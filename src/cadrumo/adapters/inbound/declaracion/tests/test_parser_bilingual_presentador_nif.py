@@ -34,7 +34,7 @@ the English render is asserted to actually BE English, so the coverage cannot
 quietly become vacuous if the fixture is regenerated in Spanish.
 
 See Also:
-    :func:`~adapters.inbound.declaracion.parse_declaracion`
+    :func:`~adapters.inbound.declaracion.parser.parse_declaracion`
         Public parser boundary exercised end to end here.
     :class:`~adapters.inbound.declaracion.InboundDeclaracionObservation`
         Observation aggregate whose ``tax_id`` these tests assert.

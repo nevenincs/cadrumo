@@ -570,22 +570,25 @@ def _assemble_pull_observations(
     snapshot: RegistrySnapshot,
     enabled: bool,
 ) -> tuple[list[dict[str, object]], int]:
-    """Per-grouping assemble-observations fan-out for the pull command."""
+    """Guarded whole-pull assembly of the operator row-set blocks.
+
+    The worksheet ingress guard is applied once over every populated block, so
+    a block claiming a row coordinate an earlier block already owns is refused
+    rather than silently overwriting part of a declared figure.  Per-block
+    validation could not observe that cross-block collision.
+    """
     if not enabled:
         return [], 0
-    from ...application.calculations.row_set_assembly import assemble_observations_for_snapshot
+    from ...application.storage.calc_sheets.row_set_assembly import assemble_row_sets_for_snapshot
+
+    try:
+        assembled = assemble_row_sets_for_snapshot(populated_row_sets, snapshot)
+    except (OutboundStorageError, RegistryValidationError) as exc:
+        raise google_refusal(exc) from exc
 
     groupings: list[dict[str, object]] = []
     total = 0
-    for row_set in populated_row_sets:
-        try:
-            source_kind, observations = assemble_observations_for_snapshot(
-                row_set.grouping,
-                row_set.cells,
-                snapshot,
-            )
-        except OutboundStorageError as exc:
-            raise google_refusal(exc) from exc
+    for row_set, (source_kind, observations) in zip(populated_row_sets, assembled, strict=True):
         total += len(observations)
         groupings.append(
             {

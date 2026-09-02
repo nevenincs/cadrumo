@@ -26,6 +26,12 @@ from pathlib import Path
 
 import pytest
 
+from ...full_screen_session_protocol import (
+    FullScreenDestination,
+    FullScreenSessionRequest,
+    parse_request_arguments,
+)
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _SCRIPT_NAME = "aeat"
@@ -102,6 +108,30 @@ def test_the_session_is_started_out_of_process_through_module_execution() -> Non
 
     assert TUI_SESSION_MODULE == _SESSION_MODULE
     assert command == ["/usr/bin/python3", "-m", _SESSION_MODULE]
+
+
+def test_a_requested_destination_is_executed_rather_than_constructed() -> None:
+    """A command whose destination is a full-screen surface still executes it.
+
+    The two commands that open a modelo work surface once constructed the
+    Textual applications in their own process, which made the frontend a
+    library for a sibling entrypoint. They now spawn the same
+    module-execution surface, carrying the subject as arguments the shared
+    session protocol defines, and the destination request this asserts is what
+    the child would actually receive.
+    """
+    from ...cli._tui_session import destination_session_command
+
+    request = FullScreenSessionRequest(
+        destination=FullScreenDestination.MODELO_WORK_REVIEW,
+        outcome_file=Path("outcome.json"),
+        work_unit_id="f" * 64,
+    )
+
+    command = destination_session_command(request, "/usr/bin/python3")
+
+    assert command[:3] == ["/usr/bin/python3", "-m", _SESSION_MODULE]
+    assert parse_request_arguments(command[3:]) == request
 
 
 def test_the_session_child_imports_no_cli_internals() -> None:

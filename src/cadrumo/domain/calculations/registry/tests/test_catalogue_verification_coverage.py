@@ -29,6 +29,7 @@ from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from ..legal import verify_legal_catalogue_grounding
 from ..loader_fingerprints import clear_fingerprint_cache
 from ..schema import filing_period_from_scope
+from ..schema_base import EvidenceTier
 from ..schema_references import SourceReference
 from ..temporal import coverage_assessment_horizon, revision_selection_coordinates, select_revision
 from ._catalogue_verification_support import _registry_tree
@@ -269,16 +270,16 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
     assert modelo_038.authority_scope == "inspection_only"
     assert not modelo_038.filing_eligible
     gates = {gate.tier: gate for gate in modelo_038.gates}
-    assert gates["legal_authority"].legal_refs == (
+    assert gates[EvidenceTier.LEGAL_AUTHORITY].legal_refs == (
         "ley-58-2003:art-93",
         "orden-hac-646-2024:art-1",
         "orden-hac-646-2024:df-unica",
         "orden-hac-66-2002:art-1",
         "orden-hac-66-2002:art-6",
     )
-    assert gates["official_source_guidance"].source_refs == ("enrolled-modelo-038-procedure",)
-    assert gates["layout_authority"].source_refs == ("aeat-dr-038-2024",)
-    assert gates["layout_authority"].workbook_refs == ("modelo-038-2024-static-layout",)
+    assert gates[EvidenceTier.OFFICIAL_SOURCE_GUIDANCE].source_refs == ("enrolled-modelo-038-procedure",)
+    assert gates[EvidenceTier.LAYOUT_AUTHORITY].source_refs == ("aeat-dr-038-2024",)
+    assert gates[EvidenceTier.LAYOUT_AUTHORITY].workbook_refs == ("modelo-038-2024-static-layout",)
 
     # Keep the full selector-derived denominator and every mandatory tier
     # visible. M038's inspection projection is deliberately non-filing, but
@@ -302,9 +303,9 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
     assert actual_coordinates == expected_coordinates
     for ledger in audit.ledgers:
         gates = {gate.tier: gate for gate in ledger.gates}
-        assert gates["legal_authority"].status == "satisfied", ledger
-        assert gates["official_source_guidance"].status == "satisfied", ledger
-        assert gates["layout_authority"].status == "satisfied", ledger
+        assert gates[EvidenceTier.LEGAL_AUTHORITY].status == "satisfied", ledger
+        assert gates[EvidenceTier.OFFICIAL_SOURCE_GUIDANCE].status == "satisfied", ledger
+        assert gates[EvidenceTier.LAYOUT_AUTHORITY].status == "satisfied", ledger
 
 
 def _synthetic_reviewed_coverage_authority(tmp_path: Path) -> ValidatedRegistryAuthority:

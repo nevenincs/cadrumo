@@ -126,10 +126,10 @@ def _sibling_work_unit(
     )
     if resolution.state is ModeloWorkSelectorState.ABSENT:
         return None
-    work_unit = resolution.work_unit
-    if work_unit is None:
+    resolved_work_unit = resolution.work_unit
+    if resolved_work_unit is None:
         raise ModeloValidationError("a present work-unit selection must carry the work unit it selected")
-    return work_unit
+    return resolved_work_unit
 
 
 def _reconcile_revision_priority(revision: CalculationRevision) -> tuple[int, datetime]:

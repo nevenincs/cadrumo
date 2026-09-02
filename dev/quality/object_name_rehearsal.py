@@ -17,13 +17,22 @@ import tempfile
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path, PurePosixPath
-from typing import Final
+from typing import Final, cast
 
 from cadrumo.core.hashing import canonical_json_bytes, prefixed_digest, sha256_file
 from cadrumo.core.link_safety import is_link_like
 
 from ..audit.object_names import ObjectNameAuditResult, ObjectNameFinding, scan, to_json
-from .object_name_graph import OperationComponent
+from .object_name_graph import (
+    InventoryLike,
+    ObjectNameGraphError,
+    OperationComponent,
+    ReferenceKind,
+    RenameManifestLike,
+    build_manifest_components,
+    collect_import_edges,
+    operation_locators,
+)
 from .object_name_manifest import (
     ObjectNameManifestError,
     ObjectNameRenameManifest,
@@ -353,10 +362,52 @@ def rehearse_object_name_component(
         raise ObjectNameRehearsalError(f"rehearsal root is not a repository worktree: {root}")
     executable = {operation.operation_id: operation for operation in select_object_name_execution(manifest)}
     try:
+        graph_manifest = cast("RenameManifestLike", manifest)
+        graph_inventory = cast("InventoryLike", inventory)
+        discovered_edges = collect_import_edges(operation_locators(graph_manifest), repo_root=root)
+        declared_generator_edges = tuple(
+            edge for edge in component.hard_edges if edge.kind is ReferenceKind.GENERATED_ARTIFACT
+        )
+        canonical_components = build_manifest_components(
+            graph_manifest,
+            inventory=graph_inventory,
+            hard_edges=(*discovered_edges, *declared_generator_edges),
+            advisory_evidence=component.risk.advisory,
+        )
+    except ObjectNameGraphError as exc:
+        raise ObjectNameRehearsalError(f"cannot reconstruct the reviewed component: {exc}") from exc
+    canonical = next((item for item in canonical_components if item.component_id == component.component_id), None)
+    if canonical is None or canonical != component:
+        raise ObjectNameRehearsalError("supplied component differs from the canonical repository graph")
+    try:
         selected = tuple(executable[operation_id] for operation_id in component.operation_ids)
     except KeyError as exc:
         raise ObjectNameRehearsalError(f"reviewed component names a non-executable operation: {exc.args[0]}") from exc
-    component_manifest = manifest.model_copy(update={"operations": selected})
+    generated_paths_by_operation = {
+        operation.operation_id: frozenset(
+            edge.path
+            for edge in component.hard_edges
+            if edge.operation_id == operation.operation_id and edge.kind is ReferenceKind.GENERATED_ARTIFACT
+        )
+        for operation in selected
+    }
+    transform_operations = tuple(
+        operation.model_copy(
+            update={
+                "changed_paths": tuple(
+                    path
+                    for path in operation.changed_paths
+                    if path not in generated_paths_by_operation[operation.operation_id]
+                ),
+                "expected_reference_classes": tuple(
+                    kind for kind in operation.expected_reference_classes if kind != "generated-artifact"
+                ),
+                "generator_commands": (),
+            }
+        )
+        for operation in selected
+    )
+    component_manifest = manifest.model_copy(update={"operations": transform_operations})
     allowed_paths = tuple(sorted({path for operation in selected for path in operation.changed_paths}))
     try:
         validate_object_name_manifest(manifest, inventory=inventory, repo_root=root)
@@ -377,7 +428,10 @@ def rehearse_object_name_component(
     if len(input_file_digests) != len(input_paths):
         raise ObjectNameRehearsalError("manifest input is a tracked deletion in the current snapshot")
 
-    system_temporary_root = Path(tempfile.gettempdir()).resolve()
+    system_temporary_candidate = Path(tempfile.gettempdir())
+    if is_link_like(system_temporary_candidate):
+        raise ObjectNameRehearsalError(f"system temporary root is unsafe: {system_temporary_candidate}")
+    system_temporary_root = system_temporary_candidate.resolve()
     if (
         not system_temporary_root.is_dir()
         or is_link_like(system_temporary_root)

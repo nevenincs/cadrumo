@@ -19,7 +19,13 @@ from .schema import ModeloRevision
 if TYPE_CHECKING:
     from .invoice_bindings import InvoiceObservation
 
-_InvoiceGrouping = Literal["operator_clave", "operator_clave_period", "contraparte_clave"]
+InvoiceGrouping = Literal["operator_clave", "operator_clave_period", "contraparte_clave"]
+"""How invoice rows are grouped before an M349 or M347 binding resolves them.
+
+Public rather than underscore-private because `invoice_bindings` needs it too. It was
+private here and separately restated there, byte for byte, which is this campaign's most
+frequent cause: a definition that cannot be reached is a definition that gets rewritten.
+"""
 
 _M349_EXPORT_NIF_COUNTRY_BINDINGS: dict[BindingId, BindingId] = {
     "iva-349-operador-row-nif": "iva-349-operador-row-codigo-pais",
@@ -267,7 +273,7 @@ def _max_row_index(rows: Mapping[tuple[BindingId, int], object], bindings: froze
 
 
 def build_invoice_rows(
-    grouping: _InvoiceGrouping,
+    grouping: InvoiceGrouping,
     observations: tuple[InvoiceObservation, ...],
     *,
     m347_threshold_filter: Callable[[tuple[InvoiceObservation, ...]], tuple[InvoiceObservation, ...]],

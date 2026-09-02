@@ -733,7 +733,7 @@ nitpick_ignore_regex = [
     # and referenced through that module's path; it is an external alias type.
     (r"py:.*", r".*\.TypeAliasType$"),
     # Bare references to private (single-underscore) helpers — ``_now``,
-    # ``_coerce_utc_aware``, ``_BorradorParseError`` — written without a module
+    # ``_coerce_utc_aware`` — written without a module
     # path. Private members are not part of the documented surface, so a literal
     # would be more correct, but the reference itself carries no public target.
     (r"py:.*", r"^_[A-Za-z]\w*$"),
@@ -1084,8 +1084,8 @@ def _build_py_suffix_index(env):
 
     Returns:
         A mapping of bare object name to the list of fully-qualified names that
-        end in it (for example ``InboundBorradorObservation`` ->
-        ``["cadrumo.adapters.inbound.borrador._schema.InboundBorradorObservation"]``).
+        end in it (for example ``InboundDeclaracionObservation`` ->
+        ``["cadrumo.adapters.inbound.declaracion.schema.InboundDeclaracionObservation"]``).
     """
     index: dict[str, list[str]] = {}
     for fullname in env.get_domain("py").objects:

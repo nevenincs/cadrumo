@@ -1549,11 +1549,14 @@ def _require_semantic_map_attestation(joined: JoinedRecordDesign, semantic_map: 
         )
     if semantic_map.source_sha256 != joined.source.source_sha256:
         raise RegistryValidationError("semantic-map SHA-256 does not match joined official source")
+    if joined.authored_semantic_map is not None and joined.authored_semantic_map != semantic_map:
+        raise RegistryValidationError("joined fields do not attest the supplied authored semantic map")
+    compiled_map = joined.compiled_semantic_map or semantic_map
     joined_entries = frozenset(field.semantic_entry for field in joined.fields)
-    if len(joined_entries) != len(joined.fields) or joined_entries != frozenset(semantic_map.entries):
+    if len(joined_entries) != len(joined.fields) or joined_entries != frozenset(compiled_map.entries):
         raise RegistryValidationError("joined fields do not attest the supplied complete semantic map")
     joined_records = frozenset(record.semantic_record for record in joined.records)
-    if len(joined_records) != len(joined.records) or joined_records != frozenset(semantic_map.records):
+    if len(joined_records) != len(joined.records) or joined_records != frozenset(compiled_map.records):
         raise RegistryValidationError("joined records do not attest the supplied complete semantic map")
 
 

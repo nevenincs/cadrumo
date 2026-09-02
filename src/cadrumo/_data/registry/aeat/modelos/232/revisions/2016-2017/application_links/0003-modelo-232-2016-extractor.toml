@@ -1,7 +1,7 @@
 [[revisions."2016-2017".application_links]]
 id = "modelo-232-2016-extractor"
 surface = "extractor"
-consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+consumer = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 requires_snapshot = true
 legal_refs = ["orden-hfp-816-2017:art-1", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]

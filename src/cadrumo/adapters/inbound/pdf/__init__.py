@@ -11,7 +11,7 @@ Where the contracts live:
 - Label-anchored extraction -- ``label_regex``, defining :class:`LabelHit`,
   ``apply_label_regex``, ``parse_spanish_decimal``, and the ``EJERCICIO_LABEL``,
   ``MODELO_LABEL``, ``PRESENTADOR_NIF_LABEL``, ``SPANISH_AMOUNT_GROUP`` and
-  ``TEXT_VALUE_GROUP`` fragments the declaracion and borrador parsers anchor on.
+  ``TEXT_VALUE_GROUP`` fragments the declaracion parser anchors on.
 - Page text -- ``page_text_extraction``, defining the pdfplumber-backed
   ``extract_pages_text_from_path``, ``extract_pages_text_from_bytes``,
   ``extract_pages_text_concatenated`` and ``extract_pages_text_with_fast_path``
@@ -29,8 +29,6 @@ its defining module.
 See Also:
     :mod:`adapters.inbound.declaracion`
         Registry-grounded filed declaration parsing.
-    :mod:`adapters.inbound.borrador`
-        Borrador/Renta artefact parsing.
     :mod:`adapters.inbound.justificante`
         AEAT filing-receipt parsing, receipt-only metadata.
 """

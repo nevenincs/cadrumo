@@ -18,7 +18,7 @@ revisions per the bundled DR dictionaries, so the one committed fixture
 grounds all three revisions' profiles.
 
 See Also:
-    :func:`~adapters.inbound.declaracion.parse_declaracion`
+    :func:`~adapters.inbound.declaracion.parser.parse_declaracion`
         Public parser entry point exercised for the 2024 and 2025 profiles.
     :class:`~domain.calculations.registry._schema_extraction.ExtractionProfileDefinition`
         Registry-owned ``declaracion_pdf`` profile contract asserted here.

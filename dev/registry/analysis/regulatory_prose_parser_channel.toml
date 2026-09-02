@@ -66,11 +66,6 @@ corpus = "BOE consolidated legal text"
 reason = "Resolves legal-reference ids and their corpus anchors against bundled BOE text."
 
 [[parser]]
-module = "src/cadrumo/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py"
-corpus = "AEAT Modelo 100 borrador PDF"
-reason = "Inbound adapter extracting declared casilla values from the operator's own AEAT borrador; the boundary where AEAT's document shape is absorbed."
-
-[[parser]]
 module = "src/cadrumo/adapters/inbound/declaracion/_detect.py"
 corpus = "AEAT declaración documents"
 reason = "Detects which modelo and ejercicio an imported AEAT document is, before any typed parse."

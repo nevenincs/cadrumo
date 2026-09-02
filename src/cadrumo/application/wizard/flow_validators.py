@@ -96,54 +96,98 @@ def _verdicts_from_validation_error(error: ValidationError) -> tuple[ValidationV
     return (ValidationVerdict.failed(_FALLBACK_MESSAGE_KEY, check=_GENERIC_CHECK, fields=[]),)
 
 
+def _verdicts_for_answers(
+    domain_keys: Mapping[str, str],
+    answers: Mapping[str, str],
+) -> tuple[ValidationVerdict, ...]:
+    """Re-run the real constructor over the staged answers and map failures.
+
+    The substrate hands cross-field validators the answer map keyed by
+    page id; ``domain_keys`` maps those to the schema-path key space the
+    persistence layer serialises to (``domain_key`` == ``profile_key`` ==
+    schema path). Instance-scoped repeating-group answers are excluded —
+    they serialise through the descendant fact path, not the top-level
+    taxpayer projection.
+    """
+    mapping: dict[str, str] = {}
+    for page_id, value in answers.items():
+        if REPEATING_INSTANCE_SEPARATOR in page_id:
+            continue
+        key = domain_keys.get(page_id)
+        if key is None or value == "":
+            continue
+        mapping[key] = value
+    try:
+        projection_for_taxpayer(mapping)
+    except ValidationError as error:
+        return _verdicts_from_validation_error(error)
+    return (ValidationVerdict.passed(),)
+
+
 def build_taxpayer_projection_validator(
     page_domain_keys: Mapping[str, str | None],
 ) -> CrossFieldValidator:
-    """Build the flow-scope validator over a page-id → domain-key mapping.
+    """Build a standalone flow-scope validator over a page-id → domain-key mapping.
 
-    The substrate hands cross-field validators the answer map keyed by
-    page id; this closure maps those to the schema-path key space the
-    persistence layer serialises to (``domain_key`` == ``profile_key`` ==
-    schema path), then re-runs the real constructor. Instance-scoped
-    repeating-group answers are excluded — they serialise through the
-    descendant fact path, not the top-level taxpayer projection.
+    The returned closure snapshots the mapping, so it validates exactly
+    the pages handed to it.
     """
     domain_keys = {page_id: key for page_id, key in page_domain_keys.items() if key}
 
     def _validate(answers: Mapping[str, str]) -> tuple[ValidationVerdict, ...]:
-        mapping: dict[str, str] = {}
-        for page_id, value in answers.items():
-            if REPEATING_INSTANCE_SEPARATOR in page_id:
-                continue
-            key = domain_keys.get(page_id)
-            if key is None or value == "":
-                continue
-            mapping[key] = value
-        try:
-            projection_for_taxpayer(mapping)
-        except ValidationError as error:
-            return _verdicts_from_validation_error(error)
-        return (ValidationVerdict.passed(),)
+        return _verdicts_for_answers(domain_keys, answers)
 
     return _validate
 
 
-def register_taxpayer_projection_validator(definition: FlowDefinition) -> None:
-    """Register the taxpayer-projection validator for a concrete definition.
+# The registered validator reads the enrolled mapping live, so the single
+# registry entry is owned by this module at import time (the sibling flow
+# validators register the same way) while each concrete definition enrols
+# its own page-id → domain-key rows at the composition point.
+_ENROLLED_DOMAIN_KEYS: dict[str, str] = {}
 
-    Extracts the page-id → domain-key mapping from the definition and
-    registers the closure under :data:`TAXPAYER_PROJECTION_VALIDATOR_ID`;
-    the definition then names that id in its ``flow_validator_ids``.
+
+def _validate_enrolled_taxpayer_projection(answers: Mapping[str, str]) -> tuple[ValidationVerdict, ...]:
+    return _verdicts_for_answers(_ENROLLED_DOMAIN_KEYS, answers)
+
+
+register_cross_field_validator(TAXPAYER_PROJECTION_VALIDATOR_ID, _validate_enrolled_taxpayer_projection)
+
+
+def register_taxpayer_projection_validator(definition: FlowDefinition) -> None:
+    """Enrol a concrete definition's page-id → domain-key rows on the validator.
+
+    Page ids are stable catalogue tokens carrying one domain key each, so
+    enrolment is idempotent and order-independent: composing the same
+    definition twice re-enrols the same rows.
     """
-    page_domain_keys = {page.id: page.domain_key for page in iter_flow_pages(definition)}
-    register_cross_field_validator(
-        TAXPAYER_PROJECTION_VALIDATOR_ID,
-        build_taxpayer_projection_validator(page_domain_keys),
+    for page in iter_flow_pages(definition):
+        if page.domain_key:
+            _ENROLLED_DOMAIN_KEYS[page.id] = page.domain_key
+
+
+def attach_taxpayer_projection_validator(definition: FlowDefinition) -> FlowDefinition:
+    """Return ``definition`` naming the flow-scope taxpayer-construction validator.
+
+    Enrols the definition's page mapping and appends
+    :data:`TAXPAYER_PROJECTION_VALIDATOR_ID` to ``flow_validator_ids``, so
+    the review surface re-runs the real taxpayer constructor over the
+    staged answers and blocks submit on a legally invalid profile.
+    Idempotent on the flow validator id: re-applying does not duplicate it.
+    """
+    register_taxpayer_projection_validator(definition)
+    if TAXPAYER_PROJECTION_VALIDATOR_ID in definition.flow_validator_ids:
+        return definition
+    return definition.model_copy(
+        update={
+            "flow_validator_ids": (*definition.flow_validator_ids, TAXPAYER_PROJECTION_VALIDATOR_ID),
+        },
     )
 
 
 __all__ = [
     "TAXPAYER_PROJECTION_VALIDATOR_ID",
+    "attach_taxpayer_projection_validator",
     "build_taxpayer_projection_validator",
     "register_taxpayer_projection_validator",
 ]

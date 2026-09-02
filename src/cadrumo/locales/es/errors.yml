@@ -163,8 +163,6 @@ errors:
       vivo agotó el tiempo antes de devolver evidencia de la AEAT.
     error_application_registry: La orquestación del registro de modelos falló o fue
       rechazada.
-    error_borrador_artefact_not_recognised: El PDF no coincide con ningún formato
-      de borrador de Modelo 100 conocido.
     error_cadrumo_async_resource_cleanup: Falló la limpieza asíncrona de recursos;
       vuelva a intentar la limpieza antes de continuar.
     error_cadrumo_core: Se produjo un error interno en la aplicación.
@@ -407,8 +405,6 @@ errors:
       de inicio de sesión guardado de este perfil; sigue en el disco.
     fail_access_gate_authorization_manifest: No se pudo cargar el manifiesto de autorización
       de modelos o contiene una entrada de habilitación no válida.
-    fail_borrador_parse: No se pudo interpretar el PDF del borrador de Modelo 100
-      como una declaración.
     fail_browser_evasion: No se pudo aplicar la configuración de evasión del navegador.
     fail_browser_session_browser: Se produjo un error en la sesión del navegador.
     fail_browser_validation: Los parámetros del navegador no superaron la validación.

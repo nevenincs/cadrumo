@@ -232,6 +232,46 @@ def test_binary_install_refuses_drifted_wheelhouse_bytes(tmp_path: Path) -> None
         )
 
 
+def test_binary_selection_uses_observed_runtime_minor() -> None:
+    """A target interpreter selects its own ready wheelhouse entry."""
+    thirteen = {"python": "3.13", "status": "ready"}
+    fourteen = {"python": "3.14", "status": "ready"}
+    manifest = {"runtimes": {"3.13": thirteen, "3.14": fourteen}}
+
+    selected_minor, selected = compatibility._select_runtime_wheelhouse(
+        manifest,
+        {"python": "3.14.7"},
+    )
+
+    assert selected_minor == "3.14"
+    assert selected is fourteen
+
+
+def test_binary_selection_attributes_advisory_missing_wheels() -> None:
+    """An incomplete advisory closure remains a machine-readable failure."""
+    manifest = {
+        "runtimes": {
+            "3.15": {
+                "python": "3.15",
+                "status": "missing-wheel",
+                "missing": [
+                    {
+                        "distribution": "pydantic-core",
+                        "platform": "windows-x86-64",
+                        "reason": "no-compatible-wheel",
+                        "requirement": "pydantic-core==2.33.2",
+                    }
+                ],
+            }
+        }
+    }
+
+    with pytest.raises(compatibility.CompatibilityProbeError, match="pydantic-core") as failure:
+        compatibility._select_runtime_wheelhouse(manifest, {"python": "3.15.0"})
+
+    assert failure.value.category == "missing-wheel"
+
+
 @pytest.mark.parametrize(
     ("stderr", "expected"),
     (

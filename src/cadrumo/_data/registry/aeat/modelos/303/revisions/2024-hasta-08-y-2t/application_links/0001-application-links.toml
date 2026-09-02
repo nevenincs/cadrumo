@@ -17,7 +17,7 @@ source_refs = ["aeat-modelo-303-procedure"]
 [[revisions.2024-hasta-08-y-2t.application_links]]
 id = "modelo-303-extractor"
 surface = "extractor"
-consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+consumer = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 requires_snapshot = true
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-modelo-303-procedure"]

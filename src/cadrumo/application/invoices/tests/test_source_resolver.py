@@ -32,7 +32,7 @@ from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
-from ....domain.modelos.row_models import Modelo349CountryPrefixContextError
+from ....domain.modelos.row_models import Modelo349ClaveOperacion, Modelo349CountryPrefixContextError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_tree import bundled_registry_tree
@@ -756,12 +756,12 @@ def test_capability_parity_m349_declares_every_intracommunity_capability(
     rows = [row for row in resolution.detail_rows if isinstance(row, Modelo349OperadorRow)]
     by_clave = {row.clave_operacion: row for row in rows}
     assert set(by_clave) == {"E", "I"}, by_clave
-    assert by_clave["E"].nif_comunitario == "DE345678901"
-    assert by_clave["E"].codigo_pais == "DE"
-    assert by_clave["E"].importe == Decimal("1500.00")
-    assert by_clave["I"].nif_comunitario == "IT12345678901"
-    assert by_clave["I"].codigo_pais == "IT"
-    assert by_clave["I"].importe == Decimal("800.00")
+    assert by_clave[Modelo349ClaveOperacion.E].nif_comunitario == "DE345678901"
+    assert by_clave[Modelo349ClaveOperacion.E].codigo_pais == "DE"
+    assert by_clave[Modelo349ClaveOperacion.E].importe == Decimal("1500.00")
+    assert by_clave[Modelo349ClaveOperacion.I].nif_comunitario == "IT12345678901"
+    assert by_clave[Modelo349ClaveOperacion.I].codigo_pais == "IT"
+    assert by_clave[Modelo349ClaveOperacion.I].importe == Decimal("800.00")
     # The domestic invoice is not an intra-community operation and must not
     # appear, so the proof also pins that the bucket is not over-declared.
     assert len(rows) == 2

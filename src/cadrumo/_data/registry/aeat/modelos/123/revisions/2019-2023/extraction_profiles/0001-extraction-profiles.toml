@@ -3,7 +3,7 @@ id = "modelo-123-2019-declaracion-pdf"
 surface = "declaracion_pdf"
 artefact_kind = "declaracion"
 accepted_artefact_kinds = ["declaration_pdf"]
-parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+parser = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 target_casillas = [
     {casilla_id = "01", match_strategy = "numeric_casilla", value_kind = "amount"},
     {casilla_id = "02", match_strategy = "numeric_casilla", value_kind = "amount"},

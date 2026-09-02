@@ -235,8 +235,8 @@ class OperationConsumedInteraction(BaseModel):
 
     @property
     def response_action(self) -> OperationResponseIntentValue:
-        """Project the private intent enum as a safe closed action literal."""
-        return self.intent.value
+        """Project the private intent enum as a safe closed action member."""
+        return self.intent
 
     @model_validator(mode="after")
     def _validate_consumed_at(self) -> OperationConsumedInteraction:

@@ -5,7 +5,7 @@ artefact_kind = "declaracion"
 accepted_artefact_kinds = ["declaration_pdf"]
 provisional_pending_specimen = true
 corpus_round_trip_verified = false
-parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+parser = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 # M130 layout: each row prints the label text, then the box number at x0~464 (right column),
 # then the monetary value at x0~533-545 on the same y-row.  Box numbers also appear inline
 # in formula text at x0~109-200, so anchor_x_min/anchor_x_max constrain the search to the

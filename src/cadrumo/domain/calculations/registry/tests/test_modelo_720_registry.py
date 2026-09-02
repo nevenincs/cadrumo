@@ -230,7 +230,7 @@ def test_committed_modelo_720_declaration_pdf_extraction_profile_targets_declara
         pdf_profiles = [profile for profile in revision.extraction_profiles if profile.surface == "declaracion_pdf"]
         assert pdf_profiles, revision.id
         for profile in pdf_profiles:
-            assert profile.parser == "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+            assert profile.parser == "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
             assert profile.confidence == "strict"
             assert profile.corpus_round_trip_verified is True
             assert profile.failure_semantics == "fail_hard"

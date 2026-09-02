@@ -18,8 +18,7 @@ source_refs = ["aeat-modelo-840-procedure", "aeat-dr-840", "boe-modelo-840-2003-
 [[revisions."2003-y-siguientes".application_links]]
 id = "modelo-840-extractor"
 surface = "extractor"
-consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+consumer = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 requires_snapshot = true
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
-

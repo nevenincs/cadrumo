@@ -3,7 +3,7 @@ id = "modelo-115-declaracion-pdf"
 surface = "declaracion_pdf"
 artefact_kind = "declaracion"
 accepted_artefact_kinds = ["declaration_pdf"]
-parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+parser = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 target_casillas = [
     {casilla_id = "01", match_strategy = "named_label", value_kind = "amount", label_pattern = 'N[uú]mero\s+(?:de\s+)?perceptores'},
     {casilla_id = "02", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Base\s+(?:de\s+)?retenciones\s+e\s+ingresos\s+a\s+cuenta'},

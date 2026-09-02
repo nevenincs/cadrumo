@@ -23,7 +23,7 @@ from ...core.filing_year import FilingYear
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.requirement import RequirementValue
+from ...core.requirement import Requirement, RequirementValue
 from ...core.resources.bundled_data import bundled_path
 from ...core.source_connectivity import (
     SourceConnectivityCensusRow,
@@ -485,7 +485,7 @@ def derive_registry_destination_records(snapshot: RegistrySnapshot) -> tuple[Reg
             segmento=casilla.segmento,
             input_kind=casilla.input_kind,
             required=casilla.required,
-            manual_requirement=("required" if casilla.required else "optional")
+            manual_requirement=(Requirement.REQUIRED if casilla.required else Requirement.OPTIONAL)
             if casilla.input_kind is InputKind.MANUAL
             else None,
             legal_refs=tuple(casilla.legal_refs),

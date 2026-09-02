@@ -19,7 +19,6 @@ and CLI presentation live outside inbound parsing.
 
 Template detection resolves identity only; registry validation and profile
 choice happen in the parser. This boundary is distinct from
-:mod:`~adapters.inbound.borrador`, which parses Renta draft PDFs, and
 :mod:`~adapters.inbound.justificante`, which parses receipt metadata.
 
 Successful parses currently return ``warnings=()``. :class:`ExtractionWarning`

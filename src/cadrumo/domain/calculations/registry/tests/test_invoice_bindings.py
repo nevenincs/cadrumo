@@ -20,6 +20,7 @@ from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
 from ..invoice_bindings import (
     InvoiceObservation,
+    RectificationScope,
     invoice_binding_requirements,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
@@ -309,13 +310,15 @@ def test_invoice_binding_requirements_groups_bindings_by_clave_and_scope() -> No
 
     assert len(requirements) == 2
     by_scope = {req.rectification_scope: req for req in requirements}
-    assert by_scope["exclude_rectifications"].binding_ids == (
+    assert by_scope[RectificationScope.EXCLUDE_RECTIFICATIONS].binding_ids == (
         "iva-349-declarante-importe-operaciones",
         "iva-349-declarante-numero-operadores",
     )
-    assert by_scope["exclude_rectifications"].claves == ("E", "M")
-    assert by_scope["only_rectifications"].binding_ids == ("iva-349-declarante-importe-rectificaciones",)
-    assert by_scope["only_rectifications"].claves == ("E",)
+    assert by_scope[RectificationScope.EXCLUDE_RECTIFICATIONS].claves == ("E", "M")
+    assert by_scope[RectificationScope.ONLY_RECTIFICATIONS].binding_ids == (
+        "iva-349-declarante-importe-rectificaciones",
+    )
+    assert by_scope[RectificationScope.ONLY_RECTIFICATIONS].claves == ("E",)
 
 
 def test_resolve_invoice_binding_values_ignores_non_invoice_bindings() -> None:

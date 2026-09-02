@@ -5,14 +5,17 @@ from __future__ import annotations
 import os
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .bucket_pointer import BucketPointer
 
 
 def active_profile_pointer_observation(
     *,
     normalizer: Callable[[Path | None], Path | None],
     storage_root: Callable[[], Path],
-) -> tuple[Path, Any]:
+) -> tuple[Path, BucketPointer]:
     """Identify the current active-profile pointer through its native coordinate.
 
     Settings construction is not a pure function of the environment: when

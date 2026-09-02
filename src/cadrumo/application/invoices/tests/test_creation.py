@@ -27,7 +27,7 @@ from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
-from ....domain.modelos.row_models import Modelo349OperadorRow
+from ....domain.modelos.row_models import Modelo349ClaveOperacion, Modelo349OperadorRow
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (
     CalculationSourceContext,
@@ -608,8 +608,8 @@ def test_intracommunity_services_now_carry_a_category_and_reach_m349(tmp_path: P
         for row in resolution.detail_rows
         if isinstance(row, Modelo349OperadorRow)
     }
-    assert rows[("FR", "S")].importe == Decimal("4000.00")
-    assert rows[("IT", "I")].importe == Decimal("3000.00")
+    assert rows[("FR", Modelo349ClaveOperacion.S)].importe == Decimal("4000.00")
+    assert rows[("IT", Modelo349ClaveOperacion.I)].importe == Decimal("3000.00")
     # Filed under the service claves, NOT under the goods claves E and A.
     assert ("FR", "E") not in rows
     assert ("IT", "A") not in rows

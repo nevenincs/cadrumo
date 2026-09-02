@@ -61,8 +61,6 @@ _SEDE_HOST = urlsplit(SEDE_BASE).netloc
 _AEAT_HOST_SUFFIX = EXTERNAL.aeat.domains.host_suffix
 _RESUMEN_URL = f"{SEDE_BASE}{EXTERNAL.aeat.sede_paths.expedientes_resumen}"
 
-DEFAULT_EXPAND_TIMEOUT_MS: int = 10_000
-
 
 @runtime_checkable
 class _HtmlSnapshotPage(Protocol):

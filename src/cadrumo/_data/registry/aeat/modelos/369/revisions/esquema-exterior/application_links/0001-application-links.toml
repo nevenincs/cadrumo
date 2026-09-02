@@ -17,7 +17,7 @@ source_refs = ["aeat-modelo-369-procedure"]
 [[revisions."esquema-exterior".application_links]]
 id = "modelo-369-exterior-extractor"
 surface = "extractor"
-consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+consumer = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 requires_snapshot = true
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-modelo-369-procedure"]

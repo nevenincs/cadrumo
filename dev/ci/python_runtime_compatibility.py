@@ -939,6 +939,11 @@ def run_probe(
             cwd=work_dir,
         )
         if selected_mode is ProbeMode.BINARY:
+            # Bind failures to the observed target minor before selecting the
+            # manifest entry.  This keeps an advisory missing-wheel verdict
+            # attributable even when selection itself raises.
+            wheelhouse_runtime = _runtime_minor(runtime)
+            dependency["wheelhouse_runtime"] = wheelhouse_runtime
             wheelhouse_platform = _wheelhouse_platform(runtime)
             if wheelhouse_bundle is None:  # pragma: no cover - guarded by binary cohort setup
                 raise CompatibilityProbeError(

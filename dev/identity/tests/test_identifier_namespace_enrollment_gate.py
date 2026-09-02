@@ -351,26 +351,6 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         reason="As the claim model: role evidence quotes the extracted text verbatim for anchoring.",
     ),
     _Adjudication(
-        path="src/cadrumo/adapters/inbound/borrador/_schema.py",
-        model="InboundBorradorObservation",
-        field="tax_id",
-        group="verbatim external evidence",
-        reason=(
-            "The parser preserves the filer identifier printed by the PDF; SubjectTaxId would canonicalise or refuse "
-            "evidence before the extraction can report it."
-        ),
-    ),
-    _Adjudication(
-        path="src/cadrumo/adapters/inbound/borrador/_schema.py",
-        model="InboundBorradorObservation",
-        field="registry_extraction_profile_id",
-        group="semantic tail collisions",
-        reason=(
-            "This names a registry extraction-profile selector, not a user ProfileId; the match comes only from its "
-            "profile_id suffix."
-        ),
-    ),
-    _Adjudication(
         path="src/cadrumo/adapters/inbound/declaracion/schema.py",
         model="InboundDeclaracionObservation",
         field="tax_id",

@@ -3,7 +3,7 @@ id = "modelo-190-declaracion-pdf"
 surface = "declaracion_pdf"
 artefact_kind = "declaration_pdf"
 accepted_artefact_kinds = ["declaration_pdf"]
-parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+parser = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 target_casillas = [
     {casilla_id = "decl.total-percepciones", match_strategy = "named_label", value_kind = "amount", label_pattern = 'N[uú]mero\s+total\s+de\s+percepciones'},
     {casilla_id = "decl.percepciones-total", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Importe\s+total\s+de\s+las\s+percepciones'},
@@ -21,4 +21,3 @@ min_coverage = "1.0"
 failure_semantics = "fail_hard"
 legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]
-

@@ -74,6 +74,7 @@ from .errors import (
     WizardValidationError,
     wizard_no_action_verdict,
 )
+from .flow_validators import attach_taxpayer_projection_validator
 from .models import WizardFlow, WizardQuestion, WizardWidget
 from .persistence import WizardPersistMode
 from .setup_legal_validators import attach_setup_legal_validators
@@ -713,9 +714,15 @@ def setup_flow_definition(
     """Bridge and decorate the wizard flow into the shared substrate definition.
 
     The single projected :class:`FlowDefinition` every frontend drives:
-    the substrate bridge, format hints, setup legal validators, and -- for
-    CREATE -- the descendant repeating group, applied in one place so no
-    caller can diverge on the definition it runs.
+    the substrate bridge, format hints, setup legal validators, the
+    flow-scope taxpayer-construction validator, and -- for CREATE -- the
+    descendant repeating group, applied in one place so no caller can
+    diverge on the definition it runs.
+
+    The taxpayer-construction validator is attached before the descendant
+    group so it enrols the top-level pages only: repeating-group answers
+    serialise through the descendant fact path, not the taxpayer
+    projection.
 
     ``attach_descendants`` gates the descendant group. It is spliced for
     CREATE (where the facts-as-checkpoint store seeds and re-seeds the group)
@@ -730,8 +737,10 @@ def setup_flow_definition(
     surfaces the descendant door instead of a silently-lossy surface.
 
     """
-    definition = attach_setup_legal_validators(
-        attach_format_hints(flow_definition_from_wizard_flow(flow, checkpoint=_SETUP_CHECKPOINT)),
+    definition = attach_taxpayer_projection_validator(
+        attach_setup_legal_validators(
+            attach_format_hints(flow_definition_from_wizard_flow(flow, checkpoint=_SETUP_CHECKPOINT)),
+        ),
     )
     if attach_descendants:
         definition = attach_descendant_group(definition)

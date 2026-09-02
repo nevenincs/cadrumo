@@ -37,8 +37,8 @@
 #
 # What is listed below is a backlog, not an endorsement. Two clusters dominate
 # it and are tracked as their own work: the orphaned-domain cluster (product
-# capability whose caller is gone -- borrador ingestion, the fincas domain, the
-# wizard flow surfaces, the filing sub-steps) and the sede/renta-web-open
+# capability whose caller is gone -- the fincas domain, the wizard flow
+# surfaces, the filing sub-steps) and the sede/renta-web-open
 # cluster (a live browser driver and its oracle, which stand or fall together).
 
 frozen_prefixes = [
@@ -51,7 +51,6 @@ frozen_prefixes = [
 ]
 
 allowed = [
-  "cadrumo.adapters.inbound.borrador",  # unreachable
   "cadrumo.adapters.inbound.einvoice._aeat_record_schema",  # unreachable
   "cadrumo.adapters.inbound.einvoice.record_batch",  # unreachable
   "cadrumo.adapters.outbound.aeat.sede._renta_web_open_safety",  # unreachable
@@ -69,8 +68,6 @@ allowed = [
   "cadrumo.application.operator_surface.crud_registry",  # unreachable
   "cadrumo.application.prorrata_register.sector_lifecycle",  # unreachable
   "cadrumo.application.prorrata_register.seed",  # unreachable
-  "cadrumo.application.storage.calc_sheets._row_set_assembly",  # unreachable
-  "cadrumo.application.storage.calc_sheets.evidence",  # unreachable
   "cadrumo.application.user_profile.acquisition_sources",  # module-exec-only
   "cadrumo.application.user_profile.login_interaction",  # module-exec-only
   "cadrumo.application.user_profile.overview",  # module-exec-only
@@ -79,7 +76,6 @@ allowed = [
   "cadrumo.application.wizard._registered_values",  # unreachable
   "cadrumo.application.wizard._translations",  # unreachable
   "cadrumo.application.wizard.copy_sources",  # unreachable
-  "cadrumo.application.wizard.flow_validators",  # unreachable
   "cadrumo.application.wizard.legal_zone",  # unreachable
   "cadrumo.core.address_components",  # unreachable
   "cadrumo.core.compatibility_lifecycle",  # unreachable

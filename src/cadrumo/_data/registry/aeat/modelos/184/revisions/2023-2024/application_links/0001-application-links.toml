@@ -17,7 +17,7 @@ source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
 [[revisions."2023-2024".application_links]]
 id = "modelo-184-extractor"
 surface = "extractor"
-consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+consumer = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 requires_snapshot = true
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]

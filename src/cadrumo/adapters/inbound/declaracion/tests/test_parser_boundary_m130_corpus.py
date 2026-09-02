@@ -1,7 +1,7 @@
 """Modelo 130 parser boundary corpus sweeps.
 
 See Also:
-    :func:`~adapters.inbound.declaracion.parse_declaracion`
+    :func:`~adapters.inbound.declaracion.parser.parse_declaracion`
         Public parser boundary exercised against every M130 corpus PDF.
     :mod:`~adapters.inbound.declaracion.tests._parser_boundary_m130_support`
         Shared parameter list and expected casilla values for this corpus.

@@ -106,6 +106,8 @@ class JoinedRecordDesign(_StrictModel):
 
     modelo: ModeloId
     source: RecordDesignIntermediateSource
+    authored_semantic_map: SemanticMap | None = None
+    compiled_semantic_map: SemanticMap | None = None
     revision_id: RevisionId | None = None
     records: tuple[JoinedRecordDesignRecord, ...] = Field(min_length=1)
     fields: tuple[JoinedRecordDesignField, ...] = Field(min_length=1)
@@ -116,6 +118,22 @@ class JoinedRecordDesign(_StrictModel):
 
     @model_validator(mode="after")
     def _require_complete_joined_state(self) -> JoinedRecordDesign:
+        if (self.authored_semantic_map is None) != (self.compiled_semantic_map is None):
+            raise ValueError("joined record design requires authored and compiled semantic maps together")
+        if self.authored_semantic_map is not None and self.compiled_semantic_map is not None:
+            if self.authored_semantic_map.model_copy(update={"entries": self.compiled_semantic_map.entries}) != (
+                self.compiled_semantic_map
+            ):
+                raise ValueError("compiled semantic map may change only casilla tokens")
+            if any(
+                not _entry_is_exact_or_left_padded(authored, compiled)
+                for authored, compiled in zip(
+                    self.authored_semantic_map.entries,
+                    self.compiled_semantic_map.entries,
+                    strict=True,
+                )
+            ):
+                raise ValueError("compiled semantic-map casilla ids must be exact or solely left-zero-padded")
         record_fields = tuple(field for record in self.records for field in record.fields)
         if self.fields != record_fields:
             raise ValueError("joined record-design fields must exactly flatten its records")
@@ -148,6 +166,25 @@ class JoinedRecordDesign(_StrictModel):
         return self
 
 
+def _entry_is_exact_or_left_padded(authored: SemanticMapEntry, compiled: SemanticMapEntry) -> bool:
+    """Prove one compiled entry changed no meaning beyond numeric zero padding."""
+    if authored == compiled:
+        return True
+    if authored.casilla_id is None or compiled.casilla_id is None:
+        return False
+    if authored.model_copy(update={"casilla_id": compiled.casilla_id}) != compiled:
+        return False
+    token = authored.casilla_id
+    resolved = compiled.casilla_id
+    return (
+        token.isdecimal()
+        and resolved.isdecimal()
+        and len(resolved) > len(token)
+        and resolved.endswith(token)
+        and set(resolved[: -len(token)]) == {"0"}
+    )
+
+
 def join_record_design_semantics(
     semantic_map: SemanticMap,
     intermediate: RecordDesignIntermediate,
@@ -165,6 +202,7 @@ def join_record_design_semantics(
     return _join_record_design_semantics(
         resolved_map,
         intermediate,
+        authored_semantic_map=semantic_map,
         revision_id=inspection.revision_id,
         projection_endpoints=inspection.projection_endpoints,
     )
@@ -174,6 +212,7 @@ def _join_record_design_semantics(
     semantic_map: SemanticMap,
     intermediate: RecordDesignIntermediate,
     *,
+    authored_semantic_map: SemanticMap | None = None,
     revision_id: RevisionId,
     projection_endpoints: tuple[ProjectionEndpointDeclaration, ...],
 ) -> JoinedRecordDesign:
@@ -196,6 +235,8 @@ def _join_record_design_semantics(
     return JoinedRecordDesign(
         modelo=semantic_map.modelo,
         source=intermediate.source,
+        authored_semantic_map=authored_semantic_map,
+        compiled_semantic_map=semantic_map,
         revision_id=revision_id,
         records=joined_records,
         fields=tuple(field for record in joined_records for field in record.fields),

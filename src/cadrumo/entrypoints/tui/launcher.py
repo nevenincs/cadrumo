@@ -8,12 +8,17 @@ from contextlib import ExitStack, asynccontextmanager, contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 
 if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
 
+    from ...application.modelo.work_review import ModeloWorkReview
+    from ...application.modelo.workspace_models import ModeloWorkspaceStaticInspectionResultV1
     from ...application.operations.composition import OperationComposedServices
+    from ...core.external_constants import OutputLanguage
+    from ...domain.modelos.work_unit import WorkUnit
 
 
 def load_modelo_work_unit_catalogue(bucket_id: str) -> WorkUnitCatalogue:
@@ -21,6 +26,96 @@ def load_modelo_work_unit_catalogue(bucket_id: str) -> WorkUnitCatalogue:
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 
     return WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
+
+
+def _require_active_bucket_id(bucket_id: str | None) -> str:
+    """Resolve the bucket a session reads, refusing a cold start outright.
+
+    A session that reached a work destination without a profile has nothing to
+    render, and the honest report is a refusal rather than an empty surface
+    that looks like a profile holding no work.
+    """
+    from ...core.bucket_pointer import resolve_active_bucket_id
+
+    resolved = bucket_id or resolve_active_bucket_id()
+    if resolved is None:
+        raise ModeloError("no active profile: a work destination needs one profile's bucket to read")
+    return resolved
+
+
+def resolve_modelo_work_unit(*, work_unit_id: str, bucket_id: str | None) -> WorkUnit:
+    """Resolve one work unit by exact id at the TUI composition boundary.
+
+    The identifier is all that crosses into this process, so the record it
+    names is read here rather than received. That is what makes the surface a
+    read of current persistence instead of a projection of whatever a sibling
+    entrypoint held when it asked for the destination.
+    """
+    from ...application.modelo.work_addressing import resolve_modelo_work_unit_for_operator_target
+
+    resolved_bucket_id = _require_active_bucket_id(bucket_id)
+    return resolve_modelo_work_unit_for_operator_target(
+        work_unit_id=work_unit_id,
+        bucket_id=bucket_id,
+        catalogue=load_modelo_work_unit_catalogue(resolved_bucket_id),
+        resolved_bucket_id=resolved_bucket_id,
+    )
+
+
+def load_modelo_work_units(*, bucket_id: str | None, include_discarded: bool) -> tuple[WorkUnit, ...]:
+    """Read the work units a picker offers at the TUI composition boundary."""
+    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ...application.modelo.work_lifecycle import list_work_units
+
+    resolved_bucket_id = _require_active_bucket_id(bucket_id)
+    return list_work_units(
+        bucket_id=bucket_id,
+        include_discarded=include_discarded,
+        repository=WorkUnitCatalogueRepository(bucket_id=resolved_bucket_id),
+    )
+
+
+def build_modelo_work_review_for_unit(unit: WorkUnit) -> ModeloWorkReview:
+    """Build the canonical review record for one resolved unit."""
+    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+    from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ...application.modelo.work_review import build_modelo_work_review
+
+    return build_modelo_work_review(
+        unit.bucket_id,
+        unit.modelo,
+        unit.filing_year,
+        unit.period,
+        work_unit_repository=WorkUnitCatalogueRepository(),
+        calculation_repository=CalculationRevisionCatalogueRepository(),
+        verification_repository=VerificationReportCatalogueRepository(),
+    )
+
+
+def resolve_modelo_workspace_static_inspection(
+    unit: WorkUnit, *, output_language: OutputLanguage
+) -> ModeloWorkspaceStaticInspectionResultV1:
+    """Assemble the workspace read result for one resolved unit."""
+    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ...application.modelo.work_addressing import ModeloVisibleFilingTarget
+    from ...application.modelo.workspace import resolve_static_inspection_result
+    from ...application.modelo.workspace_models import ModeloWorkspaceVisibleFilingTargetV1
+    from ...domain.calculations.registry.authority import bundled_authority
+
+    return resolve_static_inspection_result(
+        ModeloWorkspaceVisibleFilingTargetV1(
+            target=ModeloVisibleFilingTarget(
+                modelo=unit.modelo,
+                filing_year=unit.filing_year,
+                period=unit.period,
+            )
+        ),
+        bucket_id=unit.bucket_id,
+        catalogue_repository=WorkUnitCatalogueRepository(),
+        authority=bundled_authority(),
+        output_language=output_language,
+    )
 
 
 @contextmanager
@@ -106,4 +201,13 @@ def main(*, headless: bool = False, auto_pilot: AutopilotCallbackType | None = N
     return 0
 
 
-__all__ = ["load_modelo_work_unit_catalogue", "main", "operation_services_scope", "profile_storage_scope"]
+__all__ = [
+    "build_modelo_work_review_for_unit",
+    "load_modelo_work_unit_catalogue",
+    "load_modelo_work_units",
+    "main",
+    "operation_services_scope",
+    "profile_storage_scope",
+    "resolve_modelo_work_unit",
+    "resolve_modelo_workspace_static_inspection",
+]

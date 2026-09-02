@@ -14,6 +14,7 @@ from ..errors import RegistrySnapshotError
 from ..loader import load_modelo_directory
 from ..loader_cache import discover_modelo_sources
 from ..schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from ..schema_base import EvidenceTier
 from ..schema_input_kind import InputKind
 from ..temporal import select_revision
 from ._registry_schema_support import _committed_registry_tree
@@ -74,12 +75,12 @@ def test_committed_modelo_036_has_registry_authority_coverage() -> None:
     ledger = build_model_law_coverage_ledger(snapshot)
     gates = {gate.tier: gate for gate in ledger.gates}
 
-    assert gates["legal_authority"].status == "satisfied"
-    assert "orden-hac-1526-2024:art-1" in gates["legal_authority"].legal_refs
-    assert gates["official_source_guidance"].status == "satisfied"
-    assert "aeat-modelo-036-procedure" in gates["official_source_guidance"].source_refs
-    assert gates["layout_authority"].status == "satisfied"
-    assert "aeat-dr-036-2025" in gates["layout_authority"].source_refs
+    assert gates[EvidenceTier.LEGAL_AUTHORITY].status == "satisfied"
+    assert "orden-hac-1526-2024:art-1" in gates[EvidenceTier.LEGAL_AUTHORITY].legal_refs
+    assert gates[EvidenceTier.OFFICIAL_SOURCE_GUIDANCE].status == "satisfied"
+    assert "aeat-modelo-036-procedure" in gates[EvidenceTier.OFFICIAL_SOURCE_GUIDANCE].source_refs
+    assert gates[EvidenceTier.LAYOUT_AUTHORITY].status == "satisfied"
+    assert "aeat-dr-036-2025" in gates[EvidenceTier.LAYOUT_AUTHORITY].source_refs
 
 
 def test_committed_modelo_036_record_design_source_matches_manifest() -> None:

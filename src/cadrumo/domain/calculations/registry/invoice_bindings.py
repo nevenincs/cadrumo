@@ -16,6 +16,7 @@ from ....core.filing_year import FilingYear
 from ....core.identity import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
 from ._invoice_row_materialization import (
+    InvoiceGrouping,
     build_invoice_rows,
     m349_public_row_union,
     normalise_m349_nif_export_rows,
@@ -63,7 +64,6 @@ string for an enum-typed field, so the token is coerced at the boundary.
 """
 
 
-_InvoiceGrouping = Literal["operator_clave", "operator_clave_period", "contraparte_clave"]
 _InvoiceRowField = Literal[
     "party_tax_id",
     "country_code",
@@ -206,7 +206,7 @@ class _InvoiceSelector(BaseModel):
     rectification_scope: RectificationScopeField = RectificationScope.ANY
     iva_regime: str | None = Field(default=None, max_length=64)
     row_field: _InvoiceRowField | None = None
-    grouping: _InvoiceGrouping | None = None
+    grouping: InvoiceGrouping | None = None
     record: str | None = Field(default=None, min_length=1, max_length=64)
     data_type: BindingExportDataType | None = None
     """Scalar type of the value this row field contributes to the export.
@@ -613,7 +613,7 @@ def resolve_invoice_family_row_values(
     """
     resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     cohorts: dict[
-        tuple[object, _InvoiceGrouping, RectificationScope, tuple[str, ...], str | None],
+        tuple[object, InvoiceGrouping, RectificationScope, tuple[str, ...], str | None],
         list[tuple[DataBindingDefinition, _InvoiceSelector]],
     ] = {}
     for binding in revision.bindings:

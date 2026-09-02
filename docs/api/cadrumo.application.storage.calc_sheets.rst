@@ -14,7 +14,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.storage.calc_sheets._parity_comparison
-   cadrumo.application.storage.calc_sheets._row_set_assembly
    cadrumo.application.storage.calc_sheets._styling
    cadrumo.application.storage.calc_sheets._translator
    cadrumo.application.storage.calc_sheets.engine
@@ -24,5 +23,6 @@ Submodules
    cadrumo.application.storage.calc_sheets.layout
    cadrumo.application.storage.calc_sheets.parity_harness
    cadrumo.application.storage.calc_sheets.records
+   cadrumo.application.storage.calc_sheets.row_set_assembly
    cadrumo.application.storage.calc_sheets.theme
    cadrumo.application.storage.calc_sheets.workbook_export
