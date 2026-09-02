@@ -51,7 +51,12 @@ from ...domain.calculations.registry.ids import (
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ...domain.calculations.row_source_identity import RowBindingKey, RowSourceIdentity
-from ...domain.modelos.calculation_revision import M303RegimenSimplificadoAnnualSummaryHandoff
+from ...domain.modelos.calculation_revision import (
+    M303RegimenSimplificadoAnnualSummaryHandoff,
+    empty_row_casilla_provenance,
+    empty_row_casilla_values,
+    empty_row_source_identities,
+)
 from ...domain.modelos.row_models import ModeloDetailRow
 from .errors import AggregationValidationError, t
 
@@ -68,18 +73,6 @@ _ROW_CASILLA_PROVENANCE = TypeAdapter(dict[RowCasillaKey, DirectRowMaterializati
 
 
 def _empty_row_binding_values() -> dict[RowBindingKey, RowBindingValue]:
-    return {}
-
-
-def _empty_row_source_identities() -> dict[RowBindingKey, RowSourceIdentity]:
-    return {}
-
-
-def _empty_row_casilla_values() -> dict[RowCasillaKey, Decimal]:
-    return {}
-
-
-def _empty_row_casilla_provenance() -> dict[RowCasillaKey, DirectRowMaterializationProvenance]:
     return {}
 
 
@@ -803,13 +796,13 @@ class CalculationSourceResolution(BaseModel):
     date_binding_values: Mapping[BindingId, date] = Field(default_factory=dict)
     row_binding_values: Mapping[RowBindingKey, RowBindingValue] = Field(default_factory=_empty_row_binding_values)
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] = Field(
-        default_factory=_empty_row_source_identities,
+        default_factory=empty_row_source_identities,
         exclude=True,
         repr=False,
     )
-    row_casilla_values: Mapping[RowCasillaKey, Decimal] = Field(default_factory=_empty_row_casilla_values)
+    row_casilla_values: Mapping[RowCasillaKey, Decimal] = Field(default_factory=empty_row_casilla_values)
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] = Field(
-        default_factory=_empty_row_casilla_provenance,
+        default_factory=empty_row_casilla_provenance,
         exclude=True,
         repr=False,
     )

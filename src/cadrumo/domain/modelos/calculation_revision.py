@@ -154,15 +154,15 @@ def _string_keyed_context(context: object) -> Mapping[str, object] | None:
     return TypeAdapter(Mapping[str, object]).validate_python(context)
 
 
-def _empty_row_source_identities() -> dict[RowBindingKey, RowSourceIdentity]:
+def empty_row_source_identities() -> dict[RowBindingKey, RowSourceIdentity]:
     return {}
 
 
-def _empty_row_casilla_values() -> dict[RowCasillaKey, Decimal]:
+def empty_row_casilla_values() -> dict[RowCasillaKey, Decimal]:
     return {}
 
 
-def _empty_row_casilla_provenance() -> dict[RowCasillaKey, DirectRowMaterializationProvenance]:
+def empty_row_casilla_provenance() -> dict[RowCasillaKey, DirectRowMaterializationProvenance]:
     return {}
 
 
@@ -667,12 +667,12 @@ class CalculationRevision(BaseModel):
     binding_overrides: Mapping[BindingId, str] = Field(default_factory=dict)
     row_binding_values: Mapping[BindingId, Mapping[str, str]] = Field(default_factory=dict)
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] = Field(
-        default_factory=_empty_row_source_identities,
+        default_factory=empty_row_source_identities,
         repr=False,
     )
-    row_casilla_values: Mapping[RowCasillaKey, Decimal] = Field(default_factory=_empty_row_casilla_values, repr=False)
+    row_casilla_values: Mapping[RowCasillaKey, Decimal] = Field(default_factory=empty_row_casilla_values, repr=False)
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] = Field(
-        default_factory=_empty_row_casilla_provenance,
+        default_factory=empty_row_casilla_provenance,
         repr=False,
     )
     relation_overrides: Mapping[RelationId, str] = Field(default_factory=dict)
