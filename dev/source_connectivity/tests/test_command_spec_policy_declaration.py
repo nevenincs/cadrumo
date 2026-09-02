@@ -49,6 +49,11 @@ PROBE_READ = ExecutionPolicySpec(
     write_route="none",
 )
 
+def policy_factory() -> object:
+    return object()
+
+DYNAMIC_POLICY = policy_factory()
+
 PROBE_COMMAND_SPECS = (
     CommandSpec(
         key="probe_add",
@@ -85,3 +90,11 @@ def test_a_non_write_policy_declared_in_the_spec_module_is_still_skipped(tmp_pat
     _write_spec_module(tmp_path, "PROBE_READ")
 
     assert discover_ingress_surfaces(tmp_path) == ()
+
+
+def test_a_leaf_with_a_dynamic_policy_fails_closed(tmp_path: Path) -> None:
+    """A policy factory is not authority until its route is statically declared."""
+    _write_spec_module(tmp_path, "DYNAMIC_POLICY")
+
+    with pytest.raises(ValueError, match="write command spec policy cannot be resolved structurally"):
+        discover_ingress_surfaces(tmp_path)

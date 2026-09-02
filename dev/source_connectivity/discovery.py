@@ -12,6 +12,7 @@ import hashlib
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from importlib.util import resolve_name
 from typing import TYPE_CHECKING, Literal
 
 from cadrumo.domain.calculations.registry.authority import bundled_authority
@@ -21,6 +22,7 @@ if TYPE_CHECKING:
 
 type SecureRepositoryMechanism = Literal["secure_bound", "profile_secure_document", "secure_object"]
 type IngressChannel = Literal["cli", "worksheet"]
+type PolicyResolution = Literal["write", "non_write", "unresolved"]
 
 _SECURE_NAMES = frozenset(
     {
@@ -495,7 +497,11 @@ def _call_argument(
     return value
 
 
-def _policy_name(call: ast.Call, bindings: dict[str, ast.AST], write_policies: frozenset[str]) -> str:
+def _policy_name(
+    call: ast.Call,
+    bindings: dict[str, ast.AST],
+    policy_resolutions: dict[str, PolicyResolution],
+) -> str:
     """Name the execution policy a command spec declares, preferring the declared name.
 
     A policy is matched by the NAME of its module-level constant, so substituting
@@ -509,7 +515,7 @@ def _policy_name(call: ast.Call, bindings: dict[str, ast.AST], write_policies: f
     declared = next((item.value for item in call.keywords if item.arg == "policy"), None)
     if declared is None and len(call.args) > 8:
         declared = call.args[8]
-    if isinstance(declared, ast.Name) and declared.id in write_policies:
+    if isinstance(declared, ast.Name) and policy_resolutions.get(declared.id) in {"write", "non_write"}:
         return declared.id
     node = _call_argument(call, "policy", 8, bindings)
     return _dotted_name(node) if node is not None else ""
@@ -552,39 +558,108 @@ def _policy_factory_names(tree: ast.Module) -> frozenset[str]:
     )
 
 
-def _policy_has_write_route(value: ast.AST, *, factories: frozenset[str]) -> bool:
-    """Whether one literal policy declaration grants a canonical write route."""
+def _policy_route_resolution(value: ast.AST, *, factories: frozenset[str]) -> PolicyResolution:
+    """Classify one literal policy declaration from its canonical write route."""
     if not isinstance(value, ast.Call):
-        return False
+        return "unresolved"
     constructor = _dotted_name(value.func).rsplit(".", maxsplit=1)[-1]
     if constructor != "ExecutionPolicySpec" and constructor not in factories:
-        return False
+        return "unresolved"
     route = next((keyword.value for keyword in value.keywords if keyword.arg == "write_route"), None)
     if route is None and len(value.args) > 3:
         route = value.args[3]
     if route is None:
-        return False
+        return "unresolved"
     member = _dotted_name(route).rsplit(".", maxsplit=1)[-1]
     if isinstance(route, ast.Constant) and isinstance(route.value, str):
         member = route.value.replace("-", "_").upper()
-    return member in _WRITE_ROUTE_MEMBERS
+    if member in _WRITE_ROUTE_MEMBERS:
+        return "write"
+    return "non_write" if member == "NONE" else "unresolved"
+
+
+def _cli_module_name(path: Path, cli_root: Path) -> str:
+    """Return ``path``'s import name without importing or executing it."""
+    parts = path.relative_to(cli_root).with_suffix("").parts
+    return ".".join(("cadrumo", "entrypoints", "cli", *parts))
+
+
+def _imported_policy_bindings(tree: ast.Module, *, module_name: str) -> dict[str, tuple[str, str]]:
+    """Map local aliases to imported policy names without importing their module."""
+    bindings: dict[str, tuple[str, str]] = {}
+    package = module_name.rpartition(".")[0]
+    for node in tree.body:
+        if not isinstance(node, ast.ImportFrom) or node.module is None:
+            continue
+        imported_module = (
+            resolve_name("." * node.level + node.module, package) if node.level else node.module
+        )
+        for alias in node.names:
+            bindings[alias.asname or alias.name] = (imported_module, alias.name)
+    return bindings
+
+
+def _policy_resolutions(cli_root: Path) -> dict[str, dict[str, PolicyResolution]]:
+    """Resolve local/imported policy declarations into write, non-write, or unknown.
+
+    The scan follows only direct AST bindings across files below ``cli_root``.
+    It never imports the command-spec modules, so a dynamic policy stays an
+    unresolved structural defect instead of becoming a side effect of review.
+    """
+    trees = {
+        _cli_module_name(path, cli_root): ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for path in _production_python_files(cli_root)
+    }
+    declarations = {module: _module_level_bindings(tree) for module, tree in trees.items()}
+    imports = {
+        module: _imported_policy_bindings(tree, module_name=module)
+        for module, tree in trees.items()
+    }
+    factories = {module: _policy_factory_names(tree) for module, tree in trees.items()}
+    resolved: dict[tuple[str, str], PolicyResolution] = {}
+    resolving: set[tuple[str, str]] = set()
+
+    def resolve(module: str, name: str) -> PolicyResolution:
+        key = (module, name)
+        if key in resolved:
+            return resolved[key]
+        if key in resolving:
+            return "unresolved"
+        resolving.add(key)
+        value = declarations.get(module, {}).get(name)
+        if value is not None:
+            if isinstance(value, ast.Name):
+                outcome = resolve(module, value.id)
+            else:
+                outcome = _policy_route_resolution(value, factories=factories.get(module, frozenset()))
+        elif target := imports.get(module, {}).get(name):
+            outcome = resolve(*target)
+        else:
+            outcome = "unresolved"
+        resolving.remove(key)
+        resolved[key] = outcome
+        return outcome
+
+    for module, bindings in declarations.items():
+        for name in bindings:
+            resolve(module, name)
+    for module, bindings in imports.items():
+        for name in bindings:
+            resolve(module, name)
+    return {
+        module: {name: resolve(module, name) for name in (*declarations[module], *imports[module])}
+        for module in trees
+    }
 
 
 def _write_policy_names(cli_root: Path) -> frozenset[str]:
-    """Return named policy declarations whose explicit route permits a write."""
-    names: set[str] = set()
-    for path in _production_python_files(cli_root):
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        factories = _policy_factory_names(tree)
-        for node in tree.body:
-            if not isinstance(node, (ast.Assign, ast.AnnAssign)):
-                continue
-            value = node.value
-            targets = node.targets if isinstance(node, ast.Assign) else (node.target,)
-            if value is None or not _policy_has_write_route(value, factories=factories):
-                continue
-            names.update(target.id for target in targets if isinstance(target, ast.Name))
-    return frozenset(names)
+    """Return write-policy names for diagnostics without losing scope in discovery."""
+    return frozenset(
+        name
+        for bindings in _policy_resolutions(cli_root).values()
+        for name, resolution in bindings.items()
+        if resolution == "write"
+    )
 
 
 def _command_kind(call: ast.Call, bindings: dict[str, ast.AST]) -> str | None:
@@ -598,18 +673,18 @@ def _command_kind(call: ast.Call, bindings: dict[str, ast.AST]) -> str | None:
     return None
 
 
-def _is_write_policy(
+def _policy_resolution(
     call: ast.Call,
     bindings: dict[str, ast.AST],
-    write_policies: frozenset[str],
+    policy_resolutions: dict[str, PolicyResolution],
     *,
     factories: frozenset[str],
-) -> bool:
-    """Return whether the command's resolved policy is structurally a write."""
+) -> PolicyResolution:
+    """Classify the resolved command policy, refusing names outside this module scope."""
     policy = _call_argument(call, "policy", 8, bindings)
-    if isinstance(policy, ast.Name) and policy.id in write_policies:
-        return True
-    return _policy_has_write_route(policy, factories=factories)
+    if isinstance(policy, ast.Name):
+        return policy_resolutions.get(policy.id, "unresolved")
+    return _policy_route_resolution(policy, factories=factories)
 
 
 def _module_level_bindings(tree: ast.Module) -> dict[str, ast.AST]:
@@ -638,12 +713,23 @@ def _module_level_bindings(tree: ast.Module) -> dict[str, ast.AST]:
 
 
 def _command_spec_ingress(repo_root: Path, cli_root: Path) -> tuple[IngressCapability, ...]:
-    write_policies = _write_policy_names(cli_root)
+    policies_by_module = _policy_resolutions(cli_root)
     capabilities: list[IngressCapability] = []
     for path in _production_python_files(cli_root):
+        module_name = _cli_module_name(path, cli_root)
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         functions = {node.name: node for node in tree.body if isinstance(node, ast.FunctionDef)}
         leaf_wrapper = functions.get("_leaf")
+        leaf_template_calls = (
+            {
+                id(child)
+                for child in ast.walk(leaf_wrapper)
+                if isinstance(child, ast.Call)
+                and _dotted_name(child.func).rsplit(".", maxsplit=1)[-1] == "CommandSpec"
+            }
+            if leaf_wrapper is not None
+            else set()
+        )
         factories = _policy_factory_names(tree)
         module_bindings = _module_level_bindings(tree)
         for call in (node for node in ast.walk(tree) if isinstance(node, ast.Call)):
@@ -663,15 +749,24 @@ def _command_spec_ingress(repo_root: Path, cli_root: Path) -> tuple[IngressCapab
                 )
             elif call_name != "CommandSpec":
                 continue
+            elif id(call) in leaf_template_calls:
+                # The ``CommandSpec`` inside ``_leaf`` is a parameterized template.
+                # Its policy has meaning only after an actual wrapper call binds it.
+                continue
             kind = _command_kind(command_call, bindings)
-            policy = _policy_name(command_call, bindings, write_policies)
-            if kind != "leaf" or not _is_write_policy(
+            if kind != "leaf":
+                continue
+            policy_resolution = _policy_resolution(
                 command_call,
                 bindings,
-                write_policies,
+                policies_by_module[module_name],
                 factories=factories,
-            ):
+            )
+            if policy_resolution == "non_write":
                 continue
+            if policy_resolution == "unresolved":
+                raise ValueError(f"write command spec policy cannot be resolved structurally: {path}:{call.lineno}")
+            policy = _policy_name(command_call, bindings, policies_by_module[module_name])
             target = _deferred_handler_target(_call_argument(command_call, "handler", 9, bindings), functions, bindings)
             token = _string_value(_call_argument(command_call, "token", 2, bindings), bindings)
             parent = _string_value(_call_argument(command_call, "parent_key", 1, bindings), bindings)
