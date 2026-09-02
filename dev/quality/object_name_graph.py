@@ -308,6 +308,8 @@ def _boundary(path: str) -> str:
         return "dev"
     if len(parts) >= 3 and parts[0] == "src":
         if parts[1] == "cadrumo" and len(parts) >= 3:
+            if len(parts) == 3 and PurePosixPath(path).suffix == ".py":
+                return "src/cadrumo"
             return f"src/cadrumo/{parts[2]}"
         return f"src/{parts[1]}"
     return parts[0]
