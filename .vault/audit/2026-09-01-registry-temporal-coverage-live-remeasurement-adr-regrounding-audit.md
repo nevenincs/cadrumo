@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:079781f458f2fe31a44d73a933e849acac2bf33fb7fbd5e003b6b7e1dcd60920'
+body_hash: 'sha256:adaa7bfc01b93958001133c473a86a7d961f54a3782da719a9b48f03ce42de59'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -3031,6 +3031,54 @@ place, run, and remove it again. It touches only the edit being tested, cannot
 discard anyone else's work, and compares against the tree as it actually is. Two
 attributions were re-done that way and both came back identical, which is the
 result the earlier method was reaching for without the risk.
+
+### uncommitted-canonicalisation-was-reverted-by-another-contributor-s-commits | high | The definitions survived and the consumer repointing did not, which is the worse half
+
+Three collapses completed in this session were undone without anyone intending
+it. While the work was uncommitted, the other contributor committed three times
+and the working-tree edits to nine command-spec modules, six live CLI modules and
+one registry internals module were overwritten.
+
+The asymmetry is what matters. Every canonical definition survived - eleven new
+helpers and one deleted module - because those landed in files the commits kept.
+What reverted was the *consumer* side: the local copies came back and now sat
+beside the canonical helper rather than instead of it. That is a worse state than
+before the work started, because the tree then carries both the shared definition
+and the duplicates it was meant to replace, and a reader has no way to tell which
+one is authoritative.
+
+It was detected only because the duplicate census was re-run and two counts that
+had gone to zero were back at nine and five. Nothing failed; the code worked
+exactly as it had. A canonicalisation that is reverted leaves no failing test,
+which is precisely why the measurement has to be repeated rather than trusted
+from the last run.
+
+All three are re-applied and verified by object identity. The general lesson for
+this kind of work in a shared tree is that a collapse is not durable until it is
+committed, and that the census is the only thing that notices when it is lost.
+
+### five-of-the-nine-remaining-duplicates-are-not-duplicates | medium | Same syntax over a per-module constant, verified by reading rather than by pattern
+
+Of the nine duplicate function bodies left, five are artefacts of comparing
+syntax rather than meaning, and each was settled by reading the constant the body
+references.
+
+Two sede helpers call `assert_read_http_for(READ_GUARD_POLICY, ...)` and
+`assert_query_browser_action_for(READ_GUARD_POLICY, ...)`. `READ_GUARD_POLICY` is
+declared separately in each sede module, so five apparently identical bodies
+guard five different policies. A command-spec helper indexes `_HANDLER_MODULES`,
+a table each spec module owns. A repository helper calls a per-module `factory`.
+And the verdict extractor reads per-module marker phrases while both callers
+already delegate to one shared extractor.
+
+Collapsing any of them would parameterise away the thing that distinguishes the
+modules, which is the opposite of the goal: it would replace five honest
+declarations with one function taking five arguments.
+
+The measurement limitation is now stated plainly: an AST body comparison treats a
+module-scoped name as equal wherever the name matches, whatever it holds. It
+finds candidates. Only reading them decides, and five of nine here died on
+reading.
 
 
 ## Recommendations

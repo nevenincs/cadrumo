@@ -676,6 +676,48 @@ The transferable rule is cheap enough to always apply: a stated limitation is a
 hypothesis until a call is made against it, and in a codebase with a live interpreter
 that call is almost always shorter than the sentence asserting the limitation.
 
+### the-zero-was-registry-scoped-and-was-reported-as-if-global | critical | Package-wide the same predicate finds forty-two duplicated vocabularies, three of them crossing the scanned boundary
+
+The scan, and therefore the gate, reads one package: the registry schema. Run over the
+whole product package instead, the identical predicate finds 42 duplicated
+vocabularies, and 3 of those have one declaration inside the scanned package and one
+outside it. Those three are invisible to the shipped instrument by construction, not
+by oversight, because it cannot see across the boundary it is scoped to.
+
+The sharpest is the casilla data-type vocabulary. Its nineteen members were rooted
+into a canonical enum inside the registry during this campaign, and the same nineteen
+members are declared again at a modelo edit surface in the application layer. The
+campaign built the canonical definition and never saw the copy.
+
+The reporting failure is the finding. The registry-scoped zero is real and the gate's
+own docstring says "schema field", but the progress reports said "duplicated fourteen
+to zero" without the qualifier carrying any weight, which reads as a claim about the
+codebase. It is not one. Every future statement of this number needs its scope
+attached, and the follow-on question -- whether the gate should widen to the package
+or a second gate should own the boundary -- is open and unargued.
+
+A smaller error rode along: the canonical data-type enum was reported as having twenty
+members and has nineteen. It was never counted.
+
+### a-peer-commit-dropped-two-promotions-and-the-gate-caught-it | high | The tree is co-owned, and the gate proved to be the thing that noticed
+
+Two promotions that had landed and verified -- the date axis and the casilla data type
+-- are absent from the working tree. Neither was reverted by this campaign. A peer
+session committed the registry package as it saw it, twice, and those snapshots
+predated the two later promotions; both files are now clean against the peer's
+commits, so the work is gone rather than merely uncommitted.
+
+The peer's commit subjects name this campaign's own work, so the two sessions are
+promoting the same vocabularies into the same files concurrently. That is a
+coordination failure rather than a technical one, and it has a cost worth recording:
+re-landing now means writing files another session is actively committing, which is
+how the two promotions were lost in the first place.
+
+What worked is the gate. It went red on the exact two vocabularies within one call of
+the regression, named both, and cost nothing to run. A campaign whose verification
+depended on a forty-minute suite would have reported completion and learned this much
+later, if at all.
+
 ## Recommendations
 
 Collapse the duplicate codec members to one, which is a correctness repair
