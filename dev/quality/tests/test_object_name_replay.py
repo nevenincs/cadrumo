@@ -9,10 +9,18 @@ from typing import Any, cast
 
 import pytest
 
+from cadrumo.core.hashing import canonical_json_bytes
+
 from ...audit.object_names import scan, to_json
 from .. import object_name_graph as graph_module
 from .. import object_name_replay as replay_module
-from ..object_name_graph import build_manifest_components, collect_import_edges, operation_locators
+from ..object_name_graph import (
+    HardEdge,
+    ReferenceKind,
+    build_manifest_components,
+    collect_import_edges,
+    operation_locators,
+)
 from ..object_name_manifest import ObjectNameRenameManifest
 from ..object_name_rehearsal import ObjectNameRehearsalReceipt, rehearse_object_name_component
 from ..object_name_replay import ObjectNameReplayError, replay_object_name_component
@@ -104,6 +112,51 @@ def _module_case(tmp_path: Path) -> tuple[Path, Any, Any, Any, ObjectNameRehears
     return repo, inventory, manifest, component, receipt
 
 
+def _generated_case(tmp_path: Path) -> tuple[Path, Any, Any, Any, ObjectNameRehearsalReceipt]:
+    repo = tmp_path / "repo"
+    inventory, manifest, _component = _fixture(repo)
+    generated_path = "dev/generated.txt"
+    generated_before = b"generated Widgets\n"
+    _write(repo, generated_path, generated_before)
+    inventory = scan((repo / "src", repo / "dev"), repo)
+    command = (
+        (
+            sys.executable,
+            "-c",
+            "from pathlib import Path; Path('dev/generated.txt').write_bytes(b'generated Widget\\n')",
+        ),
+    )
+    operation = manifest.operations[0].model_copy(
+        update={
+            "expected_reference_classes": ("definition", "generated-artifact"),
+            "changed_paths": ("src/example/contracts.py", generated_path),
+            "generator_commands": command,
+            "preconditions": (
+                *manifest.operations[0].preconditions,
+                manifest.operations[0]
+                .preconditions[0]
+                .model_copy(update={"path": generated_path, "sha256": _digest(generated_before)}),
+            ),
+        }
+    )
+    manifest = manifest.model_copy(
+        update={"inventory_digest": to_json(inventory)["inventory_digest"], "operations": (operation,)}
+    )
+    edge = HardEdge(
+        "rename-widgets",
+        generated_path,
+        ReferenceKind.GENERATED_ARTIFACT,
+        generator_owner=canonical_json_bytes(command).decode("utf-8"),
+    )
+    component = build_manifest_components(
+        manifest,  # ty: ignore[invalid-argument-type]
+        inventory=inventory,  # ty: ignore[invalid-argument-type]
+        hard_edges=(edge,),
+    )[0]
+    receipt = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
+    return repo, inventory, manifest, component, receipt
+
+
 def test_successful_symbol_replay_applies_exact_receipt_and_preserves_unrelated_bytes(tmp_path: Path) -> None:
     repo, inventory, manifest, component, receipt = _case(tmp_path)
     unrelated = (repo / "dev/tracked.txt").read_bytes()
@@ -120,6 +173,21 @@ def test_successful_symbol_replay_applies_exact_receipt_and_preserves_unrelated_
     assert not (
         repo.parent / f".{repo.name}.object-name-transaction-{receipt.receipt_id.removeprefix('sha256:')}"
     ).exists()
+
+
+def test_successful_generator_backed_replay_applies_and_reports_exact_owner_output(tmp_path: Path) -> None:
+    repo, inventory, manifest, component, receipt = _generated_case(tmp_path)
+
+    result = replay_object_name_component(
+        manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
+    )
+
+    assert result.generator_outcomes == receipt.generator_outcomes
+    assert len(result.generator_outcomes) == 1
+    assert result.generator_outcomes[0].argv == manifest.operations[0].generator_commands[0]
+    assert result.generator_outcomes[0].return_code == 0
+    assert (repo / "dev/generated.txt").read_bytes() == b"generated Widget\n"
+    assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
 
 
 def test_successful_module_replay_uses_deterministic_mixed_transaction_order(
@@ -355,6 +423,34 @@ def test_authority_and_regenerated_evidence_drift_refuses_before_transaction(
             inventory=supplied_inventory,
             component=supplied_component,
             receipt=supplied_receipt,
+            repo_root=repo,
+        )
+
+    assert writes == []
+
+
+@pytest.mark.parametrize("forgery", ["affected-paths", "hard-edges"])
+def test_component_structural_forgery_reaches_canonical_preflight_and_refuses(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, forgery: str
+) -> None:
+    repo, inventory, manifest, component, receipt = _case(tmp_path)
+    if forgery == "affected-paths":
+        supplied_component = replace(component, affected_paths=(*component.affected_paths, "dev/forged.py"))
+    else:
+        supplied_component = replace(component, hard_edges=())
+    writes: list[str] = []
+    monkeypatch.setattr(replay_module, "_replace_staged", lambda *_args, **_kwargs: writes.append("replace"))
+    monkeypatch.setattr(replay_module, "_unlink_regular", lambda *_args, **_kwargs: writes.append("unlink"))
+
+    with pytest.raises(
+        ObjectNameReplayError,
+        match=r"exact preflight rehearsal refused replay: supplied component differs from the canonical repository graph",
+    ):
+        replay_object_name_component(
+            manifest,
+            inventory=inventory,
+            component=supplied_component,
+            receipt=receipt,
             repo_root=repo,
         )
 
@@ -643,6 +739,33 @@ def test_base_exception_during_apply_is_rolled_back(tmp_path: Path, monkeypatch:
     assert _live_bytes(repo) == before
 
 
+@pytest.mark.parametrize(("method", "position"), [("replace", 2), ("unlink", 1)])
+def test_base_exception_after_partial_mixed_mutation_restores_exact_live_bytes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, method: str, position: int
+) -> None:
+    repo, inventory, manifest, component, receipt = _module_case(tmp_path)
+    before = _live_bytes(repo)
+    attribute = "_replace_staged" if method == "replace" else "_unlink_regular"
+    original = getattr(replay_module, attribute)
+    calls = 0
+
+    def apply_then_interrupt(*args: Any, **kwargs: Any) -> None:
+        nonlocal calls
+        calls += 1
+        original(*args, **kwargs)
+        if calls == position:
+            raise KeyboardInterrupt(f"after-{method}-{position}")
+
+    monkeypatch.setattr(replay_module, attribute, apply_then_interrupt)
+
+    with pytest.raises(ObjectNameReplayError, match=r"live replay failed and was rolled back: after-"):
+        replay_object_name_component(
+            manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
+        )
+
+    assert _live_bytes(repo) == before
+
+
 def test_linked_root_and_unsafe_receipt_paths_refuse_without_writes(tmp_path: Path) -> None:
     repo, inventory, manifest, component, receipt = _case(tmp_path)
     linked = tmp_path / "linked-repo"
@@ -673,3 +796,56 @@ def test_cleanup_failure_does_not_mask_primary_apply_error(tmp_path: Path, monke
         replay_object_name_component(
             manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
         )
+
+
+def test_cleanup_failure_after_successful_apply_is_reported_and_keeps_transaction_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo, inventory, manifest, component, receipt = _case(tmp_path)
+    transaction = repo.parent / f".{repo.name}.object-name-transaction-{receipt.receipt_id.removeprefix('sha256:')}"
+    monkeypatch.setattr(
+        replay_module,
+        "_cleanup",
+        lambda *_args: (_ for _ in ()).throw(OSError("cleanup after success")),
+    )
+
+    with pytest.raises(ObjectNameReplayError, match="replay stage cleanup failed"):
+        replay_object_name_component(
+            manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
+        )
+
+    assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
+    assert transaction.is_dir()
+
+
+def test_rollback_failure_precedes_cleanup_failure_and_keeps_transaction_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo, inventory, manifest, component, receipt = _case(tmp_path)
+    transaction = repo.parent / f".{repo.name}.object-name-transaction-{receipt.receipt_id.removeprefix('sha256:')}"
+    monkeypatch.setattr(
+        replay_module,
+        "_run_gates_in_verified_copy",
+        lambda **_kwargs: (_ for _ in ()).throw(ObjectNameReplayError("apply failed")),
+    )
+    monkeypatch.setattr(
+        replay_module,
+        "_restore",
+        lambda **_kwargs: (_ for _ in ()).throw(ObjectNameReplayError("rollback failed")),
+    )
+    monkeypatch.setattr(
+        replay_module,
+        "_cleanup",
+        lambda *_args: (_ for _ in ()).throw(OSError("cleanup failed")),
+    )
+
+    with pytest.raises(
+        ObjectNameReplayError,
+        match=r"replay_error=apply failed; rollback_error=rollback failed",
+    ) as raised:
+        replay_object_name_component(
+            manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
+        )
+
+    assert "cleanup failed" not in str(raised.value)
+    assert transaction.is_dir()
