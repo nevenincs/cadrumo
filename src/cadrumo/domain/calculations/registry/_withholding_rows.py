@@ -358,10 +358,9 @@ def _finalise_190_special_fields(
     # The totals helpers (percibido_total / retencion_total) add the two parts
     # back together, so the resumen-anual magnitudes stay the row's full total.
     incap_dineraria = _declares_incapacidad_dineraria(clave, subclave)
-    incap_cash = row["incapacity_cash_perception"]
+    incap_cash = _numeric_slot(row, "incapacity_cash_perception")
     incap_kind_value = row["incapacity_kind_value"]
     incap_kind_ingreso = row["incapacity_kind_ingreso_a_cuenta"]
-    assert isinstance(incap_cash, Decimal)
     if "incapacity_cash_perception" in required_fields and incap_cash != 0 and not incap_dineraria:
         raise RegistryValidationError(
             f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
@@ -394,7 +393,7 @@ def _finalise_190_special_fields(
 
     if "foral_retention_estatal" in required_fields:
         foral_parts = tuple(
-            row[field]
+            _numeric_slot(row, field)
             for field in (
                 "foral_retention_estatal",
                 "foral_retention_navarra",
@@ -403,12 +402,9 @@ def _finalise_190_special_fields(
                 "foral_retention_bizkaia",
             )
         )
-        assert all(isinstance(part, Decimal) for part in foral_parts)
         foral_total = sum(foral_parts, Decimal("0"))
-        retencion_practicada = row["retencion_practicada"]
-        ingreso_a_cuenta = row["ingreso_a_cuenta"]
-        assert isinstance(retencion_practicada, Decimal)
-        assert isinstance(ingreso_a_cuenta, Decimal)
+        retencion_practicada = _numeric_slot(row, "retencion_practicada")
+        ingreso_a_cuenta = _numeric_slot(row, "ingreso_a_cuenta")
         clave_e_total = retencion_practicada + ingreso_a_cuenta
         if any(part != 0 for part in foral_parts) and clave != "E":
             raise RegistryValidationError(
@@ -772,6 +768,22 @@ def _finalise_row_defaults(
     finalised["accrual_year"] = str(accrual_year) if accrual_year is not None else "0000"
 
 
+def _numeric_slot(row: Mapping[str, Decimal | str], field: str) -> Decimal:
+    """Return the accumulated amount at ``field``, refusing a non-numeric slot.
+
+    A withholding accumulator holds both monetary totals and the clave/code
+    strings that key them, so every arithmetic read has to establish which it
+    got. Refusing here keeps that check in the built artefact: an ``assert``
+    would vanish under ``python -O`` and let a code string reach a sum.
+    """
+    value = row[field]
+    if not isinstance(value, Decimal):
+        raise RegistryValidationError(
+            f"withholding accumulator field {field!r} holds a non-numeric value",
+        )
+    return value
+
+
 def _finalise_withholding_row(
     row: Mapping[str, Decimal | str],
     *,
@@ -956,24 +968,15 @@ def build_withholding_rows(
                 *_DATOS_ADICIONALES_COUNT_FIELDS,
             ),
         )
-        prev_dinerario = bucket["percibido_dinerario"]
-        prev_especie = bucket["percibido_especie"]
-        prev_retencion = bucket["retencion_practicada"]
-        prev_ingreso = bucket["ingreso_a_cuenta"]
-        prev_repercutido = bucket["ingreso_a_cuenta_repercutido"]
-        prev_reducciones = bucket["reducciones_aplicables"]
-        prev_gastos = bucket["gastos_deducibles"]
-        prev_pension = bucket["pension_compensatoria"]
-        prev_anualidades = bucket["anualidades_alimentos"]
-        assert isinstance(prev_dinerario, Decimal)
-        assert isinstance(prev_especie, Decimal)
-        assert isinstance(prev_retencion, Decimal)
-        assert isinstance(prev_ingreso, Decimal)
-        assert isinstance(prev_repercutido, Decimal)
-        assert isinstance(prev_reducciones, Decimal)
-        assert isinstance(prev_gastos, Decimal)
-        assert isinstance(prev_pension, Decimal)
-        assert isinstance(prev_anualidades, Decimal)
+        prev_dinerario = _numeric_slot(bucket, "percibido_dinerario")
+        prev_especie = _numeric_slot(bucket, "percibido_especie")
+        prev_retencion = _numeric_slot(bucket, "retencion_practicada")
+        prev_ingreso = _numeric_slot(bucket, "ingreso_a_cuenta")
+        prev_repercutido = _numeric_slot(bucket, "ingreso_a_cuenta_repercutido")
+        prev_reducciones = _numeric_slot(bucket, "reducciones_aplicables")
+        prev_gastos = _numeric_slot(bucket, "gastos_deducibles")
+        prev_pension = _numeric_slot(bucket, "pension_compensatoria")
+        prev_anualidades = _numeric_slot(bucket, "anualidades_alimentos")
         bucket["percibido_dinerario"] = prev_dinerario + observation.percibido_dinerario
         bucket["percibido_especie"] = prev_especie + observation.percibido_especie
         bucket["retencion_practicada"] = prev_retencion + observation.retencion_practicada
@@ -1001,8 +1004,7 @@ def build_withholding_rows(
             "compensaciones",
             "garantias",
         ):
-            previous = bucket[amount_field]
-            assert isinstance(previous, Decimal)
+            previous = _numeric_slot(bucket, amount_field)
             bucket[amount_field] = previous + getattr(observation, amount_field)
     return tuple(
         _finalise_withholding_row(accum[key], required_fields=required_fields, row_number=index)
