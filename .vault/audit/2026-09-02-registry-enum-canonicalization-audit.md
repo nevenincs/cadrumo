@@ -1207,3 +1207,57 @@ would assert a zero that is not true, and the choice above belongs to the operat
 
 Package-wide after twenty-three targets: 1 duplicated (this false positive), 0 crossing
 the registry boundary. Registry-schema-scoped remains 0 with 73 vocabularies at 73 fields.
+
+## Finding 55 — the blind spot, measured for the first time
+
+The annotation scan's limitation has been documented since the instrument was written
+and quantified only by anecdote: every target had more sites than it reported. A second
+scan now reads the four positions it cannot -- function parameters and return types,
+module-level literal aliases, membership containers, and inline membership tests.
+
+It finds 1410 declarations in those positions, 1366 distinct member sets, and 28 sets
+declared in more than one place. That population has never been visible to any gate in
+this campaign, and it is roughly the same order as the annotation population the campaign
+has spent its whole life reducing.
+
+Several are inside the registry, which is where the operator's original concern sits:
+`[decimal, integer, money, ratio]` at three sites, `[decimal, integer, money]` at three,
+`[A, B, D]` at four across two withholding modules, `[authenticated_read_surface,
+public_read_surface]` at three, and `[live, replay]` at three.
+
+## Finding 56 — two numeric narrowings, told apart rather than merged
+
+`{decimal, integer, money, ratio}` is the set a formula may consume as a scalar operand.
+`{decimal, integer, money}` is the set written right-justified and zero-padded in a
+fixed-width export. They differ by `ratio`, and that difference is the whole point: a
+ratio is a scalar a formula can read and is not a zero-padded numeral.
+
+Both are now `Final` frozensets of `CasillaDataType` MEMBERS in `schema_base.py`, beside
+the enum they narrow, and the five sites that spelled them out import them.
+
+A `StrEnum` member hashes as its own string, so a frozenset of members accepts a raw
+token and a member alike. That was verified against the live enum before the edit rather
+than inferred -- had it been false, every one of these membership tests would have
+started returning `False` and the export would have silently switched padding.
+
+869 registry export and formula tests pass.
+
+## Finding 57 — an isolation floor that this campaign's own promotion moved
+
+`test_record_design_source_selection.py` pins the exact set of globals
+`resolve_record_design_binary` may reference, to prove record-design selection never
+consults export-layout machinery. It failed with one extra name: `RegistrySourceKind`.
+
+That is this campaign's debt. The selector used to compare `source.kind` against a bare
+string; the earlier promotion made it compare against the member the schema defines,
+which added a global reference. The test's own comment anticipates exactly this -- it
+warns that a floor pinning a stale spelling "reds on someone else's correct relocation".
+
+The floor was updated rather than the code reverted, because the isolation the test
+protects is untouched: `RegistrySourceKind` is defined in `schema_base`, which is schema
+vocabulary and not an export layout, and the test's separate assertion that the selector
+imports no export-layout module still has to hold on its own. 22 tests pass.
+
+Worth stating plainly: a promotion that replaces a string comparison with a member
+reference changes a function's global set, and any test asserting that set exactly will
+fail. This is the second class of collateral the campaign has produced, after imports.

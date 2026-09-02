@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:5fe50bb6da555f71e7dd36213192e7efcba1bc24e8ebb1e56721bf2430cd1cc8'
+body_hash: 'sha256:e53c8305109cb13a881037d826cb4a43ab3edac3373f41b91a47c69d639b6061'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -647,6 +647,12 @@ directly - what the readiness check demands against what the tool is configured 
 so a new companion cannot be added without the versioning learning to bump it, and a
 configured path carrying no annotation is reported rather than silently written back
 unchanged.
+
+A run confirms it rather than the configuration implying it. The release branch written
+after the fix landed carries all six surfaces at `0.3.0`: the root project and both
+companion projects, the initialiser, the manifest, and both exact pins rewritten in place
+on their annotated lines. The branch written before it carried four, and the two it
+omitted are exactly the two the readiness gate would have refused the release for.
 
 ### Not investigated
 
