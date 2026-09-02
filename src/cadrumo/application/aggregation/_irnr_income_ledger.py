@@ -335,7 +335,12 @@ def _classify_irnr_income_transaction(
     if classification_issue is not None:
         return classification_issue
     # The classification helper returns None only for a present, declared classification.
-    assert classification is not None
+    if classification is None:
+        msg = (
+            f"transaction {transaction_id} raised no M210 classification issue while carrying no "
+            "income classification; the classification screen and the row disagree"
+        )
+        raise ValueError(msg)
     if classification.official_tipo_renta_code != selected_official_tipo_renta_code:
         return None
 

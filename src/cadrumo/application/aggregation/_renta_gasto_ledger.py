@@ -353,7 +353,12 @@ def _classify_gasto_transaction(
     # taxable_base is non-None here (the MISSING_TAXABLE_BASE guard above
     # returned for the None case), so the EUR-equivalent accessor cannot
     # return None either -- it is None only when its input is.
-    assert deductible_base is not None
+    if deductible_base is None:
+        msg = (
+            f"transaction {transaction_id} cleared the missing-taxable-base gate but resolves no "
+            "EUR-equivalent base imponible for the Renta gasto casilla"
+        )
+        raise ValueError(msg)
     eur_iva_amount = effective_eur_iva_amount(transaction)
     if eur_iva_amount is not None and iva_deduction_ratio is not None:
         deductible_base += eur_iva_amount * (Decimal("1") - iva_deduction_ratio)

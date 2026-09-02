@@ -900,8 +900,12 @@ def _purchase_invoice_evidence_payload(
     # grand_total_eur check above already proved the invoice resolves to EUR.
     base_total_eur = invoice.base_total_eur
     iva_total_eur = invoice.iva_total_eur
-    assert base_total_eur is not None
-    assert iva_total_eur is not None
+    if base_total_eur is None or iva_total_eur is None:
+        msg = (
+            f"purchase invoice {purchase_invoice_evidence_id} resolves a EUR grand total but no EUR "
+            "base or cuota; its EUR-equivalent totals disagree with one another"
+        )
+        raise ValueError(msg)
     return _PurchaseInvoiceEvidencePayload(
         invoice_issue_date=invoice.issued_at,
         taxable_base=base_total_eur,

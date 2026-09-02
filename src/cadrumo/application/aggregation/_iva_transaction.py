@@ -37,7 +37,6 @@ from .iva_ledger import (
     IvaLedgerAggregationIssueReason,
     ProrrataLedgerReference,
     business_proportionality_for,
-    flow_direction_for,
     has_converted_non_eur_amount,
     iva_rate_kind_for,
     missing_tax_fact_detail,
@@ -249,8 +248,8 @@ def _resolve_iva_transaction_context(
     )
     if substrate_issue is not None:
         return _IvaTransactionOutcome(gate_issue=substrate_issue)
-    flow_direction = flow_direction_for(transaction.direction)
-    if flow_direction is None:
+    invoice_kind = invoice_kind_for_direction(transaction.direction)
+    if invoice_kind is None:
         return _IvaTransactionOutcome(
             gate_issue=IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
@@ -258,8 +257,6 @@ def _resolve_iva_transaction_context(
                 detail=f"transaction direction {transaction.direction.value!r} is not an IVA settlement flow",
             ),
         )
-    invoice_kind = invoice_kind_for_direction(transaction.direction)
-    assert invoice_kind is not None
     proportionality = business_proportionality_for(transaction)
     if proportionality is None:
         reason = (
@@ -326,27 +323,33 @@ def _resolved_iva_transaction_amounts(
                 detail=missing_tax_fact_detail(missing_reason),
             ),
         )
-    assert transaction.taxable_base is not None
-    assert transaction.iva_amount is not None
-    assert transaction.iva_rate is not None
-    if transaction.iva_rate == Decimal("0") and transaction.iva_amount != Decimal("0"):
+    taxable_base = transaction.taxable_base
+    iva_amount = transaction.iva_amount
+    iva_rate = transaction.iva_rate
+    if taxable_base is None or iva_amount is None or iva_rate is None:
+        msg = (
+            f"transaction {transaction_id} cleared the IVA missing-fact screen while base, cuota or "
+            "tipo is still unmeasured; the screen and the required tax facts disagree"
+        )
+        raise ValueError(msg)
+    if iva_rate == Decimal("0") and iva_amount != Decimal("0"):
         return _IvaTransactionOutcome(
             gate_issue=IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
                 reason=IvaLedgerAggregationIssueReason.CUOTA_ON_ZERO_RATED_ROW,
                 detail=(
-                    f"row declares iva_rate 0 with iva_amount {transaction.iva_amount}; a zero tipo "
+                    f"row declares iva_rate 0 with iva_amount {iva_amount}; a zero tipo "
                     "admits only a zero cuota, so one of the two facts is wrong"
                 ),
             ),
         )
-    rate_kind = _canonical_iva_rate_kind(transaction, operation_date=operation_date)
+    rate_kind = _canonical_iva_rate_kind(transaction, iva_rate=iva_rate, operation_date=operation_date)
     if isinstance(rate_kind, _IvaTransactionOutcome):
         return rate_kind
     return _IvaTransactionAmounts(
         rate_kind=rate_kind,
-        base_amount=transaction.taxable_base * proportionality,
-        iva_amount=transaction.iva_amount * proportionality,
+        base_amount=taxable_base * proportionality,
+        iva_amount=iva_amount * proportionality,
         recargo_amount=(transaction.recargo_amount or Decimal("0")) * proportionality,
     )
 
@@ -354,11 +357,11 @@ def _resolved_iva_transaction_amounts(
 def _canonical_iva_rate_kind(
     transaction: Transaction,
     *,
+    iva_rate: Decimal,
     operation_date: date,
 ) -> IvaRateKind | _IvaTransactionOutcome:
     """Resolve a declared rate against the legal table available on its date."""
-    assert transaction.iva_rate is not None
-    rate_kind = iva_rate_kind_for(transaction.iva_rate, on_date=operation_date)
+    rate_kind = iva_rate_kind_for(iva_rate, on_date=operation_date)
     if rate_kind is None:
         covered = rate_table_covers_any_positive_tier(EUMemberState.ES, operation_date)
         return _IvaTransactionOutcome(
@@ -370,13 +373,13 @@ def _canonical_iva_rate_kind(
                     else IvaLedgerAggregationIssueReason.IVA_RATE_DATE_OUTSIDE_TABLE_COVERAGE
                 ),
                 detail=(
-                    f"IVA rate {transaction.iva_rate} is not a canonical substrate IVA rate"
+                    f"IVA rate {iva_rate} is not a canonical substrate IVA rate"
                     if covered
                     else (
                         f"no IVA rate is on record for {operation_date.isoformat()}: the rate table "
                         f"reaches no tier bearing a positive rate on that date, so a transaction dated "
                         f"there cannot be classified whatever rate it carries. The rate "
-                        f"{transaction.iva_rate} is not what needs correcting -- the filing year is "
+                        f"{iva_rate} is not what needs correcting -- the filing year is "
                         f"outside the supported window"
                     )
                 ),
@@ -682,26 +685,33 @@ def _cash_accounting_observations(
 def _append_unpaid_cash_accounting_remainder(
     transaction: Transaction,
     parts: list[tuple[date, Decimal, Decimal, Decimal]],
+    *,
+    taxable_base: Decimal,
+    iva_amount: Decimal,
+    operation_date: date,
 ) -> None:
-    assert transaction.taxable_base is not None
-    assert transaction.iva_amount is not None
-    assert transaction.operation_date is not None
     remainder = (
-        transaction.taxable_base - sum((part[1] for part in parts), Decimal("0")),
-        transaction.iva_amount - sum((part[2] for part in parts), Decimal("0")),
+        taxable_base - sum((part[1] for part in parts), Decimal("0")),
+        iva_amount - sum((part[2] for part in parts), Decimal("0")),
         (transaction.recargo_amount or Decimal("0")) - sum((part[3] for part in parts), Decimal("0")),
     )
     if any(amount > Decimal("0") for amount in remainder):
-        fallback_date = date(transaction.operation_date.year + 1, 12, 31)
+        fallback_date = date(operation_date.year + 1, 12, 31)
         parts.append((fallback_date, *remainder))
 
 
 def _cash_accounting_settlement_parts(
     transaction: Transaction,
 ) -> tuple[tuple[date, Decimal, Decimal, Decimal], ...]:
-    assert transaction.operation_date is not None
-    assert transaction.taxable_base is not None
-    assert transaction.iva_amount is not None
+    operation_date = transaction.operation_date
+    taxable_base = transaction.taxable_base
+    iva_amount = transaction.iva_amount
+    if operation_date is None or taxable_base is None or iva_amount is None:
+        msg = (
+            f"transaction {transaction.transaction_id} reached criterio-de-caja settlement without an "
+            "operation date, taxable base or cuota; a devengo split cannot be measured from it"
+        )
+        raise ValueError(msg)
     parts = [
         (
             evidence.payment_date,
@@ -711,7 +721,13 @@ def _cash_accounting_settlement_parts(
         )
         for evidence in transaction.cash_accounting_payment_evidence
     ]
-    _append_unpaid_cash_accounting_remainder(transaction, parts)
+    _append_unpaid_cash_accounting_remainder(
+        transaction,
+        parts,
+        taxable_base=taxable_base,
+        iva_amount=iva_amount,
+        operation_date=operation_date,
+    )
     return tuple(sorted(parts, key=lambda part: part[0]))
 
 
