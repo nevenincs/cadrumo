@@ -544,10 +544,10 @@ def _deferred_handler_target(
 _WRITE_ROUTE_MEMBERS = frozenset({"PROFILE_BOUND", "BOOTSTRAP_ROOT"})
 
 
-def _policy_factory_names(tree: ast.Module) -> frozenset[str]:
+def _policy_factories(tree: ast.Module) -> dict[str, ast.FunctionDef]:
     """Return helpers that structurally construct an ``ExecutionPolicySpec``."""
-    return frozenset(
-        node.name
+    return {
+        node.name: node
         for node in tree.body
         if isinstance(node, ast.FunctionDef)
         and any(
@@ -555,19 +555,64 @@ def _policy_factory_names(tree: ast.Module) -> frozenset[str]:
             and _dotted_name(child.func).rsplit(".", maxsplit=1)[-1] == "ExecutionPolicySpec"
             for child in ast.walk(node)
         )
+    }
+
+
+def _factory_argument(factory: ast.FunctionDef, call: ast.Call, name: str) -> ast.AST | None:
+    """Resolve a factory parameter from a literal call or its declared default."""
+    for keyword in call.keywords:
+        if keyword.arg == name:
+            return keyword.value
+    positional = (*factory.args.posonlyargs, *factory.args.args)
+    for index, parameter in enumerate(positional):
+        if parameter.arg != name:
+            continue
+        if index < len(call.args):
+            return call.args[index]
+        default_index = index - (len(positional) - len(factory.args.defaults))
+        return factory.args.defaults[default_index] if default_index >= 0 else None
+    for index, parameter in enumerate(factory.args.kwonlyargs):
+        if parameter.arg == name:
+            return factory.args.kw_defaults[index]
+    return None
+
+
+def _factory_write_route(factory: ast.FunctionDef, call: ast.Call) -> ast.AST | None:
+    """Follow a literal factory's route argument without evaluating its body."""
+    constructors = [
+        child
+        for child in ast.walk(factory)
+        if isinstance(child, ast.Call)
+        and _dotted_name(child.func).rsplit(".", maxsplit=1)[-1] == "ExecutionPolicySpec"
+    ]
+    if len(constructors) != 1:
+        return None
+    route = next(
+        (keyword.value for keyword in constructors[0].keywords if keyword.arg == "write_route"),
+        None,
     )
+    if route is None and len(constructors[0].args) > 3:
+        route = constructors[0].args[3]
+    if isinstance(route, ast.Name):
+        return _factory_argument(factory, call, route.id)
+    return route
 
 
-def _policy_route_resolution(value: ast.AST, *, factories: frozenset[str]) -> PolicyResolution:
+def _policy_route_resolution(
+    value: ast.AST, *, factories: dict[str, ast.FunctionDef]
+) -> PolicyResolution:
     """Classify one literal policy declaration from its canonical write route."""
     if not isinstance(value, ast.Call):
         return "unresolved"
     constructor = _dotted_name(value.func).rsplit(".", maxsplit=1)[-1]
-    if constructor != "ExecutionPolicySpec" and constructor not in factories:
+    if constructor == "ExecutionPolicySpec":
+        route = next((keyword.value for keyword in value.keywords if keyword.arg == "write_route"), None)
+        if route is None and len(value.args) > 3:
+            route = value.args[3]
+    elif factory := factories.get(constructor):
+        route = _factory_write_route(factory, value)
+    else:
         return "unresolved"
-    route = next((keyword.value for keyword in value.keywords if keyword.arg == "write_route"), None)
-    if route is None and len(value.args) > 3:
-        route = value.args[3]
     if route is None:
         return "unresolved"
     member = _dotted_name(route).rsplit(".", maxsplit=1)[-1]
@@ -615,7 +660,7 @@ def _policy_resolutions(cli_root: Path) -> dict[str, dict[str, PolicyResolution]
         module: _imported_policy_bindings(tree, module_name=module)
         for module, tree in trees.items()
     }
-    factories = {module: _policy_factory_names(tree) for module, tree in trees.items()}
+    factories = {module: _policy_factories(tree) for module, tree in trees.items()}
     resolved: dict[tuple[str, str], PolicyResolution] = {}
     resolving: set[tuple[str, str]] = set()
 
@@ -631,7 +676,7 @@ def _policy_resolutions(cli_root: Path) -> dict[str, dict[str, PolicyResolution]
             if isinstance(value, ast.Name):
                 outcome = resolve(module, value.id)
             else:
-                outcome = _policy_route_resolution(value, factories=factories.get(module, frozenset()))
+                outcome = _policy_route_resolution(value, factories=factories.get(module, {}))
         elif target := imports.get(module, {}).get(name):
             outcome = resolve(*target)
         else:
@@ -678,7 +723,7 @@ def _policy_resolution(
     bindings: dict[str, ast.AST],
     policy_resolutions: dict[str, PolicyResolution],
     *,
-    factories: frozenset[str],
+    factories: dict[str, ast.FunctionDef],
 ) -> PolicyResolution:
     """Classify the resolved command policy, refusing names outside this module scope."""
     policy = _call_argument(call, "policy", 8, bindings)
@@ -730,7 +775,7 @@ def _command_spec_ingress(repo_root: Path, cli_root: Path) -> tuple[IngressCapab
             if leaf_wrapper is not None
             else set()
         )
-        factories = _policy_factory_names(tree)
+        factories = _policy_factories(tree)
         module_bindings = _module_level_bindings(tree)
         for call in (node for node in ast.walk(tree) if isinstance(node, ast.Call)):
             call_name = _dotted_name(call.func).rsplit(".", maxsplit=1)[-1]
@@ -772,8 +817,8 @@ def _command_spec_ingress(repo_root: Path, cli_root: Path) -> tuple[IngressCapab
             parent = _string_value(_call_argument(command_call, "parent_key", 1, bindings), bindings)
             if target is None or token is None or parent is None:
                 raise ValueError(f"write command spec cannot be resolved structurally: {path}:{call.lineno}")
-            module_name, handler_name = target
-            module_path = f"src/{module_name.replace('.', '/')}.py"
+            handler_module_name, handler_name = target
+            module_path = f"src/{handler_module_name.replace('.', '/')}.py"
             capabilities.append(
                 IngressCapability(
                     module=module_path,
