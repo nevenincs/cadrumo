@@ -11,7 +11,6 @@ related:
   - "[[2026-09-02-python-runtime-compatibility-plan]]"
 ---
 
-
 # Harden public annotation resolution and forward-reference behavior
 
 ## Scope
@@ -22,4 +21,3 @@ related:
 
 - `M` `src/cadrumo/application/modelo/workspace_manifest.py`
 - `verify:` `uv run --no-sync python -m py_compile src/cadrumo/application/modelo/workspace_manifest.py` -> `pass`
-

@@ -11,7 +11,6 @@ related:
   - "[[2026-09-02-python-runtime-compatibility-plan]]"
 ---
 
-
 # Exercise annotation contracts through the workspace-manifest path
 
 ## Scope
@@ -22,4 +21,3 @@ related:
 
 - `M` `src/cadrumo/application/modelo/tests/test_workspace_manifest.py`
 - `verify:` `uv run --no-sync pytest -q src/cadrumo/application/modelo/tests/test_workspace_manifest.py -o addopts='' -m 'integration and hex_application' -k 'future_forward or local_models or unresolved_forward' -n 0; uv run --no-sync ruff check src/cadrumo/application/modelo/tests/test_workspace_manifest.py` -> `pass`
-
