@@ -11,7 +11,8 @@ related:
   - '[[2026-08-24-modelo-edit-contract-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
-modified: '2026-08-31'
+  - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
+modified: '2026-09-02'
 body_hash: 'sha256:edbca89c94f8ce39fda3c951b71eb3df74172f1c9ed72d3f17b7fc0282a58539'
 ---
 

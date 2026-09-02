@@ -10,7 +10,7 @@ related:
   - '[[2026-09-02-object-name-declustering-reference]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:0ff0b8033cfdf98c9387b3db9d6e650053af84497e8371d3905dfdb689c43605'
+body_hash: 'sha256:3970abbd5b29451827d2167a369927720c8de0e31d68f13ac180cbb9d4f366d9'
 ---
 
 <!-- RETIRED: S21, S22 -->
@@ -85,7 +85,7 @@ Expose the safe workflow through the repository CLI surface and prove it on one 
 
 Compose inventory, planning, rehearsal, replay, and verification behind one safe command contract.
 
-- [x] `W03.P07.S15` - Compose inventory, plan, rehearse, apply, and verify modes behind a fail-closed declustering CLI; `dev/quality/object_name_declustering.py`.
+- [ ] `W03.P07.S15` - Compose inventory, plan, rehearse, apply, and verify modes behind a fail-closed declustering CLI; `dev/quality/object_name_declustering.py`.
 - [ ] `W03.P07.S16` - Test CLI argument contracts, structured output, default rehearsal, explicit apply, and exit semantics; `dev/quality/tests/test_object_name_declustering.py`.
 
 ### Phase `W03.P08` - Justfile fix target
