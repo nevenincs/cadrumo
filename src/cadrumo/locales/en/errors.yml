@@ -379,9 +379,6 @@ errors:
     fail_cli_command_group_unavailable: 'The ''%{group}'' command group could not
       be loaded: required module ''%{module}'' is missing. This installation is incomplete.'
     fail_declaracion_parse: The PDF could not be parsed into a declaration.
-    fail_export: An error occurred while exporting to the AEAT.
-    fail_export_format: The filing draft could not be serialized to the BOE format
-      requested.
     fail_filing_import: The filing could not be imported from the receipt PDF.
     fail_financial_attachments_attachment_persistence: The attachment store could
       not read or write the data.

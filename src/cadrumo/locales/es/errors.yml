@@ -418,9 +418,6 @@ errors:
     fail_cli_command_group_unavailable: 'No se pudo cargar el grupo de comandos ''%{group}'':
       falta el módulo requerido ''%{module}''. Esta instalación está incompleta.'
     fail_declaracion_parse: No se pudo interpretar el PDF como una declaración.
-    fail_export: Se produjo un error al exportar hacia la AEAT.
-    fail_export_format: El borrador de la declaración no se pudo serializar al formato
-      BOE indicado.
     fail_filing_import: No se pudo importar la declaración desde el PDF del justificante.
     fail_financial_attachments_attachment_persistence: El almacén de justificantes
       no pudo leer o escribir los datos.

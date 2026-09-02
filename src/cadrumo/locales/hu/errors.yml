@@ -385,8 +385,6 @@ errors:
     fail_cli_command_group_unavailable: 'A(z) ''%{group}'' parancscsoport nem tölthető
       be: a szükséges ''%{module}'' modul hiányzik. A telepítés hiányos.'
     fail_declaracion_parse: A bevallás fájlját nem sikerült elemezni.
-    fail_export: Az exportálás meghiúsult.
-    fail_export_format: A kért exportformátum nem támogatott.
     fail_filing_import: A bevallás importálása meghiúsult.
     fail_financial_attachments_attachment_persistence: A csatolmány-katalógust nem
       sikerült menteni vagy betölteni.

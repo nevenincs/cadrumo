@@ -422,9 +422,6 @@ errors:
       ''%{group}'': falta el mòdul requerit ''%{module}''. Aquesta instal·lació és
       incompleta.'
     fail_declaracion_parse: No s'ha pogut interpretar el PDF com una declaració.
-    fail_export: S'ha produït un error en exportar cap a l'AEAT.
-    fail_export_format: L'esborrany de la declaració no s'ha pogut serialitzar al
-      format BOE indicat.
     fail_filing_import: No s'ha pogut importar la declaració des del PDF del justificant.
     fail_financial_attachments_attachment_persistence: El magatzem de justificants
       no ha pogut llegir o escriure les dades.
