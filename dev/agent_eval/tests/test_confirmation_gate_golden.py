@@ -8,7 +8,7 @@ of the defense-in-depth against that risk (the CLI's own ``--yes`` /
 write-policy / ``LiveSubmitForbiddenError`` rails are the deterministic
 backstop beneath it).
 
-``src/cadrumo-harness/src/cadrumo_harness/mcp/tests/test_hitl_and_live_write.py`` already proves the
+``src/cadrumo_harness/mcp/tests/test_hitl_and_live_write.py`` already proves the
 pure ``confirmation_for_tool`` function returns the right enum for a handful of
 command keys in isolation. This module proves the stronger claim: the gate sits
 IN FRONT of the dispatched call (it is evaluated,

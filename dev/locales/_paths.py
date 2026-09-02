@@ -41,4 +41,4 @@ DOCS_SRC_DIR: Final[Path] = REPO_ROOT / "dev" / "docs"
 #: deliberately unlocalized English). A scan that stopped at ``src/cadrumo``
 #: would report every one of its catalogue keys as an extra key with no
 #: codebase site, for exactly the reason :data:`DOCS_SRC_DIR` exists.
-HARNESS_SRC_DIR: Final[Path] = REPO_ROOT / "src" / "cadrumo-harness" / "src" / "cadrumo_harness"
+HARNESS_SRC_DIR: Final[Path] = REPO_ROOT / "src" / "cadrumo_harness"

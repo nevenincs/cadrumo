@@ -1,7 +1,7 @@
 # Standing eval gate for the operator agent-harness.
 #
 # The harness is its own distribution, `cadrumo-harness` under
-# `src/cadrumo-harness/`: the operator rules, personas and skills, the workspace
+# `src/cadrumo_harness/`: the operator rules, personas and skills, the workspace
 # materialiser, and the `cadrumo-mcp` server that serves them. This workflow runs
 # its whole assurance surface on every change to that tree — the
 # operator-rule/persona/skill drift gate, the golden-task eval (modelo 130 and
@@ -22,7 +22,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "src/cadrumo-harness/**"
+      - "src/cadrumo_harness/**"
       - "src/cadrumo/application/operator_surface/**"
       - "src/cadrumo/entrypoints/cli/_command_schema.py"
   # NO pull_request trigger: the harness eval is a merge-time gate (it runs
@@ -54,7 +54,7 @@ jobs:
       - name: Sync frozen development environment
         # No separate harness install step: `cadrumo-harness` is a member of the
         # default `dev` dependency group with a `[tool.uv.sources]` path override
-        # onto `src/cadrumo-harness`, so a plain frozen sync builds and installs
+        # onto `src/cadrumo_harness`, so a plain frozen sync builds and installs
         # it from the checkout alongside `cadrumo`.
         run: uv sync --frozen
 
@@ -64,7 +64,7 @@ jobs:
         # .github/ci-control-plane.md; 8 is a working pin, not a derivation).
         run: >-
           uv run --no-sync pytest -n 8
-          src/cadrumo-harness/src/cadrumo_harness
+          src/cadrumo_harness
           src/cadrumo/entrypoints/cli/tests/test_operator_surface_contract_drift.py
           src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py
           -m "integration or not integration"

@@ -4,7 +4,7 @@ Guards against wrong lifecycle sequencing surfacing as a cross-surface contradic
 ``modelo readiness`` reporting ``ready: True`` for a modelo whose ``work`` verb is
 blocked. This is the enforcement surface for the "Contradictions between surfaces are a
 stop, not a retry" section of
-``src/cadrumo-harness/src/cadrumo_harness/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md``.
+``src/cadrumo_harness/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md``.
 
 The only deterministic, clock-free CLI reproduction of the contradiction relied on a
 modelo revision with ZERO registry calculation bindings: Modelo 347

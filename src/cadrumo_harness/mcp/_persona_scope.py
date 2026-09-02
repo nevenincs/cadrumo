@@ -6,7 +6,7 @@ per-persona declaration in this module is a typed mapping from
 :class:`AgentPersona` to a coarse set of mounted-command-family ``child``
 tokens plus an :class:`~application.operator_surface.OperatorMutability`
 ceiling - derived from each persona document's "Tool scope" section under
-``src/cadrumo-harness/src/cadrumo_harness/_data/agent/personas/``. It is deliberately NOT a per-tool
+``src/cadrumo_harness/_data/agent/personas/``. It is deliberately NOT a per-tool
 allowlist: a second tool-shaped artifact would duplicate the
 manifest's own ``(family, mutability)`` data and could itself drift between
 builds, contrary to ``aeat-registry-authority-flow``'s single-authority
@@ -79,7 +79,7 @@ _MUTABILITY_RANK: dict[OperatorMutability, int] = {
 class AgentPersona(StrEnum):
     """The seven operator-harness personas, named per their persona document stem.
 
-    Mirrors the file stems under ``src/cadrumo-harness/src/cadrumo_harness/_data/agent/personas/`` exactly
+    Mirrors the file stems under ``src/cadrumo_harness/_data/agent/personas/`` exactly
     (kebab-case), so a persona's runtime identity and its shipped document are
     the same token.
     """

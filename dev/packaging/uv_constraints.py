@@ -176,7 +176,7 @@ def _assert_harness_closure_present(lines: list[str], *, repo_root: Path) -> Non
             "uv export omitted the cadrumo-harness runtime closure: "
             f"{', '.join(missing)}. The harness ships in the Scoop manifest and the "
             "MCPB bundle, so its dependencies must be pinned with cadrumo's. Check "
-            "that src/cadrumo-harness/pyproject.toml's dependencies still resolve "
+            "that src/cadrumo_harness/pyproject.toml's dependencies still resolve "
             "and that cadrumo-harness is still a [tool.uv.workspace] member.",
         )
 

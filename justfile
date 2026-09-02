@@ -667,7 +667,7 @@ test-dev-ci:
 [doc('Run the four cross-layer conformance gates the per-push lane needs (rule-surface, status-frontend, self-referential-string, suggestion-command).')]
 [group('testing')]
 test-per-push-integration-gates:
-    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "integration and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo-harness/src/cadrumo_harness/tests/test_rule_surface_conformance.py src/cadrumo/application/user_profile/tests/test_status_projection.py src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py dev/tests/test_suggestion_command_conformance.py
+    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "integration and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo_harness/tests/test_rule_surface_conformance.py src/cadrumo/application/user_profile/tests/test_status_projection.py src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py dev/tests/test_suggestion_command_conformance.py
 
 # Enrol the tests that query the resident vaultspec-rag search service. Held out
 # of every other lane by the `resident_service` marker, because the service is a

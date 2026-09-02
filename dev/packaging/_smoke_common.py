@@ -730,7 +730,7 @@ def _export_names(output: str, *, repo_root: Path | None = None) -> set[str]:
     resolve such a row to the referenced project's own ``[project].name`` so the
     surface checks see the real package name.
 
-    A WORKSPACE MEMBER exports differently again -- ``-e ./src/cadrumo-harness``,
+    A WORKSPACE MEMBER exports differently again -- ``-e ./src/cadrumo_harness``,
     an editable row -- so the ``-e`` marker is stripped before the path is
     resolved. Without that the row fell through to requirement parsing, the
     member's name never entered the surface, and the dev export was reported as
