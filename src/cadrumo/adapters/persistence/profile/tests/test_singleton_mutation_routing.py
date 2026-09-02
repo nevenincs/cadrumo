@@ -202,11 +202,14 @@ def test_shared_kernel_helper_applies_the_revision_its_load_callback_reported() 
     def save(guarded_write: tuple[str, str]) -> None:
         saved.append(guarded_write)
 
-    assert mutate_revision_guarded_singleton(
-        lambda document: f"{document}-updated",
-        load_revisioned=load_revisioned,
-        write=write,
-        save=save,
-        attempts=1,
-    ) == "current-updated"
+    assert (
+        mutate_revision_guarded_singleton(
+            lambda document: f"{document}-updated",
+            load_revisioned=load_revisioned,
+            write=write,
+            save=save,
+            attempts=1,
+        )
+        == "current-updated"
+    )
     assert saved == [("current-updated", "read-revision")]
