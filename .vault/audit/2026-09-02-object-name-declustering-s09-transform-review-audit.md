@@ -5,11 +5,10 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:8487f89b8a1a01b5b744830a51db50cb535c94268fd3b54b4b2efdfe04b3ef7b'
+body_hash: 'sha256:ec2aa581e5e4930c79b8e525c8f032aa2684aa4a709fd04acf9a9380c2539cb2'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
-
 # `object-name-declustering` audit: `s09 transform review`
 
 ## Scope
@@ -76,3 +75,44 @@ linked-path refusal, unsupported reference-class refusal, deterministic
 ordering, and absence of compatibility shims. Comprehensive detector-teeth
 coverage for these working paths remains assigned to S10. Two high findings
 remain open; no critical, medium, or low finding is recorded.
+
+## Resolution evidence
+
+`_definition_lines` now compares each serialized declaration's complete
+`qualified_locator` with `operation.old_locator`, binding kind, module, symbol
+name, and occurrence together. Re-running the exact prior fixture successfully
+renamed `Widgets` while preserving the unrelated occurrence-one `Other` class.
+This closes `definition-locator-selection`.
+
+The LibCST import-from path now detects a module operation transforming its own
+source and refuses a cross-package parent change whenever the source contains a
+relative import. Re-running the exact prior `src/cadrumo/old.py` to
+`src/other/new.py` fixture refused `from .support import VALUE` with the owning
+cross-package-relative-import diagnostic. This closes
+`cross-package-relative-import` without weakening same-package behavior.
+
+Final re-review checks passed: both disposable counterexamples, Ruff lint, Ruff
+formatting, canonical `ty` checking, bytecode compilation, and live import. No
+critical, high, medium, or low finding remains open for `W02.P04.S09`.
+
+### formatted-string-reference | high | Formatted-string text could bypass opaque-reference refusal
+
+The follow-up review found that checking `SimpleString` alone did not cover LibCST's
+separate formatted-string text nodes. A dynamically constructed import, export, or
+symbol reference could retain an old spelling while the proposed changed-path set
+still matched the reviewed allowlist.
+
+## Re-review status
+
+Resolved: `definition-locator-selection` now selects definition lines by the complete
+qualified locator. This distinguishes unrelated declarations while retaining every
+line in an overload family that shares the audited binding identity.
+
+Resolved: `cross-package-relative-import` now refuses a cross-package module move when
+the moved definition source contains any relative import. Same-package moves retain
+their package-relative meaning; cross-package moves must use references whose meaning
+can be established without silently retargeting an import.
+
+Resolved: `formatted-string-reference` routes both evaluated ordinary strings and
+every formatted-string literal segment through the same fail-closed opaque-spelling
+check. The independent re-review found no remaining high or critical issue.

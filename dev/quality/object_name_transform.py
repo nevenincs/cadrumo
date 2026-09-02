@@ -115,6 +115,13 @@ def _module_for_path(relative: str) -> str:
     return ".".join(parts)
 
 
+def _import_package(module: str, relative: str) -> str:
+    """Return the package Python uses to resolve relative imports in a path."""
+    if PurePosixPath(relative).name == "__init__.py":
+        return module
+    return module.rpartition(".")[0]
+
+
 def _resolve_repo_path(repo_root: Path, relative: str) -> Path:
     candidate = PurePosixPath(relative)
     if (
@@ -288,7 +295,10 @@ class _RenameTransformer(cst.CSTTransformer):
                 if operation.operation_kind != "module-rename" or operation.old_path != self.path:
                     continue
                 old_module, _old_name, new_module, _new_name = self._operation_names(operation)
-                if old_module.rpartition(".")[0] != new_module.rpartition(".")[0]:
+                assert operation.new_path is not None
+                old_package = _import_package(old_module, operation.old_path)
+                new_package = _import_package(new_module, operation.new_path)
+                if old_package != new_package:
                     raise ObjectNameTransformError(
                         f"operation {operation.operation_id!r} moves relative-import source across packages"
                     )
