@@ -249,8 +249,6 @@ def build_baseline(cc: list[CcHit], mi: list[MiHit], cog: list[CogHit]) -> Basel
     return Baseline(cyclomatic=cyclomatic, maintainability=maintainability, cognitive=cognitive)
 
 
-
-
 def _scope_key(is_test_run: bool) -> str:
     """Top-level baseline section name for the current run scope."""
     return "tests" if is_test_run else "production"
@@ -280,7 +278,6 @@ def _scope_payload(baseline: Baseline) -> dict[str, dict[str, float]]:
         "maintainability": dict(sorted(baseline.maintainability.items())),
         "cognitive": dict(sorted(baseline.cognitive.items())),
     }
-
 
 
 @dataclass(frozen=True)
@@ -415,7 +412,6 @@ def main() -> int:
     mi = collect_mi(exclude)
     cog = collect_cog(Path(_TARGET), args.tests, args.threshold)
 
-
     # Nothing is grandfathered: the baseline is empty by construction, so every
     # hit the scanners report is classified as a violation on its own merits.
     baseline = load_baseline(args.tests)
@@ -453,15 +449,13 @@ def main() -> int:
 
     if args.strict and resolved:
         print(
-            f"\ncomplexity ({scope}): FAIL (--strict) - {resolved} entry(ies) no longer "
-            "violate.",
+            f"\ncomplexity ({scope}): FAIL (--strict) - {resolved} entry(ies) no longer violate.",
         )
         return 1
 
     if resolved:
         print(
-            f"\ncomplexity ({scope}): PASS. {resolved} previously-violating entry(ies) "
-            "resolved.",
+            f"\ncomplexity ({scope}): PASS. {resolved} previously-violating entry(ies) resolved.",
         )
     else:
         print(f"\ncomplexity ({scope}): PASS — all current violations are within the baseline.")

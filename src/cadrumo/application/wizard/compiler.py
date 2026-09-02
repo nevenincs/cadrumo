@@ -61,11 +61,7 @@ def _compile_one(
     question: WizardQuestion,
     by_id: dict[str, WizardQuestion],
 ) -> ProfileKey:
-    requirement = (
-        Requirement.REQUIRED
-        if question.required and question.visible_when is None
-        else Requirement.OPTIONAL
-    )
+    requirement = Requirement.REQUIRED if question.required and question.visible_when is None else Requirement.OPTIONAL
     # The ``required_when_*`` pair expresses a *conditional requirement*:
     # the key is REQUIRED only while its gate predicate holds. It is
     # meaningful solely for a question that is itself ``required`` —

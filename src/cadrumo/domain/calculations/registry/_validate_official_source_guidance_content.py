@@ -122,7 +122,10 @@ def validate_suppression_notice_content(
         return []
     failures: list[str] = []
     for source_id, source in sorted(sources.items()):
-        if source.kind is not RegistrySourceKind.SUPPRESSION_NOTICE or source.evidence_tier != "official_source_guidance":
+        if (
+            source.kind is not RegistrySourceKind.SUPPRESSION_NOTICE
+            or source.evidence_tier != "official_source_guidance"
+        ):
             continue
         raw = read_source_file_text(source_root, source)
         if raw is None or _carries_suppression_content(raw):

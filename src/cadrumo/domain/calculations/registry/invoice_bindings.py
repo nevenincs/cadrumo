@@ -55,9 +55,7 @@ class RectificationScope(StrEnum):
     """No rectification filter; the default when a selector is silent."""
 
 
-RectificationScopeField = Annotated[
-    RectificationScope, BeforeValidator(coerce_enum_member(RectificationScope))
-]
+RectificationScopeField = Annotated[RectificationScope, BeforeValidator(coerce_enum_member(RectificationScope))]
 """Registry ``rectification_scope`` token hydrated into a member.
 
 Registry schema models validate under ``strict=True``, which refuses a bare TOML

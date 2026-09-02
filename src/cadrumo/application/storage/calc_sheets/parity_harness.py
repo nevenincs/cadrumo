@@ -47,6 +47,7 @@ if TYPE_CHECKING:
     # site-packages stubs, so the typed forms below collapse to `Any` for
     # those tools while still giving pyrefly / ty / mypy the real shapes.
     from google.auth.credentials import Credentials
+
     SheetsResource = Any
     BatchUpdateValuesRequest = Any
     ValueRange = Any

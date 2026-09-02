@@ -155,9 +155,7 @@ def test_no_shipped_cohort_module_carries_a_transitional_marker() -> None:
         if "tests" in path.parts:
             continue
         text = path.read_text(encoding="utf-8", errors="ignore")
-        offenders.extend(
-            f"{path.relative_to(_ROOT)}: {marker}" for marker in markers if marker in text
-        )
+        offenders.extend(f"{path.relative_to(_ROOT)}: {marker}" for marker in markers if marker in text)
 
     assert not offenders, f"transitional markers in shipped cohort modules: {offenders}"
 

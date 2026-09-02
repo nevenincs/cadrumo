@@ -241,7 +241,6 @@ def fix_pyproject() -> int:
     return n
 
 
-
 def fix_string_module_paths() -> int:
     """Repoint a dotted cadrumo module path written inside a string literal.
 
@@ -303,6 +302,7 @@ def fix_string_module_paths() -> int:
             path.write_text(text, encoding="utf-8")
         changed += 1
     return changed
+
 
 counts = {
     "dot-depth files": fix_dot_depth(),

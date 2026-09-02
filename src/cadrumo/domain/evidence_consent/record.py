@@ -26,7 +26,6 @@ from ...core.time.utc import UtcInstant
 __all__ = ["EvidenceConsentLedgerEntry", "evidence_consent_ledger_entry_object_key"]
 
 
-
 class EvidenceConsentLedgerEntry(BaseModel):
     """One consented off-host evidence dispatch, recorded for later audit.
 

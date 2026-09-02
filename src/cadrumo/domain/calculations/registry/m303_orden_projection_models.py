@@ -373,7 +373,8 @@ class M303RegimenSimplificadoSnapshot(RegistryModel):
 
 def _validate_regimen_simplificado_record_design(snapshot: M303RegimenSimplificadoSnapshot) -> None:
     _require_invariant(
-        snapshot.record_design.kind is RegistrySourceKind.RECORD_DESIGN and snapshot.record_design.record_design_epoch is not None,
+        snapshot.record_design.kind is RegistrySourceKind.RECORD_DESIGN
+        and snapshot.record_design.record_design_epoch is not None,
         "M303 regimen simplificado snapshot requires an epoch-pinned record design",
     )
 

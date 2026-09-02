@@ -1238,9 +1238,7 @@ def graded_snapshot_casilla_schema_records(
                     else ()
                 ),
                 export_exposure=tuple(
-                    ModeloWorkspaceExportExposureReferenceV1(
-                        casilla_id=casilla_id, export_field_id=export_field_id
-                    )
+                    ModeloWorkspaceExportExposureReferenceV1(casilla_id=casilla_id, export_field_id=export_field_id)
                     for export_field_id in casilla.export_refs
                 ),
                 formula_operands=formula_operand_references_for_casilla(formulas, casilla_id),

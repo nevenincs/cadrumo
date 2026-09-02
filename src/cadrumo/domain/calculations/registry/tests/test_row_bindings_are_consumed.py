@@ -82,8 +82,7 @@ def _unconsumed_row_bindings() -> dict[tuple[str, str], int]:
             if not records:
                 continue
             consumed = any(
-                record.repeat == "binding_rows"
-                or any(field.kind == "binding" for field in record.fields)
+                record.repeat == "binding_rows" or any(field.kind == "binding" for field in record.fields)
                 for record in records
             )
             if not consumed:

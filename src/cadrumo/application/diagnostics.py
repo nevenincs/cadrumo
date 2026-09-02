@@ -733,9 +733,7 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[_Diagnosti
         raw = values.get(entry.key)
         if raw is not None and raw.strip() != "":
             continue
-        requirement: RequirementValue = (
-            "required" if entry.requirement.value == "required" else "optional"
-        )
+        requirement: RequirementValue = "required" if entry.requirement.value == "required" else "optional"
         label = tr(str(entry.description))
         findings.append(
             _DiagnosticFinding(

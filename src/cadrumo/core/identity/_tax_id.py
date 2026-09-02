@@ -51,7 +51,6 @@ actually enforces; a second literal elsewhere can drift from this one silently.
 """
 
 
-
 def tax_id_identity_token(value: str) -> str:
     """Return the canonical identity form of a tax identifier, without a checksum claim.
 
@@ -163,10 +162,7 @@ def validate_spanish_tax_id(value: str) -> str:
 
     leader = normalized[0]
     recognised = (
-        leader.isdigit()
-        or leader in PREFIXED_NIF_LEADERS
-        or leader in NIE_PREFIX_MAP
-        or leader in CIF_KIND_LETTERS
+        leader.isdigit() or leader in PREFIXED_NIF_LEADERS or leader in NIE_PREFIX_MAP or leader in CIF_KIND_LETTERS
     )
     if not recognised:
         raise IdentityError(

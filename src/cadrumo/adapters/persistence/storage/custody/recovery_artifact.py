@@ -92,10 +92,6 @@ class ProfileCustodyRecoveryArtifact(_RecoveryArtifactPayload, CustodyDigestMode
     def _validate_self_digest(cls, value: str) -> str:
         return validate_prefixed_digest(value, field_name="self_digest")
 
-
-
-
-
     @classmethod
     def from_recovery_envelope(cls, envelope: ProfileCustodyRecoveryEnvelope) -> ProfileCustodyRecoveryArtifact:
         """Derive a portable artifact from an already-current recovery envelope.

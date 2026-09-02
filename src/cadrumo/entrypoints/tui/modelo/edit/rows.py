@@ -129,8 +129,7 @@ class RepeatedRowSet:
     def staged_keys(self) -> tuple[RowKey, ...]:
         """Return every staged row address, in canonical order."""
         return tuple(
-            RowKey(detail_row_kind=kind, natural_key=natural)
-            for kind, natural in self._session.dirty_row_keys()
+            RowKey(detail_row_kind=kind, natural_key=natural) for kind, natural in self._session.dirty_row_keys()
         )
 
     def open_draft(self, correlation_id: str, detail_row_kind: str) -> DraftRow:

@@ -1105,4 +1105,3 @@ def test_the_filing_authority_succeeds_on_the_same_fixture_its_operation_fails_o
         )
 
         assert record is not None, "the filing authority produced no record for a verified-complete revision"
-

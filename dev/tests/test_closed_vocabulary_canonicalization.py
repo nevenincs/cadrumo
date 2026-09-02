@@ -92,9 +92,7 @@ def _by_members(rows: tuple[VocabularyField, ...]) -> dict[tuple[str, ...], list
 
 def test_no_closed_vocabulary_is_declared_at_more_than_one_field() -> None:
     """Zero. Not a ceiling, not a baselined set -- zero, with nothing to exempt."""
-    duplicated = {
-        members: sites for members, sites in _independent_declarations(scan()).items() if len(sites) > 1
-    }
+    duplicated = {members: sites for members, sites in _independent_declarations(scan()).items() if len(sites) > 1}
 
     if duplicated:
         listing = "\n".join(
@@ -121,20 +119,29 @@ def test_the_detector_fires_on_a_planted_duplicate() -> None:
     shared = ("alpha", "beta")
     planted = (
         VocabularyField(
-            path="src/zzz/one.py", lineno=1, model="One", field="kind",
-            members=shared, reached_through_alias=False, nested_in_generic=False,
+            path="src/zzz/one.py",
+            lineno=1,
+            model="One",
+            field="kind",
+            members=shared,
+            reached_through_alias=False,
+            nested_in_generic=False,
         ),
         VocabularyField(
-            path="src/zzz/two.py", lineno=2, model="Two", field="kind",
-            members=shared, reached_through_alias=True, nested_in_generic=True,
+            path="src/zzz/two.py",
+            lineno=2,
+            model="Two",
+            field="kind",
+            members=shared,
+            reached_through_alias=True,
+            nested_in_generic=True,
         ),
     )
 
     duplicated = {m: s for m, s in _independent_declarations(planted).items() if len(s) > 1}
 
     assert list(duplicated) == [shared], (
-        "the grouping did not see two declarations of one vocabulary, so the zero "
-        "asserted above proves nothing"
+        "the grouping did not see two declarations of one vocabulary, so the zero asserted above proves nothing"
     )
 
 
@@ -142,6 +149,7 @@ def test_the_gate_reads_a_real_population() -> None:
     """A scan that silently found nothing would also report zero duplicates."""
     rows = scan()
     assert len(rows) > 25, f"only {len(rows)} declarations scanned; the scan is not reaching the tree"
+
 
 def test_one_shared_alias_at_many_fields_is_not_a_duplicate() -> None:
     """The distinction the grouping exists to make, proven rather than assumed.
@@ -154,8 +162,13 @@ def test_one_shared_alias_at_many_fields_is_not_a_duplicate() -> None:
     shared = ("alpha", "beta")
     consumers = tuple(
         VocabularyField(
-            path=f"src/zzz/consumer_{n}.py", lineno=n, model=f"Model{n}", field="kind",
-            members=shared, reached_through_alias=True, nested_in_generic=False,
+            path=f"src/zzz/consumer_{n}.py",
+            lineno=n,
+            model=f"Model{n}",
+            field="kind",
+            members=shared,
+            reached_through_alias=True,
+            nested_in_generic=False,
             alias_name="OneSharedAlias",
         )
         for n in range(1, 5)
@@ -174,13 +187,23 @@ def test_two_distinct_aliases_of_one_vocabulary_do_fire() -> None:
     shared = ("alpha", "beta")
     rival = (
         VocabularyField(
-            path="src/zzz/one.py", lineno=1, model="One", field="kind",
-            members=shared, reached_through_alias=True, nested_in_generic=False,
+            path="src/zzz/one.py",
+            lineno=1,
+            model="One",
+            field="kind",
+            members=shared,
+            reached_through_alias=True,
+            nested_in_generic=False,
             alias_name="AliasOne",
         ),
         VocabularyField(
-            path="src/zzz/two.py", lineno=2, model="Two", field="kind",
-            members=shared, reached_through_alias=True, nested_in_generic=False,
+            path="src/zzz/two.py",
+            lineno=2,
+            model="Two",
+            field="kind",
+            members=shared,
+            reached_through_alias=True,
+            nested_in_generic=False,
             alias_name="AliasTwo",
         ),
     )

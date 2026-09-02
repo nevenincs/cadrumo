@@ -775,8 +775,6 @@ class QuestionPane(_FlowPane):
         Binding("ctrl+s", "save_exit", ""),
     ]
 
-
-
     def _build_stage_strip(self, *, current_index: int = 0) -> StageNavigationStrip:
         """Build the section-level stage strip from the flow's own titles.
 
@@ -832,7 +830,6 @@ class QuestionPane(_FlowPane):
                 "save_exit": tr("flows.tui.binding_save_exit"),
             },
         )
-
 
     def render_page(self) -> None:
         """Render every zone for the page the engine cursor addresses."""
@@ -1095,9 +1092,6 @@ class QuestionPane(_FlowPane):
         self.presenter.action_reset_current()
 
 
-
-
-
 _STATUS_GLYPHS: dict[PageStatus, str] = {
     PageStatus.ANSWERED: "✔",
     PageStatus.UNANSWERED: "○",
@@ -1122,8 +1116,6 @@ class ReviewPane(_FlowPane):
         Binding("ctrl+s", "save_exit", ""),
         Binding("ctrl+n", "restart_flow", ""),
     ]
-
-
 
     @override
     def compose(self) -> ComposeResult:
@@ -1161,7 +1153,6 @@ class ReviewPane(_FlowPane):
                 "restart_flow": tr("flows.tui.binding_restart"),
             },
         )
-
 
     def render_review(self) -> None:
         """Project the engine review into the table, notices, and submit control."""
@@ -1291,9 +1282,6 @@ class ReviewPane(_FlowPane):
 
     def action_submit_flow(self) -> None:
         self.presenter.action_submit()
-
-
-
 
 
 def select_flow_frontend(

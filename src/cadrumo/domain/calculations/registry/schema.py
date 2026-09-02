@@ -444,9 +444,7 @@ class CasillaProducerKind(StrEnum):
     """It exists only in a projection, with no producer of its own."""
 
 
-CasillaProducerKindField = Annotated[
-    CasillaProducerKind, BeforeValidator(coerce_enum_member(CasillaProducerKind))
-]
+CasillaProducerKindField = Annotated[CasillaProducerKind, BeforeValidator(coerce_enum_member(CasillaProducerKind))]
 """Registry ``producer_kind`` token hydrated into a member."""
 
 

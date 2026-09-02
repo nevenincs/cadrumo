@@ -96,8 +96,7 @@ def build_amend_operation_request(
             baseline=ModeloWorkAmendBaseline(from_filing_record_id=from_filing_record_id),
             amendment_kind=amendment_kind,
             overrides=tuple(
-                ModeloWorkAmendOverride(casilla_id=casilla_id, value=value)
-                for casilla_id, value in overrides.items()
+                ModeloWorkAmendOverride(casilla_id=casilla_id, value=value) for casilla_id, value in overrides.items()
             ),
             reason=reason,
             m303_rectificativa_motive=m303_rectificativa_motive,

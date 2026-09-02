@@ -204,9 +204,7 @@ class LegalReference(RegistryModel):
     """Legal-authority citation row carried by registry definitions."""
 
     id: LegalRefId
-    evidence_tier: Annotated[
-        Literal[EvidenceTier.LEGAL_AUTHORITY], BeforeValidator(coerce_enum_member(EvidenceTier))
-    ]
+    evidence_tier: Annotated[Literal[EvidenceTier.LEGAL_AUTHORITY], BeforeValidator(coerce_enum_member(EvidenceTier))]
     authority: PublishingAuthorityField
     kind: Literal[
         "ley",
@@ -486,9 +484,7 @@ class LegalParameter(RegistryModel):
     """Versioned legal parameter value cited by registry formulas."""
 
     id: ParameterId
-    evidence_tier: Annotated[
-        Literal[EvidenceTier.LEGAL_AUTHORITY], BeforeValidator(coerce_enum_member(EvidenceTier))
-    ]
+    evidence_tier: Annotated[Literal[EvidenceTier.LEGAL_AUTHORITY], BeforeValidator(coerce_enum_member(EvidenceTier))]
     value: str
     unit: str
     applies_to: str

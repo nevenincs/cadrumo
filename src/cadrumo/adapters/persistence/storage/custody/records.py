@@ -188,10 +188,6 @@ class ProfileCustodyEnvelope(_ProfileCustodyEnvelopePayload, CustodyDigestModel)
     def _validate_self_digest(cls, value: str) -> str:
         return validate_prefixed_digest(value, field_name="self_digest")
 
-
-
-
-
     @classmethod
     def create(
         cls,

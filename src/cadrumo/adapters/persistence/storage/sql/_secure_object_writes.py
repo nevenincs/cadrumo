@@ -105,9 +105,7 @@ class SecureObjectWriteOperations:
 
         def _check_session_freshness(self, namespace: str | None = None) -> None: ...
 
-        def _registered_namespace_definition(
-            self, namespace: str
-        ) -> SecureObjectNamespaceDefinition | None: ...
+        def _registered_namespace_definition(self, namespace: str) -> SecureObjectNamespaceDefinition | None: ...
 
         def _enforce_registered_write_policy(
             self,

@@ -379,8 +379,7 @@ def _validate_municipality_code(value: object) -> object:
         raise RegistryValidationError(f"municipality_code value must be a string, got {type(value).__name__}")
     if not _MUNICIPALITY_CODE_RE.match(value):
         raise RegistryValidationError(
-            f"municipality_code value {value!r} must be an INE code: "
-            "a province code (01-52) followed by three digits",
+            f"municipality_code value {value!r} must be an INE code: a province code (01-52) followed by three digits",
         )
     return value
 

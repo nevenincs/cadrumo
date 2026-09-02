@@ -104,8 +104,7 @@ def test_the_detector_fires_on_a_planted_violation() -> None:
     planted = find_private_import_violations([reach])
 
     assert [v.target_mod for v in planted] == ["cadrumo.zzz_owner._secret"], (
-        "the detector did not see a cross-package private import, so the zero "
-        "asserted above proves nothing"
+        "the detector did not see a cross-package private import, so the zero asserted above proves nothing"
     )
 
 

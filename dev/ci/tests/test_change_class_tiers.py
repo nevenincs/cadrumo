@@ -250,9 +250,7 @@ def test_every_pull_request_workflow_guards_every_job_against_fork_heads() -> No
 
 
 def _workflow_paths() -> list[Path]:
-    return sorted(
-        {*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}
-    )
+    return sorted({*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")})
 
 
 def test_no_workflow_downloads_an_artifact_from_another_run() -> None:

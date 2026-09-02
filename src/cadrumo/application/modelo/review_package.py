@@ -80,7 +80,6 @@ _DRAFT_MEMBER = "draft.fichero-boe"
 #: current.
 
 
-
 ReviewPackageActor = Annotated[
     str,
     StringConstraints(min_length=1, max_length=ACTOR_LABEL_MAX_LENGTH),

@@ -18,5 +18,4 @@ consumer reads bytes directly rather than through a filesystem path.
 
 from __future__ import annotations
 
-__all__ = [
-]
+__all__ = []

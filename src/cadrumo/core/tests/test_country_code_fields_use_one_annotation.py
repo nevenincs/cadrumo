@@ -62,8 +62,7 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "tolerating a stray space on a typed row, and nothing else"
     ),
     "domain/modelos/row_models.py::codigo_pais": (
-        "the same _IsoCountryCode alias and the same manual-entry rows as its "
-        "sibling pais field above"
+        "the same _IsoCountryCode alias and the same manual-entry rows as its sibling pais field above"
     ),
     "domain/calculations/registry/convenio.py::country_code": (
         "a treaty file keyed by country and authored by hand, so the anchored "

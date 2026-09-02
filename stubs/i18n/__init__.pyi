@@ -10,6 +10,7 @@
 load_path: list[str]
 
 def set(key: str, value: object) -> None: ...
+
 # `t` returns the translated string, or the key itself when nothing matches --
 # but it also returns `kwargs['default']` verbatim when that is supplied, and
 # a caller may pass any object as the default. `str` was too narrow: it made

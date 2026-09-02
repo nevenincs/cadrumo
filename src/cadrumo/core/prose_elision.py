@@ -176,6 +176,7 @@ class ElidedProse:
             )
         )
 
+
 #: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
 #:
 #: Homed here rather than beside its first consumer because BOTH the ledger

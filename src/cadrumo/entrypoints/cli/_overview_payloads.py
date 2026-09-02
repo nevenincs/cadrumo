@@ -127,9 +127,7 @@ class OverviewCalendarEventPayload(OutputSchema):
     period: str | None = None
     status: str | None = None
     source_url: str | None = None
-    aeat_submission_state: OverviewAeatSubmissionStateValue | None = (
-        None
-    )
+    aeat_submission_state: OverviewAeatSubmissionStateValue | None = None
     aeat_submitted_at: str | None = None
     justificante_verified: bool | None = None
     verified_justificante_csv: AeatCsv | None = None
@@ -180,9 +178,7 @@ class OverviewCalendarEventSummaryPayload(OutputSchema):
     summary: str
     reference_id: str
     status: str | None = None
-    aeat_submission_state: OverviewAeatSubmissionStateValue | None = (
-        None
-    )
+    aeat_submission_state: OverviewAeatSubmissionStateValue | None = None
     aeat_submitted_at: str | None = None
     justificante_verified: bool | None = None
 

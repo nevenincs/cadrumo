@@ -48,11 +48,7 @@ _POLICY_LITERALS: dict[str, str] = {
 
 
 def _modules() -> list[Path]:
-    return [
-        path
-        for path in sorted(_PACKAGE.rglob("*.py"))
-        if "tests" not in path.relative_to(_PACKAGE).parts
-    ]
+    return [path for path in sorted(_PACKAGE.rglob("*.py")) if "tests" not in path.relative_to(_PACKAGE).parts]
 
 
 def _string_constants(path: Path) -> set[str]:
@@ -92,8 +88,7 @@ def test_each_policy_table_is_declared_once() -> None:
                 continue
             offenders.append(f"{path.relative_to(_PACKAGE).as_posix()} restates {description}")
     assert not offenders, (
-        "these modules declare an identity policy table that "
-        f"{_AUTHORITY} already owns; import it instead: {offenders}"
+        f"these modules declare an identity policy table that {_AUTHORITY} already owns; import it instead: {offenders}"
     )
 
 
@@ -104,9 +99,7 @@ def test_the_checksum_arithmetic_has_one_home() -> None:
         if path.name == _AUTHORITY:
             continue
         source = path.read_text(encoding="utf-8")
-        body = "\n".join(
-            line for line in source.splitlines() if not line.lstrip().startswith("#")
-        )
+        body = "\n".join(line for line in source.splitlines() if not line.lstrip().startswith("#"))
         prose = "\n".join(_docstrings(path))
         for expression in ("% 23", "(10 - "):
             if expression in body and expression not in prose:

@@ -50,9 +50,7 @@ class CensalReviewedFrontendResult:
     projection: CensalReviewProjectionV1
 
 
-async def _observe(
-    services: OperationComposedServices, operation_id: str
-) -> OperationObservationSuccessV1:
+async def _observe(services: OperationComposedServices, operation_id: str) -> OperationObservationSuccessV1:
     observed = await services.observation.observe(
         OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=_OBSERVATION_LIMIT)
     )

@@ -300,6 +300,8 @@ def test_core_facade_exposes_the_single_projection_union_owner() -> None:
     assert {model_type.__name__ for model_type in _REF_MODELS} <= declarations
     assert owner.M303ProrrataActivityProjectionRef is not None
     assert owner.filing_projection_ref_casilla_id.__module__ == owner.__name__
+
+
 def test_simplified_activity_reference_refuses_cross_cohort_field_drift() -> None:
     with pytest.raises(ValidationError, match="requires field"):
         M303RegimenSimplificadoActivityProjectionRef(

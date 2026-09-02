@@ -120,9 +120,7 @@ def _unreachable_attribute_reads() -> dict[str, list[str]]:
             package = bound_packages[binding]
             reachable = _reachable_names(package / "__init__.py")
             missing = sorted(
-                attribute
-                for attribute in attributes
-                if attribute not in reachable and not attribute.startswith("__")
+                attribute for attribute in attributes if attribute not in reachable and not attribute.startswith("__")
             )
             if missing:
                 package_name = package.relative_to(_SRC).as_posix()

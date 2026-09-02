@@ -213,9 +213,7 @@ def test_modelo_194_refuses_a_mutated_2023_selector_past_its_source_window() -> 
         },
     )
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, "2023": expanded}})
-    selected = select_revision(
-        mutated_modelo, filing_year=2024, period="0A", on=date(2024, 12, 31), revision_id="2023"
-    )
+    selected = select_revision(mutated_modelo, filing_year=2024, period="0A", on=date(2024, 12, 31), revision_id="2023")
     (source_ref,) = (ref for ref in selected.source_refs if ref.startswith("aeat-dr-194-"))
 
     with pytest.raises(RegistryValidationError, match="does not apply to filing year 2024"):

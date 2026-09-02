@@ -186,5 +186,3 @@ def has_employment_irpf_category(value: str | None, *, direction: TransactionDir
     """
     descriptor = ledger_irpf_category(value, direction=direction)
     return descriptor is not None and descriptor.purpose == "employment_income"
-
-

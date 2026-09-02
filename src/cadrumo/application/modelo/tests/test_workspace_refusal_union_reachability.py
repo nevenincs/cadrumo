@@ -144,7 +144,9 @@ def test_every_refusal_union_member_is_either_emitted_or_adjudicated() -> None:
     counts = _production_construction_counts()
     assert counts, "no union members were resolved; this gate would pass vacuously"
 
-    unadjudicated = sorted(name for name, count in counts.items() if count == 0 and name not in _ADJUDICATED_UNREACHABLE)
+    unadjudicated = sorted(
+        name for name, count in counts.items() if count == 0 and name not in _ADJUDICATED_UNREACHABLE
+    )
     assert not unadjudicated, (
         "refusal union member(s) have no production construction and no ruling. The union "
         "advertises an outcome the assembler cannot emit, so every consumer's branch for it is "

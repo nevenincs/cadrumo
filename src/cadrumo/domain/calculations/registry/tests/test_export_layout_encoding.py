@@ -87,6 +87,7 @@ def test_layout_refuses_the_retired_alias_spelling() -> None:
             ),
         )
 
+
 def test_layout_with_mixed_canonical_encodings_rejected() -> None:
     """Mixing cp1252 with iso-8859-15 is a genuine inconsistency — rejected."""
 
@@ -131,6 +132,7 @@ def test_the_stored_token_hydrates_to_its_member() -> None:
     )
 
     assert layout.records[0].encoding is ExportEncoding.ISO_8859_1
+
 
 def test_an_unrecognised_export_format_token_is_refused_naming_the_accepted_set() -> None:
     """The refusal the closed set buys, at the boundary rather than downstream.

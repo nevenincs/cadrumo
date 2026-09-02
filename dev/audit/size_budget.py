@@ -79,7 +79,7 @@ _BASELINE_COMMENT = (
     "above its subject than the declared slack tolerance, so a pin cannot silently outlive the "
     "size it was taken from. 'notes' is the one hand-maintained section: prose only, never "
     "numbers, carried forward verbatim across regeneration and dropped when its key disappears. "
-    "Keys are repo-relative POSIX paths, and 'path::function' for callables."
+    "Keys are repo-relative POSIX paths, and 'path::function' for callables.",
 )
 
 
@@ -146,7 +146,6 @@ def main(argv: list[str] | None = None) -> int:
     assert_real_corpus(modules, callables)
 
     print(f"size budget: scanned {len(modules)} modules, {len(callables)} production callables.")
-
 
     baseline = load_size_budget_baseline()
     module_verdict = evaluate_budget(modules, baseline.modules, MODULE_POLICY)

@@ -262,7 +262,9 @@ class M303RegimenSimplificadoFilingEvidence(BaseModel):
     @model_validator(mode="after")
     def _rows_match_scope_and_snapshot(self) -> M303RegimenSimplificadoFilingEvidence:
         if self.scope_decision != self.regimen_snapshot.scope_decision:
-            raise ModeloValidationError("M303 simplified-regime evidence scope disagrees with its annual Orden snapshot")
+            raise ModeloValidationError(
+                "M303 simplified-regime evidence scope disagrees with its annual Orden snapshot"
+            )
         if self.rows.ejercicio != self.regimen_snapshot.orden.ejercicio:
             raise ModeloValidationError("M303 simplified-regime evidence year disagrees with its annual Orden snapshot")
         _validate_m303_regimen_simplificado_result_coordinate(self)

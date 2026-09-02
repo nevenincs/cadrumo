@@ -22,7 +22,6 @@ _DEFAULT_CATALOGUE_PATH = bundled_path("registry", "aeat", "apoderamientos", "sc
 ALL_TOKEN = "ALL"
 
 
-
 ApoderadoScopeCode = Annotated[str, StringConstraints(min_length=1, max_length=32)]
 """The AEAT code naming one apoderamiento scope."""
 

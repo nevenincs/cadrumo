@@ -61,7 +61,14 @@ type OneBasedExportOffset = Annotated[int, Field(ge=1)]
 
 
 ExportFieldDataType = Annotated[
-    Literal[CasillaDataType.TEXT, CasillaDataType.INTEGER, CasillaDataType.DECIMAL, CasillaDataType.MONEY, CasillaDataType.DATE, CasillaDataType.BOOLEAN],
+    Literal[
+        CasillaDataType.TEXT,
+        CasillaDataType.INTEGER,
+        CasillaDataType.DECIMAL,
+        CasillaDataType.MONEY,
+        CasillaDataType.DATE,
+        CasillaDataType.BOOLEAN,
+    ],
     BeforeValidator(coerce_enum_member(CasillaDataType)),
 ]
 """The scalar kinds a fixed-width export field may carry.
@@ -907,7 +914,9 @@ class ExportLayoutDefinition(RegistryModel):
         declared = {record.id: record.encoding for record in self.records}
         unique_encodings = set(declared.values())
         if len(unique_encodings) > 1:
-            per_record = ", ".join(f"{record_id}={encoding.value!r}" for record_id, encoding in sorted(declared.items()))
+            per_record = ", ".join(
+                f"{record_id}={encoding.value!r}" for record_id, encoding in sorted(declared.items())
+            )
             raise RegistryValidationError(
                 f"export layout {self.id!r} declares inconsistent encodings "
                 f"across its records: {per_record}. A single fichero-BOE "
