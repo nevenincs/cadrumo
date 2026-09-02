@@ -55,13 +55,13 @@ from pydantic import BaseModel
 
 from .....core.config import load_settings
 from .....core.decimal.coercion import coerce_decimal
+from .....core.decimal.grammar import DecimalSeparatorValue
 from .....core.errors.hierarchy import CadrumoError, CoreValidationError
 from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.parsing import normalise_iso_4217_currency
 from .....core.tabular import coerce_cell_text
-from .....core.decimal.grammar import DecimalSeparatorValue
 from .....core.text_fold import fold_diacritics
 from .....core.time.clock import now
 from .....domain.transactions.enums import TransactionDirection

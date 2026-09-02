@@ -22,10 +22,11 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import Literal, override
+from typing import override
 
 from pydantic import BaseModel, Field
 
+from .....core.decimal.grammar import DecimalSeparator, DecimalSeparatorValue
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CoreValidationError
 from .....core.logging import get_logger
@@ -36,7 +37,6 @@ from .....core.tabular import (
     decode_tabular_bytes,
     detect_tabular_delimiter,
 )
-from .....core.decimal.grammar import DecimalSeparator, DecimalSeparatorValue
 from .....domain.transactions.enums import TransactionDirection
 from .....domain.transactions.raw_transaction import SourceFormat
 from ._constants import CSV_EXTENSIONS
