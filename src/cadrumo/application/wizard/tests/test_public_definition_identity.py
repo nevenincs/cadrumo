@@ -20,7 +20,6 @@ _PUBLIC_MODULE_NAMES = (
     "catalogue",
     "commands",
     "compiler",
-    "copy_sources",
     "descendant_door",
     "descendant_group",
     "errors",
@@ -37,13 +36,11 @@ _INTERNAL_MODULE_NAMES = (
     "_checkpoint_store",
     "_format_hints",
     "_registered_values",
-    "_translations",
 )
 _MOVED_MODULE_NAMES = (
     "catalogue",
     "commands",
     "compiler",
-    "copy_sources",
     "descendant_group",
     "errors",
     "flow_validators",

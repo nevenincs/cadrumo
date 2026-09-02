@@ -14,7 +14,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import BaseModel, ConfigDict
 
+from cadrumo.application.wizard.models import WizardChoice, WizardFlow, WizardQuestion, WizardSection, WizardWidget
 from cadrumo.core.i18n import Translatable as tr
 from dev.locales.wizard_translation_audit import (
     _FIXED_RUNTIME_KEYS,
@@ -22,10 +24,12 @@ from dev.locales.wizard_translation_audit import (
     _walk_keys,
     cli_keys_referenced_in_source,
 )
-from ..models import WizardChoice, WizardFlow, WizardQuestion, WizardSection, WizardWidget
-from ._support import EmptyAnswersBase
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+class EmptyAnswersBase(BaseModel):
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 def _build_minimal_flow(*, with_help: bool = False, with_choice_description: bool = False) -> WizardFlow:

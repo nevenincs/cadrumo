@@ -128,7 +128,7 @@ owner = "source-connectivity-campaign"
 review_condition = "The accepted mapping makes a validated 2025 activity-asset schedule the exclusive future source for casillas 0208 and 0227, requires transaction-ledger collisions to refuse, and keeps finca casilla 0131 separate. The current encrypted scalar ledger remains ingress-blocked until the typed schedule, legal validation, canonical source kind, resolver ownership, provenance, encrypted revision and replay, operator review, and supported export proof are implemented."
 expires_on = 2026-12-31
 capability_locators = [
-  "src/cadrumo/adapters/persistence/profile/assets.py:227",
+  "src/cadrumo/adapters/persistence/profile/assets.py:163",
 ]
 capability_ids = [
   "secure_repository:src/cadrumo/adapters/persistence/profile/assets.py:AmortizacionLedgerRepository",
@@ -139,7 +139,7 @@ advisory_destination_refs = [
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/adapters/persistence/profile/assets.py:227"
+reference = "src/cadrumo/adapters/persistence/profile/assets.py:163"
 summary = "Encrypted FINANCIAL amortization-ledger repository exists without a canonical calculation-source handoff."
 
 [[entries.grounding]]
@@ -160,7 +160,7 @@ owner = "source-connectivity-campaign"
 review_condition = "Official evidence must determine whether the encrypted asset register carries an independent filing fact or merely supports transaction-ledger expenses and amortization. Any connection requires a separately grounded asset/activity grain, revision window, destination semantics, valuation basis, disposal treatment, units, sign, rounding, absence semantics, and override policy."
 expires_on = 2026-12-31
 capability_locators = [
-  "src/cadrumo/adapters/persistence/profile/assets.py:112",
+  "src/cadrumo/adapters/persistence/profile/assets.py:48",
 ]
 capability_ids = [
   "secure_repository:src/cadrumo/adapters/persistence/profile/assets.py:AssetsLedgerRepository",
@@ -171,7 +171,7 @@ advisory_destination_refs = [
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/adapters/persistence/profile/assets.py:112"
+reference = "src/cadrumo/adapters/persistence/profile/assets.py:48"
 summary = "Encrypted FINANCIAL asset-register storage exists, but storage identity does not establish a filing destination or independent calculation fact."
 
 [entries.bounded_follow_up]
