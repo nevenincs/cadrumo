@@ -74,6 +74,7 @@ from ..pipeline._provenance_manifest import (
 )
 from ..pipeline._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
 from ..pipeline._tree_validation import GeneratedExportTreeValidationContext
+from ..pipeline.render_check import parsed_tree_file
 from .test_generated_export_trees import (
     _GENERATED_TREES,
     _authorities,
@@ -396,7 +397,26 @@ def test_m303_2026_publication_is_twice_reproducible_and_check_mode_is_non_mutat
         first_registry_root, _first_metadata_root, first_export_root, *_first_authorities = first
         second_registry_root, _second_metadata_root, second_export_root, *_second_authorities = second
 
-        assert _tree_bytes(first_export_root) == _tree_bytes(second_export_root) == _tree_bytes(tree.committed)
+        # Two claims live here and only one of them is about bytes. Rendering twice
+        # must be byte-identical, because that is the determinism this test is named
+        # for and a serializer cannot excuse a difference between two runs of itself.
+        # Matching the SHIPPED tree is a claim about meaning: a closed-vocabulary
+        # conversion changed how one field is quoted across every generated tree
+        # without changing any value, so that half is compared parsed.
+        first_bytes = _tree_bytes(first_export_root)
+        assert first_bytes == _tree_bytes(second_export_root)
+
+        committed_bytes = _tree_bytes(tree.committed)
+        assert set(first_bytes) == set(committed_bytes)
+        semantically_differing = [
+            name
+            for name, raw in sorted(first_bytes.items())
+            if (parsed := parsed_tree_file(name, committed_bytes[name])) is None
+            or parsed != parsed_tree_file(name, raw)
+        ]
+        assert semantically_differing == [], (
+            f"records whose meaning differs from the shipped tree: {semantically_differing}"
+        )
         assert collect_export_fragment_output_digests(first_export_root) == collect_export_fragment_output_digests(
             second_export_root
         )

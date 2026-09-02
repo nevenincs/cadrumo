@@ -52,6 +52,7 @@ class ModeloCalculationRevisionSelectorAmbiguousError(ModeloCalculationRevisionS
     """Raised when a default revision selector would have to guess."""
 
     def __init__(self, candidates: tuple[ModeloCalculationRevisionCandidate, ...]) -> None:
+        """Initialize the error with the ambiguous candidate revisions."""
         self.candidates = candidates
         super().__init__("calculation revision selector is ambiguous; choose an explicit selector or revision id")
 

@@ -116,6 +116,7 @@ class ModeloProjectionError(CadrumoError):
         context: Mapping[str, object] | None = None,
         translated_message: str | None = None,
     ) -> None:
+        """Initialize the error, falling back to the translated message or class name."""
         super().__init__(
             message or translated_message or self.__class__.__name__,
             context=dict(context or {}),

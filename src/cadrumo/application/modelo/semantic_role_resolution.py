@@ -73,6 +73,7 @@ class AmbiguousSemanticRoleCasillaError(ModeloError, ValueError):
     """
 
     def __init__(self, ambiguity: SemanticRoleCasillaAmbiguity) -> None:
+        """Initialize the error from the ambiguous semantic-role resolution."""
         self.ambiguity = ambiguity
         scope: list[str] = []
         if ambiguity.modelo_id is not None:

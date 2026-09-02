@@ -409,6 +409,7 @@ def _sorted_movements(ledger: InventoryLedger) -> tuple[MovementRecord, ...]:
 
 
 def layers_value(layers: tuple[StockLayer, ...] | list[StockLayer]) -> Decimal:
+    """Return the total value of ``layers``, summing quantity times unit cost."""
     return sum((layer.quantity * layer.unit_cost for layer in layers), _ZERO)
 
 

@@ -23,6 +23,8 @@ _log = get_logger(__name__)
 
 @dataclass(frozen=True)
 class WorkbookHeader:
+    """Column positions of a matched record-design header row."""
+
     row_number: int
     ordinal_index: int
     offset_index: int
@@ -35,6 +37,7 @@ class WorkbookHeader:
 
 
 def is_blank_row(values: tuple[object, ...]) -> bool:
+    """Return whether every cell in ``values`` is empty or whitespace-only."""
     return all(value is None or str(value).strip() == "" for value in values)
 
 
@@ -134,6 +137,12 @@ def find_header(
     worksheet: Worksheet,
     header_corrections: HeaderCorrectionIndex | None = None,
 ) -> tuple[WorkbookHeader, RecordDesignHeaderCellCorrection | None]:
+    """Return the matched header of an openpyxl ``.xlsx`` worksheet, or raise.
+
+    Raises:
+        RegistryValidationError: When no row within the first ten rows matches
+            either recognised header shape.
+    """
     sheet_name = worksheet.title.strip()
     for row_number, row in enumerate(worksheet.iter_rows(min_row=1, max_row=10, values_only=True), start=1):
         matched = _probe_header_row(
@@ -152,6 +161,12 @@ def find_xls_header(
     worksheet: XlrdSheet,
     header_corrections: HeaderCorrectionIndex | None = None,
 ) -> tuple[WorkbookHeader, RecordDesignHeaderCellCorrection | None]:
+    """Return the matched header of a legacy xlrd ``.xls`` worksheet, or raise.
+
+    Raises:
+        RegistryValidationError: When no row within the first ten rows matches
+            either recognised header shape.
+    """
     sheet_name = worksheet.name.strip()
     header_corrections = header_corrections or EMPTY_HEADER_CORRECTIONS
     for rowx in range(min(10, worksheet.nrows)):
@@ -173,10 +188,12 @@ def _is_ordinal_header(value: object | None) -> bool:
 
 
 def cell_at(values: tuple[object, ...], index: int) -> object | None:
+    """Return ``values[index]``, or ``None`` when ``index`` is out of range."""
     return values[index] if index < len(values) else None
 
 
 def optional_text(value: object | None) -> str | None:
+    """Return the cell's coerced text, or ``None`` when it is blank."""
     cleaned = coerce_cell_text(value)
     return cleaned or None
 
@@ -195,6 +212,7 @@ def ordinal_text(value: object | None) -> str | None:
 
 
 def optional_header_text(values: tuple[object, ...], index: int | None) -> str | None:
+    """Return the cell text at ``index``, or ``None`` when ``index`` is absent or blank."""
     if index is None:
         return None
     return optional_text(cell_at(values, index))
@@ -258,6 +276,12 @@ def field_description_text(
     sheet: str,
     row: int,
 ) -> str:
+    """Return the row's field description, falling back to ``content``, or raise.
+
+    Raises:
+        RegistryValidationError: When both the description cell and
+            ``content`` are absent.
+    """
     description = optional_text(cell_at(values, header.description_index))
     if description is not None:
         return description
@@ -267,6 +291,7 @@ def field_description_text(
 
 
 def int_or_none(value: object | None) -> int | None:
+    """Return ``value`` as an int when it is a whole-number int or float, else ``None``."""
     if isinstance(value, bool):
         return None
     if isinstance(value, int):
@@ -364,6 +389,7 @@ def _optional_header_index(values: tuple[object, ...], *header_names: str) -> in
 
 
 def total_label_index(values: tuple[object, ...]) -> int | None:
+    """Return the index of the row's ``Total`` label cell, or ``None`` when absent."""
     for index, value in enumerate(values):
         if _normalise_header_cell(value) in {"total", "total:"}:
             return index
@@ -371,6 +397,7 @@ def total_label_index(values: tuple[object, ...]) -> int | None:
 
 
 def positive_integer_after(values: tuple[object, ...], label_index: int) -> int | None:
+    """Return the first strictly-positive integer after ``label_index``, or ``None``."""
     for candidate in values[label_index + 1 :]:
         total = int_or_none(candidate)
         if total is not None and total > 0:

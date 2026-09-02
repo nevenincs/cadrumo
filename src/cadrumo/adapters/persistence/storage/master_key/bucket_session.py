@@ -96,6 +96,7 @@ class BucketSession:
         storage_root: Path | None,
         kek_available: bool = True,
     ) -> None:
+        """Initialize the session's key buffers, deadlines, and bucket identity."""
         self._bucket_id = bucket_id
         self._storage_root = storage_root
         self._kek_available = kek_available
@@ -272,6 +273,7 @@ class BucketSession:
 
     @property
     def bucket_id(self) -> str:
+        """Return the identifier of the bucket this session unlocked."""
         return self._bucket_id
 
     @property
@@ -281,14 +283,17 @@ class BucketSession:
 
     @property
     def sealed(self) -> bool:
+        """Return whether :meth:`close` has already sealed this session."""
         return self._sealed
 
     @property
     def unsecured_backend(self) -> bool:
+        """Return whether this session was opened against an unsecured backend."""
         return self._unsecured_backend
 
     @property
     def idle_deadline(self) -> datetime:
+        """Return the current sliding idle deadline."""
         return self._idle_deadline
 
     @property

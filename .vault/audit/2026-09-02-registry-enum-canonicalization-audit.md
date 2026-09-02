@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:05518b27df8fea46f87ed959525055ed76903d12c4f19a82b06ffbf0f4479efb'
+body_hash: 'sha256:5db51836f8fc58ac54e2eb9e18302ba96d27018399989f6dd3962caf25070732'
 related: []
 ---
 
@@ -832,3 +832,35 @@ always documented this limit. What is new is that it has now cost two real defec
 two consecutive targets, which makes it the campaign's dominant remaining risk rather
 than a footnote — the annotation count can reach zero while the vocabulary surface has
 not.
+
+## Finding 39 — the decimal separator was declared ten times across five files
+
+The scan named three fields. Grepping the raw token pair found ten annotation sites in
+five modules: the three fields, plus a detector's return type, a `Counter` type
+parameter, an evidence helper's return, and three function parameters in the provider
+base and the bulk importer. Every one of the seven extra sites is a form the scan
+structurally cannot reach, because it reads field annotations only.
+
+Resolved as `DecimalSeparator` in `core/decimal/grammar.py`, beside the separator
+normalisation that already lived there. 372 provider and invoice tests pass, 33 tabular
+dialect tests pass.
+
+## Finding 40 — one token, two vocabularies, correctly left apart
+
+`ObservationSourceKind` already declared `operator_manual`, which made it look like the
+canonical home for `[aeat_live, local_filing, operator_manual]`. It is not. It splits
+the AEAT origins three ways for filing-grade evidence and uses `app_filing` where the
+sheet vocabulary says `local_filing`. Unifying them would have let a workbook cell
+claim a filing-grade AEAT origin it never established.
+
+The same trap appeared a second time in the same target: `_LOCAL_FILING_PROVENANCE` in
+`binding_prefill.py` feeds both a `provenance` field and a `source_kind` field, and the
+source kinds beside it are a different set entirely. That constant was left alone. Only
+`relation_prefill.py`'s constant, which feeds `RelationValue.provenance` and nothing
+else, was retired onto the member.
+
+Promoted as `SheetRelationProvenance` in the calc-sheets records module, the module the
+adapter already imported from, so the edge is one that existed rather than a new one.
+48 owning tests pass.
+
+Package-wide after three targets: 24 duplicated, 0 crossing the registry boundary.

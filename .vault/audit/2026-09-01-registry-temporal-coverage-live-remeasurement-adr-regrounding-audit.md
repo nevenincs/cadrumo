@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:6a889ad8788cb384f5c6f009582678746936830e531f506be7e329fc29610099'
+body_hash: 'sha256:8dc1ae86a49b44d8ebf4b36179805288be8ec1ce527ed4b3c46e9cced38b4c27'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -3672,3 +3672,86 @@ commit that staled them.
 What was fixed here is precision, not the underlying condition. A failure naming one
 file and one cause is actionable; a failure naming sixteen files, fourteen of which
 differ only in how a string is quoted, teaches the reader to skim it.
+
+### A signature that already declared the enum was returning strings
+
+`_evidence_for_workbook_kind` is annotated to return `EvidenceTier | None` and a tuple of
+`EvidenceTier`, and it returned bare strings such as `"executable_parity_evidence"`. The
+annotation had been wrong since it was written. Nothing surfaced it because a `StrEnum`
+member compares equal to its own value, so every test asserting the tier passed against
+either form and no reader had cause to look.
+
+The closed-vocabulary conversion is what made it fail, and that is worth stating in the
+enum conversion's favour. The conversion did not introduce this defect; it revealed one
+that a permissive boundary had been hiding. The same is true of the three fixtures
+spelling the encoding as `latin-1`: the token was never canonical, and only a typed
+field refused it.
+
+Both sites now construct the enum. The failure this fixes is real rather than cosmetic,
+because the value crosses into a strictly-validating registry model, and the annotation
+now describes what the function does.
+
+### A green run that selected nothing
+
+Verifying that change first produced "3 passed" over two test modules, and the number was
+the finding. `test_workbook_parity.py` carries the `external_tool` marker and the default
+lane selects `unit and not external_tool`, so all 24 of its tests - every test that
+actually exercises the module being changed - were deselected. The three that ran came
+from the other file and touch none of it.
+
+Re-run with the marker admitted, the 24 pass. The change is verified; it was not verified
+by the run that first appeared to verify it. This is the second time in this campaign that
+a marker turned a change's own test suite into an empty selection reported as success, and
+the remedy both times was to read the collection count rather than the exit code. A count
+that is lower than the file obviously contains is the cheapest available signal, and it
+costs one `--collect-only`.
+
+### Determinism and shipped-tree equality were one assertion
+
+The m303 envelope proof asserted `first == second == committed` in a single chain. Two
+different claims sat inside it. That rendering twice yields identical bytes is
+determinism, it is what the test is named for, and no serializer change can excuse a
+difference between two runs of the same code - that half stays byte-exact. That the
+render matches the shipped tree is a claim about meaning, and it is the half the quote
+flip breaks.
+
+They are now separate assertions with separate comparisons, and the failure message names
+which claim failed. The residue is the same stale manifest as everywhere else, and it is
+left failing for the same reason.
+
+### The invisible-test condition is now reported rather than noticed
+
+Twice in this campaign a change was verified against a run that selected none of the
+tests exercising it, and both times the exit code was 0. Relying on a reader to notice
+that a collected count looks low is not a control, so the condition is now a screen.
+
+`default_lane_visibility` reads the lane predicate out of the project's own `addopts`
+rather than restating it, which matters for the same reason the rest of this campaign
+matters: a hand-copied predicate is a second declaration of one fact and is free to
+drift from the selection it claims to describe. Markers are read statically from the
+module-level `pytestmark` assignment, so no test is imported or executed to produce the
+report and the screen cannot suffer the collection effects it exists to describe.
+
+The first version of the screen was wrong and the corpus said so immediately. It
+reported 99 modules as carrying no execution marker; every one of them carried
+`integration`. Those modules run - in their own lane - and calling them unrun would have
+made the report useless by burying its own sharpest row under ninety-nine false ones,
+which is precisely the failure this audit recorded for `record_drift` two findings
+earlier. The classes are now separated: `other_execution_lane` for a module that runs
+elsewhere, `no_execution_marker` for one that runs nowhere.
+
+Corrected, the tree reports zero modules carrying no execution marker. That is a
+reassuring result and it is only worth anything because the condition is constructed and
+caught in the same suite: a module marked `hex_core` alone is reported, so the empty
+corpus result means the tree is clean rather than the screen being blind.
+
+One module carries per-function markers instead of a module-level assignment, and the
+screen says so rather than guessing. The live collection agrees with that refusal: one
+of its two tests is selected and one is held out by `resident_service`.
+
+A defect in the screen itself surfaced through its own tests. `visibility_census`
+anchored every reported path to the repository root, so it raised `ValueError` on any
+tree outside it - which is every constructed fixture. The remedy was in the module rather
+than the test: the path is now anchored to the repository when it sits inside one and to
+the scanned root otherwise. A screen that can only be run over the repository cannot be
+shown to detect anything the repository does not already contain.

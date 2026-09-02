@@ -46,6 +46,7 @@ class CitationLookup:
     """
 
     def __init__(self, legal: Mapping[str, LegalReference], *, source_root: Path) -> None:
+        """Initialize the lookup with the legal catalogue and the corpus source root."""
         self._legal = dict(legal)
         self._source_root = source_root.resolve()
 

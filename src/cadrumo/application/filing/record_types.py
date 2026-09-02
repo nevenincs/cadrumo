@@ -10,6 +10,8 @@ from ...domain.calculations.registry.ids import BindingId, RecordId
 
 @dataclass(frozen=True, slots=True)
 class RecordRenderRow:
+    """One record row's position and the binding ids active on it."""
+
     row_index: int | None
     active_binding_ids: frozenset[BindingId]
 

@@ -224,6 +224,7 @@ class ModeloWorkflowGateError(ModeloError):
     """
 
     def __init__(self, result: WorkflowResult) -> None:
+        """Initialize the error from the aborted workflow result, deriving its rendered context."""
         self._result = result
         reason = result.aborted_reason.value if result.aborted_reason is not None else "unknown"
         super().__init__(

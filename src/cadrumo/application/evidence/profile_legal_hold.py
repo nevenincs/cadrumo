@@ -88,10 +88,12 @@ class LegalHoldCaseSnapshot(BaseModel):
 
     @property
     def canonical_payload(self) -> dict[str, object]:
+        """Return this snapshot's canonical JSON-shaped payload, digest field excluded."""
         return canonical_snapshot_payload(self)
 
     @property
     def computed_self_digest(self) -> str:
+        """Return the digest recomputed from this snapshot's canonical payload."""
         return canonical_snapshot_digest(
             self,
             maximum_bytes=_MAX_BYTES,
@@ -99,6 +101,7 @@ class LegalHoldCaseSnapshot(BaseModel):
         )
 
     def canonical_json_bytes(self) -> bytes:
+        """Return this snapshot serialised as canonical JSON bytes."""
         return canonical_snapshot_bytes(
             self,
             maximum_bytes=_MAX_BYTES,
@@ -113,6 +116,7 @@ class LegalHoldCaseSnapshot(BaseModel):
         open_case_ids: tuple[str, ...],
         observed_at: datetime,
     ) -> LegalHoldCaseSnapshot:
+        """Build a snapshot from the given open case identifiers, computing its digest."""
         unsigned = cls.model_construct(
             schema_version=LEGAL_HOLD_SNAPSHOT_SCHEMA_VERSION,
             profile_id=profile_id,
@@ -137,6 +141,7 @@ class LegalHoldCaseAuthority:
         root: Path | None = None,
         local_record_store: ProfileCustodyLocalRecordStore | None = None,
     ) -> None:
+        """Initialize the authority with the local record store and owner root."""
         self._local_record_store = local_record_store or default_profile_custody_local_record_store()
         self._root = profile_custody_owner_root(root, LEGAL_HOLD_OWNER_DIRNAME)
 
@@ -185,6 +190,7 @@ class LegalHoldCaseAuthority:
         )
 
     def path(self, profile_id: UUID) -> Path:
+        """Return the on-disk path of the legal case snapshot for ``profile_id``."""
         return self._root / f"{profile_id}.json"
 
     def _ensure_root(self) -> None:

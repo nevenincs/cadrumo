@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:d10ca58e5dc744b0340cc6ca64f827c41aac8e34f3d7791eac0b45b97ff9394d'
+body_hash: 'sha256:f1ec7ba45cd5f4fda67be670dc3ab30fcd05befd023647d3814631d204390877'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -72,15 +72,18 @@ does not need.
 
 - Landing the release path opens a release pull request on the next push to the
   default branch, so it requires operator sign-off rather than incremental merging.
-- The Trusted Publisher bindings are unregistered and their owning issue is blocked;
-  no publication can occur until they exist. Because nothing is registered, they
-  should be specified against the adopted workflow and the account's environment name
-  rather than the retired ones.
+- A Trusted Publisher binding takes one of two forms, and which one is decided by the
+  index rather than by preference: a name with no project behind it takes the pending
+  form, which also reserves it, while a name the index already carries takes the
+  ordinary project-level form. The primary name is held by a pending publisher; the two
+  corpus distributions already exist and therefore still owe the project-level form. An
+  upload of all three is refused until every one of them is bound.
 - Three structural CI gates currently pass and would refuse the adopted path: the
   self-hosted runner requirement, the Actions-artifact prohibition, and the workflow
   filename pins. Each needs its invariant restated, not suppressed.
-- The packaging lanes cannot build a cohort until the import-budget gate defect is
-  corrected, so the adopted path cannot be exercised end to end before that lands.
+- A structural gate proves the shape of a workflow, never that it works. No workflow in
+  the adopted path has executed, so every claim about it rests on local measurement
+  until one run exists.
 - Two versions are permanently burned and cannot be reminted.
 
 ## Implementation
@@ -107,6 +110,20 @@ owes. The tier rule, the availability states, the claim derivation and the pendi
 register are removed, along with the sealed release record's field naming them. Target
 roles and runner selectors are already owned by the canonical fleet manifest and are
 not restated here.
+
+Capability is demonstrated by compiling to the targets and running what comes out.
+Every declared distribution and channel artifact builds from one command, each file is
+checked against the index cap that governs it, and both console scripts are started from
+the built wheel in an environment holding only the artifact under test. A gate that
+parses a workflow, a descriptor that lists a channel, and a plan Step that is checked
+are all statements of intent; the built artifact that runs is the evidence. Publication
+is the natural end of that chain rather than a separate act.
+
+The same standard decides what is deleted. A development or release module whose only
+consumer is its own test has no target left to serve, and keeping it preserves the shape
+of a path the product no longer takes. Reachability is measured from the workflows, the
+recipe surface and production imports - never from a test, and never from a document
+that itself describes a retired path.
 
 ## Rationale
 

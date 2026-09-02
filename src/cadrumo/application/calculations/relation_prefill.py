@@ -1071,11 +1071,19 @@ class RelationPrefillSourceResolver:
         registry_snapshot: RegistrySnapshot | None = None,
         captured_at: datetime | None = None,
     ) -> None:
+        """Initialize the resolver with the optional repository, snapshot, and capture time."""
         self._repository = repository
         self._registry_snapshot = registry_snapshot
         self._captured_at = captured_at
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve ``relation_prefill`` values from the local store for ``context``.
+
+        Returns:
+            The resolved :class:`~application.aggregation.CalculationSourceResolution`
+            carrying relation values, binding values, diagnostics for
+            unresolved formula relations, and provenance for local filings.
+        """
         snapshot = self._registry_snapshot
         if snapshot is None:
             snapshot = bundled_authority().snapshot(

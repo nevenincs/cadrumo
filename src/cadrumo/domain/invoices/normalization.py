@@ -71,6 +71,7 @@ def _coerce_optional_datetime(value: object) -> datetime | None:
 
 
 def normalise_invoice_dates(payload: dict[str, object]) -> dict[str, object]:
+    """Coerce every present date and datetime field on ``payload`` in place, and return it."""
     for key, converter in (
         ("issued_at", _coerce_date),
         ("fx_rate_date", _coerce_optional_date),
@@ -127,6 +128,7 @@ def _judging[T](field: str, judge: Callable[[], T]) -> T:
 
 
 def normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, object]:
+    """Validate and normalise the counterparty country, tax id, and identification state in place."""
     country_raw = payload.get("counterparty_country")
     if isinstance(country_raw, str):
         payload["counterparty_country"] = _judging(
@@ -162,6 +164,7 @@ def normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, obje
 
 
 def normalise_invoice_currency(payload: dict[str, object]) -> dict[str, object]:
+    """Normalise the ISO 4217 currency field in place, and return the payload."""
     if "currency" in payload and isinstance(payload["currency"], str):
         try:
             payload["currency"] = normalise_iso_4217_currency(payload["currency"])
@@ -193,22 +196,26 @@ def _bounded_rejected_value(value: object) -> str:
 
 
 def raise_first_invoice_violation(violations: Iterable[tuple[bool, str]]) -> None:
+    """Raise on the first ``(violated, message)`` pair whose flag is true."""
     for violated, message in violations:
         if violated:
             raise InvoiceValidationError(message)
 
 
 def require_optional_non_negative(value: Decimal | None, message: str) -> None:
+    """Raise ``message`` when ``value`` is present and negative."""
     if value is not None and value < Decimal("0"):
         raise InvoiceValidationError(message)
 
 
 def require_equal(actual: Decimal, expected: Decimal, message: str) -> None:
+    """Raise ``message`` when ``actual`` does not equal ``expected``."""
     if actual != expected:
         raise InvoiceValidationError(message)
 
 
 def normalise_invoice_monetary_fields(payload: dict[str, object]) -> dict[str, object]:
+    """Coerce every present monetary field on ``payload`` to Decimal in place, and return it."""
     optional_fields = frozenset({"retention_rate", "retention_amount", "recargo_amount", "suplido_amount", "fx_rate"})
     for key in (
         "grand_total",
@@ -289,6 +296,12 @@ def derive_invoice_id_when_complete(
     *,
     derive_invoice_id: Callable[..., str],
 ) -> dict[str, object]:
+    """Derive and set ``invoice_id`` once every identity field is present, or refuse a mismatch.
+
+    Raises:
+        InvoiceValidationError: When the payload already carries an
+            ``invoice_id`` that disagrees with the derived one.
+    """
     # counterparty_tax_id is the one identity-bearing field with a declared
     # default (None, for a factura simplificada outside the RD 1619/2012
     # art. 6.1.d mandatory cases): omitting the key entirely is now a legal
@@ -320,6 +333,7 @@ def normalise_invoice_collections(
     *,
     normalise_linked_transaction_ids: Callable[[object], tuple[str, ...]],
 ) -> dict[str, object]:
+    """Normalise the linked-transaction and line collections in place, and return the payload."""
     if "linked_transaction_ids" in payload:
         payload["linked_transaction_ids"] = normalise_linked_transaction_ids(payload["linked_transaction_ids"])
     if "lines" in payload and isinstance(payload["lines"], Sequence) and not isinstance(payload["lines"], str | bytes):
@@ -328,6 +342,12 @@ def normalise_invoice_collections(
 
 
 def normalise_invoice_payment_id(payload: dict[str, object]) -> dict[str, object]:
+    """Validate and normalise ``payment_id`` to lowercase hex in place, or raise.
+
+    Raises:
+        InvoiceValidationError: When ``payment_id`` is a non-empty string that
+            is not a 64-character lowercase hex digest.
+    """
     if "payment_id" not in payload or not isinstance(payload["payment_id"], str):
         return payload
     normalized = payload["payment_id"].strip().lower()

@@ -112,6 +112,7 @@ class MissingOptionalExtraError(CoreError, ImportError):
     """
 
     def __init__(self, extra: OptionalExtra) -> None:
+        """Initialize the error from the missing optional-extra registry record."""
         self.extra = extra
         super().__init__(
             translated_message=type(self).code.message_key,

@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import content_hash_hex
+from ...core.period import Period
 from ...core.schema_family_disposition import RegistrySchemaFamilyDisposition
 from ...domain.calculations.registry.errors import RegistryFailureCondition, RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId
@@ -329,15 +330,13 @@ def capture_modelo_workspace_target_captures(
     )
     work_capture = work_port.capture_projection_with_epoch()
     resolution = work_capture.projection
-    assert resolution.modelo is not None
-    assert resolution.filing_year is not None
-    assert resolution.period is not None
+    resolved_modelo, resolved_filing_year, resolved_period = _resolved_obligation(resolution)
 
     registry_port = ModeloWorkspaceRegistryPortV1(
         authority=authority,
-        modelo_id=resolution.modelo,
-        filing_year=resolution.filing_year,
-        period=resolution.period.registry_token,
+        modelo_id=resolved_modelo,
+        filing_year=resolved_filing_year,
+        period=resolved_period.registry_token,
         grade=grade,
     )
     registry_capture = registry_port.capture_projection_with_epoch()
@@ -395,14 +394,12 @@ def resolve_modelo_workspace_target(
         authority=authority,
     )
     work_unit = resolution.work_unit
-    assert resolution.modelo is not None
-    assert resolution.filing_year is not None
-    assert resolution.period is not None
+    resolved_modelo, resolved_filing_year, resolved_period = _resolved_obligation(resolution)
     return ModeloWorkspaceResolvedTargetV1(
         bucket_id=resolution.bucket_id,
-        modelo=resolution.modelo,
-        filing_year=resolution.filing_year,
-        period=resolution.period,
+        modelo=resolved_modelo,
+        filing_year=resolved_filing_year,
+        period=resolved_period,
         law_selected_revision_id=axes.law_selected_revision_id,
         review_status=registry_projection.review_status,
         requested_revision_assertion=axes.requested_revision_assertion,
@@ -1087,6 +1084,30 @@ def resolve_graded_snapshot_baseline(
     )
 
 
+class ModeloWorkspaceAbsentRegistryProjectionError(ValueError):
+    """Raised when a registry capture returns without the projection it promised."""
+
+
+class ModeloWorkspaceUnresolvedWorkError(ValueError):
+    """Raised when a workspace read reaches a work selection that names no obligation."""
+
+
+def _resolved_obligation(resolution: ModeloWorkResolution) -> tuple[ModeloCode, int, Period]:
+    """Return the modelo, ejercicio and period a resolved selection names.
+
+    ``ModeloWorkResolution`` leaves all three optional because an unresolved
+    selection carries none of them. Every caller here has already selected a
+    work unit, so absence is a defect rather than a state to render -- and it
+    is refused rather than asserted, because an ``assert`` disappears under
+    ``python -O`` and would let a partial obligation reach the registry port.
+    """
+    if resolution.modelo is None or resolution.filing_year is None or resolution.period is None:
+        raise ModeloWorkspaceUnresolvedWorkError(
+            "work selection resolved without a complete modelo/ejercicio/period address",
+        )
+    return resolution.modelo, resolution.filing_year, resolution.period
+
+
 class ModeloWorkspaceStaleCursorError(ValueError):
     """Raised when a cursor's pinned coordinate no longer matches the current baseline.
 
@@ -1643,17 +1664,18 @@ def resolve_static_inspection_result(
     resolution = work_capture.projection
     registry_projection = registry_capture.projection
     inspection = registry_projection.inspection
-    assert inspection is not None
+    if inspection is None:
+        raise ModeloWorkspaceAbsentRegistryProjectionError(
+            "registry capture returned no inspection for the resolved revision",
+        )
 
     work_unit = resolution.work_unit
-    assert resolution.modelo is not None
-    assert resolution.filing_year is not None
-    assert resolution.period is not None
+    resolved_modelo, resolved_filing_year, resolved_period = _resolved_obligation(resolution)
     resolved_target = ModeloWorkspaceResolvedTargetV1(
         bucket_id=resolution.bucket_id,
-        modelo=resolution.modelo,
-        filing_year=resolution.filing_year,
-        period=resolution.period,
+        modelo=resolved_modelo,
+        filing_year=resolved_filing_year,
+        period=resolved_period,
         law_selected_revision_id=axes.law_selected_revision_id,
         review_status=registry_projection.review_status,
         requested_revision_assertion=axes.requested_revision_assertion,
@@ -1793,9 +1815,7 @@ def resolve_graded_snapshot_result(
     )
     work_capture = work_port.capture_projection_with_epoch()
     resolution = work_capture.projection
-    assert resolution.modelo is not None
-    assert resolution.filing_year is not None
-    assert resolution.period is not None
+    resolved_modelo, resolved_filing_year, resolved_period = _resolved_obligation(resolution)
 
     work_unit = resolution.work_unit
     if work_unit is None:
@@ -1831,9 +1851,9 @@ def resolve_graded_snapshot_result(
 
     registry_port = ModeloWorkspaceRegistryPortV1(
         authority=authority,
-        modelo_id=resolution.modelo,
-        filing_year=resolution.filing_year,
-        period=resolution.period.registry_token,
+        modelo_id=resolved_modelo,
+        filing_year=resolved_filing_year,
+        period=resolved_period.registry_token,
         grade=required_grade,
     )
     try:
@@ -1856,14 +1876,17 @@ def resolve_graded_snapshot_result(
         raise
     registry_projection = registry_capture.projection
     snapshot = registry_projection.snapshot
-    assert snapshot is not None
+    if snapshot is None:
+        raise ModeloWorkspaceAbsentRegistryProjectionError(
+            "registry capture returned no snapshot for the resolved revision",
+        )
 
     axes = resolve_modelo_workspace_revision_axes(resolution, registry_projection=registry_projection)
     resolved_target = ModeloWorkspaceResolvedTargetV1(
         bucket_id=resolution.bucket_id,
-        modelo=resolution.modelo,
-        filing_year=resolution.filing_year,
-        period=resolution.period,
+        modelo=resolved_modelo,
+        filing_year=resolved_filing_year,
+        period=resolved_period,
         law_selected_revision_id=axes.law_selected_revision_id,
         review_status=registry_projection.review_status,
         requested_revision_assertion=axes.requested_revision_assertion,

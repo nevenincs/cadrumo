@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:4d50cf00090fb5278b0deb1e2041ecb6327c918ad46d47e0024b7a82c4d24663'
+body_hash: 'sha256:c82a008bfbb69207d86a926c3978173ba0fae9a6755b488f405638b7809b40f3'
 ---
 
 # `cli-distribution-consolidation` plan
@@ -102,6 +102,33 @@ Align runner names and the Python floor with the account, and delete workflows a
 - [x] `P08.S30` - Delete the branch-only runner probe workflows; `.github/workflows/ci-runner-probe.yml`.
 - [x] `P08.S31` - Delete the control-plane document and restate its sizing rule at the call sites; `.github/ci-control-plane.md`.
 - [x] `P08.S32` - Drop the stale runner count from the load-sizing gate, leaving the invariant it actually asserts; `dev/ci/tests/test_machine_aware_load.py`.
+
+### Phase `P09` - Compile to every target as evidence
+
+Build every declared distribution and channel artifact from one command and prove the result runs, so the adopted pipeline is demonstrated capable rather than asserted.
+
+- [ ] `P09.S33` - Bind the two corpus distributions to project-level Trusted Publishers; `RELEASING.md`.
+- [ ] `P09.S34` - Build every declared distribution from one command and refuse any file over the index cap; `justfile`.
+- [ ] `P09.S35` - Prove both console scripts from the built wheel in an isolated interpreter; `dev/smoke/smoke_check.py`.
+- [ ] `P09.S36` - Render the Homebrew formula and the Scoop manifest from the built cohort; `dev/packaging/cohort_manifest.py`.
+- [ ] `P09.S37` - Produce the distribution evidence rows the three channels declare; `dev/release/readiness.py`.
+
+### Phase `P10` - Prune the release and packaging surfaces without consumers
+
+Delete the development and release modules the adopted path no longer invokes, each verified to have no consumer outside its own test.
+
+- [ ] `P10.S38` - Remove the publication-input dispatcher left without a consumer; `dev/packaging/publication_inputs.py`.
+- [ ] `P10.S39` - Remove the container base-image declaration the install proof no longer reads; `dev/packaging/_base_image.py`.
+- [ ] `P10.S40` - Remove the evidence leak sweep left without a caller; `dev/packaging/evidence_leak_sweep.py`.
+- [ ] `P10.S41` - Reduce the release module family to what the adopted path invokes; `dev/release/environment_inventory.py`.
+
+### Phase `P11` - Restate the operator surface against the adopted path
+
+Bring the runbook, the recipe surface and the workflow family back into agreement with the workflows that now exist.
+
+- [ ] `P11.S42` - Rewrite the release runbook against the adopted workflow pair; `RELEASING.md`.
+- [ ] `P11.S43` - Reduce the recipe surface to the commands the adopted path uses; `justfile`.
+- [ ] `P11.S44` - Reconcile the packaging workflow family against the sibling shape; `.github/workflows/packaging-quick.yml`.
 
 ## Parallelization
 

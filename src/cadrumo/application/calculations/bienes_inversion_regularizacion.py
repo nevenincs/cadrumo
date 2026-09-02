@@ -317,6 +317,7 @@ class BienesInversionRegularizacionSourceResolver:
         register_repository: BienesInversionIvaRegisterRepository | None = None,
         observation_repository: CalculationObservationRepository,
     ) -> None:
+        """Initialize the resolver with the current-year values and repositories it draws on."""
         self._current_year_values = dict(current_year_values or {})
         self._missing_current_year_casilla_ids = missing_current_year_casilla_ids
         self._unresolved_current_year_casilla_ids = unresolved_current_year_casilla_ids
@@ -324,6 +325,14 @@ class BienesInversionRegularizacionSourceResolver:
         self._observation_repository = observation_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve the capital-goods regularización binding for ``context``.
+
+        Returns:
+            An empty resolution when the revision declares no binding, an
+            unresolved resolution when the modelo is not Modelo 303 or 390,
+            a degraded resolution on register-load failure, or the resolved
+            :class:`~._source_mesh.CalculationSourceResolution`.
+        """
         declared_binding_ids = _declared_binding_ids(context.revision)
         if not declared_binding_ids:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)

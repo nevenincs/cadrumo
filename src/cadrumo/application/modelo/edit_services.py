@@ -427,6 +427,7 @@ def reconfirm_modelo_edit_baseline(
 def writable_scalar_entry(
     baseline: ModeloEditBaselineV1, casilla_id: str
 ) -> ModeloEditWritableScalarSurfaceEntryV1 | None:
+    """Return the baseline's writable-scalar surface entry for ``casilla_id``, or ``None``."""
     for entry in baseline.permitted_surface:
         if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1) and entry.casilla_id == casilla_id:
             return entry
@@ -571,6 +572,7 @@ def parse_modelo_edit_value(request: ModeloEditParseRequestV1) -> ModeloEditPars
 def validate_scalar_intent(
     baseline: ModeloEditBaselineV1, address: ModeloEditScalarAddressV1, kind: ModeloEditScalarIntentKind
 ) -> ModeloEditRefusalV1 | None:
+    """Return a refusal when ``kind`` is not a permitted intent for the addressed casilla, else ``None``."""
     entry = writable_scalar_entry(baseline, address.casilla_id)
     if entry is None or kind not in entry.allowed_intents:
         return _disallowed_intent_refusal(address)

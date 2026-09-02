@@ -57,6 +57,7 @@ class _VisualChartFragment:
 
 
 def extract_pdf_text_lines(pdf_bytes: bytes, *, source_label: str) -> tuple[str, ...]:
+    """Return every text line across the PDF's pages, extracted through pypdfium2."""
     import pypdfium2 as pdfium
 
     try:
@@ -78,6 +79,7 @@ def extract_pdf_text_lines(pdf_bytes: bytes, *, source_label: str) -> tuple[str,
 
 
 def extract_pdfplumber_text_lines(pdf_bytes: bytes, *, source_label: str) -> tuple[str, ...]:
+    """Return every text line across the PDF's pages, extracted through pdfplumber."""
     import pdfplumber
 
     try:
@@ -88,10 +90,12 @@ def extract_pdfplumber_text_lines(pdf_bytes: bytes, *, source_label: str) -> tup
 
 
 def uses_page_record_layout(lines: tuple[str, ...]) -> bool:
+    """Return whether any line names a page-scoped record heading."""
     return any(pdf_page_name(clean_pdf_line(line)) is not None for line in lines)
 
 
 def snapshot_pdf_page(page: Page) -> _PdfPageSnapshot:
+    """Return one page's text lines, words, and paintable geometry as a snapshot."""
     return _PdfPageSnapshot(
         lines=_extract_pdf_page_lines(page),
         words=tuple(
@@ -141,6 +145,7 @@ def extract_visual_record_design_chart(
     *,
     source_label: str,
 ) -> tuple[RecordDesignSheet, ...]:
+    """Read a record-design chart from painted page geometry, grouped by sheet name."""
     pages_by_sheet: dict[str, list[_PdfPageSnapshot]] = {}
     for page in pages:
         sheet_name = _visual_chart_page_sheet_name(page)

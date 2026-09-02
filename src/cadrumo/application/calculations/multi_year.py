@@ -189,6 +189,7 @@ class EnrollmentRecorder:
     """
 
     def __init__(self, modelo: str) -> None:
+        """Initialize the recorder for the given modelo with no observations yet."""
         self._modelo = modelo
         self._observations: list[EnrollmentYearObservation] = []
 
@@ -384,11 +385,19 @@ class PreviousFilingSourceResolver:
         registry_snapshot: RegistrySnapshot | None = None,
         excluded_binding_ids: frozenset[BindingId] | None = None,
     ) -> None:
+        """Initialize the resolver with the optional repository, snapshot, and excluded bindings."""
         self._repository = repository
         self._registry_snapshot = registry_snapshot
         self._excluded_binding_ids = excluded_binding_ids or frozenset()
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve ``source = "previous_filing"`` bindings from the prior-year local store.
+
+        Returns:
+            The resolved :class:`~application.aggregation.CalculationSourceResolution`,
+            or a degraded resolution when storage classification, decryption,
+            or version errors occur while reading prior-year observations.
+        """
         snapshot = self._registry_snapshot
         if snapshot is None:
             snapshot = bundled_authority().snapshot(

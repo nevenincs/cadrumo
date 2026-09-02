@@ -93,4 +93,3 @@ This is the smallest policy that supports one evolving codebase while keeping in
 - Future annotations remain a deliberate compatibility contract. A later Python semantic change may require a focused migration and ADR amendment.
 - Alternative Python implementations and unexecuted platform rows remain outside the claim.
 - When CPython publishes a final release, the current `next` row must be promoted, its evidence reviewed, and a new prerelease canary enrolled.
-

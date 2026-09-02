@@ -96,9 +96,23 @@ class IvaWalletDecisionSourceResolver:
     binding_id = "modelo-303-compensacion-pendiente-anteriores"
 
     def __init__(self, decision: IvaCompensationReconciliationDecision | None) -> None:
+        """Initialize the resolver with the persisted reconciliation decision, if any."""
         self._decision = decision
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve the Modelo 303 IVA wallet decision binding for ``context``.
+
+        Returns:
+            An empty resolution when the modelo is not Modelo 303 or no
+            decision was supplied, otherwise the resolved
+            :class:`~application.aggregation.CalculationSourceResolution`
+            carrying the selected amount and its provenance.
+
+        Raises:
+            IvaCompensationReconciliationInputError: When the decision does
+                not target this filing year and period, blocks the
+                calculation, or carries no selected amount.
+        """
         if context.modelo != Modelo.M303.value or self._decision is None:
             return CalculationSourceResolution(
                 resolver_id=self.resolver_id,

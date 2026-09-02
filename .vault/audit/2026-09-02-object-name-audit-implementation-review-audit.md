@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:90b221784f791834594b9216b762d6f06b440baaf9d2e9debf7dc26bd5dd8b9e'
+body_hash: 'sha256:adb382f4a30b1817ba70c228baeb7959dfae125f20526a2937d0dae9f0ad516e'
 related:
   - "[[2026-07-01-import-centralization-adr]]"
 ---
@@ -66,3 +66,43 @@ The actual `just audit-object-names` command runs successfully as a gate and pro
 Resolved: the `main` exemption is now applied only to declarations whose kind is `function`. Public `main.py` module stems remain in the comparable declaration set, and module/module plus module/class collisions produce enforced findings. A combined probe with two public `main` modules, a class named `main`, and repeated entry-point functions returned one enforced finding containing exactly the two module sites and the class site; the functions remained exempt.
 
 The two dedicated regression tests pass, and the complete focused suite passes 22 tests. The actual `just audit-object-names` command still propagates exit code one for the live repository inventory of 61,510 declarations, 781 enforced findings, and 1,523 advisory findings. No implementation-review finding remains open.
+
+## Live findings inventory
+
+Measured from the shared worktree on 2026-09-02 with `just audit-object-names --json`. The command exited one after scanning 61,496 declarations. It reported 2,303 findings: 781 enforced findings, comprising 189 exact duplicate-name collisions and 592 plural-looking public names, plus 1,522 advisory private or test collisions. No source-read or source-parse error was present. The enforced population touches 898 unique Python paths. A final same-day remeasurement after a concurrent tree edit counted 61,497 declarations while all finding counts and classifications remained unchanged.
+
+### gate-state | critical | the repository has 781 enforced object-name violations
+
+The gate is operational but red. Its default human renderer prints the first 50 findings and truncates 2,253; remediation must therefore use the deterministic JSON output as the complete manifest and rerun the live command before and after each batch. A passing detector test does not change this repository-level failure.
+
+### duplicate-name-population | high | 189 collisions require semantic adjudication before renaming
+
+The duplicate set contains 69 module-only, 55 function-only, 54 function-and-module, nine class-only, one class-and-enum, and one enum-only collision. Site cardinality ranges from two to 68. Of the 189 findings, 120 are wholly below `src`, 40 wholly below `dev`, and 29 cross the two roots. High-cardinality generic stems include `errors`, `conftest`, `models`, `secure_objects`, `protocols`, `service`, `schema`, `manager`, and `screen_authority`. These findings prove competing names, not equivalent implementations: each needs an owner-versus-distinct-concept decision before a target name is selected.
+
+### plural-name-population | high | 592 public names are lexical rename candidates, mostly modules
+
+The plural set comprises 429 modules, 158 classes, and five functions. It is concentrated in `src/cadrumo` with 548 findings; development tooling contributes 42 and `src/cadrumo_harness` contributes two. Frequent final nouns include `errors` (74), `facts` (39), `models` (39), `bindings` (19), `records` (15), `inputs` (13), `fields` (11), `details` (11), and `protocols` (11). The detector uses a conservative hard-coded suffix heuristic rather than domain semantics, so every proposed singular name still needs a vocabulary check; blind singularization can produce a misleading or already-claimed name.
+
+### advisory-population | medium | 1,522 private and test collisions remain visible but do not fail the gate
+
+All advisory findings are exact-name collisions. They are outside the zero-tolerance surface by design, but they should remain in the JSON inventory during remediation because a public rename can collide with an advisory declaration or change whether a finding is enforced. Advisory cleanup must not be mixed into an enforced batch unless its ownership and test intent are explicit.
+
+### detector-boundary | high | object-name results do not prove absence of overlapping code content
+
+The audit parses Python below `src` and `dev`, inventories module stems and module-level classes, enums, and functions, and checks exact-name collisions plus plural-looking final nouns. It excludes methods and nested declarations, exempts `main` functions, and does not compare bodies, behavior fingerprints, copy similarity, or responsibility overlap under different names. A green object-name gate would make responsibilities easier to identify, but it cannot by itself establish that the codebase contains no semantic duplication.
+
+### rename-blast-radius | critical | module renames can escape the edited Python file set
+
+The 429 plural modules and 123 collision findings involving modules are the highest-risk surface. A module rename must update direct and type-only imports, dynamic import strings, plugin or registry lookup strings, import-boundary configuration, packaging manifests, API-documentation directives, tests, and generated references through their owning generators. The displaced path must then be removed atomically without an alias module, re-export, forwarding wrapper, or compatibility shim.
+
+## Remediation safety boundary
+
+Before any live rename, build a reviewed one-to-one old-to-new manifest and reject duplicate targets, targets already present in the declaration census, ambiguous ownership, and mixed unrelated edits. Re-measure the live tree immediately before each small ownership-isolated batch.
+
+Rehearse the exact batch against a disposable copy of the current dirty tree under the system temporary directory, not against a clean `HEAD` snapshot that omits contributor changes. Apply only the manifest there, then inspect the complete changed-path set and run the object-name audit, focused import and owning tests, import-boundary checks, static typing and linting, generator checks, and residue searches for both symbol and module spellings. The rehearsal is acceptable only when every changed path is explained, intended findings disappear without new findings, the old import path is absent, and no unrelated module moves. Delete or abandon only that verified temporary target.
+
+Apply the identical reviewed manifest to the live worktree only after the rehearsal passes. Re-read affected files and the live diff first, preserve concurrent edits, and run the same gates sequentially. Stop the batch on unexpected changed paths, newly introduced collisions, dynamic-reference residue, generated drift, or unrelated failures that prevent proving the rename. Do not compensate with a shim or broad cleanup.
+
+## Audit disposition
+
+The detector implementation review is closed, but repository remediation is not ready for blind execution. The complete enforced JSON inventory is the authoritative work queue for naming violations; collision entries require semantic ownership decisions, while plural entries require reviewed singular vocabulary. A separate semantic-duplication audit is required if the acceptance criterion includes absence of overlapping code behavior rather than name clarity alone.
