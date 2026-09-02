@@ -1,4 +1,4 @@
-name: Publish
+name: Cadrumo Publish
 
 on:
   workflow_dispatch:
@@ -118,6 +118,13 @@ jobs:
       id-token: write
       contents: read
     steps:
+      # Checked out so the toolchain resolves against the repository's own
+      # `.python-version` rather than whatever the image happens to carry.
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.tag }}
+
       - name: Download dist artifacts
         uses: actions/download-artifact@v8
         with:

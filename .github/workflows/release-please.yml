@@ -1,4 +1,4 @@
-name: Release Please
+name: Cadrumo Release Please
 
 on:
   push:
