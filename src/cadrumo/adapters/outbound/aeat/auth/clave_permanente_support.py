@@ -41,6 +41,7 @@ from urllib.parse import urlsplit
 
 from .....core.errors.hierarchy import AuthError
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
+from .....domain.calculations.registry.schema_base import EvidenceTier
 from .errors import AuthConfigurationError
 
 if TYPE_CHECKING:
@@ -69,7 +70,7 @@ def clave_permanente_auth_browser_action_policy(settings: Settings) -> RemoteSta
     external = settings.external_constants()
     return RemoteStateGuardPolicy(
         id="aeat-clave-permanente-auth-browser-actions",
-        evidence_tier="official_source_guidance",
+        evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
         classification="authenticated_read_surface",
         allowed_hosts=(
             urlsplit(external.aeat.domains.sede).netloc,

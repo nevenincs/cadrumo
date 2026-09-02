@@ -47,6 +47,7 @@ from .....domain.calculations.registry.remote_state_guard import RemoteStateGuar
 from .....domain.calculations.registry.remote_state_guard import (
     assert_remote_operation_allowed as _assert_remote_operation_allowed,
 )
+from .....domain.calculations.registry.schema_base import EvidenceTier as _EvidenceTier
 from .....domain.justificante import JustificanteVerificationError as _JustificanteVerificationError
 from .._html import parse_html as _parse_html
 from .._playwright import PlaywrightError as _PlaywrightError
@@ -59,7 +60,7 @@ _VERIFY_URL = f"{_VERIFY_EXTERNAL.aeat.domains.www2}{_VERIFY_EXTERNAL.aeat.sede_
 _VERIFY_HOST = _VERIFY_EXTERNAL.aeat.domains.www2.removeprefix("https://")
 _VERIFY_GUARD_POLICY = _RemoteStateGuardPolicy(
     id="aeat-csv-verifier-read",
-    evidence_tier="official_source_guidance",
+    evidence_tier=_EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
     classification="public_read_surface",
     allowed_hosts=(_VERIFY_HOST,),
     allowed_browser_action_patterns=(),

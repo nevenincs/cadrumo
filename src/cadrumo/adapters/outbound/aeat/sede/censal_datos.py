@@ -61,6 +61,7 @@ from .....domain.calculations.registry.remote_state_guard import (
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
 )
+from .....domain.calculations.registry.schema_base import EvidenceTier
 from .._html import parse_html
 from .._playwright import Page, PlaywrightError
 from ..browser.factory import DefaultBrowserSession, default_browser_session_factory
@@ -105,7 +106,7 @@ _FORBIDDEN_LANDING_MARKERS: Final[tuple[str, ...]] = EXTERNAL.aeat.live_safety.c
 
 READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-censal-datos-read",
-    evidence_tier="official_source_guidance",
+    evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
     classification="authenticated_read_surface",
     allowed_hosts=(_SEDE_HOST,),
     # Widened to the AEAT apex so whichever ``www{n}`` the selector dispatches

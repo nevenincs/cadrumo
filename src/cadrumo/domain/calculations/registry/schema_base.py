@@ -13,7 +13,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Literal, get_args, get_origin
+from typing import Annotated, Final, Literal, get_args, get_origin
 
 from pydantic import BaseModel, BeforeValidator, Field, TypeAdapter, field_validator
 

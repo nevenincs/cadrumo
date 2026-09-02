@@ -56,6 +56,7 @@ from .....domain.calculations.registry.remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
 )
+from .....domain.calculations.registry.schema_base import EvidenceTier
 from ..browser.errors import BrowserError
 from ..browser.factory import default_browser_session_factory
 from ..browser.session import BrowserSession
@@ -108,7 +109,7 @@ _SUBMIT_SELECTORS: tuple[str, ...] = (
 
 READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-groi-direct-driver-read",
-    evidence_tier="executable_parity_evidence",
+    evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
     classification="integration_test_service",
     allowed_hosts=(_GROI_HOST,),
     # Widen to any subdomain under the AEAT apex so a ``www{n}`` load-balancer

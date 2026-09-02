@@ -35,6 +35,7 @@ from .....domain.calculations.registry.remote_state_guard import (
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
 )
+from .....domain.calculations.registry.schema_base import EvidenceTier
 from .._html import parse_html
 from ._adapter_utils import bounded_text, normalize_display_text, normalize_response_text, redacted_url
 from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
@@ -80,7 +81,7 @@ PRE303 = EXTERNAL.aeat.pre303
 _PRE303_PRESENTATION_URL = f"{EXTERNAL.aeat.domains.sede}{PRE303.presentation_service_path}"
 IVA_COMPENSATION_WALLET_READ_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-iva-compensation-wallet-read",
-    evidence_tier="official_source_guidance",
+    evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
     classification="authenticated_read_surface",
     allowed_hosts=(_SEDE_HOST,),
     # The configured suffix admits whichever AEAT load-balancer host serves

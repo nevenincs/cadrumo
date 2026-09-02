@@ -44,6 +44,7 @@ from .....domain.calculations.registry.remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
 )
+from .....domain.calculations.registry.schema_base import EvidenceTier
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..browser.errors import BrowserError
 from ..browser.factory import default_browser_session_factory
@@ -79,7 +80,7 @@ _NIF_IVA_VERIFICATION_HOST = urlsplit(EXTERNAL.aeat.oracles.nif_iva_verification
 
 READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-nif-iva-direct-driver-read",
-    evidence_tier="executable_parity_evidence",
+    evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
     classification="open_simulator",
     allowed_hosts=(_NIF_IVA_ENTRY_HOST, _NIF_IVA_VERIFICATION_HOST),
     # Widen to any subdomain under the AEAT apex so a ``www{n}`` load-balancer
