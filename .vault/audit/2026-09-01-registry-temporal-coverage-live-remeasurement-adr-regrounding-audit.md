@@ -5201,3 +5201,37 @@ and pass; the failures beside them are in tests that predate this work.
 Attribution before repair, as this audit has argued throughout. The one that was mine took a
 one-word fix; assuming the other five were also mine would have cost an iteration chasing
 another writer's in-flight work.
+
+### The four paragraphs a similarity threshold could not judge
+
+The merge left five older wordings of criteria in the Verification section, below its
+similarity threshold and above the point where a machine could tell them apart. Reading them
+in full gave four different answers, which is why no threshold would have worked.
+
+Two were plainly subsumed. The older resolved-surface criterion says a test proves the
+accessor fails when a linkage path is dropped; the current one says that and names the second
+gate that checks the import rather than the result, and why. The older release-eligibility
+criterion is the current one without its closing sentence recording that neither half holds
+yet. Both were removed.
+
+One was superseded but carried a clause its replacement had lost. The older gate-detection
+criterion says "one gate is exempt" where the current says two, so the current supersedes it -
+but the older also required each gate to pass the normal path in the same suite, and that had
+fallen out. The clause was carried across before the paragraph was dropped.
+
+One was longer than the paragraph replacing it. The older conformance-vector criterion holds
+the reason the first half cannot be engineered at all: a vector whose expected bytes came from
+this project's own writer would prove only that the writer agrees with itself. The current
+paragraph has a regression guard the older lacks. Neither subsumes the other, so they were
+merged rather than either deleted.
+
+One is not a duplicate at all. "Each of the four edge gates" and "each declaration gate" score
+0.87 against each other and describe different gate families in different Waves. It stays, and
+it is the single near-duplicate pair the section still reports - deliberately, and recorded
+here so the next reader does not remove it as residue.
+
+Twenty-four paragraphs to twenty, 215 Step rows unchanged, seventeen vault checks clean. The
+general lesson is the one the previous iteration reached from the other direction: the merge
+was right to keep what it could not judge. A threshold tuned to catch these four would have
+also caught the fifth, which is not a duplicate, and the campaign would have lost a criterion
+to a number.

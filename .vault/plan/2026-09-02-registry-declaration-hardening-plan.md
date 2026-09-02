@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:4611e381880b766f9dda741c33163369222718966336cb0672c5c98ac3a3c930'
+body_hash: 'sha256:7f84cad040abbaf53cacf4bde154cda22ffd2c698a29946c69d286250484e2d7'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -447,6 +447,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S215` - Merge the plan's triplicated Description and Verification and duplicated Parallelization into one of each, proving no paragraph was lost; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S216` - Move the acceptance criteria out of Parallelization where the duplicated structure had them accumulating and retire the superseded opener; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S217` - Correct the revision name screen's stated condition count that this campaign's own parity gate caught after the conditions were split; `dev/registry/analysis/revision_name_window.py`.
+- [x] `W06.P13.S218` - Reconcile the four superseded criterion wordings the similarity merge could not judge, preserving the unique clause in each; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -585,7 +586,8 @@ against the official record design, and a tree carrying no vector refuses as mis
 than reading as unmeasured. The second half holds and is now guarded again: the emitted-byte
 acceptance suite asserts the structured refusal, naming which channel is empty, rather than the prose
 that rephrasing once broke. The first half cannot be satisfied by engineering until the official
-reference exists.
+reference exists, because a vector whose expected bytes came from this project's own writer
+would prove only that the writer agrees with itself.
 
 Every screen is reachable, exercised and honest about what it measured. Nine gates cover this: a
 screen is enrolled in the runner, listed in the contributor README's table, carries a test module,
@@ -603,7 +605,7 @@ edit that added the missing name. A wrong count is worse than a missing one, bec
 reader the list is complete.
 
 Each declaration gate demonstrates detection of a representative defect from a constructed fixture or
-an isolated temporary registry tree, never by mutating the working tree. Two gates are exempt and
+an isolated temporary registry tree, never by mutating the working tree, and each passes the normal path in the same suite. Two gates are exempt and
 better for it: the sibling scale comparison and the tree reproduction comparison are each proven
 against a live defect in the shipped registry, and each test says so and says what must replace it
 once that defect is corrected.
@@ -672,29 +674,6 @@ worse than the cost was. The criterion is deliberately not
 it is that no failure in it is unexplained, so a new one is visible immediately. Read the exit status
 from pytest itself: a run piped through a filter reports the filter, which once made a red lane read
 as exit code zero.
-
-No gate, screen or audit reassembles the resolved export surface. Every consumer calls the accessor,
-and a test proves the accessor fails if any one of its three linkage paths is dropped.
-
-Each gate demonstrates detection of a representative defect from a constructed fixture or an isolated
-temporary registry tree, never by mutating the working tree, and each passes the normal path in the
-same suite. One gate is exempt and better for it: the sibling scale comparison is proven against a
-live defect in the shipped registry, and its test says so and says what must replace it once that
-defect is corrected.
-
-The release-eligibility predicate is evaluable from the shipped application, and a
-coordinate-identity gate runs in the repository gate lane, comparing the satisfied filing
-coordinate set by identity and naming the limb that regressed. It asserts no count, no
-ceiling and no floor.
-
-At least one generated export tree carries an enrolled conformance vector that proves its
-emitted bytes against the official record design, and a generated tree carrying no vector
-refuses as missing evidence rather than reading as unmeasured. The second half of that
-criterion already holds and must not regress: the refusal is the designed behaviour of an
-unenrolled channel, not a defect. The first half cannot be satisfied by engineering at all
-until the official reference this Wave's first Step acquires exists, because a vector whose
-expected bytes came from this project's own writer would prove only that the writer agrees
-with itself.
 
 Each of the four edge gates demonstrates detection of a representative defect from a
 constructed fixture or an isolated temporary registry tree, never by mutating the working
