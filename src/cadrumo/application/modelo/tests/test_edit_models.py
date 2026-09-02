@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from ....core.external_constants import OutputLanguage
 from ....core.modelo import Modelo
 from ....core.period import Period
+from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.modelos.codes import ModeloCode
 from ...operations.registry import OperationSchemaIdentityV1
@@ -83,7 +84,7 @@ def _compatibility() -> ModeloEditCompatibilityTupleV1:
 def _scalar_surface_entry() -> ModeloEditWritableScalarSurfaceEntryV1:
     return ModeloEditWritableScalarSurfaceEntryV1(
         casilla_id="casilla-01",
-        data_type="money",
+        data_type=CasillaDataType.MONEY,
         allowed_intents=(ModeloEditScalarIntentKind.SET_TYPED_VALUE, ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE),
     )
 

@@ -106,7 +106,7 @@ def test_decision_with_any_mode_predicates_requires_at_least_one_match() -> None
 
     decision = _decision(
         applicability_predicates=(_ROI_PREDICATE, _INTRACOM_PREDICATE),
-        applicability_condition_mode="any",
+        applicability_condition_mode=ConditionMode.ANY,
     )
 
     one_match = evaluate_cross_reference_applicability(
@@ -130,7 +130,7 @@ def test_schema_rejects_any_mode_with_empty_predicates() -> None:
     """The any-mode + empty-predicates shape is meaningless; validator must reject."""
 
     with pytest.raises(ValidationError, match="any-mode requires applicability predicates"):
-        _decision(applicability_predicates=(), applicability_condition_mode="any")
+        _decision(applicability_predicates=(), applicability_condition_mode=ConditionMode.ANY)
 
 
 def test_groi_349_binding_is_not_applicable_when_profile_is_not_intracomunitario() -> None:

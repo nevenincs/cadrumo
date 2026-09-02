@@ -23,10 +23,15 @@ from __future__ import annotations
 
 import json
 from decimal import Decimal
+from io import StringIO
 
 import pytest
+from prompt_toolkit.application import create_app_session
+from prompt_toolkit.input import create_pipe_input
+from prompt_toolkit.output.plain_text import PlainTextOutput
 from pydantic import ValidationError
 
+from ....application.flows import line_frontend as _line_frontend
 from ....application.flows.copy import assemble_page_copy
 from ....application.flows.definition import FlowPage
 from ....application.flows.errors import FlowCopyResolutionError
@@ -249,6 +254,45 @@ def test_wizard_non_interactive_host_with_steps_refuses_with_the_typed_console_e
     assert "Traceback" not in result.output
     error = json.loads(result.output)["error"]
     assert error["code"] == "REFUSED_FLOW_UNSUPPORTED_CONSOLE"
+
+
+def test_registered_wizard_cli_interactive_flow_emits_ledger_source_provenance(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The registered wizard command carries its calculated ledger trace to JSON.
+
+    The headless terminal is an explicit prompt-toolkit session, not a mocked
+    flow: the live parser dispatches to the registered ``work wizard`` handler,
+    whose real line frontend consumes the queued operator answers and then
+    emits its command-owned JSON envelope. The separate non-interactive test
+    above retains the production refusal for ordinary piped callers.
+    """
+    _create_profile()
+    _seed_m130_ledger("wizard-cli-source-provenance")
+    work_unit_id = _create_m130_work_unit()
+
+    # Five registry-discovered manual casillas, submit, then the engine's
+    # one missing-binding follow-up and its submit action.
+    keystrokes = "0\r" * len(_MANUAL_CASILLAS) + "\r" + f"{_PREV_YEAR_INCOME_ANSWER}\r\r"
+    with create_pipe_input() as pipe:
+        pipe.send_text(keystrokes)
+        # The line frontend's own headless IO contract drives real questionary
+        # prompts. Only its host probe is made true for this artificial
+        # terminal; no production guard or non-interactive behaviour changes.
+        monkeypatch.setattr(_line_frontend, "stdin_is_tty", lambda: True)
+        with create_app_session(input=pipe, output=PlainTextOutput(StringIO())):
+            result = _invoke(["--format", "json", "app", "modelo", "work", "wizard", work_unit_id])
+
+    assert result.exit_code == 0, result.output
+    document = json.loads(result.output)
+    assert document["command"] == "modelo.work.wizard"
+    payload = _payload(result.output)
+    provenance = payload["source_provenance"]
+    assert provenance, "the wizard CLI JSON must retain the calculated ledger source trace"
+    assert {row["source_ref"] for row in provenance} == {
+        "ledger_renta_ingresos_pago_fraccionado_aggregation",
+        "ledger_renta_gastos_pago_fraccionado_aggregation",
+    }
 
 
 def _valid_prompted_casilla_kwargs() -> dict[str, object]:

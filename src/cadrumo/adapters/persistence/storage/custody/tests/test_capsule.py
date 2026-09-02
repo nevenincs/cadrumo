@@ -15,6 +15,7 @@ import pytest
 
 from ......core.config import Settings
 from ......core.directory_scan import scan_directory
+from ......core.profile_publication import ProfilePublicationKind
 from ......core.storage_taxonomy import StorageCategory
 from ......tests.path_obstruction import obstructed_path
 from ..capsule import (
@@ -281,7 +282,7 @@ def test_committed_capsule_is_published_once_with_immutable_marker_and_password_
     capsule = publish_profile_custody_capsule(
         profile_id=_PROFILE_ID,
         transaction_id=UUID("4f28d1c4-e466-4a08-a25a-ea5925146f36"),
-        publication_kind="enroll",
+        publication_kind=ProfilePublicationKind.ENROLL,
         password_envelope=envelope,
         sentinel=sentinel,
         recovery_envelope=recovery,
@@ -353,7 +354,7 @@ def test_capsule_summary_witness_observes_only_validated_commit_and_uuid_bound_l
     capsule = publish_profile_custody_capsule(
         profile_id=_PROFILE_ID,
         transaction_id=UUID("60a1e2f8-eeb3-4256-b04d-0aaccc49c43d"),
-        publication_kind="enroll",
+        publication_kind=ProfilePublicationKind.ENROLL,
         password_envelope=envelope,
         sentinel=sentinel,
         recovery_envelope=None,
@@ -386,7 +387,7 @@ def test_capsule_summary_witness_refuses_foreign_or_linked_label_provenance(tmp_
     capsule = publish_profile_custody_capsule(
         profile_id=_PROFILE_ID,
         transaction_id=UUID("5f274feb-21c8-4f16-b049-bff720e699c4"),
-        publication_kind="enroll",
+        publication_kind=ProfilePublicationKind.ENROLL,
         password_envelope=envelope,
         sentinel=sentinel,
         recovery_envelope=None,
@@ -425,7 +426,7 @@ def test_summary_discovery_reuses_each_anchored_commit_observation_once(tmp_path
         publish_profile_custody_capsule(
             profile_id=profile_id,
             transaction_id=uuid4(),
-            publication_kind="enroll",
+            publication_kind=ProfilePublicationKind.ENROLL,
             password_envelope=envelope,
             sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
             data_files={"profile-label.v1.json": label.canonical_json_bytes()},
@@ -457,7 +458,7 @@ def test_summary_discovery_refuses_unbound_label_after_its_single_marker_parse(t
     capsule = publish_profile_custody_capsule(
         profile_id=_PROFILE_ID,
         transaction_id=uuid4(),
-        publication_kind="enroll",
+        publication_kind=ProfilePublicationKind.ENROLL,
         password_envelope=envelope,
         sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
         data_files={
@@ -481,7 +482,7 @@ def test_summary_discovery_refuses_a_malformed_label_without_repairing_it(tmp_pa
     capsule = publish_profile_custody_capsule(
         profile_id=_PROFILE_ID,
         transaction_id=uuid4(),
-        publication_kind="enroll",
+        publication_kind=ProfilePublicationKind.ENROLL,
         password_envelope=envelope,
         sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
         data_files={
@@ -510,7 +511,7 @@ def test_summary_discovery_refuses_a_real_permission_denial_without_mutating_the
     capsule = publish_profile_custody_capsule(
         profile_id=_PROFILE_ID,
         transaction_id=uuid4(),
-        publication_kind="enroll",
+        publication_kind=ProfilePublicationKind.ENROLL,
         password_envelope=envelope,
         sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
         data_files={"profile-label.v1.json": label.canonical_json_bytes()},
@@ -534,7 +535,7 @@ def test_summary_discovery_keeps_one_anchored_generation_during_a_real_directory
     original_capsule = publish_profile_custody_capsule(
         profile_id=_PROFILE_ID,
         transaction_id=UUID("7a3d6e8a-d2f7-4bf8-9e16-cc7d7b3594f6"),
-        publication_kind="enroll",
+        publication_kind=ProfilePublicationKind.ENROLL,
         password_envelope=original_envelope,
         sentinel=create_profile_custody_sentinel(envelope=original_envelope, dek=_DEK),
         data_files={"profile-label.v1.json": original_label.canonical_json_bytes()},
@@ -544,7 +545,7 @@ def test_summary_discovery_keeps_one_anchored_generation_during_a_real_directory
     replacement_capsule = publish_profile_custody_capsule(
         profile_id=_PROFILE_ID,
         transaction_id=UUID("2f57e4d6-f3a7-48bd-bce7-2b73126bf7bb"),
-        publication_kind="enroll",
+        publication_kind=ProfilePublicationKind.ENROLL,
         password_envelope=replacement_envelope,
         sentinel=create_profile_custody_sentinel(envelope=replacement_envelope, dek=_DEK),
         data_files={"profile-label.v1.json": replacement_label.canonical_json_bytes()},
@@ -767,7 +768,7 @@ def test_a_current_store_with_live_keystore_sidecars_is_not_refused(tmp_path: Pa
     publish_profile_custody_capsule(
         profile_id=_PROFILE_ID,
         transaction_id=uuid4(),
-        publication_kind="enroll",
+        publication_kind=ProfilePublicationKind.ENROLL,
         password_envelope=envelope,
         sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
         data_files={"state/current.bin": b"current encrypted payload"},
@@ -809,7 +810,7 @@ def test_committed_capsule_enumeration_refuses_linked_candidate_and_unsafe_root_
     published = publish_profile_custody_capsule(
         profile_id=_PROFILE_ID,
         transaction_id=uuid4(),
-        publication_kind="enroll",
+        publication_kind=ProfilePublicationKind.ENROLL,
         password_envelope=envelope,
         sentinel=sentinel,
         data_files={
@@ -851,7 +852,7 @@ def test_crash_boundary_never_recognizes_a_marker_written_only_in_sibling_stagin
         ProfileCustodyCommit.create(
             profile_id=_PROFILE_ID,
             transaction_id=transaction_id,
-            publication_kind="enroll",
+            publication_kind=ProfilePublicationKind.ENROLL,
         ).canonical_json_bytes()
     )
 
@@ -873,7 +874,7 @@ def test_publication_refuses_epoch_mismatch_traversal_and_leaves_no_staging_caps
         publish_profile_custody_capsule(
             profile_id=_PROFILE_ID,
             transaction_id=uuid4(),
-            publication_kind="enroll",
+            publication_kind=ProfilePublicationKind.ENROLL,
             password_envelope=envelope,
             sentinel=sentinel,
             recovery_envelope=mismatched_recovery,
@@ -884,7 +885,7 @@ def test_publication_refuses_epoch_mismatch_traversal_and_leaves_no_staging_caps
         publish_profile_custody_capsule(
             profile_id=_PROFILE_ID,
             transaction_id=uuid4(),
-            publication_kind="enroll",
+            publication_kind=ProfilePublicationKind.ENROLL,
             password_envelope=envelope,
             sentinel=sentinel,
             data_files={"../outside": b"must never be written"},
@@ -932,7 +933,7 @@ def test_publication_and_export_refuse_real_directory_reparse_points(tmp_path: P
         publish_profile_custody_capsule(
             profile_id=_PROFILE_ID,
             transaction_id=uuid4(),
-            publication_kind="enroll",
+            publication_kind=ProfilePublicationKind.ENROLL,
             password_envelope=envelope,
             sentinel=sentinel,
             data_files={},
@@ -971,7 +972,7 @@ def test_publication_collision_refuses_replacement_and_safely_removes_own_stage(
         publish_profile_custody_capsule(
             profile_id=_PROFILE_ID,
             transaction_id=transaction_id,
-            publication_kind="enroll",
+            publication_kind=ProfilePublicationKind.ENROLL,
             password_envelope=envelope,
             sentinel=sentinel,
             data_files={},

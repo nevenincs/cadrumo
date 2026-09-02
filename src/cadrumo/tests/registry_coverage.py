@@ -905,8 +905,8 @@ def _source_guidance_gate(
     sources: Mapping[SourceRefId, SourceReference],
     live_cross_references: Iterable[LiveCrossReferenceDecision],
 ) -> EvidenceTierCoverageGate:
-    source_refs = _sources_for_tier(sources, "official_source_guidance")
-    cross_refs = _cross_refs_for_tier(live_cross_references, "official_source_guidance")
+    source_refs = _sources_for_tier(sources, EvidenceTier.OFFICIAL_SOURCE_GUIDANCE)
+    cross_refs = _cross_refs_for_tier(live_cross_references, EvidenceTier.OFFICIAL_SOURCE_GUIDANCE)
     return EvidenceTierCoverageGate(
         tier="official_source_guidance",
         status=_status(source_refs, cross_refs),
@@ -921,14 +921,14 @@ def _executable_parity_gate(
     workbook_parity_refs: Iterable[WorkbookParityReference],
     live_cross_references: Iterable[LiveCrossReferenceDecision],
 ) -> EvidenceTierCoverageGate:
-    source_refs = _sources_for_tier(sources, "executable_parity_evidence")
+    source_refs = _sources_for_tier(sources, EvidenceTier.EXECUTABLE_PARITY_EVIDENCE)
     workbook_refs = _workbook_refs_for_tier(
         sources,
         workbook_parity_refs,
         coverage_kinds=("formula_form",),
-        tier="executable_parity_evidence",
+        tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
     )
-    cross_refs = _cross_refs_for_tier(live_cross_references, "executable_parity_evidence")
+    cross_refs = _cross_refs_for_tier(live_cross_references, EvidenceTier.EXECUTABLE_PARITY_EVIDENCE)
     return EvidenceTierCoverageGate(
         tier="executable_parity_evidence",
         status=_status(source_refs, workbook_refs, cross_refs),
@@ -944,14 +944,14 @@ def _layout_authority_gate(
     workbook_parity_refs: Iterable[WorkbookParityReference],
     live_cross_references: Iterable[LiveCrossReferenceDecision],
 ) -> EvidenceTierCoverageGate:
-    source_refs = _sources_for_tier(sources, "layout_authority")
+    source_refs = _sources_for_tier(sources, EvidenceTier.LAYOUT_AUTHORITY)
     workbook_refs = _workbook_refs_for_tier(
         sources,
         workbook_parity_refs,
         coverage_kinds=("record_design_layout", "unsupported_binary_xls", "static_layout"),
-        tier="layout_authority",
+        tier=EvidenceTier.LAYOUT_AUTHORITY,
     )
-    cross_refs = _cross_refs_for_tier(live_cross_references, "layout_authority")
+    cross_refs = _cross_refs_for_tier(live_cross_references, EvidenceTier.LAYOUT_AUTHORITY)
     return EvidenceTierCoverageGate(
         tier="layout_authority",
         status=_status(source_refs, workbook_refs, cross_refs),

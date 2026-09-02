@@ -19,6 +19,7 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.secure_object_namespaces import LIVE_VERIFY_OBSERVATION_NAMESPACE
+from ....core.identity_check_verdict import IdentityCheckVerdict
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, read_db_at_rest_bytes
 from ..errors import LiveApplicationInputError
 from ..verify import (
@@ -49,7 +50,7 @@ class TestRecord:
             bucket_id=secure_engine.bucket_id,
             surface=VerifySurface.NIF_IVA,
             nif="DE123456789",
-            verdict="valid",
+            verdict=IdentityCheckVerdict.VALID,
             checked_at=datetime(2025, 3, 15, 10, 0, tzinfo=UTC),
         )
         assert len(obs.observation_id) == 64
@@ -65,16 +66,16 @@ class TestRecord:
             bucket_id=secure_engine.bucket_id,
             surface=VerifySurface.NIF_IVA,
             nif="DE1",
-            verdict="valid",
-            expected="valid",
+            verdict=IdentityCheckVerdict.VALID,
+            expected=IdentityCheckVerdict.VALID,
             checked_at=datetime(2025, 3, 15, tzinfo=UTC),
         )
         miss = svc.record(
             bucket_id=secure_engine.bucket_id,
             surface=VerifySurface.NIF_IVA,
             nif="DE2",
-            verdict="invalid",
-            expected="valid",
+            verdict=IdentityCheckVerdict.INVALID,
+            expected=IdentityCheckVerdict.VALID,
             checked_at=datetime(2025, 3, 15, tzinfo=UTC),
         )
         assert match.matched_expectation is True
@@ -90,14 +91,14 @@ class TestRecord:
             bucket_id=secure_engine.bucket_id,
             surface=VerifySurface.NIF_IVA,
             nif="DE1",
-            verdict="valid",
+            verdict=IdentityCheckVerdict.VALID,
             checked_at=ts,
         )
         b = svc.record(
             bucket_id=secure_engine.bucket_id,
             surface=VerifySurface.NIF_IVA,
             nif="DE1",
-            verdict="valid",
+            verdict=IdentityCheckVerdict.VALID,
             checked_at=ts,
         )
         assert a.observation_id == b.observation_id
@@ -113,14 +114,14 @@ class TestRecord:
             bucket_id=secure_engine.bucket_id,
             surface=VerifySurface.NIF_IVA,
             nif="DE1",
-            verdict="valid",
+            verdict=IdentityCheckVerdict.VALID,
             checked_at=ts,
         )
         b = svc.record(
             bucket_id=secure_engine.bucket_id,
             surface=VerifySurface.NIF_IVA,
             nif="DE1",
-            verdict="invalid",
+            verdict=IdentityCheckVerdict.INVALID,
             checked_at=ts,
         )
         assert a.observation_id != b.observation_id
@@ -134,14 +135,14 @@ class TestListObservations:
             bucket_id=secure_engine.bucket_id,
             surface=VerifySurface.NIF_IVA,
             nif="DE1",
-            verdict="valid",
+            verdict=IdentityCheckVerdict.VALID,
             checked_at=ts,
         )
         svc.record(
             bucket_id=secure_engine.bucket_id,
             surface=VerifySurface.TGVI,
             nif="ES1",
-            verdict="valid",
+            verdict=IdentityCheckVerdict.VALID,
             checked_at=ts,
         )
         all_obs = svc.list_observations(bucket_id=secure_engine.bucket_id)
@@ -154,14 +155,14 @@ class TestListObservations:
             bucket_id=secure_engine.bucket_id,
             surface=VerifySurface.NIF_IVA,
             nif="DE1",
-            verdict="valid",
+            verdict=IdentityCheckVerdict.VALID,
             checked_at=ts,
         )
         svc.record(
             bucket_id=secure_engine.bucket_id,
             surface=VerifySurface.TGVI,
             nif="ES1",
-            verdict="valid",
+            verdict=IdentityCheckVerdict.VALID,
             checked_at=ts,
         )
         nif_iva_obs = svc.list_observations(bucket_id=secure_engine.bucket_id, surface=VerifySurface.NIF_IVA)
@@ -178,14 +179,14 @@ class TestListObservations:
             bucket_id=secure_engine.bucket_id,
             surface=VerifySurface.NIF_IVA,
             nif="DE1",
-            verdict="valid",
+            verdict=IdentityCheckVerdict.VALID,
             checked_at=ts,
         )
         svc.record(
             bucket_id=secure_engine.bucket_id,
             surface=VerifySurface.NIF_IVA,
             nif="DE2",
-            verdict="invalid",
+            verdict=IdentityCheckVerdict.INVALID,
             checked_at=ts,
         )
         de1_obs = svc.list_observations(bucket_id=secure_engine.bucket_id, nif="DE1")
@@ -200,7 +201,7 @@ class TestShow:
             bucket_id=secure_engine.bucket_id,
             surface=VerifySurface.NIF_IVA,
             nif="DE1",
-            verdict="valid",
+            verdict=IdentityCheckVerdict.VALID,
             checked_at=datetime(2025, 3, 15, tzinfo=UTC),
         )
         full = svc.show(bucket_id=secure_engine.bucket_id, observation_id=obs.observation_id)
@@ -224,7 +225,7 @@ class TestShow:
                 bucket_id=secure_engine.bucket_id,
                 surface=VerifySurface.NIF_IVA,
                 nif=f"DE{index:011d}",
-                verdict="valid",
+                verdict=IdentityCheckVerdict.VALID,
                 checked_at=datetime(2025, 3, 15, 10, index, tzinfo=UTC),
             )
             by_prefix.setdefault(obs.observation_id[:1], []).append(obs.observation_id)
@@ -246,14 +247,14 @@ class TestLatestForNif:
             bucket_id=secure_engine.bucket_id,
             surface=VerifySurface.NIF_IVA,
             nif="DE1",
-            verdict="valid",
+            verdict=IdentityCheckVerdict.VALID,
             checked_at=datetime(2025, 1, 1, tzinfo=UTC),
         )
         newer = svc.record(
             bucket_id=secure_engine.bucket_id,
             surface=VerifySurface.NIF_IVA,
             nif="DE1",
-            verdict="invalid",
+            verdict=IdentityCheckVerdict.INVALID,
             checked_at=datetime(2025, 6, 1, tzinfo=UTC),
         )
         latest = svc.latest_for_nif(
@@ -283,7 +284,7 @@ class TestBucketIsolation:
                 bucket_id=bucket_a.bucket_id,
                 surface=VerifySurface.NIF_IVA,
                 nif="DE1",
-                verdict="valid",
+                verdict=IdentityCheckVerdict.VALID,
                 checked_at=ts,
             )
             assert svc_a.list_observations(bucket_id=bucket_a.bucket_id)[0].nif == "DE1"
@@ -295,7 +296,7 @@ class TestBucketIsolation:
                 bucket_id=bucket_b.bucket_id,
                 surface=VerifySurface.NIF_IVA,
                 nif="DE2",
-                verdict="invalid",
+                verdict=IdentityCheckVerdict.INVALID,
                 checked_at=ts,
             )
             assert svc_b.list_observations(bucket_id=bucket_b.bucket_id)[0].nif == "DE2"
@@ -307,7 +308,7 @@ class TestSecureStorage:
             bucket_id=secure_engine.bucket_id,
             surface=VerifySurface.NIF_IVA,
             nif="DE123456789",
-            verdict="valid",
+            verdict=IdentityCheckVerdict.VALID,
             checked_at=datetime(2025, 3, 15, tzinfo=UTC),
         )
 
@@ -538,7 +539,7 @@ class TestObservationIdentityAndInstantContracts:
             bucket_id=secure_engine.bucket_id,
             surface=VerifySurface.TGVI,
             nif="ESB12345674",
-            verdict="valid",
+            verdict=IdentityCheckVerdict.VALID,
             checked_at=datetime(2025, 3, 15, 10, 0, tzinfo=UTC),
         )
 

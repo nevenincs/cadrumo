@@ -37,6 +37,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Protocol, override, runtime_checkable
 
+from .....core.decimal.grammar import DecimalSeparator
 from .....core.errors.hierarchy import CoreValidationError
 from .....core.logging import get_logger
 from .....core.optional_extras import (
@@ -310,7 +311,7 @@ class OfxProvider(FinancialProvider):
             description = memo or counterparty or trntype or "OFX transaction"
             posted_at = getattr(transaction, "dtposted", None)
             raw_amount = getattr(transaction, "trnamt", None)
-            amount = parse_amount_value(str(raw_amount), decimal_separator=".")
+            amount = parse_amount_value(str(raw_amount), decimal_separator=DecimalSeparator.PERIOD)
             booked_date = parse_date_value(posted_at, day_first=False)
         except (ValueError, FinancialValidationError) as exc:
             _logger.warning(

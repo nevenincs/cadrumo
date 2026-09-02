@@ -19,6 +19,7 @@ from typing import Literal
 
 import pytest
 
+from ......core.decimal.grammar import DecimalSeparator
 from ..base import FinancialValidationError, parse_amount_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -32,13 +33,13 @@ def test_a_two_digit_final_group_refuses_instead_of_inflating() -> None:
     can distinguish from a real one.
     """
     with pytest.raises(FinancialValidationError, match="three-digit group"):
-        parse_amount_value("1210.00", decimal_separator=",")
+        parse_amount_value("1210.00", decimal_separator=DecimalSeparator.COMMA)
 
 
 def test_a_two_digit_group_refuses_for_the_mirrored_convention_too() -> None:
     """The guard is about group width, not about which separator is which."""
     with pytest.raises(FinancialValidationError, match="three-digit group"):
-        parse_amount_value("1210,00", decimal_separator=".")
+        parse_amount_value("1210,00", decimal_separator=DecimalSeparator.PERIOD)
 
 
 @pytest.mark.parametrize(

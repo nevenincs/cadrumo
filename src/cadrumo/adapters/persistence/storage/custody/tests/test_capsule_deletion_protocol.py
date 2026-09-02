@@ -27,6 +27,7 @@ from uuid import UUID, uuid4
 import pytest
 
 from ......core.config import Settings
+from ......core.profile_publication import ProfilePublicationKind
 from ..capsule import (
     inventory_committed_profile_custody_capsule,
     profile_custody_deletion_path,
@@ -88,7 +89,7 @@ def _publish(tmp_path: Path) -> Settings:
     publish_profile_custody_capsule(
         profile_id=_PROFILE_ID,
         transaction_id=_TRANSACTION_ID,
-        publication_kind="enroll",
+        publication_kind=ProfilePublicationKind.ENROLL,
         password_envelope=envelope,
         sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
         recovery_envelope=recovery,

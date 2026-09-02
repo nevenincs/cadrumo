@@ -34,6 +34,7 @@ from ....application.live.verify import (
     VerifySurface,
 )
 from ....core.config import override_settings
+from ....core.identity_check_verdict import IdentityCheckVerdict
 from ....core.period import Period
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.cli_runner import invoke_cached_cli
@@ -213,7 +214,7 @@ class TestVerifySubgroup:
             bucket_id=bucket_id,
             surface=VerifySurface.NIF_IVA,
             nif="ESB12345678",
-            verdict="valid",
+            verdict=IdentityCheckVerdict.VALID,
             checked_at=datetime(2025, 3, 15, tzinfo=UTC),
         )
         result = _invoke_verify("latest", "--surface", "nif_iva", "--nif", "ESB12345678")

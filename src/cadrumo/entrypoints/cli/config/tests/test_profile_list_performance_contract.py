@@ -24,6 +24,7 @@ from .....adapters.persistence.storage.custody.records import (
 )
 from .....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from .....core.config import Settings
+from .....core.profile_publication import ProfilePublicationKind
 from .....tests.cli_performance import (
     CliPerformanceObservation,
     is_non_authoritative_artifact,
@@ -76,7 +77,7 @@ def _publish(root: Path, profile_id: UUID, label: str) -> None:
     publish_profile_custody_capsule(
         profile_id=profile_id,
         transaction_id=uuid4(),
-        publication_kind="enroll",
+        publication_kind=ProfilePublicationKind.ENROLL,
         password_envelope=envelope,
         sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
         data_files={

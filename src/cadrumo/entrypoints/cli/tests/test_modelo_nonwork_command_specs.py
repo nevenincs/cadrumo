@@ -11,6 +11,11 @@ import pytest
 
 from .._command_runtime import _behavior_wrapper
 from .._modelo_nonwork_command_specs import MODELO_NONWORK_COMMAND_SPECS
+from .._modelo_nonwork_reconcile_command_specs import (
+    MODELO_NONWORK_RECONCILE_COMMAND_SPECS,
+    RECONCILE_TARGET_PARAMETERS,
+)
+from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -84,6 +89,45 @@ def test_nonwork_modelo_specs_are_the_exact_54_node_set() -> None:
     assert sum(spec.kind == "group" for spec in MODELO_NONWORK_COMMAND_SPECS) == 8
     assert sum(spec.kind == "leaf" for spec in MODELO_NONWORK_COMMAND_SPECS) == 46
     assert sum(len(spec.parameters) for spec in MODELO_NONWORK_COMMAND_SPECS) == 197
+
+
+def test_reconcile_target_parameters_keep_order_and_import_extras_local() -> None:
+    specs = {spec.key: spec for spec in MODELO_NONWORK_RECONCILE_COMMAND_SPECS}
+    pull = specs["app_modelo_reconcile_pull"]
+    imported = specs["app_modelo_reconcile_import"]
+
+    assert type(RECONCILE_TARGET_PARAMETERS) is tuple
+    assert tuple(parameter.name for parameter in RECONCILE_TARGET_PARAMETERS) == (
+        "work_unit_id",
+        "modelo",
+        "year",
+        "period",
+        "revision",
+        "bucket_id",
+        "actor",
+    )
+    assert pull.parameters is RECONCILE_TARGET_PARAMETERS
+    assert tuple(parameter.name for parameter in imported.parameters) == (
+        "work_unit_id",
+        "file",
+        "modelo",
+        "year",
+        "period",
+        "revision",
+        "bucket_id",
+        "actor",
+        "kind",
+    )
+    assert imported.parameters[0] is RECONCILE_TARGET_PARAMETERS[0]
+    assert all(
+        actual is expected
+        for actual, expected in zip(imported.parameters[2:8], RECONCILE_TARGET_PARAMETERS[1:], strict=True)
+    )
+    assert pull.policy is not imported.policy
+    assert pull.handler is not imported.handler
+    assert pull.result_schema is not imported.result_schema
+    assert COMMAND_GRAPH.resolve_path(("aeat", "app", "modelo", "reconcile", "pull")) is pull
+    assert COMMAND_GRAPH.resolve_path(("aeat", "app", "modelo", "reconcile", "import")) is imported
 
 
 def test_every_nonwork_target_is_public_resolvable_and_runtime_materializable() -> None:

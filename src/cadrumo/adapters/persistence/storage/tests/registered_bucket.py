@@ -23,6 +23,7 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 from .....core.config import Settings
+from .....core.profile_publication import ProfilePublicationKind
 from ..bucket.directory_layout import bucket_paths
 from ..custody.capsule import publish_profile_custody_capsule
 from ..custody.records import ProfileCustodyEnvelope, ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
@@ -76,7 +77,7 @@ def publish_registration_capsule(root: Path, bucket_id: str) -> None:
     publish_profile_custody_capsule(
         profile_id=profile_id,
         transaction_id=uuid4(),
-        publication_kind="enroll",
+        publication_kind=ProfilePublicationKind.ENROLL,
         password_envelope=envelope,
         sentinel=create_profile_custody_sentinel(envelope=envelope, dek=CAPSULE_DEK),
         data_files={},
