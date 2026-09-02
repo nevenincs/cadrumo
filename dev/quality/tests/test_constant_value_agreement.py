@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.quality.constant_value_agreement import (
+from ..constant_value_agreement import (
     _PACKAGE_ROOT,
     collect_constants,
     constant_census,

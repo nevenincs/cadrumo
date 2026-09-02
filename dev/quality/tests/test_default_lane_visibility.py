@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.quality.default_lane_visibility import (
+from ..default_lane_visibility import (
     _REPO_ROOT,
     default_lane_predicate,
     visibility_census,
