@@ -45,70 +45,6 @@ ASSETS_LEDGER_FILENAME = "assets-ledger.secure-object"
 ASSETS_AMORTIZATION_LEDGER_FILENAME = "assets-amortization-ledger.secure-object"
 
 
-def load_assets() -> tuple[AssetRecord, ...]:
-    """Load persisted asset records from the encrypted ledger.
-
-    Returns:
-        Tuple of :class:`AssetRecord` entries, empty when the ledger is absent.
-    """
-    return AssetsLedgerRepository().load().assets
-
-
-def save_assets(assets: tuple[AssetRecord, ...]) -> Path:
-    """Persist ``assets`` as a governed FINANCIAL-class encrypted envelope.
-
-    The storage contract comes from
-    :data:`adapters.persistence.storage.PROFILE_ASSETS_LEDGER_NAMESPACE`.
-
-    Args:
-        assets: Asset records to persist.
-
-    Returns:
-        Logical secure-object marker for the persisted ledger.
-    """
-    repository = AssetsLedgerRepository()
-    repository.save(AssetsLedgerDocument(assets=assets))
-    return repository.envelope_path
-
-
-def add_asset(asset: AssetRecord) -> AssetsLedgerDocument:
-    """Atomically add ``asset`` to the encrypted asset ledger.
-
-    Args:
-        asset: Asset record to insert.
-
-    Returns:
-        The updated :class:`AssetsLedgerDocument` including the newly inserted asset.
-    """
-    return AssetsLedgerRepository().add(asset)
-
-
-def load_amortizacion_ledger() -> AmortizacionLedger:
-    """Load the amortizacion ledger, returning an empty ledger when absent.
-
-    Returns:
-        Persisted :class:`AmortizacionLedger` or an empty one when no envelope exists.
-    """
-    return AmortizacionLedgerRepository().load()
-
-
-def save_amortizacion_ledger(ledger: AmortizacionLedger) -> Path:
-    """Persist ``ledger`` as a governed FINANCIAL-class encrypted envelope.
-
-    The storage contract comes from
-    :data:`adapters.persistence.storage.PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE`.
-
-    Args:
-        ledger: Amortizacion ledger to persist.
-
-    Returns:
-        Logical secure-object marker for the persisted ledger.
-    """
-    repository = AmortizacionLedgerRepository()
-    repository.save(ledger)
-    return repository.envelope_path
-
-
 class AssetsLedgerRepository:
     """Governed repository for the encrypted :class:`AssetsLedgerDocument` singleton.
 
@@ -302,9 +238,4 @@ class AmortizacionLedgerRepository:
 __all__ = [
     "AmortizacionLedgerRepository",
     "AssetsLedgerRepository",
-    "add_asset",
-    "load_amortizacion_ledger",
-    "load_assets",
-    "save_amortizacion_ledger",
-    "save_assets",
 ]

@@ -86,13 +86,14 @@ def test_register_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
 
 def test_register_add_refuses_duplicate_identifier(tmp_path: Path) -> None:
     """The atomic add path refuses a second record with an existing identifier."""
-    from ..bienes_inversion import BienInversionRecordError, declare_bien_inversion
+    from .....domain.bienes_inversion.register import BienInversionRecordError
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="573d2a96-ff7a-48c2-9128-0a8e395f4928"):
         record = _populated_register().records[0]
-        declare_bien_inversion(record)
+        repository = BienesInversionIvaRegisterRepository()
+        repository.add(record)
         with pytest.raises(BienInversionRecordError, match="already exists"):
-            declare_bien_inversion(record)
+            repository.add(record)
 
 
 def test_register_corrupted_prorrata_surfaces_at_load(tmp_path: Path) -> None:

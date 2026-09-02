@@ -21,14 +21,12 @@ from .....domain.contribuyente.assets.records import (
     AssetClass,
     AssetRecord,
     AssetRecordError,
+    AssetsLedgerDocument,
 )
 from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..assets import (
+    AmortizacionLedgerRepository,
     AssetsLedgerRepository,
-    load_amortizacion_ledger,
-    load_assets,
-    save_amortizacion_ledger,
-    save_assets,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -55,9 +53,10 @@ def _asset(identifier: str, asset_class: AssetClass, cost_basis: str = "10000.00
 
 def test_asset_persistence_round_trip() -> None:
     asset = _asset("pc", AssetClass.ELECTRONICA_INFORMATICA)
+    repository = AssetsLedgerRepository()
 
-    save_assets((asset,))
-    loaded = load_assets()
+    repository.save(AssetsLedgerDocument(assets=(asset,)))
+    loaded = repository.load().assets
 
     assert loaded == (asset,)
 
@@ -90,7 +89,9 @@ def test_asset_persistence_is_encrypted_financial_secure_object(_runtime_profile
 
     from .....tests.secure_sql import read_db_at_rest_bytes
 
-    path = save_assets((asset,))
+    repository = AssetsLedgerRepository()
+    repository.save(AssetsLedgerDocument(assets=(asset,)))
+    path = repository.envelope_path
     db_bytes = read_db_at_rest_bytes(_runtime_profile.paths.database_file)
 
     assert not path.exists()
@@ -100,7 +101,8 @@ def test_asset_persistence_is_encrypted_financial_secure_object(_runtime_profile
 
 def test_amortizacion_ledger_persistence_round_trip() -> None:
     ledger = AmortizacionLedger(entries=(AmortizacionEntry(asset_id="pc", year=2025, amount=Decimal("100.00")),))
+    repository = AmortizacionLedgerRepository()
 
-    save_amortizacion_ledger(ledger)
+    repository.save(ledger)
 
-    assert load_amortizacion_ledger() == ledger
+    assert repository.load() == ledger
