@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:578170ca9126ffc05fb3e938f7192d8d12ecd42c351330eeb635215a58a7af0c'
+body_hash: 'sha256:d42214a171ebe057ce570fb3e4d2b4ab99ed70092ec7f2d27d28d39454a42257'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
@@ -115,3 +115,29 @@ forged component rehearsal, and generator-backed operations are refused by the
 transformer before their owning commands can run. Focused Ruff, Ruff-format, ty,
 byte-compilation, and import checks passed; those static checks do not exercise either
 cross-module authority boundary. No critical, medium, or low issue remains open.
+
+## Second re-review status
+
+Partially resolved: repository-discoverable import edges are now recomputed from current
+operation locators, manifest components are rebuilt, and an exact component equality check
+rejects the original non-generated forged-subset counterexample. Generated hard edges and
+advisory evidence, however, are copied from the supplied component into the purported
+canonical reconstruction. Because generated-surface paths, owners, and coupling are not
+independently derived from manifest or repository authority, a caller-provided generated
+edge still participates in computing the component ID and risk that subsequently
+"validates" that same component. `component-authority-unbound` therefore remains high for
+generated components.
+
+Unresolved: the generated-owner projection removes generated paths and the
+`generated-artifact` reference class before calling the transformer, but the transform
+result is still compared immediately with the original full allowlist. A disposable public
+entry-point probe using a valid generated hard edge and an owning command was refused with
+`transformation paths differ from the reviewed allowlist`; the generator command never ran.
+The comparison must use the exact projected transform allowlist before materialization,
+leaving the existing final comparison to require the full original allowlist after generator
+execution. `generator-phase-unreachable` remains high.
+
+The focused rehearsal suite passed 20 tests, but its generated-reference case still expects
+pre-rehearsal refusal and therefore does not exercise generated-owner success. Ruff,
+Ruff-format, ty, and byte-compilation checks passed. Final status remains two high findings
+and no critical, medium, or low findings.

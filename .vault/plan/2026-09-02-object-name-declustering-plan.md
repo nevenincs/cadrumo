@@ -10,7 +10,7 @@ related:
   - '[[2026-09-02-object-name-declustering-reference]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:63b906f6b3acf583c9937b41c5d2c25c38745ed745f8c4aa1922d11b5b45d262'
+body_hash: 'sha256:9106b8d84cef18adfa134363c7b59e87e6a1ba20bf8c1645b6b854a0553bae0e'
 ---
 
 <!-- RETIRED: S21, S22 -->
@@ -68,7 +68,7 @@ Implement syntax-aware edits whose changed paths and bytes are bounded by the re
 Rehearse the exact plan against a disposable copy of the current dirty tree and emit an auditable receipt.
 
 - [x] `W02.P05.S11` - Implement disposable current-tree rehearsal and immutable receipt generation in the system temporary directory; `dev/quality/object_name_rehearsal.py`.
-- [ ] `W02.P05.S12` - Test dirty and untracked input capture, isolated execution, receipt determinism, and source-tree immutability; `dev/quality/tests/test_object_name_rehearsal.py`.
+- [x] `W02.P05.S12` - Test dirty and untracked input capture, isolated execution, receipt determinism, and source-tree immutability; `dev/quality/tests/test_object_name_rehearsal.py`.
 
 ### Phase `W02.P06` - live replay and postconditions
 
