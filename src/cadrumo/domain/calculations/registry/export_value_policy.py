@@ -10,11 +10,28 @@ from enum import StrEnum
 from fractions import Fraction
 from functools import partial
 from math import isfinite
-from typing import Annotated
+from typing import Annotated, Final
 
 from pydantic import BeforeValidator
 
 from .errors import RegistryValidationError
+
+
+class SelectedUnselectedFlag(StrEnum):
+    """The two ASCII characters a selected/unselected export field may contain.
+
+    Named because the tokens carry meaning the digits do not: the field is a checkbox,
+    not a quantity. Both the projector and the validator tested the pair separately, and
+    both error messages already said "exactly ASCII 0 or 1" -- the rule was stated three
+    times and declared none.
+    """
+
+    UNSELECTED = "0"
+    SELECTED = "1"
+
+
+SELECTED_UNSELECTED_VALUES: Final[frozenset[SelectedUnselectedFlag]] = frozenset(SelectedUnselectedFlag)
+"""Both flag characters, derived from the enum so the two checks cannot disagree."""
 
 
 class ExportValuePolicy(StrEnum):
@@ -161,7 +178,7 @@ def normalize_parsed_export_policy_value(
 
 def _project_selected_unselected(value: object) -> str:
     if value is None:
-        return "0"
+        return SelectedUnselectedFlag.UNSELECTED
     if isinstance(value, str):
         return _project_selected_unselected_string(value)
     if isinstance(value, bool):
@@ -171,8 +188,8 @@ def _project_selected_unselected(value: object) -> str:
 
 def _project_selected_unselected_string(value: str) -> str:
     if value == "":
-        return "0"
-    if value in {"0", "1"}:
+        return SelectedUnselectedFlag.UNSELECTED
+    if value in SELECTED_UNSELECTED_VALUES:
         return value
     raise RegistryValidationError(
         "selected/unselected export string must be empty or exactly ASCII 0 or 1",
@@ -186,7 +203,7 @@ def _project_selected_unselected_number(value: object) -> str:
         raise RegistryValidationError("selected/unselected export numeric value must be finite")
     if isinstance(value, (int, float, Decimal, Fraction)):
         if value == 0:
-            return "0"
+            return SelectedUnselectedFlag.UNSELECTED
         if value == 1:
             return "1"
     raise RegistryValidationError(
@@ -352,7 +369,7 @@ def _require_ascii_digits(raw: str, *, label: str) -> None:
 
 
 def _validate_selected_unselected(raw: str) -> None:
-    if raw not in {"0", "1"}:
+    if raw not in SELECTED_UNSELECTED_VALUES:
         raise RegistryValidationError("selected/unselected export field must contain exactly ASCII 0 or 1")
 
 

@@ -43,6 +43,16 @@ _MONTH_AXIS_TOKENS: Final[frozenset[str]] = frozenset(
 _QUARTER_AXIS_TOKENS: Final[frozenset[str]] = frozenset(("q1", "q2", "q3", "q4"))
 
 
+_RELATED_PARTY_AXIS_ORDINALS: Final[frozenset[str]] = frozenset({"1", "2", "3", "4", "5"})
+"""The ordinals a ``related.party.N`` axis may carry.
+
+Not an enum: these are positional indices into a record design, not names, and the set
+is closed by that design rather than by any domain meaning. What matters is that the
+range is declared once -- it was tested twice on adjacent lines, so widening the design
+meant remembering to widen both halves of one comparison.
+"""
+
+
 def semantic_roles_are_quarter_axis_siblings(left: str, right: str) -> bool:
     """Return whether two roles differ only in a trailing calendar-quarter token."""
     return _differ_only_in_trailing_token(left, right, _QUARTER_AXIS_TOKENS)
@@ -160,6 +170,6 @@ def _semantic_role_related_party_row_slot_siblings(left: tuple[str, ...], right:
         return False
     return (
         left[:2] == ("related", "party")
-        and left[-1] in {"1", "2", "3", "4", "5"}
-        and right[-1] in {"1", "2", "3", "4", "5"}
+        and left[-1] in _RELATED_PARTY_AXIS_ORDINALS
+        and right[-1] in _RELATED_PARTY_AXIS_ORDINALS
     )

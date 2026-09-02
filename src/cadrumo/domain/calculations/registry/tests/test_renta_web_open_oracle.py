@@ -13,7 +13,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.config import Settings
 from .....tests.aeat_literal_fixtures import aeat_host
 from ..errors import RegistryValidationError
-from ..live_parity import ParityFieldComparison
+from ..live_parity import ParityFieldComparison, ParityVerdictKind
 from ..remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
@@ -319,9 +319,11 @@ def test_equivalent_renta_web_open_value_compares_rendered_amounts() -> None:
 # ---------------------------------------------------------------------------
 
 
-_MATCH_FIELD = ParityFieldComparison(name="probe", expected="x", observed="x", verdict="match")
-_MISMATCH_FIELD = ParityFieldComparison(name="probe", expected="x", observed="y", verdict="mismatch")
-_UNVERIFIABLE_FIELD = ParityFieldComparison(name="probe", expected="x", observed="", verdict="unverifiable")
+_MATCH_FIELD = ParityFieldComparison(name="probe", expected="x", observed="x", verdict=ParityVerdictKind.MATCH)
+_MISMATCH_FIELD = ParityFieldComparison(name="probe", expected="x", observed="y", verdict=ParityVerdictKind.MISMATCH)
+_UNVERIFIABLE_FIELD = ParityFieldComparison(
+    name="probe", expected="x", observed="", verdict=ParityVerdictKind.UNVERIFIABLE
+)
 
 
 def test_overall_verdict_applies_match_unverifiable_mismatch_precedence() -> None:

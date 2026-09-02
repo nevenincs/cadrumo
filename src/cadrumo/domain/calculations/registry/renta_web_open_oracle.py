@@ -26,6 +26,7 @@ from .live_parity import (
     ParityFieldComparison,
     ParityFieldVerdict,
     ParityResult,
+    ParityVerdictKind,
     assert_oracle_operations_allowed,
     decode_replay_json_payload,
 )
@@ -480,7 +481,9 @@ def _is_non_finite_numeric_text(value: str) -> bool:
 def _compare_expected_field(casilla_id: CasillaId, expected: object, *, observed: str | None) -> ParityFieldComparison:
     expected_text = str(expected)
     if observed is None:
-        return ParityFieldComparison(name=casilla_id, expected=expected_text, observed="", verdict="unverifiable")
+        return ParityFieldComparison(
+            name=casilla_id, expected=expected_text, observed="", verdict=ParityVerdictKind.UNVERIFIABLE
+        )
     verdict: Literal["match", "mismatch"] = (
         "match" if equivalent_renta_web_open_value(expected_text, observed) else "mismatch"
     )
@@ -512,10 +515,10 @@ def serialize_renta_web_open_replay_decimal(value: str) -> str | None:
 
 def _overall_verdict(fields: tuple[ParityFieldComparison, ...]) -> ParityFieldVerdict:
     if any(field.verdict == "mismatch" for field in fields):
-        return "mismatch"
+        return ParityVerdictKind.MISMATCH
     if any(field.verdict == "unverifiable" for field in fields):
-        return "unverifiable"
-    return "match"
+        return ParityVerdictKind.UNVERIFIABLE
+    return ParityVerdictKind.MATCH
 
 
 def _narrative_for_verdict(

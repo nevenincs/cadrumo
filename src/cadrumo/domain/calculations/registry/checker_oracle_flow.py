@@ -24,6 +24,7 @@ from .live_parity import (
     ParityFieldComparison,
     ParityResult,
     ParityVerdict,
+    ParityVerdictKind,
     assert_oracle_operations_allowed,
     decode_replay_json_payload,
 )
@@ -300,11 +301,13 @@ def observed_verdict(values: Mapping[str, str], key: str) -> str | None:
 def compare_verdict_field(key: str, expected: str, *, observed: str | None) -> ParityFieldComparison:
     """Compare one expected verdict against one observed verdict."""
     if observed is None:
-        return ParityFieldComparison(name=key, expected=expected, observed="<missing>", verdict="mismatch")
+        return ParityFieldComparison(
+            name=key, expected=expected, observed="<missing>", verdict=ParityVerdictKind.MISMATCH
+        )
     normalized_observed = observed.strip().lower()
     return ParityFieldComparison(
         name=key,
         expected=expected,
         observed=normalized_observed,
-        verdict="match" if normalized_observed == expected else "mismatch",
+        verdict=ParityVerdictKind.MATCH if normalized_observed == expected else "mismatch",
     )

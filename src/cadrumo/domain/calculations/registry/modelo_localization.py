@@ -64,7 +64,11 @@ def modelo_locale_key(modelo_id: str, field: Literal["title", "official_name"]) 
     return f"modelo.schema.{encode_modelo_locale_segment(modelo_id)}.field.{field}"
 
 
-def revision_locale_key(modelo_id: str, revision_id: RevisionId, field: Literal[ModeloLocalizationFieldKind.LABEL] = ModeloLocalizationFieldKind.LABEL) -> str:
+def revision_locale_key(
+    modelo_id: str,
+    revision_id: RevisionId,
+    field: Literal[ModeloLocalizationFieldKind.LABEL] = ModeloLocalizationFieldKind.LABEL,
+) -> str:
     """Derive a revision-level presentation key."""
     return (
         f"modelo.schema.{encode_modelo_locale_segment(modelo_id)}.revision."
