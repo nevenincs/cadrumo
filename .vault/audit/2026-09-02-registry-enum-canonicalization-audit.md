@@ -621,6 +621,61 @@ defaults included. The counter finds what to promote; it does not find what
 promotion breaks, and reading its output as a complete worklist is what allowed this
 to reach an application test.
 
+### the-charter-reached-zero-and-the-long-tail-is-not-debt | high | Sixteen promotions took duplicated vocabularies from fourteen to zero, and the seventy-four that remain are a different claim
+
+The campaign's charter was that a value set with two declarations has two definitions.
+Measured by the canonical scan, that population was fourteen and is now zero across
+sixteen promotions, and a gate asserts it with no allowlist, no baseline and nothing
+to add an exception to.
+
+Seventy-four single-site vocabularies remain and are deliberately not counted as
+outstanding defects. A union declared once is already one definition; promoting it
+buys typing, member documentation and uniformity with the rest of the schema, not
+de-duplication. Reporting them as remaining work would restate the campaign's success
+as failure, and asserting zero of them in the gate would assert a goal this campaign
+neither met nor set.
+
+The distinction matters for whoever picks this up. Closing the long tail is a
+reasonable follow-on with its own argument; it is not the completion of this one.
+
+### the-gate-asserts-only-what-its-instrument-can-prove | high | Three limits are written into the gate rather than discovered later
+
+The gate names what it does not claim, because each limit was learned the hard way
+during the campaign and would otherwise be read as a hole.
+
+It does not claim every closed vocabulary is an enum, because the long tail above is
+not a defect. It does not claim a vocabulary appears once in the type system, because
+two narrowings of the casilla taxonomy are contracts that were rooted rather than
+removed, and flattening them would widen what those surfaces accept. And its zero is a
+zero for DECLARED ANNOTATIONS: the scan reads annotations, so a value set enforced by
+a validator comparing against a tuple, or by a membership test against a module
+constant, is invisible to it and to the gate.
+
+That third limit is inherited, not chosen, and stating it is the difference between a
+gate and a claim. A green result here means no vocabulary is declared twice in an
+annotation; it does not mean the codebase has one definition per value set everywhere.
+Finding the rest is semantic search by meaning, which is how this campaign found an
+aliasing normaliser and two byte-identical enums no name search reached.
+
+### the-campaign-misjudged-its-own-work-five-times | medium | Every wrong call came from reading a shape instead of running a check
+
+Five substantive claims made during this campaign were wrong, and the pattern is one
+pattern. Two one-member unions were called defects because they had one member, when
+the field restated its own model's identity. A cadence enum was nearly merged with a
+period-shape enum because they shared a name and three values. A coercion hop was
+reported as impossible on a mapping key. A containment gate was reported as certain to
+go blind on promotion, when it went blind on the opposite side from the one predicted.
+
+Each was an inference from the SHAPE of a declaration, stated as fact, and each was
+refuted by a check costing under ten lines. The disciplines this campaign accumulated
+-- the load check, the counter, the sweep rules, the review rounds -- all operate on
+edits already made. None of them examines a claim about work not yet attempted, which
+is where every one of these five originated.
+
+The transferable rule is cheap enough to always apply: a stated limitation is a
+hypothesis until a call is made against it, and in a codebase with a live interpreter
+that call is almost always shorter than the sentence asserting the limitation.
+
 ## Recommendations
 
 Collapse the duplicate codec members to one, which is a correctness repair
@@ -643,3 +698,20 @@ provenance is legitimately declared in shipped registry data versus which is
 development metastate that belongs outside the wheel, and whether a closed
 vocabulary may ever be expressed as an inline union or must always resolve to a
 named enum the schema imports.
+
+The remaining work this campaign deliberately did not do, each with its own argument
+rather than as a continuation of this one.
+
+Seventy-four single-site vocabularies could be promoted for typing and documentation.
+That is a uniformity argument, not a de-duplication one, and it should be made on its
+own terms.
+
+The scan's blind spot is real and unmeasured. A vocabulary enforced by a validator or
+a membership test rather than by an annotation is invisible to every instrument this
+campaign built, and nobody has counted that population. A semantic sweep is the only
+method that reaches it.
+
+Seven legal-parameter rows assert an operator countersignature transcribed from a
+free-text token, covering IRPF imputacion and IVA recargo de equivalencia rates. They
+are the only place in the tree where an unverifiable string became typed countersigned
+authority, and they warrant either verification or downgrade.

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:5974551c9234f97f8887fe9d8c54abad0c4adff0bfd0af996f9995994b649de2'
+body_hash: 'sha256:475324fc05e3000b435ead16610495a0e5e840f7b04896fa1b9f8b6beac0cced'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -164,6 +164,61 @@ as published-then-deleted and permanently retired.
 the three Trusted Publisher bindings and is labelled blocked; it specifies them
 against `publish-release.yml` and environment `release`, while the account convention
 uses environment `pypi`.
+
+### Merging the harness changes the distribution name, not the package name
+
+Twenty-two files outside the harness tree name the distribution `cadrumo-harness`:
+cohort and evidence constants, the installed-oracle probes, the homebrew acquisition
+and smoke lanes, the import-hygiene and locale scanners, the agent-evaluation harness
+and its workflow, the justfile and the root project file. Those are the merge's real
+surface.
+
+A further twelve files import only the package `cadrumo_harness`. Keeping that package
+name while merging the distribution leaves them untouched, and preserves the one-way
+import boundary the metadata-only CLI contract asserts: the package stays distinct, so
+`cadrumo` still never imports it.
+
+Two consumers need more than a name change. `dev/packaging/tests/test_distribution_evidence_emit.py`
+asserts an installed console entry point against `distribution="cadrumo-harness"` with
+`expected_value="cadrumo_harness.mcp:main"`, and the root project file carries the
+workspace membership and source pin that the merge removes.
+
+### Packaging-suite failures are not caused by this decision's work
+
+Every confirmed failure under `dev/packaging/tests` predates this work or is
+environmental. Seven of the failing files reference no surface this decision changes;
+the justfile recipe-ownership gate names six unowned tests in files it never touches;
+and the launcher-semantics refusal resolves `cadrumo-mcp` from the development
+environment, which is present and unmodified.
+
+Measurements taken while editing the same tree are not evidence: a cohort-stamping gate
+reported as failing in a concurrent run passes on a quiet one.
+
+### The host-extension removal is one indivisible change
+
+The acquisition-lane map, the channel descriptor, the derived-tier rule and the
+artifact-kind taxonomy validate against each other, so the host-extension channels
+cannot be withdrawn in stages. Deleting the lanes alone leaves the lane map naming
+absent workflows; dropping the map entries alone leaves channels with no evidence
+source; dropping the channels alone leaves the tier rule selecting a tier nothing
+serves; and dropping the artifact kinds alone breaks the gate requiring every kind to
+be surfaced by exactly one channel. Each of those four failures was observed by
+applying the corresponding half on its own.
+
+The tier rule is withdrawn by setting `extends_host_application` false, which is the
+same fact the decision records: the MCP server ships as a second console script inside
+the product wheel, so no host application carries a channel.
+
+### The working tree currently declares channels whose lanes are deleted
+
+The acquisition workflows and the publication workflow are deleted and committed, while
+the descriptor still declares the host-extension channels and the lane map still names
+the deleted acquisition workflow. Five modules reference workflow files that are absent:
+the publication-input map, the evidence-transport gate, the environment-inventory and
+external-client-boundary tests, and the documentation-site module in prose.
+
+This is not a property of the decision; it is a half-applied state. Reconciling it means
+applying the indivisible change above in full.
 
 ### The work is already fragmented across the vault
 

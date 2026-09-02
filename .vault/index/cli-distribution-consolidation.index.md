@@ -6,7 +6,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:055e72dddc4bfe7227b94e2eaf0b4e205b930f3189c5814c4fd5979cbfef2a81'
+body_hash: 'sha256:b5625bdfce77829cdeb0dd08c83d73a52105191c3e089942a67b8e78910735ea'
 related:
   - '[[2026-09-02-cli-distribution-consolidation-P01-S01]]'
   - '[[2026-09-02-cli-distribution-consolidation-P01-S02]]'
@@ -17,6 +17,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-P03-S08]]'
   - '[[2026-09-02-cli-distribution-consolidation-P03-S09]]'
   - '[[2026-09-02-cli-distribution-consolidation-P03-S10]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P04-S13]]'
   - '[[2026-09-02-cli-distribution-consolidation-adr]]'
   - '[[2026-09-02-cli-distribution-consolidation-plan]]'
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
@@ -43,6 +44,7 @@ Auto-generated index of all documents tagged with `#cli-distribution-consolidati
 - `2026-09-02-cli-distribution-consolidation-P03-S08` - Restate the self-hosted runner invariant as a workflow-level split
 - `2026-09-02-cli-distribution-consolidation-P03-S09` - Restate the artifact-storage prohibition as a no-cross-run assertion
 - `2026-09-02-cli-distribution-consolidation-P03-S10` - Retire the orchestrator, publication and soak workflows with their release-candidate modules
+- `2026-09-02-cli-distribution-consolidation-P04-S13` - Delete the host-extension channel artifacts and their acquisition lanes
 
 ### plan
 

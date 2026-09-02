@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:4bcc1f4b1ecbfae27afbf86f478f56cc83d3400606a4d28c7e33178f03bdb2ce'
+body_hash: 'sha256:3f08161736f94f4b8bfc484cb200ae6f8e1f1ad4ae74ab1da7faa4b6f5e311a7'
 ---
 
 # `cli-distribution-consolidation` plan
@@ -62,7 +62,7 @@ Merge the MCP console script into the product distribution and remove the two ho
 
 - [ ] `P04.S11` - Move the MCP console script into the product distribution and assert it in the distribution smoke check; `pyproject.toml`.
 - [ ] `P04.S12` - Remove the harness distribution and its workspace membership; `src/cadrumo-harness/pyproject.toml`.
-- [ ] `P04.S13` - Delete the host-extension channel artifacts and their acquisition lanes; `packaging/mcpb/build.py`.
+- [x] `P04.S13` - Delete the host-extension channel artifacts and their acquisition lanes; `packaging/mcpb/build.py`.
 - [ ] `P04.S14` - Rewrite the agent connection guide around the installed console script; `docs/how-to/connect-an-agent.md`.
 - [ ] `P04.S15` - Unlist the superseded plugin from the marketplace descriptor; `packaging/marketplace/.claude-plugin/marketplace.json`.
 
@@ -117,6 +117,16 @@ its replacement is proven.
 P04, P05 and P06 are mutually independent and may run in parallel once P03 has landed.
 Each touches a disjoint surface; only P04 and P05 both edit `pyproject.toml`, so they
 take one writer between them or sequence those two Steps.
+
+Removing the host-extension channels is ONE atomic change spanning two Phases as
+written, and cannot be split. The acquisition-lane map, the channel descriptor and the
+artifact-kind taxonomy all validate against each other: deleting the lanes alone leaves
+a lane map pointing at absent workflows; removing the map entries alone leaves channels
+with no evidence source; removing the channels alone leaves the derived-tier rule
+selecting a tier nothing serves; and removing the artifact kinds alone breaks the parity
+gate that requires every kind to be surfaced by exactly one channel. The descriptor
+Steps in P07 that touch host-extension channels must therefore land in the same change
+as the P04 deletion Step, not after it.
 
 Within P04 the deletion Step precedes the merge Step. The harness is referenced from
 forty-four files outside its own tree; roughly a third are host-extension surfaces the
