@@ -37,6 +37,7 @@ from ..edit_models import (
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
     ModeloEditSubmissionV1,
+    ModeloEditWritableScalarSurfaceEntryV1,
     ModeloScalarEditIntentV1,
 )
 from ..edit_services import admit_modelo_edit, modelo_edit_request_schema_identity, modelo_edit_result_schema_identity
@@ -117,7 +118,9 @@ def _writable_casilla_id(baseline: ModeloEditBaselineV1) -> str:
     untestable.
     """
     for entry in baseline.permitted_surface:
-        if getattr(entry, "kind", None) == "writable_scalar" and getattr(entry, "data_type", None) in _NUMERIC_TYPES:
+        # Only the writable-scalar variant carries a casilla_id and a data_type;
+        # narrowing to it is what makes both reads well typed.
+        if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1) and entry.data_type in _NUMERIC_TYPES:
             return str(entry.casilla_id)
     pytest.fail("the real M130 admission permits no numeric writable scalar; these proofs would be vacuous")
 
