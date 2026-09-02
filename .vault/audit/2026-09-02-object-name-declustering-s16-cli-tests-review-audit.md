@@ -5,49 +5,71 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:19f8aae4c217c231ee011eea441f01cf878ba1344ae20ea7863f483c4e733efa'
+body_hash: 'sha256:0c325724536f058a023d7d3fd04ba805d9f9467169637bdb83da142b84521d6a'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace object-name-declustering with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `object-name-declustering` audit: `s16 cli tests review`
 
 ## Scope
 
-<!-- What was audited and why -->
+Reviewed the S16 CLI detector-teeth suite against the accepted object-name declustering ADR,
+research, reference, and plan and the current CLI, manifest, graph, rehearsal, and replay
+contracts. The review covered modes and arguments, strict structured input adapters,
+deterministic output, default non-mutating rehearsal, explicit receipt-bound apply,
+inventory/plan/verify behavior, canonical component selection, and expected versus
+programming-error exit semantics. No production or test code was modified.
 
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
+### generated-context-coverage | high | The untested CLI graph adapter rejects valid generator-backed manifests
 
-       ### s16 cli tests review | {level} | {summary}
+Every CLI context fixture is definition-only. Production `_context` passes only repository
+import edges to `build_manifest_components`; unlike rehearsal, it derives no
+`generated-artifact` edges from reviewed manifest commands and paths. The graph contract
+therefore observes no generated class and refuses a valid generator-backed manifest before
+plan, rehearsal, or apply. The missing end-to-end generator CLI case allows an accepted
+workflow to remain unreachable while the suite is green.
 
-     followed by a paragraph carrying the detail. s16 cli tests review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+### canonical-component-count | medium | Multiple-component refusal has no detector tooth
+
+The real plan test exercises one valid component, while dispatch tests replace `_context`.
+No manifest with two independent components proves that plan, rehearse, and apply refuse the
+same non-canonical scope before either execution primitive is called. Removing or weakening
+the exactly-one-component check would not fail the current suite.
+
+### structured-result-adapters | medium | Rehearse and apply output tests assert only their mode labels
+
+Dispatch tests return typed stub objects but inspect only `payload["mode"]`; the real
+rehearsal immutability test likewise does not validate its JSON receipt. They do not assert
+the exact serialized receipt/result keys and values or run a real CLI apply. Output adapters
+could omit evidence, misbind result fields, or pass incorrect context arguments to replay
+without these tests failing, despite structured output being the operator handoff.
+
+### clean-verify-exit | medium | Verify exit semantics cover findings but not a clean inventory
+
+The suite proves verify returns one when enforced findings remain and inventory remains
+informational with findings. It never verifies a clean repository returns zero with a
+zero-finding structured payload. A reversed or hard-coded nonzero clean branch would pass.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+Make CLI context construction use the same independently derived generated-edge authority as
+rehearsal, then drive plan and rehearsal through a real generator-backed manifest. Add a
+two-independent-operation manifest and assert all context-owning modes refuse before
+rehearsal or replay. Assert exact JSON envelopes for plan, rehearsal, and apply, including
+all receipt/result evidence, and perform one real receipt-bound CLI apply that verifies live
+bytes. Add a clean verify case asserting exit zero, stdout-only deterministic JSON, and zero
+enforced findings.
+
+Preserve the suite's existing strong coverage: safe manifest and receipt paths, strict receipt
+schema and digest validation, apply-only receipt arguments and explicit identity, default
+rehearsal with unchanged live bytes, manifest-independent inventory and verify, malformed
+manifest refusal, deterministic JSON and human output, link-like root refusal, expected
+stderr/exit-two mapping, and unexpected programming-defect traceback behavior.
+
+## Validation
+
+The focused suite passed 35 tests in 14.18 seconds. Ruff, Ruff-format, and ty checks passed.
+Final review status is one high and three medium findings, with no critical or low findings.

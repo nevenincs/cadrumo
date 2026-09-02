@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:34a0ffa8a352808af3c4441f1bbdf256f2439fa95ce45d7d9ae3cd73ceda3fcb'
+body_hash: 'sha256:cf711c647e20ff98495c7f78dc4ebcde393c5e45cc02b64a4f5a62bbd3b7d1b5'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -471,6 +471,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S209` - Establish that the modelo 369 schemes disambiguate by period family and withdraw the unreachability the probe appeared to show; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S210` - Probe revision selection with the codes each revision declares, so a wrong-shaped question cannot be read as a registry refusal; `dev/registry/analysis/revision_selection_probe.py,dev/registry/tests/test_revision_selection_probe.py`.
 - [x] `W06.P13.S211` - Sweep every modelo with the declared-code probe and teach it to ask a well-formed question at a mid-year revision split; `dev/registry/analysis/revision_selection_probe.py,dev/registry/tests/test_revision_selection_probe.py`.
+- [x] `W06.P13.S212` - Retry only an ambiguity refusal with a date, halving the probe suite runtime that was driving worker crashes; `dev/registry/analysis/revision_selection_probe.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -595,7 +596,7 @@ What remains fully available is the dev-owned surface, which is why the twelve S
 `W06.P13` all live there. A screen, its dispositions and its gate can be authored, proved
 and left green without touching a file the other campaign holds.
 
-The plan is complete when every Step is closed. Beyond that, eleven criteria decide whether the work
+The plan is complete when every Step is closed. Beyond that, twelve criteria decide whether the work
 achieved what it was for. Each names the evidence that settles it, because a criterion whose proof is
 a reading rather than a command is one nobody can check later.
 
@@ -786,6 +787,22 @@ that a tally spells identically.
 The evidence is that all four of those failures are recorded here with what they cost, that
 the gates now assert their populations against measured floors, and that every run whose
 figures this plan quotes has been swept for lost-worker markers and carries none.
+
+Every category a screen reports has members that were read, and a member's presence implies a
+remedy the other members share. That is not the criterion above restated: a measurement can be
+taken correctly and still be sorted into a category mixing defects with correct declarations,
+and the sorting is what a reader acts on.
+
+The need was proved on this campaign's own screens rather than inherited. One condition was
+built, run, and removed inside a single iteration once thirty-five of its thirty-six members
+turned out to be correct. Another was split by direction because its four members wanted three
+different corrections. A third had to stop firing on five revisions a neighbouring condition
+already described more accurately, where the two rows contradicted each other outright. In
+each case the count was the least informative thing about the finding.
+
+What satisfies the criterion is that each condition names what a member has that a non-member
+lacks, that the boundary is tested from both sides, and that a condition whose members are
+mostly correct is withdrawn rather than kept for the sake of the one that is not.
 
 ## Verification
 

@@ -5054,3 +5054,25 @@ Worth noting what made the crash likelier: the retry doubles the authority calls
 refused probe, and this suite was already slow. A change that makes a test slower makes a
 timeout-driven crash more likely, and the crash then reads as a failure of the change. The two
 are easy to confuse and were nearly confused here.
+
+### The retry now fires only where a date can change the answer
+
+The date retry added last iteration fired on every refusal, which was both wasteful and
+imprecise. A date decides between windows that split inside one year; it decides nothing about
+a year the revision does not cover at all. So every genuine refusal was being asked a second
+time to hear the same answer.
+
+It now fires only on `AmbiguousRevisionSelectionError`, which is the one refusal a date can
+resolve. Behaviour is unchanged where it matters and was checked in both directions: modelo
+308's four probes still resolve to themselves, and modelo 322 at 2015 still reports twelve
+refusals with none of them retried into a resolve.
+
+The runtime is the reason this is worth recording. The suite ran in 164 seconds and now runs
+in 69, and the previous iteration's crash was a timeout under parallel execution on a suite
+that had just been made slower. A correctness fix that halves the work also removes the
+condition that produced a false failure, and the two were the same change.
+
+The narrower point is about what a retry is for. Retrying a failed question makes sense only
+when something about the second attempt could change the answer. Retrying because the first
+attempt failed is how a probe turns a definite refusal into twice as much evidence for the
+same conclusion, and this one did that for an iteration.
