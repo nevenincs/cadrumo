@@ -44,13 +44,17 @@ index does not carry takes the **pending publisher** form at
 index already carries takes the ordinary **project-level** form at
 `https://pypi.org/manage/project/<name>/settings/publishing/`.
 
-- `cadrumo` — held by a pending publisher. The index reports no project for it, which is
-  correct: a pending publisher reserves a name without creating one.
-- `cadrumo-data-manuals` — published at `0.0.0`; owes a project-level publisher.
-- `cadrumo-data-official` — published at `0.0.0`; owes a project-level publisher.
+- `cadrumo` — no project on the index yet, so it takes the pending form, which is also
+  what reserves the name.
+- `cadrumo-data-manuals` — published at `0.0.0`, so it takes the project-level form.
+- `cadrumo-data-official` — published at `0.0.0`, so it takes the project-level form.
 
-An upload is per-file, so until every distribution is bound the publish step succeeds on
-the bound ones and is refused on the rest. Remove any obsolete registration naming
+All three are registered. A registration is visible only from inside the account, so
+neither this document nor any check in this repository can confirm one: the first publish
+run is what demonstrates them. An upload is per-file, so a distribution whose binding is
+missing or misspelled is refused on its own while the others succeed, and re-running the
+workflow against the same tag reconciles the partial upload. Remove any obsolete
+registration naming
 `pypi-upload.yml` or `publish-release.yml`. The `pypi` environment is the OIDC trust
 anchor and must exist on the repository; the workflow does not require environment
 reviewers.
