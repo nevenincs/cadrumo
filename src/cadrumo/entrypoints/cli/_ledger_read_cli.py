@@ -418,9 +418,9 @@ def ledger_check(
         return
     years = sorted(
         {
+            # ``booked_date`` is required, so the fallback always yields a date.
             (tx.raw.value_date or tx.raw.booked_date).year
             for tx in catalogue.values()
-            if (tx.raw.value_date or tx.raw.booked_date) is not None
         }
     )
     if not years:

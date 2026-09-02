@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core.identity import CalculationRevisionId
+from ...domain.modelos.codes import ModeloCode
 from ._modelo_review_package_payloads import (
     ModeloReviewPackageBuildResult,
     ModeloReviewPackageCounterSignResult,
@@ -60,7 +61,7 @@ def review_package_build_result_payload(build_result: ReviewPackageBuildResult) 
         bucket_id=manifest.bucket_id,
         work_unit_id=manifest.work_unit_id,
         calculation_revision_id=manifest.calculation_revision_id,
-        modelo=manifest.modelo,
+        modelo=ModeloCode(manifest.modelo),
         filing_year=manifest.filing_year,
         period=manifest.period,
         revision_state=manifest.revision_state,
@@ -109,7 +110,7 @@ def review_package_verify_result(
         bucket_id=manifest.bucket_id,
         work_unit_id=manifest.work_unit_id,
         calculation_revision_id=manifest.calculation_revision_id,
-        modelo=manifest.modelo,
+        modelo=ModeloCode(manifest.modelo),
         filing_year=manifest.filing_year,
         period=manifest.period,
         revision_state=manifest.revision_state,

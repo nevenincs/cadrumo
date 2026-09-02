@@ -19,7 +19,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import TYPE_CHECKING, Literal, Self
+from typing import TYPE_CHECKING, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -27,19 +27,18 @@ from ....core.aggregation import RelationAggregationOp
 from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period, RegistrySelectorPeriodCode
-from .relation_dependency import (
-    RelationDependencyRole,
-    RelationDependencyRoleField,
-    RelationDependencyTreatment,
-    RelationDependencyTreatmentField,
-    RelationKindField,
-)
 from ._relation_aggregation import relation_aggregation_op
 from .binding_selector_utils import unique_tuple
 from .errors import RegistryValidationError
 from .ids import BindingId, LegalRefId, ModeloId, RelationId, SourceRefId
 from .observation_fold import gather_observed_requirement_values
 from .period_offset_math import apply_period_offset
+from .relation_dependency import (
+    RelationDependencyRole,
+    RelationDependencyRoleField,
+    RelationDependencyTreatment,
+    RelationDependencyTreatmentField,
+)
 from .schema import ModeloRevision, filing_period_from_scope
 from .schema_surfaces import RelationDefinition
 

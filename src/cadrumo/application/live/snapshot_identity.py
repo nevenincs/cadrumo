@@ -21,4 +21,4 @@ def derive_snapshot_id(capture: BaseModel) -> str:
     Typed on the model base rather than on each capture, because the rule is
     about the serialisation and not about which capture is being serialised.
     """
-    return sha256_hex(capture.model_dump_json())
+    return sha256_hex(capture.model_dump_json().encode("utf-8"))

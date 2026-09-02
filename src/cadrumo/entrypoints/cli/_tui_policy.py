@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import typer
 
 from .command_spec import CommandSpec, TuiCapability
@@ -9,7 +11,7 @@ from .command_spec import CommandSpec, TuiCapability
 
 def tui_was_requested(ctx: typer.Context) -> bool:
     """Return the root-level frontend request without duplicating CLI options."""
-    root_object: dict[str, object] = ctx.find_root().ensure_object(dict)
+    root_object = cast("dict[str, object]", ctx.find_root().ensure_object(dict))
     return bool(root_object.get("tui_requested"))
 
 

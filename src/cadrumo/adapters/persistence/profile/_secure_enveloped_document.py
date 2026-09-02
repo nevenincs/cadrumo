@@ -128,7 +128,8 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
             inner_envelope_version_is_current,
         )
 
-        envelope = Envelope.for_payload_type(self._model_type).model_validate_json(payload)
+        envelope_cls: type[Envelope[DocumentT]] = Envelope[DocumentT].for_payload_type(self._model_type)
+        envelope = envelope_cls.model_validate_json(payload)
         if not inner_envelope_classification_is_expected(envelope.classification, self._definition.sensitivity):
             from ..storage.errors import ClassificationError
 
@@ -153,9 +154,10 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
                     "max_supported_version": self._definition.schema_version,
                 },
             )
-        if not isinstance(envelope.payload, self._model_type):
+        decoded = envelope.payload
+        if not isinstance(decoded, self._model_type):
             raise TypeError(f"{self.namespace}/{self.object_key} envelope payload has an unexpected type")
-        return envelope.payload
+        return decoded
 
     def load_revisioned(self) -> tuple[DocumentT, str]:
         """Return the stored document and the revision id it was read at.
