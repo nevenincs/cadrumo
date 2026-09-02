@@ -83,6 +83,35 @@ guard is not a comprehensive detector for `Path.open`, repository construction
 or other network entry points. The green focused suite therefore cannot detect
 the two production findings above.
 
+### final-remediation-disposition | low | Axis authority and deterministic merging are closed
+
+Final re-review confirms that the provider now reconciles the two bundles
+separately, masks the non-owning axis on each result group, and joins those
+groups through the calendar-evidence authority. `AeatCalendarEvidenceSources`
+explicitly accepts the filing records whose embedded external evidence can
+establish AEAT meaning, and the CLI intentionally supplies its already-loaded
+records to both inputs. It does not move any repository, settings, encrypted
+artefact or parser adapter into application code. The cross-axis probe now
+returns `ready_to_file`, `not_observed`, and no AEAT reference when only the
+local bundle contains an accepted external-evidence record. This closes
+`axis-authority`.
+
+The existing authority now selects both local and AEAT limbs with complete
+semantic precedence keys and sorts merged output with those same keys. Reversing
+two equal-rank observations at one natural address now produces identical
+evidence in both orders, selecting the later `aeat-other` observation at 10:30
+and retaining sorted conflict references. This closes
+`natural-address-determinism`.
+
+The expanded tests directly cover both wrong-bundle directions, cross-axis
+masking, available-empty versus never-captured, stale retention, same-address
+permutation, and expected-identity match, mismatch and absence. The final local
+focused run passed 19 tests across the provider and CLI degradation/local
+evidence seams; Ruff and Basedpyright were clean across the provider, reconciler,
+focused test and CLI consumer. Together with direct purity inspection, this
+closes `provider-test-teeth` at the reviewed scope. No critical, high or medium
+finding remains open.
+
 ## Recommendations
 
 1. Make axis ownership explicit before crediting S367. Either project local
@@ -99,3 +128,5 @@ the two production findings above.
    degradation integration tests.
 4. Do not credit `W08.P25.S367` while the two high-severity findings remain
    open. No critical finding was identified.
+5. Final remediation closes recommendations 1 through 4. S367 has no remaining
+   review finding above low severity.
