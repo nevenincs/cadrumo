@@ -88,7 +88,7 @@ from ..errors import (
 )
 from ..storage_path_definitions import PROFILE_SESSION_FILENAME, PROFILE_SESSION_RETIREMENT_FILENAME
 from . import acceleration_receipt_crypto as _crypto
-from .acceleration_receipt_crypto import _encryption_error
+from .acceleration_receipt_crypto import encryption_error
 from .errors import ProfileCustodyRecordError
 from .filesystem import (
     compare_and_clear_profile_custody_local_record,
@@ -667,7 +667,7 @@ def mint_profile_session(
     if absolute_minutes <= 0:
         raise StorageValidationError("absolute_minutes must be a strict positive integer")
     if len(dek) != KEY_SIZE:
-        raise _encryption_error(f"dek must be exactly {KEY_SIZE} bytes")
+        raise encryption_error(f"dek must be exactly {KEY_SIZE} bytes")
     now = _crypto.validate_profile_session_metadata(
         profile_id=profile_id,
         custody_generation=custody_generation,

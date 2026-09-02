@@ -42,7 +42,7 @@ _STORAGE_DECRYPTION_MESSAGE_KEY: Final[str] = "errors.integrity.integrity_storag
 _STORAGE_ENCRYPTION_MESSAGE_KEY: Final[str] = "errors.integrity.integrity_storage_encryption"
 
 
-def _encryption_error(message: str) -> EncryptionError:
+def encryption_error(message: str) -> EncryptionError:
     return EncryptionError(message, translated_message=_STORAGE_ENCRYPTION_MESSAGE_KEY)
 
 
@@ -56,9 +56,9 @@ def validate_profile_session_metadata(
     """Validate immutable receipt metadata before durable coordination."""
     canonical_profile_bucket_id(profile_id)
     if custody_generation < 1:
-        raise _encryption_error("custody_generation must be a strict positive integer")
+        raise encryption_error("custody_generation must be a strict positive integer")
     if not dek_epoch:
-        raise _encryption_error("dek_epoch must be non-empty")
+        raise encryption_error("dek_epoch must be non-empty")
     return validate_utc_aware(issued_at)
 
 
@@ -127,9 +127,9 @@ def wrap_profile_session_dek(
 ) -> PersistedProfileSession:
     """Wrap ``dek`` under ``session_key`` with all metadata bound as AAD."""
     if len(session_key) != PROFILE_SESSION_KEY_BYTES:
-        raise _encryption_error(f"session_key must be exactly {PROFILE_SESSION_KEY_BYTES} bytes")
+        raise encryption_error(f"session_key must be exactly {PROFILE_SESSION_KEY_BYTES} bytes")
     if len(dek) != KEY_SIZE:
-        raise _encryption_error(f"dek must be exactly {KEY_SIZE} bytes")
+        raise encryption_error(f"dek must be exactly {KEY_SIZE} bytes")
     issued_at = validate_profile_session_metadata(
         profile_id=profile_id,
         custody_generation=custody_generation,
@@ -139,7 +139,7 @@ def wrap_profile_session_dek(
     idle_deadline = validate_utc_aware(idle_deadline)
     absolute_deadline = validate_utc_aware(absolute_deadline)
     if idle_deadline > absolute_deadline:
-        raise _encryption_error("idle_deadline must not exceed absolute_deadline")
+        raise encryption_error("idle_deadline must not exceed absolute_deadline")
 
     aad = _associated_data(
         schema_version=PROFILE_SESSION_SCHEMA_VERSION,
@@ -174,7 +174,7 @@ def wrap_profile_session_dek(
 def unwrap_profile_session_dek(*, session_key: bytes, record: PersistedProfileSession) -> bytearray:
     """Recover a wipeable 32-byte DEK after authenticating every metadata field."""
     if len(session_key) != PROFILE_SESSION_KEY_BYTES:
-        raise _encryption_error(f"session_key must be exactly {PROFILE_SESSION_KEY_BYTES} bytes")
+        raise encryption_error(f"session_key must be exactly {PROFILE_SESSION_KEY_BYTES} bytes")
     aad = _associated_data(
         schema_version=record.schema_version,
         profile_id=record.profile_id,

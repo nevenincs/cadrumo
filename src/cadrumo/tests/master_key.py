@@ -30,7 +30,7 @@ class EphemeralMasterKeyProvider:
             )
         self._key = key
         self.session: BucketSession | None = None
-        self._activation_cm: AbstractContextManager[None] | None = None
+        self.activation_cm: AbstractContextManager[None] | None = None
 
     def get_master_key(self) -> bytes:
         """Return the in-memory master key minted for this provider instance."""
@@ -55,7 +55,7 @@ class EphemeralMasterKeyProvider:
         activation = activate_session(session)
         activation.__enter__()
         self.session = session
-        self._activation_cm = activation
+        self.activation_cm = activation
         return session
 
     def __exit__(
@@ -72,7 +72,7 @@ class EphemeralMasterKeyProvider:
         cleared before either is touched, so a raising teardown cannot leave
         this provider holding a half-torn-down session it would try to reuse.
         """
-        activation, self._activation_cm = self._activation_cm, None
+        activation, self.activation_cm = self.activation_cm, None
         session, self.session = self.session, None
         try:
             if activation is not None:

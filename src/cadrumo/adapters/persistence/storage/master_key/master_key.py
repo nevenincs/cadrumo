@@ -63,7 +63,7 @@ class MasterKeyProvider(Protocol):
     session (idle-timeout guard, in-memory key cache) and exiting tears
     it down. Every concrete provider implements the protocol verbatim.
 
-    The ``session`` / ``_activation_cm`` slots are the bookkeeping the
+    The ``session`` / ``activation_cm`` slots are the bookkeeping the
     shared enter/exit machinery binds onto: entering stores the opened
     :class:`BucketSession` and its activation context manager, exiting
     tears both down. Every concrete provider declares them in
@@ -71,7 +71,7 @@ class MasterKeyProvider(Protocol):
     """
 
     session: BucketSession | None
-    _activation_cm: AbstractContextManager[None] | None
+    activation_cm: AbstractContextManager[None] | None
 
     def get_master_key(self) -> bytes:
         """Return the 32-byte AES-256 master key.
@@ -270,7 +270,7 @@ def _provider_enter(
     activation = activate_session(session)
     activation.__enter__()
     provider.session = session
-    provider._activation_cm = activation
+    provider.activation_cm = activation
     try:
         if session.unsecured_backend:
             refuse_unsecured_bucket_with_real_profile(session)
@@ -302,7 +302,7 @@ class UnsecuredMasterKeyProvider:
 
     def __init__(self) -> None:
         self.session: BucketSession | None = None
-        self._activation_cm: AbstractContextManager[None] | None = None
+        self.activation_cm: AbstractContextManager[None] | None = None
 
     def get_master_key(self) -> bytes:
         """Return the published deterministic master key for unsecured mode.

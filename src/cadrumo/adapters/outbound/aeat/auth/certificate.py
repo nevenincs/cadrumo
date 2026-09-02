@@ -199,6 +199,17 @@ class LoadedCertificate(BaseModel):
     _password: SecretStr = PrivateAttr(default=SecretStr(""))
     _private_key_handle: object | None = PrivateAttr(default=None)
 
+    def client_certificate_material(self) -> tuple[bytes, str]:
+        """Return the PKCS#12 bytes and passphrase for a client-TLS handshake.
+
+        The bundle and its passphrase are held as private attributes so they
+        never reach a model dump, log line, or serialized payload. This is the
+        one authorized read: the browser context binds them to the AEAT origin
+        for mutual TLS and nothing else. Callers must not store or forward the
+        returned material.
+        """
+        return self._pkcs12_bytes, self._password.get_secret_value()
+
     def is_expired(self, now: datetime | None = None) -> bool:
         """Return True if the certificate's validity has elapsed.
 

@@ -43,7 +43,7 @@ class _Owner:
     """The provider bookkeeping the teardown reads, in its real shape."""
 
     session: BucketSession | None = None
-    _activation_cm: AbstractContextManager[None] | None = None
+    activation_cm: AbstractContextManager[None] | None = None
 
 
 def _session(bucket_id: str) -> BucketSession:

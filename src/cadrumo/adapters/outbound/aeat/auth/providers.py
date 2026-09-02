@@ -78,12 +78,13 @@ class CertificateContextProvisioner:
             A :class:`BrowserContextKwargs` mapping with ``client_certificates``
             populated for the bound origin.
         """
+        pfx, passphrase = self._cert.client_certificate_material()
         return {
             "client_certificates": [
                 {
                     "origin": AEAT_CERTIFICATE_PROTECTED_ORIGIN,
-                    "pfx": self._cert._pkcs12_bytes,
-                    "passphrase": self._cert._password.get_secret_value(),
+                    "pfx": pfx,
+                    "passphrase": passphrase,
                 },
             ],
         }

@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class ProviderSessionOwner(Protocol):
     """Provider state required by :func:`exit_provider_session`."""
 
-    _activation_cm: AbstractContextManager[None] | None
+    activation_cm: AbstractContextManager[None] | None
     session: BucketSession | None
 
 
@@ -32,9 +32,9 @@ def exit_provider_session(
     no-ops. If another boundary already replaced the active binding, only the
     captured session is closed; a different current session is never evicted.
     """
-    activation = provider._activation_cm
+    activation = provider.activation_cm
     session = provider.session
-    provider._activation_cm = None
+    provider.activation_cm = None
     provider.session = None
     try:
         if session is not None:

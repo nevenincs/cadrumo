@@ -145,5 +145,5 @@ def test_a_refused_entry_closes_the_session_it_had_opened(tmp_path: Path) -> Non
             provider.__enter__()
 
         assert provider.session is None, "the refused entry left its session on the provider"
-        assert provider._activation_cm is None, "the refused entry left its activation attached"
+        assert provider.activation_cm is None, "the refused entry left its activation attached"
         assert current_active_bucket_session() is None, "the refused entry left a published-key session bound"

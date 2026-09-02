@@ -387,10 +387,10 @@ def walk_live_command_tree(app: typer.Typer) -> tuple[LiveCommandNode, ...]:
 
         context = TyContext(command, info_name=path[-1])
         try:
-            lazy_table = command._lazy_table() if isinstance(command, CadrumoTyperGroup) else {}
+            child_lazy_table = command.lazy_table() if isinstance(command, CadrumoTyperGroup) else {}
             group = cast(Any, command)
             for child_name in group.list_commands(context):
-                lazy = lazy_table.get(child_name)
+                lazy = child_lazy_table.get(child_name)
                 child = group.get_command(context, child_name)
                 if child is None:
                     continue
@@ -505,7 +505,7 @@ class CadrumoTyperGroup(TyperGroup):
 
     lazy_subcommands: tuple[LazySubcommand, ...] = ()
 
-    def _lazy_table(self) -> dict[str, LazySubcommand]:
+    def lazy_table(self) -> dict[str, LazySubcommand]:
         """Project this node's immutable spec-derived lazy children by token."""
         return {child.name: child for child in self.lazy_subcommands}
 
@@ -562,7 +562,7 @@ class CadrumoTyperGroup(TyperGroup):
         and only for the command actually selected.
         """
         eager = super().list_commands(ctx)
-        lazy = self._lazy_table()
+        lazy = self.lazy_table()
         merged = [*eager, *(name for name in lazy if name not in eager)]
         return sorted(merged)
 
@@ -575,7 +575,7 @@ class CadrumoTyperGroup(TyperGroup):
         import sweep.  Lazy registrations already own the operator name and
         short-help metadata, so only eager children need concrete resolution.
         """
-        lazy = self._lazy_table()
+        lazy = self.lazy_table()
         eager_names = set(super().list_commands(ctx))
         rows: list[tuple[str, str]] = []
         visible_names: list[str] = []
@@ -610,7 +610,7 @@ class CadrumoTyperGroup(TyperGroup):
     @override
     def shell_complete(self, ctx: TyContext, incomplete: str) -> list[CompletionItem]:
         """Complete lazy names and descriptions without loading their targets."""
-        lazy = self._lazy_table()
+        lazy = self.lazy_table()
         eager_names = set(super().list_commands(ctx))
         results: list[CompletionItem] = []
         for name in self.list_commands(ctx):
@@ -640,7 +640,7 @@ class CadrumoTyperGroup(TyperGroup):
         eager = super().get_command(ctx, cmd_name)
         if eager is not None:
             return eager
-        lazy = self._lazy_table().get(cmd_name)
+        lazy = self.lazy_table().get(cmd_name)
         if lazy is not None:
             return lazy.load()
         return None

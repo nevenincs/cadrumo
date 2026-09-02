@@ -68,8 +68,8 @@ from ._declarations_fetch import (
     COTEJO_PATH_PREFIX,
     READ_GUARD_POLICY,
     SEDE_BASE,
-    _assert_read_browser_action,
-    _assert_read_http,
+    assert_declarations_read_browser_action,
+    assert_declarations_read_http,
     cotejo_document_url,
     cotejo_view_url,
     get_buscar_settle_ms,
@@ -660,7 +660,7 @@ async def _drive_search(
         return False
 
     try:
-        _assert_read_browser_action("buscar-declaraciones-presentadas", policy=read_policy)
+        assert_declarations_read_browser_action("buscar-declaraciones-presentadas", policy=read_policy)
         await (
             page.locator("button.z-button")
             .filter(has_text="Buscar")
@@ -724,7 +724,7 @@ async def _open_register_form(
             than the register, or the form does not render its Modelo label.
     """
     try:
-        _assert_read_http("GET", _LISTING_URL, policy=read_policy)
+        assert_declarations_read_http("GET", _LISTING_URL, policy=read_policy)
         await page.goto(
             _LISTING_URL,
             wait_until=_WAIT_NETWORKIDLE,
@@ -804,7 +804,7 @@ async def _open_combobox(
     label = page.get_by_text(label_text, exact=True).first
     button = label.locator('xpath=following::a[contains(@class,"z-combobox-button")][1]')
     try:
-        _assert_read_browser_action(f"select-{label_text.split()[0].lower()}", policy=read_policy)
+        assert_declarations_read_browser_action(f"select-{label_text.split()[0].lower()}", policy=read_policy)
         await button.click(timeout=get_form_interaction_timeout_ms())
     except PlaywrightError as exc:
         raise SedeNavigationError(
@@ -836,7 +836,7 @@ async def _select_combobox_value(
 
     target = matching_options.first
     try:
-        _assert_read_browser_action(f"select-option-{option_match}", policy=read_policy)
+        assert_declarations_read_browser_action(f"select-option-{option_match}", policy=read_policy)
         await target.click(timeout=get_form_interaction_timeout_ms())
     except PlaywrightError as exc:
         raise SedeNavigationError(
@@ -854,7 +854,7 @@ async def _continue_alert_modal(
 ) -> None:
     """Dismiss AEAT's informational alert modal without opening alert actions."""
     try:
-        _assert_read_browser_action("alert-modal-continuar", policy=read_policy)
+        assert_declarations_read_browser_action("alert-modal-continuar", policy=read_policy)
         result = await page.evaluate(
             """
             () => {
@@ -947,7 +947,7 @@ async def capture_declaration(
             async with context.expect_page(
                 timeout=get_ver_click_timeout_ms(),
             ) as new_page_info:
-                _assert_read_browser_action("open-cotejo-pdf", policy=read_policy)
+                assert_declarations_read_browser_action("open-cotejo-pdf", policy=read_policy)
                 await ver_button.click(timeout=get_form_interaction_timeout_ms())
             cotejo_page = await new_page_info.value
         except PlaywrightError as exc:
@@ -985,7 +985,7 @@ async def capture_declaration(
             pdf_url=AnyHttpUrl(cotejo_document_url(origin_of(cotejo_url), csv)),
         )
 
-        _assert_read_http("GET", str(ref.pdf_url), policy=read_policy)
+        assert_declarations_read_http("GET", str(ref.pdf_url), policy=read_policy)
         pdf_response = await context.request.get(str(ref.pdf_url))
         content_type = pdf_response.headers.get("content-type", "")
         body = await pdf_response.body()
