@@ -180,6 +180,8 @@ class ProbeEvidence:
                 raise CompatibilityProbeError(f"{name} must be a lowercase SHA-256 digest")
         if any(_SHA256_RE.fullmatch(digest) is None for digest in self.artifact_digests.values()):
             raise CompatibilityProbeError("artifact_digests contains an invalid SHA-256 digest")
+        if self.artifact_digests and self.artifact_sha256 != _canonical_artifact_digest(self.artifact_digests):
+            raise CompatibilityProbeError("artifact_sha256 must bind the canonical artifact digest map")
         if self.status == ProbeStatus.PASSED.value and self.failure is not None:
             raise CompatibilityProbeError("passing compatibility evidence cannot contain a failure")
         if self.status == ProbeStatus.FAILED.value and not self.failure:

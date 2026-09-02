@@ -62,7 +62,7 @@ def _evidence(*, mode: str, status: str = "passed", dependency_status: str = "re
         status=status,
         stability="stable",
         lock_sha256=digest,
-        artifact_sha256=digest,
+        artifact_sha256=compatibility._canonical_artifact_digest(artifact_digests),
         artifact_digests=artifact_digests,
         source_commit="a" * 40,
         cohort_manifest_sha256=digest if mode == "binary" else None,
@@ -135,6 +135,7 @@ def test_passing_binary_evidence_requires_wheelhouse_binding() -> None:
     """A binary green row cannot launder a product-only artifact digest."""
     payload = _evidence(mode="binary").to_dict()
     payload["artifact_digests"] = {"cadrumo": hashlib.sha256(b"fixture").hexdigest()}
+    payload["artifact_sha256"] = compatibility._canonical_artifact_digest(payload["artifact_digests"])
 
     with pytest.raises(compatibility.CompatibilityProbeError, match="runtime wheelhouse bytes"):
         compatibility.ProbeEvidence(**payload)
