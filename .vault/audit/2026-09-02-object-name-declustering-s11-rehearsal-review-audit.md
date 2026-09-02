@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:1e7ba6409713680e25054ca860f458b67c3da819b1b5eaf00c580a6154b113a5'
+body_hash: 'sha256:578170ca9126ffc05fb3e938f7192d8d12ecd42c351330eeb635215a58a7af0c'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
@@ -57,13 +57,37 @@ inspection.
 The initial snapshot dropped tracked working-tree deletions rather than retaining an
 explicit absent marker, weakening the baseline path-set identity.
 
+### component-authority-unbound | high | A caller can rehearse a forged partial component
+
+`rehearse_object_name_component` resolves only the supplied component's operation IDs
+against executable manifest rows. It does not derive the current operation graph or
+verify the supplied component ID, affected paths, hard edges, risk evidence, or complete
+operation membership. A caller can therefore construct an `OperationComponent` containing
+only one operation from an indivisible connected component and obtain a receipt bearing an
+arbitrary component ID. Full-manifest validation does not establish graph membership, so
+the receipt does not prove the ADR's exactly-one-complete-reviewed-component boundary.
+
+### generator-phase-unreachable | high | Declared owning generators cannot execute
+
+The manifest contract requires every non-empty `generator_commands` declaration to include
+the `generated-artifact` reference class. The rehearsal calls
+`plan_object_name_transformation` before running generators, while that transformer refuses
+every operation declaring `generated-artifact`. Consequently every operation with an owning
+generator fails at the transformation boundary and the generator loop is unreachable for
+non-empty generator input. Rehearsal cannot satisfy the accepted generated-owner workflow or
+emit generator outcome evidence for a valid manifest.
+
 ## Recommendations
 
 Bind commands to the verified installed runtime while resolving project imports from
 the copy. Recompute the copied inventory before mutation. Separate stable replay
 identity from volatile raw-output evidence while binding both. Preserve failed-command
 outcomes, fail fast, include explicit tracked-deletion markers, disclose every retained
-target, and bind Git and uv versions alongside Python and LibCST.
+target, and bind Git and uv versions alongside Python and LibCST. Recompute the canonical
+operation graph at the rehearsal boundary and require exact equality with the selected
+component before issuing a receipt. Split generated-owner execution from the LibCST-only
+transform phase so a reviewed generator can run in the disposable copy while its exact
+generated paths remain inside the selected component allowlist.
 
 ## Re-review status
 
@@ -83,4 +107,11 @@ and two distinct evidence digests.
 Resolved: every post-allocation error and final immutability failure discloses the
 retained rehearsal root. The target is never automatically deleted. Tool evidence
 includes Git, uv, Python, LibCST, the installed runtime environment, and rehearsal
-schema. Final independent review found no high or critical issue.
+schema.
+
+Open: final contract review found two high-severity issues. The selected
+`OperationComponent` is not bound back to the canonical graph, permitting partial or
+forged component rehearsal, and generator-backed operations are refused by the
+transformer before their owning commands can run. Focused Ruff, Ruff-format, ty,
+byte-compilation, and import checks passed; those static checks do not exercise either
+cross-module authority boundary. No critical, medium, or low issue remains open.
