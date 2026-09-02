@@ -10,7 +10,7 @@ related:
   - '[[2026-09-02-object-name-declustering-reference]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:c067c71c81b2c85998143ff7329ddfee2e4f015d1933c907ced58bf477ed50d2'
+body_hash: 'sha256:d746faf4c5b5b8b7ee3079f86aa6f4477f50411e462ee80d6d4975dd24e87500'
 ---
 
 <!-- RETIRED: S21, S22 -->
@@ -47,7 +47,7 @@ Define the typed reviewed intent that selects and constrains every proposed rena
 
 Derive deterministic operation-to-surface components and explainable risk ordering from existing analyzers.
 
-- [ ] `W01.P03.S05` - Build deterministic hard-edge operation-to-file components and explainable risk ordering from installed analyzer signals; `dev/quality/object_name_graph.py`.
+- [x] `W01.P03.S05` - Build deterministic hard-edge operation-to-file components and explainable risk ordering from installed analyzer signals; `dev/quality/object_name_graph.py`.
 - [ ] `W01.P03.S06` - Test component isolation, shared-file coupling, stable ordering, and risk-evidence rendering; `dev/quality/tests/test_object_name_graph.py`.
 
 ## Wave `W02` - receipt-bound rehearsal and replay

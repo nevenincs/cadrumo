@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:c906187ae2d8ae664fdd83824785b63cad08d4f574e5b1d0915d0084ba30bdff'
+body_hash: 'sha256:34581c6b8267e65059bd95c1e13bf703ab64e987162b5e42cd23f409642d2515'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -4363,3 +4363,101 @@ continuity modules as modified by the command that ran the screen. They were not
 pending diffs from the concurrent writer, neither contains any reference to the screen, and
 the command has no write path to them. A timing coincidence read as causation would have put
 another writer's edits into this campaign's record.
+
+### The seam between derivation and publication is now held
+
+Naming the render inputs removed the reason a publication caller had to derive them again.
+It did not stop the two halves drifting apart afterwards, which is a different failure and
+the one that would put the second derivation back.
+
+Publication takes six values. Two are its own concern - the target context and the rendered
+tree. The other four describe the revision and must come from the validated authority, and
+those four are exactly what the derived inputs carry. A gate now asserts that containment,
+so a seventh revision-describing parameter on publication, or a field dropped from the
+derivation, fails rather than quietly forcing the next caller to derive its own.
+
+The check discriminates in both directions and that was demonstrated rather than asserted: a
+hypothetical seventh parameter fails and names it, and a derivation missing `semantic_map`
+fails and names that. A companion test pins that the signature being read is real - at least
+six parameters including the two publication-owned ones, and at least four derived fields -
+because a signature read as empty would make the containment vacuously true. That defence is
+now standard in this campaign's gates for the reason it keeps earning: a check over nothing
+reports success.
+
+The suite runs 19 tests, all passing.
+
+### The pending-diff rule caught a file that had changed hands
+
+The natural home for this gate was the render-check test module, and it carries a pending
+diff. The reflex answer was that the diff was mine, since this campaign edited that file
+earlier. Reading it showed otherwise: four inserted lines repointing an import, and none of
+the semantic assertions written here. Those had already been committed by the concurrent
+campaign's tree-wide sweep, so the file's uncommitted state belongs to another writer
+entirely.
+
+The gate went into the publication test module instead, which is the better home anyway - the
+seam it guards is publication's - and which was verified clean first. The rule earned its
+keep for the second time in three iterations, and the specific lesson is narrower than the
+rule: "I edited this file recently" is not evidence that the current diff is mine, in a
+worktree where another writer commits across the whole tree. The diff has to be read.
+
+### Two of this campaign's own gates could have passed over nothing
+
+This audit has argued repeatedly that a check over an empty population reports success, and
+has recorded twice that a green result had selected nothing. Turned on the gates written
+here, the standard was not being met by two of the five.
+
+The disposition gate compares the census against the file and was safe only by accident: the
+file carries nine rows, so a census that silently returned nothing would fail loudly against
+them. That safety is a property of the file's current contents, not of the check. Both sides
+emptying together - a census that breaks and a file someone clears - would leave an equality
+between two empty sets, passing while asserting nothing. A check that works only while
+somebody remembers not to empty a file is not a check.
+
+The lane-visibility screen had no population assertion at all. A scan reaching nothing would
+have reported a clean tree in exactly the same way it reports a genuinely clean one.
+
+Both now assert their population before asserting their invariant, and the thresholds were
+set against measured reality rather than picked: 4,462 public definitions against a floor of
+500, 101 classified modules against a floor of 50, and a requirement that the same-layer
+census be non-empty at all, which it is at nine. Wide enough that ordinary movement in the
+tree will not trip them, narrow enough that a scan that stopped reaching the tree will.
+
+The other three already carried the defence, which is worth stating because it means the
+standard was being applied unevenly rather than not at all - and unevenly is the harder
+failure to notice. The five gates now run 28 tests, all passing.
+
+Worth naming plainly: every instance of this defect that this campaign has reported in the
+tree - the annotation that stopped describing its function, the location note forbidding the
+move already made, the export list naming a retired surface, the copied vocabulary - had the
+same shape as this one. The difference here is only that the author and the auditor were the
+same person, which is the case where it is least likely to be found.
+
+### The filing export proof is empty, and the emptiness is the honest kind
+
+The plan recorded that the filing export proof carries zero enrolled coordinates, so no
+exported byte has ever been checked against an official record design. That is true, and the
+Step asked for vectors to be loaded from registry data instead of the empty canonical tuples.
+
+The emptiness turns out to be deliberate, documented and, more importantly, load-bearing in
+the right direction. Both tuples carry a comment saying so: an empty live-proof authority is
+"an honest authority with no successful entries; it is not permission to infer proof from
+layouts", and empty vectors "yield typed per-channel refusals; they are never treated as a
+waiver or proof". Comments are only a claim, so the behaviour was checked. A test takes a
+real revision that declares an export layout, composes coverage against the real empty proof
+authority, and asserts the limb comes back refused with reason `missing_evidence` and a
+disposition naming an owner, a work item and a reconsideration condition.
+
+That is the distinction this audit has been drawing since its first pages, and here the tree
+gets it right: a declared layout does not become emitted-byte evidence because nothing
+contradicts it. Missing proof stays missing and says whose job it is.
+
+So the Step is not blocked on plumbing, and describing it as loading vectors from registry
+data understated what it needs. A conformance vector asserts what official bytes look like,
+and this project's own grounding rule refuses expected values derived from the implementation
+under test. Authoring vectors requires official record-design examples as the source; without
+them the only way to make the tuples non-empty is to invent the thing they are supposed to
+prove. The Step has been rewritten to name official examples as the input and left open.
+
+Recording this as a correction rather than a discovery: the hole is real and unchanged, and
+what changed is that the plan now says what would fill it.

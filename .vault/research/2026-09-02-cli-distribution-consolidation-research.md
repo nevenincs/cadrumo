@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:6557ac0b332cf54e2b3bcf4f7e8a06aec226346bf724366d5fe4da36fe0c3298'
+body_hash: 'sha256:2348ef29c3c40aa1a832aedb25933ca958b20f26023e293680123ab1ce199103'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -339,10 +339,17 @@ residue of the deleted release machinery and can be removed.
 
 The index already carries `cadrumo-data-manuals` and `cadrumo-data-official`, both at
 `0.0.0` and both uploaded on 2026-07-19. Only the primary name was ever unregistered.
-That asymmetry matters for the trust bindings: a pending publisher applies only to a
-name with no project behind it, so the two corpus distributions take the ordinary
-project-level publisher form instead, registered per project. Until both carry one,
-`uv publish dist/*` uploads the primary distribution and is refused on the other two.
+That asymmetry decides the binding form rather than leaving it to preference: a pending
+publisher applies only to a name with no project behind it, so the two corpus
+distributions take the ordinary project-level form, registered per project.
+
+All three are registered, on the operator's word. That is the only evidence available and
+it is sufficient: a publisher registration lives in the account and is visible from
+nowhere else, so no probe in this repository and no request to the index can confirm or
+refute one. An earlier version of this record asserted the two corpus bindings were
+outstanding; that was inferred from the distributions existing, never measured, and it
+was wrong. The first publish run is what demonstrates all three, and because an upload is
+per-file it demonstrates them one at a time.
 
 The release runbook still drives the retired orchestrator. `release-orchestrator.yml`
 no longer exists in the workflow directory, yet `RELEASING.md` names it eight times as
@@ -508,18 +515,55 @@ With the absent-inference lane repaired the packaging suite runs 264 passed agai
 failures, every one of them reproducible at the clean commit and so none introduced by
 this work.
 
-Six tests under `dev/packaging/tests` are selected by no recipe, so every local gate over
-that directory silently drops them - among them both gates asserting that the inference
-lane's driven inventory covers every guarded entry point, which is the claim this phase
-just found to have been vacuous. A test nothing runs is weaker than a test that fails.
+Six tests under `dev/packaging/tests` had no packaging-scoped owner. All six are
+`integration and serial`; the preflight lane excludes serial deliberately, and the
+installed-oracle lane names one module, so the remainder was reachable only through the
+tree-wide serial recipe. Someone verifying packaging alone got a green result that never
+touched them - and two of the six are the gates asserting the inference lane covers every
+guarded entry point, the claim this phase found vacuous. A recipe owning the serial
+remainder closes it. The tests were never absent from CI, which runs the tree-wide lane;
+what was missing was the directory-scoped ownership the gate exists to require.
+
 One inference test imports `pydantic_core` directly while no declaration names it, so the
-package is relied on as an incidental transitive.
+package is relied on as an incidental transitive. That one is open.
 
 The third failure is environmental rather than a finding: the core-payload gate shells out
 to `git archive HEAD` and that command fails in this worktree. A fourth, in the evidence
 emitter, does not fail but times out during a large `copytree` under host load. Neither
 can be resolved by reading the tree, and both mean the suite has no clean whole-run
 verdict on this workstation - only on a runner.
+
+### The release path was already running, and being refused in seconds
+
+`release-please` has fired on every push to the default branch since it landed and failed
+each time in six to eight seconds. The forge refuses a workflow whose actions are not
+pinned to full-length commit SHAs, and it refuses it before any step runs. Both workflows
+ported for this work referenced their actions by tag.
+
+Nothing downstream could happen: no release pull request was opened, so no tag was cut,
+so the publish workflow it dispatches never ran, so the project never rendered on the
+index and the pending publisher holding the name had nothing to admit. Every conclusion
+recorded above about publication being "not yet attempted" was true of the outcome and
+wrong about the cause - the attempt was being made, several times an hour, and discarded.
+
+The failure is the quiet kind. It is reported as an actions-permission error, which reads
+as a repository settings problem rather than as a defect in the workflow just added, and
+the run is short enough to look like a no-op. The one gate asserting SHA pins covered the
+artifact actions of the packaging workflows, and the release path is neither an artifact
+action nor a packaging workflow, so the tree said nothing.
+
+Both workflows now pin every action to the SHA the rest of the tree already uses, so
+there is one pin per action across the repository rather than a second opinion in the
+release path. A gate now asserts the rule the forge applies - every action, every
+workflow - and refuses an abbreviated SHA as well as a tag, because a short SHA looks
+pinned and a check that only rejected a leading `v` would pass it.
+
+Pinning is the whole of the constraint: the repository allows all actions and requires
+SHA pinning, so no allowlist stands behind the refusal and nothing else about these two
+workflows was rejected. Every other workflow in the repository was already pinned and is
+green across recent runs; the release path was the only failing workflow in the tree, and
+the publish workflow has no runs at all, which is what never being dispatched looks
+like.
 
 ### Not investigated
 

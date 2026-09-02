@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:15405102b5eb7c0a2e9b15292ca08ab28a9783503dda3f4b8864ec0078bc993c'
+body_hash: 'sha256:692656a08bb508177fe341639e9f2f1d1d643429daf975ae2b8180e45c3f70b7'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -326,7 +326,7 @@ Author filing-export conformance vectors as registry data for the generated tree
 - [ ] `W03.P06.S57` - Acquire one official emitted-byte reference for a single modelo revision, or an independently reviewed equivalent, as the evidence every later Step in this Phase consumes; `src/cadrumo/_data/corpus/aeat_official`.
 - [ ] `W03.P06.S20` - Declare the filing-export conformance vector schema as registry data beside the generation provenance; `src/cadrumo/domain/calculations/registry/schema_exports.py`.
 - [ ] `W03.P06.S21` - Author the conformance vector for the modelo 303 twenty twenty five generated tree as the reference case; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/_conformance.vector.toml`.
-- [ ] `W03.P06.S22` - Load enrolled vectors from registry data instead of the empty canonical tuples; `dev/registry/filing_export_proof.py`.
+- [ ] `W03.P06.S22` - Enrol filing export conformance vectors from official record-design examples, which the empty canonical tuples are honestly refusing in the meantime; `dev/registry/filing_export_proof.py`.
 - [ ] `W03.P06.S23` - Gate that a generated tree carrying no conformance vector keeps refusing as missing evidence rather than reading as unmeasured; `src/cadrumo/application/filing/export_proof.py`.
 - [ ] `W03.P06.S24` - Author the conformance vectors for the remaining generated trees; `src/cadrumo/_data/registry/aeat/modelos`.
 
@@ -450,6 +450,9 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S187` - Gate that the development refusal vocabulary keeps containing the application's and adds only the locally owned reasons; `dev/registry/conformance/tests/test_closure.py`.
 - [x] `W06.P13.S189` - Remeasure the cross-package private imports reachable from dev and correct the promotion Step to name the surface that actually carries them; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S190` - Name the revision render input assembly so the publication path can obtain the same seven values the comparison derives; `dev/registry/pipeline/render_check.py`.
+- [x] `W06.P13.S191` - Gate that the derived render inputs keep supplying every revision-describing value the publication limb requires; `dev/registry/tests/test_generated_tree_publication.py`.
+- [x] `W06.P13.S192` - Apply the empty-population defence to this campaign's own gates, which two of them lacked; `dev/quality/tests/test_name_collision_dispositions.py,dev/quality/tests/test_default_lane_visibility.py`.
+- [x] `W06.P13.S193` - Establish that the empty filing export proof authority refuses rather than passing, and correct the enrolment Step to name its real blocker; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
