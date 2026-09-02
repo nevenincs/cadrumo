@@ -125,6 +125,7 @@ from .workspace_models import ModeloWorkspaceRefreshTargetV1
 
 if TYPE_CHECKING:
     from ...domain.deadlines.models import TaxpayerProfile
+    from ...domain.filing.schema import ModeloScalar
     from ...domain.modelos.verification_report import VerificationReport
     from ..operations.models import OperationRequest
     from ..operations.owner import OperationExecutorContext
@@ -1192,7 +1193,7 @@ class ModeloEditApplyBaselineV1(BaseModel):
 type _ModeloEditApplyScalarValue = int | str | bool | date | None
 
 
-def _wire_scalar_value(value: object) -> _ModeloEditApplyScalarValue:
+def _wire_scalar_value(value: ModeloScalar) -> _ModeloEditApplyScalarValue:
     """Mirror one domain ``ModeloScalar`` onto the payload-safe wire union.
 
     Only ``Decimal`` needs mirroring, and it becomes the exact characters
@@ -1208,7 +1209,7 @@ def _wire_scalar_value(value: object) -> _ModeloEditApplyScalarValue:
     registry ``data_type``, so what a casilla holds is decided by the registry
     rather than by which Python type happened to survive the trip.
     """
-    return str(value) if isinstance(value, Decimal) else value  # type: ignore[return-value]
+    return str(value) if isinstance(value, Decimal) else value
 
 
 class ModeloEditApplyScalarIntentV1(BaseModel):

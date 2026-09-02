@@ -57,7 +57,7 @@ def screen_text(app: App[Any], width: int, height: int) -> str:
     # rendering it is the only way to capture the frame exactly as
     # ``export_screenshot`` does. The dynamic reach is annotated so the
     # compositor keeps its real declared type rather than leaking ``Any``.
-    compositor = cast("Compositor", getattr(app.screen, "_compositor"))  # noqa: B009
+    compositor = cast(Compositor, getattr(app.screen, "_compositor"))  # noqa: B009
     console.print(compositor, end="")
     return console.export_text(styles=False).rstrip("\n")
 

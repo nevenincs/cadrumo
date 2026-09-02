@@ -47,7 +47,7 @@ def localize_key_descriptions(node: DOMNode, descriptions: Mapping[str, str]) ->
     # Textual exposes no public re-description path: ``bind`` and ``BindingsMap.merge``
     # both APPEND, so either would offer a key once more on every call. The
     # private reach is direct so the map keeps its real declared type.
-    bindings = cast("BindingsMap", getattr(node, "_bindings"))  # noqa: B009
+    bindings = cast(BindingsMap, getattr(node, "_bindings"))  # noqa: B009
     table = bindings.key_to_bindings
     described: set[str] = set()
     for key, bound in list(table.items()):
