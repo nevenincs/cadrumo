@@ -26,7 +26,7 @@ A formula regression in the registry WILL cause the verification chain test
 to fail, which is the intended safety gate.
 
 Usage (regenerate committed PDFs):
-    uv run --no-sync python src/cadrumo/tests/fixtures/borrador/_generate.py
+    uv run --no-sync python src/cadrumo/tests/fixtures/borrador/generate.py
 """
 
 from __future__ import annotations
@@ -130,7 +130,7 @@ def _format_spanish_decimal(value: Decimal) -> str:
     return f"{'.'.join(reversed(groups))},{fractional}"
 
 
-def _render_borrador_pdf(year: int, casilla_values: Mapping[CasillaId, Decimal]) -> bytes:
+def render_borrador_pdf(year: int, casilla_values: Mapping[CasillaId, Decimal]) -> bytes:
     """Render a minimal borrador-format PDF for the given year and casilla values.
 
     Layout follows the AEAT Renta Web Open borrador text stream:
@@ -226,7 +226,7 @@ def generate_corpus() -> None:
     """Render and write the three M100 borrador corpus PDFs to fixtures/borrador/."""
     _FIXTURES_DIR.mkdir(parents=True, exist_ok=True)
     for year, casilla_values in _CORPUS_VALUES.items():
-        pdf_bytes = _render_borrador_pdf(year, casilla_values)
+        pdf_bytes = render_borrador_pdf(year, casilla_values)
         out_path = _FIXTURES_DIR / f"modelo_100_{year}.pdf"
         out_path.write_bytes(pdf_bytes)
         sidecar = write_provenance_sidecar(out_path)
