@@ -29,9 +29,6 @@ the downstream export owner that catches or projects the invariant; naming
 them here keeps the exclusion visible instead of hiding it behind a matcher
 that would silently pass.
 
-See Also:
-    :class:`~cadrumo.application.filing.errors.ModeloCalculateError`
-        Application-layer calculation refusal proven here to render as its key.
 """
 
 from __future__ import annotations
@@ -63,7 +60,6 @@ _FILING_OWNED_ERRORS: frozenset[str] = frozenset(
         "FilingExportValidationError",
         "ModeloApplicationError",
         "ModeloBuilderError",
-        "ModeloCalculateError",
         "ModeloDraftError",
         "ModeloImportError",
         "_ModeloBuilderError",
@@ -78,7 +74,6 @@ _SWEPT_MODULES: tuple[str, ...] = (
     "_complementaria.py",
     "draft_construction.py",
     "_export_parity.py",
-    "_import.py",
     "_m303_exonerado_390.py",
     "_m303_export_applicability.py",
     "draft_review.py",
@@ -93,7 +88,7 @@ _UNSWEPT_MODULE_RATIONALES: dict[str, str] = {
         "The public export/verify boundary owns field and digest declaration "
         "failures and projects them at the filed-artifact boundary."
     ),
-    "_export_producer.py": (
+    "export_producer.py": (
         "Producer-snapshot completeness is consumed by export.py, whose "
         "public export boundary owns the resulting validation/catch path."
     ),
@@ -101,14 +96,14 @@ _UNSWEPT_MODULE_RATIONALES: dict[str, str] = {
         "XML-dictionary layout invariants are consumed by export.py, whose "
         "export/verification boundary owns their projection."
     ),
-    "_projection.py": (
+    "projection.py": (
         "Projection-plan and value-address invariants are consumed by export.py's render-request boundary."
     ),
     "_record_field_renderer.py": (
         "Field offset, length, and role invariants are consumed by "
-        "_record_renderer.py/export.py at the artifact boundary."
+        "record_renderer.py/export.py at the artifact boundary."
     ),
-    "_record_renderer.py": (
+    "record_renderer.py": (
         "Record ordering and occurrence invariants are consumed by export.py at the artifact boundary."
     ),
 }
@@ -123,7 +118,6 @@ _OPERATOR_REACHABLE_REFUSAL_ALIASES: dict[str, str] = {
     "draft_construction.py": "_ModeloBuilderError",
     "_complementaria.py": "ModeloBuilderError",
     "_export_parity.py": "FilingExportError",
-    "_import.py": "ModeloImportError",
     "_m303_exonerado_390.py": "FilingExportError",
     "_m303_export_applicability.py": "FilingExportError",
     "runtime.py": "ModeloBuilderError",

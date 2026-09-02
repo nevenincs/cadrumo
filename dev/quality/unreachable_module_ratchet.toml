@@ -65,7 +65,6 @@ allowed = [
   "cadrumo.adapters.persistence.profile.fincas",  # unreachable
   "cadrumo.application.filing._calculate",  # unreachable
   "cadrumo.application.filing._complementaria",  # unreachable
-  "cadrumo.application.filing.validation",  # unreachable
   "cadrumo.application.inventory._source_readiness",  # unreachable
   "cadrumo.application.invoices._projection",  # unreachable
   "cadrumo.application.invoices._reconciliation",  # unreachable

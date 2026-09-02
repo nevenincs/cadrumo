@@ -32,9 +32,6 @@ See Also:
         The pre-file verification gate this validator runs inside, which
         owns :class:`ModeloVerificationFinding` and the persisted
         :class:`VerificationReport`.
-    :func:`~cadrumo.application.filing.validate_draft`:
-        Re-runs this validator against an existing draft, preserving
-        ``draft_id``.
 """
 
 from __future__ import annotations
