@@ -25,7 +25,6 @@ from ...flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ...flows.validators import CrossFieldValidator, ValidationVerdict, resolve_cross_field_validator
 from ..flow_validators import (
     TAXPAYER_PROJECTION_VALIDATOR_ID,
-    build_taxpayer_projection_validator,
     register_taxpayer_projection_validator,
 )
 
@@ -55,7 +54,9 @@ _PAGE_DOMAIN_KEYS: dict[str, str] = {
 
 @pytest.fixture(scope="module")
 def validator() -> CrossFieldValidator:
-    return build_taxpayer_projection_validator(_PAGE_DOMAIN_KEYS)
+    """Return the registered validator with the test definition enrolled."""
+    register_taxpayer_projection_validator(_definition())
+    return resolve_cross_field_validator(TAXPAYER_PROJECTION_VALIDATOR_ID)
 
 
 def _checks(verdicts: tuple[ValidationVerdict, ...]) -> set[str]:
