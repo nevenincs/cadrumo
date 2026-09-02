@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:5b65ab5837c4ca486bce41d26ba5da04e8e56420ce9e7780a59c3bf5f98ea2ef'
+body_hash: 'sha256:bb55aa6f1189474862f9b712d83e7d7b3760bf3f3ec4feb96380ec460cfd6903'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -407,10 +407,69 @@ channels install what the index serves, and these install what a release page se
 the same bytes by construction today, but a second distribution surface with its own
 availability and its own retention.
 
-Whether that is a divergence to close or a deliberate consequence of pinning digests -
-which the index's URLs do not carry in a form Homebrew consumes - is unresolved. It is
-recorded here rather than acted on because the answer changes the accepted decision
-rather than following from it.
+That is resolved, and against the generators. Nothing in the tree attaches an asset to a
+GitHub release: `gh release upload` appears in no workflow, the release configuration
+declares no extra assets, and a standing gate forbids every packaging workflow from
+reaching the releases API at all. The base URL both generators pin therefore addresses a
+surface the adopted path never populates, so a formula or manifest rendered today points
+at downloads that do not exist. Both managed channels would fail at install.
+
+The accepted decision already says what the fix is - the managed channels install what
+the index serves - so this is the generators failing to follow the decision rather than
+the decision needing revision. It is the first defect found that makes the pipeline
+incapable end to end rather than merely unproven.
+
+### The evidence rows cannot exist before a first release
+
+Every one of the seven rows the three channels declare is an acquisition proof: the
+producers install the product from the real channel and repeat grounded tax work from
+that environment. The index acquirer refuses instructively while the index does not yet
+serve the promoted version, and the tap and bucket acquirers have nothing to install
+from until a first publication writes the formula and manifest. Four distinct platforms
+are needed to mint the full set, only one of which is a workstation.
+
+So the readiness gate's blocking evidence set is not merely unmet, it is unmeetable
+before the first release - which makes the first release the act that produces its own
+preconditions, and means the gate cannot be the thing that authorises it.
+
+### The publication leak sweep guards a transport that no longer exists
+
+The sweep is the tripwire above the evidence builders: it refuses a promotion when an
+asset about to be attached to a public release still carries a runner hostname or an
+operating-system username. Nothing attaches assets any more, and a standing gate forbids
+packaging workflows from reaching the releases API, so it has no payload to sweep.
+
+Whether it is dead or merely dormant depends on how the channel-source defect above is
+settled. Sourcing the managed channels from the index keeps release assets absent and
+the sweep permanently unreachable; populating release assets to satisfy the generators
+as written brings the hazard straight back and needs the sweep wired into the new path.
+Deleting it before that is decided would remove a security control on the strength of a
+guess.
+
+### Deletions landed; the gates naming what was deleted did not
+
+Five separate gates in this repository police an artefact that an earlier step of this
+same work removed. Each fails by raising a missing-path error rather than reporting a
+violation, which is the more dangerous shape: it reads as the invariant failing when the
+invariant no longer has a subject.
+
+The base-image singularity gate names a container proof retired with the nested-container
+install path. The wall advisory's consumer-parity check reads a benchmark file deleted in
+the import promotion. The distribution-readiness suite builds a fixture wheel from a
+harness directory folded into the product package. The external-client boundary asserts a
+workflow retired with the plugin channel. And the recipe-guidance suite asserted the
+contents of an evidence-collection recipe removed one step earlier in this phase - that
+last one introduced by this work and repaired in the same run that found it.
+
+The common cause is that all five name their subject as a literal path. A gate that
+enumerates what it checks cannot distinguish "this is gone" from "this is wrong", and
+stops asserting anything about a surface nobody added to its list. Both gates repaired so
+far were converted to discover their subjects and to fail when discovery finds nothing,
+which is the shape that survives a deletion in either direction.
+
+Ten of these failures predate this phase and remain open: eight in the
+distribution-readiness suite and two in the external-client boundary, all traceable to
+the harness fold and the channel retirement.
 
 ### Not investigated
 

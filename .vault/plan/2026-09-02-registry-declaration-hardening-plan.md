@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:6d8bd61ca5b4374b92be0d62a1672c9eafe18b641992df7b6b09995ab4279d60'
+body_hash: 'sha256:e6f98a42912530992ed7817664dc12f99695f13a6b9f2b2ceecf404973b023e3'
 ---
 
 <!-- RETIRED: S73 -->
@@ -154,6 +154,30 @@ refactor has overtaken. Every Step in Wave six is therefore authoring or migrati
 cannot begin until those records exist and are accepted, and the Phase that holds the four
 decisions is the gate on the Phase that applies them.
 
+While Wave six's decisions remain unwritten, the work has extended into the surface those
+decisions will eventually be applied to. The same question the registry raised - is this
+fact declared once, or restated - turns out to be answerable about the codebase itself, and
+the answers are of the same kind. One name defined in two modules of one layer is a
+restatement no boundary explains; a constant whose name carries two values is a restatement
+a reader cannot even detect by grepping. Both are now measured, adjudicated and gated, and
+the nine same-layer collisions divide into three that are correct, four whose name misleads,
+one that is a genuine duplicate, and one where the two definitions disagree about what they
+accept and no rename can settle it.
+
+Three of these screens were not built, and their absence is part of the result. Type
+declarations sharing an exact field shape number 81, and every one of the seven sharpest is
+correct by construction - a protocol matching its implementation, three commands whose
+schema names are their output contract. A lane-visibility gate was built and then narrowed,
+because the tree already answered the reachability half of its question per test rather than
+per module. A category is worth gating only when a member of it is more likely wrong than
+right, and this plan has now declined that test three times as often as it has passed it.
+
+What the extension found in passing matters more than the screens. The conformance closure
+suite - sixteen ordinary unit tests that prove real filing outcomes - is named by no CI lane
+and has never run, and one of its tests has been failing throughout this campaign's
+measurements under the description of inherited baseline. The remedy is one path in one
+recipe, and the Step that names it is deliberately left open.
+
 ## Steps
 
 ## Wave `W01` - measurement integrity
@@ -180,7 +204,7 @@ Return the registry to having a standing regression gate that continuous integra
 
 Delete the retired baseline and ratchet remnants and repoint every document and recipe that still names the deleted audit command.
 
-- [ ] `W02.P02.S06` - Delete the dead baseline and ratchet models left by the retired audit command; `dev/registry/conformance/manager.py`.
+- [x] `W02.P02.S06` - Delete the dead baseline and ratchet models left by the retired audit command; `dev/registry/conformance/manager.py`.
 - [ ] `W02.P02.S07` - Repoint the registry conformance recipe at the closure command; `justfile`.
 - [ ] `W02.P02.S08` - Declare the development-to-application boundary contract for the registry tooling; `.importlinter`.
 - [ ] `W02.P02.S09` - Move the tomlkit dependency declaration so the last authoring migrator can be retired; `pyproject.toml`.
@@ -193,7 +217,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [ ] `W02.P02.S109` - Rewrite the modelo 151 live-filing closure test onto the two-channel authority, then delete the single-channel proof authority whose only proof-producing path refuses; `dev/registry/conformance/tests/test_real_closure_outcomes.py`.
 - [ ] `W02.P02.S110` - Resolve the twenty-four filing tests demanding filing grade from modelos 200, 038 and 036, which now declare calculation or applicability grade; `src/cadrumo/application/filing/tests`.
 - [x] `W02.P02.S111` - Retire the generation pipeline package re-export facade so the initialiser is an inert namespace marker; `dev/registry/pipeline/__init__.py`.
-- [ ] `W02.P02.S112` - Bring the conformance test directory into the lane measurement, since every full-lane run so far covered only dev/registry/tests; `dev/registry/conformance/tests`.
+- [x] `W02.P02.S112` - Bring the conformance test directory into the lane measurement, since every full-lane run so far covered only dev/registry/tests; `dev/registry/conformance/tests`.
 - [x] `W02.P02.S113` - Reduce the remaining five package initialisers in the registry development tree to inert namespace markers; `dev/registry`.
 - [x] `W02.P02.S114` - Gate that every package initialiser in the registry development tree carries nothing but a docstring, proven against a constructed re-export; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W02.P02.S115` - Clear the vault record citations from the registry source module and the four modelo 390 casilla declarations that carried them; `dev/registry/pipeline/_source_defects.py`.
@@ -202,7 +226,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S118` - Add an authority accessor returning the admitted revision identifier without the isolating deep copy, and move the temporal coverage composer onto it; `src/cadrumo/domain/calculations/registry/authority.py`.
 - [x] `W02.P02.S119` - Re-point the forty-four stale branch adjudication keys the private-to-public module rename invalidated; `dev/registry/analysis/modelo_branch_classification.toml`.
 - [ ] `W02.P02.S120` - Adjudicate the seven split-out modules and twenty-one newly reachable modules the refactor created, which needs grounded rulings rather than key repair; `dev/registry/analysis`.
-- [ ] `W02.P02.S121` - Decide whether the static load closure should exclude function-scoped import edges, or hoist the deferred import that makes it disagree with a real load; `dev/registry/analysis/load_census.py`.
+- [x] `W02.P02.S121` - Decide whether the static load closure should exclude function-scoped import edges, or hoist the deferred import that makes it disagree with a real load; `dev/registry/analysis/load_census.py`.
 - [x] `W02.P02.S125` - Probe every construct-evidence coordinate through the identifier accessor and materialise only the snapshot the ledger reads; `src/cadrumo/domain/calculations/registry/coverage.py`.
 - [x] `W02.P02.S126` - Remove the plan step identifiers embedded in the modelo 200 revision declarations; `src/cadrumo/_data/registry/aeat/modelos/200/revisions`.
 - [x] `W02.P02.S127` - Extend the code-boundary detection to plan step identifiers, which it does not match today because it looks for document stems only; `dev/registry/tests/test_declaration_invariant_gates.py`.
@@ -321,7 +345,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S70` - Prove the monetary scale screen exempts the self-scaling wire types and reports the unscaled ones; `dev/registry/tests/test_monetary_scale.py`.
 - [ ] `W04.P07.S75` - Give the existing publication authority an invocable entry point, since publish_validated_generated_export_tree has no caller, then publish the two enrolled trees that render but were never committed; `dev/registry/pipeline/_tree_publication.py`.
 - [ ] `W04.P07.S71` - Declare the scale the official design specifies for each monetary field rendered by an unscaled wire type; `src/cadrumo/_data/registry/aeat/modelos`.
-- [ ] `W04.P07.S72` - Gate that every monetary field declares a scale or is rendered by a self-scaling wire type; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W04.P07.S72` - Gate that every monetary field declares a scale or is rendered by a self-scaling wire type; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W04.P07.S74` - Screen sibling amount fields of one record for disagreeing scale representations; `dev/registry/analysis/monetary_scale.py`.
 - [x] `W04.P07.S78` - Measure whether the thirty-two footnoted corporate-tax amounts are also rendered unscaled; `dev/registry/analysis/monetary_scale.py`.
 - [ ] `W04.P07.S76` - Refuse a bare footnote pointer as a stated wire fact, landing with the reviewed rules the correction makes due, since the file is no longer held but the coverage gate demands both halves in one change; `dev/registry/pipeline/_render_profile.py`.
@@ -418,6 +442,9 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S179` - Retire the lane screen's duplicate reachability assertion and scope it to the question the canonical gate does not answer; `dev/quality/default_lane_visibility.py,dev/quality/tests/test_default_lane_visibility.py`.
 - [x] `W06.P13.S180` - Reconcile the reachability gate's location note with the directory it actually occupies; `dev/tests/test_lane_reachability.py`.
 - [ ] `W06.P13.S181` - Name dev/registry/conformance/tests in the dev tooling lane so the sixteen closure tests CI never runs are executed; `justfile`.
+- [x] `W06.P13.S182` - Establish the red the conformance lane will inherit and separate it from a concurrent writer's transient import breakage; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S183` - Record in the plan Description how the declaration question extended from the registry to the codebase and which screens were declined; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S184` - Report the operator path leaked into a sibling campaign's committed audit and confirm this feature's documents carry none; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

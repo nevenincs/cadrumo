@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:51c5663f73a215106f437c4c49442b8ae74d4491a6dabea5fcbc8a439612c9b4'
+body_hash: 'sha256:4ed6c2b426bd693e5e3bf9d072b4854281745eca0024ed514babf24f78a082f7'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -4039,3 +4039,149 @@ A marker would also silence the gate, and it would be the wrong fix. The gate's 
 refuses it: the only accepted excuse is a precondition genuinely absent from a runner, and
 "nobody wired a lane" is explicitly not on the list. Marking these tests CI-incapable would
 convert a wiring omission into a permanent exemption and lose the finding entirely.
+
+### What the sixteen unrun tests actually do, and one measurement that had to be thrown away
+
+Running the two conformance files by hand, so that whoever wires the lane knows the red in
+advance: 15 pass and 1 fails, the failure being
+`test_real_live_filing_success_cannot_invent_a_complete_source_limb` - the same test this
+audit has been carrying. Eight minutes of wall time. That is the state the lane will
+inherit on the day it starts naming the path.
+
+A second measurement taken minutes later reported something different and alarming: a
+collection error, `NameError`, only 7 of the 16 tests collected. Read at face value it
+would have entered this audit as a conformance-suite defect, and it is not one.
+
+The chain is `test_closure.py` to `conformance/authorities.py` to
+`source_connectivity/live_proof.py` into the CLI package, and it terminates in
+`entrypoints/cli/config/_spec_policies.py`, which uses `CommandWriteRoute` and
+`CommandWriteRouteValue` before importing them. Both names exist and are canonical in
+`command_spec.py`. The file carries a pending diff: it is another writer's uncommitted,
+mid-edit state, and the concurrent campaign is collapsing three spellings of that concept
+into one. The error name even changed between two consecutive collections, which is what a
+file being typed into looks like from the outside.
+
+So the conformance suite is not broken; the tree was momentarily unimportable through the
+CLI, and anything importing the CLI would have shown the same face. The first run collected
+all 16 because it began before the edit.
+
+Two things worth keeping from this. A measurement taken in a shared worktree is a statement
+about a moment, and the only defence is to notice when a result changes shape between two
+runs and to find out why before recording either. And the rule against touching a file with
+a pending diff earned its keep here in the plainest way: the fastest path to a green
+collection was to add one import line to `_spec_policies.py`, which would have written into
+the middle of another writer's unfinished edit and, at best, produced a conflict they would
+have had to unpick.
+
+### The static closure and a real load were answering different questions
+
+The load census asserted that every registry module its import graph says a load imports is
+present in `sys.modules` after the authority has loaded. It failed on exactly one module,
+`_withholding_rows`, and the open Step asked which of two remedies applied: exclude
+function-scoped edges from the closure, or hoist the deferred import that causes the
+disagreement.
+
+Neither, as posed. The code decides it. `_withholding_rows` imports `withholding_bindings`
+at module level, and `withholding_bindings` imports `_withholding_rows` from inside
+`resolve_withholding_binding_row_values`. That is a cycle, and the function-scoped import
+is the standard break. Hoisting it restores the cycle, so the second remedy does not exist,
+and the first would have silently narrowed what the closure means without saying so.
+
+The real defect was the assertion. A closure built from an import graph states what a load
+can REACH; `sys.modules` states what it DID import. Those are different questions and the
+test demanded they be equal, which no amount of graph tuning makes true while a legitimate
+cycle break exists. This is the same shape as `record_drift` comparing bytes where it meant
+meaning, and as the module that answered two contracts under one name: one word, two
+questions.
+
+The claim is now the sharper one it should always have been. The difference between reach
+and load must consist exactly of deferred edges: every module the graph reaches and the load
+did not import must have no module-level importer at all. A new helper,
+`module_level_importers`, answers that by walking module-scope statements and descending
+into `if` and `try` blocks - which execute on import - while stopping at function, method
+and class bodies, which do not.
+
+It discriminates, and that was checked in both directions rather than assumed:
+`_withholding_rows` has zero module-level importers, and a control module in the same
+package has 115. So a module that vanishes for any other reason - deleted, renamed, dropped
+from the load path - still fails the test, which is the detection it existed for. The
+module's failures fell from two to one, and the survivor is the twenty-one unclassified
+modules belonging to the concurrent rename, left where they are for the reason already
+recorded.
+
+### Every monetary field declares its scale, and the gate now says so before emission
+
+Two wire types carry money through the export boundary. `money` is self-scaling: the codec
+renders and parses it at two decimal places without consulting the declaration. `decimal`
+is not, and `_require_decimals` demands the value from the field.
+
+The codec already refuses an undeclared scale, so the invariant was not unprotected. It was
+protected at the wrong moment. The refusal fires when that particular field is rendered or
+parsed, which means a revision can compile, validate, ship and sit in the registry with the
+defect latent until something reaches the field. Given that this audit's original monetary
+finding was a field emitting at the wrong magnitude in a revision currently in force, "it
+fails when someone touches it" is not where this check belongs.
+
+Measured across the corpus before the gate was written, because a gate authored against an
+unknown state is either red on arrival or unproven: 18,231 export fields, of which 3,385 are
+`decimal` and 4,028 are `money`. Decimal fields declaring no scale: zero. The invariant holds
+today, so the gate lands green and pins it.
+
+Three tests rather than one. The invariant itself; a constructed field with its scale
+stripped, so the gate is shown able to report the condition rather than only ever having
+seen a clean corpus; and a check that both wire types are actually present, so a corpus that
+stopped declaring monetary fields could not satisfy the invariant by emptiness. That third
+one exists because this campaign has now twice recorded a green result that had selected
+nothing.
+
+The Step that authors missing scales stays open and is registry data. Nothing needs
+authoring today, which is what the measurement established.
+
+### An operator path is committed in a sibling campaign's audit
+
+The full lane surfaced a privacy gate failing on
+`2026-08-27-calculation-correctness-campaign-restrictive-default-sweep-audit.md`, which
+carries an absolute path under a named user's home directory including an agent job
+identifier. Committed vault text is shipped text, and the gate's own message is right that
+host, login and path data must not be in it.
+
+It is another campaign's document and is reported rather than edited. What was checked here
+is the obligation this campaign owns: the audit and plan for this feature carry zero
+operator-identifying tokens, verified by search rather than assumed. A finding about leaked
+paths written in a document that leaks paths would be worth very little.
+
+### The retired audit command's models are gone, and the only thing still naming them was prose
+
+The conformance manager carried a ratchet apparatus for a command that no longer exists:
+`ConformanceRatchetCeilings`, `ConformanceProgressFloors`, `ConformanceVacuityFloors`,
+`ConformanceBaseline` and `ConformanceAuditResult`, together with `render_audit` and the
+three `_current_*` helpers that fed it. 279 lines of a 1,781-line module, now 1,502.
+
+The deletion was worth making carefully, because a crude scan would have got it wrong in
+both directions. A substring search over the tree reported these symbols as referenced,
+which they are - by other modules named `manager` that define unrelated symbols the same
+scan happened to match. An import-based scan reported the module's own internal uses as
+external. What settled it was asking the question exactly: word-boundary matches for each
+class across `dev/`, `src/` and `tests/`, then the same for every function referencing them.
+
+All four models had zero references outside the module. `render_audit` and the three
+helpers had zero. `ConformanceAuditResult` had exactly one, and it was a docstring bullet
+in the package initialiser describing "the ratchet comparison against the committed
+baseline" - prose about an apparatus nothing invoked. That line is removed too, because a
+reference surviving its subject is how the next reader learns to look for something that
+is not there.
+
+Non-code references were checked before deleting rather than after: no TOML, JSON, YAML,
+justfile or workflow names any of it, so nothing reached the cluster dynamically.
+
+All six were listed in `__all__`, which is the detail worth keeping. The module declared
+this apparatus as its public surface and no consumer had ever imported it. An export list
+is a claim about what callers need, and this one had gone on asserting a need that ended
+when the command was retired - the same shape as the annotation promising what its function
+stopped checking, and the location note forbidding the move that had already happened. This
+audit has now recorded that shape four times in different materials.
+
+Verified after: the module imports and declares 23 public symbols, lint and format are
+clean, and the conformance suite runs 18 tests with 17 passing. The single failure is the
+pre-existing one in `test_real_closure_outcomes.py` that no CI lane executes, unchanged by
+this deletion.

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:1d8428e817338634779bb578813607dbbbefa2c5148dc82541bf0501d26c9bd8'
+body_hash: 'sha256:c95e0292676ec9a6ddce2155ce699c370dd4f48ea99b2976c35e126414ba222a'
 related:
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
 ---

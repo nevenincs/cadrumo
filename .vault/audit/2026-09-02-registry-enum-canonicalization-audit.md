@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:a9749b8d06b2f6f9acc17f053b3c9ce5eee615b4ff72a6a9168c00c2fb58aeff'
+body_hash: 'sha256:534a3b3ce913084cc664c59bdf5a75e4b8c01444fa15a6eedb7d30359881b818'
 related: []
 ---
 
@@ -952,3 +952,166 @@ and the third fails in `external_import_actions.py` on missing M303 filing evide
 which touches none of the three edited files.
 
 Package-wide after six targets: 21 duplicated, 0 crossing the registry boundary.
+
+## Finding 44 — two clave sets that share a field name and five letters, kept apart
+
+The M349 clave de operación was declared three times: a private alias
+`_M349_CLAVE_OPERACION` in `domain/modelos/row_models.py` used at two fields, and two
+inline copies on the wire mirrors in `operation_definitions.py`. Same root cause as the
+sede verdict: the alias was underscore-private, so the wire mirrors in another package
+were not permitted to import it and respelled the set instead. Making it public is the
+fix; the duplication was a symptom of the privacy.
+
+`_M347_CLAVE_OPERACION` sits forty lines away with `A`–`G`. It shares the field name
+`clave_operacion` and five of its seven letters with the M349 set, and it was declared
+twice on the same pattern. Both were promoted, as two separate public enums, and the
+docstrings say why they are not one: the forms draw from different Órdenes
+(HAC/174/2020 Anexo II and EHA/3012/2008), so a letter valid on one is not thereby
+valid on the other. Proven rather than asserted -- a `B` is accepted on a 347 row and
+refused on a 349 row.
+
+Member meanings were deliberately NOT paraphrased into the docstrings. The Orden
+defines them, and a gloss written from memory beside a filing-grade code set is a second
+authority that can drift from the first; the citation carries the meaning instead.
+
+Both wire mirrors are operation surfaces, so both fields take the
+`Literal[Enum.MEMBER, ...]` form. Verified against the live model rather than inferred:
+the mirror accepts the raw letter `E` and hydrates it to a member.
+
+64 row-model tests and 155 M349/M347 tests pass. The one failure asserts a
+human-readable substring against an error that now carries a translation key, part of an
+unrelated in-flight i18n migration.
+
+Package-wide after seven targets: 19 duplicated, 0 crossing the registry boundary.
+
+## Finding 45 — one vocabulary under three names, plus a fourth copy in a frozenset
+
+`write_route` was the worst fragmentation the campaign has found. Three rival names for
+one value set -- `WriteRoute` in `command_spec.py`, `CommandWriteRouteScope` in
+`_command_policy.py`, and an inline spelling in `_command_schema.py` -- plus
+`_WRITE_ROUTES`, a frozenset the spec validator checked membership against, and a bare
+`str` parameter in `storage_write_policy.py` comparing the tokens directly.
+
+Two of those four are invisible to the scan by construction: an alias it collapses only
+when the NAME matches, and a frozenset that is not an annotation at all. The gate's own
+test already proves two rival aliases count as two declarations; this is that case in
+production.
+
+Unified as `CommandWriteRoute` in `command_spec.py`. The frozenset is gone -- the
+validator now tests membership against the enum itself, which cannot drift from the
+member list because it IS the member list. Verified rather than assumed: a known route
+passes and an unknown one is refused.
+
+`DiagnosticAudience` landed in the same pass: an alias plus an inline copy plus four
+producers. The OAuth `audience` parameter in `oauth_flow.py` shares the word and means a
+JWT ``aud`` claim; it was not touched.
+
+## Finding 46 — a stale reference left by this session's own earlier rename
+
+`test_command_spec_kernel.py` pointed at `_command_spec.py`, a filename the earlier
+private-to-public promotion removed. That is debt from this session's own campaign, so
+the path was corrected.
+
+Correcting it exposed the real defect rather than fixing the test: `command_spec.py`
+carries a relative import at line 16, so the `runpy.run_path` the test uses to prove the
+kernel is import-light cannot succeed for any filename. The test's premise no longer
+holds. It was left failing and reported rather than adjusted to pass, because the two
+available repairs -- give the module a package context, or make it genuinely standalone
+-- are different decisions about what the kernel guarantees.
+
+Package-wide after nine targets: 17 duplicated, 0 crossing the registry boundary.
+
+## Finding 47 — the canonical enum was in the same package, thirty lines up
+
+`[apply, reject]` was declared at seven sites across three packages. `OperationResponseIntent`
+already existed in `application/operations/interactions.py`, and the file's own concrete
+response models already used it correctly as `Literal[OperationResponseIntent.APPLY]`.
+One inline copy sat in that same module, thirty lines below the enum it should have used.
+
+This is the third time the definition already existed and the sites spelled it anyway.
+The pattern is not that authors cannot find the enum; it is that no form existed for
+"either member" -- the enum had only single-member narrowings in use, so a field
+admitting both had nothing to import and wrote the pair out. Adding
+`OperationResponseIntentValue` gives that surface something to root against, and the
+single-member narrowings on the concrete responses stay narrow, which is the point of
+having both forms.
+
+Two of the seven sites are `frozenset[Literal[...]]` -- a collection of the vocabulary
+rather than one of it. Same vocabulary, different cardinality; not a second vocabulary.
+
+365 operations tests and the TUI/censal consumers pass. Four failures in the package are
+unrelated and were traced rather than assumed: three are an extra-fields refusal in
+`_OperationRequestResolutionHeader` inside `registry.py`, a file this change never
+touched and which contains no reference to the promoted symbol, and one is 29 projection
+claims joining no surface, an auth and user-profile wiring gap.
+
+Package-wide after ten targets: 16 duplicated, 0 crossing the registry boundary.
+
+## Finding 48 — a whole module restating its neighbour's vocabularies
+
+`_command_schema.py` did not duplicate one vocabulary; it duplicated a family.
+`CommandCapability`, `CommandSideEffectClass`, `CommandPerformanceClass` and
+`CommandParameterKind` each restated a `command_spec.py` alias of identical members
+under a `Command`-prefixed name, and `_command_schema.py` already imported from
+`command_spec.py`, so nothing had prevented it importing these too.
+
+All four retired. `CommandCapabilityClass` is a real dataclass, not an alias, and
+survives; the rename was ordered longest-name-first so it was never eaten by the
+`CommandCapability` substring -- the same prefix hazard that produced
+`CommandCommandWriteRouteValueValue` a target earlier, avoided this time by ordering
+rather than by luck.
+
+## Finding 49 — two enums with one conversion function between them
+
+`JsonType` (a `StrEnum` in `_verb_input_schema.py`) and `CommandJsonType` (a `Literal`
+in `_command_schema.py`) carried the same four members, and `_verb_input_schema.py:231`
+called `JsonType(p.json_type)` to convert one into the other. That call existed only
+because both declarations did. The same held for `VerbParamKind` against
+`command_spec.py`'s `ParameterKind`.
+
+Neither could simply import the other: `_verb_input_schema` imports `_command_schema`
+which imports `command_spec`, so only the kernel can hold a vocabulary all three need.
+Both now live in `command_spec.py`, and `ParameterKind` became a real enum rather than
+staying a bare `Literal`. Its two consumers are frozen dataclasses, not pydantic models,
+which is why the conversion carries no strict-validation risk -- checked before the edit
+rather than discovered after it.
+
+This target was found only because a too-broad slice deleted `CommandJsonType` by
+accident and lint reported it undefined. Restoring it required asking where it belonged,
+which surfaced the duplicate. Worth recording honestly: the mistake found the finding.
+
+159 CLI schema tests pass. The four failures are byte-identical to the set failing before
+this change: the 19th modelo-work command spec, the kernel `run_path` premise, the Google
+typer-authority check, and the root parameter contract.
+
+Package-wide after twelve targets: 12 duplicated, 0 crossing the registry boundary.
+
+## Finding 50 — a bare Enum blocked its own reuse
+
+`ProfileAuthenticationPosture` in `command_spec.py` already held the three postures, and
+two payload surfaces wrote the tokens out anyway. The reason was structural, not
+carelessness: it subclassed `Enum`, not `StrEnum`, so its members are not strings. A
+`Literal[Posture.MEMBER, ...]` over a bare `Enum` cannot accept the plain token a
+serialised payload carries, which left those fields nothing to import.
+
+This is the same shape as the private alias and the missing both-members literal, and it
+completes the pattern the campaign keeps meeting: duplication is almost never an author
+declining to reuse a definition. It is a definition that cannot be reached from the
+boundary that needs it -- because it is private, because it lacks the form that boundary
+requires, or because it is the wrong base class.
+
+Converted to `StrEnum`. Every existing use compares with `is` against a member, so
+widening member-to-token equality changes nothing that was relied on; that was checked
+across all uses before the edit, not assumed from the declaration's shape.
+
+`MachineSecretPresence` was hosted for the first time -- both sites spelled
+`Literal["absent", "present"]` and no canonical existed -- and `CommandNodeKind` needed
+only an import, having existed in `command_spec.py` all along.
+
+193 CLI schema tests pass, up from 159, with the same four pre-existing failures and no
+new ones.
+
+Package-wide after fifteen targets: 9 duplicated, 0 crossing the registry boundary. The
+`_command_schema.py` / `command_spec.py` pair alone accounted for eight of the
+vocabularies cleared in the last two ticks: one module restating its neighbour's
+vocabulary is a far larger source of duplication than any single scattered field.

@@ -3,186 +3,113 @@ tags:
   - '#plan'
   - '#object-name-declustering'
 date: '2026-09-02'
-modified: '2026-09-02'
-body_schema: 'body-v2'
-body_hash: 'sha256:169bd7f0c9bbc8adfbd27135e6954a1644971b4353759791503436bf209fe4ab'
 tier: L3
 related:
-  - "[[2026-09-02-object-name-declustering-adr]]"
-  - "[[2026-09-02-object-name-declustering-research]]"
-  - "[[2026-09-02-object-name-declustering-reference]]"
+  - '[[2026-09-02-object-name-declustering-adr]]'
+  - '[[2026-09-02-object-name-declustering-research]]'
+  - '[[2026-09-02-object-name-declustering-reference]]'
+modified: '2026-09-02'
+body_schema: body-v2
+body_hash: 'sha256:f3fcd48dae3585580556193548f98a86c541e228f46855a31c601b052dd13af9'
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #plan) and one feature tag.
-     Replace object-name-declustering with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     tier is mandatory for new plans. Allowed: L1, L2, L3, L4.
-     L1 = Steps only. L2 = Phases above Steps. L3 = Waves above
-     Phases above Steps. L4 = Epic above Waves above Phases above
-     Steps; PM association required. Pre-existing plans without this
-     field default to L2.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'. The related field
-     carries the AUTHORIZING documents (ADR, research, reference, prior
-     plan) for every Step in this plan; Steps inherit this chain;
-     per-row reference footers do not exist.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - The related: field carries the AUTHORIZING documents (ADR, research,
-       reference, prior plan) for every Step in this plan. Steps inherit this
-       chain; per-row reference footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- HIERARCHY AND TIERS:
-     Epic > Wave > Phase > Step. Step is the canonical leaf-row
-     noun. Execution Record artifact: <Step Record>.
-     Tier is declared in frontmatter as tier: L1/L2/L3/L4
-     (mandatory for new plans; pre-existing plans without the
-     field default to L2 and the writer adds the field on first
-     edit). The tier selects containers:
-       L1 = Steps only.
-       L2 = Phases above Steps.
-       L3 = Waves above Phases above Steps.
-       L4 = Epic above Waves above Phases above Steps; MUST declare
-            a project-management association in the Epic intent
-            block prose.
-     Selection is by complexity criteria, not container counting.
-     Writer never invents containers to qualify a tier. -->
-
-<!-- IDENTIFIERS AND ROW CONTRACT:
-     S##, P##, W## are flat, per-document, append-only, immutable.
-     Promotion adds containers without renumbering. Gaps are not
-     reused.
-     Display paths are computed from current grouping:
-       Step path:    L1 S##   L2 P##.S##   L3/L4 W##.P##.S##
-       Phase heading:        L2 P##       L3/L4 W##.P##
-       Wave heading:                      L3/L4 W##
-     Row format:
-       - [ ] `<display-path>` - imperative-verb action; `path/to/file`.
-     Two-state checkboxes only ([ ] open, [x] closed). No per-row
-     reference footers; wiki-links and markdown links are forbidden
-     in plan body. Authorizing documents go in the plan's `related:`
-     frontmatter once.
-     ASCII spaced hyphens everywhere; em-dash (U+2014) and en-dash
-     (U+2013) are forbidden. Step rows within a Phase are
-     contiguous. -->
-
-<!-- NO COMPRESSION:
-     N self-similar actions = N rows. Never collapse into "for each
-     X, do Y" / "across all callers, do Z" / "in every module,
-     replace W". The rule applies at every tier including L1. -->
-
-<!-- VAULTSPEC-CORE VAULT PLAN CLI:
-     The `vaultspec-core vault plan` CLI is the canonical surface for
-     structural manipulation of this plan document. Writers and
-     executors MUST use `vaultspec-core vault plan step add/insert/move/
-     remove/check/uncheck/toggle/edit`,
-     `vaultspec-core vault plan phase add/move/remove/edit`,
-     `vaultspec-core vault plan wave add/move/remove/edit`,
-     `vaultspec-core vault plan epic intent`, and
-     `vaultspec-core vault plan tier promote/demote` for every
-     identifier-affecting change rather than hand-editing the row
-     grammar. Hand edits are tolerated by the parser but flagged by
-     `vaultspec-core vault plan check`; canonical-identifier preservation is
-     guaranteed only when the CLI performs the mutation. Run
-     `vaultspec-core vault plan --help` for the full subcommand
-     surface. -->
-
 # `object-name-declustering` plan
-
-<!-- One-line headline summary plan. -->
 
 ## Description
 
-<!-- Briefly describe the proposed work. Reference `{adr}`s,
-`{research}`, `{reference}`. Supporting documentation must be read prior to
-writing the plan document. A plan may execute one ADR or a cluster; when
-several feed it, state here which Wave or Phase each ADR governs. -->
+This L3 plan executes the accepted object-name declustering ADR using the audit findings, implementation research, and repository reference already linked in frontmatter. It separates stable finding identity from byte preconditions, groups operations by hard operation-to-file dependencies, and permits live changes only when an unchanged rehearsal receipt is explicitly replayed.
+
+The operator surface is just fix-object-names. With no arguments it inventories, plans, and rehearses in the system temporary directory without modifying the live tree. Live application requires an explicit apply mode and a matching receipt; stale bytes, unexpected paths, unsupported syntax, or failed verification cause refusal. This plan builds the safety mechanism and records a pilot rehearsal. It does not authorize bulk semantic consolidation or an unreviewed rename sweep.
 
 ## Steps
+## Wave `W01` - deterministic inventory and component authority
 
-<!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
-`L4`) determines the structure under this section:
+Establish the canonical inventory, reviewed manifest, and hard dependency components that every later mutation consumes.
 
-- `L1`: a flat list of Step rows (no Phase, Wave, or Epic).
-- `L2`: one or more `### Phase` blocks each containing Step rows.
-- `L3`: one or more `## Wave` blocks each containing Phase blocks.
-- `L4`: a `## Epic intent` block, followed by Wave blocks. -->
+### Phase `W01.P01` - canonical inventory identity
 
-<!-- Replace this scaffold with the tier-appropriate structure for your plan.
-Format examples for each block type are embedded below as commented
-templates. -->
+Extend the existing object-name authority with complete stable machine identity and drift guards.
 
-<!-- IMPORTANT: This document must be updated between execution runs to
-     track progress. -->
+- [ ] `W01.P01.S01` - Emit complete declaration records with qualified locators, stable finding identifiers, source-byte hashes, and an inventory digest; `dev/audit/object_names.py`.
+- [ ] `W01.P01.S02` - Cover deterministic identities, digest stability, and source drift reporting with focused regression tests; `dev/audit/tests/test_object_names.py`.
 
-<!-- PHASE BLOCK FORMAT (L2, L3, L4):
-     ### Phase `P02` - rewrite the writer-agent contract
+### Phase `W01.P02` - reviewed manifest authority
 
-     One sentence stating what this Phase delivers.
+Define the typed reviewed intent that selects and constrains every proposed rename operation.
 
-     - [ ] `P02.S01` - imperative-verb action; `path/to/file`.
-     - [ ] `P02.S02` - imperative-verb action; `path/to/file`.
+- [ ] `W01.P02.S03` - Implement the typed reviewed rename-manifest loader and reject ambiguous, incomplete, or stale intent; `dev/quality/object_name_manifest.py`.
+- [ ] `W01.P02.S04` - Test manifest parsing, uniqueness constraints, stale preconditions, and fail-closed validation; `dev/quality/tests/test_object_name_manifest.py`.
 
-     At L3/L4 the Phase heading uses the ancestor-aware path
-     (### Phase `W01.P02` - ...). The intent sentence is mandatory. -->
+### Phase `W01.P03` - evidence graph and scheduling
 
-<!-- WAVE BLOCK FORMAT (L3, L4):
-     ## Wave `W01` - language-only convention rollout
+Derive deterministic operation-to-surface components and explainable risk ordering from existing analyzers.
 
-     One paragraph stating what this Wave delivers, which downstream
-     Wave depends on it, and which authorizing documents back it.
+- [ ] `W01.P03.S05` - Build deterministic hard-edge operation-to-file components and explainable risk ordering from installed analyzer signals; `dev/quality/object_name_graph.py`.
+- [ ] `W01.P03.S06` - Test component isolation, shared-file coupling, stable ordering, and risk-evidence rendering; `dev/quality/tests/test_object_name_graph.py`.
 
-     ### Phase `W01.P01` - ...
-     ### Phase `W01.P02` - ...
+## Wave `W02` - receipt-bound rehearsal and replay
 
-     The Wave intent paragraph is mandatory. -->
+Implement controlled transformations, disposable current-tree rehearsal, and identical fail-closed live replay on the Wave W01 contracts.
 
-<!-- EPIC INTENT BLOCK FORMAT (L4 only):
-     ## Epic intent
+### Phase `W02.P04` - controlled transformation engine
 
-     One paragraph stating the strategic goal, the external project-
-     management association (milestone name, project board identifier,
-     roadmap entry), the timeline horizon, and the teams or agents
-     involved.
+Implement syntax-aware edits whose changed paths and bytes are bounded by the reviewed manifest.
 
-     ## Wave `W01` - ...
-     ## Wave `W02` - ...
+- [ ] `W02.P04.S07` - Declare LibCST as a direct development dependency for controlled syntax-preserving Python edits; `pyproject.toml`.
+- [ ] `W02.P04.S08` - Refresh the locked dependency graph after the direct LibCST declaration; `uv.lock`.
+- [ ] `W02.P04.S09` - Implement bounded syntax-aware rename transformations with byte-precondition and allowlist enforcement; `dev/quality/object_name_transform.py`.
+- [ ] `W02.P04.S10` - Test exact edits, unsupported constructs, changed-path bounds, and byte-level refusal behavior; `dev/quality/tests/test_object_name_transform.py`.
 
-     The ## Epic intent block is mandatory at L4 and absent at L1, L2,
-     L3. The plan title (the level-one # heading at the top of the
-     document) is the Epic title; no separate Epic heading is emitted. -->
+### Phase `W02.P05` - disposable rehearsal and receipt
+
+Rehearse the exact plan against a disposable copy of the current dirty tree and emit an auditable receipt.
+
+- [ ] `W02.P05.S11` - Implement disposable current-tree rehearsal and immutable receipt generation in the system temporary directory; `dev/quality/object_name_rehearsal.py`.
+- [ ] `W02.P05.S12` - Test dirty and untracked input capture, isolated execution, receipt determinism, and source-tree immutability; `dev/quality/tests/test_object_name_rehearsal.py`.
+
+### Phase `W02.P06` - live replay and postconditions
+
+Replay only a matching receipt against live files and enforce fail-closed postconditions.
+
+- [ ] `W02.P06.S13` - Implement receipt-bound live replay with preflight validation, atomic writes, and required postconditions; `dev/quality/object_name_replay.py`.
+- [ ] `W02.P06.S14` - Test stale receipts, unexpected paths, failed gates, interrupted writes, and successful replay; `dev/quality/tests/test_object_name_replay.py`.
+
+## Wave `W03` - operator CLI and pilot proof
+
+Expose the safe workflow through the repository CLI surface and prove it on one low-risk leaf component without broadening scope.
+
+### Phase `W03.P07` - operator CLI
+
+Compose inventory, planning, rehearsal, replay, and verification behind one safe command contract.
+
+- [ ] `W03.P07.S15` - Compose inventory, plan, rehearse, apply, and verify modes behind a fail-closed declustering CLI; `dev/quality/object_name_declustering.py`.
+- [ ] `W03.P07.S16` - Test CLI argument contracts, structured output, default rehearsal, explicit apply, and exit semantics; `dev/quality/tests/test_object_name_declustering.py`.
+
+### Phase `W03.P08` - Justfile fix target
+
+Expose the declustering command as a discoverable mutation recipe whose default behavior is non-destructive.
+
+- [ ] `W03.P08.S17` - Add the grouped fix-object-names recipe with pass-through arguments and rehearsal as its no-argument default; `Justfile`.
+- [ ] `W03.P08.S18` - Test recipe discovery, command forwarding, safe defaults, and the absence of implicit live mutation; `dev/quality/tests/test_object_name_declustering_recipe.py`.
+
+### Phase `W03.P09` - low-risk pilot rehearsal
+
+Demonstrate the workflow on one reviewed leaf component and record evidence before any live rename.
+
+- [ ] `W03.P09.S19` - Author one reviewed low-risk leaf-component manifest with exact finding and byte preconditions; `dev/quality/object_name_rename_manifest.toml`.
+- [ ] `W03.P09.S20` - Run the Justfile rehearsal and record scope, receipt, gate results, residual findings, and unchanged-live-tree proof; `.vault/audit/2026-09-02-object-name-declustering-pilot-rehearsal-audit.md`.
+- [ ] `W03.P09.S21` - Author one reviewed low-risk leaf-component manifest with exact finding and byte preconditions; `dev/quality/object_name_rename_manifest.toml`.
+- [ ] `W03.P09.S22` - Run the Justfile rehearsal and record scope, receipt, gate results, residual findings, and unchanged-live-tree proof; `.vault/audit/2026-09-02-object-name-declustering-pilot-rehearsal-audit.md`.
 
 ## Parallelization
 
-<!-- State which Steps, Phases, or Waves can be executed in parallel and
-which carry hard ordering. At `L1` and `L2`, parallelism is decided
-per-Step or per-Phase. At `L3` and `L4`, Waves are sequenced by
-default (one Wave must land before the next can begin); Phases
-within a single Wave may be parallelized when they share no hard
-interdependency. -->
+Waves are sequential: Wave W01 defines identities and dependency components consumed by Wave W02, and Wave W03 composes only the settled Wave W02 contracts. Within Wave W01, Phase P01 precedes P02 and P03; P02 and P03 may then proceed in parallel. Wave W02 is sequential from dependency declaration and transformation through rehearsal to replay. Wave W03 is sequential from CLI composition through the Justfile recipe to the pilot. Test steps may be developed with their owning implementation steps, but each phase lands as one coherent contract.
 
 ## Verification
 
-<!-- State the mission success criteria for this plan. Each criterion
-should be a verifiable check (test passes, surface conforms,
-reviewer signs off) rather than a free-form assertion.
+Focused contract tests must pass for inventory, manifest, graph, transformation, rehearsal, replay, CLI, and recipe behavior.
 
-The plan is complete when every Step in the plan is closed
-(`- [x]`). At `L4`, the Epic-completion check additionally requires
-the declared project-management association to report the Epic
-complete.
+Invoking just fix-object-names with no arguments must complete a disposable rehearsal while leaving tracked, dirty, and untracked live-tree content unchanged. Explicit apply must refuse missing or stale receipts, changed byte preconditions, unsupported edits, unexpected changed paths, and failed gates. Rehearsal and replay must report an actual changed-path set equal to the manifest allowlist and retain stable finding identities across reruns.
 
-For tier-specific verification cadence, see the authorizing
-documents linked in the `related:` frontmatter. -->
+The pilot audit must record its temporary location, receipt digest, selected component, analyzer evidence, verification results, residual findings, and unchanged-live-tree proof. The object-name audit must report no newly introduced finding, and the pilot finding may be absent only after an explicitly approved live replay.
+
+Repository import, architecture, generated-reference, type, lint, semantic-overlap, and clone gates must pass for affected surfaces. No compatibility shim, forwarding facade, fallback import, or duplicate authority may be introduced. Plan conformance, feature-scoped Vaultspec checks, and git diff whitespace validation must pass. Completion requires all twenty Steps to be closed; execution still requires explicit plan approval.

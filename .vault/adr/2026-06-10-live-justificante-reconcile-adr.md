@@ -8,8 +8,8 @@ body_hash: 'sha256:03bbd39b742ad0058c1e383565f2be33e913af35b939c5423b289646b8913
 related:
   - '[[2026-06-10-live-justificante-reconcile-research]]'
   - '[[2026-06-09-modelo-iva-routing-carry-adr]]'
+  - '[[2026-09-02-live-justificante-reconcile-csv-authenticity-wiring-research]]'
 ---
-
 # `live-justificante-reconcile` adr: `live-sourced justificante reconciliation bridge` | (**status:** `accepted`)
 
 ## Problem Statement

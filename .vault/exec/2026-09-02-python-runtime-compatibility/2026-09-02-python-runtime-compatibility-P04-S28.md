@@ -20,4 +20,3 @@ related:
 
 - `M` `dev/packaging/tests/test_packaging_smoke_workflow.py`
 - `verify:` `uv run --no-sync pytest -q -o addopts='' dev/packaging/tests/test_packaging_smoke_workflow.py; uv run --no-sync ruff check dev/packaging/tests/test_packaging_smoke_workflow.py` -> `pass`
-

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:aa54a8d3dc3b9ea01bd75917203292e8ad7b7796c4b6c9f4e191afe70641aeec'
+body_hash: 'sha256:4a90adecfe5ff06f83821dfeb6c4ba10486acf412a485378e646c0599a52e23f'
 related:
   - "[[2026-09-02-unreachable-capability-research]]"
 ---

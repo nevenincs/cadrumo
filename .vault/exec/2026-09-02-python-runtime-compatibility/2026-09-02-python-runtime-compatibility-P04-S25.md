@@ -20,4 +20,3 @@ related:
 
 - `M` `dev/ci/tests/test_python_version_pin.py`
 - `verify:` `uv run --no-sync pytest -q -o addopts='' dev/ci/tests/test_python_version_pin.py; uv run --no-sync ruff check dev/ci/tests/test_python_version_pin.py` -> `pass`
-

@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-python-runtime-compatibility-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:e27bf15d427068f875dcc8cbcb903c41355043989617a660b9852e24a434f5b5'
+body_hash: 'sha256:5b2bb2909e4bef678ed2bd0949ddfc467bd0d11dbffba920f7feafe0f94d3d1c'
 ---
 
 <!-- RETIRED: S33, S35, S37, S39, S41, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 -->
@@ -56,22 +56,22 @@ Create one reusable runner and bind its evidence to the tested artifact and runt
 
 - [x] `P03.S17` - Implement isolated source and binary compatibility probes with JSON evidence; `dev/ci/python_runtime_compatibility.py`.
 - [x] `P03.S18` - Test mode separation lock binding digest binding and missing-wheel refusal; `dev/ci/tests/test_python_runtime_compatibility.py`.
-- [ ] `P03.S19` - Extend distribution evidence with runtime stability and installation outcomes; `dev/packaging/evidence.py`.
-- [ ] `P03.S20` - Test source versus binary evidence and foreign cohort refusal; `dev/packaging/tests/test_evidence.py`.
-- [ ] `P03.S21` - Reuse installed-wheel isolation for selected target interpreters; `dev/packaging/_smoke_common.py`.
-- [ ] `P03.S22` - Verify smoke acceptance removes checkout imports and ambient executables; `dev/packaging/tests/test_smoke_core_env.py`.
+- [x] `P03.S19` - Extend distribution evidence with runtime stability and installation outcomes; `dev/packaging/evidence.py`.
+- [x] `P03.S20` - Test source versus binary evidence and foreign cohort refusal; `dev/packaging/tests/test_evidence.py`.
+- [x] `P03.S21` - Reuse installed-wheel isolation for selected target interpreters; `dev/packaging/_smoke_common.py`.
+- [x] `P03.S22` - Verify smoke acceptance removes checkout imports and ambient executables; `dev/packaging/tests/test_smoke_core_env.py`.
 
 ### Phase `P04` - add the dedicated rolling workflow
 
 Add a separately verdictable workflow without expanding protected CI or release-cohort builders.
 
-- [ ] `P04.S23` - Add stable and next source and binary compatibility matrix jobs; `.github/workflows/python-runtime-compatibility.yml`.
-- [ ] `P04.S24` - Gate workflow inventory source mode separation skips warnings and digests; `dev/ci/tests/test_python_runtime_compatibility_workflow.py`.
-- [ ] `P04.S25` - Permit only the dedicated runtime matrix while preserving exact-pin lanes; `dev/ci/tests/test_python_version_pin.py`.
-- [ ] `P04.S26` - Enroll the compatibility workflow in change-class and fork-safety invariants; `dev/ci/tests/test_change_class_tiers.py`.
-- [ ] `P04.S27` - Verify workflow Python calls use repository module entry points; `dev/ci/tests/test_workflow_tool_invocation.py`.
-- [ ] `P04.S28` - Preserve protected packaging-smoke single-build behavior; `dev/packaging/tests/test_packaging_smoke_workflow.py`.
-- [ ] `P04.S29` - Preserve protected quick-packaging single-runtime behavior; `dev/packaging/tests/test_packaging_quick_workflow.py`.
+- [x] `P04.S23` - Add stable and next source and binary compatibility matrix jobs; `.github/workflows/python-runtime-compatibility.yml`.
+- [x] `P04.S24` - Gate workflow inventory source mode separation skips warnings and digests; `dev/ci/tests/test_python_runtime_compatibility_workflow.py`.
+- [x] `P04.S25` - Permit only the dedicated runtime matrix while preserving exact-pin lanes; `dev/ci/tests/test_python_version_pin.py`.
+- [x] `P04.S26` - Enroll the compatibility workflow in change-class and fork-safety invariants; `dev/ci/tests/test_change_class_tiers.py`.
+- [x] `P04.S27` - Verify workflow Python calls use repository module entry points; `dev/ci/tests/test_workflow_tool_invocation.py`.
+- [x] `P04.S28` - Preserve protected packaging-smoke single-build behavior; `dev/packaging/tests/test_packaging_smoke_workflow.py`.
+- [x] `P04.S29` - Preserve protected quick-packaging single-runtime behavior; `dev/packaging/tests/test_packaging_quick_workflow.py`.
 
 ### Phase `P05` - align stable metadata release gates and documentation
 

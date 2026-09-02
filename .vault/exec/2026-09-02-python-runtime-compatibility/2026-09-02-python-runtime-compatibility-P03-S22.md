@@ -11,7 +11,6 @@ related:
   - "[[2026-09-02-python-runtime-compatibility-plan]]"
 ---
 
-
 # Verify smoke acceptance removes checkout imports and ambient executables
 
 ## Scope

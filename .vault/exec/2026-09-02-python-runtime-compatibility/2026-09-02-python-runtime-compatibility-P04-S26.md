@@ -20,4 +20,3 @@ related:
 
 - `M` `dev/ci/tests/test_change_class_tiers.py`
 - `verify:` `uv run --no-sync pytest -q -o addopts='' dev/ci/tests/test_change_class_tiers.py; uv run --no-sync ruff check dev/ci/tests/test_change_class_tiers.py` -> `pass`
-

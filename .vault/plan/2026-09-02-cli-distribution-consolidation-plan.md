@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:9840b9825941d58d7f5d2fbefb0ff456ea28e827418bf15c57860935fd1237ac'
+body_hash: 'sha256:9d731b060110d983027cdb12f1b85989190915561a46ec17c93ddea9a1490bac'
 ---
 
 # `cli-distribution-consolidation` plan
@@ -120,15 +120,15 @@ Delete the development and release modules the adopted path no longer invokes, e
 - [x] `P10.S38` - Remove the publication-input dispatcher left without a consumer; `dev/packaging/publication_inputs.py`.
 - [ ] `P10.S39` - Remove the container base-image declaration the install proof no longer reads; `dev/packaging/_base_image.py`.
 - [ ] `P10.S40` - Remove the evidence leak sweep left without a caller; `dev/packaging/evidence_leak_sweep.py`.
-- [ ] `P10.S41` - Reduce the release module family to what the adopted path invokes; `dev/release/environment_inventory.py`.
+- [x] `P10.S41` - Reduce the release module family to what the adopted path invokes; `dev/release/environment_inventory.py`.
 
 ### Phase `P11` - Restate the operator surface against the adopted path
 
 Bring the runbook, the recipe surface and the workflow family back into agreement with the workflows that now exist.
 
-- [ ] `P11.S42` - Rewrite the release runbook against the adopted workflow pair; `RELEASING.md`.
-- [ ] `P11.S43` - Reduce the recipe surface to the commands the adopted path uses; `justfile`.
-- [ ] `P11.S44` - Reconcile the packaging workflow family against the sibling shape; `.github/workflows/packaging-quick.yml`.
+- [x] `P11.S42` - Rewrite the release runbook against the adopted workflow pair; `RELEASING.md`.
+- [x] `P11.S43` - Reduce the recipe surface to the commands the adopted path uses; `justfile`.
+- [x] `P11.S44` - Reconcile the packaging workflow family against the sibling shape; `.github/workflows/packaging-quick.yml`.
 
 ## Parallelization
 
