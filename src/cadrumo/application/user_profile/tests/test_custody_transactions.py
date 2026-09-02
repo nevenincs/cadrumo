@@ -41,6 +41,7 @@ from ....adapters.persistence.storage.master_key.bucket_session import BucketSes
 from ....core.bucket_pointer import BucketPointer
 from ....core.config import Settings
 from ....core.period import Period
+from ....core.profile_publication import ProfilePublicationKind
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import ModeloRecord, derive_filing_record_id
 from ... import user_profile as user_profiles
@@ -99,7 +100,7 @@ def _committed_capsule(
     return publish_profile_custody_capsule(
         profile_id=profile_id,
         transaction_id=transaction_id or uuid4(),
-        publication_kind="enroll",
+        publication_kind=ProfilePublicationKind.ENROLL,
         password_envelope=envelope,
         sentinel=sentinel,
         data_files={
@@ -290,7 +291,7 @@ def _crash_create_at_durable_boundary(root_text: str, transaction_id_text: str, 
     publish_profile_custody_capsule(
         profile_id=_PROFILE_ID,
         transaction_id=transaction_id,
-        publication_kind="enroll",
+        publication_kind=ProfilePublicationKind.ENROLL,
         password_envelope=envelope,
         sentinel=sentinel,
         data_files={
@@ -768,7 +769,7 @@ def test_create_orchestration_journals_stages_verifies_and_publishes_pointer_las
         sentinel=sentinel,
         data_files=data_files,
         label="Custody operator",
-        publication_kind="restore",
+        publication_kind=ProfilePublicationKind.RESTORE,
         transaction_id=transaction_id,
         now=_INSTANT,
     )
@@ -849,7 +850,7 @@ def test_create_recovery_refuses_a_label_claimed_while_its_real_stage_waited(tmp
         sentinel=sentinel,
         data_files=data_files,
         label="CRASH LABEL",
-        publication_kind="restore",
+        publication_kind=ProfilePublicationKind.RESTORE,
         now=_INSTANT,
     )
 

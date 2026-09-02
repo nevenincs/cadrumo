@@ -3,7 +3,7 @@
 Exercises the parts of the driver that are implementable without live
 browser access: the ``planned_operations`` enumeration, empty-input
 rejection, the ``Pydantic`` observation/result models, and the
-``extract_verdict_from_response_text`` parser.
+the canonical ``extract_marker_verdict`` parser with NIF-IVA markers.
 
 Live navigation tests live behind ``@pytest.mark.aeat_live`` and require
 ``CADRUMO_LIVE_TESTS_ENABLED=1`` plus a working AEAT browser session.
@@ -25,7 +25,7 @@ from ......tests.aeat_literal_fixtures import (
     PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE,
     aeat_url,
 )
-from .._adapter_utils import is_aeat_auth_gate_redirect
+from .._adapter_utils import extract_marker_verdict, is_aeat_auth_gate_redirect
 from ..errors import SedeNavigationError
 from ..nif_iva_check import (
     DEFAULT_NIF_IVA_TIMEOUT_MS,
@@ -33,9 +33,9 @@ from ..nif_iva_check import (
     NifIvaCheckResult,
     NifIvaCheckSedeDriver,
     SedeNifIvaCheckObservation,
+    _POSITIVE_MARKERS,
     _assert_query_browser_action,
     assert_nif_iva_read_landing,
-    extract_verdict_from_response_text,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -127,18 +127,18 @@ def test_result_model_defaults_to_empty_observations() -> None:
     assert result.observations == ()
 
 
-def test_extract_verdict_parses_valid_response_text() -> None:
-    assert extract_verdict_from_response_text("Sí. Operador intracomunitario identificado") == "valid"
-    assert extract_verdict_from_response_text("NIF-IVA válido") == "valid"
+def test_marker_verdict_parses_valid_response_text() -> None:
+    assert extract_marker_verdict("Sí. Operador intracomunitario identificado", positive_markers=_POSITIVE_MARKERS) == "valid"
+    assert extract_marker_verdict("NIF-IVA válido", positive_markers=_POSITIVE_MARKERS) == "valid"
 
 
-def test_extract_verdict_parses_invalid_response_text_before_positive_tokens() -> None:
-    assert extract_verdict_from_response_text("No. Operador no identificado") == "invalid"
-    assert extract_verdict_from_response_text("NIF-IVA no válido") == "invalid"
+def test_marker_verdict_parses_invalid_response_text_before_positive_tokens() -> None:
+    assert extract_marker_verdict("No. Operador no identificado", positive_markers=_POSITIVE_MARKERS) == "invalid"
+    assert extract_marker_verdict("NIF-IVA no válido", positive_markers=_POSITIVE_MARKERS) == "invalid"
 
 
-def test_extract_verdict_returns_unknown_for_unrecognized_response_text() -> None:
-    assert extract_verdict_from_response_text("") == "unknown"
+def test_marker_verdict_returns_unknown_for_unrecognized_response_text() -> None:
+    assert extract_marker_verdict("", positive_markers=_POSITIVE_MARKERS) == "unknown"
 
 
 def test_auth_gate_detector_matches_aeat_4033_redirect() -> None:

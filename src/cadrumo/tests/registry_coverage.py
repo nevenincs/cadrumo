@@ -101,12 +101,16 @@ CoverageAuthorityScopeField = Annotated[
 Registry schema models validate strictly, which refuses a bare TOML string for an
 enum-typed field, so the token is coerced at the boundary.
 """
-RequiredCoverageTier = Literal["legal_authority", "official_source_guidance", "layout_authority"]
+RequiredCoverageTier = Literal[
+    EvidenceTier.LEGAL_AUTHORITY,
+    EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
+    EvidenceTier.LAYOUT_AUTHORITY,
+]
 
 REQUIRED_COVERAGE_TIERS: tuple[RequiredCoverageTier, ...] = (
-    "legal_authority",
-    "official_source_guidance",
-    "layout_authority",
+    EvidenceTier.LEGAL_AUTHORITY,
+    EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
+    EvidenceTier.LAYOUT_AUTHORITY,
 )
 """The evidence tiers a revision cannot be filing-grade without.
 
@@ -533,7 +537,7 @@ def _model_law_coverage_findings(
     )
     parity_gaps = (
         (f"modelo {modelo.id} revision {revision.id}: executable_parity_evidence coverage gap",)
-        if gates["executable_parity_evidence"].status == "gap" and revision.formulas
+        if gates[EvidenceTier.EXECUTABLE_PARITY_EVIDENCE].status == "gap" and revision.formulas
         else ()
     )
     return required_failures, parity_gaps
@@ -670,7 +674,9 @@ def build_model_law_coverage_ledger(
         workbook_parity_refs = authority.workbook_parity_refs
         live_cross_references = authority.live_cross_references
         proven = _authority_proof if _authority_proof in _AUTHORITY_CHECK_PROOFS else None
-        authority_scope = "filing" if proven is not None else "inspection_only"
+        authority_scope = (
+            CoverageAuthorityScope.FILING if proven is not None else CoverageAuthorityScope.INSPECTION_ONLY
+        )
         review_tier = proven.review_tier if proven is not None else None
     elif isinstance(authority, RegistrySnapshot):
         modelo_id = authority.modelo.id
@@ -687,7 +693,7 @@ def build_model_law_coverage_ledger(
         live_cross_references: Iterable[LiveCrossReferenceDecision] = authority.live_cross_references.values()
         proven = _authority_proof if _authority_proof in _AUTHORITY_CHECK_PROOFS else None
         authority_scope: CoverageAuthorityScopeField = (
-            CoverageAuthorityScope.FILING if proven is not None else "inspection_only"
+            CoverageAuthorityScope.FILING if proven is not None else CoverageAuthorityScope.INSPECTION_ONLY
         )
         review_tier = proven.review_tier if proven is not None else None
     else:
@@ -701,7 +707,7 @@ def build_model_law_coverage_ledger(
         sources = authority.sources
         workbook_parity_refs = authority.workbook_parity_refs
         live_cross_references = authority.live_cross_references
-        authority_scope = "inspection_only"
+        authority_scope = CoverageAuthorityScope.INSPECTION_ONLY
         review_tier = None
 
     return ModelLawCoverageLedger(
@@ -747,8 +753,8 @@ def _construct_evidence_context(
 ) -> tuple[str, str, ModeloRevision | RegistryRevisionInspection, CoverageAuthorityScope]:
     """Project the shared identity, declarations, and scope for one authority."""
     if isinstance(authority, RegistrySnapshot):
-        return authority.modelo.id, authority.revision.id, authority.revision, "filing"
-    return authority.modelo_id, authority.revision_id, authority, "inspection_only"
+        return authority.modelo.id, authority.revision.id, authority.revision, CoverageAuthorityScope.FILING
+    return authority.modelo_id, authority.revision_id, authority, CoverageAuthorityScope.INSPECTION_ONLY
 
 
 def _build_construct_evidence_ledger(
@@ -894,7 +900,7 @@ def _status_for_declared_refs(
 def _legal_authority_gate(legal_refs: Iterable[LegalRefId]) -> EvidenceTierCoverageGate:
     refs = tuple(sorted(legal_refs))
     return EvidenceTierCoverageGate(
-        tier="legal_authority",
+        tier=EvidenceTier.LEGAL_AUTHORITY,
         status=_status(refs),
         legal_refs=refs,
         detail="BOE or other binding legal references for filing-grade calculation",
@@ -905,10 +911,10 @@ def _source_guidance_gate(
     sources: Mapping[SourceRefId, SourceReference],
     live_cross_references: Iterable[LiveCrossReferenceDecision],
 ) -> EvidenceTierCoverageGate:
-    source_refs = _sources_for_tier(sources, "official_source_guidance")
-    cross_refs = _cross_refs_for_tier(live_cross_references, "official_source_guidance")
+    source_refs = _sources_for_tier(sources, EvidenceTier.OFFICIAL_SOURCE_GUIDANCE)
+    cross_refs = _cross_refs_for_tier(live_cross_references, EvidenceTier.OFFICIAL_SOURCE_GUIDANCE)
     return EvidenceTierCoverageGate(
-        tier="official_source_guidance",
+        tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
         status=_status(source_refs, cross_refs),
         source_refs=source_refs,
         cross_reference_refs=cross_refs,
@@ -921,16 +927,16 @@ def _executable_parity_gate(
     workbook_parity_refs: Iterable[WorkbookParityReference],
     live_cross_references: Iterable[LiveCrossReferenceDecision],
 ) -> EvidenceTierCoverageGate:
-    source_refs = _sources_for_tier(sources, "executable_parity_evidence")
+    source_refs = _sources_for_tier(sources, EvidenceTier.EXECUTABLE_PARITY_EVIDENCE)
     workbook_refs = _workbook_refs_for_tier(
         sources,
         workbook_parity_refs,
         coverage_kinds=("formula_form",),
-        tier="executable_parity_evidence",
+        tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
     )
-    cross_refs = _cross_refs_for_tier(live_cross_references, "executable_parity_evidence")
+    cross_refs = _cross_refs_for_tier(live_cross_references, EvidenceTier.EXECUTABLE_PARITY_EVIDENCE)
     return EvidenceTierCoverageGate(
-        tier="executable_parity_evidence",
+        tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
         status=_status(source_refs, workbook_refs, cross_refs),
         source_refs=source_refs,
         workbook_refs=workbook_refs,
@@ -944,16 +950,16 @@ def _layout_authority_gate(
     workbook_parity_refs: Iterable[WorkbookParityReference],
     live_cross_references: Iterable[LiveCrossReferenceDecision],
 ) -> EvidenceTierCoverageGate:
-    source_refs = _sources_for_tier(sources, "layout_authority")
+    source_refs = _sources_for_tier(sources, EvidenceTier.LAYOUT_AUTHORITY)
     workbook_refs = _workbook_refs_for_tier(
         sources,
         workbook_parity_refs,
         coverage_kinds=("record_design_layout", "unsupported_binary_xls", "static_layout"),
-        tier="layout_authority",
+        tier=EvidenceTier.LAYOUT_AUTHORITY,
     )
-    cross_refs = _cross_refs_for_tier(live_cross_references, "layout_authority")
+    cross_refs = _cross_refs_for_tier(live_cross_references, EvidenceTier.LAYOUT_AUTHORITY)
     return EvidenceTierCoverageGate(
-        tier="layout_authority",
+        tier=EvidenceTier.LAYOUT_AUTHORITY,
         status=_status(source_refs, workbook_refs, cross_refs),
         source_refs=source_refs,
         workbook_refs=workbook_refs,

@@ -61,7 +61,7 @@ from ..core.logging import default_log_file_path, get_logger
 from ..core.modelo import Modelo
 from ..core.operator_action_enums import NoRecoveryOutcome
 from ..core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
-from ..core.requirement import RequirementValue
+from ..core.requirement import Requirement, RequirementValue
 from ..core.resources.bundled_data import bundled_path
 from ..core.time.clock import now
 from .diagnostic_models import (
@@ -739,7 +739,9 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[_Diagnosti
         raw = values.get(entry.key)
         if raw is not None and raw.strip() != "":
             continue
-        requirement: RequirementValue = "required" if entry.requirement.value == "required" else "optional"
+        requirement: RequirementValue = (
+            Requirement.REQUIRED if entry.requirement is Requirement.REQUIRED else Requirement.OPTIONAL
+        )
         label = tr(str(entry.description))
         findings.append(
             _DiagnosticFinding(
@@ -766,6 +768,8 @@ def _profile_check(
     profile keys from :class:`~application.workflow.WorkflowState` into
     per-key :class:`DiagnosticFinding` rows.
     """
+    from .workflow.profile_health import UNREADABLE_PROFILE_STATUSES
+
     if profile_health is not None and profile_health.status == "profile_locked":
         # Same distinction as `_profile_unavailable_check`: a locked profile
         # is benign, so it gets its own sentence rather than falling through
@@ -777,11 +781,7 @@ def _profile_check(
             summary=tr("cli.diagnostics.summary.profile_locked"),
             precondition_verdict=_required_profile_health_verdict(profile_health),
         )
-    if profile_health is not None and profile_health.status in {
-        "dangling_pointer",
-        "missing_profile_record",
-        "profile_record_unreadable",
-    }:
+    if profile_health is not None and profile_health.status in UNREADABLE_PROFILE_STATUSES:
         return _DiagnosticCheck(
             name="profile.readiness",
             status=_DiagnosticStatus.WARN,
@@ -857,12 +857,12 @@ def _profile_not_ready_findings(
     missing_required = tuple(f for f in unset_findings if f.requirement == "required")
     if not missing_required:
         missing_required = tuple(
-            _DiagnosticFinding(summary=_grounded_profile_key_summary(key), requirement="required")
+            _DiagnosticFinding(summary=_grounded_profile_key_summary(key), requirement=Requirement.REQUIRED)
             for key in report.missing_required
         )
     already_named = {finding.summary.split(" — ", 1)[0] for finding in missing_required}
     enrolment_findings = tuple(
-        _DiagnosticFinding(summary=_grounded_profile_key_summary(key), requirement="required")
+        _DiagnosticFinding(summary=_grounded_profile_key_summary(key), requirement=Requirement.REQUIRED)
         for key in report.missing_enrolment
         if key not in already_named
     )

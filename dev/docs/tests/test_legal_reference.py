@@ -7,6 +7,7 @@ from datetime import date
 from html import unescape
 from io import StringIO
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 from docutils import nodes
@@ -178,6 +179,16 @@ def test_provision_heading_leads_with_the_citation_not_the_catalogue_id() -> Non
     assert "``ley-37-1992:art-92``" in page.rst
 
 
+class _SharedProvisionFields(TypedDict):
+    """The catalogue fields both consolidated versions of one article share."""
+
+    kind: str
+    document_id: str
+    corpus_ref: str
+    permalink: str
+    article: str
+
+
 def test_same_article_versions_get_distinct_headings_by_in_force_date() -> None:
     """Consolidated versions of one article are told apart by their in-force date.
 
@@ -185,7 +196,7 @@ def test_same_article_versions_get_distinct_headings_by_in_force_date() -> None:
     version. A shared heading would leave a reader unable to tell which version
     governs their year, so the authored ``effective_from`` disambiguates.
     """
-    common = {
+    common: _SharedProvisionFields = {
         "kind": "ley",
         "document_id": "BOE-A-2006-20764",
         "corpus_ref": "corpus/normatives/html/ley-35-2006.html#a52",

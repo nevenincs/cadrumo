@@ -104,7 +104,7 @@ def _gate_active_bucket() -> str:
     """
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ..workflow.persistence import workflow_state_repository
-    from ..workflow.profile_health import assess_active_profile_health
+    from ..workflow.profile_health import RECORD_FAULT_STATUSES, assess_active_profile_health
 
     if resolve_active_bucket_id() is None:
         raise AuthConfigureNoActiveBucketError(
@@ -124,7 +124,7 @@ def _gate_active_bucket() -> str:
             context={"active_profile": active_bucket_id},
             precondition_verdict=profile_health.precondition_verdict,
         )
-    if profile_health.status in {"missing_profile_record", "profile_record_unreadable"}:
+    if profile_health.status in RECORD_FAULT_STATUSES:
         raise AuthConfigureDanglingActiveProfileError(
             translated_message="application.auth.operator.errors.unreadable_active_profile",
             context={

@@ -16,6 +16,7 @@ from ..command_spec import (
     MachineSecretChannelKind,
     MachineSecretConditionSpec,
     MachineSecretFieldSpec,
+    MachineSecretPresence,
     MachineSecretSpec,
     MachineSecretVariantSpec,
     OptionSpec,
@@ -733,13 +734,13 @@ PROFILE_COMMAND_SPECS = (
                     "passphrase",
                     (MachineSecretFieldSpec("passphrase"),),
                     DeferredTarget("cadrumo.entrypoints.cli.config._restore_cli", "RestorePassphraseSecrets"),
-                    MachineSecretConditionSpec("artifact", "absent"),
+                    MachineSecretConditionSpec("artifact", MachineSecretPresence.ABSENT),
                 ),
                 MachineSecretVariantSpec(
                     "recovery",
                     (MachineSecretFieldSpec("recovery_secret"),),
                     DeferredTarget("cadrumo.entrypoints.cli.config._restore_cli", "RestoreRecoverySecrets"),
-                    MachineSecretConditionSpec("artifact", "present"),
+                    MachineSecretConditionSpec("artifact", MachineSecretPresence.PRESENT),
                 ),
             )
         ),

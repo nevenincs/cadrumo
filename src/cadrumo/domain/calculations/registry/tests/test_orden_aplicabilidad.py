@@ -28,6 +28,7 @@ from .._validate_orden_aplicabilidad import validate_orden_aplicabilidad
 from ..errors import RegistryValidationError
 from ..ids import LegalRefId, SourceRefId
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from ..schema_base import EvidenceTier
 from ..schema_references import LegalReference, PeriodSelector
 from ._registry_schema_support import _committed_registry_tree
 
@@ -44,7 +45,7 @@ _NON_ORDEN_LEGAL_REF: LegalRefId = "ley-58-2003:art-29"
 # Minimal synthetic legal catalogue entry for tests.
 _VALID_LEGAL_REF = LegalReference(
     id=_VALID_LEGAL_REF_ID,
-    evidence_tier="legal_authority",
+    evidence_tier=EvidenceTier.LEGAL_AUTHORITY,
     authority="boe",
     kind="orden",
     corpus_ref="corpus/normatives/html/orden-test-0001.html#a1",

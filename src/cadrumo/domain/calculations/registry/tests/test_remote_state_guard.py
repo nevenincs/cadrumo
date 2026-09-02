@@ -35,6 +35,7 @@ from ..remote_state_guard import (
 )
 from ..renta_web_open_oracle import RentaWebOpenOracle
 from ..schema import ModeloDefinition, RegistryCatalogues
+from ..schema_base import EvidenceTier
 from ..schema_verification import LiveCrossReferenceDecision
 from ._registry_schema_support import _committed_registry_tree
 
@@ -93,7 +94,7 @@ def _open_policy() -> RemoteStateGuardPolicy:
     # no-synthetic-sede-live-surfaces contract.
     return RemoteStateGuardPolicy(
         id="m303-open",
-        evidence_tier="executable_parity_evidence",
+        evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
         classification="open_simulator",
         allowed_hosts=(_SEDE_HOST,),
         synthetic_data_allowed=False,
@@ -184,7 +185,7 @@ def test_oracle_bound_cross_reference_policy_gets_consult_action_allow_list() ->
     # be false.
     decision = LiveCrossReferenceDecision(
         id="modelo-349-groi-spanish-counterparty-check",
-        evidence_tier="executable_parity_evidence",
+        evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
         surface="authenticated_simulator",
         guard_policy_id="modelo-349-groi-spanish-roi-check",
         allowed_hosts=(_WWW2_HOST,),
@@ -222,7 +223,7 @@ def test_schema_rejects_aeat_hosted_live_cross_reference_with_synthetic_data_all
     with pytest.raises(ValidationError, match="synthetic data is prohibited on AEAT-hosted"):
         LiveCrossReferenceDecision(
             id="test-aeat-hosted-synthetic-reject",
-            evidence_tier="executable_parity_evidence",
+            evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
             surface="open_simulator",
             guard_policy_id="test-aeat-hosted-synthetic-reject-policy",
             allowed_hosts=(_SEDE_HOST,),
@@ -249,7 +250,7 @@ def test_schema_accepts_non_aeat_host_with_synthetic_data_allowed() -> None:
     """A non-AEAT host may still declare synthetic_data_allowed = true (local simulator)."""
     decision = LiveCrossReferenceDecision(
         id="test-local-simulator-synthetic-ok",
-        evidence_tier="executable_parity_evidence",
+        evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
         surface="open_simulator",
         guard_policy_id="test-local-simulator-policy",
         allowed_hosts=("localhost",),
@@ -277,7 +278,7 @@ def test_schema_accepts_aeat_host_with_synthetic_data_not_allowed() -> None:
     """An AEAT-hosted cross-reference is valid when synthetic_data_allowed = false."""
     decision = LiveCrossReferenceDecision(
         id="test-aeat-hosted-no-synthetic",
-        evidence_tier="executable_parity_evidence",
+        evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
         surface="open_simulator",
         guard_policy_id="test-aeat-hosted-no-synthetic-policy",
         allowed_hosts=(_SEDE_HOST,),
@@ -306,7 +307,7 @@ def test_guard_rejects_aeat_hosted_policy_with_synthetic_data_allowed() -> None:
     with pytest.raises(ValidationError, match="synthetic data is prohibited on AEAT-hosted"):
         RemoteStateGuardPolicy(
             id="test-aeat-guard-synthetic-reject",
-            evidence_tier="executable_parity_evidence",
+            evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
             classification="open_simulator",
             allowed_hosts=(_SEDE_HOST,),
             synthetic_data_allowed=True,
@@ -328,7 +329,7 @@ def test_schema_rejects_each_aeat_suffix_form_with_synthetic_data() -> None:
         with pytest.raises(ValidationError, match="synthetic data is prohibited on AEAT-hosted"):
             LiveCrossReferenceDecision(
                 id="test-aeat-suffix-form-reject",
-                evidence_tier="executable_parity_evidence",
+                evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
                 surface="open_simulator",
                 guard_policy_id="test-aeat-suffix-form-policy",
                 allowed_hosts=(host,),
@@ -358,7 +359,7 @@ def test_guard_rejects_each_aeat_suffix_form_with_synthetic_data() -> None:
         with pytest.raises(ValidationError, match="synthetic data is prohibited on AEAT-hosted"):
             RemoteStateGuardPolicy(
                 id="test-guard-suffix-form-reject",
-                evidence_tier="executable_parity_evidence",
+                evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
                 classification="open_simulator",
                 allowed_hosts=(host,),
                 synthetic_data_allowed=True,
@@ -377,7 +378,7 @@ def test_public_read_surface_synthetic_data_message_is_classification_specific()
     with pytest.raises(ValueError, match="public reads must not use synthetic remote data"):
         RemoteStateGuardPolicy(
             id="public-read-synthetic",
-            evidence_tier="official_source_guidance",
+            evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
             classification="public_read_surface",
             allowed_hosts=(_SEDE_HOST,),
             synthetic_data_allowed=True,
@@ -391,7 +392,7 @@ def test_authenticated_read_surface_requires_authentication_message() -> None:
     with pytest.raises(ValueError, match="authenticated filed-data read policy must require authentication"):
         RemoteStateGuardPolicy(
             id="auth-read-no-auth",
-            evidence_tier="official_source_guidance",
+            evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
             classification="authenticated_read_surface",
             allowed_hosts=(_WWW6_HOST,),
             synthetic_data_allowed=False,
@@ -405,7 +406,7 @@ def test_forbidden_stateful_surface_rejects_synthetic_data() -> None:
     with pytest.raises(ValueError, match="forbidden stateful surface cannot accept synthetic remote data"):
         RemoteStateGuardPolicy(
             id="forbidden-synthetic",
-            evidence_tier="official_source_guidance",
+            evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
             classification="forbidden_stateful_surface",
             allowed_hosts=(),
             synthetic_data_allowed=True,
@@ -419,7 +420,7 @@ def test_open_simulator_must_not_require_authentication() -> None:
     with pytest.raises(ValueError, match="open simulator policy must not require authentication"):
         RemoteStateGuardPolicy(
             id="open-sim-auth",
-            evidence_tier="executable_parity_evidence",
+            evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
             classification="open_simulator",
             allowed_hosts=(_SEDE_HOST,),
             synthetic_data_allowed=False,
@@ -433,7 +434,7 @@ def test_live_policy_must_declare_allowed_hosts() -> None:
     with pytest.raises(ValueError, match="AEAT remote policy must declare allowed hosts"):
         RemoteStateGuardPolicy(
             id="open-sim-no-hosts",
-            evidence_tier="executable_parity_evidence",
+            evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
             classification="open_simulator",
             allowed_hosts=(),
             synthetic_data_allowed=False,
@@ -460,7 +461,7 @@ def _host_suffix_policy() -> RemoteStateGuardPolicy:
     # guards that must tolerate ``www{n}`` load-balancer dispatch.
     return RemoteStateGuardPolicy(
         id="host-suffix-read",
-        evidence_tier="official_source_guidance",
+        evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
         classification="authenticated_read_surface",
         allowed_hosts=(_WWW6_HOST,),
         allowed_host_suffixes=(AEAT_HOST_SUFFIX_EXPECTED,),
@@ -505,7 +506,7 @@ def test_host_suffix_field_rejects_non_aeat_suffix() -> None:
     with pytest.raises(ValidationError, match="allowed host suffix is not an AEAT host"):
         RemoteStateGuardPolicy(
             id="host-suffix-foreign",
-            evidence_tier="official_source_guidance",
+            evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
             classification="authenticated_read_surface",
             allowed_hosts=(_WWW6_HOST,),
             allowed_host_suffixes=("example.com",),
@@ -520,7 +521,7 @@ def test_gov_idp_host_refused_without_opt_in() -> None:
     with pytest.raises(ValidationError, match="sanctioned government-IdP"):
         RemoteStateGuardPolicy(
             id="idp-no-optin",
-            evidence_tier="official_source_guidance",
+            evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
             classification="authenticated_read_surface",
             allowed_hosts=(_WWW6_HOST, _CLAVE_HOST),
             synthetic_data_allowed=False,
@@ -534,7 +535,7 @@ def test_gov_idp_opt_in_refused_on_open_simulator() -> None:
     with pytest.raises(ValidationError, match="authenticated_read_surface"):
         RemoteStateGuardPolicy(
             id="idp-open-sim",
-            evidence_tier="executable_parity_evidence",
+            evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
             classification="open_simulator",
             allowed_hosts=(_SEDE_HOST,),
             allows_gov_idp_hosts=True,
@@ -549,7 +550,7 @@ def test_gov_idp_opt_in_refused_on_public_read_surface() -> None:
     with pytest.raises(ValidationError, match="authenticated_read_surface"):
         RemoteStateGuardPolicy(
             id="idp-public",
-            evidence_tier="official_source_guidance",
+            evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
             classification="public_read_surface",
             allowed_hosts=(_SEDE_HOST,),
             allows_gov_idp_hosts=True,
@@ -564,7 +565,7 @@ def test_arbitrary_gob_es_host_refused_even_with_opt_in() -> None:
     with pytest.raises(ValidationError, match="not an AEAT host"):
         RemoteStateGuardPolicy(
             id="idp-arbitrary-gob",
-            evidence_tier="official_source_guidance",
+            evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
             classification="authenticated_read_surface",
             allowed_hosts=(_SEDE_HOST, "foo.gob.es"),
             allows_gov_idp_hosts=True,
@@ -578,7 +579,7 @@ def test_gov_idp_opt_in_auth_read_admits_the_clave_idp_host() -> None:
     """A valid opt-in authenticated-read policy builds and admits the Cl@ve IdP host."""
     policy = RemoteStateGuardPolicy(
         id="idp-optin-valid",
-        evidence_tier="official_source_guidance",
+        evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
         classification="authenticated_read_surface",
         allowed_hosts=(_WWW6_HOST,),
         allowed_host_suffixes=(_CLAVE_HOST,),
@@ -603,7 +604,7 @@ def test_gov_idp_opt_in_auth_read_admits_the_clave_idp_host() -> None:
 def test_remote_state_guard_allows_local_workbook_for_static_policy() -> None:
     policy = RemoteStateGuardPolicy(
         id="static-docs",
-        evidence_tier="layout_authority",
+        evidence_tier=EvidenceTier.LAYOUT_AUTHORITY,
         classification="static_official_only",
         allowed_hosts=(),
         synthetic_data_allowed=False,
@@ -619,7 +620,7 @@ def test_remote_state_guard_allows_local_workbook_for_static_policy() -> None:
 def test_remote_state_guard_rejects_static_policy_live_http() -> None:
     policy = RemoteStateGuardPolicy(
         id="static-docs",
-        evidence_tier="layout_authority",
+        evidence_tier=EvidenceTier.LAYOUT_AUTHORITY,
         classification="static_official_only",
         allowed_hosts=(),
         synthetic_data_allowed=False,
@@ -644,7 +645,7 @@ def test_remote_state_guard_rejects_live_policy_without_executable_parity_tier()
     with pytest.raises(ValueError, match="requires executable parity evidence"):
         RemoteStateGuardPolicy(
             id="open-without-parity",
-            evidence_tier="official_source_guidance",
+            evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
             classification="open_simulator",
             allowed_hosts=(_SEDE_HOST,),
             synthetic_data_allowed=True,
@@ -657,7 +658,7 @@ def test_remote_state_guard_rejects_static_policy_as_executable_parity() -> None
     with pytest.raises(ValueError, match="static official documentation is not executable parity evidence"):
         RemoteStateGuardPolicy(
             id="static-as-parity",
-            evidence_tier="executable_parity_evidence",
+            evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
             classification="static_official_only",
             allowed_hosts=(),
             synthetic_data_allowed=False,
@@ -669,7 +670,7 @@ def test_remote_state_guard_rejects_static_policy_as_executable_parity() -> None
 def test_remote_state_guard_allows_authenticated_read_surface_get() -> None:
     policy = RemoteStateGuardPolicy(
         id="filed-data-read",
-        evidence_tier="official_source_guidance",
+        evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
         classification="authenticated_read_surface",
         allowed_hosts=(_WWW6_HOST,),
         synthetic_data_allowed=False,
@@ -693,7 +694,7 @@ def test_remote_state_guard_allows_declared_authenticated_read_post_path_only() 
     wallet_path = configured_path("sede_paths", "iva_compensation_wallet")
     policy = RemoteStateGuardPolicy(
         id="wallet-read",
-        evidence_tier="official_source_guidance",
+        evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
         classification="authenticated_read_surface",
         allowed_hosts=(_WWW6_HOST,),
         allowed_read_paths=(wallet_path,),
@@ -730,7 +731,7 @@ def test_bounded_read_policy_rejects_a_post_path_outside_its_read_routes() -> No
     with pytest.raises(ValidationError, match="subset of the policy's allowed read paths"):
         RemoteStateGuardPolicy(
             id="wallet-read-invalid-post-path",
-            evidence_tier="official_source_guidance",
+            evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
             classification="authenticated_read_surface",
             allowed_hosts=(_WWW6_HOST,),
             allowed_read_paths=(wallet_path,),
@@ -745,7 +746,7 @@ def test_remote_state_guard_rejects_authenticated_read_as_parity() -> None:
     with pytest.raises(ValueError, match="not executable parity evidence"):
         RemoteStateGuardPolicy(
             id="filed-data-read",
-            evidence_tier="executable_parity_evidence",
+            evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
             classification="authenticated_read_surface",
             allowed_hosts=(_WWW6_HOST,),
             synthetic_data_allowed=False,
@@ -757,7 +758,7 @@ def test_remote_state_guard_rejects_authenticated_read_as_parity() -> None:
 def test_remote_state_guard_allows_public_read_surface_get() -> None:
     policy = RemoteStateGuardPolicy(
         id="public-read",
-        evidence_tier="official_source_guidance",
+        evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
         classification="public_read_surface",
         allowed_hosts=(_SEDE_HOST,),
         synthetic_data_allowed=False,

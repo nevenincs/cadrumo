@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path, PurePosixPath
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
@@ -77,6 +78,11 @@ class GeneratedExportTreeValidationContext:
     #: rendered, compared, or published, and its target revision is refused:
     #: the rendered target remains the sole source of its own facts.
     continuity_metadata_modelo_root: Path | None = None
+    #: Authority grade the caller is entitled to establish.  Existing check and
+    #: validation callers keep the filing-grade default; bootstrap publication
+    #: explicitly asks for calculation grade because a static generated layout
+    #: does not establish filing readiness.
+    required_grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING
 
     def __post_init__(self) -> None:
         if not self.period.strip():
@@ -208,6 +214,7 @@ def _validated_target_snapshot(
             period=context.period,
             on=context.on,
             revision_id=revision_id,
+            grade=context.required_grade,
         )
 
     continuity_modelo = _load_continuity_metadata_modelo(
@@ -237,7 +244,7 @@ def _validated_target_snapshot(
             "registry validation failed:\n" + "\n".join(f" - {failure}" for failure in continuity_failures)
         )
 
-    # ``build_snapshot`` owns exactly the model-local validation and filing-grade
+    # ``build_snapshot`` owns exactly the model-local validation and requested-grade
     # selection that the production authority delegates to after its registry
     # scope has passed.  The scope above is the same existing validator, with
     # the copied predecessor facts used only to make strict continuity answerable.
@@ -249,6 +256,7 @@ def _validated_target_snapshot(
         period=context.period,
         on=context.on,
         revision_id=revision_id,
+        grade=context.required_grade,
     )
 
 

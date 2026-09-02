@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Mapping
+from enum import StrEnum
 from typing import Literal, Protocol
 
 from pydantic import AnyUrl, BaseModel, Field, field_validator
@@ -30,6 +31,26 @@ from .remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
 )
+
+
+class CheckerDriverMode(StrEnum):
+    """Whether a checker driver reaches AEAT or replays captured evidence."""
+
+    LIVE = "live"
+    """Executes against the live AEAT surface."""
+
+    REPLAY = "replay"
+    """Replays previously captured evidence and performs no network operation."""
+
+
+CheckerDriverModeValue = Literal[CheckerDriverMode.LIVE, CheckerDriverMode.REPLAY]
+"""Both modes, for the Protocol property a driver of either kind satisfies.
+
+The concrete drivers narrow this to the single member they actually are, rooted as
+`Literal[CheckerDriverMode.LIVE]` or `Literal[CheckerDriverMode.REPLAY]`. Those
+narrowings are contracts -- a live driver may never report itself as a replay -- and
+are deliberately not widened to this alias.
+"""
 
 
 class CheckerObservation(BaseModel):
@@ -53,7 +74,7 @@ class CheckerDriver(Protocol):
     """Execution boundary shared by live and replay checker adapters."""
 
     @property
-    def mode(self) -> Literal["live", "replay"]:
+    def mode(self) -> CheckerDriverModeValue:
         """Return whether this driver executes live operations or replays evidence."""
         ...
 
@@ -85,9 +106,9 @@ class CheckerReplayDriver:
         self._replay_action = replay_action
 
     @property
-    def mode(self) -> Literal["replay"]:
+    def mode(self) -> Literal[CheckerDriverMode.REPLAY]:
         """Replay drivers decode local evidence and never touch the network."""
-        return "replay"
+        return CheckerDriverMode.REPLAY
 
     def planned_operations(
         self,

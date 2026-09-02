@@ -235,8 +235,8 @@ def test_coherent_modelos_report_no_findings() -> None:
     everything would still satisfy every positive-detection test below.
     """
     audit = _audit(
-        _modelo("100", calculation_class="filing", tax_domain=TaxDomain.IRPF),
-        _modelo("347", calculation_class="informative", tax_domain=TaxDomain.INFORMATIVE),
+        _modelo("100", calculation_class=CalculationClass.FILING, tax_domain=TaxDomain.IRPF),
+        _modelo("347", calculation_class=CalculationClass.INFORMATIVE, tax_domain=TaxDomain.INFORMATIVE),
     )
     assert audit.findings == ()
     assert audit.ok is True
@@ -278,11 +278,11 @@ def test_forced_divergence_names_the_invariant_blocker() -> None:
     """
     blocked = _modelo(
         "349",
-        calculation_class="filing",
+        calculation_class=CalculationClass.FILING,
         tax_domain=TaxDomain.INFORMATIVE,
         revision=_revision(casillas=(_bound_casilla(),)),
     )
-    unexplained = _modelo("038", calculation_class="filing", tax_domain=TaxDomain.INFORMATIVE)
+    unexplained = _modelo("038", calculation_class=CalculationClass.FILING, tax_domain=TaxDomain.INFORMATIVE)
 
     blocked_row = _audit(blocked).rows[0]
     assert blocked_row.informative_class_blockers != ()
@@ -369,7 +369,7 @@ def test_builder_returns_findings_instead_of_raising_on_a_fully_incoherent_model
         (
             _modelo(
                 "999",
-                calculation_class="informative",
+                calculation_class=CalculationClass.INFORMATIVE,
                 tax_domain=TaxDomain.IRPF,
                 revision=_revision(dependencies=(dependency,)),
             ),
@@ -402,7 +402,7 @@ def test_axis_census_flips_to_exercised_when_the_tree_declares_the_axis() -> Non
     assert silent.status == "unused"
     assert axis in _audit(_modelo("130")).unused_axes
 
-    declaring_audit = _audit(_modelo("390", calculation_class="summary", tax_domain=TaxDomain.IVA))
+    declaring_audit = _audit(_modelo("390", calculation_class=CalculationClass.SUMMARY, tax_domain=TaxDomain.IVA))
     declaring = {item.axis: item for item in declaring_audit.axis_usage}[axis]
     assert declaring.declaration_count == 1
     assert declaring.status == "exercised"
@@ -446,7 +446,7 @@ def test_a_modelo_with_many_blockers_is_reported_rather_than_refused() -> None:
     audit = _audit(
         _modelo(
             "100",
-            calculation_class="filing",
+            calculation_class=CalculationClass.FILING,
             tax_domain=TaxDomain.INFORMATIVE,
             revision=_revision(casillas=casillas),
         ),
@@ -591,7 +591,7 @@ def test_the_worst_case_the_registry_schema_permits_needs_no_truncation() -> Non
     audit = _audit(
         _modelo(
             "100",
-            calculation_class="filing",
+            calculation_class=CalculationClass.FILING,
             tax_domain=TaxDomain.INFORMATIVE,
             revision=_revision(revision_id, casillas=(widest, second)),
         ),
@@ -614,7 +614,7 @@ def test_degraded_read_stamps_every_row_and_finding_unvalidated() -> None:
     degraded read from a validated one.
     """
     audit = _audit(
-        _modelo("130", calculation_class="informative", tax_domain=TaxDomain.IRPF),
+        _modelo("130", calculation_class=CalculationClass.INFORMATIVE, tax_domain=TaxDomain.IRPF),
     )
     assert audit.registry_validated is False
     assert len(audit.rows) == 1
@@ -631,7 +631,7 @@ def test_validated_read_stamps_every_row_and_finding_validated() -> None:
     False would satisfy the degraded test above.
     """
     audit = build_classification_coherence_audit(
-        (_modelo("130", calculation_class="informative", tax_domain=TaxDomain.IRPF),),
+        (_modelo("130", calculation_class=CalculationClass.INFORMATIVE, tax_domain=TaxDomain.IRPF),),
         non_registry_modelo_codes=_NO_NON_REGISTRY_CODES,
         known_modelo_codes=frozenset({"130"}),
         registry_validated=True,
@@ -649,7 +649,7 @@ def test_flattened_findings_preserve_the_validated_label() -> None:
     findings that carry different labels; flattening via ``audit.findings``
     must preserve, not erase, the per-finding stamp.
     """
-    divergent = _modelo("130", calculation_class="informative", tax_domain=TaxDomain.IRPF)
+    divergent = _modelo("130", calculation_class=CalculationClass.INFORMATIVE, tax_domain=TaxDomain.IRPF)
 
     degraded = _audit(divergent)
     validated = build_classification_coherence_audit(

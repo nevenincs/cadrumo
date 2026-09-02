@@ -165,7 +165,7 @@ def _emit_profile_record_status(
     read_profile_record: ProfileRecordReader,
 ) -> None:
     """Emit a non-secret status report for one registered profile bucket."""
-    from ....application.workflow.profile_health import unavailable_profile_record_verdict
+    from ....application.workflow.profile_health import ProfileHealthStatus, unavailable_profile_record_verdict
     from ....domain.user_profile.errors import ProfileNotFoundError
     from ..config_payloads import RepairProfileResult
 
@@ -183,7 +183,7 @@ def _emit_profile_record_status(
             "status": "missing_profile_record",
             "precondition_action": resolve_cli_precondition_action(
                 unavailable_profile_record_verdict(
-                    status="missing_profile_record",
+                    status=ProfileHealthStatus.MISSING_PROFILE_RECORD,
                     source="none",
                     repairable_by_clearing_pointer=False,
                 )
@@ -257,7 +257,7 @@ def _emit_profile_record_unreadable_repair(
     profile_id: str,
     error: Exception,
 ) -> None:
-    from ....application.workflow.profile_health import unavailable_profile_record_verdict
+    from ....application.workflow.profile_health import ProfileHealthStatus, unavailable_profile_record_verdict
     from ..config_payloads import RepairProfileResult
 
     payload = {
@@ -270,7 +270,7 @@ def _emit_profile_record_unreadable_repair(
         "error": type(error).__name__,
         "precondition_action": resolve_cli_precondition_action(
             unavailable_profile_record_verdict(
-                status="profile_record_unreadable",
+                status=ProfileHealthStatus.PROFILE_RECORD_UNREADABLE,
                 source="none",
                 repairable_by_clearing_pointer=False,
             )

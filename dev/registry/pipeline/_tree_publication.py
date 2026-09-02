@@ -49,6 +49,7 @@ from ._casilla_export_refs import export_refs_by_casilla, write_generated_casill
 from ._export_tree import RenderedExportTree
 from ._provenance_manifest import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
+    ExportFragmentOutputDigest,
     ExportFragmentProvenanceManifest,
     collect_export_fragment_output_digests,
     load_export_fragment_provenance_manifest,
@@ -66,6 +67,7 @@ from ._tree_validation import (
 
 __all__ = [
     "GeneratedExportTreePublicationContext",
+    "GeneratedExportTreeTargetStateReceipt",
     "PublishedGeneratedExportTree",
     "publish_validated_generated_export_tree",
 ]
@@ -100,6 +102,24 @@ class GeneratedExportTreePublicationContext:
     temporary_root: Path
     target_root: Path
     target_export_root: Path
+    expected_target_state: GeneratedExportTreeTargetStateReceipt | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class GeneratedExportTreeTargetStateReceipt:
+    """The target state a read-only check observed before publication."""
+
+    manifest_sha256: str | None
+    output_files: tuple[ExportFragmentOutputDigest, ...]
+
+    @classmethod
+    def observe(cls, export_root: Path) -> GeneratedExportTreeTargetStateReceipt:
+        if not export_root.exists():
+            return cls(manifest_sha256=None, output_files=())
+        return cls(
+            manifest_sha256=_sha256(export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME),
+            output_files=collect_export_fragment_output_digests(export_root),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -133,6 +153,7 @@ def publish_validated_generated_export_tree(
     lock_identity = _lock_identity(context)
 
     with exclusive_file_lock(lock_identity):
+        _require_expected_target_state(context, target_export_root)
         recovery_completed = _recover_interrupted_publication(
             context=context,
             candidate_export_root=candidate_export_root,
@@ -264,6 +285,23 @@ def _prepare_publication_paths(context: GeneratedExportTreePublicationContext) -
     if target_export_root.exists():
         _require_complete_regular_tree(target_export_root, subject="generated target export root")
     return candidate_export_root, target_export_root
+
+
+def _require_expected_target_state(context: GeneratedExportTreePublicationContext, target_export_root: Path) -> None:
+    """Refuse a target that changed after the read-only preflight and before lock entry."""
+    expected = context.expected_target_state
+    if expected is None:
+        return
+    if expected.manifest_sha256 is None:
+        if target_export_root.exists():
+            raise RegistryValidationError("generated export target appeared after check and before publication lock")
+        return
+    if (
+        not target_export_root.exists()
+        or _sha256(target_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME) != expected.manifest_sha256
+        or collect_export_fragment_output_digests(target_export_root) != expected.output_files
+    ):
+        raise RegistryValidationError("generated export target changed after check and before publication lock")
 
 
 def _require_narrow_root(path: Path, *, subject: str) -> Path:

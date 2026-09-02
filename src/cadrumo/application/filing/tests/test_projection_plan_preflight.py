@@ -17,6 +17,7 @@ from ....core.modelo import Modelo
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -65,7 +66,7 @@ def _projection_authority() -> tuple[FilingRecordRenderContext, M303ProrrataActi
         length=4,
         kind=CasillaFieldKind.PROJECTION,
         projection_ref=reference,
-        data_type="text",
+        data_type=CasillaDataType.TEXT,
         required=True,
         padding="right_space",
         justification="left",

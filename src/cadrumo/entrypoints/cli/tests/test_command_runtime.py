@@ -14,6 +14,7 @@ from .._command_runtime import (
 from ..command_spec import (
     CommandSpec,
     CommandSpecGraph,
+    CommandWriteRoute,
     DeferredTarget,
     ExecutionPolicySpec,
     InvocationSpec,
@@ -34,7 +35,7 @@ _POLICY = ExecutionPolicySpec(
     capabilities=frozenset({"state-free"}),
     side_effects=frozenset({"none"}),
     performance="metadata",
-    write_route="none",
+    write_route=CommandWriteRoute.NONE,
 )
 _NO_SCHEMA = ResultSchemaSpec(SchemaState.NOT_SUPPORTED)
 

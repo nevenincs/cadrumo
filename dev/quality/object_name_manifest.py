@@ -18,7 +18,8 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 from cadrumo.core.hashing import canonical_json_bytes, prefixed_digest, sha256_file, validate_prefixed_digest
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.toml import freeze_toml, read_toml
-from dev.audit.object_names import ObjectNameAuditResult, ObjectNameDeclaration, ObjectNameKind, to_json
+
+from ..audit.object_names import ObjectNameAuditResult, ObjectNameDeclaration, ObjectNameKind, to_json
 
 __all__ = [
     "ObjectNameFilePrecondition",

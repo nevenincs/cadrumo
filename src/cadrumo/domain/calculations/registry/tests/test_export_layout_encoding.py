@@ -16,6 +16,7 @@ from .....core.export_layout_format import ExportLayoutFormat
 from ...export_field_kind import CasillaFieldKind
 from ..authority import bundled_authority
 from ..fixed_width_codec import ExportEncoding
+from ..schema_base import CasillaDataType
 from ..schema_exports import ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -36,7 +37,7 @@ def _record(*, record_id: str, encoding: str) -> ExportRecordDefinition:
                 literal="X",
                 offset=1,
                 length=1,
-                data_type="text",
+                data_type=CasillaDataType.TEXT,
                 required=True,
                 padding="none",
                 justification="none",

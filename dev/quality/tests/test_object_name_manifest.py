@@ -12,7 +12,8 @@ import rtoml
 from pydantic import ValidationError
 
 from cadrumo.core.hashing import prefixed_digest
-from dev.audit.object_names import (
+
+from ...audit.object_names import (
     ObjectNameAuditResult,
     ObjectNameDeclaration,
     ObjectNameFinding,
@@ -21,7 +22,7 @@ from dev.audit.object_names import (
     scan,
     to_json,
 )
-from dev.quality.object_name_manifest import (
+from ..object_name_manifest import (
     ObjectNameManifestError,
     ObjectNameRenameManifest,
     load_object_name_manifest,

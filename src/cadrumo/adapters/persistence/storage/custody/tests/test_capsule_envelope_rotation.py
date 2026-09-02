@@ -30,6 +30,7 @@ import pytest
 
 from ......core.config import Settings
 from ......core.hashing import prefixed_digest
+from ......core.profile_publication import ProfilePublicationKind
 from ..capsule import (
     load_committed_profile_password_material,
     publish_profile_custody_capsule,
@@ -85,7 +86,7 @@ def _publish(tmp_path: Path, settings: Settings) -> None:
     publish_profile_custody_capsule(
         profile_id=_PROFILE_ID,
         transaction_id=uuid4(),
-        publication_kind="enroll",
+        publication_kind=ProfilePublicationKind.ENROLL,
         password_envelope=envelope,
         sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
         data_files={},

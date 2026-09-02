@@ -24,6 +24,7 @@ from ...export_field_kind import CasillaFieldKind
 from ..export import derive_export_layouts_from_bindings, resolved_export_casillas, resolved_export_endpoints
 from ..fixed_width_codec import ExportEncoding
 from ..schema import DataBindingDefinition, ModeloRevision
+from ..schema_base import CasillaDataType
 from ..schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -48,7 +49,7 @@ def _casilla_field(field_id: str, casilla_id: CasillaId, *, offset: int) -> Expo
         length=10,
         kind=CasillaFieldKind.CASILLA,
         casilla_id=casilla_id,
-        data_type="money",
+        data_type=CasillaDataType.MONEY,
         required=False,
         padding="left_zero",
         justification="right",
@@ -70,7 +71,7 @@ def _projection_field() -> ExportFieldDefinition:
             field=M303ProrrataActivityProjectionField.CNAE,
             casilla_id=_PROJECTION_CASILLA,
         ),
-        data_type="text",
+        data_type=CasillaDataType.TEXT,
         required=False,
         padding="right_space",
         justification="left",

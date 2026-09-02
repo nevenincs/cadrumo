@@ -73,13 +73,18 @@ inventory is the source of truth for local and CI runtime selection. Its
 separate `next` row is a prerelease watch only; it is not a stable support or
 classifier claim until it has been promoted with evidence.
 
+The `next` row uses a provisionable rolling minor selector (currently `3.15`)
+while prereleases are available. Its evidence records the exact interpreter
+patch (currently CPython `3.15.0b4`); do not replace the rolling selector with a
+fixed RC identifier unless that exact interpreter can be provisioned.
+
 The repository's [`.python-version`](.python-version) is the exact Python
 identity used to build release artifacts. It is deliberately narrower than the
 support floor and must not be changed just to add a runtime to the matrix. To
 install selectors for local checks, run for example:
 
 ```console
-uv python install 3.13 3.14
+uv python install 3.13 3.14 3.15
 ```
 
 Then run the inventory-driven compatibility command from a clean checkout:

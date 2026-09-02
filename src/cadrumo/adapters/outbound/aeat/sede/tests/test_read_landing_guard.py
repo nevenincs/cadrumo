@@ -21,6 +21,7 @@ from __future__ import annotations
 import pytest
 
 from ......domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
+from ......domain.calculations.registry.schema_base import EvidenceTier
 from ......tests.aeat_literal_fixtures import (
     CENSAL_M036_FILING_TOOL_PATH_CANARY,
     CENSAL_MODIF_DOMICILIO_FISCAL_PATH_CANARY,
@@ -44,7 +45,7 @@ _READ_PREFIX = _READ_PATH.removesuffix("/index.zul")
 
 _POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-landing-guard-proof",
-    evidence_tier="official_source_guidance",
+    evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
     classification="authenticated_read_surface",
     allowed_hosts=(aeat_host("sede"),),
     synthetic_data_allowed=False,

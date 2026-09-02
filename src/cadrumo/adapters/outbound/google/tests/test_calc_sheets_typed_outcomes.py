@@ -8,15 +8,20 @@ import sys
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import pytest
+
+if TYPE_CHECKING:
+    from googleapiclient._apis.drive.v3.resources import DriveResource
+    from googleapiclient._apis.sheets.v4.resources import SheetsResource
 
 from .....application.storage.calc_sheets.engine import CALC_SHEETS_ENGINE_VERSION
 from .....application.storage.calc_sheets.records import SheetExportPlan
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....core.tax_domain import TaxDomain
 from .....domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
+from .....tests.google_credentials import unused_google_credentials
 from ...storage.errors import OutboundStorageConflictError, OutboundStorageError, OutboundStorageValidationError
 from ..calc_sheets_apply import apply_export_plan, preview_export_plan
 from ..calc_sheets_pull import (
@@ -201,7 +206,7 @@ def test_apply_missing_google_api_client_is_a_closed_safety_outcome() -> None:
 
 def test_apply_rejects_a_blank_root_folder_id_with_an_operator_decision() -> None:
     with pytest.raises(OutboundStorageValidationError) as raised:
-        apply_export_plan(cast(SheetExportPlan, object()), credentials=object(), root_folder_id="  ")
+        apply_export_plan(cast(SheetExportPlan, object()), credentials=unused_google_credentials(), root_folder_id="  ")
 
     _assert_closed_outcome(
         raised.value,
@@ -213,7 +218,9 @@ def test_apply_rejects_a_blank_root_folder_id_with_an_operator_decision() -> Non
 
 def test_preview_rejects_a_blank_root_folder_id_with_the_same_operator_decision() -> None:
     with pytest.raises(OutboundStorageValidationError) as raised:
-        preview_export_plan(cast(SheetExportPlan, object()), credentials=object(), root_folder_id="  ")
+        preview_export_plan(
+            cast(SheetExportPlan, object()), credentials=unused_google_credentials(), root_folder_id="  "
+        )
 
     _assert_closed_outcome(
         raised.value,
@@ -256,7 +263,9 @@ def test_pull_missing_google_api_client_is_a_closed_safety_outcome(
 
 def test_pull_rejects_a_blank_spreadsheet_id_with_an_operator_decision() -> None:
     with pytest.raises(OutboundStorageValidationError) as raised:
-        pull_operator_edits(cast(RegistrySnapshot, object()), spreadsheet_id="  ", credentials=object())
+        pull_operator_edits(
+            cast(RegistrySnapshot, object()), spreadsheet_id="  ", credentials=unused_google_credentials()
+        )
 
     _assert_closed_outcome(
         raised.value,
@@ -399,9 +408,24 @@ class _SheetsService:
         return _SheetsSpreadsheets(self._response)
 
 
+def _drive_resource(response: dict[str, object]) -> DriveResource:
+    """A Drive resource stand-in returning one canned metadata response.
+
+    The vendor resource types are ``type_check_only``, so a stand-in cannot
+    subclass one; naming the type here keeps the cast in a single place
+    instead of at every call site.
+    """
+    return cast("DriveResource", _DriveService(response))
+
+
+def _sheets_resource(response: dict[str, object]) -> SheetsResource:
+    """A Sheets resource stand-in returning one canned metadata response."""
+    return cast("SheetsResource", _SheetsService(response))
+
+
 def test_non_mapping_ownership_metadata_is_an_operator_decision() -> None:
     with pytest.raises(OutboundStorageValidationError) as raised:
-        _verify_ownership(_DriveService({"appProperties": "not-a-mapping"}), _SPREADSHEET_ID)
+        _verify_ownership(_drive_resource({"appProperties": "not-a-mapping"}), _SPREADSHEET_ID)
 
     _assert_closed_outcome(
         raised.value,
@@ -413,7 +437,7 @@ def test_non_mapping_ownership_metadata_is_an_operator_decision() -> None:
 
 def test_foreign_spreadsheet_is_a_state_divergence_operator_decision() -> None:
     with pytest.raises(OutboundStorageConflictError) as raised:
-        _verify_ownership(_DriveService({"appProperties": {}}), _SPREADSHEET_ID)
+        _verify_ownership(_drive_resource({"appProperties": {}}), _SPREADSHEET_ID)
 
     _assert_closed_outcome(
         raised.value,
@@ -425,7 +449,7 @@ def test_foreign_spreadsheet_is_a_state_divergence_operator_decision() -> None:
 
 def test_non_list_developer_metadata_is_an_operator_decision() -> None:
     with pytest.raises(OutboundStorageValidationError) as raised:
-        _read_developer_metadata(_SheetsService({"developerMetadata": {}}), _SPREADSHEET_ID)
+        _read_developer_metadata(_sheets_resource({"developerMetadata": {}}), _SPREADSHEET_ID)
 
     _assert_closed_outcome(
         raised.value,

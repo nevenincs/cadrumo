@@ -209,11 +209,27 @@ def _drive_service(credentials: Credentials) -> _DriveService:
     return cast(_DriveService, build("drive", "v3", credentials=credentials, cache_discovery=False))
 
 
+def _resolved_drive_service(credentials: Credentials | None, service: _DriveService | None) -> _DriveService:
+    """Return the injected Drive service, or build one from credentials.
+
+    Neither present is a caller defect rather than a recoverable condition:
+    absence is reported explicitly instead of being carried into a transport
+    call that would fail with an unrelated message.
+    """
+    if service is not None:
+        return service
+    if credentials is None:
+        raise OutboundStorageValidationError(
+            "resolving a Drive document requires either credentials or an injected service",
+        )
+    return _drive_service(credentials)
+
+
 def resolve_document_link(
     *,
     source: AttachmentSource,
     reference: str,
-    credentials: Credentials,
+    credentials: Credentials | None = None,
     service: _DriveService | None = None,
 ) -> bytes:
     """Resolve a recorded :class:`~domain.attachments.AttachmentSource` link to bytes.
@@ -222,6 +238,8 @@ def resolve_document_link(
         source: The recorded link source.
         reference: The link reference (Drive URL / file id, Gmail link, or URL).
         credentials: Google OAuth credentials carrying the granted scopes.
+            Optional only because ``service`` may be injected instead; one
+            of the two must be supplied.
         service: Optional pre-built Drive ``v3`` service. When ``None`` (the
             production path) the service is built from ``credentials``; tests
             inject a transport-only seam here so the fetch path runs without a
@@ -263,7 +281,7 @@ def resolve_document_link(
                 facts={"source": source.value, "reference_identified": False},
                 outcome=NoRecoveryOutcome.OPERATOR_DECISION,
             )
-        drive_service = service if service is not None else _drive_service(credentials)
+        drive_service = _resolved_drive_service(credentials, service)
         return _download_drive_file_from_service(file_id, drive_service)
     if source is AttachmentSource.URL:
         raise _document_link_terminal_refusal(
@@ -343,7 +361,7 @@ def _download_drive_file_from_service(file_id: str, service: _DriveService) -> b
 def list_drive_folder_documents(
     *,
     folder_id: str,
-    credentials: Credentials,
+    credentials: Credentials | None = None,
     service: _DriveService | None = None,
 ) -> DriveFolderListing:
     """List the PDF/image children of a ``drive.file``-reachable Drive folder.
@@ -362,6 +380,8 @@ def list_drive_folder_documents(
         folder_id: The Drive folder id (parsed the same way a document
             reference is via :func:`parse_drive_file_id`, or passed as a bare id).
         credentials: Google OAuth credentials carrying the granted scopes.
+            Optional only because ``service`` may be injected instead; one
+            of the two must be supplied.
         service: Optional pre-built Drive ``v3`` service (test seam).
 
     Returns:
@@ -374,7 +394,7 @@ def list_drive_folder_documents(
         :exc:`~adapters.outbound.storage.OutboundStorageNetworkError`:
             On any other transport or unmapped Drive failure.
     """
-    drive_service = service if service is not None else _drive_service(credentials)
+    drive_service = _resolved_drive_service(credentials, service)
     documents: list[DriveFolderDocument] = []
     skipped = 0
     for document in _iter_drive_folder_files(drive_service, folder_id=folder_id):

@@ -79,6 +79,14 @@ jobs:
             echo 'RUNTIME_MATRIX'
           } >> "$GITHUB_OUTPUT"
 
+      - name: Enforce future-directive AST policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run --no-sync pytest -q --tb=short \
+            dev/tests/test_import_hygiene_scan.py \
+            -k future_directive
+
   build-python-cohort:
     name: Cadrumo / build immutable compatibility cohort / Python 3.13
     # This is the only cohort construction in this workflow.  Runtime rows

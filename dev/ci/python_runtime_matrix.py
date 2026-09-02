@@ -139,8 +139,14 @@ def _parse_record(value: object, *, context: str, phase: RuntimePhase) -> Runtim
         raise RuntimeMatrixError(f"{context}.selector is not a Python selector: {selector!r}")
     if phase is RuntimePhase.STABLE and selector != minor:
         raise RuntimeMatrixError(f"{context}.selector {selector!r} must select stable minor {minor}")
-    if phase is RuntimePhase.PRERELEASE and not selector.startswith(f"{minor}."):
-        raise RuntimeMatrixError(f"{context}.selector {selector!r} does not target prerelease minor {minor}")
+    # A bare minor is intentional for the rolling prerelease channel: it lets
+    # uv provision the currently available prerelease instead of naming an RC
+    # that may no longer be available from the configured interpreter source.
+    if phase is RuntimePhase.PRERELEASE and selector != minor and not selector.startswith(f"{minor}."):
+        raise RuntimeMatrixError(
+            f"{context}.selector {selector!r} must be the rolling minor {minor!r} "
+            f"or a versioned selector for that minor",
+        )
     implementation = _require_string(row["implementation"], context=f"{context}.implementation")
     if implementation != "CPython":
         raise RuntimeMatrixError(f"{context}.implementation must be 'CPython', got {implementation!r}")

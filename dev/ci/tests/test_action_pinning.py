@@ -19,6 +19,7 @@ are different code with identical spelling.
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 from typing import Final
@@ -165,3 +166,57 @@ def test_the_gate_refuses_a_bare_directory_glob() -> None:
 
     assert arguments == ["dist/*"]
     assert not all(argument.endswith((".whl", ".tar.gz")) for argument in arguments)
+
+
+def test_release_please_bumps_every_version_surface_the_release_gate_compares() -> None:
+    """The versioning tool and the readiness gate must agree on what a version is.
+
+    The gate refuses a release unless the root project, both companion projects,
+    the package initialiser, the manifest and both exact companion pins report
+    one version. The tool bumps the root, the initialiser and the manifest on
+    its own; everything else it touches only because it is configured to.
+
+    Configured wrong, the release still happens: the branch is written, the tag
+    is cut, and the refusal arrives afterwards from the product's own gate,
+    against a version that already exists. So the two are compared here.
+    """
+    config = json.loads((REPO_ROOT / "release-please-config.json").read_text(encoding="utf-8"))
+    extra_files = set(config["packages"]["."].get("extra-files", []))
+
+    companions = sorted(
+        path.relative_to(REPO_ROOT).as_posix() for path in (REPO_ROOT / "packaging").glob("*/pyproject.toml")
+    )
+    required = {"src/cadrumo/__init__.py", "pyproject.toml", *companions}
+
+    assert required <= extra_files, (
+        f"release-please does not bump these version surfaces: {sorted(required - extra_files)}. "
+        "The release-readiness gate compares them, so a release would be cut and then refused."
+    )
+
+
+#: Surfaces the `python` release type rewrites from its own knowledge of the
+#: shape. A run confirmed it bumps `__version__` in a package initialiser with
+#: no annotation present, so requiring one there would fail against a file the
+#: tool already handles.
+_NATIVELY_UPDATED: Final = frozenset({"src/cadrumo/__init__.py"})
+
+
+def test_every_other_configured_extra_file_carries_the_annotation_that_moves_it() -> None:
+    """A path in `extra-files` with no annotation is a surface silently left behind.
+
+    Outside the shapes the release type knows, the generic updater rewrites a
+    version only on lines marked `x-release-please-version`. A file listed
+    without one is read, matched against nothing, and written back unchanged -
+    which reports success and ships a stale version.
+    """
+    config = json.loads((REPO_ROOT / "release-please-config.json").read_text(encoding="utf-8"))
+
+    unmarked = [
+        entry
+        for entry in config["packages"]["."].get("extra-files", [])
+        if isinstance(entry, str)
+        and entry not in _NATIVELY_UPDATED
+        and "x-release-please-version" not in (REPO_ROOT / entry).read_text(encoding="utf-8")
+    ]
+
+    assert unmarked == [], f"these files are configured for bumping but carry no version annotation: {unmarked}"

@@ -10,6 +10,7 @@ from typing import override
 import pytest
 
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....tests.google_credentials import unused_google_credentials
 from ...google.tests.drive_media_server import drive_files_list_endpoint
 from .. import _google_drive as drive_module
 from .. import _google_drive_metadata as drive_metadata_module
@@ -441,7 +442,9 @@ def _assert_terminal_contract(
 
 
 def _provider() -> GoogleDriveProvider:
-    return GoogleDriveProvider(credentials=object(), root_folder_id="drive-root", vault_folder_name="cadrumo-vault")
+    return GoogleDriveProvider(
+        credentials=unused_google_credentials(), root_folder_id="drive-root", vault_folder_name="cadrumo-vault"
+    )
 
 
 def _owned_folder(identifier: str, name: str) -> dict[str, object]:

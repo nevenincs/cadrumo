@@ -1,0 +1,7 @@
+[[targets]]
+modelo = "200"
+revision = "2025-y-siguientes"
+source_ref = "aeat-dr-200-2025"
+source_sha256 = "92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509"
+layout_id = "generated-modelo-200-2025-y-siguientes-fichero"
+line_ending = "crlf"

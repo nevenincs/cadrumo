@@ -5,6 +5,7 @@ from __future__ import annotations
 from ...core.modelo import Modelo
 from .command_spec import (
     CommandSpec,
+    CommandWriteRoute,
     DeferredTarget,
     ExecutionPolicySpec,
     InvocationSpec,
@@ -18,7 +19,7 @@ from .command_spec import (
 )
 
 _CALCULATION_READ = ExecutionPolicySpec(
-    frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute", "none"
+    frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute", CommandWriteRoute.NONE
 )
 _STR = ValueContract(DeferredTarget("builtins", "str"))
 _INT = ValueContract(DeferredTarget("builtins", "int"))

@@ -44,6 +44,7 @@ from ..remote_state_guard import (
     RemoteStateGuardResult,
     evaluate_remote_operation,
 )
+from ..schema_base import EvidenceTier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -57,7 +58,7 @@ def _authenticated_policy() -> RemoteStateGuardPolicy:
     """Return an authenticated-read policy admitting exactly one AEAT host."""
     return RemoteStateGuardPolicy(
         id="authority-canonicalisation-probe",
-        evidence_tier="official_source_guidance",
+        evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
         classification="authenticated_read_surface",
         allowed_hosts=(_WWW6_HOST,),
         synthetic_data_allowed=False,

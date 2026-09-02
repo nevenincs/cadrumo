@@ -270,7 +270,20 @@ def test_record_design_selection_cannot_consult_registry_export_layouts() -> Non
     } <= top_level_imported_symbols
     assert top_level_direct_imports == set()
     assert resolver_imports == set()
-    assert resolver_globals == {"RegistryValidationError", "ResolvedRecordDesignBinary", "date", "verify_source_file"}
+    # `RegistrySourceKind` is admitted for the reason the floor above states: it moved
+    # with a promotion, not with a change here. The selector used to compare
+    # `source.kind` against a bare string and now compares it against the member the
+    # schema defines, which is what this campaign asks of every closed vocabulary. It
+    # is schema vocabulary from `schema_base`, not export-layout machinery, so the
+    # isolation this test protects is unchanged -- the export-layout assertion above
+    # still has to hold on its own.
+    assert resolver_globals == {
+        "RegistrySourceKind",
+        "RegistryValidationError",
+        "ResolvedRecordDesignBinary",
+        "date",
+        "verify_source_file",
+    }
     assert call_names == {"RegistryValidationError", "ResolvedRecordDesignBinary", "date", "verify_source_file"}
     # `applies_across` is a temporal check on a SOURCE -- the selector confirming a
     # record design applies across the filing year -- not a reach into an export

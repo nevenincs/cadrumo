@@ -11,9 +11,9 @@ from typing import cast
 import grimp
 import pytest
 
-from dev.audit.duplication import DuplicationResult
-from dev.audit.semantic_duplication import Candidate
-from dev.quality.object_name_graph import (
+from ...audit.duplication import DuplicationResult
+from ...audit.semantic_duplication import Candidate
+from ..object_name_graph import (
     AdvisoryEvidence,
     HardEdge,
     InventoryLike,
@@ -350,8 +350,7 @@ def test_semantic_and_clone_advisory_evidence_never_connect_operations() -> None
     assert len(components) == 2
     assert all(any(item.source == "clone:unavailable" for item in component.risk.advisory) for component in components)
     assert all(
-        any(item.source == "semantic:call_fingerprint" for item in component.risk.advisory)
-        for component in components
+        any(item.source == "semantic:call_fingerprint" for item in component.risk.advisory) for component in components
     )
     assert all(
         next(item for item in component.risk.advisory if item.source == "clone:unavailable").detail == "npx absent"

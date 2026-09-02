@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from .....tests.aeat_literal_fixtures import AEAT_NONCANONICAL_HTTP_MANUAL_URL_CANARY
 from ..errors import RegistryValidationError
 from ..legal import verify_legal_reference
+from ..schema_base import EvidenceTier
 from ..schema_references import LegalReference, SourceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -91,7 +92,7 @@ def test_an_unreviewed_legal_reference_still_cannot_supply_filing_grade_authorit
 def test_legal_reference_preserves_https_permalink_fragment() -> None:
     reference = LegalReference(
         id="ley-58-2003:art-1",
-        evidence_tier="legal_authority",
+        evidence_tier=EvidenceTier.LEGAL_AUTHORITY,
         authority="boe",
         kind="ley",
         corpus_ref="corpus/normatives/html/ley-58-2003.html#a1",
@@ -112,7 +113,7 @@ def test_legal_reference_refuses_noncanonical_permalink(permalink: str) -> None:
     with pytest.raises(ValidationError, match="permalink"):
         LegalReference(
             id="ley-58-2003:art-1",
-            evidence_tier="legal_authority",
+            evidence_tier=EvidenceTier.LEGAL_AUTHORITY,
             authority="boe",
             kind="ley",
             corpus_ref="corpus/normatives/html/ley-58-2003.html#a1",

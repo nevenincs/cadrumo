@@ -30,6 +30,7 @@ from ..live_parity import (
 )
 from ..remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 from ..renta_web_open_oracle import RentaWebOpenOracle
+from ..schema_base import EvidenceTier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -80,7 +81,7 @@ class _ScriptedOracle:
 def _read_only_policy() -> RemoteStateGuardPolicy:
     return RemoteStateGuardPolicy(
         id="pre-flight-test-policy",
-        evidence_tier="executable_parity_evidence",
+        evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
         classification="open_simulator",
         allowed_hosts=(_WWW6_HOST,),
         synthetic_data_allowed=False,
@@ -92,7 +93,7 @@ def _read_only_policy() -> RemoteStateGuardPolicy:
 def _static_only_policy() -> RemoteStateGuardPolicy:
     return RemoteStateGuardPolicy(
         id="pre-flight-static-only-policy",
-        evidence_tier="official_source_guidance",
+        evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
         classification="static_official_only",
         allowed_hosts=(),
         synthetic_data_allowed=False,

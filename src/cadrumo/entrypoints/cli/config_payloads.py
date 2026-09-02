@@ -42,7 +42,7 @@ from ...application.diagnostic_models import (
 from ...application.user_profile.aggregate import ProfileRestoreAuthority
 from ...application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportTransport
 from ...application.workflow.events import WorkflowReasonClass
-from ...application.workflow.profile_health import ProfileHealthStatus, ProfileSource
+from ...application.workflow.profile_health import ProfileHealthStatusValue, ProfileSource
 from ...core.errors.severity import BaseSeverity
 from ...core.hex import Hex64Str
 from ...core.identity import BucketId, ProfileId, ProfileLabel
@@ -955,7 +955,7 @@ class ActiveProfileHealthPayload(OutputSchema):
 
     active_profile: str | None
     source: ProfileSource
-    status: ProfileHealthStatus
+    status: ProfileHealthStatusValue
     registered_bucket: bool = False
     profile_record_present: bool = False
     profile_record_error: str = ""

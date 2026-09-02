@@ -265,6 +265,7 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
             SecureObjectRevisionConflictError: Contention persisted across every
                 attempt.
         """
+
         def write(document: DocumentT, *, expected_revision_id: str) -> SecureObjectWrite:
             return self.to_secure_object_write(document, expected_revision_id=expected_revision_id)
 

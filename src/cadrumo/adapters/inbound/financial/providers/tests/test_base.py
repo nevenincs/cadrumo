@@ -14,6 +14,7 @@ from decimal import Decimal
 
 import pytest
 
+from ......core.decimal.grammar import DecimalSeparator
 from ......core.tabular import coerce_cell_text
 from ......domain.transactions.raw_transaction import RawTransaction, SourceFormat
 from ......tests import FIXTURES_DIR
@@ -85,10 +86,10 @@ def test_detect_provider_uses_extension_and_validation() -> None:
 
 def test_parse_amount_value_respects_explicit_decimal_separator() -> None:
     """Explicit decimal separators should disambiguate locale-specific amounts."""
-    assert parse_amount_value("1.234", decimal_separator=",") == Decimal("1234")
-    assert parse_amount_value("1,234", decimal_separator=".") == Decimal("1234")
-    assert parse_amount_value("1.234,56", decimal_separator=",") == Decimal("1234.56")
-    assert parse_amount_value("1,234.56", decimal_separator=".") == Decimal("1234.56")
+    assert parse_amount_value("1.234", decimal_separator=DecimalSeparator.COMMA) == Decimal("1234")
+    assert parse_amount_value("1,234", decimal_separator=DecimalSeparator.PERIOD) == Decimal("1234")
+    assert parse_amount_value("1.234,56", decimal_separator=DecimalSeparator.COMMA) == Decimal("1234.56")
+    assert parse_amount_value("1,234.56", decimal_separator=DecimalSeparator.PERIOD) == Decimal("1234.56")
 
 
 def test_financial_archive_cell_text_binds_the_canonical_temporal_policy() -> None:

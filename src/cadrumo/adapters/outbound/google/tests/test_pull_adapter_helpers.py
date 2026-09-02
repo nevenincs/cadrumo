@@ -23,6 +23,7 @@ import pytest
 from .....application.storage.calc_sheets.engine import CALC_SHEETS_ENGINE_VERSION, build_export_plan, registry_sha
 from .....core.decimal.coercion import coerce_decimal as _coerce_decimal
 from .....domain.calculations.registry.authority import bundled_authority
+from .....tests.google_credentials import unused_google_credentials
 from ...storage.errors import OutboundStorageConflictError, OutboundStorageValidationError
 from ..calc_sheets_pull import (
     _classify_metadata_match,
@@ -342,7 +343,7 @@ def test_pull_operator_edits_refuses_blank_spreadsheet_id_before_service_build()
     snapshot = modelo_130_2025_1t_snapshot()
 
     with pytest.raises(OutboundStorageValidationError) as raised:
-        pull_operator_edits(snapshot=snapshot, spreadsheet_id="  ", credentials=object())
+        pull_operator_edits(snapshot=snapshot, spreadsheet_id="  ", credentials=unused_google_credentials())
 
     assert raised.value.context == {"spreadsheet_id": "  "}
     assert raised.value.translated_message == "adapters.google.calc_sheets.errors.spreadsheet_id_blank"

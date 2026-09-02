@@ -14,6 +14,7 @@ from ....core.config import Settings
 from ....core.decimal.coercion import coerce_finite_european_decimal, normalize_decimal_separators
 from ....core.identity import AeatBoxNumber
 from ....core.models import STRICT_FROZEN_CONFIG
+from .checker_oracle_flow import CheckerDriverMode, CheckerDriverModeValue
 from .errors import RegistryValidationError
 from .external_grounding import (
     BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH,
@@ -119,7 +120,7 @@ class RentaWebOpenDriver(Protocol):
     """Execution boundary for live or replay Renta WEB Open adapters."""
 
     @property
-    def mode(self) -> Literal["live", "replay"]:
+    def mode(self) -> CheckerDriverModeValue:
         """Identify whether this driver talks to a real surface or replays a capture.
 
         Returns:
@@ -180,7 +181,7 @@ class RentaWebOpenReplayDriver:
     """Deterministic local replay driver for captured Renta WEB Open outputs."""
 
     @property
-    def mode(self) -> Literal["replay"]:
+    def mode(self) -> Literal[CheckerDriverMode.REPLAY]:
         """Report this driver as a replay surface.
 
         Returns:
@@ -188,7 +189,7 @@ class RentaWebOpenReplayDriver:
             rather than scraping the live Renta WEB Open simulator, so the
             oracle can run deterministically offline.
         """
-        return "replay"
+        return CheckerDriverMode.REPLAY
 
     def planned_operations(
         self,
@@ -519,7 +520,7 @@ def _overall_verdict(fields: tuple[ParityFieldComparison, ...]) -> Literal["matc
 def _narrative_for_verdict(
     verdict: Literal["match", "mismatch", "unverifiable"],
     *,
-    driver_mode: Literal["live", "replay"],
+    driver_mode: CheckerDriverModeValue,
 ) -> str:
     if verdict == "match":
         return f"Renta WEB Open {driver_mode} parity matched every expected field"

@@ -6,12 +6,11 @@
 #
 # This is not a ratchet. It stores no counts and no ceilings, and shrinking it
 # is not the measure of progress; the requirement is that no shared name inside
-# a layer sits unexplained. A tenth collision fails the gate whatever the other
-# nine say.
+# a layer sits unexplained. Any newly surfaced collision fails the gate.
 #
 # Cross-layer collisions carry no rows. A layer restating a concept in its own
 # vocabulary is what the hexagonal boundary is for, and demanding a written
-# reason for each would bury these nine.
+# reason for each would bury the corpus.
 #
 # `class` is one of:
 #   contract_conflict     - the two definitions disagree about what they accept
@@ -26,17 +25,6 @@
 #                           where it sits. No action owed.
 
 schema_version = 1
-
-[extract_verdict_from_response_text]
-class = "duplicate_owed_collapse"
-sites = ["adapters/outbound/aeat/sede/groi_check.py", "adapters/outbound/aeat/sede/nif_iva_check.py"]
-reason = """
-Byte-identical bodies in one package. Both classify a Spanish-language verdict
-string, and both already depend on the shared negative-marker table in that
-package's `_adapter_utils`, which is where the single definition belongs. This
-is the only one of the nine whose two bodies are the same, and the only one
-where collapsing loses nothing.
-"""
 
 [validate_category_id]
 class = "duplicate_owed_collapse"

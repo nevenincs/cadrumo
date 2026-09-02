@@ -47,6 +47,7 @@ import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 import rtoml
 
@@ -62,7 +63,12 @@ from ._render_profile import load_render_profile, load_render_profile_source_evi
 from ._semantic_map_join import join_record_design_semantics
 from ._semantic_map_loader import load_semantic_map
 
-__all__ = ["RenderComparison", "compare_revision_against_committed", "parsed_tree_file"]
+__all__ = [
+    "GeneratedExportBootstrapTransport",
+    "RenderComparison",
+    "compare_revision_against_committed",
+    "parsed_tree_file",
+]
 
 _SERIALIZER_CONVENTION = "rtoml-pretty-v1"
 
@@ -201,30 +207,42 @@ class RevisionRenderInputs:
     transport_profile: ExportTreeTransportProfile
 
 
+@dataclass(frozen=True, slots=True)
+class GeneratedExportBootstrapTransport:
+    """The explicit static transport identity for an unpublished generated tree.
+
+    A revision without a committed generated layout cannot lend its transport
+    fields to the generator. Bootstrap callers therefore name this typed
+    identity, which is checked against the generator's revision-keyed layout-id
+    convention rather than inferred from a neighbouring tree.
+    """
+
+    layout_id: str
+    line_ending: Literal["crlf", "lf", "none"]
+    source_ref: str
+    source_sha256: str
+
+
 def revision_render_inputs(
     authority: ValidatedRegistryAuthority,
     *,
     modelo: str,
     revision: str,
     source_ref: str | None = None,
+    bootstrap_transport: GeneratedExportBootstrapTransport | None = None,
 ) -> RevisionRenderInputs:
     """Derive one revision's render inputs from the validated authority.
 
     Raises:
-        ValueError: If the revision declares no generated export layout, a requested
-            record-design source is not declared by the revision, or its authored
-            inputs are absent. Each is reported by name rather than substituted,
-            because a silent fallback would derive the wrong thing and look like
-            success.
+        ValueError: If the source selector is undeclared, a layout is absent
+            without an explicit bootstrap transport, or authored inputs are
+            absent. Each is reported by name rather than substituted, because a
+            silent fallback would derive the wrong thing and look like success.
     """
     definition = authority.modelo(modelo)
     if revision not in definition.revisions:
         raise ValueError(f"modelo {modelo} declares no revision {revision!r}")
     selected = definition.revisions[revision]
-    if not selected.export_layouts:
-        raise ValueError(f"{modelo}/{revision} declares no export layout to render")
-    layout = selected.export_layouts[0]
-
     sources = authority.catalogues.sources
     design_refs = [
         ref
@@ -248,6 +266,31 @@ def revision_render_inputs(
     if epoch is None:  # pragma: no cover - filtered above, restated for the type checker
         raise ValueError(f"source {selected_source_ref} declares no design epoch")
 
+    if selected.export_layouts:
+        layout = selected.export_layouts[0]
+        layout_id = str(layout.id)
+        line_ending = layout.records[0].line_ending
+    else:
+        if bootstrap_transport is None:
+            raise ValueError(f"{modelo}/{revision} declares no export layout to render")
+        expected_layout_id = f"generated-modelo-{modelo}-{revision}-fichero"
+        if bootstrap_transport.layout_id != expected_layout_id:
+            raise ValueError(
+                f"{modelo}/{revision} bootstrap layout id must be {expected_layout_id!r}, "
+                f"got {bootstrap_transport.layout_id!r}",
+            )
+        if bootstrap_transport.source_ref != str(selected_source_ref):
+            raise ValueError(
+                f"{modelo}/{revision} bootstrap source must be {str(selected_source_ref)!r}, "
+                f"got {bootstrap_transport.source_ref!r}",
+            )
+        if bootstrap_transport.source_sha256 != sources[selected_source_ref].sha256:
+            raise ValueError(
+                f"{modelo}/{revision} bootstrap source digest does not match selected source {selected_source_ref!r}",
+            )
+        layout_id = bootstrap_transport.layout_id
+        line_ending = bootstrap_transport.line_ending
+
     semantic_root = _AUTHORED_ROOT / "mappings" / f"modelo_{modelo}" / epoch
     profile_root = _AUTHORED_ROOT / "render_profiles" / f"modelo_{modelo}" / epoch
     for root in (semantic_root, profile_root):
@@ -267,6 +310,12 @@ def revision_render_inputs(
         filing_year=selected.valid_from.year,
         design_epoch=epoch,
     )
+    if (
+        bootstrap_transport is not None
+        and not selected.export_layouts
+        and bootstrap_transport.source_sha256 != intermediate.source.source_sha256
+    ):
+        raise ValueError(f"{modelo}/{revision} bootstrap source changed while assembling render inputs")
     inspection = RegistryRevisionInspection.from_revision(
         modelo=definition,
         revision=selected,
@@ -284,16 +333,16 @@ def revision_render_inputs(
         design_epoch=epoch,
         source_ref=selected_source_ref,
         source_sha256=intermediate.source.source_sha256,
-        layout_id=str(layout.id),
+        layout_id=layout_id,
         format="fixed_width",
         encoding=ExportEncoding.ISO_8859_1,
-        line_ending=layout.records[0].line_ending,
+        line_ending=line_ending,
         serializer_convention=_SERIALIZER_CONVENTION,
     )
 
     return RevisionRenderInputs(
         revision_id=selected.id,
-        layout_id=str(layout.id),
+        layout_id=layout_id,
         joined=joined,
         semantic_map=semantic_map,
         render_profile=render_profile,

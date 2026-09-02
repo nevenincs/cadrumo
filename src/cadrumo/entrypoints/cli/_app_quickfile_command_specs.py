@@ -5,6 +5,7 @@ from __future__ import annotations
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
     CommandSpec,
+    CommandWriteRoute,
     DeferredTarget,
     ExecutionPolicySpec,
     InvocationSpec,
@@ -21,7 +22,7 @@ _POLICY = ExecutionPolicySpec(
     frozenset({"calculation", "encrypted-facts", "filing"}),
     frozenset({"local-state"}),
     "compute",
-    "profile-bound",
+    CommandWriteRoute.PROFILE_BOUND,
     handoff=True,
 )
 _STR = ValueContract(DeferredTarget("builtins", "str"))

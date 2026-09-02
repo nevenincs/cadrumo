@@ -20,6 +20,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources.bundled_data import bundled_path
+from ...calculations.registry.schema_base import EvidenceTier
 from ...calculations.registry.schema_references import LegalReference, SourceReference
 from .._grounding import legal_ref_failures
 from ..errors import IvaCatalogueError
@@ -92,7 +93,7 @@ def _legal(ref_id: str) -> LegalReference:
     """Build one schema-valid legal row whose corpus file is absent."""
     return LegalReference(
         id=ref_id,
-        evidence_tier="legal_authority",
+        evidence_tier=EvidenceTier.LEGAL_AUTHORITY,
         authority="boe",
         kind="ley",
         corpus_ref="corpus/normatives/html/does-not-exist.html#a1",

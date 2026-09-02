@@ -14,7 +14,7 @@ from .._command_policy import (
     CommandWriteRouteValue,
 )
 from .._command_schema import CommandCapabilityClass
-from ..command_spec import Capability, SideEffect
+from ..command_spec import Capability, CommandWriteRoute, SideEffect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -58,7 +58,7 @@ def _classification(
 def test_policy_is_immutable_and_preserves_explicit_safe_judgments() -> None:
     policy = CommandExecutionPolicy(
         classification=_classification(capabilities=frozenset({"state-free"}), side_effects=frozenset({"none"})),
-        write_route="none",
+        write_route=CommandWriteRoute.NONE,
     )
 
     assert not policy.destructive

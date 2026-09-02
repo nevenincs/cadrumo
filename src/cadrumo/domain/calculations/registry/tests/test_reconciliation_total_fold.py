@@ -60,24 +60,24 @@ def test_totals_from_several_expectations_merge_into_one_mapping() -> None:
     """The fold is a union across expectations, not a pick of one."""
     folded = fold_reconciliation_total_casilla_ids(
         (
-            _expectation("e1", {"ingresar": "15"}),
-            _expectation("e2", {"devolver": "16"}),
+            _expectation("e1", {SettlementDirection.INGRESAR: "15"}),
+            _expectation("e2", {SettlementDirection.DEVOLVER: "16"}),
         ),
     )
 
-    assert dict(folded) == {"devolver": "16", "ingresar": "15"}
+    assert dict(folded) == {SettlementDirection.DEVOLVER: "16", SettlementDirection.INGRESAR: "15"}
 
 
 def test_the_same_casilla_declared_twice_is_not_a_conflict() -> None:
     """Repetition is harmless; only disagreement is a fault."""
     folded = fold_reconciliation_total_casilla_ids(
         (
-            _expectation("e1", {"ingresar": "15"}),
-            _expectation("e2", {"ingresar": "15"}),
+            _expectation("e1", {SettlementDirection.INGRESAR: "15"}),
+            _expectation("e2", {SettlementDirection.INGRESAR: "15"}),
         ),
     )
 
-    assert dict(folded) == {"ingresar": "15"}
+    assert dict(folded) == {SettlementDirection.INGRESAR: "15"}
 
 
 def test_conflicting_totals_for_one_kind_are_refused() -> None:
@@ -90,8 +90,8 @@ def test_conflicting_totals_for_one_kind_are_refused() -> None:
     with pytest.raises(RegistryValidationError) as exc_info:
         fold_reconciliation_total_casilla_ids(
             (
-                _expectation("e1", {"ingresar": "15"}),
-                _expectation("e2", {"ingresar": "99"}),
+                _expectation("e1", {SettlementDirection.INGRESAR: "15"}),
+                _expectation("e2", {SettlementDirection.INGRESAR: "99"}),
             ),
         )
 
@@ -115,8 +115,8 @@ def test_the_fold_is_ordered_so_two_surfaces_cannot_differ_by_iteration() -> Non
     """Deterministic key order: the subview serialises this mapping."""
     folded = fold_reconciliation_total_casilla_ids(
         (
-            _expectation("e1", {"ingresar": "15"}),
-            _expectation("e2", {"devolver": "16"}),
+            _expectation("e1", {SettlementDirection.INGRESAR: "15"}),
+            _expectation("e2", {SettlementDirection.DEVOLVER: "16"}),
         ),
     )
 

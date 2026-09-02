@@ -156,14 +156,14 @@ def join_record_design_semantics(
     anomaly_exceptions: tuple[SemanticMapAnomalyException, ...] = (),
 ) -> JoinedRecordDesign:
     """Join static parser/map evidence through a non-filing revision inspection."""
-    validate_semantic_map(
+    resolved_map = validate_semantic_map(
         semantic_map,
         intermediate,
         inspection,
         anomaly_exceptions=anomaly_exceptions,
     )
     return _join_record_design_semantics(
-        semantic_map,
+        resolved_map,
         intermediate,
         revision_id=inspection.revision_id,
         projection_endpoints=inspection.projection_endpoints,

@@ -10,7 +10,7 @@ name = "cadrumo-data-official"
 # two ever drift, so the companion can only ship at the same version as the
 # runtime wheel that resolves it. Bump both (and the sibling
 # `cadrumo-data-manuals`) together on every release.
-version = "0.2.2"
+version = "0.2.2" # x-release-please-version
 description = "Official AEAT diseños de registro / workbooks and normative PDFs (corpus source binaries) for the Cadrumo distribution"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -28,6 +28,7 @@ classifiers = [
   "Intended Audience :: Developers",
   "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Office/Business :: Financial",
 ]
 

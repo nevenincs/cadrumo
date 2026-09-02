@@ -23,6 +23,7 @@ from collections.abc import Iterator, Sequence
 from pathlib import Path
 from typing import TypedDict, override
 
+from .....core.decimal.grammar import DecimalSeparator
 from .....core.external_constants import DEFAULT_CURRENCY
 from .....core.logging import get_logger
 from .....domain.transactions.raw_transaction import SourceFormat
@@ -162,7 +163,7 @@ class PdfN26Provider(FinancialProvider):
             booked_date = parse_date_value(parsed_row["booked_date"])
             value_date_text = parsed_row.get("value_date")
             value_date = parse_date_value(value_date_text) if value_date_text else None
-            amount = parse_amount_value(parsed_row["amount"], decimal_separator=",")
+            amount = parse_amount_value(parsed_row["amount"], decimal_separator=DecimalSeparator.COMMA)
             counterparty, description = _derive_counterparty_and_description(
                 parsed_row["narrative"],
                 parsed_row["continuations"],

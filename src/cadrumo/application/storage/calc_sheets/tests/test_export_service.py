@@ -23,6 +23,7 @@ from .....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from .....core.sync_surface import SyncSurface
 from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import bundled_authority
+from .....tests.google_credentials import unused_google_credentials
 from .....tests.secure_sql import isolated_runtime_profile
 from ..engine import build_export_plan
 from ..export_service import _export_scope_description, _SingleExportCoverage, export_modelo_to_sheets
@@ -73,7 +74,7 @@ def test_a_failed_apply_still_persists_a_sync_run_record_and_reraises(tmp_path: 
         with pytest.raises(OutboundStorageValidationError):
             export_modelo_to_sheets(
                 plan,
-                credentials=object(),
+                credentials=unused_google_credentials(),
                 root_folder_id="",
                 sync_run_repository=repository,
                 apply_export_plan=apply_export_plan,

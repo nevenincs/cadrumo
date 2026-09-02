@@ -11,6 +11,7 @@ from ..authority import bundled_authority
 from ..export import derive_export_layouts_from_bindings
 from ..fixed_width_codec import ExportEncoding
 from ..schema import DataBindingDefinition
+from ..schema_base import CasillaDataType
 from ..schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -75,7 +76,7 @@ def test_binding_derived_export_fields_preserve_enum_kind() -> None:
         length=10,
         kind=CasillaFieldKind.CASILLA,
         casilla_id=_CASILLA_01,
-        data_type="money",
+        data_type=CasillaDataType.MONEY,
         required=False,
         padding="left_zero",
         justification="right",
@@ -170,7 +171,7 @@ def test_binding_derived_export_skips_source_mirror_when_row_field_is_hand_autho
         length=10,
         kind=CasillaFieldKind.BINDING,
         binding=public_binding.id,
-        data_type="money",
+        data_type=CasillaDataType.MONEY,
         required=False,
         padding="left_zero",
         justification="right",
@@ -248,7 +249,7 @@ def test_binding_derived_export_emits_one_field_for_source_mirror_template() -> 
         length=10,
         kind=CasillaFieldKind.CASILLA,
         casilla_id=_CASILLA_01,
-        data_type="money",
+        data_type=CasillaDataType.MONEY,
         required=False,
         padding="left_zero",
         justification="right",

@@ -24,6 +24,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.m303_regimen_simplificado_projection import project_m303_regimen_simplificado_rows
+from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -308,7 +309,7 @@ def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
                         length=14,
                         kind=CasillaFieldKind.PROJECTION,
                         projection_ref=reference,
-                        data_type="decimal",
+                        data_type=CasillaDataType.DECIMAL,
                         required=True,
                         padding="left_zero",
                         justification="right",

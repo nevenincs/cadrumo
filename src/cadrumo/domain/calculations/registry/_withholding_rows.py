@@ -6,7 +6,11 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from .errors import RegistryValidationError
-from .withholding_bindings import WithholdingGrouping, WithholdingObservation
+from .withholding_bindings import (
+    IDENTIFICATION_BLOCK_CLAVES,
+    WithholdingGrouping,
+    WithholdingObservation,
+)
 
 _DATOS_ADICIONALES_CLAVES: frozenset[str] = frozenset({"A", "C"})
 _DATOS_ADICIONALES_B_SUBCLAVES: frozenset[str] = frozenset({"01", "03", "04", "99"})
@@ -467,14 +471,14 @@ def _finalise_193_primary_fields(
     perceptor_tax_id: str,
     finalised: dict[str, Decimal | str],
 ) -> None:
-    clave_abd = clave in {"A", "B", "D"}
+    clave_abd = clave in IDENTIFICATION_BLOCK_CLAVES
     naturaleza_s = row.get("naturaleza_declarante") == "S"
 
     # ---- Modelo 193 perceptor-record completion ----
     # The design's claves A/B/D block, and the naturaleza-del-declarante 'S'
     # cascade that overrides it: under 'S' the A/B/D identification block
     # writes the design's own no-content and a present fact contradicts it.
-    clave_abd = clave in {"A", "B", "D"}
+    clave_abd = clave in IDENTIFICATION_BLOCK_CLAVES
     naturaleza_s = row.get("naturaleza_declarante") == "S"
     if "naturaleza" in required_fields:
         naturaleza193 = row.get("naturaleza")
@@ -586,7 +590,7 @@ def _finalise_193_instrument_fields(
     finalised: dict[str, Decimal | str],
     row_number: int,
 ) -> None:
-    clave_abd = clave in {"A", "B", "D"}
+    clave_abd = clave in IDENTIFICATION_BLOCK_CLAVES
     naturaleza_s = row.get("naturaleza_declarante") == "S"
 
     if "penalizaciones" in required_fields:
