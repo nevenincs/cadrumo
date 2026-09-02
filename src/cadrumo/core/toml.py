@@ -14,12 +14,10 @@ already hold a TOML payload in memory, such as the secure bucket manifest
 reader. :func:`to_str_keyed_dict` is the narrow bridge from loosely typed
 parsed TOML mappings into strict schema models that require string keys.
 
-The parse itself is backed by :mod:`rtoml` (a Rust-extension TOML parser),
-not stdlib :mod:`tomllib`: ~2.4x faster on the registry's ~16k-fragment tree,
-with output proven
-byte-identical to :mod:`tomllib` across every fragment the registry ships.
-Both parsers return the same native Python types for every TOML value shape
-(str/int/float/bool/list/dict/date/datetime/time); neither ever produces a
+The parse is backed by the Python standard-library :mod:`tomllib` module,
+available throughout Cadrumo's supported Python range. It returns the native
+Python types defined by TOML for every value shape
+(str/int/float/bool/list/dict/date/datetime/time); it does not produce a
 :class:`decimal.Decimal` (TOML has no native decimal type), so registry money
 and rate values continue to arrive as plain TOML strings, coerced to
 ``Decimal`` downstream by pydantic field validators exactly as before.
@@ -27,10 +25,9 @@ and rate values continue to arrive as plain TOML strings, coerced to
 
 from __future__ import annotations
 
+import tomllib
 from collections.abc import Callable, Mapping
 from pathlib import Path
-
-import rtoml
 
 from .type_guards import is_object_dict, is_object_list
 
@@ -50,18 +47,17 @@ def read_toml(path: Path, *, error_factory: Callable[[str], Exception]) -> dict[
     Raises:
         Exception: The exception built by ``error_factory`` when the file
             cannot be read (``OSError``) or contains invalid TOML
-            (``rtoml.TomlParsingError``).
+            (``tomllib.TOMLDecodeError``).
     """
     try:
-        # No root-shape guard: TOML's grammar makes the document a table by
-        # construction, and `rtoml.load` is a py.typed dependency declaring
-        # `-> dict[str, Any]`. A refusal here could not fire.
-        loaded = rtoml.load(path)
-        raw: dict[object, object] = {}
-        for key, value in loaded.items():
-            raw[key] = value
-        return to_str_keyed_dict(raw, error_factory=error_factory)
-    except rtoml.TomlParsingError as exc:
+        with path.open("rb") as handle:
+            loaded = tomllib.load(handle)
+        if not isinstance(loaded, Mapping):
+            raise error_factory(f"{path}: TOML root must be a mapping")
+        return to_str_keyed_dict(loaded, error_factory=error_factory)
+    except tomllib.TOMLDecodeError as exc:
+        raise error_factory(f"{path}: invalid TOML: {exc}") from exc
+    except UnicodeDecodeError as exc:
         raise error_factory(f"{path}: invalid TOML: {exc}") from exc
     except OSError as exc:
         raise error_factory(f"{path}: cannot read TOML: {exc}") from exc
@@ -79,8 +75,7 @@ def parse_toml_text(text: str, *, error_factory: Callable[[str], Exception]) -> 
     Args:
         text: TOML payload to decode.
         error_factory: Callable that builds the domain-specific
-            exception from a message; invoked on
-            ``rtoml.TomlParsingError``.
+            exception from a message; invoked on ``tomllib.TOMLDecodeError``.
 
     Returns:
         The parsed top-level TOML mapping.
@@ -90,12 +85,19 @@ def parse_toml_text(text: str, *, error_factory: Callable[[str], Exception]) -> 
             payload is not valid TOML.
     """
     try:
-        return dict(rtoml.loads(text))
-    except rtoml.TomlParsingError as exc:
+        loaded = tomllib.loads(text)
+        if not isinstance(loaded, Mapping):
+            raise error_factory("TOML root must be a mapping")
+        return to_str_keyed_dict(loaded, error_factory=error_factory)
+    except tomllib.TOMLDecodeError as exc:
+        raise error_factory(f"invalid TOML: {exc}") from exc
+    except UnicodeDecodeError as exc:
         raise error_factory(f"invalid TOML: {exc}") from exc
 
 
-def to_str_keyed_dict(raw: Mapping[object, object], *, error_factory: Callable[[str], Exception]) -> dict[str, object]:
+def to_str_keyed_dict[KeyT](
+    raw: Mapping[KeyT, object], *, error_factory: Callable[[str], Exception]
+) -> dict[str, object]:
     """Convert a parsed TOML mapping to a str-keyed dict, rejecting non-string keys.
 
     Args:

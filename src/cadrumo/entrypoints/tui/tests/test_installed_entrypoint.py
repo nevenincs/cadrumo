@@ -96,7 +96,7 @@ def test_the_session_is_started_out_of_process_through_module_execution() -> Non
     out-of-process execution as the sanctioned alternative, so the command the
     CLI builds is part of that contract rather than an implementation detail.
     """
-    from cadrumo.entrypoints.cli._tui_session import TUI_SESSION_MODULE, tui_session_command
+    from ...cli._tui_session import TUI_SESSION_MODULE, tui_session_command
 
     command = tui_session_command("/usr/bin/python3")
 

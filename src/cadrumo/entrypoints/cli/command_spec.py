@@ -16,6 +16,8 @@ from typing import Literal
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 
 type CommandNodeKind = Literal["root", "group", "leaf"]
+
+
 class ParameterKind(StrEnum):
     """Whether a CLI parameter is positional or a flag."""
 
@@ -35,6 +37,8 @@ class JsonType(StrEnum):
     INTEGER = "integer"
     NUMBER = "number"
     BOOLEAN = "boolean"
+
+
 type LiteralValue = str | int | float | bool | bytes | None
 type Capability = Literal[
     "state-free",
@@ -52,6 +56,8 @@ type Capability = Literal[
 ]
 type SideEffect = Literal["none", "local-state", "network", "browser", "google"]
 type PerformanceClass = Literal["metadata", "local-io", "compute", "external-io", "interactive"]
+
+
 class CommandWriteRoute(StrEnum):
     """Which storage a command is permitted to write through.
 

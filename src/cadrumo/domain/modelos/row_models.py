@@ -345,6 +345,7 @@ class Modelo232VinculadaRow(BaseModel):
 # scoped to Modelo 349's own transition-period need.
 _M349_GB_NIF_PATTERN: re.Pattern[str] = re.compile(r"^GB(\d{9}|\d{12}|GD\d{3}|HA\d{3})$")
 
+
 class Modelo349ClaveOperacion(StrEnum):
     """Clave de operación declarable on a Modelo 349 row.
 
@@ -724,6 +725,7 @@ def m349_nif_number_for_export(nif: str, pais: str) -> str:
 # 1065/2007 art. 33.1).  The threshold check is performed at the CLI
 # validator level, not here, so that partial row accumulation works.
 # ---------------------------------------------------------------------------
+
 
 class Modelo347ClaveOperacion(StrEnum):
     """Clave de operación declarable on a Modelo 347 counterparty row.

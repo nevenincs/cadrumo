@@ -126,9 +126,7 @@ def resolve_invoice_repository(
             "invoice repository bucket_id does not match the manual ledger command bucket",
             context={"command_bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
-    return require_concrete_repository(
-        repository, InvoiceCatalogueRepository, reason="the manual ledger invoice path"
-    )
+    return require_concrete_repository(repository, InvoiceCatalogueRepository, reason="the manual ledger invoice path")
 
 
 def resolve_bucket_event_repository(

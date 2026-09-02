@@ -22,6 +22,13 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 _REPO_ROOT = REPO_ROOT
 
 
+def _isolated_vulture_config(tmp_path: Path) -> Path:
+    """Write a config that leaves an explicitly supplied candidate in scope."""
+    config = tmp_path / "vulture.toml"
+    config.write_text("[tool.vulture]\nmin_confidence = 60\n", encoding="utf-8")
+    return config
+
+
 def test_real_scan_over_the_tree_returns_a_typed_outcome_with_real_findings() -> None:
     """A real vulture run classifies to CLEAN or FINDINGS, never a crash.
 
@@ -46,6 +53,7 @@ def test_whitelist_does_not_mask_former_protocol_parameter_names(tmp_path: Path,
     """The live whitelist leaves unrelated unused names detectable by vulture."""
     candidate = tmp_path / "candidate.py"
     candidate.write_text(f"def {unused_name}():\n    pass\n", encoding="utf-8")
+    config = _isolated_vulture_config(tmp_path)
 
     completed = subprocess.run(  # noqa: S603 - fixed argv, no shell
         [  # noqa: S607 - fixed executable path within the project environment
@@ -54,7 +62,7 @@ def test_whitelist_does_not_mask_former_protocol_parameter_names(tmp_path: Path,
             "--no-sync",
             "vulture",
             "--config",
-            "pyproject.toml",
+            str(config),
             str(candidate),
             "dev/audit/vulture_whitelist.py",
         ],
@@ -66,4 +74,36 @@ def test_whitelist_does_not_mask_former_protocol_parameter_names(tmp_path: Path,
     )
 
     assert completed.returncode == 3, completed.stderr
+    assert f"{candidate}:" in completed.stdout
     assert f"unused function '{unused_name}'" in completed.stdout
+
+
+def test_vulture_detects_a_type_import_used_only_in_a_quoted_cast(tmp_path: Path) -> None:
+    """A quoted cast does not make a runtime type import live to Vulture."""
+    candidate = tmp_path / "candidate.py"
+    candidate.write_text(
+        'from sqlalchemy import Table as _Table\nfrom typing import cast\n\ncast("_Table", object())\n',
+        encoding="utf-8",
+    )
+    config = _isolated_vulture_config(tmp_path)
+
+    completed = subprocess.run(  # noqa: S603 - fixed argv, no shell
+        [  # noqa: S607 - fixed executable path within the project environment
+            "uv",
+            "run",
+            "--no-sync",
+            "vulture",
+            "--config",
+            str(config),
+            str(candidate),
+        ],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+        cwd=_REPO_ROOT,
+    )
+
+    assert completed.returncode == 3, completed.stderr
+    assert f"{candidate}:" in completed.stdout
+    assert "unused import '_Table'" in completed.stdout

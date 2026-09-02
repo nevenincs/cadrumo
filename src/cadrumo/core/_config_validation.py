@@ -3,17 +3,22 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from datetime import date
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
 
 from .config_state_root import refuse_former_product_database
 from .errors.hierarchy import ActiveProfilePointerError, CoreValidationError
 
+if TYPE_CHECKING:
+    from .bucket_pointer import BucketPointer
+    from .config import Settings
+
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_live_iva_timeout_hierarchy(settings: Any) -> Any:
+def validate_live_iva_timeout_hierarchy(settings: Settings) -> Settings:
     if settings.cadrumo_live_iva_declaration_capture_timeout_ms >= settings.cadrumo_live_iva_surface_timeout_ms:
         raise CoreValidationError(
             translated_message="errors.integrity.integrity_cadrumo_core_validation",
@@ -26,7 +31,9 @@ def validate_live_iva_timeout_hierarchy(settings: Any) -> Any:
     return settings
 
 
-def resolve_database_url_for_active_profile(settings: Any, *, pointer_observation: tuple[Path, Any] | None) -> Any:
+def resolve_database_url_for_active_profile(
+    settings: Settings, *, pointer_observation: tuple[Path, BucketPointer] | None
+) -> Settings:
     """Resolve ``cadrumo_database_url`` through the active-profile chain.
 
     When the field is left empty (the production default), this
@@ -116,7 +123,7 @@ def resolve_database_url_for_active_profile(settings: Any, *, pointer_observatio
     return settings
 
 
-def resolve_output_dirs_under_storage_root(settings: Any) -> Any:
+def resolve_output_dirs_under_storage_root(settings: Settings) -> Settings:
     """Root every derived output directory under ``cadrumo_local_storage_root``.
 
     Auth tokens, the diagnostic log, the encrypted-store substrate (secret,
@@ -156,21 +163,21 @@ def resolve_output_dirs_under_storage_root(settings: Any) -> Any:
     return settings
 
 
-def empty_optional_paths_are_none(value: object) -> Any:
+def empty_optional_paths_are_none[ValueT](value: ValueT) -> ValueT | None:
     """Treat blank env vars for optional path fields as unset."""
     if isinstance(value, str) and value.strip() == "":
         return None
     return value
 
 
-def empty_optional_secrets_are_none(value: object) -> Any:
+def empty_optional_secrets_are_none[ValueT](value: ValueT) -> ValueT | None:
     """Treat blank env vars for optional secret fields as unset."""
     if isinstance(value, str) and value.strip() == "":
         return None
     return value
 
 
-def detail_url_template_has_expediente_id(value: str) -> Any:
+def detail_url_template_has_expediente_id(value: str) -> str:
     """Reject templates that omit the ``{expediente_id}`` placeholder."""
     if "{expediente_id}" not in value:
         raise CoreValidationError(
@@ -184,14 +191,14 @@ def detail_url_template_has_expediente_id(value: str) -> Any:
     return value
 
 
-def empty_optional_clave_fields_are_none(value: object) -> Any:
+def empty_optional_clave_fields_are_none[ValueT](value: ValueT) -> ValueT | None:
     """Treat blank env vars for optional Cl@ve identity/password fields as unset."""
     if isinstance(value, str) and value.strip() == "":
         return None
     return value
 
 
-def clave_dni_fecha_is_iso_date(value: str | None) -> Any:
+def clave_dni_fecha_is_iso_date(value: str | None) -> str | None:
     """Reject DNI validity dates that are not canonical ``YYYY-MM-DD``.
 
     Python 3.11's ``date.fromisoformat`` also accepts the compact
@@ -227,7 +234,7 @@ def clave_dni_fecha_is_iso_date(value: str | None) -> Any:
     return value
 
 
-def clave_sede_access_url_template_has_target(value: str) -> Any:
+def clave_sede_access_url_template_has_target(value: str) -> str:
     """Reject templates that omit the ``{target}`` placeholder."""
     if "{target}" not in value:
         raise CoreValidationError(
@@ -241,6 +248,8 @@ def clave_sede_access_url_template_has_target(value: str) -> Any:
     return value
 
 
-def normalize_repo_relative_paths(value: Path | None, *, normalizer: Any) -> Any:
+def normalize_repo_relative_paths(
+    value: Path | None, *, normalizer: Callable[[Path | None], Path | None]
+) -> Path | None:
     """Anchor repo-relative path settings to the application data root."""
     return normalizer(value)

@@ -14,25 +14,23 @@ from datetime import date
 
 import pytest
 
-from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.filing_projection_ref import (
+from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.filing_projection_ref import (
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
 )
-from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
-from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_exports import (
+from ...export_field_kind import CasillaFieldKind
+from ..export import derive_export_layouts_from_bindings, resolved_export_casillas, resolved_export_endpoints
+from ..fixed_width_codec import ExportEncoding
+from ..schema import DataBindingDefinition, ModeloRevision
+from ..schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from cadrumo.domain.calculations.registry.withholding_bindings import _WithholdingSelector
-
-from ..export import resolved_export_casillas, resolved_export_endpoints
+from ..schema_references import PeriodSelector
+from ..withholding_bindings import _WithholdingSelector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

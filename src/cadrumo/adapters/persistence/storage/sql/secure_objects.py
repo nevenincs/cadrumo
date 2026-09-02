@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Generator, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from datetime import datetime
-from typing import NamedTuple, cast
+from typing import NamedTuple, cast, override
 
 from sqlalchemy import Engine, bindparam, delete, inspect, select, text
 from sqlalchemy.orm import Session
@@ -94,12 +94,19 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         self._namespace_registry = namespace_registry
         self._active_session_bucket_id = active_session_bucket_id
         self._require_secure_active_session = require_secure_active_session
-        # `inspect(mapped_class).local_table` is a `Table` at runtime, but the
-        # SQLAlchemy stubs widen its declared type to `FromClause` (which lacks
-        # `.create`). Cast through `Table` so pyrefly resolves the method.
+        # SQLAlchemy declares ``local_table`` as the wider ``FromClause`` even
+        # though this mapped row must resolve to a concrete ``Table`` before it
+        # can be created. Keep the boundary executable: a quoted-only cast
+        # would disappear under optimisation and would not reject a malformed
+        # mapper result.
         from sqlalchemy import Table as _Table
 
-        local_table = cast("_Table", inspect(SecureObjectRow).local_table)
+        local_table = inspect(SecureObjectRow).local_table
+        if not isinstance(local_table, _Table):
+            raise TypeError(
+                "SecureObjectRow inspection must resolve to a SQLAlchemy Table "
+                f"before secure_objects creation; got {type(local_table).__name__}"
+            )
         local_table.create(self._engine, checkfirst=True)
 
     _coerce_raw_bytes = staticmethod(coerce_raw_bytes)
@@ -154,6 +161,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         with session_scope(self._engine) as session:
             yield session
 
+    @override
     def _registered_namespace_definition(self, namespace: str) -> SecureObjectNamespaceDefinition | None:
         """Return the registry contract for ``namespace`` when policy is bound."""
         if is_former_product_namespace(namespace):
@@ -171,6 +179,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                 context={"namespace": namespace},
             ) from exc
 
+    @override
     def _enforce_registered_write_policy(
         self,
         *,
@@ -267,6 +276,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
             current_version=definition.schema_version,
         )
 
+    @override
     def _check_session_freshness(self, namespace: str | None = None) -> None:
         """Refuse the operation when the active profile session is no longer valid.
 
