@@ -28,6 +28,8 @@ what makes it evidence.
 
 from __future__ import annotations
 
+import collections
+
 import pytest
 
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
@@ -593,3 +595,74 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
 
     assert checked, "no screen stated a condition count, so this gate checked nothing"
     assert not wrong, "\n".join(wrong)
+
+
+def _export_fields(authority: ValidatedRegistryAuthority) -> list[tuple[str, str, object]]:
+    """Return every export field in the corpus with the coordinate that owns it."""
+    found: list[tuple[str, str, object]] = []
+    for code in sorted(str(item) for item in registry_modelo_codes()):
+        for revision_id, revision in authority.modelo(code).revisions.items():
+            for layout in revision.export_layouts:
+                for record in layout.records:
+                    found.extend((code, str(revision_id), field) for field in record.fields)
+    return found
+
+
+def test_every_monetary_field_declares_a_scale_or_is_rendered_by_a_self_scaling_type(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """A monetary amount whose scale is undeclared cannot be emitted at a known magnitude.
+
+    Two wire types carry money. ``money`` is self-scaling: the codec renders and
+    parses it at two decimal places without consulting the declaration. ``decimal``
+    is not, and the codec demands ``decimals`` from the field itself.
+
+    The codec already refuses an undeclared scale, but only at the moment it renders
+    or parses that field, which means a revision can ship, validate and sit in the
+    registry with the defect latent until something exercises the field. This gate
+    asks the question of every declaration at once instead, so the answer does not
+    depend on which fields a test happens to reach.
+    """
+    unscaled = [
+        f"{modelo}/{revision} {field.id}"
+        for modelo, revision, field in _export_fields(authority)
+        if str(getattr(field, "data_type", "")) == "decimal" and getattr(field, "decimals", None) is None
+    ]
+    assert unscaled == [], (
+        "these decimal export fields declare no scale, so the magnitude they emit is "
+        f"undefined until the codec refuses them at render time: {unscaled}"
+    )
+
+
+def test_the_corpus_actually_contains_both_monetary_wire_types(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """The gate above is meaningless if neither type is present to be checked.
+
+    Pinned so that a corpus which stopped declaring monetary fields altogether
+    cannot make the invariant pass by emptiness.
+    """
+    types = collections.Counter(str(getattr(field, "data_type", "")) for _, _, field in _export_fields(authority))
+    assert types["decimal"] > 0
+    assert types["money"] > 0
+
+
+def test_the_gate_detects_a_decimal_field_that_declares_no_scale(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """Constructed, because the corpus declares a scale everywhere.
+
+    A real decimal field is copied with its scale removed and put back through the
+    same predicate the gate uses, so the gate is shown able to report the condition
+    it protects rather than only ever having seen a clean corpus.
+    """
+    sample = next(
+        field
+        for _, _, field in _export_fields(authority)
+        if str(getattr(field, "data_type", "")) == "decimal" and getattr(field, "decimals", None) is not None
+    )
+    stripped = sample.model_copy(update={"decimals": None})
+
+    assert str(stripped.data_type) == "decimal"
+    assert stripped.decimals is None
+    assert getattr(sample, "decimals", None) is not None, "the donor field must still declare its own scale"

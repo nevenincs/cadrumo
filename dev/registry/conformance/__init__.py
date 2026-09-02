@@ -25,8 +25,6 @@ Major declarations:
 * :class:`~dev.registry.conformance.manager.ConformanceReport` — the rendered
   per-revision report.
 * :class:`~dev.registry.conformance.manager.CoverageReport` — per-axis coverage.
-* :class:`~dev.registry.conformance.manager.ConformanceAuditResult` — the
-  ratchet comparison against the committed baseline.
 * :func:`~dev.registry.conformance.manager.load_conformance_report` — composes
   the bundled registry's report, validated or degraded.
 

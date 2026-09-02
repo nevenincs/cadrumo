@@ -99,7 +99,6 @@ from pydantic_core.core_schema import SerializerFunctionWrapHandler
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n import lookup_translation_entry
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.external_grounding import (
     ExternalOracleInventory,
@@ -143,15 +142,10 @@ __all__ = [
     "AUDITED_LOCALES",
     "COORDINATE_CLASSIFICATIONS",
     "NOT_MEASURED",
-    "ConformanceAuditResult",
-    "ConformanceBaseline",
     "ConformanceCoordinate",
     "ConformanceCoordinateClassification",
     "ConformanceCoordinateMatrix",
-    "ConformanceProgressFloors",
-    "ConformanceRatchetCeilings",
     "ConformanceReport",
-    "ConformanceVacuityFloors",
     "CoverageAxisRow",
     "CoverageReport",
     "LocaleAxisSummary",
@@ -163,7 +157,6 @@ __all__ = [
     "build_coverage_report",
     "load_conformance_report",
     "load_locale_coverage_index",
-    "render_audit",
     "render_coverage",
     "render_report",
     "reset_conformance_cache",
@@ -666,203 +659,14 @@ class CoverageReport(ConformanceModel):
     modelo_count: int = Field(ge=0)
 
 
-class ConformanceRatchetCeilings(ConformanceModel):
-    """Shrink-only ceilings: each counter may stay flat or fall, never grow.
-
-    Every field is a DEFECT count whose right value is zero, or a defect backlog
-    being burnt down. Lowering one requires re-recording the committed baseline,
-    which is the point: the capture is the visible record that the defect count
-    moved.
-
-    What is deliberately NOT here
-    -----------------------------
-
-    Four counters used to live in this class and no longer do:
-    ``unreviewed_revisions``, ``revisions_without_operator_review``,
-    ``revisions_without_engineered_by``, and ``untranslated_locale_labels``.
-    They are not defect counts — they are POPULATION MINUS PROGRESS, and a
-    shrink-only ceiling on that quantity gates the wrong term.
-
-    Each was pinned at the full population, so the ninety-first revision took all
-    three review counters past their ceilings and reddened the only gating exit
-    this surface has. The same held per casilla for the locale counter: every new
-    casilla adds one required leaf per audited locale, so an ordinary registry
-    addition raised it without a single translation being lost. Worse, the
-    sanctioned way past the resulting refusal was ``--accept-weakening``, whose
-    documented purpose is to take a capture that is deliberately suspicious — so
-    an honest population increase and a deliberate loosening of the ratchet
-    arrived through the same door, and the operator had to assert the second in
-    order to record the first.
-
-    A RATIO ceiling against ``composed_revisions`` was the obvious alternative
-    and was rejected on arithmetic. It survives today only because the backlog is
-    total: ninety of ninety unreviewed is a fraction of 1.0, and a ninety-first
-    unreviewed revision is still 1.0. The moment the stamping campaign makes
-    progress the problem returns — with forty of ninety unreviewed the ceiling
-    fraction is 0.4444, and one peer landing an unstamped revision gives
-    forty-one of ninety-one, 0.4505, which reds. That is the same complaint
-    arriving later and harder to read, and it would red continuously through
-    exactly the campaign this surface exists to support.
-
-    :class:`ConformanceProgressFloors` carries them instead, inverted into the
-    term that actually needs protecting. See that class for why.
-    """
-
-    grounding_findings: int = Field(ge=0)
-    modelo_scope_classification_findings: int = Field(ge=0)
-    required_coverage_gap_rows: int = Field(ge=0)
-    unattributed_oracle_payloads: int = Field(ge=0)
-    unmatched_oracle_evidence: int = Field(ge=0)
-    unused_declared_axes: int = Field(ge=0)
-    scope_diagnostics: int = Field(ge=0)
-    locale_unavailable_modelos: int = Field(ge=0)
 
 
-class ConformanceProgressFloors(ConformanceModel):
-    """Grow-only progress: declared provenance and translation already achieved.
-
-    Every field counts WORK DONE, so each may rise or stay flat and may never
-    fall. This is the inversion of the four population-pinned ceilings that used
-    to sit on :class:`ConformanceRatchetCeilings`, and the inversion is the whole
-    fix: a backlog count is ``population - progress``, and growth in it does not
-    say which term moved. Splitting the two makes the gate answer the question it
-    can actually answer.
-
-    A ninety-first revision raises the population and leaves progress untouched,
-    so every floor here stays satisfied and the gate is silent — which is right,
-    because nothing regressed. Erasing one revision's signoff, dropping one
-    authorship claim, or deleting one translated leaf lowers progress below its
-    committed floor, and the gate reds naming the counter — which is also right,
-    because that work is gone and, for the review axis, is underivable by
-    construction and cannot be reconstructed from the tree.
-
-    What is lost by the change, stated plainly: nothing now gates the ARRIVAL of
-    unstamped revisions. That is deliberate. New modelo revisions are the product
-    working, the stamping campaign is what closes their provenance, and a gate
-    that reddened on every peer's registry addition would be routed around within
-    a week. The arrival stays visible on the census and the coverage screen,
-    which is where an unenforced fact belongs.
-
-    Why the review axis is TWO floors
-    ---------------------------------
-
-    ``reviewed_revisions`` counts every revision declaring any review at all, and
-    the stamp verb is DESIGNED to move it: an agent may write ``agent_reviewed``
-    freely, so a sweep across the tree drives it from zero to the full registry.
-    The governing decision's rationale for a three-state vocabulary is that it
-    makes the backlog visible instead of laundering it into prose, and one gated
-    counter covering two of the three tiers reintroduces exactly that collapse at
-    the only place anything is enforced.
-
-    ``operator_reviewed_revisions`` is therefore the counter CI protects. The
-    stamp verb cannot move it at all — that value is outside the vocabulary this
-    CLI will write, enforced at the writer's own boundary rather than by its type
-    hints — so it rises only by a human editing a manifest, and falls only by a
-    human signoff being destroyed. Agent review remains a real, visible axis; it
-    is simply not progress against the operator floor, because it is not the same
-    claim.
-
-    Read as a direct census count rather than as ``population - other tiers``:
-    for a FLOOR the direct count is exact, and a fourth status added to the
-    vocabulary tomorrow cannot inflate it. The subtraction that
-    ``reviewed_revisions`` does use carries the opposite property for the
-    opposite reason — any revision the census does not record as pending has SOME
-    review declared, whatever tier a future vocabulary adds.
-
-    Attributes:
-        reviewed_revisions: Revisions declaring any review tier beyond pending.
-        operator_reviewed_revisions: Revisions carrying an operator signoff.
-        revisions_with_engineered_by: Revisions naming who engineered them.
-        translated_locale_labels: Authored schema-local label leaves, summed over
-            audited locales.
-    """
-
-    reviewed_revisions: int = Field(ge=0)
-    operator_reviewed_revisions: int = Field(ge=0)
-    revisions_with_engineered_by: int = Field(ge=0)
-    translated_locale_labels: int = Field(ge=0)
 
 
-class ConformanceVacuityFloors(ConformanceModel):
-    """Minimums proving the run examined a real registry before reporting zeros.
-
-    A profile composed from an empty or half-read tree reports no gaps, no
-    findings, and no unreviewed revisions while having examined nothing. Each
-    floor is a POPULATION the audit must have reached; falling below one means
-    the measurement, not the registry, is what changed.
-    """
-
-    composed_revisions: int = Field(ge=1)
-    composed_modelos: int = Field(ge=1)
-    reconciled_casillas: int = Field(ge=1)
-    declared_grounding_claims: int = Field(ge=1)
-    bundled_oracle_payloads: int = Field(ge=1)
-    audited_locale_leaves: int = Field(ge=1)
 
 
-class ConformanceBaseline(ConformanceModel):
-    """The committed conformance ratchet baseline.
-
-    Attributes:
-        recorded_at: When the baseline was captured.
-        source: The command that produced it.
-        review_cadence: When the ceilings are expected to be revisited.
-        note: Why this capture happened and under what tree conditions.
-            Mandatory and non-empty, because in a shared worktree a baseline is
-            a snapshot of a MOVING tree: a capture taken while a peer's
-            half-landed change is present records their state as everyone's
-            ceiling, and a re-record with no stated reason is indistinguishable
-            from silencing a real regression.
-        ceilings: Shrink-only defect counters.
-        floors: Anti-vacuity population minimums.
-        progress: Grow-only provenance and translation already achieved.
-    """
-
-    recorded_at: str = Field(min_length=1)
-    source: str = Field(min_length=1)
-    review_cadence: str = Field(min_length=1)
-    note: str = Field(min_length=1)
-    ceilings: ConformanceRatchetCeilings
-    floors: ConformanceVacuityFloors
-    progress: ConformanceProgressFloors
 
 
-class ConformanceAuditResult(ConformanceModel):
-    """The current report compared against the committed baseline.
-
-    Attributes:
-        report: The report the comparison was taken over.
-        baseline: The committed baseline it was compared against.
-        ratchet_violations: Defect counters that GREW past their ceiling.
-        vacuity_violations: Populations that FELL below their floor, meaning the
-            run examined less than the baseline proves it must.
-        progress_violations: Declared provenance or translation that was LOST,
-            meaning work recorded in the tree is no longer there.
-    """
-
-    report: ConformanceReport
-    baseline: ConformanceBaseline
-    ratchet_violations: tuple[str, ...]
-    vacuity_violations: tuple[str, ...]
-    progress_violations: tuple[str, ...]
-
-    @property
-    def violations(self) -> tuple[str, ...]:
-        """Every violation, ordered by how much of the reading each one invalidates.
-
-        Vacuity first: a shrunken measurement makes every clean counter below it
-        meaningless, so it has to be read before anything else. Progress next: a
-        lost signoff or translation is destroyed work, and for the review axis it
-        is underivable by construction, so nothing in the tree can reconstruct
-        it. Ratchet last: a grown defect count is a real regression and a fixable
-        one.
-        """
-        return (*self.vacuity_violations, *self.progress_violations, *self.ratchet_violations)
-
-    @property
-    def passed(self) -> bool:
-        """Whether the audit found neither a grown backlog nor a shrunken measurement."""
-        return not self.violations
 
 
 @lru_cache(maxsize=2)
@@ -1479,102 +1283,12 @@ def vacuity_warning(report: ConformanceReport) -> str | None:
     )
 
 
-def render_audit(result: ConformanceAuditResult) -> str:
-    """Render the ratchet comparison, violations first."""
-    current = _current_ceilings(result.report)
-    floors = _current_floors(result.report)
-    progress = _current_progress(result.report)
-    lines = [
-        _kv_line(
-            "audit",
-            registry_validated=result.report.registry_validated,
-            passed=result.passed,
-            ratchet_violations=len(result.ratchet_violations),
-            vacuity_violations=len(result.vacuity_violations),
-            progress_violations=len(result.progress_violations),
-            baseline_recorded_at=result.baseline.recorded_at,
-        ),
-    ]
-    lines.extend(
-        _kv_line(
-            "ceiling",
-            counter=field_name,
-            current=getattr(current, field_name),
-            allowed=getattr(result.baseline.ceilings, field_name),
-        )
-        for field_name in ConformanceRatchetCeilings.model_fields
-    )
-    lines.extend(
-        _kv_line(
-            "floor",
-            population=field_name,
-            current=getattr(floors, field_name),
-            required=getattr(result.baseline.floors, field_name),
-        )
-        for field_name in ConformanceVacuityFloors.model_fields
-    )
-    lines.extend(
-        _kv_line(
-            "progress",
-            counter=field_name,
-            current=getattr(progress, field_name),
-            required=getattr(result.baseline.progress, field_name),
-        )
-        for field_name in ConformanceProgressFloors.model_fields
-    )
-    lines.extend(_kv_line("violation", kind="vacuity", detail=item) for item in result.vacuity_violations)
-    lines.extend(_kv_line("violation", kind="progress", detail=item) for item in result.progress_violations)
-    lines.extend(_kv_line("violation", kind="ratchet", detail=item) for item in result.ratchet_violations)
-    return "\n".join(lines)
 
 
-def _current_ceilings(report: ConformanceReport) -> ConformanceRatchetCeilings:
-    """Project the report's shrink-only defect counters."""
-    return ConformanceRatchetCeilings(
-        grounding_findings=report.grounding_finding_count,
-        modelo_scope_classification_findings=report.modelo_scope_classification_finding_count,
-        required_coverage_gap_rows=report.required_coverage_gap_row_count,
-        unattributed_oracle_payloads=len(report.unattributed_oracle_payloads),
-        unmatched_oracle_evidence=len(report.unmatched_oracle_evidence),
-        unused_declared_axes=len(report.unused_declared_axes),
-        scope_diagnostics=report.scope_diagnostic_count,
-        locale_unavailable_modelos=len(report.locale_unavailable_modelos),
-    )
 
 
-def _current_progress(report: ConformanceReport) -> ConformanceProgressFloors:
-    """Project the grow-only provenance and translation the tree already carries.
-
-    ``reviewed_revisions`` subtracts the pending census from the population
-    rather than summing the reviewed tiers, so a fourth status added to the
-    vocabulary tomorrow counts as review instead of silently escaping the floor.
-    ``operator_reviewed_revisions`` reads its census entry directly, because for
-    that floor the exact count is the claim and a subtraction would credit any
-    future tier with a signoff it does not carry.
-    """
-    return ConformanceProgressFloors(
-        reviewed_revisions=(
-            report.revision_count - report.review_status_census.get(RevisionReviewStatus.PENDING_REVIEW.value, 0)
-        ),
-        operator_reviewed_revisions=report.review_status_census.get(
-            RevisionReviewStatus.OPERATOR_REVIEWED.value,
-            0,
-        ),
-        revisions_with_engineered_by=report.engineered_by_declared_count,
-        translated_locale_labels=report.translated_locale_labels,
-    )
 
 
-def _current_floors(report: ConformanceReport) -> ConformanceVacuityFloors:
-    """Project the populations the run must have reached to mean anything."""
-    return ConformanceVacuityFloors(
-        composed_revisions=report.revision_count,
-        composed_modelos=report.modelo_count,
-        reconciled_casillas=report.reconciled_casillas,
-        declared_grounding_claims=report.declared_grounding_claims,
-        bundled_oracle_payloads=report.bundled_oracle_payload_count,
-        audited_locale_leaves=report.audited_locale_leaves,
-    )
 
 
 def reviewer_attribution(review_status: str, reviewed_by: str | None) -> str | None:

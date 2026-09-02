@@ -66,7 +66,7 @@ import tempfile
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Final
+from typing import Final, TypeGuard
 
 import grimp
 
@@ -159,6 +159,75 @@ def static_load_closure(graph: grimp.ImportGraph) -> frozenset[str]:
         closure.add(entry)
         closure |= graph.find_upstream_modules(entry)
     return frozenset(closure)
+
+
+def module_level_importers(module: str) -> frozenset[str]:
+    """Return the registry modules that import ``module`` outside any function body.
+
+    A function-scoped import is an edge the import graph records and a real load
+    never walks unless that function runs. The two are different claims, and
+    telling them apart is what lets the closure be confronted with ``sys.modules``
+    without the confrontation failing on a deliberate cycle break.
+
+    Nested ``if`` and ``try`` blocks at module scope still count as module level,
+    because they execute on import. Only a function or method body defers.
+
+    Args:
+        module: The fully qualified module whose importers are wanted.
+
+    Returns:
+        The importing modules, empty when every import of ``module`` is deferred.
+    """
+    importers: set[str] = set()
+    for path in sorted(REGISTRY_DIR.rglob("*.py")):
+        if "__pycache__" in path.parts or "tests" in path.parts:
+            continue
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+        except (SyntaxError, UnicodeDecodeError):
+            continue
+        owner = _module_name_for(path)
+        if owner == module:
+            continue
+        for node in _module_level_statements(tree):
+            if _import_targets(node, owner=owner) & {module}:
+                importers.add(owner)
+    return frozenset(importers)
+
+
+def _module_level_statements(tree: ast.Module) -> Iterable[ast.stmt]:
+    """Yield every statement that executes at import time, descending into blocks but not functions."""
+    stack = list(tree.body)
+    while stack:
+        node = stack.pop()
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            continue
+        yield node
+        for block in ("body", "orelse", "finalbody"):
+            stack.extend(getattr(node, block, []) or [])
+        for handler in getattr(node, "handlers", []) or []:
+            stack.extend(handler.body)
+
+
+def _import_targets(node: ast.stmt, *, owner: str) -> frozenset[str]:
+    """Return the fully qualified modules one import statement names."""
+    if isinstance(node, ast.Import):
+        return frozenset(alias.name for alias in node.names)
+    if not isinstance(node, ast.ImportFrom):
+        return frozenset()
+    if node.level:
+        base = owner.rsplit(".", node.level)[0] if node.level <= owner.count(".") else ""
+        head = f"{base}.{node.module}" if node.module else base
+    else:
+        head = node.module or ""
+    return frozenset({head} | {f"{head}.{alias.name}" for alias in node.names})
+
+
+def _module_name_for(path: Path) -> str:
+    """Return the fully qualified module name of a registry source file."""
+    relative = path.relative_to(REGISTRY_DIR).with_suffix("")
+    parts = [part for part in relative.parts if part != "__init__"]
+    return ".".join([REGISTRY_PACKAGE, *parts]) if parts else REGISTRY_PACKAGE
 
 
 def registry_package_modules() -> frozenset[str]:
@@ -307,7 +376,7 @@ def _string_tuple_constants(tree: ast.Module) -> dict[str, tuple[str, ...]]:
     return constants
 
 
-def _is_import_module_call(node: ast.AST) -> bool:
+def _is_import_module_call(node: ast.AST) -> TypeGuard[ast.Call]:
     if not isinstance(node, ast.Call):
         return False
     func = node.func
@@ -370,7 +439,6 @@ def dynamic_import_sites(*, production_only: bool = True) -> tuple[DynamicImport
         for node in ast.walk(tree):
             if not _is_import_module_call(node):
                 continue
-            assert isinstance(node, ast.Call)
             members = loop_targets.get(node.lineno)
             if members is not None:
                 sites.extend(DynamicImportSite(module, node.lineno, _absolute(member, package)) for member in members)
