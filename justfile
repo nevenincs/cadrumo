@@ -610,7 +610,7 @@ fix-format:
 fix-all: fix-style fix-format
 
 # Rehearse a reviewed object-name component by default; live application requires explicit arguments.
-[script('pwsh.exe', '-NoLogo', '-File')]
+[script('pwsh.exe', '-NoLogo', '-NoProfile', '-File')]
 [positional-arguments]
 [group('mutations')]
 fix-object-names *ARGS:

@@ -122,7 +122,7 @@ def test_real_justfile_dump_pins_the_complete_safe_recipe_contract() -> None:
     assert recipe["attributes"] == [
         {"group": "mutations"},
         "positional-arguments",
-        {"script": {"arguments": ["-NoLogo", "-File"], "command": "pwsh.exe"}},
+        {"script": {"arguments": ["-NoLogo", "-NoProfile", "-File"], "command": "pwsh.exe"}},
     ]
     assert recipe["body"] == [
         ["& uv run --no-sync python -m dev.quality.object_name_declustering @args"],
@@ -204,6 +204,30 @@ def test_recipe_propagates_the_powershell_child_exit_code(
 
     assert _captured_argv(capture) == [*_CLI_PREFIX, "verify"]
     assert result.returncode == 23
+
+
+def test_recipe_ignores_operator_powershell_profile_and_its_uv_shadow(
+    uv_probe: tuple[dict[str, str], Path], tmp_path: Path
+) -> None:
+    environment, capture = uv_probe
+    user_profile = tmp_path / "isolated-user"
+    profile = user_profile / "Documents/PowerShell/Microsoft.PowerShell_profile.ps1"
+    profile.parent.mkdir(parents=True)
+    sentinel = tmp_path / "profile-loaded.txt"
+    profile.write_text(
+        "[System.IO.File]::WriteAllText($env:OBJECT_NAME_PROFILE_SENTINEL, 'loaded')\n"
+        "function global:uv { [System.IO.File]::WriteAllText($env:OBJECT_NAME_PROFILE_SENTINEL, 'shadow'); exit 91 }\n",
+        encoding="utf-8",
+    )
+    environment["USERPROFILE"] = str(user_profile)
+    environment["HOME"] = str(user_profile)
+    environment["OBJECT_NAME_PROFILE_SENTINEL"] = str(sentinel)
+
+    result = _just(_RECIPE, "inventory", "--json", environment=environment)
+
+    assert result.returncode == 0, result.stderr
+    assert _captured_argv(capture) == [*_CLI_PREFIX, "inventory", "--json"]
+    assert not sentinel.exists()
 
 
 @pytest.mark.parametrize(
