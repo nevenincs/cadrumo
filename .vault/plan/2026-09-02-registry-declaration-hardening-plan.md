@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:1cfd8d4aab2341872ccfe48fc2358ead1fca2b431e8558fdf43fcc09026ddc9a'
+body_hash: 'sha256:cc9cf4dc6189afb2a6038f5b3672d5f617262a5bb4b2dbdb4582f5579322bac0'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -449,6 +449,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S219` - Reconcile the two Description paragraphs whose screen counts disagreed, settling the count against the entry point rather than by length; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S220` - Retire the Steps-count claim that goes stale and record that the name-window findings were already stepped; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S221` - Prove the two revision-name conditions the corpus never exercises and gate that every documented condition is reachable; `dev/registry/tests/test_revision_name_window.py`.
+- [x] `W06.P13.S222` - Sweep every screen for conditions documented but never emitted and establish that only the revision-name screen carried the defect; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

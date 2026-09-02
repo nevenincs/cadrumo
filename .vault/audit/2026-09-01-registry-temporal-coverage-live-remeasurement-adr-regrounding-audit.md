@@ -5328,3 +5328,34 @@ screen claiming two conditions it had never been shown to reach. Both are a decl
 drifting from what it describes, and neither is visible in a passing test run - the first was
 caught by a gate written here, the second only by asking which documented conditions the
 corpus never exercises.
+
+### Swept across the screens, the unfired-condition defect was confined to one
+
+Having found two conditions in the revision-name screen that had never been shown to fire, the
+obvious question is how many others carry the same. All ten screens were compared: the
+conditions each documents against the kinds each can emit.
+
+The answer is none. Six screens declare condition bullets and all six agree with what they
+emit - continuity integrity at four, monetary scale at four, revision name at eight, temporal
+site agreement at four, and the rest. Four screens document their findings without a bulleted
+condition list, so the comparison does not apply to them. The revision-name screen was the
+only one carrying the defect, and it is fixed.
+
+Reaching that answer took two corrections to the sweep, both of the same kind and both caught
+before anything was recorded. The first extraction matched only `kind="x"` as a keyword
+argument, so the monetary-scale screen appeared to document three conditions it never emits;
+it emits all three, assigning `kind = "x"` to a variable first and passing it later. The second
+extraction still reported two screens, and both were bullet lists that are not conditions at
+all - the casilla grammar screen documents five identifier grammars, and the capability screen
+explains what an authority grade is.
+
+So the sweep reported four defects and the tree contains none of them, which is worth stating
+as plainly as a real finding would be. Every one was an artefact of reading source with a
+regular expression that did not know how the code produces its values or what its prose is
+describing. That is now the fifth measurement artefact this campaign has produced and caught,
+and the pattern across all five is identical: the extraction was tested against the answer it
+was expected to give rather than against the shape of what it reads.
+
+The result stands as a negative one. A defect found once was checked for everywhere and found
+nowhere else, which is a smaller conclusion than the sweep promised and the only one the
+evidence supports.

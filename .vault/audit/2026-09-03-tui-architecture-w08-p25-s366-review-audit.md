@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:99de1c18eec52792ed458b0239f9badbe3f39173da16fa246f3774e7b5cc9b2f'
+body_hash: 'sha256:21a64fbeded0c35a04fee3991464c778e8151977c22d7a9a8566c07ffe0e749e'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-09-02-tui-architecture-w08-p25-s365-review-audit]]"
@@ -84,6 +84,37 @@ cannot prove absence of I/O; the current implementation is pure by inspection,
 but that test would stay green if I/O entered through a differently named global
 or helper.
 
+### s365-relocation-governance | medium | The contract moved but its plan path and focused proof did not move with it
+
+Current HEAD intentionally folds the S365 projection records into `home.py` and
+deletes `home_projection.py`. The result has one canonical definition and no
+runtime import split, but the approved plan still credits S365 to the deleted
+module while S366 names only the composer module. The relocation also deleted
+the 12-test S365 contract file rather than migrating its direct negative cases.
+The remaining S366 suite exercises composition well, but no longer directly
+bites several model invariants that the S365 review required: stale observation
+time, session-posture shape, Ledger subset bounds, declaration year agreement,
+Messages zero under unavailable authority, and contradictory direct projection
+construction. This is a plan/evidence mismatch rather than a new runtime
+authority defect, but the owning rows cannot be considered fully traceable until
+the plan and tests describe the live canonical home.
+
+### remediation-disposition | low | Exact reader authority and complete deterministic ties close the production findings
+
+Final re-review confirms that `work_units` and the WorkUnit imports and lifecycle
+translation are gone. `HomeProjectionInput` now accepts only exact declaration
+rows and refuses duplicate `work_unit_id` values. Action ordering uses a
+canonical JSON identity over every semantic field except the incoming rank, so
+argument bindings participate in ties; duplicate semantic actions are refused
+before preview trimming. The tests now prove both permutation-independent action
+ties and duplicate refusal, and the focused suite passes with 9 tests. The
+composer remains local-only and its final `HomeProjectionV1` construction
+enforces unavailable-zone mismatches and AEAT-evidence masking.
+
+Accordingly, `declaration-authority` and `tie-determinism` are closed. No
+critical or high-severity finding remains. The relocation/test-proof mismatch
+above remains medium severity.
+
 ## Recommendations
 
 1. Remove the raw `work_units` input and `_project_declarations` lifecycle
@@ -96,3 +127,8 @@ or helper.
    ties and each zone mismatch branch.
 4. Do not credit `W08.P25.S366` while `declaration-authority` remains open. No
    critical finding remains; one high-severity finding remains.
+5. Final remediation closes recommendations 1 through 3 and supersedes the
+   initial recommendation 4 disposition: no high or critical finding remains.
+6. Reconcile the S365 plan path with the intentional canonical-module fold and
+   migrate the deleted direct S365 invariant tests into the live owning test
+   module before treating the combined S365/S366 evidence as complete.

@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-02'
-body_hash: 'sha256:381ea40f61bf9b33448750f956448cdd21e8dab6a5ba17024c607f6ebcf1f876'
+body_hash: 'sha256:74535aa6b28472570c83a74db4a7aa9f4cbb9898e66489c446b4772411d5dbed'
 ---
 
 <!-- RETIRED: S370 -->
@@ -554,7 +554,7 @@ Compose the approved Home, Ledger, Declarations, AEAT Sync, and account-bound Pr
 
 Define frontend-neutral session, Home, destination-admission, search, calendar-evidence, Ledger-readiness, and AEAT Sync projections without moving business authority into the TUI.
 
-- [x] `W08.P25.S365` - Define immutable account-session, zone-availability, next-action, declaration-resume, Ledger-readiness, and agenda records for the Home projection; `src/cadrumo/application/overview/home_projection.py`.
+- [x] `W08.P25.S365` - Define immutable account-session, zone-availability, next-action, declaration-resume, Ledger-readiness, and agenda records for the Home projection; `src/cadrumo/application/overview/home.py`.
 - [ ] `W08.P25.S366` - Compose HomeProjectionV1 from canonical profile, overview, Ledger, declaration, notification, and filing-evidence readers with no implicit network activity; `src/cadrumo/application/overview/home.py`.
 - [ ] `W08.P25.S367` - Promote the calendar evidence assembly into a frontend-neutral application provider consumed by CLI and TUI; `src/cadrumo/application/overview/evidence.py`.
 - [ ] `W08.P25.S368` - Define typed workbench search results and a cross-domain query service that preserves source, natural address, status, and admission; `src/cadrumo/application/search/workbench.py`.
