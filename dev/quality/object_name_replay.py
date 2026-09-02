@@ -121,6 +121,8 @@ def _run_exact_commands(
                 f"post-apply command failed: argv={outcome.argv!r}, return_code={outcome.return_code}, "
                 f"stdout_sha256={outcome.stdout_sha256}, stderr_sha256={outcome.stderr_sha256}"
             )
+    if outcomes != expected:
+        raise ObjectNameReplayError("post-apply command output evidence differs from the receipt")
     return outcomes
 
 
@@ -144,6 +146,25 @@ def _stage_bytes(target: Path, payload: bytes, *, label: str) -> Path:
         if staged.exists() and not is_link_like(staged):
             staged.unlink()
         raise
+
+
+def _replace_staged(root: Path, relative: str, staged: Path) -> None:
+    target = _safe_path(root, relative, allow_missing_leaf=True)
+    if is_link_like(staged) or staged.parent.resolve() != target.parent.resolve():
+        raise ObjectNameReplayError(f"staging sibling changed before replace: {relative}")
+    os.replace(staged, target)
+    verified = _safe_path(root, relative)
+    if not verified.is_file() or is_link_like(verified):
+        raise ObjectNameReplayError(f"replaced target is not a regular unlinked file: {relative}")
+    fsync_parent_dir(verified)
+
+
+def _unlink_regular(root: Path, relative: str) -> None:
+    target = _safe_path(root, relative)
+    if not target.is_file() or is_link_like(target):
+        raise ObjectNameReplayError(f"replay deletion target changed: {relative}")
+    target.unlink()
+    fsync_parent_dir(target)
 
 
 def _cleanup(paths: tuple[Path, ...]) -> None:
@@ -178,8 +199,7 @@ def _restore(
             target = _safe_path(root, relative, allow_missing_leaf=True)
             target.parent.mkdir(parents=True, exist_ok=True)
             staged = _stage_bytes(target, payload, label="restore")
-            os.replace(staged, target)
-            fsync_parent_dir(target)
+            _replace_staged(root, relative, staged)
         except Exception as exc:  # rollback must attempt every member
             failures.append(f"{relative}: {exc}")
     for directory in sorted(created_directories, key=lambda item: len(item.parts), reverse=True):
@@ -315,12 +335,9 @@ def replay_object_name_component(
         for relative, payload in sorted(direct_payloads.items()):
             target = _safe_path(root, relative, allow_missing_leaf=True)
             if payload is None:
-                if not target.is_file() or is_link_like(target):
-                    raise ObjectNameReplayError(f"replay deletion target changed: {relative}")
-                target.unlink()
+                _unlink_regular(root, relative)
             else:
-                os.replace(stages.pop(relative), target)
-            fsync_parent_dir(target)
+                _replace_staged(root, relative, stages.pop(relative))
 
         generator_outcomes = _run_exact_commands(receipt.generator_outcomes, root=root)
         gate_outcomes = _run_exact_commands(receipt.gate_outcomes, root=root)
