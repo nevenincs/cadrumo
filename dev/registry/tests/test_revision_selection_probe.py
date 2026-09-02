@@ -91,3 +91,57 @@ def test_a_year_outside_the_declared_window_is_reported_as_a_named_refusal(
 
     blocked = [probe for probe in refuses if probe.revision == "2008-2022"]
     assert blocked and all(probe.resolved is None and probe.refusal for probe in blocked)
+
+
+def test_a_mid_year_split_resolves_rather_than_reporting_the_probes_own_ambiguity(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """Modelo 308 changes revision at the end of June 2011 and every probe still resolves.
+
+    Asked for filing year 2011 alone, the registry refuses as ambiguous, and it
+    is right to: two revisions cover parts of that year and the year does not
+    say which. Reporting that refusal would have been this module doing exactly
+    what it exists to prevent - reading an under-specified question as a
+    registry defect.
+    """
+    probes = probe_modelo(authority, "308")
+
+    assert len(probes) == 4
+    assert [probe for probe in probes if not probe.resolves_to_itself] == []
+
+
+def test_the_registry_still_refuses_a_genuinely_ambiguous_coordinate(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """The retry must not hide the refusal that a caller asking by year gets.
+
+    A date inside one window is what disambiguates. Without it the coordinate is
+    genuinely undecidable, and the registry refusing it is the behaviour the
+    no-silent-under-declaration rule requires. This pins that the refusal is
+    still there for anyone who asks the ambiguous question.
+    """
+    import datetime
+
+    from cadrumo.core.authority_grade import RegistryAuthorityGrade
+
+    with pytest.raises(Exception, match="[Aa]mbiguous"):
+        authority.admitted_revision_id(
+            "308", filing_year=2011, period="AD-HOC", grade=RegistryAuthorityGrade.APPLICABILITY
+        )
+
+    before = authority.admitted_revision_id(
+        "308",
+        filing_year=2011,
+        period="AD-HOC",
+        on=datetime.date(2011, 3, 1),
+        grade=RegistryAuthorityGrade.APPLICABILITY,
+    )
+    after = authority.admitted_revision_id(
+        "308",
+        filing_year=2011,
+        period="AD-HOC",
+        on=datetime.date(2011, 9, 1),
+        grade=RegistryAuthorityGrade.APPLICABILITY,
+    )
+    assert str(before) == "2009-2011-junio"
+    assert str(after) == "2011-julio-2015"
