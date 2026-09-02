@@ -69,7 +69,7 @@ def _prepare(invocation: _Invocation, root: Path) -> _PreparedInvocation:
             source_ref=invocation.source_ref,
         )
     except (RegistryError, ValueError) as error:
-        raise typer.BadParameter(str(error)) from error
+        raise ValueError(str(error)) from error
 
     candidate_root = root / "candidate" / "registry" / "aeat"
     target_root = bundled_path("registry", "aeat")
@@ -141,7 +141,7 @@ def _stage_continuity_metadata(root: Path, *, modelo: str, revision: str) -> Pat
     definition = bundled_authority().modelo(modelo)
     selected = definition.revisions.get(revision)
     if selected is None:
-        raise typer.BadParameter(f"modelo {modelo} declares no revision {revision!r}")
+        raise ValueError(f"modelo {modelo} declares no revision {revision!r}")
     predecessors = sorted({str(item.from_revision) for item in selected.casilla_continuidad_evolutions})
     if not predecessors:
         return None
