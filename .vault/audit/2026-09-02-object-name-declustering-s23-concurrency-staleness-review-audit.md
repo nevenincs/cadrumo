@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:6029b526f1360c88da544ecaf8b8bda49b2ede849ac320f61178c1d56d5de504'
+body_hash: 'sha256:52f9bdb6132be846dc793d423b3b0db5f6397f38d678725edde247f6f1d8969e'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
@@ -32,7 +32,7 @@ to equal both the supplied current inventory and `manifest.inventory_digest`, an
 receipt inventory digest from the manifest. Replay likewise requires the receipt inventory
 digest to equal both current inventory and manifest. Unrelated inventory churn therefore
 passes S23's validator but is refused at the next mandatory workflow phase. The approved step
-objectiveâ€”preventing unrelated churn from invalidating a leaf operationâ€”is not achieved.
+objective--preventing unrelated churn from invalidating a leaf operation--is not achieved.
 
 ### end-to-end-churn-teeth | medium | The new test proves only validator tolerance
 
@@ -72,3 +72,25 @@ new-reference-edge, and selected-byte drift refusals.
 The focused manifest suite passed 42 tests in 2.91 seconds. Ruff, Ruff-format, ty, and byte
 compilation checks passed. Final review status is one high and one medium finding, with no
 critical or low findings.
+
+## S24 resolution status
+
+Resolved: `downstream-global-digest-refusal` is closed by separating authored manifest
+identity from current inventory evidence. Rehearsal now binds the exact manifest digest,
+records the inventory digest scanned from its verified disposable copy, and limits receipt
+baseline identity to declared input and changed paths. Replay requires the exact manifest
+digest and exact guarded baseline, regenerates transformation, findings, tools, generators,
+and gates from current state, and no longer equates the historical manifest inventory value
+with the current receipt inventory.
+
+An independent disposable end-to-end probe added a singular unrelated Python declaration
+after manifest authoring. Its inventory digest differed from the manifest, rehearsal recorded
+that new current digest, replay changed only the selected declaration, and the unrelated file
+remained byte-identical. Selected finding/site/path checks, target occupancy, exact guarded
+bytes, graph reference containment, output and gate equality, and transactional rollback
+remain fail-closed.
+
+Open: `end-to-end-churn-teeth` remains medium because the committed success test mutates an
+unrelated `.txt` file and reuses the pre-churn inventory object. It proves scoped byte
+tolerance, but not the S23 condition of a real unrelated Python declaration changing the
+inventory digest across manifest, receipt, and replay.
