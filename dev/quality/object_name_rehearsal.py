@@ -209,7 +209,10 @@ def _copy_snapshot(
     source_root: Path,
     target_root: Path,
     files: Sequence[tuple[str, str | None]],
+    *,
+    guarded_paths: frozenset[str] | None = None,
 ) -> None:
+    exact_paths = frozenset(path for path, _digest in files) if guarded_paths is None else guarded_paths
     for source_root_name in ("src", "dev"):
         (target_root / source_root_name).mkdir(parents=True, exist_ok=True)
     for relative, expected_digest in files:
@@ -217,12 +220,14 @@ def _copy_snapshot(
             continue
         source = _regular_file(source_root, relative)
         if source is None:
-            raise ObjectNameRehearsalError(f"snapshot source disappeared during copy: {relative}")
+            if relative in exact_paths:
+                raise ObjectNameRehearsalError(f"snapshot source disappeared during copy: {relative}")
+            continue
         target = target_root.joinpath(*PurePosixPath(relative).parts)
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, target, follow_symlinks=False)
         actual_digest = f"{_DIGEST_PREFIX}{sha256_file(target)}"
-        if actual_digest != expected_digest:
+        if relative in exact_paths and actual_digest != expected_digest:
             raise ObjectNameRehearsalError(f"temporary copy hash differs for {relative}")
 
 
@@ -504,10 +509,30 @@ def rehearse_object_name_component(
         if temporary_parent.parent != system_temporary_root or is_link_like(temporary_parent):
             raise ObjectNameRehearsalError(f"allocated rehearsal parent is unsafe: {temporary_parent}")
         temporary_root.mkdir()
-        _copy_snapshot(root, temporary_root, baseline_files)
-        if _snapshot(temporary_root, tuple(path for path, _digest in baseline_files)) != baseline_files:
-            raise ObjectNameRehearsalError("verified temporary snapshot differs from the current tree")
+        _copy_snapshot(root, temporary_root, baseline_files, guarded_paths=frozenset(guarded_paths))
+        copied_baseline_files = _snapshot(temporary_root, tuple(path for path, _digest in baseline_files))
+        if _snapshot(temporary_root, guarded_paths) != receipt_baseline_files:
+            raise ObjectNameRehearsalError("selected component bytes changed during the temporary copy")
         copied_inventory = scan((temporary_root / "src", temporary_root / "dev"), temporary_root)
+        copied_components = canonical_object_name_component_set(
+            manifest,
+            inventory=copied_inventory,
+            repo_root=temporary_root,
+        )
+        copied_component = next(
+            (item for item in copied_components if item.component_id == component.component_id),
+            None,
+        )
+        if copied_component is None or (
+            copied_component.operation_ids,
+            copied_component.affected_paths,
+            copied_component.hard_edges,
+        ) != (
+            component.operation_ids,
+            component.affected_paths,
+            component.hard_edges,
+        ):
+            raise ObjectNameRehearsalError("copied repository graph differs from the reviewed component")
         copied_inventory_digest = cast("str", to_json(copied_inventory)["inventory_digest"])
         if not isinstance(copied_inventory_digest, str):
             raise ObjectNameRehearsalError("copied inventory did not emit a string digest")
@@ -550,8 +575,8 @@ def rehearse_object_name_component(
         changed = tuple(
             sorted(
                 path
-                for path in set(dict(baseline_files)) | set(dict(after_files))
-                if dict(baseline_files).get(path) != dict(after_files).get(path)
+                for path in set(dict(copied_baseline_files)) | set(dict(after_files))
+                if dict(copied_baseline_files).get(path) != dict(after_files).get(path)
             )
         )
         if changed != allowed_paths:

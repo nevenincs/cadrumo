@@ -581,6 +581,30 @@ def test_unrelated_live_tree_mutation_does_not_stale_selected_component(tmp_path
         live_path.write_bytes(original)
 
 
+def test_copy_race_that_adds_selected_reference_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = tmp_path / "repo"
+    inventory, manifest, component = _fixture(repo)
+    consumer = repo / "src/example/consumer.py"
+    consumer.write_text("VALUE = 1\n", encoding="utf-8")
+    _git(repo, "add", "src/example/consumer.py")
+    original_copy = rehearsal_module._copy_snapshot
+
+    def copy_then_add_reference(*args: Any, **kwargs: Any) -> None:
+        original_copy(*args, **kwargs)
+        target_root = args[1]
+        (target_root / "src/example/consumer.py").write_text(
+            "from example.contracts import Widgets\n",
+            encoding="utf-8",
+        )
+
+    monkeypatch.setattr(rehearsal_module, "_copy_snapshot", copy_then_add_reference)
+
+    with pytest.raises(ObjectNameRehearsalError, match=r"hard reference .* is outside the changed-path allowlist"):
+        rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
+
+
 def test_unsafe_system_temp_and_escaped_allocation_are_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     repo = tmp_path / "repo"
     inventory, manifest, component = _fixture(repo)
