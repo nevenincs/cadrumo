@@ -35,6 +35,7 @@ from .casilla_membership import undeclared_casilla_ids
 from .errors import RegistrySnapshotError, RegistryValidationError
 from .ids import RevisionId
 from .schema import ModeloRevision
+from .schema_base import NUMERIC_CASILLA_DATA_TYPES
 from .schema_formula import BracketEntry, DatedValue, ParameterDefinition
 from .schema_rounding import RegistryRoundingCode
 
@@ -285,7 +286,7 @@ def resolve_scalar_parameter(parameter_id: str, ctx: _EvalContext, *, op: str) -
             translated_message="errors.calc.parameter_unknown",
             context={"parameter_id": parameter_id},
         )
-    if parameter.data_type not in {"decimal", "money", "integer", "ratio"}:
+    if parameter.data_type not in NUMERIC_CASILLA_DATA_TYPES:
         raise RegistryValidationError(
             f"parameter {parameter_id!r} must be scalar to be used by {op}",
             translated_message="errors.calc.dispatch_parameter_kind",

@@ -27,8 +27,10 @@ from .ids import LegalRefId, SourceRefId
 __all__ = [
     "GOVERNANCE_STAMP",
     "MANIFEST_ONLY",
+    "NUMERIC_CASILLA_DATA_TYPES",
     "REGISTRY_SOURCE_GROUNDING_TIERS",
     "SCHEMA_FAMILY",
+    "ZERO_PADDED_EXPORT_DATA_TYPES",
     "CalculationClass",
     "CalculationClassField",
     "CasillaSignConstraint",
@@ -682,6 +684,40 @@ CasillaDataTypeField = Annotated[CasillaDataType, BeforeValidator(coerce_enum_me
 
 Registry schema models validate strictly, which refuses a bare TOML string for an
 enum-typed field, so the token is coerced at the boundary.
+"""
+
+
+NUMERIC_CASILLA_DATA_TYPES: Final[frozenset[CasillaDataType]] = frozenset(
+    {
+        CasillaDataType.DECIMAL,
+        CasillaDataType.INTEGER,
+        CasillaDataType.MONEY,
+        CasillaDataType.RATIO,
+    },
+)
+"""Data types a formula may consume as a scalar operand.
+
+A narrowing of :class:`CasillaDataType`, held as members rather than as tokens so a
+member added or renamed cannot leave this set validating the old spelling. A
+``StrEnum`` member hashes as its own string, so this set accepts a raw token and a
+member alike -- verified against the live enum, not assumed.
+
+Distinct from :data:`ZERO_PADDED_EXPORT_DATA_TYPES`, which excludes ``RATIO``: a ratio
+is a scalar a formula can read, and is not written as a zero-padded numeral.
+"""
+
+ZERO_PADDED_EXPORT_DATA_TYPES: Final[frozenset[CasillaDataType]] = frozenset(
+    {
+        CasillaDataType.DECIMAL,
+        CasillaDataType.INTEGER,
+        CasillaDataType.MONEY,
+    },
+)
+"""Data types written right-justified and zero-padded in a fixed-width export.
+
+The narrower of the two numeric sets. Keeping both named, rather than one set with an
+exception at the ratio, is what stops a later reader assuming they are the same
+population.
 """
 
 
