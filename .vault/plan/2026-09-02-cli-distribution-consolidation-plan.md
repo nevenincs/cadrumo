@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:f098b4f2c01a946e5a9d1fd407f426292ca3e90f6d9b244c7ec13964cc8ea674'
+body_hash: 'sha256:71351e8888b6aa0118a32e73764fb4c3c8a9d9ea8751f0887869de138edf7a44'
 ---
 
 # `cli-distribution-consolidation` plan
@@ -49,18 +49,18 @@ Hold the primary PyPI name and register the Trusted Publisher bindings against t
 
 Replace bespoke orchestration with the sibling release-please and publish pair, restating the CI invariants it contradicts.
 
-- [ ] `P03.S05` - Add the release-please workflow dispatching publication and documentation delivery; `.github/workflows/release-please.yml`.
-- [ ] `P03.S06` - Add the publish workflow building, proving and uploading the three distributions; `.github/workflows/publish.yml`.
-- [ ] `P03.S07` - Add the distribution smoke check asserting both console scripts; `dev/smoke/smoke_check.py`.
-- [ ] `P03.S08` - Restate the self-hosted runner invariant as a workflow-level split; `dev/ci/tests/test_self_hosted_fleet.py`.
-- [ ] `P03.S09` - Restate the artifact-storage prohibition as a no-cross-run assertion; `dev/ci/tests/test_change_class_tiers.py`.
-- [ ] `P03.S10` - Retire the orchestrator, publication and soak workflows with their release-candidate modules; `.github/workflows/release-orchestrator.yml`.
+- [x] `P03.S05` - Add the release-please workflow dispatching publication and documentation delivery; `.github/workflows/release-please.yml`.
+- [x] `P03.S06` - Add the publish workflow building, proving and uploading the three distributions; `.github/workflows/publish.yml`.
+- [x] `P03.S07` - Add the distribution smoke check asserting both console scripts; `dev/smoke/smoke_check.py`.
+- [x] `P03.S08` - Restate the self-hosted runner invariant as a workflow-level split; `dev/ci/tests/test_self_hosted_fleet.py`.
+- [x] `P03.S09` - Restate the artifact-storage prohibition as a no-cross-run assertion; `dev/ci/tests/test_change_class_tiers.py`.
+- [x] `P03.S10` - Retire the orchestrator, publication and soak workflows with their release-candidate modules; `.github/workflows/release-orchestrator.yml`.
 
 ### Phase `P04` - Dissolve the agent harness into the product wheel
 
 Merge the MCP console script into the product distribution and remove the two host-extension channels.
 
-- [ ] `P04.S11` - Move the MCP console script into the product distribution; `pyproject.toml`.
+- [ ] `P04.S11` - Move the MCP console script into the product distribution and assert it in the distribution smoke check; `pyproject.toml`.
 - [ ] `P04.S12` - Remove the harness distribution and its workspace membership; `src/cadrumo-harness/pyproject.toml`.
 - [ ] `P04.S13` - Delete the host-extension channel artifacts and their acquisition lanes; `packaging/mcpb/build.py`.
 - [ ] `P04.S14` - Rewrite the agent connection guide around the installed console script; `docs/how-to/connect-an-agent.md`.
@@ -74,7 +74,7 @@ Route the root option to the full-screen session, add a headless self-test, and 
 - [ ] `P05.S17` - Route a bare full-screen request to the root session; `src/cadrumo/entrypoints/cli/_root_cli.py`.
 - [ ] `P05.S18` - Add the headless self-test option and its console-capability bypass; `src/cadrumo/entrypoints/cli/_tui_policy.py`.
 - [ ] `P05.S19` - Translate the self-test help key across every supported locale; `src/cadrumo/locales/en/cli.yml`.
-- [ ] `P05.S20` - Retire the second console script and repoint its entry-point test; `src/cadrumo/entrypoints/tui/tests/test_installed_entrypoint.py`.
+- [ ] `P05.S20` - Retire the second console script, repoint its entry-point test, and assert the headless full-screen start in the distribution smoke check; `src/cadrumo/entrypoints/tui/tests/test_installed_entrypoint.py`.
 
 ### Phase `P06` - Replace the install proof mechanism
 

@@ -526,6 +526,60 @@ its vocabularies through the typing introspection that works on a literal union 
 does not work on an enum, so promoting any member of the lattice without repairing
 that gate would leave it reading nothing while still reporting green.
 
+### a-lattice-is-rooted-not-flattened | high | The evidence tier shows the shape every narrowing should take
+
+The evidence tier existed at three independent levels: the full vocabulary, a subset
+naming the tiers that ground an entity on published material rather than on the law,
+and a one-member pin for the law alone on two models. Nothing derived any level from
+another, so a member added to the full set never reached the narrowings and a
+narrowing could drift outside the set it was supposed to narrow.
+
+The repair kept every level and removed only their independence. The full vocabulary
+is one enum; the subset is a tuple of its members rather than a restated pair of
+strings; the pins are expressed as a single-member literal OVER that enum rather than
+as a string that happens to match. A member added to the vocabulary now reaches every
+narrowing by construction.
+
+This answers the question the data-type lattice raised and could not settle. A
+narrowing is not duplication and must not be collapsed, but it also must not be
+independent. Rooting it in the canonical definition preserves the contract and
+removes the drift, and it is the shape the rest of this campaign's lattices should
+take.
+
+### the-load-check-proves-loading-not-resolution | medium | A missing import survived the standing check and surfaced only in an application test
+
+The one-call registry load has caught five breakages in this campaign and is the
+cheapest verification available, so its limit is worth stating precisely. Promoting
+the corpus tier moved two validator comparisons onto enum members and the import that
+made them resolvable was not added. The load check passed anyway, because the
+validator branch those comparisons sit in is not reached while loading the bundled
+tree. The failure appeared later, in an application-level export test, as a plain
+name error.
+
+The check therefore proves that the tree loads, not that every path in the modules it
+touched resolves. It remains the right first call after any narrowing edit; it is not
+a substitute for running the owning tests, and an edit that changes a comparison
+inside a conditional branch is exactly the shape it cannot see.
+
+### a-sweep-destroyed-the-proof-the-campaign-had-just-written | high | Canonicalising every occurrence removed the deliberate counter-example
+
+Sweeping the retired encoding spelling across the source and development trees
+rewrote a test written one iteration earlier whose entire purpose was to prove that
+spelling is refused. The sweep canonicalised the input, leaving a test named for a
+refusal that no longer supplied anything to refuse: green, and asserting nothing.
+
+This is the eighth appearance of the over-broad sweep in this campaign and the most
+instructive, because the earlier seven missed occurrences and this one destroyed a
+deliberate occurrence. A repair sweep and a negative fixture are indistinguishable by
+pattern -- both contain exactly the token being retired -- and only intent separates
+them.
+
+The rule that follows is narrow enough to apply. A sweep that removes a value must
+exclude the tests that prove the value is removed, and the cheapest way to honour it
+is to run the owning tests immediately after the sweep rather than only at the end of
+the iteration, because a proof turned vacuous still passes and will not announce
+itself.
+
 ## Recommendations
 
 Collapse the duplicate codec members to one, which is a correctness repair
