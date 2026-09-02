@@ -5298,3 +5298,33 @@ so the sentence now says every Step of that phase lives on the dev-owned surface
 true however many there are. A count in prose is a declaration that has to be maintained, and
 this plan has spent several findings on declarations that stopped describing what they
 describe.
+
+### Two conditions had never fired, and nothing would have noticed
+
+The revision-name screen documents eight conditions and emits five against the corpus. Of the
+three that never appear, one is asserted by an existing test. Two were neither emitted nor
+tested: `name_claims_open_ended`, for a name promising every later year over a window that
+ends, and `name_misstates_closing`, for a name whose stated closing year is not the declared
+one.
+
+A condition that has never fired is indistinguishable from one that cannot. Either could have
+been unreachable - a predicate ordered so an earlier branch always wins, a comparison that can
+never be true - and the screen would report a clean corpus for a defect it is blind to, which
+is worse than not screening for it at all.
+
+Both are now constructed and caught. A revision with an open-ended name is given a closing
+date and the first condition fires; one whose name states a span has its window's close moved
+a year earlier and the second fires, naming both years. Neither existed in the corpus, which
+is why the corpus could not prove them.
+
+A third test now pins that the set of documented conditions equals the set the module can
+emit, read from the source rather than from a count. It compares eight against eight, and it
+was checked to be comparing eight rather than passing on two empty sets - the defence this
+campaign added to its own gates after finding two of five could pass over nothing.
+
+This is the same defect as the stated condition count corrected two iterations ago, one level
+down. That one had the screen claiming six conditions while emitting eight; this one has the
+screen claiming two conditions it had never been shown to reach. Both are a declaration
+drifting from what it describes, and neither is visible in a passing test run - the first was
+caught by a gate written here, the second only by asking which documented conditions the
+corpus never exercises.

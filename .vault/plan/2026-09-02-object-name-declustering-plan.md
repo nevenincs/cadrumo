@@ -10,7 +10,7 @@ related:
   - '[[2026-09-02-object-name-declustering-reference]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:a660f57ede13d5d893fe7bad2e099db28faffae6d4f15d466884c63135dbfda3'
+body_hash: 'sha256:ea68e8a16cc4d928c85e03e54c6d8f4bd2487c30a9a6d6e362d88b533cb008ef'
 ---
 
 <!-- RETIRED: S21, S22 -->
@@ -99,6 +99,7 @@ Expose the declustering command as a discoverable mutation recipe whose default 
 
 Demonstrate the workflow on one reviewed leaf component and record evidence before any live rename.
 
+- [ ] `W03.P09.S23` - Bind manifest staleness to selected identities and declared bytes so unrelated concurrent inventory churn cannot invalidate a leaf operation; `dev/quality/object_name_manifest.py, dev/quality/tests/test_object_name_manifest.py`.
 - [ ] `W03.P09.S19` - Author one reviewed low-risk leaf-component manifest with exact finding and byte preconditions; `dev/quality/object_name_rename_manifest.toml`.
 - [ ] `W03.P09.S20` - Run the Justfile rehearsal and record scope, receipt, gate results, residual findings, and unchanged-live-tree proof; `.vault/audit/2026-09-02-object-name-declustering-pilot-rehearsal-audit.md`.
 
