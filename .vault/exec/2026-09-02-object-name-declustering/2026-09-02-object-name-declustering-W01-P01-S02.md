@@ -5,16 +5,11 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:e8d5c132154ef0940472de56600492aee25d351506dc0534a4c55dec5b6eb798'
+body_hash: 'sha256:53af6eb51509e6cc0eead930705daea577130bd6628857fa632790fa10a71dc9'
 step_id: 'S02'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Cover deterministic identities, digest stability, and source drift reporting with focused regression tests
 
@@ -25,4 +20,6 @@ related:
 ## Changes
 
 - `M` `dev/audit/tests/test_object_names.py`
-
+- `verify:` `uv run --no-sync pytest dev/audit/tests/test_object_names.py -q` -> `pass`
+- `verify:` `uv run --no-sync ruff check dev/audit/object_names.py dev/audit/tests/test_object_names.py` -> `pass`
+- `verify:` `git diff --check -- dev/audit/object_names.py dev/audit/tests/test_object_names.py .vault/plan/2026-09-02-object-name-declustering-plan.md .vault/exec/2026-09-02-object-name-declustering/2026-09-02-object-name-declustering-W01-P01-S02.md` -> `pass`
