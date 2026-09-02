@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import sys
+from dataclasses import dataclass, replace
 from pathlib import Path
+from types import SimpleNamespace
+from typing import cast
 
 import grimp
 import pytest
@@ -12,9 +16,12 @@ from dev.audit.semantic_duplication import Candidate
 from dev.quality.object_name_graph import (
     AdvisoryEvidence,
     HardEdge,
+    InventoryLike,
     ObjectNameGraphError,
     OperationLocator,
     ReferenceKind,
+    RenameManifestLike,
+    build_manifest_components,
     build_operation_components,
     clone_advisory,
     collect_import_edges,
@@ -22,6 +29,39 @@ from dev.quality.object_name_graph import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@dataclass(frozen=True)
+class _Operation:
+    operation_id: str
+    finding_id: str
+    old_locator: str
+    old_path: str
+    changed_paths: tuple[str, ...]
+    expected_reference_classes: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class _Manifest:
+    operations: tuple[_Operation, ...]
+
+
+@dataclass(frozen=True)
+class _Finding:
+    id: str
+    qualified_sites: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class _Declaration:
+    qualified_locator: str
+    path: str
+
+
+@dataclass(frozen=True)
+class _Inventory:
+    findings: tuple[_Finding, ...]
+    declarations: tuple[_Declaration, ...]
 
 
 def _build(
@@ -94,6 +134,8 @@ def test_every_hard_reference_class_is_preserved_and_explains_risk() -> None:
         HardEdge("alpha", "src/cadrumo/type_hint.py", ReferenceKind.TYPE_ONLY_IMPORT),
         HardEdge("alpha", "src/cadrumo/dynamic.py", ReferenceKind.DYNAMIC_IMPORT),
         HardEdge("alpha", "src/cadrumo/__init__.py", ReferenceKind.EXPORT),
+        HardEdge("alpha", "src/cadrumo/symbol_user.py", ReferenceKind.SYMBOL_IMPORT),
+        HardEdge("alpha", "src/cadrumo/collision.py", ReferenceKind.COLLISION_MEMBER),
         HardEdge("alpha", "docs/api/alpha.rst", ReferenceKind.GENERATED_ARTIFACT, generator_owner="apidocs"),
     )
     component = _build(("alpha",), edges=edges)[0]
@@ -104,12 +146,50 @@ def test_every_hard_reference_class_is_preserved_and_explains_risk() -> None:
         ReferenceKind.TYPE_ONLY_IMPORT,
         ReferenceKind.DYNAMIC_IMPORT,
         ReferenceKind.EXPORT,
+        ReferenceKind.SYMBOL_IMPORT,
+        ReferenceKind.COLLISION_MEMBER,
         ReferenceKind.GENERATED_ARTIFACT,
     }
     assert component.risk.generated_artifact_count == 1
     assert component.risk.dynamic_reference_count == 1
     assert component.risk.maximum_direct_fan_in == 7
     assert component.risk.boundary_crossing_count == 1
+
+
+def test_manifest_projection_expands_inventory_collision_paths_and_reconciles_reference_classes() -> None:
+    locator = "class:cadrumo.alpha.Alpha#binding=1"
+    peer_locator = "class:cadrumo.beta.Alpha#binding=1"
+    operation = _Operation(
+        operation_id="rename-alpha",
+        finding_id="finding-alpha",
+        old_locator=locator,
+        old_path="src/cadrumo/alpha.py",
+        changed_paths=("src/cadrumo/alpha.py", "src/cadrumo/beta.py"),
+        expected_reference_classes=("definition",),
+    )
+    manifest = cast(RenameManifestLike, _Manifest((operation,)))
+    inventory = cast(
+        InventoryLike,
+        _Inventory(
+            findings=(_Finding("finding-alpha", (locator, peer_locator)),),
+            declarations=(
+                _Declaration(locator, "src/cadrumo/alpha.py"),
+                _Declaration(peer_locator, "src/cadrumo/beta.py"),
+            ),
+        ),
+    )
+
+    component = build_manifest_components(manifest, inventory=inventory)[0]
+
+    assert component.affected_paths == ("src/cadrumo/alpha.py", "src/cadrumo/beta.py")
+    assert any(edge.kind is ReferenceKind.COLLISION_MEMBER for edge in component.hard_edges)
+
+    stale_expectation = cast(
+        RenameManifestLike,
+        _Manifest((replace(operation, expected_reference_classes=("definition", "dynamic-target")),)),
+    )
+    with pytest.raises(ObjectNameGraphError, match="reference classes differ from reviewed intent"):
+        build_manifest_components(stale_expectation, inventory=inventory)
 
 
 def test_import_collector_distinguishes_runtime_type_only_dynamic_and_export(tmp_path: Path) -> None:
@@ -165,6 +245,44 @@ def test_import_collector_distinguishes_runtime_type_only_dynamic_and_export(tmp
     assert ("symbol-op", "src/cadrumo/type_hint.py", ReferenceKind.TYPE_ONLY_IMPORT) in observed
     assert ("symbol-op", "src/cadrumo/__init__.py", ReferenceKind.EXPORT) in observed
     assert ("symbol-op", "src/cadrumo/dynamic.py", ReferenceKind.DYNAMIC_IMPORT) in observed
+
+
+def test_collector_preserves_multiple_symbols_and_mixed_type_checking_context(tmp_path: Path) -> None:
+    _write(tmp_path, "dev/__init__.py")
+    _write(tmp_path, "src/cadrumo/target.py", "class RuntimeThing: pass\nclass TypeThing: pass\n")
+    _write(
+        tmp_path,
+        "src/cadrumo/mixed.py",
+        "from typing import TYPE_CHECKING\n"
+        "from cadrumo.target import RuntimeThing\n"
+        "if TYPE_CHECKING:\n"
+        "    from cadrumo.target import TypeThing\n",
+    )
+    all_graph = _graph(
+        "cadrumo",
+        "cadrumo.target",
+        "cadrumo.mixed",
+        imports=(("cadrumo.mixed", "cadrumo.target"),),
+    )
+    runtime_graph = _graph(
+        "cadrumo",
+        "cadrumo.target",
+        "cadrumo.mixed",
+        imports=(("cadrumo.mixed", "cadrumo.target"),),
+    )
+    edges = collect_import_edges(
+        (
+            OperationLocator("runtime-op", "cadrumo.target", "src/cadrumo/target.py", "RuntimeThing"),
+            OperationLocator("type-op", "cadrumo.target", "src/cadrumo/target.py", "TypeThing"),
+        ),
+        repo_root=tmp_path,
+        all_graph=all_graph,
+        runtime_graph=runtime_graph,
+    )
+    observed = {(edge.operation_id, edge.path, edge.kind) for edge in edges}
+
+    assert ("runtime-op", "src/cadrumo/mixed.py", ReferenceKind.SYMBOL_IMPORT) in observed
+    assert ("type-op", "src/cadrumo/mixed.py", ReferenceKind.TYPE_ONLY_IMPORT) in observed
 
 
 def test_missing_allowlist_path_and_unowned_generated_artifact_refuse() -> None:
@@ -286,4 +404,18 @@ def test_parse_error_and_unmappable_importer_fail_closed(tmp_path: Path) -> None
             repo_root=tmp_path,
             all_graph=graph,
             runtime_graph=graph,
+        )
+
+
+def test_internal_graph_build_refuses_a_first_party_package_loaded_from_another_tree(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write(tmp_path, "dev/__init__.py")
+    _write(tmp_path, "src/cadrumo/target.py")
+    monkeypatch.setitem(sys.modules, "cadrumo", SimpleNamespace(__file__=str(tmp_path.parent / "foreign.py")))
+
+    with pytest.raises(ObjectNameGraphError, match="belongs to a different tree"):
+        collect_import_edges(
+            (OperationLocator("module-op", "cadrumo.target", "src/cadrumo/target.py"),),
+            repo_root=tmp_path,
         )
