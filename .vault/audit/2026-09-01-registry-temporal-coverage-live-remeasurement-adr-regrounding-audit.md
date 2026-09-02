@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:106eedc5c8c931cdb03fb6fcc0b518722e8f2365a9be3b076c996ed57d3bf316'
+body_hash: 'sha256:079781f458f2fe31a44d73a933e849acac2bf33fb7fbd5e003b6b7e1dcd60920'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -1767,6 +1767,1271 @@ why it is easy to omit: at nearly twelve minutes for seven tests it exceeds the
 default foreground timeout, so it drops out of any run that is not deliberately
 backgrounded.
 
+### seven-package-initialisers-were-facades-and-the-condition-is-now-gated | medium | Two were fixed one at a time before anyone asked how many there were
+
+Two re-export facades were removed from this tree in earlier findings, each
+found by walking into it while doing something else. Neither prompted the
+obvious question, which is how many others there are. Surveying every
+`__init__.py` under the registry development tree answers it: of eleven, five
+still carried imports and an `__all__`, including one of eighty-five lines and
+one of sixty-five.
+
+All five were removable without touching a single caller. An AST sweep for
+symbol imports from those five package roots returns zero across the repository:
+every consumer already imports the defining module. The facades were carrying
+nothing except the ability to grow, and three of them were pure - docstring,
+imports, `__all__`, and no other statement - so reducing them to their docstrings
+was mechanical.
+
+Two checks were made that a symbol search would not have caught, because these
+packages are executed as well as imported. Three are run as `python -m
+dev.registry.<package>` from the justfile and CI, which loads `__main__.py`; each
+of those imports `from .cli import app`, the submodule, not the package root. The
+fourth is referenced in two CI workflows as
+`python -m dev.registry.parity.maintenance_cli`, again a submodule path. All four
+entry points were then imported directly to confirm it rather than argued.
+
+One of the five was this campaign's own: an `analysis` initialiser declaring an
+empty `__all__`. An empty export list is still an export declaration, and leaving
+it while removing four others would have been the kind of exemption that makes a
+rule unenforceable.
+
+The condition is now gated: every initialiser in the tree must carry nothing but
+a docstring. The gate is paired with a detector that builds a facade as source
+text and shows the predicate catches its import and its `__all__` - constructed
+in memory rather than written into the tree, because a gate over the
+contributor's working tree must not modify it to prove itself. The argument for a
+standing gate rather than five fixes is that nothing made the first facade fail,
+so nothing would have made the sixth.
+
+### the-lane-figure-was-wrong-again-for-the-same-reason-one-size-down | medium | Reported as seventeen, measured as eighteen: a file was run where a directory was meant
+
+The previous finding here established that every lane measurement had covered
+`dev/registry/tests` and silently excluded the conformance suite beside it, and
+put the corrected total at seventeen. Measured over both directories the total is
+**eighteen**: `PYTEST_EXIT=1`, 18 failed against 833 passed in 15m05s.
+
+The missing one is a third conformance failure, in `test_closure.py`. It was
+missed because the correction ran a single *file* of that directory rather than
+the directory - the identical error to the one being corrected, one size smaller,
+committed while writing the correction for it.
+
+The plan criterion now names paths rather than reciting a count, because the count
+has been wrong twice and the path is what makes it checkable.
+
+### five-code-boundary-violations-in-the-registry-tree-are-cleared | medium | A shipped check already existed for the rule; nobody had run it
+
+The retired applicability migrator was found citing plan and step identifiers in
+its own docstring, which the code-stands-alone mandate forbids. That prompted the
+question of how many others do the same, and the answer did not need new tooling:
+`vaultspec-core vault check code-boundary` exists for exactly this rule and had
+twelve findings.
+
+Five were in this campaign's tree and are now cleared. The generation pipeline's
+source-defect module cited an ADR and a reference document to justify its own
+adjudication; the citation was unnecessary, because that docstring already argues
+the whole case from the document it adjudicates - a workbook that prints an
+eleven-character constant into a slot it declares twelve bytes wide - and the
+vault record cites the module by path, not the reverse. Four modelo 390 casilla
+declarations carried an ADR identifier in a parenthetical inside an otherwise
+self-contained comment, which the sentence survives losing.
+
+These are shipped filing-grade declarations, so the change was verified rather
+than assumed safe: the diff is four files of one line each, the authority still
+compiles all five modelo 390 revisions and their 1,450 casillas, and the annual
+snapshot still resolves at filing grade.
+
+Seven violations remain, all outside this tree, and they are recorded rather than
+fixed for the same reason as before: they belong to surfaces this campaign does
+not own.
+
+### the-facade-condition-was-not-peculiar-to-this-tree | low | Eleven of fifty-two initialisers elsewhere in the development tree carry exports
+
+Having found seven facades in the registry development tree, the same predicate
+was run across the rest of the development tree to see whether that was unusual.
+It is not: eleven of fifty-two initialisers outside the registry carry statements
+beyond a docstring, the largest fourteen.
+
+They are deliberately not touched. They sit outside this plan's feature, and the
+gate written here is scoped to the registry tree for the honest reason that a
+repository-wide version would fail immediately on surfaces nobody has agreed to
+change. The measurement is recorded so that the scoping is a decision someone can
+revisit rather than an omission.
+
+### the-closure-report-is-snapshot-bound-and-costs-211-seconds | high | Seventeen hundred isolated snapshots for one hundred and twenty-eight rows
+
+The third conformance failure is not an assertion. `test_cli_live_mode_uses_
+canonical_loaders_but_blocks_without_durable_filing_proof` exhausts the suite's
+300-second budget inside `copy.deepcopy`, and the reason is a cost nobody had
+measured: one registry closure report takes **210.8 seconds** to produce 128 rows.
+That leaves no room for a test that builds the report and then does anything at
+all.
+
+The attribution was taken rather than guessed, and the first guess was wrong. The
+traceback points at deepcopy, so "snapshot isolation is the cost" is the obvious
+reading; timing snapshots individually gives 0.04s to 0.23s, which across 128 rows
+accounts for about 26 seconds, so the obvious reading appeared to fail and the
+remaining 185 seconds looked unexplained. A profiler run was started and abandoned
+after forty minutes without output - cProfile's overhead over deeply recursive
+deepcopy is severe enough to be useless here.
+
+Timing the report's four composable phases directly settles it in one run.
+`compose_temporal_coverage` takes 103.8s and `compose_filing_export_coverage`
+73.4s, together 84% of the total. Counting inside the first: **1,727 `snapshot()`
+calls costing 82.9 seconds, 95% of that phase**. So the earlier estimate was wrong
+not about the mechanism but about the multiplier - the composer takes about
+thirteen and a half snapshots per row, not one.
+
+What makes this structural rather than a slow function is where the isolation
+sits. The authority caches the compiled registry, and the freshness test asserts
+that identity directly. What `snapshot()` does per call is `model_copy(deep=True)`
+on the revision projection, so the cache prevents recompilation and not
+re-isolation: N calls cost N deep copies whatever the cache does. The registry
+authority rule requires callers to receive isolated validated snapshots rather
+than shared mutable state, so the copying is deliberate and correct; what is
+accidental is taking seventeen hundred of them to answer a question about a
+hundred and twenty-eight rows.
+
+Two constraints bound the remedy, and both are worth stating before anyone reaches
+for a cache. Memoising above the authority is explicitly forbidden and gated: a
+fingerprint-blind memo would outlive the authority's own cache entry and hand back
+a pinned object after invalidation. And that gate is itself red right now -
+`test_snapshot_resolution_is_not_memoized_above_the_authority` is among the
+currently failing filing tests - so the property it defends cannot presently be
+assumed to hold. The tractable directions are reducing the call count in the
+composers, or making isolation cheap for models that are already frozen, and
+neither is a cache above the authority.
+
+### the-temporal-coverage-phase-is-eleven-times-faster-and-provably-unchanged | high | Seventeen hundred deep copies were made to read seventeen hundred strings
+
+The composer took one isolated snapshot per coordinate and used exactly one
+thing from it: `str(snapshot.revision.id)`. Every field of the validated
+projection was deep-copied and then discarded. The call had a second real
+purpose - proving the snapshot boundary admits the coordinate at its declared
+grade, which is the module's stated reason for going through the boundary at all
+- but that purpose is served by whether the call raises, not by the object it
+returns.
+
+The measurements that settle where the cost sits, all against the bundled
+registry:
+
+- `_cached_snapshot` on a hit: **0.0 ms**. The compiled registry really is cached.
+- deep copy of the full `RegistrySnapshot`: **236.5 ms**.
+- the whole `snapshot()` call: **241.1 ms**.
+
+So the isolating copy is **98%** of the call, and the cache prevents
+recompilation rather than re-isolation. `compose_temporal_coverage` made 1,727
+such calls for 128 rows.
+
+A new accessor returns the admitted revision identifier through the same
+selection, the same validation and the same refusals, without the copy. Giving
+up the copy is safe for exactly one reason and no more: the copy exists so a
+caller cannot mutate cached registry state, and a string is not mutable state. A
+caller that goes on to READ the projection still takes a snapshot and still gets
+its own isolated copy. The phase falls from **103.8s to 9.5s**.
+
+Behaviour was proved unchanged rather than asserted: every one of the 1,727
+coordinates the composer visits was replayed through both the old and the new
+path and the outcomes compared including exception type and message - **0
+differ**. The owning tests pass (44), and the accessor carries its own tests
+covering four unlike modelos, an identical refusal on a grade the registry
+genuinely will not admit, and the string-ness that the safety argument rests on.
+
+One self-correction is recorded because it nearly damaged an accurate record. An
+intermediate measurement put the deep copy at 18% of the call, which appeared to
+refute the finding above and prompted a correction to it. That measurement was
+wrong: it timed a deep copy of `snapshot.revision` against a call that
+deep-copies the entire `RegistrySnapshot`, which is a comparison of unlike
+things. Measuring the same object on both sides gives 98%. The lesson is narrow
+and worth keeping - a correction needs the same standard of evidence as the
+claim it corrects, and this one nearly replaced a true statement with a false
+one.
+
+### the-conformance-cli-test-now-passes-and-the-margin-says-the-work-is-not-finished | medium | 262 seconds against a 300 second budget is a pass nobody should rely on
+
+`test_cli_live_mode_uses_canonical_loaders_but_blocks_without_durable_filing_proof`
+failed by exhausting the suite's 300-second budget. With the temporal-coverage
+phase cut from 103.8s to 9.5s it now passes: `1 passed in 262.71s`. The whole
+closure report fell from 210.8s to 93.0s over the same 128 rows.
+
+The pass is real and it is also thin. Thirty-seven seconds of headroom on a
+four-minute test is not a margin, it is a coincidence: any machine slower than
+this one, any concurrent test run competing for CPU, or any future row added to
+the report puts it back over the line. The failure would then look like a
+regression in whatever changed last rather than the cost cliff it actually is.
+
+So this is recorded as progress with the remedy unfinished rather than as a
+fixed test. `compose_filing_export_coverage` is still 73.4s and is now the
+dominant term in the report; the same question that resolved the first phase -
+whether it materialises isolated snapshots whose projections it discards - is
+the first thing to ask of it. Until that lands, the honest statement is that the
+test passes on this machine today.
+
+### all-five-classification-failures-are-refactor-collateral-and-four-need-an-owner-not-an-edit | high | The gates are working; they are reporting that adjudication ledgers were not carried through a rename
+
+The five remaining classification failures in the lane were attributed. None is a
+defect in the classification tooling's logic and none is a stale assertion. In
+every case the gate is doing its job and reporting that the in-flight refactor
+moved modules while the adjudication ledgers stayed behind.
+
+One was mechanical and is fixed. The private-to-public promotion renamed 44
+application modules, and the branch ledger keys on `path::symbol::modelos`, so
+every key went stale on its path segment alone. A strict bijection was proved
+before rewriting - each stale key maps to exactly one unclassified key by
+dropping the leading underscore, all 44 new files exist and no old file survives
+- and 82 other keys naming modules that are still private were correctly left
+alone, so this was a per-key mapping rather than a blanket strip. That gate now
+passes; the lane's classification failures fall from five to four, verified
+independently at 4 failed / 21 passed.
+
+The other four were deliberately not fixed, and the reasoning is the valuable
+part. Closing them means *authoring* adjudications, not repairing keys: seven
+modules split out of two parents need a machinery-versus-regulatory-embed ruling
+each, and one of them carries a live regulatory prose literal whose
+classification is a filing-grade judgement that has to be grounded in AEAT
+authority. Twenty-one newly reachable modules need a trigger naming a concrete
+surface, and that file's own gate exists to refuse a trigger that names none.
+Writing plausible justifications for either would satisfy the gate and destroy
+its meaning, which is the precise failure these gates were built to prevent.
+
+A fourth is a real question rather than a defect: `ledger_bindings.py` was split
+and every consumer repointed at the children, so the parent is now unreferenced.
+The gate is asking whether it is genuinely dead, and the answer decides whether
+it should be deleted rather than classified.
+
+### the-static-load-closure-conflates-reachability-with-what-a-load-imports | medium | A function-scoped import is a graph edge but not a load-time import
+
+The closure gate compares the statically derived import closure against what a
+real load actually imports, and fails for eight registry modules. The chain was
+traced to its last surviving link: a function-local deferred import inside
+`validate_m303_regimen_simplificado_annual_summary_revision`, sitting after an
+early return. At runtime the two enclosing modules are in `sys.modules` after a
+load while the imported one is not.
+
+The underlying weakness is in the instrument, not the assertion. The graph tool
+records function-scoped imports as ordinary edges, so the derived closure means
+"reachable if every function ran" while the comparison treats it as "imported
+when a load runs". Those are different claims and the gate is the place the
+difference surfaces.
+
+The assertion should not be relaxed to accommodate this - it is the gate
+confronting the graph with reality, which is exactly its purpose. The two honest
+remedies are hoisting that import to module scope if no cycle forbids it, or
+teaching the closure to exclude function-scoped edges and say so. Both sit
+outside this campaign's ownership and are recorded rather than taken.
+
+### what-this-product-can-actually-file-is-now-stated-and-the-answer-is-small | critical | Sixty-eight revisions claim filing grade; fifty-two of them cannot be presented
+
+The first question anyone asks of this registry is which modelos the product can
+calculate and file. Until now that answer had to be reconstructed from grades,
+layout counts and directory listings, which is why it kept being answered
+differently. It is declared data and was simply never assembled.
+
+Assembled, over 58 modelos and 128 revisions:
+
+- 22 modelos declare `applicability` only - the censal and informational ones,
+  including 036 and 038, whose alta, modificacion and baja are filed on AEAT's
+  sede and produce no fichero here. That is the correct and complete state for
+  such a modelo, and the screen reports nothing for it.
+- 5 modelos declare `calculation` only: 117, 126, 128, 136 and 200. Modelo 200's
+  grade is not an anomaly needing investigation; it sits with four siblings.
+- 68 revisions reach filing grade with a layout to render from.
+- **52 of those 68 declare no filing envelope.** They can render bytes and have
+  nothing to present them in.
+- 25 revisions carry an export layout while declaring a grade below filing,
+  including modelo 222, which ships a committed generated export tree at
+  applicability grade.
+- Modelo 100, the IRPF declaration, declares filing grade across six revisions
+  with six layouts, no envelope on any of them and no committed tree.
+
+So the honest headline is that filing capability is declared far more widely than
+it is built. Sixteen revisions carry a complete filing chain; the rest claim a
+rung and stop somewhere short of it.
+
+None of the three reported conditions is automatically a defect, and the screen
+is deliberately built so that a modelo which is genuinely not filed here produces
+no row at all - that case is proven by a test over modelo 036 rather than
+asserted. What the screen refuses to allow is a filing claim and the machinery
+behind it drifting apart in silence, which is the same failure the
+under-declaration rule names.
+
+The distinction is recorded as a screen rather than as prose in a README for the
+reason every other census here is: a maintained list of which modelos are real
+filings would be wrong within a release, while a derivation from the declarations
+cannot be. The three conditions it reports are now plan steps.
+
+### the-shipped-code-boundary-check-misses-step-identifiers-and-declarations-carried-them | high | It reported the registry clean while filing-grade declarations cited a plan step
+
+The code-boundary rule was checked earlier with the shipped
+`vaultspec-core vault check code-boundary`, five registry violations were
+cleared, and the registry was recorded clean. It was not. Two modelo 200
+revision declarations - shipped, filing-relevant, read as tax-domain evidence -
+each carried the sentence "until the canonical generator publishes the exact
+20xx design under downstream step W04.P08.S22", and a third citation sat in a
+development channel declaration.
+
+The check did not miss them by accident of scope. It matches vault document
+*stems* - the dated `yyyy-mm-dd-feature-type` form - and a plan step identifier
+is not one. So the class of citation most likely to be written casually mid-work,
+and least likely to look like a reference at all, is precisely the class the
+check cannot see. Running it and reading "clean" was therefore evidence about
+stems, not about the rule.
+
+A declaration is the worst place for such a citation. It ships in the wheel, it
+is read as evidence about Spanish tax law, and it names development scaffolding
+the product is supposed to be removable from.
+
+All three citations are removed and the condition is now gated in this
+repository rather than delegated to the installed check. The gate matches four
+kinds - wave-phase-step and phase-step identifiers, dated document stems, and
+literal vault paths - across the registry development tree and the shipped
+registry declarations, and it scans over a thousand files.
+
+Two details of its construction are worth keeping, because both were found by
+the gate failing rather than by design. The phase-step pattern first matched
+inside the wave-phase-step form, so one citation reported as two; it is now
+anchored to reject that. And the gate reported *itself*, because its paired
+detector must contain an example of each kind to prove the patterns fire -
+the module excludes its own path, with the reason stated in the code, since
+removing the examples would leave the patterns unproven and scanning them makes
+the gate self-accusing.
+
+The detector proves the negative half too: a revision directory name like
+`2025-y-siguientes`, a casilla identifier like `DP200014:01033`, an Orden
+citation and a `2024-2025` span must all NOT match. A detector that fired on
+ordinary registry vocabulary would be unusable, and a clean corpus would never
+reveal it.
+
+### the-three-grade-withdrawals-were-deliberate-correct-and-evidenced | high | The accident was the filing claim, not its removal
+
+The twenty-four filing tests demanding filing grade from modelos 200, 038 and
+036 were investigated against the commit history. All three withdrawals are
+deliberate and correct, and no filing-correctness regression exists.
+
+Modelo 200's demotion to `calculation` carries its rationale in the declaration
+itself: the revision spanned two incompatible AEAT layouts, so filing refuses
+until layout-correct revisions exist. Filing capability had already been
+withdrawn separately and atomically - 149 export fragments deleted in one commit
+that simultaneously recorded the removal decision, reasoning that retaining a
+partial layout "would permit silent under-declaration". Today both revisions
+declare no export layouts at all, so filing grade would be a false claim.
+
+Modelo 038 is the sharpest case, because there the *filing* grade was the
+accident. A bulk edit inserted `authority_grade = "filing"` into 97 revision
+files under an unrelated subject, contradicting the human-written applicability
+prose two lines above it in twenty-five of them. The correction four days later
+was a demotion plus a transcription that added no claim. Restoring filing here
+would re-introduce the original defect.
+
+Modelo 036 is read through censo synchronisation rather than produced, and
+production code already names it as the motivating case for the below-filing
+boundary.
+
+What was actually missed is atomicity: three commits changed a grade without
+moving the consumers asserting it, which is the architecture rule's atomic-change
+requirement applied to grades rather than identifiers. The twenty-four failures
+are that debt. Eight were never about modelo 200 at all and merely used it as a
+convenient filing fixture; fourteen assert a decimal-slot contract that is
+modelo-agnostic and whose stated premise is false today independently of the
+grade; two are not grade failures at all but stale expectations of a refusal
+shape that production deliberately made richer.
+
+### the-envelope-finding-was-mostly-noise-and-the-real-defect-was-hiding-inside-it | critical | Fifty-two reported, thirty-one real, and the real ones lose the mandatory developer identity
+
+The capability screen's first envelope condition reported 52 filing-grade
+revisions carrying no filing envelope. Grounded against the bundled official
+record designs, most of that was the screen's error rather than the registry's,
+and the correction is recorded in full because the corrected finding is worse
+than the original.
+
+Three things were wrong with it. The envelope is not universally required: a
+design that declares no variable composition is complete as records alone, and
+ten hand-authored and seven pipeline-derived revisions were correctly envelope
+free, confirmed against their designs. There is a second legal spelling,
+`auxiliary_envelope_header`, the total-less page-zero header, which the counter
+ignored. And an XML-dictionary layout may never carry an envelope at all - the
+schema refuses it - which alone accounted for modelo 100's six revisions.
+
+What was left after removing the noise is a genuine defect the count had buried.
+**Thirty-one revisions carry their envelope smuggled into the record tuple as an
+`envelope_header` pseudo-record instead of the typed slot**, twenty of them at
+filing grade. The bytes can look right while the envelope is invisible to every
+consumer that asks the layout whether it has one - including the export
+boundary, which branches on exactly that question, takes the plain-records path,
+and then *refuses* the product and software identity an enveloped filing must
+carry.
+
+Modelo 714 shows what the spelling costs. Its envelope record declares filler
+across most of the 328-byte prefix, and offsets 93-96 and 101-109 - the
+Version del Programa and NIF Empresa Desarrollo the design marks mandatory - are
+covered by **no field at all**. A typed envelope would have compelled them.
+
+Modelo 322 proves it is a regression rather than unfinished work: three of its
+revisions are pipeline-generated with typed envelopes, and the newest,
+filing-grade revision lost it to the record spelling.
+
+The condition was replaced rather than tuned. A screen whose signal is a third of
+its rows teaches its reader to skim, which is the failure mode this campaign has
+already recorded for frozen counts. It now fires regardless of declared grade,
+because the defect does not become real when a grade is raised - it is inherited.
+
+Two further cases need a decision rather than an edit. Modelo 100 declares filing
+grade for an XML layout that will refuse at render for want of a grounded
+aux-version token, so the value is honestly absent while the grade overstates the
+outcome; the token must not be invented. Modelo 222 declares applicability while
+shipping a generated tree with a typed envelope, and its own rationale comment -
+that nobody has mapped its box numbers - was made false by the same commit that
+installed the mapping.
+
+### two-revisions-ship-filing-bytes-while-declaring-they-cannot-file | high | And the honest response was a structural gate, not a prose correction
+
+Modelo 222 declares applicability grade while shipping a committed generated
+export tree whose layout carries a typed filing envelope. Modelo 185 does the
+same without the envelope. Two of the twenty-seven revisions that ship trees are
+in this state: the product ships the bytes of a filing for a revision whose own
+declaration says it cannot file.
+
+Modelo 222's declaration also contains two statements that are now false. A file
+comment says the money-closure casillas remain deferred because "nobody has yet
+mapped its box numbers", and a reviewer attestation says the revision "declares 2
+casillas" and that "no export layout of either kind is declared". The revision
+carries seventy-six casillas and one export layout, and the mapping was authored
+by the same commit that installed the tree.
+
+Neither was corrected, and the reasoning matters more than the finding. The
+attestation is a person's signed statement bounded in time - it ends "This review
+reaches scheduling and applicability only" - and rewriting it to match the
+current data would forge a review that never happened. The staleness IS the
+evidence: the declaration was materially enlarged after a review that explicitly
+limited its own scope, and nobody re-reviewed it. Editing the prose would destroy
+the only trace of that.
+
+So the condition is reported structurally instead, comparing the shipped tree
+against the declared grade - two facts, neither of them prose. That gate fires on
+both revisions today and is proven not to fire on modelo 303, which ships trees
+across six filing-grade revisions and is the intended state. A screen that
+flagged those would be reporting the product working correctly, and its reader
+would learn to ignore the kind.
+
+The remedy is a re-review of modelo 222 against what it now declares, not a
+grade edit made on the strength of a tree being present.
+
+### the-contract-can-say-a-family-is-inapplicable-but-not-that-a-capability-is-withheld | high | Twenty-five revisions carry filing machinery below filing grade and none can say why in typed data
+
+Twenty-five revisions declare an export layout while sitting below filing grade.
+Grounded against the registry, they are not one condition. Three are correct by
+law - modelos 117, 126 and 128 each state that the liable filer is a third party,
+so the product's user never files them. Eighteen are deliberate conservatism,
+and one of them states the doctrine plainly: a layout "proves byte geometry only;
+it does not promote the revision to filing grade... promoting it is an operator
+decision, and it is not made here on the strength of the layout". One is stale.
+Three - modelos 189, 280 and 345 - carry no rationale of any kind, which is
+indistinguishable from oversight.
+
+The obvious hardening was to require the reason as typed data, and the registry
+appeared to have the mechanism: revisions carry `family_dispositions`, a mapping
+from schema family to a declaration with a reason, already used for four
+families. Zero of the twenty-five use it for the export family.
+
+They cannot. The validator refuses a disposition against a family that HOLDS
+content, on the ground that claiming the law does not require what the revision
+already declares is a contradiction the coverage projection would have to
+arbitrate. That reasoning is right, and it means the mechanism expresses "this
+family is not applicable here" and cannot express "this family is present and its
+promotion is deliberately withheld". They are different statements and only the
+first is typed.
+
+A sweep of every field a revision carries confirms no other slot holds it. The
+grade states the rung reached; the review fields state who looked and when;
+nothing states why a revision holding filing machinery stays below filing. So the
+eighteen documented deferrals are documented only in comments - unqueryable,
+unenforceable, and invisible to every gate - and the three undocumented ones
+cannot be told apart from an accident.
+
+This was very nearly implemented as a gate requiring the typed disposition, which
+the schema would have refused for exactly the reason above. Reading the validator
+before writing the gate is the only thing that prevented shipping an invalid
+contract. It is recorded as a decision for the declaration-contract phase rather
+than an invented field, because the choice between a new typed slot and widening
+the existing disposition semantics is a contract decision with consequences for
+the coverage projection.
+
+### ninety-nine-percent-of-each-isolating-copy-is-data-the-caller-never-reads | high | Which makes the safe remedy cheaper than the one that needed a guard relaxed
+
+The conformance audit's remaining cost is one call site: 884 of its 952 snapshots
+come from the model-law coverage loop, and unlike the sites fixed so far this one
+genuinely READS its projection - the ledger consumes the snapshot's legal refs,
+sources, workbook parity refs, live cross references and coordinate. So the
+remedy applied twice already, discarding a copy nobody reads, does not apply
+here.
+
+Two remedies were then available and they are not equally safe.
+
+The first is coordinate reuse. Every one of those 884 snapshots is built for a
+distinct filing coordinate of an ALREADY-PINNED revision, and the resulting
+ledgers were shown to be coordinate-invariant: grouping all 1,729 ledgers by
+modelo and revision and comparing them with only the two coordinate fields
+removed gives 95 of 95 multi-coordinate groups byte-identical. So one snapshot
+per revision would serve. But the ledger builder refuses a coordinate that
+disagrees with its snapshot, and that guard is what makes a mismatched pairing
+impossible. Reusing one snapshot across coordinates means relaxing it, which
+trades a real safety property for speed on a filing-adjacent path.
+
+The second remedy came from asking what the copy actually costs. Against modelo
+390: a full snapshot deep copy is 127.5 ms, its revision alone 25.3 ms, and the
+four collections the ledger genuinely reads **1.4 ms**. The revision carries 393
+casillas; the ledger reads none of them. So roughly ninety-nine percent of every
+one of those 884 copies is data the caller never touches, and the isolation the
+copy provides is being bought for the whole projection when it is needed for a
+hundredth of it.
+
+That makes the safer remedy also the cheaper one: isolate the facts a coverage
+ledger reads rather than the snapshot that contains them. Every coordinate keeps
+its own isolated data and its own coordinate, the guard stays exactly as it is,
+and no contract moves. The arithmetic is 884 x 127.5 ms against 884 x 1.4 ms.
+
+The measurement is recorded before the change because it inverts which remedy is
+obvious. The coordinate-invariance proof is genuinely strong evidence and it
+pointed at the more dangerous fix; the cost breakdown took one command and made
+it unnecessary.
+
+### the-conformance-audit-is-six-times-faster-and-every-ledger-is-byte-identical | high | 133.9s to 22.1s, without relaxing the guard that made the fast path look dangerous
+
+The isolating copy now covers what a coverage ledger reads rather than the
+projection that contains it. A new authority accessor returns the coordinate and
+the four evidence collections, each deep-copied, and the ledger builder accepts
+that projection alongside the two it already took.
+
+The results, each measured rather than projected:
+
+- one call: **126.4 ms to 0.2 ms**.
+- the model-law coverage audit: **48.3s to 5.8s** over its 884 coordinates.
+- the whole conformance audit: **133.9s to 22.1s**, having been 66.3s after the
+  first fix in this chain.
+- the registry closure report earlier in this campaign: 210.8s to 15.0s.
+
+Equivalence was proved on the audit's own coordinates rather than on a
+reconstruction of them. A first attempt derived the coordinate list from the
+period selector, matched nothing, and compared zero ledgers - a proof that would
+have read as a pass. Capturing what the audit actually requests gives 884
+coordinates, and building every ledger through both the old and the new path
+yields **884 identical, 0 differing** by full JSON comparison.
+
+The isolation guarantee is unchanged and that is the point of the shape. Every
+collection is still copied, so no caller can reach cached registry state; each
+coordinate still gets its own facts rather than sharing one revision's copy; and
+the builder still refuses a coordinate that disagrees with the data beside it.
+The alternative remedy - one snapshot per revision, reused across coordinates -
+would have required relaxing exactly that refusal.
+
+Two tests in the owning suite fail, and both were shown pre-existing rather than
+argued to be. Each was A/B tested by restoring the original call, re-running, and
+putting the change back: `test_committed_registry_tree_has_required_model_law_coverage`
+and `test_every_modelo_resolves_exactly_one_revision_for_every_filing_year_through_today`
+fail identically with the original accessor. The first reports executable parity
+evidence gaps on modelos 714 and others, which is registry evidence debt this
+change neither creates nor repairs.
+
+### the-new-projection-is-gated-on-its-contract-and-not-on-its-speed | medium | The isolation it gives up the snapshot's copy for is proven by breaking it
+
+The coverage-facts projection was landed on a performance argument, which is
+precisely why its tests assert none of it. Cheapness is not the contract. The
+contract is that it answers identically, refuses identically, and isolates what
+it hands out, and if any of those breaks the speed is worthless.
+
+Four gates cover it. It carries the same coordinate and all four evidence
+collections a snapshot does, across three unlike modelos. A ledger built from
+either projection is byte-identical - the substitution the coverage audit
+performs 884 times, so a divergence would silently alter published coverage
+findings rather than fail loudly. A grade the registry will not admit is refused
+with the identical message, because an accessor that skipped the copy and also
+skipped a refusal would hand out facts for a coordinate the boundary never
+admitted.
+
+The fourth is the safety argument itself, and it is proven by breaking it rather
+than by inspection: a caller deletes an entry from the mapping it was given, and
+the next caller must still see that entry. Asserting that a deepcopy call appears
+in the source proves the code was written; deleting from what came back proves it
+works. Run against the live authority, the deletion leaves both the next caller's
+facts and the cached snapshot intact.
+
+One of these tests was initially written with a line that was not valid Python
+and a mutation that would have proven nothing even if it had parsed. It was
+rewritten rather than deleted, because the property it was reaching for is the
+only reason skipping the snapshot's copy is defensible.
+
+### the-provenance-screen-reported-thirty-one-thousand-rows-for-three-hundred-and-fourteen-references | medium | Nineteen citation sites per thing to fix, and the same lesson as the envelope count
+
+Running the whole screen suite gives 35,287 findings, of which one screen
+contributes 31,589. A five-figure count from a screen whose siblings report tens
+is a claim about the screen, not the corpus, and this one proved to be exactly
+the failure already recorded for the envelope condition one iteration earlier.
+
+The measurement is right and the report was wrong. The screen finds each child
+whose citations reach outside its revision manifest, which is the correct unit to
+measure. It then printed one row per child, so a single reference missing from a
+manifest appears once for every casilla, formula and binding that cites it. The
+31,589 rows collapse to **1,389 outside references across modelo, revision and
+reference kind, and 314 distinct references overall** - roughly nineteen sites per
+thing anyone would actually fix.
+
+The output now names the reference and carries the number of children citing it,
+which is not a smaller report but a differently-keyed one: the reference is the
+unit someone acts on, and the citing count is how much of the revision depends on
+that single fix. The census line keeps all three numbers, so nothing was lost to
+make the report shorter.
+
+One self-correction. An ad-hoc measurement taken while investigating put the
+collapse at 1,669 and 519. Those figures keyed on the whole reference tuple a
+finding carries rather than on each reference inside it, so they counted distinct
+*combinations* rather than distinct references. The screen's own decomposition -
+1,389 and 314 - is the correct one, and the earlier pair should not be quoted.
+
+### the-lane-is-fifteen-failures-and-runs-in-a-third-of-the-time | high | Eighteen to fifteen, and fifteen minutes to six and a half
+
+A full-scope run over both directories now gives **15 failed, 848 passed in
+6m26s**, against 18 failed / 833 passed in 15m04s when the scope was first
+measured correctly. Exit status read from pytest itself.
+
+Three failures are genuinely gone rather than reclassified: the branch
+classification gate, once its forty-four ledger keys were re-pointed at the
+renamed modules; the conformance CLI test, which was failing on a three hundred
+second timeout that the closure report's cost caused; and one of the two closure
+outcome tests, whose mutation payload had gone stale against computed fields the
+temporal-coverage model added.
+
+The runtime is the more useful number. A suite that took a quarter of an hour was
+run rarely and, as this campaign found, was silently excluded from every earlier
+measurement because it exceeded a foreground timeout. At six and a half minutes
+it is a suite a contributor will actually run, which is worth more than the three
+failures.
+
+### the-twenty-four-grade-stale-filing-tests-are-re-sited-and-one-was-doubly-stale | high | No grade restored, and the invariants moved rather than being lowered
+
+All twenty-four tests demanding filing grade from modelos 200, 038 and 036 now
+pass, with no grade restored and no test deleted, skipped or weakened. Verified
+independently at 24 passed and 47 passed across the affected files.
+
+The eight convenience-fixture tests moved to modelos that still file, chosen by
+asking the registry which ones do. The fourteen decimal-slot tests were
+re-grounded on a modelo 303 page whose scales genuinely vary, which makes
+"scale is per-field" demonstrable rather than asserted, and every modelo 200
+diseño quotation was replaced by that page's own transcribed geometry rather than
+carried across - a quotation that no longer describes the modelo it sits under
+has stopped being evidence.
+
+One test was worse than grade-stale. Its ambiguity assertion used a `match=`
+pattern that could never have matched, because the error's string form is only a
+message key; it had been passing on the exception type alone for however long. It
+was rewritten to prove the ambiguity structurally - the typed context offers back
+more than one candidate, which is what separates it from the single-candidate
+case - rather than restored to a comparison that never worked.
+
+The honest replacement for what the fourteen used to prove now lives in the
+modelo 200 suite: that it declares no export layouts, sits at calculation grade,
+still computes, and refuses a filing snapshot naming both grades. Both halves
+together, so a future promotion turns it red rather than passing quietly.
+
+### the-suite-census-counted-sites-and-the-work-it-implied-was-two-orders-of-magnitude-too-large | high | Thirty-five thousand findings became one thousand seven hundred, and one step shrank from 3,349 items to 27
+
+Having found the provenance screen reporting citation sites where it should
+report references, the same question was asked of every screen rather than
+waiting to meet the third instance. The runner's census - the one command a
+maintainer runs to ask what state the declarations are in - totalled 35,287
+findings. It now totals 1,765, and nothing was measured differently: only the
+unit counted changed.
+
+Two screens dominated it and both were counting sites.
+
+The wire-type screen reported 3,349 divergent casillas. Those resolve to **27
+distinct declared-to-wire transitions**, dominated by money to decimal (2,140)
+and ratio to decimal (619). The screen's own output already reported per
+transition; it was the runner that counted casillas, which matters because the
+runner is the surface read first. The consequence is not cosmetic: the plan step
+that settles this declares permitted transitions as registry data, so its real
+size is twenty-seven declarations, not 3,349 adjudications. The step said 3,349
+until this measurement, which would have made it look like a campaign rather than
+an afternoon.
+
+The provenance screen contributed 31,589, resolving to 1,389 outside references
+and 314 distinct ones.
+
+A generic proxy was tried first and discarded, which is worth recording because
+it read as reassuring. Comparing row counts against distinct detail strings gives
+provenance a ratio of 1.0 - apparently no duplication at all - because each
+detail embeds the child that cites the reference. A screen-shaped question
+("what would someone act on") found the collapse the generic one hid. There is
+no mechanical test for this; each screen has to be asked what its unit is.
+
+The raw per-site counts are not lost. Each screen still measures per site and
+still prints those counts beside the unit, because how many casillas depend on a
+single missing reference is exactly what tells someone whether to fix it first.
+
+### the-census-counted-a-shape-the-screen-says-is-not-wrong | medium | A hundred and thirty-two of a hundred and fifty-eight, and the screen said so in its own docstring
+
+The monetary screen reports 158 findings and the audit records 24 unscaled
+fields. Both are right, which is the problem. The 158 is four conditions summed:
+132 part splits, 24 fields without a scale, one unusual scale and one field
+disagreeing with its siblings.
+
+The 132 are not defects, and the screen says so in the docstring beside the
+condition: a monetary casilla carried by several fields of one record is the
+official integer-and-decimal part split, "reported so the shape is visible and
+countable, not because it is wrong". The census counted them as findings anyway,
+so the first number a maintainer reads overstated the work six-fold - and it
+overstated it with rows that a reader who investigated would find are correct,
+which is the fastest way to teach someone that this screen's number means
+nothing.
+
+The census now counts the twenty-six findings that need a decision. The screen is
+unchanged and still reports all four conditions, because the part split is worth
+seeing; it is the *census* that had no business calling it a finding. This is the
+same filter already applied to identity type transitions and non-mixing modelos,
+so the runner had the precedent and this condition had simply never been held to
+it.
+
+With that, the suite census is 1,633 where it began at 35,287.
+
+The remaining six screens were then checked the same way rather than assumed
+correct, and none needs the treatment: identifier grammar counts mixing modelos,
+name-window counts revision names, temporal agreement and grade-earned count
+revisions, continuity counts modelos and chains. Each already counts the thing
+someone would act on.
+
+One condition is deliberately left overstated, and it is worth naming so nobody
+"fixes" it. The capability screen reports 25 revisions carrying a layout below
+filing grade, of which three are correct by law and eighteen are documented
+deferrals. Those twenty-one are not structurally distinguishable from the rest,
+because the deferral lives in a comment and the contract has no typed slot for
+it. Filtering them would mean matching prose. The census stays honest and
+overstated until that slot exists, which is the declaration-contract decision
+recorded above.
+
+### five-revisions-claim-they-can-be-filed-and-cannot-say-by-when | high | A filer asks two questions and these answer one
+
+Twenty-seven revisions declare no deadline window. Twenty-two of them sit below
+filing grade, where saying nothing about a due date is the correct and complete
+answer - a modelo filed on AEAT's sede, or one this product does not file, has no
+deadline of its own to declare.
+
+The other five reach filing grade with an export layout: modelos 145, 151, 165,
+308 and 309. They can render a fichero and cannot say when it must be presented.
+A filer asks two things of a modelo - what to send and by when - and these answer
+only the first, which makes the filing claim incomplete in a way no export test
+would catch, because the bytes are fine.
+
+This bears directly on the question that opened this campaign: what the product
+supports and for what time range. Part of the answer turns out to be that for
+five filing-grade revisions the second half of the question has no declared
+answer at all.
+
+The distinction is structural rather than a reading of prose - filing grade plus
+a layout, against a deadline count of zero - so unlike the deferral cases
+recorded above it can be reported honestly without prose matching. It is gated in
+both directions: modelo 151's earlier revision is caught, and modelo 036 is proven
+not to be, because demanding a deadline from a censal modelo that has none is how
+a screen earns being ignored.
+
+### fourteen-filing-revisions-carry-no-formula-and-ten-of-them-are-right-to | high | The distinction that separates them is declared, so the finding is four
+
+Fourteen of the sixty-eight filing-grade revisions with an export layout declare
+no formula at all. Reported as fourteen, that would have been the envelope error
+for a third time: most of them are correct.
+
+A declaracion informativa transmits data and computes no liability, so having no
+formula is its complete state, not a gap. Modelos 347, 184, 720, 165 and others
+are exactly that. What makes this checkable rather than a matter of opinion is
+that the registry already declares it - each modelo carries a
+`calculation_class`, and ten of the fourteen declare themselves informative.
+
+The remaining four declare `calculation_class = filing` and still carry no
+formula: modelos 296, 308, 349 and 360. Each claims to compute what its filing
+reports, and nothing computes it.
+
+The condition reads the modelo's own declared class rather than counting formulas
+alone, so an informative modelo is never asked for arithmetic it has no reason to
+do. Both directions are gated: modelo 349 is caught, and 347, 184 and 720 are
+proven not to be.
+
+Worth recording separately: two of the fourteen - modelos 145 and 232 - carry a
+tax domain of IRPF and Sociedades while declaring an informative calculation
+class. That pairing is not a contradiction, because a modelo can belong to a tax
+and still only report, but it is the reason the condition keys on calculation
+class rather than tax domain. Keying on the domain would have flagged both as
+defects.
+
+### naming-every-kind-was-not-enough-because-the-count-above-them-can-still-lie | medium | Two stale counts, one introduced by the edit that fixed the names
+
+An earlier gate here requires every kind a screen emits to be named in its own
+docstring, and two screens satisfied it while still opening with a count from an
+earlier version of themselves. The monetary screen said "Three conditions are
+reported" above four documented bullets, and the capability screen said three
+above six.
+
+The monetary one is the instructive case: that sentence went stale in the very
+edit that fixed the names. A fourth bullet was appended for the condition that
+surfaces the corpus's only known filing-correctness defect, and the sentence two
+lines above it was left saying three. The gate written to stop names drifting had
+no opinion about the number introducing them.
+
+A wrong count is worse than a missing name. It tells the reader the list is
+complete, so the condition they never find is the one they conclude does not
+exist.
+
+Both counts are corrected and the claim is now gated: a docstring stating "N
+conditions are reported" must match the bullets it introduces and must not
+understate the kinds the screen emits live.
+
+The gate found two further errors immediately, both in this work rather than in
+the corpus, which is the useful part. Its first version counted every
+backtick-bulleted line and failed on a docstring whose number was right, because
+several screens also bullet the FACTS they read in the same form; the count is
+now scoped to bullets following the claim. Then it rejected the correction
+itself: the capability screen was set to five, counting the kinds observed live,
+when six are documented - one occurs only under a constructed defect and is
+covered by the detector that constructs it. Six is the honest number, and the
+distinction between documented and live conditions is exactly what the gate
+checks in the two directions it checks it.
+
+### four-filing-claims-fail-more-than-one-capability-axis-and-one-fails-three | critical | The same revisions keep appearing, which is the answer to which claims to distrust
+
+The capability conditions were built one axis at a time - grade, layout,
+envelope, deadline, calculation - and the same modelos kept recurring across
+them. Crossed against each other, four filing-grade revisions fail more than one
+axis:
+
+- **308/2019-y-siguientes fails three.** It declares a filing calculation class
+  with no formula, declares no deadline window, and its declared grade exceeds
+  what its prerequisites support.
+- **145/2012-01-31-y-siguientes** and **165/2016-2022** each fail two: no
+  deadline, and a grade the prerequisites do not support.
+- **360/2010-y-siguientes** fails two: a filing calculation class with no
+  formula, and a grade the prerequisites do not support.
+
+A separate reading of the grade screen makes the pattern sharper. All five
+revisions whose declared grade exceeds their prerequisites fail on the same
+missing prerequisite - a completeness manifest - and four of those five are in
+the list above. So this is not five unrelated shortfalls; it is one class of
+unfinished revision that also happens to be missing the other things a filing
+needs.
+
+That is the useful output of building the axes separately. Any one condition
+reads as a small gap: a missing deadline, an absent formula, a grade a shade too
+high. Together they identify the revisions whose filing claim rests on the least,
+and they are the ones to distrust first. Sixty-eight revisions claim filing
+grade; these four are the ones where several independent checks agree the claim
+is thin.
+
+The cross-axis reading is recorded rather than gated. Each axis is already gated
+on its own, and a gate that fired on "fails at least two of these" would add no
+detection - it would only re-report what the individual conditions already say,
+while inventing a severity ordering the registry does not declare.
+
+### two-feature-documents-fail-their-own-attested-body-schema | low | Not this work's documents, so reported rather than filled in
+
+Validating this feature's documents surfaces two structural failures that are not
+in this audit or its plan. A modelo 353 audit from 26 August is missing the
+`## Scope` section its attested body schema requires, and a registry temporal
+coverage reference from 31 August is missing `## Summary`.
+
+Both predate this work, both were last written by other commits, and neither
+carries a pending diff. The obvious move is to add the sections, and it is the
+wrong one: a required section is not a formatting slot, it is a claim about the
+document - what its author was looking at, what they concluded. Filling in a
+Scope for someone else's audit would put words in a record that reads as their
+assessment.
+
+This is the same reasoning that left the modelo 222 reviewer attestation
+uncorrected. A vault document is a person's account of what they examined, and a
+missing section is evidence that the account is incomplete rather than a defect
+in the file's shape.
+
+### the-file-blocking-the-filing-defect-is-free-and-the-work-is-still-not-unblocked | high | 183 fields measured exactly, 149 of them due immediately
+
+The eligibility predicate that causes this campaign's only known
+filing-correctness defect sits in a file another contributor was holding. That
+file now carries no pending diff, which was checked rather than assumed. It does
+not follow that the Step is unblocked, and the measurement says why.
+
+The defect is precise. For a workbook design, a non-blank Contenido cell means the
+design stated the field's wire fact, so no reviewed rule is needed. The
+instruction-only vocabulary that overrides this holds exactly one phrase. Modelo
+353's field carries `Nota 4.` - a bare footnote pointer, which states nothing at
+all - so it is read as a statement, never receives a reviewed rule, and renders
+unscaled beside siblings that emit cents.
+
+Across 107 designs and 66,522 workbook fields, **331 carry a bare footnote
+pointer as their entire Contenido**, spread over ten modelos and dominated by
+`Nota 1` (195) and `Nota 2` (105). Of those, **exactly 183 would become newly
+eligible** once the other eligibility conditions are applied - independently
+reproducing the figure the plan carried, and now resolved per modelo: 390 has 80,
+200 has 60, 220 has 27, 131 has 7, 303 has 6, and modelos 202, 222 and 353 have
+one each. The modelo 353 field is the defect.
+
+The coverage gate demands exact coverage of the eligible set in both directions,
+so every newly eligible field needs a reviewed representation rule authored in
+the same change. Six of the eight modelos already carry a render profile and are
+therefore held to that gate immediately: **149 rules fall due with the
+correction**, and the remaining 34 only when modelos 220 and 131 gain profiles.
+
+So the honest position is that a one-line predicate correction carries 149
+grounded authoring decisions with it, each needing the official design's own
+statement for that field. Landing the predicate alone would break six modelos'
+coverage; landing it with invented rules would be worse, because a reviewed rule
+is an assertion about what AEAT requires. The blocker moved from a held file to
+authoring capacity, which is a better place for it to be and not the same thing
+as progress.
+
+### the-note-behind-the-filing-defect-says-nothing-about-the-wire-and-now-says-so-in-quotation | high | The design's own words, not a characterisation of them
+
+The field that renders unscaled in modelo 353 carries `Nota 4.` in the cell where
+the design states a wire fact. What that pointer points at, quoted from the
+design's own transcription:
+
+> Nota 4: Solo para periodos 02 y siguientes.
+
+It is an applicability statement. It carries no scale, no decimal count, no sign
+convention. So the fact really is unstated and the field really should be under
+reviewed authority - which until now was an inference from the field's behaviour
+and is now a quotation from the source.
+
+Resolving the pointer is also the tool the 149 due rules need. An author writing
+them has to know what each pointer names, because the answer decides the rule:
+this design's Nota 1 gives the numeric conventions in full - alignment, zero
+fill, the sign character - and constrains any rule written against a field
+pointing at it, while Nota 2 is about declaration type and Nota 4 about periods,
+neither bearing on the wire at all. A pointer cell naming two notes resolves each
+separately, because one may constrain and the other may not.
+
+The resolver authors nothing and decides nothing; it puts the design's wording in
+front of whoever writes the rule. Two deliberate refusals in it are worth
+recording. A pointer the design does not define comes back unresolved rather than
+omitted, because an author who sees nothing cannot tell a note that says little
+from a note that was not found. And a cell that says more than a pointer -
+"Importe con 2 decimales. Nota 1" - is not treated as a pointer at all, since
+widening the correction to swallow real design statements would be the opposite
+failure and the worse one; that is asserted in both directions rather than left
+to the regex's shape.
+
+One implementation detail was corrected on inspection rather than shipped: the
+extracted text was being read with decode errors silenced. The corpus files are
+valid UTF-8 and the mangled Spanish first seen was the terminal rather than the
+read, but a silenced decode error would drop accented characters from note text
+an author is about to rely on. It now reads strictly, so a genuinely bad file
+fails instead of quietly losing a word.
+
+### the-one-hundred-and-eighty-three-due-rules-are-triaged-and-one-hundred-and-seventy-five-are-unconstrained | high | Only six point at a note that says anything about the wire
+
+Resolving every newly eligible field's pointer against the design that names it
+triages the authoring work the eligibility correction makes due:
+
+- **175 point at a note that says nothing about the wire.** The note is about
+  periods, declaration types, complementary pages - real content, none of it
+  scale, sign or decimals. For these the reviewed rule is genuinely needed and
+  the note constrains it not at all.
+- **6 point at a note that does bear on the wire**, all in modelo 131. Those
+  rules are not free authoring: they must agree with what the note already says,
+  and the design keeps its veto.
+- **2 remain unresolved**, where the design defines no note of that number.
+
+A correction to this measurement is worth recording because the first version
+reported eight unresolved rather than two, and the difference was entirely mine.
+The transcription was located by globbing the design directory and taking the
+first file, which is wrong wherever a modelo bundles several designs - modelo 303
+bundles fifteen. Deriving the transcription from the source reference's own
+corpus path, which names the exact file, drops the unresolved count from eight to
+two and moves six fields into the silent-on-wire group. A measurement that picks
+an arbitrary member of a set will usually still produce a plausible number.
+
+### thirteen-bundled-record-designs-have-no-transcription | medium | Evidence tooling is blind to them, and three belong to a modelo already failing three capability axes
+
+The same sweep found that thirteen bundled record designs across eight modelos -
+126, 128, 165, 194, 270, 308, 309 and 341 - ship the original workbook or PDF
+with no extracted text beside it. Modelo 308 is the clearest case: four designs
+bundled, one transcribed.
+
+The parser reads the workbook directly, so this does not break generation. What
+it breaks is every tool that needs to QUOTE the design - the footnote resolver
+above, any evidence check that compares a reviewed rule against the design's own
+wording, and any reviewer who wants the source text without opening a spreadsheet.
+For those designs the evidence is present in the repository and unreadable by
+anything that reasons about text.
+
+Three of the thirteen belong to modelo 308 and three to modelo 309, both of which
+already appear among the revisions failing more than one capability axis. That is
+not a coincidence worth theorising about, but it does mean the modelos whose
+claims are thinnest are also the ones whose evidence is hardest to read.
+
+### the-triage-is-now-repeatable-and-deliberately-stops-short-of-the-eligibility-predicate | medium | The mistake that produced a plausible wrong answer is now the thing the tool cannot make
+
+The pointer triage existed as a script run twice, once wrongly. It is now an API
+with tests, and two of its decisions are worth recording because both were forced
+by earlier mistakes in this work.
+
+A design's transcription is derived from the path the source reference names,
+never by searching the design's directory. That is the bug from the first triage
+pass elevated into a function: searching returns an arbitrary sibling, modelo 303
+bundles fifteen designs, and resolving a note against the wrong year's design
+still produces an answer. It is asserted in a test that quotes why - a wrong
+answer that looks right is the failure mode, not a crash.
+
+A design with no transcription returns nothing, and the docstring and test both
+state that the caller must check: thirteen bundled designs ship without extracted
+text, and an empty result is indistinguishable from a design that carries no
+pointers. Returning empty is correct; returning empty silently would be the same
+class of defect as the census counts corrected earlier.
+
+The tool deliberately does not replicate the eligibility predicate. Doing so
+would mean either duplicating it or importing a private helper across a package
+boundary, which is the violation this campaign has already recorded as an open
+contract question. It answers what it can answer publicly - what each pointer
+cell names and what the design says behind it - and leaves eligibility to the
+pipeline that owns it.
+
+The wire-vocabulary flag is labelled a reading aid in the code, not a verdict. It
+says which notes are worth opening first among many; a note mentioning decimals
+still has to be read, and the rule's author decides. Calling it a verdict would
+re-enact the mistake this campaign keeps finding: a heuristic presented as a
+measurement.
+
+### the-plan-was-held-to-the-gate-the-plan-added | low | Its own gate count was stale, and the first correction was wrong too
+
+A gate landed here requiring a screen that states how many conditions it reports
+to agree with what it documents and emits. The plan carries the same shape of
+claim in its verification criteria - a criterion asserting that N gates cover the
+screens - and it had gone stale the same way, still saying seven after an eighth
+was added.
+
+Correcting it produced a second error, which is why this is recorded rather than
+fixed quietly. The count was raised to eight and the enumeration listed eight
+clauses, but the module holds nine screen-integrity gates: the one requiring every
+symbol the contributor READMEs name to still resolve was omitted, because it reads
+as documentation hygiene rather than screen integrity. It is neither optional nor
+separate - a screen documented with a symbol that no longer exists is not honestly
+documented - so the criterion now says nine and names it.
+
+The pattern is worth stating plainly because it has now happened four times in
+this campaign: a count written beside a list goes stale when the list grows, and
+the person adding the entry is the least likely to reread the sentence above it.
+Three of those four were caught by a gate; this one was caught by holding the
+plan to the gate the plan had just added, which is the only reason it was checked
+at all.
+
+### the-private-module-breach-is-fourteen-imports-not-one-hundred-and-eleven | medium | The split between tests and production changes what the remedy is
+
+The naming rule says a leading-underscore module is private to its package and
+not a cross-package API. Measured across the registry development tree, **111
+imports reach 22 such modules from outside their package** - which reads as the
+underscore naming having stopped describing reality entirely, and as a rename of
+twenty-two modules.
+
+Splitting them says otherwise. **97 of the 111 come from tests**, and a test
+exercising a package's internals is inside that package's boundary in every sense
+that matters: it ships with the code, changes with it, and is exactly where a
+private module is legitimately probed. Treating those as a violation would push
+the suite towards testing only public surfaces, which is a worse outcome than the
+naming inconsistency.
+
+**Fourteen come from non-test code**, and those are the breach. They concentrate
+sharply: five in the filing-export proof module, seven across three analysis
+modules, and `_paths`, which four separate consumers import - a CLI, two analysis
+modules and another CLI. A module that four unrelated consumers reach for is not
+private by any reading; it is shared infrastructure wearing an underscore.
+
+So the decision shrinks from renaming twenty-two modules to promoting the few
+that non-test code genuinely depends on, or routing those consumers through a
+public surface. The step now says that, with the counts, because the version that
+said "decide whether these are public or private" invited the twenty-two-module
+answer and would have been a week of atomic renames for a naming rule that the
+tests were never breaking.
+
+### the-plan-cannot-be-gated-the-way-the-screens-are | low | And the rule that prevents it is one this campaign has been enforcing
+
+Four stale counts have now been found in this campaign's own prose, and the
+natural next move - a gate over the plan's counts, matching the one over the
+screens' - is not available. A test lives in `dev/`; the plan lives in `.vault/`;
+and the code-stands-alone mandate forbids source from referencing the project's
+own development records. A gate that opened the plan to check a number would be
+the precise violation this campaign cleared five instances of, including two in
+shipped filing declarations.
+
+The rule is right and the consequence is real: vault prose is checked by the
+person writing it or not at all. That is worth stating rather than working
+around, because the workaround would look like diligence and would reintroduce
+the coupling the mandate exists to prevent. If this class of drift is worth
+mechanising, it belongs in the vault tooling, which is already permitted to read
+vault documents - not in a repository test reaching sideways into `.vault/`.
+
+### an-entire-module-was-left-behind-by-its-own-split-and-duplicated-fifty-nine-definitions | critical | Two thousand one hundred and thirty-nine lines, zero importers
+
+Searching the codebase for one concept expressed twice found `ledger_bindings.py`
+duplicating the modules that replaced it. A commit split it into per-channel
+modules - IVA, renta, OSS, impatriado - and repointed every consumer, but the
+parent was never removed.
+
+Measured rather than assumed: **59 of its 60 top-level definitions have a
+byte-identical body in another module**, the sole exception being one private
+helper. It has **zero importers** by AST search across the repository, no dynamic
+import, and its only remaining mention was an adjudication row in this campaign's
+own classification data. It is deleted, with that row removed in the same change
+so the ledger does not go stale.
+
+This is the largest parallel declaration found: for every one of those 59
+functions, two definitions of the same fact sat in the tree, and a change to the
+live one would leave the dead one disagreeing silently. The classification gate
+had already noticed something was wrong - it reports `ledger_bindings.py` as the
+sole unreferenced-module candidate and asks whether it is genuinely dead. The
+answer is yes, and the gate was asking the right question.
+
+Verification: the registry compiles, the bindings module imports, and 614 of 615
+ledger and binding tests pass. The single failure is a home-office carve-out
+worked example that fails identically at HEAD, proved by restoring the original
+files, re-running, and putting the change back.
+
+### three-copies-of-one-type-guard-and-two-of-one-predicate | medium | And a fourth apparent duplicate that is a legitimate boundary wrapper
+
+Two smaller parallel declarations were collapsed onto canonical definitions.
+`is_object_list` had three byte-identical copies across IVA modules beside the
+definition in the core type-guard module, differing only in whether the docstring
+spells "unparameterised" with an s or a z. `mapping_lacks_fact` had two copies
+beside the one in its selector support module. All five sites now resolve to a
+single object, which is asserted directly rather than inferred from the imports.
+
+A third candidate was left alone after reading it. `sha256_file` exists twice
+with genuinely different bodies, which looks like the worst case - one concept,
+two behaviours - and is not. The second delegates to the canonical digest and
+adds error translation plus filename redaction, because diagnostics must not leak
+source filenames. That is a boundary wrapper with its own responsibility, and
+collapsing it would remove a redaction the security rule requires. The name it
+shares is the only thing duplicated.
+
+That is now the third time in this campaign a duplication signal has turned out
+to be legitimate on inspection. The measurement finds candidates; only reading
+them decides.
+
+### a-module-was-serving-as-a-re-export-path-and-only-deleting-the-duplicate-revealed-it | medium | The consumer reached a type guard through a module that merely happened to define it
+
+Collapsing `is_str_keyed_mapping` onto a canonical definition exposed a second
+parallel declaration underneath it. The guard was defined in two IVA modules; one
+of them never called it. Removing the unused copy broke sixteen tests, and the
+reason is the finding: a third module, `country_vocabulary`, imported
+`establishment` and called `_establishment.is_str_keyed_mapping` at four sites.
+
+So `establishment` was not a definition site at all. It was a re-export path, and
+a consumer was reaching a general-purpose type guard through a module about
+Spanish IVA establishment rules because that module happened to define it. The
+import said nothing true about where the concept lives.
+
+Both are now pointed at the core type-guard module. The guard was promoted with
+its precondition preserved rather than copied verbatim: unlike its sibling it
+checks nothing about the keys at runtime, and is sound only where the provenance
+guarantees them - a TOML table always has string keys. That docstring now says so
+and names the sibling to prefer otherwise, because a guard that asserts less than
+its name suggests is exactly the ambiguity this work is removing. 829 IVA tests
+pass.
+
+The sequence is worth keeping: the duplicate was visible to a scan, the
+re-export path was not, and only removing the duplicate surfaced it. A tree can
+hide a second parallel declaration behind the first.
+
+### the-deleted-module-was-cleared-by-three-independent-a-b-tests | medium | A large deletion beside a red suite needs causation established, not asserted
+
+Deleting a 2,139-line module while neighbouring suites already fail is exactly
+the situation where a real regression hides among inherited noise. Three failures
+were therefore each A/B tested by restoring the module, re-running, and deleting
+it again: a ledger evidence-grounding test failed identically both ways, a
+resolver enrolment gate failed identically both ways, and a home-office carve-out
+example failed identically both ways.
+
+The combined run of the aggregation and ledger suites reports 468 failures, which
+looks alarming beside a deletion. Aggregation alone is 5 failed against 1,049
+passed, so the weight sits in the ledger suite, and the sampled failures there are
+the other contributor's in-flight module renames and unenrolled split-out
+resolvers. None of the failures mentions the deleted module, and no import error
+appears anywhere - consistent with a module that had zero importers by AST search.
+
+The general point is that "the suite was already red" is not evidence about a
+specific change. Only restoring the change and observing the same failure is.
+
+### one-schema-construction-had-five-spellings-in-one-package | medium | Four identical private helpers and a fifth built inline
+
+Four command-spec modules each defined an identical private `_schema` helper
+building a deferred result schema for a config payload, and a fifth module built
+the same object inline. One concept, five spellings, inside one package.
+
+They agreed, which is exactly what let it persist: nothing failed, and each new
+spec module copied whichever neighbour it was written beside. The risk was never
+disagreement today - it is that the payload module's name, the schema state or
+the deferred-target shape changes in one of them and the rest keep working while
+meaning something slightly different.
+
+All four now alias one canonical helper, which is asserted by identity rather
+than by reading the imports. The CLI spec suite reports 10 failed and 394 passed
+both before and after, proved by restoring the four originals, re-running, and
+putting the change back.
+
+### two-functions-that-look-identical-to-an-ast-scan-are-not-duplicates | medium | Same syntax, different module constants, and the shared mechanism already exists
+
+The two AEAT sede checkers each define `extract_verdict_from_response_text` with
+byte-identical bodies, which reads as an obvious duplicate. It is not. Each body
+references its own module-level `_POSITIVE_MARKERS` - GROI's ROI-registration
+phrases in one, the NIF-IVA identification phrases in the other - and both
+already delegate to a shared marker-verdict extractor, which is the canonical
+mechanism. What is duplicated is the delegation, and collapsing it would mean
+parameterising away the thing that distinguishes the two checkers.
+
+The limitation of the measurement is worth stating: comparing function bodies by
+AST shape treats a reference to a module-scoped name as equal wherever the name
+matches, regardless of what it holds. So a body-identical result is a candidate
+and not a finding - the fourth time in this campaign a duplication signal has
+survived measurement and died on reading. Both files are also held by another
+contributor, so this would have been reported rather than changed in any case.
+
+### a-function-describing-itself-as-the-single-projection-existed-twice | medium | And modelo 390 resolves to no revision for the current filing year
+
+The clearest instance of the pattern this work is removing: a twenty-two line
+helper whose own docstring says it reads the operator profile "through the
+SINGLE projection", carried verbatim in two application modules. The claim was
+true of the projection it delegates to and false of the helper making it.
+
+It now lives beside that projection, and its docstring records why rather than
+repeating the claim. Two callers alias one object, asserted by identity.
+
+Separately, running the affected suites surfaced a registry coverage hole worth
+recording on its own: **modelo 390 declares revisions 2021 through 2025 and
+resolves to nothing for filing year 2026**, which is the current year. Several
+calculation tests fail on it, and the earlier revision-span gate reports the same
+shape - a closed-ended tail the calendar has passed. It is registry data rather
+than tooling, and it is now a step.
+
+Duplicate function bodies across the shipped package are down from 27 to 18, and
+redundant copies from 45 to 36, with every collapse verified by object identity
+rather than by reading imports.
+
+### the-a-b-method-was-wrong-and-is-corrected | high | Restoring a file from git is not the same as undoing an edit, and it risks other people's work
+
+Several failures in this session were attributed by restoring a file with
+`git checkout --` and re-running. That was wrong twice over and both reasons
+matter.
+
+It is destructive. The working tree carries over six hundred modified files from
+another contributor, and discarding a file's working state to test a hypothesis
+risks deleting work that exists nowhere else. Each use here was preceded by a
+copy and followed by a restore, and the files were verified byte-identical
+afterwards, so nothing was lost - but the safety came from a manual backup, not
+from the method, and one missed copy would have been unrecoverable.
+
+It is also wrong on its own terms. Restoring from the index gives the COMMITTED
+version, not the state before the edit under test. With hundreds of uncommitted
+changes in the tree that is a different and older world, which is exactly why one
+such attempt produced 534 failures and no usable comparison.
+
+The correct method, used since, is surgical: re-add the removed definition in
+place, run, and remove it again. It touches only the edit being tested, cannot
+discard anyone else's work, and compares against the tree as it actually is. Two
+attributions were re-done that way and both came back identical, which is the
+result the earlier method was reaching for without the risk.
+
 
 ## Recommendations
 
@@ -1929,3 +3194,48 @@ and they are sound, but nothing here establishes that an emitted byte matches wh
 expects. Four measurements in this audit were settled only by opening an official design, and every
 one of them corrected a conclusion the internal tooling had reached. The remaining distance to the
 claim this product exists to make is one official reference file and the decisions listed above.
+
+### Consolidated position, third revision
+
+The second revision above is superseded on scope rather than on substance: its two filing-data
+defects still stand and are still unrepaired from here. What has changed is that the question this
+audit opened with now has an answer, and the answer is smaller than the registry's own declarations
+imply.
+
+**What the product can file.** Of 58 modelos, 22 declare applicability only - the censal and
+informational ones, correctly carrying no filing machinery, and a screen that demanded any from them
+would be wrong. Five declare calculation only. Sixty-eight revisions reach filing grade with an
+export layout, and that is where the claim thins: 31 layouts spell their envelope as a record the
+export boundary cannot see, and one of those loses the developer identity fields the official design
+marks mandatory; 5 can render a fichero and cannot say when it is due; 4 declare a filing calculation
+class with no formula behind it. Four revisions fail more than one of those axes and modelo 308 fails
+three. Sixteen revisions carry a complete filing chain.
+
+**The distinction is decidable and is now stated in code.** Which modelos are real filings was
+treated as a judgement call earlier in this work, and it is not: authority grade, calculation class,
+export layout, filing envelope and deadline window are all declared, and a screen reads them. A
+maintained list of "real" modelos would be wrong within a release; a derivation cannot be.
+
+**The measurement discipline is the transferable result.** Three conditions were first measured far
+larger than they are - 52 envelope gaps where 31 are real, 14 formula gaps where 4 are real, 35,287
+census findings where 1,633 are actionable - and each overstatement had the same two causes: counting
+the sites that exhibit a condition rather than the unit someone fixes, and counting a declared,
+correct shape as a defect. A screen whose signal is a fifth of its rows teaches its reader to skim,
+which is the same failure the retired frozen ratchets had. Every count in this audit that survived
+was re-derived after that lesson.
+
+**Performance stopped being invisible.** A conformance test failed on a timeout and read as a logic
+failure; measured, one closure report took 210.8s and the conformance audit 133.9s, both dominated by
+one mechanism - a snapshot is a free cache hit plus an isolating deep copy that is 98% of the call,
+and callers took one per coordinate to read a single string or four small collections. They are now
+15.0s and 22.1s, and the lane runs in 6m26s rather than 15m04s. No caller gained access to shared
+registry state to get there, which is the only reason the speed is acceptable.
+
+**What is blocked, and on whom.** Two contract decisions are genuinely open and neither should be
+settled by tooling: there is no typed slot to record why a revision holding filing machinery stays
+below filing grade, so eighteen documented deferrals live in comments and three have no reason at
+all; and modelo 100 declares filing grade for a layout that refuses at render for want of an
+aux-version token that must not be invented. Modelo 222 needs re-review rather than a grade edit,
+because its attestation reaches scheduling and applicability only while the revision it describes has
+since tripled. The twenty-four filing tests demanding grades three modelos no longer declare are
+resolved; the grades themselves were correct and it was the consumers that were owed the change.

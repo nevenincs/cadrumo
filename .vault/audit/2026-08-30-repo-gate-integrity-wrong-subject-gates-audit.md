@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#repo-gate-integrity'
 date: '2026-08-30'
-modified: '2026-08-31'
+modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:e8aa6433b4cfe6a174e23eb4a845a7036a21baf44923b19ea61a9a752772a23e'
+body_hash: 'sha256:08e1592a66d5cf3659bdb5125746cf518100ebbeaf873e4a56a9e8e4b04a1217'
 related: []
 ---
 
@@ -3392,7 +3392,6 @@ corpora is exactly the kind of work that must not be done by whoever happens to
 notice. Recorded for its owner. The six stale paths in each are separately
 mechanical and resolve unambiguously to public twins.
 
-
 ### Branch adjudication: two closed on the ledger's own vocabulary, one that fits no group
 
 **2026-08-31.** Both `modelo_branch_classification` ledgers repointed to zero
@@ -3426,7 +3425,6 @@ which is the ambiguity stated by its author: a regulatory distinction riding in
 presentation because no typed channel carries it. Forcing it into an ill-fitting
 group would record a judgement nobody made; the honest options are a new group
 or an owner's ruling.
-
 
 ### The branch-classification gate is green, and it took four different dispositions
 
@@ -3476,7 +3474,6 @@ remedy: a quarter with no retenciones is ATTESTED, never filed blank". That is
 effect and treating it as the whole effect is the same error as reading a
 capability declaration as an observed event.
 
-
 ### The drift census walks the filesystem; its staleness scan reads git. An untracked file cannot be adjudicated.
 
 **Found 2026-08-31**, after clearing the census to `unadjudicated: 0,
@@ -3509,7 +3506,6 @@ without saying which tree each read. The authoritative gate here is the census
 (exit 0); the path scan's six are informational until the relocation lands.
 When it does, the two adjudications above may need repointing, and that is a
 normal consequence of adjudicating a moving file rather than an error in either.
-
 
 ### A third staleness case: a ledger correct about a tree that does not exist YET
 

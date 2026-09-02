@@ -3,30 +3,12 @@ tags:
   - '#audit'
   - '#ci-lane-deconflation'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:2ccd8339c801104c1592cb43a553547671d8d913f2110c731c75fea89a80e8ab'
+body_hash: 'sha256:519545845b95940e32efece2dee6e1deed879a1335facc5c8c9b9513110bb51f'
 related:
   - "[[2026-08-05-ci-lane-deconflation-P02-S75]]"
 ---
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace ci-lane-deconflation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `ci-lane-deconflation` audit: `P02 S75 implementation provenance self review`
 

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:e07e032a544308ccbd56f5052f721334fd0e0fb453e6225c4d66ba4f5e0acc3b'
+body_hash: 'sha256:b3ffc2bd763742e0b55c23c38cbe172d6a851e52fb9e7fff62ce71a4b99a3aab'
 ---
 
 <!-- RETIRED: S73 -->
@@ -35,9 +35,25 @@ returns the project to having a standing regression gate. Wave three makes the f
 real. Wave four adds the missing edge gates. Wave five corrects the data defects that need no
 decision. Wave six applies the general contract.
 
-Measurement has since changed what the later Waves are for, and the Steps record it. Nine screens
-measure the declaration conditions from one entry point over a single loaded registry, and eleven
-gates stand behind them. Conditions clean corpus-wide are gated as invariants carrying no tolerance
+Measurement has since changed what the later Waves are for, and the Steps record it. Ten screens
+measure the declaration conditions from one entry point over a single loaded registry, and sixteen
+gates stand behind them with two detector proofs beside them. Each gate was written after finding the
+hole it closes rather than in advance, and several caught the author within an iteration of being
+written - one rejected the very correction made to satisfy it, twice.
+
+The tenth screen answers the question that opened this work directly, because it turned out to be
+answerable from the declarations rather than needing judgement. Of 58 modelos, 22 declare
+applicability only - the censal and informational ones, correctly carrying no filing machinery - and
+5 declare calculation only. Sixty-eight revisions reach filing grade with a layout. What that claim
+rests on is thinner than the number suggests: 31 layouts spell their envelope as a record where the
+export boundary cannot see it, 5 revisions can render a fichero and cannot say when it is due, and 4
+declare a filing calculation class with no formula behind it.
+
+Three of those conditions were first measured as much larger and corrected before being reported: an
+envelope condition counted 52 where 31 are real, a formula condition would have counted 14 where 4
+are real, and the suite census counted 35,287 findings where 1,633 are things anyone would act on.
+Each overstatement came from counting sites rather than the unit someone fixes, or from treating a
+declared and correct shape as a defect. Conditions clean corpus-wide are gated as invariants carrying no tolerance
 rather than as counts; conditions still carrying findings are deliberately not gated, because gating
 them would need a tolerance and a tolerance is the ratchet this project retired. Several conditions
 turned out larger or differently shaped than the audit first recorded, and several claims were
@@ -173,11 +189,30 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S96` - Retire the eight tests driving the disabled single-channel proof authority, and re-site the three payload-acceptance tests whose modelo 200 fixture lost both its export layouts and its filing grade; `dev/registry/tests/test_filing_export_live_proof.py`.
 - [x] `W02.P02.S97` - Sweep the registry suites for gates that cannot pass and record each as owned, dispositioned or retired; `dev/registry/tests`.
 - [x] `W02.P02.S107` - Retire the developer registry package re-export facade and its enforcing inventory assertion, repointing the one symbol consumer at the defining module; `dev/registry/__init__.py`.
-- [ ] `W02.P02.S108` - Decide whether the pipeline defining modules are public or private, then either name them publicly or stop importing them from sibling packages; `dev/registry/pipeline`.
+- [ ] `W02.P02.S108` - Promote the handful of pipeline and shared modules that fourteen non-test consumers reach across a package boundary, leaving the ninety-seven test imports alone; `dev/registry/pipeline`.
 - [ ] `W02.P02.S109` - Rewrite the modelo 151 live-filing closure test onto the two-channel authority, then delete the single-channel proof authority whose only proof-producing path refuses; `dev/registry/conformance/tests/test_real_closure_outcomes.py`.
 - [ ] `W02.P02.S110` - Resolve the twenty-four filing tests demanding filing grade from modelos 200, 038 and 036, which now declare calculation or applicability grade; `src/cadrumo/application/filing/tests`.
 - [x] `W02.P02.S111` - Retire the generation pipeline package re-export facade so the initialiser is an inert namespace marker; `dev/registry/pipeline/__init__.py`.
 - [ ] `W02.P02.S112` - Bring the conformance test directory into the lane measurement, since every full-lane run so far covered only dev/registry/tests; `dev/registry/conformance/tests`.
+- [x] `W02.P02.S113` - Reduce the remaining five package initialisers in the registry development tree to inert namespace markers; `dev/registry`.
+- [x] `W02.P02.S114` - Gate that every package initialiser in the registry development tree carries nothing but a docstring, proven against a constructed re-export; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W02.P02.S115` - Clear the vault record citations from the registry source module and the four modelo 390 casilla declarations that carried them; `dev/registry/pipeline/_source_defects.py`.
+- [ ] `W02.P02.S116` - Decide the seven remaining code-boundary violations outside the registry tree, and the eleven package initialisers elsewhere in dev that carry exports; `dev`.
+- [x] `W02.P02.S117` - Cut the seventeen hundred isolated snapshots the closure composers take for one hundred and twenty-eight rows, without memoising above the authority; `src/cadrumo/application/registry/temporal_coverage.py`.
+- [x] `W02.P02.S118` - Add an authority accessor returning the admitted revision identifier without the isolating deep copy, and move the temporal coverage composer onto it; `src/cadrumo/domain/calculations/registry/authority.py`.
+- [x] `W02.P02.S119` - Re-point the forty-four stale branch adjudication keys the private-to-public module rename invalidated; `dev/registry/analysis/modelo_branch_classification.toml`.
+- [ ] `W02.P02.S120` - Adjudicate the seven split-out modules and twenty-one newly reachable modules the refactor created, which needs grounded rulings rather than key repair; `dev/registry/analysis`.
+- [ ] `W02.P02.S121` - Decide whether the static load closure should exclude function-scoped import edges, or hoist the deferred import that makes it disagree with a real load; `dev/registry/analysis/load_census.py`.
+- [x] `W02.P02.S125` - Probe every construct-evidence coordinate through the identifier accessor and materialise only the snapshot the ledger reads; `src/cadrumo/domain/calculations/registry/coverage.py`.
+- [x] `W02.P02.S126` - Remove the plan step identifiers embedded in the modelo 200 revision declarations; `src/cadrumo/_data/registry/aeat/modelos/200/revisions`.
+- [x] `W02.P02.S127` - Extend the code-boundary detection to plan step identifiers, which it does not match today because it looks for document stems only; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W02.P02.S128` - Re-site or convert the twenty-four filing tests that demand filing grade from modelos 200, 038 and 036, per the specification recorded in the audit; `src/cadrumo/application/filing/tests`.
+- [x] `W02.P02.S136` - Expose the coverage facts a ledger reads as their own isolated projection, since deep-copying a whole snapshot to read four collections costs a hundred times what those collections cost; `src/cadrumo/domain/calculations/registry/authority.py`.
+- [x] `W02.P02.S137` - Gate the coverage facts projection on answering identically, refusing identically, and isolating what it hands out; `src/cadrumo/domain/calculations/registry/tests/test_coverage_facts.py`.
+- [x] `W02.P02.S152` - Delete the ledger bindings parent module left behind by its own split, whose fifty-nine of sixty definitions exist identically in the modules that replaced it; `src/cadrumo/domain/calculations/registry/ledger_bindings.py`.
+- [x] `W02.P02.S153` - Collapse the duplicated list type guard and mapping predicate onto their canonical definitions; `src/cadrumo/domain/iva`.
+- [x] `W02.P02.S154` - Collapse the config payload result schema onto one construction, replacing four identical private helpers and one inline copy; `src/cadrumo/entrypoints/cli/config/_command_spec_schema.py`.
+- [x] `W02.P02.S155` - Collapse the duplicated JSON locator, flow traversals and profile projection onto canonical definitions; `src/cadrumo`.
 
 ### Phase `W02.P03` - release predicate relocation
 
@@ -207,6 +242,26 @@ Wire a standing regression gate comparing the satisfied filing-coordinate set by
 - [x] `W02.P04.S104` - Gate that running every screen leaves the shipped registry byte-for-byte untouched; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W02.P04.S105` - Correct the five screen labels that described one kind while counting several, including one that inverted its sense; `dev/registry/analysis/screens.py`.
 - [x] `W02.P04.S106` - Gate that every kind a screen emits live is named in its own docstring; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W02.P04.S122` - State per modelo what the product can actually calculate and file, as a screen reading the declarations rather than a maintained list; `dev/registry/analysis/modelo_capability.py`.
+- [ ] `W02.P04.S123` - Migrate the thirty-one layouts that spell their envelope as a record onto the typed envelope slot, so the export boundary can see it and admit the required product identity; `src/cadrumo/_data/registry/aeat/modelos`.
+- [ ] `W02.P04.S124` - Resolve the twenty-five revisions carrying export layouts while declaring a grade below filing, including modelo 222 which ships a generated tree at applicability grade; `src/cadrumo/_data/registry/aeat/modelos`.
+- [x] `W02.P04.S129` - Re-ground the capability screen's envelope condition against the official designs, replacing the fifty-two-row count with the thirty-one real record-spelled cases; `dev/registry/analysis/modelo_capability.py`.
+- [ ] `W02.P04.S130` - Author the modelo 714 envelope fields at offsets 93 to 96 and 101 to 109, which no field covers today and which carry the mandatory developer identity; `src/cadrumo/_data/registry/aeat/modelos/714/revisions`.
+- [ ] `W02.P04.S131` - Decide modelo 100, which declares filing grade for an XML layout that refuses at render for want of a grounded aux version token; `src/cadrumo/_data/registry/aeat/modelos/100/revisions`.
+- [x] `W02.P04.S132` - Report structurally when a revision ships a committed export tree while declaring a grade below filing; `dev/registry/analysis/modelo_capability.py`.
+- [ ] `W02.P04.S133` - Re-review modelo 222, whose attestation reaches scheduling and applicability only and describes two casillas and no export layout while the revision now ships seventy-six casillas, a typed envelope and a committed tree; `src/cadrumo/_data/registry/aeat/modelos/222/revisions`.
+- [ ] `W02.P04.S135` - Author the missing deferral rationale for modelos 189, 280 and 345, whose layout-bearing revisions carry no stated reason for staying below filing grade; `src/cadrumo/_data/registry/aeat/modelos`.
+- [x] `W02.P04.S138` - Report provenance findings on the reference that is outside rather than on every child citing it; `dev/registry/analysis/provenance_consistency.py`.
+- [x] `W02.P04.S139` - Count the actionable unit in the screen runner census, not every site exhibiting it; `dev/registry/analysis/screens.py`.
+- [x] `W02.P04.S140` - Stop counting the official part split as a finding in the suite census, since the screen reports it for visibility and not as a defect; `dev/registry/analysis/screens.py`.
+- [x] `W02.P04.S141` - Report a revision that reaches filing grade with a layout while declaring no deadline window; `dev/registry/analysis/modelo_capability.py`.
+- [ ] `W02.P04.S142` - Author deadline windows for the five filing-grade revisions of modelos 145, 151, 165, 308 and 309 that declare none; `src/cadrumo/_data/registry/aeat/modelos`.
+- [x] `W02.P04.S143` - Report a filing-grade revision whose modelo claims a filing calculation class while declaring no formula; `dev/registry/analysis/modelo_capability.py`.
+- [ ] `W02.P04.S144` - Resolve modelos 296, 308, 349 and 360, which claim a filing calculation class with no formula behind it; `src/cadrumo/_data/registry/aeat/modelos`.
+- [x] `W02.P04.S145` - Gate that a screen stating how many conditions it reports agrees with what it documents and emits; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [ ] `W02.P04.S146` - Resolve the four filing-grade revisions failing more than one capability axis, modelo 308 failing three of them; `src/cadrumo/_data/registry/aeat/modelos`.
+- [ ] `W02.P04.S147` - Author the missing Scope and Summary sections in the two feature documents whose attested body schema requires them; `.vault`.
+- [x] `W02.P04.S151` - Document the distinction between a screen and an authoring aid in the contributor README, and how the gates tell them apart; `dev/registry/README.md`.
 
 ## Wave `W03` - filing-export proof made measurable
 
@@ -230,6 +285,7 @@ Repair the verifier that raises when probing a generated artefact source, which 
 - [x] `W03.P05.S91` - Sweep every published generated tree and record which reproduce, which carry a stale attestation and which carry record drift; `dev/registry/pipeline/render_check.py`.
 - [x] `W03.P05.S92` - Record why each non-reproducing generated tree does not reproduce and whether it is safe to republish; `dev/registry/pipeline/generated_tree_dispositions.toml`.
 - [x] `W03.P05.S93` - Gate that every non-reproducing tree carries a live disposition and every disposition names a tree that still fails; `dev/registry/tests/test_render_check.py`.
+- [ ] `W03.P05.S156` - Close the modelo 390 coverage hole, which declares revisions through 2025 while the current filing year resolves to nothing; `src/cadrumo/_data/registry/aeat/modelos/390/revisions`.
 
 ### Phase `W03.P06` - proof vector enrolment
 
@@ -253,7 +309,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 
 - [x] `W04.P07.S25` - Screen the declared casilla type against the type its resolved export field carries; `dev/registry/analysis/wire_type_compatibility.py`.
 - [x] `W04.P07.S26` - Prove the wire-type screen against a constructed incompatible declaration; `dev/registry/tests/test_wire_type_compatibility.py`.
-- [ ] `W04.P07.S27` - Declare the permitted casilla-to-wire type transitions as validated registry data; `src/cadrumo/domain/calculations/registry/export_value_policy.py`.
+- [ ] `W04.P07.S27` - Declare the twenty-seven distinct casilla-to-wire type transitions as validated registry data, the largest being money to decimal and ratio to decimal; `src/cadrumo/domain/calculations/registry/export_value_policy.py`.
 - [x] `W04.P07.S69` - Screen every monetary field for a wire type that applies no scale to the emitted digits; `dev/registry/analysis/monetary_scale.py`.
 - [x] `W04.P07.S70` - Prove the monetary scale screen exempts the self-scaling wire types and reports the unscaled ones; `dev/registry/tests/test_monetary_scale.py`.
 - [ ] `W04.P07.S75` - Give the existing publication authority an invocable entry point, since publish_validated_generated_export_tree has no caller, then publish the two enrolled trees that render but were never committed; `dev/registry/pipeline/_tree_publication.py`.
@@ -261,12 +317,15 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [ ] `W04.P07.S72` - Gate that every monetary field declares a scale or is rendered by a self-scaling wire type; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W04.P07.S74` - Screen sibling amount fields of one record for disagreeing scale representations; `dev/registry/analysis/monetary_scale.py`.
 - [x] `W04.P07.S78` - Measure whether the thirty-two footnoted corporate-tax amounts are also rendered unscaled; `dev/registry/analysis/monetary_scale.py`.
-- [ ] `W04.P07.S76` - Refuse a bare footnote reference as a stated wire fact so a footnoted amount stays under render-profile authority; `dev/registry/pipeline/_render_profile.py`.
+- [ ] `W04.P07.S76` - Refuse a bare footnote pointer as a stated wire fact, landing with the reviewed rules the correction makes due, since the file is no longer held but the coverage gate demands both halves in one change; `dev/registry/pipeline/_render_profile.py`.
 - [ ] `W04.P07.S77` - Prove the eligibility predicate treats a footnote-only content cell as stating no wire fact; `dev/registry/tests/test_render_profile.py`.
-- [ ] `W04.P07.S79` - Author reviewed representation rules for the one hundred and eighty three fields the corrected eligibility predicate admits; `dev/registry/render_profiles`.
+- [ ] `W04.P07.S79` - Author reviewed representation rules for the one hundred and forty-nine newly eligible fields in the six modelos that carry a render profile, the remaining thirty-four falling due when modelos 220 and 131 gain one; `dev/registry/render_profiles`.
 - [x] `W04.P07.S80` - Require a declared scale for every monetary export field in the new-modelo authoring checklist; `dev/registry/newmodelo/checklist.py`.
 - [x] `W04.P07.S81` - Require a sibling-amount comparison in the authoring checklist and stop pinning the checklist item count in its tests; `dev/registry/newmodelo/tests`.
 - [x] `W04.P07.S82` - Document which fields a render profile may govern and why a footnote reference removes one from its reach; `dev/registry/render_profiles/README.md`.
+- [x] `W04.P07.S148` - Resolve a footnote pointer to the note it names, so the reviewed rules the eligibility correction makes due can be grounded in the design's own wording; `dev/registry/analysis/footnote_pointer_notes.py`.
+- [ ] `W04.P07.S149` - Transcribe the thirteen bundled record designs that ship without an extracted text, which leaves evidence tooling blind to them; `src/cadrumo/_data/corpus/aeat_official/disenos_registro`.
+- [x] `W04.P07.S150` - Make the pointer triage repeatable, deriving each design's transcription from the source reference rather than by searching its directory; `dev/registry/analysis/footnote_pointer_notes.py`.
 
 ### Phase `W04.P08` - grade earned gate
 
@@ -333,6 +392,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S65` - Screen cross-revision continuity chains for grammar crossing, singletons and orphan evolutions; `dev/registry/analysis/continuity_integrity.py`.
 - [x] `W06.P13.S66` - Gate that no continuity chain crosses an identifier grammar and no evolution names a chain that does not exist; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W06.P13.S99` - Prove the continuity screen detects a chain crossing a grammar and an evolution naming a chain no casilla carries; `dev/registry/tests/test_continuity_integrity.py`.
+- [ ] `W06.P13.S134` - Decide a typed slot for withheld promotion, since a revision can declare a family inapplicable but cannot record why it carries filing machinery at a lower grade; `src/cadrumo/domain/calculations/registry/schema.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -369,11 +429,20 @@ reviewed representation rule authored in the same change. Eighty-seven of those 
 whose trees are not yet published, sixty of them in the corporate-tax design. Publishing such a tree
 first does not avoid the work; it converts it from authoring into a correction of shipped filing data.
 
-The generator verb must exist before any generated-tree defect can be corrected. A defect whose root
-cause is proven, whose corrected value is stated in the official design, and whose authored input is
-uncontended is still unfixable while the pipeline exposes no supported way to regenerate one revision
-from its inputs. That verb therefore gates every correction Step touching a generated modelo, whatever
-Wave the Step sits in.
+The generator verb must be reachable before any generated-tree defect can be corrected. A defect whose
+root cause is proven, whose corrected value is stated in the official design, and whose authored input
+is uncontended is still unfixable while no supported path regenerates one revision from its inputs.
+This constraint was first written as though the verb had to be built. It does not: the pipeline
+implements `publish_validated_generated_export_tree`, and a search for its callers returns one hit, a
+test asserting that a different module does not reference it. So the limb exists and nothing can reach
+it, which is a worse state than absence because it reads as capability. The constraint stands and its
+remedy shrinks: expose the existing authority, do not write a second one. It gates every correction
+Step touching a generated modelo, whatever Wave the Step sits in, and it also gates the two enrolled
+trees that render successfully and have never been committed.
+
+The read-only half of that path exists and is deliberately kept separate: a comparison that renders
+into a temporary directory and never writes to the registry is safe to run against filing data, and
+publication is not.
 
 A Step whose scope names a file another contributor has modified waits, whatever its Wave or
 dependencies. This is not a soft preference: the architecture rule requires a relocation to move a
@@ -381,6 +450,11 @@ definition and every consumer in one change, and a partial move leaves the tree 
 writing this blocks the whole of Wave two's residue and predicate Phases, and it blocked one screen
 from being written at all, because the predicates it needed are private to a held module and restating
 them would reproduce the very fault this plan removes.
+
+That set is not static, and it is not a property of the file: two package initialisers that were held
+when this constraint was written were released by a commit and became workable the same day. Re-read
+`git status --porcelain` for the specific path before assuming a Step is still blocked, and before
+every write. A Step deferred once is not deferred permanently.
 
 ## Parallelization
 
@@ -403,7 +477,7 @@ the boundary contract, the ratchet residue deletion and the dependency move.
 
 ## Verification
 
-The plan is complete when every Step is closed. Beyond that, eight criteria decide whether the work
+The plan is complete when every Step is closed. Beyond that, nine criteria decide whether the work
 achieved what it was for. Each names the evidence that settles it, because a criterion whose proof is
 a reading rather than a command is one nobody can check later.
 
@@ -425,14 +499,20 @@ acceptance suite asserts the structured refusal, naming which channel is empty, 
 that rephrasing once broke. The first half cannot be satisfied by engineering until the official
 reference exists.
 
-Every screen is reachable, exercised and honest about what it measured. Seven gates cover this: a
-screen is enrolled in the runner, documented in the contributor README, carries a test module,
+Every screen is reachable, exercised and honest about what it measured. Nine gates cover this: a
+screen is enrolled in the runner, listed in the contributor README's table, carries a test module,
 searches a non-empty population, completes over the whole corpus, leaves the shipped registry
-byte-for-byte untouched, and names in its own docstring every finding kind it emits. Each was added
+byte-for-byte untouched, names in its own docstring every finding kind it emits, and states a
+condition count matching both what it documents and what it emits; and every symbol those READMEs
+name still resolves, so the documentation cannot outlive the code it describes. Each was added
 after finding the hole it closes, and two caught the author within one iteration of being written.
 The seventh collects its kinds by running the screens rather than reading their source, because two
 earlier static extractors were each wrong in a different direction: one under-read a screen to a
-single kind and another to none, and a regex reported function names as undocumented kinds.
+single kind and another to none, and a regex reported function names as undocumented kinds. The
+eighth exists because the seventh was not enough: two screens named every kind they emit while still
+opening with a count from an earlier version of themselves, and one of those went stale in the very
+edit that added the missing name. A wrong count is worse than a missing one, because it tells the
+reader the list is complete.
 
 Each declaration gate demonstrates detection of a representative defect from a constructed fixture or
 an isolated temporary registry tree, never by mutating the working tree. Two gates are exempt and
@@ -450,19 +530,41 @@ that does not. Temporal selection resolves every coordinate the law can decide a
 it genuinely cannot. Fourteen names fail the first today and two coordinates fail the second.
 
 The development registry lane passes, and until it does every failure in it is named and attributed.
-The lane is red: seventeen failures, fifteen under `dev/registry/tests` against eight hundred and
-twenty-three passes and two more in the conformance suite beside it. The first figure was down from
-twenty-six when the inventory was first taken; the second went unmeasured until the scope of the
-measurement was itself questioned, because every run had named only the first directory. Every one is accounted for - eight generated trees that do not
+The lane is red: fifteen failures over both directories, fourteen under `dev/registry/tests` and one
+in the conformance suite beside it, down from eighteen. It also completes in six and a half minutes
+rather than fifteen, which is the performance work above showing up where a contributor feels it. The passing count is deliberately not recorded. It rises
+whenever this plan adds a gate - it moved by two within a day of being written down - so a criterion
+carrying it goes stale for the best possible reason, and a number that changes when nothing is wrong
+teaches a reader to ignore it. The
+first figure was down from twenty-six when the inventory was first taken. The second was corrected
+twice: the conformance suite went unmeasured entirely until the scope of the measurement was
+questioned, and was then reported as two failures because a single file in it had been run instead of
+the directory. Measuring the directory gives three. Both errors were the same error at different
+sizes, which is why the criterion names paths and not counts. Every one is accounted for - eight generated trees that do not
 reproduce or were never published, four over files another contributor is holding uncommitted, two
 classification modules, and one boundary check naming modules an in-flight rename moved. None belongs
-to this plan, and that was established by name rather than assumed. The two conformance failures are a
-closure row driven by a proof authority whose only proof-producing path refuses, and a guard whose
-expected refusal message no longer matches what the code raises.
+to this plan, and that was established by name rather than assumed. The three conformance failures are a
+closure row driven by a proof authority whose only proof-producing path refuses, a guard whose
+expected refusal message no longer matches what the code raises, and one in the closure suite beside
+them that has not yet been read.
 
 The lane figure is only as honest as the path it was taken over, so the run names both directories.
-The conformance suite takes nearly twelve minutes for seven tests, which exceeds the default
-foreground timeout and is exactly why it fell out of every earlier measurement. The criterion is deliberately not
+The conformance suite once took nearly twelve minutes for seven tests, which exceeds the default
+foreground timeout and is exactly why it fell out of every earlier measurement; that cost is the
+subject of the criterion below.
+
+The registry's own audits complete well inside the budget the tests give them, and each remedy
+preserves the isolation contract rather than trading it away. This was not a criterion when the plan
+was written, because the cost was invisible: a conformance test failed on a three hundred second
+timeout and read as a logic failure. Measured, one closure report took 210.8s for 128 rows and the
+conformance audit 133.9s, both dominated by a single mechanism - a snapshot is a cached lookup plus an
+isolating deep copy, the lookup costs nothing measurable and the copy is 98% of the call, and callers
+were taking one per coordinate to read a single string or four small collections. The closure report
+is now 15.0s and the conformance audit 22.1s. What makes those numbers acceptable rather than merely
+smaller is that no caller gained access to shared registry state to get them: each remedy either
+returns a value that cannot be mutated, or isolates the part actually read. A future change that
+restores the cost is a regression; one that reaches the same speed by handing out cached state is
+worse than the cost was. The criterion is deliberately not
 "the lane is green", because this plan cannot make it green while another campaign holds the files;
 it is that no failure in it is unexplained, so a new one is visible immediately. Read the exit status
 from pytest itself: a run piped through a filter reports the filter, which once made a red lane read

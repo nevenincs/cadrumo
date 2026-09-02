@@ -3,17 +3,13 @@ tags:
   - '#exec'
   - '#ci-lane-deconflation'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:2433be10ff8d5d31c76f7b7d32686bae755fbcbb0ea2b16d885fe2d274945ff0'
+body_hash: 'sha256:5dc9c574e6db88b9ed31c82880481a0ea5ed9b21452609f2c3ea3537977ef908'
 step_id: 'S182'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Refactor the size-budget subjects in authority.py into cohesive siblings without raising any threshold.
 

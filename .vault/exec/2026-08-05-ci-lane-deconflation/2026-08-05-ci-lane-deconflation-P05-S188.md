@@ -3,17 +3,13 @@ tags:
   - '#exec'
   - '#ci-lane-deconflation'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:b3741688b7c6cb74795fc6d6f7e00c67e340bbf29e36a4e39c313e84f48940e8'
+body_hash: 'sha256:6ee8f6280cd9f2138ee8ccf11fcbfc7ab29ee3b1cf82af7f7a5536ab9bc6322d'
 step_id: 'S188'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Refactor the size-budget subjects in ledger_bindings.py into cohesive siblings without raising any threshold.
 

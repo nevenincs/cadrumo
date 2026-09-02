@@ -7,9 +7,9 @@ tier: L2
 related:
   - '[[2026-08-28-semantic-consolidation-research]]'
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
-modified: '2026-08-31'
+modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:766e60db647d28a89fa39274049a8d3882b05db60584969334762f7ad3431264'
+body_hash: 'sha256:e3481aa4684f40e0cfb008fee7873b3c937bb54ce53f4ec4dfaa2c496be89028'
 ---
 
 # `semantic-consolidation` plan
@@ -109,11 +109,9 @@ Eleven repository classes declare the identical namespace, payload_type, schema_
 
 Behaviour-fingerprint matches that are small, self-contained and mechanically rehomable once a canonical home is ruled: the uppercase-alphanumeric code validator across domain auth and the CLI payloads, the passphrase strength renderer across two TUI screens, the projection row selector across M200 and M296, the snapshot lister across borrador and justificante, and three identical secure-persistence constructors.
 
-
 ### Phase `P05` - Adjudicate the enum-subset rebuilt groupings
 
 Fifty-two enum-subset clusters at two to six sites, each a candidate partition of a closed axis stated more than once. Every one needs the substitutability pre-filter before collapse, because two modules naming the same members for genuinely different rules must stay apart. The home-office family grouping closed earlier is the worked precedent for both the fix and the gate.
-
 
 ### Phase `P06` - Collapse the filing-year axis onto one declared bound
 

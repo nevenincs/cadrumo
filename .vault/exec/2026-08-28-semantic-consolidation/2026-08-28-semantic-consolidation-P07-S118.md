@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#semantic-consolidation'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:60f6ce41ed96267b7760adc8c60b9018faed9f9bdaa63dd6ba9c2c2b19edff40'
+body_hash: 'sha256:3ea971351f3b306b9a461299b275f1cf7a9fb1517a19c93e99ee2e6a1a457425'
 step_id: 'S118'
 related:
   - "[[2026-08-28-semantic-consolidation-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Publicise the mirror-manifest module so its remote-naming contracts are reachable without going through the storage namespace
 
