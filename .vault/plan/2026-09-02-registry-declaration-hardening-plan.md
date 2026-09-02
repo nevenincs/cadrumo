@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:7f84cad040abbaf53cacf4bde154cda22ffd2c698a29946c69d286250484e2d7'
+body_hash: 'sha256:78e40fb2e21f7c790fc20750dd1cd2b26c0883c3af554800da51f66852eabb49'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -36,10 +36,17 @@ real. Wave four adds the missing edge gates. Wave five corrects the data defects
 decision. Wave six applies the general contract.
 
 Measurement has since changed what the later Waves are for, and the Steps record it. Ten screens
-measure the declaration conditions from one entry point over a single loaded registry, and sixteen
-gates stand behind them with two detector proofs beside them. Each gate was written after finding the
-hole it closes rather than in advance, and several caught the author within an iteration of being
-written - one rejected the very correction made to satisfy it, twice.
+measure the declaration conditions from one entry point over a single loaded registry, each proving
+its own detection against a constructed defect, and sixteen gates stand behind them with two
+detector proofs beside them. Each gate was written after finding the hole it closes rather than in
+advance, and several caught the author within an iteration of being written - one rejected the very
+correction made to satisfy it, twice.
+
+Several conditions turned out to be clean corpus-wide and are gated as invariants carrying no
+tolerance rather than as counts; several others turned out larger or differently shaped than the
+audit first recorded, and two claims the audit made were withdrawn outright when measured. The
+screens are the evidence the Wave six decisions are written from, which is why they precede those
+decisions rather than waiting on them.
 
 The tenth screen answers the question that opened this work directly, because it turned out to be
 answerable from the declarations rather than needing judgement. Of 58 modelos, 22 declare
@@ -81,15 +88,6 @@ removal. The filing-export proof cannot proceed by engineering at all, because t
 official emitted-byte reference and a vector whose expected bytes came from this project's own writer
 would prove only self-consistency. Wave six waits on four decisions that are written and proposed but
 not accepted.
-
-Measurement has since changed what the later Waves are for, and the Steps record it. Eight
-screens now measure the declaration conditions, run from one entry point over a single loaded
-registry, and each proves its own detection against a constructed defect. Several conditions
-turned out to be clean corpus-wide and are gated as invariants carrying no tolerance rather
-than as counts; several others turned out larger or differently shaped than the audit first
-recorded, and two claims the audit made were withdrawn outright when measured. The screens are
-the evidence the Wave six decisions are written from, which is why they precede those decisions
-rather than waiting on them.
 
 Two blockers are load-bearing and neither is a design question. Wave two and part of Wave three
 cannot proceed while another contributor holds the files their Steps must move, because the
@@ -448,6 +446,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S216` - Move the acceptance criteria out of Parallelization where the duplicated structure had them accumulating and retire the superseded opener; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S217` - Correct the revision name screen's stated condition count that this campaign's own parity gate caught after the conditions were split; `dev/registry/analysis/revision_name_window.py`.
 - [x] `W06.P13.S218` - Reconcile the four superseded criterion wordings the similarity merge could not judge, preserving the unique clause in each; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S219` - Reconcile the two Description paragraphs whose screen counts disagreed, settling the count against the entry point rather than by length; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -560,8 +559,8 @@ recorded rather than worked around, because the available workaround - stubbing 
 the test cannot satisfy - would convert a real gap in filing evidence into a passing test,
 which is the outcome the whole plan exists to prevent.
 
-What remains fully available is the dev-owned surface, which is why the twelve Steps of
-`W06.P13` all live there. A screen, its dispositions and its gate can be authored, proved
+What remains fully available is the dev-owned surface, which is why every Step of `W06.P13`
+lives there. A screen, its dispositions and its gate can be authored, proved
 and left green without touching a file the other campaign holds.
 
 ## Verification

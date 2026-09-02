@@ -5235,3 +5235,32 @@ general lesson is the one the previous iteration reached from the other directio
 was right to keep what it could not judge. A threshold tuned to catch these four would have
 also caught the fifth, which is not a duplicate, and the campaign would have lost a criterion
 to a number.
+
+### Two Descriptions of the screens, disagreeing on how many there are
+
+The Description carried one near-duplicate pair the merge had left, and it was worth reading
+for a reason the Verification pairs were not: the two paragraphs state different numbers. One
+says ten screens measure the declaration conditions; the other says eight.
+
+The longer, later-sounding paragraph is the one that is wrong. Counting the entry point
+settles it - `SCREENS` in the analysis package enumerates ten - so the shorter paragraph
+carries the correct figure and the fuller one carries a stale count picked up when the screens
+were fewer.
+
+That is the whole argument for checking rather than preferring the longer variant, which is
+what the automated merge does and what a reader skimming would also do. Length correlates with
+recency often enough to be tempting and not often enough to be trusted, and here it points
+exactly the wrong way.
+
+Both paragraphs carried unique material: one the sixteen gates and the detail that several
+gates caught their own author, the other that each screen proves its detection against a
+constructed defect, that several conditions turned out clean corpus-wide, and that two of the
+audit's own claims were withdrawn when measured. They are now one passage with the verified
+count and everything both said. The Description reports no near-duplicate pair.
+
+A verification of that merge reported one clause lost, and it had not been. The check searched
+for the clause with the line break where the older paragraph happened to wrap it, and the
+merged text wraps it elsewhere. Normalising whitespace before comparing showed all four clauses
+present. It is the third time in this campaign that a literal newline inside a search string
+has produced a false result, twice in a check and once in an edit anchor - the same lesson each
+time, and cheap enough to keep relearning only because the checks are run at all.
