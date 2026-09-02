@@ -565,6 +565,44 @@ green across recent runs; the release path was the only failing workflow in the 
 the publish workflow has no runs at all, which is what never being dispatched looks
 like.
 
+### The first release pull request would carry five weeks of history
+
+With the pin refusal removed, the next push opens the first release pull request, and its
+prerequisites all hold: the manifest names `0.2.2`, the configured bootstrap commit is a
+real ancestor of the default branch, and no version tag exists to narrow the window. That
+last fact is the problem. The bootstrap commit is the `v0.1.0` release chore from five
+weeks earlier, so the changelog spans every commit since - 8,640 conventional commits, of
+which all but the 161 hidden `ci` and `style` entries would be rendered. The subject
+lines alone are roughly 820 KB, an order of magnitude past what a pull request body
+accepts.
+
+Five commits carry a breaking marker. The configuration sets `bump-minor-pre-major`, so
+below `1.0.0` those bump the minor rather than the major and the computed version is
+`0.3.0` rather than `1.0.0` - the setting exists for exactly this and is doing its job.
+
+The version is therefore right and the changelog is not. Moving the bootstrap commit
+nearer the head narrows the first release to a window someone can review, at the cost of
+the first changelog no longer claiming to describe everything before it. That is a
+decision about what the first release says it contains rather than a defect to repair,
+and it wants an operator rather than a default.
+
+### The publish step offered the index files it would refuse
+
+Auditing one link further down the chain found the failure waiting after the pin refusal
+is lifted. The build job seals a checksum manifest into `dist/` and then publishes
+`dist/*`, so the upload offers `manifest.sha256` alongside the six distributions. An
+upload is not atomic and is per-file, so this fails part-way through rather than before
+it starts - the worst place for it, and the one the `--check-url` retry exists to
+recover from.
+
+The publish step now names distributions by suffix. The gate asserting it reads the
+command line rather than the file, so it can be exercised against the shape it replaced
+as well as the one that ships; a check that could only read the live workflow would be
+the same enumerate-your-subject weakness found five times elsewhere in this work.
+
+The marker `uv build` leaves in the output directory was never at risk - a shell glob
+skips a dotfile - but it is the same class of passenger and the suffix rule covers both.
+
 ### Not investigated
 
 Nothing outstanding for this decision.
