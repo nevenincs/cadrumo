@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:bad528304bbd88b697dcf1c2f4838a78b9dae3ac99d8f886b6a7f8445e601ee1'
+body_hash: 'sha256:23607a78183a76b1e4de49c1467f1cb8bd5a4830764b825c376f9cc4aca66e12'
 related:
   - "[[2026-09-02-python-runtime-compatibility-adr]]"
   - "[[2026-09-02-python-runtime-compatibility-plan]]"
