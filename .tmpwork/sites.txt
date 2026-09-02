@@ -1,0 +1,246 @@
+cadrumo.application.ledger.invoice_draft_extraction
+   -> cadrumo.adapters.inbound.einvoice.xml
+   l79: from ...adapters.inbound.einvoice.xml import EInvoiceXmlParseError
+cadrumo.application.ledger.actions_common
+   -> cadrumo.adapters.persistence.storage.secure_object_namespaces
+   l32: from ...adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
+cadrumo.application.ledger.actions_common
+   -> cadrumo.adapters.persistence.profile.modelos_calculation
+   l227: from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+cadrumo.application.ledger.actions_common
+   -> cadrumo.adapters.persistence.storage.runtime_repository
+   l141: from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket | l480: from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+cadrumo.application.ledger.llm_diagnostics
+   -> cadrumo.adapters.outbound.llm.usage
+   l44: from ...adapters.outbound.llm.usage import UsageRecorder
+cadrumo.application.modelo._edit_execution
+   -> cadrumo.adapters.persistence.profile.modelos_calculation
+   l36: from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+cadrumo.application.ledger.llm_classification
+   -> cadrumo.adapters.persistence.storage.runtime_repository
+   l51: from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+cadrumo.application.ledger.invoice_confirmation
+   -> cadrumo.adapters.persistence.storage.attachment
+   l62: from ...adapters.persistence.storage.attachment import AttachmentStore
+cadrumo.application.ledger.actions_common
+   -> cadrumo.adapters.persistence.profile.transactions
+   l30: from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+cadrumo.application.ledger.counterparty_establishment
+   -> cadrumo.adapters.persistence.storage.secure_object_namespaces
+   l62: from ...adapters.persistence.storage.secure_object_namespaces import LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE
+cadrumo.application.ledger.evidence
+   -> cadrumo.adapters.persistence.storage.runtime_repository
+   l61: from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+cadrumo.application.ledger.invoice_draft_extraction
+   -> cadrumo.adapters.persistence.profile.invoices
+   l80: from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+cadrumo.application.ledger.aeat_record_projection
+   -> cadrumo.adapters.inbound.einvoice.record_batch
+   l44: from ...adapters.inbound.einvoice.record_batch import AeatParty, ParsedAeatRecord
+cadrumo.application.live.justificante
+   -> cadrumo.adapters.outbound.aeat.sede.declarations
+   l63: from ...adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
+cadrumo.application.ledger.actions_common
+   -> cadrumo.adapters.persistence.profile.invoices
+   l28: from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+cadrumo.application.ledger.evidence
+   -> cadrumo.adapters.persistence.storage.envelope.secure_bound_repository
+   l60: from ...adapters.persistence.storage.envelope.secure_bound_repository import SecureBoundRepository
+cadrumo.application.ledger.actions_common
+   -> cadrumo.adapters.persistence.profile.modelos_work_units
+   l29: from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+cadrumo.application.ledger.actions_common
+   -> cadrumo.adapters.persistence.storage.errors
+   l919: from ...adapters.persistence.storage.errors import SecureObjectRevisionConflictError
+cadrumo.application.ledger.actions_common
+   -> cadrumo.adapters.persistence.profile.buckets
+   l27: from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+cadrumo.application.modelo._edit_execution
+   -> cadrumo.adapters.persistence.profile.modelos_work_units
+   l38: from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+cadrumo.application.ledger.actions_import
+   -> cadrumo.adapters.persistence.storage.secure_object_namespaces
+   l28: from ...adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
+cadrumo.application.modelo._edit_execution
+   -> cadrumo.adapters.persistence.profile.buckets
+   l35: from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+cadrumo.application.ledger.llm_classification
+   -> cadrumo.adapters.persistence.profile.buckets
+   l49: from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+cadrumo.application.ledger.batch_ingest
+   -> cadrumo.adapters.inbound.einvoice.shape
+   l370: from ...adapters.inbound.einvoice.shape import probe_document_shape
+cadrumo.application.ledger.invoice_draft_extraction
+   -> cadrumo.adapters.persistence.storage.attachment
+   l81: from ...adapters.persistence.storage.attachment import AttachmentStore
+cadrumo.application.ledger.actions_import
+   -> cadrumo.adapters.inbound.financial.providers.detection
+   l449: from ...adapters.inbound.financial.providers.detection import detect_provider
+cadrumo.application.modelo._edit_execution
+   -> cadrumo.adapters.persistence.profile.modelos_edit_receipts
+   l37: from ...adapters.persistence.profile.modelos_edit_receipts import ModeloEditReceiptRepository
+cadrumo.application.bienes_inversion.service
+   -> cadrumo.adapters.persistence.profile.bienes_inversion
+   l34: from ...adapters.persistence.profile.bienes_inversion import ( BienesInversionIvaRegisterRepository, ) from ...domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord 
+cadrumo.application.live.justificante
+   -> cadrumo.adapters.outbound.aeat.sede.walker
+   l64: from ...adapters.outbound.aeat.sede.walker import capture_justificante, walk_expedientes_tree
+cadrumo.application.ledger.actions_import
+   -> cadrumo.adapters.inbound.financial.providers.ofx
+   l450: from ...adapters.inbound.financial.providers.ofx import OfxProvider
+cadrumo.application.ledger.actions_import
+   -> cadrumo.adapters.inbound.financial.providers.base
+   l342: from ...adapters.inbound.financial.providers.base import FinancialProviderError
+cadrumo.application.prorrata_register.service
+   -> cadrumo.adapters.persistence.profile.prorrata_register
+   l33: from ...adapters.persistence.profile.prorrata_register import ( ProrrataRegisterRepository, ) from ...core.prorrata_register import ProrrataProvisionalProvenance as _ProrrataProvisionalProvenance from ...core.prorrata_register import ProrrataRegisterRegime as _ProrrataRegisterRegime
+cadrumo.application.live.filed_data_capture
+   -> cadrumo.adapters.outbound.aeat.sede.declarations_capture
+   l54: from ...adapters.outbound.aeat.sede.declarations_capture import ( capture_previous_filing_observations, capture_relation_source_observations, ) from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion
+cadrumo.application.ledger.actions_common
+   -> cadrumo.adapters.persistence.storage.attachment
+   l467: from ...adapters.persistence.storage.attachment import resolve_attachment_store
+cadrumo.application.modelo.export
+   -> cadrumo.adapters.persistence.profile.prorrata_register
+   l55: from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+cadrumo.application.modelo.calculation_actions
+   -> cadrumo.adapters.persistence.profile.prorrata_register
+   l53: from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+cadrumo.application.ledger.confirmed_field_resolution
+   -> cadrumo.adapters.inbound.einvoice.parsers
+   l35: from ...adapters.inbound.einvoice.parsers import FacturaeInvoiceClass
+cadrumo.application.aggregation._modelo_bindings_invoice_iva
+   -> cadrumo.adapters.persistence.profile.invoices
+   l15: from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+cadrumo.application.diagnostic_models
+   -> cadrumo.adapters.persistence.storage.sql.secure_objects
+   l257: from ..adapters.persistence.storage.sql.secure_objects import SecureObjectNamespaceIntegrity
+cadrumo.application.ledger.llm_classification
+   -> cadrumo.adapters.persistence.storage.attachment
+   l50: from ...adapters.persistence.storage.attachment import AttachmentStore
+cadrumo.application.auth.operator_probes
+   -> cadrumo.adapters.outbound.aeat.auth.clave_movil_support
+   l164: from ...adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilConfigurationError, classify_identity | l500: from ...adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilConfigurationError, classify_identity
+cadrumo.application.ledger.llm_diagnostics
+   -> cadrumo.adapters.persistence.profile.transactions
+   l45: from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+cadrumo.application.ledger.invoice_confirmation
+   -> cadrumo.adapters.persistence.storage.runtime_repository
+   l63: from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+cadrumo.application.ledger.evidence
+   -> cadrumo.adapters.persistence.storage.attachment
+   l59: from ...adapters.persistence.storage.attachment import AttachmentStore
+cadrumo.application.modelo.export
+   -> cadrumo.adapters.persistence.profile.bienes_inversion
+   l49: from ...adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
+cadrumo.application.calculations.bienes_inversion_regularizacion
+   -> cadrumo.adapters.persistence.profile.bienes_inversion
+   l29: from ...adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
+cadrumo.application.ledger.evidence
+   -> cadrumo.adapters.persistence.storage.secure_object_namespaces
+   l62: from ...adapters.persistence.storage.secure_object_namespaces import LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE
+cadrumo.application.modelo._bienes_inversion_advisory
+   -> cadrumo.adapters.persistence.profile.bienes_inversion
+   l54: from ...adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
+cadrumo.application.ledger.actions_common
+   -> cadrumo.adapters.persistence.profile.usage_ratios
+   l31: from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
+cadrumo.application.modelo._prorrata_regularizacion_advisory
+   -> cadrumo.adapters.persistence.profile.prorrata_register
+   l60: from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+cadrumo.application.ledger.llm_classification
+   -> cadrumo.adapters.outbound.llm.run_telemetry
+   l371: from ...adapters.outbound.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
+cadrumo.application.live.censo
+   -> cadrumo.adapters.outbound.aeat.sede.censal_datos
+   l21: from ...adapters.outbound.aeat.sede.censal_datos import fetch_censal_datos
+cadrumo.application.ledger.counterparty_establishment
+   -> cadrumo.adapters.persistence.storage.envelope.secure_bound_repository
+   l61: from ...adapters.persistence.storage.envelope.secure_bound_repository import SecureBoundRepository
+cadrumo.application.ledger.invoice_draft_extraction
+   -> cadrumo.adapters.inbound.einvoice.parsers
+   l78: from ...adapters.inbound.einvoice.parsers import parse_einvoice_document
+cadrumo.application.user_profile.usage_ratio_resolution
+   -> cadrumo.adapters.persistence.profile.usage_ratios
+   l43: from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
+cadrumo.application.ledger.actions_import
+   -> cadrumo.adapters.inbound.financial.providers.csv
+   l448: from ...adapters.inbound.financial.providers.csv import CsvProvider
+cadrumo.application.ledger.evidence_textlayer
+   -> cadrumo.adapters.inbound.pdf.page_text_extraction
+   l24: from ...adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
+cadrumo.application.ledger.invoice_confirmation
+   -> cadrumo.adapters.persistence.profile.invoices
+   l61: from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+cadrumo.application.ledger.invoice_draft_records
+   -> cadrumo.adapters.inbound.einvoice.parsers
+   l23: from ...adapters.inbound.einvoice.parsers import FacturaeInvoiceClass
+cadrumo.application.ledger.actions_import
+   -> cadrumo.adapters.inbound.financial.providers.xlsx
+   l452: from ...adapters.inbound.financial.providers.xlsx import XlsxProvider
+cadrumo.application.ledger.evidence_input
+   -> cadrumo.adapters.inbound.einvoice.shape
+   l119: from ...adapters.inbound.einvoice.shape import probe_document_shape | l155: from ...adapters.inbound.einvoice.shape import probe_document_shape
+cadrumo.application.live.errors
+   -> cadrumo.adapters.outbound.aeat.auth.clave_movil_support
+   l165: from ...adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilFailureMode | l210: from ...adapters.outbound.aeat.auth.clave_movil_support import ( ClaveMovilApprovalTimeoutError, ClaveMovilConfigurationError, ) from ...adapters.outbound.aeat.sede.errors import SedeError
+cadrumo.application.ledger.actions_import
+   -> cadrumo.adapters.inbound.financial.providers.pdf_n26
+   l451: from ...adapters.inbound.financial.providers.pdf_n26 import PdfN26Provider
+cadrumo.application.calculations.cross_period_external_evidence
+   -> cadrumo.adapters.persistence.profile.justificante
+   l7: from ...adapters.persistence.profile.justificante import JustificanteRepository
+cadrumo.application.modelo.calculation
+   -> cadrumo.adapters.persistence.profile.modelos_calculation
+   l135: from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+cadrumo.application.ledger.invoice_draft_extraction
+   -> cadrumo.adapters.persistence.storage.runtime_repository
+   l82: from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+cadrumo.application.aggregation._modelo_bindings_support
+   -> cadrumo.adapters.persistence.storage.errors
+   l5: from ...adapters.persistence.storage.errors import ( ClassificationError, DecryptionError, EnvelopeVersionError, StorageValidationError,
+cadrumo.application.ledger.evidence
+   -> cadrumo.adapters.persistence.profile.buckets
+   l58: from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+cadrumo.application.ledger.invoice_draft_extraction
+   -> cadrumo.llm.evidence_draft_vision
+   l716: from ...llm.evidence_draft_vision import LocalVisionDocumentTranscriber, transcribe_document_images
+cadrumo.application.ledger.invoice_draft_extraction
+   -> cadrumo.llm.providers.local
+   l95: from ...llm.providers.local import rasterise_pdf_pages_to_base64_png
+cadrumo.application.ledger.invoice_draft_extraction
+   -> cadrumo.llm.errors
+   l93: from ...llm.errors import LLMPdfRasterisationError, LLMProviderError
+cadrumo.application.ledger.llm_classification
+   -> cadrumo.llm.models
+   l78: from ...llm.models import MultimodalImageInput
+cadrumo.application.ledger.llm_classification
+   -> cadrumo.llm.providers.local
+   l79: from ...llm.providers.local import rasterise_pdf_pages_to_base64_png
+cadrumo.application.ledger.llm_classification
+   -> cadrumo.llm.errors
+   l336: from ...llm.errors import LLMProviderError | l372: from ...llm.errors import LLMCacheError
+cadrumo.application.ledger.invoice_draft_extraction
+   -> cadrumo.llm.supply_nature_proposal
+   l370: from ...llm.supply_nature_proposal import SupplyNatureProposer
+cadrumo.application.ledger.invoice_draft_extraction
+   -> cadrumo.llm.models
+   l94: from ...llm.models import MultimodalImageInput
+cadrumo.application.ledger.llm_review_workflow
+   -> cadrumo.llm.suggestions
+   l40: from ...llm.suggestions import ( LLMClassificationSuggestion, LLMSaturatedSuggestion, LLMSplitApplyResult, LLMSplitSuggestion,
+cadrumo.application.ledger.llm_diagnostics
+   -> cadrumo.llm.models
+   l48: from ...llm.models import UsageRecord
+cadrumo.application.ledger.llm_classification
+   -> cadrumo.llm.text_classifier
+   l89: from ...llm.text_classifier import LocalTextLLMClassifier
+cadrumo.application.ledger.llm_classification
+   -> cadrumo.llm.suggestions
+   l80: from ...llm.suggestions import ( LLMClassificationSuggestion, LLMSaturatedSuggestion, LLMSplitApplyResult, LLMSplitChildSuggestion,
+cadrumo.application.ledger.invoice_draft_extraction
+   -> cadrumo.llm.evidence_draft_text
+   l453: from ...llm.evidence_draft_text import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
+cadrumo.application.ledger.llm_classification
+   -> cadrumo.llm.vision_classifier
+   l90: from ...llm.vision_classifier import LocalVisionLLMClassifier
