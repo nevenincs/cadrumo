@@ -227,7 +227,10 @@ def test_invalid_receipt_integrity_refuses_before_any_live_write(
     assert (repo / "src/example/contracts.py").read_bytes() == b"class Widgets:\n    pass\n"
 
 
-@pytest.mark.parametrize("drift", ["manifest", "inventory", "component", "file", "tool", "gate", "content"])
+@pytest.mark.parametrize(
+    "drift",
+    ["manifest", "inventory", "component", "file", "tool", "generator", "gate", "content"],
+)
 def test_authority_and_regenerated_evidence_drift_refuses_before_transaction(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, drift: str
 ) -> None:
@@ -249,6 +252,8 @@ def test_authority_and_regenerated_evidence_drift_refuses_before_transaction(
         (repo / "dev/untracked.txt").write_bytes(b"drift\n")
     elif drift == "tool":
         supplied_receipt = _retag(replace(receipt, tool_versions=((*receipt.tool_versions[:-1], ("uv", "changed")))))
+    elif drift == "generator":
+        supplied_receipt = _retag(replace(receipt, generator_outcomes=(receipt.gate_outcomes[0],)))
     elif drift == "gate":
         changed = replace(receipt.gate_outcomes[0], stdout_sha256=_digest(b"changed"))
         supplied_receipt = _retag(replace(receipt, gate_outcomes=(changed,)))

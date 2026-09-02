@@ -106,17 +106,20 @@ def test_report_is_deterministic_byte_for_byte(
     committed-artifact contract: a re-run on any machine yields the same bytes.
     """
     relevance = _sweep_from(("concept:prorrata", "page:how-to/choose-modelo"))
-    kwargs = {
-        "relevance": relevance,
-        "concept_cards": concept_cards,
-        "casilla_records": casilla_records,
-        "legal_ids": legal_ids,
-        "authority": authority,
-        **_EMPTY_CLI,
-    }
 
-    first = compute_coverage_report(**kwargs)
-    second = compute_coverage_report(**kwargs)
+    def report() -> CoverageReport:
+        return compute_coverage_report(
+            relevance=relevance,
+            concept_cards=concept_cards,
+            casilla_records=casilla_records,
+            legal_ids=legal_ids,
+            authority=authority,
+            cli_command_records=(),
+            cli_option_records=(),
+        )
+
+    first = report()
+    second = report()
 
     assert first.model_dump_json(indent=2) == second.model_dump_json(indent=2)
 

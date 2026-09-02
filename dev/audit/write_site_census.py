@@ -285,7 +285,7 @@ def _taxonomy_subpath_tokens() -> frozenset[str]:
     return frozenset(tokens)
 
 
-def _literal_tail(node: ast.expr | None) -> tuple[str, ...]:
+def _literal_tail(node: ast.AST | None) -> tuple[str, ...]:
     """Return the ordered string-literal segments in a ``/``-join chain's contiguous trailing run.
 
     ``tmp_path / "secrets"`` -> ``("secrets",)``. ``root / bucket_id / "db"``
@@ -324,7 +324,7 @@ def _module_signals_constraint_risk(tree: ast.AST) -> bool:
 
 
 def _is_constrained(
-    path_expression: ast.expr | None,
+    path_expression: ast.AST | None,
     *,
     provenance: str,
     module_signals_risk: bool,
