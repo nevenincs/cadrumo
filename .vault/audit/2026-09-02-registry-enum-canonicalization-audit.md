@@ -1619,3 +1619,55 @@ refusal behaviour is exercised, which is a coverage judgement and not a de-dupli
 edit. Left for the operator.
 
 479 + 348 + 45 tests pass across this tick's targets.
+
+## Finding 75 — the registry schema has no inline vocabularies left
+
+The de-duplication sweep reached its floor with 69 registry schema fields still declaring
+a closed vocabulary. Those were never duplicates -- each was a single declaration -- so
+the gate ignored them by design. They were, however, exactly what the campaign's opening
+directive named: ad-hoc values declared at the field instead of derived from a canonical
+enum.
+
+That population is now zero inline. All 26 remaining fields reach a named type, and 43
+were promoted to enums across this phase.
+
+Measuring the split was what made the work honest. Of the 41 that remained mid-phase,
+only 15 were spelled inline; 26 already reached a named alias and were therefore already
+one definition. Converting those buys type identity and member documentation, not the
+removal of an ad-hoc value, and saying so separates the two claims rather than reporting
+one number as if it were homogeneous.
+
+## Finding 76 — enum promotion silently degrades operator-facing messages
+
+Thirteen registry validation messages interpolated a promoted field with `!r`. Before
+promotion `{field!r}` printed `'declaracion_pdf'`; after, it printed
+`<ExtractionSurface.DECLARACION_PDF: 'declaracion_pdf'>`.
+
+These are messages an operator reads when the registry refuses a filing. The degradation
+is invisible to the load check and to every import smoke test: the tree still loads, the
+modules still import, and only a test asserting on message text -- or a human reading a
+refusal -- can see it. One such test caught the first instance; the remaining twelve were
+found by grepping `!r` against the promoted field names.
+
+Some of them predated the batch that exposed the pattern. `data_type!r` had been
+rendering an enum repr since `CasillaDataType` was promoted much earlier in this
+campaign, which means degraded messages shipped unnoticed for many ticks.
+
+The rule, now part of the procedure rather than a discovery: every promotion needs a
+`!r` sweep over the promoted field name, INCLUDING fields promoted in earlier batches,
+because nothing else in the toolchain reports it.
+
+## Finding 77 — three more vocabularies kept apart
+
+`LegalParameterDataType` shares six tokens with `CasillaDataType` and adds
+`bracket_table` and `keyed_bracket_table`. A parameter can be a bracket table; a casilla
+cannot. Proven not a subset rather than judged by eye.
+
+The two `regularizacion_output` vocabularies in `bindings.py` both name a 303 and a 390
+destination, and are disjoint: different casillas for a different adjustment. Proven
+disjoint.
+
+`ApplicationLinkSurface` is the third vocabulary in this codebase called a "surface",
+after the extraction surfaces and the live verification surfaces. One names an artefact,
+one an AEAT endpoint, one a part of the product. They share no token, and the name
+collision is the only thing they have in common.

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:5fcfbe98a19e30f0590078fa68200e3f0f69f45911ed7c71a507bb8df7595e29'
+body_hash: 'sha256:f5998b2390f6598c51fe20489564856c501944a5993e1421a06a671f320f0cc8'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -452,6 +452,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S222` - Sweep every screen for conditions documented but never emitted and establish that only the revision-name screen carried the defect; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S223` - Ground the twenty-one load classifications by measuring which modules a real load imports rather than which the graph reaches; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S224` - Repoint the load classification member the canonicalisation renamed and separate the one ambiguous stale name from the twelve outside the census universe; `dev/registry/analysis/load_census_classification.py`.
+- [x] `W06.P13.S225` - Separate the thirteen stale census entries into a universe too narrow, a rule that over-claims and one missing module; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

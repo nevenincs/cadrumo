@@ -5457,3 +5457,33 @@ The Step is closed on its stated subject. The census is not yet clean: thirteen 
 remain, twelve naming core modules outside the census universe and one naming the `snapshot`
 module whose successor is ambiguous. Both were separated from this work in the previous finding
 and neither is what this Step asked for.
+
+### One stale count, three different defects, and the largest is the census being wrong
+
+The thirteen remaining stale entries were treated in an earlier finding as a scope question to
+be left to whoever wrote the rules. Measured against a real load, they are three separate
+things and the rules are right about most of them.
+
+Six name modules a real load does import. `cadrumo.core`, `cadrumo.core.classification`,
+`cadrumo.core.errors.not_found`, `cadrumo.core.redaction` and `cadrumo.domain.calculations` are
+all in `sys.modules` after the bundled authority has loaded, so the rules claiming they load are
+correct and the census is calling them stale because its universe does not contain them. The
+universe is documented as the static load closure unioned with what the closure reaches
+dynamically and with the registry package, and these modules are demonstrably reached by a
+load, so the closure is not seeing edges the interpreter walks. That is a defect in the census,
+not in the rules it checks, and it is the largest share of the count.
+
+Three are the reverse. The justificante protocol, error and package modules are claimed `live`
+under the trigger "ValidatedRegistryAuthority.load", and a real load does not import any of
+them. That rule over-claims. The caveat is stated rather than buried: this was measured on one
+load path, the bundled authority, and the census distinguishes load regimes elsewhere, so a
+cold-regime load might reach them. The claim needs checking against both regimes before the
+rule is edited, and it is not edited here.
+
+One is the `snapshot` module, which does not exist on disk and whose successor is ambiguous
+between two siblings. Unchanged from the previous finding and still not guessed at.
+
+So a single number covered a census too narrow, a rule too broad, and a rename nobody
+completed - three defects wanting three different owners, presented as one count of stale
+rules. This audit has made that observation about the registry's own categories repeatedly;
+it applies to the tooling that measures the registry just as well.
