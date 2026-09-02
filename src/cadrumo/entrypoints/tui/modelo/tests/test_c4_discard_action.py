@@ -22,6 +22,7 @@ from .....application.modelo.operation_definitions import (
     ModeloWorkDiscardRequest,
     build_modelo_work_discard_definition,
 )
+from .....application.operations.models import OperationRequest
 from .....application.operations.registry import OperationBaselinePolicy, OperationCancellation
 from ..action import discard as discard_action
 from ..actions import MODELO_ACTION_DISPATCH
@@ -32,15 +33,22 @@ _WORK_UNIT_ID = "a" * 64
 _OBSERVED_AT = datetime(2026, 1, 10, tzinfo=UTC)
 
 
-def _request(**overrides: object):
-    kwargs: dict[str, object] = {
-        "work_unit_id": _WORK_UNIT_ID,
-        "observed_name": "130-2026-1T",
-        "observed_updated_at": _OBSERVED_AT,
-        "actor_ref": "operator:test",
-    }
-    kwargs.update(overrides)
-    return discard_action.build_discard_operation_request(**kwargs)  # type: ignore[arg-type]
+def _request(
+    *,
+    work_unit_id: str = _WORK_UNIT_ID,
+    observed_name: str = "130-2026-1T",
+    observed_updated_at: datetime = _OBSERVED_AT,
+    actor_ref: str = "operator:test",
+    reason: str | None = None,
+) -> OperationRequest[ModeloWorkDiscardRequest]:
+    """Build one discard request, each field defaulted and individually overridable."""
+    return discard_action.build_discard_operation_request(
+        work_unit_id=work_unit_id,
+        observed_name=observed_name,
+        observed_updated_at=observed_updated_at,
+        actor_ref=actor_ref,
+        reason=reason,
+    )
 
 
 def test_the_request_is_addressed_to_the_registered_discard_operation() -> None:
