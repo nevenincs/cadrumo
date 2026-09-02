@@ -46,7 +46,13 @@ def _evidence(*, mode: str, status: str = "passed", dependency_status: str = "re
     dependency = {"status": dependency_status, "detail": "fixture"}
     if mode == "binary":
         artifact_digests["runtime-wheelhouse"] = digest
-        dependency.update({"source": "sealed-runtime-wheelhouse", "wheelhouse_platform": "windows-x86-64"})
+        dependency.update(
+            {
+                "source": "sealed-runtime-wheelhouse",
+                "wheelhouse_platform": "windows-x86-64",
+                "wheelhouse_runtime": "3.14",
+            }
+        )
     return compatibility.ProbeEvidence(
         schema="cadrumo.python-runtime-compatibility.v1",
         runtime={

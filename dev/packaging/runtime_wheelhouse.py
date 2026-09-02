@@ -161,7 +161,7 @@ def _runtime_rows(repo_root: Path, python_versions: Sequence[str] | None) -> tup
                 inventory = load_runtime_inventory(inventory_path)
             except RuntimeMatrixError as exc:
                 raise SystemExit(f"runtime inventory cannot drive wheelhouse construction: {exc}") from exc
-            rows = tuple((row.minor, True) for row in inventory.stable) + ((inventory.next.minor, False),)
+            rows = (*((row.minor, True) for row in inventory.stable), (inventory.next.minor, False))
     if not rows:
         raise SystemExit("runtime wheelhouse runtime set is empty")
     if len({minor for minor, _blocking in rows}) != len(rows):
@@ -191,10 +191,10 @@ def _marker_environment(target: TargetPlatform, python_version: str) -> dict[str
 
 def _interpreter_rank(tag: Tag, python_version: str) -> int | None:
     target_minor = int(_canonical_python_minor(python_version).split(".", maxsplit=1)[1])
-    target_interpreter = f"cp{target_minor}"
+    target_interpreter = f"cp3{target_minor}"
     interpreter = tag.interpreter
     abi = tag.abi
-    if interpreter in {"py3", f"py{target_minor}"} and abi == "none":
+    if interpreter in {"py3", f"py3{target_minor}"} and abi == "none":
         return 0
     if interpreter == target_interpreter and abi == target_interpreter:
         return 1

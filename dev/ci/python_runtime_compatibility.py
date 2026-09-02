@@ -195,6 +195,8 @@ class ProbeEvidence:
                 raise CompatibilityProbeError("passing binary evidence must bind the runtime wheelhouse bytes")
             if self.dependency.get("source") != "sealed-runtime-wheelhouse":
                 raise CompatibilityProbeError("passing binary evidence must name the sealed wheelhouse source")
+            if not re.fullmatch(r"3\.[0-9]+", self.dependency.get("wheelhouse_runtime", "")):
+                raise CompatibilityProbeError("passing binary evidence must name the selected runtime wheelhouse")
         names = tuple(test.name for test in self.focused_tests)
         if any(not name for name in names) or len(names) != len(set(names)):
             raise CompatibilityProbeError("focused runtime tests must have unique non-empty names")
@@ -407,6 +409,51 @@ def _wheelhouse_platform(runtime: Mapping[str, str]) -> str:
         f"sealed runtime wheelhouse has no target for {operating_system!r}/{machine!r}",
         category="platform-unsupported",
     )
+
+
+def _runtime_minor(runtime: Mapping[str, str]) -> str:
+    """Return the observed interpreter's canonical ``3.N`` wheelhouse key."""
+    observed = runtime.get("python", "")
+    match = re.fullmatch(r"3\.(?P<minor>[0-9]+)(?:\.[0-9]+)?", observed)
+    if match is None:
+        raise CompatibilityProbeError(
+            f"selected interpreter reported an invalid Python version: {observed!r}",
+            category="runtime-identity-mismatch",
+        )
+    return f"3.{int(match.group('minor'))}"
+
+
+def _select_runtime_wheelhouse(
+    manifest: Mapping[str, Any],
+    runtime: Mapping[str, str],
+) -> tuple[str, Mapping[str, Any]]:
+    """Select the ready wheelhouse entry matching the observed CPython minor."""
+    python_minor = _runtime_minor(runtime)
+    runtimes = manifest.get("runtimes")
+    entry = runtimes.get(python_minor) if isinstance(runtimes, Mapping) else None
+    if not isinstance(entry, Mapping):
+        raise CompatibilityProbeError(
+            f"sealed runtime wheelhouse has no entry for Python {python_minor}",
+            category="missing-wheel",
+        )
+    status = entry.get("status")
+    if status == "missing-wheel":
+        missing = entry.get("missing")
+        details = "; ".join(
+            f"{item.get('distribution')} ({item.get('platform')}, {item.get('requirement')})"
+            for item in missing
+            if isinstance(item, Mapping)
+        ) if isinstance(missing, list) else "unattributed dependency closure"
+        raise CompatibilityProbeError(
+            f"sealed runtime wheelhouse for Python {python_minor} is missing wheels: {details}",
+            category="missing-wheel",
+        )
+    if status != "ready":
+        raise CompatibilityProbeError(
+            f"sealed runtime wheelhouse entry for Python {python_minor} is not ready",
+            category="cohort-invalid",
+        )
+    return python_minor, entry
 
 
 def _binary_wheel_targets(
@@ -818,6 +865,8 @@ def run_probe(
     wheelhouse_dir: Path | None = None
     wheelhouse_manifest: Mapping[str, Any] | None = None
     wheelhouse_platform: str | None = None
+    wheelhouse_runtime: str | None = None
+    wheelhouse_bundle: Any | None = None
     source_commit: str | None = None
     cohort_manifest_sha256: str | None = None
     builder_python: str | None = None
@@ -828,6 +877,7 @@ def run_probe(
             {
                 "source": "sealed-runtime-wheelhouse",
                 "wheelhouse_platform": "unresolved",
+                "wheelhouse_runtime": "unresolved",
             }
         )
     isolation = {"checkout_imports_removed": False, "ambient_product_executables_removed": False}
@@ -862,18 +912,15 @@ def run_probe(
                 )
             }
             # ``load_python_cohort`` has already checked the source archive,
-            # cohort manifest, and wheelhouse member bytes.  Validate the
-            # wheelhouse against the same lock digest once more at this
-            # handoff, then extract it into the target run's private working
-            # directory.  The installer receives only this extracted directory
-            # and never gets a registry/index fallback.
-            load_runtime_wheelhouse(
+            # cohort manifest, and every wheelhouse member byte. Validate the
+            # archive against the same lock digest once more at this handoff.
+            # Runtime selection happens only after the target interpreter's
+            # identity is observed below; a 3.13 wheel can never be presented
+            # to a 3.14 installer by accident.
+            wheelhouse_bundle = load_runtime_wheelhouse(
                 cohort.runtime_wheelhouse,
                 expected_lock_sha256=lock_sha256,
             )
-            wheelhouse_dir = work_dir / "runtime-wheelhouse"
-            wheelhouse = extract_runtime_wheelhouse(cohort.runtime_wheelhouse, wheelhouse_dir)
-            wheelhouse_manifest = wheelhouse.manifest
             artifact_digests["runtime-wheelhouse"] = cohort.sha256["runtime-wheelhouse"]
             artifact_sha256 = _canonical_artifact_digest(artifact_digests)
             cohort_manifest_sha256 = sha256_path(cohort.manifest)
@@ -889,6 +936,23 @@ def run_probe(
         )
         if selected_mode is ProbeMode.BINARY:
             wheelhouse_platform = _wheelhouse_platform(runtime)
+            if wheelhouse_bundle is None:  # pragma: no cover - guarded by binary cohort setup
+                raise CompatibilityProbeError(
+                    "binary mode did not load its sealed runtime wheelhouse",
+                    category="cohort-invalid",
+                )
+            wheelhouse_runtime, selected_wheelhouse = _select_runtime_wheelhouse(
+                wheelhouse_bundle.manifest,
+                runtime,
+            )
+            dependency["wheelhouse_runtime"] = wheelhouse_runtime
+            wheelhouse_dir = work_dir / f"runtime-wheelhouse-{wheelhouse_runtime}"
+            extract_runtime_wheelhouse(
+                wheelhouse_bundle.archive,
+                wheelhouse_dir,
+                python_version=wheelhouse_runtime,
+            )
+            wheelhouse_manifest = selected_wheelhouse
             dependency["wheelhouse_platform"] = wheelhouse_platform
         install_commands, dependency_status, dependency_detail = _install(
             uv,
@@ -920,6 +984,9 @@ def run_probe(
             raise CompatibilityProbeError(focused_failure, category="focused-test-failed")
     except (CompatibilityProbeError, OSError, ValueError, SystemExit) as exc:
         category = exc.category if isinstance(exc, CompatibilityProbeError) else "probe-failure"
+        if category == DependencyStatus.MISSING_WHEEL.value:
+            dependency["status"] = DependencyStatus.MISSING_WHEEL.value
+            dependency["detail"] = str(exc)
         failure = {"category": category, "detail": str(exc)}
     status = ProbeStatus.FAILED.value if failure is not None else ProbeStatus.PASSED.value
     return ProbeEvidence(

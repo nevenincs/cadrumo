@@ -30,43 +30,49 @@ def add_test_runtime_wheelhouse(
     artifacts: dict[str, str],
     digests: dict[str, str],
 ) -> Path:
-    """Add one closed four-platform wheelhouse bound to the test source lock."""
+    """Add a closed multi-runtime wheelhouse bound to the test source lock."""
     filename = "cadrumo_test_dependency-1.0.0-py3-none-any.whl"
     payload = b"sealed-test-runtime-wheel"
     lock = b"version = 1\nrevision = 1\nrequires-python = '>=3.13'\n"
     rows = {"cadrumo-test-dependency": filename}
+    floors = {
+        "linux-aarch64": "glibc-2.28",
+        "linux-x86-64": "glibc-2.28",
+        "macos-arm64": "macos-14.0",
+        "windows-x86-64": "windows-10",
+    }
+    platform_rows = {
+        target: rows
+        for target in ("linux-aarch64", "linux-x86-64", "macos-arm64", "windows-x86-64")
+    }
+    wheel_record = {
+        filename: {
+            "distribution": "cadrumo-test-dependency",
+            "sha256": hashlib.sha256(payload).hexdigest(),
+            "size": len(payload),
+            "version": "1.0.0",
+        }
+    }
+    runtime_entries = {
+        runtime: {
+            "platforms": platform_rows,
+            "python": runtime,
+            "status": "ready",
+            "wheels": wheel_record,
+        }
+        for runtime in ("3.13", "3.14")
+    }
     manifest = {
         "lock_sha256": hashlib.sha256(lock).hexdigest(),
-        "platform_floors": {
-            "linux-aarch64": "glibc-2.28",
-            "linux-x86-64": "glibc-2.28",
-            "macos-arm64": "macos-14.0",
-            "windows-x86-64": "windows-10",
-        },
-        "platforms": {
-            target: rows
-            for target in (
-                "linux-aarch64",
-                "linux-x86-64",
-                "macos-arm64",
-                "windows-x86-64",
-            )
-        },
-        "python": "3.13",
-        "schema": "cadrumo.runtime-wheelhouse.v2",
-        "wheels": {
-            filename: {
-                "distribution": "cadrumo-test-dependency",
-                "sha256": hashlib.sha256(payload).hexdigest(),
-                "size": len(payload),
-                "version": "1.0.0",
-            }
-        },
+        "platform_floors": floors,
+        "runtimes": runtime_entries,
+        "schema": "cadrumo.runtime-wheelhouse.v3",
     }
-    path = directory / "cadrumo-runtime-wheelhouse-py313.zip"
+    path = directory / "cadrumo-runtime-wheelhouse.zip"
     with zipfile.ZipFile(path, "w") as archive:
         archive.writestr("runtime-wheelhouse.json", json.dumps(manifest, sort_keys=True))
-        archive.writestr(f"wheels/{filename}", payload)
+        for runtime in ("3.13", "3.14"):
+            archive.writestr(f"wheels/{runtime}/{filename}", payload)
     artifacts["runtime-wheelhouse"] = path.name
     digests["runtime-wheelhouse"] = sha256_path(path)
     return path

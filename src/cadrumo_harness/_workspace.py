@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import filecmp
 import json
+import re
 import shutil
 import zipfile
 from collections.abc import Mapping, Sequence
@@ -126,15 +127,15 @@ _PYTHON_COHORT_WHEELS = (
     "cadrumo-data-official",
 )
 _PLUGIN_COHORT_SCHEMA = "cadrumo.plugin-python-cohort.v1"
-_RUNTIME_WHEELHOUSE_SCHEMA = "cadrumo.runtime-wheelhouse.v2"
+_RUNTIME_WHEELHOUSE_SCHEMA = "cadrumo.runtime-wheelhouse.v3"
 _RUNTIME_WHEELHOUSE_MANIFEST = "runtime-wheelhouse.json"
 _RUNTIME_WHEELHOUSE_PREFIX = "wheels/"
 _RUNTIME_WHEELHOUSE_SUBDIR = "wheelhouse"
 _SUPPORTED_WHEELHOUSE_TARGETS = frozenset({"linux-aarch64", "linux-x86-64", "macos-arm64", "windows-x86-64"})
 _RUNTIME_WHEELHOUSE_FLOORS = {
-    "linux-aarch64": "glibc-2.17",
-    "linux-x86-64": "glibc-2.17",
-    "macos-arm64": "macos-11.0",
+    "linux-aarch64": "glibc-2.28",
+    "linux-x86-64": "glibc-2.28",
+    "macos-arm64": "macos-14.0",
     "windows-x86-64": "windows-10",
 }
 
@@ -510,7 +511,7 @@ def _extract_runtime_wheelhouse(
     cohort: _PluginPythonCohort,
     destination: Path,
 ) -> dict[str, object]:
-    """Extract only the complete, digest-bound lock wheelhouse into the plugin."""
+    """Extract all ready runtime closures into one plugin candidate directory."""
     archive_digest = sha256_hex(cohort.runtime_wheelhouse.read_bytes())
     if archive_digest != cohort.sha256["runtime-wheelhouse"]:
         raise ValueError(
@@ -523,55 +524,78 @@ def _extract_runtime_wheelhouse(
             raise ValueError("runtime wheelhouse has a missing or duplicate member")
         document = json.loads(archive.read(_RUNTIME_WHEELHOUSE_MANIFEST))
         if not isinstance(document, dict) or set(document) != {
-            "lock_sha256",
-            "platform_floors",
-            "platforms",
-            "python",
-            "schema",
-            "wheels",
+            "lock_sha256", "platform_floors", "runtimes", "schema"
         }:
             raise ValueError("runtime wheelhouse manifest schema drifted")
         if document != dict(cohort.runtime_wheelhouse_manifest):
             raise ValueError("runtime wheelhouse manifest drifted from the validated cohort")
-        if document.get("schema") != _RUNTIME_WHEELHOUSE_SCHEMA or document.get("python") != "3.13":
+        if document.get("schema") != _RUNTIME_WHEELHOUSE_SCHEMA:
             raise ValueError("runtime wheelhouse identity drifted")
         if document.get("platform_floors") != _RUNTIME_WHEELHOUSE_FLOORS:
             raise ValueError("runtime wheelhouse platform support floor drifted")
-        platforms = document.get("platforms")
-        wheels = document.get("wheels")
-        if not isinstance(platforms, dict) or set(platforms) != _SUPPORTED_WHEELHOUSE_TARGETS:
-            raise ValueError("runtime wheelhouse platform closure is incomplete")
-        if not isinstance(wheels, dict) or not wheels:
-            raise ValueError("runtime wheelhouse declares no wheels")
-        expected_members = {
-            _RUNTIME_WHEELHOUSE_MANIFEST,
-            *(f"{_RUNTIME_WHEELHOUSE_PREFIX}{filename}" for filename in wheels),
-        }
+        runtimes = document.get("runtimes")
+        if not isinstance(runtimes, dict) or not runtimes:
+            raise ValueError("runtime wheelhouse declares no runtimes")
+        expected_members = {_RUNTIME_WHEELHOUSE_MANIFEST}
+        destination.mkdir(parents=True)
+        ready_runtime = False
+        for python_version, runtime in sorted(runtimes.items()):
+            if (
+                not isinstance(python_version, str)
+                or re.fullmatch(r"3\.[0-9]+", python_version) is None
+                or not isinstance(runtime, dict)
+                or runtime.get("python") != python_version
+            ):
+                raise ValueError(f"runtime wheelhouse runtime declaration is invalid: {python_version!r}")
+            status = runtime.get("status")
+            if status == "missing-wheel":
+                if set(runtime) != {"missing", "python", "status"}:
+                    raise ValueError(f"runtime wheelhouse missing-wheel record drifted: {python_version!r}")
+                continue
+            if status != "ready" or set(runtime) != {"platforms", "python", "status", "wheels"}:
+                raise ValueError(f"runtime wheelhouse runtime status is invalid: {python_version!r}")
+            ready_runtime = True
+            platforms = runtime.get("platforms")
+            wheels = runtime.get("wheels")
+            if not isinstance(platforms, dict) or set(platforms) != _SUPPORTED_WHEELHOUSE_TARGETS:
+                raise ValueError(f"runtime wheelhouse platform closure is incomplete: {python_version!r}")
+            if not isinstance(wheels, dict) or not wheels:
+                raise ValueError(f"runtime wheelhouse declares no wheels: {python_version!r}")
+            for filename, record in sorted(wheels.items()):
+                if (
+                    not isinstance(filename, str)
+                    or PurePosixPath(filename).name != filename
+                    or not filename.endswith(".whl")
+                    or not isinstance(record, dict)
+                    or set(record) != {"distribution", "sha256", "size", "version"}
+                ):
+                    raise ValueError(f"runtime wheelhouse record is invalid: {filename!r}")
+                member = f"{_RUNTIME_WHEELHOUSE_PREFIX}{python_version}/{filename}"
+                expected_members.add(member)
+                payload = archive.read(member)
+                if len(payload) != record.get("size") or sha256_hex(payload) != record.get("sha256"):
+                    raise ValueError(f"runtime wheelhouse wheel bytes drifted: {python_version}/{filename!r}")
+                destination_path = destination / filename
+                if destination_path.exists() and destination_path.read_bytes() != payload:
+                    raise ValueError(f"runtime wheelhouse runtime variants disagree: {filename!r}")
+                destination_path.write_bytes(payload)
+            for target, rows in platforms.items():
+                if not isinstance(rows, dict) or not rows:
+                    raise ValueError(f"runtime wheelhouse target closure is empty: {python_version}/{target!r}")
+                for distribution, filename in rows.items():
+                    record = wheels.get(filename) if isinstance(filename, str) else None
+                    if not isinstance(distribution, str) or not isinstance(record, dict):
+                        raise ValueError(
+                            f"runtime wheelhouse target references an unknown wheel: {python_version}/{target!r}"
+                        )
+                    if record.get("distribution") != distribution:
+                        raise ValueError(
+                            f"runtime wheelhouse target swaps distribution bytes: {python_version}/{target!r}"
+                        )
+        if not ready_runtime:
+            raise ValueError("runtime wheelhouse has no ready runtime closure")
         if set(names) != expected_members:
             raise ValueError("runtime wheelhouse member inventory drifted")
-        destination.mkdir(parents=True)
-        for filename, record in sorted(wheels.items()):
-            if (
-                not isinstance(filename, str)
-                or PurePosixPath(filename).name != filename
-                or not filename.endswith(".whl")
-                or not isinstance(record, dict)
-                or set(record) != {"distribution", "sha256", "size", "version"}
-            ):
-                raise ValueError(f"runtime wheelhouse record is invalid: {filename!r}")
-            payload = archive.read(f"{_RUNTIME_WHEELHOUSE_PREFIX}{filename}")
-            if len(payload) != record.get("size") or sha256_hex(payload) != record.get("sha256"):
-                raise ValueError(f"runtime wheelhouse wheel bytes drifted: {filename!r}")
-            (destination / filename).write_bytes(payload)
-        for target, rows in platforms.items():
-            if not isinstance(rows, dict) or not rows:
-                raise ValueError(f"runtime wheelhouse target closure is empty: {target!r}")
-            for distribution, filename in rows.items():
-                record = wheels.get(filename) if isinstance(filename, str) else None
-                if not isinstance(distribution, str) or not isinstance(record, dict):
-                    raise ValueError(f"runtime wheelhouse target references an unknown wheel: {target!r}")
-                if record.get("distribution") != distribution:
-                    raise ValueError(f"runtime wheelhouse target swaps distribution bytes: {target!r}/{distribution!r}")
     return {str(key): value for key, value in document.items()}
 
 

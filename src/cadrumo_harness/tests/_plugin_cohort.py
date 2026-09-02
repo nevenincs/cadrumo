@@ -45,36 +45,46 @@ def make_test_plugin_cohort(
     dependency_name = "mcp-2.0.0-py3-none-any.whl"
     dependency_bytes = b"sealed-test-wheel:mcp\n"
     dependency_sha256 = hashlib.sha256(dependency_bytes).hexdigest()
+    platform_floors = {
+        "linux-aarch64": "glibc-2.28",
+        "linux-x86-64": "glibc-2.28",
+        "macos-arm64": "macos-14.0",
+        "windows-x86-64": "windows-10",
+    }
+    platform_rows = {
+        target: {"mcp": dependency_name}
+        for target in ("linux-aarch64", "linux-x86-64", "macos-arm64", "windows-x86-64")
+    }
+    wheel_record = {
+        dependency_name: {
+            "distribution": "mcp",
+            "sha256": dependency_sha256,
+            "size": len(dependency_bytes),
+            "version": "2.0.0",
+        }
+    }
     wheelhouse_manifest: dict[str, object] = {
         "lock_sha256": "b" * 64,
-        "platform_floors": {
-            "linux-aarch64": "glibc-2.17",
-            "linux-x86-64": "glibc-2.17",
-            "macos-arm64": "macos-11.0",
-            "windows-x86-64": "windows-10",
-        },
-        "platforms": {
-            target: {"mcp": dependency_name}
-            for target in ("linux-aarch64", "linux-x86-64", "macos-arm64", "windows-x86-64")
-        },
-        "python": "3.13",
-        "schema": "cadrumo.runtime-wheelhouse.v2",
-        "wheels": {
-            dependency_name: {
-                "distribution": "mcp",
-                "sha256": dependency_sha256,
-                "size": len(dependency_bytes),
-                "version": "2.0.0",
+        "platform_floors": platform_floors,
+        "runtimes": {
+            runtime: {
+                "platforms": platform_rows,
+                "python": runtime,
+                "status": "ready",
+                "wheels": wheel_record,
             }
+            for runtime in ("3.13", "3.14")
         },
+        "schema": "cadrumo.runtime-wheelhouse.v3",
     }
-    runtime_wheelhouse = directory / "cadrumo-runtime-wheelhouse-py313.zip"
+    runtime_wheelhouse = directory / "cadrumo-runtime-wheelhouse.zip"
     with zipfile.ZipFile(runtime_wheelhouse, "w") as archive:
         archive.writestr(
             "runtime-wheelhouse.json",
             json.dumps(wheelhouse_manifest, sort_keys=True),
         )
-        archive.writestr(f"wheels/{dependency_name}", dependency_bytes)
+        for runtime in ("3.13", "3.14"):
+            archive.writestr(f"wheels/{runtime}/{dependency_name}", dependency_bytes)
     sha256 = {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in artifacts.items()}
     sha256["runtime-wheelhouse"] = hashlib.sha256(runtime_wheelhouse.read_bytes()).hexdigest()
     return TestPluginCohort(
