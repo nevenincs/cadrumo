@@ -33,6 +33,7 @@ import pytest
 from .....adapters.persistence.storage.attachment import AttachmentStore
 from .....domain.attachments.enums import AttachmentKind, AttachmentSource
 from .....domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
+from .....tests.google_credentials import unused_google_credentials
 from .....tests.secure_sql import isolated_runtime_profile
 from ...storage.errors import OutboundStorageError, OutboundStoragePermissionError
 from ..document_link_resolver import list_drive_folder_documents, resolve_document_link
@@ -72,7 +73,9 @@ def _pull_folder(
     API refuses an individual file outside the ``drive.file`` scope.
     """
     with drive_files_list_endpoint(pages=listing_pages) as list_endpoint:
-        listing = list_drive_folder_documents(folder_id=_FOLDER_ID, credentials=None, service=list_endpoint.service)
+        listing = list_drive_folder_documents(
+            folder_id=_FOLDER_ID, credentials=unused_google_credentials(), service=list_endpoint.service
+        )
 
     fetched: list[str] = []
     refused: list[str] = []
@@ -85,7 +88,7 @@ def _pull_folder(
                 data = resolve_document_link(
                     source=AttachmentSource.GOOGLE_DRIVE,
                     reference=reference,
-                    credentials=None,
+                    credentials=unused_google_credentials(),
                     service=media_endpoint.service,
                 )
             except OutboundStorageError:
@@ -183,7 +186,7 @@ def test_permission_denied_file_raises_scope_named_error_when_isolated() -> None
         resolve_document_link(
             source=AttachmentSource.GOOGLE_DRIVE,
             reference=f"https://drive.google.com/file/d/{_FILE_ID_DENIED}/view",
-            credentials=None,
+            credentials=unused_google_credentials(),
             service=endpoint.service,
         )
     assert excinfo.value.context is not None

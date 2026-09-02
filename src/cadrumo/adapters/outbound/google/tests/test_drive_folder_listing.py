@@ -21,6 +21,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....tests.google_credentials import unused_google_credentials
 from ...storage.errors import OutboundStorageError, OutboundStoragePermissionError, OutboundStorageValidationError
 from ..document_link_resolver import list_drive_folder_documents
 from .drive_media_server import drive_files_list_endpoint
@@ -65,7 +66,9 @@ def test_lists_pdf_and_image_children_and_skips_nested_folder() -> None:
         ],
     }
     with drive_files_list_endpoint(pages=[page]) as endpoint:
-        listing = list_drive_folder_documents(folder_id=_FOLDER_ID, credentials=None, service=endpoint.service)
+        listing = list_drive_folder_documents(
+            folder_id=_FOLDER_ID, credentials=unused_google_credentials(), service=endpoint.service
+        )
 
     assert listing.skipped_non_document_count == 0
     assert {document.file_id for document in listing.documents} == {"file-pdf-1", "file-pdf-2", "file-img-1"}
@@ -85,7 +88,9 @@ def test_filters_non_invoice_mime_type_and_counts_it_skipped() -> None:
         ],
     }
     with drive_files_list_endpoint(pages=[page]) as endpoint:
-        listing = list_drive_folder_documents(folder_id=_FOLDER_ID, credentials=None, service=endpoint.service)
+        listing = list_drive_folder_documents(
+            folder_id=_FOLDER_ID, credentials=unused_google_credentials(), service=endpoint.service
+        )
 
     assert [document.file_id for document in listing.documents] == ["file-pdf-1"]
     assert listing.skipped_non_document_count == 1
@@ -101,7 +106,9 @@ def test_follows_pagination_until_exhausted() -> None:
         "files": [{"id": "file-2", "name": "b.pdf", "mimeType": "application/pdf"}],
     }
     with drive_files_list_endpoint(pages=[page_one, page_two]) as endpoint:
-        listing = list_drive_folder_documents(folder_id=_FOLDER_ID, credentials=None, service=endpoint.service)
+        listing = list_drive_folder_documents(
+            folder_id=_FOLDER_ID, credentials=unused_google_credentials(), service=endpoint.service
+        )
 
     assert {document.file_id for document in listing.documents} == {"file-1", "file-2"}
     assert len(endpoint.requested_queries) == 2
@@ -114,7 +121,9 @@ def test_repeated_page_token_refuses_before_an_unbounded_drive_sweep() -> None:
         drive_files_list_endpoint(pages=[repeated_page, repeated_page]) as endpoint,
         pytest.raises(OutboundStorageValidationError, match="invalid nextPageToken") as excinfo,
     ):
-        list_drive_folder_documents(folder_id=_FOLDER_ID, credentials=None, service=endpoint.service)
+        list_drive_folder_documents(
+            folder_id=_FOLDER_ID, credentials=unused_google_credentials(), service=endpoint.service
+        )
     assert len(endpoint.requested_queries) == 2
     assert excinfo.value.context == {
         "action": "drive.files.list",
@@ -134,7 +143,9 @@ def test_non_string_page_token_is_a_validation_outcome() -> None:
         drive_files_list_endpoint(pages=[{"files": [], "nextPageToken": 42}]) as endpoint,
         pytest.raises(OutboundStorageValidationError, match="invalid nextPageToken") as excinfo,
     ):
-        list_drive_folder_documents(folder_id=_FOLDER_ID, credentials=None, service=endpoint.service)
+        list_drive_folder_documents(
+            folder_id=_FOLDER_ID, credentials=unused_google_credentials(), service=endpoint.service
+        )
 
     assert excinfo.value.context == {
         "action": "drive.files.list",
@@ -168,7 +179,9 @@ def test_malformed_successful_file_entry_refuses_at_the_drive_boundary(entry: ob
         drive_files_list_endpoint(pages=[{"files": [entry]}]) as endpoint,
         pytest.raises(OutboundStorageValidationError, match="malformed file entry") as excinfo,
     ):
-        list_drive_folder_documents(folder_id=_FOLDER_ID, credentials=None, service=endpoint.service)
+        list_drive_folder_documents(
+            folder_id=_FOLDER_ID, credentials=unused_google_credentials(), service=endpoint.service
+        )
 
     assert excinfo.value.context == {
         "action": "drive.files.list",
@@ -188,7 +201,9 @@ def test_non_list_successful_files_field_is_a_validation_outcome() -> None:
         drive_files_list_endpoint(pages=[{"files": {"id": "not-a-list"}}]) as endpoint,
         pytest.raises(OutboundStorageValidationError, match="non-list files field") as excinfo,
     ):
-        list_drive_folder_documents(folder_id=_FOLDER_ID, credentials=None, service=endpoint.service)
+        list_drive_folder_documents(
+            folder_id=_FOLDER_ID, credentials=unused_google_credentials(), service=endpoint.service
+        )
 
     _assert_closed_outcome(
         excinfo.value,
@@ -201,7 +216,9 @@ def test_non_list_successful_files_field_is_a_validation_outcome() -> None:
 def test_empty_folder_returns_no_documents() -> None:
     """An empty (or fully-filtered) folder returns zero documents, not an error."""
     with drive_files_list_endpoint(pages=[{"files": []}]) as endpoint:
-        listing = list_drive_folder_documents(folder_id=_FOLDER_ID, credentials=None, service=endpoint.service)
+        listing = list_drive_folder_documents(
+            folder_id=_FOLDER_ID, credentials=unused_google_credentials(), service=endpoint.service
+        )
 
     assert listing.documents == ()
     assert listing.skipped_non_document_count == 0
@@ -213,7 +230,9 @@ def test_permission_denied_folder_refuses_with_scope_named_error() -> None:
         drive_files_list_endpoint(pages=[{"error": {"code": 403, "message": "denied"}}], status=403) as endpoint,
         pytest.raises(OutboundStoragePermissionError) as excinfo,
     ):
-        list_drive_folder_documents(folder_id=_FOLDER_ID, credentials=None, service=endpoint.service)
+        list_drive_folder_documents(
+            folder_id=_FOLDER_ID, credentials=unused_google_credentials(), service=endpoint.service
+        )
 
     assert excinfo.value.context is not None
     assert excinfo.value.context["required_scope"] == "https://www.googleapis.com/auth/drive.readonly"

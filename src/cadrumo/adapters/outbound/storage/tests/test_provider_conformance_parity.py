@@ -38,6 +38,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from .....tests.google_credentials import unused_google_credentials
 from .._google_drive import GoogleDriveProvider
 from .._key_validation import assert_admissible_object_key_hmac
 from ..errors import OutboundStorageValidationError
@@ -64,7 +65,7 @@ def _drive_provider(_tmp_path: Path) -> GoogleDriveProvider:
     # is a real instance rather than a double: no credentials are exercised and
     # no request is issued until a read/write method is called.
     return GoogleDriveProvider(
-        credentials=object(),
+        credentials=unused_google_credentials(),
         root_folder_id="root-folder-id",
         vault_folder_name="vault",
     )

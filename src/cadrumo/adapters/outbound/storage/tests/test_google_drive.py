@@ -18,6 +18,7 @@ import pytest
 from .....core.errors.error_codes import resolve_error_message
 from .....core.i18n import tr
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....tests.google_credentials import unused_google_credentials
 from ...google.tests.drive_media_server import drive_files_list_endpoint
 from .._google_drive import GoogleDriveProvider
 from .._google_drive_metadata import drive_storage_content_hash
@@ -49,7 +50,9 @@ def _assert_drive_verdict(
 
 
 def _provider() -> GoogleDriveProvider:
-    return GoogleDriveProvider(credentials=object(), root_folder_id="drive-root", vault_folder_name="cadrumo-vault")
+    return GoogleDriveProvider(
+        credentials=unused_google_credentials(), root_folder_id="drive-root", vault_folder_name="cadrumo-vault"
+    )
 
 
 def test_google_drive_explicit_constructor_does_not_build_google_client() -> None:
@@ -65,7 +68,7 @@ def test_google_drive_explicit_constructor_does_not_build_google_client() -> Non
                 from cadrumo.adapters.outbound.storage._google_drive import GoogleDriveProvider
 
                 provider = GoogleDriveProvider(
-                    credentials=object(),
+                    credentials=unused_google_credentials(),
                     root_folder_id="drive-root",
                     vault_folder_name="cadrumo-vault",
                 )
@@ -132,7 +135,9 @@ def test_google_drive_provider_rejects_blank_constructor_values_with_localized_m
 def test_google_drive_provider_refuses_the_former_product_vault_before_service_construction() -> None:
     """The legacy Drive folder is never adopted as Cadrumo state."""
     with pytest.raises(OutboundStorageValidationError) as raised:
-        GoogleDriveProvider(credentials=object(), root_folder_id="drive-root", vault_folder_name="aeat-vault")
+        GoogleDriveProvider(
+            credentials=unused_google_credentials(), root_folder_id="drive-root", vault_folder_name="aeat-vault"
+        )
 
     exc = raised.value
     assert exc.translated_message == "adapters.outbound.storage.google_drive.errors.former_vault_folder"

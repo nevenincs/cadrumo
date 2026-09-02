@@ -31,6 +31,7 @@ from .....adapters.persistence.storage.attachment import AttachmentStore
 from .....domain.attachments.enums import AttachmentKind, AttachmentSource
 from .....domain.attachments.errors import AttachmentValidationError
 from .....domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
+from .....tests.google_credentials import unused_google_credentials
 from .....tests.secure_sql import isolated_runtime_profile
 from ...storage.errors import OutboundStoragePermissionError
 from ..document_link_resolver import resolve_document_link
@@ -53,7 +54,7 @@ def _store_resolved_link(store: AttachmentStore, *, payload: bytes):
         data = resolve_document_link(
             source=AttachmentSource.GOOGLE_DRIVE,
             reference=_DRIVE_LINK,
-            credentials=None,
+            credentials=unused_google_credentials(),
             service=endpoint.service,
         )
         assert endpoint.requested_paths == [f"/drive/v3/files/{_FILE_ID}?alt=media"]
@@ -152,7 +153,7 @@ def test_gmail_reference_refuses_and_writes_nothing(tmp_path: Path) -> None:
             resolve_document_link(
                 source=AttachmentSource.GMAIL,
                 reference="https://mail.google.com/mail/u/0/#inbox/abc123",
-                credentials=None,
+                credentials=unused_google_credentials(),
             )
         assert excinfo.value.context is not None
         assert excinfo.value.context["required_scope"] == "https://www.googleapis.com/auth/gmail.readonly"
@@ -168,7 +169,7 @@ def test_url_reference_refuses_and_writes_nothing(tmp_path: Path) -> None:
             resolve_document_link(
                 source=AttachmentSource.URL,
                 reference="https://example.com/justificante.pdf",
-                credentials=None,
+                credentials=unused_google_credentials(),
             )
         assert excinfo.value.context is not None
         assert excinfo.value.context["required_scope"] == "https://www.googleapis.com/auth/drive.readonly"
