@@ -186,6 +186,12 @@ def publish_validated_generated_export_tree(
         )
         candidate_manifest = _verify_generated_export_package(candidate_export_root)
         candidate_manifest_sha256 = _sha256(candidate_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME)
+        staged_candidate_export_root = _stage_verified_candidate_package(
+            candidate_export_root=candidate_export_root,
+            target_export_root=target_export_root,
+            expected_manifest_sha256=candidate_manifest_sha256,
+            expected_manifest=candidate_manifest,
+        )
 
         backup_export_root = _rollback_sibling(
             target_root=context.target_root.resolve(),
@@ -197,7 +203,7 @@ def publish_validated_generated_export_tree(
             state="intent",
             modelo=str(context.validation.target.modelo),
             revision_id=str(context.validation.target.revision_id),
-            candidate_export=str(candidate_export_root),
+            candidate_export=str(staged_candidate_export_root),
             backup_export=str(backup_export_root),
             candidate_manifest_sha256=candidate_manifest_sha256,
         )
@@ -210,13 +216,14 @@ def publish_validated_generated_export_tree(
             journal = journal.model_copy(update={"state": "backup_staged"})
             _write_journal(journal_path, journal)
         try:
-            os.replace(candidate_export_root, target_export_root)
+            os.replace(staged_candidate_export_root, target_export_root)
         except OSError as publish_error:
             _restore_backup_or_raise(
                 target_export_root=target_export_root,
                 backup_export_root=backup_export_root,
                 publish_error=publish_error,
             )
+            _delete_verified_staged_candidate_if_present(staged_candidate_export_root)
             _delete_journal(journal_path)
             raise RegistryValidationError(
                 f"generated export publication failed; the previous target was restored: {publish_error}",
@@ -451,23 +458,10 @@ def _recover_interrupted_publication(
         context.validation.target.revision_id
     ):
         raise RegistryValidationError(f"generated publication journal does not belong to this target: {journal_path}")
-    expected_candidate = str(candidate_export_root)
     backup_export_root = _journal_backup_path(journal, target_export_root, context.target_root.resolve())
-    if journal.candidate_export != expected_candidate:
-        # A failed cross-volume replacement can have restored the old target,
-        # removed its rollback sibling, and lost the caller's temporary root
-        # before this process can clean up the journal.  That completed
-        # rollback is safe to forget, but only when there is nothing left to
-        # recover from the recorded transaction.
-        recorded_candidate = Path(journal.candidate_export)
-        if target_export_root.exists() and not backup_export_root.exists() and not recorded_candidate.exists():
-            _delete_journal(journal_path)
-            return False
-        raise RegistryValidationError(
-            "generated publication journal candidate does not match the explicit caller temporary root",
-        )
-    candidate_is_verified = candidate_export_root.exists() and _matches_journal_candidate(
-        candidate_export_root,
+    staged_candidate_export_root = _journal_staged_candidate_path(journal, target_export_root)
+    candidate_is_verified = staged_candidate_export_root.exists() and _matches_journal_candidate(
+        staged_candidate_export_root,
         journal,
     )
     target_is_verified = target_export_root.exists() and _matches_journal_candidate(target_export_root, journal)
@@ -493,8 +487,8 @@ def _recover_interrupted_publication(
         return True
     if backup_export_root.exists():
         if candidate_is_verified:
-            candidate_manifest = _verify_recovery_package_against_current_authorities(
-                candidate_export_root,
+                candidate_manifest = _verify_recovery_package_against_current_authorities(
+                staged_candidate_export_root,
                 context=context,
                 joined=joined,
                 semantic_map=semantic_map,
@@ -504,7 +498,7 @@ def _recover_interrupted_publication(
             )
             if target_export_root.exists():
                 _move_failed_candidate_aside(target_export_root)
-            os.replace(candidate_export_root, target_export_root)
+            os.replace(staged_candidate_export_root, target_export_root)
             fsync_parent_dir(target_export_root)
             _verify_post_cutover_target(
                 target_export_root,
@@ -522,7 +516,7 @@ def _recover_interrupted_publication(
         return False
     if candidate_is_verified and not target_export_root.exists():
         candidate_manifest = _verify_recovery_package_against_current_authorities(
-            candidate_export_root,
+            staged_candidate_export_root,
             context=context,
             joined=joined,
             semantic_map=semantic_map,
@@ -530,7 +524,7 @@ def _recover_interrupted_publication(
             render_profile=render_profile,
             render_profile_source_evidence=render_profile_source_evidence,
         )
-        os.replace(candidate_export_root, target_export_root)
+        os.replace(staged_candidate_export_root, target_export_root)
         fsync_parent_dir(target_export_root)
         _verify_post_cutover_target(
             target_export_root,
