@@ -24,11 +24,22 @@ def authority() -> ValidatedRegistryAuthority:
 
 
 def test_a_reproducing_revision_is_reported_conclusively(authority: ValidatedRegistryAuthority) -> None:
-    """A tree that matches its authored inputs reproduces exactly."""
+    """A tree that matches its authored inputs carries no record that means something else.
+
+    Byte equality is not asserted, and that is a deliberate weakening of the
+    wrong axis. A closed-vocabulary conversion changed how one field is quoted
+    across every generated tree without changing any value, so byte equality
+    now fails on trees that are perfectly correct. What must hold is that every
+    byte difference is accounted for - as the attestation or as spelling - and
+    that nothing is left over. A changed value would land in
+    ``record_differing`` and fail here.
+    """
     comparison = compare_revision_against_committed(authority, modelo="303", revision="2025")
-    assert comparison.reproduced
+    assert comparison.semantically_reproduced
     assert comparison.record_differing == ()
-    assert not comparison.provenance_only
+    accounted = {*comparison.serialization_only, "_generation.provenance.json"}
+    assert set(comparison.differing) <= accounted
+    assert comparison.only_committed == () and comparison.only_rendered == ()
 
 
 def test_a_stale_attestation_is_separated_from_record_drift(authority: ValidatedRegistryAuthority) -> None:
@@ -40,7 +51,7 @@ def test_a_stale_attestation_is_separated_from_record_drift(authority: Validated
     """
     comparison = compare_revision_against_committed(authority, modelo="296", revision="2024-y-siguientes")
     assert not comparison.reproduced
-    assert comparison.provenance_only
+    assert comparison.semantically_reproduced
     assert comparison.record_differing == ()
 
 
@@ -96,9 +107,10 @@ def test_every_non_reproducing_tree_is_dispositioned_and_every_disposition_is_li
             if not bundled_path("registry", "aeat", "modelos", code, "revisions", revision_id, "export").is_dir():
                 continue
             comparison = compare_revision_against_committed(authority, modelo=code, revision=revision_id)
-            if comparison.reproduced:
+            state = comparison.disposition_class
+            if state is None:
                 continue
-            observed[f"{code}/{revision_id}"] = "provenance_only" if comparison.provenance_only else "record_drift"
+            observed[f"{code}/{revision_id}"] = state
 
     assert set(observed) == set(dispositioned), (
         f"trees that do not reproduce and carry no disposition: {sorted(set(observed) - set(dispositioned))}; "

@@ -11,13 +11,18 @@ have a single root they can catch at integration boundaries.
 2. The policy "live AEAT submission is permanently forbidden" is
    a foundational invariant, not an adapter implementation detail.
 
+There is no outbound submitter transport anywhere in the tree: no submitter
+ABC, no browser-session submitter, no remote filing transport. That absence
+is deliberate and is stated here, beside the refusal that enforces it, rather
+than in an empty adapter package that shipped and did nothing. File
+generation remains a local export concern and writes disk artefacts, never
+remote submissions.
+
 See Also:
     :class:`core.access_gate.AeatAccessGate`
         Gate that raises these errors from live-read and live-write checks.
     :class:`LiveSubmitForbiddenError`
         Permanent refusal raised by every attempted live AEAT write.
-    :mod:`adapters.outbound.aeat.export._submitters`
-        Empty adapter namespace kept free of remote submitter implementations.
 """
 
 from __future__ import annotations

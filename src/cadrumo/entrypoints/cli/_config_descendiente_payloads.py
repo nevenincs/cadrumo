@@ -39,7 +39,7 @@ from pydantic import NonNegativeInt, StringConstraints, field_validator, model_v
 
 from ...core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.json_contract import OutputSchema
-from ...core.text_bounds import CalendarMonth, is_canonical_month_set
+from ...core.text_bounds import is_canonical_month_set
 from ...core.time.clock import today_madrid
 from ...domain.contribuyente.descendant_record import DescendantRecordFields
 
@@ -48,21 +48,6 @@ DescendantNif = Annotated[
     StringConstraints(strip_whitespace=True, to_upper=True, min_length=9, max_length=9),
 ]
 """Optional descendant NIF/NIE, shaped exactly as :class:`DescendantInfo` validates it."""
-
-
-class GuarderiaMonthSpendPayload(OutputSchema):
-    """One month's Art. 81.2 guardería spend, as the wire carries it.
-
-    Projection of :class:`~cadrumo.domain.contribuyente.GuarderiaMonthSpend`,
-    with the same bounds. The map is SPARSE: a month with no spend has no row,
-    and nothing here encodes the window's ends. That is deliberate — the upper
-    bound is the childcare centre's determination, reported by the centre on its
-    own informative return, so a transport that implied a window would assert a
-    fact this application does not hold.
-    """
-
-    month: CalendarMonth
-    amount_euros: NonNegativeInt
 
 
 class ProfileDescendientePayload(DescendantRecordFields, OutputSchema):
@@ -74,10 +59,9 @@ class ProfileDescendientePayload(DescendantRecordFields, OutputSchema):
     """
 
     index: NonNegativeInt
-    # ``convive_con_contribuyente`` and ``custodia_compartida`` are inherited
-    # from the shared field vocabulary with their canonical defaults; the
-    # projection always states both explicitly.
-    gastos_guarderia_mensuales: tuple[GuarderiaMonthSpendPayload, ...] = ()
+    # ``convive_con_contribuyente``, ``custodia_compartida`` and
+    # ``gastos_guarderia_mensuales`` come from the shared field vocabulary with
+    # their canonical types; the projection always states them explicitly.
     nif: DescendantNif | None = None
 
     @field_validator("meses_madre_trabajo")

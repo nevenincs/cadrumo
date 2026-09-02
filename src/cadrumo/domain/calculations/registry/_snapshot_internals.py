@@ -17,6 +17,7 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from ._validate import RegistryValidator
 from ._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow, validate_orden_aplicabilidad
+from ._validate_revision_context import records_by_id
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .export import derive_export_layouts_from_bindings
 from .ids import RevisionId
@@ -38,21 +39,9 @@ _SNAPSHOT_CACHE: dict[_SnapshotCacheKey, _SnapshotCacheValue] = {}
 _VALIDATION_CACHE: dict[_ValidationCacheKey, _ValidationCacheValue] = {}
 
 
-class _IdentifiedRecord(Protocol):
-    """Record whose canonical identifier keys a snapshot projection."""
-
-    @property
-    def id(self) -> str: ...
-
-
 class _GroundedRecord(Protocol):
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
-
-
-def _records_by_id[RecordT: _IdentifiedRecord](records: Iterable[RecordT]) -> dict[str, RecordT]:
-    """Index records by id while preserving their authored order."""
-    return {record.id: record for record in records}
 
 
 def _catalogue_slice[RecordT](catalogue: Mapping[str, RecordT], record_ids: set[str]) -> dict[str, RecordT]:
@@ -276,15 +265,15 @@ def _build_validated_snapshot(
         period=period,
         legal=_catalogue_slice(catalogues.legal, legal_ids),
         sources=_catalogue_slice(catalogues.sources, source_ids),
-        extraction_profiles=_records_by_id(revision.extraction_profiles),
-        live_cross_references=_records_by_id(revision.live_cross_references),
-        workbook_parity_refs=_records_by_id(revision.workbook_parity_refs),
-        verification_expectations=_records_by_id(revision.verification_expectations),
-        application_links=_records_by_id(revision.application_links),
-        deadline_windows=_records_by_id(revision.deadline_windows),
-        filing_schedules=_records_by_id(revision.filing_schedules),
-        constructs=_records_by_id(revision.constructs),
-        dependency_classifications=_records_by_id(revision.dependency_classifications),
+        extraction_profiles=records_by_id(revision.extraction_profiles),
+        live_cross_references=records_by_id(revision.live_cross_references),
+        workbook_parity_refs=records_by_id(revision.workbook_parity_refs),
+        verification_expectations=records_by_id(revision.verification_expectations),
+        application_links=records_by_id(revision.application_links),
+        deadline_windows=records_by_id(revision.deadline_windows),
+        filing_schedules=records_by_id(revision.filing_schedules),
+        constructs=records_by_id(revision.constructs),
+        dependency_classifications=records_by_id(revision.dependency_classifications),
         convenio=catalogues.convenio,
         supplementary_ordenes=catalogues.supplementary_ordenes,
     )

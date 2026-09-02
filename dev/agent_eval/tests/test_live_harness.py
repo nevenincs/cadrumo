@@ -15,8 +15,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from cadrumo_harness.mcp import faithfulness_check
 from pydantic import ValidationError
+
+from cadrumo_harness.mcp import faithfulness_check
 
 from .. import (
     GoldenScenario,

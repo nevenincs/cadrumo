@@ -54,18 +54,12 @@ allowed = [
   "cadrumo.adapters.inbound.borrador",  # unreachable
   "cadrumo.adapters.inbound.einvoice._aeat_record_schema",  # unreachable
   "cadrumo.adapters.inbound.einvoice.record_batch",  # unreachable
-  "cadrumo.adapters.outbound.aeat.export._submitters",  # unreachable
-  "cadrumo.adapters.outbound.aeat.export.errors",  # unreachable
   "cadrumo.adapters.outbound.aeat.sede._renta_web_open_safety",  # unreachable
   "cadrumo.adapters.outbound.aeat.sede.renta_web_open",  # unreachable
   "cadrumo.adapters.outbound.aeat.verify",  # unreachable
   "cadrumo.adapters.outbound.google.calc_sheets_pull_coverage",  # unreachable
-  "cadrumo.adapters.persistence.profile.filing_amendments",  # unreachable
   "cadrumo.adapters.persistence.profile.filing_export_replay",  # unreachable
   "cadrumo.adapters.persistence.profile.fincas",  # unreachable
-  "cadrumo.application.filing._calculate",  # unreachable
-  "cadrumo.application.filing._complementaria",  # unreachable
-  "cadrumo.application.filing.validation",  # unreachable
   "cadrumo.application.inventory._source_readiness",  # unreachable
   "cadrumo.application.invoices._projection",  # unreachable
   "cadrumo.application.invoices._reconciliation",  # unreachable
@@ -75,11 +69,8 @@ allowed = [
   "cadrumo.application.operator_surface.calculation_workflows",  # unreachable
   "cadrumo.application.operator_surface.crud_contract",  # unreachable
   "cadrumo.application.operator_surface.crud_registry",  # unreachable
-  "cadrumo.application.portals",  # unreachable
   "cadrumo.application.prorrata_register.sector_lifecycle",  # unreachable
   "cadrumo.application.prorrata_register.seed",  # unreachable
-  "cadrumo.application.registry.conformance",  # unreachable
-  "cadrumo.application.registry.filing_export_authority",  # unreachable
   "cadrumo.application.review._edit",  # unreachable
   "cadrumo.application.review.actions",  # unreachable
   "cadrumo.application.storage.calc_sheets._row_set_assembly",  # unreachable
@@ -99,13 +90,8 @@ allowed = [
   "cadrumo.core.corpus_manifest._bundle_signing",  # unreachable
   "cadrumo.core.observability.replay",  # unreachable
   "cadrumo.core.telemetry._producers",  # unreachable
-  "cadrumo.domain.calculations.registry.aeat_nif_iva_oracle",  # unreachable
-  "cadrumo.domain.calculations.registry.classification_coherence",  # unreachable
-  "cadrumo.domain.calculations.registry.coverage",  # unreachable
-  "cadrumo.domain.calculations.registry.groi_oracle",  # unreachable
   "cadrumo.domain.calculations.registry.record_spec",  # unreachable
   "cadrumo.domain.calculations.registry.renta_web_open_oracle",  # unreachable
-  "cadrumo.domain.filing.amendment",  # unreachable
   "cadrumo.domain.fincas",  # unreachable
   "cadrumo.domain.iva.place_of_supply",  # unreachable
   "cadrumo.domain.iva.verify",  # unreachable

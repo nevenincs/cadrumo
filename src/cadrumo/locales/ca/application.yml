@@ -409,37 +409,9 @@ application:
         unsupported_filing_year: L'exercici {filing_year} no està declarat com a suportat.
           El registre declara {supported_filing_years}. Admeteu l'exercici a {declaration}
           després de fonamentar-ne els requisits.
-    complementaria:
-      errors:
-        justificante_csv_absent: La complementària requereix el CSV del justificant
-          de la declaració original.
-        no_changed_casilla: La complementària requereix almenys una casella modificada.
-        original_draft_addressing_mismatch: La declaració original i l'esborrany desat
-          declaren un model o període diferent.
-        original_draft_snapshot_stale: L'esborrany original no es va construir amb
-          el snapshot de registre actiu.
-        original_submission_csv_blank: La declaració original ha de portar un CSV
-          de justificant oficial.
-        original_submission_fields_missing: A la declaració original li falten camps
-          obligatoris.
-        original_submission_shape_invalid: La declaració original no correspon a la
-          forma de registre esperada.
     errors:
-      amendment_not_persisted: no hi ha cap rectificació persistida amb id %{amendment_id}
-      complementaria_taxpayer_identity_absent: 'la complementària requereix una identitat
-        fiscal declarada: el profile_tax_id de la declaració presentada és %{submitted_tax_id}
-        mentre que l''esborrany original declara %{draft_tax_id}'
-      complementaria_taxpayer_identity_malformed: 'la complementària no pot confirmar
-        un únic contribuent: el profile_tax_id %{submitted_tax_id} de la declaració
-        presentada no és un NIF, NIE o CIF vàlid, i l''esborrany original declara
-        %{draft_tax_id}'
-      complementaria_taxpayer_identity_mismatch: 'la identitat fiscal de la complementària
-        divergeix: la declaració presentada declara profile_tax_id %{submitted_tax_id}
-        i l''esborrany original declara %{draft_tax_id}; tots dos han d''anomenar
-        el mateix contribuent'
       import_failed: 'no es pot importar el model %{modelo}: %{detail}'
       modelo_not_in_registry: el model %{modelo} no és present al registre de càlcul
-      original_draft_not_persisted: l'esborrany original %{draft_id} no està persistit
       period_ejercicio_mismatch: 'model %{modelo}: no es pot canonicalitzar el període
         %{period} per a l''exercici %{ejercicio}'
       unexpected_ejercicio: 'model %{modelo}: exercici inesperat %{ejercicio}; cal

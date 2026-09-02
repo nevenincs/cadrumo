@@ -270,6 +270,7 @@ class M145CommunicationRecord(BaseModel):
 
     @property
     def snapshot_id(self) -> str:
+        """Return the communication record id under the generic name the snapshot repository expects."""
         return self.communication_record_id
 
     @model_validator(mode="after")
@@ -328,6 +329,7 @@ def derive_m145_communication_record_id(
 
 
 def m145_communication_record_object_key(bucket_id: str, communication_record_id: str) -> str:
+    """Return the secure-object storage key for one Modelo 145 communication record."""
     return f"m145-communication:{bucket_id}:{communication_record_id}"
 
 

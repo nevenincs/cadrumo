@@ -207,6 +207,7 @@ class InventoryService:
         bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
         repository_factory: InventoryRepositoryFactory | None = None,
     ) -> None:
+        """Initialize the service with resolved settings and the optional repository factories."""
         # `Settings()` bypasses `override_settings`; route through
         # `load_settings()` so tests and CLI calls see the active scoped
         # storage runtime.

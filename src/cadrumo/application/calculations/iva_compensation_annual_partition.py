@@ -250,10 +250,18 @@ class IvaCompensationAnnualPartitionSourceResolver:
         repository: CalculationObservationRepository | None = None,
         registry_snapshot: RegistrySnapshot | None = None,
     ) -> None:
+        """Initialize the resolver with the optional observation repository and registry snapshot."""
         self._repository = repository
         self._registry_snapshot = registry_snapshot
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve the Modelo 390 boxes 97 / 662 IVA compensation FIFO partition for ``context``.
+
+        Returns:
+            An empty resolution when the revision declares no such
+            requirement, a degraded resolution on repository failure, or the
+            resolved :class:`~._source_mesh.CalculationSourceResolution`.
+        """
         revision = self._registry_snapshot.revision if self._registry_snapshot is not None else None
         if revision is None:
             from ...core.resources.bundled_data import bundled_path

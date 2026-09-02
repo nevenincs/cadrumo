@@ -127,12 +127,14 @@ _COMPLEMENTARIA: str = "complementaria"
 _SUSTITUTIVA: str = "sustitutiva"
 _RECTIFICATIVA: str = "rectificativa"
 
-#: Pre-rectificativa regime: only the dual complementaria/sustitutiva pair.
+#: Pre-rectificativa regime: only the dual complementaria (LGT art. 122.2) /
+#: sustitutiva (LGT art. 122.1) pair.
 _PRE_RECTIFICATIVA_KINDS: frozenset[str] = frozenset({_COMPLEMENTARIA, _SUSTITUTIVA})
 
-#: Post-rectificativa regime: rectificativa replaces complementaria as the
-#: modelo's unified ordinary-correction mechanism; sustitutiva remains for
-#: material restatements.
+#: Post-rectificativa regime: rectificativa (LGT art. 120.4) replaces
+#: complementaria as the modelo's unified ordinary-correction mechanism;
+#: sustitutiva (LGT art. 122.1) remains for material restatements, which is why
+#: it is the one kind admitted by both regimes.
 _POST_RECTIFICATIVA_KINDS: frozenset[str] = frozenset({_RECTIFICATIVA, _SUSTITUTIVA})
 
 

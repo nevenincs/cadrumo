@@ -129,76 +129,6 @@ def _copy_python_cohort(cohort: PythonCohort, destination: Path) -> PythonCohort
     return load_python_cohort(destination)
 
 
-_SEALED_MATERIALIZER_SOURCE: Final[str] = r"""
-import json
-import os
-import sys
-import sysconfig
-import zipfile
-from pathlib import Path
-from types import SimpleNamespace
-
-site = Path(os.environ["CADRUMO_MATERIALIZER_SITE"]).resolve(strict=True)
-sys.path.insert(0, str(site))
-
-import cadrumo
-import cadrumo_harness
-from cadrumo_harness import materialise_marketplace
-
-def confined(module):
-    origin = Path(module.__file__).resolve(strict=True)
-    try:
-        origin.relative_to(site)
-    except ValueError as exc:
-        raise SystemExit(
-            f"materializer module origin escaped sealed site: {module.__name__}={origin}"
-        ) from exc
-
-confined(cadrumo)
-confined(cadrumo_harness)
-cohort_dir = Path(os.environ["CADRUMO_MATERIALIZER_COHORT"]).resolve(strict=True)
-manifest = json.loads((cohort_dir / "python-cohort.json").read_text(encoding="utf-8"))
-artifacts = manifest["artifacts"]
-with zipfile.ZipFile(cohort_dir / artifacts["runtime-wheelhouse"]) as archive:
-    wheelhouse_manifest = json.loads(archive.read("runtime-wheelhouse.json"))
-cohort = SimpleNamespace(
-    directory=cohort_dir,
-    harness_version=manifest["harness_version"],
-    root_wheel=cohort_dir / artifacts["cadrumo"],
-    harness_wheel=cohort_dir / artifacts["cadrumo-harness"],
-    runtime_wheelhouse=cohort_dir / artifacts["runtime-wheelhouse"],
-    runtime_wheelhouse_manifest=wheelhouse_manifest,
-    manuals_wheel=cohort_dir / artifacts["cadrumo-data-manuals"],
-    official_wheel=cohort_dir / artifacts["cadrumo-data-official"],
-    sha256=manifest["sha256"],
-    source_commit=manifest["source_commit"],
-    version=manifest["version"],
-)
-result = materialise_marketplace(
-    Path(os.environ["CADRUMO_MATERIALIZER_OUTPUT"]),
-    cohort=cohort,
-)
-stdlib = Path(sysconfig.get_paths()["stdlib"]).resolve(strict=True)
-for name, module in tuple(sys.modules.items()):
-    raw_origin = getattr(module, "__file__", None)
-    if not raw_origin:
-        continue
-    origin = Path(raw_origin).resolve(strict=True)
-    try:
-        origin.relative_to(site)
-        continue
-    except ValueError:
-        pass
-    try:
-        origin.relative_to(stdlib)
-    except ValueError as exc:
-        raise SystemExit(
-            f"materializer module origin escaped sealed site/stdlib: {name}={origin}"
-        ) from exc
-print(json.dumps({"plugin_source": result.plugin_source}, sort_keys=True))
-"""
-
-
 def _generate_channel_artifacts(
     *,
     clean_root: Path,
@@ -358,8 +288,6 @@ def build_from_clean_source(
         artifacts=(
             ("cadrumo-wheel", ArtifactKind.PYTHON_WHEEL, cohort.root_wheel),
             ("cadrumo-sdist", ArtifactKind.PYTHON_SDIST, cohort.root_sdist),
-            ("cadrumo-harness-wheel", ArtifactKind.PYTHON_WHEEL, cohort.harness_wheel),
-            ("cadrumo-harness-sdist", ArtifactKind.PYTHON_SDIST, cohort.harness_sdist),
             (
                 "cadrumo-source-archive",
                 ArtifactKind.PYTHON_SOURCE_ARCHIVE,

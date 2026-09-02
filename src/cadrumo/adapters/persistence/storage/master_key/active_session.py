@@ -62,6 +62,7 @@ class NoActiveBucketSessionError(SecretStoreError):
     """
 
     def __init__(self, detail: str | None = None) -> None:
+        """Initialize the error, ignoring ``detail`` in favour of the fixed translated message."""
         del detail
         super().__init__(
             context={"active_bucket_session_available": False},

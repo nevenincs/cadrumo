@@ -52,7 +52,7 @@ from enum import StrEnum
 # We import it under TYPE_CHECKING so the runtime dependency stays optional
 # (the ImportError path in ``_drive_service`` / ``_sheets_service`` guards the
 # live path) while the type-checker can narrow the ``Any`` service returns.
-from typing import TYPE_CHECKING, Any, Final, Literal
+from typing import TYPE_CHECKING, Any, Final
 
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
@@ -63,7 +63,11 @@ from pydantic import TypeAdapter, ValidationError
 
 from ....application.storage.calc_sheets.engine import CALC_SHEETS_ENGINE_VERSION, collect_row_sets, registry_sha
 from ....application.storage.calc_sheets.layout import SheetLayout, plan_layout
-from ....application.storage.calc_sheets.records import column_index_to_letters
+from ....application.storage.calc_sheets.records import (
+    SheetRelationProvenance,
+    SheetRelationProvenanceValue,
+    column_index_to_letters,
+)
 from ....core.casilla_id import CasillaId
 from ....core.decimal.coercion import coerce_decimal, coerce_finite_european_decimal
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
@@ -761,7 +765,7 @@ def _decode_relation_edits(
 def _parse_relation_metadata(
     raw: str,
 ) -> tuple[
-    Literal["local_filing", "aeat_live", "operator_manual"] | None,
+    SheetRelationProvenanceValue | None,
     ModeloId | None,
     int | None,
     tuple[str, ...],
@@ -779,14 +783,14 @@ def _parse_relation_metadata(
         key, _, value = part.partition("=")
         fields[key.strip()] = value.strip()
     raw_provenance = fields.get("provenance", "")
-    provenance: Literal["local_filing", "aeat_live", "operator_manual"] | None
+    provenance: SheetRelationProvenanceValue | None
     match raw_provenance:
         case "local_filing":
-            provenance = "local_filing"
+            provenance = SheetRelationProvenance.LOCAL_FILING
         case "aeat_live":
-            provenance = "aeat_live"
+            provenance = SheetRelationProvenance.AEAT_LIVE
         case "operator_manual":
-            provenance = "operator_manual"
+            provenance = SheetRelationProvenance.OPERATOR_MANUAL
         case _:
             provenance = None
     source_modelo: ModeloId | None = fields.get("source_modelo") or None

@@ -36,9 +36,7 @@ from ..draft_review import (
     empty_profile_activity_fingerprint,
     refresh_review_status,
 )
-from ..errors import ModeloCalculateError
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
-from ..validation import iter_findings, validate_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -461,13 +459,6 @@ def test_build_draft_preserves_modelo_131_page_one_structured_binding_values() -
     assert binding_values["modelo-131.page1.693-705.justificante-anterior"] == "1234567890123"
 
 
-def test_validate_draft_preserves_id_without_builder_dispatch() -> None:
-    schema_provider = _schema_provider()
-    draft = _draft(schema_provider)
-    refreshed = validate_draft(draft, bucket_id="test", schema_provider=schema_provider)
-    assert refreshed.draft_id == draft.draft_id
-
-
 def test_validator_reports_schema_version_mismatch_against_registry_schema() -> None:
     draft = _draft()
     stale = draft.model_copy(update={"schema_version": f"{draft.schema_version}:changed"})
@@ -538,29 +529,6 @@ def test_compute_draft_id_uses_snapshot_ref_not_schema_version() -> None:
 
     assert schema_mutated_id == draft.draft_id
     assert snapshot_mutated_id != draft.draft_id
-
-
-def test_iter_findings_threshold() -> None:
-    finding_error = ModeloValidationFinding(
-        casilla_id=None,
-        severity=BaseSeverity.ERROR,
-        code="x",
-        message=tr("translation"),
-    )
-    finding_info = ModeloValidationFinding(
-        casilla_id=None,
-        severity=BaseSeverity.INFO,
-        code="y",
-        message=tr("translation"),
-    )
-    draft = _draft().model_copy(update={"findings": (finding_error, finding_info)})
-    warnings_or_errors = list(iter_findings(draft, severity_at_least="WARNING"))
-    assert finding_error in warnings_or_errors
-    assert finding_info not in warnings_or_errors
-    assert finding_info in list(iter_findings(draft, severity_at_least="INFO"))
-    with pytest.raises(ModeloCalculateError) as severity_error:
-        list(iter_findings(draft, severity_at_least="HUGE"))
-    assert severity_error.value.translated_message == "application.filing.errors.unknown_severity_threshold"
 
 
 def test_approve_draft_uses_registry_schema_fingerprint() -> None:

@@ -598,7 +598,7 @@ def run_installed_mcp_oracle(
         runtime_server_executable=str(runtime_server),
         runtime_project_root=runtime_project_root,
         installed_cli_payload_sha256=installed_distribution_payload_sha256(sibling_cli, "cadrumo"),
-        installed_harness_payload_sha256=installed_distribution_payload_sha256(runtime_server, "cadrumo-harness"),
+        installed_harness_payload_sha256=installed_distribution_payload_sha256(runtime_server, "cadrumo"),
     )
 
 

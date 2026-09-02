@@ -276,7 +276,7 @@ check-relative-imports:
 # Verify the core facade, import-edge, and no-shim architecture invariants.
 [group('static-checks')]
 check-architecture:
-    @uv run --no-sync pytest -q -n0 dev/tests/test_cross_package_private_imports.py dev/tests/test_import_edge_integrity_gate.py dev/tests/test_facade_export_gate.py
+    @uv run --no-sync pytest -q -n0 dev/tests/test_cross_package_private_imports.py dev/tests/test_closed_vocabulary_canonicalization.py dev/tests/test_import_edge_integrity_gate.py dev/tests/test_facade_export_gate.py
 
 # Verify no shipped module has become unreachable from the declared entrypoints.
 # The baseline in dev/quality/unreachable_module_ratchet.toml may only shrink;
@@ -667,7 +667,7 @@ test-dev-ci:
 [doc('Run the four cross-layer conformance gates the per-push lane needs (rule-surface, status-frontend, self-referential-string, suggestion-command).')]
 [group('testing')]
 test-per-push-integration-gates:
-    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "integration and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo-harness/src/cadrumo_harness/tests/test_rule_surface_conformance.py src/cadrumo/application/user_profile/tests/test_status_projection.py src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py dev/tests/test_suggestion_command_conformance.py
+    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "integration and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo_harness/tests/test_rule_surface_conformance.py src/cadrumo/application/user_profile/tests/test_status_projection.py src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py dev/tests/test_suggestion_command_conformance.py
 
 # Enrol the tests that query the resident vaultspec-rag search service. Held out
 # of every other lane by the `resident_service` marker, because the service is a
@@ -907,6 +907,14 @@ audit-health-report:
 [group('audits')]
 audit-health-report-json:
     @uv run --no-sync python -m dev.audit.report --json
+
+# Audit module, class, enum, and function names across src/ and dev/.
+# Public production declarations must be singular and globally unique; private
+# and test collisions remain visible as advisory findings.
+[doc('Audit module, class, enum, and function names across src/ and dev/ for singularity and uniqueness.')]
+[group('audits')]
+audit-object-names *ARGS:
+    @uv run --no-sync python -m dev.audit.object_names {{ARGS}}
 
 # Show conformance status across all modelo revisions and compare against the
 # committed baseline. ``report`` exits 0 always (a screen); ``audit`` exits 0
@@ -1278,4 +1286,3 @@ release-collect-evidence *run_ids:
         ForEach-Object { Copy-Item $_.FullName -Destination $dest -Force; $n++ }
     Remove-Item -Recurse -Force $tmp
     Write-Host "collected $n record(s) into $dest (client-row records from emit_real_client_evidence are already local there)"
-

@@ -125,7 +125,6 @@ from ....core.aggregation import BindingSourceKind
 from ....core.export_layout_format import ExportLayoutFormat
 from ....core.resources.bundled_data import resolve_corpus_binary
 from ..export_field_kind import CasillaFieldKind
-from .schema_base import RegistrySourceKind
 from .binding_selector_utils import selector_as_dict
 from .errors import RegistryValidationError
 from .export import derive_export_layouts_from_bindings
@@ -133,6 +132,7 @@ from .record_design import extract_record_design
 from .record_design_pdf_rows import naturaleza_or_none
 from .record_design_schema import RecordDesignField, RecordDesignSheet
 from .schema import ModeloRevision
+from .schema_base import RegistrySourceKind
 from .schema_exports import (
     AuxiliaryEnvelopeHeaderDefinition,
     ExportFieldDefinition,

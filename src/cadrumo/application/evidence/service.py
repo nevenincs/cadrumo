@@ -195,6 +195,7 @@ class EvidenceBundleService:
         settings: Settings | None = None,
         repository_factory: Callable[[str], EvidenceBundleRepository] | None = None,
     ) -> None:
+        """Initialize the service with resolved settings and the repository factory."""
         # `load_settings()` honours `override_settings`; bare `Settings()`
         # does not. The repository factory uses the resolved settings so
         # bucket routes are still runtime-created when a test or CLI flow

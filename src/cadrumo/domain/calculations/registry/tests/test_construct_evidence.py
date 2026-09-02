@@ -9,14 +9,14 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
-from ..authority import bundled_authority
-from ..coverage import (
+from .....tests.registry_coverage import (
     ConstructEvidenceLedger,
     ConstructEvidenceRow,
     audit_registry_construct_evidence,
     build_construct_evidence_ledger,
 )
+from .....tests.registry_snapshot import build_snapshot
+from ..authority import bundled_authority
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

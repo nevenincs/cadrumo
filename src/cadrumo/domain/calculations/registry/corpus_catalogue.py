@@ -23,9 +23,9 @@ from typing import Final
 
 from ....core.hashing import hash_file
 from ....core.resources.bundled_data import resolve_companion_binary
-from .schema_base import RegistrySourceKind
 from .errors import RegistryValidationError
 from .legal import _PROVISION_SUFFIXED_FILENAME
+from .schema_base import RegistrySourceKind
 from .schema_references import SourceReference
 from .static_inspection import GeneratedArtifactSource
 

@@ -49,7 +49,7 @@ import re
 import sys
 from dataclasses import asdict, dataclass
 from enum import StrEnum
-from typing import Final
+from typing import Final, override
 
 from ..quality.repository_sources import production_sources
 
@@ -217,21 +217,25 @@ class _Hex64Visitor(ast.NodeVisitor):
         self._binding: list[str] = []
         self.declarations: list[Declaration] = []
 
+    @override
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         self._stack.append(node.name)
         self.generic_visit(node)
         self._stack.pop()
 
+    @override
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         self._stack.append(node.name)
         self.generic_visit(node)
         self._stack.pop()
 
+    @override
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         self._stack.append(node.name)
         self.generic_visit(node)
         self._stack.pop()
 
+    @override
     def visit_Constant(self, node: ast.Constant) -> None:
         # Class 1 catches the shape wherever it is written: a module constant, a
         # Field(pattern=...), a re.compile argument, or a value inside a typed
@@ -257,18 +261,21 @@ class _Hex64Visitor(ast.NodeVisitor):
             )
         self.generic_visit(node)
 
+    @override
     def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
         name = node.target.id if isinstance(node.target, ast.Name) else ""
         if name:
             self._consider_constraint(node.value, name, node.lineno)
         self._visit_bound(node, name)
 
+    @override
     def visit_Assign(self, node: ast.Assign) -> None:
         names = [t.id for t in node.targets if isinstance(t, ast.Name)]
         for name in names:
             self._consider_constraint(node.value, name, node.lineno)
         self._visit_bound(node, names[0] if names else "")
 
+    @override
     def visit_TypeAlias(self, node: ast.TypeAlias) -> None:
         # PEP 695 ``type X = Annotated[...]``. A distinct node from Assign, and
         # a real carrier in this tree -- the sha256-prefixed export ref is one.

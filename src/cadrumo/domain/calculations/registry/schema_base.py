@@ -31,7 +31,11 @@ __all__ = [
     "SCHEMA_FAMILY",
     "CalculationClass",
     "CalculationClassField",
+    "CasillaSignConstraint",
+    "CasillaSignConstraintField",
+    "CasillaSignConstraintValue",
     "DateAxis",
+    "DateAxisField",
     "EvidenceTier",
     "FormulaOperator",
     "GovernanceStampMarker",
@@ -414,7 +418,31 @@ broken", and neither can the absence of a record_design_epoch, which also covers
 designs whose selection window is merely not assigned yet.
 """
 
-DateAxis = Literal["filing_period", "devengo_date", "transaction_date", "invoice_date", "submission_date"]
+class DateAxis(StrEnum):
+    """Which date a registry value or bracket table is keyed to."""
+
+    FILING_PERIOD = "filing_period"
+    """The period the declaration covers, rather than any single date."""
+
+    DEVENGO_DATE = "devengo_date"
+    """The accrual date the liability arises on."""
+
+    TRANSACTION_DATE = "transaction_date"
+    """The date the underlying transaction occurred."""
+
+    INVOICE_DATE = "invoice_date"
+    """The date the invoice was issued."""
+
+    SUBMISSION_DATE = "submission_date"
+    """The date the declaration was submitted."""
+
+
+DateAxisField = Annotated[DateAxis, BeforeValidator(coerce_enum_member(DateAxis))]
+"""Registry date-axis token hydrated into a member.
+
+Registry schema models validate strictly, which refuses a bare TOML string for an
+enum-typed field, so the token is coerced at the boundary.
+"""
 class EvidenceTier(StrEnum):
     """What kind of authority grounds a registry entity."""
 
@@ -436,6 +464,47 @@ EvidenceTierField = Annotated[EvidenceTier, BeforeValidator(coerce_enum_member(E
 
 Registry schema models validate strictly, which refuses a bare TOML string for an
 enum-typed field, so the token is coerced at the boundary.
+"""
+
+
+class CasillaSignConstraint(StrEnum):
+    """Which side of zero a casilla's computed value may fall on.
+
+    Declared by the registry and consumed unchanged by the spreadsheet surface that
+    renders the same restriction as a cell validation rule. The two stated it
+    separately before, so a member added here would have left the workbook accepting
+    a value the engine rejects.
+    """
+
+    ANY = "any"
+    """Unrestricted; the casilla admits either sign."""
+
+    NON_NEGATIVE = "non_negative"
+    """Zero or positive. A negative computed value is a constraint violation."""
+
+    NON_POSITIVE = "non_positive"
+    """Zero or negative, as for a casilla that only ever records a deduction."""
+
+
+CasillaSignConstraintField = Annotated[
+    CasillaSignConstraint, BeforeValidator(coerce_enum_member(CasillaSignConstraint))
+]
+"""Registry ``sign`` token hydrated into a member.
+
+Registry schema models validate strictly, which refuses a bare TOML string for an
+enum-typed field, so the token is coerced at the boundary.
+"""
+
+CasillaSignConstraintValue = Literal[
+    CasillaSignConstraint.ANY,
+    CasillaSignConstraint.NON_NEGATIVE,
+    CasillaSignConstraint.NON_POSITIVE,
+]
+"""The same vocabulary where a coercing annotation may not be used.
+
+A strict payload or operation surface refuses a bare enum for a raw token and forbids
+a customised core schema, so those fields take this literal over the members above
+rather than restating the tokens.
 """
 
 #: The tiers that ground a registry entity on AEAT-published MATERIAL, as distinct
@@ -545,6 +614,107 @@ RegistrySourceKindField = Annotated[
 
 Registry schema models validate strictly, which refuses a bare TOML string for an
 enum-typed field, so the token is coerced at the boundary.
+"""
+
+class CasillaDataType(StrEnum):
+    """The scalar kind a casilla declares, and the root of every narrowing of it."""
+
+    DECIMAL = "decimal"
+    """A decimal quantity that is not money."""
+
+    MONEY = "money"
+    """A monetary amount, the default for a casilla."""
+
+    INTEGER = "integer"
+    """A whole count."""
+
+    RATIO = "ratio"
+    """A proportion or rate expressed as a fraction."""
+
+    TEXT = "text"
+    """Free text the taxpayer or AEAT supplies."""
+
+    BOOLEAN = "boolean"
+    """A declared yes or no."""
+
+    NIF = "nif"
+    """A Spanish tax identity number."""
+
+    YEAR = "year"
+    """A four-digit ejercicio."""
+
+    PERIOD_CODE = "period_code"
+    """A filing-period token."""
+
+    COUNTRY_CODE = "country_code"
+    """An ISO country code."""
+
+    IBAN = "iban"
+    """An international bank account number."""
+
+    NAME = "name"
+    """A party name."""
+
+    NIF_IVA = "nif_iva"
+    """An intra-community VAT identifier."""
+
+    CCAA_CODE = "ccaa_code"
+    """An autonomous-community code."""
+
+    PROVINCE_CODE = "province_code"
+    """A Spanish province code."""
+
+    POSTAL_CODE = "postal_code"
+    """A Spanish postal code."""
+
+    MUNICIPALITY_CODE = "municipality_code"
+    """A municipality code."""
+
+    BIC = "bic"
+    """A SWIFT business identifier code."""
+
+    DATE = "date"
+    """A calendar date."""
+
+
+CasillaDataTypeField = Annotated[
+    CasillaDataType, BeforeValidator(coerce_enum_member(CasillaDataType))
+]
+"""Registry casilla ``data_type`` token hydrated into a member.
+
+Registry schema models validate strictly, which refuses a bare TOML string for an
+enum-typed field, so the token is coerced at the boundary.
+"""
+
+
+CasillaDataTypeValue = Literal[
+    CasillaDataType.DECIMAL,
+    CasillaDataType.MONEY,
+    CasillaDataType.INTEGER,
+    CasillaDataType.RATIO,
+    CasillaDataType.TEXT,
+    CasillaDataType.BOOLEAN,
+    CasillaDataType.NIF,
+    CasillaDataType.YEAR,
+    CasillaDataType.PERIOD_CODE,
+    CasillaDataType.COUNTRY_CODE,
+    CasillaDataType.IBAN,
+    CasillaDataType.NAME,
+    CasillaDataType.NIF_IVA,
+    CasillaDataType.CCAA_CODE,
+    CasillaDataType.PROVINCE_CODE,
+    CasillaDataType.POSTAL_CODE,
+    CasillaDataType.MUNICIPALITY_CODE,
+    CasillaDataType.BIC,
+    CasillaDataType.DATE,
+]
+"""The same vocabulary in the one form an operation public schema admits.
+
+An operation model graph must not customise its Pydantic core schema, which the
+coercing field alias does, and a bare enum under strict validation refuses the plain
+token every caller sends. A literal over the enum's own members satisfies both: it
+carries no core-schema hook and it still accepts the token. Rooted in the vocabulary
+above rather than restated, so a member added there reaches this form too.
 """
 
 LegalRefs = Annotated[tuple[LegalRefId, ...], Field(min_length=1)]

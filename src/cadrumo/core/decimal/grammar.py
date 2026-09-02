@@ -51,6 +51,8 @@ from __future__ import annotations
 
 import re
 from decimal import Decimal, InvalidOperation
+from enum import StrEnum
+from typing import Literal
 
 _UNSIGNED_ANY_FRACTION = re.compile(r"^\d+(\.\d+)?$")
 _SIGNED_ANY_FRACTION = re.compile(r"^-?\d+(\.\d+)?$")
@@ -200,3 +202,29 @@ def is_non_negative_canonical_decimal(text: str) -> bool:
     "same shape" as the first.
     """
     return try_parse_canonical_decimal(text, signed=False) is not None
+
+
+class DecimalSeparator(StrEnum):
+    """Which character a file uses to separate a decimal fraction.
+
+    Spanish and German banks write ``1.234,56`` where the same amount is
+    ``1,234.56`` elsewhere, so every tabular reader in the codebase has to record
+    which convention a file follows. Four modules stated that pair independently
+    before this existed -- the CSV bank layouts, the bulk invoice importer, the
+    tabular dialect detector, and the provider amount parser.
+    """
+
+    COMMA = ","
+    """Comma-decimal, the Spanish and wider continental European convention."""
+
+    PERIOD = "."
+    """Dot-decimal, the convention most exported bank CSVs use."""
+
+
+DecimalSeparatorValue = Literal[DecimalSeparator.COMMA, DecimalSeparator.PERIOD]
+"""The same vocabulary for a strict model field or payload surface.
+
+A bare enum under strict validation refuses the plain token a serialised layout or
+imported row carries, so those fields take this literal over the members above rather
+than restating the pair.
+"""

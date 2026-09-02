@@ -6,8 +6,8 @@ from dataclasses import replace
 
 import pytest
 
+from .....tests.registry_coverage import build_construct_evidence_ledger
 from ..authority import ValidatedRegistryAuthority, bundled_authority
-from ..coverage import build_construct_evidence_ledger
 from ..errors import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

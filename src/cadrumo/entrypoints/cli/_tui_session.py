@@ -22,20 +22,28 @@ from typing import Final
 TUI_SESSION_MODULE: Final[str] = "cadrumo.entrypoints.tui"
 
 
-def tui_session_command(executable: str = sys.executable) -> list[str]:
+SELF_TEST_FLAG: Final[str] = "--self-test"
+
+
+def tui_session_command(executable: str = sys.executable, *, self_test: bool = False) -> list[str]:
     """Build the child-interpreter command line that starts one TUI session."""
-    return [executable, "-m", TUI_SESSION_MODULE]
+    command = [executable, "-m", TUI_SESSION_MODULE]
+    if self_test:
+        command.append(SELF_TEST_FLAG)
+    return command
 
 
-def run_tui_session() -> int:
+def run_tui_session(*, self_test: bool = False) -> int:
     """Run one full-screen session to completion and return its exit status.
 
     The child inherits this process's streams so the terminal belongs to it for
     the session's lifetime. Its status is returned rather than interpreted: a
     session that ends badly must not read as a successful CLI invocation.
     """
-    completed = subprocess.run(tui_session_command(), check=False)  # noqa: S603 - fixed argv, no shell
+    completed = subprocess.run(  # noqa: S603 - fixed argv, no shell
+        tui_session_command(self_test=self_test), check=False
+    )
     return completed.returncode
 
 
-__all__ = ["TUI_SESSION_MODULE", "run_tui_session", "tui_session_command"]
+__all__ = ["SELF_TEST_FLAG", "TUI_SESSION_MODULE", "run_tui_session", "tui_session_command"]

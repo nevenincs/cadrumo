@@ -67,6 +67,7 @@ class VocabularyField:
     members: tuple[str, ...]
     reached_through_alias: bool
     nested_in_generic: bool
+    alias_name: str | None = None
 
     @property
     def location(self) -> str:
@@ -114,21 +115,28 @@ def _alias_table(trees: list[tuple[Path, ast.AST]]) -> dict[str, ast.Subscript]:
     return aliases
 
 
-def _resolve(annotation: ast.AST, aliases: dict[str, ast.Subscript]) -> tuple[ast.Subscript, bool, bool] | None:
-    """Return the closed union an annotation admits, however it is written."""
+def _resolve(
+    annotation: ast.AST, aliases: dict[str, ast.Subscript]
+) -> tuple[ast.Subscript, bool, bool, str | None] | None:
+    """Return the closed union an annotation admits, however it is written.
+
+    The alias NAME comes back with it. Without it, two fields that both reference one
+    shared alias are indistinguishable from two independent declarations of the same
+    members -- the first is a single definition used twice and is not a defect at all.
+    """
     direct = _literal_subscript(annotation)
     if direct is not None:
-        return direct, False, False
+        return direct, False, False, None
     if isinstance(annotation, ast.Name) and annotation.id in aliases:
-        return aliases[annotation.id], True, False
+        return aliases[annotation.id], True, False, annotation.id
     for child in ast.walk(annotation):
         if child is annotation:
             continue
         nested = _literal_subscript(child)
         if nested is not None:
-            return nested, False, True
+            return nested, False, True, None
         if isinstance(child, ast.Name) and child.id in aliases:
-            return aliases[child.id], True, True
+            return aliases[child.id], True, True, child.id
     return None
 
 
@@ -148,7 +156,7 @@ def scan() -> tuple[VocabularyField, ...]:
                 resolved = _resolve(stmt.annotation, aliases)
                 if resolved is None:
                     continue
-                literal, via_alias, nested = resolved
+                literal, via_alias, nested, alias_name = resolved
                 members = _members(literal)
                 if len(members) < 2 or not all(isinstance(m, str) for m in members):
                     continue
@@ -161,6 +169,7 @@ def scan() -> tuple[VocabularyField, ...]:
                         members=tuple(str(m) for m in members),
                         reached_through_alias=via_alias,
                         nested_in_generic=nested,
+                        alias_name=alias_name,
                     ),
                 )
     return tuple(found)

@@ -51,7 +51,7 @@ from .loader_fingerprints import (
     refresh_toml_fingerprint_after_load_error as _refresh_toml_fingerprint_after_load_error,
 )
 from .modelo_localization import (
-    _as_toml_array,
+    as_toml_array,
     enroll_revision_localization,
     modelo_locale_key,
 )
@@ -323,7 +323,7 @@ def _compile_revision_projection_record(source_path: Path, raw_record: object) -
     if record is None:
         return _passthrough_toml_row(raw_record)
     compiled = dict(record)
-    fields = _as_toml_array(record.get("fields"))
+    fields = as_toml_array(record.get("fields"))
     if fields is not None:
         compiled["fields"] = tuple(_compile_export_semantic_field(source_path, raw_field) for raw_field in fields)
     return compiled
@@ -334,7 +334,7 @@ def _compile_revision_projection_layout(source_path: Path, raw_layout: object) -
     if layout is None:
         return _passthrough_toml_row(raw_layout)
     compiled = dict(layout)
-    records = _as_toml_array(layout.get("records"))
+    records = as_toml_array(layout.get("records"))
     if records is not None:
         compiled["records"] = tuple(
             _compile_revision_projection_record(source_path, raw_record) for raw_record in records
@@ -345,12 +345,12 @@ def _compile_revision_projection_layout(source_path: Path, raw_layout: object) -
 def _compile_revision_projection_semantics(source_path: Path, payload: Mapping[str, object]) -> dict[str, object]:
     """Compile revision-owned typed tokens before schema construction."""
     compiled = dict(payload)
-    declarations = _as_toml_array(payload.get("projection_endpoints"))
+    declarations = as_toml_array(payload.get("projection_endpoints"))
     if declarations is not None:
         compiled["projection_endpoints"] = tuple(
             _compile_projection_endpoint_declaration(source_path, raw_declaration) for raw_declaration in declarations
         )
-    layouts = _as_toml_array(payload.get("export_layouts"))
+    layouts = as_toml_array(payload.get("export_layouts"))
     if layouts is not None:
         compiled["export_layouts"] = tuple(
             _compile_revision_projection_layout(source_path, raw_layout) for raw_layout in layouts
@@ -609,10 +609,10 @@ def _reject_revision_fragment_field(path: Path, key: str) -> None:
 
 
 def _merge_revision_fragment_constructs(path: Path, value: object, merged_revision: dict[str, object]) -> None:
-    incoming = _as_toml_array(value)
+    incoming = as_toml_array(value)
     if incoming is None:
         raise RegistryLoadError(f"{path}: revision fragment field 'constructs' must be an array")
-    existing = _as_toml_array(merged_revision.get(_REVISION_CONSTRUCTS, ()))
+    existing = as_toml_array(merged_revision.get(_REVISION_CONSTRUCTS, ()))
     if existing is None:
         raise RegistryLoadError(f"{path}: revision fragment field 'constructs' conflicts with a non-array field")
     merged_revision[_REVISION_CONSTRUCTS] = _merge_table_array_fragments(
@@ -630,20 +630,20 @@ def _merge_revision_fragment_append_array(
     value: object,
     merged_revision: dict[str, object],
 ) -> None:
-    incoming = _as_toml_array(value)
+    incoming = as_toml_array(value)
     if incoming is None:
         raise RegistryLoadError(f"{path}: revision fragment field {key!r} must be an array")
-    existing = _as_toml_array(merged_revision.get(key, ()))
+    existing = as_toml_array(merged_revision.get(key, ()))
     if existing is None:
         raise RegistryLoadError(f"{path}: revision fragment field {key!r} conflicts with a non-array field")
     merged_revision[key] = (*existing, *incoming)
 
 
 def _merge_revision_fragment_export_layouts(path: Path, value: object, merged_revision: dict[str, object]) -> None:
-    incoming = _as_toml_array(value)
+    incoming = as_toml_array(value)
     if incoming is None:
         raise RegistryLoadError(f"{path}: revision fragment field 'export_layouts' must be an array")
-    existing = _as_toml_array(merged_revision.get(_REVISION_EXPORT_LAYOUTS, ()))
+    existing = as_toml_array(merged_revision.get(_REVISION_EXPORT_LAYOUTS, ()))
     if existing is None:
         raise RegistryLoadError(
             f"{path}: revision fragment field 'export_layouts' conflicts with a non-array field",
@@ -684,10 +684,10 @@ def _merge_singleton_table_fragment(
     merged = dict(existing_table)
     for key, value in incoming_table.items():
         if key in append_array_fields:
-            incoming = _as_toml_array(value)
+            incoming = as_toml_array(value)
             if incoming is None:
                 raise RegistryLoadError(f"{path}: revision fragment field {field_name!r}.{key!r} must be an array")
-            existing_values = _as_toml_array(merged.get(key, ()))
+            existing_values = as_toml_array(merged.get(key, ()))
             if existing_values is None:
                 raise RegistryLoadError(
                     f"{path}: revision fragment field {field_name!r}.{key!r} conflicts with a non-array field",
@@ -743,10 +743,10 @@ def _merge_export_layout_by_id(
         if key == "id":
             continue
         if key == "records":
-            incoming_records = _as_toml_array(value)
+            incoming_records = as_toml_array(value)
             if incoming_records is None:
                 raise RegistryLoadError(f"{path}: export layout {layout_id!r} records must be an array")
-            existing_records = _as_toml_array(merged.get("records", ()))
+            existing_records = as_toml_array(merged.get("records", ()))
             if existing_records is None:
                 raise RegistryLoadError(f"{path}: export layout {layout_id!r} existing records are not an array")
             merged["records"] = _merge_table_array_fragments(
@@ -819,10 +819,10 @@ def _merge_table_fragment_by_id(
         if key == "id":
             continue
         if key in append_array_fields:
-            incoming_values = _as_toml_array(value)
+            incoming_values = as_toml_array(value)
             if incoming_values is None:
                 raise RegistryLoadError(f"{path}: {item_label} {item_id!r} field {key!r} must be an array")
-            existing_values = _as_toml_array(merged.get(key, ()))
+            existing_values = as_toml_array(merged.get(key, ()))
             if existing_values is None:
                 raise RegistryLoadError(
                     f"{path}: {item_label} {item_id!r} field {key!r} conflicts with a non-array fragment",

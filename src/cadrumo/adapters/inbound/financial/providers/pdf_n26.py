@@ -26,6 +26,7 @@ from typing import TypedDict, override
 from .....core.external_constants import DEFAULT_CURRENCY
 from .....core.logging import get_logger
 from .....domain.transactions.raw_transaction import SourceFormat
+from ...pdf.redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
 from ._constants import PDF_EXTENSION
 from .base import (
     FinancialProvider,
@@ -66,7 +67,6 @@ _ROW_RE = re.compile(
 _VALUE_DATE_RE = re.compile(r"^Wertstellung (?P<value_date>\d{2}\.\d{2}\.\d{4})$")
 _STATEMENT_NUMBER_RE = re.compile(r"(?:Kontoauszug )?Nr\. (?P<number>\d+/\d+)")
 _PERIOD_RE = re.compile(r"^\d{2}\.\d{2}\.\d{4} bis \d{2}\.\d{2}\.\d{4}$")
-_INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
 
 _logger = get_logger(__name__)
 

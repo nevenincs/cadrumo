@@ -205,7 +205,6 @@ errors:
     error_domain_submission_preflight: L'esborrany no ha superat la comprovació prèvia
       d'enviament local.
     error_domain_validation: Un identificador o model de domini no és vàlid.
-    error_filing_amendment: S'ha produït un error relacionat amb la declaració complementària.
     error_filing_application: S'ha produït un error en la capa d'aplicació de declaracions.
     error_filing_builder: Ha fallat la selecció o execució del generador de la declaració.
     error_filing_computation: El generador no ha pogut avaluar una casella amb fórmula.
@@ -422,9 +421,6 @@ errors:
       ''%{group}'': falta el mòdul requerit ''%{module}''. Aquesta instal·lació és
       incompleta.'
     fail_declaracion_parse: No s'ha pogut interpretar el PDF com una declaració.
-    fail_export: S'ha produït un error en exportar cap a l'AEAT.
-    fail_export_format: L'esborrany de la declaració no s'ha pogut serialitzar al
-      format BOE indicat.
     fail_filing_import: No s'ha pogut importar la declaració des del PDF del justificant.
     fail_financial_attachments_attachment_persistence: El magatzem de justificants
       no ha pogut llegir o escriure les dades.
@@ -580,8 +576,6 @@ errors:
       mal configurat.
     integrity_corpus_anchor_resolution: Una àncora del corpus inclòs no es resol exactament
       en una unitat extreta.
-    integrity_filing_amendment_validation: La declaració complementària infringeix
-      una invariant legal o d'estructura.
     integrity_filing_validation: La validació de la declaració ha detectat un problema
       que impedeix continuar.
     integrity_financial_attachments_attachment_validation: El justificant adjunt no
@@ -998,8 +992,6 @@ errors:
       notificació.
     refused_live_notifications_snapshot_not_found: No existeix cap instantània de
       notificacions amb l'identificador indicat.
-    refused_live_portal_not_found: No existeix cap portal de l'AEAT amb l'identificador
-      indicat.
     refused_live_verify_observation_not_found: No existeix cap observació de verificació
       amb l'identificador indicat.
     refused_llm_busy: Aquest equip ja executa el màxim configurat de peticions al

@@ -28,7 +28,6 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 from hmac import compare_digest
-from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -46,12 +45,11 @@ from ...core.config import Settings, load_settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, ContentDigest
+from ...core.identity_check_verdict import IdentityCheckVerdictValue
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...core.time.utc import validate_utc_aware
 from .errors import LiveApplicationInputError
-
-VerifyVerdict = Literal["valid", "invalid", "unknown"]
 
 
 class VerifySurface(StrEnum):
@@ -89,8 +87,8 @@ class VerifyObservation(BaseModel):
     bucket_id: BucketId
     surface: VerifySurface
     nif: str = Field(min_length=1, max_length=32)
-    verdict: VerifyVerdict
-    expected: VerifyVerdict | None = Field(default=None)
+    verdict: IdentityCheckVerdictValue
+    expected: IdentityCheckVerdictValue | None = Field(default=None)
     matched_expectation: bool | None = Field(default=None)
     checked_at: datetime
     raw_evidence_locator: str | None = Field(default=None, max_length=512)
@@ -135,7 +133,7 @@ def _derive_observation_id(
     *,
     surface: VerifySurface,
     nif: str,
-    verdict: VerifyVerdict,
+    verdict: IdentityCheckVerdictValue,
     checked_at: datetime,
 ) -> str:
     canonical = f"{surface.value}|{nif}|{verdict}|{checked_at.isoformat()}"
@@ -341,9 +339,9 @@ class VerifyService:
         bucket_id: str,
         surface: VerifySurface,
         nif: str,
-        verdict: VerifyVerdict,
+        verdict: IdentityCheckVerdictValue,
         checked_at: datetime,
-        expected: VerifyVerdict | None = None,
+        expected: IdentityCheckVerdictValue | None = None,
         raw_evidence_locator: str | None = None,
     ) -> VerifyObservation:
         """Persist one verify observation. Deduplicates identical replays.
@@ -438,6 +436,5 @@ __all__ = [
     "VerifyObservationRepository",
     "VerifyService",
     "VerifySurface",
-    "VerifyVerdict",
     "verify_observation_object_key",
 ]

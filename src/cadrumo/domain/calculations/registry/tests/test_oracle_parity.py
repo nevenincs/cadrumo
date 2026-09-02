@@ -14,9 +14,9 @@ from .....tests.aeat_literal_fixtures import (
     aeat_host,
     aeat_url,
 )
-from ..aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
+from .....tests.aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
+from .....tests.groi_oracle import GROI_ORACLE_ID, GroiOracle
 from ..errors import RegistryValidationError
-from ..groi_oracle import GROI_ORACLE_ID, GroiOracle
 from ..live_parity import (
     LiveParityCatalogue,
     OracleEnvironment,

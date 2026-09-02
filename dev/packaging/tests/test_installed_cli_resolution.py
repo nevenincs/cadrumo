@@ -1,7 +1,7 @@
 """Installed MCP subprocess resolution is independent of checkout and ``PATH``.
 
 This is a real distribution test, not an in-process unit test. It builds the
-committed closed-world wheel cohort including the exact ``cadrumo-harness`` wheel (the
+committed closed-world wheel cohort including the exact product wheel (the
 retired ``cadrumo[agent]`` extra no longer exists, so the harness installs as
 its own distribution), installs them into a fresh stdlib virtual environment,
 launches that environment's absolute ``cadrumo-mcp`` console script outside
@@ -27,7 +27,6 @@ from ..._paths import REPO_ROOT
 from .._hashing import sha256_path
 from .._smoke_common import (
     build_companion_wheels,
-    build_harness_wheel,
     build_wheel,
     create_pip_venv,
     head_extract,
@@ -60,7 +59,6 @@ def installed_agent_environment(
     build_root = head_extract(_REPO_ROOT, work_dir)
     root_wheel = build_wheel(_REPO_ROOT, work_dir, uv, build_root=build_root)
     data_wheels = build_companion_wheels(work_dir, uv, build_root=build_root)
-    harness_wheel = build_harness_wheel(work_dir, uv, build_root=build_root)
     venv = create_pip_venv(work_dir, f"{sys.version_info.major}.{sys.version_info.minor}")
     run_checked(
         [
@@ -71,7 +69,6 @@ def installed_agent_environment(
             "--disable-pip-version-check",
             "--no-cache-dir",
             str(root_wheel.resolve()),
-            str(harness_wheel.resolve()),
             *(str(wheel.resolve()) for wheel in data_wheels),
         ],
         cwd=work_dir,
@@ -84,14 +81,13 @@ def installed_agent_environment(
     assert cli.is_file()
     source_commit = run_checked(["git", "rev-parse", "HEAD"], cwd=_REPO_ROOT).stdout.strip()
     root_sha256 = sha256_path(root_wheel)
-    harness_sha256 = sha256_path(harness_wheel)
+    harness_sha256 = root_sha256
     capture_manifest = work_dir / "capture-cohort.json"
     capture_manifest.write_text(
         json.dumps(
             {
                 "source_commit": source_commit,
                 "cadrumo-wheel": root_sha256,
-                "cadrumo-harness-wheel": harness_sha256,
             },
             sort_keys=True,
         ),

@@ -38,14 +38,14 @@ from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import ClassVar, Literal
+from typing import ClassVar
 
 from pydantic import BaseModel, Field, NonNegativeInt, ValidationError
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal.coercion import coerce_decimal, normalize_decimal_separators
-from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import DecimalSeparator, DecimalSeparatorValue, try_parse_canonical_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing import IsoCurrencyCode
@@ -133,7 +133,7 @@ class BulkInvoiceImportSource(BaseModel):
 
     rows: tuple[BulkImportSourceRow, ...]
     resolution: BulkImportColumnResolution
-    decimal_separator: Literal[",", "."] = "."
+    decimal_separator: DecimalSeparatorValue = DecimalSeparator.PERIOD
 
 
 class BulkInvoiceImportRow(BaseModel):
@@ -275,7 +275,7 @@ class _RowParseError(Exception):
         self.reason = reason
 
 
-def _canonicalise_amount_text(raw: object, *, decimal_separator: Literal[",", "."]) -> object:
+def _canonicalise_amount_text(raw: object, *, decimal_separator: DecimalSeparatorValue) -> object:
     """Rewrite a comma-convention amount into canonical form before the grammar check.
 
     Only text is touched, and only when the file's own detected convention says
@@ -291,7 +291,7 @@ def _canonicalise_amount_text(raw: object, *, decimal_separator: Literal[",", ".
     if not isinstance(raw, str):
         return raw
     text = raw.strip().removesuffix("%").strip()
-    if decimal_separator != ",":
+    if decimal_separator != DecimalSeparator.COMMA:
         return text
     return normalize_decimal_separators(text, strip_thousands="." in text and "," in text)
 
@@ -300,7 +300,7 @@ def _parse_bulk_invoice_row(
     raw_row: Mapping[str, object],
     *,
     row_number: int,
-    decimal_separator: Literal[",", "."] = ".",
+    decimal_separator: DecimalSeparatorValue = DecimalSeparator.PERIOD,
     declared_country: str | None = None,
 ) -> BulkInvoiceImportRow:
     """Return a validated :class:`BulkInvoiceImportRow`, or raise :class:`_RowParseError`.

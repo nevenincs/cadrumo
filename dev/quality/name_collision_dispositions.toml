@@ -1,0 +1,139 @@
+# Why a public name defined twice inside one architectural layer is or is not a
+# defect. Every same-layer collision carries a row here, and every row must name
+# a collision that still exists: the gate refuses in both directions, so an
+# unadjudicated collision fails, and a row whose collision has been resolved
+# fails too rather than lingering.
+#
+# This is not a ratchet. It stores no counts and no ceilings, and shrinking it
+# is not the measure of progress; the requirement is that no shared name inside
+# a layer sits unexplained. A tenth collision fails the gate whatever the other
+# nine say.
+#
+# Cross-layer collisions carry no rows. A layer restating a concept in its own
+# vocabulary is what the hexagonal boundary is for, and demanding a written
+# reason for each would bury these nine.
+#
+# `class` is one of:
+#   contract_conflict     - the two definitions disagree about what they accept
+#                           or return. A caller cannot substitute one for the
+#                           other. The sharpest class: this is a defect in the
+#                           code, not only in the name.
+#   duplicate_owed_collapse - the same behaviour written twice. One canonical
+#                           definition should survive and the other should go.
+#   distinct_rename_owed  - genuinely different behaviour whose shared name
+#                           misleads. The code is right; the name is the defect.
+#   distinct_by_design    - different behaviour under a name that is defensible
+#                           where it sits. No action owed.
+
+schema_version = 1
+
+[extract_verdict_from_response_text]
+class = "duplicate_owed_collapse"
+sites = ["adapters/outbound/aeat/sede/groi_check.py", "adapters/outbound/aeat/sede/nif_iva_check.py"]
+reason = """
+Byte-identical bodies in one package. Both classify a Spanish-language verdict
+string, and both already depend on the shared negative-marker table in that
+package's `_adapter_utils`, which is where the single definition belongs. This
+is the only one of the nine whose two bodies are the same, and the only one
+where collapsing loses nothing.
+"""
+
+[validate_category_id]
+class = "duplicate_owed_collapse"
+sites = ["entrypoints/cli/_ledger_rules_cli.py", "entrypoints/cli/_ledger_support.py"]
+reason = """
+Both reject a category outside the closed spending taxonomy. The support module
+carries the reasoned version, naming the canonical enum and its one-to-one
+mapping onto the modelo registry bindings; the rules CLI copy re-derives the
+same refusal with a local import. The support definition is canonical and the
+copy should call it.
+"""
+
+[resolve_bucket_event_repository]
+class = "contract_conflict"
+sites = ["application/ledger/actions_common.py", "application/ledger/review_projection.py"]
+reason = """
+One package, one signature, two contracts. The projection version returns the
+protocol and accepts any implementation of it. The actions version returns the
+concrete class and asserts the argument IS that class, so a caller passing a
+valid protocol implementation that is not the concrete type fails - and because
+the guard is an `assert`, it vanishes under `python -O`, leaving a return
+annotation that promises something the function has stopped checking.
+
+Identical arity is why nothing surfaced this: the cheapest signal that two
+same-named functions differ was unavailable here. Neither definition is dead
+and neither is a copy. This needs a decision about which contract is correct
+before either name can be settled.
+"""
+
+[export_profile_recovery_artifact]
+class = "duplicate_owed_collapse"
+sites = ["application/user_profile/custody_ports.py", "application/user_profile/recovery_custody.py"]
+reason = """
+One package, near-identical keyword signatures over the same custody ports. The
+bodies differ only in statement count, which is the shape of a wrapper that has
+drifted from the thing it wraps rather than two designed alternatives. One
+should survive; deciding which requires reading who calls each.
+"""
+
+[extract_pages_text_from_bytes]
+class = "distinct_rename_owed"
+sites = ["adapters/inbound/declaracion/_parsers/pdfplumber_backend.py", "adapters/inbound/pdf/page_text_extraction.py"]
+reason = """
+The pdf module holds the shared primitive: it takes an explicit `error_class`
+and `pdf_label`, which is what makes it reusable across inbound families. The
+declaracion backend's function is a caller of that primitive, adding a
+pypdfium2 fast path with declaration-specific canaries and falling back to it.
+
+A primitive and one of its callers sharing a name is the most confusing form
+this can take, because the wrapper looks like an alternative implementation
+rather than a specialisation. The wrapper should be named for what it adds.
+"""
+
+[extract_pages_text]
+class = "distinct_by_design"
+sites = ["adapters/inbound/borrador/_parsers/pdfplumber_backend.py", "adapters/inbound/declaracion/_parsers/pdfplumber_backend.py"]
+reason = """
+Two inbound families each expose a backend entry point of the same name, and
+both delegate to the shared pdfplumber primitive with different strategies -
+the declaration backend tries pypdfium2 first and validates canaries, the
+borrador backend does not. They are reached by module path, never by the bare
+name, and the parallel naming is what makes the two backends recognisable as
+the same role. No action owed.
+"""
+
+[metric_line]
+class = "distinct_rename_owed"
+sites = ["entrypoints/cli/_app_live_auth_preflight.py", "entrypoints/cli/registry.py"]
+reason = """
+The registry version translates the key through the catalogue before emitting
+it; the preflight version emits the raw key. Two different output contracts
+under one name, and the difference is exactly the one a reader is most likely
+to get wrong: assuming a metric line is localised when it is not, or the
+reverse. The untranslated one should say so.
+"""
+
+[review_view]
+class = "distinct_by_design"
+sites = ["entrypoints/cli/_ledger_evidence_review_cli.py", "entrypoints/cli/_review.py"]
+reason = """
+Two Typer command handlers over different subjects - one shows a pending
+extraction draft's reviewable fields, the other a review item with optional
+explanation and output language. Each registers on its own command app and
+neither is imported by the other's name. Differing arity, 2 against 4, makes
+them plainly distinct at every call site. No action owed.
+"""
+
+[active_profile_label]
+class = "distinct_by_design"
+sites = ["entrypoints/cli/_common.py", "entrypoints/cli/config/_profile_list_cli.py"]
+reason = """
+Different cost contracts, deliberately. The common version resolves the active
+bucket through the core precedence chain and reads the live manifest label. The
+profile-list version takes rows already joined and picks the active one's label
+specifically to avoid re-reading the pointer, which its own docstring states.
+
+Collapsing them would force the list command to repeat work it has already
+done. The shared name is defensible because the returned value is the same
+concept; only the path to it differs.
+"""

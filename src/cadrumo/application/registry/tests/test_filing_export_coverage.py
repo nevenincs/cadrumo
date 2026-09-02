@@ -13,6 +13,11 @@ from pydantic import ValidationError
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.modelo import Modelo
 from ....core.revision_review import RevisionReviewStatus
+from ....tests.filing_export_authority import (
+    FilingExportEmissionProof,
+    FilingExportGenerationProof,
+    GeneratedExportFileDigest,
+)
 from ...filing.export_proof import (
     FilingExportConformanceReceipt,
     FilingExportGeneratedOutput,
@@ -26,7 +31,6 @@ from ...filing.export_proof import (
     FilingExportPublicProvenance,
     FilingExportSecureReplayReceipt,
 )
-from ..filing_export_authority import FilingExportEmissionProof, FilingExportGenerationProof, GeneratedExportFileDigest
 from ..filing_export_coverage import _filing_export_proof, compose_filing_export_coverage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

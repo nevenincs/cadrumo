@@ -50,6 +50,7 @@ from ....domain.calculations.registry.schema_extraction import (
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ..pdf.extracted_casilla import ExtractedCasilla
 from ..pdf.label_regex import PRESENTADOR_NIF_LABEL, SPANISH_AMOUNT_GROUP, TEXT_VALUE_GROUP, parse_spanish_decimal
+from ..pdf.redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
 from ..pdf.source_provenance import sha256_file, source_pdf_reference_path
 from ._detect import detect_template_revision, detect_template_revision_from_pages
 from ._parsers.pdfplumber_backend import extract_pages_text, extract_pages_text_from_bytes
@@ -67,7 +68,6 @@ from .schema import InboundDeclaracionObservation, TemplateRevision
 _PdfWord = dict[str, Any]
 
 _logger = get_logger(__name__)
-_INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
 
 
 def _pdf_word_text(word: _PdfWord) -> str:

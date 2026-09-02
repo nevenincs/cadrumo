@@ -236,31 +236,3 @@ class ModeloDraftRepositoryProtocol(Protocol):
     def list_draft_ids(self) -> tuple[str, ...]:
         """Return every draft id persisted in this repository."""
         ...
-
-
-@runtime_checkable
-class ModeloAmendmentRepositoryProtocol(Protocol):
-    """Narrow domain-facing contract for the filing-amendment repository.
-
-    :class:`~cadrumo.adapters.persistence.profile.filing_amendments.ModeloAmendmentRepository`
-    structurally conforms to this Protocol; domain service code that only
-    needs to load, save, or list amendments should depend inward on this
-    port.
-    """
-
-    @property
-    def bucket_id(self) -> str | None:
-        """Return the profile bucket id when this repository resolved one."""
-        ...
-
-    def load(self, amendment_id: str) -> object | None:
-        """Load a persisted amendment by id, or return ``None`` if absent."""
-        ...
-
-    def save(self, amendment: object) -> None:
-        """Persist ``amendment`` in the encrypted object store."""
-        ...
-
-    def list_amendment_ids(self) -> tuple[str, ...]:
-        """Return every amendment id persisted in this repository."""
-        ...

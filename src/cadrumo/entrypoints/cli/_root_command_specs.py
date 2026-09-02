@@ -131,6 +131,14 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 is_flag=True,
             ),
             OptionSpec(
+                name="self_test",
+                declarations=("--self-test",),
+                value=_BOOL,
+                default=ParameterDefault.value(False),
+                help_key=TranslationKey("cli.root.self_test_help"),
+                is_flag=True,
+            ),
+            OptionSpec(
                 name="quiet",
                 declarations=("--quiet",),
                 value=_BOOL,

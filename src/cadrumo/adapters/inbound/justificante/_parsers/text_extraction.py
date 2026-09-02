@@ -20,9 +20,9 @@ from collections import OrderedDict
 from pathlib import Path
 
 from .....domain.justificante import JustificanteParseError, JustificanteParserBackend
+from ...pdf.redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
 from ...pdf.source_provenance import sha256_file
 
-_INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
 _TEXT_CACHE_MAXSIZE = 256
 _TEXT_CACHE: OrderedDict[tuple[str, str, int, int], str] = OrderedDict()
 

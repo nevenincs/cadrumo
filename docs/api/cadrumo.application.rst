@@ -34,7 +34,6 @@ Subpackages
    cadrumo.application.operator_output
    cadrumo.application.operator_surface
    cadrumo.application.overview
-   cadrumo.application.portals
    cadrumo.application.prorrata_register
    cadrumo.application.registry
    cadrumo.application.review

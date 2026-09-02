@@ -15,16 +15,16 @@ from pydantic import ValidationError
 from .....core.resources.bundled_data import bundled_path
 from .....tests import REPO_ROOT
 from .....tests.aeat_literal_fixtures import RECORD_DESIGN_ROUTE_BASE_FIXTURE
-from .....tests.registry_snapshot import build_snapshot
-from .._snapshot_internals import check_snapshot_filing_review_tier
-from ..authority import ValidatedRegistryAuthority, bundled_authority
-from ..corpus_catalogue import resolve_record_design_binary, verify_source_file
-from ..coverage import (
+from .....tests.registry_coverage import (
     EvidenceTierCoverageGate,
     _snapshot_filing_review_proof,
     audit_registry_model_law_coverage,
     build_model_law_coverage_ledger,
 )
+from .....tests.registry_snapshot import build_snapshot
+from .._snapshot_internals import check_snapshot_filing_review_tier
+from ..authority import ValidatedRegistryAuthority, bundled_authority
+from ..corpus_catalogue import resolve_record_design_binary, verify_source_file
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from ..legal import verify_legal_catalogue_grounding
 from ..loader_fingerprints import clear_fingerprint_cache

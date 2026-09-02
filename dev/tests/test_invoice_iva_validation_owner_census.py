@@ -7,6 +7,7 @@ from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -219,11 +220,13 @@ class _RaiseVisitor(ast.NodeVisitor):
         self._functions: list[str] = []
         self.occurrences: list[tuple[str, str]] = []
 
+    @override
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         self._functions.append(node.name)
         self.generic_visit(node)
         self._functions.pop()
 
+    @override
     def visit_Raise(self, node: ast.Raise) -> None:
         if (
             isinstance(node.exc, ast.Call)

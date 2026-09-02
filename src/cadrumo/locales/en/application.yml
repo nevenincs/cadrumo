@@ -371,35 +371,9 @@ application:
         unsupported_filing_year: Filing year {filing_year} is not declared supported.
           The registry declares {supported_filing_years}. Admit the year in {declaration}
           after grounding its prerequisites.
-    complementaria:
-      errors:
-        justificante_csv_absent: The complementaria requires the original filing's
-          justificante CSV.
-        no_changed_casilla: The complementaria requires at least one changed casilla.
-        original_draft_addressing_mismatch: The original filing and the stored draft
-          declare a different modelo or period.
-        original_draft_snapshot_stale: The original draft was not built from the active
-          registry snapshot.
-        original_submission_csv_blank: The original filing must carry an official
-          justificante CSV.
-        original_submission_fields_missing: The original filing is missing required
-          fields.
-        original_submission_shape_invalid: The original filing does not match the
-          expected record shape.
     errors:
-      amendment_not_persisted: no persisted amendment with id %{amendment_id}
-      complementaria_taxpayer_identity_absent: 'complementaria requires a declared
-        taxpayer identity: the submitted filing''s profile_tax_id is %{submitted_tax_id}
-        while the original draft declares %{draft_tax_id}'
-      complementaria_taxpayer_identity_malformed: 'complementaria cannot confirm one
-        taxpayer: the submitted filing''s profile_tax_id %{submitted_tax_id} is not
-        a valid NIF, NIE or CIF, and the original draft declares %{draft_tax_id}'
-      complementaria_taxpayer_identity_mismatch: 'complementaria taxpayer identity
-        diverges: the submitted filing declares profile_tax_id %{submitted_tax_id}
-        and the original draft declares %{draft_tax_id}; both must name one taxpayer'
       import_failed: 'cannot import modelo %{modelo}: %{detail}'
       modelo_not_in_registry: modelo %{modelo} is not present in the calculation registry
-      original_draft_not_persisted: original draft %{draft_id} is not persisted
       period_ejercicio_mismatch: 'modelo %{modelo}: cannot canonicalise period %{period}
         for ejercicio %{ejercicio}'
       unexpected_ejercicio: 'modelo %{modelo}: unexpected ejercicio %{ejercicio};

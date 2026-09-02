@@ -60,6 +60,7 @@ from ...application.live.remote_state_models import (
 from ...application.operator_actions.models import ActionReference
 from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n.render import tr
+from ...core.identity_check_verdict import IdentityCheckVerdict, IdentityCheckVerdictValue
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.period import Period, PeriodError
 from ...core.type_guards import is_str_keyed_dict
@@ -75,19 +76,18 @@ from ._common import (
 )
 
 if TYPE_CHECKING:
-    from ...application.live.verify import VerifyVerdict
     from ...domain.deadlines.models import TaxpayerProfile
 
 
-def verify_expected(value: str | None) -> VerifyVerdict | None:
+def verify_expected(value: str | None) -> IdentityCheckVerdictValue | None:
     if value is None:
         return None
-    if value == "valid":
-        return "valid"
-    if value == "invalid":
-        return "invalid"
-    if value == "unknown":
-        return "unknown"
+    if value == IdentityCheckVerdict.VALID:
+        return IdentityCheckVerdict.VALID
+    if value == IdentityCheckVerdict.INVALID:
+        return IdentityCheckVerdict.INVALID
+    if value == IdentityCheckVerdict.UNKNOWN:
+        return IdentityCheckVerdict.UNKNOWN
     raise typer.BadParameter(tr("cli.app.live.verify.expected_values_error"))
 
 

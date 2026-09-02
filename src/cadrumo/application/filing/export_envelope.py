@@ -75,6 +75,7 @@ class FilingEnvelopeRenderRequest(BaseModel):
 
     @property
     def modelo(self) -> Modelo:
+        """Return the modelo named by the registry snapshot."""
         return Modelo(self.registry_snapshot.modelo.id)
 
     @model_validator(mode="after")
@@ -232,6 +233,7 @@ def render_declared_prefix(
     period: Period,
     product_software_identity: AeatProductSoftwareIdentity,
 ) -> bytes:
+    """Render the declared prefix fields to their exact byte extent, or raise."""
     prefix = b"".join(
         render_envelope_prefix_field(
             field.role,
@@ -292,6 +294,7 @@ def render_envelope_prefix_field(
     period: Period,
     product_software_identity: AeatProductSoftwareIdentity,
 ) -> bytes:
+    """Render one declared prefix field's ASCII value to its declared byte length, or raise."""
     value = _envelope_prefix_role_value(
         role,
         length=length,

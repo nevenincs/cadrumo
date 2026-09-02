@@ -235,7 +235,7 @@ def _assert_mcp_oracle_bound_to_cohort(
         "cohort_source_commit": cohort.manifest.source.commit,
         "cohort_manifest_sha256": records["python-cohort-manifest"].sha256,
         "cohort_root_wheel_sha256": records["cadrumo-wheel"].sha256,
-        "cohort_harness_wheel_sha256": records["cadrumo-harness-wheel"].sha256,
+        "cohort_harness_wheel_sha256": records["cadrumo-wheel"].sha256,
     }
     observed = {
         "cohort_source_commit": mcp_evidence.cohort_source_commit,
@@ -272,7 +272,7 @@ def _assert_mcp_oracle_bound_to_cohort(
         )
         assert_installed_console_entry_point(
             runtime_server,
-            distribution="cadrumo-harness",
+            distribution="cadrumo",
             entry_point="cadrumo-mcp",
             expected_value="cadrumo_harness.mcp:main",
         )
@@ -281,9 +281,9 @@ def _assert_mcp_oracle_bound_to_cohort(
     if sha256_path(runtime_server) != mcp_evidence.server_executable_sha256:
         raise EvidenceCohortBindingError("installed MCP runtime executable digest drifted after capture")
     expected_cli = sealed_wheel_payload_sha256(cohort.artifact("cadrumo-wheel"))
-    expected_harness = sealed_wheel_payload_sha256(cohort.artifact("cadrumo-harness-wheel"))
+    expected_harness = sealed_wheel_payload_sha256(cohort.artifact("cadrumo-wheel"))
     live_cli = installed_distribution_payload_sha256(sibling_cli, "cadrumo")
-    live_harness = installed_distribution_payload_sha256(runtime_server, "cadrumo-harness")
+    live_harness = installed_distribution_payload_sha256(runtime_server, "cadrumo")
     if (mcp_evidence.installed_cli_payload_sha256, live_cli) != (expected_cli, expected_cli):
         raise EvidenceCohortBindingError("MCP-invoked CLI payload is not the exact sealed root wheel")
     if (mcp_evidence.installed_harness_payload_sha256, live_harness) != (

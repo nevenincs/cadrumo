@@ -8,19 +8,15 @@ used by the per-section reference walkers.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING
 
 from ....core.casilla_id import CasillaId
-from ._validate_revision_context import _export_field_ids
+from ._validate_revision_context import _IdentifiedRecord, collect_export_field_ids
 from .ids import LegalRefId, SourceRefId
 from .schema import ModeloRevision
 
 if TYPE_CHECKING:
     from .schema import RegistrySnapshot
-
-
-class _IdentifiedRecord(Protocol):
-    id: str
 
 
 def _record_ids[RecordT: _IdentifiedRecord](records: Iterable[RecordT]) -> set[str]:
@@ -97,7 +93,7 @@ class IdReferenceChecker:
         self.binding_ids = _record_ids(revision.bindings)
         self.relation_ids = _record_ids(revision.relations)
         self.export_layout_ids = _record_ids(revision.export_layouts)
-        self.export_field_ids = _export_field_ids(revision)
+        self.export_field_ids = collect_export_field_ids(revision)
         self.extraction_profile_ids = _record_ids(revision.extraction_profiles)
         self.cross_reference_ids = _record_ids(revision.live_cross_references)
         self.workbook_parity_ids = _record_ids(revision.workbook_parity_refs)

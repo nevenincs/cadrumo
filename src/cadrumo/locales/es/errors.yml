@@ -205,7 +205,6 @@ errors:
     error_domain_submission_preflight: El borrador no superó la comprobación previa
       de envío local.
     error_domain_validation: Un identificador o modelo de dominio no es válido.
-    error_filing_amendment: Se produjo un error relacionado con la declaración complementaria.
     error_filing_application: Se produjo un error en la capa de aplicación de declaraciones.
     error_filing_builder: Falló la selección o ejecución del generador de la declaración.
     error_filing_computation: El generador no pudo evaluar una casilla con fórmula.
@@ -418,9 +417,6 @@ errors:
     fail_cli_command_group_unavailable: 'No se pudo cargar el grupo de comandos ''%{group}'':
       falta el módulo requerido ''%{module}''. Esta instalación está incompleta.'
     fail_declaracion_parse: No se pudo interpretar el PDF como una declaración.
-    fail_export: Se produjo un error al exportar hacia la AEAT.
-    fail_export_format: El borrador de la declaración no se pudo serializar al formato
-      BOE indicado.
     fail_filing_import: No se pudo importar la declaración desde el PDF del justificante.
     fail_financial_attachments_attachment_persistence: El almacén de justificantes
       no pudo leer o escribir los datos.
@@ -573,8 +569,6 @@ errors:
       mal configurado.
     integrity_corpus_anchor_resolution: Un ancla del corpus incluido no se resuelve
       exactamente en una unidad extraída.
-    integrity_filing_amendment_validation: La declaración complementaria infringe
-      una invariante legal o de estructura.
     integrity_filing_validation: La validación de la declaración detectó un problema
       que impide continuar.
     integrity_financial_attachments_attachment_validation: El justificante adjunto
@@ -991,8 +985,6 @@ errors:
       a esa notificación.
     refused_live_notifications_snapshot_not_found: No existe ningún snapshot de notificaciones
       con el identificador indicado.
-    refused_live_portal_not_found: No existe ningún portal de la AEAT con el identificador
-      indicado.
     refused_live_verify_observation_not_found: No existe ninguna observación de verificación
       con el identificador indicado.
     refused_llm_busy: Este equipo ya ejecuta el máximo configurado de peticiones al

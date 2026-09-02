@@ -29,7 +29,6 @@ from ....core.export_layout_format import ExportLayoutFormat
 from ....core.modelo import NON_REGISTRY_MODELOS, Modelo
 from ....core.revision_review import RevisionReviewStatus
 from ....domain.calculations.registry.authority import ValidatedRegistryAuthority
-from ....domain.calculations.registry.classification_coherence import build_classification_coherence_audit
 from ....domain.calculations.registry.export_parse import xml_dictionary_entries
 from ....domain.calculations.registry.external_grounding import (
     RegistryExternalGroundingAudit,
@@ -37,14 +36,15 @@ from ....domain.calculations.registry.external_grounding import (
     load_bundled_external_oracle_inventory,
 )
 from ....domain.calculations.registry.schema import ModeloDefinition
-from ....tests.registry_tree import bundled_registry_tree
-from ..conformance import (
+from ....tests.registry_classification_coherence import build_classification_coherence_audit
+from ....tests.registry_conformance import (
     AnnualCasillaPopulationComparison,
     RegistryConformanceProfile,
     build_registry_conformance_profile,
     compare_annual_casilla_population,
     compare_annual_casilla_population_for_revision,
 )
+from ....tests.registry_tree import bundled_registry_tree
 from ..errors import RegistryApplicationInputError
 from ._conformance_profile_fixtures import degraded_profile, validated_profile
 

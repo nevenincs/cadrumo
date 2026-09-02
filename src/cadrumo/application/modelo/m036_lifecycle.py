@@ -154,6 +154,7 @@ class M036DeclarationResult(BaseModel):
     # load contract refuses on the symmetric model_validate_json).
     @property
     def snapshot_id(self) -> str:
+        """Return the declaration id under the generic name the snapshot repository expects."""
         return self.declaration_id
 
 

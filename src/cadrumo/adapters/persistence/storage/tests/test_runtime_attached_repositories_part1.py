@@ -37,7 +37,6 @@ from ._runtime_attached_repositories_support import (
     LLMCache,
     LLMProvider,
     LLMRunTelemetryRecorder,
-    ModeloAmendmentRepository,
     ModeloDraftRepository,
     ModeloHistoryRepository,
     ModeloRecordCatalogueRepository,
@@ -75,7 +74,6 @@ from ._runtime_attached_repositories_support import (
     _justificante,
     _llm_request,
     _llm_response,
-    _modelo_amendment,
     _modelo_draft,
     _repair_decision,
     _save_auth_diagnostic,
@@ -141,7 +139,6 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     ("transactions", lambda: TransactionCatalogueRepository(bucket_id=_BUCKET_A_ID).load()),
     ("invoices", lambda: InvoiceCatalogueRepository().load()),
     ("filing_drafts", lambda: ModeloDraftRepository(bucket_id=_BUCKET_A_ID).load("d" * 64)),
-    ("filing_amendments", lambda: ModeloAmendmentRepository(bucket_id=_BUCKET_A_ID).load("amendment-a")),
     ("submission", lambda: SubmissionRepository().list_submission_ids()),
     ("justificante", lambda: JustificanteRepository().list_csvs()),
     ("filing_history", lambda: ModeloHistoryRepository(bucket_id=_BUCKET_A_ID).list_modelos()),
@@ -378,8 +375,6 @@ def test_event_and_workflow_run_defaults_isolate_active_profile_writes(tmp_path:
 def test_domain_repository_defaults_isolate_active_profile_writes(tmp_path: Path) -> None:
     draft_a = _modelo_draft(_BUCKET_A_ID)
     draft_b = _modelo_draft(_BUCKET_B_ID)
-    amendment_a = _modelo_amendment(_BUCKET_A_ID)
-    amendment_b = _modelo_amendment(_BUCKET_B_ID)
     submission_a = _submission(_BUCKET_A_ID)
     submission_b = _submission(_BUCKET_B_ID)
     justificante_a = _justificante(tmp_path, _BUCKET_A_ID)
@@ -388,19 +383,16 @@ def test_domain_repository_defaults_isolate_active_profile_writes(tmp_path: Path
     with _active_runtime(tmp_path, _BUCKET_A_ID):
         InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices((_invoice(_BUCKET_A_ID),)))
         ModeloDraftRepository(bucket_id=_BUCKET_A_ID).save(draft_a)
-        ModeloAmendmentRepository(bucket_id=_BUCKET_A_ID).save(amendment_a)
         SubmissionRepository().save(submission_a)
         JustificanteRepository().save(justificante_a)
 
     with _active_runtime(tmp_path, _BUCKET_B_ID):
         assert InvoiceCatalogueRepository().load().invoices == {}
         assert ModeloDraftRepository(bucket_id=_BUCKET_B_ID).load(draft_a.draft_id) is None
-        assert ModeloAmendmentRepository(bucket_id=_BUCKET_B_ID).load(amendment_a.amendment_id) is None
         assert SubmissionRepository().list_submission_ids() == ()
         assert JustificanteRepository().list_csvs() == ()
         InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices((_invoice(_BUCKET_B_ID),)))
         ModeloDraftRepository(bucket_id=_BUCKET_B_ID).save(draft_b)
-        ModeloAmendmentRepository(bucket_id=_BUCKET_B_ID).save(amendment_b)
         SubmissionRepository().save(submission_b)
         JustificanteRepository().save(justificante_b)
 
@@ -408,16 +400,12 @@ def test_domain_repository_defaults_isolate_active_profile_writes(tmp_path: Path
         invoices = InvoiceCatalogueRepository().load().invoices
         loaded_draft_a = ModeloDraftRepository(bucket_id=_BUCKET_A_ID).load(draft_a.draft_id)
         loaded_draft_b = ModeloDraftRepository(bucket_id=_BUCKET_A_ID).load(draft_b.draft_id)
-        loaded_amendment_a = ModeloAmendmentRepository(bucket_id=_BUCKET_A_ID).load(amendment_a.amendment_id)
-        loaded_amendment_b = ModeloAmendmentRepository(bucket_id=_BUCKET_A_ID).load(amendment_b.amendment_id)
         submissions = SubmissionRepository().list_submission_ids()
         csvs = JustificanteRepository().list_csvs()
 
     assert tuple(invoice.invoice_number for invoice in invoices.values()) == (f"INV-{_BUCKET_A_ID.upper()}",)
     assert loaded_draft_a == draft_a
     assert loaded_draft_b is None
-    assert loaded_amendment_a == amendment_a
-    assert loaded_amendment_b is None
     assert submissions == (submission_a.submission_id,)
     assert csvs == (justificante_a.csv,)
 

@@ -16,4 +16,5 @@ Submodules
    cadrumo.adapters.inbound.pdf.extracted_casilla
    cadrumo.adapters.inbound.pdf.label_regex
    cadrumo.adapters.inbound.pdf.page_text_extraction
+   cadrumo.adapters.inbound.pdf.redaction
    cadrumo.adapters.inbound.pdf.source_provenance

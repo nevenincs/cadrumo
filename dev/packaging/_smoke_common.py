@@ -63,7 +63,6 @@ __all__ = [
     "assert_wheel_contains_tracked_data",
     "assert_wheel_metadata_matches_pyproject",
     "build_companion_wheels",
-    "build_harness_wheel",
     "build_sdist",
     "build_wheel",
     "clean_product_env",
@@ -120,10 +119,6 @@ _DATA_COMPANION_PROJECTS = (
     ("cadrumo-data-manuals", "packaging/cadrumo_data_manuals", "cadrumo_data_manuals-*.whl"),
     ("cadrumo-data-official", "packaging/cadrumo_data_official", "cadrumo_data_official-*.whl"),
 )
-#: The independently versioned harness distribution. Release cohorts seal its
-#: wheel and sdist alongside the command and data artifacts.
-_HARNESS_PROJECT_DIR = Path("src") / "cadrumo-harness"
-_HARNESS_WHEEL_GLOB = "cadrumo_harness-*.whl"
 _RENTA_PDF_ALLOW_LIST = {
     f"src/cadrumo/_data/corpus/manuals/renta/{year}/part1/source.pdf"
     for year in ("2020", "2021", "2022", "2023", "2024", "2025")
@@ -285,27 +280,6 @@ def extract_source_commit(repo_root: Path, work_dir: Path, source_commit: str) -
         bundle.extractall(extract_root)
     archive.unlink()
     return extract_root
-
-
-def build_harness_wheel(work_dir: Path, uv: str, *, build_root: Path) -> Path:
-    """Build the agent-harness wheel from one immutable source tree.
-
-    Mirrors the data companions' build: one ``uv build --project`` per sibling
-    distribution, from an extracted source commit rather than the shared
-    worktree, so the artifact corresponds to a commit. The independent output
-    directory prevents accidental worktree reuse; the cohort builder then
-    seals the exact bytes into its closed-world manifest.
-    """
-    out_dir = work_dir / "harness-wheel"
-    run_checked(
-        [uv, "build", "--project", str(build_root / _HARNESS_PROJECT_DIR), "--out-dir", str(out_dir)],
-        cwd=build_root,
-    )
-    built = scan_directory(out_dir, pattern=_HARNESS_WHEEL_GLOB)
-    if len(built) != 1:
-        names = [row.name for row in built]
-        raise SystemExit(f"expected one cadrumo-harness wheel in {out_dir}; got {names!r}")
-    return built[0]
 
 
 def _wsl_path_from_windows_gitdir(gitdir: str) -> Path | None:
@@ -730,7 +704,7 @@ def _export_names(output: str, *, repo_root: Path | None = None) -> set[str]:
     resolve such a row to the referenced project's own ``[project].name`` so the
     surface checks see the real package name.
 
-    A WORKSPACE MEMBER exports differently again -- ``-e ./src/cadrumo-harness``,
+    A WORKSPACE MEMBER exports differently again -- ``-e ./src/cadrumo_harness``,
     an editable row -- so the ``-e`` marker is stripped before the path is
     resolved. Without that the row fell through to requirement parsing, the
     member's name never entered the surface, and the dev export was reported as

@@ -3,7 +3,7 @@ name = "cadrumo"
 version = "0.2.2"
 description = "Cadrumo is a deterministic Spanish tax calculation CLI that turns local financial records into checked, exportable modelo filing artifacts. Independent software; not affiliated with AEAT."
 readme = "README.md"
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.13"
 license = "Apache-2.0"
 # Explicit so the wheel/sdist always carry the Apache §4(d) attribution chain
 # (dist-info/licenses/{LICENSE,NOTICE}), independent of hatchling's default
@@ -26,8 +26,10 @@ dependencies = [
   # companions are separate files only to stay below the package-index
   # per-file cap; they are exact-version runtime dependencies because the CLI
   # cannot perform grounded tax work without both corpus slices.
+  "anyio>=4.5,<5",
   "cadrumo-data-manuals==0.2.2",
   "cadrumo-data-official==0.2.2",
+  "mcp>=2,<3",
   # Capability-gated integrations live in [project.optional-dependencies].
   # `anthropic` (Anthropic-API LLM provider), the `google-*` stack
   # (Drive/Sheets export), and `playwright*` (live AEAT browser) are lazily
@@ -124,6 +126,7 @@ dependencies = [
 
 [project.scripts]
 aeat = "cadrumo.entrypoints._cli_main:main"
+cadrumo-mcp = "cadrumo_harness.mcp:main"
 
 [project.urls]
 Homepage = "https://github.com/nevenincs/cadrumo"
@@ -199,7 +202,7 @@ llm = [
 ]
 # Deliberately absent: an `agent` extra. The operator agent harness, its
 # reviewed operating data, accessors, and MCP runtime are a separate
-# `cadrumo-harness` distribution which depends on this base package.
+# `cadrumo_harness` package shipped alongside it in this distribution.
 #
 # Deliberately absent: a `search` extra. The on-host grounding search stack
 # needs none — the lexical index (stdlib sqlite3 FTS5 plus the core
@@ -232,6 +235,7 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.sdist]
 include = [
   "src/cadrumo",
+  "src/cadrumo_harness",
   "pyproject.toml",
   "README.md",
   "CHANGELOG.md",
@@ -250,6 +254,10 @@ exclude = [
   "dev/**",
   "src/cadrumo/tests",
   "src/cadrumo/tests/**",
+  "src/cadrumo_harness/tests",
+  "src/cadrumo_harness/tests/**",
+  "src/cadrumo_harness/**/tests",
+  "src/cadrumo_harness/**/tests/**",
   "src/cadrumo/**/tests",
   "src/cadrumo/**/tests/**",
   "src/cadrumo/_data/corpus/**/*.pdf",
@@ -261,7 +269,7 @@ exclude = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/cadrumo"]
+packages = ["src/cadrumo", "src/cadrumo_harness"]
 # Test modules and fixtures serve no installed consumer: the suites run from
 # the repo tree, and nothing in the wheel imports `cadrumo.tests` at module load.
 # This payload is shed from the distribution to bound its size.
@@ -270,6 +278,10 @@ exclude = [
   "src/cadrumo/tests/**",
   "src/cadrumo/**/tests",
   "src/cadrumo/**/tests/**",
+  "src/cadrumo_harness/tests",
+  "src/cadrumo_harness/tests/**",
+  "src/cadrumo_harness/**/tests",
+  "src/cadrumo_harness/**/tests/**",
   # Corpus source binaries (the AEAT/BOE manuals and workbooks) are 94% of the
   # wheel's compressed weight and serve only the always-on registry integrity
   # hash chain and the opt-in `cadrumo app registry` verification verbs at runtime.
@@ -298,6 +310,8 @@ include = [
   "src/cadrumo/py.typed",
   "src/cadrumo/adapters/persistence/storage/_bip39_wordlist.txt",
   "src/cadrumo/core/external_constants.toml",
+  "src/cadrumo_harness/py.typed",
+  "src/cadrumo_harness/_data/**",
 ]
 
 # ── uv ───────────────────────────────────────────────────────────────────────
@@ -330,10 +344,7 @@ torch = [
 # distributions from the configured package index.
 cadrumo-data-manuals = { path = "packaging/cadrumo_data_manuals" }
 cadrumo-data-official = { path = "packaging/cadrumo_data_official" }
-cadrumo-harness = { workspace = true }
 
-[tool.uv.workspace]
-members = ["src/cadrumo-harness"]
 
 [tool.vaultspec-rag]
 managed-torch-direct-dependency = true
@@ -419,7 +430,6 @@ dev = [
   # tooling tracks latest.
   "vaultspec-core>=0.1.55",
   "vaultspec-rag[mcp]>=0.3.8",
-  "cadrumo-harness",
   # Sphinx documentation pipeline — `just docs` builds HTML + Markdown from
   # the Google-style + Sphinx-cross-referenced docstrings under src/cadrumo/.
   "sphinx>=8.1,<9",  # <9: sphinx-hoverxref 1.4.2 (latest) crashes on Sphinx 9's _Opt config repr at config-inited
@@ -587,8 +597,8 @@ convention = "google"
 "src/cadrumo/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
 "src/cadrumo/tests/**/*.py" = ["S101", "T20", "D"]
 "src/cadrumo/**/conftest.py" = ["S101", "D"]
-"src/cadrumo-harness/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
-"src/cadrumo-harness/**/conftest.py" = ["S101", "D"]
+"src/cadrumo_harness/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
+"src/cadrumo_harness/**/conftest.py" = ["S101", "D"]
 "conftest.py" = ["S101", "D"]
 # dev/docs/ holds contributor-only documentation tools and tests.
 "dev/docs/**/*.py" = ["T20", "D", "E402"]
@@ -797,7 +807,7 @@ convention = "google"
 # (partial paths resolved from PATH by design), mirroring the src/cadrumo
 # wheel-build gates.
 "dev/packaging/tests/test_cadrumo_data_distribution.py" = ["S603", "S607"]
-"src/cadrumo-harness/src/cadrumo_harness/mcp/tests/test_stdio_lifetime.py" = ["S603"]
+"src/cadrumo_harness/mcp/tests/test_stdio_lifetime.py" = ["S603"]
 "src/cadrumo/adapters/persistence/storage/bucket/tests/test_lockfile.py" = ["S603"]
 # Cross-process custody-root exclusion is only provable against real spawned
 # processes killed abruptly; every argv is a fixed `sys.executable -c <script>`
@@ -893,7 +903,6 @@ convention = "google"
 # build, so the length is harmless.
 "src/cadrumo/application/modelo/tests/test_bienes_inversion_advisory.py" = ["S106", "E501"]
 "src/cadrumo/application/modelo/tests/test_prorrata_regularizacion_advisory.py" = ["S106"]
-"src/cadrumo/application/filing/tests/test_complementaria_repository.py" = ["E501"]
 # Long import-linter diagnostic f-string and the codemod tool's usage example.
 "src/cadrumo/tests/test_importlinter_ledger.py" = ["E501"]
 "dev/quality/import_centralization_codemod.py" = ["E501"]
@@ -1019,7 +1028,7 @@ reportUnnecessaryIsInstance = "none"
 # the default unit gate fails on drift instead of relying on manual CLI use.
 testpaths = [
   "src/cadrumo",
-  "src/cadrumo-harness",
+  "src/cadrumo_harness",
   "dev/source_connectivity/tests",
 ]
 pythonpath = ["src"]

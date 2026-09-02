@@ -51,12 +51,12 @@ from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from cadrumo_harness import iter_skill_documents
 from pydantic import BaseModel, ConfigDict
 
 from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
 from cadrumo.core.json_contract import EnvelopeStatus, ResolvedActionArgument
 from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo_harness import iter_skill_documents
 
 from ._models import (
     LIFECYCLE_STAGE_ORDER,

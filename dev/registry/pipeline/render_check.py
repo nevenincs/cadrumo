@@ -41,11 +41,14 @@ inputs produce, not a gap in this comparison, and the caveat was excusing it.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+
+import rtoml
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
@@ -59,7 +62,7 @@ from ._render_profile import load_render_profile, load_render_profile_source_evi
 from ._semantic_map_join import join_record_design_semantics
 from ._semantic_map_loader import load_semantic_map
 
-__all__ = ["RenderComparison", "compare_revision_against_committed"]
+__all__ = ["RenderComparison", "compare_revision_against_committed", "parsed_tree_file"]
 
 _SERIALIZER_CONVENTION = "rtoml-pretty-v1"
 
@@ -83,22 +86,64 @@ class RenderComparison:
     differing: tuple[str, ...]
     only_committed: tuple[str, ...]
     only_rendered: tuple[str, ...]
+    serialization_only: tuple[str, ...] = ()
+
+    @property
+    def byte_differing(self) -> tuple[str, ...]:
+        """Every file whose bytes differ, whatever the difference means."""
+        return self.differing
 
     @property
     def record_differing(self) -> tuple[str, ...]:
-        """Differing files that are records rather than the provenance attestation."""
-        return tuple(name for name in self.differing if name != _PROVENANCE_MANIFEST)
+        """Records whose parsed meaning differs, not merely their spelling.
+
+        A file whose bytes changed but whose parsed content did not is excluded.
+        The serializer decides quoting, key order and whitespace, and none of
+        those reach the emitted filing bytes; treating them as drift fills the
+        class that exists to stop an unsafe republication with members that are
+        perfectly safe, which is how a real one stops being noticed.
+        """
+        excluded = {_PROVENANCE_MANIFEST, *self.serialization_only}
+        return tuple(name for name in self.differing if name not in excluded)
 
     @property
     def provenance_only(self) -> bool:
         """Whether the tree differs solely in its generation manifest.
 
-        A tree in this state ships the right bytes with an attestation that no
-        longer proves them, and republishing it is safe. A tree with any record
-        difference is NOT in this state and republishing it would ship whatever
-        the current inputs now produce, which may be worse than what is there.
+        True only when the manifest is the single differing file. A tree whose
+        records differ in spelling alone is also safe to republish, but it is
+        not in this state and saying so would misreport which file moved; ask
+        ``semantically_reproduced`` for that question.
         """
-        return bool(self.differing) and not self.record_differing and not (self.only_committed or self.only_rendered)
+        return tuple(self.differing) == (_PROVENANCE_MANIFEST,) and not (self.only_committed or self.only_rendered)
+
+    @property
+    def semantically_reproduced(self) -> bool:
+        """Whether every shipped record still means what its inputs produce.
+
+        Weaker than ``reproduced`` and deliberately so: it tolerates a
+        serializer change, which cannot reach the emitted filing bytes, while
+        still refusing a changed value.
+        """
+        return not (self.record_differing or self.only_committed or self.only_rendered)
+
+    @property
+    def disposition_class(self) -> str | None:
+        """Which explained state this tree is in, or ``None`` when it needs no row.
+
+        Three outcomes, and the third is why this exists. A record that means
+        something its inputs no longer produce is ``record_drift`` and is unsafe
+        to republish. A stale attestation over correct records is
+        ``provenance_only`` and is safe. A tree differing only in how the
+        serializer spells a value is in neither state: nothing about it is
+        unexplained, and demanding a written disposition for it would bury the
+        rows that describe a real condition.
+        """
+        if self.record_differing or self.only_committed or self.only_rendered:
+            return "record_drift"
+        if _PROVENANCE_MANIFEST in self.differing:
+            return "provenance_only"
+        return None
 
     @property
     def reproduced(self) -> bool:
@@ -109,6 +154,23 @@ class RenderComparison:
         so it means unreproduced rather than drifted.
         """
         return not (self.differing or self.only_committed or self.only_rendered)
+
+
+def parsed_tree_file(name: str, raw: bytes) -> object | None:
+    """Return the parsed content of a tree file, or ``None`` when it does not parse.
+
+    Returning ``None`` matters: an unparseable file must never compare equal to
+    another, or a corrupted record would be excused as a spelling change.
+    """
+    try:
+        text = raw.decode("utf-8")
+        if name.endswith(".toml"):
+            return rtoml.loads(text)
+        if name.endswith(".json"):
+            return json.loads(text)
+    except (UnicodeDecodeError, ValueError):
+        return None
+    return None
 
 
 def _tree_bytes(root: Path) -> dict[str, bytes]:
@@ -210,12 +272,21 @@ def compare_revision_against_committed(
         rendered = _tree_bytes(target)
 
     shared = sorted(set(committed) & set(rendered))
+    differing = tuple(name for name in shared if committed[name] != rendered[name])
+    serialization_only = tuple(
+        name
+        for name in differing
+        if name != _PROVENANCE_MANIFEST
+        and (parsed := parsed_tree_file(name, committed[name])) is not None
+        and parsed == parsed_tree_file(name, rendered[name])
+    )
     return RenderComparison(
         modelo=modelo,
         revision=revision,
         layout_id=str(layout.id),
         files_compared=len(shared),
-        differing=tuple(name for name in shared if committed[name] != rendered[name]),
+        differing=differing,
+        serialization_only=serialization_only,
         only_committed=tuple(sorted(set(committed) - set(rendered))),
         only_rendered=tuple(sorted(set(rendered) - set(committed))),
     )
@@ -245,8 +316,10 @@ def main(argv: list[str] | None = None) -> int:
         f"layout={comparison.layout_id} compared={comparison.files_compared} "
         f"reproduced={comparison.reproduced} "
         f"record_drift={len(comparison.record_differing)} "
+        f"serialization_only={len(comparison.serialization_only)} "
+        f"semantically_reproduced={comparison.semantically_reproduced} "
         f"provenance_only={comparison.provenance_only} "
-        f"note='record_drift means the shipped bytes no longer follow from the inputs'\n"
+        f"note='record_drift means a record now MEANS what its inputs do not produce'\n"
     )
     return 1 if args.check and not comparison.reproduced else 0
 

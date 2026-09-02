@@ -38,7 +38,7 @@ from ._m303_orden_constants import (
 )
 from .errors import RegistryValidationError
 from .ids import LegalRefId, RevisionId, SourceRefId
-from .schema_base import RegistrySourceKind, RegistryModel
+from .schema_base import RegistryModel, RegistrySourceKind
 from .schema_references import LegalReference, SourceReference
 
 _M303_2022_RECORD_DESIGN_SOURCE_REF = "aeat-dr-303-2022"

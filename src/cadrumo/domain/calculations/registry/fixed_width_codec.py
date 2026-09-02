@@ -22,6 +22,7 @@ from .export_value_policy import (
     project_export_value,
     validate_export_wire_value,
 )
+from .schema_base import CasillaDataType
 
 
 class ExportPadding(StrEnum):
@@ -95,7 +96,7 @@ class _ExportField(Protocol):
     def literal(self) -> str | None: ...
 
     @property
-    def data_type(self) -> Literal["text", "integer", "decimal", "money", "date", "boolean"]: ...
+    def data_type(self) -> CasillaDataType: ...
 
     @property
     def required(self) -> bool: ...

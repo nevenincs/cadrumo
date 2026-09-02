@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
+from .....tests.aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from ..live_parity import (
     LiveParityCatalogue,
     OracleEnvironment,

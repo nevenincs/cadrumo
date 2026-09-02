@@ -112,6 +112,7 @@ def canonical_row_binding_values(
     *,
     surface: str,
 ) -> dict[BindingId, dict[str, str]]:
+    """Return row-binding values with validated keys, canonically sorted, or raise."""
     canonical: dict[BindingId, dict[str, str]] = {}
     for raw_binding_id, raw_rows in row_binding_values.items():
         binding_id = _validated_binding_id(raw_binding_id, surface=surface)
@@ -134,6 +135,7 @@ def canonical_row_binding_values(
 def canonical_row_source_identities(
     value: Mapping[RowBindingKey, RowSourceIdentity],
 ) -> list[dict[str, object]]:
+    """Return row source identities as canonically sorted, JSON-shaped rows."""
     canonical: list[dict[str, object]] = []
     for (binding_id, row_index), identity in sorted(value.items()):
         row_identity: dict[str, object] = {
@@ -150,6 +152,7 @@ def canonical_row_source_identities(
 
 
 def canonical_row_casilla_values(value: Mapping[RowCasillaKey, Decimal]) -> list[dict[str, object]]:
+    """Return row casilla values as canonically sorted, JSON-shaped rows."""
     return [
         {"casilla_id": casilla_id, "row_index": row_index, "value": _canonical_decimal(amount)}
         for (casilla_id, row_index), amount in sorted(value.items())
@@ -159,6 +162,7 @@ def canonical_row_casilla_values(value: Mapping[RowCasillaKey, Decimal]) -> list
 def canonical_row_casilla_provenance(
     value: Mapping[RowCasillaKey, DirectRowMaterializationProvenance],
 ) -> list[dict[str, object]]:
+    """Return row casilla materialization provenance as canonically sorted, JSON-shaped rows."""
     return [
         {
             "casilla_id": casilla_id,

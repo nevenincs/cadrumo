@@ -36,11 +36,11 @@ corruption report ever arrives.
 from __future__ import annotations
 
 from ....application.operator_actions.preconditions import no_action_precondition_verdict
+from ....core.hashing import SHA256_HEX_LENGTH as _SHA256_HEX_LENGTH
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from .errors import OutboundStorageIntegrityError
 
 _SHA256_PREFIX = "sha256-"
-_SHA256_HEX_LENGTH = 64
 _HEX_DIGITS = frozenset("0123456789abcdef")
 
 

@@ -205,6 +205,7 @@ class RemoteMirrorInspection(BaseModel):
 
     @property
     def ok(self) -> bool:
+        """Return whether the inspection recorded no issues."""
         return not self.issues
 
 

@@ -18,13 +18,12 @@ from ..command_spec import (
     MachineSecretVariantSpec,
     OptionSpec,
     ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
     TuiCapability,
     ValueContract,
 )
+from ..command_spec import translation_key as _key
 from ._command_spec_schema import config_payload_schema as _schema
-from ._spec_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, STATE_FREE
+from ._spec_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, state_free_group_spec
 
 _BOOL = ValueContract(DeferredTarget("builtins", "bool"))
 _INT = ValueContract(DeferredTarget("builtins", "int"))
@@ -89,22 +88,6 @@ def _handler(module: str, name: str) -> LazyBinding:
     return LazyBinding.available(DeferredTarget(_HANDLER_MODULES[module], name))
 
 
-def _group(key: str, parent: str, token: str, help_key: str) -> CommandSpec:
-    return CommandSpec(
-        key=key,
-        parent_key=parent,
-        token=token,
-        kind="group",
-        help_key=_key(help_key),
-        short_help_key=None,
-        invocation=InvocationSpec(no_args_is_help=True),
-        parameters=(),
-        policy=STATE_FREE,
-        handler=None,
-        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
-    )
-
-
 def _leaf(
     key: str,
     parent: str,
@@ -141,7 +124,7 @@ _NAME_REGISTER = _option("name", ("--name",), _STR, "cli.config.auth.certificate
 
 
 AUTH_COMMAND_SPECS = (
-    _group("config_auth", "config", "auth", "cli.config.auth.help"),
+    state_free_group_spec("config_auth", "config", "auth", "cli.config.auth.help"),
     _leaf(
         "config_auth_providers",
         "config_auth",
@@ -240,7 +223,7 @@ AUTH_COMMAND_SPECS = (
             _option("yes", ("--yes",), _BOOL, "cli.config.auth.reset_yes_help", flag=True),
         ),
     ),
-    _group("config_auth_diagnostics", "config_auth", "diagnostics", "cli.config.auth.diagnostics.help"),
+    state_free_group_spec("config_auth_diagnostics", "config_auth", "diagnostics", "cli.config.auth.diagnostics.help"),
     _leaf(
         "config_auth_diagnostics_list",
         "config_auth_diagnostics",
@@ -288,7 +271,7 @@ AUTH_COMMAND_SPECS = (
             ),
         ),
     ),
-    _group("config_auth_apoderado", "config_auth", "apoderado", "cli.config.auth.apoderado.help"),
+    state_free_group_spec("config_auth_apoderado", "config_auth", "apoderado", "cli.config.auth.apoderado.help"),
     _leaf(
         "config_auth_apoderado_status",
         "config_auth_apoderado",
@@ -339,7 +322,9 @@ AUTH_COMMAND_SPECS = (
         "ApoderadoCheckResult",
         ENCRYPTED_READ,
     ),
-    _group("config_auth_apoderado_scopes", "config_auth_apoderado", "scopes", "cli.config.auth.apoderado.scopes.help"),
+    state_free_group_spec(
+        "config_auth_apoderado_scopes", "config_auth_apoderado", "scopes", "cli.config.auth.apoderado.scopes.help"
+    ),
     _leaf(
         "config_auth_apoderado_scopes_list",
         "config_auth_apoderado_scopes",
@@ -350,7 +335,7 @@ AUTH_COMMAND_SPECS = (
         "ApoderadoScopesListResult",
         ENCRYPTED_READ,
     ),
-    _group("config_auth_certificate", "config_auth", "certificate", "cli.config.auth.certificate.help"),
+    state_free_group_spec("config_auth_certificate", "config_auth", "certificate", "cli.config.auth.certificate.help"),
     _leaf(
         "config_auth_certificate_register",
         "config_auth_certificate",
@@ -419,7 +404,7 @@ AUTH_COMMAND_SPECS = (
         "CertificateSourceCheckPayload",
         ENCRYPTED_READ,
     ),
-    _group(
+    state_free_group_spec(
         "config_auth_certificate_secret", "config_auth_certificate", "secret", "cli.config.auth.certificate.secret.help"
     ),
     _leaf(
@@ -477,8 +462,3 @@ AUTH_COMMAND_SPECS = (
 
 
 __all__ = ["AUTH_COMMAND_SPECS"]
-
-
-def _key(value: str) -> TranslationKey:
-    """TEMPORARY A/B copy."""
-    return TranslationKey(value)

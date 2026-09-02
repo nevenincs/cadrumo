@@ -56,6 +56,10 @@ from ....domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ....domain.calculations.registry.schema import DecimalValue as _RegistryDecimalValue
+from ....domain.calculations.registry.schema_base import (
+    CasillaSignConstraint,
+    CasillaSignConstraintValue,
+)
 from .errors import CalcSheetsRecordError
 from .theme import WORKBOOK_FONT_FAMILY, StyleRole
 
@@ -251,7 +255,7 @@ class SheetCellConstraint(BaseModel):
     model_config = _STRICT_FROZEN
 
     address: SheetCellAddress
-    sign: Literal["any", "non_negative", "non_positive"] = "any"
+    sign: CasillaSignConstraintValue = CasillaSignConstraint.ANY
     min_value: Decimal | None = None
     max_value: Decimal | None = None
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
@@ -669,6 +673,40 @@ class OperatorInputs(BaseModel):
         return {item.casilla_id: item for item in self.values}
 
 
+class SheetRelationProvenance(StrEnum):
+    """Where a spreadsheet relation cell's value came from.
+
+    Deliberately coarser than :class:`ObservationSourceKind`, which splits the AEAT
+    origins three ways for filing-grade evidence. This vocabulary answers a narrower
+    question the workbook actually renders -- did the operator type it, did a local
+    filing supply it, or did it come off AEAT -- and the two share the
+    ``operator_manual`` token without being the same set. They must not be unified:
+    collapsing them would let a sheet claim a filing-grade AEAT origin it never
+    established.
+    """
+
+    LOCAL_FILING = "local_filing"
+    """Derived from a filing this installation holds locally."""
+
+    AEAT_LIVE = "aeat_live"
+    """Observed from AEAT, without distinguishing which AEAT surface supplied it."""
+
+    OPERATOR_MANUAL = "operator_manual"
+    """Typed by the operator, carrying no external evidence of its own."""
+
+
+SheetRelationProvenanceValue = Literal[
+    SheetRelationProvenance.LOCAL_FILING,
+    SheetRelationProvenance.AEAT_LIVE,
+    SheetRelationProvenance.OPERATOR_MANUAL,
+]
+"""The same vocabulary for a strict record or CLI payload field.
+
+A bare enum under strict validation refuses the plain token a serialised row carries,
+so those fields take this literal over the members above rather than restating them.
+"""
+
+
 class RelationValue(BaseModel):
     """One pre-resolved cross-revision relation value.
 
@@ -703,7 +741,7 @@ class RelationValue(BaseModel):
     #: means the revision declared no treatment, which is not the same as any
     #: particular one and must never be read as one.
     dependency_treatment: str = ""
-    provenance: Literal["local_filing", "aeat_live", "operator_manual"] = "operator_manual"
+    provenance: SheetRelationProvenanceValue = SheetRelationProvenance.OPERATOR_MANUAL
     source_modelo: ModeloId | None = None
     source_filing_year: FilingYear | None = None
     source_periods: tuple[str, ...] = ()

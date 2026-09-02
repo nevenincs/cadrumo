@@ -4,7 +4,7 @@ Guards against wrong lifecycle sequencing surfacing as a cross-surface contradic
 ``modelo readiness`` reporting ``ready: True`` for a modelo whose ``work`` verb is
 blocked. This is the enforcement surface for the "Contradictions between surfaces are a
 stop, not a retry" section of
-``src/cadrumo-harness/src/cadrumo_harness/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md``.
+``src/cadrumo_harness/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md``.
 
 The only deterministic, clock-free CLI reproduction of the contradiction relied on a
 modelo revision with ZERO registry calculation bindings: Modelo 347
@@ -39,11 +39,11 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from cadrumo_harness.mcp import build_tool_descriptors
 
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from cadrumo_harness.mcp import build_tool_descriptors
 
 from .. import ContradictionScenario, check_contradiction_scenario
 

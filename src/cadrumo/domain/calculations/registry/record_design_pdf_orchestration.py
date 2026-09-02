@@ -41,6 +41,12 @@ def extract_record_design_pdf_cached(
     byte_count: int,
     modified_ns: int,
 ) -> RecordDesignExtraction:
+    """Extract and cache one record-design PDF's parsed sheets, keyed on its identity.
+
+    ``byte_count`` and ``modified_ns`` are cache-key components only, invalidating
+    the cache when the file changes on disk; the extraction itself reads the file
+    fresh from ``path``.
+    """
     del byte_count, modified_ns
     source_path = Path(path)
     corrections = load_corrections(source_path)
@@ -58,6 +64,12 @@ def extract_record_design_pdf_stream(
     source_label: str,
     corrections: CorrectionIndex = EMPTY_CORRECTIONS,
 ) -> RecordDesignExtraction:
+    """Read a record-design PDF's sheets from an open stream, trying repairs and visual fallback in turn.
+
+    Raises:
+        RegistryValidationError: When no text can be extracted, or every text
+            and visual reading strategy fails to produce a usable extraction.
+    """
     import pdfplumber
 
     pdf_bytes = stream.read()

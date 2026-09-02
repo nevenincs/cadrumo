@@ -9,50 +9,42 @@ gated commands the CLI does.
 
 ## What the agent connection is
 
-The separate `cadrumo-harness` distribution ships an MCP (Model Context
-Protocol) server, `cadrumo-mcp`, for the `aeat` command. MCP is an open
-standard that lets assistants call tools. Any MCP-capable client can connect;
-Claude is one such client.
+Installing Cadrumo installs two commands: `aeat`, the application, and
+`cadrumo-mcp`, an MCP (Model Context Protocol) server that exposes it. MCP is an
+open standard that lets assistants call tools. Any MCP-capable client can
+connect; Claude is one such client.
 
-The server exposes the CLI's read and prepare operations as tools, plus
-grounded search over the bundled BOE and AEAT legal corpus. It refuses live
-submission by construction, exactly like the CLI.
+The server exposes the CLI's read and prepare operations as tools, plus grounded
+search over the bundled BOE and AEAT legal corpus. It refuses live submission by
+construction, exactly like the CLI.
 
-In the beta, connect from the repository checkout below. Every release also
-builds the plugin and Desktop extension artifacts; their marketplace and
-registry listings open with the public launch (see
-[Get Cadrumo](../download.md) for channel status).
-
-## Prepare the source checkout
+## Check the server is installed
 
 ```bash
-git clone https://github.com/nevenincs/cadrumo.git
-cd cadrumo
-uv sync --package cadrumo-harness
-uv run --package cadrumo-harness cadrumo-mcp --help
+cadrumo-mcp --help
 ```
 
-## Register the source server
+If the command is not found, install Cadrumo first — see
+[Get Cadrumo](../download.md).
 
-Register `uv run --package cadrumo-harness cadrumo-mcp` as a stdio server and
-set the checkout as the working directory. In clients that accept a JSON server
+## Register the server
+
+Register `cadrumo-mcp` as a stdio server. In clients that accept a JSON server
 definition:
 
 ```json
 {
   "mcpServers": {
     "cadrumo": {
-      "command": "uv",
-      "args": ["run", "--package", "cadrumo-harness", "cadrumo-mcp"],
-      "cwd": "/absolute/path/to/cadrumo"
+      "command": "cadrumo-mcp"
     }
   }
 }
 ```
 
-Replace the example path with the absolute path to your authorized checkout.
-Do not replace this with `uvx`, a marketplace install, or a downloaded
-extension until public distribution is announced.
+That is the whole configuration. The command is on your `PATH` after
+installation, and it finds your profile the same way `aeat` does, so it needs
+no working directory and no path of its own.
 
 ## Before the first agent session
 

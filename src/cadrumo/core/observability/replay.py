@@ -265,10 +265,10 @@ def _assert_replayed_envelope(
 
     Delegates the canonicalise/mask/compare to the shared golden
     primitive so this replay consumer and the operator golden gate never
-    diverge on masking. The lazy import keeps ``_golden`` (and its
+    diverge on masking. The lazy import keeps ``golden_comparison`` (and its
     ``json_contract`` dependency) off the module-load graph.
     """
-    from .golden import assert_golden_match
+    from ...tests.golden_comparison import assert_golden_match
 
     if not captured:
         raise CadrumoObservabilityError(

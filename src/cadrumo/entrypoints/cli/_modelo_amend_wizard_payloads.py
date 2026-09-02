@@ -11,8 +11,9 @@ delegation live in :mod:`~entrypoints.cli._modelo_amend_wizard_cli`. Every paylo
 
 from __future__ import annotations
 
+from pydantic import model_validator
+
 from ...core.casilla_id import CasillaId
-from ...core.identity import FilingRecordId
 from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
@@ -49,16 +50,27 @@ class WorkAmendWizardResult(ModeloRecordPayload):
     unknown status/kind, or an oversized notes string is refused rather than
     accepted. Adds the wizard-specific ``corrected_casillas`` audit trail;
     the amendment wizard never writes a fichero-BOE itself.
-    ``amends_filing_record_id`` is narrowed to required: every amendment
-    wizard result amends a prior filing record by definition.
+    ``amends_filing_record_id`` is required in practice and refused when
+    absent: every amendment wizard result amends a prior filing record.
     """
 
     operation: str = "modelo.work.amend_wizard"
     amendment_kind: CalculationRevisionAmendmentKind
     m303_rectificativa_motive: M303RectificativaMotive | None
     amendment_reason: OperatorReason
-    amends_filing_record_id: FilingRecordId
     corrected_casillas: tuple[AmendWizardCorrectedCasillaPayload, ...] = ()
+
+    @model_validator(mode="after")
+    def _amendment_names_the_record_it_supersedes(self) -> WorkAmendWizardResult:
+        """Refuse a wizard result that does not name the record it amends.
+
+        The field keeps the shared record payload's optional type, which every
+        non-amending result needs. An amendment without it is incomplete, so it
+        is refused here rather than emitted.
+        """
+        if self.amends_filing_record_id is None:
+            raise ValueError("an amendment wizard result must carry amends_filing_record_id")
+        return self
 
 
 __all__ = ["AmendWizardCorrectedCasillaPayload", "WorkAmendWizardResult"]

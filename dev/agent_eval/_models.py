@@ -24,7 +24,7 @@ correct move is to stop and report the disagreement — never to retry past it w
 further mutating tool call. This is the enforcement surface for the
 ``cadrumo-operator-lifecycle-ordering`` rule's "Contradictions between surfaces are a stop, not
 a retry" section
-(``src/cadrumo-harness/src/cadrumo_harness/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md``). This
+(``src/cadrumo_harness/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md``). This
 pair follows the standalone ``check_*_scenario`` shape used by
 :class:`ExitCodeScenario`/:class:`ExitCodeVerdict` and
 :class:`UnderDeclarationScenario`/:class:`UnderDeclarationVerdict` rather

@@ -6,7 +6,7 @@ from collections.abc import Callable, Generator, Mapping
 from contextlib import AbstractContextManager, contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Literal, NoReturn
+from typing import NoReturn
 from uuid import UUID
 
 from ....application.user_profile.authentication import ProfilePasswordProofOperation
@@ -50,6 +50,7 @@ from ....application.user_profile.custody_ports import (
 from ....core.classification.policies import SensitivityClass
 from ....core.config import Settings
 from ....core.hashing import prefixed_digest
+from ....core.profile_publication import ProfilePublicationKindValue
 from ....core.storage_taxonomy import StorageCategory, StorageCustodyProfile
 from ....core.storage_taxonomy_locations import storage_location
 from ....core.time.clock import now as _utc_now
@@ -640,7 +641,7 @@ class _PersistenceProfileCustody:
         *,
         profile_id: UUID,
         transaction_id: UUID,
-        publication_kind: Literal["enroll", "restore"],
+        publication_kind: ProfilePublicationKindValue,
         password_envelope: ProfileCustodyEnvelopePort,
         sentinel: ProfileCustodySentinelPort,
         data_files: Mapping[str, bytes],

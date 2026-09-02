@@ -1167,16 +1167,20 @@ def _is_record_design_path(lowered_relative_path: str) -> bool:
 
 def _evidence_for_workbook_kind(kind: WorkbookKind) -> tuple[EvidenceTier | None, tuple[EvidenceTier, ...]]:
     if kind == WorkbookKind.FORMULA_FORM:
-        return "executable_parity_evidence", ("legal_authority", "layout_authority")
+        return EvidenceTier.EXECUTABLE_PARITY_EVIDENCE, (EvidenceTier.LEGAL_AUTHORITY, EvidenceTier.LAYOUT_AUTHORITY)
     if kind in {WorkbookKind.RECORD_DESIGN_LAYOUT, WorkbookKind.UNSUPPORTED_BINARY_XLS, WorkbookKind.STATIC_LAYOUT}:
-        return "layout_authority", ("legal_authority", "executable_parity_evidence")
+        return EvidenceTier.LAYOUT_AUTHORITY, (EvidenceTier.LEGAL_AUTHORITY, EvidenceTier.EXECUTABLE_PARITY_EVIDENCE)
     if kind == WorkbookKind.VALIDATION_HINTS:
-        return "official_source_guidance", ("legal_authority", "executable_parity_evidence", "layout_authority")
+        return EvidenceTier.OFFICIAL_SOURCE_GUIDANCE, (
+            EvidenceTier.LEGAL_AUTHORITY,
+            EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
+            EvidenceTier.LAYOUT_AUTHORITY,
+        )
     return None, (
-        "legal_authority",
-        "official_source_guidance",
-        "executable_parity_evidence",
-        "layout_authority",
+        EvidenceTier.LEGAL_AUTHORITY,
+        EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
+        EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
+        EvidenceTier.LAYOUT_AUTHORITY,
     )
 
 
@@ -1246,10 +1250,10 @@ def _failed_report(
         formula_cells=0,
         evidence_tier=None,
         not_evidence_for=(
-            "legal_authority",
-            "official_source_guidance",
-            "executable_parity_evidence",
-            "layout_authority",
+            EvidenceTier.LEGAL_AUTHORITY,
+            EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
+            EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
+            EvidenceTier.LAYOUT_AUTHORITY,
         ),
         scan_status=status,
         error=error,
@@ -1275,10 +1279,10 @@ def _failed_conversion_report(
         formula_cells=0,
         evidence_tier=None,
         not_evidence_for=(
-            "legal_authority",
-            "official_source_guidance",
-            "executable_parity_evidence",
-            "layout_authority",
+            EvidenceTier.LEGAL_AUTHORITY,
+            EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
+            EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
+            EvidenceTier.LAYOUT_AUTHORITY,
         ),
         conversion_status="failed",
         error=error,

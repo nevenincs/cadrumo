@@ -49,7 +49,7 @@ import re
 import sys
 import unicodedata
 from dataclasses import asdict, dataclass
-from typing import Final
+from typing import Final, override
 
 from ..quality.repository_sources import production_sources
 
@@ -228,6 +228,7 @@ class _NounVisitor(ast.NodeVisitor):
         self._stack: list[str] = []
         self.candidates: list[NounCandidate] = []
 
+    @override
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         self._stack.append(node.name)
         prose = attribute_prose(ast.get_docstring(node))

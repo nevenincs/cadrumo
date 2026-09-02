@@ -24,9 +24,6 @@ See Also:
     :func:`application.modelo._result_disposition_resolution.resolve_modelo_result_disposition`
         Determines the filed result disposition that export and carry-forward
         persistence read.
-    :func:`cadrumo.application.filing.summarise_calculation`
-        Draft-calculation summary surface for filing workflows; this module
-        handles persisted modelo revisions instead.
 """
 
 from __future__ import annotations

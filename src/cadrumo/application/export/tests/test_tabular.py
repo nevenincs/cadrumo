@@ -95,12 +95,12 @@ def test_serialize_tabular_rows_rejects_unknown_fields() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_export_format_error_registry_uses_distinct_application_and_adapter_classes() -> None:
-    """The export format error classes must keep distinct registry identities.
+def test_only_the_application_layer_owns_an_export_format_error() -> None:
+    """One export-format refusal identity, owned by the application layer.
 
-    After the adapter rename, only the application-layer ExportFormatError
-    (code REFUSED_EXPORT_FORMAT) should use that simple name. The
-    adapter class is now AeatExportFormatError (code FAIL_EXPORT_FORMAT).
+    The outbound adapter once carried a second class of its own; nothing
+    raised it and it is retired. A new adapter-side twin reappearing here is
+    the duplication this guards against.
     """
     export_format_rows = [
         (qualname, code.code)
@@ -108,7 +108,6 @@ def test_export_format_error_registry_uses_distinct_application_and_adapter_clas
         if qualname.split(".")[-1].endswith("ExportFormatError")
     ]
     assert export_format_rows == [
-        ("cadrumo.adapters.outbound.aeat.export.errors.AeatExportFormatError", "FAIL_EXPORT_FORMAT"),
         ("cadrumo.application.export.errors.ExportFormatError", "REFUSED_EXPORT_FORMAT"),
     ]
 

@@ -23,9 +23,6 @@ not open portals, submit returns, sign, pay, mark notifications read, or perform
 live AEAT access; those operations belong to application and adapter layers.
 
 See Also:
-    :mod:`application.portals`
-        Local operator discovery service that projects this catalogue without
-        contacting AEAT or emitting bucket events.
     :mod:`application.live`
         Read-only remote observation workflows that may consult portal metadata
         before entering an access-gated live path.

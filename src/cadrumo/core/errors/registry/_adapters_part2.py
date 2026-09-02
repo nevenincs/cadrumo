@@ -38,16 +38,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.export.errors.ExportError",
-        ErrorCode(
-            code="FAIL_EXPORT",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_export",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.adapters.inbound.financial.providers.base.FinancialProviderError",
         ErrorCode(
             code="ERROR_FINANCIAL_PROVIDER",

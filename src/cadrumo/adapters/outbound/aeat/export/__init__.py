@@ -10,9 +10,8 @@ attempt is refused at the core access gate by
 :class:`core.access_gate.LiveSubmitForbiddenError`.
 
 Inert namespace. The renderer is reached at
-:mod:`~adapters.outbound.aeat.export._registry_record_renderer` and the
-translated adapter errors at :mod:`~adapters.outbound.aeat.export.errors`.
-Fixed-width value semantics are owned by
+:mod:`~adapters.outbound.aeat.export.registry_record_renderer`, which raises
+the domain export refusal. Fixed-width value semantics are owned by
 :mod:`domain.calculations.registry`.
 
 See Also:

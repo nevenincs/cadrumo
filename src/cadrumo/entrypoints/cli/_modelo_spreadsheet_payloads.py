@@ -14,8 +14,7 @@ by :mod:`calc_sheets`, and the export plan by :mod:`export`.
 
 from __future__ import annotations
 
-from typing import Literal
-
+from ...application.storage.calc_sheets.records import SheetRelationProvenanceValue
 from ...core.casilla_id import CasillaId
 from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry.ids import FormulaId, LegalRefId, RelationId, SourceRefId
@@ -140,7 +139,7 @@ class ModeloSpreadsheetPullRelationEditPayload(OutputSchema):
 
     relation: RelationId
     value: str | None = None
-    provenance: Literal["local_filing", "aeat_live", "operator_manual"] | None = None
+    provenance: SheetRelationProvenanceValue | None = None
     source_modelo: str | None = None
     source_filing_year: int | None = None
     source_periods: list[str] = []

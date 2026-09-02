@@ -89,7 +89,6 @@ Submodules
    cadrumo.domain.calculations.registry._validation_memoization
    cadrumo.domain.calculations.registry._verdict_cache
    cadrumo.domain.calculations.registry._withholding_rows
-   cadrumo.domain.calculations.registry.aeat_nif_iva_oracle
    cadrumo.domain.calculations.registry.applicability
    cadrumo.domain.calculations.registry.applicability_modelo202
    cadrumo.domain.calculations.registry.applicability_payer_facts
@@ -103,12 +102,10 @@ Submodules
    cadrumo.domain.calculations.registry.casilla_membership
    cadrumo.domain.calculations.registry.censo_modelos
    cadrumo.domain.calculations.registry.checker_oracle_flow
-   cadrumo.domain.calculations.registry.classification_coherence
    cadrumo.domain.calculations.registry.condition_mode
    cadrumo.domain.calculations.registry.convenio
    cadrumo.domain.calculations.registry.corpus_catalogue
    cadrumo.domain.calculations.registry.counterpart_bindings
-   cadrumo.domain.calculations.registry.coverage
    cadrumo.domain.calculations.registry.deadline_coordinate
    cadrumo.domain.calculations.registry.design_constant_bindings
    cadrumo.domain.calculations.registry.detail_record_bindings
@@ -127,7 +124,6 @@ Submodules
    cadrumo.domain.calculations.registry.formula_runtime_ops
    cadrumo.domain.calculations.registry.formula_text_inputs
    cadrumo.domain.calculations.registry.gasto193_bindings
-   cadrumo.domain.calculations.registry.groi_oracle
    cadrumo.domain.calculations.registry.handoffs
    cadrumo.domain.calculations.registry.identity
    cadrumo.domain.calculations.registry.ids

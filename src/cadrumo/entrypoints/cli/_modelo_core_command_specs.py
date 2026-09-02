@@ -15,6 +15,7 @@ from .command_spec import (
     SchemaState,
     ValueContract,
 )
+from .command_spec import translation_key as _key
 
 _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", "none")
 _CALCULATION_READ = ExecutionPolicySpec(
@@ -222,8 +223,3 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["MODELO_CORE_COMMAND_SPECS"]
-
-
-def _key(value: str) -> TranslationKey:
-    """TEMPORARY A/B copy."""
-    return TranslationKey(value)

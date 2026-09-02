@@ -35,6 +35,7 @@ from ...core.identity import (
 from ...core.period import Period
 from ...core.time.utc import validate_utc_aware
 from ...domain.calculations.registry.ids import BindingId, RevisionId
+from ...domain.calculations.registry.schema_base import CasillaDataTypeValue
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.filing.schema import ModeloScalar
 from ...domain.modelos.codes import ModeloCode
@@ -264,32 +265,11 @@ type ModeloEditAddressV1 = Annotated[
 ]
 
 
-type ModeloEditCasillaDataType = Literal[
-    "decimal",
-    "money",
-    "integer",
-    "ratio",
-    "text",
-    "boolean",
-    "nif",
-    "year",
-    "period_code",
-    "country_code",
-    "iban",
-    "name",
-    "nif_iva",
-    "ccaa_code",
-    "province_code",
-    "postal_code",
-    "municipality_code",
-    "bic",
-    "date",
-]
-"""The exact registry ``CasillaDefinition.data_type`` closed set, mirrored here.
-
-Metadata only, not a value: the parse service selects its grammar from this
-axis, and the permitted surface carries no casilla value.
-"""
+#: The registry's casilla data-type vocabulary, reached at its definition rather
+#: than mirrored. Metadata only, not a value: the parse service selects its grammar
+#: from this axis, and the permitted surface carries no casilla value. The mirror this
+#: replaced was a hand-maintained copy of the same nineteen members, so a member added
+#: to the registry never reached it.
 
 
 class ModeloEditWritableScalarSurfaceEntryV1(EditModel):
@@ -297,7 +277,7 @@ class ModeloEditWritableScalarSurfaceEntryV1(EditModel):
 
     kind: Literal["writable_scalar"] = "writable_scalar"
     casilla_id: CasillaId
-    data_type: ModeloEditCasillaDataType
+    data_type: CasillaDataTypeValue
     allowed_intents: Annotated[tuple[ModeloEditScalarIntentKind, ...], Field(min_length=1, max_length=3)]
 
     @field_validator("allowed_intents")
@@ -982,7 +962,6 @@ __all__ = [
     "ModeloEditBaselineV1",
     "ModeloEditBindingAddressV1",
     "ModeloEditBindingIntentKind",
-    "ModeloEditCasillaDataType",
     "ModeloEditCompatibilityRefusalV1",
     "ModeloEditCompatibilityTupleV1",
     "ModeloEditDetailRowAddressV1",

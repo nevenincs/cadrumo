@@ -79,6 +79,7 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
         filing_repository: ModeloRecordCatalogueRepositoryProtocol,
         regimen_simplificado_applies: bool,
     ) -> None:
+        """Initialize the resolver with the repositories and applicability flag it draws on."""
         self._registry_snapshot = registry_snapshot
         self._work_unit_repository = work_unit_repository
         self._calculation_repository = calculation_repository

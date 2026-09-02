@@ -101,6 +101,7 @@ class SupervisorExecutorContext:
         response_authority_issuer: OperationResponseAuthorityIssuer | None,
         response_token_factory: Callable[[], str],
     ) -> None:
+        """Initialize the context, wrapping the delegate context's interactions with supervisor publication."""
         self.identity = context.identity
         self.cancellation = context.cancellation
         self.deadlines = context.deadlines

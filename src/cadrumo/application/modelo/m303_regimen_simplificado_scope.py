@@ -35,6 +35,7 @@ def m303_profile_readiness_failure(
 
 
 def active_taxpayer_profile(work_unit: WorkUnit) -> TaxpayerProfile:
+    """Return the work unit's active, setup-complete taxpayer profile, or raise."""
     try:
         record = ProfileRecordRepository.for_current_session(work_unit.bucket_id).load(work_unit.bucket_id)
     except ProfileNotFoundError as exc:

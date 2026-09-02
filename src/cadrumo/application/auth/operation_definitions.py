@@ -102,7 +102,7 @@ class _PassphraseRotationSecret(BaseModel):
 
 
 def _require_profile_subject[PayloadT: BaseModel](request: OperationRequest[PayloadT], profile_id: UUID) -> None:
-    if request.subject_ref != _profile_subject(profile_id):
+    if request.subject_ref != _profile_subject(str(profile_id)):
         raise ValueError("auth operation subject does not match its exact profile")
 
 
@@ -112,7 +112,7 @@ def _require_active_profile_subject[PayloadT: BaseModel](request: OperationReque
         profile_id = UUID(request.subject_ref.removeprefix("profile:"))
     except ValueError as error:
         raise ValueError("auth operation subject is not a canonical profile reference") from error
-    if request.subject_ref != _profile_subject(profile_id):
+    if request.subject_ref != _profile_subject(str(profile_id)):
         raise ValueError("auth operation subject is not a canonical profile reference")
     if require_active_bucket_id() != str(profile_id):
         raise ValueError("auth operation requires its profile to be active")

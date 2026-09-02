@@ -56,7 +56,7 @@ def gate_build_jobs() -> str:
     A gate wants determinism and a bounded footprint, not peak speed, so this
     does NOT default to ``auto``. ``auto`` takes one worker per core -- 24 on
     the current build host -- which is the same unbounded-width pattern
-    ``.github/ci-control-plane.md`` bans for ``pytest -n auto``, and for the
+    the CI lanes ban for ``pytest -n auto``, and for the
     same reason: co-resident CI lanes and peer agents already contend for those
     cores, so an uncapped build starves itself and everything beside it.
 

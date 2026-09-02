@@ -92,7 +92,6 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId
 from ....core.export_exemption_reason import ExportExemptionReason
 from ....core.export_layout_format import ExportLayoutFormat
-from .schema_base import RegistrySourceKind
 from .bindings import binding_source_casilla_ids, binding_source_modelo
 from .export import derive_export_layouts_from_bindings, fixed_width_record_casilla_ids
 from .runtime_graph import expression_casilla_refs
@@ -102,6 +101,7 @@ from .schema import (
     ModeloDefinition,
     ModeloRevision,
 )
+from .schema_base import RegistrySourceKind
 from .schema_references import SourceReference
 from .schema_surfaces import CasillaDefinition
 

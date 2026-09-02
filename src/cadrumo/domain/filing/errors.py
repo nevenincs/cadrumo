@@ -36,14 +36,6 @@ class ModeloComputationError(ModeloDraftError):
     """Raised when a builder cannot evaluate a formula casilla."""
 
 
-class ModeloAmendmentError(ModeloDraftError):
-    """Base class for every amendment-related filing error."""
-
-
-class ModeloAmendmentValidationError(ModeloAmendmentError):
-    """Raised when an amendment violates legal or shape invariants."""
-
-
 class ModeloImportError(ModeloDraftError):
     """Raised when importing a filing from a justificante PDF fails."""
 

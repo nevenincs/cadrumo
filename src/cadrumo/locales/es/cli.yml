@@ -3879,6 +3879,7 @@ cli:
     language_help: Idioma de la salida y del texto de ayuda (en, es, ca, hu).
     profile_help: Nombre del perfil activo.
     quiet_help: Mostrar solo los errores.
+    self_test_help: Inicia la interfaz de pantalla completa sin terminal y sale, para comprobar que arranca.
     tui_help: Solicita la interfaz de pantalla completa para el comando seleccionado.
     verbose_help: Habilitar salida detallada.
     version_help: Mostrar el número de versión y salir.

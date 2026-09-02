@@ -85,13 +85,14 @@ from .work_addressing import (
 )
 
 _BASELINE_VALIDITY_WINDOW = timedelta(minutes=15)
-_RESPONSIBLE_OWNER = "modelo.edit"
+RESPONSIBLE_OWNER = "modelo.edit"
+"""The owner recorded on every refusal and advisory the modelo edit surface raises."""
 
 
 def _target_absent_refusal() -> ModeloEditRefusalV1:
     return ModeloEditDomainRefusalV1(
         code=ModeloEditRefusalCode.TARGET_ABSENT,
-        responsible_owner=_RESPONSIBLE_OWNER,
+        responsible_owner=RESPONSIBLE_OWNER,
         reconsideration_condition="resupply a target naming an existing, non-discarded work unit",
     )
 
@@ -321,7 +322,7 @@ def admit_modelo_edit(
         return ModeloEditRefusedV1(
             refusal=ModeloEditCompatibilityRefusalV1(
                 requested_axis=incompatible,
-                responsible_owner=_RESPONSIBLE_OWNER,
+                responsible_owner=RESPONSIBLE_OWNER,
                 reconsideration_condition="re-fetch the current compatibility tuple and resubmit",
             ),
         )
@@ -418,7 +419,7 @@ def reconfirm_modelo_edit_baseline(
     return ModeloEditStaleBaselineRefusalV1(
         baseline_id=baseline.baseline_id,
         mismatching_coordinates=tuple(mismatches),
-        responsible_owner=_RESPONSIBLE_OWNER,
+        responsible_owner=RESPONSIBLE_OWNER,
         reconsideration_condition="admit a fresh baseline and resubmit",
     )
 
@@ -426,6 +427,7 @@ def reconfirm_modelo_edit_baseline(
 def writable_scalar_entry(
     baseline: ModeloEditBaselineV1, casilla_id: str
 ) -> ModeloEditWritableScalarSurfaceEntryV1 | None:
+    """Return the baseline's writable-scalar surface entry for ``casilla_id``, or ``None``."""
     for entry in baseline.permitted_surface:
         if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1) and entry.casilla_id == casilla_id:
             return entry
@@ -503,7 +505,7 @@ def _disallowed_intent_refusal(address: ModeloEditAddressV1) -> ModeloEditRefusa
     return ModeloEditDomainRefusalV1(
         code=ModeloEditRefusalCode.DISALLOWED_INTENT,
         address=address,
-        responsible_owner=_RESPONSIBLE_OWNER,
+        responsible_owner=RESPONSIBLE_OWNER,
         reconsideration_condition=(
             "address only a casilla, binding override, detail row, or row group the baseline's permitted surface admits"
         ),
@@ -560,7 +562,7 @@ def parse_modelo_edit_value(request: ModeloEditParseRequestV1) -> ModeloEditPars
             refusal=ModeloEditDomainRefusalV1(
                 code=ModeloEditRefusalCode.PARSE_FAILED,
                 address=request.address,
-                responsible_owner=_RESPONSIBLE_OWNER,
+                responsible_owner=RESPONSIBLE_OWNER,
                 reconsideration_condition="resupply a value conforming to the casilla's declared data type",
             )
         )
@@ -570,6 +572,7 @@ def parse_modelo_edit_value(request: ModeloEditParseRequestV1) -> ModeloEditPars
 def validate_scalar_intent(
     baseline: ModeloEditBaselineV1, address: ModeloEditScalarAddressV1, kind: ModeloEditScalarIntentKind
 ) -> ModeloEditRefusalV1 | None:
+    """Return a refusal when ``kind`` is not a permitted intent for the addressed casilla, else ``None``."""
     entry = writable_scalar_entry(baseline, address.casilla_id)
     if entry is None or kind not in entry.allowed_intents:
         return _disallowed_intent_refusal(address)

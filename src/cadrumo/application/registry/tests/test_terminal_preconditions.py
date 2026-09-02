@@ -15,7 +15,7 @@ from ....core.config import override_settings
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.manuals.schema import ManualPart
-from ..conformance import _AxisIndex
+from ....tests.registry_conformance import _AxisIndex
 from ..corpus import (
     RegistryCitationShowCommand,
     RegistryManualId,
@@ -35,10 +35,13 @@ from ..filed_state import _verified_required_casilla_ids
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _REGISTRY_ROOT = Path(__file__).resolve().parents[1]
+# The conformance projection is test substrate and lives in the shared
+# test-support package, which is excluded from the wheel.
+_TEST_SUPPORT_ROOT = Path(__file__).resolve().parents[3] / "tests"
 _REFUSAL_SOURCES = (
     _REGISTRY_ROOT / "diff.py",
     _REGISTRY_ROOT / "filed_state.py",
-    _REGISTRY_ROOT / "conformance.py",
+    _TEST_SUPPORT_ROOT / "registry_conformance.py",
     _REGISTRY_ROOT / "corpus.py",
     _REGISTRY_ROOT / "_corpus_manual_helpers.py",
 )
@@ -363,7 +366,7 @@ def test_all_twelve_registry_refusals_delegate_to_the_canonical_no_action_helper
             "NoRecoveryOutcome.OPERATOR_DECISION",
         ),
         (
-            "conformance.py",
+            "registry_conformance.py",
             "require_classification_row",
             "RegistryPreconditionCondition.CONFORMANCE_CLASSIFICATION_ROW_PRESENT",
             "{'modelo': str(modelo_id), 'classification_row_present': False}",
@@ -371,7 +374,7 @@ def test_all_twelve_registry_refusals_delegate_to_the_canonical_no_action_helper
             "NoRecoveryOutcome.SAFETY",
         ),
         (
-            "conformance.py",
+            "registry_conformance.py",
             "require_grounding_row",
             "RegistryPreconditionCondition.CONFORMANCE_GROUNDING_ROW_PRESENT",
             "{'modelo': str(modelo_id), 'revision_id': str(revision_id), 'grounding_row_present': False}",

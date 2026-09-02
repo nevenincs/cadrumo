@@ -3604,6 +3604,7 @@ cli:
     language_help: Language for output and help text (en, es, ca, hu).
     profile_help: Name of the active profile.
     quiet_help: Show errors only.
+    self_test_help: Start the full-screen interface without a terminal and exit, to prove it runs.
     tui_help: Request the full-screen interface for the selected command.
     verbose_help: Enable detailed output.
     version_help: Show the version number and exit.

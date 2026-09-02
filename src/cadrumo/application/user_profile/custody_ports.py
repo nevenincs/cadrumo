@@ -14,7 +14,7 @@ from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, NoReturn, Protocol, Self, cast, runtime_checkable
+from typing import TYPE_CHECKING, NoReturn, Protocol, Self, cast, runtime_checkable
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 from ...core.classification.policies import SensitivityClass
 from ...core.errors.hierarchy import CoreError
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.profile_publication import ProfilePublicationKindValue
 from ...core.secure_object_write import SecureObjectWrite
 from ...core.storage_taxonomy import StorageCategory, StorageCustodyProfile
 from ...core.storage_taxonomy_locations import storage_location
@@ -47,7 +48,7 @@ class ProfileCustodyCommitPort(Protocol):
         ...
 
     @property
-    def publication_kind(self) -> Literal["enroll", "restore"]:
+    def publication_kind(self) -> ProfilePublicationKindValue:
         """Whether this capsule was enrolled locally or restored."""
         ...
 
@@ -1054,7 +1055,7 @@ class ProfileCustodyPort(Protocol):
         *,
         profile_id: UUID,
         transaction_id: UUID,
-        publication_kind: Literal["enroll", "restore"],
+        publication_kind: ProfilePublicationKindValue,
         password_envelope: ProfileCustodyEnvelopePort,
         sentinel: ProfileCustodySentinelPort,
         data_files: Mapping[str, bytes],

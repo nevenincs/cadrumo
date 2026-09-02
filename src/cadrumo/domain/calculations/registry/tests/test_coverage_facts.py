@@ -16,8 +16,8 @@ from __future__ import annotations
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
+from .....tests.registry_coverage import build_model_law_coverage_ledger
 from ..authority import bundled_authority
-from ..coverage import build_model_law_coverage_ledger
 from ..errors import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

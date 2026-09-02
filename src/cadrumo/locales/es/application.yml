@@ -408,38 +408,10 @@ application:
         unsupported_filing_year: El ejercicio {filing_year} no está declarado como
           soportado. El registro declara {supported_filing_years}. Admita el ejercicio
           en {declaration} tras fundamentar sus requisitos.
-    complementaria:
-      errors:
-        justificante_csv_absent: La complementaria requiere el CSV del justificante
-          de la declaración original.
-        no_changed_casilla: La complementaria requiere al menos una casilla modificada.
-        original_draft_addressing_mismatch: La declaración original y el borrador
-          guardado declaran distinto modelo o periodo.
-        original_draft_snapshot_stale: El borrador original no se construyó con el
-          snapshot de registro activo.
-        original_submission_csv_blank: La declaración original debe llevar un CSV
-          de justificante oficial.
-        original_submission_fields_missing: A la declaración original le faltan campos
-          obligatorios.
-        original_submission_shape_invalid: La declaración original no corresponde
-          a la forma de registro esperada.
     errors:
-      amendment_not_persisted: no hay ninguna rectificación persistida con id %{amendment_id}
-      complementaria_taxpayer_identity_absent: 'la complementaria requiere una identidad
-        fiscal declarada: el profile_tax_id de la declaración presentada es %{submitted_tax_id}
-        mientras que el borrador original declara %{draft_tax_id}'
-      complementaria_taxpayer_identity_malformed: 'la complementaria no puede confirmar
-        un único contribuyente: el profile_tax_id %{submitted_tax_id} de la declaración
-        presentada no es un NIF, NIE o CIF válido, y el borrador original declara
-        %{draft_tax_id}'
-      complementaria_taxpayer_identity_mismatch: 'la identidad fiscal de la complementaria
-        diverge: la declaración presentada declara profile_tax_id %{submitted_tax_id}
-        y el borrador original declara %{draft_tax_id}; ambos deben nombrar al mismo
-        contribuyente'
       import_failed: 'no se puede importar el modelo %{modelo}: %{detail}'
       modelo_not_in_registry: el modelo %{modelo} no está presente en el registro
         de cálculo
-      original_draft_not_persisted: el borrador original %{draft_id} no está persistido
       period_ejercicio_mismatch: 'modelo %{modelo}: no se puede canonicalizar el periodo
         %{period} para el ejercicio %{ejercicio}'
       unexpected_ejercicio: 'modelo %{modelo}: ejercicio inesperado %{ejercicio};

@@ -73,6 +73,7 @@ class _WorkbookSheetRows:
 
 
 def extract_sheet(worksheet: Worksheet, corrections: CorrectionIndex = EMPTY_CORRECTIONS) -> RecordDesignSheet:
+    """Extract a record-design sheet from an openpyxl ``.xlsx`` worksheet."""
     header, header_correction = find_header(worksheet, corrections.header_corrections)
     return _extract_sheet_rows(
         worksheet.title,
@@ -87,6 +88,7 @@ def extract_sheet(worksheet: Worksheet, corrections: CorrectionIndex = EMPTY_COR
 
 
 def extract_xls_sheet(worksheet: XlrdSheet, corrections: CorrectionIndex = EMPTY_CORRECTIONS) -> RecordDesignSheet:
+    """Extract a record-design sheet from a legacy xlrd ``.xls`` worksheet."""
     header, header_correction = find_xls_header(worksheet, corrections.header_corrections)
     return _extract_sheet_rows(
         worksheet.name,

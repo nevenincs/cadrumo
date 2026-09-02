@@ -67,11 +67,20 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
         invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
         prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
     ) -> None:
+        """Initialize the resolver with the repositories it aggregates expenses from."""
         self._transaction_repository = transaction_repository
         self._invoice_repository = invoice_repository
         self._prorrata_register_repository = prorrata_register_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve the ledger Renta gastos estimación directa aggregation binding for ``context``.
+
+        Returns:
+            An empty resolution when the revision declares no such binding
+            source, a degraded resolution on repository failure, or the
+            aggregated :class:`~._source_mesh.CalculationSourceResolution`
+            with its binding values, diagnostics, and provenance.
+        """
         if not revision_has_binding_source(context.revision, "ledger_renta_gastos_estimacion_directa_aggregation"):
             return empty_source_resolution(self.resolver_id, self.owned_sources)
 

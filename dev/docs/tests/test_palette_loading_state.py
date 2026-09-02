@@ -39,6 +39,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from functools import partial
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -78,11 +79,13 @@ _OBSERVE_BUSY = """
 class _SlowPagefindHandler(http.server.SimpleHTTPRequestHandler):
     """Serve the real tree, but make the Pagefind module import slow."""
 
+    @override
     def do_GET(self) -> None:  # http.server's casing
         if self.path.split("?")[0].endswith("/pagefind/pagefind.js"):
             time.sleep(_PAGEFIND_DELAY_S)
         super().do_GET()
 
+    @override
     def log_message(self, *args: object) -> None:
         """Keep the test output clean."""
 

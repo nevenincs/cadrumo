@@ -45,7 +45,7 @@ from pathlib import Path
 from typing import Final
 
 from .._paths import UTF_8
-from ..docs.download_matrix import ChannelTier, DownloadDescriptor, claimed_channels, load_descriptor
+from ..docs.download_matrix import DownloadDescriptor, claimed_channels, load_descriptor
 
 _UTF_8: Final[str] = UTF_8
 
@@ -57,10 +57,6 @@ SOURCE_INPUT_BY_CHANNEL: Final[Mapping[str, str]] = {
     "python": "packaging_run_id",
     "scoop": "scoop_run_id",
     "homebrew": "homebrew_run_id",
-    # Many-to-one is intended: the two host-extension channels are proven by one
-    # operator-uploaded evidence release, not by a workflow run.
-    "claude-plugin": "claude_evidence_release",
-    "mcpb": "claude_evidence_release",
 }
 
 #: The input that carries the sealed cohort itself. It is unconditional: it is
@@ -82,10 +78,6 @@ COHORT_INPUT: Final[str] = "packaging_run_id"
 LANE_WORKFLOW_BY_CHANNEL: Final[Mapping[str, str]] = {
     "scoop": ".github/workflows/packaging-scoop.yml",
     "homebrew": ".github/workflows/packaging-homebrew.yml",
-    # One dispatch proves both: packaging-claude.yml exercises the plugin and
-    # the MCPB install in a single run.
-    "claude-plugin": ".github/workflows/packaging-claude.yml",
-    "mcpb": ".github/workflows/packaging-claude.yml",
 }
 
 
@@ -248,11 +240,6 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Print the acquisition workflow paths the claimed channels require, one per line.",
     )
-    parser.add_argument(
-        "--check-host-extension-precondition",
-        action="store_true",
-        help="Refuse when a claimed host-extension channel has no operator-minted claude evidence release.",
-    )
     args = parser.parse_args(argv)
 
     descriptor = load_descriptor()
@@ -266,11 +253,20 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{workflow_path}	{lane_output_name(workflow_path)}")
         return 0
 
-    if args.check_host_extension_precondition:
-        # Deliberately reads the evidence-release tag from the environment
-        # rather than a flag: the orchestrator has no such dispatch input, and
-        # under today's descriptor no host-extension channel is claimed - all
-        # five sit at `public_launch`, and `claimed_channels` counts a channel
-        # only at `available` (or the registry tier) - so this passes
-        # trivially. The refusal exists so that flipping one to available
-        # cannot silently publish it unevidenced.
+    provided = {name: os.environ.get(name.upper(), "") for name in SOURCE_INPUT_BY_CHANNEL.values()}
+    provided[COHORT_INPUT] = os.environ.get(COHORT_INPUT.upper(), "")
+
+    if lines := refusals(descriptor, provided):
+        for line in lines:
+            print(line, file=sys.stderr)
+        return 1
+
+    demanded = demanded_inputs(descriptor)
+    print(f"required by the claimed channels: {list(demanded)}")
+    if args.github_output is not None:
+        _emit_outputs(descriptor, args.github_output)
+    return 0
+
+
+if __name__ == "__main__":  # pragma: no cover - CLI entry
+    raise SystemExit(main())

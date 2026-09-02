@@ -42,6 +42,7 @@ class ProfileCustodyPasswordReadOperation:
 
 
 def is_real_directory(path: Path) -> bool:
+    """Return whether ``path`` is a real directory, never a symlink or reparse point."""
     try:
         metadata = path.lstat()
     except OSError:
@@ -52,6 +53,7 @@ def is_real_directory(path: Path) -> bool:
 
 
 def ensure_real_directory(path: Path) -> None:
+    """Create ``path`` as a real directory, refusing an existing link or non-directory."""
     if os.path.lexists(path) and not is_real_directory(path):
         raise ProfileCustodyRecordError("profile capsule root must not be a link or non-directory")
     try:
@@ -209,6 +211,7 @@ def posix_directory_fd(path: Path) -> Generator[int]:
 
 
 def posix_open_child_directory(parent_fd: int, name: str) -> int:
+    """Open ``name`` below ``parent_fd`` without following links, or raise."""
     try:
         return os.open(
             name,
@@ -220,6 +223,7 @@ def posix_open_child_directory(parent_fd: int, name: str) -> int:
 
 
 def posix_mkdir_child_directory(parent_fd: int, name: str) -> int:
+    """Create directory ``name`` below ``parent_fd`` and return its open descriptor."""
     try:
         os.mkdir(name, mode=0o700, dir_fd=parent_fd)
     except OSError as exc:
@@ -228,6 +232,7 @@ def posix_mkdir_child_directory(parent_fd: int, name: str) -> int:
 
 
 def is_reparse_metadata(metadata: os.stat_result) -> bool:
+    """Return whether ``metadata`` describes a reparse-point entry."""
     return bool(getattr(metadata, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0))
 
 

@@ -66,9 +66,9 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
-from .schema_base import RegistrySourceKind
 from ._source_file_text import read_source_file_text
 from ._validate_evidence import EvidenceValidator
+from .schema_base import RegistrySourceKind
 from .schema_deadlines import DeadlineWindowDefinition
 from .schema_references import SourceReference
 

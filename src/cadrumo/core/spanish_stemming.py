@@ -27,7 +27,9 @@ _WORD_RE = re.compile(r"\w+", re.UNICODE)
 class SpanishStemmer(Protocol):
     """The narrow Snowball contract the application's lexical indexes consume."""
 
-    def stemWords(self, words: list[str]) -> list[str]: ...  # noqa: N802 - third-party API
+    def stemWords(self, words: list[str]) -> list[str]:  # noqa: N802 - third-party API
+        """Return the Snowball stem of each word in ``words``, in order."""
+        ...
 
 
 def spanish_stemmer() -> SpanishStemmer:

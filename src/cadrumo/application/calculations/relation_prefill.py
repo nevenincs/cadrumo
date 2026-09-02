@@ -101,7 +101,7 @@ from ..aggregation import (
     CalculationSourceResolution,
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
-from ..storage.calc_sheets.records import RelationValue, RelationValues
+from ..storage.calc_sheets.records import RelationValue, RelationValues, SheetRelationProvenance
 from ..user_profile.projections import profile_path_values_for_bucket as _profile_path_values_for_bucket
 from .m111_no_retenciones import (
     is_m111_no_retenciones_period,
@@ -116,7 +116,6 @@ from .revision_carry_gate import revision_carry_outcome
 if TYPE_CHECKING:
     from ...domain.deadlines.models import EntityType
 
-_LOCAL_FILING_PROVENANCE: Final = "local_filing"
 STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 _ECONOMIC_ACTIVITY_CATEGORY: Final = "actividad_economica"
 _DIRECT_ESTIMATION_REGIMES: Final = frozenset({"directa_normal", "directa_simplificada"})
@@ -611,7 +610,7 @@ def resolve_relations_from_local_store(
                     RelationValue(
                         relation=relation.id,
                         value=Decimal("0"),
-                        provenance="operator_manual",
+                        provenance=SheetRelationProvenance.OPERATOR_MANUAL,
                         source_filing_year=target_year,
                         source_periods=source_periods,
                         **grounding,
@@ -628,7 +627,7 @@ def resolve_relations_from_local_store(
                     RelationValue(
                         relation=relation.id,
                         value=Decimal("0"),
-                        provenance="operator_manual",
+                        provenance=SheetRelationProvenance.OPERATOR_MANUAL,
                         source_filing_year=target_year,
                         source_periods=source_periods,
                         **grounding,
@@ -646,7 +645,7 @@ def resolve_relations_from_local_store(
             RelationValue(
                 relation=relation.id,
                 value=Decimal(resolved),
-                provenance=_LOCAL_FILING_PROVENANCE,
+                provenance=SheetRelationProvenance.LOCAL_FILING,
                 source_filing_year=target_year,
                 source_periods=source_periods,
                 **grounding,
@@ -1072,11 +1071,19 @@ class RelationPrefillSourceResolver:
         registry_snapshot: RegistrySnapshot | None = None,
         captured_at: datetime | None = None,
     ) -> None:
+        """Initialize the resolver with the optional repository, snapshot, and capture time."""
         self._repository = repository
         self._registry_snapshot = registry_snapshot
         self._captured_at = captured_at
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve ``relation_prefill`` values from the local store for ``context``.
+
+        Returns:
+            The resolved :class:`~application.aggregation.CalculationSourceResolution`
+            carrying relation values, binding values, diagnostics for
+            unresolved formula relations, and provenance for local filings.
+        """
         snapshot = self._registry_snapshot
         if snapshot is None:
             snapshot = bundled_authority().snapshot(

@@ -55,6 +55,7 @@ from pydantic import BaseModel
 
 from .....core.config import load_settings
 from .....core.decimal.coercion import coerce_decimal
+from .....core.decimal.grammar import DecimalSeparatorValue
 from .....core.errors.hierarchy import CadrumoError, CoreValidationError
 from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.logging import get_logger
@@ -493,7 +494,7 @@ _THOUSANDS_GROUP_WIDTH: Final[int] = 3
 def parse_amount_value(
     value: object,
     *,
-    decimal_separator: Literal[",", "."] | None = None,
+    decimal_separator: DecimalSeparatorValue | None = None,
 ) -> Decimal:
     """Parse bank-export numeric text into ``Decimal`` without float coercion.
 
@@ -602,7 +603,7 @@ def _sanitise_amount_text(raw: str) -> tuple[str, bool]:
 def _resolve_decimal_separator(
     sanitized: str,
     *,
-    override: Literal[",", "."] | None,
+    override: DecimalSeparatorValue | None,
 ) -> str:
     """Resolve the decimal separator: explicit override, then inference from the sanitised text.
 

@@ -15,7 +15,20 @@ from .errors import ModeloValidationError
 
 
 class CalculationRevisionAmendmentKind(StrEnum):
-    """Closed catalogue of amendment kinds a calculation revision may carry."""
+    """Closed catalogue of amendment kinds a calculation revision may carry.
+
+    Each member names the instrument it files, so the article travels with the
+    kind rather than only with the regime that admits it:
+
+    * ``COMPLEMENTARIA`` -- LGT art. 122.2 (``ley-58-2003:art-122``), an
+      additional declaration correcting an already-presented one upward.
+    * ``SUSTITUTIVA`` -- LGT art. 122.1 (``ley-58-2003:art-122``), a material
+      restatement that replaces an already-presented filing in full. Not
+      time-boxed by the rectificativa reform, which is why it is admitted in
+      both regimes below.
+    * ``RECTIFICATIVA`` -- LGT art. 120.4, the unified ordinary-correction
+      mechanism each modelo adopts from its own effective period.
+    """
 
     COMPLEMENTARIA = "complementaria"
     SUSTITUTIVA = "sustitutiva"

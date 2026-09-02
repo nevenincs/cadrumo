@@ -22,6 +22,7 @@ from .edit_models import (
     ModeloMutationCapabilityRequestV1,
     ModeloMutationCapabilityRowV1,
 )
+from .edit_services import RESPONSIBLE_OWNER as _RESPONSIBLE_OWNER
 from .work_addressing import (
     ModeloWorkAddressNotFoundError,
     ModeloWorkUnitNotFoundError,
@@ -30,8 +31,6 @@ from .work_addressing import (
     work_address_for_modelo_target,
 )
 from .workspace_models import ModeloWorkspaceCapabilityDisposition
-
-_RESPONSIBLE_OWNER = "modelo.edit"
 
 
 def project_modelo_edit_mutation_capability(

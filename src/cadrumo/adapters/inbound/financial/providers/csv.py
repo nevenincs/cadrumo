@@ -22,10 +22,11 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import Literal, override
+from typing import override
 
 from pydantic import BaseModel, Field
 
+from .....core.decimal.grammar import DecimalSeparator, DecimalSeparatorValue
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CoreValidationError
 from .....core.logging import get_logger
@@ -106,7 +107,7 @@ class CsvBankLayout(BaseModel):
     bank_name: str = Field(min_length=1)
     columns: CsvColumnMap
     day_first_dates: bool = True
-    decimal_separator: Literal[",", "."] = ","
+    decimal_separator: DecimalSeparatorValue = DecimalSeparator.COMMA
 
 
 BBVA_LAYOUT = CsvBankLayout(
@@ -157,7 +158,7 @@ REVOLUT_LAYOUT = CsvBankLayout(
         external_id=("id", "reference"),
     ),
     day_first_dates=False,
-    decimal_separator=".",
+    decimal_separator=DecimalSeparator.PERIOD,
 )
 N26_LAYOUT = CsvBankLayout(
     bank_name="N26",
@@ -171,7 +172,7 @@ N26_LAYOUT = CsvBankLayout(
         external_id=("id", "transaction id", "reference id"),
     ),
     day_first_dates=False,
-    decimal_separator=".",
+    decimal_separator=DecimalSeparator.PERIOD,
 )
 CSV_LAYOUTS: tuple[CsvBankLayout, ...] = (
     N26_LAYOUT,

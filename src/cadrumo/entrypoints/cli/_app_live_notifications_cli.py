@@ -72,10 +72,6 @@ if TYPE_CHECKING:
     from ...domain.notifications.sancion import SancionLiquidacion
 
 
-def _bucket_id() -> str:
-    return active_bucket_id_or_refuse()
-
-
 def _notification_document_service(settings: Settings) -> NotificationDocumentService:
     """Compose the notification-document use case with its real adapters."""
 
@@ -115,7 +111,7 @@ def notifications_pull(ctx: typer.Context) -> None:
     :class:`PersistedNotificationsSnapshot`, and emitted through
     :class:`NotificationsCaptureResult`.
     """
-    bucket_id = _bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     emit_live_auth_preflight()
     persisted = asyncio.run(capture_notifications(bucket_id=bucket_id))
     result = NotificationsCaptureResult(
@@ -143,7 +139,7 @@ def notifications_list(ctx: typer.Context) -> None:
     bucket and emits :class:`NotificationsListResult` summaries rather than
     expanding notification rows.
     """
-    bucket_id = _bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     rows = NotificationsService().list_snapshots(bucket_id=bucket_id)
     result = NotificationsListResult(
         bucket_id=bucket_id,
@@ -173,7 +169,7 @@ def notifications_show(
     projected as :class:`NotificationsViewResult`. This local view does not
     acknowledge, submit, or mark notifications remotely.
     """
-    bucket_id = _bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     record = NotificationsService().show(bucket_id=bucket_id, snapshot_id=snapshot_id)
     result = NotificationsViewResult(
         bucket_id=bucket_id,
@@ -219,7 +215,7 @@ def notifications_latest(ctx: typer.Context) -> None:
     :class:`NotificationsLatestResult` with ``snapshot_id=None`` so automation
     can distinguish no local capture from a live-read failure.
     """
-    bucket_id = _bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     record = NotificationsService().latest(bucket_id=bucket_id)
     if record is None:
         empty = NotificationsLatestResult(bucket_id=bucket_id, snapshot_id=None)
@@ -422,7 +418,7 @@ def notifications_document_pull(
     caller supplied. A notification AEAT does not already report as read is
     refused before any request crosses the wire.
     """
-    bucket_id = _bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     emit_live_auth_preflight()
     service = _notification_document_service(load_settings())
     custody = asyncio.run(
@@ -465,7 +461,7 @@ def notifications_document_view(
     reading come from the encrypted secure-object store, so this verb cannot be
     the act that serves a notification. It runs with no AEAT session at all.
     """
-    bucket_id = _bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     record = _notification_document_service(load_settings()).show(
         bucket_id=bucket_id,
         certificado_id=certificado_id,
@@ -501,7 +497,7 @@ def _history_notice(*, count: int) -> Notice:
 
 def notifications_document_history(ctx: typer.Context) -> None:
     """List parsed documents in encrypted custody without asserting a balance."""
-    bucket_id = _bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     records = tuple(
         record
         for record in _notification_document_service(load_settings()).list_documents(bucket_id=bucket_id)

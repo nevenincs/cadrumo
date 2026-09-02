@@ -32,11 +32,11 @@ from ...core.renta_declaracion_type import RentaDeclaracionType
 from ...domain.contribuyente.renta_codes import SituacionFamiliar
 from ..flows.definition import FlowDefinition, FlowSection
 from ..flows.validators import ValidationVerdict, register_cross_field_validator
+from .catalogue import FAMILIA_SECTION_ID as _FAMILIA_SECTION_ID
 
 SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID = "setup-familia-conjunta-unidad-familiar"
 """Registered id of the familia section-exit Art. 82.1.2ª validator."""
 
-_FAMILIA_SECTION_ID = "familia"
 
 # Setup-flow page ids carrying the three answers the Art. 82.1.2ª rule reads.
 # These page ids are the same stable catalogue tokens the visibility

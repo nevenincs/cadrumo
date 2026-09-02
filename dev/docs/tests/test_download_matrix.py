@@ -20,14 +20,12 @@ from ...packaging.cohort_manifest import ArtifactKind
 from ..download_matrix import (
     _ZONE_BEGIN,
     _ZONE_END,
-    ChannelTier,
     DownloadDescriptor,
     build_download_latest,
     download_page_path,
     load_descriptor,
     main,
     render_page,
-    render_zone,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -72,12 +70,10 @@ def test_runtime_wheelhouse_belongs_to_the_base_python_channel() -> None:
     descriptor = load_descriptor()
     owners = [channel.id for channel in descriptor.channel if ArtifactKind.PYTHON_WHEELHOUSE in channel.artifact_kinds]
     assert owners == ["python"]
-    # The claim is about WHERE the wheelhouse lives, not about whether the
-    # product extends a host application at all: both host-extension channels
-    # ship, so the wheelhouse earns its home by its owner being the language
-    # registry rather than one of them.
+    # The wheelhouse belongs to the language registry, which is where the
+    # product's dependency resolution happens.
     owner = next(channel for channel in descriptor.channel if channel.id == "python")
-    assert owner.tier is ChannelTier.REGISTRY
+    assert owner.registry == "PyPI listing"
 
 
 def test_generated_zone_present_in_download_page() -> None:
@@ -107,22 +103,6 @@ def test_check_fails_on_mutated_zone() -> None:
     # check would flag the mutation as drift.
     restored = render_page(descriptor, mutated)
     assert restored == fresh
-
-
-def test_zone_withholds_literal_commands_for_gated_channels() -> None:
-    """Gated (public_launch) channels never emit a bare install command.
-
-    This is the guard that keeps the page from advertising a channel ahead of
-    its passing distribution evidence (see test_distribution_claims).
-    """
-    descriptor = load_descriptor()
-    zone = render_zone(descriptor)
-    for channel in descriptor.channel:
-        if channel.availability.value == "public_launch":
-            for command in channel.install_commands:
-                assert command not in zone, (
-                    f"gated channel {channel.id!r} leaked literal command {command!r} into the generated zone"
-                )
 
 
 def _write_cohort_manifest(directory: Path) -> Path:

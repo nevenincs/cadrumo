@@ -202,7 +202,6 @@ errors:
     error_domain_submission_preflight: A tervezet nem ment át a helyi benyújtás előzetes
       ellenőrzésén.
     error_domain_validation: Egy domain azonosító vagy modell érvénytelen.
-    error_filing_amendment: Módosítással kapcsolatos benyújtási hiba történt.
     error_filing_application: Hiba történt a benyújtási alkalmazási rétegben.
     error_filing_builder: A benyújtási építő kiválasztása vagy végrehajtása meghiúsult.
     error_filing_computation: Az építő nem tudta kiértékelni egy képlet-mezőt.
@@ -385,8 +384,6 @@ errors:
     fail_cli_command_group_unavailable: 'A(z) ''%{group}'' parancscsoport nem tölthető
       be: a szükséges ''%{module}'' modul hiányzik. A telepítés hiányos.'
     fail_declaracion_parse: A bevallás fájlját nem sikerült elemezni.
-    fail_export: Az exportálás meghiúsult.
-    fail_export_format: A kért exportformátum nem támogatott.
     fail_filing_import: A bevallás importálása meghiúsult.
     fail_financial_attachments_attachment_persistence: A csatolmány-katalógust nem
       sikerült menteni vagy betölteni.
@@ -536,8 +533,6 @@ errors:
       konfigurálva.
     integrity_corpus_anchor_resolution: Egy csomagolt korpuszhorgony nem pontosan
       egy kinyert egységre oldódik fel.
-    integrity_filing_amendment_validation: A módosítás sérti a jogi vagy strukturális
-      invariánst.
     integrity_filing_validation: A benyújtás-érvényesítés blokkoló eredményt talált.
     integrity_financial_attachments_attachment_validation: A csatolmány nem ment át
       az érvényesítésen. Ellenőrizze a fájlt, és csatolja újra.
@@ -935,7 +930,6 @@ errors:
       meg ennek az értesítésnek.
     refused_live_notifications_snapshot_not_found: Nem létezik értesítési pillanatkép
       a megadott azonosítóval.
-    refused_live_portal_not_found: Nem létezik AEAT portál a megadott azonosítóval.
     refused_live_verify_observation_not_found: Nem létezik ellenőrzési megfigyelés
       a megadott azonosítóval.
     refused_llm_busy: Ez a gép már a beállított maximális számú helyi nyelvi modell

@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from types import MappingProxyType
-from typing import Literal, Protocol
+from typing import Protocol
 
 from pydantic import Field, model_validator
 
@@ -29,7 +29,7 @@ from .schema import (
     ModeloRevision,
     SchemaFamilyDispositionDeclaration,
 )
-from .schema_base import RegistrySourceKind, CorpusTierField, RegistryModel
+from .schema_base import CorpusTierField, RegistryModel, RegistrySourceKind
 from .schema_exports import ProjectionEndpointDeclaration
 from .schema_formula import ParameterDefinition
 from .schema_references import SourceReference, source_window_applies_across

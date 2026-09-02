@@ -7,11 +7,10 @@ generated output envelopes.
 
 from __future__ import annotations
 
-from enum import StrEnum
-
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
+from enum import StrEnum
 from typing import Annotated, Final, Literal
 
 from pydantic import (
@@ -159,7 +158,6 @@ from .schema_base import (
     MANIFEST_ONLY,
     SCHEMA_FAMILY,
     CalculationClass,
-    coerce_enum_member,
     CalculationClassField,
     LegalRefs,
     ModeloFilingCapability,
@@ -169,6 +167,7 @@ from .schema_base import (
     SensitivityClassField,
     SourceCitation,
     SourceRefs,
+    coerce_enum_member,
     collection_shaped_fields,
     governance_stamp_fields,
     manifest_only_fields,

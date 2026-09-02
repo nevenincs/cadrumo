@@ -518,16 +518,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.export.errors.AeatExportFormatError",
-        ErrorCode(
-            code="FAIL_EXPORT_FORMAT",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_export_format",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.adapters.outbound.aeat.auth.errors.AuthValidationError",
         ErrorCode(
             code="AUTH_AUTH_VALIDATION",

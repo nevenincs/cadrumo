@@ -248,16 +248,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.portals.service.PortalNotFoundError",
-        ErrorCode(
-            code="REFUSED_LIVE_PORTAL_NOT_FOUND",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_live_portal_not_found",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.domain.justificante.errors.PdfModeloImportError",
         ErrorCode(
             code="ERROR_PDF_IMPORT_PDF_MODELO_IMPORT",
@@ -303,26 +293,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_DEADLINES_MISSING_WINDOWS",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_deadlines_missing_windows",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.filing.errors.ModeloAmendmentError",
-        ErrorCode(
-            code="ERROR_FILING_AMENDMENT",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_filing_amendment",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.filing.errors.ModeloAmendmentValidationError",
-        ErrorCode(
-            code="INTEGRITY_FILING_AMENDMENT_VALIDATION",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.integrity_filing_amendment_validation",
             retryable=False,
             runbook_id=None,
         ),

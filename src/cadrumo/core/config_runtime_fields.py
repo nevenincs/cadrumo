@@ -7,6 +7,8 @@ from .model_catalogue import ModelRole, ModelRuntime, default_model_runtime_id
 
 
 class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
+    """LLM provider endpoints and runtime tuning fields layered on top of timeouts."""
+
     cadrumo_llm_openai_chat_completions_url: str = Field(
         default="https://api.openai.com/v1/chat/completions",
         description="OpenAI Chat Completions endpoint; override for OpenAI-compatible proxies",

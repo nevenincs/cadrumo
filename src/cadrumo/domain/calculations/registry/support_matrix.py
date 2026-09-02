@@ -49,7 +49,7 @@ from .authority import ValidatedRegistryAuthority
 from .ids import ModeloId, RevisionId
 from .record_design_coverage import calculation_closure_casilla_ids
 from .schema import ModeloDefinition, ModeloRevision
-from .schema_base import CalculationClass, CalculationClassField, EvidenceTierField
+from .schema_base import CalculationClassField, EvidenceTierField
 from .schema_surfaces import CasillaContinuidadEvolutionDefinition
 
 __all__ = [

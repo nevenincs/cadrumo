@@ -55,6 +55,7 @@ class ModeloIvaWalletSeedError(ModeloError):
         context: dict[str, object] | None = None,
         precondition_failure: ModeloPreconditionFailure | None = None,
     ) -> None:
+        """Initialize the error with its translated message and optional precondition failure."""
         super().__init__(
             translated_message,
             translated_message=translated_message,

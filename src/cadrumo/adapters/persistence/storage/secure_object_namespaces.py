@@ -1062,16 +1062,6 @@ FILING_EXPORT_REPLAY_PROOFS_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
-FILING_AMENDMENTS_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="filing_amendments",
-    namespace="cadrumo.domain.filing.amendments",
-    owner="cadrumo.domain.filing",
-    sensitivity=SensitivityClass.AUDIT,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="{amendment_id}",
-    scope=StorageNamespaceScope.PROFILE_LOCAL,
-    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
-)
 INVOICE_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="invoice_catalogue",
     namespace="cadrumo.domain.invoices",
@@ -1189,7 +1179,6 @@ DOMAIN_NAMESPACE_DEFINITIONS = (
     JUSTIFICANTE_METADATA_NAMESPACE,
     FILING_DRAFTS_NAMESPACE,
     FILING_EXPORT_REPLAY_PROOFS_NAMESPACE,
-    FILING_AMENDMENTS_NAMESPACE,
     INVOICE_CATALOGUE_NAMESPACE,
     TRANSACTION_CATALOGUE_NAMESPACE,
     USAGE_RATIO_PROFILE_NAMESPACE,
