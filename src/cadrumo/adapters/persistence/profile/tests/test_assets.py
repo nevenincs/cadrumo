@@ -94,6 +94,7 @@ def test_asset_persistence_is_encrypted_financial_secure_object(_runtime_profile
     path = repository.envelope_path
     db_bytes = read_db_at_rest_bytes(_runtime_profile.paths.database_file)
 
+    assert path.as_posix().endswith("cadrumo.persistence.profile.assets/assets-ledger.secure-object")
     assert not path.exists()
     assert b"LEAK-CANARY-NAS" not in db_bytes
     assert b'"nas"' not in db_bytes
