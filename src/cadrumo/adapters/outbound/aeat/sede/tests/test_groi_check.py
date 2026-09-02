@@ -31,12 +31,12 @@ from ......tests.groi_oracle import GROI_ORACLE_ID
 from .._adapter_utils import extract_marker_verdict
 from ..errors import SedeNavigationError
 from ..groi_check import (
+    _POSITIVE_MARKERS,
     DEFAULT_GROI_TIMEOUT_MS,
     READ_GUARD_POLICY,
     GroiNifVerdict,
     GroiResult,
     GroiSedeDriver,
-    _POSITIVE_MARKERS,
     _assert_query_browser_action,
     assert_groi_read_landing,
 )
