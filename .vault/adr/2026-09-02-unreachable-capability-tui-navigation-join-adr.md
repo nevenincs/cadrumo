@@ -16,118 +16,67 @@ related:
 
 ## Problem Statement
 
-Five finished TUI areas ship inside the wheel and no operator can open any of
-them. The reachability evidence and the per-module classification are in
-`2026-09-02-unreachable-capability-research`; what that grounding cannot settle
-is the decision the source itself defers. `src/cadrumo/entrypoints/tui/app.py:12`
-records that every area exposes a mountable screen and every cohort gate is
-green, and that the root mounts nothing because no navigation model exists.
-Mounting one area makes it the whole product; mounting several without a way to
-move between them offers destinations an operator cannot reach.
+The installed TUI has one reachable process but no product navigation model. The prior form of this decision assumed five host-neutral implementation areas could be listed unchanged. `2026-09-02-unreachable-capability-tui-root-composition-research` disproves that premise; `2026-09-02-unreachable-capability-tui-homepage-product-design-research` grounds the replacement product model. The decision must define the operator-facing workspaces, their composition boundary, Home's role, truthful availability, and the relationship between local data, Modelo calculation and AEAT evidence without creating frontend-owned business behavior.
 
-A second, smaller question sits in front of it. `aeat --tui [COMMAND_PATH]` is
-already the accepted routing request under `2026-08-11-tui-architecture-adr`
-and `2026-08-11-tui-interface-adr`, but a bare `aeat --tui` refused because the
-root node carried no TUI posture, while a separate `aeat-tui` console script
-started the session instead. Two spellings reached one surface and neither
-reached an area.
+The entrypoint question is already settled: bare `aeat --tui` starts the out-of-process TUI module, and the parallel `aeat-tui` spelling remains retired.
 
 ## Considerations
 
-- Every area is mountable and cohort-green; the blocker is design, not readiness
-  (`src/cadrumo/entrypoints/tui/app.py:12`).
-- The CLI may not import, load, re-export, annotate against, or register from
-  the TUI; out-of-process execution is the sanctioned reference
-  (`2026-08-11-tui-architecture-adr` D11).
-- `src/cadrumo/entrypoints/tui/__main__.py` already ships, so a module-execution
-  surface exists for a child process to target without new packaging.
-- The CLI contract forbids parallel spellings for one surface, which
-  `aeat-tui` beside `aeat --tui` was.
-- Installed packaging already assumes `aeat` and `cadrumo-mcp` as the entry
-  points (`dev/packaging/_installed_wheel_binding.py:152`).
-- The frontend-capability gate refuses a full-screen request on a console that
-  cannot host one, so the routing decision does not change non-terminal
-  behaviour.
+- Ledger facts are a principal input to Modelo calculations, not a secondary utility.
+- Profile facts identify the filer and affect applicability, while profile editing and credential journeys already have dedicated owners.
+- Declarations own Modelo calculation, revisions, verification, filing preparation and filing history.
+- AEAT retrieval and reconciliation span profile, declarations, notifications and evidence, so they cannot be hidden inside Profile.
+- Local state, AEAT-observed state, missing evidence, stale evidence and a proven zero or empty result remain distinct.
+- Existing application projections and screens must be composed, never reimplemented in Home.
+- The CLI-to-TUI boundary remains out of process; TUI must not import CLI-private evidence joins.
 
 ## Considered options
 
-- **Mount one area as the root.** Rejected: it makes that area the product and
-  strands the other four, which is the failure mode the root's own docstring
-  names.
-- **Command palette over an empty shell.** Rejected for now: most flexible and
-  it could reuse the command-search index, but it is the largest build and it
-  offers no visible inventory of what exists, which is what an operator meeting
-  the product first needs.
-- **Modelo as default with a key-bound switcher.** Rejected: fastest path to the
-  primary task, but it implies Modelo is the whole product and buries the
-  profile and credential journeys a new operator must complete first.
-- **Home screen listing the areas.** Chosen. Each area pushes as a screen and
-  returns home, which is exactly the shape the areas already expose.
-- **Keep `aeat-tui` alongside `aeat --tui`.** Rejected: two spellings for one
-  surface is the drift the CLI contract names, and no consumer required it.
+- **Five implementation areas.** Rejected: Profile, Secret, Flows, Operations and Modelo are internal asymmetries, not an operator information architecture, and several are not joinable roots.
+- **Profile, Ledger and Modelo as equal tabs.** Rejected: Profile is identity-bound and infrequently edited, while Ledger and Declarations are continuous workspaces; AEAT reconciliation also crosses all three.
+- **Modelo-first shell with hidden utilities.** Rejected: it understates Ledger's role as the input layer and obscures evidence reconciliation.
+- **Task launcher as Home.** Rejected as the default because it hides portfolio, blocker and deadline state; retained as the global command palette.
+- **Joined Home plus Ledger, Declarations and AEAT Sync workspaces, with Profile under account identity.** Chosen.
 
 ## Constraints
 
-- The join must not introduce a CLI-to-TUI import edge. The root request starts
-  the session as a child interpreter against the module-execution surface.
-- The home screen offers only areas whose cohort receipts are green. An area
-  that regresses is removed from the home screen rather than shown broken.
-- Locale keys for the home screen follow the catalogue contract: every supported
-  locale carries a real translation, not a copied source string.
-- The areas' files are owned by the in-flight TUI plans. This record decides the
-  shape; the mounting work is executed by the plan step that awaits it,
-  `W06.P13.S73` in `2026-08-11-tui-architecture-plan`, with the Modelo mount at
-  `W06.P13.S92` in `2026-08-11-tui-interface-plan`.
+- The public navigation vocabulary is Home, Ledger, Declarations and AEAT Sync. Profile is always reachable through the account identity control. Implementation terms such as Secret, Flow, Operation and WorkUnit are not navigation labels.
+- “Declaration” is the human-facing term for a local Modelo/year/period case. “Filing” is reserved for submission or filing evidence.
+- Home is local-only on initial load. AEAT network activity is always an explicit action with visible progress, result and failure state.
+- “Sync” means explicit pull, compare, reconcile and supported push or filing actions. It must not imply automatic two-way convergence or silently choose which side wins.
+- Every Home zone and destination admission carries an explicit state such as available, locked, stale, never captured or unavailable. Unavailable destinations remain understandable rather than masquerading as empty data.
+- Only the active destination body is mounted. Navigation uses routed screens, not a tab container retaining inactive workspaces.
+- Focus, active destination, blockers and statuses have textual non-colour cues. Focus restoration uses semantic identity rather than row position.
+- Profile, Ledger, Declarations and AEAT evidence remain behind their owning secure-storage, application-service and capability boundaries.
 
 ## Implementation
 
-Two layers, and only the first has landed.
+The root receives a frontend-neutral immutable Home projection, a refresh door and a closed destination catalogue. The projection composes account/session posture, application-owned next actions, resumable declarations, Ledger readiness and a short filing agenda. It preserves authority and freshness per zone and performs no calculation, classification or reconciliation itself. Registration, login, logout, password rotation, profile handover and session expiry rebuild the projection through the refresh door.
 
-The entrypoint layer is done. The root command node now declares an available
-TUI posture, so a bare `aeat --tui` passes the routing gate instead of refusing
-as unrouted. The root callback, on a bare invocation carrying the request,
-starts one session and exits with its status rather than falling through to the
-scripted landing surface. The session runs in a child interpreter addressed as
-`python -m` against the TUI package, which keeps the sanctioned out-of-process
-reference and names no TUI symbol from the CLI. The `aeat-tui` console script is
-removed from packaging, and its former proof file now asserts the retirement so
-a second spelling cannot return.
+Home is the joined operational overview. It leads with status and no more than three application-ranked next actions, then resumable declarations and a compact chronological filing agenda. It contains no editor, calculation, profile form or month-grid calendar. Global search and `Ctrl+P` route to owning destinations and actions.
 
-The navigation layer is the work this record authorises and does not perform.
-The root app composes a home screen listing the five areas: profile, secret,
-flows, operations and Modelo. Selecting one pushes that area's existing screen
-with the session's composed operation services supplied at mount time; leaving
-it returns to the home screen. The root keeps its present role as the holder of
-composed services and gains no knowledge of any area's internals beyond the
-screen it pushes. Nothing in the areas changes shape, because they already
-expose the screens this join needs.
+Ledger is a principal workspace for overview, entries, review, imports, classification, evidence and reconciliation. Its landing view prioritises data quality, unresolved classification and affected declarations over decorative financial totals.
+
+Declarations owns in-progress, needs-attention, ready, filed and history views; the full operational calendar belongs here. A declaration workspace owns Modelo inputs, results, provenance, verification, filing and revisions. Existing Modelo screens become genuinely host-neutral and dismiss back to their parent route before production admission.
+
+AEAT Sync owns explicit profile/census retrieval, filed-declaration observation, notifications, evidence comparison and reconciliation. It distinguishes local data from AEAT-observed evidence and provides no generic write path: each push or filing action requires its own registered operation and capability.
+
+Profile editing, user switching, password management, settings and sign-out are account utilities. Existing Profile and secret screens remain their owners; the shell supplies production factories rather than reproducing their forms.
+
+The responsive shell uses a two-column Home when space permits and one ordered scroll column at the supported floor. The full calendar is an agenda/filter/search workbench with optional broader visualisations, not a mandatory month grid. Search spans Ledger entries and evidence, Modelo declarations and revisions, filing records, reconciliation findings and notifications while preserving each result's type, source and status.
+
+The already-landed entrypoint layer remains unchanged: `aeat --tui` starts one child interpreter against the TUI module, and the retired `aeat-tui` console script does not return.
 
 ## Rationale
 
-The home screen is the smallest join that makes every finished area reachable
-without ranking them against each other. It matches the shape the areas already
-have, so the mounting work is composition rather than redesign, and it gives an
-operator meeting the product an inventory of what it can do. The palette
-remains available later as a navigation accelerator over the same screens; it is
-deferred rather than rejected on merit.
+This option matches the application's causal structure: Profile and Ledger facts feed Modelo calculations; Declarations turn them into revisioned filing work; AEAT Sync observes and reconciles external evidence; Home joins their actionable state. It gives Ledger equal operational weight without making account configuration a permanent peer workspace, and it keeps the calendar with the declarations whose legal windows it represents. The command palette preserves task-launcher speed without sacrificing glanceable status.
 
-Retiring `aeat-tui` in the same record is deliberate. Leaving it would preserve
-the parallel spelling the CLI contract forbids while the new request took over
-its job, and the packaging already assumed it was gone.
+It also removes the false assumption that finished modules are automatically joinable destinations. A projection plus admitted factory catalogue makes availability explicit and keeps persistence, network, calculation and mutation authority out of the root frontend.
 
 ## Consequences
 
-Gains: one entrypoint reaches the full-screen product; roughly 5,700 lines of
-finished operator capability across profile, secret, flows, operations and
-Modelo become reachable once the navigation layer lands; the unreachable-module
-audit loses its largest cluster for a real reason rather than a rooting change.
+Operators gain one coherent workbench, a first-class Ledger, a declaration lifecycle with calendar and history, explicit AEAT reconciliation, account-bound Profile access and global search. Missing, stale and conflicting evidence remains visible.
 
-Costs: the home screen is new surface with new locale keys and its own tests.
-Anyone invoking `aeat-tui` in a script must change to `aeat --tui`, which is a
-breaking change to an installed console entry, taken before a public
-compatibility floor exists and therefore without a shim.
+The architecture and interface plans must be reconciled before execution. Work now includes a Home projection and refresh contract, production area factories, host-neutral declaration navigation, a Ledger TUI, a public calendar/evidence composition provider, AEAT Sync and notification projections, global search, localization, responsive behavior and accessibility gates. These capabilities may land incrementally, but unavailable destinations cannot claim completion.
 
-Pitfall: mounting an area whose receipts are not green would put a broken
-destination on the home screen, which is worse than an empty root because it
-looks finished. The home screen's membership is a receipts question at mount
-time, not a wish list.
+The earlier “five existing areas, no shape changes” implementation text is retired by this amendment. The entrypoint retirement and out-of-process CLI boundary remain in force.

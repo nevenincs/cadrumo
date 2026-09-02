@@ -1483,3 +1483,48 @@ parallel load and passes alone. 55 maritime tests pass; the one failure is regis
 -- modelo 200 casillas referencing unknown export fields -- and touches neither change.
 
 Blind-spot scope: 17 -> 14 member sets declared in more than one place.
+
+## Finding 68 — a security allowlist held in two copies
+
+`{"GET", "HEAD", "OPTIONS"}` is the set of methods a live AEAT read surface may use. It
+existed as an inline membership test in `schema_verification.py` and again as a private
+`_READ_ONLY_HTTP_METHODS` in `remote_state_guard.py`, where the read-only mandate is
+enforced. Two copies of a security allowlist is one copy too many: a method admitted to
+one and not the other produces a surface the schema rejects and the guard permits, or
+the reverse.
+
+Now one `READ_ONLY_HTTP_METHODS` in `schema_verification.py`, which
+`remote_state_guard.py` already imports from. `SIMULATOR_HTTP_METHODS` is derived from
+it by union with `POST` rather than relisted, so a method REMOVED from the read-only set
+cannot silently survive in the simulator one.
+
+Deliberately not an enum. HTTP methods are an external vocabulary this codebase does not
+close, and declaring one would assert a completeness the registry has no authority over.
+What is closed is these two sets, and naming them is the whole requirement.
+
+## Finding 69 — a mirror maintained by hand, and its own comment said so
+
+`withholding_bindings.py` declared six fact tokens twice on adjacent lines: once as a
+`frozenset` for the runtime membership check and once as a `Literal` for the strict
+selector field. The selector's own comment described the type as "mirroring the runtime
+check the handler does against `_WITHHOLDING_FACTS`" -- an accurate description of two
+hand-maintained lists that agreed only while someone maintained both.
+
+Now one `_WithholdingFactKind` enum with the literal and the frozenset both derived from
+it. One declaration, two views. The model is strict-frozen and built from registry TOML,
+so the field takes the literal over the members -- checked before the edit.
+
+## Finding 70 — a narrowing that stops a blocked run being read as a comparison
+
+`ParityVerdict` carries four verdicts including `blocked`. The three-verdict subset was
+written out three times: on the comparison model and twice in the Renta WEB oracle.
+
+`blocked` belongs to a whole run, never to one field: a run can be blocked before any
+field is compared, and a field that was never compared is `unverifiable`, not `blocked`.
+`ParityFieldVerdict` now names the narrowing once, and keeping it narrow stops a blocked
+run being recorded as a field-level outcome -- which would report a comparison that never
+happened as one that did.
+
+Registry annotation-scope inline declarations fell from 72 to 69 fields. Blind-spot
+scope: 14 -> 11 member sets declared in more than one place. Package-wide annotation
+scope remains 1, still the M184/IVA false positive.
