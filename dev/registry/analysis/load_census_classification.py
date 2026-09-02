@@ -258,7 +258,7 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "validate_cross_domain_snapshot",
             "_validate_reference_checker",
             "_validate_reference_sections",
-            "_validate_references",
+            "validate_references",
         ),
     ),
     ClassificationRule(

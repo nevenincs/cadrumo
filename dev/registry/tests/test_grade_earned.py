@@ -17,6 +17,7 @@ from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -40,7 +41,7 @@ def _layout() -> ExportLayoutDefinition:
         length=10,
         kind=CasillaFieldKind.CASILLA,
         casilla_id=_CASILLA_01,
-        data_type="money",
+        data_type=CasillaDataType.MONEY,
         required=False,
         padding="left_zero",
         justification="right",
