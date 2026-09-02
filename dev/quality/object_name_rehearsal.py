@@ -48,6 +48,7 @@ __all__ = [
     "ObjectNameGateOutcome",
     "ObjectNameRehearsalError",
     "ObjectNameRehearsalReceipt",
+    "canonical_object_name_component_set",
     "rehearse_object_name_component",
 ]
 
@@ -350,18 +351,14 @@ def _receipt_payload(
     return payload
 
 
-def rehearse_object_name_component(
+def canonical_object_name_component_set(
     manifest: ObjectNameRenameManifest,
     *,
     inventory: ObjectNameAuditResult,
-    component: OperationComponent,
     repo_root: Path,
-) -> ObjectNameRehearsalReceipt:
-    """Rehearse exactly one complete reviewed component outside the live tree."""
+) -> tuple[OperationComponent, ...]:
+    """Derive canonical components from repository evidence and reviewed generator intent."""
     root = repo_root.resolve()
-    if not (root / ".git").exists() or not (root / "src").is_dir() or not (root / "dev").is_dir():
-        raise ObjectNameRehearsalError(f"rehearsal root is not a repository worktree: {root}")
-    executable = {operation.operation_id: operation for operation in select_object_name_execution(manifest)}
     try:
         graph_manifest = cast("RenameManifestLike", manifest)
         graph_inventory = cast("InventoryLike", inventory)
@@ -393,13 +390,28 @@ def rehearse_object_name_component(
                 )
                 for path in sorted(generated_paths)
             )
-        canonical_components = build_manifest_components(
+        return build_manifest_components(
             graph_manifest,
             inventory=graph_inventory,
             hard_edges=(*discovered_edges, *derived_generator_edges),
         )
     except ObjectNameGraphError as exc:
         raise ObjectNameRehearsalError(f"cannot reconstruct the reviewed component: {exc}") from exc
+
+
+def rehearse_object_name_component(
+    manifest: ObjectNameRenameManifest,
+    *,
+    inventory: ObjectNameAuditResult,
+    component: OperationComponent,
+    repo_root: Path,
+) -> ObjectNameRehearsalReceipt:
+    """Rehearse exactly one complete reviewed component outside the live tree."""
+    root = repo_root.resolve()
+    if not (root / ".git").exists() or not (root / "src").is_dir() or not (root / "dev").is_dir():
+        raise ObjectNameRehearsalError(f"rehearsal root is not a repository worktree: {root}")
+    executable = {operation.operation_id: operation for operation in select_object_name_execution(manifest)}
+    canonical_components = canonical_object_name_component_set(manifest, inventory=inventory, repo_root=root)
     canonical = next((item for item in canonical_components if item.component_id == component.component_id), None)
     if canonical is None or (
         canonical.component_id,

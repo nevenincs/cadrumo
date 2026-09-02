@@ -16,18 +16,12 @@ from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.link_safety import is_link_like
 
 from ..audit.object_names import exit_code, scan, to_json
-from .object_name_graph import (
-    InventoryLike,
-    ObjectNameGraphError,
-    RenameManifestLike,
-    build_manifest_components,
-    collect_import_edges,
-    operation_locators,
-)
+from .object_name_graph import ObjectNameGraphError
 from .object_name_manifest import ObjectNameManifestError, load_validated_object_name_manifest
 from .object_name_rehearsal import (
     ObjectNameRehearsalError,
     ObjectNameRehearsalReceipt,
+    canonical_object_name_component_set,
     rehearse_object_name_component,
 )
 from .object_name_replay import (
@@ -99,9 +93,7 @@ def _manifest_path(root: Path, supplied: Path) -> Path:
 def _context(root: Path, manifest_path: Path):
     inventory = scan((root / "src", root / "dev"), root)
     manifest = load_validated_object_name_manifest(manifest_path, inventory=inventory, repo_root=root)
-    graph_manifest = cast("RenameManifestLike", manifest)
-    edges = collect_import_edges(operation_locators(graph_manifest), repo_root=root)
-    components = build_manifest_components(graph_manifest, inventory=cast("InventoryLike", inventory), hard_edges=edges)
+    components = canonical_object_name_component_set(manifest, inventory=inventory, repo_root=root)
     if len(components) != 1:
         raise ObjectNameDeclusteringCliError(
             f"manifest must select exactly one complete component; found {len(components)}"
