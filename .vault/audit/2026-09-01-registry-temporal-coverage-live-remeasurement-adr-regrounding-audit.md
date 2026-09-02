@@ -4550,3 +4550,60 @@ comparison is between two numbers from the same invocation rather than between a
 number and a later tree. Until then the crash-marker sweep is the available integrity signal,
 and it is a check on the run rather than on the result, which is the weaker of the two things
 worth knowing.
+
+### The eleventh verification criterion, and a note on where this campaign's files now live
+
+Four of this campaign's measurements failed in ways that all looked like success: a suite
+reporting three passing tests over a file holding twenty-four, a gate comparing two sets that
+could both be empty, a crashed worker reported as a failing test, and a comparison against a
+remembered total taken from a tree that had since moved. Those are not four accidents of the
+same author being careless. They are four shapes of one defect, and a plan whose entire
+subject is declarations that stop matching what they describe should say so in its own
+acceptance terms.
+
+The plan now carries an eleventh criterion requiring that every measurement it rests on names
+its population, that every gate refuses to pass over an empty one, that a run's collected
+count comes from the same invocation as its result, and that a reported failure is read from
+its own text rather than a summary line - because a crash and an assertion are different
+events that a tally spells identically. The criterion is met by evidence rather than
+assertion: all four failures are recorded here with what they cost, the gates now assert
+measured floors, and every run quoted by this plan has been swept for lost-worker markers.
+
+Separately, a state check worth having done. Every file this campaign authored or edited has
+been committed by the concurrent campaign's tree-wide sweeps, except one - and that one's
+pending diff is theirs, not this campaign's: forty-five lines adding a bootstrap transport
+identity, built on top of the render-input extraction recorded two findings ago. The
+extraction was made so that a second consumer would not have to re-derive what the comparison
+derives, and a second consumer is now being written against it.
+
+That is the more useful confirmation than any test result. A seam is justified by something
+arriving to use it, and one has.
+
+### The serial re-run settles it: the test passes
+
+The filing acceptance suite was re-run serially, as the lost-test hook instructs. Three tests
+collected, three passed, exit status zero. The test this audit briefly recorded as failing
+does not fail. The parallel run's "1 failed, 7 passed" was the crashed worker and nothing
+else, which is precisely what the hook's warning says such a line means.
+
+Two conclusions, and the second is the durable one. The filing acceptance path is green and
+this campaign's residual failure list loses an entry it never should have gained. And the
+hook's instruction is worth following the first time: it named the remedy exactly, the remedy
+took one command, and the ten minutes it cost bought a correct answer in place of a wrong one
+that had already been written down.
+
+### A feature-health warning that belongs to another writer
+
+The feature's body-section check reports three warnings, and none of them are against this
+campaign's documents. They fall on an audit scaffolded under this feature's tag for a modelo
+200 publication review, whose Scope, Findings and Recommendations are still template
+placeholders. The file is untracked, so it is a scaffold created and not yet written, and its
+author is the concurrent campaign.
+
+It is left alone. Filling those sections would mean authoring findings about a review this
+campaign has not performed, under someone else's document, and a health check satisfied that
+way is worth less than the warning it silences. The warning is accurate: the sections are
+empty, and they should be, until whoever created it writes them.
+
+Worth stating because the alternative is tempting when a shared feature tag makes another
+writer's incomplete document look like this campaign's failing check.

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:5234e6b9a61625ef6d0b32cf59be7255ccd6a972eac52f3133a2e625b8a81028'
+body_hash: 'sha256:804c28f04bbc925aee6b2bc5cf832e3f93d28455275269bbda6b51dae97e7c02'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -456,6 +456,8 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S194` - Establish that the closure test rewrite is blocked behind vector enrolment and record the ordering constraint; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S195` - Distinguish a crashed pytest worker from a failing assertion and re-run the affected path serially before concluding; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S196` - Sweep every recorded run in this campaign for lost-worker markers and establish that its headline numbers are from clean runs; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S197` - Add the measurement integrity criterion that the four failed measurements make due; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S198` - Settle the crashed-worker test serially and attribute the feature health warnings to the untracked scaffold that carries them; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -580,7 +582,7 @@ What remains fully available is the dev-owned surface, which is why the twelve S
 `W06.P13` all live there. A screen, its dispositions and its gate can be authored, proved
 and left green without touching a file the other campaign holds.
 
-The plan is complete when every Step is closed. Beyond that, ten criteria decide whether the work
+The plan is complete when every Step is closed. Beyond that, eleven criteria decide whether the work
 achieved what it was for. Each names the evidence that settles it, because a criterion whose proof is
 a reading rather than a command is one nobody can check later.
 
@@ -753,6 +755,24 @@ tree, and each passes the normal path in the same suite.
 Every revision directory name agrees with the window that revision declares, and a gate
 refuses a name that does not. Temporal selection resolves every coordinate the law can
 decide and refuses only those it genuinely cannot.
+
+Every measurement this plan rests on is one a reader can check, and the plan says how it was
+taken rather than only what it showed. This criterion exists because the measurements failed
+four times in ways that all looked like success. A suite reported three passing tests over a
+file holding twenty-four, because a marker had deselected the rest. A gate compared two sets
+that could both be empty. A worker crashed and its run reported a failing test, taking an
+unknown number of tests with it. And a comparison against a remembered total answered nothing,
+because the tree had moved underneath it.
+
+What satisfies the criterion is not that the numbers are good. It is that each one names its
+population, that every gate refuses to pass over an empty one, that a run's collected count
+comes from the same invocation as its result, and that a reported failure is read from its own
+text rather than from a summary line - because a crash and an assertion are different events
+that a tally spells identically.
+
+The evidence is that all four of those failures are recorded here with what they cost, that
+the gates now assert their populations against measured floors, and that every run whose
+figures this plan quotes has been swept for lost-worker markers and carries none.
 
 ## Verification
 
