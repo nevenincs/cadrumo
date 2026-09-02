@@ -189,19 +189,19 @@ def _with_active_profile_label(health: ActiveProfileHealth, label: str | None) -
 
 
 _HEALTH_CONDITIONS: dict[ProfileHealthStatus, str] = {
-    "dangling_pointer": "profile.active.pointer_registered",
+    ProfileHealthStatus.DANGLING_POINTER: "profile.active.pointer_registered",
     ProfileHealthStatus.MISSING_PROFILE_RECORD: "profile.active.record_present",
     ProfileHealthStatus.PROFILE_RECORD_UNREADABLE: "profile.active.record_readable",
-    "capsule_unreadable": "profile.active.capsule_readable",
-    "incomplete": "profile.configuration.complete",
+    ProfileHealthStatus.CAPSULE_UNREADABLE: "profile.active.capsule_readable",
+    ProfileHealthStatus.INCOMPLETE: "profile.configuration.complete",
 }
 
 _HEALTH_EVIDENCE_IDS: dict[ProfileHealthStatus, str] = {
-    "dangling_pointer": "profile.active.pointer.health",
+    ProfileHealthStatus.DANGLING_POINTER: "profile.active.pointer.health",
     ProfileHealthStatus.MISSING_PROFILE_RECORD: "profile.active.record.presence",
     ProfileHealthStatus.PROFILE_RECORD_UNREADABLE: "profile.active.record.readability",
-    "capsule_unreadable": "profile.active.capsule.readability",
-    "incomplete": "profile.configuration.completeness",
+    ProfileHealthStatus.CAPSULE_UNREADABLE: "profile.active.capsule.readability",
+    ProfileHealthStatus.INCOMPLETE: "profile.configuration.completeness",
 }
 
 #: Health status carried by each reason the active-profile record did not resolve.
@@ -209,7 +209,7 @@ _HEALTH_EVIDENCE_IDS: dict[ProfileHealthStatus, str] = {
 #: profile is benign and a mis-addressed session is a readability failure.
 _UNAVAILABILITY_STATUSES: dict[ProfileRecordUnavailability, ProfileHealthStatus] = {
     ProfileRecordUnavailability.NO_LIVE_CAPSULE: ProfileHealthStatus.MISSING_PROFILE_RECORD,
-    ProfileRecordUnavailability.SESSION_REQUIRED: "profile_locked",
+    ProfileRecordUnavailability.SESSION_REQUIRED: ProfileHealthStatus.PROFILE_LOCKED,
     ProfileRecordUnavailability.SESSION_IDENTITY_MISMATCH: ProfileHealthStatus.PROFILE_RECORD_UNREADABLE,
 }
 

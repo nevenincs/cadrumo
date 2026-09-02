@@ -14,8 +14,8 @@ from .....adapters.outbound.google.calc_sheets_pull_records import RowSetCellEdi
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
 from .....domain.calculations.registry.errors import RegistryValidationError
-from ..row_set_assembly import assemble_row_sets_for_snapshot
 from ..engine import collect_row_sets
+from ..row_set_assembly import assemble_row_sets_for_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
