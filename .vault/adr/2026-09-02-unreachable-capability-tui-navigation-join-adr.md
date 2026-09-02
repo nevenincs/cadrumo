@@ -10,6 +10,7 @@ related:
   - "[[2026-09-02-unreachable-capability-research]]"
   - '[[2026-09-02-unreachable-capability-fincas-unblock-research]]'
   - '[[2026-09-02-unreachable-capability-tui-root-composition-research]]'
+  - '[[2026-09-02-unreachable-capability-tui-homepage-product-design-research]]'
 ---
 # `unreachable-capability` adr: `one tui entrypoint and a home-screen navigation join` | (**status:** `accepted`)
 
