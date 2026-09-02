@@ -238,7 +238,11 @@ class CheckerOracle:
             compare_verdict_field(key, expected_value, observed=observed_verdict(observation.values, key))
             for key, expected_value in sorted(self._expected_values(expected).items())
         )
-        verdict: ParityVerdict = "match" if fields and all(field.verdict == "match" for field in fields) else "mismatch"
+        verdict: ParityVerdict = (
+            ParityVerdictKind.MATCH
+            if fields and all(field.verdict == ParityVerdictKind.MATCH for field in fields)
+            else ParityVerdictKind.MISMATCH
+        )
         return ParityResult(
             oracle_id=self.oracle_id,
             cross_reference_id=policy.id,
@@ -309,5 +313,5 @@ def compare_verdict_field(key: str, expected: str, *, observed: str | None) -> P
         name=key,
         expected=expected,
         observed=normalized_observed,
-        verdict=ParityVerdictKind.MATCH if normalized_observed == expected else "mismatch",
+        verdict=ParityVerdictKind.MATCH if normalized_observed == expected else ParityVerdictKind.MISMATCH,
     )

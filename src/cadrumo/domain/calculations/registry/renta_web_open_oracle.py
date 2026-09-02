@@ -484,8 +484,10 @@ def _compare_expected_field(casilla_id: CasillaId, expected: object, *, observed
         return ParityFieldComparison(
             name=casilla_id, expected=expected_text, observed="", verdict=ParityVerdictKind.UNVERIFIABLE
         )
-    verdict: Literal["match", "mismatch"] = (
-        "match" if equivalent_renta_web_open_value(expected_text, observed) else "mismatch"
+    verdict: Literal[ParityVerdictKind.MATCH, ParityVerdictKind.MISMATCH] = (
+        ParityVerdictKind.MATCH
+        if equivalent_renta_web_open_value(expected_text, observed)
+        else ParityVerdictKind.MISMATCH
     )
     return ParityFieldComparison(name=casilla_id, expected=expected_text, observed=observed, verdict=verdict)
 
