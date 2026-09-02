@@ -58,7 +58,7 @@ def _leaf(key: str, parent: str, token: str, module: str, handler: str, policy: 
         key=key,
         parent_key=parent,
         token=token,
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=_key("probe.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),

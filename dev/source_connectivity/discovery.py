@@ -535,23 +535,76 @@ def _deferred_handler_target(
     return None
 
 
+_WRITE_ROUTE_MEMBERS = frozenset({"PROFILE_BOUND", "BOOTSTRAP_ROOT"})
+
+
+def _policy_factory_names(tree: ast.Module) -> frozenset[str]:
+    """Return helpers that structurally construct an ``ExecutionPolicySpec``."""
+    return frozenset(
+        node.name
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef)
+        and any(
+            isinstance(child, ast.Call)
+            and _dotted_name(child.func).rsplit(".", maxsplit=1)[-1] == "ExecutionPolicySpec"
+            for child in ast.walk(node)
+        )
+    )
+
+
+def _policy_has_write_route(value: ast.AST, *, factories: frozenset[str]) -> bool:
+    """Whether one literal policy declaration grants a canonical write route."""
+    if not isinstance(value, ast.Call):
+        return False
+    constructor = _dotted_name(value.func).rsplit(".", maxsplit=1)[-1]
+    if constructor != "ExecutionPolicySpec" and constructor not in factories:
+        return False
+    route = next((keyword.value for keyword in value.keywords if keyword.arg == "write_route"), None)
+    if route is None and len(value.args) > 3:
+        route = value.args[3]
+    return route is not None and _dotted_name(route).rsplit(".", maxsplit=1)[-1] in _WRITE_ROUTE_MEMBERS
+
+
 def _write_policy_names(cli_root: Path) -> frozenset[str]:
+    """Return named policy declarations whose explicit route permits a write."""
     names: set[str] = set()
     for path in _production_python_files(cli_root):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        factories = _policy_factory_names(tree)
         for node in tree.body:
             if not isinstance(node, (ast.Assign, ast.AnnAssign)):
                 continue
             value = node.value
             targets = node.targets if isinstance(node, ast.Assign) else (node.target,)
-            if value is None or "local-state" not in {
-                child.value
-                for child in ast.walk(value)
-                if isinstance(child, ast.Constant) and isinstance(child.value, str)
-            }:
+            if value is None or not _policy_has_write_route(value, factories=factories):
                 continue
             names.update(target.id for target in targets if isinstance(target, ast.Name))
     return frozenset(names)
+
+
+def _command_kind(call: ast.Call, bindings: dict[str, ast.AST]) -> str | None:
+    """Resolve a command kind from its legacy literal or current enum spelling."""
+    kind = _call_argument(call, "kind", 3, bindings)
+    literal = _string_value(kind, bindings)
+    if literal is not None:
+        return literal
+    if _dotted_name(kind) == "CommandNodeKind.LEAF":
+        return "leaf"
+    return None
+
+
+def _is_write_policy(
+    call: ast.Call,
+    bindings: dict[str, ast.AST],
+    write_policies: frozenset[str],
+    *,
+    factories: frozenset[str],
+) -> bool:
+    """Return whether the command's resolved policy is structurally a write."""
+    policy = _call_argument(call, "policy", 8, bindings)
+    if isinstance(policy, ast.Name) and policy.id in write_policies:
+        return True
+    return _policy_has_write_route(policy, factories=factories)
 
 
 def _module_level_bindings(tree: ast.Module) -> dict[str, ast.AST]:
@@ -586,6 +639,7 @@ def _command_spec_ingress(repo_root: Path, cli_root: Path) -> tuple[IngressCapab
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         functions = {node.name: node for node in tree.body if isinstance(node, ast.FunctionDef)}
         leaf_wrapper = functions.get("_leaf")
+        factories = _policy_factory_names(tree)
         module_bindings = _module_level_bindings(tree)
         for call in (node for node in ast.walk(tree) if isinstance(node, ast.Call)):
             call_name = _dotted_name(call.func).rsplit(".", maxsplit=1)[-1]
@@ -604,9 +658,14 @@ def _command_spec_ingress(repo_root: Path, cli_root: Path) -> tuple[IngressCapab
                 )
             elif call_name != "CommandSpec":
                 continue
-            kind = _string_value(_call_argument(command_call, "kind", 3, bindings), bindings)
+            kind = _command_kind(command_call, bindings)
             policy = _policy_name(command_call, bindings, write_policies)
-            if kind != "leaf" or policy.rsplit(".", maxsplit=1)[-1] not in write_policies:
+            if kind != "leaf" or not _is_write_policy(
+                command_call,
+                bindings,
+                write_policies,
+                factories=factories,
+            ):
                 continue
             target = _deferred_handler_target(_call_argument(command_call, "handler", 9, bindings), functions, bindings)
             token = _string_value(_call_argument(command_call, "token", 2, bindings), bindings)

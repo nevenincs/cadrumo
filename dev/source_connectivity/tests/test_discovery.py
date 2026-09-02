@@ -127,7 +127,7 @@ PROBE_COMMAND_SPECS = (
         key="probe_add",
         parent_key="probe",
         token="add",
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         policy=PROBE_WRITE,
         handler=LazyBinding.available(
             DeferredTarget("cadrumo.entrypoints.cli._probe", "probe_add")
