@@ -72,7 +72,6 @@ allowed = [
   "cadrumo.application.wizard._translations",  # unreachable
   "cadrumo.application.wizard.copy_sources",  # unreachable
   "cadrumo.application.wizard.legal_zone",  # unreachable
-  "cadrumo.core.address_components",  # unreachable
   "cadrumo.core.compatibility_lifecycle",  # unreachable
   "cadrumo.core.corpus_manifest._bundle_signing",  # unreachable
   "cadrumo.core.observability.replay",  # unreachable
@@ -87,3 +86,8 @@ allowed = [
   "cadrumo.domain.portals.drift",  # type-only
   "cadrumo.domain.renta._substrate",  # unreachable
 ]
+
+[[intentional]]
+module = "cadrumo.core.address_components"
+kind = "design_time_authority"
+rationale = "Canonical AEAT address-component vocabulary constraining producer-key declarations; it deliberately has no runtime transport caller."
