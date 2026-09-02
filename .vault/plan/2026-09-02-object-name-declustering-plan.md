@@ -10,8 +10,11 @@ related:
   - '[[2026-09-02-object-name-declustering-reference]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:f3fcd48dae3585580556193548f98a86c541e228f46855a31c601b052dd13af9'
+body_hash: 'sha256:0fcd9b38bb3302f3bef98e9561f76c9c24c8b7a4ead03d61ef492447f7dac564'
 ---
+
+<!-- RETIRED: S21, S22 -->
+
 # `object-name-declustering` plan
 
 ## Description
@@ -21,6 +24,7 @@ This L3 plan executes the accepted object-name declustering ADR using the audit 
 The operator surface is just fix-object-names. With no arguments it inventories, plans, and rehearses in the system temporary directory without modifying the live tree. Live application requires an explicit apply mode and a matching receipt; stale bytes, unexpected paths, unsupported syntax, or failed verification cause refusal. This plan builds the safety mechanism and records a pilot rehearsal. It does not authorize bulk semantic consolidation or an unreviewed rename sweep.
 
 ## Steps
+
 ## Wave `W01` - deterministic inventory and component authority
 
 Establish the canonical inventory, reviewed manifest, and hard dependency components that every later mutation consumes.
@@ -97,8 +101,6 @@ Demonstrate the workflow on one reviewed leaf component and record evidence befo
 
 - [ ] `W03.P09.S19` - Author one reviewed low-risk leaf-component manifest with exact finding and byte preconditions; `dev/quality/object_name_rename_manifest.toml`.
 - [ ] `W03.P09.S20` - Run the Justfile rehearsal and record scope, receipt, gate results, residual findings, and unchanged-live-tree proof; `.vault/audit/2026-09-02-object-name-declustering-pilot-rehearsal-audit.md`.
-- [ ] `W03.P09.S21` - Author one reviewed low-risk leaf-component manifest with exact finding and byte preconditions; `dev/quality/object_name_rename_manifest.toml`.
-- [ ] `W03.P09.S22` - Run the Justfile rehearsal and record scope, receipt, gate results, residual findings, and unchanged-live-tree proof; `.vault/audit/2026-09-02-object-name-declustering-pilot-rehearsal-audit.md`.
 
 ## Parallelization
 
