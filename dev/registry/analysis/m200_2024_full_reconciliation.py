@@ -394,8 +394,7 @@ def _cross_revision_index(*, sibling, sources, legal, valid_from, valid_to) -> d
         declaration = declarations.get(str(entry.casilla_id))
         if declaration is None:
             continue
-        _applicable, inapplicable = _legal_partition(declaration.legal_refs, legal, valid_from, valid_to)
-        if inapplicable:
+        if not _legal_refs_support_proposal(declaration.legal_refs, legal, valid_from, valid_to):
             continue
         anchor = semantic_anchor_key(entry.anchor)
         field = fields[anchor]
@@ -444,6 +443,11 @@ def _legal_evidence(refs, legal, valid_from, valid_to):
         else "applicable"
     )
     return applicable, inapplicable, state
+
+
+def _legal_refs_support_proposal(refs, legal, valid_from, valid_to) -> bool:
+    """Admit sibling proposals only when non-empty legal proof fully covers 2024."""
+    return _legal_evidence(refs, legal, valid_from, valid_to)[2] == "applicable"
 
 
 def _same_year_state(payload, fields, templates):

@@ -157,6 +157,12 @@ def test_missing_map_legal_ref_is_visible_and_unreviewed_candidates_cannot_seed_
     assert subject._legal_evidence(
         ("missing-legal-ref",), {}, subject.TARGET_VALID_FROM, subject.TARGET_VALID_TO
     ) == ((), ("missing-legal-ref",), "unresolved_or_inapplicable")
+    assert not subject._legal_refs_support_proposal(
+        (), {}, subject.TARGET_VALID_FROM, subject.TARGET_VALID_TO
+    )
+    assert not subject._legal_refs_support_proposal(
+        ("missing-legal-ref",), {}, subject.TARGET_VALID_FROM, subject.TARGET_VALID_TO
+    )
     assert all(row.legal_evidence_state == "applicable" for row in census.rows)
     assert all(anchor.legal_evidence_state == "applicable" for anchor in census.anchors)
 
