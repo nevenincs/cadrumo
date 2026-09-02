@@ -87,12 +87,6 @@ command once that channel is live.
 * - macOS (Apple silicon), Linux (x86-64 and arm64)
   - Homebrew formula
   - Release page artifact; Homebrew tap at public launch
-* - Claude Code, Claude Desktop, Claude Cowork
-  - Claude plugin
-  - Release page artifact; neve marketplace listing at public launch
-* - Claude Desktop
-  - Claude Desktop extension (MCPB)
-  - Release page artifact; Claude Desktop extension directory at public launch
 ```
 
 Per-channel install paths:
@@ -108,14 +102,6 @@ The Scoop bucket opens at public launch; until then, install the release-page ar
 **Homebrew formula**: macOS (Apple silicon), Linux (x86-64 and arm64)
 
 The Homebrew tap opens at public launch; until then, install the release-page artifact attached to the latest release.
-
-**Claude plugin**: Claude Code, Claude Desktop, Claude Cowork
-
-The neve marketplace listing opens at public launch; until then, install the release-page artifact attached to the latest release.
-
-**Claude Desktop extension (MCPB)**: Claude Desktop
-
-The Claude Desktop extension directory opens at public launch; until then, install the release-page artifact attached to the latest release.
 
 <div data-cadrumo-downloads hidden></div>
 <!-- vaultspec:generated:end download-matrix -->
