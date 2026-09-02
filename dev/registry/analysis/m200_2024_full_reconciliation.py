@@ -30,6 +30,8 @@ class M200FieldOwnership:
     """One exact current official field owned by a planned casilla."""
 
     export_field_id: str
+    printed_number: str
+    ownership_kind: str
     anchor: tuple[object, ...]
     official_description: str
     template: str
@@ -46,6 +48,8 @@ class M200ReconciliationRow:
     source_ref_state: str
     mechanical_source_refs_proposal: tuple[str, ...] | None
     export_reachability: str
+    declared_export_refs: tuple[str, ...]
+    export_reciprocity: str
     fields: tuple[M200FieldOwnership, ...]
     normalized_official_descriptions: tuple[str, ...]
     same_2024_template_state: str
@@ -71,7 +75,8 @@ def reconcile_bundled_m200_2024() -> tuple[M200ReconciliationRow, ...]:
     target_map = load_semantic_map(Path(__file__).parents[1] / "mappings" / "modelo_200" / "2024")
     candidates = _candidate_payloads()
     candidate_ids = frozenset(candidates)
-    current = {str(item.id): _payload(item) for item in revision.casillas if str(item.id) not in candidate_ids}
+    current_declarations = {str(item.id): item for item in revision.casillas if str(item.id) not in candidate_ids}
+    current = {identifier: _payload(item) for identifier, item in current_declarations.items()}
     planned = {**current, **{identifier: payload for identifier, (_path, payload) in candidates.items()}}
 
     target_fields = {intermediate_anchor_key(field): field for sheet in target_design.sheets for field in sheet.fields}
@@ -91,6 +96,8 @@ def reconcile_bundled_m200_2024() -> tuple[M200ReconciliationRow, ...]:
         ownership[owner].append(
             M200FieldOwnership(
                 export_field_id=str(entry.export_field_id),
+                printed_number=printed,
+                ownership_kind="qualified_record_identity" if ":" in owner else "unqualified_printed_identity",
                 anchor=anchor,
                 official_description=field.normalized_description,
                 template=_template(field.normalized_description),
@@ -117,6 +124,17 @@ def reconcile_bundled_m200_2024() -> tuple[M200ReconciliationRow, ...]:
         source_state, source_proposal = _source_ref_state(payload, mapped=bool(fields))
         applicable, inapplicable = _legal_partition(payload.legal_refs, legal, revision.valid_from, revision.valid_to)
         same_year = _same_year_state(payload, fields, template_payloads)
+        declared_export_refs = (
+            tuple(current_declarations[identifier].export_refs) if identifier in current_declarations else ()
+        )
+        generated_refs = tuple(field.export_field_id for field in fields)
+        reciprocity = (
+            "unmapped_no_reciprocity"
+            if not fields
+            else "complete"
+            if declared_export_refs == generated_refs
+            else "generator_pending"
+        )
         cross_payloads = {
             proposal
             for field in fields
@@ -137,6 +155,8 @@ def reconcile_bundled_m200_2024() -> tuple[M200ReconciliationRow, ...]:
                 source_ref_state=source_state,
                 mechanical_source_refs_proposal=source_proposal,
                 export_reachability="mapped_current_2024" if fields else "unmapped_calculation_only",
+                declared_export_refs=declared_export_refs,
+                export_reciprocity=reciprocity,
                 fields=fields,
                 normalized_official_descriptions=tuple(field.official_description for field in fields),
                 same_2024_template_state=same_year,
@@ -156,14 +176,16 @@ def render_reconciliation_toml(rows: tuple[M200ReconciliationRow, ...]) -> str:
     """Render deterministic report rows bound to the official 2024 source SHA."""
     source = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml")).sources["aeat-dr-200-2024"]
     return rtoml.dumps(
-        {
-            "schema_version": 1,
-            "modelo": "200",
-            "revision": "2024",
-            "source_ref": str(source.id),
-            "source_sha256": source.sha256,
-            "row": [_serialise(row) for row in rows],
-        },
+        _toml_order(
+            {
+                "schema_version": 1,
+                "modelo": "200",
+                "revision": "2024",
+                "source_ref": str(source.id),
+                "source_sha256": source.sha256,
+                "row": [_serialise(row) for row in rows],
+            }
+        ),
         pretty=True,
     )
 
@@ -184,6 +206,18 @@ def main(argv: list[str] | None = None) -> int:
         print(f"source_{state}={sum(row.source_ref_state == state for row in rows)}")
     print(f"mapped={sum(bool(row.fields) for row in rows)}")
     print(f"unmapped={sum(not row.fields for row in rows)}")
+    for state in ("complete", "generator_pending", "unmapped_no_reciprocity"):
+        print(f"export_{state}={sum(row.export_reciprocity == state for row in rows)}")
+    template_states = (
+        "unique_consistent_peer",
+        "conflicting_peers",
+        "no_distinct_peer",
+        "unmapped_no_template_adjudication",
+    )
+    for state in template_states:
+        print(f"template_{state}={sum(row.same_2024_template_state == state for row in rows)}")
+    for state in ("unique_non_authoritative", "conflicting_non_authoritative", "no_applicable_match"):
+        print(f"cross_{state}={sum(row.cross_revision_status == state for row in rows)}")
     print(f"legal_inapplicable={sum(bool(row.inapplicable_legal_refs) for row in rows)}")
     return 0
 
@@ -260,6 +294,21 @@ def _serialise(row: M200ReconciliationRow) -> dict:
     if value["cross_revision_proposal_non_authoritative"] is None:
         value.pop("cross_revision_proposal_non_authoritative")
     return value
+
+
+def _toml_order(value):
+    if isinstance(value, dict):
+        items = tuple((key, _toml_order(item)) for key, item in value.items())
+        scalars = tuple((key, item) for key, item in items if not _table_like(item))
+        tables = tuple((key, item) for key, item in items if _table_like(item))
+        return dict((*scalars, *tables))
+    if isinstance(value, (list, tuple)):
+        return [_toml_order(item) for item in value]
+    return value
+
+
+def _table_like(value):
+    return isinstance(value, dict) or (isinstance(value, list) and any(isinstance(item, dict) for item in value))
 
 
 if __name__ == "__main__":
