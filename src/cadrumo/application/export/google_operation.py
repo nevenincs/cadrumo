@@ -190,7 +190,7 @@ def _require_active_profile_subject(
     request: OperationRequest[GoogleSheetsExportOperationRequest],
 ) -> None:
     """Bind the supervised request subject to the selected active profile."""
-    if request.subject_ref != _profile_subject(request.payload.profile_id):
+    if request.subject_ref != _profile_subject(str(request.payload.profile_id)):
         raise ValueError("Google Sheets export subject does not match its exact profile")
 
 

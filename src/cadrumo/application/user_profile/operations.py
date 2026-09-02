@@ -175,14 +175,14 @@ def build_profile_logout_operation_request(
     """Build the sole typed strong-close request for an active profile."""
     return OperationRequest(
         definition_id=PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
-        subject_ref=_profile_subject(profile_id),
+        subject_ref=_profile_subject(str(profile_id)),
         payload=ProfileLogoutOperationRequest(profile_id=profile_id),
     )
 
 
 def _require_active_profile_subject[PayloadT: BaseModel](request: OperationRequest[PayloadT], profile_id: UUID) -> None:
     """Bind every active-profile authority to exactly its secure operation subject."""
-    if request.subject_ref != _profile_subject(profile_id):
+    if request.subject_ref != _profile_subject(str(profile_id)):
         raise ValueError("user-profile operation subject does not match its exact profile")
     if require_active_bucket_id() != str(profile_id):
         raise ValueError("user-profile operation requires its profile to be active")
