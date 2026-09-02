@@ -18,12 +18,6 @@ shapes carry a temporal claim:
 
 Six conditions are reported, and every row names one of them:
 
-- ``selector_declares_no_window`` - the name claims a span of years and the
-  period selector carries neither an opening nor a closing year, so the span is
-  stated nowhere a consumer reads. A single-year revision declaring no bounds is
-  NOT reported: its id names the year, selection resolves through ``valid_from``,
-  and thirty-five such revisions resolve correctly today. The remedy here is to
-  author the declaration rather than to correct the name.
 - ``name_opens_after_window`` - the name's leading year is later than the year
   the window opens, so the revision serves years its name does not claim. A
   reader selecting by name understates the revision's reach.
@@ -104,26 +98,6 @@ def name_window_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[R
                 revision=name,
                 kind="window_sources_disagree",
                 detail=f"valid_from={revision.valid_from.year} period_selector.year_from={selector_from}",
-            )
-        )
-
-    # A single-year revision legitimately declares no selector bounds: its own id
-    # names the year and selection resolves through ``valid_from``. Confirmed
-    # against the live authority - modelo 100's 2023 and 2024, modelo 714's 2023
-    # and modelo 390's 2024 each admit themselves. Reporting those would put
-    # thirty-five correct declarations around the one that is wrong.
-    #
-    # A name claiming a SPAN is different: the span is then stated nowhere but the
-    # name, which no consumer reads.
-    selector = revision.period_selector
-    span_claimed = len(_YEAR.findall(name)) > 1 or name.endswith(_OPEN_ENDED)
-    if span_claimed and selector.year_from is None and selector.year_to is None:
-        findings.append(
-            RevisionNameFinding(
-                modelo=modelo_id,
-                revision=name,
-                kind="selector_declares_no_window",
-                detail=f"period selector declares neither year_from nor year_to; valid_from is {opening}",
             )
         )
 

@@ -30,15 +30,36 @@ def test_an_agreeing_name_reports_nothing(authority: ValidatedRegistryAuthority)
     assert name_window_findings(revision, modelo_id="303") == ()
 
 
-def test_a_misstated_opening_is_reported(authority: ValidatedRegistryAuthority) -> None:
-    """Modelo 151 names 2025 while declaring a window that opens in 2023."""
+def test_a_name_later_than_its_window_is_reported_apart_from_one_that_is_earlier(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """Modelo 151 names 2025 while declaring a window that opens in 2023.
+
+    The direction is carried in the kind rather than left to the detail text,
+    because the two directions want different corrections. A name later than its
+    window understates the revision's reach - 151 serves filing years 2023 and
+    2024 under a name claiming 2025 - while a name earlier than its window claims
+    years the revision does not serve.
+    """
     revision = authority.modelo("151").revisions["2025-y-siguientes"]
     findings = name_window_findings(revision, modelo_id="151")
     kinds = {finding.kind for finding in findings}
-    assert "name_misstates_opening" in kinds
-    detail = next(item.detail for item in findings if item.kind == "name_misstates_opening")
+    assert "name_opens_after_window" in kinds
+    assert "name_opens_before_window" not in kinds
+    detail = next(item.detail for item in findings if item.kind == "name_opens_after_window")
     assert "2025" in detail
     assert "2023" in detail
+
+
+def test_a_name_earlier_than_its_window_is_the_other_direction(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """Modelo 185 names 2025 while declaring a window that opens in 2026."""
+    revision = authority.modelo("185").revisions["2025-y-siguientes"]
+    kinds = {finding.kind for finding in name_window_findings(revision, modelo_id="185")}
+
+    assert "name_opens_before_window" in kinds
+    assert "name_opens_after_window" not in kinds
 
 
 def test_a_name_without_a_year_is_reported_not_skipped(authority: ValidatedRegistryAuthority) -> None:
@@ -59,7 +80,7 @@ def test_screen_detects_a_window_moved_away_from_its_name(authority: ValidatedRe
 
     moved = revision.model_copy(update={"valid_from": datetime.date(2019, 1, 1)})
     findings = name_window_findings(moved, modelo_id="303")
-    assert any(finding.kind == "name_misstates_opening" for finding in findings)
+    assert any(finding.kind == "name_opens_after_window" for finding in findings)
 
 
 def test_screen_reports_disagreeing_window_sources(authority: ValidatedRegistryAuthority) -> None:
