@@ -294,7 +294,7 @@ def _require_observation_period(period: Period) -> Period:
     # Deliberate runtime guard: annotations are not enforced at call time and this
     # value composes a persisted observation key, so a wrong type would surface as
     # an unreadable record rather than a refusal here.
-    if not isinstance(period, Period):  # pyright: ignore[reportUnnecessaryIsInstance]
+    if not isinstance(period, Period):
         raise ObservationKeyError(
             translated_message="application.calculations.observations.errors.period_type_invalid",
             context={"observed_type": type(period).__name__},

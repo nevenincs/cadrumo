@@ -234,7 +234,7 @@ def _resolve_invoice_line_totals(
     otherwise this is the sole synthesis of the one operator-supplied rate line.
     """
     if lines:
-        if not all(isinstance(item, InvoiceLine) for item in lines):  # pyright: ignore[reportUnnecessaryIsInstance]
+        if not all(isinstance(item, InvoiceLine) for item in lines):
             raise InvoiceValidationError("lines must be InvoiceLine records")
         base_total = round_to_cents(sum((item.subtotal for item in lines), Decimal("0")))
         iva_total = round_to_cents(sum((item.iva_amount for item in lines), Decimal("0")))
