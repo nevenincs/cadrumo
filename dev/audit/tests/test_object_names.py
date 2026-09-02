@@ -308,10 +308,40 @@ def test_inventory_serialises_complete_module_and_symbol_records(tmp_path: Path)
         "function:cadrumo.invoice.load_invoice#binding=1",
         "function:cadrumo.invoice.fetch_invoice#binding=1",
     }
-    for record in records.values():
+    expected_identity = {
+        "module:cadrumo.invoice#binding=1": ("invoice", "module", 1),
+        "class:cadrumo.invoice.Invoice#binding=1": ("Invoice", "class", 2),
+        "enum:cadrumo.invoice.FilingKind#binding=1": ("FilingKind", "enum", 3),
+        "function:cadrumo.invoice.load_invoice#binding=1": ("load_invoice", "function", 5),
+        "function:cadrumo.invoice.fetch_invoice#binding=1": ("fetch_invoice", "function", 6),
+    }
+    for locator, record in records.items():
+        name, kind, line = expected_identity[locator]
+        assert set(record) == {
+            "binding_occurrence",
+            "kind",
+            "line",
+            "name",
+            "overload",
+            "path",
+            "public",
+            "qualified_locator",
+            "source_hash",
+            "test",
+        }
+        assert record == {
+            "binding_occurrence": 1,
+            "kind": kind,
+            "line": line,
+            "name": name,
+            "overload": False,
+            "path": "src/cadrumo/invoice.py",
+            "public": True,
+            "qualified_locator": locator,
+            "source_hash": record["source_hash"],
+            "test": False,
+        }
         assert record["source_hash"].startswith("sha256:")
-        assert record["path"] == "src/cadrumo/invoice.py"
-        assert record["binding_occurrence"] == 1
     assert payload["schema_version"] == 1
     assert payload["inventory_digest"].startswith("sha256:")
 
@@ -328,7 +358,7 @@ def test_inventory_is_repeatable_and_raw_byte_drift_changes_only_execution_ident
     duplicate_before = next(finding for finding in first["findings"] if finding["name"] == "Invoice")
     left_before = next(record for record in first["declarations"] if record["path"] == "src/cadrumo/left.py")
 
-    _write(tmp_path, "src/cadrumo/left.py", "# unrelated line movement\n\n" + left)
+    _write(tmp_path, "src/cadrumo/left.py", left + "# unrelated trailing bytes\n")
     drifted = to_json(scan((tmp_path / "src", tmp_path / "dev"), tmp_path))
     duplicate_after = next(finding for finding in drifted["findings"] if finding["name"] == "Invoice")
     left_after = next(record for record in drifted["declarations"] if record["path"] == "src/cadrumo/left.py")
@@ -336,5 +366,5 @@ def test_inventory_is_repeatable_and_raw_byte_drift_changes_only_execution_ident
     assert left_after["source_hash"] != left_before["source_hash"]
     assert drifted["inventory_digest"] != first["inventory_digest"]
     assert duplicate_after["id"] == duplicate_before["id"]
-    assert duplicate_after["sites"] != duplicate_before["sites"]
+    assert duplicate_after["sites"] == duplicate_before["sites"]
     assert duplicate_after["qualified_sites"] == duplicate_before["qualified_sites"]
