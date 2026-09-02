@@ -197,24 +197,30 @@ def test_modelo_721_does_not_claim_pair_complete_aeat_soap_xml_contract_authorit
 
 
 def test_modelo_721_threshold_continuity_has_registry_parameters_without_calculation_surface() -> None:
-    modelo, revision, _ = _revision_721(2024)
+    modelo, _, _ = _revision_721(2024)
 
-    link_ids_by_surface = {link.surface: link.id for link in revision.application_links}
     expected_link_ids_by_surface = {
         "portal": "modelo-721-portal",
         "filing": "modelo-721-filing",
         "deadline": "modelo-721-deadline",
     }
 
-    assert "calculation" not in link_ids_by_surface
-    assert "extractor" not in link_ids_by_surface
-    assert "modelo-721-extractor" not in revision.constructs[0].application_links
-    assert "modelo-721-calculation" not in revision.constructs[0].application_links
-    assert expected_link_ids_by_surface.items() <= link_ids_by_surface.items()
-    assert {parameter.id for parameter in revision.parameters} >= {
-        "modelo-721-asset-declaration-threshold-eur",
-        "modelo-721-redeclaration-increment-threshold-eur",
-    }
+    for revision in modelo.revisions.values():
+        link_ids_by_surface = {link.surface: link.id for link in revision.application_links}
+
+        assert "calculation" not in link_ids_by_surface
+        assert "extractor" not in link_ids_by_surface
+        assert revision.extraction_profiles == ()
+        assert revision.constructs, f"Modelo 721 revision {revision.id} must retain its informative construct"
+        for construct in revision.constructs:
+            assert construct.extraction_profiles == ()
+            assert "modelo-721-extractor" not in construct.application_links
+            assert "modelo-721-calculation" not in construct.application_links
+        assert expected_link_ids_by_surface.items() <= link_ids_by_surface.items()
+        assert {parameter.id for parameter in revision.parameters} >= {
+            "modelo-721-asset-declaration-threshold-eur",
+            "modelo-721-redeclaration-increment-threshold-eur",
+        }
     assert modelo.id == "721"
 
 

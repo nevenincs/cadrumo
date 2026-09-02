@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import re
 from collections.abc import Mapping
+from enum import StrEnum
 from typing import Final, Literal, cast
 
 from ....core.external_constants import UTF_8_ENCODING
@@ -14,7 +15,33 @@ from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ._toml_helpers import as_toml_table as _as_toml_table
 from .ids import RevisionId
 
-ModeloLocalizationField = Literal["label", "help", "title", "official_name"]
+
+class ModeloLocalizationFieldKind(StrEnum):
+    """Which localizable text a modelo locale key addresses."""
+
+    LABEL = "label"
+    HELP = "help"
+    TITLE = "title"
+    OFFICIAL_NAME = "official_name"
+
+
+ModeloLocalizationField = Literal[
+    ModeloLocalizationFieldKind.LABEL,
+    ModeloLocalizationFieldKind.HELP,
+    ModeloLocalizationFieldKind.TITLE,
+    ModeloLocalizationFieldKind.OFFICIAL_NAME,
+]
+"""Every localizable field."""
+
+CasillaLocalizationField = Literal[
+    ModeloLocalizationFieldKind.LABEL,
+    ModeloLocalizationFieldKind.HELP,
+]
+"""The fields a CASILLA carries, which are only its label and its help text.
+
+A narrowing written out twice before this existed. A casilla has no title and no
+official name -- those belong to the modelo and its revision -- so keeping this narrow
+stops a caller asking for a casilla key that can never resolve."""
 
 _PLAIN_SEGMENT: Final = re.compile(r"^[A-Za-z0-9_-]+$")
 _ENCODED_PREFIX: Final[str] = "x-"
@@ -37,7 +64,7 @@ def modelo_locale_key(modelo_id: str, field: Literal["title", "official_name"]) 
     return f"modelo.schema.{encode_modelo_locale_segment(modelo_id)}.field.{field}"
 
 
-def revision_locale_key(modelo_id: str, revision_id: RevisionId, field: Literal["label"] = "label") -> str:
+def revision_locale_key(modelo_id: str, revision_id: RevisionId, field: Literal[ModeloLocalizationFieldKind.LABEL] = ModeloLocalizationFieldKind.LABEL) -> str:
     """Derive a revision-level presentation key."""
     return (
         f"modelo.schema.{encode_modelo_locale_segment(modelo_id)}.revision."
@@ -68,7 +95,7 @@ def casilla_occurrence_locale_key(
     modelo_id: str,
     revision_id: RevisionId,
     casilla_id: str,
-    field: Literal["label", "help"],
+    field: CasillaLocalizationField,
 ) -> str:
     """Derive the exact revision-occurrence key for one casilla field."""
     return (
@@ -81,7 +108,7 @@ def casilla_occurrence_locale_key(
 def casilla_continuity_locale_key(
     modelo_id: str,
     continuidad_id: str,
-    field: Literal["label", "help"],
+    field: CasillaLocalizationField,
 ) -> str:
     """Derive the stable continuity key for one grounded casilla field."""
     return (
@@ -95,7 +122,7 @@ def casilla_alias_locale_key(
     revision_id: RevisionId,
     casilla_id: str,
     alias_id: str,
-    field: Literal["label"] = "label",
+    field: Literal[ModeloLocalizationFieldKind.LABEL] = ModeloLocalizationFieldKind.LABEL,
 ) -> str:
     """Derive the presentation key for one casilla alias occurrence."""
     return (
@@ -280,7 +307,9 @@ def require_modelo_localization(
 
 
 __all__ = [
+    "CasillaLocalizationField",
     "ModeloLocalizationField",
+    "ModeloLocalizationFieldKind",
     "casilla_alias_locale_key",
     "casilla_continuity_locale_key",
     "casilla_occurrence_locale_key",

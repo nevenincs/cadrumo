@@ -20,7 +20,7 @@ grounds all three revisions' profiles.
 See Also:
     :func:`~adapters.inbound.declaracion.parser.parse_declaracion`
         Public parser entry point exercised for the 2024 and 2025 profiles.
-    :class:`~domain.calculations.registry._schema_extraction.ExtractionProfileDefinition`
+    :class:`~domain.calculations.registry.schema_extraction.ExtractionProfileDefinition`
         Registry-owned ``declaracion_pdf`` profile contract asserted here.
     ``test_parser_synthetic_fixtures_quarterly.py``
         Sibling 2026 fixture round-trip reused as the current-year layout

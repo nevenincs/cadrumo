@@ -130,7 +130,7 @@ def validate_bbox_anchor_consistency(
     """Registry-level defense-in-depth for bbox_anchor field/strategy consistency.
 
     The
-    :class:`~domain.calculations.registry._schema_extraction.ExtractionTargetDefinition`
+    :class:`~domain.calculations.registry.schema_extraction.ExtractionTargetDefinition`
     model validator enforces this at construction time; this function provides
     an additional snapshot-build check so that targets loaded from TOML that
     somehow bypass the in-memory validator (e.g. via future schema migration

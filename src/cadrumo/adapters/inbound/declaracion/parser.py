@@ -4,7 +4,7 @@ Parsing is registry-profile-driven: template detection resolves the
 modelo/year/revision coordinate, then a
 :class:`~domain.calculations.registry.RegistrySnapshot` supplies the single
 ``declaracion_pdf``
-:class:`~domain.calculations.registry._schema_extraction.ExtractionProfileDefinition`
+:class:`~domain.calculations.registry.schema_extraction.ExtractionProfileDefinition`
 used to extract casillas. There is deliberately no per-modelo extractor class
 registry here.
 
