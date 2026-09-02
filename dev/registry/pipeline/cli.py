@@ -28,7 +28,7 @@ from ._provenance_manifest import ExportFragmentTarget
 from ._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
 from ._tree_publication import GeneratedExportTreePublicationContext, publish_validated_generated_export_tree
 from ._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
-from .render_check import RevisionRenderInputs, revision_render_inputs
+from .render_check import GeneratedExportBootstrapTransport, RevisionRenderInputs, revision_render_inputs
 
 app = typer.Typer(
     name="pipeline",
@@ -62,24 +62,32 @@ class _PreparedInvocation:
 def _prepare(invocation: _Invocation, root: Path) -> _PreparedInvocation:
     """Stage one narrow candidate and derive its render inputs from authority."""
     authority = bundled_authority()
+    target_root = bundled_path("registry", "aeat")
+    target_export_root = target_root / "modelos" / invocation.modelo / "revisions" / invocation.revision / "export"
     try:
         inputs = revision_render_inputs(
             authority,
             modelo=invocation.modelo,
             revision=invocation.revision,
             source_ref=invocation.source_ref,
+            bootstrap_transport=(
+                None
+                if target_export_root.exists()
+                else GeneratedExportBootstrapTransport(
+                    layout_id=f"generated-modelo-{invocation.modelo}-{invocation.revision}-fichero",
+                    line_ending="crlf",
+                )
+            ),
         )
     except (RegistryError, ValueError) as error:
         raise ValueError(str(error)) from error
 
     candidate_root = root / "candidate" / "registry" / "aeat"
-    target_root = bundled_path("registry", "aeat")
     _stage_candidate(
         candidate_root,
         modelo=invocation.modelo,
         revision=invocation.revision,
     )
-    target_export_root = target_root / "modelos" / invocation.modelo / "revisions" / invocation.revision / "export"
     validation = GeneratedExportTreeValidationContext(
         registry_root=candidate_root,
         source_root=bundled_path(),

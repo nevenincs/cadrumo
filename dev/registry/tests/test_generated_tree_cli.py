@@ -12,8 +12,13 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 
+from ..pipeline._export_tree import render_complete_export_tree
 from ..pipeline.cli import _check, _Invocation, _PreparedInvocation, _publish, app
-from ..pipeline.render_check import RevisionRenderInputs
+from ..pipeline.render_check import (
+    GeneratedExportBootstrapTransport,
+    RevisionRenderInputs,
+    revision_render_inputs,
+)
 from .test_export_tree import _ISOLATED_TREE, _real_authorities, _write_isolated_generated_authority_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -119,3 +124,30 @@ def test_modelo_200_calculation_grade_does_not_widen_its_runtime_filing_authorit
         )
 
     assert str(calculation.revision.id) == "2024"
+
+
+def test_modelo_200_bootstrap_assembly_reaches_the_real_join_and_renderer(tmp_path: Path) -> None:
+    """An unpublished revision is assembled from its selected official design, not a missing layout."""
+    inputs = revision_render_inputs(
+        bundled_authority(),
+        modelo="200",
+        revision="2025-y-siguientes",
+        source_ref="aeat-dr-200-2025",
+        bootstrap_transport=GeneratedExportBootstrapTransport(
+            layout_id="generated-modelo-200-2025-y-siguientes-fichero",
+            line_ending="crlf",
+        ),
+    )
+
+    rendered = render_complete_export_tree(
+        tmp_path / "export",
+        revision_id=inputs.revision_id,
+        joined=inputs.joined,
+        semantic_map=inputs.semantic_map,
+        transport_profile=inputs.transport_profile,
+        render_profile=inputs.render_profile,
+        render_profile_source_evidence=inputs.render_profile_source_evidence,
+    )
+
+    assert inputs.layout_id == "generated-modelo-200-2025-y-siguientes-fichero"
+    assert rendered.output_files
