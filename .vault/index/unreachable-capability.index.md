@@ -6,8 +6,9 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:bb7bd44a4c1307ba1afa77cbd8ee9239c68a155daa551b5f47a4da6d5ab10721'
+body_hash: 'sha256:2c9a6ab0561a706e1cdc7ec879dabb8502b32d7484a8d612c418a706313e4ecf'
 related:
+  - '[[2026-09-02-unreachable-capability-disconnected-capability-inventory-reference]]'
   - '[[2026-09-02-unreachable-capability-fincas-unblock-research]]'
   - '[[2026-09-02-unreachable-capability-research]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
@@ -23,6 +24,10 @@ Auto-generated index of all documents tagged with `#unreachable-capability`.
 ### adr
 
 - `2026-09-02-unreachable-capability-tui-navigation-join-adr` - `unreachable-capability` adr: `one tui entrypoint and a home-screen navigation join` | (**status:** `accepted`)
+
+### reference
+
+- `2026-09-02-unreachable-capability-disconnected-capability-inventory-reference` - `unreachable-capability` reference: `capability built but unreachable from the CLI`
 
 ### research
 
