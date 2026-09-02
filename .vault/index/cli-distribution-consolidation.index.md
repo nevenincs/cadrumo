@@ -6,7 +6,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:ea6750063398be06a3cbdab07f32d909025ddd22f7f0bec4c51e70d83a946d7d'
+body_hash: 'sha256:6a57acf9ef2871583892aa4c95d3e50b702fe9914507956f1eabddf02b428817'
 related:
   - '[[2026-09-02-cli-distribution-consolidation-P01-S01]]'
   - '[[2026-09-02-cli-distribution-consolidation-P01-S02]]'
@@ -22,6 +22,22 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-P04-S13]]'
   - '[[2026-09-02-cli-distribution-consolidation-P04-S14]]'
   - '[[2026-09-02-cli-distribution-consolidation-P04-S15]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P05-S16]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P05-S17]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P05-S18]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P05-S19]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P05-S20]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P06-S21]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P06-S22]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P07-S23]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P07-S24]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P07-S25]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P07-S26]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P08-S28]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P08-S29]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P08-S30]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P08-S31]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P08-S32]]'
   - '[[2026-09-02-cli-distribution-consolidation-adr]]'
   - '[[2026-09-02-cli-distribution-consolidation-plan]]'
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
@@ -53,6 +69,22 @@ Auto-generated index of all documents tagged with `#cli-distribution-consolidati
 - `2026-09-02-cli-distribution-consolidation-P04-S13` - Delete the host-extension channel artifacts and their acquisition lanes
 - `2026-09-02-cli-distribution-consolidation-P04-S14` - Rewrite the agent connection guide around the installed console script
 - `2026-09-02-cli-distribution-consolidation-P04-S15` - Unlist the superseded plugin from the marketplace descriptor
+- `2026-09-02-cli-distribution-consolidation-P05-S16` - Declare the root command's full-screen capability
+- `2026-09-02-cli-distribution-consolidation-P05-S17` - Route a bare full-screen request to the root session
+- `2026-09-02-cli-distribution-consolidation-P05-S18` - Add the headless self-test option and its console-capability bypass
+- `2026-09-02-cli-distribution-consolidation-P05-S19` - Translate the self-test help key across every supported locale
+- `2026-09-02-cli-distribution-consolidation-P05-S20` - Retire the second console script, repoint its entry-point test, and assert the headless full-screen start in the distribution smoke check
+- `2026-09-02-cli-distribution-consolidation-P06-S21` - Replace nested-container install proof with an isolated environment probe
+- `2026-09-02-cli-distribution-consolidation-P06-S22` - Remove the container-daemon prerequisite from the prove legs
+- `2026-09-02-cli-distribution-consolidation-P07-S23` - Rewrite the channel descriptor as a flat three-channel inventory
+- `2026-09-02-cli-distribution-consolidation-P07-S24` - Remove the tier rule, availability states and claim derivation
+- `2026-09-02-cli-distribution-consolidation-P07-S25` - Derive the required evidence rows from the whole inventory
+- `2026-09-02-cli-distribution-consolidation-P07-S26` - Rename the sealed release record's channel field to drop the claim vocabulary
+- `2026-09-02-cli-distribution-consolidation-P08-S28` - Run the suite under the newer interpreter and raise the declared floor to the account range
+- `2026-09-02-cli-distribution-consolidation-P08-S29` - Rename the runners to the product-prefixed account convention
+- `2026-09-02-cli-distribution-consolidation-P08-S30` - Delete the branch-only runner probe workflows
+- `2026-09-02-cli-distribution-consolidation-P08-S31` - Delete the control-plane document and restate its sizing rule at the call sites
+- `2026-09-02-cli-distribution-consolidation-P08-S32` - Drop the stale runner count from the load-sizing gate, leaving the invariant it actually asserts
 
 ### plan
 

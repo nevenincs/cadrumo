@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:475324fc05e3000b435ead16610495a0e5e840f7b04896fa1b9f8b6beac0cced'
+body_hash: 'sha256:481dd7dc4eb3ec307b684f638f927de42b4bcd9a86502e8d2077d73ce4f25f32'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -281,6 +281,47 @@ stale figure is a runner count in prose, which the metanarration ruling already 
 
 The ratchets therefore belong to the registry and quality-gate features that already
 carry plans, not to this one.
+
+### No continuous-integration run has exercised this decision's work
+
+Every verification behind the completed Steps was taken locally, on one operating
+system, in a development environment. A wheel builds carrying both packages, installing
+it yields two working console scripts, they run under both interpreters in the declared
+range, and the gates that were changed pass when run directly.
+
+None of that is a release qualification. The adopted release-path workflows exist only
+in the working tree and have never executed. No packaging campaign has run, so the
+evidence directory the readiness gate and the claims gate both read is empty - which is
+why the install page cannot yet state its acquisition command. The macOS and Linux
+targets are unverified entirely; the suite has not been run in full; and the server's
+most recent runs predate this work and were failing.
+
+The distribution therefore builds and installs, and is not shown to be publishable. The
+sequence that would establish it is a green quick campaign across the three targets,
+then a full campaign minting the rows, before any name is claimed on the index.
+
+### The index credential is absent by design, not by oversight
+
+No PyPI credential exists in the environment, the user configuration, the operating
+system keyring, or the repository's secrets - which hold only a marketplace token and a
+tap token. That is consistent rather than missing: publication was designed for Trusted
+Publishing over OIDC, so a long-lived token was never meant to exist.
+
+The consequence is that reserving the primary name is not a credential-handling problem
+to solve. It unblocks by registering the three publisher bindings against the adopted
+workflow and environment, after which publication happens through the workflow rather
+than beside it. Uploading by hand with a personal token would work once and leave the
+path it bypassed still unexercised.
+
+A reservation should also carry the placeholder version the two corpus distributions
+already use rather than the product version, so that holding the name costs no release
+number - two are already permanently retired.
+
+Nothing else stands between the name and the index. `uv build --no-sources` produces
+both distributions from the merged tree - a 74.5 MB wheel and a 59.6 MB source
+distribution - and each sits comfortably under the index's 100 MB per-file cap, the one
+limit that could have forced a repackaging before a first upload. The remaining action
+is the upload itself, and it is external to this tree.
 
 ### Not investigated
 

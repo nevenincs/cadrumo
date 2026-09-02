@@ -30,7 +30,10 @@ from .validate_revision_identity import collect_record_id_lists
 
 
 class _IdentifiedRecord(Protocol):
-    id: str
+    """A record carrying a string id, which is all indexing by id requires."""
+
+    @property
+    def id(self) -> str: ...
 
 
 def records_by_id[RecordT: _IdentifiedRecord](records: Iterable[RecordT]) -> dict[str, RecordT]:

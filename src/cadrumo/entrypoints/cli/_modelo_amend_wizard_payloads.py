@@ -50,8 +50,8 @@ class WorkAmendWizardResult(ModeloRecordPayload):
     unknown status/kind, or an oversized notes string is refused rather than
     accepted. Adds the wizard-specific ``corrected_casillas`` audit trail;
     the amendment wizard never writes a fichero-BOE itself.
-    ``amends_filing_record_id`` is narrowed to required: every amendment
-    wizard result amends a prior filing record by definition.
+    ``amends_filing_record_id`` is required in practice and refused when
+    absent: every amendment wizard result amends a prior filing record.
     """
 
     operation: str = "modelo.work.amend_wizard"
@@ -61,7 +61,7 @@ class WorkAmendWizardResult(ModeloRecordPayload):
     corrected_casillas: tuple[AmendWizardCorrectedCasillaPayload, ...] = ()
 
     @model_validator(mode="after")
-    def _amendment_names_the_record_it_supersedes(self) -> "WorkAmendWizardResult":
+    def _amendment_names_the_record_it_supersedes(self) -> WorkAmendWizardResult:
         """Refuse a wizard result that does not name the record it amends.
 
         The field keeps the shared record payload's optional type, which every

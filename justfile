@@ -276,7 +276,7 @@ check-relative-imports:
 # Verify the core facade, import-edge, and no-shim architecture invariants.
 [group('static-checks')]
 check-architecture:
-    @uv run --no-sync pytest -q -n0 dev/tests/test_cross_package_private_imports.py dev/tests/test_import_edge_integrity_gate.py dev/tests/test_facade_export_gate.py
+    @uv run --no-sync pytest -q -n0 dev/tests/test_cross_package_private_imports.py dev/tests/test_closed_vocabulary_canonicalization.py dev/tests/test_import_edge_integrity_gate.py dev/tests/test_facade_export_gate.py
 
 # Verify no shipped module has become unreachable from the declared entrypoints.
 # The baseline in dev/quality/unreachable_module_ratchet.toml may only shrink;

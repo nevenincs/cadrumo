@@ -51,12 +51,19 @@ def _vocabulary_of(annotation: object) -> frozenset[str]:
         return frozenset(str(member.value) for member in annotation)
     args = typing.get_args(annotation)
     if typing.get_origin(annotation) is not typing.Literal and args:
+        # Annotated[...] or another wrapper: the vocabulary is its first argument.
         return _vocabulary_of(args[0])
     return frozenset(str(arg.value if isinstance(arg, enum.Enum) else arg) for arg in args)
 
 
 def _declared_members(model: type[BaseModel]) -> frozenset[str]:
-    """Return the closed ``data_type`` vocabulary a model declares."""
+    """Return the closed ``data_type`` vocabulary a model declares.
+
+    A surface declares its vocabulary either as an enum -- the canonical casilla
+    taxonomy, whose members ARE the vocabulary -- or as a literal narrowing over that
+    enum's members. Both are read here rather than only the literal form, so this
+    stays a reader of what each model declares rather than of one spelling of it.
+    """
     return _vocabulary_of(model.model_fields["data_type"].annotation)
 
 

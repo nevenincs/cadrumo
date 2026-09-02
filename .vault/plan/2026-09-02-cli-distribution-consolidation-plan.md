@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:9e2f18b71308053c8135ae22b8427f36936b25fabdf829fcd8f3af155e50e3bb'
+body_hash: 'sha256:ca96027c299c1a3891c5bae56825c74b2e49d61ac73459dcfd6d07af3b229850'
 ---
 
 # `cli-distribution-consolidation` plan
@@ -87,21 +87,21 @@ Prove installs in an isolated environment holding only the artifact, removing th
 
 Rewrite the channel descriptor as a flat inventory and strip tier, availability and claim derivation from the release surfaces.
 
-- [ ] `P07.S23` - Rewrite the channel descriptor as a flat three-channel inventory; `docs/_data/download_channels.toml`.
-- [ ] `P07.S24` - Remove the tier rule, availability states and claim derivation; `dev/docs/download_matrix.py`.
-- [ ] `P07.S25` - Derive the required evidence rows from the whole inventory; `dev/release/readiness.py`.
-- [ ] `P07.S26` - Rename the sealed release record's channel field to drop the claim vocabulary; `dev/release/release_candidate.py`.
-- [ ] `P07.S27` - Rewrite the install page around the primary registry; `docs/download.md`.
+- [x] `P07.S23` - Rewrite the channel descriptor as a flat three-channel inventory; `docs/_data/download_channels.toml`.
+- [x] `P07.S24` - Remove the tier rule, availability states and claim derivation; `dev/docs/download_matrix.py`.
+- [x] `P07.S25` - Derive the required evidence rows from the whole inventory; `dev/release/readiness.py`.
+- [x] `P07.S26` - Rename the sealed release record's channel field to drop the claim vocabulary; `dev/release/release_candidate.py`.
+- [x] `P07.S27` - Rewrite the install page around the primary registry; `docs/download.md`.
 
 ### Phase `P08` - Harmonize naming and retire dead surfaces
 
 Align runner names and the Python floor with the account, and delete workflows and documents that no longer have a target to serve.
 
-- [ ] `P08.S28` - Run the suite under the newer interpreter and raise the declared floor to the account range; `pyproject.toml`.
-- [ ] `P08.S29` - Rename the runners to the product-prefixed account convention; `.github/workflows/ci.yml`.
-- [ ] `P08.S30` - Delete the branch-only runner probe workflows; `.github/workflows/ci-runner-probe.yml`.
-- [ ] `P08.S31` - Delete the control-plane document and restate its sizing rule at the call sites; `.github/ci-control-plane.md`.
-- [ ] `P08.S32` - Drop the stale runner count from the load-sizing gate, leaving the invariant it actually asserts; `dev/ci/tests/test_machine_aware_load.py`.
+- [x] `P08.S28` - Run the suite under the newer interpreter and raise the declared floor to the account range; `pyproject.toml`.
+- [x] `P08.S29` - Rename the runners to the product-prefixed account convention; `.github/workflows/ci.yml`.
+- [x] `P08.S30` - Delete the branch-only runner probe workflows; `.github/workflows/ci-runner-probe.yml`.
+- [x] `P08.S31` - Delete the control-plane document and restate its sizing rule at the call sites; `.github/ci-control-plane.md`.
+- [x] `P08.S32` - Drop the stale runner count from the load-sizing gate, leaving the invariant it actually asserts; `dev/ci/tests/test_machine_aware_load.py`.
 
 ## Parallelization
 
@@ -137,6 +137,12 @@ connection guide against the merged surface.
 
 P07 depends on P04, which deletes the channels most of the vocabulary describes.
 Cleaning the descriptor first would rewrite code that P04 removes.
+
+The install page cannot land its final wording before the primary distribution name
+resolves on the index. Its instructions are literal acquisition claims, and the claims
+gate requires a passing evidence row for every channel a page advertises by hand - so
+the page's PyPI section stays blocked on the name reservation Step in P02, which is
+itself blocked on credentials the executing agent does not hold.
 
 P08 depends on nothing but is scheduled last so its retirements cannot orphan a
 surface an earlier Phase still needs.
