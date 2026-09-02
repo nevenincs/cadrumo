@@ -20,13 +20,13 @@ from pydantic import AnyUrl, ValidationError
 
 from .....core.config import Settings
 from .....tests.aeat_literal_fixtures import UNKNOWN_AEAT_STATE_SURFACE_URL_CANARY, aeat_host
-from ..checker_oracle_flow import CheckerObservation, CheckerReplayDriver
-from ..errors import RegistryValidationError
-from ..groi_oracle import (
+from .....tests.groi_oracle import (
     GROI_ORACLE_ID,
     GroiOracle,
     register_default,
 )
+from ..checker_oracle_flow import CheckerObservation, CheckerReplayDriver
+from ..errors import RegistryValidationError
 from ..live_parity import LiveParityCatalogue, LiveParityOracle, OracleEnvironment
 from ..remote_state_guard import (
     AEAT_WRITE_FORBIDDEN_ACTIONS,

@@ -617,12 +617,6 @@ ignore_imports =
     cadrumo.application.filing.history_repository -> cadrumo.adapters.persistence.**
     cadrumo.application.filing.persistence_wiring -> cadrumo.adapters.persistence.**
     cadrumo.application.inventory.service -> cadrumo.adapters.persistence.**
-    # Reaches NO persistence: this pin sat between two repository modules and
-    # was wholly an inbound-adapter allowance. A justificante PDF is an
-    # externally-authored format, so lifting a filing out of its bytes is
-    # inbound-adapter work; this module validates and stores what the parse
-    # returned. Same class as the einvoice pins above, now stated.
-    cadrumo.application.filing._import -> cadrumo.adapters.inbound.justificante.parser
     # Foreign-currency invoices are converted at creation time, so the invoice
     # creation path constructs the default ECB rate provider (the concrete
     # ExchangeRateProvider) — the outbound-wiring edge sec. 538 permits, pinned

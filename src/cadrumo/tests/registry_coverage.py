@@ -51,33 +51,35 @@ from typing import Annotated, Literal
 
 from pydantic import BeforeValidator, Field, PrivateAttr, computed_field, model_validator
 
-from ....core.authority_grade import RegistryAuthorityGrade
-from ....core.filing_year import FilingYear
-from ....core.period import RegistrySelectorPeriodCode
-from ....core.revision_review import RevisionReviewStatus
-from ._schema_family_coverage import (
+from ..core.authority_grade import RegistryAuthorityGrade
+from ..core.filing_year import FilingYear
+from ..core.period import RegistrySelectorPeriodCode
+from ..core.revision_review import RevisionReviewStatus
+from ..domain.calculations.registry._schema_family_coverage import (
     CoverageModel,
 )
-from ._snapshot_internals import check_snapshot_filing_review_tier
-from .authority import RegistryCoverageFacts, ValidatedRegistryAuthority
-from .errors import AmbiguousRevisionSelectionError, RegistryValidationError
-from .ids import BindingId, CrossReferenceId, LegalRefId, SourceRefId, WorkbookParityRefId
-from .schema import (
+from ..domain.calculations.registry._snapshot_internals import check_snapshot_filing_review_tier
+from ..domain.calculations.registry.authority import RegistryCoverageFacts, ValidatedRegistryAuthority
+from ..domain.calculations.registry.errors import AmbiguousRevisionSelectionError, RegistryValidationError
+from ..domain.calculations.registry.ids import BindingId, CrossReferenceId, LegalRefId, SourceRefId, WorkbookParityRefId
+from ..domain.calculations.registry.schema import (
     DataBindingDefinition,
     FormulaDefinition,
     ModeloDefinition,
     ModeloRevision,
     RegistrySnapshot,
 )
-from .schema_base import EvidenceTier, EvidenceTierField, coerce_enum_member
-from .schema_formula import ParameterDefinition
-from .schema_references import SourceReference
-from .schema_surfaces import RelationDefinition
-from .schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
-from .static_inspection import RegistryRevisionInspection
-from .temporal import coverage_assessment_horizon, revision_selection_coordinates
+from ..domain.calculations.registry.schema_base import EvidenceTier, EvidenceTierField, coerce_enum_member
+from ..domain.calculations.registry.schema_formula import ParameterDefinition
+from ..domain.calculations.registry.schema_references import SourceReference
+from ..domain.calculations.registry.schema_surfaces import RelationDefinition
+from ..domain.calculations.registry.schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
+from ..domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from ..domain.calculations.registry.temporal import coverage_assessment_horizon, revision_selection_coordinates
 
 CoverageGateStatus = Literal["satisfied", "gap"]
+
+
 class CoverageAuthorityScope(StrEnum):
     """What authority a coverage ledger was built from."""
 
@@ -684,7 +686,9 @@ def build_model_law_coverage_ledger(
         workbook_parity_refs: Iterable[WorkbookParityReference] = authority.workbook_parity_refs.values()
         live_cross_references: Iterable[LiveCrossReferenceDecision] = authority.live_cross_references.values()
         proven = _authority_proof if _authority_proof in _AUTHORITY_CHECK_PROOFS else None
-        authority_scope: CoverageAuthorityScopeField = CoverageAuthorityScope.FILING if proven is not None else "inspection_only"
+        authority_scope: CoverageAuthorityScopeField = (
+            CoverageAuthorityScope.FILING if proven is not None else "inspection_only"
+        )
         review_tier = proven.review_tier if proven is not None else None
     else:
         modelo_id = authority.modelo_id

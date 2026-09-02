@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import pytest
 
-from ..aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
-from ..groi_oracle import GROI_ORACLE_ID, GroiOracle
+from .....tests.aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
+from .....tests.groi_oracle import GROI_ORACLE_ID, GroiOracle
 from ..live_parity import (
     _COMPATIBLE_SURFACE_PAIRS,
     LiveParityCatalogue,

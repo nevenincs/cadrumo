@@ -6,10 +6,10 @@ import pytest
 
 from .....core.resources.bundled_data import bundled_path
 from .....tests import REPO_ROOT
+from .....tests.registry_coverage import build_model_law_coverage_ledger
 from .....tests.registry_snapshot import build_snapshot
 from ..binding_selector_utils import selector_as_dict
 from ..corpus_catalogue import verify_source_file
-from ..coverage import build_model_law_coverage_ledger
 from ..errors import RegistrySnapshotError
 from ..loader import load_modelo_directory
 from ..loader_cache import discover_modelo_sources

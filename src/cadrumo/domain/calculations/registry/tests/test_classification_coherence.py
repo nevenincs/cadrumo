@@ -31,8 +31,7 @@ import pytest
 from pydantic import BaseModel, Field, ValidationError
 
 from .....core.tax_domain import TaxDomain
-from .....tests.registry_tree import bundled_registry_tree
-from ..classification_coherence import (
+from .....tests.registry_classification_coherence import (
     _MAX_DETAIL_LENGTH,
     _TRUNCATION_SUFFIX,
     ClassificationCoherenceFinding,
@@ -43,6 +42,7 @@ from ..classification_coherence import (
     audit_bundled_classification_coherence,
     build_classification_coherence_audit,
 )
+from .....tests.registry_tree import bundled_registry_tree
 from ..schema import ModeloDefinition, ModeloRevision
 from ..schema_base import CalculationClass
 from ..schema_input_kind import InputKind

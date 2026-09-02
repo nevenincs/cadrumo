@@ -19,10 +19,10 @@ from .....tests.aeat_literal_fixtures import (
     aeat_url,
     configured_path,
 )
+from .....tests.aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
+from .....tests.groi_oracle import GROI_ORACLE_ID, GroiOracle
 from .....tests.registry_snapshot import build_snapshot
-from ..aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from ..errors import RegistrySnapshotError, RegistryValidationError
-from ..groi_oracle import GROI_ORACLE_ID, GroiOracle
 from ..live_parity import LiveParityCatalogue, OracleEnvironment
 from ..remote_state_guard import (
     _FORBIDDEN_TOKENS,

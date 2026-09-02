@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from .....core.config import Settings
 from .....tests.aeat_literal_fixtures import aeat_host
-from ..aeat_nif_iva_oracle import (
+from .....tests.aeat_nif_iva_oracle import (
     ORACLE_ID,
     AeatNifIvaCheckerOracle,
     register_default,
@@ -248,13 +248,13 @@ def test_replay_payload_strict_rejects_non_string_value_in_observed_nif_iva() ->
 
 def test_the_oracle_module_keeps_a_public_locally_defined_surface() -> None:
     """Every exported oracle symbol is defined here, and the package binds none."""
+    from .....tests import aeat_nif_iva_oracle
     from ... import registry as registry_namespace
-    from .. import aeat_nif_iva_oracle
 
     assert aeat_nif_iva_oracle.__all__
     for name in aeat_nif_iva_oracle.__all__:
         owned = getattr(aeat_nif_iva_oracle, name)
         owner = getattr(owned, "__module__", None)
         if owner is not None:
-            assert owner == "cadrumo.domain.calculations.registry.aeat_nif_iva_oracle", name
+            assert owner == "cadrumo.tests.aeat_nif_iva_oracle", name
         assert not hasattr(registry_namespace, name), name

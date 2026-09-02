@@ -68,16 +68,16 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
-from ....core.modelo import NON_REGISTRY_MODELOS, Modelo
-from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.prose_elision import PROSE_ELISION_MARKER, elide_to_cap
-from ....core.resources.bundled_data import bundled_path
-from ....core.tax_domain import TaxDomain
-from ._validate_revision_rules import validate_informative_class_invariant
-from .ids import ModeloId
-from .loader import load_registry_tree
-from .schema import ModeloDefinition
-from .schema_base import CalculationClass, CalculationClassField
+from ..core.modelo import NON_REGISTRY_MODELOS, Modelo
+from ..core.models import STRICT_FROZEN_CONFIG
+from ..core.prose_elision import PROSE_ELISION_MARKER, elide_to_cap
+from ..core.resources.bundled_data import bundled_path
+from ..core.tax_domain import TaxDomain
+from ..domain.calculations.registry._validate_revision_rules import validate_informative_class_invariant
+from ..domain.calculations.registry.ids import ModeloId
+from ..domain.calculations.registry.loader import load_registry_tree
+from ..domain.calculations.registry.schema import ModeloDefinition
+from ..domain.calculations.registry.schema_base import CalculationClass, CalculationClassField
 
 #: The ``calculation_class`` value naming the informative enforcement posture.
 

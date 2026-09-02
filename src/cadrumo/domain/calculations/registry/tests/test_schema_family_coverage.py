@@ -24,13 +24,13 @@ from .....core.schema_family_disposition import (
     UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS,
     RegistrySchemaFamilyDisposition,
 )
+from .....tests.registry_coverage import REQUIRED_COVERAGE_TIERS
 from .....tests.registry_tree import bundled_registry_tree
 from .._schema_family_coverage import (
     RevisionCoverageManifest,
     SchemaFamilyCoverageRow,
     build_revision_coverage_manifest,
 )
-from ..coverage import REQUIRED_COVERAGE_TIERS
 from ..errors import RegistryLoadError
 from ..loader import load_modelo_directory
 from ..schema import (

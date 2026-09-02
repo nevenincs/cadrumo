@@ -333,10 +333,8 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "grounding the no-silent-under-declaration rule requires."
         ),
         members=_registry(
-            "aeat_nif_iva_oracle",
             "checker_oracle_flow",
             "external_grounding",
-            "groi_oracle",
             "live_parity",
             "remote_state_guard",
             "renta_web_open_oracle",
@@ -352,8 +350,6 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "defect went unobserved."
         ),
         members=_registry(
-            "classification_coherence",
-            "coverage",
             "static_inspection",
         ),
     ),
@@ -717,9 +713,7 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "Investment-goods regularisation and filing-evidence records are built by the filing "
             "surfaces, not by the registry load."
         ),
-        members=(
-            "cadrumo.domain.filing_evidence",
-        ),
+        members=("cadrumo.domain.filing_evidence",),
     ),
 )
 

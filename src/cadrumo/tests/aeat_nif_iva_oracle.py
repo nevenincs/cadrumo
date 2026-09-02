@@ -11,10 +11,10 @@ from typing import override
 
 from pydantic import AnyUrl
 
-from ....core.config import Settings
-from .checker_oracle_flow import CheckerDriver, CheckerOperationPlan, CheckerOracle
-from .ids import OracleId
-from .live_parity import LiveParityCatalogue, OracleEnvironment, OracleSurfaceKind
+from ..core.config import Settings
+from ..domain.calculations.registry.checker_oracle_flow import CheckerDriver, CheckerOperationPlan, CheckerOracle
+from ..domain.calculations.registry.ids import OracleId
+from ..domain.calculations.registry.live_parity import LiveParityCatalogue, OracleEnvironment, OracleSurfaceKind
 
 ORACLE_ID: OracleId = "aeat-nif-iva-checker"
 

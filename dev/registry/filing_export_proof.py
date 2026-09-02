@@ -39,10 +39,6 @@ from cadrumo.application.filing.export_proof import (
 from cadrumo.application.filing.export_proof import FilingExportProof as TwoChannelFilingExportProof
 from cadrumo.application.filing.producer_snapshot import FilingProducerSnapshot
 from cadrumo.application.filing.runtime import build_runtime_schema_provider
-from cadrumo.application.registry.filing_export_authority import (
-    FilingExportProof,
-    FilingExportProofConflictError,
-)
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.period import Period
@@ -60,6 +56,10 @@ from cadrumo.domain.calculations.registry.static_inspection import (
 )
 from cadrumo.domain.filing.errors import FilingExportError
 from cadrumo.domain.filing.schema import ModeloDraft
+from cadrumo.tests.filing_export_authority import (
+    FilingExportProof,
+    FilingExportProofConflictError,
+)
 
 from .diagnostic_classification import (
     RegistryDiagnosticFilingRevision,

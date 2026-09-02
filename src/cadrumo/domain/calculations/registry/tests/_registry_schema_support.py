@@ -15,11 +15,11 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.directory_scan import scan_directory
 from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_coverage import build_model_law_coverage_ledger
 from .....tests.registry_snapshot import build_snapshot
 from .._loader_internals import load_modelo_file
 from .._validate import RegistryValidator
 from ..authority import bundled_authority
-from ..coverage import build_model_law_coverage_ledger
 from ..errors import RegistryLoadError, RegistryValidationError
 from ..loader import load_registry_tree
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
