@@ -1,0 +1,282 @@
+# Dedicated rolling CPython compatibility evidence.
+#
+# This workflow is intentionally separate from the protected per-push and
+# release-cohort lanes.  It exercises every row declared by the checked-in
+# runtime inventory in two independently verdictable installation modes:
+# source artifacts and the one sealed release cohort.  The inventory's
+# prerelease row is advisory until promotion, but its probe and evidence remain
+# visible in the run.
+
+name: Cadrumo Python Runtime Compatibility
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/python-runtime-compatibility.yml"
+      - ".python-version"
+      - "pyproject.toml"
+      - "uv.lock"
+      - "dev/**"
+      - "src/**"
+      - "packaging/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/python-runtime-compatibility.yml"
+      - ".python-version"
+      - "pyproject.toml"
+      - "uv.lock"
+      - "dev/**"
+      - "src/**"
+      - "packaging/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  UV_VERSION: "0.11.29"
+
+jobs:
+  runtime-inventory:
+    name: Cadrumo / runtime inventory
+    # Never execute a fork pull-request head on the self-hosted fleet.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 15
+    outputs:
+      matrix: ${{ steps.emit-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: false
+
+      - name: Sync the checked-in lock
+        run: uv sync --frozen
+
+      - name: Validate inventory and emit matrix
+        id: emit-matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          matrix="$(uv run --no-sync python -m dev.ci.python_runtime_matrix)"
+          test -n "$matrix"
+          {
+            echo 'matrix<<RUNTIME_MATRIX'
+            echo "$matrix"
+            echo 'RUNTIME_MATRIX'
+          } >> "$GITHUB_OUTPUT"
+
+  build-python-cohort:
+    name: Cadrumo / build immutable compatibility cohort / Python 3.13
+    # This is the only cohort construction in this workflow.  Runtime rows
+    # consume its sealed bytes; they never rebuild or restamp a per-runtime
+    # replacement.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 90
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: false
+
+      - name: Sync the checked-in lock
+        run: uv sync --frozen
+
+      - name: Build the one immutable release cohort
+        shell: bash
+        run: |
+          set -euo pipefail
+          commit="$(git rev-parse HEAD)"
+          uv run --no-sync python -m dev.packaging.release_cohort build \
+            --output var/python-runtime-cohort \
+            --expected-commit "$commit"
+
+      - name: Verify the cohort and record archive digest
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run --no-sync python -m dev.packaging.release_cohort verify \
+            --cohort-dir var/python-runtime-cohort
+          test -n "$(find var/python-runtime-cohort -type f -print -quit)"
+          tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner \
+            -czf cadrumo-python-runtime-cohort.tar.gz \
+            -C var/python-runtime-cohort .
+          sha256sum cadrumo-python-runtime-cohort.tar.gz > cadrumo-python-runtime-cohort.tar.gz.sha256
+
+      - name: Upload the immutable compatibility cohort
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: cadrumo-python-runtime-cohort
+          path: |
+            cadrumo-python-runtime-cohort.tar.gz
+            cadrumo-python-runtime-cohort.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+  compatibility-source:
+    name: Cadrumo / source / ${{ matrix.python-minor }} / ${{ matrix.phase }}
+    needs: runtime-inventory
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.runtime-inventory.outputs.matrix) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: false
+
+      - name: Sync the checked-in lock
+        run: uv sync --frozen
+
+      - name: Run source compatibility probe
+        shell: bash
+        run: |
+          set +e
+          uv run --no-sync python -m dev.ci.python_runtime_compatibility \
+            --mode source \
+            --python "${{ matrix.python-version }}" \
+            --runtime-id "${{ matrix.runtime-id }}" \
+            --stability "${{ matrix.phase }}" \
+            --repo-root "$GITHUB_WORKSPACE" \
+            --work-dir "var/python-runtime-compatibility/${{ matrix.runtime-id }}/source" \
+            --evidence "var/python-runtime-compatibility/${{ matrix.runtime-id }}/source/compatibility-evidence.json"
+          probe_status=$?
+          set -e
+          if [ "$probe_status" -ne 0 ]; then
+            if [ "${{ matrix.blocking }}" = "true" ]; then
+              echo "::error::blocking source compatibility probe failed for ${{ matrix.runtime-id }}"
+              exit "$probe_status"
+            fi
+            echo "::warning::advisory source compatibility probe failed for ${{ matrix.runtime-id }}"
+          fi
+
+      - name: Hash source compatibility evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="var/python-runtime-compatibility/${{ matrix.runtime-id }}/source/compatibility-evidence.json"
+          test -f "$evidence"
+          sha256sum "$evidence" > "$evidence.sha256"
+
+      - name: Upload source compatibility evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: python-runtime-${{ matrix.runtime-id }}-source-evidence
+          path: var/python-runtime-compatibility/${{ matrix.runtime-id }}/source/compatibility-evidence.json*
+          if-no-files-found: error
+          retention-days: 14
+
+  compatibility-binary:
+    name: Cadrumo / binary / ${{ matrix.python-minor }} / ${{ matrix.phase }}
+    needs: [runtime-inventory, build-python-cohort]
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.runtime-inventory.outputs.matrix) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: false
+
+      - name: Sync the checked-in lock
+        run: uv sync --frozen
+
+      - name: Download the one immutable compatibility cohort
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: cadrumo-python-runtime-cohort
+          path: var/python-runtime-cohort-download
+
+      - name: Verify and extract the immutable compatibility cohort
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd var/python-runtime-cohort-download
+          sha256sum --check cadrumo-python-runtime-cohort.tar.gz.sha256
+          mkdir -p ../python-runtime-cohort
+          tar -xzf cadrumo-python-runtime-cohort.tar.gz -C ../python-runtime-cohort
+          cd ../..
+          uv run --no-sync python -m dev.packaging.release_cohort verify \
+            --cohort-dir var/python-runtime-cohort
+
+      - name: Run binary compatibility probe
+        shell: bash
+        run: |
+          set +e
+          uv run --no-sync python -m dev.ci.python_runtime_compatibility \
+            --mode binary \
+            --python "${{ matrix.python-version }}" \
+            --runtime-id "${{ matrix.runtime-id }}" \
+            --stability "${{ matrix.phase }}" \
+            --repo-root "$GITHUB_WORKSPACE" \
+            --cohort-dir var/python-runtime-cohort \
+            --work-dir "var/python-runtime-compatibility/${{ matrix.runtime-id }}/binary" \
+            --evidence "var/python-runtime-compatibility/${{ matrix.runtime-id }}/binary/compatibility-evidence.json"
+          probe_status=$?
+          set -e
+          if [ "$probe_status" -ne 0 ]; then
+            if [ "${{ matrix.blocking }}" = "true" ]; then
+              echo "::error::blocking binary compatibility probe failed for ${{ matrix.runtime-id }}"
+              exit "$probe_status"
+            fi
+            echo "::warning::advisory binary compatibility probe failed for ${{ matrix.runtime-id }}"
+          fi
+
+      - name: Hash binary compatibility evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="var/python-runtime-compatibility/${{ matrix.runtime-id }}/binary/compatibility-evidence.json"
+          test -f "$evidence"
+          sha256sum "$evidence" > "$evidence.sha256"
+
+      - name: Upload binary compatibility evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: python-runtime-${{ matrix.runtime-id }}-binary-evidence
+          path: var/python-runtime-compatibility/${{ matrix.runtime-id }}/binary/compatibility-evidence.json*
+          if-no-files-found: error
+          retention-days: 14
