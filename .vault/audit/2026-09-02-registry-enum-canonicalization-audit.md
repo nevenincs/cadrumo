@@ -580,6 +580,47 @@ is to run the owning tests immediately after the sweep rather than only at the e
 the iteration, because a proof turned vacuous still passes and will not announce
 itself.
 
+### a-design-blocker-was-asserted-without-being-tested | high | Two vocabularies were reported blocked on a constraint a five-line check disproved
+
+Two remaining vocabularies were reported as blocked because a coercion hop supposedly
+cannot attach to a mapping key the way it attaches to a scalar field. The claim was
+never tested. A five-line model under the same strict configuration the registry uses
+accepts raw string keys through a hop on the key type and still refuses an unknown
+key, so the constraint does not exist and both vocabularies were promotable the whole
+time.
+
+The error is worth recording because none of this campaign's other disciplines catch
+it. The sweeps, the load check, the counter and the review rounds all operate on
+edits that have been made; nothing operates on a claim made in a status report about
+work not yet attempted. The claim was inferred from the SHAPE of the annotation --
+a key position looks unlike a field position -- which is the same reasoning that
+produced two retracted one-member findings and one wrongly merged cadence enum.
+
+The rule is the cheap one: a stated limitation is a hypothesis until a call is made
+against it, and in this codebase that call is usually under ten lines. Reporting a
+blocker costs the campaign a decision it did not need to defer.
+
+### promotion-breaks-annotations-the-counter-cannot-see | high | Collection fields typed on a promoted vocabulary lose their coercion silently
+
+Promoting the evidence tier left four fields elsewhere annotated as tuples of that
+vocabulary. They had been correct against a string union and became refusals against
+an enum, because a container element gets no coercion hop from the field that holds
+it. The failure surfaced two promotions later, in an application projection, as a
+validation error naming an element index.
+
+The counter cannot find this class and should not be extended to. It searches for
+closed vocabularies still spelled as unions, which is what to promote; these fields
+are already typed on the vocabulary, which is what promotion produces. They are not
+candidates, they are collateral, and the two populations are disjoint by
+construction.
+
+So the promotion procedure needs a step the counter does not supply. After the enum
+lands, every annotation naming it must be reviewed for whether it needs the coercing
+alias rather than the bare member type -- container elements, mapping values and
+defaults included. The counter finds what to promote; it does not find what
+promotion breaks, and reading its output as a complete worklist is what allowed this
+to reach an application test.
+
 ## Recommendations
 
 Collapse the duplicate codec members to one, which is a correctness repair

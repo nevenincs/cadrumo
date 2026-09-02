@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:71351e8888b6aa0118a32e73764fb4c3c8a9d9ea8751f0887869de138edf7a44'
+body_hash: 'sha256:4bcc1f4b1ecbfae27afbf86f478f56cc83d3400606a4d28c7e33178f03bdb2ce'
 ---
 
 # `cli-distribution-consolidation` plan
