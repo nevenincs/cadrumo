@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-python-runtime-compatibility-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:5fcc369e755707398f34d2393bc2d7fd0beb1e18af7699247b75ea01af792255'
+body_hash: 'sha256:6705f9b1ad9ab42f70b4341b1371652692a93934d1c3d11c4747e8a7ab4c8242'
 ---
 
 <!-- RETIRED: S33, S35, S37, S39, S41, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 -->
@@ -47,15 +47,15 @@ Keep one annotation model and detect APIs removed or deprecated across the suppo
 - [x] `P02.S12` - Exercise annotation contracts through the workspace-manifest path; `src/cadrumo/application/modelo/tests/test_workspace_manifest.py`.
 - [x] `P02.S13` - Harden dynamic wizard signatures against annotation representation changes; `src/cadrumo/application/wizard/commands.py`.
 - [x] `P02.S14` - Test dynamic signatures type hints metadata and CLI discovery; `src/cadrumo/application/wizard/tests/test_commands_helpers.py`.
-- [ ] `P02.S15` - Compile every dev and src module against the oldest supported grammar; `dev/tests/test_every_source_file_parses.py`.
+- [x] `P02.S15` - Compile every dev and src module against the oldest supported grammar; `dev/tests/test_every_source_file_parses.py`.
 - [ ] `P02.S16` - Enforce annotations as the sole project future directive; `dev/tests/test_import_hygiene_scan.py`.
 
 ### Phase `P03` - produce attributable source and binary evidence
 
 Create one reusable runner and bind its evidence to the tested artifact and runtime.
 
-- [ ] `P03.S17` - Implement isolated source and binary compatibility probes with JSON evidence; `dev/ci/python_runtime_compatibility.py`.
-- [ ] `P03.S18` - Test mode separation lock binding digest binding and missing-wheel refusal; `dev/ci/tests/test_python_runtime_compatibility.py`.
+- [x] `P03.S17` - Implement isolated source and binary compatibility probes with JSON evidence; `dev/ci/python_runtime_compatibility.py`.
+- [x] `P03.S18` - Test mode separation lock binding digest binding and missing-wheel refusal; `dev/ci/tests/test_python_runtime_compatibility.py`.
 - [ ] `P03.S19` - Extend distribution evidence with runtime stability and installation outcomes; `dev/packaging/evidence.py`.
 - [ ] `P03.S20` - Test source versus binary evidence and foreign cohort refusal; `dev/packaging/tests/test_evidence.py`.
 - [ ] `P03.S21` - Reuse installed-wheel isolation for selected target interpreters; `dev/packaging/_smoke_common.py`.
