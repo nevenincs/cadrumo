@@ -240,7 +240,8 @@ def _render_registry_fragment(candidate: RestorationCandidate) -> str:
     return "\n".join(
         (
             "# Generated from the current M200/2024 semantic map and official aeat-dr-200-2024 design.",
-            f"# Physical export placement is current field {candidate.export_refs[0]}; its reciprocal ref is CLI-owned.",
+            f"# Physical export placement is current field {candidate.export_refs[0]}; "
+            "its reciprocal ref is CLI-owned.",
             f"# Semantic payload reviewed from pinned repository commit {HISTORIC_COMMIT}.",
             "",
             '[[revisions."2024".casillas]]',
