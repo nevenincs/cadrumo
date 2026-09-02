@@ -69,6 +69,7 @@ from __future__ import annotations
 
 import re
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Final, NamedTuple
 
@@ -138,8 +139,8 @@ class Mismatch(NamedTuple):
 
 
 def find_mismatches(
-    modelo_refs: dict[str, tuple[str, ...]],
-    entries: dict[str, tuple[str, ...]],
+    modelo_refs: Mapping[str, tuple[str, ...]],
+    entries: Mapping[str, tuple[str, ...]],
 ) -> list[Mismatch]:
     """Return every citation whose approving provision names another modelo.
 

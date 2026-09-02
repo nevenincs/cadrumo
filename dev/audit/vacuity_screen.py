@@ -76,7 +76,7 @@ def _is_empty_collection(node: ast.expr) -> bool:
     return False
 
 
-def asserts_emptiness(node: ast.stmt) -> bool:
+def asserts_emptiness(node: ast.AST) -> bool:
     """True when ``node`` asserts a collection is empty or a count is zero.
 
     Constructed empties count alongside literal ones. ``assert x == set()`` is
@@ -99,7 +99,7 @@ def asserts_emptiness(node: ast.stmt) -> bool:
     return isinstance(right, ast.Constant) and right.value == 0
 
 
-def proves_it_scanned(node: ast.stmt) -> bool:
+def proves_it_scanned(node: ast.AST) -> bool:
     """True when ``node`` asserts a lower bound, a membership, or a truthy corpus.
 
     Any of these fails when the walk returns nothing, which is the property that
@@ -138,7 +138,7 @@ def _is_non_empty_literal(node: ast.expr) -> bool:
     )
 
 
-def asserts_a_non_empty_result(node: ast.stmt) -> bool:
+def asserts_a_non_empty_result(node: ast.AST) -> bool:
     """True when ``node`` asserts a call produced a specific non-empty value.
 
     This is what makes a paired detector control not vacuous. A function

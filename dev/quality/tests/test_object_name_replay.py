@@ -47,7 +47,7 @@ def _module_case(tmp_path: Path) -> tuple[Path, Any, Any, Any, ObjectNameRehears
     (repo / "dev").mkdir()
     _write(repo, "src/example/__init__.py", b"")
     _write(repo, "src/example/widgets.py", b"VALUE = 1\n")
-    _write(repo, "src/example/consumer.py", b"from example.widgets import VALUE\n")
+    _write(repo, "src/example/consumer.py", b"import example.widgets\n")
     _git(repo, "add", "src/example/__init__.py", "src/example/widgets.py", "src/example/consumer.py")
     inventory = scan((repo / "src", repo / "dev"), repo)
     declaration = next(item for item in inventory.declarations if item.path == "src/example/widgets.py")
@@ -91,9 +91,14 @@ def _module_case(tmp_path: Path) -> tuple[Path, Any, Any, Any, ObjectNameRehears
             "operations": (operation,),
         }
     )
-    edges = collect_import_edges(operation_locators(manifest), repo_root=repo)
-    component = build_manifest_components(  # ty: ignore[invalid-argument-type]
-        manifest, inventory=inventory, hard_edges=edges
+    edges = collect_import_edges(
+        operation_locators(manifest),  # ty: ignore[invalid-argument-type]
+        repo_root=repo,
+    )
+    component = build_manifest_components(
+        manifest,  # ty: ignore[invalid-argument-type]
+        inventory=inventory,  # ty: ignore[invalid-argument-type]
+        hard_edges=edges,
     )[0]
     receipt = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
     return repo, inventory, manifest, component, receipt
@@ -148,7 +153,7 @@ def test_successful_module_replay_uses_deterministic_mixed_transaction_order(
     assert result.changed_paths == receipt.changed_paths
     assert not (repo / "src/example/widgets.py").exists()
     assert (repo / "src/example/widget.py").read_bytes() == b"VALUE = 1\n"
-    assert (repo / "src/example/consumer.py").read_bytes() == b"from example.widget import VALUE\n"
+    assert (repo / "src/example/consumer.py").read_bytes() == b"import example.widget\n"
 
 
 @pytest.mark.parametrize(("method", "position"), [("replace", 1), ("replace", 2), ("unlink", 1)])
