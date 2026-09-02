@@ -25,19 +25,6 @@ consumed in the body:
   contract on the ``_SheetsDiscoveryBuilder`` Protocol stub
   (:mod:`cadrumo.application.storage.calc_sheets.parity_harness`). The name is
   the google API client's keyword and is part of the structural type.
-* ``quota_project_id`` — the ``google.auth.default`` keyword on the
-  ``_AdcResolver`` Protocol stub
-  (:mod:`cadrumo.adapters.outbound.google.impersonation`). The name is the
-  google auth client's keyword and is part of the structural type.
-* ``clock_skew_in_seconds`` — the ``verify_oauth2_token`` keyword on the
-  ``_IdTokenVerifier`` Protocol stub
-  (:mod:`cadrumo.adapters.outbound.google.oauth_flow`). The name is the google
-  auth client's keyword and is part of the structural type.
-* ``interaction_facts`` — the positional parameter on the
-  ``OperationReviewProjector`` Protocol stub
-  (:mod:`cadrumo.application.operations.registry`). The name is part of the
-  projection contract and is required by implementations.
-
 Vulture marks a name "used" when it appears in a whitelist file. Referencing
 each name once here clears the false positive while leaving every other
 occurrence of an unused name still subject to detection — this file lists
@@ -80,18 +67,3 @@ def _set_language_field(source_citation: object) -> None:
 def _sheets_discovery_build(cache_discovery: object) -> None:
     """Mirror ``_SheetsDiscoveryBuilder.__call__`` keyword contract."""
     cache_discovery  # noqa: B018
-
-
-def _adc_resolver(quota_project_id: object) -> None:
-    """Mirror ``_AdcResolver.__call__`` keyword contract."""
-    quota_project_id  # noqa: B018
-
-
-def _id_token_verifier(clock_skew_in_seconds: object) -> None:
-    """Mirror ``_IdTokenVerifier.verify_oauth2_token`` keyword contract."""
-    clock_skew_in_seconds  # noqa: B018
-
-
-def _operation_review_projector(interaction_facts: object) -> None:
-    """Mirror ``OperationReviewProjector.__call__`` positional contract."""
-    interaction_facts  # noqa: B018

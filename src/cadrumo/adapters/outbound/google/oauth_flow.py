@@ -417,8 +417,7 @@ class _IdTokenVerifier(Protocol):
         self,
         id_token: str | bytes,
         request: object,
-        audience: str | None = ...,
-        clock_skew_in_seconds: int = ...,
+        audience: str,
     ) -> Mapping[str, object]: ...
 
 
