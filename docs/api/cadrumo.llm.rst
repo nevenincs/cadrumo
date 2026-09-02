@@ -33,6 +33,7 @@ Submodules
    cadrumo.llm.models
    cadrumo.llm.preconditions
    cadrumo.llm.pricing
+   cadrumo.llm.response_json
    cadrumo.llm.retention
    cadrumo.llm.suggestions
    cadrumo.llm.supply_nature_proposal

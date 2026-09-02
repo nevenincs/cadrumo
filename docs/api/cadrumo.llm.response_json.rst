@@ -1,7 +1,7 @@
-cadrumo.domain.iva.corpus module
+cadrumo.llm.response_json module
 ================================
 
-.. automodule:: cadrumo.domain.iva.corpus
+.. automodule:: cadrumo.llm.response_json
    :members:
    :show-inheritance:
    :ignore-module-all:

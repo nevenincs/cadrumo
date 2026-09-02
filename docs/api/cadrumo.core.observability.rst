@@ -17,7 +17,6 @@ Submodules
    cadrumo.core.observability.context
    cadrumo.core.observability.errors
    cadrumo.core.observability.fingerprint
-   cadrumo.core.observability.golden
    cadrumo.core.observability.models
    cadrumo.core.observability.recorder
    cadrumo.core.observability.redaction_rules

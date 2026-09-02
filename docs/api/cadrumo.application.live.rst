@@ -32,4 +32,5 @@ Submodules
    cadrumo.application.live.remote_state_outcomes
    cadrumo.application.live.session
    cadrumo.application.live.snapshot_base
+   cadrumo.application.live.snapshot_identity
    cadrumo.application.live.verify
