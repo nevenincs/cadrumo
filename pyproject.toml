@@ -202,7 +202,7 @@ llm = [
 ]
 # Deliberately absent: an `agent` extra. The operator agent harness, its
 # reviewed operating data, accessors, and MCP runtime are a separate
-# `cadrumo-harness` distribution which depends on this base package.
+# `cadrumo_harness` package shipped alongside it in this distribution.
 #
 # Deliberately absent: a `search` extra. The on-host grounding search stack
 # needs none — the lexical index (stdlib sqlite3 FTS5 plus the core
@@ -430,7 +430,6 @@ dev = [
   # tooling tracks latest.
   "vaultspec-core>=0.1.55",
   "vaultspec-rag[mcp]>=0.3.8",
-  "cadrumo-harness",
   # Sphinx documentation pipeline — `just docs` builds HTML + Markdown from
   # the Google-style + Sphinx-cross-referenced docstrings under src/cadrumo/.
   "sphinx>=8.1,<9",  # <9: sphinx-hoverxref 1.4.2 (latest) crashes on Sphinx 9's _Opt config repr at config-inited

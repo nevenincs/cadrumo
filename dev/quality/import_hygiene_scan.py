@@ -14,7 +14,7 @@ live together so a fix to one cannot silently leave the other behind.
 
 It is also the SINGLE AUTHORITY for the one-way ``src/`` -> ``dev/`` boundary.
 The boundary is absolute, by operator ruling: no module under ``src/`` --
-shipped or test, ``cadrumo`` or ``cadrumo-harness`` -- may have ANY awareness of
+shipped or test, ``cadrumo`` or ``cadrumo_harness`` -- may have ANY awareness of
 the ``dev/`` tree. Family 5 detects an IMPORT of ``dev.*`` (static or dynamic),
 Family 6 detects a module building a PATH into the ``dev/`` tree at runtime,
 and Family 10 detects PROSE awareness -- a comment, docstring or multi-line
@@ -2303,7 +2303,7 @@ def first_party_census_files(*, repo_root: Path = REPO_ROOT) -> list[tuple[Path,
     """
     roots = (
         (repo_root / "src" / "cadrumo", repo_root / "src"),
-        (repo_root / "src" / "cadrumo-harness" / "src", repo_root / "src" / "cadrumo-harness" / "src"),
+        (repo_root / "src" / "cadrumo_harness", repo_root / "src" / "cadrumo_harness"),
         (repo_root / "dev", repo_root),
     )
     census: list[tuple[Path, Path]] = []
@@ -3366,7 +3366,7 @@ def main() -> int:
     # The dev-boundary families sweep every module under src/, the harness
     # distribution included, while the import-hygiene census proper stays
     # scoped to the cadrumo package whose module names it resolves.
-    harness_root = SRC_ROOT / "cadrumo-harness" / "src"
+    harness_root = SRC_ROOT / "cadrumo_harness"
     dev_boundary_files = list(py_files)
     if harness_root.is_dir():
         dev_boundary_files += scan_directory(
