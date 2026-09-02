@@ -1,0 +1,26 @@
+[[revisions."2023".extraction_profiles]]
+id = "modelo-100-2023-borrador-pdf"
+surface = "borrador_pdf"
+artefact_kind = "modelo_100_renta_borrador"
+accepted_artefact_kinds = ["declaration_pdf"]
+parser = "cadrumo.adapters.inbound.borrador.parse_borrador"
+target_casillas = [
+    {casilla_id = "0505", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "0545", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "0546", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "0585", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "0586", match_strategy = "numeric_casilla", value_kind = "amount"},
+]
+confidence = "strict"
+corpus_round_trip_verified = true
+verification_source = "synthetic_from_aeat_published_text"
+min_coverage = "1"
+failure_semantics = "fail_hard"
+legal_refs = [
+    "ley-35-2006:art-50",
+    "ley-35-2006:art-63",
+    "ley-35-2006:art-67",
+    "ley-35-2006:art-74",
+    "ley-35-2006:art-77",
+]
+source_refs = ["aeat-dr-100-2023-dictionary", "boe-modelo-100-2023-form"]
