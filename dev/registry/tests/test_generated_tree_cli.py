@@ -10,7 +10,7 @@ from typer.testing import CliRunner
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..pipeline._export_tree import render_complete_export_tree
 from ..pipeline.cli import _check, _Invocation, _PreparedInvocation, _publish, app
@@ -114,7 +114,7 @@ def test_modelo_200_calculation_grade_does_not_widen_its_runtime_filing_authorit
         revision_id="2024",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
-    with pytest.raises(RegistrySnapshotError, match="cannot satisfy the requested 'filing' snapshot authority"):
+    with pytest.raises(RegistryValidationError, match="cannot satisfy the requested 'filing' snapshot authority"):
         authority.snapshot(
             "200",
             filing_year=2024,

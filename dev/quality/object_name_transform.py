@@ -1,125 +1,142 @@
-"""Bounded LibCST transformations for reviewed object-name renames.
+"""Bounded, read-only planning for reviewed object-name transformations.
 
-The transformer is deliberately not a discovery tool.  It consumes the strict
-manifest contract, checks the exact input bytes again, computes every result in
-memory, and refuses the whole component before a filesystem write when syntax or
-scope cannot be proved safe.
+The transformer is deliberately not a filesystem mutation API.  It validates the
+manifest's raw-byte preconditions, computes the complete proposed byte set, and
+returns explicit move and output records for rehearsal or replay to consume.
+Unsupported reference classes and ambiguous LibCST metadata fail closed.
 """
 
 from __future__ import annotations
 
-from collections.abc import Collection, Mapping, Sequence
-from dataclasses import dataclass
 import hashlib
+import importlib.util
+from collections import defaultdict
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Final
+from typing import Final, cast, override
 
 import libcst as cst
-from libcst.metadata import MetadataWrapper, QualifiedNameProvider
+from libcst.metadata import (
+    CodeRange,
+    MetadataWrapper,
+    PositionProvider,
+    QualifiedName,
+    QualifiedNameProvider,
+    QualifiedNameSource,
+)
 
 from cadrumo.core.link_safety import is_link_like
-from dev.quality.object_name_manifest import ObjectNameRenameManifest, ObjectNameRenameOperation
+from dev.audit.object_names import declarations_in_source
+from dev.quality.object_name_manifest import (
+    ObjectNameRenameManifest,
+    ObjectNameRenameOperation,
+    select_object_name_execution,
+)
 
 __all__ = [
-    "ObjectNameChange",
+    "ObjectNameProposedMove",
+    "ObjectNameProposedOutput",
     "ObjectNameTransformError",
     "ObjectNameTransformResult",
-    "apply_object_name_transformations",
     "plan_object_name_transformations",
 ]
 
 
-_DYNAMIC_IMPORTS: Final[frozenset[str]] = frozenset(
-    {"__import__", "builtins.__import__", "import_module", "importlib.import_module"}
-)
+_SHA256_PREFIX: Final[str] = "sha256:"
+_UNSUPPORTED_REFERENCE_CLASSES: Final[frozenset[str]] = frozenset({"dynamic-target", "generated-artifact"})
 
 
-class ObjectNameTransformError(ValueError):
-    """A reviewed rename cannot be represented as one bounded safe transform."""
+class ObjectNameTransformError(RuntimeError):
+    """A reviewed operation cannot be transformed within its declared bounds."""
 
 
 @dataclass(frozen=True, slots=True)
-class ObjectNameChange:
-    """One deterministic before/after filesystem entry."""
+class ObjectNameProposedOutput:
+    """The complete proposed state of one changed repository path.
+
+    ``content=None`` is an explicit deletion.  ``original_sha256=None`` identifies
+    a path that must not exist before replay.
+    """
 
     path: str
-    before_sha256: str | None
-    after_sha256: str | None
+    original_sha256: str | None
     content: bytes | None
 
 
 @dataclass(frozen=True, slots=True)
-class ObjectNameTransformResult:
-    """A completely validated component transformation, ready for replay."""
+class ObjectNameProposedMove:
+    """One explicit source-to-target Python module move."""
 
-    changes: tuple[ObjectNameChange, ...]
-
-    @property
-    def changed_paths(self) -> tuple[str, ...]:
-        return tuple(change.path for change in self.changes)
+    source: str
+    target: str
 
 
 @dataclass(frozen=True, slots=True)
-class _Rename:
-    operation_id: str
-    old_module: str
-    new_module: str
-    old_symbol: str | None
-    new_symbol: str | None
-    binding: int
+class ObjectNameTransformResult:
+    """Immutable proposed outputs; constructing this result performs no writes."""
+
+    outputs: tuple[ObjectNameProposedOutput, ...]
+    moves: tuple[ObjectNameProposedMove, ...]
+
+    @property
+    def changed_paths(self) -> tuple[str, ...]:
+        """Return the exact paths whose proposed bytes differ from the live tree."""
+        return tuple(output.path for output in self.outputs)
+
+    def content_by_path(self) -> Mapping[str, bytes | None]:
+        """Return a fresh path-to-proposed-content view."""
+        return {output.path: output.content for output in self.outputs}
 
 
-def _digest(data: bytes) -> str:
-    return f"sha256:{hashlib.sha256(data).hexdigest()}"
+def _sha256(payload: bytes) -> str:
+    return f"{_SHA256_PREFIX}{hashlib.sha256(payload).hexdigest()}"
 
 
 def _locator_parts(locator: str) -> tuple[str, str, int]:
-    kind, value = locator.split(":", 1)
-    qualified, binding_text = value.rsplit("#binding=", 1)
-    return kind, qualified, int(binding_text)
+    try:
+        kind, qualified_binding = locator.split(":", 1)
+        qualified, binding = qualified_binding.rsplit("#binding=", 1)
+        occurrence = int(binding)
+    except (TypeError, ValueError) as exc:
+        raise ObjectNameTransformError(f"malformed object-name locator: {locator!r}") from exc
+    if occurrence < 1:
+        raise ObjectNameTransformError(f"invalid binding occurrence in locator: {locator!r}")
+    return kind, qualified, occurrence
 
 
-def _operation_rename(operation: ObjectNameRenameOperation) -> _Rename:
-    if operation.new_locator is None:
-        raise ObjectNameTransformError(f"operation {operation.operation_id!r} has no executable target")
-    old_kind, old_qualified, binding = _locator_parts(operation.old_locator)
-    new_kind, new_qualified, new_binding = _locator_parts(operation.new_locator)
-    if old_kind != new_kind or binding != new_binding:
-        raise ObjectNameTransformError(
-            f"operation {operation.operation_id!r} changes declaration kind or binding identity"
-        )
-    if old_kind == "module":
-        return _Rename(operation.operation_id, old_qualified, new_qualified, None, None, binding)
-    old_module, separator, old_symbol = old_qualified.rpartition(".")
-    new_module, new_separator, new_symbol = new_qualified.rpartition(".")
-    if not separator or not new_separator or old_module != new_module:
-        raise ObjectNameTransformError(f"operation {operation.operation_id!r} is not an in-module symbol rename")
-    return _Rename(operation.operation_id, old_module, new_module, old_symbol, new_symbol, binding)
+def _module_for_path(relative: str) -> str:
+    parts = list(PurePosixPath(relative).with_suffix("").parts)
+    if parts and parts[0] == "src":
+        parts.pop(0)
+    if parts and parts[-1] == "__init__":
+        parts.pop()
+    return ".".join(parts)
 
 
-def _path(repo_root: Path, relative: str, *, operation_id: str) -> Path:
+def _resolve_repo_path(repo_root: Path, relative: str) -> Path:
+    candidate = PurePosixPath(relative)
+    if (
+        not relative
+        or "\\" in relative
+        or ":" in relative
+        or candidate.is_absolute()
+        or candidate.as_posix() != relative
+        or any(part in {"", ".", ".."} for part in candidate.parts)
+        or candidate.parts[0] == ".git"
+    ):
+        raise ObjectNameTransformError(f"unsafe repository path: {relative!r}")
     current = repo_root
-    for part in PurePosixPath(relative).parts:
+    for part in candidate.parts:
         current /= part
         if is_link_like(current):
-            raise ObjectNameTransformError(
-                f"operation {operation_id!r} path traverses a link-like component: {relative}"
-            )
+            raise ObjectNameTransformError(f"path traverses a link-like component: {relative}")
     return current
 
 
-def _module_for_path(relative: str) -> tuple[str, bool]:
-    path = PurePosixPath(relative).with_suffix("")
-    parts = list(path.parts)
-    if parts[0] == "src":
-        parts.pop(0)
-    package_module = parts[-1] == "__init__"
-    if package_module:
-        parts.pop()
-    return ".".join(parts), package_module
-
-
 def _dotted_name(node: cst.BaseExpression | None) -> str | None:
+    if node is None:
+        return ""
     if isinstance(node, cst.Name):
         return node.value
     if isinstance(node, cst.Attribute):
@@ -128,164 +145,262 @@ def _dotted_name(node: cst.BaseExpression | None) -> str | None:
     return None
 
 
-def _parse_dotted(value: str) -> cst.Name | cst.Attribute:
+def _dotted_expression(value: str) -> cst.BaseExpression:
     expression = cst.parse_expression(value)
     if not isinstance(expression, (cst.Name, cst.Attribute)):
-        raise ObjectNameTransformError(f"invalid dotted import target: {value!r}")
+        raise ObjectNameTransformError(f"module target is not a dotted name: {value!r}")
     return expression
 
 
-def _replace_module(value: str, renames: Sequence[_Rename]) -> str:
-    matches = [rename for rename in renames if value == rename.old_module or value.startswith(f"{rename.old_module}.")]
-    if len(matches) > 1:
-        raise ObjectNameTransformError(f"overlapping module rename targets for {value!r}")
-    if not matches:
-        return value
-    rename = matches[0]
-    return f"{rename.new_module}{value[len(rename.old_module) :]}"
+def _absolute_import_from(node: cst.ImportFrom, module_name: str, *, package_module: bool) -> str | None:
+    dotted = _dotted_name(node.module)
+    if dotted is None:
+        return None
+    if not node.relative:
+        return dotted
+    package = module_name if package_module else module_name.rpartition(".")[0]
+    relative = f"{'.' * len(node.relative)}{dotted}"
+    try:
+        return importlib.util.resolve_name(relative, package)
+    except (ImportError, ValueError):
+        return None
+
+
+def _qualified_names(transformer: _RenameTransformer, node: cst.CSTNode) -> frozenset[QualifiedName]:
+    return frozenset(cast("set[QualifiedName]", transformer.get_metadata(QualifiedNameProvider, node, set())))
 
 
 class _RenameTransformer(cst.CSTTransformer):
-    METADATA_DEPENDENCIES = (QualifiedNameProvider,)
+    METADATA_DEPENDENCIES = (PositionProvider, QualifiedNameProvider)
 
-    def __init__(self, *, path: str, renames: Sequence[_Rename]) -> None:
-        self.path = path
-        self.renames = renames
-        self.module, self.package_module = _module_for_path(path)
-        self.definition_counts: dict[str, int] = {}
+    def __init__(
+        self,
+        *,
+        module_name: str,
+        package_module: bool,
+        operations: Sequence[ObjectNameRenameOperation],
+        definition_lines: Mapping[str, frozenset[int]],
+    ) -> None:
+        self.module_name = module_name
+        self.package_module = package_module
+        self.operations = operations
+        self.definition_lines = definition_lines
+        self.definition_hits: defaultdict[str, int] = defaultdict(int)
+        self.reference_hits: defaultdict[str, int] = defaultdict(int)
+        self._declaration_name_nodes: set[int] = set()
 
-    def _qualified_names(self, node: cst.CSTNode) -> frozenset[str]:
-        names = self.get_metadata(QualifiedNameProvider, node, set())
-        return frozenset(name.name for name in names)
+    def _operation_names(self, operation: ObjectNameRenameOperation) -> tuple[str, str, str, str]:
+        _old_kind, old_qualified, _old_occurrence = _locator_parts(operation.old_locator)
+        if operation.new_locator is None:
+            raise ObjectNameTransformError(f"operation {operation.operation_id!r} has no target locator")
+        _new_kind, new_qualified, _new_occurrence = _locator_parts(operation.new_locator)
+        if operation.operation_kind == "module-rename":
+            return old_qualified, old_qualified.rsplit(".", 1)[-1], new_qualified, new_qualified.rsplit(".", 1)[-1]
+        old_module, _, old_name = old_qualified.rpartition(".")
+        new_module, _, new_name = new_qualified.rpartition(".")
+        if old_module != new_module:
+            raise ObjectNameTransformError(f"symbol operation {operation.operation_id!r} changes its owning module")
+        return old_module, old_name, new_module, new_name
 
-    def _symbol_target(self, node: cst.CSTNode, spelling: str) -> str | None:
-        qualified = self._qualified_names(node)
-        matches = [
-            rename
-            for rename in self.renames
-            if rename.old_symbol == spelling and f"{rename.old_module}.{rename.old_symbol}" in qualified
-        ]
-        if len(matches) > 1:
-            raise ObjectNameTransformError(f"ambiguous symbol reference {spelling!r} in {self.path}")
-        return None if not matches else matches[0].new_symbol
+    @override
+    def visit_ClassDef(self, node: cst.ClassDef) -> bool | None:
+        self._declaration_name_nodes.add(id(node.name))
+        return True
 
-    def _record_definition(self, name: str) -> int:
-        count = self.definition_counts.get(name, 0) + 1
-        self.definition_counts[name] = count
-        return count
+    @override
+    def visit_FunctionDef(self, node: cst.FunctionDef) -> bool | None:
+        self._declaration_name_nodes.add(id(node.name))
+        return True
 
-    def _definition_name(self, original: cst.Name, updated: cst.Name) -> cst.Name:
-        occurrence = self._record_definition(original.value)
-        matches = [
-            rename
-            for rename in self.renames
-            if rename.old_symbol == original.value and rename.old_module == self.module and rename.binding == occurrence
-        ]
-        if len(matches) > 1:
-            raise ObjectNameTransformError(f"ambiguous definition {original.value!r} in {self.path}")
-        return updated if not matches else updated.with_changes(value=matches[0].new_symbol)
-
+    @override
     def leave_ClassDef(self, original_node: cst.ClassDef, updated_node: cst.ClassDef) -> cst.ClassDef:
-        return updated_node.with_changes(name=self._definition_name(original_node.name, updated_node.name))
+        return updated_node.with_changes(name=self._renamed_definition(original_node.name, updated_node.name))
 
+    @override
     def leave_FunctionDef(self, original_node: cst.FunctionDef, updated_node: cst.FunctionDef) -> cst.FunctionDef:
-        return updated_node.with_changes(name=self._definition_name(original_node.name, updated_node.name))
+        return updated_node.with_changes(name=self._renamed_definition(original_node.name, updated_node.name))
 
+    def _renamed_definition(self, original: cst.Name, updated: cst.Name) -> cst.Name:
+        position = cast("CodeRange", self.get_metadata(PositionProvider, original))  # ty: ignore[redundant-cast]
+        line = position.start.line
+        for operation in self.operations:
+            if operation.operation_kind != "symbol-rename" or line not in self.definition_lines[operation.operation_id]:
+                continue
+            _module, old_name, _new_module, new_name = self._operation_names(operation)
+            if original.value != old_name:
+                raise ObjectNameTransformError(
+                    f"operation {operation.operation_id!r} definition line no longer names {old_name!r}"
+                )
+            self.definition_hits[operation.operation_id] += 1
+            return updated.with_changes(value=new_name)
+        return updated
+
+    @override
     def leave_ImportAlias(self, original_node: cst.ImportAlias, updated_node: cst.ImportAlias) -> cst.ImportAlias:
-        original = _dotted_name(original_node.name)
-        if original is None:
-            raise ObjectNameTransformError(f"unsupported import expression in {self.path}")
-        replaced = _replace_module(original, self.renames)
-        for rename in self.renames:
-            if rename.old_symbol is not None and original == rename.old_symbol:
-                qualified = self._qualified_names(original_node.name)
-                if f"{rename.old_module}.{rename.old_symbol}" in qualified:
-                    replaced = rename.new_symbol or replaced
-        return updated_node if replaced == original else updated_node.with_changes(name=_parse_dotted(replaced))
+        dotted = _dotted_name(original_node.name)
+        if dotted is None:
+            raise ObjectNameTransformError("unsupported non-dotted import target")
+        for operation in self.operations:
+            old_module, old_name, new_module, _new_name = self._operation_names(operation)
+            if operation.operation_kind == "module-rename" and dotted == old_module:
+                self.reference_hits[operation.operation_id] += 1
+                return updated_node.with_changes(name=_dotted_expression(new_module))
+            if operation.operation_kind == "symbol-rename" and dotted == old_name:
+                # ImportFrom ownership is handled by leave_ImportFrom; an unqualified
+                # alias here cannot establish the symbol's defining module.
+                continue
+        return updated_node
 
+    @override
     def leave_ImportFrom(self, original_node: cst.ImportFrom, updated_node: cst.ImportFrom) -> cst.ImportFrom:
-        if isinstance(original_node.names, cst.ImportStar):
-            target = _dotted_name(original_node.module)
-            if any(rename.old_symbol is not None and target == rename.old_module for rename in self.renames):
-                raise ObjectNameTransformError(f"wildcard import hides symbol references in {self.path}")
-        if original_node.relative:
-            # Relative module rewrites require import-resolution evidence that the CST
-            # alone cannot prove; the graph must surface them and the transform refuses.
-            target = _dotted_name(original_node.module) or ""
-            if any(
-                rename.old_module.endswith(target)
-                and (rename.old_symbol is None or isinstance(original_node.names, cst.ImportStar))
-                for rename in self.renames
-            ):
-                raise ObjectNameTransformError(f"relative import rename is unsupported in {self.path}")
+        absolute = _absolute_import_from(original_node, self.module_name, package_module=self.package_module)
+        if absolute is None or isinstance(original_node.names, cst.ImportStar):
+            if isinstance(original_node.names, cst.ImportStar):
+                for operation in self.operations:
+                    old_module, _old_name, _new_module, _new_name = self._operation_names(operation)
+                    if absolute == old_module:
+                        raise ObjectNameTransformError(
+                            f"operation {operation.operation_id!r} reaches an unsupported star import"
+                        )
             return updated_node
-        original = _dotted_name(original_node.module)
-        if original is None:
-            return updated_node
-        replaced = _replace_module(original, self.renames)
-        return updated_node if replaced == original else updated_node.with_changes(module=_parse_dotted(replaced))
 
+        rewritten_module = updated_node.module
+        rewritten_relative = updated_node.relative
+        rewritten_aliases: list[cst.ImportAlias] = list(cast("Sequence[cst.ImportAlias]", updated_node.names))
+        for operation in self.operations:
+            old_module, old_name, new_module, new_name = self._operation_names(operation)
+            if operation.operation_kind == "symbol-rename" and absolute == old_module:
+                changed = False
+                aliases: list[cst.ImportAlias] = []
+                for alias in rewritten_aliases:
+                    if _dotted_name(alias.name) == old_name:
+                        aliases.append(alias.with_changes(name=cst.Name(new_name)))
+                        changed = True
+                    else:
+                        aliases.append(alias)
+                if changed:
+                    rewritten_aliases = aliases
+                    self.reference_hits[operation.operation_id] += 1
+            elif operation.operation_kind == "module-rename":
+                if absolute == old_module:
+                    rewritten_module = _dotted_expression(new_module)
+                    rewritten_relative = ()
+                    self.reference_hits[operation.operation_id] += 1
+                elif absolute == old_module.rpartition(".")[0]:
+                    old_parent, _, _ = old_module.rpartition(".")
+                    new_parent, _, _ = new_module.rpartition(".")
+                    matching = [alias for alias in rewritten_aliases if _dotted_name(alias.name) == old_name]
+                    if matching:
+                        if len(rewritten_aliases) != 1 and old_parent != new_parent:
+                            raise ObjectNameTransformError(
+                                f"operation {operation.operation_id!r} cannot split a cross-package mixed import"
+                            )
+                        rewritten_aliases = [
+                            alias.with_changes(name=cst.Name(new_name))
+                            if _dotted_name(alias.name) == old_name
+                            else alias
+                            for alias in rewritten_aliases
+                        ]
+                        if old_parent != new_parent:
+                            rewritten_module = _dotted_expression(new_parent)
+                            rewritten_relative = ()
+                        self.reference_hits[operation.operation_id] += 1
+        return updated_node.with_changes(
+            module=rewritten_module,
+            relative=rewritten_relative,
+            names=tuple(rewritten_aliases),
+        )
+
+    @override
+    def leave_Attribute(self, original_node: cst.Attribute, updated_node: cst.Attribute) -> cst.BaseExpression:
+        names = _qualified_names(self, original_node)
+        for operation in self.operations:
+            old_module, old_name, new_module, new_name = self._operation_names(operation)
+            target = f"{old_module}.{old_name}" if operation.operation_kind == "symbol-rename" else old_module
+            matching = {name for name in names if name.name == target}
+            if not matching:
+                continue
+            if names != frozenset(matching):
+                raise ObjectNameTransformError(
+                    f"operation {operation.operation_id!r} has an ambiguous qualified attribute reference"
+                )
+            self.reference_hits[operation.operation_id] += 1
+            if operation.operation_kind == "symbol-rename":
+                return updated_node.with_changes(attr=cst.Name(new_name))
+            return _dotted_expression(new_module)
+        return updated_node
+
+    @override
     def leave_Name(self, original_node: cst.Name, updated_node: cst.Name) -> cst.Name:
-        target = self._symbol_target(original_node, original_node.value)
-        return updated_node if target is None else updated_node.with_changes(value=target)
-
-    def leave_Attribute(self, original_node: cst.Attribute, updated_node: cst.Attribute) -> cst.Attribute:
-        target = self._symbol_target(original_node, original_node.attr.value)
-        if target is not None:
-            return updated_node.with_changes(attr=updated_node.attr.with_changes(value=target))
-        qualified = self._qualified_names(original_node)
-        matches = [
-            rename
-            for rename in self.renames
-            if rename.old_symbol is None
-            and rename.old_module in qualified
-            and original_node.attr.value == rename.old_module.rsplit(".", 1)[-1]
-        ]
-        if len(matches) > 1:
-            raise ObjectNameTransformError(f"ambiguous module reference in {self.path}")
-        if not matches:
+        if id(original_node) in self._declaration_name_nodes:
             return updated_node
-        return updated_node.with_changes(
-            attr=updated_node.attr.with_changes(value=matches[0].new_module.rsplit(".", 1)[-1])
-        )
-
-    def leave_Call(self, original_node: cst.Call, updated_node: cst.Call) -> cst.Call:
-        called = _dotted_name(original_node.func)
-        if called not in _DYNAMIC_IMPORTS or not original_node.args:
-            return updated_node
-        first = original_node.args[0].value
-        if not isinstance(first, cst.SimpleString):
-            if any(rename.old_symbol is None for rename in self.renames):
-                raise ObjectNameTransformError(f"computed dynamic import target in {self.path}")
-            return updated_node
-        try:
-            value = first.evaluated_value
-        except Exception as exc:  # LibCST exposes malformed literal failures at evaluation time.
-            raise ObjectNameTransformError(f"invalid dynamic import literal in {self.path}") from exc
-        if not isinstance(value, str):
-            return updated_node
-        replaced = _replace_module(value, self.renames)
-        if replaced == value:
-            return updated_node
-        quote = '"' if first.quote == '"' else "'"
-        return updated_node.with_changes(
-            args=(
-                updated_node.args[0].with_changes(value=cst.SimpleString(f"{quote}{replaced}{quote}")),
-                *updated_node.args[1:],
+        names = _qualified_names(self, original_node)
+        for operation in self.operations:
+            old_module, old_name, _new_module, new_name = self._operation_names(operation)
+            if original_node.value != old_name:
+                continue
+            target_names = {old_module, f"{old_module}.{old_name}"}
+            matching = {name for name in names if name.name in target_names}
+            local_definition_reference = (
+                operation.operation_kind == "symbol-rename"
+                and self.module_name == old_module
+                and QualifiedName(old_name, QualifiedNameSource.LOCAL) in names
             )
-        )
+            if not matching and not local_definition_reference:
+                continue
+            permitted: set[QualifiedName] = set(matching)
+            if local_definition_reference:
+                permitted.add(QualifiedName(old_name, QualifiedNameSource.LOCAL))
+            if names != frozenset(permitted):
+                raise ObjectNameTransformError(
+                    f"operation {operation.operation_id!r} has an ambiguous qualified name reference"
+                )
+            self.reference_hits[operation.operation_id] += 1
+            return updated_node.with_changes(value=new_name)
+        return updated_node
 
 
-def _transform_python(data: bytes, *, path: str, renames: Sequence[_Rename]) -> bytes:
-    bom = data.startswith(b"\xef\xbb\xbf")
+def _definition_lines(operation: ObjectNameRenameOperation, source: bytes) -> frozenset[int]:
+    kind, _qualified, occurrence = _locator_parts(operation.old_locator)
+    if operation.operation_kind == "module-rename":
+        return frozenset[int]()
     try:
-        source = data.decode("utf-8-sig" if bom else "utf-8")
+        text = source.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise ObjectNameTransformError(f"operation {operation.operation_id!r} definition source is not UTF-8") from exc
+    declarations = declarations_in_source(text, operation.old_path)
+    line_values: set[int] = set()
+    for declaration in declarations:
+        if declaration.kind.value == kind and declaration.binding_occurrence == occurrence:
+            line_values.add(declaration.line)
+    lines = frozenset(line_values)
+    if not lines:
+        raise ObjectNameTransformError(f"operation {operation.operation_id!r} definition binding is absent")
+    return lines
+
+
+def _transform_python(
+    source: bytes,
+    *,
+    relative: str,
+    operations: Sequence[ObjectNameRenameOperation],
+    definition_lines: Mapping[str, frozenset[int]],
+) -> tuple[bytes, _RenameTransformer]:
+    try:
         module = cst.parse_module(source)
-        transformed = MetadataWrapper(module).visit(_RenameTransformer(path=path, renames=renames)).code
-    except (UnicodeDecodeError, cst.ParserSyntaxError, RecursionError) as exc:
-        raise ObjectNameTransformError(f"cannot safely transform {path}: {exc}") from exc
-    encoded = transformed.encode("utf-8")
-    return b"\xef\xbb\xbf" + encoded if bom else encoded
+    except (UnicodeDecodeError, cst.ParserSyntaxError) as exc:
+        raise ObjectNameTransformError(f"cannot parse affected Python source {relative}: {exc}") from exc
+    transformer = _RenameTransformer(
+        module_name=_module_for_path(relative),
+        package_module=PurePosixPath(relative).name == "__init__.py",
+        operations=operations,
+        definition_lines=definition_lines,
+    )
+    try:
+        changed = MetadataWrapper(module).visit(transformer)
+    except (KeyError, RecursionError) as exc:
+        raise ObjectNameTransformError(f"cannot resolve metadata for {relative}: {exc}") from exc
+    return changed.bytes, transformer
 
 
 def plan_object_name_transformations(
@@ -293,94 +408,121 @@ def plan_object_name_transformations(
     *,
     repo_root: Path,
 ) -> ObjectNameTransformResult:
-    """Compute one exact reviewed component without modifying the filesystem."""
+    """Compute an exact, fail-closed transformation without writing live files."""
+    selected = tuple(sorted(select_object_name_execution(manifest), key=lambda operation: operation.operation_id))
+    if not selected:
+        raise ObjectNameTransformError("at least one reviewed operation is required")
+    if len({operation.operation_id for operation in selected}) != len(selected):
+        raise ObjectNameTransformError("operation identifiers must be unique")
     root = repo_root.resolve()
-    operations = tuple(
-        operation
-        for operation in manifest.operations
-        if operation.lifecycle == "reviewed" and operation.disposition in {"lexical-singular", "rename-distinct"}
-    )
-    if not operations:
-        raise ObjectNameTransformError("manifest selects no executable reviewed operations")
-    if any(operation.generator_commands for operation in operations):
-        raise ObjectNameTransformError("generated artifacts require the rehearsal generator phase")
-    renames = tuple(_operation_rename(operation) for operation in operations)
+    if not (root / "src").is_dir() or not (root / "dev").is_dir():
+        raise ObjectNameTransformError(f"repository root lacks src/ or dev/: {root}")
 
-    expected: dict[str, str] = {}
-    owners: dict[str, set[str]] = {}
-    allowed: set[str] = set()
-    moves: dict[str, str] = {}
-    for operation in operations:
-        allowed.update(operation.changed_paths)
+    allowlist = {path for operation in selected for path in operation.changed_paths}
+    expected_hashes: dict[str, str] = {}
+    for operation in selected:
+        unsupported = _UNSUPPORTED_REFERENCE_CLASSES.intersection(operation.expected_reference_classes)
+        if unsupported:
+            raise ObjectNameTransformError(
+                f"operation {operation.operation_id!r} declares unsupported reference classes: {sorted(unsupported)!r}"
+            )
         for precondition in operation.preconditions:
-            prior = expected.setdefault(precondition.path, precondition.sha256)
+            prior = expected_hashes.setdefault(precondition.path, precondition.sha256)
             if prior != precondition.sha256:
-                raise ObjectNameTransformError(f"conflicting byte preconditions for {precondition.path}")
-            owners.setdefault(precondition.path, set()).add(operation.operation_id)
-        for move in operation.moves:
-            if move.source in moves and moves[move.source] != move.target:
-                raise ObjectNameTransformError(f"conflicting moves for {move.source}")
-            moves[move.source] = move.target
+                raise ObjectNameTransformError(f"operations disagree on the byte precondition for {precondition.path}")
 
-    inputs: dict[str, bytes] = {}
-    for relative, digest in sorted(expected.items()):
-        operation_id = min(owners[relative])
-        path = _path(root, relative, operation_id=operation_id)
+    before: dict[str, bytes] = {}
+    for relative, expected in sorted(expected_hashes.items()):
+        path = _resolve_repo_path(root, relative)
         if not path.is_file():
             raise ObjectNameTransformError(f"precondition path is not a regular file: {relative}")
-        data = path.read_bytes()
-        if _digest(data) != digest:
+        payload = path.read_bytes()
+        if _sha256(payload) != expected:
             raise ObjectNameTransformError(f"byte precondition is stale for {relative}")
-        inputs[relative] = data
+        before[relative] = payload
 
-    for source, target in sorted(moves.items()):
-        if source not in inputs:
-            raise ObjectNameTransformError(f"move source lacks a byte precondition: {source}")
-        target_path = _path(root, target, operation_id="module-move")
-        if target_path.exists() or is_link_like(target_path):
-            raise ObjectNameTransformError(f"module move target already exists: {target}")
+    move_by_source: dict[str, str] = {}
+    move_targets: set[str] = set()
+    for operation in selected:
+        if operation.operation_kind == "module-rename":
+            if len(operation.moves) != 1:
+                raise ObjectNameTransformError(
+                    f"module operation {operation.operation_id!r} must declare exactly one move"
+                )
+            move = operation.moves[0]
+            if move.source in move_by_source or move.target in move_targets:
+                raise ObjectNameTransformError("module move paths must be unique")
+            target = _resolve_repo_path(root, move.target)
+            if target.exists() or is_link_like(target):
+                raise ObjectNameTransformError(f"module move target already exists: {move.target}")
+            move_by_source[move.source] = move.target
+            move_targets.add(move.target)
 
-    after: dict[str, bytes] = {}
-    for relative, data in sorted(inputs.items()):
+    lines_by_operation = {
+        operation.operation_id: _definition_lines(operation, before[operation.old_path]) for operation in selected
+    }
+    operations_by_path: defaultdict[str, list[ObjectNameRenameOperation]] = defaultdict(list)
+    for relative in expected_hashes:
+        for operation in selected:
+            if relative in operation.changed_paths:
+                operations_by_path[relative].append(operation)
+
+    proposed: dict[str, bytes | None] = dict(before)
+    all_definition_hits: defaultdict[str, int] = defaultdict(int)
+    all_reference_hits: defaultdict[str, int] = defaultdict(int)
+    for relative, path_operations in sorted(operations_by_path.items()):
         if PurePosixPath(relative).suffix != ".py":
-            raise ObjectNameTransformError(f"unsupported non-Python changed surface: {relative}")
-        transformed = _transform_python(data, path=relative, renames=renames)
-        after[moves.get(relative, relative)] = transformed
-
-    changes: dict[str, ObjectNameChange] = {}
-    for relative, data in sorted(inputs.items()):
-        target = moves.get(relative, relative)
-        transformed = after[target]
-        if target != relative:
-            changes[relative] = ObjectNameChange(relative, _digest(data), None, None)
-            changes[target] = ObjectNameChange(target, None, _digest(transformed), transformed)
-        elif transformed != data:
-            changes[relative] = ObjectNameChange(relative, _digest(data), _digest(transformed), transformed)
-    actual = set(changes)
-    if actual != allowed:
-        raise ObjectNameTransformError(
-            f"actual changed paths do not equal the reviewed allowlist; missing={sorted(allowed - actual)!r}, "
-            f"unexpected={sorted(actual - allowed)!r}"
+            raise ObjectNameTransformError(f"unsupported non-Python changed path: {relative}")
+        transformed, transformer = _transform_python(
+            before[relative],
+            relative=relative,
+            operations=path_operations,
+            definition_lines=lines_by_operation,
         )
-    return ObjectNameTransformResult(tuple(changes[path] for path in sorted(changes)))
+        proposed[relative] = transformed
+        for operation_id, count in transformer.definition_hits.items():
+            all_definition_hits[operation_id] += count
+        for operation_id, count in transformer.reference_hits.items():
+            all_reference_hits[operation_id] += count
 
+    for operation in selected:
+        if operation.operation_kind == "symbol-rename":
+            expected_definitions = len(lines_by_operation[operation.operation_id])
+            if all_definition_hits[operation.operation_id] != expected_definitions:
+                raise ObjectNameTransformError(
+                    f"operation {operation.operation_id!r} transformed "
+                    f"{all_definition_hits[operation.operation_id]} of {expected_definitions} definitions"
+                )
+        elif all_reference_hits[operation.operation_id] == 0:
+            # The move itself is the definition transformation; references are optional.
+            pass
 
-def apply_object_name_transformations(
-    manifest: ObjectNameRenameManifest,
-    *,
-    repo_root: Path,
-) -> ObjectNameTransformResult:
-    """Recheck, plan, and apply one bounded component to the selected tree."""
-    result = plan_object_name_transformations(manifest, repo_root=repo_root)
-    root = repo_root.resolve()
-    # All sources and targets were checked before this mutation loop.  Deletions
-    # occur only for explicit reviewed moves, after their target bytes are written.
-    for change in result.changes:
-        target = root.joinpath(*PurePosixPath(change.path).parts)
-        if change.content is not None:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(change.content)
-    for change in result.changes:
-        if change.content is None:
-            root.joinpath(*PurePosixPath(change.path).parts).unlink()
-    return result
+    for source, target in sorted(move_by_source.items()):
+        if source not in proposed:
+            raise ObjectNameTransformError(f"move source has no byte precondition: {source}")
+        proposed[target] = proposed[source]
+        proposed[source] = None
+
+    actual = {
+        relative
+        for relative, payload in proposed.items()
+        if payload is None or relative not in before or payload != before[relative]
+    }
+    if actual != allowlist:
+        raise ObjectNameTransformError(
+            "proposed changed paths differ from the reviewed allowlist; "
+            f"missing={sorted(allowlist - actual)!r}, unexpected={sorted(actual - allowlist)!r}"
+        )
+
+    outputs = tuple(
+        ObjectNameProposedOutput(
+            path=relative,
+            original_sha256=_sha256(before[relative]) if relative in before else None,
+            content=proposed[relative],
+        )
+        for relative in sorted(actual)
+    )
+    moves = tuple(
+        ObjectNameProposedMove(source=source, target=target) for source, target in sorted(move_by_source.items())
+    )
+    return ObjectNameTransformResult(outputs=outputs, moves=moves)
