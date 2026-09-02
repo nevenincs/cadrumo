@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import os
 import re
+import subprocess
 import uuid
 import zipfile
 from pathlib import Path
@@ -17,6 +19,84 @@ from ..release_cohort import _REQUIRED_PYTHON_VERSION, build_release_cohort, det
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _EXACT_PYTHON: Final[str] = r"3\.\d+\.\d+"
+
+
+class _CleanBuilderInvocationObservedError(RuntimeError):
+    """Stop the harness after it has assembled the clean-child command."""
+
+
+def _assert_clean_builder_invocation(
+    argv: list[str],
+    *,
+    cwd: Path,
+    env: dict[str, str] | None,
+    expected_commit: str,
+) -> None:
+    """Protect package imports, clean-source isolation, and commit binding."""
+    assert argv[1:3] == ["-m", "dev.packaging.release_cohort"], (
+        "clean release-cohort construction must invoke the package module"
+    )
+    assert cwd.name == "source"
+    assert env is not None
+    assert env["PYTHONPATH"] == os.pathsep.join((str(cwd / "src"), str(cwd)))
+    assert argv[argv.index("--expected-commit") + 1] == expected_commit
+
+
+def test_clean_builder_subprocess_is_package_correct_and_detector_bites(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """The clean child keeps relative imports and the exact source assertion."""
+    repo_root = tmp_path / "repo"
+    (repo_root / "var").mkdir(parents=True)
+    output = repo_root / "var" / "cohort"
+    expected_commit = "a" * 40
+    captured: list[tuple[list[str], Path, dict[str, str] | None]] = []
+
+    def fake_git(_repo: Path, *_args: str) -> str:
+        return expected_commit
+
+    def fake_run(
+        argv: list[str],
+        *,
+        cwd: Path,
+        env: dict[str, str] | None = None,
+    ) -> subprocess.CompletedProcess[str]:
+        captured.append((argv, cwd, env))
+        if "build-clean" in argv:
+            raise _CleanBuilderInvocationObservedError
+        return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(release_cohort_module, "_git", fake_git)
+    monkeypatch.setattr(release_cohort_module, "_run", fake_run)
+    monkeypatch.setattr(release_cohort_module.shutil, "which", lambda executable: executable)
+
+    with pytest.raises(_CleanBuilderInvocationObservedError):
+        build_release_cohort(
+            repo_root=repo_root,
+            output_dir=output,
+            expected_commit=expected_commit,
+        )
+
+    child_calls = [call for call in captured if "build-clean" in call[0]]
+    assert len(child_calls) == 1
+    argv, cwd, env = child_calls[0]
+    _assert_clean_builder_invocation(
+        argv,
+        cwd=cwd,
+        env=env,
+        expected_commit=expected_commit,
+    )
+
+    file_path_regression = list(argv)
+    file_path_regression[1:3] = [str(cwd / "dev" / "packaging" / "release_cohort.py"), "build-clean"]
+    with pytest.raises(AssertionError, match="package module"):
+        _assert_clean_builder_invocation(
+            file_path_regression,
+            cwd=cwd,
+            env=env,
+            expected_commit=expected_commit,
+        )
 
 
 def test_deterministic_zip_preserves_real_tree_bytes(tmp_path: Path) -> None:
