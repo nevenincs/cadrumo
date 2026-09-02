@@ -91,9 +91,11 @@ def _fresh_storage_root(tmp_path: Path) -> Iterator[Path]:
     locale-resolved CLI output stays deterministic for assertions.
     """
 
-    with override_settings(cadrumo_output_language="en"):
-        with isolated_sessionless_storage_root(tmp_path=tmp_path) as storage_root:
-            yield storage_root
+    with (
+        override_settings(cadrumo_output_language="en"),
+        isolated_sessionless_storage_root(tmp_path=tmp_path) as storage_root,
+    ):
+        yield storage_root
 
 
 def _verb_label(verb: tuple[str, ...]) -> str:
@@ -105,9 +107,11 @@ def test_cold_start_verbs_refuse_without_leaks_and_surface_profile_guidance(tmp_
 
     for index, verb in enumerate(_cold_start_verbs()):
         label = _verb_label(verb)
-        with override_settings(cadrumo_output_language="en"):
-            with isolated_sessionless_storage_root(tmp_path=tmp_path / f"cold-start-{index}"):
-                result = invoke_cached_cli(list(verb))
+        with (
+            override_settings(cadrumo_output_language="en"),
+            isolated_sessionless_storage_root(tmp_path=tmp_path / f"cold-start-{index}"),
+        ):
+            result = invoke_cached_cli(list(verb))
 
         assert result.exit_code != 0, f"{label} should refuse: {result.output}"
         for marker in _LEAK_MARKERS:

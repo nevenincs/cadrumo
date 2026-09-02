@@ -55,9 +55,11 @@ def _fresh_storage_root(tmp_path: Path) -> Iterator[Path]:
 
     from ....core.config import override_settings
 
-    with override_settings(cadrumo_output_language="en"):
-        with isolated_sessionless_storage_root(tmp_path=tmp_path) as storage_root:
-            yield storage_root
+    with (
+        override_settings(cadrumo_output_language="en"),
+        isolated_sessionless_storage_root(tmp_path=tmp_path) as storage_root,
+    ):
+        yield storage_root
 
 
 @pytest.mark.parametrize("verb", _FAST_REPAIR_VERBS, ids=lambda v: " ".join(v))

@@ -43,9 +43,7 @@ def _is_type_checking_block(node: ast.AST) -> bool:
     test = node.test
     if isinstance(test, ast.Name) and test.id == "TYPE_CHECKING":
         return True
-    if isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING":
-        return True
-    return False
+    return isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING"
 
 
 def _resolve_relative_module(source: Path, level: int, module: str | None) -> str | None:
@@ -67,14 +65,10 @@ def _resolve_relative_module(source: Path, level: int, module: str | None) -> st
     except ValueError:
         return None
     parts = list(relative.with_suffix("").parts)
-    if parts[-1] == "__init__":
-        # ``__init__.py`` IS the package; trim the marker so the
-        # remaining parts identify the package itself.
-        package_parts = parts[:-1]
-    else:
-        # Non-init module lives inside its containing package; strip
-        # the leaf module name to recover the package's dotted path.
-        package_parts = parts[:-1]
+    # Whether ``source`` is an ``__init__.py`` (the package itself) or a
+    # regular module (living inside its containing package), the package's
+    # dotted path is recovered the same way: drop the trailing element.
+    package_parts = parts[:-1]
     # ``level=1`` keeps every element; each additional level walks one
     # package up.
     if level - 1 > len(package_parts):

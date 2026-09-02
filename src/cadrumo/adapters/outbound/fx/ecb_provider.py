@@ -33,13 +33,13 @@ from __future__ import annotations
 
 import csv
 import io
-import urllib.error
-import urllib.request
 from collections.abc import Callable
 from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 from urllib.parse import urlparse
+
+import httpx
 
 from ....core.config import load_settings
 from ....core.errors.hierarchy import CoreValidationError
@@ -210,14 +210,12 @@ def _https_fetch(url: str) -> str:
         raise ExchangeRateProviderError(msg)
     settings = load_settings()
     timeout = settings.cadrumo_fx_rate_lookup_timeout_s
-    # URL is constrained to the canonical ECB Data Portal HTTPS host above.
     try:
-        with urllib.request.urlopen(url, timeout=timeout) as response:  # nosemgrep
-            payload = response.read()
-            if not isinstance(payload, bytes):
-                raise ExchangeRateProviderError("ECB euro reference-rate response was not bytes")
-            return payload.decode(UTF_8_ENCODING)
-    except (urllib.error.URLError, TimeoutError, OSError) as exc:
+        with httpx.Client(timeout=timeout) as client:
+            response = client.get(url)
+            response.raise_for_status()
+            return response.content.decode(UTF_8_ENCODING)
+    except (httpx.HTTPError, TimeoutError, OSError) as exc:
         msg = f"ECB euro reference-rate lookup failed for {url!r}: {exc}"
         raise ExchangeRateProviderError(msg) from exc
 
