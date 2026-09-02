@@ -142,6 +142,52 @@ DESTINATION MAPPING: which casilla each computed aggregate lands in, at which
 of the four grains, and how attribution splits across owners. That is
 `W04.P12.S72` and `S73`, and both can be executed by reading bundled material.
 
+### The census locator gate exists, is thorough, and never sees the live census
+
+The six dead fincas pointers were not a fincas problem. `check_capability_locators`
+in `dev/source_connectivity/check.py` already requires every locator to
+re-fetch, requires the line number to be within the file, and cross-checks each
+`capability_id` against a discovery pass so an id and its locator cannot drift
+apart. It is a well-built gate.
+
+Its tests only ever hand it focused or synthetic manifests. Nothing runs it
+against the shipped census, so the promotion of private modules to public names
+broke pointers in shipped data with no gate objecting. Running it against the
+live manifest by hand reports five dead locators across three further rows:
+
+- `censo.modelo-036-profile-status` and `coverage.remaining-ingress-surfaces`
+  both point at `application/modelo/_m036_lifecycle.py`, now `m036_lifecycle.py`.
+- `inventory.stock-valuation` points twice into
+  `domain/contribuyente/inventory/__init__.py` at lines 1161 and 1367; that
+  module is now a 20-line inert namespace and the symbols moved to `records.py`
+  and `valuation.py`. It also points at `application/inventory/_service.py`,
+  now `service.py`.
+
+These were not repaired here, and the reason is worth stating. The row's
+`capability_ids` carry an exact correspondence to their locators, down to the
+line, so a hand repair can silently attribute a capability to the wrong symbol.
+The correct source of truth already exists: `discovered_source_capability_evidence`
+resolves each id to its current location, and it disagrees with the census on
+both the module AND the line for the inventory entries. Regenerating that block
+from discovery is the owner's tooling decision, not a text edit.
+
+### Question for the source-connectivity owner
+
+Two decisions belong to whoever owns the closed disposition vocabulary and the
+census schema. Neither is answered here.
+
+First, the fincas row carries `grounding_blocked` while the readiness function
+reports the persistence gap that `ingress_blocked` describes. Both are true and
+a row holds one. The options are to re-label once the mapping decision lands,
+to keep the grounding label until `S72` and `S73` close, or to extend the schema
+with a secondary blocker. Each changes what the monotonic enforcement gate
+means, which is why it is not an editorial choice.
+
+Second, should locator resolution run against the shipped census in a declared
+lane? The gate exists; adding the live manifest to it would have caught all
+eleven dead pointers on the commit that renamed the modules. It would also be
+red on arrival, so landing it needs the repair above to go first.
+
 ### What was not investigated
 
 Whether amortization's `ingress_blocked` state has a shorter path
