@@ -127,6 +127,11 @@ skipped check. Artifact evidence is the final identity check: each runtime must
 smoke-test the exact checksum-verified files that will be uploaded, without a
 per-runtime rebuild.
 
+Keep the prerelease `next` selector provisionable: use its rolling minor (for
+example, `3.15`) while prereleases are available, and retain the observed patch
+version (for example, CPython `3.15.0b4`) in evidence. A fixed RC selector must
+not be declared unless the selected interpreter is actually provisionable.
+
 When a new CPython minor reaches its final release, promote it in this order:
 
 1. Move the `next` row into `stable`, set `current_stable_minor`, and add the

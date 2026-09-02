@@ -165,9 +165,19 @@ def test_inventory_job_is_the_only_matrix_authority() -> None:
     inventory_surface = _run_surface(inventory)
     assert "uv sync --frozen" in inventory_surface
     assert "uv run --no-sync python -m dev.ci.python_runtime_matrix" in inventory_surface
+    assert "dev/tests/test_import_hygiene_scan.py" in inventory_surface
+    assert "-k future_directive" in inventory_surface
     emit_steps = [step for step in inventory["steps"] if isinstance(step, dict) and step.get("id") == "emit-matrix"]
     assert len(emit_steps) == 1
     assert "GITHUB_OUTPUT" in str(emit_steps[0]["run"])
+
+    future_steps = [
+        step
+        for step in inventory["steps"]
+        if isinstance(step, dict) and step.get("name") == "Enforce future-directive AST policy"
+    ]
+    assert len(future_steps) == 1
+    assert "set -euo pipefail" in str(future_steps[0]["run"])
 
     source = document["jobs"]["compatibility-source"]
     binary = document["jobs"]["compatibility-binary"]

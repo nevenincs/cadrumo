@@ -36,6 +36,7 @@ def test_live_inventory_is_complete_and_emits_one_canary() -> None:
     assert inventory.current_stable_minor == "3.14"
     assert [row.minor for row in inventory.stable] == ["3.13", "3.14"]
     assert inventory.next.minor == "3.15"
+    assert inventory.next.selector == "3.15"
     assert inventory.next.phase is RuntimePhase.PRERELEASE
     assert inventory.next.blocking is False
     assert inventory.next.classifier_eligible is False
@@ -47,7 +48,7 @@ def test_matrix_projection_keeps_stable_and_canary_verdict_dimensions() -> None:
 
     rows = matrix["include"]
     assert [row["runtime-id"] for row in rows] == ["cp313", "cp314", "cp315-next"]
-    assert [row["python-version"] for row in rows] == ["3.13", "3.14", "3.15.0-rc.2"]
+    assert [row["python-version"] for row in rows] == ["3.13", "3.14", "3.15"]
     assert [row["phase"] for row in rows] == ["stable", "stable", "prerelease"]
     assert [row["blocking"] for row in rows] == [True, True, False]
     assert [row["classifier-eligible"] for row in rows] == [True, True, False]

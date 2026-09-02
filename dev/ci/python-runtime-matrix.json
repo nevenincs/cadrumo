@@ -25,7 +25,7 @@
   "next": {
     "id": "cp315-next",
     "minor": "3.15",
-    "selector": "3.15.0-rc.2",
+    "selector": "3.15",
     "implementation": "CPython",
     "phase": "prerelease",
     "blocking": false,

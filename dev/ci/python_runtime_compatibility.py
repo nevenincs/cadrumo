@@ -3,7 +3,7 @@
 The compatibility workflow deliberately has two installation modes.  ``source``
 builds an sdist (and the two mandatory data companions) from one source snapshot;
 ``binary`` installs the already sealed Python cohort.  The modes share the
-installed import/CLI probes, but never share an installation or a verdict.  A
+installed import/CLI/focused-behavior probes, but never share an installation or a verdict.  A
 binary-wheel failure therefore remains a binary-wheel failure even when the
 same runtime can install the source distribution.
 
@@ -22,6 +22,7 @@ import json
 import os
 import platform
 import re
+import subprocess
 import sys
 import zipfile
 from collections.abc import Mapping, Sequence
@@ -46,6 +47,7 @@ from ..packaging._smoke_common import (
     venv_python_path,
 )
 from ..packaging.python_cohort import digest_install_target, load_python_cohort
+from ..packaging.runtime_wheelhouse import extract_runtime_wheelhouse, load_runtime_wheelhouse
 
 _UTF_8: Final[str] = UTF_8
 _SCHEMA: Final[str] = "cadrumo.python-runtime-compatibility.v1"
@@ -178,6 +180,13 @@ class ProbeEvidence:
             raise CompatibilityProbeError("failed compatibility evidence must name its failure")
         if self.dependency.get("status") == "skipped":
             raise CompatibilityProbeError("compatibility dependency evidence cannot be skipped")
+        if self.mode == ProbeMode.BINARY.value and self.status == ProbeStatus.PASSED.value:
+            if self.cohort_manifest_sha256 is None:
+                raise CompatibilityProbeError("passing binary evidence must bind a cohort manifest")
+            if "runtime-wheelhouse" not in self.artifact_digests:
+                raise CompatibilityProbeError("passing binary evidence must bind the runtime wheelhouse bytes")
+            if self.dependency.get("source") != "sealed-runtime-wheelhouse":
+                raise CompatibilityProbeError("passing binary evidence must name the sealed wheelhouse source")
         names = tuple(test.name for test in self.focused_tests)
         if any(not name for name in names) or len(names) != len(set(names)):
             raise CompatibilityProbeError("focused runtime tests must have unique non-empty names")
@@ -334,6 +343,134 @@ def _isolated_environment(work_dir: Path, executable_dir: Path) -> dict[str, str
     return environment
 
 
+_RESOLVER_ENVIRONMENT: Final[tuple[str, ...]] = (
+    "UV_DEFAULT_INDEX",
+    "UV_EXTRA_INDEX_URL",
+    "UV_FIND_LINKS",
+    "UV_INDEX",
+    "UV_INDEX_URL",
+    "UV_NATIVE_TLS",
+    "UV_NO_INDEX",
+    "UV_OFFLINE",
+    "UV_REQUEST_TIMEOUT",
+    "PIP_EXTRA_INDEX_URL",
+    "PIP_FIND_LINKS",
+    "PIP_INDEX_URL",
+    "PIP_NO_INDEX",
+    "PIP_TRUSTED_HOST",
+)
+
+
+def _binary_environment() -> dict[str, str]:
+    """Return an installer environment with every ambient resolver input removed.
+
+    The command-line ``--offline --no-index`` switches are the authoritative
+    closure, but ambient ``UV_*`` and ``PIP_*`` values must not be allowed to
+    add another candidate source or change resolver behavior.  Keeping this
+    scrub local to the binary installer also leaves source probes free to use
+    their normal networked build path.
+    """
+    environment = clean_product_env()
+    for name in _RESOLVER_ENVIRONMENT:
+        environment.pop(name, None)
+    for name in ("PYTHONPATH", "PYTHONHOME", "VIRTUAL_ENV", "UV_PROJECT_ENVIRONMENT"):
+        environment.pop(name, None)
+    return environment
+
+
+def _wheelhouse_platform(runtime: Mapping[str, str]) -> str:
+    """Map the selected interpreter identity to one sealed wheelhouse target."""
+    operating_system = runtime.get("platform")
+    machine = runtime.get("machine", "").lower().replace("-", "_")
+    if operating_system == "linux":
+        if machine in {"x86_64", "amd64"}:
+            return "linux-x86-64"
+        if machine in {"aarch64", "arm64"}:
+            return "linux-aarch64"
+    elif operating_system == "darwin" and machine in {"arm64", "aarch64"}:
+        return "macos-arm64"
+    elif operating_system in {"win32", "win64"} and machine in {"amd64", "x86_64"}:
+        return "windows-x86-64"
+    raise CompatibilityProbeError(
+        f"sealed runtime wheelhouse has no target for {operating_system!r}/{machine!r}",
+        category="platform-unsupported",
+    )
+
+
+def _binary_wheel_targets(
+    wheelhouse_dir: Path,
+    manifest: Mapping[str, Any],
+    *,
+    platform_target: str,
+) -> tuple[str, ...]:
+    """Return digest-pinned direct requirements for one sealed target closure.
+
+    ``--find-links`` supplies the validated wheelhouse as the only candidate
+    directory.  Direct requirements are still emitted for every platform-row
+    wheel so ``--require-hashes`` constrains each installed dependency to the
+    exact bytes recorded by the wheelhouse manifest, rather than merely proving
+    that some compatible wheel happened to be found there.
+    """
+    platforms = manifest.get("platforms")
+    wheels = manifest.get("wheels")
+    rows = platforms.get(platform_target) if isinstance(platforms, Mapping) else None
+    if not isinstance(rows, Mapping) or not rows:
+        raise CompatibilityProbeError(
+            f"sealed runtime wheelhouse has no dependency rows for {platform_target!r}",
+            category="cohort-invalid",
+        )
+    if not isinstance(wheels, Mapping) or not wheels:
+        raise CompatibilityProbeError(
+            "sealed runtime wheelhouse declares no wheel records",
+            category="cohort-invalid",
+        )
+
+    targets: list[str] = []
+    for distribution, filename in sorted(rows.items(), key=lambda item: str(item[0])):
+        if not isinstance(distribution, str) or not distribution or not isinstance(filename, str):
+            raise CompatibilityProbeError(
+                f"sealed runtime wheelhouse has an invalid {platform_target!r} row",
+                category="cohort-invalid",
+            )
+        record = wheels.get(filename)
+        if not isinstance(record, Mapping) or record.get("distribution") != distribution:
+            raise CompatibilityProbeError(
+                f"sealed runtime wheelhouse target swaps distribution bytes: {platform_target!r}/{distribution!r}",
+                category="cohort-invalid",
+            )
+        expected_digest = record.get("sha256")
+        expected_size = record.get("size")
+        if (
+            not isinstance(expected_digest, str)
+            or _SHA256_RE.fullmatch(expected_digest) is None
+            or not isinstance(expected_size, int)
+            or expected_size < 0
+        ):
+            raise CompatibilityProbeError(
+                f"sealed runtime wheelhouse wheel record is invalid: {filename!r}",
+                category="cohort-invalid",
+            )
+        try:
+            path = (wheelhouse_dir / filename).resolve(strict=True)
+        except OSError as exc:
+            raise CompatibilityProbeError(
+                f"sealed runtime wheelhouse omitted {filename!r}",
+                category="cohort-invalid",
+            ) from exc
+        if path.parent != wheelhouse_dir.resolve():
+            raise CompatibilityProbeError(
+                f"sealed runtime wheelhouse wheel escapes its extraction directory: {filename!r}",
+                category="cohort-invalid",
+            )
+        if path.stat().st_size != expected_size or sha256_path(path) != expected_digest:
+            raise CompatibilityProbeError(
+                f"sealed runtime wheelhouse wheel bytes drifted: {filename!r}",
+                category="cohort-invalid",
+            )
+        targets.append(digest_install_target(distribution, path))
+    return tuple(targets)
+
+
 def _venv(uv: str, *, repo_root: Path, work_dir: Path, selector: str) -> tuple[Path, list[CommandEvidence]]:
     """Create one fresh target-runtime virtualenv and retain the command result."""
     environment = clean_product_env()
@@ -358,17 +495,58 @@ def _install(
     venv: Path,
     artifacts: tuple[tuple[str, Path], ...],
     mode: ProbeMode,
+    wheelhouse_dir: Path | None = None,
+    wheelhouse_manifest: Mapping[str, Any] | None = None,
+    wheelhouse_platform: str | None = None,
 ) -> tuple[list[CommandEvidence], DependencyStatus, str | None]:
-    """Install exact local artifacts, forcing wheels only in binary mode."""
+    """Install exact artifacts, closing binary dependency resolution to the cohort.
+
+    Source mode deliberately keeps its normal resolver behavior while binary
+    mode is required to receive an extracted, manifest-validated wheelhouse.
+    Every selected third-party wheel is passed as a digest-pinned direct
+    requirement in addition to ``--find-links``.  This makes the wheelhouse
+    directory the only candidate source and makes its recorded bytes the
+    install constraint, rather than a post-install observation.
+    """
     python = venv_python_path(venv)
     targets = tuple(digest_install_target(name, path) for name, path in artifacts)
     argv: list[str] = [uv, "pip", "install", "--python", str(python)]
     if mode is ProbeMode.BINARY:
-        argv.extend(("--only-binary", ":all:"))
+        if wheelhouse_dir is None or wheelhouse_manifest is None or wheelhouse_platform is None:
+            raise CompatibilityProbeError(
+                "binary mode requires an extracted sealed runtime wheelhouse",
+                category="cohort-invalid",
+            )
+        try:
+            wheelhouse = wheelhouse_dir.resolve(strict=True)
+        except OSError as exc:
+            raise CompatibilityProbeError(
+                f"sealed runtime wheelhouse extraction is unavailable: {wheelhouse_dir}",
+                category="cohort-invalid",
+            ) from exc
+        if not wheelhouse.is_dir():
+            raise CompatibilityProbeError(
+                f"sealed runtime wheelhouse extraction is not a directory: {wheelhouse}",
+                category="cohort-invalid",
+            )
+        targets += _binary_wheel_targets(
+            wheelhouse,
+            wheelhouse_manifest,
+            platform_target=wheelhouse_platform,
+        )
+        argv.extend(
+            (
+                "--offline",
+                "--no-index",
+                "--find-links",
+                str(wheelhouse),
+                "--only-binary",
+                ":all:",
+                "--require-hashes",
+            )
+        )
     argv.extend(targets)
-    environment = clean_product_env()
-    for name in ("PYTHONPATH", "PYTHONHOME", "VIRTUAL_ENV", "UV_PROJECT_ENVIRONMENT"):
-        environment.pop(name, None)
+    environment = _binary_environment() if mode is ProbeMode.BINARY else clean_product_env()
     result = run_command(tuple(argv), cwd=repo_root, environment=environment)
     command = [CommandEvidence.from_result(result)]
     if result.returncode != 0:
@@ -443,6 +621,92 @@ def _installed_probe(venv: Path, *, work_dir: Path) -> tuple[list[CommandEvidenc
     if not cli_result.stdout.startswith("CADRUMO "):
         raise CompatibilityProbeError("installed CLI returned an invalid product identity", category="cli-probe-failed")
     return commands, {"checkout_imports_removed": True, "ambient_product_executables_removed": True}
+
+
+def _mcp_executable_path(venv: Path) -> Path:
+    """Return the installed MCP console-script path for one target venv."""
+    executable = "cadrumo-mcp.exe" if os.name == "nt" else "cadrumo-mcp"
+    return venv_bin_dir(venv) / executable
+
+
+def _run_focused_test(
+    name: str,
+    argv: Sequence[str],
+    *,
+    cwd: Path,
+    environment: Mapping[str, str],
+    stdout_marker: str | None = None,
+) -> FocusedTestEvidence:
+    """Run one named target-runtime behavior test and retain its truthful result."""
+    try:
+        result = run_command(argv, cwd=cwd, environment=environment, timeout_seconds=120)
+    except subprocess.TimeoutExpired as exc:
+        raise CompatibilityProbeError(
+            f"focused runtime test timed out after 120 seconds: {name}",
+            category="focused-test-timeout",
+        ) from exc
+    detail: str | None = None
+    passed = result.returncode == 0
+    if passed and stdout_marker is not None and stdout_marker not in result.stdout:
+        passed = False
+        detail = f"expected stdout marker {stdout_marker!r} was absent"
+    if not passed and detail is None:
+        detail = result.stderr.strip()[-500:] or result.stdout.strip()[-500:] or "focused test failed"
+    status = FocusedTestStatus.PASSED.value if passed else FocusedTestStatus.FAILED.value
+    return FocusedTestEvidence(
+        name=name,
+        status=status,
+        command=CommandEvidence.from_result(result),
+        detail=detail,
+    )
+
+
+def _focused_runtime_tests(
+    venv: Path,
+    *,
+    work_dir: Path,
+) -> tuple[tuple[FocusedTestEvidence, ...], list[CommandEvidence], str | None]:
+    """Run the small behavior suite under the selected interpreter.
+
+    These checks intentionally run from the target venv with the checkout absent
+    from both ``sys.path`` and ``PATH``.  The first command exercises the installed
+    package's import/TOML behavior and the MCP module contract; the second invokes
+    the actual installed ``cadrumo-mcp`` console script.  They are deliberately
+    dependency-light and deterministic so every source and binary matrix row can
+    execute the same focused set, including the advisory prerelease row.
+    """
+    python = venv_python_path(venv)
+    environment = _isolated_environment(work_dir, venv_bin_dir(venv))
+    behavior_code = (
+        "import json\n"
+        "import cadrumo\n"
+        "import cadrumo_harness.mcp as mcp\n"
+        "from cadrumo.core.toml import parse_toml_text\n"
+        "parsed = parse_toml_text('value = 42\\n', error_factory=ValueError)\n"
+        "assert parsed == {'value': 42}, parsed\n"
+        "assert cadrumo.__version__\n"
+        "assert callable(mcp.main) and callable(mcp.build_server)\n"
+        "print(json.dumps({'runtime_behavior_ok': True}, sort_keys=True))\n"
+    )
+    tests = (
+        _run_focused_test(
+            "installed-package-behavior",
+            (str(python), "-I", "-W", "error::DeprecationWarning", "-c", behavior_code),
+            cwd=work_dir,
+            environment=environment,
+            stdout_marker="runtime_behavior_ok",
+        ),
+        _run_focused_test(
+            "installed-cadrumo-mcp-help",
+            (str(_mcp_executable_path(venv)), "--help"),
+            cwd=work_dir,
+            environment=environment,
+            stdout_marker="usage:",
+        ),
+    )
+    commands = [test.command for test in tests]
+    failures = tuple(f"{test.name}: {test.detail or 'failed'}" for test in tests if test.status != "passed")
+    return tests, commands, "; ".join(failures) if failures else None
 
 
 def _load_binary_artifacts(
@@ -539,12 +803,23 @@ def run_probe(
     artifacts: tuple[tuple[str, Path], ...] = ()
     artifact_digests: dict[str, str] = {}
     lock_sha256 = _read_lock_digest(repo_root / "uv.lock")
+    wheelhouse_dir: Path | None = None
+    wheelhouse_manifest: Mapping[str, Any] | None = None
+    wheelhouse_platform: str | None = None
     source_commit: str | None = None
     cohort_manifest_sha256: str | None = None
     builder_python: str | None = None
     artifact_sha256 = _digest_bytes(b"unavailable")
     dependency = {"status": DependencyStatus.FAILED.value, "detail": "probe did not reach installation"}
+    if selected_mode is ProbeMode.BINARY:
+        dependency.update(
+            {
+                "source": "sealed-runtime-wheelhouse",
+                "wheelhouse_platform": "unresolved",
+            }
+        )
     isolation = {"checkout_imports_removed": False, "ambient_product_executables_removed": False}
+    focused_tests: tuple[FocusedTestEvidence, ...] = ()
     failure: dict[str, str] | None = None
     runtime: dict[str, str] = {
         "id": runtime_id,
@@ -574,6 +849,21 @@ def run_probe(
                     ("cadrumo-data-official", "cadrumo-data-official"),
                 )
             }
+            # ``load_python_cohort`` has already checked the source archive,
+            # cohort manifest, and wheelhouse member bytes.  Validate the
+            # wheelhouse against the same lock digest once more at this
+            # handoff, then extract it into the target run's private working
+            # directory.  The installer receives only this extracted directory
+            # and never gets a registry/index fallback.
+            load_runtime_wheelhouse(
+                cohort.runtime_wheelhouse,
+                expected_lock_sha256=lock_sha256,
+            )
+            wheelhouse_dir = work_dir / "runtime-wheelhouse"
+            wheelhouse = extract_runtime_wheelhouse(cohort.runtime_wheelhouse, wheelhouse_dir)
+            wheelhouse_manifest = wheelhouse.manifest
+            artifact_digests["runtime-wheelhouse"] = cohort.sha256["runtime-wheelhouse"]
+            artifact_sha256 = _canonical_artifact_digest(artifact_digests)
             cohort_manifest_sha256 = sha256_path(cohort.manifest)
             source_commit = cohort.source_commit
         venv, created = _venv(uv, repo_root=repo_root, work_dir=work_dir, selector=python)
@@ -585,6 +875,9 @@ def run_probe(
             stability=stability,
             cwd=work_dir,
         )
+        if selected_mode is ProbeMode.BINARY:
+            wheelhouse_platform = _wheelhouse_platform(runtime)
+            dependency["wheelhouse_platform"] = wheelhouse_platform
         install_commands, dependency_status, dependency_detail = _install(
             uv,
             repo_root=repo_root,
@@ -592,9 +885,16 @@ def run_probe(
             venv=venv,
             artifacts=artifacts,
             mode=selected_mode,
+            wheelhouse_dir=wheelhouse_dir,
+            wheelhouse_manifest=wheelhouse_manifest,
+            wheelhouse_platform=wheelhouse_platform,
         )
         commands.extend(install_commands)
-        dependency = {"status": dependency_status.value, "detail": dependency_detail or "resolved"}
+        dependency = {
+            **dependency,
+            "status": dependency_status.value,
+            "detail": dependency_detail or "resolved",
+        }
         if dependency_status is not DependencyStatus.RESOLVED:
             raise CompatibilityProbeError(
                 dependency_detail or "dependency installation failed",
@@ -602,6 +902,10 @@ def run_probe(
             )
         probe_commands, isolation = _installed_probe(venv, work_dir=work_dir)
         commands.extend(probe_commands)
+        focused_tests, focused_commands, focused_failure = _focused_runtime_tests(venv, work_dir=work_dir)
+        commands.extend(focused_commands)
+        if focused_failure is not None:
+            raise CompatibilityProbeError(focused_failure, category="focused-test-failed")
     except (CompatibilityProbeError, OSError, ValueError, SystemExit) as exc:
         category = exc.category if isinstance(exc, CompatibilityProbeError) else "probe-failure"
         failure = {"category": category, "detail": str(exc)}
@@ -621,6 +925,7 @@ def run_probe(
         dependency=dependency,
         isolation=isolation,
         commands=tuple(commands),
+        focused_tests=focused_tests,
         failure=failure,
         observed_at=datetime.now(UTC).isoformat(),
     )
@@ -700,6 +1005,8 @@ __all__ = [
     "CommandEvidence",
     "CompatibilityProbeError",
     "DependencyStatus",
+    "FocusedTestEvidence",
+    "FocusedTestStatus",
     "ProbeEvidence",
     "ProbeMode",
     "ProbeStatus",
