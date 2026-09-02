@@ -5359,3 +5359,41 @@ was expected to give rather than against the shape of what it reads.
 The result stands as a negative one. A defect found once was checked for everywhere and found
 nowhere else, which is a smaller conclusion than the sweep promised and the only one the
 evidence supports.
+
+### The twenty-one unclassified modules now have a ruling each, decided by measurement
+
+The load-census residue was deferred earlier on the ground that the modules were still being
+moved by the concurrent campaign. Re-measured, it is unchanged at twenty-one unclassified
+modules and fourteen stale rules, the modules carry no pending edits, and nothing has committed
+against them in hours. They are stable, so the reason for deferring has expired.
+
+The Step asks for grounded rulings rather than key repair, and the ground turns out to be
+available. Every one of the twenty-one sits inside the static load closure, which on its own
+says nothing: the closure includes function-scoped edges a real load never walks, which is the
+distinction established when the closure test was repaired earlier in this campaign. Asking the
+sharper question - which of them `sys.modules` holds after the authority has actually loaded -
+splits them cleanly. Nineteen are imported by a real load and are `live`. Two are not:
+`_withholding_rows` and `calculation_revision_identity`, each with zero module-level importers,
+so each is reached only through a deferred edge and is `conditionally_reachable`.
+
+Both classifications already exist in the rule table, so no new vocabulary is needed. What
+remains is authoring each rule's trigger and reason, which is prose about why a module loads
+rather than a decision about whether it does. The decision is now made by measurement, and the
+Step is smaller than it was written to be.
+
+### A registry that would not load, and the cause was not the registry
+
+The measurement first failed with modelo 100's 2021 revision declaring an extraction surface
+outside the permitted set. Read as a data defect it would have been a serious finding and a
+second instance of the shared registry being committed invalid.
+
+It was neither. The schema file permits that surface, and the most recent commit is a revert
+restoring the borrador parser and its extraction profiles. The error listed the permitted
+values without the restored one, which is a loaded module older than the file it came from.
+Clearing the package's compiled cache made the load succeed and the measurement complete.
+
+Stale bytecode has now produced two false findings in this campaign, and both looked like the
+tree being broken by someone else. The tell is the same both times: an error whose message
+contradicts the source that would have produced it. Reading the file the error blames, rather
+than trusting the error, is what separates them - and it costs one command against an
+iteration spent reporting another writer's imaginary defect.

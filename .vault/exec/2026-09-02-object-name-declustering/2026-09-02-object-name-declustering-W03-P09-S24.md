@@ -32,3 +32,5 @@ related:
 - `M` `dev/quality/tests/test_object_name_rehearsal.py`
 - `M` `dev/quality/tests/test_object_name_replay.py`
 - `verify:` `uv run --no-sync pytest -q -n0 dev/quality/tests/test_object_name_manifest.py dev/quality/tests/test_object_name_rehearsal.py` -> `pass`
+- `verify:` `uv run --no-sync pytest -q -n0 dev/quality/tests/test_object_name_replay.py` -> `pass`
+- `verify:` `uv run --no-sync ruff check dev/quality/object_name_manifest.py dev/quality/object_name_rehearsal.py dev/quality/object_name_replay.py dev/quality/tests/test_object_name_manifest.py dev/quality/tests/test_object_name_rehearsal.py dev/quality/tests/test_object_name_replay.py` -> `pass`
