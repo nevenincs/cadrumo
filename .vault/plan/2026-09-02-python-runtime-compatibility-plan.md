@@ -3,185 +3,93 @@ tags:
   - '#plan'
   - '#python-runtime-compatibility'
 date: '2026-09-02'
-modified: '2026-09-02'
-body_schema: 'body-v2'
-body_hash: 'sha256:ee69d0733dc7d62614943587a30e3ffcb9e9dbe35b7c97be92ba57e7f100a2d8'
 tier: L2
 related:
-  - "[[2026-09-02-python-runtime-compatibility-adr]]"
-  - "[[2026-09-02-python-runtime-compatibility-research]]"
+  - '[[2026-09-02-python-runtime-compatibility-adr]]'
+  - '[[2026-09-02-python-runtime-compatibility-research]]'
+modified: '2026-09-02'
+body_schema: body-v2
+body_hash: 'sha256:26d29576832ffd0a0333ab3c5743888f4ac1c3fa07d77656d1a740227ccb7fc3'
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #plan) and one feature tag.
-     Replace python-runtime-compatibility with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     tier is mandatory for new plans. Allowed: L1, L2, L3, L4.
-     L1 = Steps only. L2 = Phases above Steps. L3 = Waves above
-     Phases above Steps. L4 = Epic above Waves above Phases above
-     Steps; PM association required. Pre-existing plans without this
-     field default to L2.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'. The related field
-     carries the AUTHORIZING documents (ADR, research, reference, prior
-     plan) for every Step in this plan; Steps inherit this chain;
-     per-row reference footers do not exist.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - The related: field carries the AUTHORIZING documents (ADR, research,
-       reference, prior plan) for every Step in this plan. Steps inherit this
-       chain; per-row reference footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- HIERARCHY AND TIERS:
-     Epic > Wave > Phase > Step. Step is the canonical leaf-row
-     noun. Execution Record artifact: <Step Record>.
-     Tier is declared in frontmatter as tier: L1/L2/L3/L4
-     (mandatory for new plans; pre-existing plans without the
-     field default to L2 and the writer adds the field on first
-     edit). The tier selects containers:
-       L1 = Steps only.
-       L2 = Phases above Steps.
-       L3 = Waves above Phases above Steps.
-       L4 = Epic above Waves above Phases above Steps; MUST declare
-            a project-management association in the Epic intent
-            block prose.
-     Selection is by complexity criteria, not container counting.
-     Writer never invents containers to qualify a tier. -->
-
-<!-- IDENTIFIERS AND ROW CONTRACT:
-     S##, P##, W## are flat, per-document, append-only, immutable.
-     Promotion adds containers without renumbering. Gaps are not
-     reused.
-     Display paths are computed from current grouping:
-       Step path:    L1 S##   L2 P##.S##   L3/L4 W##.P##.S##
-       Phase heading:        L2 P##       L3/L4 W##.P##
-       Wave heading:                      L3/L4 W##
-     Row format:
-       - [ ] `<display-path>` - imperative-verb action; `path/to/file`.
-     Two-state checkboxes only ([ ] open, [x] closed). No per-row
-     reference footers; wiki-links and markdown links are forbidden
-     in plan body. Authorizing documents go in the plan's `related:`
-     frontmatter once.
-     ASCII spaced hyphens everywhere; em-dash (U+2014) and en-dash
-     (U+2013) are forbidden. Step rows within a Phase are
-     contiguous. -->
-
-<!-- NO COMPRESSION:
-     N self-similar actions = N rows. Never collapse into "for each
-     X, do Y" / "across all callers, do Z" / "in every module,
-     replace W". The rule applies at every tier including L1. -->
-
-<!-- VAULTSPEC-CORE VAULT PLAN CLI:
-     The `vaultspec-core vault plan` CLI is the canonical surface for
-     structural manipulation of this plan document. Writers and
-     executors MUST use `vaultspec-core vault plan step add/insert/move/
-     remove/check/uncheck/toggle/edit`,
-     `vaultspec-core vault plan phase add/move/remove/edit`,
-     `vaultspec-core vault plan wave add/move/remove/edit`,
-     `vaultspec-core vault plan epic intent`, and
-     `vaultspec-core vault plan tier promote/demote` for every
-     identifier-affecting change rather than hand-editing the row
-     grammar. Hand edits are tolerated by the parser but flagged by
-     `vaultspec-core vault plan check`; canonical-identifier preservation is
-     guaranteed only when the CLI performs the mutation. Run
-     `vaultspec-core vault plan --help` for the full subcommand
-     surface. -->
+<!-- RETIRED: S33, S35, S37, S39, S41, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 -->
 
 # `python-runtime-compatibility` plan
 
-<!-- One-line headline summary plan. -->
+Implement one Python 3.13-and-later source tree with an open installation floor, explicit released-runtime evidence, a rolling prerelease canary, separate source and binary dependency verdicts, and runtime testing of one immutable release cohort.
 
 ## Description
 
-<!-- Briefly describe the proposed work. Reference `{adr}`s,
-`{research}`, `{reference}`. Supporting documentation must be read prior to
-writing the plan document. A plan may execute one ADR or a cluster; when
-several feed it, state here which Wave or Phase each ADR governs. -->
+This plan executes `2026-09-02-python-runtime-compatibility-adr` using the grounding in `2026-09-02-python-runtime-compatibility-research`. It separates broad runtime compatibility from the exact `.python-version` release-builder identity and preserves existing protected CI lane contracts.
 
 ## Steps
 
-<!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
-`L4`) determines the structure under this section:
+### Phase `P01` - establish the compatibility contract
 
-- `L1`: a flat list of Step rows (no Phase, Wave, or Epic).
-- `L2`: one or more `### Phase` blocks each containing Step rows.
-- `L3`: one or more `## Wave` blocks each containing Phase blocks.
-- `L4`: a `## Epic intent` block, followed by Wave blocks. -->
+Make metadata, inventory, and release-cohort boundaries authoritative.
 
-<!-- Replace this scaffold with the tier-appropriate structure for your plan.
-Format examples for each block type are embedded below as commented
-templates. -->
+- [x] `P01.S01` - Change the root package floor to >=3.13 and preserve py313 static-analysis targets; `pyproject.toml`.
+- [ ] `P01.S02` - Regenerate lock metadata without dependency upgrades; `uv.lock`.
+- [ ] `P01.S03` - Add explicit stable and prerelease runtime records and classifier eligibility; `dev/ci/python-runtime-matrix.json`.
+- [ ] `P01.S04` - Parse and validate the runtime inventory and emit GitHub matrix JSON; `dev/ci/python_runtime_matrix.py`.
+- [ ] `P01.S05` - Add detector-teeth tests for runtime inventory gaps duplicates and invalid states; `dev/ci/tests/test_python_runtime_matrix.py`.
+- [ ] `P01.S06` - Replace the stale Python ceiling assertion with the open-floor policy; `dev/audit/security.py`.
+- [ ] `P01.S07` - Update security-audit expectations for the open-ended floor; `dev/audit/tests/test_security.py`.
+- [ ] `P01.S08` - Guard the exact CPython release-builder identity; `dev/packaging/tests/test_release_cohort.py`.
 
-<!-- IMPORTANT: This document must be updated between execution runs to
-     track progress. -->
+### Phase `P02` - harden dev and src runtime compatibility
 
-<!-- PHASE BLOCK FORMAT (L2, L3, L4):
-     ### Phase `P02` - rewrite the writer-agent contract
+Keep one annotation model and detect APIs removed or deprecated across the supported CPython range.
 
-     One sentence stating what this Phase delivers.
+- [ ] `P02.S09` - Add an AST compatibility census for removed and deprecated Python APIs; `dev/quality/python_compatibility_scan.py`.
+- [ ] `P02.S10` - Add representative-defect tests for the compatibility census; `dev/quality/tests/test_python_compatibility_scan.py`.
+- [ ] `P02.S11` - Harden public annotation resolution and forward-reference behavior; `src/cadrumo/application/modelo/workspace_manifest.py`.
+- [ ] `P02.S12` - Exercise annotation contracts through the workspace-manifest path; `src/cadrumo/application/modelo/tests/test_workspace_manifest.py`.
+- [ ] `P02.S13` - Harden dynamic wizard signatures against annotation representation changes; `src/cadrumo/application/wizard/commands.py`.
+- [ ] `P02.S14` - Test dynamic signatures type hints metadata and CLI discovery; `src/cadrumo/application/wizard/tests/test_commands_helpers.py`.
+- [ ] `P02.S15` - Compile every dev and src module against the oldest supported grammar; `dev/tests/test_every_source_file_parses.py`.
+- [ ] `P02.S16` - Enforce annotations as the sole project future directive; `dev/tests/test_import_hygiene_scan.py`.
 
-     - [ ] `P02.S01` - imperative-verb action; `path/to/file`.
-     - [ ] `P02.S02` - imperative-verb action; `path/to/file`.
+### Phase `P03` - produce attributable source and binary evidence
 
-     At L3/L4 the Phase heading uses the ancestor-aware path
-     (### Phase `W01.P02` - ...). The intent sentence is mandatory. -->
+Create one reusable runner and bind its evidence to the tested artifact and runtime.
 
-<!-- WAVE BLOCK FORMAT (L3, L4):
-     ## Wave `W01` - language-only convention rollout
+- [ ] `P03.S17` - Implement isolated source and binary compatibility probes with JSON evidence; `dev/ci/python_runtime_compatibility.py`.
+- [ ] `P03.S18` - Test mode separation lock binding digest binding and missing-wheel refusal; `dev/ci/tests/test_python_runtime_compatibility.py`.
+- [ ] `P03.S19` - Extend distribution evidence with runtime stability and installation outcomes; `dev/packaging/evidence.py`.
+- [ ] `P03.S20` - Test source versus binary evidence and foreign cohort refusal; `dev/packaging/tests/test_evidence.py`.
+- [ ] `P03.S21` - Reuse installed-wheel isolation for selected target interpreters; `dev/packaging/_smoke_common.py`.
+- [ ] `P03.S22` - Verify smoke acceptance removes checkout imports and ambient executables; `dev/packaging/tests/test_smoke_core_env.py`.
 
-     One paragraph stating what this Wave delivers, which downstream
-     Wave depends on it, and which authorizing documents back it.
+### Phase `P04` - add the dedicated rolling workflow
 
-     ### Phase `W01.P01` - ...
-     ### Phase `W01.P02` - ...
+Add a separately verdictable workflow without expanding protected CI or release-cohort builders.
 
-     The Wave intent paragraph is mandatory. -->
+- [ ] `P04.S23` - Add stable and next source and binary compatibility matrix jobs; `.github/workflows/python-runtime-compatibility.yml`.
+- [ ] `P04.S24` - Gate workflow inventory source mode separation skips warnings and digests; `dev/ci/tests/test_python_runtime_compatibility_workflow.py`.
+- [ ] `P04.S25` - Permit only the dedicated runtime matrix while preserving exact-pin lanes; `dev/ci/tests/test_python_version_pin.py`.
+- [ ] `P04.S26` - Enroll the compatibility workflow in change-class and fork-safety invariants; `dev/ci/tests/test_change_class_tiers.py`.
+- [ ] `P04.S27` - Verify workflow Python calls use repository module entry points; `dev/ci/tests/test_workflow_tool_invocation.py`.
+- [ ] `P04.S28` - Preserve protected packaging-smoke single-build behavior; `dev/packaging/tests/test_packaging_smoke_workflow.py`.
+- [ ] `P04.S29` - Preserve protected quick-packaging single-runtime behavior; `dev/packaging/tests/test_packaging_quick_workflow.py`.
 
-<!-- EPIC INTENT BLOCK FORMAT (L4 only):
-     ## Epic intent
+### Phase `P05` - align stable metadata release gates and documentation
 
-     One paragraph stating the strategic goal, the external project-
-     management association (milestone name, project board identifier,
-     roadmap entry), the timeline horizon, and the teams or agents
-     involved.
+Make stable support claims only after their blocking evidence passes.
 
-     ## Wave `W01` - ...
-     ## Wave `W02` - ...
-
-     The ## Epic intent block is mandatory at L4 and absent at L1, L2,
-     L3. The plan title (the level-one # heading at the top of the
-     document) is the Epic title; no separate Epic heading is emitted. -->
+- [ ] `P05.S30` - Add classifiers only for stable runtimes proven by the matrix; `pyproject.toml`.
+- [ ] `P05.S31` - Align manuals companion classifiers with stable runtime evidence; `packaging/cadrumo_data_manuals/pyproject.toml`.
+- [ ] `P05.S32` - Align official-data companion classifiers with stable runtime evidence; `packaging/cadrumo_data_official/pyproject.toml`.
+- [ ] `P05.S34` - Enforce root and companion classifier parity and prerelease exclusion; `dev/packaging/tests/test_classifier_parity.py`.
+- [ ] `P05.S36` - Test sealed release artifacts across supported stable runtimes; `.github/workflows/publish.yml`.
+- [ ] `P05.S38` - Document local runtime selection and source versus binary evidence; `CONTRIBUTING.md`.
+- [ ] `P05.S40` - Document final-runtime promotion and classifier evidence; `RELEASING.md`.
+- [ ] `P05.S42` - Add an inventory-driven local compatibility command; `justfile`.
 
 ## Parallelization
 
-<!-- State which Steps, Phases, or Waves can be executed in parallel and
-which carry hard ordering. At `L1` and `L2`, parallelism is decided
-per-Step or per-Phase. At `L3` and `L4`, Waves are sequenced by
-default (one Wave must land before the next can begin); Phases
-within a single Wave may be parallelized when they share no hard
-interdependency. -->
+The metadata and inventory work in P01 and the source compatibility work in P02 may proceed concurrently when file ownership is disjoint. P03 depends on the P01 inventory and P02 runtime contracts. P04 depends on P03. P05 follows successful stable-runtime evidence. `pyproject.toml` has one owner across its two steps, and the existing dirty worktree must be re-read before every edit.
 
 ## Verification
 
-<!-- State the mission success criteria for this plan. Each criterion
-should be a verifiable check (test passes, surface conforms,
-reviewer signs off) rather than a free-form assertion.
-
-The plan is complete when every Step in the plan is closed
-(`- [x]`). At `L4`, the Epic-completion check additionally requires
-the declared project-management association to report the Epic
-complete.
-
-For tier-specific verification cadence, see the authorizing
-documents linked in the `related:` frontmatter. -->
+The open floor and regenerated lock must validate without a Python upper bound. The inventory must prove every released CPython minor from 3.13 and exactly one next prerelease. Stable rows must exercise source, binary, dependency, import, CLI, focused-test, and immutable-artifact paths. Prerelease failures and missing wheels remain attributable and never become skips. Annotation behavior remains consistent, existing protected lanes retain the exact 3.13.11 builder, classifier claims match proven stable rows, focused and broad quality gates pass, and mandatory code review reports no high-severity finding.
