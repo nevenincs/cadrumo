@@ -28,13 +28,19 @@ See Also:
 
 from __future__ import annotations
 
+from importlib import import_module
+
 import pytest
 
 from ....tests.attribute_scope import scoped_attribute
 
 # The MODULE object, not names from it: the tests below scope an attribute
 # on it. `from .. import <module>` is the relative form that yields one.
-from .. import deterministic_findings as deterministic_findings_module
+
+#: The defining module itself, for the attribute scoping below. Named through
+#: `import_module` rather than `from .. import`: the ledger package facade is
+#: inert and its tests may not import through it.
+deterministic_findings_module = import_module("cadrumo.application.ledger.deterministic_findings")
 from ..deterministic_findings import (
     DETERMINISTIC_CHECKS,
     DeterministicCheck,

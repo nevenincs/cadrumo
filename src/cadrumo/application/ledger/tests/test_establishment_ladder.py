@@ -31,6 +31,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from importlib import import_module
 
 import pytest
 
@@ -52,7 +53,6 @@ from ....domain.iva.establishment import (
 from ....domain.iva.identification import identification_state_for_printed_tax_identifier
 from ....domain.iva.schema import EUMemberState
 from ....tests.attribute_scope import scoped_attribute
-from .. import establishment_ladder as ladder_module
 from ..counterparty_establishment import (
     ConfirmedCounterpartyFactsRepository,
     ConfirmedCounterpartyResolution,
@@ -68,6 +68,11 @@ from ..establishment_ladder import (
 )
 from ..evidence_draft import counterparty_draft_side
 from ..invoice_draft_records import InvoiceDraft, InvoiceDraftLine, InvoiceDraftRateBreakdown
+
+#: The defining module itself, for the attribute scoping below. Named through
+#: `import_module` rather than `from .. import`: the ledger package facade is
+#: inert and its tests may not import through it.
+ladder_module = import_module("cadrumo.application.ledger.establishment_ladder")
 from ..regime_contradiction import draft_prints_a_repercutido_line
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

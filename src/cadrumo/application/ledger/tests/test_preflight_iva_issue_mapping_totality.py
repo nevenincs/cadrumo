@@ -22,6 +22,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from importlib import import_module
 from pathlib import Path
 
 import pytest
@@ -32,6 +33,11 @@ from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+
+#: The defining module itself, for the attribute scoping below. Named through
+#: `import_module` rather than `from .. import`: the ledger package facade is
+#: inert and its tests may not import through it.
+preflight_module = import_module("cadrumo.application.ledger.preflight")
 from ...aggregation import (
     IVA_LEDGER_COUNTERPARTY_GATE_REASONS,
     IVA_LEDGER_MISSING_FACT_REASONS,
@@ -42,7 +48,6 @@ from ...aggregation import (
 
 # The MODULE object, not names from it: the tests below scope an attribute
 # on it. `from .. import <module>` is the relative form that yields one.
-from .. import preflight as preflight_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

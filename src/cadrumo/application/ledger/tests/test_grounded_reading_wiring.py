@@ -19,6 +19,7 @@ import hashlib
 import inspect
 import json
 from decimal import Decimal
+from importlib import import_module
 from pathlib import Path
 
 import pytest
@@ -35,7 +36,6 @@ from ....tests.attribute_scope import scoped_attribute
 
 # The MODULE object, not names from it: the tests below scope an attribute
 # on it. `from .. import <module>` is the relative form that yields one.
-from .. import invoice_draft_extraction as invoice_draft_extraction_module
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..evidence_input import EvidenceInput
@@ -48,6 +48,11 @@ from ..grounded_reading import (
 )
 from ..identity_roles import IdentityCandidate, resolve_counterparty_identity
 from ..invoice_draft_records import FieldProvenance, InvoiceDraft
+
+#: The defining module itself, for the attribute scoping below. Named through
+#: `import_module` rather than `from .. import`: the ledger package facade is
+#: inert and its tests may not import through it.
+invoice_draft_extraction_module = import_module("cadrumo.application.ledger.invoice_draft_extraction")
 from ..preconditions import LedgerPreconditionCondition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
