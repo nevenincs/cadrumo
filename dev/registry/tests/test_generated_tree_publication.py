@@ -124,6 +124,15 @@ def _stage_interrupted_verified_candidate(
     context: GeneratedExportTreePublicationContext,
     candidate_export_root: Path,
 ) -> Path:
+    candidate_manifest = _tree_publication._verify_generated_export_package(candidate_export_root)
+    staged_candidate_export_root = _tree_publication._stage_verified_candidate_package(
+        candidate_export_root=candidate_export_root,
+        target_export_root=context.target_export_root,
+        expected_manifest_sha256=_tree_publication._sha256(
+            candidate_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME,
+        ),
+        expected_manifest=candidate_manifest,
+    )
     backup_export_root = _tree_publication._rollback_sibling(
         target_root=context.target_root.resolve(),
         modelo=_ISOLATED_TREE.modelo,
@@ -134,10 +143,10 @@ def _stage_interrupted_verified_candidate(
         state="backup_staged",
         modelo=_ISOLATED_TREE.modelo,
         revision_id=_ISOLATED_TREE.revision,
-        candidate_export=str(candidate_export_root),
+        candidate_export=str(staged_candidate_export_root),
         backup_export=str(backup_export_root),
         candidate_manifest_sha256=_tree_publication._sha256(
-            candidate_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME,
+            staged_candidate_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME,
         ),
     )
     os.replace(context.target_export_root, backup_export_root)
@@ -173,7 +182,7 @@ def test_publication_replaces_only_export_and_removes_opaque_backup(m130_inspect
     assert published.provenance_manifest_path == context.target_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME
     assert _tree_bytes(context.target_export_root) == expected_export
     assert _non_export_authority_bytes(revision_root) == before_authority
-    assert not candidate_export_root.exists()
+    assert candidate_export_root.exists()
     assert not _rollback_siblings(context.target_export_root)
     assert not (revision_root / "export.lock").exists()
     assert not _tree_publication._journal_path(context).exists()
@@ -331,10 +340,10 @@ def test_publication_refuses_coordinate_authority_and_output_mutations_before_cu
     assert not _rollback_siblings(context.target_export_root)
 
 
-def test_publication_restores_live_export_after_real_windows_locked_candidate_failure(
-    m130_inspection_snapshot, tmp_path
+def test_publication_restores_live_export_after_staged_cutover_refusal(
+    m130_inspection_snapshot, monkeypatch, tmp_path
 ) -> None:
-    """A real Windows handle blocks the second directory rename after backup staging."""
+    """A same-volume staged candidate cannot leave the old export displaced."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
         m130_inspection_snapshot,
@@ -342,9 +351,16 @@ def test_publication_restores_live_export_after_real_windows_locked_candidate_fa
     )
     before = _tree_bytes(context.target_export_root)
     before_authority = _non_export_authority_bytes(context.target_export_root.parent)
-    held_output = candidate_export_root / rendered.output_files[0]
+    real_replace = os.replace
 
-    with held_output.open("rb"), pytest.raises(RegistryValidationError, match="previous target was restored"):
+    def refuse_staged_cutover(source: str | os.PathLike[str], destination: str | os.PathLike[str]) -> None:
+        if Path(source).name.startswith(".export.generated-stage-") and Path(destination) == context.target_export_root:
+            raise OSError(17, "cross-device link")
+        real_replace(source, destination)
+
+    monkeypatch.setattr(_tree_publication.os, "replace", refuse_staged_cutover)
+
+    with pytest.raises(RegistryValidationError, match="previous target was restored"):
         publish_validated_generated_export_tree(
             context=context,
             joined=joined,
@@ -357,6 +373,7 @@ def test_publication_restores_live_export_after_real_windows_locked_candidate_fa
     assert _tree_bytes(context.target_export_root) == before
     assert _non_export_authority_bytes(context.target_export_root.parent) == before_authority
     assert candidate_export_root.exists()
+    assert not tuple(context.target_export_root.parent.glob(".export.generated-stage-*"))
     assert not _rollback_siblings(context.target_export_root)
     assert not _tree_publication._journal_path(context).exists()
 

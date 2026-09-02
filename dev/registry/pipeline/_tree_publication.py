@@ -156,7 +156,6 @@ def publish_validated_generated_export_tree(
         _require_expected_target_state(context, target_export_root)
         recovery_completed = _recover_interrupted_publication(
             context=context,
-            candidate_export_root=candidate_export_root,
             target_export_root=target_export_root,
             journal_path=journal_path,
             joined=joined,
@@ -442,7 +441,6 @@ def _verify_post_cutover_target(
 def _recover_interrupted_publication(
     *,
     context: GeneratedExportTreePublicationContext,
-    candidate_export_root: Path,
     target_export_root: Path,
     journal_path: Path,
     joined: JoinedRecordDesign,
@@ -487,7 +485,7 @@ def _recover_interrupted_publication(
         return True
     if backup_export_root.exists():
         if candidate_is_verified:
-                candidate_manifest = _verify_recovery_package_against_current_authorities(
+            candidate_manifest = _verify_recovery_package_against_current_authorities(
                 staged_candidate_export_root,
                 context=context,
                 joined=joined,
@@ -677,7 +675,9 @@ def _journal_staged_candidate_path(journal: _PublicationJournal, target_export_r
     candidate = Path(journal.candidate_export)
     prefix = f".{target_export_root.name}.generated-stage-"
     if candidate.parent != target_export_root.parent or not candidate.name.startswith(prefix):
-        raise RegistryValidationError("generated publication journal candidate is not a target-revision staging sibling")
+        raise RegistryValidationError(
+            "generated publication journal candidate is not a target-revision staging sibling",
+        )
     if is_link_like(candidate):
         raise RegistryValidationError("generated publication journal candidate must not be a symbolic link or junction")
     return candidate
