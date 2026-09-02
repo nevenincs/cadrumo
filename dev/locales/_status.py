@@ -155,7 +155,7 @@ def catalogue_status(manager: LocaleManager) -> tuple[CatalogueStatusRecord, ...
     )
     allowlist = _load_intentional_identical(manager.locales_dir / _INTENTIONAL_IDENTICAL_FILENAME)
 
-    leaves_by_file: dict[str, dict[str, object]] = {}
+    leaves_by_file: dict[str, dict[str, str]] = {}
     for locale in sorted(discover_locale_codes(manager.locales_dir)):
         source = locale_catalogue_source(manager.locales_dir, locale)
         if source is None:

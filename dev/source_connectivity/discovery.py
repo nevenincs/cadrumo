@@ -562,7 +562,12 @@ def _policy_has_write_route(value: ast.AST, *, factories: frozenset[str]) -> boo
     route = next((keyword.value for keyword in value.keywords if keyword.arg == "write_route"), None)
     if route is None and len(value.args) > 3:
         route = value.args[3]
-    return route is not None and _dotted_name(route).rsplit(".", maxsplit=1)[-1] in _WRITE_ROUTE_MEMBERS
+    if route is None:
+        return False
+    member = _dotted_name(route).rsplit(".", maxsplit=1)[-1]
+    if isinstance(route, ast.Constant) and isinstance(route.value, str):
+        member = route.value.replace("-", "_").upper()
+    return member in _WRITE_ROUTE_MEMBERS
 
 
 def _write_policy_names(cli_root: Path) -> frozenset[str]:
