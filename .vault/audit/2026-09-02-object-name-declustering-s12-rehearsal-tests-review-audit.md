@@ -76,3 +76,31 @@ allowlists.
 
 The focused suite passed 23 tests. Ruff, Ruff-format, and ty checks passed. Final review
 status is four medium findings and no critical, high, or low findings.
+
+## Re-review status
+
+Resolved: `receipt-identity-teeth` now independently recomputes both receipt hashes from the
+serialized production payload, first proving the emitted values are exact and then mutating
+manifest, inventory, component, operation, baseline, input, proposal, path, finding, tool,
+gate, and source-immutability fields one at a time. Every stable mutation changes
+`receipt_id`, while a stdout digest/size mutation preserves `receipt_id` and changes
+`evidence_digest`. A constant ID or omitted stable field therefore fails the test.
+
+Resolved: `copy-verification-teeth` replaces the real copy primitive with a wrapper that
+corrupts the copied declaration immediately after transfer. The public rehearsal entry point
+must refuse the mismatched target hash and retain the disposable root, so ordinary successful
+copy behavior cannot make the test pass after digest verification is removed.
+
+Resolved: `no-shell-teeth` passes a shell-metacharacter expression as a literal child-process
+argument, has the child assert exact argv preservation, verifies the receipt records that
+exact vector, and proves the shell-only sentinel path was not created. This protects the
+argv/no-shell execution contract without mocking the command runner.
+
+Resolved: `indivisible-component-teeth` creates two real declarations and one real importer
+that statically imports both names. The reviewed graph contains both operations joined at the
+shared consumer, and the public rehearsal boundary rejects a component forged down to one
+operation. The test therefore distinguishes independent multi-component selection from an
+invalid subset of one connected component.
+
+The amended focused suite passed 27 tests in 59.10 seconds. Ruff, Ruff-format, and ty checks
+passed. Final S12 status is no open critical, high, medium, or low findings.

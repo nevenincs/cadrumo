@@ -1434,3 +1434,52 @@ where a definition lives cannot be trusted to match where it actually lives.
 plus one xdist worker crash on a test that never references the changed symbol.
 
 Blind-spot scope: 19 -> 17 member sets declared in more than one place.
+
+## Finding 66 — a vocabulary with legal authority, and a decorator avoided
+
+`["REBECA", "rebeca_eu_eea", "scheduled_canary_route"]` is the vessel-register set that
+gates the maritime exemption, grounded in Ley 19/1994 Arts. 73.2, 73.3, 75.1 and 75.3.
+It was written out at the fact field, at the eligibility test beside it, and again at
+the application parser that produces it.
+
+Now `VesselRegistry`, with `ELIGIBLE_VESSEL_REGISTRIES` built as `frozenset(VesselRegistry)`
+rather than by relisting the three: a register added to the vocabulary cannot be left out
+of the eligibility test, which is exactly what a hand-written copy invited. The
+upper-case `REBECA` is reproduced as declared, because these are stored values and not
+display text, and no member meaning was paraphrased beside the Orden citation.
+
+`MaritimeWorkerFacts` carries `@dataclass(frozen=True, slots=True)`. The insertion was
+anchored on the decorator line rather than the class line, and both were asserted
+afterwards -- the enum is not a dataclass, the facts record still is. This is the same
+hazard that previously produced an enum decorated as a dataclass, avoided by procedure
+rather than by luck.
+
+## Finding 67 — a cross-process wire contract, stated twice
+
+The supervised key-derivation child accepts five operations. The supervisor builds the
+token and the worker both dispatches on it and validates the payload's required fields
+against it, so each of the two wrap tokens and two unwrap tokens appeared twice across
+two modules.
+
+`_kdf_operations.py` now holds `KdfOperation` with `UNWRAP_OPERATIONS` and
+`WRAP_OPERATIONS`. The two sets are kept separate rather than derived from one another
+with a direction flag, because they demand different required fields and a single set
+would let one payload shape satisfy the other's check.
+
+Two constraints made this target more than a rename. The worker is a subprocess entry
+point whose import graph is asserted by `test_kdf_worker_import_graph.py`, on the
+grounds that every wrap and unwrap spawns an interpreter and an eager import is paid on
+the production login path. The new module imports only `enum` and `typing`, and the
+forbidden list was read before the edit rather than after. And the tokens cross a
+process boundary as JSON: a member serialises to its plain token and the worker's
+comparison still holds after the round trip, verified directly rather than assumed.
+
+Ruff's `S105 possible hardcoded password` fired on the two members whose names contain
+`PASSWORD`. False positives on operation names, suppressed inline with the reason rather
+than by widening any lint configuration.
+
+21 kdf tests pass, including the import graph. One real-worker test timed out under
+parallel load and passes alone. 55 maritime tests pass; the one failure is registry data
+-- modelo 200 casillas referencing unknown export fields -- and touches neither change.
+
+Blind-spot scope: 17 -> 14 member sets declared in more than one place.
