@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:76252cbc89220914e41467e64b19c27a9e03d1e205cafcdd65ca66543fa06f01'
+body_hash: 'sha256:6557ac0b332cf54e2b3bcf4f7e8a06aec226346bf724366d5fe4da36fe0c3298'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -501,6 +501,25 @@ a surface is defined in, which is the rule consumers import by. Repairing it imm
 surfaced a real hole the old rule had been hiding: `SupplyNatureProposer` carries the
 guard and is public, and the lane had never driven it, so the claim that every guarded
 surface returns to the refusal was never true of it. It is enrolled now.
+
+### What the packaging suite still reports, and what it cannot report here
+
+With the absent-inference lane repaired the packaging suite runs 264 passed against three
+failures, every one of them reproducible at the clean commit and so none introduced by
+this work.
+
+Six tests under `dev/packaging/tests` are selected by no recipe, so every local gate over
+that directory silently drops them - among them both gates asserting that the inference
+lane's driven inventory covers every guarded entry point, which is the claim this phase
+just found to have been vacuous. A test nothing runs is weaker than a test that fails.
+One inference test imports `pydantic_core` directly while no declaration names it, so the
+package is relied on as an incidental transitive.
+
+The third failure is environmental rather than a finding: the core-payload gate shells out
+to `git archive HEAD` and that command fails in this worktree. A fourth, in the evidence
+emitter, does not fail but times out during a large `copytree` under host load. Neither
+can be resolved by reading the tree, and both mean the suite has no clean whole-run
+verdict on this workstation - only on a runner.
 
 ### Not investigated
 

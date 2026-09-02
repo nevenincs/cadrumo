@@ -5,16 +5,11 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:c196d68c08eff1070865101cf5b4f5f28adffe5f327851eef7d210cb95f47903'
+body_hash: 'sha256:b386fde53ec2c812da02adcc81a31672a2a7d82bc9d781610ab752a27cbc3532'
 step_id: 'S42'
 related:
   - "[[2026-09-02-python-runtime-compatibility-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Add an inventory-driven local compatibility command
 
@@ -23,23 +18,6 @@ related:
 - `justfile`
 
 ## Changes
-
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
 
 - `M` `justfile`
 - `verify:` `just --dry-run python-compatibility; just --dump | Select-String -Pattern 'python-compatibility:|dev.packaging.release_cohort build|dev.ci.python_runtime_compatibility|for mode in source binary|runtime inventory produced no rows'` -> `pass`
