@@ -1,0 +1,27 @@
+schema_version = 1
+inventory_digest = "sha256:29f3dbf06ed45c093058666277b8367f73fee634bb50d67c9242919703cb5ef8"
+
+[[operations]]
+operation_id = "revision-parity-report"
+finding_id = "sha256:c4592df7c17c6f2211ca7ef1aaa6162dbf0900bb66252aba350c2643ea3d3ccc"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:dev.locales._revision_drift.RevisionParityFindings#binding=1"
+old_path = "dev/locales/_revision_drift.py"
+new_locator = "class:dev.locales._revision_drift.RevisionParityReport#binding=1"
+new_path = "dev/locales/_revision_drift.py"
+owner = "locales"
+rationale = "The value is one immutable report containing both directions of revision-parity drift; Report is singular, descriptive, and globally unclaimed."
+preconditions = [
+  { path = "dev/locales/__init__.py", sha256 = "sha256:3f4d8af2c50e272de2caa340df6bd0c78739064f375703e38968abbf8e5e6af2" },
+  { path = "dev/locales/_revision_drift.py", sha256 = "sha256:42ec8e09b8836b860e73896d09e6b3725fad504ad84c361d7bd20168d552a402" },
+]
+expected_reference_classes = ["definition", "export"]
+moves = []
+changed_paths = ["dev/locales/__init__.py", "dev/locales/_revision_drift.py"]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "-q", "-n0", "dev/locales/tests"],
+  ["uv", "run", "--no-sync", "ruff", "check", "dev/locales/__init__.py", "dev/locales/_revision_drift.py"],
+]

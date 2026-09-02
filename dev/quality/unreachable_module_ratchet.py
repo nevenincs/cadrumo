@@ -88,6 +88,7 @@ class IntentionalReachabilityDisposition:
     rationale: str
 
     def __post_init__(self) -> None:
+        """Reject a disposition that cannot identify or justify its exception."""
         if not self.module.strip():
             raise ValueError("intentional reachability disposition module must be non-empty")
         if not self.rationale.strip():
@@ -98,7 +99,7 @@ def _string_list(data: object, *, field: str) -> tuple[str, ...]:
     """Read one non-empty TOML string list without accepting scalar lookalikes."""
     if not isinstance(data, list) or any(not isinstance(item, str) or not item.strip() for item in data):
         raise ValueError(f"{field} must be a list of non-empty strings")
-    return tuple(data)
+    return tuple(item for item in data if isinstance(item, str))
 
 
 @dataclass(frozen=True, slots=True)
@@ -121,6 +122,7 @@ class UnreachableBaseline:
     intentional: tuple[IntentionalReachabilityDisposition, ...] = ()
 
     def __post_init__(self) -> None:
+        """Reject overlapping or frozen entries before they can weaken the gate."""
         allowed = frozenset(self.allowed)
         intentional_by_module = {disposition.module: disposition for disposition in self.intentional}
         if len(intentional_by_module) != len(self.intentional):
