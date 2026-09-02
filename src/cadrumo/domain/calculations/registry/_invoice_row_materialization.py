@@ -527,7 +527,7 @@ def _build_operator_clave_period_rows(
         previous = observation.rectified_base_previous
         if previous is None:
             raise RegistryValidationError(
-                f"rectification observation {observation.ledger_id!r} declares no rectified base to compare",
+                f"rectification observation {observation.invoice_id!r} declares no rectified base to compare",
             )
         bucket.base_previous_total += previous
         if bucket.party_legal_name is None and observation.party_legal_name is not None:
