@@ -12,6 +12,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.filing_projection_ref import FilingProjectionRef
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -36,6 +37,7 @@ from ._variable_envelope import validate_variable_envelope
 
 __all__ = [
     "SemanticMapAnomalyException",
+    "resolve_semantic_map_casilla_tokens",
     "validate_inspection_source_authority",
     "validate_semantic_map",
 ]
@@ -68,7 +70,7 @@ def validate_semantic_map(
     inspection: GeneratedArtifactInspection,
     *,
     anomaly_exceptions: tuple[SemanticMapAnomalyException, ...] = (),
-) -> None:
+) -> SemanticMap:
     """Validate a static map through a non-filing revision inspection.
 
     Static source compilation has no filing context.  The inspection presents
@@ -81,13 +83,77 @@ def validate_semantic_map(
     _validate_exact_bijection(semantic_map, intermediate)
     _validate_exact_record_bijection(semantic_map, intermediate)
     _validate_variable_envelope_boundary(semantic_map, intermediate)
-    _validate_entry_references(
+    resolved_map = resolve_semantic_map_casilla_tokens(
         semantic_map,
+        casilla_ids=inspection.casilla_ids,
+    )
+    _validate_entry_references(
+        resolved_map,
         casilla_ids=inspection.casilla_ids,
         binding_ids=inspection.binding_ids,
         projection_endpoints=inspection.projection_endpoints,
         legal_ref_ids=inspection.legal_ref_ids,
         source_refs=frozenset(inspection.sources),
+    )
+    return resolved_map
+
+
+def resolve_semantic_map_casilla_tokens(
+    semantic_map: SemanticMap,
+    *,
+    casilla_ids: frozenset[CasillaId],
+) -> SemanticMap:
+    """Compile official numeric box tokens to exact revision-owned identifiers.
+
+    An authored semantic map may carry the numeric token printed by an official
+    record design without the registry's leading zeroes.  The selected revision
+    remains the sole identity authority: an exact identifier is preserved, and
+    a numeric token is left-padded only when exactly one unqualified declared
+    identifier can be obtained by adding zeroes to its left.  Qualified or
+    otherwise non-numeric identities are never rewritten, so segment ownership
+    cannot be inferred from a nearby-looking token.
+    """
+    resolved_entries: list[SemanticMapEntry] = []
+    for entry in semantic_map.entries:
+        token = entry.casilla_id
+        if token is None or token in casilla_ids:
+            resolved_entries.append(entry)
+            continue
+
+        candidates = _left_padded_casilla_candidates(token, casilla_ids=casilla_ids)
+        if len(candidates) == 1:
+            resolved_entries.append(entry.model_copy(update={"casilla_id": candidates[0]}))
+            continue
+        if candidates:
+            raise RegistryValidationError(
+                f"semantic map export field {entry.export_field_id!r} has ambiguous numeric casilla token "
+                f"{token!r}; target revision left-padding candidates are {tuple(candidates)!r}",
+            )
+        raise RegistryValidationError(
+            f"semantic map export field {entry.export_field_id!r} references unknown target-revision "
+            f"casilla {token!r}; no unique left-padding resolution exists",
+        )
+
+    return semantic_map.model_copy(update={"entries": tuple(resolved_entries)})
+
+
+def _left_padded_casilla_candidates(
+    token: CasillaId,
+    *,
+    casilla_ids: frozenset[CasillaId],
+) -> tuple[CasillaId, ...]:
+    """Return declared unqualified ids produced solely by left-zero padding."""
+    if not token.isdecimal():
+        return ()
+    return tuple(
+        sorted(
+            candidate
+            for candidate in casilla_ids
+            if candidate.isdecimal()
+            and len(candidate) > len(token)
+            and candidate.endswith(token)
+            and set(candidate[: -len(token)]) == {"0"}
+        ),
     )
 
 

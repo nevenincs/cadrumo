@@ -19,7 +19,11 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ..pipeline import _semantic_map_validation
 from ..pipeline._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
 from ..pipeline._semantic_map import SemanticMap
-from ..pipeline._semantic_map_validation import SemanticMapAnomalyException, validate_semantic_map
+from ..pipeline._semantic_map_validation import (
+    SemanticMapAnomalyException,
+    resolve_semantic_map_casilla_tokens,
+    validate_semantic_map,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -164,6 +168,85 @@ def _projection_ref() -> M303ProrrataActivityProjectionRef:
         field=M303ProrrataActivityProjectionField.CNAE,
         casilla_id=validated_casilla_id("500", surface="test"),
     )
+
+
+def _casilla_token_map(token: str) -> SemanticMap:
+    """Build the smallest typed map needed to exercise token compilation."""
+    return SemanticMap.model_validate(
+        _semantic_map_payload(
+            entries=(
+                _entry(
+                    row=14,
+                    ordinal=1,
+                    field_id="generated.casilla.one",
+                    kind="casilla",
+                    casilla_id=token,
+                ),
+                _entry(row=15, ordinal=2, field_id="generated.literal.two", literal="0"),
+            ),
+        ),
+    )
+
+
+def test_numeric_official_casilla_token_left_pads_only_to_one_declared_id() -> None:
+    semantic_map = _casilla_token_map("93")
+
+    resolved = resolve_semantic_map_casilla_tokens(
+        semantic_map,
+        casilla_ids=frozenset(
+            {
+                validated_casilla_id("00093", surface="test"),
+                validated_casilla_id("00193", surface="test"),
+            },
+        ),
+    )
+
+    assert resolved.entries[0].casilla_id == "00093"
+    assert semantic_map.entries[0].casilla_id == "93"
+
+
+def test_exact_and_segment_qualified_casilla_identities_are_preserved() -> None:
+    qualified = validated_casilla_id("DP200012:00093", surface="test")
+    semantic_map = _casilla_token_map(qualified)
+
+    resolved = resolve_semantic_map_casilla_tokens(
+        semantic_map,
+        casilla_ids=frozenset({qualified, validated_casilla_id("00093", surface="test")}),
+    )
+
+    assert resolved.entries[0] is semantic_map.entries[0]
+    assert resolved.entries[0].casilla_id == qualified
+
+
+def test_numeric_official_casilla_token_refuses_ambiguous_left_padding() -> None:
+    semantic_map = _casilla_token_map("93")
+
+    with pytest.raises(RegistryValidationError, match=r"ambiguous numeric casilla token.*00093.*0093"):
+        resolve_semantic_map_casilla_tokens(
+            semantic_map,
+            casilla_ids=frozenset(
+                {
+                    validated_casilla_id("00093", surface="test"),
+                    validated_casilla_id("0093", surface="test"),
+                },
+            ),
+        )
+
+
+@pytest.mark.parametrize("token", ("1087", "DP200012:93"))
+def test_casilla_token_refuses_absence_and_never_infers_segment_identity(token: str) -> None:
+    semantic_map = _casilla_token_map(token)
+
+    with pytest.raises(RegistryValidationError, match="no unique left-padding resolution exists"):
+        resolve_semantic_map_casilla_tokens(
+            semantic_map,
+            casilla_ids=frozenset(
+                {
+                    validated_casilla_id("DP200012:00093", surface="test"),
+                    validated_casilla_id("01088", surface="test"),
+                },
+            ),
+        )
 
 
 def test_validation_accepts_complete_exact_map_with_live_revision_authority(m130_inspection_snapshot) -> None:
