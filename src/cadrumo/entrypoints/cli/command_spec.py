@@ -331,6 +331,7 @@ class ParameterConstraint:
     allow_dash: bool = False
 
     def __post_init__(self) -> None:
+        """Validate the scalar bound and path-constraint invariants, or raise."""
         if self.minimum is not None and self.maximum is not None and self.minimum > self.maximum:
             raise ValueError("parameter minimum cannot exceed maximum")
         if self.clamp and self.minimum is None and self.maximum is None:
