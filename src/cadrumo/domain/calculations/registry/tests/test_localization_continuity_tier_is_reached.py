@@ -209,7 +209,7 @@ def test_the_occurrence_key_still_wins_when_it_carries_a_value() -> None:
     )
     keys, locale, occurrence_value, continuity_value = contested[0]
 
-    resolved = resolve_modelo_localization(keys, locale=locale, required=False)
+    resolved = resolve_modelo_localization(keys, locale=locale)
 
     assert resolved == occurrence_value, (
         f"the revision-specific value for {keys[0]!r} was replaced by its shared ancestor "
@@ -231,7 +231,7 @@ def test_a_valueless_key_does_not_stop_the_chain() -> None:
     present, value = lookup_translation_entry(valueless_key, locale=witness.locale)
     assert present and value is None, f"{valueless_key!r} is no longer the present-but-valueless shape this test needs"
 
-    resolved = resolve_modelo_localization(witness.keys, locale=witness.locale, required=False)
+    resolved = resolve_modelo_localization(witness.keys, locale=witness.locale)
 
     # Equality, not merely non-None. A chain that stopped here would still
     # return text -- the Spanish backstop in the outer loop supplies it -- so

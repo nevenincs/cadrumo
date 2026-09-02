@@ -313,8 +313,7 @@ def resolve_withholding296_binding_row_values(
             value = row.get(row_field)
             if value is None:
                 raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {row_field!r} not produced "
-                    f"for withholding296 row {row_index}",
+                    f"binding {binding.id!r} row_field {row_field!r} not produced for withholding296 row {row_index}",
                 )
             resolved[(str(binding.id), row_index)] = value
     return resolved

@@ -114,7 +114,10 @@ def fold_observed_requirement_values(
     # Every relation-derived requirement declares its aggregation op; only the
     # unrelated same-modelo previous_filing producer leaves it unset, and this
     # fold is the one both RELATION paths apply, per the docstring above.
-    assert aggregation_op is not None
+    if aggregation_op is None:
+        raise RegistryValidationError(
+            f"relation requirement {requirement.relation_ids!r} declares no aggregation op to fold with",
+        )
     return fold_sum_or_copy(
         aggregation_op,
         values,

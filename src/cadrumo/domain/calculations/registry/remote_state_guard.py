@@ -451,8 +451,10 @@ def _http_policy_block_reason(policy: RemoteStateGuardPolicy, url: AnyUrl, actio
 
 def _evaluate_http(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -> RemoteStateGuardResult:
     method = (operation.method or "").upper()
-    assert operation.url is not None
-    path = operation.url.path
+    url = operation.url
+    if url is None:
+        raise RegistryValidationError("AEAT remote HTTP operation carries no URL to evaluate")
+    path = url.path
     if not _http_method_is_allowed(policy, method, path):
         return _blocked(policy, f"AEAT remote write method {method!r} is forbidden")
     # Scheme, user-info and port are decided by the one canonical authority

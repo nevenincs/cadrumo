@@ -961,10 +961,15 @@ class ValidatedRegistryAuthority:
                 if selected_revision.id != containing_revision.id:
                     continue
                 # Cold validation proves this ownership invariant.  Keep the
-                # assertion at the projection boundary as a defence against a
+                # guard at the projection boundary as a defence against a
                 # future traversal refactor accidentally returning provenance
                 # from a revision other than the canonical selector's result.
-                assert containing_revision is modelo.revisions[selected_revision.id]
+                if containing_revision is not modelo.revisions[selected_revision.id]:
+                    raise RegistrySnapshotError(
+                        f"modelo {modelo.id} deadline provenance names revision "
+                        f"{containing_revision.id!r} while the canonical selector resolved "
+                        f"{selected_revision.id!r}",
+                    )
                 out.append((modelo.id, selected_revision, window))
         out.sort(
             key=lambda item: (

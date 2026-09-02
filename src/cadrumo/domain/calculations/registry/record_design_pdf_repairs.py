@@ -427,14 +427,15 @@ def rejoin_bare_coordinate_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
         length = int(triple.group("length"))
 
         successor_index = None
+        successor = None
         for candidate in range(index + 2, min(index + 2 + _BARE_COORDINATE_LOOKAHEAD, len(lines))):
-            if parsed[candidate] is not None:
+            parsed_candidate = parsed[candidate]
+            if parsed_candidate is not None:
                 successor_index = candidate
+                successor = parsed_candidate
                 break
-        if successor_index is None:
+        if successor_index is None or successor is None:
             continue
-        successor = parsed[successor_index]
-        assert successor is not None
         if successor.ordinal != str(int(ordinal) + 1) or successor.offset != offset + length:
             continue
 

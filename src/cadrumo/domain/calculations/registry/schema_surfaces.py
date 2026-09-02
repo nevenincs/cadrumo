@@ -24,7 +24,7 @@ from .ids import (
     RevisionId,
     SourceRefId,
 )
-from .modelo_localization import resolve_modelo_localization
+from .modelo_localization import require_modelo_localization, resolve_modelo_localization
 from .relation_dependency import (
     RelationDependencyRoleField,
     RelationKindField,
@@ -98,9 +98,7 @@ class CasillaAlias(RegistryModel):
 
     def get_label(self, locale: str) -> str:
         """Resolve the alias label through the shared catalogue."""
-        resolved = resolve_modelo_localization((self.localization_key,), locale=locale, required=True)
-        assert resolved is not None
-        return resolved
+        return require_modelo_localization((self.localization_key,), locale=locale)
 
     @property
     def label(self) -> str:
@@ -293,14 +291,12 @@ class CasillaDefinition(RegistryModel):
 
     def get_label(self, locale: str) -> str:
         """Resolve one label scalar through the canonical shared catalogues."""
-        resolved = resolve_modelo_localization(self.localization_keys, locale=locale, required=True)
-        assert resolved is not None
-        return resolved
+        return require_modelo_localization(self.localization_keys, locale=locale)
 
     def get_help(self, locale: str) -> str | None:
         """Resolve optional help through the same identity and fallback chain."""
         help_keys = tuple(f"{key.removesuffix('.label')}.help" for key in self.localization_keys)
-        return resolve_modelo_localization(help_keys, locale=locale, required=False)
+        return resolve_modelo_localization(help_keys, locale=locale)
 
     @property
     def label(self) -> str:

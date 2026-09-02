@@ -661,8 +661,7 @@ def resolve_invoice_family_row_values(
                 value = row.get(row_field)
                 if value is None:
                     raise RegistryValidationError(
-                        f"binding {binding.id!r} row_field {row_field!r} not produced "
-                        f"for grouping {grouping!r}",
+                        f"binding {binding.id!r} row_field {row_field!r} not produced for grouping {grouping!r}",
                     )
                 resolved[(binding.id, row_index)] = value
     return resolved

@@ -579,8 +579,7 @@ def _render_fractional_digits(field: _ExportField, value: object) -> str:
     scaled = fraction * (Decimal(10) ** length)
     if scaled != scaled.to_integral_value():
         raise RegistryValidationError(
-            f"export field {field.id!r} cannot represent {length} fractional digits "
-            f"of a value carrying more precision",
+            f"export field {field.id!r} cannot represent {length} fractional digits of a value carrying more precision",
         )
     return str(int(scaled)).rjust(length, "0")
 

@@ -614,8 +614,10 @@ def _allowed_values_failure(field: ExportFieldDefinition) -> str | None:
             f"export field {field.id!r} allowed_values requires an unsigned right-justified "
             "left-zero-padded fixed-width integer"
         )
-    assert field.length is not None
-    invalid = tuple(value for value in allowed_values if not _is_canonical_digit_run(value, field.length))
+    length = field.length
+    if length is None:
+        return f"export field {field.id!r} allowed_values requires a declared length"
+    invalid = tuple(value for value in allowed_values if not _is_canonical_digit_run(value, length))
     if invalid:
         return f"export field {field.id!r} allowed_values contains noncanonical or out-of-width entries: {invalid!r}"
     return None

@@ -179,8 +179,7 @@ def resolve_gasto193_binding_row_values(
                 value = " " * 9
             if value is None:
                 raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {row_field!r} not produced "
-                    f"for gasto193 row {row_index}",
+                    f"binding {binding.id!r} row_field {row_field!r} not produced for gasto193 row {row_index}",
                 )
             resolved[(str(binding.id), row_index)] = value
     return resolved

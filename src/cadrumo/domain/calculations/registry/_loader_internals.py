@@ -77,7 +77,6 @@ _REVISION_SPECIAL_MERGE_FIELDS = frozenset({_REVISION_EXPORT_LAYOUTS, _REVISION_
 def _compute_revision_append_arrays() -> frozenset[str]:
     names: set[str] = set()
     for field_name, field in ModeloRevision.model_fields.items():
-        assert isinstance(field_name, str)
         if (
             field.default == ()
             and get_origin(field.annotation) is tuple
