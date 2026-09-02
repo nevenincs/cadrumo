@@ -219,14 +219,18 @@ class LazyBinding:
         *,
         optional_dependencies: tuple[str, ...] = (),
     ) -> LazyBinding:
+        """Return a binding whose implementation resolves to ``target``."""
         return cls(BindingState.TARGET, target=target, optional_dependencies=optional_dependencies)
 
     @classmethod
     def unavailable(cls, reason_key: TranslationKey) -> LazyBinding:
+        """Return a binding explicitly unavailable, with a localized reason."""
         return cls(BindingState.UNAVAILABLE, reason_key=reason_key)
 
 
 class DefaultKind(Enum):
+    """How a parameter's default value is determined."""
+
     REQUIRED = "required"
     LITERAL = "literal"
     FACTORY = "factory"
@@ -263,6 +267,7 @@ class ParameterDefault:
     factory: DeferredTarget | None = None
 
     def __post_init__(self) -> None:
+        """Validate that ``literal`` and ``factory`` agree with the declared ``kind``, or raise."""
         if self.kind is DefaultKind.REQUIRED:
             if self.literal is not None or self.factory is not None:
                 raise ValueError("required parameter default cannot carry a value")
@@ -274,14 +279,17 @@ class ParameterDefault:
 
     @classmethod
     def required(cls) -> ParameterDefault:
+        """Return a default marking the parameter as required, with no value."""
         return cls(DefaultKind.REQUIRED)
 
     @classmethod
     def value(cls, value: LiteralValue | tuple[LiteralValue, ...]) -> ParameterDefault:
+        """Return a default carrying the immutable literal ``value``."""
         return cls(DefaultKind.LITERAL, literal=value)
 
     @classmethod
     def from_factory(cls, target: DeferredTarget) -> ParameterDefault:
+        """Return a default resolved lazily through the deferred factory ``target``."""
         return cls(DefaultKind.FACTORY, factory=target)
 
 
@@ -297,6 +305,7 @@ class ValueContract:
     choices: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
+        """Validate that the click type, parser, and choices are mutually exclusive, or raise."""
         if self.click_type is not None and self.parser is not None:
             raise ValueError("value contract cannot declare both a Click type and parser")
         if len(self.choices) != len(set(self.choices)) or any(not choice for choice in self.choices):
