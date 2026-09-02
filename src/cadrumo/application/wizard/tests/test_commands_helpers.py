@@ -16,9 +16,14 @@ calculation tautologies.
 
 from __future__ import annotations
 
+import inspect
+import typing
 from pathlib import Path
+from typing import Annotated
 
 import pytest
+import typer
+from typer.testing import CliRunner
 
 from ....core.i18n import Translatable as tr
 from ..commands import (
@@ -30,6 +35,8 @@ from ..commands import (
     _help_key,
     _missing_required_flags,
     _required_flag_questions,
+    _wizard_command_metadata,
+    build_wizard_command,
 )
 from ..models import WizardCondition, WizardFlow, WizardQuestion, WizardSection, WizardWidget
 from ._support import EmptyAnswersBase
@@ -297,3 +304,60 @@ def test_canonical_from_flag_value_checkbox_non_iterable_returns_none() -> None:
     value is rejected as a parser anomaly."""
     question = _question(widget=WizardWidget.CHECKBOX, answer_type=str)
     assert _canonical_from_flag_value(question, "madrid") is None
+
+
+# ---------------------------------------------------------------------------
+# Dynamic command signatures
+# ---------------------------------------------------------------------------
+
+
+def test_wizard_command_metadata_keeps_signature_and_annotations_in_lockstep() -> None:
+    """Both runtime consumers receive the same public annotation objects."""
+    annotation = Annotated[str, "wizard-metadata"]
+    annotated = inspect.Parameter(
+        "value",
+        kind=inspect.Parameter.KEYWORD_ONLY,
+        annotation=annotation,
+    )
+    unannotated = inspect.Parameter(
+        "ignored",
+        kind=inspect.Parameter.KEYWORD_ONLY,
+    )
+
+    signature, annotations = _wizard_command_metadata((annotated, unannotated))
+
+    assert signature.parameters["value"].annotation is annotation
+    assert annotations == {"value": annotation}
+
+
+def test_build_wizard_command_exposes_resolvable_annotation_metadata() -> None:
+    """Future-annotation source policy does not erase dynamic Typer metadata."""
+    command = build_wizard_command(
+        _flow(_question(qid="activity", widget=WizardWidget.TEXT)),
+        mode="create",
+    )
+
+    signature = inspect.signature(command)
+    raw_annotations = inspect.get_annotations(command, eval_str=False)
+    resolved_annotations = typing.get_type_hints(command, include_extras=True)
+
+    assert tuple(raw_annotations) == tuple(signature.parameters)
+    assert tuple(resolved_annotations) == tuple(signature.parameters)
+    assert resolved_annotations["activity"] == signature.parameters["activity"].annotation
+    assert typing.get_origin(resolved_annotations["activity"]) is typing.Annotated
+    assert typing.get_args(resolved_annotations["activity"])[1].help is not None
+
+
+def test_build_wizard_command_is_discoverable_by_typer() -> None:
+    """Typer can register the generated signature and expose its flag."""
+    command = build_wizard_command(
+        _flow(_question(qid="activity", widget=WizardWidget.TEXT)),
+        mode="create",
+    )
+    app = typer.Typer()
+    app.command()(command)
+
+    result = CliRunner().invoke(app, ["--help"])
+
+    assert result.exit_code == 0
+    assert "--activity" in result.stdout
