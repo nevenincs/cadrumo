@@ -76,7 +76,37 @@ __all__ = [
     "resolve_cross_reference_oracle",
 ]
 
-ParityVerdict = Literal["match", "mismatch", "unverifiable", "blocked"]
+class ParityVerdictKind(StrEnum):
+    """How a live-parity comparison came out."""
+
+    MATCH = "match"
+    MISMATCH = "mismatch"
+    UNVERIFIABLE = "unverifiable"
+    BLOCKED = "blocked"
+    """Reserved for a whole result, never for one field: a run can be blocked before
+    any field is compared, and a field that was never compared is unverifiable rather
+    than blocked."""
+
+
+ParityVerdict = Literal[
+    ParityVerdictKind.MATCH,
+    ParityVerdictKind.MISMATCH,
+    ParityVerdictKind.UNVERIFIABLE,
+    ParityVerdictKind.BLOCKED,
+]
+"""Every verdict, for a result-level field."""
+
+ParityFieldVerdict = Literal[
+    ParityVerdictKind.MATCH,
+    ParityVerdictKind.MISMATCH,
+    ParityVerdictKind.UNVERIFIABLE,
+]
+"""The verdicts one FIELD can carry, which excludes ``BLOCKED``.
+
+A genuine narrowing, written out three times before this existed -- once on the
+comparison model and twice in the Renta WEB oracle. Keeping it named stops a blocked
+run being recorded as a field-level outcome, which would report a comparison that never
+happened as one that did."""
 OracleSurfaceKind = Literal[
     "file_validator",
     "open_simulator",
@@ -133,7 +163,7 @@ class ParityFieldComparison(_ParityModel):
     name: str = Field(min_length=1, max_length=160)
     expected: str
     observed: str
-    verdict: Literal["match", "mismatch", "unverifiable"]
+    verdict: ParityFieldVerdict
 
 
 class ParityResult(_ParityModel):

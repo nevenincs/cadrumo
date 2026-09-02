@@ -24,6 +24,7 @@ from .ids import OracleId
 from .live_parity import (
     OracleSurfaceKind,
     ParityFieldComparison,
+    ParityFieldVerdict,
     ParityResult,
     assert_oracle_operations_allowed,
     decode_replay_json_payload,
@@ -509,7 +510,7 @@ def serialize_renta_web_open_replay_decimal(value: str) -> str | None:
     return None if parsed is None else format(parsed, "f")
 
 
-def _overall_verdict(fields: tuple[ParityFieldComparison, ...]) -> Literal["match", "mismatch", "unverifiable"]:
+def _overall_verdict(fields: tuple[ParityFieldComparison, ...]) -> ParityFieldVerdict:
     if any(field.verdict == "mismatch" for field in fields):
         return "mismatch"
     if any(field.verdict == "unverifiable" for field in fields):
@@ -518,7 +519,7 @@ def _overall_verdict(fields: tuple[ParityFieldComparison, ...]) -> Literal["matc
 
 
 def _narrative_for_verdict(
-    verdict: Literal["match", "mismatch", "unverifiable"],
+    verdict: ParityFieldVerdict,
     *,
     driver_mode: CheckerDriverModeValue,
 ) -> str:
