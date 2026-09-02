@@ -444,7 +444,7 @@ def pyproject_surfaces(repo_root: Path) -> DependencySurfaces:
 
 def optional_extra_registry(repo_root: Path) -> tuple[dict[str, str], set[str]]:
     """Return capability-gated optional extras declared by the core registry."""
-    source = repo_root / "src" / "cadrumo" / "core" / "_optional_extras.py"
+    source = repo_root / "src" / "cadrumo" / "core" / "optional_extras.py"
     module = ast.parse(source.read_text(encoding=_UTF_8), filename=str(source))
     records_by_symbol: dict[str, tuple[str, str]] = {}
     tuple_symbols: set[str] = set()
