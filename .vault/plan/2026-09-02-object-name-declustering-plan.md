@@ -10,7 +10,7 @@ related:
   - '[[2026-09-02-object-name-declustering-reference]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:be4d599193f86e3e7ecf9b82ecbb52a57ceb3f37652f63a08d03359fe615e4fb'
+body_hash: 'sha256:8ef3dfb4788ccb6a1d552880d66a1dc70436e485324ca3799a9ddb2bc1be0e41'
 ---
 
 <!-- RETIRED: S21, S22 -->
@@ -41,7 +41,7 @@ Extend the existing object-name authority with complete stable machine identity 
 Define the typed reviewed intent that selects and constrains every proposed rename operation.
 
 - [x] `W01.P02.S03` - Implement the typed reviewed rename-manifest loader and reject ambiguous, incomplete, or stale intent; `dev/quality/object_name_manifest.py`.
-- [ ] `W01.P02.S04` - Test manifest parsing, uniqueness constraints, stale preconditions, and fail-closed validation; `dev/quality/tests/test_object_name_manifest.py`.
+- [x] `W01.P02.S04` - Test manifest parsing, uniqueness constraints, stale preconditions, and fail-closed validation; `dev/quality/tests/test_object_name_manifest.py`.
 
 ### Phase `W01.P03` - evidence graph and scheduling
 

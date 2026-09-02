@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:e957837f5b398e1c8dc522a75239b4ab4c6a3d9251693850e786e17875081087'
+body_hash: 'sha256:0d28a47154cedc613c300cd635ada1fc390c18eb6167e290ad4fc99c61568dde'
 step_id: 'S04'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
@@ -24,19 +24,11 @@ related:
 
 ## Changes
 
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
+- `A` `dev/quality/tests/test_object_name_manifest.py`
+- `verify:` `uv run --no-sync pytest -q -n0 dev/quality/tests/test_object_name_manifest.py` -> `pass`
+- `verify:` `uv run --no-sync ruff check dev/quality/tests/test_object_name_manifest.py dev/quality/object_name_manifest.py` -> `pass`
+- `verify:` `uv run --no-sync ty check dev/quality/tests/test_object_name_manifest.py dev/quality/object_name_manifest.py` -> `pass`
+- `verify:` `uv run basedpyright dev/quality/tests/test_object_name_manifest.py` -> `pass`
+- `verify:` `independent current-byte S03+S04 review` -> `pass`
 
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
 
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->

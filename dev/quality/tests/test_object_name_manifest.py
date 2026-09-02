@@ -224,6 +224,28 @@ def test_loader_refuses_strict_schema_coercion_and_unknown_fields(
         load_object_name_manifest(manifest_path)
 
 
+def test_loader_refuses_prohibited_keep_distinct_disposition(tmp_path: Path) -> None:
+    inventory, declaration, finding = _symbol_fixture(tmp_path)
+    operation = _operation(declaration, finding, disposition="keep-distinct")
+
+    with pytest.raises(ValidationError, match=r"lexical-singular.*rename-distinct.*merge-authority"):
+        _model(inventory, operation)
+
+
+def test_loader_refuses_linked_manifest(tmp_path: Path) -> None:
+    inventory, declaration, finding = _symbol_fixture(tmp_path)
+    real_manifest = tmp_path / "real.toml"
+    _write_manifest(real_manifest, _manifest_payload(inventory, _operation(declaration, finding)))
+    linked_manifest = tmp_path / "linked.toml"
+    try:
+        linked_manifest.symlink_to(real_manifest)
+    except OSError as exc:
+        pytest.skip(f"symlinks unavailable: {exc}")
+
+    with pytest.raises(ObjectNameManifestError, match="regular file"):
+        load_object_name_manifest(linked_manifest)
+
+
 @pytest.mark.parametrize(
     ("field", "value"),
     (
@@ -449,6 +471,46 @@ def test_module_move_without_name_change_is_refused(tmp_path: Path) -> None:
 
     with pytest.raises(ObjectNameManifestError, match="must change the audited object name"):
         validate_object_name_manifest(_model(inventory, operation), inventory=inventory, repo_root=tmp_path)
+
+
+@pytest.mark.parametrize(
+    "new_locator",
+    (
+        "class:cadrumo.other.Widget#binding=1",
+        "class:cadrumo.widget_contract.Widget#binding=2",
+    ),
+)
+def test_validator_refuses_symbol_target_locator_disagreement(tmp_path: Path, new_locator: str) -> None:
+    inventory, declaration, finding = _symbol_fixture(tmp_path)
+    operation = _operation(declaration, finding)
+    operation["new_locator"] = new_locator
+
+    with pytest.raises(ObjectNameManifestError, match="target path and locator disagree"):
+        validate_object_name_manifest(_model(inventory, operation), inventory=inventory, repo_root=tmp_path)
+
+
+def test_validator_refuses_module_package_mismatch_and_non_python_target(tmp_path: Path) -> None:
+    inventory, declaration, finding = _module_fixture(tmp_path)
+    mismatched = _operation(
+        declaration,
+        finding,
+        operation_id="rename-widgets-module",
+        target_name="widget",
+        target_path="src/cadrumo/widget.py",
+    )
+    mismatched["new_locator"] = "module:cadrumo.other#binding=1"
+    with pytest.raises(ObjectNameManifestError, match="target path and locator disagree"):
+        validate_object_name_manifest(_model(inventory, mismatched), inventory=inventory, repo_root=tmp_path)
+
+    non_python = _operation(
+        declaration,
+        finding,
+        operation_id="rename-widgets-module",
+        target_name="widget",
+        target_path="src/cadrumo/widget.txt",
+    )
+    with pytest.raises(ValidationError, match="Python source files"):
+        _model(inventory, non_python)
 
 
 def test_validator_refuses_symlinked_affected_path_component(tmp_path: Path) -> None:
