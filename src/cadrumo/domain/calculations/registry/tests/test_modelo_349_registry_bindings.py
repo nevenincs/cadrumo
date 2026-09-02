@@ -14,6 +14,7 @@ from ..binding_selector_utils import selector_as_dict
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..invoice_bindings import (
     InvoiceObservation,
+    RectificationScope,
     invoice_binding_requirements,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
@@ -120,10 +121,10 @@ def test_committed_modelo_349_invoice_binding_requirements_split_by_rectificatio
     expected_collectible_claves = ("A", "C", "D", "E", "H", "I", "M", "R", "S", "T")
     expected_payable_claves = ("A", "I", "T")
     assert set(by_scope_and_claves) == {
-        ("exclude_rectifications", expected_collectible_claves),
-        ("only_rectifications", expected_collectible_claves),
-        ("exclude_rectifications", expected_payable_claves),
-        ("only_rectifications", expected_payable_claves),
+        (RectificationScope.EXCLUDE_RECTIFICATIONS, expected_collectible_claves),
+        (RectificationScope.ONLY_RECTIFICATIONS, expected_collectible_claves),
+        (RectificationScope.EXCLUDE_RECTIFICATIONS, expected_payable_claves),
+        (RectificationScope.ONLY_RECTIFICATIONS, expected_payable_claves),
     }
     expected_collectible_exclude = {
         "iva-349-declarante-numero-operadores",
@@ -149,19 +150,20 @@ def test_committed_modelo_349_invoice_binding_requirements_split_by_rectificatio
     expected_payable_exclude = {f"{binding_id}-adquisicion" for binding_id in expected_collectible_exclude}
     expected_payable_only = {f"{binding_id}-adquisicion" for binding_id in expected_collectible_only}
     assert (
-        set(by_scope_and_claves[("exclude_rectifications", expected_collectible_claves)].binding_ids)
+        set(by_scope_and_claves[(RectificationScope.EXCLUDE_RECTIFICATIONS, expected_collectible_claves)].binding_ids)
         == expected_collectible_exclude
     )
     assert (
-        set(by_scope_and_claves[("only_rectifications", expected_collectible_claves)].binding_ids)
+        set(by_scope_and_claves[(RectificationScope.ONLY_RECTIFICATIONS, expected_collectible_claves)].binding_ids)
         == expected_collectible_only
     )
     assert (
-        set(by_scope_and_claves[("exclude_rectifications", expected_payable_claves)].binding_ids)
+        set(by_scope_and_claves[(RectificationScope.EXCLUDE_RECTIFICATIONS, expected_payable_claves)].binding_ids)
         == expected_payable_exclude
     )
     assert (
-        set(by_scope_and_claves[("only_rectifications", expected_payable_claves)].binding_ids) == expected_payable_only
+        set(by_scope_and_claves[(RectificationScope.ONLY_RECTIFICATIONS, expected_payable_claves)].binding_ids)
+        == expected_payable_only
     )
 
 

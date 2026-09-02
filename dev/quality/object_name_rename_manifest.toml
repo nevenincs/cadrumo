@@ -1,27 +1,31 @@
 schema_version = 1
-inventory_digest = "sha256:29f3dbf06ed45c093058666277b8367f73fee634bb50d67c9242919703cb5ef8"
+inventory_digest = "sha256:0fe08d3dff00c9abbdfda3c916384c57dd4394402453724c401bc9097b63ef81"
 
 [[operations]]
-operation_id = "revision-parity-report"
-finding_id = "sha256:c4592df7c17c6f2211ca7ef1aaa6162dbf0900bb66252aba350c2643ea3d3ccc"
+operation_id = "rename-dev-tui-surface-inventory"
+finding_id = "sha256:2adf2941c55a0c8041bf98cbfaa271e9f383db6975f97aaab01dd4239ad11ef6"
 operation_kind = "symbol-rename"
-disposition = "lexical-singular"
+disposition = "rename-distinct"
 lifecycle = "reviewed"
-old_locator = "class:dev.locales._revision_drift.RevisionParityFindings#binding=1"
-old_path = "dev/locales/_revision_drift.py"
-new_locator = "class:dev.locales._revision_drift.RevisionParityReport#binding=1"
-new_path = "dev/locales/_revision_drift.py"
-owner = "locales"
-rationale = "The value is one immutable report containing both directions of revision-parity drift; Report is singular, descriptive, and globally unclaimed."
-preconditions = [
-  { path = "dev/locales/__init__.py", sha256 = "sha256:3f4d8af2c50e272de2caa340df6bd0c78739064f375703e38968abbf8e5e6af2" },
-  { path = "dev/locales/_revision_drift.py", sha256 = "sha256:42ec8e09b8836b860e73896d09e6b3725fad504ad84c361d7bd20168d552a402" },
-]
-expected_reference_classes = ["definition", "export"]
-moves = []
-changed_paths = ["dev/locales/__init__.py", "dev/locales/_revision_drift.py"]
+old_locator = "function:dev.tui._harness.surfaces#binding=1"
+old_path = "dev/tui/_harness.py"
+new_locator = "function:dev.tui._harness.surface_inventory#binding=1"
+new_path = "dev/tui/_harness.py"
+owner = "dev-tui"
+rationale = "The function inventories every harness-driven visual surface; the responsibility-specific singular target distinguishes that catalogue operation from an individual surface."
+expected_reference_classes = ["definition", "static-import"]
+changed_paths = ["dev/tui/_harness.py", "dev/tui/cli.py"]
 generator_commands = []
 focused_gates = [
-  ["uv", "run", "--no-sync", "pytest", "-q", "-n0", "dev/locales/tests"],
-  ["uv", "run", "--no-sync", "ruff", "check", "dev/locales/__init__.py", "dev/locales/_revision_drift.py"],
+  ["uv", "run", "--no-sync", "pytest", "-q", "-n0", "dev/tui/tests/test_tui_visual_inventory.py"],
+  ["uv", "run", "--no-sync", "ruff", "check", "dev/tui/_harness.py", "dev/tui/cli.py"],
 ]
+moves = []
+
+[[operations.preconditions]]
+path = "dev/tui/_harness.py"
+sha256 = "sha256:895b0b2c41742985578bb65d55ceeec2bf5e391923454269bd675fd00a05dd8d"
+
+[[operations.preconditions]]
+path = "dev/tui/cli.py"
+sha256 = "sha256:7b84e73ef33f148e4ce12cd11256da8ede3a28bccf36e2d4449ba21507bc4307"
