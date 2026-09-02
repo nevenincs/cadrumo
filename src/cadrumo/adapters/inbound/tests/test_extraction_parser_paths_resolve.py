@@ -21,6 +21,8 @@ See Also:
     :func:`~adapters.inbound.declaracion.parser.parse_declaracion`
         Registry-profile-driven declaración parser facade referenced by
         shipped extraction profiles.
+    :func:`~adapters.inbound.borrador.parser.parse_borrador`
+        Borrador parser facade allowed as a sanctioned parser authority.
     :mod:`~domain.calculations.registry.tests.test_registry_schema_part2`
         Domain-layer regression proving only dotted-callable shape is checked.
 """
@@ -37,11 +39,10 @@ from ....core.directory_scan import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
-# Sanctioned parser authorities: the inbound declaration-PDF parser package,
-# plus the registry's own in-tree export-payload parser (a domain-internal
-# callable). The retired Modelo 100 borrador parser is intentionally absent;
-# no registry profile may point back to that deleted adapter.
+# Sanctioned parser authorities: the two inbound-PDF parser packages, plus the
+# registry's own in-tree export-payload parser (a domain-internal callable).
 _ALLOWED_PARSER_AUTHORITY_PREFIXES: tuple[str, ...] = (
+    "cadrumo.adapters.inbound.borrador",
     "cadrumo.adapters.inbound.declaracion",
     "cadrumo.domain.calculations.registry",
 )

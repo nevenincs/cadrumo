@@ -154,6 +154,7 @@ def validate_extraction_profile_artefacts(
     profile: ExtractionProfileDefinition,
 ) -> list[str]:
     expected_by_surface = {
+        "borrador_pdf": {"declaration_pdf"},
         "declaracion_pdf": {"declaration_pdf"},
         "justificante_pdf": {"justificante_pdf"},
         "export_record": {"submitted_file"},

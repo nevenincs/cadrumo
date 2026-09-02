@@ -77,6 +77,7 @@ from .schema_base import (
     SettlementDirection,
     SettlementDirectionField,
     SourceRefs,
+    coerce_enum_member,
 )
 from .schema_scalars import DecimalValue, WorkbookCellRefStr
 
@@ -164,6 +165,19 @@ SIMULATOR_SURFACES: Final[frozenset[LiveVerificationSurface]] = frozenset(
 )
 """Surfaces that are not AEAT production infrastructure."""
 
+LiveVerificationSurfaceField = Annotated[
+    LiveVerificationSurface,
+    BeforeValidator(coerce_enum_member(LiveVerificationSurface)),
+]
+"""The surface as a REGISTRY SCHEMA field.
+
+`LiveCrossReferenceDecision` validates strictly and is built from registry TOML, so the
+declared token needs the coercion hop to arrive as a member. The bare enum stays the
+form this module's own comparisons use, and the two subsets stay derived from it.
+"""
+
+
+
 
 def _validate_open_or_public_authentication(
     surface: str,
@@ -225,14 +239,7 @@ class LiveCrossReferenceDecision(RegistryModel):
 
     id: CrossReferenceId
     evidence_tier: EvidenceTierField
-    surface: Literal[
-        "open_simulator",
-        "integration_test_service",
-        "public_read_surface",
-        "authenticated_read_surface",
-        "authenticated_simulator",
-        "static_official_documentation",
-    ]
+    surface: LiveVerificationSurfaceField
     guard_policy_id: str
     allowed_hosts: tuple[str, ...] = ()
     allowed_methods: tuple[str, ...] = ()

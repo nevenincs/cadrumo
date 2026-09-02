@@ -123,10 +123,10 @@ class ExtractionTargetDefinition(RegistryModel):
 
 
 class ExtractionProfileDefinition(RegistryModel):
-    """Registry extraction profile for declaration/workbook artefacts."""
+    """Registry extraction profile for declaration/borrador/workbook artefacts."""
 
     id: ExtractionProfileId
-    surface: Literal["declaracion_pdf", "justificante_pdf", "export_record", "official_workbook"]
+    surface: Literal["borrador_pdf", "declaracion_pdf", "justificante_pdf", "export_record", "official_workbook"]
     artefact_kind: str
     accepted_artefact_kinds: tuple[
         Literal["submitted_file", "declaration_pdf", "justificante_pdf", "official_workbook"],

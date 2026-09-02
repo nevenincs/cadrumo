@@ -149,6 +149,8 @@ errors:
     error_application_live_iva_surface_timeout: Live IVA read surface timed out before
       returning AEAT evidence.
     error_application_registry: The modelo registry orchestration failed or was refused.
+    error_borrador_artefact_not_recognised: The PDF does not match any known Modelo
+      100 borrador shape.
     error_cadrumo_async_resource_cleanup: Asynchronous resource cleanup failed; retry
       cleanup before continuing.
     error_cadrumo_core: An internal application error occurred.
@@ -368,6 +370,7 @@ errors:
     fail_access_gate_authorization_manifest: The modelo authorization manifest could
       not be loaded or contains an invalid enrollment entry.
     fail_browser_evasion: Browser evasion setup could not be applied.
+    fail_borrador_parse: The Modelo 100 borrador PDF could not be parsed into a filing.
     fail_browser_session_browser: A browser session error occurred.
     fail_browser_validation: The browser parameters failed validation.
     fail_certificado_censal_parse: Could not read the Certificado de Situación Censal

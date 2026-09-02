@@ -163,6 +163,8 @@ errors:
       viu ha esgotat el temps abans de retornar evidència de l'AEAT.
     error_application_registry: L'orquestració del registre de models ha fallat o
       ha estat rebutjada.
+    error_borrador_artefact_not_recognised: El PDF no coincideix amb cap format d'esborrany
+      del Model 100 conegut.
     error_cadrumo_async_resource_cleanup: Ha fallat la neteja asíncrona de recursos;
       torneu a intentar la neteja abans de continuar.
     error_cadrumo_core: S'ha produït un error intern en l'aplicació.
@@ -409,6 +411,8 @@ errors:
     fail_access_gate_authorization_manifest: No s'ha pogut carregar el manifest d'autorització
       de models o conté una entrada d'habilitació no vàlida.
     fail_browser_evasion: No s'ha pogut aplicar la configuració d'evasió del navegador.
+    fail_borrador_parse: No s'ha pogut interpretar el PDF de l'esborrany del Model
+      100 com una declaració.
     fail_browser_session_browser: S'ha produït un error en la sessió del navegador.
     fail_browser_validation: Els paràmetres del navegador no han superat la validació.
     fail_certificado_censal_parse: No s'ha pogut llegir el document del Certificado

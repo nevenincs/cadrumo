@@ -1,16 +1,20 @@
 """Provenance gate for the fixture corpora outside ``justificantes/``.
 
 The sibling justificante gate polices ``tests/fixtures/justificantes/`` because
-that tree backs a registry ``verification_source`` tag. One other committed PDF
-corpus had neither a sidecar nor any gate at all:
+that tree backs a registry ``verification_source`` tag. Two other committed PDF
+corpora had neither a sidecar nor any gate at all:
 
+- ``tests/fixtures/borrador/`` — three synthetic Modelo 100 borrador renders
+  feeding the M100 verification chain.
 - ``tests/fixtures/financial/n26/`` — three synthetic N26 savings statements
   feeding the financial-input PDF provider.
 
-The files were generator-produced and did not say so. Worse, the generator set
-the bare ``"reportlab"`` ``/Producer`` signature. An unsignatured producer is
-exactly the evidence the discriminator reads as *real* origin, so synthetic
-files presented as externally-authored bank statements to any gate that asked.
+Both were generator-produced and neither said so. Worse, neither generator set
+the ``/Producer`` signature the discriminator rests on. An unsignatured producer
+is exactly the evidence the discriminator reads as *real* origin, so six
+synthetic files presented as externally-authored documents to any gate that
+asked — the N26 ones as real bank statements. Both corpora now declare a
+sidecar provenance and stamp the synthetic producer signature.
 
 This module closes that by asserting the same contract the justificante gate
 applies, against the same declared-then-cross-checked shape required of every
@@ -48,7 +52,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # level up, mirroring the derivation in the justificante gate.
 _FIXTURE_ROOT = bundled_path().resolve().parents[0] / "tests" / "fixtures"
 
-_GATED_CORPORA: tuple[tuple[str, Path], ...] = (("n26", _FIXTURE_ROOT / "financial" / "n26"),)
+_GATED_CORPORA: tuple[tuple[str, Path], ...] = (
+    ("borrador", _FIXTURE_ROOT / "borrador"),
+    ("n26", _FIXTURE_ROOT / "financial" / "n26"),
+)
 
 
 def _corpus_pdfs(corpus_dir: Path) -> tuple[Path, ...]:
@@ -93,8 +100,11 @@ def test_gated_corpus_is_not_empty(corpus_name: str, corpus_dir: Path) -> None:
 
 @pytest.mark.parametrize(
     "pdf_path,expected_provenance",
-    [(_FIXTURE_ROOT / "financial" / "n26" / "n26-savings-2024-06.pdf", FIXTURE_PROVENANCE_SYNTHETIC)],
-    ids=["n26-synthetic"],
+    [
+        (_FIXTURE_ROOT / "borrador" / "modelo_100_2021.pdf", FIXTURE_PROVENANCE_SYNTHETIC),
+        (_FIXTURE_ROOT / "financial" / "n26" / "n26-savings-2024-06.pdf", FIXTURE_PROVENANCE_SYNTHETIC),
+    ],
+    ids=["borrador-synthetic", "n26-synthetic"],
 )
 def test_shared_discriminator_accepts_committed_fixture_evidence(
     pdf_path: Path,

@@ -98,6 +98,26 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.adapters.inbound.borrador.errors.ArtefactNotRecognisedError",
+        ErrorCode(
+            code="ERROR_BORRADOR_ARTEFACT_NOT_RECOGNISED",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_borrador_artefact_not_recognised",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.adapters.inbound.borrador.errors.BorradorParseError",
+        ErrorCode(
+            code="FAIL_BORRADOR_PARSE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_borrador_parse",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.inbound.notificacion.errors.NotificacionParseError",
         ErrorCode(
             code="FAIL_NOTIFICACION_PARSE",
