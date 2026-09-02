@@ -11,23 +11,26 @@ from pathlib import Path
 from typing import Any, Final, cast
 
 from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo.core.link_safety import is_link_like
 
-from ..audit.object_names import scan, to_json
+from ..audit.object_names import exit_code, scan, to_json
 from .object_name_graph import (
     InventoryLike,
+    ObjectNameGraphError,
     RenameManifestLike,
     build_manifest_components,
     collect_import_edges,
     operation_locators,
 )
-from .object_name_manifest import load_validated_object_name_manifest
+from .object_name_manifest import ObjectNameManifestError, load_validated_object_name_manifest
 from .object_name_rehearsal import (
     ObjectNameFindingDelta,
     ObjectNameGateOutcome,
+    ObjectNameRehearsalError,
     ObjectNameRehearsalReceipt,
     rehearse_object_name_component,
 )
-from .object_name_replay import replay_object_name_component
+from .object_name_replay import ObjectNameReplayError, replay_object_name_component
 
 _DEFAULT_MANIFEST: Final[str] = "dev/quality/object_name_rename_manifest.toml"
 _MODES: Final[tuple[str, ...]] = ("inventory", "plan", "rehearse", "apply", "verify")
@@ -41,7 +44,12 @@ def _repo_root(start: Path) -> Path:
     raw = start.absolute()
     for candidate in (raw, *raw.parents):
         if (candidate / ".git").is_dir() and (candidate / "src").is_dir() and (candidate / "dev").is_dir():
-            return candidate.resolve()
+            current = candidate
+            while current != current.parent:
+                if is_link_like(current):
+                    raise ObjectNameDeclusteringCliError(f"repository invocation path is link-like: {current}")
+                current = current.parent
+            return candidate
     raise ObjectNameDeclusteringCliError("cannot discover a repository worktree root")
 
 
@@ -121,7 +129,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 0
         if args.mode == "verify":
             _emit({"inventory": to_json(inventory), "mode": "verify"}, as_json=args.json)
-            return 0
+            return exit_code(inventory)
         if args.mode == "apply":
             if apply_receipt is None:
                 raise ObjectNameDeclusteringCliError("apply receipt was not validated")
@@ -133,7 +141,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         receipt = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=root)
         _emit({"mode": "rehearse", "receipt": asdict(receipt)}, as_json=args.json)
         return 0
-    except Exception as exc:
+    except (
+        ObjectNameDeclusteringCliError,
+        ObjectNameGraphError,
+        ObjectNameManifestError,
+        ObjectNameRehearsalError,
+        ObjectNameReplayError,
+        OSError,
+        UnicodeError,
+        json.JSONDecodeError,
+    ) as exc:
         print(f"object-name declustering refused: {exc}", file=sys.stderr)
         return 2
 

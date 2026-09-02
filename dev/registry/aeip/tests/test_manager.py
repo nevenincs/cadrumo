@@ -22,6 +22,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from cadrumo.core.identity import ContinuidadId
 from cadrumo.domain.calculations.registry.modelo_localization import (
+    ModeloLocalizationFieldKind,
     casilla_continuity_locale_key,
     casilla_occurrence_locale_key,
 )
@@ -188,7 +189,7 @@ def test_grounding_collapses_per_revision_keys_onto_one_concept(adjudicated) -> 
     _, plan, _ = adjudicated
     assert plan.complete, "the shipped adjudications must leave nothing open"
     occurrence_keys = {
-        casilla_occurrence_locale_key("100", occ.revision_id, occ.casilla_id, "label")
+        casilla_occurrence_locale_key("100", occ.revision_id, occ.casilla_id, ModeloLocalizationFieldKind.LABEL)
         for entry in plan.entries
         for occ in entry.occurrences
     }
