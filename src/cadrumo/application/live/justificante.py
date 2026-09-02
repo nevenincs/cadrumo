@@ -1060,9 +1060,7 @@ async def verify_capture_authenticity(
         )
     return service.stamp_authenticity(
         snapshot=snapshot,
-        authenticity=(
-            JustificanteAuthenticity.CONFIRMED if confirmed else JustificanteAuthenticity.DENIED
-        ),
+        authenticity=(JustificanteAuthenticity.CONFIRMED if confirmed else JustificanteAuthenticity.DENIED),
     )
 
 
