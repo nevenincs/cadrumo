@@ -1,13 +1,22 @@
 """Contract tests for the immutable Home projection."""
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.application.overview.calendar_models import (
+    OverviewAeatSubmissionState,
+    OverviewLocalFilingState,
+    OverviewPeriodState,
+)
+from cadrumo.core.period import Period
+
 from ..home_projection import (
     HomeAccountSession,
+    HomeAgendaEntry,
     HomeAvailability,
+    HomeDeclarationState,
     HomeLedgerReadiness,
     HomeProjectionV1,
     HomeSessionPosture,
@@ -30,6 +39,10 @@ def test_available_empty_projection_preserves_proven_zero_counts() -> None:
         ledger_state=_AVAILABLE,
         ledger=HomeLedgerReadiness(entries=0, requiring_review=0, unclassified=0, missing_evidence=0),
         agenda_state=_AVAILABLE,
+        agenda_evidence_state=HomeZoneState(
+            availability=HomeAvailability.NEVER_CAPTURED,
+            reason_code="aeat.never_captured",
+        ),
         messages_state=_AVAILABLE,
         messages_requiring_attention=0,
     )
@@ -51,6 +64,7 @@ def test_locked_projection_cannot_claim_zero_ledger_or_messages() -> None:
             ledger_state=_LOCKED,
             ledger=HomeLedgerReadiness(entries=0, requiring_review=0, unclassified=0, missing_evidence=0),
             agenda_state=_LOCKED,
+            agenda_evidence_state=_LOCKED,
             messages_state=_LOCKED,
         )
 
@@ -64,6 +78,11 @@ def test_never_captured_zone_refuses_a_false_observation_time() -> None:
         )
 
 
+def test_stale_zone_requires_the_last_observation_time() -> None:
+    with pytest.raises(ValidationError, match="last observation"):
+        HomeZoneState(availability=HomeAvailability.STALE, reason_code="calendar.stale")
+
+
 def test_ledger_issue_counts_cannot_exceed_entries() -> None:
     with pytest.raises(ValidationError, match="cannot exceed"):
         HomeLedgerReadiness(entries=1, requiring_review=2, unclassified=0, missing_evidence=0)
@@ -72,3 +91,77 @@ def test_ledger_issue_counts_cannot_exceed_entries() -> None:
 def test_selected_profile_posture_requires_a_label() -> None:
     with pytest.raises(ValidationError, match="requires a profile label"):
         HomeAccountSession(posture=HomeSessionPosture.ACTIVE)
+
+
+def test_local_agenda_survives_when_aeat_evidence_was_never_captured() -> None:
+    agenda = HomeAgendaEntry(
+        modelo="303",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "3T"),
+        due_on=date(2026, 10, 20),
+        period_state=OverviewPeriodState.DUE,
+        local_filing_state=OverviewLocalFilingState.READY_TO_FILE,
+        aeat_submission_state=OverviewAeatSubmissionState.NOT_OBSERVED,
+    )
+    projection = HomeProjectionV1(
+        generated_at=_NOW,
+        account=HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Example profile"),
+        actions_state=_AVAILABLE,
+        declarations_state=_AVAILABLE,
+        ledger_state=_AVAILABLE,
+        ledger=HomeLedgerReadiness(entries=0, requiring_review=0, unclassified=0, missing_evidence=0),
+        agenda_state=_AVAILABLE,
+        agenda_evidence_state=HomeZoneState(
+            availability=HomeAvailability.NEVER_CAPTURED,
+            reason_code="aeat.never_captured",
+        ),
+        agenda=(agenda,),
+        messages_state=_AVAILABLE,
+        messages_requiring_attention=0,
+    )
+
+    assert projection.agenda == (agenda,)
+    assert projection.agenda_evidence_state.availability is HomeAvailability.NEVER_CAPTURED
+
+
+def test_agenda_requires_chronological_order_and_preview_bound() -> None:
+    def entry(due_on: date) -> HomeAgendaEntry:
+        return HomeAgendaEntry(
+            modelo="303",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "3T"),
+            due_on=due_on,
+            period_state=OverviewPeriodState.DUE,
+            local_filing_state=OverviewLocalFilingState.NOT_READY_TO_FILE,
+            aeat_submission_state=OverviewAeatSubmissionState.NOT_OBSERVED,
+        )
+
+    with pytest.raises(ValidationError, match="chronological"):
+        HomeProjectionV1(
+            generated_at=_NOW,
+            account=HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Example profile"),
+            actions_state=_AVAILABLE,
+            declarations_state=_AVAILABLE,
+            ledger_state=_AVAILABLE,
+            ledger=HomeLedgerReadiness(entries=0, requiring_review=0, unclassified=0, missing_evidence=0),
+            agenda_state=_AVAILABLE,
+            agenda_evidence_state=_AVAILABLE,
+            agenda=(entry(date(2026, 10, 21)), entry(date(2026, 10, 20))),
+            messages_state=_AVAILABLE,
+            messages_requiring_attention=0,
+        )
+
+
+def test_declaration_state_is_closed_and_period_year_must_match() -> None:
+    assert HomeDeclarationState.NEEDS_REVIEW.value == "needs_review"
+    with pytest.raises(ValidationError, match="filing_year must match"):
+        from cadrumo.application.overview.home_projection import HomeDeclarationResume
+
+        HomeDeclarationResume(
+            work_unit_id="a" * 64,
+            modelo="303",
+            filing_year=2025,
+            period=Period.from_year_and_code(2026, "3T"),
+            name="IVA third quarter",
+            state=HomeDeclarationState.NEEDS_REVIEW,
+        )

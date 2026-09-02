@@ -36,6 +36,16 @@ class HomeSessionPosture(StrEnum):
     EXPIRED = "expired"
 
 
+class HomeDeclarationState(StrEnum):
+    """Closed operator-facing lifecycle for a resumable declaration."""
+
+    DRAFT = "draft"
+    NEEDS_REVIEW = "needs_review"
+    READY = "ready"
+    FILED = "filed"
+    DISCARDED = "discarded"
+
+
 class HomeZoneState(BaseModel):
     """Authority and freshness state shared by every Home zone."""
 
@@ -53,6 +63,8 @@ class HomeZoneState(BaseModel):
             raise ValueError("a non-available Home zone requires a reason code")
         if self.availability is HomeAvailability.NEVER_CAPTURED and self.observed_at is not None:
             raise ValueError("a never-captured Home zone cannot carry an observation time")
+        if self.availability is HomeAvailability.STALE and self.observed_at is None:
+            raise ValueError("a stale Home zone requires its last observation time")
         return self
 
 
@@ -88,6 +100,15 @@ class HomeNextAction(BaseModel):
     filing_year: FilingYear | None = None
     period: Period | None = None
 
+    @model_validator(mode="after")
+    def _enforce_complete_natural_address(self) -> Self:
+        address = (self.modelo, self.filing_year, self.period)
+        if any(value is not None for value in address) and not all(value is not None for value in address):
+            raise ValueError("a next-action declaration address must be complete or absent")
+        if self.period is not None and self.filing_year != self.period.filing_year:
+            raise ValueError("next-action filing_year must match its period year")
+        return self
+
 
 class HomeDeclarationResume(BaseModel):
     """Natural declaration address and current revision state for resumption."""
@@ -99,8 +120,14 @@ class HomeDeclarationResume(BaseModel):
     filing_year: FilingYear
     period: Period
     name: str = Field(min_length=1, max_length=200)
-    state: str = Field(min_length=1, max_length=64)
+    state: HomeDeclarationState
     revision_id: RevisionId | None = None
+
+    @model_validator(mode="after")
+    def _enforce_period_year(self) -> Self:
+        if self.filing_year != self.period.filing_year:
+            raise ValueError("declaration filing_year must match its period year")
+        return self
 
 
 class HomeLedgerReadiness(BaseModel):
@@ -148,6 +175,7 @@ class HomeProjectionV1(BaseModel):
     ledger_state: HomeZoneState
     ledger: HomeLedgerReadiness | None = None
     agenda_state: HomeZoneState
+    agenda_evidence_state: HomeZoneState
     agenda: tuple[HomeAgendaEntry, ...] = ()
     messages_state: HomeZoneState
     messages_requiring_attention: NonNegativeInt | None = None
@@ -172,6 +200,16 @@ class HomeProjectionV1(BaseModel):
                 raise ValueError("an available Messages zone requires an attention count")
         elif self.messages_requiring_attention is not None:
             raise ValueError("a non-available Messages zone cannot claim an attention count")
+        if len(self.actions) > 3:
+            raise ValueError("Home may preview at most three next actions")
+        ranks = tuple(item.rank for item in self.actions)
+        if ranks != tuple(range(len(self.actions))):
+            raise ValueError("Home next actions require unique contiguous ranks in display order")
+        if len(self.agenda) > 3:
+            raise ValueError("Home may preview at most three agenda entries")
+        due_dates = tuple(item.due_on for item in self.agenda)
+        if due_dates != tuple(sorted(due_dates)):
+            raise ValueError("Home agenda entries must be chronological")
         return self
 
 
@@ -180,6 +218,7 @@ __all__ = [
     "HomeAgendaEntry",
     "HomeAvailability",
     "HomeDeclarationResume",
+    "HomeDeclarationState",
     "HomeLedgerReadiness",
     "HomeNextAction",
     "HomeProjectionV1",
