@@ -182,16 +182,35 @@ def _tree_bytes(root: Path) -> dict[str, bytes]:
     }
 
 
-def compare_revision_against_committed(
+@dataclass(frozen=True, slots=True)
+class RevisionRenderInputs:
+    """Everything the generator needs to render one revision, derived from the authority.
+
+    Assembling these was reachable only from inside the comparison, so the
+    publication path - which needs the same seven values - had no supported way
+    to obtain them and no caller. Naming the assembly makes the second consumer
+    possible without a second derivation that could disagree with this one.
+    """
+
+    revision_id: object
+    layout_id: str
+    joined: object
+    semantic_map: object
+    render_profile: object
+    render_profile_source_evidence: object
+    transport_profile: ExportTreeTransportProfile
+
+
+def revision_render_inputs(
     authority: ValidatedRegistryAuthority, *, modelo: str, revision: str
-) -> RenderComparison:
-    """Re-render one revision from its authored inputs and diff it against the shipped tree.
+) -> RevisionRenderInputs:
+    """Derive one revision's render inputs from the validated authority.
 
     Raises:
         ValueError: If the revision declares no generated export layout, or no
             record-design source, or its authored inputs are absent. Each is
             reported by name rather than substituted, because a silent fallback
-            would compare the wrong thing and report a match.
+            would derive the wrong thing and look like success.
     """
     definition = authority.modelo(modelo)
     if revision not in definition.revisions:
@@ -256,18 +275,42 @@ def compare_revision_against_committed(
         serializer_convention=_SERIALIZER_CONVENTION,
     )
 
+    return RevisionRenderInputs(
+        revision_id=selected.id,
+        layout_id=str(layout.id),
+        joined=joined,
+        semantic_map=semantic_map,
+        render_profile=render_profile,
+        render_profile_source_evidence=evidence,
+        transport_profile=transport,
+    )
+
+
+def compare_revision_against_committed(
+    authority: ValidatedRegistryAuthority, *, modelo: str, revision: str
+) -> RenderComparison:
+    """Re-render one revision from its authored inputs and diff it against the shipped tree.
+
+    Raises:
+        ValueError: If the revision declares no generated export layout, or no
+            record-design source, or its authored inputs are absent. Each is
+            reported by name rather than substituted, because a silent fallback
+            would compare the wrong thing and report a match.
+    """
+    inputs = revision_render_inputs(authority, modelo=modelo, revision=revision)
+
     committed_root = bundled_path("registry", "aeat", "modelos", modelo, "revisions", revision, "export")
     committed = _tree_bytes(committed_root)
     with tempfile.TemporaryDirectory(prefix="cadrumo-render-check-") as scratch:
         target = Path(scratch) / "export"
         render_complete_export_tree(
             target,
-            revision_id=selected.id,
-            joined=joined,
-            semantic_map=semantic_map,
-            transport_profile=transport,
-            render_profile=render_profile,
-            render_profile_source_evidence=evidence,
+            revision_id=inputs.revision_id,
+            joined=inputs.joined,
+            semantic_map=inputs.semantic_map,
+            transport_profile=inputs.transport_profile,
+            render_profile=inputs.render_profile,
+            render_profile_source_evidence=inputs.render_profile_source_evidence,
         )
         rendered = _tree_bytes(target)
 
@@ -283,7 +326,7 @@ def compare_revision_against_committed(
     return RenderComparison(
         modelo=modelo,
         revision=revision,
-        layout_id=str(layout.id),
+        layout_id=inputs.layout_id,
         files_compared=len(shared),
         differing=differing,
         serialization_only=serialization_only,

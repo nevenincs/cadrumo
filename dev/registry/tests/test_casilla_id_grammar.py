@@ -9,7 +9,8 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
-from dev.registry.analysis.casilla_id_grammar import GRAMMARS, classify_casilla_id, screen_authority
+
+from ..analysis.casilla_id_grammar import GRAMMARS, classify_casilla_id, screen_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

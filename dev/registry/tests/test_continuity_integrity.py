@@ -12,8 +12,9 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
-from dev.registry.analysis.casilla_id_grammar import classify_casilla_id
-from dev.registry.analysis.continuity_integrity import chain_index, continuity_census, screen_authority
+
+from ..analysis.casilla_id_grammar import classify_casilla_id
+from ..analysis.continuity_integrity import chain_index, continuity_census, screen_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

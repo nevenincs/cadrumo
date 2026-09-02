@@ -25,6 +25,7 @@ from ..pipeline._tree_publication import (
     publish_validated_generated_export_tree,
 )
 from ..pipeline._tree_validation import validate_generated_export_tree
+from ..pipeline.render_check import RevisionRenderInputs
 from .test_export_tree import (
     _ISOLATED_TREE,
     _isolated_render_profile,
@@ -548,3 +549,39 @@ def test_publication_module_has_no_old_tree_read_merge_or_copy_surface() -> None
     assert not {"copytree", "copy2", "read_text"}.intersection(attribute_names)
     publish_source = inspect.getsource(_tree_publication.publish_validated_generated_export_tree)
     assert "_verify_generated_export_package(target_export_root)" not in publish_source
+
+
+def test_derived_render_inputs_supply_every_value_publication_needs_from_the_authority() -> None:
+    """The derivation and the publication limb still meet.
+
+    Publication takes six values. Two are publication's own concern - where the
+    tree goes and what was rendered - and the other four describe the revision
+    and must come from the validated authority. Those four had no name until
+    recently: they were assembled inside the render comparison, so anything
+    wanting them had to call a comparison it did not want or derive them a second
+    time.
+
+    Naming them is only half the fix. This is the half that keeps them meeting: if
+    publication grows a seventh parameter describing the revision, or the derived
+    inputs stop carrying one, the seam breaks silently and the next caller writes
+    the second derivation after all.
+    """
+    publication_parameters = set(inspect.signature(publish_validated_generated_export_tree).parameters)
+    derived_fields = set(RevisionRenderInputs.__dataclass_fields__)
+
+    publication_owned = {"context", "rendered"}
+    revision_described = publication_parameters - publication_owned
+
+    assert revision_described <= derived_fields, (
+        "publication needs these values from the authority and the derived inputs do not carry them, "
+        f"so a caller would have to derive them again: {sorted(revision_described - derived_fields)}"
+    )
+
+
+def test_the_seam_check_is_reading_a_real_signature() -> None:
+    """A signature read as empty would make the containment above vacuously true."""
+    publication_parameters = set(inspect.signature(publish_validated_generated_export_tree).parameters)
+
+    assert {"context", "rendered"} <= publication_parameters
+    assert len(publication_parameters) >= 6
+    assert len(RevisionRenderInputs.__dataclass_fields__) >= 4

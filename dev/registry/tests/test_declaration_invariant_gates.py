@@ -34,9 +34,10 @@ import pytest
 
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
-from dev.registry.analysis.casilla_id_grammar import screen_authority as grammar_screen
-from dev.registry.analysis.continuity_integrity import screen_authority as continuity_screen
-from dev.registry.analysis.export_ref_symmetry import screen_authority as export_ref_screen
+
+from ..analysis.casilla_id_grammar import screen_authority as grammar_screen
+from ..analysis.continuity_integrity import screen_authority as continuity_screen
+from ..analysis.export_ref_symmetry import screen_authority as export_ref_screen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -92,7 +93,7 @@ def test_every_screen_module_is_enrolled_in_the_runner() -> None:
     """
     import pathlib
 
-    from dev.registry.analysis.screens import SCREENS
+    from ..analysis.screens import SCREENS
 
     analysis = pathlib.Path(__file__).resolve().parent.parent / "analysis"
     defining = {
@@ -136,7 +137,7 @@ def test_the_readme_screen_table_lists_exactly_the_enrolled_screens() -> None:
     import pathlib
     import re
 
-    from dev.registry.analysis.screens import SCREENS
+    from ..analysis.screens import SCREENS
 
     readme = (pathlib.Path(__file__).resolve().parent.parent / "README.md").read_text(encoding="utf-8")
     documented = set(re.findall(r"^\| `([a-z_]+)` \| ", readme, re.MULTILINE))
@@ -204,9 +205,10 @@ def test_every_screen_searches_a_population_that_is_not_empty(
     the set of things they looked at.
     """
     from cadrumo.domain.calculations.registry.export import resolved_export_endpoints
-    from dev.registry.analysis.casilla_id_grammar import screen_authority as grammar
-    from dev.registry.analysis.continuity_integrity import continuity_census
-    from dev.registry.analysis.wire_type_compatibility import screen_authority as wire_types
+
+    from ..analysis.casilla_id_grammar import screen_authority as grammar
+    from ..analysis.continuity_integrity import continuity_census
+    from ..analysis.wire_type_compatibility import screen_authority as wire_types
 
     populations: dict[str, int] = {
         "identifier grammar": sum(count for use in grammar(authority, modelo_ids) for _, count in use.counts),
@@ -259,7 +261,7 @@ def test_every_enrolled_screen_runs_over_the_whole_corpus(
     a contract. What is asserted is that each screen completes and describes
     what it counted.
     """
-    from dev.registry.analysis.screens import SCREENS, run_screens
+    from ..analysis.screens import SCREENS, run_screens
 
     results = run_screens(authority, modelo_ids)
     assert len(results) == len(SCREENS)
@@ -315,7 +317,8 @@ def test_running_every_screen_leaves_the_shipped_registry_untouched(
     import os
 
     from cadrumo.core.resources.bundled_data import bundled_path
-    from dev.registry.analysis.screens import run_screens
+
+    from ..analysis.screens import run_screens
 
     def fingerprint() -> dict[str, tuple[int, int]]:
         root = bundled_path("registry")
@@ -358,7 +361,7 @@ def test_every_kind_a_screen_emits_is_named_in_its_own_docstring(
     """
     import importlib
 
-    from dev.registry.analysis.screens import SCREENS
+    from ..analysis.screens import SCREENS
 
     observed: set[tuple[str, str]] = set()
     undocumented: list[str] = []
@@ -562,7 +565,7 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
     import importlib
     import re
 
-    from dev.registry.analysis.screens import SCREENS
+    from ..analysis.screens import SCREENS
 
     wrong: list[str] = []
     checked = 0

@@ -38,7 +38,8 @@ from dataclasses import dataclass
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from dev.registry.analysis.casilla_id_grammar import classify_casilla_id
+
+from .casilla_id_grammar import classify_casilla_id
 
 __all__ = [
     "ContinuityFinding",
