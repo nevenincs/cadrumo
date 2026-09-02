@@ -23,7 +23,7 @@ Submodules
    cadrumo.application.overview.data_prep
    cadrumo.application.overview.errors
    cadrumo.application.overview.explain
-   cadrumo.application.overview.home_projection
+   cadrumo.application.overview.home
    cadrumo.application.overview.next_actions
    cadrumo.application.overview.pipeline_health
    cadrumo.application.overview.status_report
