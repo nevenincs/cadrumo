@@ -31,6 +31,11 @@ from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import RegistrySelectorPeriodCode
+from .relation_dependency import (
+    RelationDependencyRoleField,
+    RelationDependencyTreatmentField,
+    RelationKindField,
+)
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import invariant_diagnostics, selector_against_model
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
@@ -129,7 +134,7 @@ def previous_filing_observation_requirements(
     # value ultimately feeds -- typed to match rather than widened to `str`.
     dependency_treatment_by_key: dict[
         tuple[ModeloId, int, str],
-        Literal["direct_annual_settlement", "factual_evidence", "non_dependency"] | None,
+        RelationDependencyTreatmentField | None,
     ] = {}
     classifications_by_source = {
         classification.source_modelo: classification for classification in revision.dependency_classifications

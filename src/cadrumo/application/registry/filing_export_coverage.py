@@ -121,7 +121,23 @@ def _compose_revision_limb(
     modelo_id: str,
     revision: ModeloRevision,
 ) -> RegistryClosureLimb:
-    """Build one retained filing-export limb from its declared revision scope."""
+    """Build one retained filing-export limb from its declared revision scope.
+
+    Every coordinate is still admitted through the filing snapshot boundary, so
+    a per-coordinate refusal and a law-selection disagreement surface exactly
+    where they did before.  What the admission returns is the difference: the
+    check reads one identifier, and materialising the whole projection to
+    compare one string charged the limb an isolating deep copy of the entire
+    validated snapshot per coordinate.
+
+    The projection is therefore derived once, from the first admitted
+    coordinate.  A snapshot's modelo, revision and source slice are functions of
+    the selected revision alone; the coordinate reaches only the filing-year and
+    period fields, which this limb never reads.  Since a coordinate admitting a
+    different revision has already refused above, every coordinate reaching this
+    point carries the same materialised layouts and the same layout-authority
+    sources.
+    """
     if revision.authority_grade is not RegistryAuthorityGrade.FILING:
         return RegistryClosureLimb(
             modelo=modelo_id,
@@ -145,7 +161,7 @@ def _compose_revision_limb(
     expected_layout_ids: tuple[str, ...] | None = None
     for filing_year, period in coordinates:
         try:
-            snapshot = authority.snapshot(
+            admitted_revision_id = authority.admitted_revision_id(
                 modelo_id,
                 filing_year=filing_year,
                 period=period,
@@ -162,13 +178,13 @@ def _compose_revision_limb(
                     "Supply the exact official layout evidence required by the filing snapshot boundary."
                 ),
             )
-        if snapshot.revision.id != revision.id:
+        if admitted_revision_id != revision.id:
             return _refused_limb(
                 modelo_id=modelo_id,
                 revision_id=revision.id,
                 reason="cross_limb_disagreement",
                 detail=(
-                    f"{filing_year}/{period}: filing snapshot selected revision {snapshot.revision.id!r} instead "
+                    f"{filing_year}/{period}: filing snapshot selected revision {admitted_revision_id!r} instead "
                     f"of the registered revision {revision.id!r}"
                 ),
                 work_item="registry-temporal-coverage:law-selection",
@@ -176,19 +192,15 @@ def _compose_revision_limb(
                     "Reconcile the filing snapshot selection with the revision's declared temporal scope."
                 ),
             )
-        layout_ids = tuple(layout.id for layout in snapshot.revision.export_layouts)
-        if expected_layout_ids is not None and layout_ids != expected_layout_ids:
-            return _refused_limb(
-                modelo_id=modelo_id,
-                revision_id=revision.id,
-                reason="cross_limb_disagreement",
-                detail=f"{filing_year}/{period}: filing snapshot changed materialised export layout ids",
-                work_item="registry-temporal-coverage:law-selection",
-                reconsideration_condition=(
-                    "Split the revision at the exact layout boundary before asserting one export proof."
-                ),
-            )
-        expected_layout_ids = layout_ids
+        if expected_layout_ids is not None:
+            continue
+        snapshot = authority.snapshot(
+            modelo_id,
+            filing_year=filing_year,
+            period=period,
+            grade=RegistryAuthorityGrade.FILING,
+        )
+        expected_layout_ids = tuple(layout.id for layout in snapshot.revision.export_layouts)
         evidence, evidence_failure = _layout_byte_evidence(authority=authority, snapshot=snapshot)
         if evidence_failure is not None:
             return _refused_limb(

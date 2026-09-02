@@ -21,7 +21,7 @@ source_refs = ["aeat-dr-369-2021"]
 id = "modelo-369-union-envelope"
 record_type = "t3690-estruc-gral"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 binding_record = "modelo-369-union-envelope"
 [[revisions."esquema-union".export_layouts.records.fields]]
@@ -132,7 +132,7 @@ source_refs = ["aeat-dr-369-2021"]
 id = "modelo-369-union-info-adicional"
 record_type = "t36900-info-adicional"
 order = 1
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 [[revisions."esquema-union".export_layouts.records.fields]]
 id = "modelo-369-union-info-adicional-1-inicio-del-identificador-de-modelo-y-pag"
@@ -217,7 +217,7 @@ source_refs = ["aeat-dr-369-2021"]
 id = "modelo-369-union-t36904"
 record_type = "t36904-un"
 order = 2
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 binding_record = "modelo-369-union-t36904"
 [[revisions."esquema-union".export_layouts.records.fields]]
@@ -342,7 +342,7 @@ source_refs = ["aeat-dr-369-2021"]
 id = "modelo-369-union-t36905"
 record_type = "t36905-un"
 order = 3
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 binding_record = "modelo-369-union-t36905"
 [[revisions."esquema-union".export_layouts.records.fields]]
@@ -441,7 +441,7 @@ source_refs = ["aeat-dr-369-2021"]
 id = "modelo-369-union-t36906"
 record_type = "t36906-un"
 order = 4
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 binding_record = "modelo-369-union-t36906"
 [[revisions."esquema-union".export_layouts.records.fields]]
@@ -540,7 +540,7 @@ source_refs = ["aeat-dr-369-2021"]
 id = "modelo-369-union-t36907"
 record_type = "t36907-un"
 order = 5
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 binding_record = "modelo-369-union-t36907"
 [[revisions."esquema-union".export_layouts.records.fields]]
@@ -639,7 +639,7 @@ source_refs = ["aeat-dr-369-2021"]
 id = "modelo-369-union-t36908"
 record_type = "t36908-un"
 order = 6
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 binding_record = "modelo-369-union-t36908"
 [[revisions."esquema-union".export_layouts.records.fields]]
@@ -738,7 +738,7 @@ source_refs = ["aeat-dr-369-2021"]
 id = "modelo-369-union-t36909"
 record_type = "t36909-un"
 order = 7
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 [[revisions."esquema-union".export_layouts.records.fields]]
 id = "modelo-369-union-t36909-1-inicio-del-identificador-de-modelo-y-pag"

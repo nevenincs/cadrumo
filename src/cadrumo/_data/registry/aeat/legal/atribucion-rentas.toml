@@ -109,7 +109,7 @@ bytes = 373652
 retrieved_at = 2026-05-06
 applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_184_2025.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-184-2023-2024"]
 evidence_tier = "layout_authority"
@@ -123,7 +123,7 @@ retrieved_at = 2026-07-21
 applies_from = 2023-01-01
 applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/DR_Mod_184_2023.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-dr-184-2015"]
 evidence_tier = "layout_authority"
@@ -138,7 +138,7 @@ published_at = 2015-10-29
 applies_from = 2015-01-01
 applies_to = 2015-12-31
 source_url = "https://www.boe.es/boe/dias/2015/10/29/pdfs/BOE-A-2015-11596.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-dr-184-2016-2018"]
 evidence_tier = "layout_authority"
@@ -153,7 +153,7 @@ published_at = 2016-12-21
 applies_from = 2016-01-01
 applies_to = 2018-12-31
 source_url = "https://www.boe.es/boe/dias/2016/12/21/pdfs/BOE-A-2016-12114.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-dr-184-2019-2021"]
 evidence_tier = "layout_authority"
@@ -168,7 +168,7 @@ published_at = 2019-12-31
 applies_from = 2019-01-01
 applies_to = 2021-12-31
 source_url = "https://www.boe.es/boe/dias/2019/12/31/pdfs/BOE-A-2019-18752.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-dr-184-2022"]
 evidence_tier = "layout_authority"
@@ -183,7 +183,7 @@ published_at = 2022-12-03
 applies_from = 2022-01-01
 applies_to = 2022-12-31
 source_url = "https://www.boe.es/boe/dias/2022/12/03/pdfs/BOE-A-2022-20274.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-dr-184-2023-2024"]
 evidence_tier = "layout_authority"
@@ -198,7 +198,7 @@ published_at = 2023-11-30
 applies_from = 2023-01-01
 applies_to = 2024-12-31
 source_url = "https://www.boe.es/boe/dias/2023/11/30/pdfs/BOE-A-2023-24412.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-184-procedure"]
 evidence_tier = "official_source_guidance"
@@ -210,7 +210,7 @@ bytes = 48554
 retrieved_at = 2026-05-06
 applies_from = 2015-10-30
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI04.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-184-2015-form"]
 evidence_tier = "layout_authority"
@@ -223,7 +223,7 @@ retrieved_at = 2026-05-06
 published_at = 2015-10-29
 applies_from = 2015-10-30
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11596"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [legal."orden-hac-1430-2025:art-4"]
 evidence_tier = "legal_authority"

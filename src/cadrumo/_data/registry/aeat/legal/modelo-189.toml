@@ -109,7 +109,7 @@ bytes = 63259
 retrieved_at = 2026-07-01
 applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI09.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-189-base-order"]
 evidence_tier = "layout_authority"
@@ -122,7 +122,7 @@ retrieved_at = 2026-07-01
 published_at = 2008-12-04
 applies_from = 2009-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-19523"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-189-2023-amendment-hfp-1180"]
 evidence_tier = "layout_authority"
@@ -135,7 +135,7 @@ retrieved_at = 2026-07-01
 published_at = 2023-10-31
 applies_from = 2023-11-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-22221"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-189-2023-amendment-hfp-1284"]
 evidence_tier = "layout_authority"
@@ -148,7 +148,7 @@ retrieved_at = 2026-07-01
 published_at = 2023-11-30
 applies_from = 2023-12-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-24412"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # The AEAT sede bundled Diseño de Registro PDF for Modelo 189 (already present
 # in the corpus tree under disenos_registro/modelo_189/ per its own
@@ -167,7 +167,7 @@ retrieved_at = 2026-07-21
 record_design_epoch = "2023"
 applies_from = 2023-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/DR_Mod_189_2023.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-189-2025-values"]
 evidence_tier = "official_source_guidance"
@@ -180,4 +180,4 @@ retrieved_at = 2026-07-01
 published_at = 2026-02-27
 applies_from = 2026-02-28
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-4521"
-review_status = "reviewed"
+review_status = "pending_review"

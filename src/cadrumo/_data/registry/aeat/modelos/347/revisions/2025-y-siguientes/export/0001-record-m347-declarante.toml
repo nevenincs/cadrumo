@@ -5,7 +5,7 @@ id = 'generated-modelo-347-2025-y-siguientes-fichero'
 id = 'm347-declarante'
 record_type = 'declarante'
 order = 0
-encoding = 'latin-1'
+encoding = "iso-8859-1"
 line_ending = 'crlf'
 required = true
 

@@ -37,7 +37,6 @@ from .fixed_width_codec import (
     validate_fixed_width_shape,
 )
 from .ids import BindingId, ExportFieldId, ExportLayoutId, RecordId, SourceRefId
-from .record_spec import ENCODING_ALIAS_MAP
 from .schema_base import LegalRefs, RegistryModel, SourceRefs
 
 __all__ = [
@@ -897,12 +896,10 @@ class ExportLayoutDefinition(RegistryModel):
         """
         if self.format is not ExportLayoutFormat.FIXED_WIDTH:
             return self
-        normalised: dict[str, str] = {}
-        for record in self.records:
-            normalised[record.id] = _normalise_fichero_boe_encoding(record.encoding)
-        unique_encodings = set(normalised.values())
+        declared = {record.id: record.encoding for record in self.records}
+        unique_encodings = set(declared.values())
         if len(unique_encodings) > 1:
-            per_record = ", ".join(f"{record_id}={encoding!r}" for record_id, encoding in sorted(normalised.items()))
+            per_record = ", ".join(f"{record_id}={encoding.value!r}" for record_id, encoding in sorted(declared.items()))
             raise RegistryValidationError(
                 f"export layout {self.id!r} declares inconsistent encodings "
                 f"across its records: {per_record}. A single fichero-BOE "
@@ -979,8 +976,3 @@ def _validate_non_xml_layout(layout: ExportLayoutDefinition) -> None:
         raise RegistryValidationError(
             f"export layout {layout.id!r} filing-envelope body records must retain the exact layout order",
         )
-
-
-def _normalise_fichero_boe_encoding(declared: str) -> str:
-    """Return the canonical form of a fichero-BOE encoding declaration."""
-    return ENCODING_ALIAS_MAP.get(declared.strip().lower(), declared.strip().lower())

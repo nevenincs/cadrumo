@@ -12,7 +12,7 @@ id = "modelo-122-fichero-boe"
 id = "modelo-122-pagina-01"
 record_type = "pagina_01"
 order = 1
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 [[revisions."2017-y-siguientes".export_layouts.records.fields]]

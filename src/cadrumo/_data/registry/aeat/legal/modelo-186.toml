@@ -47,7 +47,7 @@ retrieved_at = 2026-07-04
 published_at = 2003-03-10
 applies_from = 2003-03-11
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-5304"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # The same bundled orden HTML as enrolled-modelo-186-procedure, kept as a
 # separate id because several revision and construct rows cite it by name.
@@ -71,7 +71,7 @@ retrieved_at = 2026-07-04
 published_at = 2003-03-10
 applies_from = 2003-03-11
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-5304"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # The BOE consolidated text of Orden HAC/539/2003 embeds its Anexo I/II
 # "diseños físicos y lógicos" position tables as scanned PNG images rather
@@ -112,4 +112,4 @@ retrieved_at = 2026-08-15
 published_at = 2003-03-10
 applies_from = 2003-03-11
 source_url = "https://www.boe.es/datos/imagenes/disp/2003/63/05304_8169760_image1.png"
-review_status = "reviewed"
+review_status = "pending_review"

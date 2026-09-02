@@ -889,7 +889,7 @@ bytes = 134404
 retrieved_at = 2026-07-21
 applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR202e25.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # These manifest-backed AEAT binaries are source evidence, but their published
 # titles do not establish a non-conflicting selection window against another
@@ -904,7 +904,7 @@ sha256 = "463cac7529de6333f55c174e3a887e92c79e7af328de5865bb1a0399d711b9a0"
 bytes = 135038
 retrieved_at = 2026-05-03
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/DR202e25.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-202-2019-september-update"]
 evidence_tier = "layout_authority"
@@ -915,7 +915,7 @@ sha256 = "99dc1738c38269209bd15053ab5c4805477dc70394e29ead2e4c34a172628cc7"
 bytes = 131561
 retrieved_at = 2026-05-03
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR202e17v50.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-202-2012-v32"]
 evidence_tier = "layout_authority"
@@ -926,7 +926,7 @@ sha256 = "3a47f5b39926e79ca7fa2a589b6a8fabfe15472ad51d324f2d7bc0e489a35adf"
 bytes = 40560
 retrieved_at = 2026-05-03
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/dr202e12v32.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-202-2013-v33"]
 evidence_tier = "layout_authority"
@@ -937,7 +937,7 @@ sha256 = "90385eb1ca5692d4504b3b567aa6b63fddd2e60b0805b70fbecb044e35587d84"
 bytes = 40253
 retrieved_at = 2026-05-03
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/dr202e12v33.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-202-2010-v13"]
 evidence_tier = "layout_authority"
@@ -948,7 +948,7 @@ sha256 = "c58221f899a6aacc674f305f86764595dfa0c7152f2f58faffa3e341521f5534"
 bytes = 33426
 retrieved_at = 2026-05-03
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/dr202e12v13.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-200-2009-v20"]
 evidence_tier = "layout_authority"
@@ -962,7 +962,7 @@ retrieved_at = 2026-05-03
 applies_from = 2009-01-01
 applies_to = 2009-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/dr200e09v20.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-202-instructions"]
 evidence_tier = "official_source_guidance"
@@ -974,7 +974,7 @@ bytes = 92399
 retrieved_at = 2026-05-05
 applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/impuesto-sobre-sociedades/modelo-202-is-i_____resencia-territorio-fraccionado_/instrucciones.html"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-222-2025"]
 evidence_tier = "layout_authority"
@@ -987,7 +987,7 @@ bytes = 139242
 retrieved_at = 2026-07-21
 applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR222e25.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Historical Modelo 222 design, pre-2025, outside the current declared span.
 # Already acquired and manifested (2026-07-21) but previously unregistered --
@@ -1006,7 +1006,7 @@ retrieved_at = 2026-07-21
 applies_from = 2023-01-01
 applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_23/DR222e23.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-202-2023"]
 evidence_tier = "layout_authority"
@@ -1020,7 +1020,7 @@ retrieved_at = 2026-05-03
 applies_from = 2023-01-01
 applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_23/DR202e23.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-202-instructions-2023-2024"]
 evidence_tier = "official_source_guidance"
@@ -1033,7 +1033,7 @@ retrieved_at = 2026-05-05
 applies_from = 2023-01-01
 applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/impuesto-sobre-sociedades/modelo-202-is-i_____resencia-territorio-fraccionado_/instrucciones/instrucciones-periodos-impositivos-iniciados-2023-2024.html"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-202-instructions-2018-2022"]
 evidence_tier = "official_source_guidance"
@@ -1046,7 +1046,7 @@ retrieved_at = 2026-07-01
 applies_from = 2018-01-01
 applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/GE00/202_2018_Instrucciones.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-202-2019"]
 evidence_tier = "layout_authority"
@@ -1060,7 +1060,7 @@ retrieved_at = 2026-05-03
 applies_from = 2019-01-01
 applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_19/DR202v52.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-202-base-order"]
 evidence_tier = "layout_authority"
@@ -1073,7 +1073,7 @@ retrieved_at = 2026-06-29
 published_at = 2017-03-15
 applies_from = 2017-03-16
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-2778"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-202-2018-amendment"]
 evidence_tier = "layout_authority"
@@ -1086,7 +1086,7 @@ retrieved_at = 2026-06-29
 published_at = 2018-09-14
 applies_from = 2018-09-15
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-12515"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-202-2023-amendment"]
 evidence_tier = "layout_authority"
@@ -1099,7 +1099,7 @@ retrieved_at = 2026-06-29
 published_at = 2023-03-31
 applies_from = 2023-04-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-8120"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-202-2025-amendment"]
 evidence_tier = "layout_authority"
@@ -1112,7 +1112,7 @@ retrieved_at = 2026-06-29
 published_at = 2025-03-19
 applies_from = 2025-03-20
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-5407"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [legal."ley-27-2014:art-18"]
 evidence_tier = "legal_authority"
@@ -1250,7 +1250,7 @@ bytes = 149501
 retrieved_at = 2026-05-03
 applies_from = 2018-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_17/dr232e17v14.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-232-2016"]
 evidence_tier = "layout_authority"
@@ -1264,7 +1264,7 @@ retrieved_at = 2026-05-03
 applies_from = 2016-01-01
 applies_to = 2017-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/dr232e17v13.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-232-procedure"]
 evidence_tier = "official_source_guidance"
@@ -1276,7 +1276,7 @@ bytes = 35923
 retrieved_at = 2026-05-05
 applies_from = 2017-08-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI43.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-232-2017-form"]
 evidence_tier = "layout_authority"
@@ -1289,7 +1289,7 @@ retrieved_at = 2026-05-05
 published_at = 2017-08-30
 applies_from = 2017-08-31
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-10042"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [legal."ley-27-2014:art-41"]
 evidence_tier = "legal_authority"
@@ -1435,7 +1435,7 @@ retrieved_at = 2026-07-21
 applies_from = 2025-01-01
 record_design_epoch = "2025"
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR200e25.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-200-2024"]
 evidence_tier = "layout_authority"
@@ -1449,7 +1449,7 @@ applies_from = 2024-01-01
 applies_to = 2024-12-31
 record_design_epoch = "2024"
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_24/DR200-2024.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-220-2023"]
 evidence_tier = "layout_authority"
@@ -1463,7 +1463,7 @@ applies_from = 2023-01-01
 applies_to = 2023-12-31
 record_design_epoch = "2023"
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_23/DR220e23.xlsm"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-220-2024"]
 evidence_tier = "layout_authority"
@@ -1477,7 +1477,7 @@ applies_from = 2024-01-01
 applies_to = 2024-12-31
 record_design_epoch = "2024"
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_24/DR220e24.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-220-2025"]
 evidence_tier = "layout_authority"
@@ -1491,7 +1491,7 @@ applies_from = 2025-01-01
 applies_to = 2025-12-31
 record_design_epoch = "2025"
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR220e25.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Historical Modelo 220 design, 2022 edition. Already acquired and manifested
 # (2026-07-21) but previously unregistered -- registration, not acquisition.
@@ -1517,7 +1517,7 @@ retrieved_at = 2026-07-21
 applies_from = 2022-01-01
 applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_22/DR220e22.xlsm"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-200-manual-2024"]
 evidence_tier = "official_source_guidance"
@@ -1530,7 +1530,7 @@ retrieved_at = 2026-05-06
 applies_from = 2024-01-01
 applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Sociedades/Manual_Sociedades_2024.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-200-manual-2025"]
 evidence_tier = "official_source_guidance"
@@ -1543,7 +1543,7 @@ retrieved_at = 2026-07-21
 applies_from = 2025-01-01
 applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Sociedades/Manual_Sociedades_2025.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Retiered 2026-08-15: this 2308-byte orden excerpt carries no annex section
 # and no record-layout vocabulary, so it was never layout authority for either
@@ -1564,7 +1564,7 @@ published_at = 2025-06-24
 applies_from = 2025-07-01
 applies_to = 2025-07-25
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-12818"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [legal."orden-hac-529-2026:art-3"]
 evidence_tier = "legal_authority"
@@ -1636,7 +1636,7 @@ published_at = 2026-05-13
 applies_from = 2025-01-01
 applies_to = 2025-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-11583"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [legal."ley-44-2015:art-1"]
 evidence_tier = "legal_authority"
@@ -2093,7 +2093,7 @@ retrieved_at = 2026-05-03
 applies_from = 2010-01-01
 applies_to = 2010-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200_2010.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-200-2011"]
 evidence_tier = "layout_authority"
@@ -2107,7 +2107,7 @@ retrieved_at = 2026-05-03
 applies_from = 2011-01-01
 applies_to = 2011-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2011.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-200-2012"]
 evidence_tier = "layout_authority"
@@ -2121,7 +2121,7 @@ retrieved_at = 2026-05-03
 applies_from = 2012-01-01
 applies_to = 2012-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2012.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-200-2013"]
 evidence_tier = "layout_authority"
@@ -2135,7 +2135,7 @@ retrieved_at = 2026-05-03
 applies_from = 2013-01-01
 applies_to = 2013-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2013.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-200-2014"]
 evidence_tier = "layout_authority"
@@ -2149,7 +2149,7 @@ retrieved_at = 2026-05-03
 applies_from = 2014-01-01
 applies_to = 2014-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2014.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-200-2015"]
 evidence_tier = "layout_authority"
@@ -2163,7 +2163,7 @@ retrieved_at = 2026-05-03
 applies_from = 2015-01-01
 applies_to = 2015-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2015.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-200-2016"]
 evidence_tier = "layout_authority"
@@ -2177,7 +2177,7 @@ retrieved_at = 2026-05-03
 applies_from = 2016-01-01
 applies_to = 2016-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2016.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-200-2017"]
 evidence_tier = "layout_authority"
@@ -2191,7 +2191,7 @@ retrieved_at = 2026-05-03
 applies_from = 2017-01-01
 applies_to = 2017-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2017-1_00.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-200-2018"]
 evidence_tier = "layout_authority"
@@ -2205,7 +2205,7 @@ retrieved_at = 2026-05-03
 applies_from = 2018-01-01
 applies_to = 2018-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2018.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-200-2019"]
 evidence_tier = "layout_authority"
@@ -2219,7 +2219,7 @@ retrieved_at = 2026-05-03
 applies_from = 2019-01-01
 applies_to = 2019-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2019.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-200-2020"]
 evidence_tier = "layout_authority"
@@ -2233,7 +2233,7 @@ retrieved_at = 2026-05-03
 applies_from = 2020-01-01
 applies_to = 2020-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_20/DR200-2020.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-200-2021"]
 evidence_tier = "layout_authority"
@@ -2247,7 +2247,7 @@ retrieved_at = 2026-05-03
 applies_from = 2021-01-01
 applies_to = 2021-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_21/DR200-2021.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-200-2022"]
 evidence_tier = "layout_authority"
@@ -2261,7 +2261,7 @@ retrieved_at = 2026-05-03
 applies_from = 2022-01-01
 applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_22/DR200-2022.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-200-2023"]
 evidence_tier = "layout_authority"
@@ -2275,7 +2275,7 @@ retrieved_at = 2026-05-03
 applies_from = 2023-01-01
 applies_to = 2023-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_23/DR200-2023.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-202-2008"]
 evidence_tier = "layout_authority"
@@ -2289,7 +2289,7 @@ retrieved_at = 2026-05-03
 applies_from = 2008-01-01
 applies_to = 2009-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/202_2008.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-202-2013-desde-3p"]
 evidence_tier = "layout_authority"
@@ -2303,7 +2303,7 @@ retrieved_at = 2026-05-03
 applies_from = 2013-01-01
 applies_to = 2014-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/dr202e13v34.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-202-2015"]
 evidence_tier = "layout_authority"
@@ -2317,7 +2317,7 @@ retrieved_at = 2026-05-03
 applies_from = 2015-01-01
 applies_to = 2015-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR202e15v42.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-202-2016-1p"]
 evidence_tier = "layout_authority"
@@ -2331,7 +2331,7 @@ retrieved_at = 2026-05-03
 applies_from = 2016-01-01
 applies_to = 2016-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR202e16v43.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-202-2016-desde-2p"]
 evidence_tier = "layout_authority"
@@ -2345,7 +2345,7 @@ retrieved_at = 2026-05-03
 applies_from = 2016-01-01
 applies_to = 2016-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR202e16v44.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-202-2017"]
 evidence_tier = "layout_authority"
@@ -2359,7 +2359,7 @@ retrieved_at = 2026-05-03
 applies_from = 2017-01-01
 applies_to = 2018-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR202e17v47.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-202-2018-desde-2p"]
 evidence_tier = "layout_authority"
@@ -2373,4 +2373,4 @@ retrieved_at = 2026-05-03
 applies_from = 2018-01-01
 applies_to = 2018-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR202e17v48.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"

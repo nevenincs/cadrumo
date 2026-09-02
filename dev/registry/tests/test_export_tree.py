@@ -266,7 +266,7 @@ def _profile() -> ExportTreeTransportProfile:
         source_sha256="58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7",
         layout_id="generated-modelo-130-fichero",
         format="fixed_width",
-        encoding=ExportEncoding.LATIN_1,
+        encoding=ExportEncoding.ISO_8859_1,
         line_ending="crlf",
         serializer_convention="rtoml-pretty-v1",
     )

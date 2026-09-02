@@ -48,7 +48,6 @@ class ExportEncoding(StrEnum):
     CP1252 = "cp1252"
     ISO_8859_1 = "iso-8859-1"
     ISO_8859_15 = "iso-8859-15"
-    LATIN_1 = "latin-1"
 
 
 def _coerce_closed_axis(value: object, axis: type[StrEnum]) -> object:

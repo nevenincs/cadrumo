@@ -5,7 +5,7 @@ id = 'generated-modelo-232-2018-y-siguientes-fichero'
 id = 'm232-paraisos-fiscales'
 record_type = 'paraisos-fiscales'
 order = 1
-encoding = 'latin-1'
+encoding = "iso-8859-1"
 line_ending = 'crlf'
 required = true
 

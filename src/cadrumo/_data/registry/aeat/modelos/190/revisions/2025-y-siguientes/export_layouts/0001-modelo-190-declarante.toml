@@ -5,7 +5,7 @@ id = "modelo-190-fichero-boe"
 id = "modelo-190-declarante"
 record_type = "declarante"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 [[revisions."2025-y-siguientes".export_layouts.records.fields]]

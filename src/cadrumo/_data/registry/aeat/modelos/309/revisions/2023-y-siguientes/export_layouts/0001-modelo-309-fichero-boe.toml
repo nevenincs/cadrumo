@@ -7,7 +7,7 @@ source_refs = ["aeat-dr-309-2023"]
 id = "modelo-309-page-00"
 record_type = "page_00"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 required = true
 [[revisions."2023-y-siguientes".export_layouts.records.fields]]
@@ -134,7 +134,7 @@ source_refs = ["aeat-dr-309-2023"]
 id = "modelo-309-page-01"
 record_type = "page_01"
 order = 1
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 required = true
 [[revisions."2023-y-siguientes".export_layouts.records.fields]]

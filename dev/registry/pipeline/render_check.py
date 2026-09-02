@@ -189,7 +189,7 @@ def compare_revision_against_committed(
         source_sha256=intermediate.source.source_sha256,
         layout_id=str(layout.id),
         format="fixed_width",
-        encoding=ExportEncoding.LATIN_1,
+        encoding=ExportEncoding.ISO_8859_1,
         line_ending=layout.records[0].line_ending,
         serializer_convention=_SERIALIZER_CONVENTION,
     )

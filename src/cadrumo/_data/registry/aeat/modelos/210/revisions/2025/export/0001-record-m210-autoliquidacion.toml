@@ -5,7 +5,7 @@ id = 'generated-modelo-210-2025-fichero'
 id = 'm210-autoliquidacion'
 record_type = 'autoliquidacion'
 order = 0
-encoding = 'latin-1'
+encoding = "iso-8859-1"
 line_ending = 'crlf'
 required = true
 

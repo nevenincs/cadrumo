@@ -46,7 +46,7 @@ retrieved_at = 2026-07-04
 published_at = 2009-12-29
 applies_from = 2009-12-30
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-21165"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Retiered 2026-08-15: this 1105-byte orden excerpt carries no annex section
 # and no record-layout vocabulary, so it was never layout authority -- the
@@ -64,7 +64,7 @@ retrieved_at = 2026-07-04
 published_at = 2009-12-29
 applies_from = 2009-12-30
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-21165"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-181-2022"]
 evidence_tier = "layout_authority"
@@ -77,7 +77,7 @@ bytes = 316409
 retrieved_at = 2026-07-21
 applies_from = 2022-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_22/DR_181_2022.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-181-2009"]
 evidence_tier = "layout_authority"
@@ -100,7 +100,7 @@ applies_from = 2009-01-01
 # aeat-dr-181-2016 applies_from, which is where HFP/1923/2016 takes over.
 applies_to = 2015-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr181.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-181-2016"]
 evidence_tier = "layout_authority"
@@ -114,7 +114,7 @@ retrieved_at = 2026-08-25
 applies_from = 2016-01-01
 applies_to = 2016-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR181_2016.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-181-2017"]
 evidence_tier = "layout_authority"
@@ -136,4 +136,4 @@ applies_from = 2017-01-01
 # aeat-dr-181-2022 applies_from begins.
 applies_to = 2021-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_17/DR181_2017.pdf"
-review_status = "reviewed"
+review_status = "pending_review"

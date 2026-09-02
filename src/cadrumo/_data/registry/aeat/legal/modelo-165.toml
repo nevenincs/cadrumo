@@ -47,7 +47,7 @@ retrieved_at = 2026-07-04
 published_at = 2013-12-27
 applies_from = 2013-12-28
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-13798"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Retiered 2026-08-15: this 1094-byte orden excerpt carries no annex section
 # and no record-layout vocabulary, so it was never layout authority. The
@@ -65,7 +65,7 @@ retrieved_at = 2026-07-04
 published_at = 2013-12-27
 applies_from = 2013-12-28
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-13798"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # AEAT's historical index publishes the original design under the approving
 # Orden's title. BOE-A-2013-13798 states first application to ejercicio 2013;
@@ -85,7 +85,7 @@ retrieved_at = 2026-08-25
 applies_from = 2013-01-01
 applies_to = 2015-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DLogicos_mod_165.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # AEAT labels this historical PDF as the 2013 Orden updated by HFP/1822/2016.
 # That Orden's final provision states first use for declaraciones of ejercicio
@@ -102,7 +102,7 @@ retrieved_at = 2026-08-25
 applies_from = 2016-01-01
 applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR165_2016.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-165-2026"]
 evidence_tier = "layout_authority"
@@ -115,4 +115,4 @@ bytes = 208095
 retrieved_at = 2026-07-21
 applies_from = 2026-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/DR_Mod_165_2023.pdf"
-review_status = "reviewed"
+review_status = "pending_review"

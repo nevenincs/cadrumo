@@ -139,7 +139,7 @@ def _profile() -> ExportTreeTransportProfile:
             "source_sha256": _SHA,
             "layout_id": "aeat-dr-390-2022",
             "format": "fixed_width",
-            "encoding": ExportEncoding.LATIN_1,
+            "encoding": ExportEncoding.ISO_8859_1,
             "line_ending": "crlf",
             "serializer_convention": "rtoml-pretty-v1",
         }

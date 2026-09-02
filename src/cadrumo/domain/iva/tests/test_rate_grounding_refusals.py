@@ -84,7 +84,7 @@ def _source(
         applies_from=applies_from,
         applies_to=applies_to,
         source_url="https://example.invalid/source",
-        review_status="reviewed",
+        review_status="pending_review",
     )
 
 

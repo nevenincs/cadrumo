@@ -21,7 +21,7 @@ source_refs = ["aeat-dr-604-2024"]
 id = "modelo-604-604-00"
 record_type = "envelope_header"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 required = true
 

@@ -211,7 +211,7 @@ class ModeloBindingQueryRow(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     binding_id: BindingId
-    source: str
+    source: BindingSourceKind
     typed_enum: str | None
     input_channel: Literal["decimal", "enum"]
     selector: BindingSelectorQueryProjection

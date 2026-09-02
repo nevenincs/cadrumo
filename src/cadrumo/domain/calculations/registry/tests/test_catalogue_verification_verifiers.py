@@ -820,7 +820,7 @@ def test_verify_source_file_checks_manual_structure(tmp_path: Path) -> None:
         bytes=len(payload),
         retrieved_at=date(2026, 5, 6),
         source_url=f"{Settings.external_constants().aeat.domains.sede}/Manual.pdf",
-        review_status="reviewed",
+        review_status="pending_review",
     )
 
     with pytest.raises(RegistryValidationError, match="manual structure check failed"):

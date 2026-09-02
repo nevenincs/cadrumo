@@ -48,7 +48,7 @@ bytes = 901491
 retrieved_at = 2026-08-01
 applies_from = 2025-07-01
 source_url = "https://www.europarl.europa.eu/RegData/etudes/BRIE/2026/782613/EPRS_BRI(2026)782613_EN.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."eu-your-europe-iva-rates-2026-07-13"]
 evidence_tier = "official_source_guidance"
@@ -60,7 +60,7 @@ bytes = 215350
 retrieved_at = 2026-08-01
 applies_from = 2026-07-13
 source_url = "https://europa.eu/youreurope/business/finance-and-tax/vat/vat-rules-rates/indexamp_en.htm"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."ee-emta-iva-rate-change-2025"]
 evidence_tier = "official_source_guidance"
@@ -72,7 +72,7 @@ bytes = 247451
 retrieved_at = 2026-08-01
 applies_from = 2024-01-01
 source_url = "https://www.emta.ee/en/business-client/taxes-and-payment/value-added-tax"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."fi-vero-iva-rate-change-2026"]
 evidence_tier = "official_source_guidance"
@@ -85,7 +85,7 @@ retrieved_at = 2026-08-01
 published_at = 2026-01-01
 applies_from = 2025-01-01
 source_url = "https://www.vero.fi/en/businesses-and-corporations/taxes-and-charges/vat/rates-of-vat/"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."lt-vmi-iva-rate-change-2026"]
 evidence_tier = "official_source_guidance"
@@ -97,7 +97,7 @@ bytes = 273571
 retrieved_at = 2026-08-01
 applies_from = 2025-01-01
 source_url = "https://www.vmi.lt/evmi/pvm-tarifai"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."ro-anaf-iva-rate-change-2025"]
 evidence_tier = "official_source_guidance"
@@ -110,4 +110,4 @@ retrieved_at = 2026-08-01
 published_at = 2025-08-07
 applies_from = 2025-01-01
 source_url = "https://static.anaf.ro/static/10/Galati/Vrancea/Modif-TVA-Legea-141-25.pdf"
-review_status = "reviewed"
+review_status = "pending_review"

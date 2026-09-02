@@ -19,6 +19,11 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import FilingPeriodCode, RegistrySelectorPeriodCode
+from .relation_dependency import (
+    RelationDependencyRoleField,
+    RelationDependencyTreatmentField,
+    RelationKindField,
+)
 from ._relation_aggregation import relation_aggregation_op
 from ._validate import RegistryValidator
 from .authority import ValidatedRegistryAuthority
@@ -118,13 +123,8 @@ class RelationHandoffRecord(BaseModel):
     target_modelo: ModeloId
     target_revision: RevisionId
     relation_id: RelationId
-    relation_kind: Literal["previous_period", "annual_summary", "cross_model_output"]
-    dependency_role: Literal[
-        "periodic_to_annual_summary",
-        "instalment_to_final_settlement",
-        "direct_calculation",
-        "factual_evidence",
-    ]
+    relation_kind: RelationKindField
+    dependency_role: RelationDependencyRoleField
     source_modelo: ModeloId
     source_revision_selector: RelationRevisionSelector
     source_casilla_id: CasillaId
@@ -191,7 +191,7 @@ class RelationHandoffApplicabilityRecord(BaseModel):
     source_casilla_id: CasillaId
     target_binding: BindingId
     requirement_relation_ids: tuple[RelationId, ...] = ()
-    dependency_treatment: Literal["direct_annual_settlement", "factual_evidence", "non_dependency"]
+    dependency_treatment: RelationDependencyTreatmentField
     taxpayer_files_source: bool
     conditional_on_economic_activity: bool
     clean_state_mode: Literal["required", "conditional", "advisory"]

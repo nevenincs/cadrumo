@@ -22,7 +22,7 @@ source_refs = ["aeat-dr-576-2008"]
 id = "modelo-576-autoliquidacion-record"
 record_type = "576-01"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 required = true
 

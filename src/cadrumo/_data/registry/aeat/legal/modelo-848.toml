@@ -47,7 +47,7 @@ retrieved_at = 2026-07-04
 published_at = 2003-01-28
 applies_from = 2003-01-29
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-1686"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Retiered 2026-08-15: this 1326-byte orden excerpt carries no annex section
 # and no record-layout vocabulary, so it was never layout authority.
@@ -68,4 +68,4 @@ retrieved_at = 2026-07-04
 published_at = 2003-01-28
 applies_from = 2003-01-29
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-1686"
-review_status = "reviewed"
+review_status = "pending_review"

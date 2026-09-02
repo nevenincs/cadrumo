@@ -66,7 +66,7 @@ retrieved_at = 2026-08-22
 published_at = 2014-12-19
 applies_from = 2015-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-13180"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [legal."orden-hac-1363-2018:art-unico"]
 evidence_tier = "legal_authority"
@@ -97,7 +97,7 @@ retrieved_at = 2026-08-22
 published_at = 2018-12-19
 applies_from = 2018-10-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2018-17602"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."enrolled-modelo-763-procedure"]
 evidence_tier = "official_source_guidance"
@@ -110,7 +110,7 @@ retrieved_at = 2026-07-04
 published_at = 2011-07-06
 applies_from = 2011-07-07
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-11704"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Re-pointed 2026-08-15: the previous corpus_path (orden-eha-1881-2011.html,
 # 1114 bytes) carries no annex section and no record-layout vocabulary. The
@@ -142,7 +142,7 @@ bytes = 100952
 retrieved_at = 2026-07-21
 applies_from = 2018-10-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR763e18.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Registered 2026-08-22. This design was bundled corpus that no catalogue entry,
 # hash-pin or resolver could see -- one of 49 such files the registration gate
@@ -173,7 +173,7 @@ retrieved_at = 2026-08-15
 applies_from = 2012-04-01
 applies_to = 2014-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_resto_mod/archivos/dr763e2011v11.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-763-2015"]
 evidence_tier = "layout_authority"
@@ -187,4 +187,4 @@ retrieved_at = 2026-08-15
 applies_from = 2015-01-01
 applies_to = 2018-09-30
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_resto_mod/archivos/dr763e2015v11.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"

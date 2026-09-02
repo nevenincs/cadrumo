@@ -149,7 +149,7 @@ def _minimal_source_ref() -> SourceReference:
         bytes=1024,
         retrieved_at=date(2024, 1, 1),
         source_url=f"{Settings.external_constants().aeat.domains.legacy_www}/",
-        review_status="reviewed",
+        review_status="pending_review",
     )
 
 

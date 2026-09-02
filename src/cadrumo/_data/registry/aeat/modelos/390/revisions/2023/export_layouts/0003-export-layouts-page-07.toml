@@ -46,7 +46,7 @@ id = "modelo-390-page-07"
 record_type = "page_07"
 binding_record = "page_7"
 order = 7
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 [[revisions."2023".export_layouts.records.fields]]

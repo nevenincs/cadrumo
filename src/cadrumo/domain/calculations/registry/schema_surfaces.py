@@ -12,6 +12,11 @@ from ....core.aggregation import RelationAggregation
 from ....core.casilla_id import CasillaId
 from ....core.identity import AeatBoxNumber, ContinuidadId
 from ....core.period import FilingPeriodCode, RegistrySelectorPeriodCode
+from .relation_dependency import (
+    RelationDependencyRoleField,
+    RelationDependencyTreatmentField,
+    RelationKindField,
+)
 from ._schema_export_exemption import ExportExemptionReasonValue
 from .errors import RegistryValidationError
 from .ids import (
@@ -643,13 +648,8 @@ class RelationDefinition(RegistryModel):
     """
 
     id: RelationId
-    kind: Literal["previous_period", "annual_summary", "cross_model_output"]
-    dependency_role: Literal[
-        "periodic_to_annual_summary",
-        "instalment_to_final_settlement",
-        "direct_calculation",
-        "factual_evidence",
-    ]
+    kind: RelationKindField
+    dependency_role: RelationDependencyRoleField
     source_modelo: ModeloId
     source_revision_selector: RelationRevisionSelector
     source_casilla_id: CasillaId

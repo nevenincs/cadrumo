@@ -46,7 +46,7 @@ retrieved_at = 2026-07-04
 published_at = 2005-05-11
 applies_from = 2005-05-12
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2005-7775"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Retiered 2026-08-15: this orden excerpt carries no annex section and no
 # record-layout vocabulary, so it was never layout authority. CONFIRMED
@@ -67,4 +67,4 @@ retrieved_at = 2026-07-04
 published_at = 2005-05-11
 applies_from = 2005-05-12
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2005-7775"
-review_status = "reviewed"
+review_status = "pending_review"

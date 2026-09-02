@@ -21,7 +21,7 @@ source_refs = ["aeat-dr-111-2019-v18"]
 id = "modelo-111-envelope-header"
 record_type = "envelope_header"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-111-envelope-open"
@@ -169,7 +169,7 @@ source_refs = ["aeat-dr-111-2019-v18"]
 id = "modelo-111-page-01"
 record_type = "page_1"
 order = 1
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-111-page-01-open"

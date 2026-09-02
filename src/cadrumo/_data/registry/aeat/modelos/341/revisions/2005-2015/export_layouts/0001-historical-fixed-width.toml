@@ -11,7 +11,7 @@ source_refs = ["aeat-dr-341-2005-2015"]
 id = "modelo-341-historical-record"
 record_type = "historical_fixed_width"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 [[revisions."2005-2015".export_layouts.records.fields]]

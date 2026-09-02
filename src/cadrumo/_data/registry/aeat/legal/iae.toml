@@ -130,7 +130,7 @@ bytes = 101013
 retrieved_at = 2026-05-03
 applies_from = 2003-09-19
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/dr840.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-840-procedure"]
 evidence_tier = "official_source_guidance"
@@ -142,7 +142,7 @@ bytes = 22692
 retrieved_at = 2026-07-01
 applies_from = 2003-09-19
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G323.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-840-2003-form"]
 evidence_tier = "layout_authority"
@@ -155,4 +155,4 @@ retrieved_at = 2026-05-06
 published_at = 2003-09-18
 applies_from = 2003-09-19
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-17642"
-review_status = "reviewed"
+review_status = "pending_review"

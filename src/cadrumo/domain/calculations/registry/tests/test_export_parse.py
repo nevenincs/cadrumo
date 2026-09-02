@@ -404,7 +404,7 @@ def test_payload_with_auxiliary_header_prefix_skips_the_header_before_records() 
             "id": "record-m232-test",
             "record_type": "test",
             "order": 0,
-            "encoding": ExportEncoding.LATIN_1,
+            "encoding": ExportEncoding.ISO_8859_1,
             "line_ending": "crlf",
             "fields": (
                 {

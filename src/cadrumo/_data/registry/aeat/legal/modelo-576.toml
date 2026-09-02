@@ -47,7 +47,7 @@ retrieved_at = 2026-07-04
 published_at = 2007-12-31
 applies_from = 2008-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-22442"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-576-2005-procedure"]
 evidence_tier = "official_source_guidance"
@@ -61,7 +61,7 @@ published_at = 2005-06-29
 applies_from = 2006-01-01
 applies_to = 2007-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2005-10950"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-576-2005-form"]
 evidence_tier = "layout_authority"
@@ -75,7 +75,7 @@ published_at = 2005-06-29
 applies_from = 2006-01-01
 applies_to = 2007-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2005-10950"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # This is the first parser-usable positional design evidence in the local
 # corpus. Its own "Ej.Dev.<2008 / >=2008" branch and the approving orden's
@@ -92,4 +92,4 @@ sha256 = "d1964b0c5b2c360b1a06e510ae3f7fce632cd3f7882be0365a8fdb3c26e0dbc7"
 bytes = 65097
 retrieved_at = 2026-07-21
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/dr576.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"

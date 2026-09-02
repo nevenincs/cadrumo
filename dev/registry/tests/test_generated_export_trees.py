@@ -312,7 +312,7 @@ def _authorities(tree: _GeneratedTree):
         source_sha256=intermediate.source.source_sha256,
         layout_id=tree.layout_id,
         format="fixed_width",
-        encoding=ExportEncoding.LATIN_1,
+        encoding=ExportEncoding.ISO_8859_1,
         line_ending="crlf",
         serializer_convention="rtoml-pretty-v1",
     )

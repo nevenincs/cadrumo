@@ -47,7 +47,7 @@ retrieved_at = 2026-07-04
 published_at = 2017-02-10
 applies_from = 2017-02-11
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-1334"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Retiered 2026-08-15: this 2101-byte orden excerpt carries no annex section
 # and no record-layout vocabulary, so it was never layout authority -- the
@@ -65,7 +65,7 @@ retrieved_at = 2026-07-04
 published_at = 2017-02-10
 applies_from = 2017-02-11
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-1334"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Modelo 122 diseño de registro, the AEAT-published binary record-design
 # artefact backing the órden-hfp-105-2017 layout established above. Acquired,
@@ -84,4 +84,4 @@ bytes = 79199
 retrieved_at = 2026-07-21
 applies_from = 2016-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_18/dr122e18v13.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"

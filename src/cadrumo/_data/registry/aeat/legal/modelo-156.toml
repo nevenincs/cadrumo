@@ -46,7 +46,7 @@ retrieved_at = 2026-07-04
 published_at = 2003-12-17
 applies_from = 2003-12-18
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23509"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Re-pointed 2026-08-15: the previous corpus_path (orden-hac-3580-2003.html,
 # 1112 bytes) carries no annex section and no record-layout vocabulary. The
@@ -85,5 +85,5 @@ sha256 = "d387cfeb7254e49d539d5c3a731c0bd6bf275c8c1fdae80e6faa5a1006d5d068"
 bytes = 39458
 retrieved_at = 2026-07-21
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/156_HAC_3580_2003.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 

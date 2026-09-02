@@ -8,7 +8,7 @@ id = "modelo-390-2025-fichero-boe"
 id = "modelo-390-page-04"
 record_type = "page_04"
 order = 5
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 # 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 2% - Base imponible [769]

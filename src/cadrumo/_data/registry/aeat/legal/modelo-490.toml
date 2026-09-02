@@ -47,7 +47,7 @@ retrieved_at = 2026-07-04
 published_at = 2021-06-08
 applies_from = 2021-06-09
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-9721"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Retiered 2026-08-15: this 961-byte orden excerpt carries no annex section
 # and no record-layout vocabulary, so it was never layout authority -- the
@@ -65,7 +65,7 @@ retrieved_at = 2026-07-04
 published_at = 2021-06-08
 applies_from = 2021-06-09
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-9721"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # AEAT publishes THREE Modelo 490 record designs, one per era, and all three are
 # bundled in the corpus and registered below.
@@ -111,7 +111,7 @@ retrieved_at = 2026-08-15
 applies_from = 2021-01-01
 applies_to = 2022-03-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/dr490e21.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-490-2022-2t"]
 evidence_tier = "layout_authority"
@@ -125,7 +125,7 @@ retrieved_at = 2026-08-15
 applies_from = 2022-04-01
 applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/dr490e22.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-490-2023"]
 evidence_tier = "layout_authority"
@@ -138,4 +138,4 @@ bytes = 107327
 retrieved_at = 2026-07-21
 applies_from = 2023-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/dr490e23.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"

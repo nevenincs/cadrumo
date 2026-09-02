@@ -139,5 +139,5 @@ def test_source_reference_refuses_noncanonical_source_url(source_url: str) -> No
             bytes=1,
             retrieved_at=date(2026, 8, 1),
             source_url=source_url,
-            review_status="reviewed",
+            review_status="pending_review",
         )

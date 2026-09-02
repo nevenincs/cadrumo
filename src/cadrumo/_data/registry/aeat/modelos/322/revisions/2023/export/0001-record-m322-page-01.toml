@@ -5,7 +5,7 @@ id = 'generated-modelo-322-2023-fichero'
 id = 'm322-page-01'
 record_type = 'page-01'
 order = 0
-encoding = 'latin-1'
+encoding = "iso-8859-1"
 line_ending = 'crlf'
 required = true
 

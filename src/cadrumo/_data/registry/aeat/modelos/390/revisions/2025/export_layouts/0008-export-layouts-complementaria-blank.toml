@@ -19,7 +19,7 @@ id = "modelo-390-2025-fichero-boe"
 id = "modelo-390-page-01"
 record_type = "page_01"
 order = 1
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 # Pág. 1: contenido 'En blanco'.
@@ -40,7 +40,7 @@ source_refs = ["aeat-dr-390-2025"]
 id = "modelo-390-page-02"
 record_type = "page_02"
 order = 2
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 # Pág. 2: contenido 'En Blanco'.
@@ -61,7 +61,7 @@ source_refs = ["aeat-dr-390-2025"]
 id = "modelo-390-page-02b"
 record_type = "page_02b"
 order = 3
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 # Pág. 2 bis: contenido 'En Blanco'.
@@ -82,7 +82,7 @@ source_refs = ["aeat-dr-390-2025"]
 id = "modelo-390-page-03"
 record_type = "page_03"
 order = 4
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 # Pág. 3: contenido 'En Blanco'.
@@ -103,7 +103,7 @@ source_refs = ["aeat-dr-390-2025"]
 id = "modelo-390-page-04"
 record_type = "page_04"
 order = 5
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 # Pág. 4: contenido 'En Blanco'.
@@ -124,7 +124,7 @@ source_refs = ["aeat-dr-390-2025"]
 id = "modelo-390-page-06"
 record_type = "page_06"
 order = 7
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 # Pág. 6: contenido 'En blanco'.

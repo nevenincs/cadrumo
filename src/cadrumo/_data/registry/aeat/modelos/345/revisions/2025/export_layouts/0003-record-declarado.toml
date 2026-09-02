@@ -8,7 +8,7 @@ id = "modelo-345-fichero-2025"
 id = "modelo-345-declarado"
 record_type = "declarado"
 order = 1
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 # Posicion 1. TIPO DE REGISTRO. Constante '2'.

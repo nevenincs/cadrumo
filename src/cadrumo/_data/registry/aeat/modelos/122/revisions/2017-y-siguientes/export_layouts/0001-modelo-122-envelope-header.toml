@@ -21,7 +21,7 @@ id = "modelo-122-fichero-boe"
 id = "modelo-122-envelope-header"
 record_type = "envelope_header"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 [[revisions."2017-y-siguientes".export_layouts.records.fields]]

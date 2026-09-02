@@ -49,7 +49,7 @@ bytes = 47415
 retrieved_at = 2026-05-06
 applies_from = 2010-04-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/DR360.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-360-procedure"]
 evidence_tier = "official_source_guidance"
@@ -61,7 +61,7 @@ bytes = 24585
 retrieved_at = 2026-05-06
 applies_from = 2010-04-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GZ09.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-360-2010-form"]
 evidence_tier = "layout_authority"
@@ -74,7 +74,7 @@ retrieved_at = 2026-05-06
 published_at = 2010-03-31
 applies_from = 2010-04-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [legal."orden-hac-3625-2003:apartado-1"]
 evidence_tier = "legal_authority"
@@ -153,7 +153,7 @@ bytes = 192000
 retrieved_at = 2026-05-06
 applies_from = 2023-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_23/dr309e23.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # AEAT's historical index explicitly assigns these three raw designs to the
 # listed annual windows.  They are catalogued and hash-pinned here, but remain
@@ -171,7 +171,7 @@ retrieved_at = 2026-08-26
 applies_from = 2004-01-01
 applies_to = 2015-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr309_2004.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-309-2016"]
 evidence_tier = "layout_authority"
@@ -185,7 +185,7 @@ retrieved_at = 2026-08-26
 applies_from = 2016-01-01
 applies_to = 2017-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr309e16v10.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-309-2018"]
 evidence_tier = "layout_authority"
@@ -199,7 +199,7 @@ retrieved_at = 2026-08-26
 applies_from = 2018-01-01
 applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_17/dr309e17v13.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-309-procedure"]
 evidence_tier = "official_source_guidance"
@@ -211,7 +211,7 @@ bytes = 23970
 retrieved_at = 2026-05-06
 applies_from = 2003-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G404.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-309-instructions"]
 evidence_tier = "official_source_guidance"
@@ -223,7 +223,7 @@ bytes = 18880
 retrieved_at = 2026-08-18
 applies_from = 2003-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/iva/modelo-309-iva-declaracion-liquidacion-periodica_/instrucciones-modelo-309.html"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-309-2003-form"]
 evidence_tier = "layout_authority"
@@ -236,7 +236,7 @@ retrieved_at = 2026-05-06
 published_at = 2003-12-30
 applies_from = 2003-12-31
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23809"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [legal."orden-eha-3434-2007:art-1"]
 evidence_tier = "legal_authority"
@@ -292,7 +292,7 @@ retrieved_at = 2026-05-06
 # has no separately grounded, complete writer in this registry.
 applies_from = 2026-02-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_26/DR353e26v12.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [legal."orden-hac-27-2026:disposicion-final-unica"]
 evidence_tier = "legal_authority"
@@ -325,7 +325,7 @@ retrieved_at = 2026-07-21
 applies_from = 2021-01-01
 applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_17/DR353e21v21.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # AEAT's historical index lists the last three sources below against precise
 # annual windows.  The two older PDF designs are also official record-design
@@ -343,7 +343,7 @@ sha256 = "45098659a378ca489801f45a1e90edb449bd125271b77f3a40a8a0423cd3253a"
 bytes = 262730
 retrieved_at = 2026-08-26
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr353.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-353-2008-orden"]
 evidence_tier = "layout_authority"
@@ -354,7 +354,7 @@ sha256 = "550112cdcde5e2ee1c5ded127744553671b65ba92caced93e19b4ff1aca2e1a2"
 bytes = 35332
 retrieved_at = 2026-08-26
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr353v13.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-353-2015-2016"]
 evidence_tier = "layout_authority"
@@ -368,7 +368,7 @@ retrieved_at = 2026-08-26
 applies_from = 2015-01-01
 applies_to = 2016-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR353e16v19.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-353-2017-2019"]
 evidence_tier = "layout_authority"
@@ -382,7 +382,7 @@ retrieved_at = 2026-08-26
 applies_from = 2017-01-01
 applies_to = 2019-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR353e17v20.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-353-2020"]
 evidence_tier = "layout_authority"
@@ -396,7 +396,7 @@ retrieved_at = 2026-08-26
 applies_from = 2020-01-01
 applies_to = 2020-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR353e17v20.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-353-procedure"]
 evidence_tier = "official_source_guidance"
@@ -408,7 +408,7 @@ bytes = 24211
 retrieved_at = 2026-05-06
 applies_from = 2007-11-30
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G408.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-353-2007-form"]
 evidence_tier = "layout_authority"
@@ -421,7 +421,7 @@ retrieved_at = 2026-05-06
 published_at = 2007-11-29
 applies_from = 2007-11-30
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20484"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [legal."orden-eha-3434-2007:art-8"]
 evidence_tier = "legal_authority"
@@ -454,7 +454,7 @@ bytes = 774672
 retrieved_at = 2026-05-06
 applies_from = 2026-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_26/DR322e26v11.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-322-2022"]
 evidence_tier = "layout_authority"
@@ -468,7 +468,7 @@ retrieved_at = 2026-07-21
 applies_from = 2022-01-01
 applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_22/DR322e22.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-322-2023"]
 evidence_tier = "layout_authority"
@@ -482,7 +482,7 @@ retrieved_at = 2026-07-21
 applies_from = 2023-01-01
 applies_to = 2023-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_23/DR322e23.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-322-2024-2025"]
 evidence_tier = "layout_authority"
@@ -496,7 +496,7 @@ retrieved_at = 2026-07-21
 applies_from = 2024-01-01
 applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_24/DR322e24.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-322-procedure"]
 evidence_tier = "official_source_guidance"
@@ -508,7 +508,7 @@ bytes = 24721
 retrieved_at = 2026-05-06
 applies_from = 2007-11-30
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G407.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-322-2007-form"]
 evidence_tier = "layout_authority"
@@ -521,7 +521,7 @@ retrieved_at = 2026-05-06
 published_at = 2007-11-29
 applies_from = 2007-11-30
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20484"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [legal."orden-eha-3786-2008:art-1"]
 evidence_tier = "legal_authority"
@@ -651,7 +651,7 @@ bytes = 182784
 retrieved_at = 2026-05-06
 applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/dr308e16v13.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-308-2009"]
 evidence_tier = "layout_authority"
@@ -665,7 +665,7 @@ retrieved_at = 2026-08-26
 applies_from = 2009-01-01
 applies_to = 2011-06-30
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr308.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-308-2011-july"]
 evidence_tier = "layout_authority"
@@ -679,7 +679,7 @@ retrieved_at = 2026-08-26
 applies_from = 2011-07-01
 applies_to = 2015-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr308_2011.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-308-2016"]
 evidence_tier = "layout_authority"
@@ -693,7 +693,7 @@ retrieved_at = 2026-08-26
 applies_from = 2016-01-01
 applies_to = 2018-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr308e16v12.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-308-procedure"]
 evidence_tier = "official_source_guidance"
@@ -705,7 +705,7 @@ bytes = 23429
 retrieved_at = 2026-05-06
 applies_from = 2009-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G403.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-308-2008-form"]
 evidence_tier = "layout_authority"
@@ -718,7 +718,7 @@ retrieved_at = 2026-05-06
 published_at = 2008-12-30
 applies_from = 2009-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-20953"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [legal."orden-eha-3111-2009:art-1"]
 evidence_tier = "legal_authority"
@@ -772,7 +772,7 @@ retrieved_at = 2026-05-06
 applies_from = 2025-01-01
 applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/390_2025.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Historical Modelo 390 designs, pre-2022, predating the split into the
 # current disjoint 2022/2023/2024/2025 revisions. Already acquired and
@@ -794,7 +794,7 @@ retrieved_at = 2026-05-03
 applies_from = 2015-01-01
 applies_to = 2015-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/390v01e2015_v1.00.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-390-2016"]
 evidence_tier = "layout_authority"
@@ -807,7 +807,7 @@ retrieved_at = 2026-05-03
 applies_from = 2016-01-01
 applies_to = 2016-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/390v01e2016_v1.00.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-390-2023"]
 evidence_tier = "layout_authority"
@@ -821,7 +821,7 @@ retrieved_at = 2026-05-03
 applies_from = 2023-01-01
 applies_to = 2023-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_23/dr390e2023v100.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-390-2024"]
 evidence_tier = "layout_authority"
@@ -835,7 +835,7 @@ retrieved_at = 2026-05-03
 applies_from = 2024-01-01
 applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_24/dr390e2024.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-390-2022"]
 evidence_tier = "layout_authority"
@@ -849,7 +849,7 @@ retrieved_at = 2026-05-03
 applies_from = 2022-01-01
 applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_22/dr390e2022.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-390-procedure"]
 evidence_tier = "official_source_guidance"
@@ -861,7 +861,7 @@ bytes = 25574
 retrieved_at = 2026-05-06
 applies_from = 2010-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G412.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-390-2009-form"]
 evidence_tier = "layout_authority"
@@ -874,7 +874,7 @@ retrieved_at = 2026-05-06
 published_at = 2009-11-20
 applies_from = 2010-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18472"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-303-2025"]
 evidence_tier = "layout_authority"
@@ -894,7 +894,7 @@ retrieved_at = 2026-05-06
 applies_from = 2025-01-01
 applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/303_2025.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-303-2022"]
 evidence_tier = "layout_authority"
@@ -908,7 +908,7 @@ retrieved_at = 2026-08-14
 applies_from = 2022-01-01
 applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_22/DR303e22.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-303-2023"]
 evidence_tier = "layout_authority"
@@ -922,7 +922,7 @@ retrieved_at = 2026-05-03
 applies_from = 2023-01-01
 applies_to = 2023-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_23/DR303e23.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-303-2024-early"]
 evidence_tier = "layout_authority"
@@ -936,7 +936,7 @@ retrieved_at = 2026-05-03
 applies_from = 2024-01-01
 applies_to = 2024-08-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_24/DR303e24.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # The 2024 pair's windows OVERLAP in July and August, and that is AEAT's rule
 # rather than a data error. `-early` is titled "hasta periodos 08 y 2T" and
@@ -959,7 +959,7 @@ retrieved_at = 2026-05-03
 applies_from = 2024-07-01
 applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_24/DR303e24v200.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-303-2026"]
 evidence_tier = "layout_authority"
@@ -972,7 +972,7 @@ bytes = 386926
 retrieved_at = 2026-05-06
 applies_from = 2026-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_26/DR303e26v101.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Pre-2022 Modelo 303 record designs, acquired and manifested since 2026-05-03
 # to 2026-07-21 but previously unregistered -- registration, not acquisition.
@@ -996,7 +996,7 @@ retrieved_at = 2026-05-03
 applies_from = 2014-01-01
 applies_to = 2014-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR303e14v22.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-303-2015-2016"]
 evidence_tier = "layout_authority"
@@ -1009,7 +1009,7 @@ retrieved_at = 2026-05-03
 applies_from = 2015-01-01
 applies_to = 2016-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR303e15v34.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-303-2017"]
 evidence_tier = "layout_authority"
@@ -1022,7 +1022,7 @@ retrieved_at = 2026-05-03
 applies_from = 2017-01-01
 applies_to = 2017-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR303e17v20_04.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Two distinct 2018 designs, differentiated by which PERIODS within 2018 they
 # cover rather than by date range -- SourceReference has no period-selector
@@ -1053,7 +1053,7 @@ applies_from = 2018-01-01
 applies_to = 2018-12-31
 period_selector = { years = [2018], periods = ["1T", "2T", "3T", "4T"] }
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR303e18v10_40.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-303-2018-salvo-ultimo-periodo"]
 evidence_tier = "layout_authority"
@@ -1067,7 +1067,7 @@ applies_from = 2018-01-01
 applies_to = 2018-12-31
 period_selector = { years = [2018], periods = ["1T", "2T", "3T"] }
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR303e18v10_10.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-303-2019-2020"]
 evidence_tier = "layout_authority"
@@ -1080,7 +1080,7 @@ retrieved_at = 2026-05-03
 applies_from = 2019-01-01
 applies_to = 2020-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR303e20v10_20.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-303-2021-hasta-periodo-06"]
 evidence_tier = "layout_authority"
@@ -1094,7 +1094,7 @@ applies_from = 2021-01-01
 applies_to = 2021-12-31
 period_selector = { years = [2021], periods = ["1T", "2T"] }
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_21/DR303e21v103.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-303-2021-desde-periodo-07"]
 evidence_tier = "layout_authority"
@@ -1108,7 +1108,7 @@ applies_from = 2021-01-01
 applies_to = 2021-12-31
 period_selector = { years = [2021], periods = ["3T", "4T"] }
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_21/DR303e21v200.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-303-procedure"]
 evidence_tier = "official_source_guidance"
@@ -1120,7 +1120,7 @@ bytes = 24562
 retrieved_at = 2026-05-06
 applies_from = 2009-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G414.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-303-2008-form"]
 evidence_tier = "layout_authority"
@@ -1133,7 +1133,7 @@ retrieved_at = 2026-05-06
 published_at = 2008-12-30
 applies_from = 2009-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-20953"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [legal."orden-eha-769-2010:art-1"]
 evidence_tier = "legal_authority"
@@ -1228,7 +1228,7 @@ retrieved_at = 2026-05-03
 published_at = 2020-02-29
 applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_20/DR_Anexo_349.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-349-2002"]
 evidence_tier = "layout_authority"
@@ -1239,7 +1239,7 @@ sha256 = "2aec34746d7f91b89b4f59b127a4fc00658b49d091137a8777dee68ae50d7ea2"
 bytes = 1023320
 retrieved_at = 2026-05-03
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/TIPOS34905.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-349-form-2010"]
 evidence_tier = "layout_authority"
@@ -1252,7 +1252,7 @@ retrieved_at = 2026-05-05
 published_at = 2010-03-31
 applies_from = 2010-04-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5098"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-349-procedure"]
 evidence_tier = "official_source_guidance"
@@ -1264,7 +1264,7 @@ bytes = 46458
 retrieved_at = 2026-05-05
 applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI28.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-349-instructions"]
 evidence_tier = "official_source_guidance"
@@ -1276,7 +1276,7 @@ bytes = 69284
 retrieved_at = 2026-05-26
 applies_from = 2021-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/GI28/instr_mod_349.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-vies-gestiones-procedure"]
 evidence_tier = "executable_parity_evidence"
@@ -1288,7 +1288,7 @@ bytes = 11499
 retrieved_at = 2026-05-08
 applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/iva/iva-operaciones-comercio-exterior/identificacion-realizar-operaciones-otros-empresarios-ue/vies.html"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-036-roi-enrollment-procedure"]
 evidence_tier = "official_source_guidance"
@@ -1300,7 +1300,7 @@ bytes = 36079
 retrieved_at = 2026-05-08
 applies_from = 2008-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G322.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [legal."orden-hac-610-2021:art-1"]
 evidence_tier = "legal_authority"
@@ -1456,7 +1456,7 @@ retrieved_at = 2026-05-03
 published_at = 2021-09-17
 applies_from = 2021-07-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_21/DR369e21.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-369-procedure"]
 evidence_tier = "official_source_guidance"
@@ -1468,7 +1468,7 @@ bytes = 20824
 retrieved_at = 2026-05-06
 applies_from = 2021-07-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G420.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-369-2021-form"]
 evidence_tier = "layout_authority"
@@ -1481,7 +1481,7 @@ retrieved_at = 2026-05-06
 published_at = 2021-06-18
 applies_from = 2021-07-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10161"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [legal."ley-37-1992:art-99"]
 evidence_tier = "legal_authority"
@@ -2372,7 +2372,7 @@ retrieved_at = 2026-07-02
 applies_from = 2025-01-01
 applies_to = 2025-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-orden-hfp-1172-2022-iva-authority"]
 evidence_tier = "official_source_guidance"
@@ -2385,7 +2385,7 @@ retrieved_at = 2026-08-10
 applies_from = 2023-01-01
 applies_to = 2023-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-orden-hfp-1335-2021-iva-authority"]
 evidence_tier = "official_source_guidance"
@@ -2399,7 +2399,7 @@ published_at = 2021-12-01
 applies_from = 2022-01-01
 applies_to = 2022-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19904"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-orden-hfp-1359-2023-iva-authority"]
 evidence_tier = "official_source_guidance"
@@ -2412,7 +2412,7 @@ retrieved_at = 2026-08-10
 applies_from = 2024-01-01
 applies_to = 2024-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-orden-hac-1425-2025-iva-authority"]
 evidence_tier = "official_source_guidance"
@@ -2425,7 +2425,7 @@ retrieved_at = 2026-08-10
 applies_from = 2026-01-01
 applies_to = 2026-12-31
 source_url = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [legal."ley-37-1992:art-75"]
 evidence_tier = "legal_authority"
@@ -3008,7 +3008,7 @@ retrieved_at = 2026-05-03
 applies_from = 2009-01-01
 applies_to = 2013-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR303e12v11.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-390-2017"]
 evidence_tier = "layout_authority"
@@ -3022,7 +3022,7 @@ retrieved_at = 2026-05-03
 applies_from = 2017-01-01
 applies_to = 2017-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr390e2017v3.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-390-2018"]
 evidence_tier = "layout_authority"
@@ -3036,7 +3036,7 @@ retrieved_at = 2026-05-03
 applies_from = 2018-01-01
 applies_to = 2018-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr390e2018v101.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-390-2019"]
 evidence_tier = "layout_authority"
@@ -3050,7 +3050,7 @@ retrieved_at = 2026-05-03
 applies_from = 2019-01-01
 applies_to = 2020-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_19/dr390e2019v101.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-390-2021"]
 evidence_tier = "layout_authority"
@@ -3064,4 +3064,4 @@ retrieved_at = 2026-05-03
 applies_from = 2021-01-01
 applies_to = 2021-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_21/dr390e2021.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"

@@ -49,7 +49,7 @@ retrieved_at = 2026-07-04
 published_at = 2025-10-21
 applies_from = 2026-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-21726"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Same bundled orden HTML, registered a second time under layout_authority tier
 # for the per-revision workbook-parity-coverage gate. This is NOT the
@@ -67,7 +67,7 @@ retrieved_at = 2026-07-04
 published_at = 2025-10-21
 applies_from = 2026-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-21726"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-185-2026"]
 evidence_tier = "layout_authority"
@@ -80,7 +80,7 @@ bytes = 185616
 retrieved_at = 2026-07-21
 applies_from = 2026-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR185_2025.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [legal."orden-hac-96-2003:art-3"]
 evidence_tier = "legal_authority"
@@ -151,7 +151,7 @@ published_at = 2003-01-30
 applies_from = 2003-01-31
 applies_to = 2025-12-31
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-1911"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Same bundled orden-hac-96-2003 HTML, registered a second time under
 # layout_authority tier for the per-revision workbook-parity-coverage gate of
@@ -172,7 +172,7 @@ published_at = 2003-01-30
 applies_from = 2003-01-31
 applies_to = 2025-12-31
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-1911"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # The as-published BOE Annex I is the original primary record-layout source for
 # the 2003-2025 span. It is deliberately a form_spec, not a record_design:
@@ -193,4 +193,4 @@ published_at = 2003-01-30
 applies_from = 2003-01-31
 applies_to = 2025-12-31
 source_url = "https://www.boe.es/boe/dias/2003/01/30/pdfs/A03911-03920.pdf"
-review_status = "reviewed"
+review_status = "pending_review"

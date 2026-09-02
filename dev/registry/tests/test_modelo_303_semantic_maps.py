@@ -774,7 +774,7 @@ class _EpochAuthorities:
             source_sha256=self.source_sha256,
             layout_id=f"generated-modelo-303-{self.design_epoch}-fichero",
             format="fixed_width",
-            encoding=ExportEncoding.LATIN_1,
+            encoding=ExportEncoding.ISO_8859_1,
             line_ending="crlf",
             serializer_convention="rtoml-pretty-v1",
         )

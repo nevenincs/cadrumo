@@ -403,7 +403,7 @@ bytes = 58046
 retrieved_at = 2026-07-01
 applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI42.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-289-webservice"]
 evidence_tier = "official_source_guidance"
@@ -415,7 +415,7 @@ bytes = 11189
 retrieved_at = 2026-07-01
 applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/en_gb/todas-gestiones/impuestos-tasas/declaraciones-informativas/modelo-289-decla_informativa-anual-cuentas-financieras_/gestiones/servicio-web-presentacion-modelo-289.html"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-289-xsd-wsdl"]
 evidence_tier = "layout_authority"
@@ -427,7 +427,7 @@ bytes = 23669
 retrieved_at = 2026-07-01
 applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Tema/Procedimientos_tributarios/Declaraciones_informativas/Modelos_200_299/289/XSD/289_XSD_2.0_WSDL_2.0.1.zip"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-rd-1021-2015"]
 evidence_tier = "layout_authority"
@@ -440,7 +440,7 @@ retrieved_at = 2026-07-01
 published_at = 2015-11-17
 applies_from = 2016-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-12399"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-289-base-order"]
 evidence_tier = "layout_authority"
@@ -453,7 +453,7 @@ retrieved_at = 2026-07-01
 published_at = 2016-10-27
 applies_from = 2016-10-28
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2016-9834"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-289-2017-amendment-hfp-1308"]
 evidence_tier = "layout_authority"
@@ -466,7 +466,7 @@ retrieved_at = 2026-07-01
 published_at = 2017-12-29
 applies_from = 2017-12-30
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2017-15845"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-289-2018-amendment-hac-1417"]
 evidence_tier = "layout_authority"
@@ -479,7 +479,7 @@ retrieved_at = 2026-07-01
 published_at = 2018-12-29
 applies_from = 2018-12-30
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-17997"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-289-2019-amendment-hac-1276"]
 evidence_tier = "layout_authority"
@@ -492,7 +492,7 @@ retrieved_at = 2026-07-01
 published_at = 2019-12-31
 applies_from = 2019-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2019-18752"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-289-2020-amendment-hac-1276"]
 evidence_tier = "layout_authority"
@@ -505,7 +505,7 @@ retrieved_at = 2026-07-01
 published_at = 2020-12-30
 applies_from = 2020-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2020-17271"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-289-2021-amendment-hfp-1351"]
 evidence_tier = "layout_authority"
@@ -518,7 +518,7 @@ retrieved_at = 2026-07-01
 published_at = 2021-12-03
 applies_from = 2021-12-04
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-20004"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-289-2022-amendment-hfp-1192"]
 evidence_tier = "layout_authority"
@@ -531,7 +531,7 @@ retrieved_at = 2026-07-01
 published_at = 2022-12-03
 applies_from = 2022-12-04
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20274"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-289-2023-amendment-hfp-1284"]
 evidence_tier = "layout_authority"
@@ -544,7 +544,7 @@ retrieved_at = 2026-07-01
 published_at = 2023-11-30
 applies_from = 2023-12-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-24412"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-289-2024-amendment-hfp-1397"]
 evidence_tier = "layout_authority"
@@ -557,7 +557,7 @@ retrieved_at = 2026-07-01
 published_at = 2023-12-29
 applies_from = 2024-01-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-26632"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-289-2024-amendment-hac-1504"]
 evidence_tier = "layout_authority"
@@ -570,7 +570,7 @@ retrieved_at = 2026-07-01
 published_at = 2024-12-31
 applies_from = 2025-01-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-27528"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-289-2025-amendment-hac-1430"]
 evidence_tier = "layout_authority"
@@ -583,4 +583,4 @@ retrieved_at = 2026-07-01
 published_at = 2025-12-16
 applies_from = 2025-12-17
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-25389"
-review_status = "reviewed"
+review_status = "pending_review"

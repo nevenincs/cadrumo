@@ -172,7 +172,7 @@ bytes = 24595
 retrieved_at = 2026-08-18
 applies_from = 2008-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G615.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Retiered 2026-08-15: this 915-byte orden excerpt carries no annex section
 # and no record-layout vocabulary, so it was never layout authority. Both
@@ -191,7 +191,7 @@ retrieved_at = 2026-05-27
 published_at = 2008-10-08
 applies_from = 2008-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-16237"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-151-2023"]
 evidence_tier = "layout_authority"
@@ -204,7 +204,7 @@ bytes = 1521664
 retrieved_at = 2026-07-21
 applies_from = 2023-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR151E2023.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Modelo 151 diseño de registro for ejercicios 2015-2022 (Orden HAP/2783/2015).
 # This was NOT a genuine publication gap: AEAT's historical Diseños de
@@ -230,7 +230,7 @@ retrieved_at = 2026-08-15
 applies_from = 2015-01-01
 applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/dr151e15v12.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 
 [legal."orden-hap-2783-2015:art-1"]
