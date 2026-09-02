@@ -75,6 +75,8 @@ def test_only_implemented_cli_tui_routes_are_enrolled() -> None:
 
     specs = COMMAND_GRAPH.by_key()
     expected = {
+        "app_modelo_work_review",
+        "app_modelo_work_select",
         "config_login",
         "config_profile_status",
         "root",
