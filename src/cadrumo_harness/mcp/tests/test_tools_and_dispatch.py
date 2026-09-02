@@ -6,11 +6,11 @@ import pytest
 
 from cadrumo.entrypoints.cli.command_api import (
     JsonType,
+    ParameterKind,
     SchemaResolutionError,
     VerbInputSchema,
     VerbLeafResolutionFailure,
     VerbParameter,
-    VerbParamKind,
     assert_schema_coverage,
     build_verb_input_schemas,
     cli_argv_for,
@@ -230,7 +230,7 @@ def test_default_true_flag_pair_is_expressible_false_and_emits_the_off_token() -
         parameters=(
             VerbParameter(
                 name="colour",
-                kind=VerbParamKind.OPTION,
+                kind=ParameterKind.OPTION,
                 cli_flag="--colour",
                 off_flag="--no-colour",
                 json_type=JsonType.BOOLEAN,

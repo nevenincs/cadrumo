@@ -10,7 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.entrypoints.cli import cli_path_for_command_key, command_execution_policy_for_cli_path
+from cadrumo.entrypoints.cli import command_execution_policy_for_cli_path
+from cadrumo.entrypoints.cli.command_api import cli_path_for_command_key
 
 from .._command_policy import CommandPolicyProjection, policy_projection_is_coherent, project_command_policy
 from .._hitl import ConfirmationPolicy, confirmation_for_policy

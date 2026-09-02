@@ -10,8 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.entrypoints.cli import VerbInputSchema, command_schema_refs
-from cadrumo.entrypoints.cli._command_schema import command_registration_projection
+from cadrumo.entrypoints.cli.command_api import VerbInputSchema, command_registration_projection, command_schema_refs
 
 from .._annotations import McpAnnotations
 from .._command_policy import CommandPolicyProjection
