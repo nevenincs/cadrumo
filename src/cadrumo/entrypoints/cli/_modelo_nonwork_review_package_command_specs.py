@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+from typing import Final
+
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._modelo_nonwork_command_spec_policies import (
     _CALCULATION_WRITE,
@@ -24,6 +26,38 @@ from .command_spec import (
     SchemaState,
     TranslationKey,
     ValueContract,
+)
+
+_REVIEW_PACKAGE_INPUT: Final[ArgumentSpec] = ArgumentSpec(
+    name="package",
+    value=ValueContract(DeferredTarget("pathlib", "Path")),
+    default=ParameterDefault.required(),
+    help_key=TranslationKey("cli.app.modelo.review_package.package_path_help"),
+    transport_locus=TransportLocus.LOCAL_IN,
+    transport_shape=TransportShape.FILE,
+    transport_role=TransportRole.PRIMARY,
+)
+
+_SIGNATURE_INPUT: Final[ArgumentSpec] = ArgumentSpec(
+    name="signature",
+    value=ValueContract(DeferredTarget("pathlib", "Path")),
+    default=ParameterDefault.required(),
+    help_key=TranslationKey("cli.app.modelo.review_package.signature_path_help"),
+    transport_locus=TransportLocus.LOCAL_IN,
+    transport_shape=TransportShape.FILE,
+    transport_role=TransportRole.AUXILIARY,
+)
+
+_REVIEW_PACKAGE_BUCKET_ID_OPTION: Final[OptionSpec] = OptionSpec(
+    name="bucket_id",
+    declarations=("--bucket-id",),
+    value=ValueContract(DeferredTarget("builtins", "str")),
+    default=ParameterDefault.value(None),
+    help_key=TranslationKey("cli.app.modelo.review_package.bucket_id_help"),
+    multiple=False,
+    is_flag=False,
+    flag_value=None,
+    constraint=ParameterConstraint(),
 )
 
 MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
@@ -209,17 +243,7 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         help_key=TranslationKey("cli.app.modelo.review_package.verify_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(
-            ArgumentSpec(
-                name="package",
-                value=ValueContract(DeferredTarget("pathlib", "Path")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.modelo.review_package.package_path_help"),
-                transport_locus=TransportLocus.LOCAL_IN,
-                transport_shape=TransportShape.FILE,
-                transport_role=TransportRole.PRIMARY,
-            ),
-        ),
+        parameters=(_REVIEW_PACKAGE_INPUT,),
         policy=_CRYPTO_READ,
         handler=LazyBinding.available(
             DeferredTarget("cadrumo.entrypoints.cli._modelo_review_package_cli", "review_package_verify")
@@ -241,15 +265,7 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(
-            ArgumentSpec(
-                name="package",
-                value=ValueContract(DeferredTarget("pathlib", "Path")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.modelo.review_package.package_path_help"),
-                transport_locus=TransportLocus.LOCAL_IN,
-                transport_shape=TransportShape.FILE,
-                transport_role=TransportRole.PRIMARY,
-            ),
+            _REVIEW_PACKAGE_INPUT,
             OptionSpec(
                 name="output",
                 declarations=("--output",),
@@ -264,17 +280,7 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 transport_shape=TransportShape.FILE,
                 transport_role=TransportRole.PRIMARY,
             ),
-            OptionSpec(
-                name="bucket_id",
-                declarations=("--bucket-id",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.review_package.bucket_id_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
+            _REVIEW_PACKAGE_BUCKET_ID_OPTION,
         ),
         policy=_CRYPTO_PROFILE_WRITE,
         handler=LazyBinding.available(
@@ -295,24 +301,8 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(
-            ArgumentSpec(
-                name="package",
-                value=ValueContract(DeferredTarget("pathlib", "Path")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.modelo.review_package.package_path_help"),
-                transport_locus=TransportLocus.LOCAL_IN,
-                transport_shape=TransportShape.FILE,
-                transport_role=TransportRole.PRIMARY,
-            ),
-            ArgumentSpec(
-                name="signature",
-                value=ValueContract(DeferredTarget("pathlib", "Path")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.modelo.review_package.signature_path_help"),
-                transport_locus=TransportLocus.LOCAL_IN,
-                transport_shape=TransportShape.FILE,
-                transport_role=TransportRole.AUXILIARY,
-            ),
+            _REVIEW_PACKAGE_INPUT,
+            _SIGNATURE_INPUT,
             OptionSpec(
                 name="public_key",
                 declarations=("--public-key",),
@@ -346,24 +336,8 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(
-            ArgumentSpec(
-                name="package",
-                value=ValueContract(DeferredTarget("pathlib", "Path")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.modelo.review_package.package_path_help"),
-                transport_locus=TransportLocus.LOCAL_IN,
-                transport_shape=TransportShape.FILE,
-                transport_role=TransportRole.PRIMARY,
-            ),
-            ArgumentSpec(
-                name="signature",
-                value=ValueContract(DeferredTarget("pathlib", "Path")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.modelo.review_package.signature_path_help"),
-                transport_locus=TransportLocus.LOCAL_IN,
-                transport_shape=TransportShape.FILE,
-                transport_role=TransportRole.AUXILIARY,
-            ),
+            _REVIEW_PACKAGE_INPUT,
+            _SIGNATURE_INPUT,
             OptionSpec(
                 name="output",
                 declarations=("--output",),
@@ -389,17 +363,7 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 flag_value=None,
                 constraint=ParameterConstraint(),
             ),
-            OptionSpec(
-                name="bucket_id",
-                declarations=("--bucket-id",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.review_package.bucket_id_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
+            _REVIEW_PACKAGE_BUCKET_ID_OPTION,
         ),
         policy=_CRYPTO_PROFILE_WRITE,
         handler=LazyBinding.available(
@@ -422,15 +386,7 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(
-            ArgumentSpec(
-                name="package",
-                value=ValueContract(DeferredTarget("pathlib", "Path")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.modelo.review_package.package_path_help"),
-                transport_locus=TransportLocus.LOCAL_IN,
-                transport_shape=TransportShape.FILE,
-                transport_role=TransportRole.PRIMARY,
-            ),
+            _REVIEW_PACKAGE_INPUT,
             ArgumentSpec(
                 name="receipt_path",
                 value=ValueContract(DeferredTarget("pathlib", "Path")),
@@ -484,15 +440,7 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(
-            ArgumentSpec(
-                name="package",
-                value=ValueContract(DeferredTarget("pathlib", "Path")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.modelo.review_package.package_path_help"),
-                transport_locus=TransportLocus.LOCAL_IN,
-                transport_shape=TransportShape.FILE,
-                transport_role=TransportRole.PRIMARY,
-            ),
+            _REVIEW_PACKAGE_INPUT,
             OptionSpec(
                 name="recipient_id",
                 declarations=("--recipient",),
@@ -540,17 +488,7 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 flag_value=None,
                 constraint=ParameterConstraint(),
             ),
-            OptionSpec(
-                name="bucket_id",
-                declarations=("--bucket-id",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.review_package.bucket_id_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
+            _REVIEW_PACKAGE_BUCKET_ID_OPTION,
         ),
         policy=_CRYPTO_FACT_FILE_WRITE,
         handler=LazyBinding.available(
@@ -597,17 +535,7 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 transport_shape=TransportShape.FILE,
                 transport_role=TransportRole.PRIMARY,
             ),
-            OptionSpec(
-                name="bucket_id",
-                declarations=("--bucket-id",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.review_package.bucket_id_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
+            _REVIEW_PACKAGE_BUCKET_ID_OPTION,
         ),
         policy=_CRYPTO_PROFILE_WRITE,
         handler=LazyBinding.available(
@@ -713,17 +641,7 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 transport_shape=TransportShape.FILE,
                 transport_role=TransportRole.AUXILIARY,
             ),
-            OptionSpec(
-                name="bucket_id",
-                declarations=("--bucket-id",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.review_package.bucket_id_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
+            _REVIEW_PACKAGE_BUCKET_ID_OPTION,
         ),
         policy=_CRYPTO_FACT_FILE_WRITE,
         handler=LazyBinding.available(
@@ -786,17 +704,7 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 flag_value=None,
                 constraint=ParameterConstraint(),
             ),
-            OptionSpec(
-                name="bucket_id",
-                declarations=("--bucket-id",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.review_package.bucket_id_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
+            _REVIEW_PACKAGE_BUCKET_ID_OPTION,
         ),
         policy=_CRYPTO_PROFILE_WRITE,
         handler=LazyBinding.available(

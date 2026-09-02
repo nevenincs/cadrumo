@@ -10,10 +10,26 @@ from pathlib import Path
 import pytest
 
 from .._command_runtime import _behavior_wrapper
+from .._modelo_nonwork_m036_command_specs import (
+    M036_DECLARATION_PARAMETERS,
+    MODELO_NONWORK_M036_COMMAND_SPECS,
+)
+from .._modelo_nonwork_m145_command_specs import (
+    M145_ACTOR_PARAMETER,
+    M145_COMMUNICATION_RECORD_ID_PARAMETER,
+    M145_RECORD_ACTION_PARAMETERS,
+    MODELO_NONWORK_M145_COMMAND_SPECS,
+)
 from .._modelo_nonwork_command_specs import MODELO_NONWORK_COMMAND_SPECS
 from .._modelo_nonwork_reconcile_command_specs import (
     MODELO_NONWORK_RECONCILE_COMMAND_SPECS,
     RECONCILE_TARGET_PARAMETERS,
+)
+from .._modelo_nonwork_review_package_command_specs import (
+    MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS,
+    _REVIEW_PACKAGE_BUCKET_ID_OPTION,
+    _REVIEW_PACKAGE_INPUT,
+    _SIGNATURE_INPUT,
 )
 from ..command_specs import COMMAND_GRAPH
 
@@ -128,6 +144,153 @@ def test_reconcile_target_parameters_keep_order_and_import_extras_local() -> Non
     assert pull.result_schema is not imported.result_schema
     assert COMMAND_GRAPH.resolve_path(("aeat", "app", "modelo", "reconcile", "pull")) is pull
     assert COMMAND_GRAPH.resolve_path(("aeat", "app", "modelo", "reconcile", "import")) is imported
+
+
+def test_m036_declaration_parameters_keep_exact_order_and_identity() -> None:
+    specs = {spec.key: spec for spec in MODELO_NONWORK_M036_COMMAND_SPECS}
+    declaration_keys = (
+        "app_modelo_m036_alta",
+        "app_modelo_m036_modificacion",
+        "app_modelo_m036_baja",
+    )
+
+    assert type(M036_DECLARATION_PARAMETERS) is tuple
+    assert tuple(parameter.name for parameter in M036_DECLARATION_PARAMETERS) == (
+        "declared_on",
+        "sede_justificante",
+        "note",
+    )
+    assert tuple(parameter.declarations for parameter in M036_DECLARATION_PARAMETERS) == (
+        ("--declared-on",),
+        ("--sede-justificante",),
+        ("--note",),
+    )
+    assert all(specs[key].parameters is M036_DECLARATION_PARAMETERS for key in declaration_keys)
+
+
+def test_m145_record_action_parameters_keep_adjudicated_order_and_identity() -> None:
+    specs = {spec.key: spec for spec in MODELO_NONWORK_M145_COMMAND_SPECS}
+    record_action_keys = (
+        "app_modelo_m145_export",
+        "app_modelo_m145_mark_delivered_to_payer",
+        "app_modelo_m145_mark_locally_completed",
+    )
+
+    assert type(M145_RECORD_ACTION_PARAMETERS) is tuple
+    assert tuple(parameter.name for parameter in M145_RECORD_ACTION_PARAMETERS) == (
+        "communication_record_id",
+        "actor",
+    )
+    assert M145_RECORD_ACTION_PARAMETERS[0] is M145_COMMUNICATION_RECORD_ID_PARAMETER
+    assert M145_RECORD_ACTION_PARAMETERS[1] is M145_ACTOR_PARAMETER
+    validate_parameters = specs["app_modelo_m145_validate"].parameters
+    assert validate_parameters == (M145_COMMUNICATION_RECORD_ID_PARAMETER,)
+    assert validate_parameters[0] is M145_COMMUNICATION_RECORD_ID_PARAMETER
+    assert validate_parameters is not M145_RECORD_ACTION_PARAMETERS
+    assert all(specs[key].parameters is M145_RECORD_ACTION_PARAMETERS for key in record_action_keys)
+    create_parameters = specs["app_modelo_m145_create"].parameters
+    assert create_parameters[-1] is M145_ACTOR_PARAMETER
+    assert tuple(parameter.name for parameter in create_parameters) == (
+        "year",
+        "period",
+        "casilla",
+        "note",
+        "actor",
+    )
+    assert all(parameter is not M145_COMMUNICATION_RECORD_ID_PARAMETER for parameter in create_parameters)
+
+
+def test_review_package_shared_inputs_keep_exact_order_and_identity() -> None:
+    specs = {spec.key: spec for spec in MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS}
+    expected_orders = {
+        "app_modelo_review_package_build": (
+            "work_unit_id",
+            "modelo",
+            "year",
+            "period",
+            "registry_revision",
+            "bucket_id",
+            "select",
+            "output",
+            "revision",
+            "actor",
+            "refund_election",
+            "payment_election",
+            "prior_domiciliation_election",
+            "notes",
+        ),
+        "app_modelo_review_package_verify": ("package",),
+        "app_modelo_review_package_sign": ("package", "output", "bucket_id"),
+        "app_modelo_review_package_verify_signature": ("package", "signature", "public_key"),
+        "app_modelo_review_package_counter_sign": ("package", "signature", "output", "note", "bucket_id"),
+        "app_modelo_review_package_verify_receipt": (
+            "package",
+            "receipt_path",
+            "operator_public_key",
+            "counter_signer_public_key",
+        ),
+        "app_modelo_review_package_encrypt_for_recipient": (
+            "package",
+            "recipient_id",
+            "output",
+            "review_only",
+            "valid_for_days",
+            "bucket_id",
+        ),
+        "app_modelo_review_package_decrypt": ("envelope_path", "output", "bucket_id"),
+        "app_modelo_review_package_encrypt_feedback": (
+            "originator_id",
+            "work_unit_id",
+            "calculation_revision_id",
+            "submitted_by",
+            "output",
+            "note",
+            "receipt",
+            "bucket_id",
+        ),
+        "app_modelo_review_package_import_feedback": (
+            "envelope_path",
+            "package",
+            "operator_public_key_hex",
+            "counter_signer_public_key_hex",
+            "bucket_id",
+        ),
+    }
+    assert {
+        key: tuple(parameter.name for parameter in spec.parameters)
+        for key, spec in specs.items()
+    } == expected_orders
+
+    for key in (
+        "app_modelo_review_package_verify",
+        "app_modelo_review_package_sign",
+        "app_modelo_review_package_verify_signature",
+        "app_modelo_review_package_counter_sign",
+        "app_modelo_review_package_verify_receipt",
+        "app_modelo_review_package_encrypt_for_recipient",
+    ):
+        assert specs[key].parameters[0] is _REVIEW_PACKAGE_INPUT
+    for key in (
+        "app_modelo_review_package_verify_signature",
+        "app_modelo_review_package_counter_sign",
+    ):
+        assert specs[key].parameters[1] is _SIGNATURE_INPUT
+    for key in (
+        "app_modelo_review_package_sign",
+        "app_modelo_review_package_counter_sign",
+        "app_modelo_review_package_encrypt_for_recipient",
+        "app_modelo_review_package_decrypt",
+        "app_modelo_review_package_encrypt_feedback",
+        "app_modelo_review_package_import_feedback",
+    ):
+        assert specs[key].parameters[-1] is _REVIEW_PACKAGE_BUCKET_ID_OPTION
+
+    build = specs["app_modelo_review_package_build"]
+    assert build.parameters[5].name == "bucket_id"
+    assert build.parameters[5] is not _REVIEW_PACKAGE_BUCKET_ID_OPTION
+    imported = specs["app_modelo_review_package_import_feedback"]
+    assert imported.parameters[1].name == "package"
+    assert imported.parameters[1] is not _REVIEW_PACKAGE_INPUT
 
 
 def test_every_nonwork_target_is_public_resolvable_and_runtime_materializable() -> None:

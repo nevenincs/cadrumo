@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+from typing import Final
+
 from ._modelo_nonwork_command_spec_policies import (
     _MODEL_HANDOFF,
     _MODEL_READ,
@@ -22,6 +24,30 @@ from .command_spec import (
     SchemaState,
     TranslationKey,
     ValueContract,
+)
+
+M145_COMMUNICATION_RECORD_ID_PARAMETER: Final[ArgumentSpec] = ArgumentSpec(
+    name="communication_record_id",
+    value=ValueContract(DeferredTarget("builtins", "str")),
+    default=ParameterDefault.required(),
+    help_key=TranslationKey("cli.app.modelo.m145.communication_record_id_help"),
+)
+
+M145_ACTOR_PARAMETER: Final[OptionSpec] = OptionSpec(
+    name="actor",
+    declarations=("--by",),
+    value=ValueContract(DeferredTarget("builtins", "str")),
+    default=ParameterDefault.value(None),
+    help_key=TranslationKey("cli.app.modelo.m145.actor_help"),
+    multiple=False,
+    is_flag=False,
+    flag_value=None,
+    constraint=ParameterConstraint(),
+)
+
+M145_RECORD_ACTION_PARAMETERS: Final[tuple[ArgumentSpec | OptionSpec, ...]] = (
+    M145_COMMUNICATION_RECORD_ID_PARAMETER,
+    M145_ACTOR_PARAMETER,
 )
 
 MODELO_NONWORK_M145_COMMAND_SPECS: tuple[CommandSpec, ...] = (
@@ -80,17 +106,7 @@ MODELO_NONWORK_M145_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 flag_value=None,
                 constraint=ParameterConstraint(),
             ),
-            OptionSpec(
-                name="actor",
-                declarations=("--by",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.m145.actor_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
+            M145_ACTOR_PARAMETER,
         ),
         policy=_MODEL_WRITE,
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._modelo_m145_cli", "m145_create")),
@@ -108,14 +124,7 @@ MODELO_NONWORK_M145_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         help_key=TranslationKey("cli.app.modelo.m145.validate_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(
-            ArgumentSpec(
-                name="communication_record_id",
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.modelo.m145.communication_record_id_help"),
-            ),
-        ),
+        parameters=(M145_COMMUNICATION_RECORD_ID_PARAMETER,),
         policy=_MODEL_READ,
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._modelo_m145_cli", "m145_validate")),
         result_schema=ResultSchemaSpec(
@@ -132,25 +141,7 @@ MODELO_NONWORK_M145_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         help_key=TranslationKey("cli.app.modelo.m145.export_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(
-            ArgumentSpec(
-                name="communication_record_id",
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.modelo.m145.communication_record_id_help"),
-            ),
-            OptionSpec(
-                name="actor",
-                declarations=("--by",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.m145.actor_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
-        ),
+        parameters=M145_RECORD_ACTION_PARAMETERS,
         policy=_MODEL_HANDOFF,
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._modelo_m145_cli", "m145_export")),
         result_schema=ResultSchemaSpec(
@@ -167,25 +158,7 @@ MODELO_NONWORK_M145_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         help_key=TranslationKey("cli.app.modelo.m145.mark_delivered_to_payer_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(
-            ArgumentSpec(
-                name="communication_record_id",
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.modelo.m145.communication_record_id_help"),
-            ),
-            OptionSpec(
-                name="actor",
-                declarations=("--by",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.m145.actor_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
-        ),
+        parameters=M145_RECORD_ACTION_PARAMETERS,
         policy=_MODEL_WRITE,
         handler=LazyBinding.available(
             DeferredTarget("cadrumo.entrypoints.cli._modelo_m145_cli", "m145_mark_delivered_to_payer")
@@ -204,25 +177,7 @@ MODELO_NONWORK_M145_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         help_key=TranslationKey("cli.app.modelo.m145.mark_locally_completed_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(
-            ArgumentSpec(
-                name="communication_record_id",
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.modelo.m145.communication_record_id_help"),
-            ),
-            OptionSpec(
-                name="actor",
-                declarations=("--by",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.m145.actor_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
-        ),
+        parameters=M145_RECORD_ACTION_PARAMETERS,
         policy=_MODEL_WRITE,
         handler=LazyBinding.available(
             DeferredTarget("cadrumo.entrypoints.cli._modelo_m145_cli", "m145_mark_locally_completed")
