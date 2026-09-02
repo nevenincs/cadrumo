@@ -5,16 +5,11 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:815049cb457c752290e243ddddd20a44631a66482bdafffffcbf08ed6f5fa3b0'
+body_hash: 'sha256:ac757a0f9762d3e1e886677072e840a2c870a2b00ab6e1136bb889efed0a290d'
 step_id: 'S19'
 related:
   - "[[2026-09-02-python-runtime-compatibility-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Extend distribution evidence with runtime stability and installation outcomes
 
@@ -24,19 +19,5 @@ related:
 
 ## Changes
 
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
+- `M` `dev/packaging/evidence.py`
+- `verify:` `uv run --no-sync ruff check dev/packaging/evidence.py; uv run --no-sync python -m py_compile dev/packaging/evidence.py; uv run --no-sync pytest -q dev/packaging/tests/test_evidence.py -k 'command_transcript or checkpoint' -o addopts=''` -> `pass`
