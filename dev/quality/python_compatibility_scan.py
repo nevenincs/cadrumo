@@ -28,7 +28,6 @@ import argparse
 import ast
 import json
 import os
-import sys
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -37,14 +36,15 @@ from typing import Final, override
 from .._paths import REPO_ROOT, UTF_8
 
 __all__ = [
-    "CompatibilityFinding",
-    "CompatibilityKind",
-    "CompatibilityRule",
     "DEFAULT_SOURCE_ROOTS",
     "DEPRECATED_API_RULES",
     "REMOVED_MODULE_RULES",
-    "scan_python_compatibility",
+    "CompatibilityFinding",
+    "CompatibilityKind",
+    "CompatibilityRule",
+    "scan",
     "scan_paths_for_python_compatibility",
+    "scan_python_compatibility",
     "source_paths",
 ]
 
@@ -415,7 +415,11 @@ class _CompatibilityAnalyzer(ast.NodeVisitor):
         rule = _rule_for_name(name)
         if rule is None:
             return
-        self.findings.append(_finding(self.path, node, rule, api=name))
+        # Report the catalogue's canonical key, not each spelling reached
+        # through an alias or a submodule prefix.  This keeps one import such
+        # as ``from distutils import util`` from becoming two findings for the
+        # same removed module and gives downstream reports a stable API key.
+        self.findings.append(_finding(self.path, node, rule, api=rule.qualified_name))
 
     def _resolved(self, node: ast.AST) -> str | None:
         """Resolve a local name/attribute through the imports seen in the module."""
@@ -484,10 +488,7 @@ class _CompatibilityAnalyzer(ast.NodeVisitor):
 
 def _deduplicate(findings: list[CompatibilityFinding]) -> tuple[CompatibilityFinding, ...]:
     """Keep one stable row for a source location/API/category combination."""
-    unique = {
-        (item.path.resolve(), item.lineno, item.kind, item.api): item
-        for item in findings
-    }
+    unique = {(item.path.resolve(), item.lineno, item.kind, item.api): item for item in findings}
     return tuple(
         sorted(
             unique.values(),
@@ -553,6 +554,11 @@ def scan_paths_for_python_compatibility(paths: tuple[Path, ...]) -> tuple[Compat
     return _deduplicate(findings)
 
 
+def scan(paths: tuple[Path, ...] | None = None) -> tuple[CompatibilityFinding, ...]:
+    """Return the compatibility census for explicit paths or the live roots."""
+    return scan_paths_for_python_compatibility(source_paths() if paths is None else paths)
+
+
 def _display(path: Path) -> str:
     """Render a repo-relative path where possible."""
     try:
@@ -580,8 +586,10 @@ def main(argv: list[str] | None = None) -> int:
     findings = scan_paths_for_python_compatibility(paths)
 
     for item in findings:
-        print(f"python_compatibility path={_display(item.path)} line={item.lineno} "
-              f"kind={item.kind.value} api={item.api} first_affected={item.first_affected}")
+        print(
+            f"python_compatibility path={_display(item.path)} line={item.lineno} "
+            f"kind={item.kind.value} api={item.api} first_affected={item.first_affected}"
+        )
         if item.reason:
             print(f"  {item.reason}")
 
