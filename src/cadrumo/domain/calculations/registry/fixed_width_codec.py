@@ -5,11 +5,17 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import ROUND_DOWN, ROUND_HALF_UP, Decimal
 from enum import StrEnum
-from typing import Annotated, Literal, Protocol
+from typing import TYPE_CHECKING, Annotated, Protocol
 
 from pydantic import BeforeValidator
 
 from ....core.casilla_id import CasillaId
+
+if TYPE_CHECKING:
+    # Imported for typing only: schema_exports imports this module at runtime,
+    # so a runtime import here would close the cycle.
+    from .schema_exports import ExportLineEnding
+
 from ....core.decimal.fixed_width import coerce_fixed_width_decimal
 from ....core.errors.hierarchy import CadrumoError
 from ....core.money.rounding import round_to_cents
@@ -130,7 +136,7 @@ class _ExportRecord(Protocol):
     def encoding(self) -> str: ...
 
     @property
-    def line_ending(self) -> Literal["crlf", "lf", "none"]: ...
+    def line_ending(self) -> ExportLineEnding: ...
 
     @property
     def fields(self) -> tuple[_ExportField, ...]: ...

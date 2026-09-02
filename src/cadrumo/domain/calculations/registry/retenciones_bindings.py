@@ -17,10 +17,9 @@ canonical binding values for this source family.
 
 from __future__ import annotations
 
-from enum import StrEnum
-
 from decimal import Decimal
-from typing import Annotated, Literal, Protocol
+from enum import StrEnum
+from typing import Annotated, Protocol
 
 from pydantic import BaseModel, BeforeValidator
 
@@ -31,7 +30,7 @@ from .binding_selector_utils import selector_against_model
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .ids import BindingId
 from .schema import DataBindingDefinition, ModeloRevision
-from .schema_base import coerce_enum_tuple, coerce_enum_member
+from .schema_base import coerce_enum_member, coerce_enum_tuple
 
 
 class RetencionesAggregationFact(StrEnum):

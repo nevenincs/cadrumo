@@ -27,9 +27,10 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import Literal
+from enum import StrEnum
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, BeforeValidator, Field, field_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.country_code import CountryCodeAlpha2
@@ -46,6 +47,7 @@ from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .schema import DataBindingDefinition, ModeloRevision
+from .schema_base import coerce_enum_member
 
 __all__ = [
     "DonativoDonorObservation",
@@ -88,13 +90,20 @@ def _validate_donativo_row_field(
 # ---------------------------------------------------------------------------
 
 
-_DonativoRowField = Literal[
-    "donor_tax_id",
-    "donor_legal_name",
-    "amount_donated",
-    "deduction_percentage",
-    "is_recurrent",
+class DonativoRowField(StrEnum):
+    """A field of one donativo detail row."""
+
+    DONOR_TAX_ID = "donor_tax_id"
+    DONOR_LEGAL_NAME = "donor_legal_name"
+    AMOUNT_DONATED = "amount_donated"
+    DEDUCTION_PERCENTAGE = "deduction_percentage"
+    IS_RECURRENT = "is_recurrent"
+
+
+_DonativoRowField = Annotated[
+    DonativoRowField, BeforeValidator(coerce_enum_member(DonativoRowField))
 ]
+"""Registry token hydrated into a DonativoRowField member."""
 
 
 class DonativoDonorObservation(BaseModel):
