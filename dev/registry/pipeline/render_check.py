@@ -110,12 +110,12 @@ class RenderComparison:
     def provenance_only(self) -> bool:
         """Whether the tree differs solely in its generation manifest.
 
-        A tree in this state ships the right bytes with an attestation that no
-        longer proves them, and republishing it is safe. A tree with any record
-        difference is NOT in this state and republishing it would ship whatever
-        the current inputs now produce, which may be worse than what is there.
+        True only when the manifest is the single differing file. A tree whose
+        records differ in spelling alone is also safe to republish, but it is
+        not in this state and saying so would misreport which file moved; ask
+        ``semantically_reproduced`` for that question.
         """
-        return bool(self.differing) and not self.record_differing and not (self.only_committed or self.only_rendered)
+        return tuple(self.differing) == (_PROVENANCE_MANIFEST,) and not (self.only_committed or self.only_rendered)
 
     @property
     def semantically_reproduced(self) -> bool:
@@ -126,6 +126,24 @@ class RenderComparison:
         still refusing a changed value.
         """
         return not (self.record_differing or self.only_committed or self.only_rendered)
+
+    @property
+    def disposition_class(self) -> str | None:
+        """Which explained state this tree is in, or ``None`` when it needs no row.
+
+        Three outcomes, and the third is why this exists. A record that means
+        something its inputs no longer produce is ``record_drift`` and is unsafe
+        to republish. A stale attestation over correct records is
+        ``provenance_only`` and is safe. A tree differing only in how the
+        serializer spells a value is in neither state: nothing about it is
+        unexplained, and demanding a written disposition for it would bury the
+        rows that describe a real condition.
+        """
+        if self.record_differing or self.only_committed or self.only_rendered:
+            return "record_drift"
+        if _PROVENANCE_MANIFEST in self.differing:
+            return "provenance_only"
+        return None
 
     @property
     def reproduced(self) -> bool:
@@ -298,8 +316,10 @@ def main(argv: list[str] | None = None) -> int:
         f"layout={comparison.layout_id} compared={comparison.files_compared} "
         f"reproduced={comparison.reproduced} "
         f"record_drift={len(comparison.record_differing)} "
+        f"serialization_only={len(comparison.serialization_only)} "
+        f"semantically_reproduced={comparison.semantically_reproduced} "
         f"provenance_only={comparison.provenance_only} "
-        f"note='record_drift means the shipped bytes no longer follow from the inputs'\n"
+        f"note='record_drift means a record now MEANS what its inputs do not produce'\n"
     )
     return 1 if args.check and not comparison.reproduced else 0
 
