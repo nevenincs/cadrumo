@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-python-runtime-compatibility-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:26d29576832ffd0a0333ab3c5743888f4ac1c3fa07d77656d1a740227ccb7fc3'
+body_hash: 'sha256:abb4ef9617ef7c965254729b46a30e0b1f1186373dfce84d909972d2796032c7'
 ---
 
 <!-- RETIRED: S33, S35, S37, S39, S41, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 -->
@@ -29,7 +29,7 @@ This plan executes `2026-09-02-python-runtime-compatibility-adr` using the groun
 Make metadata, inventory, and release-cohort boundaries authoritative.
 
 - [x] `P01.S01` - Change the root package floor to >=3.13 and preserve py313 static-analysis targets; `pyproject.toml`.
-- [ ] `P01.S02` - Regenerate lock metadata without dependency upgrades; `uv.lock`.
+- [x] `P01.S02` - Regenerate lock metadata without dependency upgrades; `uv.lock`.
 - [ ] `P01.S03` - Add explicit stable and prerelease runtime records and classifier eligibility; `dev/ci/python-runtime-matrix.json`.
 - [ ] `P01.S04` - Parse and validate the runtime inventory and emit GitHub matrix JSON; `dev/ci/python_runtime_matrix.py`.
 - [ ] `P01.S05` - Add detector-teeth tests for runtime inventory gaps duplicates and invalid states; `dev/ci/tests/test_python_runtime_matrix.py`.
