@@ -59,6 +59,8 @@ def _repo_root(start: Path) -> Path:
 
 def _receipt(path: Path) -> ObjectNameRehearsalReceipt:
     try:
+        if is_link_like(path) or not path.is_file():
+            raise ObjectNameDeclusteringCliError(f"receipt must be a regular file: {path}")
         payload = path.read_bytes()
         decoded = cast("object", json.loads(payload))
         if not isinstance(decoded, dict):
@@ -69,7 +71,15 @@ def _receipt(path: Path) -> ObjectNameRehearsalReceipt:
         receipt = TypeAdapter(ObjectNameRehearsalReceipt).validate_json(payload, strict=True)
         _validate_receipt_integrity(receipt)
         return receipt
-    except (OSError, UnicodeError, json.JSONDecodeError, ValidationError, KeyError, TypeError) as exc:
+    except (
+        OSError,
+        UnicodeError,
+        json.JSONDecodeError,
+        ValidationError,
+        KeyError,
+        TypeError,
+        ObjectNameReplayError,
+    ) as exc:
         raise ObjectNameDeclusteringCliError(f"receipt file is invalid: {path}") from exc
 
 
@@ -91,9 +101,7 @@ def _context(root: Path, manifest_path: Path):
     manifest = load_validated_object_name_manifest(manifest_path, inventory=inventory, repo_root=root)
     graph_manifest = cast("RenameManifestLike", manifest)
     edges = collect_import_edges(operation_locators(graph_manifest), repo_root=root)
-    components = build_manifest_components(
-        graph_manifest, inventory=cast("InventoryLike", inventory), hard_edges=edges
-    )
+    components = build_manifest_components(graph_manifest, inventory=cast("InventoryLike", inventory), hard_edges=edges)
     if len(components) != 1:
         raise ObjectNameDeclusteringCliError(
             f"manifest must select exactly one complete component; found {len(components)}"

@@ -204,6 +204,19 @@ def test_receipt_loader_refuses_failed_or_retagged_evidence(tmp_path: Path) -> N
         cli._receipt(path)
 
 
+def test_receipt_loader_refuses_linked_file(tmp_path: Path) -> None:
+    target = tmp_path / "target.json"
+    target.write_text("{}", encoding="utf-8")
+    link = tmp_path / "receipt.json"
+    try:
+        link.symlink_to(target)
+    except OSError as exc:
+        pytest.skip(f"file links unavailable: {exc}")
+
+    with pytest.raises(cli.ObjectNameDeclusteringCliError, match="regular file"):
+        cli._receipt(link)
+
+
 @pytest.mark.parametrize("supplied", [Path("../manifest.toml"), Path(".git/manifest.toml")])
 def test_manifest_path_refuses_lexical_escape_and_metadata(tmp_path: Path, supplied: Path) -> None:
     root = _repository(tmp_path)
@@ -267,6 +280,23 @@ def test_plan_uses_real_manifest_context_without_writing_live_tree(
     assert cli.main(["plan", "--json"]) == 0
     assert json.loads(capsys.readouterr().out)["mode"] == "plan"
     assert _live_bytes(root) == before
+
+
+def test_plan_refuses_malformed_manifest_without_rehearsal_or_replay(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = _repository(tmp_path)
+    manifest = root / "dev/quality/object_name_rename_manifest.toml"
+    manifest.parent.mkdir(parents=True)
+    manifest.write_text("not valid toml = [", encoding="utf-8")
+    monkeypatch.chdir(root)
+    monkeypatch.setattr(cli, "rehearse_object_name_component", lambda *_args, **_kwargs: pytest.fail("rehearsed"))
+    monkeypatch.setattr(cli, "replay_object_name_component", lambda *_args, **_kwargs: pytest.fail("replayed"))
+
+    assert cli.main(["plan", "--json"]) == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "object-name declustering refused" in captured.err
 
 
 def test_mode_dispatches_only_to_its_owned_operation(
