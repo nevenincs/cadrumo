@@ -27,10 +27,9 @@ from ...application.overview.calendar_models import (
     OverviewCalendarRange,
 )
 from ...application.overview.evidence import (
-    OverviewAeatEvidenceSources,
-    OverviewEvidenceReadOutcome,
-    OverviewLocalEvidenceSources,
-    provide_calendar_evidence,
+    CalendarEvidenceReadOutcome,
+    CalendarEvidenceSources,
+    build_calendar_evidence_projection,
 )
 from ...application.overview.home import HomeAvailability, HomeZoneState
 from ...core.hashing import sha256_hex
@@ -314,14 +313,14 @@ def local_calendar_filing_evidence(
             message_key="cli.overview.calendar_local_filing_evidence_unavailable",
         )
     available = HomeZoneState(availability=HomeAvailability.AVAILABLE)
-    projection = provide_calendar_evidence(
-        local=OverviewEvidenceReadOutcome(
+    projection = build_calendar_evidence_projection(
+        local=CalendarEvidenceReadOutcome(
             state=available,
-            value=OverviewLocalEvidenceSources(filing_records=filing_records),
+            value=CalendarEvidenceSources(filing_records=filing_records),
         ),
-        aeat=OverviewEvidenceReadOutcome(
+        aeat=CalendarEvidenceReadOutcome(
             state=available,
-            value=OverviewAeatEvidenceSources(
+            value=CalendarEvidenceSources(
                 observed_events=events,
                 filed_declaration_observations=tuple(filed_declaration_observations),
                 verified_filed_declaration_artefact_refs=tuple(verified_filed_artefact_csvs),

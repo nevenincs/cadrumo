@@ -11,10 +11,9 @@ import pytest
 from ....core.period import Period
 from ..calendar_models import OverviewAeatSubmissionState, OverviewCalendarEvent, OverviewCalendarEventType
 from ..evidence import (
-    OverviewAeatEvidenceSources,
-    OverviewEvidenceReadOutcome,
-    OverviewLocalEvidenceSources,
-    provide_calendar_evidence,
+    CalendarEvidenceReadOutcome,
+    CalendarEvidenceSources,
+    build_calendar_evidence_projection,
 )
 from ..home import HomeAvailability, HomeZoneState
 from .calendar_test_support import modelo_record
@@ -42,11 +41,11 @@ def _local(
     *,
     records: tuple = (),
     observed_at: datetime | None = None,
-) -> OverviewEvidenceReadOutcome[OverviewLocalEvidenceSources]:
-    return OverviewEvidenceReadOutcome(
+) -> CalendarEvidenceReadOutcome:
+    return CalendarEvidenceReadOutcome(
         state=_state(availability, observed_at=observed_at),
         value=(
-            OverviewLocalEvidenceSources(filing_records=records)
+            CalendarEvidenceSources(filing_records=records)
             if availability in {HomeAvailability.AVAILABLE, HomeAvailability.STALE}
             else None
         ),
@@ -58,11 +57,11 @@ def _aeat(
     *,
     events: tuple[OverviewCalendarEvent, ...] = (),
     observed_at: datetime | None = None,
-) -> OverviewEvidenceReadOutcome[OverviewAeatEvidenceSources]:
-    return OverviewEvidenceReadOutcome(
+) -> CalendarEvidenceReadOutcome:
+    return CalendarEvidenceReadOutcome(
         state=_state(availability, observed_at=observed_at),
         value=(
-            OverviewAeatEvidenceSources(observed_events=events)
+            CalendarEvidenceSources(observed_events=events)
             if availability in {HomeAvailability.AVAILABLE, HomeAvailability.STALE}
             else None
         ),
@@ -93,22 +92,22 @@ def _observed_event(*, modelo: str = "303", period: Period = _PERIOD) -> Overvie
         (_state(HomeAvailability.AVAILABLE), None, "requires its loaded source bundle"),
         (
             _state(HomeAvailability.LOCKED),
-            OverviewLocalEvidenceSources(),
+            CalendarEvidenceSources(),
             "cannot carry source values",
         ),
     ],
 )
 def test_read_outcome_refuses_state_value_mismatches(
     state: HomeZoneState,
-    value: OverviewLocalEvidenceSources | None,
+    value: CalendarEvidenceSources | None,
     message: str,
 ) -> None:
     with pytest.raises(ValueError, match=message):
-        OverviewEvidenceReadOutcome(state=state, value=value)
+        CalendarEvidenceReadOutcome(state=state, value=value)
 
 
 def test_stale_local_values_and_their_source_timestamp_are_preserved() -> None:
-    projection = provide_calendar_evidence(
+    projection = build_calendar_evidence_projection(
         local=_local(HomeAvailability.STALE, records=(modelo_record(),), observed_at=_OBSERVED_AT),
         aeat=_aeat(HomeAvailability.NEVER_CAPTURED),
     )
@@ -124,7 +123,7 @@ def test_stale_local_values_and_their_source_timestamp_are_preserved() -> None:
 
 
 def test_never_captured_evidence_remains_unknown_instead_of_becoming_available_empty() -> None:
-    projection = provide_calendar_evidence(
+    projection = build_calendar_evidence_projection(
         local=_local(HomeAvailability.LOCKED),
         aeat=_aeat(HomeAvailability.NEVER_CAPTURED),
     )
@@ -142,12 +141,12 @@ def test_natural_address_join_is_deterministic_and_preserves_both_axes() -> None
     )
     events = (_observed_event(modelo="303", period=period_2t), _observed_event(modelo="130"))
 
-    forward = provide_calendar_evidence(
+    forward = build_calendar_evidence_projection(
         local=_local(records=records),
         aeat=_aeat(events=events),
         expected_tax_id="X1234567L",
     )
-    reversed_sources = provide_calendar_evidence(
+    reversed_sources = build_calendar_evidence_projection(
         local=_local(records=tuple(reversed(records))),
         aeat=_aeat(events=tuple(reversed(events))),
         expected_tax_id="X1234567L",
@@ -169,6 +168,6 @@ def test_provider_performs_no_implicit_file_or_network_io(monkeypatch: pytest.Mo
     monkeypatch.setattr(builtins, "open", _forbidden)
     monkeypatch.setattr(socket, "create_connection", _forbidden)
 
-    projection = provide_calendar_evidence(local=_local(), aeat=_aeat())
+    projection = build_calendar_evidence_projection(local=_local(), aeat=_aeat())
 
     assert projection.evidence == ()

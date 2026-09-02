@@ -25,20 +25,14 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True, slots=True)
-class OverviewLocalEvidenceSources:
-    """Already-loaded sources capable of establishing the local filing axis."""
-
-    filing_records: tuple[ModeloRecord, ...] = ()
-
-
-@dataclass(frozen=True, slots=True)
-class OverviewAeatEvidenceSources:
-    """Already-loaded sources capable of establishing the observed-AEAT axis.
+class CalendarEvidenceSources:
+    """Already-loaded sources consumed by the calendar evidence reconciler.
 
     Verified artefact CSVs use a sorted tuple rather than a mutable mapping so
     the source bundle stays immutable and has a deterministic representation.
     """
 
+    filing_records: tuple[ModeloRecord, ...] = ()
     observed_events: tuple[OverviewCalendarEvent, ...] = ()
     filed_declaration_observations: tuple[FiledDeclaracionObservation, ...] = ()
     verified_filed_declaration_artefact_refs: tuple[str, ...] = ()
@@ -48,6 +42,7 @@ class OverviewAeatEvidenceSources:
     justificantes: tuple[Justificante, ...] = ()
 
     def __post_init__(self) -> None:
+        """Reject order-dependent or ambiguous verified-artefact metadata."""
         refs = tuple(ref for ref, _csv in self.verified_filed_declaration_artefact_csvs)
         if refs != tuple(sorted(refs)):
             raise ValueError("verified filed-declaration artefact CSVs must be sorted by reference")
@@ -56,13 +51,14 @@ class OverviewAeatEvidenceSources:
 
 
 @dataclass(frozen=True, slots=True)
-class OverviewEvidenceReadOutcome[SourcesT]:
+class CalendarEvidenceReadOutcome:
     """One already-completed source read with explicit authority and freshness."""
 
     state: HomeZoneState
-    value: SourcesT | None = None
+    value: CalendarEvidenceSources | None = None
 
     def __post_init__(self) -> None:
+        """Keep source values consistent with their declared availability."""
         observable = self.state.availability in {
             HomeAvailability.AVAILABLE,
             HomeAvailability.STALE,
@@ -74,7 +70,7 @@ class OverviewEvidenceReadOutcome[SourcesT]:
 
 
 @dataclass(frozen=True, slots=True)
-class OverviewEvidenceProjection:
+class CalendarEvidenceProjection:
     """Reconciled evidence plus independent local and AEAT source truth."""
 
     local_state: HomeZoneState
@@ -82,12 +78,12 @@ class OverviewEvidenceProjection:
     evidence: tuple[OverviewCalendarFilingEvidence, ...] = field(default_factory=tuple)
 
 
-def provide_calendar_evidence(
+def build_calendar_evidence_projection(
     *,
-    local: OverviewEvidenceReadOutcome[OverviewLocalEvidenceSources],
-    aeat: OverviewEvidenceReadOutcome[OverviewAeatEvidenceSources],
+    local: CalendarEvidenceReadOutcome,
+    aeat: CalendarEvidenceReadOutcome,
     expected_tax_id: str | None = None,
-) -> OverviewEvidenceProjection:
+) -> CalendarEvidenceProjection:
     """Reconcile already-loaded sources without performing implicit I/O.
 
     ``STALE`` is observable: its last known values and ``observed_at`` survive
@@ -95,8 +91,8 @@ def provide_calendar_evidence(
     false submission claim.  The underlying reconciler owns all strength,
     identity, and natural ``(modelo, filing year, period)`` joins.
     """
-    local_sources = local.value or OverviewLocalEvidenceSources()
-    aeat_sources = aeat.value or OverviewAeatEvidenceSources()
+    local_sources = local.value or CalendarEvidenceSources()
+    aeat_sources = aeat.value or CalendarEvidenceSources()
     evidence = calendar_filing_evidence_from_sources(
         filing_records=local_sources.filing_records,
         observed_events=aeat_sources.observed_events,
@@ -108,7 +104,7 @@ def provide_calendar_evidence(
         justificantes=aeat_sources.justificantes,
         expected_tax_id=expected_tax_id,
     )
-    return OverviewEvidenceProjection(
+    return CalendarEvidenceProjection(
         local_state=local.state,
         aeat_state=aeat.state,
         evidence=tuple(
@@ -147,9 +143,8 @@ def _mask_unobservable_axes(
 
 
 __all__ = [
-    "OverviewAeatEvidenceSources",
-    "OverviewEvidenceProjection",
-    "OverviewEvidenceReadOutcome",
-    "OverviewLocalEvidenceSources",
-    "provide_calendar_evidence",
+    "CalendarEvidenceProjection",
+    "CalendarEvidenceReadOutcome",
+    "CalendarEvidenceSources",
+    "build_calendar_evidence_projection",
 ]
