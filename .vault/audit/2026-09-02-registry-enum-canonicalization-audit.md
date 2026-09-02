@@ -864,3 +864,28 @@ adapter already imported from, so the edge is one that existed rather than a new
 48 owning tests pass.
 
 Package-wide after three targets: 24 duplicated, 0 crossing the registry boundary.
+
+## Finding 41 — publication_kind: ten annotations across seven modules and two layers
+
+The scan named three fields. The tokens named ten annotation sites in seven modules --
+the capsule records and their two writers, the profile aggregate and summary views, the
+custody service, and a Protocol property on the custody port -- plus four value
+literals. The Protocol property return type is a shape none of the earlier counting
+methods could have reached.
+
+Promoted to `ProfilePublicationKind` in `core/profile_publication.py`, chosen because the
+custody adapters and the profile application code both already import from `core` and
+neither may import the other.
+
+Left deliberately apart: `ProfileRestoreAuthority` (`password`, `recovery_artifact`) sits
+directly beside `publication_kind` in the same module and answers the adjacent question
+of what authorised a restore. Same class of axis, different vocabulary, not merged.
+
+446 user_profile tests pass. Four failures and five errors in that package are unrelated
+and pre-existing: a bounded-regular-file guard in `custody/filesystem.py`, two undeclared
+retryable error codes, a lock-ordering timeout, and a cross-process roundtrip test whose
+subprocess imports `build_profile_custody_port` from the package `__init__`, which
+declares `__all__ = ()` and exports nothing by design. That last one is a test written
+against a facade the architecture rule removed; it cannot have passed recently.
+
+Package-wide after four targets: 23 duplicated, 0 crossing the registry boundary.
