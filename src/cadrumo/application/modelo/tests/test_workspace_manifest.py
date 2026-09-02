@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from functools import cache
-from typing import Literal
+from typing import Annotated, Literal, get_args
 
 import pytest
 from pydantic import BaseModel, ValidationError
@@ -19,6 +19,7 @@ from ..workspace_manifest import (
     ModeloWorkspaceManifestCaptureError,
     ModeloWorkspaceManifestCurrentCoordinate,
     _manifest_digest,
+    _model_annotations,
     _Node,
     _walk_annotation,
     capture_modelo_workspace_manifest,
@@ -44,6 +45,22 @@ type _NestedTraversalAlias = Mapping[str, tuple[int, ...]]
 
 class _NestedTraversalModel(BaseModel):
     value: str
+
+
+class _ForwardReferenceLeaf(BaseModel):
+    value: Literal["forward"]
+
+
+class _ForwardReferenceRoot(BaseModel):
+    child: _ForwardReferenceLeaf
+
+
+class _AnnotatedForwardReferenceRoot(BaseModel):
+    child: Annotated[_ForwardReferenceLeaf, "workspace-contract"]
+
+
+class _UnresolvedForwardReference(BaseModel):
+    missing: MissingWorkspaceType  # noqa: F821 - intentional unresolved-reference fixture
 
 
 @cache
@@ -191,6 +208,47 @@ def test_workspace_manifest_walks_nested_union_containers_and_aliases() -> None:
     assert any(path.endswith("variant=union=Literal") for path in nodes)
     assert any(path.endswith("variant=union=int") for path in nodes)
     assert any(path.endswith("variant=union=NoneType") for path in nodes)
+
+
+def test_workspace_manifest_resolves_future_forward_references_with_public_typing_apis() -> None:
+    """The walker receives real types while retaining ``Annotated`` metadata."""
+    resolved = _model_annotations(_ForwardReferenceRoot)
+    assert resolved["child"] is _ForwardReferenceLeaf
+
+    annotated = _model_annotations(_AnnotatedForwardReferenceRoot)["child"]
+    assert get_args(annotated)[0] is _ForwardReferenceLeaf
+    assert get_args(annotated)[1:] == ("workspace-contract",)
+
+    nodes: dict[str, _Node] = {}
+    _walk_annotation(
+        annotation=_ForwardReferenceRoot,
+        path="forward",
+        nodes=nodes,
+        visited=set(),
+        active=(),
+        discriminator=None,
+    )
+    assert "forward.child.value" in nodes
+
+
+def test_workspace_manifest_uses_pydantic_field_annotations_for_local_models() -> None:
+    """A model assembled in a local scope still resolves after public rebuild."""
+
+    class LocalLeaf(BaseModel):
+        value: Literal["local"]
+
+    class LocalRoot(BaseModel):
+        child: LocalLeaf
+
+    LocalRoot.model_rebuild(_types_namespace={"LocalLeaf": LocalLeaf})
+
+    assert _model_annotations(LocalRoot)["child"] is LocalLeaf
+
+
+def test_workspace_manifest_refuses_unresolved_forward_references() -> None:
+    """An unresolved string cannot silently become a schema-type label."""
+    with pytest.raises(ValueError, match=r"_UnresolvedForwardReference\.missing"):
+        _model_annotations(_UnresolvedForwardReference)
 
 
 def test_workspace_manifest_walks_live_dispatch_parameter_identity() -> None:
