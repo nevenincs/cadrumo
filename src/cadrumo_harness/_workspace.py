@@ -523,9 +523,7 @@ def _extract_runtime_wheelhouse(
         if names.count(_RUNTIME_WHEELHOUSE_MANIFEST) != 1 or len(names) != len(set(names)):
             raise ValueError("runtime wheelhouse has a missing or duplicate member")
         document = json.loads(archive.read(_RUNTIME_WHEELHOUSE_MANIFEST))
-        if not isinstance(document, dict) or set(document) != {
-            "lock_sha256", "platform_floors", "runtimes", "schema"
-        }:
+        if not isinstance(document, dict) or set(document) != {"lock_sha256", "platform_floors", "runtimes", "schema"}:
             raise ValueError("runtime wheelhouse manifest schema drifted")
         if document != dict(cohort.runtime_wheelhouse_manifest):
             raise ValueError("runtime wheelhouse manifest drifted from the validated cohort")

@@ -384,9 +384,7 @@ def _plan_runtime_wheelhouse(repo_root: Path, python_version: str) -> RuntimeWhe
 
 
 def _missing_wheel_message(plan: RuntimeWheelhousePlan) -> str:
-    missing = "; ".join(
-        f"{item['distribution']} ({item['platform']}, {item['requirement']})" for item in plan.missing
-    )
+    missing = "; ".join(f"{item['distribution']} ({item['platform']}, {item['requirement']})" for item in plan.missing)
     return f"runtime lock has no complete {plan.python_version} wheelhouse: {missing}"
 
 
@@ -572,15 +570,18 @@ def load_runtime_wheelhouse(
                 if not isinstance(missing, list) or not missing:
                     raise SystemExit(f"runtime wheelhouse missing-wheel record is empty: {python_version!r}")
                 for item in missing:
-                    if not isinstance(item, dict) or set(item) != {
-                        "distribution",
-                        "platform",
-                        "reason",
-                        "requirement",
-                    } or any(not isinstance(item[key], str) or not item[key] for key in item):
-                        raise SystemExit(
-                            f"runtime wheelhouse missing-wheel attribution is invalid: {python_version!r}"
-                        )
+                    if (
+                        not isinstance(item, dict)
+                        or set(item)
+                        != {
+                            "distribution",
+                            "platform",
+                            "reason",
+                            "requirement",
+                        }
+                        or any(not isinstance(item[key], str) or not item[key] for key in item)
+                    ):
+                        raise SystemExit(f"runtime wheelhouse missing-wheel attribution is invalid: {python_version!r}")
                 continue
             if status != "ready" or set(runtime) != {"platforms", "python", "status", "wheels"}:
                 raise SystemExit(f"runtime wheelhouse runtime status is invalid: {python_version!r}")

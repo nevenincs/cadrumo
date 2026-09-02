@@ -146,3 +146,37 @@ def test_an_explicit_closing_date_is_never_reported_as_unselectable(
     assert selector.year_from is None and selector.year_to is None
     kinds = {finding.kind for finding in name_window_findings(revision, modelo_id="100")}
     assert "open_ended_window_not_selectable" not in kinds
+
+
+def test_an_unselectable_open_end_is_not_also_called_a_name_understating_its_reach(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """The two conditions overlap on the same field and must not both fire.
+
+    A revision whose open-ended ``valid_to`` selection does not honour serves
+    only its named year, so its single-year name is accurate. Reporting it as a
+    name that omits years it serves would be the screen contradicting itself:
+    one row saying the window does not extend, another saying the name fails to
+    admit that it does.
+    """
+    revision = authority.modelo("131").revisions["2026"]
+    kinds = {finding.kind for finding in name_window_findings(revision, modelo_id="131")}
+
+    assert "open_ended_window_not_selectable" in kinds
+    assert "name_claims_single_year" not in kinds
+
+
+def test_a_selectable_open_end_still_reports_the_name_understating_its_reach(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """The exclusion is keyed on selectability, not on the name being one year.
+
+    Modelo 721's 2024 is named for one year, runs open-ended, and admits filing
+    year 2026. It must keep its finding, or the exclusion above would have
+    silenced the condition rather than narrowed it.
+    """
+    revision = authority.modelo("721").revisions["2024"]
+    kinds = {finding.kind for finding in name_window_findings(revision, modelo_id="721")}
+
+    assert "name_claims_single_year" in kinds
+    assert "open_ended_window_not_selectable" not in kinds

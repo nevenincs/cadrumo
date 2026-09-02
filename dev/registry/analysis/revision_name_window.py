@@ -32,7 +32,10 @@ Six conditions are reported, and every row names one of them:
   year the window opens, so the name claims years the revision does not serve.
 - ``name_misstates_closing`` - the name closes at a year the window does not.
 - ``name_claims_single_year`` - the name gives one year while the window runs
-  open-ended. This understates reach rather than overstating it, which is why
+  open-ended AND selection honours that, so the revision really does serve years
+  its name omits. A revision whose open-endedness is not selectable is excluded:
+  its single-year name describes what it does, and reporting it here would call
+  an accurate name misleading. This understates reach rather than overstating it, which is why
   it attracts no attention and is the most common of these.
 - ``name_claims_open_ended`` - the name carries the open-ended suffix while the
   window closes.
@@ -109,7 +112,11 @@ def name_window_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[R
         )
 
     selector = revision.period_selector
-    if revision.valid_to is None and selector.year_from is None and selector.year_to is None:
+    # An open-ended `valid_to` beside a selector carrying neither bound does not
+    # select beyond the named year, so such a revision's single-year name is
+    # ACCURATE and must not also be reported as understating its reach.
+    window_unselectable = revision.valid_to is None and selector.year_from is None and selector.year_to is None
+    if window_unselectable:
         findings.append(
             RevisionNameFinding(
                 modelo=modelo_id,
@@ -156,7 +163,7 @@ def name_window_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[R
                 detail=f"name claims open-ended; declared window closes {closing}",
             )
         )
-    elif not open_ended and claimed_close is None and closing is None and len(years) == 1:
+    elif not open_ended and claimed_close is None and closing is None and len(years) == 1 and not window_unselectable:
         findings.append(
             RevisionNameFinding(
                 modelo=modelo_id,

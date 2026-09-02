@@ -41,10 +41,7 @@ def add_test_runtime_wheelhouse(
         "macos-arm64": "macos-14.0",
         "windows-x86-64": "windows-10",
     }
-    platform_rows = {
-        target: rows
-        for target in ("linux-aarch64", "linux-x86-64", "macos-arm64", "windows-x86-64")
-    }
+    platform_rows = {target: rows for target in ("linux-aarch64", "linux-x86-64", "macos-arm64", "windows-x86-64")}
     wheel_record = {
         filename: {
             "distribution": "cadrumo-test-dependency",

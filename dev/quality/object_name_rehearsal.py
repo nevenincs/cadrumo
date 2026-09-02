@@ -250,6 +250,31 @@ def _run_command(argv: tuple[str, ...], *, cwd: Path, environment: Mapping[str, 
     )
 
 
+def _failed_command_message(outcome: ObjectNameGateOutcome) -> str:
+    return (
+        f"declared rehearsal command failed: argv={outcome.argv!r}, return_code={outcome.return_code}, "
+        f"stdout_sha256={outcome.stdout_sha256}, stdout_bytes={outcome.stdout_bytes}, "
+        f"stderr_sha256={outcome.stderr_sha256}, stderr_bytes={outcome.stderr_bytes}"
+    )
+
+
+def _tool_version(argv: tuple[str, ...], *, cwd: Path) -> str:
+    try:
+        completed = subprocess.run(  # noqa: S603
+            argv,
+            cwd=cwd,
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=_COMMAND_TIMEOUT_SECONDS,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise ObjectNameRehearsalError(f"cannot determine tool version with {argv!r}") from exc
+    if completed.returncode != 0:
+        raise ObjectNameRehearsalError(f"tool version command failed: {argv!r}")
+    return completed.stdout.strip()
+
+
 def _finding_signature(finding: ObjectNameFinding) -> str:
     kind = finding.kind
     name = finding.name
@@ -361,16 +386,14 @@ def rehearse_object_name_component(
         raise ObjectNameRehearsalError(f"system temporary root is unsafe: {system_temporary_root}")
     try:
         temporary_parent = Path(tempfile.mkdtemp(prefix="cadrumo-object-name-", dir=system_temporary_root)).resolve()
-        if temporary_parent.parent != system_temporary_root or is_link_like(temporary_parent):
-            raise ObjectNameRehearsalError(f"allocated rehearsal parent is unsafe: {temporary_parent}")
-        temporary_root = temporary_parent / "repository"
-        temporary_root.mkdir()
-    except ObjectNameRehearsalError:
-        raise
     except OSError as exc:
         raise ObjectNameRehearsalError("cannot allocate the system-temporary rehearsal root") from exc
+    temporary_root = temporary_parent / "repository"
     source_unchanged = False
     try:
+        if temporary_parent.parent != system_temporary_root or is_link_like(temporary_parent):
+            raise ObjectNameRehearsalError(f"allocated rehearsal parent is unsafe: {temporary_parent}")
+        temporary_root.mkdir()
         _copy_snapshot(root, temporary_root, baseline_files)
         if _snapshot(temporary_root, tuple(path for path, _digest in baseline_files)) != baseline_files:
             raise ObjectNameRehearsalError("verified temporary snapshot differs from the current tree")
@@ -400,12 +423,12 @@ def rehearse_object_name_component(
             outcome = _run_command(argv, cwd=temporary_root, environment=command_environment)
             generator_results.append(outcome)
             if outcome.return_code != 0:
-                raise ObjectNameRehearsalError(f"declared rehearsal command failed: {outcome.argv!r}")
+                raise ObjectNameRehearsalError(_failed_command_message(outcome))
         for argv in gate_argv:
             outcome = _run_command(argv, cwd=temporary_root, environment=command_environment)
             gate_results.append(outcome)
             if outcome.return_code != 0:
-                raise ObjectNameRehearsalError(f"declared rehearsal command failed: {outcome.argv!r}")
+                raise ObjectNameRehearsalError(_failed_command_message(outcome))
         generator_outcomes = tuple(generator_results)
         gate_outcomes = tuple(gate_results)
 
@@ -427,14 +450,20 @@ def rehearse_object_name_component(
             raise ObjectNameRehearsalError("materialised changed paths differ from the reviewed allowlist")
         proposed_digests = tuple((path, dict(after_files).get(path)) for path in changed)
         changed_path_digest = _digest_bytes(canonical_json_bytes(list(changed)))
-        tool_versions = (
-            ("libcst", importlib.metadata.version("libcst")),
-            ("python", sys.version.split()[0]),
-            ("rehearsal", str(_RECEIPT_SCHEMA_VERSION)),
-            (
-                "runtime-environment",
-                _digest_bytes(canonical_json_bytes({"executable": sys.executable, "prefix": sys.prefix})),
-            ),
+        tool_versions = tuple(
+            sorted(
+                (
+                    ("git", _tool_version(("git", "--version"), cwd=temporary_root)),
+                    ("libcst", importlib.metadata.version("libcst")),
+                    ("python", sys.version.split()[0]),
+                    ("rehearsal", str(_RECEIPT_SCHEMA_VERSION)),
+                    (
+                        "runtime-environment",
+                        _digest_bytes(canonical_json_bytes({"executable": sys.executable, "prefix": sys.prefix})),
+                    ),
+                    ("uv", _tool_version(("uv", "--version"), cwd=temporary_root)),
+                )
+            )
         )
         source_paths_after = _git_snapshot_paths(root)
         source_unchanged = (
@@ -480,8 +509,16 @@ def rehearse_object_name_component(
     except Exception as exc:
         raise ObjectNameRehearsalError(f"rehearsal failed; retained rehearsal root: {temporary_root}") from exc
     finally:
-        current_paths = _git_snapshot_paths(root)
-        if current_paths != snapshot_paths or _snapshot(root, current_paths) != baseline_files:
+        try:
+            current_paths = _git_snapshot_paths(root)
+            final_source_unchanged = (
+                current_paths == snapshot_paths and _snapshot(root, current_paths) == baseline_files
+            )
+        except Exception as exc:
+            raise ObjectNameRehearsalError(
+                f"cannot verify source immutability; retained rehearsal root: {temporary_root}"
+            ) from exc
+        if not final_source_unchanged:
             raise ObjectNameRehearsalError(
                 f"source tree changed during rehearsal; retained rehearsal root: {temporary_root}"
             )

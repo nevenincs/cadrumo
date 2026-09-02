@@ -7,7 +7,6 @@ import secrets
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Literal
 from uuid import UUID, uuid4
 
 from pydantic import ValidationError
@@ -31,6 +30,8 @@ from .custody_repository import (
 )
 from .custody_transactions import (
     CUSTODY_RECEIPT_SCHEMA_VERSION,
+    CustodyReceiptOwner,
+    CustodyReceiptOwnerValue,
     ProfileCustodyDeleteConfirmation,
     ProfileCustodyDuplicateLabelError,
     ProfileCustodyInventoryWitness,
@@ -957,7 +958,7 @@ class _ProfileCustodyTransactionCapability:
         journal: ProfileCustodyTransactionJournal,
         instant: datetime,
         *,
-        owner: Literal["process-secret-revocation", "local-session-acceleration"],
+        owner: CustodyReceiptOwnerValue,
         error_message: str,
         produce: Callable[[], ProfileCustodySessionOwnerEffect],
     ) -> None:
@@ -983,7 +984,7 @@ class _ProfileCustodyTransactionCapability:
         self._record_owner_effect(
             journal,
             instant,
-            owner="process-secret-revocation",
+            owner=CustodyReceiptOwner.PROCESS_SECRET_REVOCATION,
             error_message="current process-secret owner could not be revoked",
             produce=lambda: revoke_live_profile_secret_for_custody_delete(bucket_id=str(journal.profile_id)),
         )
@@ -992,7 +993,7 @@ class _ProfileCustodyTransactionCapability:
         self._record_owner_effect(
             journal,
             instant,
-            owner="local-session-acceleration",
+            owner=CustodyReceiptOwner.LOCAL_SESSION_ACCELERATION,
             error_message="current local-session acceleration owner could not be removed",
             produce=lambda: remove_profile_session_acceleration_for_custody_delete(
                 storage_root=self._root,

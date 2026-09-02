@@ -103,9 +103,9 @@ out at three sites before this existed, so that warning was carried by prose at 
 and by three separate hand-written pairs everywhere else.
 """
 
-UNREADABLE_PROFILE_STATUSES: Final[frozenset[ProfileHealthStatus]] = (
-    RECORD_FAULT_STATUSES | {ProfileHealthStatus.DANGLING_POINTER}
-)
+UNREADABLE_PROFILE_STATUSES: Final[frozenset[ProfileHealthStatus]] = RECORD_FAULT_STATUSES | {
+    ProfileHealthStatus.DANGLING_POINTER
+}
 """Record faults plus a pointer that resolves to nothing.
 
 Derived from :data:`RECORD_FAULT_STATUSES` rather than restated, so the two sets cannot
@@ -537,9 +537,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
 
     values = record_to_path_values(record)
     validation = validate_profile_values(values)
-    status: ProfileHealthStatusValue = (
-        ProfileHealthStatus.READY if validation.valid else ProfileHealthStatus.INCOMPLETE
-    )
+    status: ProfileHealthStatusValue = ProfileHealthStatus.READY if validation.valid else ProfileHealthStatus.INCOMPLETE
     return _finalise_health(
         ActiveProfileHealth(
             active_profile=active_profile,

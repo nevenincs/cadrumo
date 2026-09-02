@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Literal
 from uuid import UUID
 
 from pydantic import ValidationError
@@ -17,6 +16,7 @@ from .custody_ports import ProfileCustodyLocalRecordStore, default_profile_custo
 from .custody_transactions import (
     CUSTODY_RECEIPT_MAX_BYTES,
     CUSTODY_TRANSACTION_MAX_BYTES,
+    CustodyReceiptOwnerValue,
     ProfileCustodyOwnerReceipt,
     ProfileCustodyTransactionConflictError,
     ProfileCustodyTransactionCorruptError,
@@ -51,7 +51,7 @@ class ProfileCustodyTransactionRepository:
     def owner_receipt_path(
         self,
         transaction_id: UUID,
-        owner: Literal["process-secret-revocation", "local-session-acceleration"],
+        owner: CustodyReceiptOwnerValue,
     ) -> Path:
         """Return the durable path for an owner-specific receipt."""
         return self._receipt_root / f"{transaction_id}.{owner}.json"
@@ -140,7 +140,7 @@ class ProfileCustodyTransactionRepository:
     def load_owner_receipt(
         self,
         transaction_id: UUID,
-        owner: Literal["process-secret-revocation", "local-session-acceleration"],
+        owner: CustodyReceiptOwnerValue,
     ) -> ProfileCustodyOwnerReceipt | None:
         """Load and validate an owner-specific receipt, if present."""
         path = self.owner_receipt_path(transaction_id, owner)

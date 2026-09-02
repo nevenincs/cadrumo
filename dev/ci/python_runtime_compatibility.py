@@ -439,11 +439,15 @@ def _select_runtime_wheelhouse(
     status = entry.get("status")
     if status == "missing-wheel":
         missing = entry.get("missing")
-        details = "; ".join(
-            f"{item.get('distribution')} ({item.get('platform')}, {item.get('requirement')})"
-            for item in missing
-            if isinstance(item, Mapping)
-        ) if isinstance(missing, list) else "unattributed dependency closure"
+        details = (
+            "; ".join(
+                f"{item.get('distribution')} ({item.get('platform')}, {item.get('requirement')})"
+                for item in missing
+                if isinstance(item, Mapping)
+            )
+            if isinstance(missing, list)
+            else "unattributed dependency closure"
+        )
         raise CompatibilityProbeError(
             f"sealed runtime wheelhouse for Python {python_minor} is missing wheels: {details}",
             category="missing-wheel",

@@ -403,24 +403,6 @@ _CHECK_MODE_PENDING: dict[str, str] = {
     #
     # Whoever stamps one of these must expect the window refusal next, and fix it
     # rather than re-pin it.
-    # 200 is behind a DELIBERATE downgrade, not a reviewer stamp. Its
-    # authority_grade was lowered to "calculation" to hold the filing boundary
-    # shut while one revision spanned the incompatible 2024 and 2025 AEAT
-    # layouts. Check mode validates the candidate through the real authority and
-    # therefore asks for filing grade, so it cannot run for 200 while that stands.
-    #
-    # The split HAS since landed -- 200 now carries revisions 2024 and
-    # 2025-y-siguientes, each bound to its own design epoch -- but both still
-    # declare authority_grade = "calculation", so the split alone did not retire
-    # this entry. It retires when the grade is restored to filing, which is a
-    # separate decision from splitting the revision, and the assertion below
-    # fails the day check mode passes so the entry cannot outlive its reason.
-    #
-    # Recorded so the byte-equality half of this gate keeps working: without an
-    # entry the row fails blind, and an unguarded published tree is free to
-    # drift -- which is exactly what 347's map did unnoticed, per the note
-    # above.
-    "m200-2025-y-siguientes": "cannot satisfy the requested 'filing' snapshot authority",
     # 185 and 222 are STALE grades, not wrong ones. Each revision carries a
     # human applicability review stamped 2026-08-21 recording "no export layout
     # of either kind is declared" and reaching "scheduling and applicability
