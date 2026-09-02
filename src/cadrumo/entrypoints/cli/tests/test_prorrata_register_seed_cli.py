@@ -26,7 +26,7 @@ from ....application.calculations.observations_repository import CalculationObse
 from ....application.prorrata_register.service import ProrrataRegisterService
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
-from ....core.i18n.render import tr
+from ....core.i18n.render import output_language, tr
 from ....core.modelo import Modelo
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
@@ -116,6 +116,16 @@ def _register_entries() -> list[dict[str, object]]:
 
 def _notice_codes(result) -> set[str]:
     return {notice["code"] for notice in json.loads(result.output).get("notices", [])}
+
+
+def _refusal_text(result) -> str:
+    """Return the JSON error envelope's prose in the active output language.
+
+    Refusal copy is localized, so the assertions compare against the same
+    catalogue rendering the command emitted rather than against English
+    literals that only hold under one locale.
+    """
+    return json.dumps(json.loads(result.output)["error"], ensure_ascii=False)
 
 
 def test_seed_persists_the_carried_prior_definitiva_entry() -> None:
@@ -215,7 +225,13 @@ def test_seed_is_idempotent() -> None:
 def test_seed_without_a_prior_observation_refuses_as_absent_not_zero() -> None:
     result = _seed()
     assert result.exit_code != 0, result.output
-    assert "missing, not zero" in result.output
+    expected = tr(
+        "cli.app.ledger.prorrata.seed_source_absent",
+        locale=output_language(),
+        prior_ejercicio=_PRIOR_YEAR,
+        ejercicio=_CURRENT_YEAR,
+    )
+    assert expected in _refusal_text(result)
     assert ProrrataRegisterService().get(_CURRENT_YEAR) is None
 
 
@@ -309,6 +325,8 @@ def test_sector_lifecycle_settles_then_seeds_the_next_ejercicio() -> None:
 def test_seed_sector_without_a_prior_definitive_refuses_as_absent() -> None:
     result = _invoke(
         [
+            "--format",
+            "json",
             "app",
             "ledger",
             "prorrata",
@@ -320,13 +338,22 @@ def test_seed_sector_without_a_prior_definitive_refuses_as_absent() -> None:
         ]
     )
     assert result.exit_code != 0, result.output
-    assert "missing, not zero" in result.output
+    expected = tr(
+        "cli.app.ledger.prorrata.seed_sector_prior_definitive_absent",
+        locale=output_language(),
+        sector_id="arrendamiento",
+        prior_ejercicio=_PRIOR_YEAR,
+        ejercicio=_CURRENT_YEAR,
+    )
+    assert expected in _refusal_text(result)
     assert ProrrataRegisterService().get(_CURRENT_YEAR, sector_id="arrendamiento") is None
 
 
 def test_settle_sector_without_an_entry_refuses() -> None:
     result = _invoke(
         [
+            "--format",
+            "json",
             "app",
             "ledger",
             "prorrata",
@@ -342,7 +369,13 @@ def test_settle_sector_without_an_entry_refuses() -> None:
         ]
     )
     assert result.exit_code != 0, result.output
-    assert "nothing to settle" in result.output
+    expected = tr(
+        "cli.app.ledger.prorrata.settle_sector_entry_absent",
+        locale=output_language(),
+        ejercicio=_PRIOR_YEAR,
+        sector_id="arrendamiento",
+    )
+    assert expected in _refusal_text(result)
 
 
 @pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)
