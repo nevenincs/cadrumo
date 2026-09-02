@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-16'
-modified: '2026-08-31'
+modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:51bbca03b14bccfaa52cb4400893d791d317a382a3f7ee90708b15569ce67298'
+body_hash: 'sha256:c17ab005c3c89aff13b700eff3fb1c7d95f87b7b67afc0d5de088505cc0aaecc'
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-ledger]]'
@@ -95,6 +95,7 @@ related:
   - '[[2026-08-18-aeat-export-fragment-generator-authority-split-part-export-value-policy-adr]]'
   - '[[2026-08-30-aeat-export-fragment-generator-authority-m390-2022-layout-anchor-reconciliation-audit]]'
   - '[[2026-08-31-aeat-export-fragment-generator-authority-m390-2022-page-7-constant-reference]]'
+  - '[[2026-08-31-aeat-export-fragment-generator-authority-operator-invocation-surface-adr]]'
   - '[[2026-08-31-aeat-export-fragment-generator-authority-semantic-map-cannot-express-binding-rows-audit]]'
   - '[[2026-08-31-aeat-export-fragment-generator-authority-source-defect-adjudication-adr]]'
 ---
@@ -110,6 +111,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-adr` - `aeat-export-fragment-generator-authority` adr: `official-binary coordinates, reviewed render profiles, and semantic maps generate export fragments` | (**status:** `accepted`)
 - `2026-08-16-aeat-export-fragment-generator-authority-pdf-source-wire-fact-authority-adr` - `aeat-export-fragment-generator-authority` adr: `PDF-sourced designs state wire facts in prose, so every numeric anchor is profile-eligible` | (**status:** `accepted`)
 - `2026-08-18-aeat-export-fragment-generator-authority-split-part-export-value-policy-adr` - `aeat-export-fragment-generator-authority` adr: `one semantic value written across the parts AEAT prints` | (**status:** `accepted`)
+- `2026-08-31-aeat-export-fragment-generator-authority-operator-invocation-surface-adr` - `aeat-export-fragment-generator-authority` adr: `the export-tree lifecycle needs an operator invocation surface` | (**status:** `proposed`)
 - `2026-08-31-aeat-export-fragment-generator-authority-source-defect-adjudication-adr` - `aeat-export-fragment-generator-authority` adr: `adjudicating a self-contradictory cell in an official AEAT record design` | (**status:** `accepted`)
 
 ### audit
@@ -187,7 +189,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-14-aeat-export-fragment-generator-authority-s92-implementation-review-audit` - `aeat-export-fragment-generator-authority` audit: `S92 M303 rectificativa motive implementation review`
 - `2026-08-14-aeat-export-fragment-generator-authority-silent-partial-record-design-extraction-audit` - `aeat-export-fragment-generator-authority` audit: `silent partial record design extraction`
 - `2026-08-30-aeat-export-fragment-generator-authority-m390-2022-layout-anchor-reconciliation-audit` - `aeat-export-fragment-generator-authority` audit: `Modelo 390 2022 layout-to-anchor reconciliation`
-- `2026-08-31-aeat-export-fragment-generator-authority-semantic-map-cannot-express-binding-rows-audit` - `aeat-export-fragment-generator-authority` audit: `the generator's input schema is narrower than the registry it generates into`
+- `2026-08-31-aeat-export-fragment-generator-authority-semantic-map-cannot-express-binding-rows-audit` - `aeat-export-fragment-generator-authority` audit: the generator's input schema is narrower than the registry it generates into
 
 ### exec
 

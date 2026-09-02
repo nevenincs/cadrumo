@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-python-runtime-compatibility-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:c9758245769a6c2442f8621e418180a752b23574018f1714c29e956789eb7d2e'
+body_hash: 'sha256:e581cde1d2f16a8c222f49f88c052e166cedd503a63b3ae4aa9896d53a3ee760'
 ---
 
 <!-- RETIRED: S33, S35, S37, S39, S41, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 -->
@@ -103,7 +103,7 @@ Make every selected runtime carry focused behavioral and MCP evidence, keep the 
 - [x] `P06.S68` - Classify binary missing-wheel failures only from resolver-specific diagnostics; `dev/ci/python_runtime_compatibility.py`.
 - [x] `P06.S69` - Align the prerelease selector with the provisionable rolling minor; `dev/ci/python-runtime-matrix.json`.
 - [x] `P06.S70` - Close binary compatibility dependency resolution to the sealed runtime wheelhouse; `dev/ci/python_runtime_compatibility.py`.
-- [ ] `P06.S71` - Build and validate runtime-specific sealed wheelhouses for every blocking CPython minor; `dev/packaging/runtime_wheelhouse.py, dev/packaging/python_cohort.py, dev/ci/python_runtime_compatibility.py`.
+- [x] `P06.S71` - Build and validate runtime-specific sealed wheelhouses for every blocking CPython minor; `dev/packaging/runtime_wheelhouse.py, dev/packaging/python_cohort.py, dev/ci/python_runtime_compatibility.py`.
 
 ## Parallelization
 

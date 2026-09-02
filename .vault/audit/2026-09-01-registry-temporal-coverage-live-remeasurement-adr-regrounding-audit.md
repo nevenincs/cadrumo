@@ -4960,3 +4960,52 @@ Three probes, two false alarms, and the same root cause as the `Period` object a
 code earlier in this campaign: an argument shaped wrongly returns a refusal indistinguishable
 from a registry that cannot answer. The check that resolved it was reading what the selector
 declares before asking it anything, which took one command and should have been the first.
+
+### A probe that cannot ask the wrong question
+
+Three investigations in this campaign reached a wrong conclusion the same way. A revision was
+asked whether it resolves, the question carried a period code that revision does not declare,
+and the refusal was read as the registry being unable to answer. It read once as temporal
+selection silently collapsing three regimes into one, once as two regimes being unreachable,
+and once as modelo 322 refusing every year of its own span.
+
+The refusal is byte-identical in all cases, which is the root of it: a revision with no
+coverage for a year and a revision asked in the wrong period family raise the same error. The
+caller cannot tell a finding from a mistake without returning to the declaration, which is the
+step a caller who believes they have found something skips.
+
+`revision_selection_probe` reads the codes off each revision's own selector and asks with
+those. It supplies no default, because a default is how the wrong code gets asked: a revision
+declaring nothing yields no probe rather than a guessed one. On modelo 369 it returns twenty
+probes with nothing resolving to anything but itself, which is the answer three manual attempts
+failed to reach. On modelo 322 it returns forty-eight, also clean.
+
+It also rescued a finding that was resting on the artefact. Modelo 322's `2008-2022` was
+recorded as refusing every year tested, which was the wrong-code result. Asked with its own
+monthly code it serves 2022 and refuses 2008, 2015 and 2021 - so the name really does claim
+fourteen years the revision does not serve, and the finding now rests on evidence rather than
+on a mistake that happened to point the same way.
+
+One test premise was wrong and is recorded rather than quietly fixed. It asserted the corpus
+contains revisions declaring no period codes; modelo 100 declares `0A` on every revision, and
+what it lacks is `year_from` and `year_to` - a different field on the same selector, conflated
+while writing the test. The test is now constructed against the function's contract, which
+holds whatever the corpus does.
+
+### The shared registry did not validate for a window this iteration
+
+Three of the four tests errored mid-iteration with the registry refusing to validate: modelo
+200 revision 2024 carried casillas referencing export fields that did not exist. No registry
+data was uncommitted at the time, so the invalid state was committed rather than a partial
+edit on disk, and every consumer of the bundled authority was blocked by it - not only these
+tests.
+
+It was repaired by the concurrent campaign within the iteration, by a commit restoring those
+casillas from the semantic map and the official design, and all four tests then pass. An
+earlier command in the same iteration had failed differently, with the authority refusing a
+torn read while the registry directory changed under it during cache fingerprinting.
+
+Both behaviours are the authority failing closed, which is what it should do, and both are
+worth recording for the same reason: in a shared worktree a red result carries a timestamp,
+and the question "was the tree valid when I measured" has a different answer at two points in
+one iteration.

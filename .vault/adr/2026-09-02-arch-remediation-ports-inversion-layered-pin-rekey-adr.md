@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:3202c9d03b482ab77469d57a7e39a97c75bc95f1fa7993b3a89e7635bd243fdf'
+body_hash: 'sha256:8559412b80294fce681b2c065aac11ef03663873ac4e85ac83285119124a0271'
 related:
   - "[[2026-07-08-importlinter-test-carveout-adr]]"
   - "[[2026-07-02-arch-remediation-ports-inversion-adr]]"
