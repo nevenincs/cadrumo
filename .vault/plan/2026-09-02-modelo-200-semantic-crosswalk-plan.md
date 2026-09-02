@@ -3,15 +3,25 @@ tags:
   - '#plan'
   - '#modelo-200-semantic-crosswalk'
 date: '2026-09-02'
-modified: '2026-09-02'
-body_schema: 'body-v2'
-body_hash: 'sha256:fd4780301fb354e070e83e77d103ce880a456c109bf5c23de77b2e044b848ce7'
 tier: L3
 related:
-  - "[[2026-08-08-aeat-design-relayout-boundary-modelo-200-partition-adr]]"
-  - "[[2026-09-02-modelo-200-semantic-crosswalk-research]]"
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
+  - '[[2026-08-08-aeat-design-relayout-boundary-modelo-200-partition-adr]]'
+  - '[[2026-09-02-modelo-200-semantic-crosswalk-research]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
+modified: '2026-09-02'
+body_schema: body-v2
+body_hash: 'sha256:a4096b39cb703ec9f179d813e9793b35883f31a22a98241b5eb2358722142689'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 <!-- FRONTMATTER RULES:
      tags: one directory tag (hardcoded #plan) and one feature tag.
@@ -35,14 +45,6 @@ related:
      DO NOT add fields beyond those scaffolded; metadata lives
      only in the frontmatter. -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - The related: field carries the AUTHORIZING documents (ADR, research,
-       reference, prior plan) for every Step in this plan. Steps inherit this
-       chain; per-row reference footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 <!-- HIERARCHY AND TIERS:
      Epic > Wave > Phase > Step. Step is the canonical leaf-row
@@ -112,6 +114,10 @@ several feed it, state here which Wave or Phase each ADR governs. -->
 
 ## Steps
 
+## Wave `W01` - establish the immutable 2024 reconciliation boundary
+
+Freeze the exact pinned 2024 design as the sole target identity authority and record the full population before mutation.
+
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
 `L4`) determines the structure under this section:
 
@@ -163,6 +169,37 @@ templates. -->
      The ## Epic intent block is mandatory at L4 and absent at L1, L2,
      L3. The plan title (the level-one # heading at the top of the
      document) is the Epic title; no separate Epic heading is emitted. -->
+
+### Phase `W01.P01` - freeze the declaration and source evidence census
+
+Separate current declarations from semantic adjudications and bind every result to the exact 2024 source SHA.
+
+
+### Phase `W01.P02` - remove non-authoritative historic semantic reuse
+
+Prevent historical fragments, adjacent designs, and description similarity from becoming 2024 semantic or legal authority.
+
+
+## Wave `W02` - derive physical reconciliation from the pinned design
+
+Build deterministic tooling that changes only facts proven by the 2024 design and never infers semantic ownership from siblings.
+
+### Phase `W02.P03` - program the exact source-reference rebind
+
+Derive exact 2024-anchor rebinds while preserving every non-source authority fact byte-for-byte.
+
+
+## Wave `W03` - adjudicate 2024 meaning and legal authority
+
+Turn target-year evidence into reviewed semantic-map and legal authority after the identity worklist is closed.
+
+## Wave `W04` - materialize complete target authority and generate privately
+
+Integrate reviewed declaration, legal, map, and render authority and regenerate into a fresh temporary root.
+
+## Wave `W05` - publish filing-grade authority and independently verify it
+
+Publish and promote only after the complete generated package passes the real fail-closed authority path.
 
 ## Parallelization
 
