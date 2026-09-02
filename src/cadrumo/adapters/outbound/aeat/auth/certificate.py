@@ -23,9 +23,7 @@ Design constraints:
 
 See Also:
     :class:`adapters.outbound.aeat.auth.CertificateContextProvisioner`
-    for wiring :class:`LoadedCertificate` into browser contexts, and
-    :func:`adapters.outbound.aeat.auth.describe_certificate_provider`
-    for the provider summary built from :class:`CertificateHealth`.
+    for wiring :class:`LoadedCertificate` into browser contexts.
 """
 
 from __future__ import annotations

@@ -73,7 +73,6 @@ DEUDAS_READ_SURFACE: Final = "deudas consulta"
 """Surface label a deudas landing refusal names, so a refusal says who refused."""
 
 _DEUDAS_CONSULTA_PATH: Final = EXTERNAL.aeat.sede_paths.deudas_consulta
-_DEUDAS_PAGAR_TODAS_PATH: Final = EXTERNAL.aeat.sede_paths.deudas_pagar_todas
 
 
 class Deuda(BaseModel):

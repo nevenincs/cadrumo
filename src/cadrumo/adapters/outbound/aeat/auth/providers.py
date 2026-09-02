@@ -15,14 +15,9 @@ from __future__ import annotations
 
 from typing import Protocol, TypedDict, runtime_checkable
 
-from .....core.auth_provider import AuthProviderDescription as _AuthProviderDescription
-from .....core.auth_provider import AuthProviderKind as _AuthProviderKind
 from .....core.config import AEAT_CERTIFICATE_PROTECTED_ORIGIN
 from .certificate import (
-    CertificateNifParseError,
     LoadedCertificate,
-    evaluate_loaded_certificate_health,
-    extract_nif_from_subject,
 )
 
 
@@ -90,43 +85,7 @@ class CertificateContextProvisioner:
         }
 
 
-def describe_certificate_provider(
-    cert: LoadedCertificate,
-    *,
-    warn_days: int,
-    critical_days: int,
-) -> _AuthProviderDescription:
-    """Build an :class:`AuthProviderDescription` from a loaded certificate.
-
-    The returned description carries the parsed identity NIF when available and
-    the :class:`~adapters.outbound.aeat.auth.certificate.CertificateHealth`
-    severity used by operator-facing auth status commands.
-    """
-    health = evaluate_loaded_certificate_health(
-        cert,
-        warn_days=warn_days,
-        critical_days=critical_days,
-    )
-    try:
-        identity_nif = extract_nif_from_subject(cert)
-    except CertificateNifParseError:
-        identity_nif = None
-    return _AuthProviderDescription(
-        kind=_AuthProviderKind.CERTIFICATE,
-        label="AEAT certificate",
-        configured=True,
-        available=True,
-        identity_nif=identity_nif,
-        subject=cert.subject,
-        expires_on=cert.not_after,
-        health_severity=health.severity.value,
-        days_until_expiry=health.days_until_expiry,
-        health_summary=f"{health.severity.value}:{health.days_until_expiry}",
-    )
-
-
 __all__ = [
     "BrowserContextProvisioner",
     "CertificateContextProvisioner",
-    "describe_certificate_provider",
 ]

@@ -105,7 +105,6 @@ log = get_logger(__name__)
 
 EXTERNAL = Settings.external_constants()
 _SEDE_HOST = urlsplit(SEDE_BASE).netloc
-_AEAT_HOST_SUFFIX = EXTERNAL.aeat.domains.host_suffix
 _LISTING_URL = f"{SEDE_BASE}{EXTERNAL.aeat.sede_paths.declarations_listing}"
 
 
@@ -134,11 +133,6 @@ _DECLARATIONS_READ_PATH_PREFIXES: tuple[str, ...] = (_DECLARATIONS_LISTING_PATH_
 # 14A alongside the numeric ones.
 _MODELO_OPTION_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<modelo>[0-9A-Z]{2,8})\s*-")
 _EJERCICIO_OPTION_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<ejercicio>[0-9]{4})$")
-
-DEFAULT_NAVIGATION_TIMEOUT_MS: int = 30_000
-DEFAULT_FORM_INTERACTION_TIMEOUT_MS: int = 10_000
-DEFAULT_BUSCAR_SETTLE_MS: int = 2_000
-DEFAULT_VER_CLICK_TIMEOUT_MS: int = 5_000
 
 
 def assert_declarations_read_landing(

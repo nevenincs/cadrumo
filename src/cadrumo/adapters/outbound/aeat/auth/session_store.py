@@ -165,18 +165,6 @@ def storage_state_sha256(storage_state: Mapping[str, object]) -> str:
     return _storage_state_sha256(storage_state)
 
 
-def logical_object_key(path: Path) -> str:
-    """Return the natural secure-object key for a browser-session ``path``.
-
-    The key shape follows
-    :data:`adapters.persistence.storage.AEAT_BROWSER_SESSION_NAMESPACE`.
-    :class:`~adapters.persistence.storage.SecureObjectRepository`
-    HMAC-digests this value before writing the row, so callers can use the same
-    logical key without exposing it on disk.
-    """
-    return _key(path)
-
-
 def _key(path: Path) -> str:
     return Path(path).as_posix()
 
@@ -235,7 +223,6 @@ __all__ = [
     "delete",
     "exists",
     "load",
-    "logical_object_key",
     "save",
     "storage_state_sha256",
 ]
