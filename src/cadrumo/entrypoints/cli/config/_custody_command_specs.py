@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ..command_spec import (
     ArgumentSpec,
+    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -59,7 +60,7 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
         key="config_passphrase",
         parent_key="config",
         token="passphrase",  # noqa: S106 - CLI token, not a credential.
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.config.passphrase.help"),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),
@@ -72,7 +73,7 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
         key="config_passphrase_change",
         parent_key="config_passphrase",
         token="change",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.passphrase.change_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -107,7 +108,7 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
         key="config_login",
         parent_key="config",
         token="login",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.login.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -139,7 +140,7 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
         key="config_logout",
         parent_key="config",
         token="logout",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.logout.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),

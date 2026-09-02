@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .command_spec import (
+    CommandNodeKind,
     CommandSpec,
     CommandWriteRoute,
     DeferredTarget,
@@ -56,7 +57,7 @@ MODELO_READINESS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_modelo_readiness",
         parent_key="app_modelo",
         token="readiness",  # noqa: S106 - CLI operator token, not a credential
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.readiness_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),

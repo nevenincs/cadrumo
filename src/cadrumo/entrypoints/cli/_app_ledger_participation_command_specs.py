@@ -8,6 +8,7 @@ from ._app_ledger_command_spec_policies import (
     _POLICY_3,
 )
 from .command_spec import (
+    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -22,7 +23,7 @@ LEDGER_PARTICIPATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_ledger_participation_rebuild",
         parent_key="app_ledger_participation",
         token="rebuild",
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.participation.rebuild_help"),
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),

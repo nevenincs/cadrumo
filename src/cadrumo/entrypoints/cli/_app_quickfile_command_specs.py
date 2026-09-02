@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
+    CommandNodeKind,
     CommandSpec,
     CommandWriteRoute,
     DeferredTarget,
@@ -62,7 +63,7 @@ QUICKFILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_quickfile",
         "app",
         "quickfile",
-        "group",
+        CommandNodeKind.GROUP,
         TranslationKey("cli.app.quickfile.app_help"),
         None,
         InvocationSpec(

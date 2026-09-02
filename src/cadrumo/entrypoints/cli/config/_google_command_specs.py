@@ -7,6 +7,7 @@ from typing import Final
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ..command_spec import (
     ArgumentSpec,
+    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     ExecutionPolicySpec,
@@ -110,7 +111,7 @@ def _leaf(
         key=key,
         parent_key=parent,
         token=token,
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=_key(help_key),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),

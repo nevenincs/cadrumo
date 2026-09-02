@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ..command_spec import (
     ArgumentSpec,
+    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -43,7 +44,7 @@ CONFIG_COLLAB_COMMAND_SPECS = (
         key="config_collab",
         parent_key="config",
         token="collab",  # noqa: S106 - CLI token, not a credential.
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.config.collab.help"),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),
@@ -56,7 +57,7 @@ CONFIG_COLLAB_COMMAND_SPECS = (
         key="config_collab_recipient",
         parent_key="config_collab",
         token="recipient",  # noqa: S106 - CLI token, not a credential.
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.config.collab.recipient.help"),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),
@@ -69,7 +70,7 @@ CONFIG_COLLAB_COMMAND_SPECS = (
         key="config_collab_recipient_add",
         parent_key="config_collab_recipient",
         token="add",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.collab.recipient.add_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -98,7 +99,7 @@ CONFIG_COLLAB_COMMAND_SPECS = (
         key="config_collab_recipient_list",
         parent_key="config_collab_recipient",
         token="list",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.collab.recipient.list_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -111,7 +112,7 @@ CONFIG_COLLAB_COMMAND_SPECS = (
         key="config_collab_recipient_remove",
         parent_key="config_collab_recipient",
         token="remove",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.collab.recipient.remove_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),

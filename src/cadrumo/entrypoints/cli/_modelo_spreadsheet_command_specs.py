@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
+    CommandNodeKind,
     CommandSpec,
     CommandWriteRoute,
     DeferredTarget,
@@ -104,7 +105,7 @@ def _leaf(
         key=key,
         parent_key="app_modelo_spreadsheet",
         token=token,
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey(help_key),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -136,7 +137,7 @@ MODELO_SPREADSHEET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_modelo_spreadsheet",
         parent_key="app_modelo",
         token="spreadsheet",
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.modelo.spreadsheet.app_help"),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),

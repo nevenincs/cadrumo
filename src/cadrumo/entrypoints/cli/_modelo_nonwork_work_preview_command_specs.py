@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from ._modelo_nonwork_command_spec_policies import _CALCULATION_READ
 from .command_spec import (
+    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -24,7 +25,7 @@ MODELO_NONWORK_WORK_PREVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_modelo_work_preview_maritime_exemption",
         parent_key="app_modelo_work",
         token="preview-maritime-exemption",
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.work.preview_maritime_exemption_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),

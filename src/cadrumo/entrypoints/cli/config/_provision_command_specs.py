@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ..command_spec import (
+    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -49,7 +50,7 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         key="config_provision",
         parent_key="config",
         token="provision",  # noqa: S106 - CLI token, not a credential.
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.config.provision.help"),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),
@@ -62,7 +63,7 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         key="config_provision_report",
         parent_key="config_provision",
         token="report",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.provision.report.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -75,7 +76,7 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         key="config_provision_pull",
         parent_key="config_provision",
         token="pull",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.provision.pull.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -88,7 +89,7 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         key="config_provision_verify",
         parent_key="config_provision",
         token="verify",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.provision.verify.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),

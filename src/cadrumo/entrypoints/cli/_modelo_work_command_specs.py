@@ -8,6 +8,7 @@ from ...core.transport_locus import TransportLocus, TransportRole, TransportShap
 from .command_spec import (
     ArgumentSpec,
     Capability,
+    CommandNodeKind,
     CommandSpec,
     CommandWriteRoute,
     CommandWriteRouteValue,
@@ -168,7 +169,7 @@ def _leaf(
         f"app_modelo_work_{name}",
         "app_modelo_work",
         token,
-        "leaf",
+        CommandNodeKind.LEAF,
         _key(f"cli.app.modelo.work.{name}_help"),
         None,
         InvocationSpec(context_parameter="ctx"),

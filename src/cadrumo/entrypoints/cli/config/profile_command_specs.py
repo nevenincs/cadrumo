@@ -7,6 +7,7 @@ from typing import Final
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ..command_spec import (
     ArgumentSpec,
+    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     ExecutionPolicySpec,
@@ -137,7 +138,7 @@ def _group(key: str, parent: str, token: str, help_key: str) -> CommandSpec:
         key,
         parent,
         token,
-        "group",
+        CommandNodeKind.GROUP,
         _key(help_key),
         None,
         InvocationSpec(no_args_is_help=True),
@@ -169,7 +170,7 @@ def _leaf(
         key,
         parent,
         token,
-        "leaf",
+        CommandNodeKind.LEAF,
         _key(help_key),
         None,
         InvocationSpec(context_parameter="ctx"),
@@ -321,7 +322,7 @@ PROFILE_COMMAND_SPECS = (
         "config_profile_descendiente",
         "config_profile",
         "descendiente",
-        "group",
+        CommandNodeKind.GROUP,
         _key("cli.config.profile.descendiente.help"),
         None,
         InvocationSpec(

@@ -9,6 +9,7 @@ from ._app_ledger_command_spec_policies import (
     _POLICY_6,
 )
 from .command_spec import (
+    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -27,7 +28,7 @@ LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_ledger_inventory_movement_add",
         parent_key="app_ledger_inventory_movement",
         token="add",
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.inventory.movement_add_help"),
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
@@ -191,7 +192,7 @@ LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_ledger_inventory_valuation_preview",
         parent_key="app_ledger_inventory_valuation",
         token="preview",
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.inventory.valuation_preview_help"),
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),

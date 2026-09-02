@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ..command_spec import (
+    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -18,7 +19,7 @@ CONFIG_CHECK_COMMAND_SPECS = (
         key="config_check",
         parent_key="config",
         token="check",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.check.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),

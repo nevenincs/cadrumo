@@ -5,6 +5,7 @@ from __future__ import annotations
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
     ArgumentSpec,
+    CommandNodeKind,
     CommandSpec,
     CommandWriteRoute,
     DeferredTarget,
@@ -84,7 +85,7 @@ def _group(key: str, parent: str, token: str, help_key: str) -> CommandSpec:
         key,
         parent,
         token,
-        "group",
+        CommandNodeKind.GROUP,
         _key(help_key),
         None,
         InvocationSpec(no_args_is_help=True, add_completion=False),
@@ -110,7 +111,7 @@ def _leaf(
         key,
         parent,
         token,
-        "leaf",
+        CommandNodeKind.LEAF,
         _key(help_key),
         None,
         InvocationSpec(context_parameter="ctx"),

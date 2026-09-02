@@ -10,6 +10,7 @@ from ._app_ledger_command_spec_policies import (
 )
 from .command_spec import (
     ArgumentSpec,
+    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -28,7 +29,7 @@ LEDGER_BIENES_INVERSION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_ledger_bienes_inversion_declare",
         parent_key="app_ledger_bienes_inversion",
         token="declare",
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.bienes_inversion.declare_help"),
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
@@ -234,7 +235,7 @@ LEDGER_BIENES_INVERSION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_ledger_bienes_inversion_list",
         parent_key="app_ledger_bienes_inversion",
         token="list",
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.bienes_inversion.list_help"),
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),

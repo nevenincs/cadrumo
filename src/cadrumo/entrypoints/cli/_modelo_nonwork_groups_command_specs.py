@@ -5,14 +5,14 @@
 from __future__ import annotations
 
 from ._modelo_nonwork_command_spec_policies import _METADATA
-from .command_spec import CommandSpec, InvocationSpec, ResultSchemaSpec, SchemaState, TranslationKey
+from .command_spec import CommandNodeKind, CommandSpec, InvocationSpec, ResultSchemaSpec, SchemaState, TranslationKey
 
 MODELO_NONWORK_GROUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
         key="app_modelo_bindings",
         parent_key="app_modelo",
         token="bindings",
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.modelo.bindings.app_help"),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),
@@ -25,7 +25,7 @@ MODELO_NONWORK_GROUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_modelo_filing_record",
         parent_key="app_modelo",
         token="filing-record",
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.modelo.filing_record.app_help"),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),
@@ -38,7 +38,7 @@ MODELO_NONWORK_GROUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_modelo_verification_report",
         parent_key="app_modelo",
         token="verification-report",
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.modelo.verification_report.app_help"),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),
@@ -51,7 +51,7 @@ MODELO_NONWORK_GROUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_modelo_reconcile",
         parent_key="app_modelo",
         token="reconcile",
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.modelo.reconcile.app_help"),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),
@@ -64,7 +64,7 @@ MODELO_NONWORK_GROUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_modelo_m036",
         parent_key="app_modelo",
         token="m036",
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.modelo.m036.group_help"),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),
@@ -77,7 +77,7 @@ MODELO_NONWORK_GROUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_modelo_m145",
         parent_key="app_modelo",
         token="m145",
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.modelo.m145.group_help"),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),
@@ -90,7 +90,7 @@ MODELO_NONWORK_GROUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_modelo_iva_wallet",
         parent_key="app_modelo",
         token="iva-wallet",
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.modelo.iva_wallet.group_help"),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),
@@ -103,7 +103,7 @@ MODELO_NONWORK_GROUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_modelo_review_package",
         parent_key="app_modelo",
         token="review-package",
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.modelo.review_package.group_help"),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),

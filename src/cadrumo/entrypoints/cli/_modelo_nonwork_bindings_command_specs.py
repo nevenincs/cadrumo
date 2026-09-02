@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from ._modelo_nonwork_command_spec_policies import _REGISTRY_MODEL_READ
 from .command_spec import (
+    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -24,7 +25,7 @@ MODELO_NONWORK_BINDINGS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_modelo_bindings_list",
         parent_key="app_modelo_bindings",
         token="list",
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.bindings.list_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -97,7 +98,7 @@ MODELO_NONWORK_BINDINGS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_modelo_bindings_resolve",
         parent_key="app_modelo_bindings",
         token="resolve",
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.bindings.resolve_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),

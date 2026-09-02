@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ..command_spec import (
     Capability,
+    CommandNodeKind,
     CommandSpec,
     CommandWriteRoute,
     CommandWriteRouteValue,
@@ -166,7 +167,7 @@ def state_free_group_spec(key: str, parent: str, token: str, help_key: str) -> C
         key=key,
         parent_key=parent,
         token=token,
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=translation_key(help_key),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),

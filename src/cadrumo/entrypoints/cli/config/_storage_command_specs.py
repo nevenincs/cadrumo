@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ..command_spec import (
     ArgumentSpec,
+    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -44,7 +45,7 @@ CONFIG_STORAGE_COMMAND_SPECS = (
         key="config_storage",
         parent_key="config",
         token="storage",  # noqa: S106 - CLI token, not a credential.
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.config.storage.help"),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),
@@ -57,7 +58,7 @@ CONFIG_STORAGE_COMMAND_SPECS = (
         key="config_storage_list",
         parent_key="config_storage",
         token="list",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.storage.list.area_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -70,7 +71,7 @@ CONFIG_STORAGE_COMMAND_SPECS = (
         key="config_storage_view",
         parent_key="config_storage",
         token="view",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.storage.view.area_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -91,7 +92,7 @@ CONFIG_STORAGE_COMMAND_SPECS = (
         key="config_storage_check",
         parent_key="config_storage",
         token="check",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.storage.check.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -104,7 +105,7 @@ CONFIG_STORAGE_COMMAND_SPECS = (
         key="config_storage_init",
         parent_key="config_storage",
         token="init",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.storage.init.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -117,7 +118,7 @@ CONFIG_STORAGE_COMMAND_SPECS = (
         key="config_storage_reclaim",
         parent_key="config_storage",
         token="reclaim",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.storage.reclaim.area_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
