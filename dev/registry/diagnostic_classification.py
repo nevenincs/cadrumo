@@ -11,15 +11,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ....core.authority_grade import RegistryAuthorityGrade
-from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
-from .errors import RegistrySnapshotError, RegistryValidationError
-from .ids import ModeloId, RevisionId
-from .static_inspection import RegistryRevisionInspection, StaticGeneratedArtifactInspection
-from .temporal import coverage_assessment_horizon, revision_selection_coordinates
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.domain.calculations.registry._source_evidence_fingerprint import collect_source_evidence_fingerprints
+from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId
+from cadrumo.domain.calculations.registry.static_inspection import (
+    RegistryRevisionInspection,
+    StaticGeneratedArtifactInspection,
+)
+from cadrumo.domain.calculations.registry.temporal import coverage_assessment_horizon, revision_selection_coordinates
 
 if TYPE_CHECKING:
-    from .authority import ValidatedRegistryAuthority
+    from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 
 @dataclass(frozen=True, slots=True)
@@ -225,13 +228,13 @@ def load_registry_diagnostic_classification(
     residue; filing, export, and calculation callers must load a validated
     authority through :meth:`ValidatedRegistryAuthority.load`.
     """
-    from .authority import (
+    from cadrumo.domain.calculations.registry.authority import (
         canonical_authority_root_pair,
         collect_registry_identity_fingerprints,
         construct_authority,
         fingerprint_key,
     )
-    from .identity import resolve_registry_identity
+    from cadrumo.domain.calculations.registry.identity import resolve_registry_identity
 
     identity_pair = canonical_authority_root_pair(root, source_root)
     resolved_root = identity_pair.root

@@ -12,7 +12,6 @@ from cadrumo.application.filing.export_proof import FilingExportProofAssessment,
 from cadrumo.application.registry.closure import RegistryClosureEvidence, RegistryClosureLimb
 from cadrumo.application.registry.filing_export_coverage import FilingExportCoverageReport
 from cadrumo.application.registry.source_connectivity_coverage import SourceConnectivityCoverageReport
-from cadrumo.application.registry.temporal_coverage import TemporalCoverageReport, TemporalRevisionCoverage
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.source_connectivity import (
     SourceConnectivityConnectionIdentity,
@@ -22,6 +21,7 @@ from cadrumo.core.source_connectivity import (
 )
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 
+from ...temporal_coverage import TemporalCoverageReport, TemporalRevisionCoverage
 from ..authorities import RegistryClosureAuthorities
 from ..cli import app
 from ..closure import (

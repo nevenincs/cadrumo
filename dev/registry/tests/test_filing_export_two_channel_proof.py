@@ -19,10 +19,6 @@ from cadrumo.application.filing.export_proof import FilingExportProofChannel, Fi
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
-from cadrumo.domain.calculations.registry.diagnostic_classification import (
-    RegistryDiagnosticFilingRevision,
-    load_registry_diagnostic_classification,
-)
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.static_inspection import (
     RegistryRevisionInspection,
@@ -30,6 +26,10 @@ from cadrumo.domain.calculations.registry.static_inspection import (
 )
 
 from .. import filing_export_proof
+from ..diagnostic_classification import (
+    RegistryDiagnosticFilingRevision,
+    load_registry_diagnostic_classification,
+)
 from ..filing_export_proof import (
     CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS,
     CanonicalTwoChannelFilingExportProofAuthority,

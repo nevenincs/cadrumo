@@ -18,7 +18,6 @@ from pydantic import BaseModel, BeforeValidator, Field, TypeAdapter, field_valid
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.classification.policies import SensitivityClass
-from ....core.legal_review import LegalReviewStatus
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.revision_review import RevisionReviewStatus
 from .errors import RegistryValidationError
@@ -35,12 +34,10 @@ __all__ = [
     "FormulaOperator",
     "GovernanceStampMarker",
     "LegalRefs",
-    "LegalReviewStatusField",
     "ManifestOnlyMarker",
     "ModeloFilingCapability",
     "RegistryAuthorityGradeField",
     "RegistryModel",
-    "ReviewStatus",
     "RevisionReviewStatusField",
     "SchemaFamilyMarker",
     "SensitivityClassField",
@@ -85,8 +82,7 @@ string for an enum-typed field, so the governance stamp needs this coercion hop
 exactly as ``output_sensitivity`` does. An unknown token raises out of the enum
 constructor and surfaces as a registry load failure naming the offending value.
 
-Distinct from :data:`ReviewStatus` below, which is the legal catalogue's own
-single-valued review vocabulary and governs a different subject.
+Shared with the legal catalogue rows, which reach the same vocabulary.
 """
 
 
@@ -381,25 +377,6 @@ ModeloFilingCapability = Literal["borrador", "renta_ledger_default"]
   and may declare cross-model relations but is not a filing modelo.
 """
 
-
-def _coerce_legal_review_status(value: object) -> object:
-    if isinstance(value, LegalReviewStatus):
-        return value
-    if isinstance(value, str):
-        return LegalReviewStatus(value)
-    return value
-
-
-LegalReviewStatusField = Annotated[LegalReviewStatus, BeforeValidator(_coerce_legal_review_status)]
-"""The legal-reference catalogue's typed review-provenance vocabulary.
-
-Distinct from :data:`RevisionReviewStatusField` above, which coerces the
-registry's per-revision governance-stamp token and governs a different
-subject.
-"""
-
-ReviewStatus = Literal["reviewed"]
-"""Review token retained for official sources and legal parameters."""
 
 DesignAuthority = Literal["authoritative", "provenance_only"]
 """Whether a bundled record design is a machine-readable authority or provenance.

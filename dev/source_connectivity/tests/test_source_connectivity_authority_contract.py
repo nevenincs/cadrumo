@@ -11,9 +11,22 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ....core.identity import CalculationRevisionId
-from ....core.source_connectivity import (
+from cadrumo.application.aggregation import BindingSourceDisposition
+from cadrumo.application.modelo.calculation_route import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
+from cadrumo.application.operator_surface.calculation_workflows import (
+    ModeloCalculationRouteId,
+    SupportedModeloCalculationWorkflow,
+    SupportedModeloCalculationWorkflowCatalogue,
+    build_supported_modelo_calculation_workflow_catalogue,
+)
+from cadrumo.application.operator_surface.manifest import (
+    LiveLeafInventoryRow,
+    OperatorSurfaceReconciliation,
+    ReconciledOperatorLeaf,
+)
+from cadrumo.core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from cadrumo.core.identity import CalculationRevisionId
+from cadrumo.core.source_connectivity import (
     SourceConnectivityConnectionIdentity,
     SourceConnectivityExecutableEvidence,
     SourceConnectivityExecutableEvidenceRole,
@@ -21,21 +34,13 @@ from ....core.source_connectivity import (
     SourceConnectivityGroundingLocatorKind,
     SourceConnectivityOperatorReachabilityProof,
 )
-from ....domain.modelos.calculation_revision import (
+from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
     CalculationSourceRef,
 )
-from ...aggregation import BindingSourceDisposition
-from ...modelo.calculation_route import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
-from ...operator_surface.calculation_workflows import (
-    ModeloCalculationRouteId,
-    SupportedModeloCalculationWorkflow,
-    SupportedModeloCalculationWorkflowCatalogue,
-    build_supported_modelo_calculation_workflow_catalogue,
-)
-from ...operator_surface.manifest import LiveLeafInventoryRow, OperatorSurfaceReconciliation, ReconciledOperatorLeaf
+
 from ..source_connectivity_authority import (
     CalculationRouteResolverSourceOwnership,
     CalculationRouteSourceOwnershipCatalogue,

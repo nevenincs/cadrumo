@@ -10,11 +10,21 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ....core.calculation_route import ModeloCalculationRouteId
-from ....core.source_connectivity import (
+from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.aggregation import BindingSourceDisposition
+from cadrumo.application.modelo.calculation_route import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
+from cadrumo.application.operator_surface.calculation_workflows import (
+    build_supported_modelo_calculation_workflow_catalogue,
+)
+from cadrumo.application.registry.source_connectivity import (
+    SourceConnectivityCensusEntry,
+    load_source_connectivity_census,
+)
+from cadrumo.application.registry.source_connectivity_coverage import compose_source_connectivity_coverage
+from cadrumo.core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from cadrumo.core.calculation_route import ModeloCalculationRouteId
+from cadrumo.core.source_connectivity import (
     SourceConnectivityCensusRow,
     SourceConnectivityConnectedProof,
     SourceConnectivityConnectionIdentity,
@@ -28,19 +38,16 @@ from ....core.source_connectivity import (
     SourceConnectivityProofFailureCause,
     SourceConnectivityResolverOwnershipProof,
 )
-from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
-from ....domain.modelos.calculation_revision import (
+from cadrumo.domain.modelos.calculation_repository import CalculationRevisionPersistenceError
+from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
     CalculationSourceRef,
     derive_calculation_revision_id,
 )
-from ....entrypoints.cli import current_operator_surface_reconciliation
-from ...aggregation import BindingSourceDisposition
-from ...modelo.calculation_route import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
-from ...operator_surface.calculation_workflows import build_supported_modelo_calculation_workflow_catalogue
-from ..source_connectivity import SourceConnectivityCensusEntry, load_source_connectivity_census
+from cadrumo.entrypoints.cli import current_operator_surface_reconciliation
+
 from ..source_connectivity_authority import (
     CalculationRouteResolverSourceOwnership,
     CalculationRouteSourceOwnershipCatalogue,
@@ -49,7 +56,6 @@ from ..source_connectivity_authority import (
     RepositoryRootEvidenceDigestVerifier,
     build_calculation_route_source_ownership_catalogue,
 )
-from ..source_connectivity_coverage import compose_source_connectivity_coverage
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -271,12 +277,12 @@ def test_real_live_authority_encrypted_payload_roundtrip_and_raw_lineage_deletio
 ) -> None:
     import json
 
-    from ....adapters.persistence.profile.modelos_calculation import (
+    from cadrumo.adapters.persistence.profile.modelos_calculation import (
         _CALCULATION_CATALOGUE_VERSION,
         _CALCULATION_NAMESPACE,
         _CALCULATION_OBJECT_KEY,
     )
-    from ....core.classification.policies import SensitivityClass
+    from cadrumo.core.classification.policies import SensitivityClass
 
     authority, connection, proof, _ = _composition(tmp_path, secure_objects)
     repository = authority.calculation_revisions

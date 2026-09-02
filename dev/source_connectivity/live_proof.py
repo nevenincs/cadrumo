@@ -38,12 +38,6 @@ from cadrumo.application.modelo.revision_persistence import persist_calculation_
 from cadrumo.application.operator_surface.calculation_workflows import (
     build_supported_modelo_calculation_workflow_catalogue,
 )
-from cadrumo.application.registry.source_connectivity_authority import (
-    LiveSourceConnectivityProofAuthority,
-    LiveSourceConnectivityProofExpectation,
-    RepositoryRootEvidenceDigestVerifier,
-    build_calculation_route_source_ownership_catalogue,
-)
 from cadrumo.core.aggregation import BindingSourceKind, CalculationSourceLineageRole, IntracomOperationType
 from cadrumo.core.calculation_route import ModeloCalculationRouteId
 from cadrumo.core.casilla_id import validated_casilla_id
@@ -59,6 +53,13 @@ from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from cadrumo.entrypoints.cli import current_operator_surface_reconciliation
+
+from .source_connectivity_authority import (
+    LiveSourceConnectivityProofAuthority,
+    LiveSourceConnectivityProofExpectation,
+    RepositoryRootEvidenceDigestVerifier,
+    build_calculation_route_source_ownership_catalogue,
+)
 
 
 class ConnectedProofCompositionError(ValueError):

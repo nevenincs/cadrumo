@@ -15,7 +15,7 @@ from ....core.corpus_text import (
     resolve_anchored_extracted_unit,
 )
 from ....core.hashing import blake2b_hex
-from ....core.legal_review import REVIEWED_LEGAL_STATUSES
+from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES
 from ._citation_blocklist import CitationSource, find_known_bad
 from .errors import RegistryValidationError
 from .schema_references import LegalReference
@@ -260,7 +260,7 @@ def verify_legal_reference(
     present forbidden phrase — so their failures are raised with distinct
     messages naming which clause fired.
 
-    The review gate admits any member of :data:`REVIEWED_LEGAL_STATUSES` —
+    The review gate admits any member of :data:`REVIEWED_REVISION_REVIEW_STATUSES` —
     agent or operator — rather than demanding ``operator_reviewed``
     specifically. Demanding it made filing-grade authority unreachable by
     construction: nothing in this project may stamp ``operator_reviewed``,
@@ -272,7 +272,7 @@ def verify_legal_reference(
     and used for reviewer-field coherence, not a second vocabulary invented
     here.
     """
-    if reference.review_status not in REVIEWED_LEGAL_STATUSES:
+    if reference.review_status not in REVIEWED_REVISION_REVIEW_STATUSES:
         raise RegistryValidationError(
             f"legal reference {reference.id!r} is {reference.review_status.value!r}; "
             "filing-grade authority requires a reviewed status",
