@@ -1,91 +1,39 @@
-# Cadrumo download-channel descriptor — the single source of truth for the
-# stable, version-agnostic facts about each install channel (channel identity,
-# platform, install-command template, package/marketplace/bucket/tap names, and
-# availability state).
+# Cadrumo install channels.
 #
-# This file is NOT hand-rendered into docs/download.md: run
+# Stable, version-agnostic facts about each channel: identity, platform,
+# install commands, package and repository names, the artifact kinds it
+# carries, and the distribution-evidence rows it must produce. A channel is
+# listed here because Cadrumo publishes to it.
+#
+# This file is not hand-rendered into docs/download.md. Run
 #   uv run --no-sync python -m dev.docs.download_matrix generate
-# to inject the generated table + install commands into the marker zone in
-# docs/download.md, and
+# to inject the table and install commands into the marker zone there, and
 #   uv run --no-sync python -m dev.docs.download_matrix --check
 # as the drift gate. See dev/docs/download_matrix.py.
 #
 # What lives WHERE (do not duplicate a fact across sources of truth):
-#   - stable channel facts (this file): channel id, platform, install commands,
-#     package / marketplace / bucket / tap names, availability state.
+#   - stable channel facts: this file.
 #   - artifact-kind taxonomy: ArtifactKind in dev/packaging/cohort_manifest.py.
-#     Every ArtifactKind must be surfaced by exactly one channel's
-#     `artifact_kinds`; the parity gate in dev/docs/tests/test_download_matrix.py
-#     fails when a cohort kind has no documented channel row.
-#   - version + filenames + sha256 (release-time only): the cohort manifest.
-#
-# `availability`:
-#   - "available"      the channel is publicly live; the generated zone renders
-#                      its literal install command block.
-#   - "public_launch"  the channel is not yet publicly live (beta stance): the
-#                      generated zone renders the "at public launch" framing and
-#                      withholds the literal install command until passing
-#                      distribution evidence lands (see
-#                      dev/docs/tests/test_distribution_claims.py). Flip to
-#                      "available" in the same change that lands the evidence.
+#     Every kind must be surfaced by exactly one channel's `artifact_kinds`;
+#     the parity gate in dev/docs/tests/test_download_matrix.py fails when a
+#     cohort kind has no documented channel row.
+#   - target roles and runner selectors: the fleet manifest.
+#   - version, filenames and digests: the cohort manifest, at release time.
 
-schema_version = 1
+schema_version = 2
 
-# ---------------------------------------------------------------------------
-# The channel matrix is DERIVED, not chosen.
-#
-# A product's channel set falls out of three declared properties, evaluated
-# against the tier rule in dev/docs/download_matrix.py (derived_tiers). The rule
-# is the account standard; this block is the only per-product input to it, which
-# is what makes the matrix data rather than a hand-maintained per-product list.
-# A sibling product copies this file, sets these three booleans, and its channel
-# set is computed rather than argued.
-#
-#   registry            always — every product ships its language-native
-#                       registry; it is the floor and the only channel where
-#                       dependency resolution happens.
-#   standalone-executable   iff exposes_user_invoked_command — removes the
-#                       toolchain prerequisite for a user who invokes a command.
-#   shared-tap /        iff exposes_user_invoked_command AND NOT
-#   shared-bucket /     assumes_language_toolchain — the managed installers
-#   community-windows   exist for users who cannot be assumed to hold the
-#                       toolchain.
-#   host-extension      iff extends_host_application, orthogonally to the above.
-#
-# `pending_tiers` names tiers the rule SELECTS for this product and that the
-# product does not yet ship. It exists so the gap is declared data rather than a
-# silent absence: the parity gate in dev/docs/tests/test_download_matrix.py
-# asserts the derived tier set equals the tiers present here plus these pending
-# ones, so neither dropping a channel nor quietly acquiring one can pass unseen.
-[matrix]
-# Cadrumo exposes `aeat`, a command its users invoke directly.
-exposes_user_invoked_command = true
-# Its users are taxpayers and their advisers, not developers, so a Python
-# toolchain cannot be assumed. This is the property that earns the managed
-# installers.
-assumes_language_toolchain = false
-# The MCP server ships as a second console script inside the product wheel, so
-# no host application carries a channel of its own.
-extends_host_application = false
-# Derived-but-unbuilt: cadrumo ships no standalone per-platform executables and
-# has no community Windows package submission yet. Both are selected by the rule
-# above and are release-blocking for neither, because an unclaimed channel does
-# not block a claimed one — but they are named here rather than hidden.
-pending_tiers = ["standalone-executable", "community-windows"]
-
+# PyPI is the primary target. Homebrew and Scoop install what it serves, for
+# users who cannot be assumed to hold a Python toolchain.
 [[channel]]
 id = "python"
 title = "Python package"
 platform = "Any platform with Python 3.13+"
-tier = "registry"
 artifact_kinds = ["python-wheel", "python-sdist", "python-manifest", "python-source-archive", "python-wheelhouse"]
-availability = "public_launch"
 package = "cadrumo"
 registry = "PyPI listing"
-# The distribution-evidence rows this channel must produce before it may be
-# claimed. dev/release/readiness.py derives its required row set from the
-# claimed channels' rows, so this is the single place a channel's proof
-# obligation is declared.
+# The rows this channel must prove. dev/release/readiness.py derives its
+# blocking set from the union of every channel's rows, so this is the single
+# place a channel's proof obligation is declared.
 evidence_rows = [
   "python-linux-x86-64",
   "python-macos-arm64",
@@ -98,40 +46,15 @@ install_commands = [
 ]
 
 [[channel]]
-id = "scoop"
-title = "Scoop package"
-platform = "Windows (x86-64)"
-tier = "shared-bucket"
-artifact_kinds = ["scoop-manifest"]
-availability = "public_launch"
-package = "cadrumo"
-registry = "Scoop bucket"
-# One shared account distribution repository serves BOTH ecosystems: Scoop
-# imposes no repository-name constraint and resolves manifests from a `bucket/`
-# subdirectory when present, while Homebrew's mandatory `homebrew-` prefix
-# forces that repository to exist anyway. So the tap repo carries `bucket/` too
-# and a new product adds one manifest file, creating no repository. The user
-# adds this bucket once, ever, and reaches every product in it.
-bucket = "nevenincs"
-bucket_repo = "nevenincs/homebrew-tap"
-evidence_rows = ["scoop-windows-x86-64"]
-install_commands = [
-  "scoop bucket add nevenincs https://github.com/nevenincs/homebrew-tap",
-  "scoop install nevenincs/cadrumo",
-]
-
-[[channel]]
 id = "homebrew"
 title = "Homebrew formula"
 platform = "macOS (Apple silicon), Linux (x86-64 and arm64)"
-tier = "shared-tap"
 artifact_kinds = ["homebrew-formula"]
-availability = "public_launch"
 package = "cadrumo"
 registry = "Homebrew tap"
-# The same shared repository as the Scoop bucket above. The `homebrew-` repo-name
-# prefix is mandatory for the one-argument tap form, so the repo is
-# `nevenincs/homebrew-tap` and the tap name is `nevenincs/tap`.
+# Homebrew requires a repository named `homebrew-<name>` for the one-argument
+# tap form, so the repository is `nevenincs/homebrew-tap` and the tap name is
+# `nevenincs/tap`. The same repository carries the Scoop bucket below.
 tap = "nevenincs/tap"
 evidence_rows = [
   "homebrew-linux-arm64",
@@ -143,3 +66,20 @@ install_commands = [
   "brew install nevenincs/tap/cadrumo",
 ]
 
+[[channel]]
+id = "scoop"
+title = "Scoop package"
+platform = "Windows (x86-64)"
+artifact_kinds = ["scoop-manifest"]
+package = "cadrumo"
+registry = "Scoop bucket"
+# Scoop imposes no repository-name constraint and resolves manifests from a
+# `bucket/` subdirectory, so it shares the tap repository above. A new product
+# adds one manifest file and creates no repository.
+bucket = "nevenincs"
+bucket_repo = "nevenincs/homebrew-tap"
+evidence_rows = ["scoop-windows-x86-64"]
+install_commands = [
+  "scoop bucket add nevenincs https://github.com/nevenincs/homebrew-tap",
+  "scoop install nevenincs/cadrumo",
+]

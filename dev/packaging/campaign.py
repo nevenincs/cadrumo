@@ -128,7 +128,6 @@ _LANES: Final[dict[str, Lane]] = {
             Form("sdist", "dev.packaging.smoke_sdist_core"),
             Form("extras", "dev.packaging.smoke_extras"),
             Form("joined-cohort", "dev.packaging.smoke_split_install"),
-            Form("container", "dev.packaging.smoke_docker"),
         ),
         behavioural_proof="installed grounded Modelo 200 tax-work oracle",
         reference_form="uv-venv",
@@ -139,7 +138,6 @@ _LANES: Final[dict[str, Lane]] = {
         forms=(
             Form("host", "dev.packaging.smoke_browser"),
             Form("host-with-deps", "dev.packaging.smoke_browser", ("--with-deps",)),
-            Form("container", "dev.packaging.smoke_docker", ("--browser",)),
         ),
     ),
     # Standalone rather than a core form: its invariant is not shipped-artifact
@@ -191,8 +189,6 @@ _PROFILES: Final[dict[str, tuple[str, ...]]] = {
         "core/extras",
         "core/joined-cohort",
         "browser/host-with-deps",
-        "core/container",
-        "browser/container",
         "inference-boundary/wheel",
     ),
     "quick": ("core/uv-venv",),

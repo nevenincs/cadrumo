@@ -41,7 +41,6 @@ from __future__ import annotations
 import argparse
 import sys
 import tomllib
-from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
@@ -65,93 +64,6 @@ _ZONE_END: Final[str] = f"<!-- vaultspec:generated:end {_ZONE_SLUG} -->"
 _REGEN_HINT: Final[str] = "uv run --no-sync python -m dev.docs.download_matrix generate"
 
 
-class Availability(StrEnum):
-    """Closed set of publication states for one download channel."""
-
-    AVAILABLE = "available"
-    PUBLIC_LAUNCH = "public_launch"
-
-
-class ChannelTier(StrEnum):
-    """Closed set of channel tiers the account-wide matrix rule selects over.
-
-    A tier is a *kind* of channel, not a product's choice: the rule in
-    :func:`derived_tiers` decides which tiers a product ships from three declared
-    properties, so a product that does not exist yet still gets an answer.
-    """
-
-    REGISTRY = "registry"
-    STANDALONE_EXECUTABLE = "standalone-executable"
-    SHARED_TAP = "shared-tap"
-    SHARED_BUCKET = "shared-bucket"
-    COMMUNITY_WINDOWS = "community-windows"
-    HOST_EXTENSION = "host-extension"
-
-
-#: Tiers that exist for users who cannot be assumed to hold the language
-#: toolchain. They are selected together because they answer one need — an
-#: install that does not presuppose a developer environment.
-_MANAGED_INSTALLER_TIERS: Final[frozenset[ChannelTier]] = frozenset(
-    {
-        ChannelTier.SHARED_TAP,
-        ChannelTier.SHARED_BUCKET,
-        ChannelTier.COMMUNITY_WINDOWS,
-    },
-)
-
-
-class ChannelMatrix(BaseModel):
-    """The per-product input to the account-wide derived channel matrix.
-
-    These are the only product-specific facts the rule consumes. Everything else
-    about which channels a product ships is computed, which is what lets one rule
-    serve a product nobody has described yet.
-    """
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    exposes_user_invoked_command: bool
-    assumes_language_toolchain: bool
-    extends_host_application: bool
-    #: Tiers the rule selects that this product does not ship yet. Declared so
-    #: the gap is visible data rather than a silent absence.
-    pending_tiers: tuple[ChannelTier, ...] = ()
-
-    @model_validator(mode="after")
-    def _pending_tiers_are_unique_and_selected(self) -> Self:
-        if len(set(self.pending_tiers)) != len(self.pending_tiers):
-            raise ValueError("pending_tiers lists a duplicate tier")
-        unselected = sorted(tier.value for tier in self.pending_tiers if tier not in derived_tiers(self))
-        if unselected:
-            raise ValueError(
-                f"pending_tiers names tier(s) the matrix rule does not select: {unselected}; "
-                "a tier the rule excludes is not pending, it is simply not this product's",
-            )
-        return self
-
-
-def derived_tiers(matrix: ChannelMatrix) -> frozenset[ChannelTier]:
-    """Return the channel tiers the account matrix rule selects for a product.
-
-    The rule, from the account distribution standard: every product ships its
-    language-native registry (the floor, and the only channel where dependency
-    resolution happens); a product exposing a user-invoked command additionally
-    ships standalone per-platform executables, which removes the toolchain
-    prerequisite; a product exposing a user-invoked command to an audience that
-    cannot be assumed to hold the toolchain additionally ships the managed
-    installers; and, orthogonally, a product extending a host application ships
-    that host's own channel.
-    """
-    tiers = {ChannelTier.REGISTRY}
-    if matrix.exposes_user_invoked_command:
-        tiers.add(ChannelTier.STANDALONE_EXECUTABLE)
-        if not matrix.assumes_language_toolchain:
-            tiers |= _MANAGED_INSTALLER_TIERS
-    if matrix.extends_host_application:
-        tiers.add(ChannelTier.HOST_EXTENSION)
-    return frozenset(tiers)
-
-
 class DownloadChannel(BaseModel):
     """One stable, version-agnostic install channel."""
 
@@ -162,9 +74,7 @@ class DownloadChannel(BaseModel):
     id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
     title: str = Field(min_length=1)
     platform: str = Field(min_length=1)
-    tier: ChannelTier
     artifact_kinds: tuple[ArtifactKind, ...] = Field(min_length=1)
-    availability: Availability
     package: str = Field(min_length=1)
     registry: str = Field(min_length=1)
     #: Distribution-evidence row ids this channel must produce before it may be
@@ -192,31 +102,7 @@ class DownloadDescriptor(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     schema_version: int = Field(ge=1)
-    matrix: ChannelMatrix
     channel: tuple[DownloadChannel, ...] = Field(min_length=1)
-
-    @model_validator(mode="after")
-    def _tiers_match_the_derived_matrix(self) -> Self:
-        """Refuse a descriptor whose channels disagree with the derived rule.
-
-        Present tiers plus declared-pending tiers must be exactly the tiers the
-        rule selects. Dropping a channel therefore cannot pass unnoticed, and
-        acquiring one the rule does not select cannot either.
-        """
-        selected = derived_tiers(self.matrix)
-        present = {channel.tier for channel in self.channel}
-        accounted = present | set(self.matrix.pending_tiers)
-        if unselected := sorted(tier.value for tier in present - selected):
-            raise ValueError(
-                f"channel(s) declare tier(s) the matrix rule does not select: {unselected}; "
-                "either the product properties in [matrix] are wrong or the channel does not belong",
-            )
-        if unaccounted := sorted(tier.value for tier in selected - accounted):
-            raise ValueError(
-                f"the matrix rule selects tier(s) no channel serves: {unaccounted}; "
-                "ship the channel or declare the tier in [matrix] pending_tiers",
-            )
-        return self
 
     @model_validator(mode="after")
     def _evidence_rows_are_partitioned(self) -> Self:
@@ -283,30 +169,14 @@ def load_descriptor(path: Path | None = None) -> DownloadDescriptor:
 # ---------------------------------------------------------------------------
 
 
-def claimed_channels(descriptor: DownloadDescriptor) -> tuple[DownloadChannel, ...]:
-    """Return the channels this release actually claims.
-
-    A channel is claimed when it is publicly live (``availability = available``),
-    because that is precisely when the documentation prints its literal install
-    command and a reader can act on it. The language-native registry is always
-    claimed regardless: it is the floor of the account standard, so the required
-    evidence set can never collapse to nothing.
-    """
-    return tuple(
-        channel
-        for channel in descriptor.channel
-        if channel.availability is Availability.AVAILABLE or channel.tier is ChannelTier.REGISTRY
-    )
-
-
 def required_evidence_rows(descriptor: DownloadDescriptor) -> tuple[str, ...]:
-    """Return the distribution-evidence rows the claimed channels must prove.
+    """Return every distribution-evidence row the inventory must prove.
 
-    Evidence stays proportional to claims: a release claiming one channel proves
-    one channel, a release claiming five proves five. No gate is weakened and no
-    row is removed — an unclaimed channel simply stops blocking a claimed one.
+    A channel is listed because the product publishes to it, so every listed
+    channel owes its rows. A channel that cannot be proven is removed from the
+    inventory rather than left declared and unproven.
     """
-    return tuple(sorted({row for channel in claimed_channels(descriptor) for row in channel.evidence_rows}))
+    return tuple(sorted({row for channel in descriptor.channel for row in channel.evidence_rows}))
 
 
 # ---------------------------------------------------------------------------
@@ -314,32 +184,17 @@ def required_evidence_rows(descriptor: DownloadDescriptor) -> tuple[str, ...]:
 # ---------------------------------------------------------------------------
 
 
-def _availability_note(channel: DownloadChannel) -> str:
-    """Return the "how you get the current beta" cell for one channel."""
-    if channel.availability is Availability.AVAILABLE:
-        return f"Release page artifact; {channel.registry} live"
-    return f"Release page artifact; {channel.registry} at public launch"
-
-
 def _install_block(channel: DownloadChannel) -> str:
     """Return the per-channel install section.
 
-    An ``available`` channel renders its literal install commands in a fenced
-    code block. A ``public_launch`` channel withholds the literal command (so the
-    page never advertises a channel ahead of its passing distribution evidence)
-    and renders an "at public launch" line instead.
+    A channel with install commands renders them in a fenced code block; one
+    without renders the registry it is acquired from instead.
     """
     heading = f"**{channel.title}**: {channel.platform}"
-    if channel.availability is Availability.AVAILABLE and channel.install_commands:
-        commands = "\n".join(channel.install_commands)
-        return f"{heading}\n\n```bash\n{commands}\n```\n"
-    if channel.availability is Availability.AVAILABLE and not channel.install_commands:
-        return f"{heading}\n\nDownload the release-page artifact and install it through {channel.registry}.\n"
-    return (
-        f"{heading}\n\n"
-        f"The {channel.registry} opens at public launch; until then, install the "
-        f"release-page artifact attached to the latest release.\n"
-    )
+    if channel.install_commands:
+        commands = chr(10).join(channel.install_commands)
+        return f"{heading}" + chr(10) * 2 + "```bash" + chr(10) + commands + chr(10) + "```" + chr(10)
+    return f"{heading}" + chr(10) * 2 + f"Acquire it through {channel.registry}." + chr(10)
 
 
 def render_zone(descriptor: DownloadDescriptor) -> str:
@@ -362,7 +217,7 @@ def render_zone(descriptor: DownloadDescriptor) -> str:
     for channel in descriptor.channel:
         lines.append(f"* - {channel.platform}")
         lines.append(f"  - {channel.title}")
-        lines.append(f"  - {_availability_note(channel)}")
+        lines.append(f"  - {channel.registry}")
     lines.append("```")
     lines.append("")
     lines.append("Per-channel install paths:")

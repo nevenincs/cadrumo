@@ -48,8 +48,6 @@ _EXPECTED_EXECUTION: dict[str, tuple[tuple[str, tuple[str, ...]], ...]] = {
         ("dev.packaging.smoke_extras", ()),
         ("dev.packaging.smoke_split_install", ()),
         ("dev.packaging.smoke_browser", ("--with-deps",)),
-        ("dev.packaging.smoke_docker", ()),
-        ("dev.packaging.smoke_docker", ("--browser",)),
         ("dev.packaging.smoke_absent_llm", ()),
     ),
 }
@@ -126,7 +124,6 @@ def test_portable_profile_matches_the_host_portable_aggregate() -> None:
         "browser/host",
         "inference-boundary/wheel",
     }
-    assert "core/container" not in _PROFILES["portable"]
     assert "browser/host-with-deps" not in _PROFILES["portable"]
 
 
@@ -143,7 +140,6 @@ def test_ci_profile_is_the_ubuntu_superset() -> None:
         "inference-boundary/wheel",
     } <= ci
     assert "browser/host-with-deps" in ci
-    assert {"core/container", "browser/container"} <= ci
     # The portable browser variant is replaced by the --with-deps variant.
     assert "browser/host" not in ci
 
@@ -209,12 +205,11 @@ def test_the_behavioural_proof_runs_on_the_reference_form_and_nowhere_else() -> 
 
     Known limitation, recorded where someone would trip on it. This keys on the
     module, so it cannot express a behavioural proof for a lane whose forms
-    SHARE a module: ``smoke_docker`` backs both ``core/container`` and
-    ``browser/container``, and ``smoke_browser`` backs both browser host forms,
-    so ``calls_oracle`` is necessarily equal across those forms while
-    ``expected`` would differ — unsatisfiable by construction. Every browser-lane
-    form shares its module, so that lane cannot declare a behavioural proof at
+    SHARE a module: ``smoke_browser`` backs both browser host forms, so
+    ``calls_oracle`` is necessarily equal across them while ``expected`` would
+    differ — unsatisfiable by construction. Every browser-lane form shares its
     all today. Nothing is blocked (``behavioural_proof=None`` is a legitimate
+    state the pairing test enforces), but a future "the browser really drives a
     state the pairing test enforces), but a future "the browser really drives a
     page" proof meets this wall. The fix then is to key on the resolved
     ``(module, extra_args)`` invocation, the granularity the executed-set pin
