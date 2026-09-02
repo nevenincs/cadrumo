@@ -95,3 +95,54 @@ def test_screen_reports_disagreeing_window_sources(authority: ValidatedRegistryA
     moved = revision.model_copy(update={"valid_from": datetime.date(selector.year_from - 3, 1, 1)})
     kinds = {finding.kind for finding in name_window_findings(moved, modelo_id="303")}
     assert "window_sources_disagree" in kinds
+
+
+def test_an_open_ended_window_its_selector_does_not_carry_is_reported(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """A revision reads as open-ended and selection stops at its named year.
+
+    ``valid_to`` unset is how the corpus spells an open-ended window, and a
+    reader takes it at face value. In this shape the selector carries neither
+    bound, and selection does not extend: modelo 131's 2026 admits 2026 and
+    refuses 2027, and the same holds for the other four instances.
+
+    The condition is keyed on ``valid_to`` being unset rather than on the
+    selector alone, and that distinction was established by measurement. Fifty
+    revisions carry an empty selector beside an explicit ``valid_to``; their
+    window is stated by the dates and they are correct, so reporting them would
+    put fifty right declarations around five wrong ones.
+    """
+    revision = authority.modelo("131").revisions["2026"]
+    kinds = {finding.kind for finding in name_window_findings(revision, modelo_id="131")}
+
+    assert "open_ended_window_not_selectable" in kinds
+
+
+def test_a_genuinely_open_ended_revision_carries_a_selector_opening_and_is_not_reported(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """The shape that really does serve later years must not be swept in.
+
+    Modelo 721's 2024 declares no ``valid_to`` and a selector ``year_from``, and
+    it admits filing year 2026 under a name saying 2024. That is a name
+    understating its reach, which the single-year condition reports, and it is
+    emphatically not an unselectable window.
+    """
+    revision = authority.modelo("721").revisions["2024"]
+    kinds = {finding.kind for finding in name_window_findings(revision, modelo_id="721")}
+
+    assert "open_ended_window_not_selectable" not in kinds
+
+
+def test_an_explicit_closing_date_is_never_reported_as_unselectable(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """A revision whose window closes states its span in the dates, selector or not."""
+    revision = authority.modelo("100").revisions["2025"]
+    selector = revision.period_selector
+
+    assert revision.valid_to is not None
+    assert selector.year_from is None and selector.year_to is None
+    kinds = {finding.kind for finding in name_window_findings(revision, modelo_id="100")}
+    assert "open_ended_window_not_selectable" not in kinds

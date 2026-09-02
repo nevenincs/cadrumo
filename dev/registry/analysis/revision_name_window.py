@@ -18,6 +18,13 @@ shapes carry a temporal claim:
 
 Six conditions are reported, and every row names one of them:
 
+- ``open_ended_window_not_selectable`` - the revision declares no ``valid_to``,
+  which reads as an open-ended window, while its period selector declares
+  neither an opening nor a closing year. Selection does not in fact extend
+  beyond the named year in this shape: all five instances admit their own year
+  and refuse the next. A revision that genuinely runs open-ended carries a
+  selector ``year_from``, which is how modelo 194 and modelo 721 serve years
+  after the one their name states.
 - ``name_opens_after_window`` - the name's leading year is later than the year
   the window opens, so the revision serves years its name does not claim. A
   reader selecting by name understates the revision's reach.
@@ -98,6 +105,20 @@ def name_window_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[R
                 revision=name,
                 kind="window_sources_disagree",
                 detail=f"valid_from={revision.valid_from.year} period_selector.year_from={selector_from}",
+            )
+        )
+
+    selector = revision.period_selector
+    if revision.valid_to is None and selector.year_from is None and selector.year_to is None:
+        findings.append(
+            RevisionNameFinding(
+                modelo=modelo_id,
+                revision=name,
+                kind="open_ended_window_not_selectable",
+                detail=(
+                    "valid_to is unset, which reads as open-ended, while the period selector "
+                    "declares neither year_from nor year_to"
+                ),
             )
         )
 
