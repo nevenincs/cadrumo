@@ -387,7 +387,8 @@ def build_release_cohort(
         env["PYTHONPATH"] = os.pathsep.join((str(clean_root / "src"), str(clean_root)))
         argv = [
             sys.executable,
-            str(clean_root / "dev" / "packaging" / "release_cohort.py"),
+            "-m",
+            "dev.packaging.release_cohort",
             "build-clean",
             "--output",
             str(staging),

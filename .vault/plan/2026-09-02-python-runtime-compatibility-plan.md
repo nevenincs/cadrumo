@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-python-runtime-compatibility-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:5b2bb2909e4bef678ed2bd0949ddfc467bd0d11dbffba920f7feafe0f94d3d1c'
+body_hash: 'sha256:0a0a2c0000fbc878f86909a174183792b292c8cf2ec9e6019252597674f79a49'
 ---
 
 <!-- RETIRED: S33, S35, S37, S39, S41, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 -->
@@ -72,12 +72,14 @@ Add a separately verdictable workflow without expanding protected CI or release-
 - [x] `P04.S27` - Verify workflow Python calls use repository module entry points; `dev/ci/tests/test_workflow_tool_invocation.py`.
 - [x] `P04.S28` - Preserve protected packaging-smoke single-build behavior; `dev/packaging/tests/test_packaging_smoke_workflow.py`.
 - [x] `P04.S29` - Preserve protected quick-packaging single-runtime behavior; `dev/packaging/tests/test_packaging_quick_workflow.py`.
+- [x] `P04.S58` - Invoke clean release-cohort construction through its package module; `dev/packaging/release_cohort.py`.
+- [ ] `P04.S59` - Prove clean release-cohort subprocess imports remain package-correct; `dev/packaging/tests/test_release_cohort.py`.
 
 ### Phase `P05` - align stable metadata release gates and documentation
 
 Make stable support claims only after their blocking evidence passes.
 
-- [ ] `P05.S30` - Add classifiers only for stable runtimes proven by the matrix; `pyproject.toml`.
+- [x] `P05.S30` - Add classifiers only for stable runtimes proven by the matrix; `pyproject.toml`.
 - [ ] `P05.S31` - Align manuals companion classifiers with stable runtime evidence; `packaging/cadrumo_data_manuals/pyproject.toml`.
 - [ ] `P05.S32` - Align official-data companion classifiers with stable runtime evidence; `packaging/cadrumo_data_official/pyproject.toml`.
 - [ ] `P05.S34` - Enforce root and companion classifier parity and prerelease exclusion; `dev/packaging/tests/test_classifier_parity.py`.
