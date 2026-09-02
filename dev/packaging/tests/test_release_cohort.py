@@ -2,16 +2,21 @@
 
 from __future__ import annotations
 
+import re
 import uuid
 import zipfile
 from pathlib import Path
+from typing import Final
 
 import pytest
 
 from ..._paths import REPO_ROOT
-from ..release_cohort import build_release_cohort, deterministic_zip_tree
+from .. import release_cohort as release_cohort_module
+from ..release_cohort import _REQUIRED_PYTHON_VERSION, build_release_cohort, deterministic_zip_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_EXACT_PYTHON: Final[str] = r"3\.\d+\.\d+"
 
 
 def test_deterministic_zip_preserves_real_tree_bytes(tmp_path: Path) -> None:
@@ -69,3 +74,34 @@ def test_build_refuses_an_expected_commit_other_than_checked_out_head() -> None:
         )
 
     assert not output.exists()
+
+
+def test_release_builder_identity_is_the_exact_checked_in_cpython_pin() -> None:
+    """The release cohort's build identity remains separate from the open support floor."""
+    pin = (REPO_ROOT / ".python-version").read_text(encoding="utf-8").strip()
+
+    assert re.fullmatch(_EXACT_PYTHON, pin) is not None
+    assert pin == _REQUIRED_PYTHON_VERSION
+
+    identity = release_cohort_module._build_identity(REPO_ROOT)
+
+    assert identity.implementation == "dev.packaging.release_cohort"
+    assert identity.python == pin
+
+
+@pytest.mark.parametrize(
+    ("implementation", "version"),
+    [("PyPy", _REQUIRED_PYTHON_VERSION), ("CPython", "3.14.0")],
+    ids=("alternative-implementation", "different-patch"),
+)
+def test_release_builder_refuses_a_non_exact_cpython_identity(
+    monkeypatch: pytest.MonkeyPatch,
+    implementation: str,
+    version: str,
+) -> None:
+    """A compatibility runtime cannot silently become the reproducible builder."""
+    monkeypatch.setattr(release_cohort_module.platform, "python_implementation", lambda: implementation)
+    monkeypatch.setattr(release_cohort_module.platform, "python_version", lambda: version)
+
+    with pytest.raises(SystemExit, match="release cohort requires"):
+        release_cohort_module._build_identity(REPO_ROOT)

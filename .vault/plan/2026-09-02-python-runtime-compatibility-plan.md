@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-python-runtime-compatibility-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:a187188bb6ad7e4769da1506c36c953d66583e44a23cad29a037d11a5a67e37a'
+body_hash: 'sha256:dc202f0028563934b51ef0604da3fbf917f1c51f0d12cb5c55f2b6d68b563ad6'
 ---
 
 <!-- RETIRED: S33, S35, S37, S39, S41, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 -->
@@ -35,7 +35,7 @@ Make metadata, inventory, and release-cohort boundaries authoritative.
 - [x] `P01.S05` - Add detector-teeth tests for runtime inventory gaps duplicates and invalid states; `dev/ci/tests/test_python_runtime_matrix.py`.
 - [x] `P01.S06` - Replace the stale Python ceiling assertion with the open-floor policy; `dev/audit/security.py`.
 - [x] `P01.S07` - Update security-audit expectations for the open-ended floor; `dev/audit/tests/test_security.py`.
-- [ ] `P01.S08` - Guard the exact CPython release-builder identity; `dev/packaging/tests/test_release_cohort.py`.
+- [x] `P01.S08` - Guard the exact CPython release-builder identity; `dev/packaging/tests/test_release_cohort.py`.
 
 ### Phase `P02` - harden dev and src runtime compatibility
 
