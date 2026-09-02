@@ -25,10 +25,11 @@ import pytest
 
 from ......core.config import Settings
 from ......tests.live_gate import requires_live_enabled
+from .._adapter_utils import extract_marker_verdict
 from ...browser.factory import default_browser_session_factory
 from ..groi_check import (
     GroiSedeDriver,
-    extract_verdict_from_response_text,
+    _POSITIVE_MARKERS,
 )
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
@@ -61,7 +62,7 @@ def test_groi_verdict_parser_recognises_live_telefonica_certification() -> None:
 
     requires_live_enabled()
     body_text = asyncio.run(_query_live_body_text(_PROBE_NIF))
-    assert extract_verdict_from_response_text(body_text) == "valid", body_text[:500]
+    assert extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS) == "valid", body_text[:500]
 
 
 async def _assert_form_shape() -> None:

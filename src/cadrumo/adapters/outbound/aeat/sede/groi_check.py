@@ -477,7 +477,7 @@ async def _check_single_nif(
         description="GROI response body text",
         timeout_ms=timeout_ms,
     )
-    return extract_verdict_from_response_text(body_text)
+    return extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS)
 
 
 _POSITIVE_MARKERS: tuple[str, ...] = (
@@ -486,25 +486,10 @@ _POSITIVE_MARKERS: tuple[str, ...] = (
     "operador intracomunitario identificado",
 )
 
-
-def extract_verdict_from_response_text(body_text: str) -> IdentityCheckVerdictValue:
-    """Parse the AEAT GROI verdict from the response body text.
-
-    Positive markers are GROI's own ROI-registration phrases, verified
-    against live AEAT response samples captured 2026-05-07. Rejection is
-    classified by the shared
-    :data:`~._adapter_utils.SPANISH_NEGATIVE_VERDICT_MARKERS` table, which
-    every sede checker reads so one driver cannot recognise a refusal the
-    other misses.
-    """
-    return extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS)
-
-
 __all__ = [
     "DEFAULT_GROI_TIMEOUT_MS",
     "GroiNifVerdict",
     "GroiResult",
     "GroiSedeDriver",
     "collect_groi_observations",
-    "extract_verdict_from_response_text",
 ]

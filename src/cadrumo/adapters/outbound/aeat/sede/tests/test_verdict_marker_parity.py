@@ -17,8 +17,8 @@ from __future__ import annotations
 import pytest
 
 from .._adapter_utils import SPANISH_NEGATIVE_VERDICT_MARKERS, extract_marker_verdict
-from ..groi_check import extract_verdict_from_response_text as groi_verdict
-from ..nif_iva_check import extract_verdict_from_response_text as nif_iva_verdict
+from ..groi_check import _POSITIVE_MARKERS as _GROI_POSITIVE_MARKERS
+from ..nif_iva_check import _POSITIVE_MARKERS as _NIF_IVA_POSITIVE_MARKERS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -37,15 +37,15 @@ SPANISH_NEGATIVE_RESPONSES = (
 @pytest.mark.parametrize("body_text", SPANISH_NEGATIVE_RESPONSES)
 def test_both_checkers_classify_spanish_negatives_as_invalid(body_text: str) -> None:
     """A refusal is a refusal on either surface -- never valid, never unknown."""
-    assert groi_verdict(body_text) == "invalid", body_text
-    assert nif_iva_verdict(body_text) == "invalid", body_text
+    assert extract_marker_verdict(body_text, positive_markers=_GROI_POSITIVE_MARKERS) == "invalid", body_text
+    assert extract_marker_verdict(body_text, positive_markers=_NIF_IVA_POSITIVE_MARKERS) == "invalid", body_text
 
 
 @pytest.mark.parametrize("body_text", SPANISH_NEGATIVE_RESPONSES)
 def test_no_negative_response_is_ever_reported_valid(body_text: str) -> None:
     """The safety property: an AEAT rejection must never read as a pass."""
-    assert groi_verdict(body_text) != "valid", body_text
-    assert nif_iva_verdict(body_text) != "valid", body_text
+    assert extract_marker_verdict(body_text, positive_markers=_GROI_POSITIVE_MARKERS) != "valid", body_text
+    assert extract_marker_verdict(body_text, positive_markers=_NIF_IVA_POSITIVE_MARKERS) != "valid", body_text
 
 
 def test_surface_specific_affirmations_stay_surface_specific() -> None:
@@ -55,17 +55,23 @@ def test_surface_specific_affirmations_stay_surface_specific() -> None:
     must not read it as ``valid``; the converse holds for GROI's own
     registration phrase.
     """
-    assert nif_iva_verdict("NIF-IVA válido") == "valid"
-    assert groi_verdict("NIF-IVA válido") == "unknown"
+    assert extract_marker_verdict("NIF-IVA válido", positive_markers=_NIF_IVA_POSITIVE_MARKERS) == "valid"
+    assert extract_marker_verdict("NIF-IVA válido", positive_markers=_GROI_POSITIVE_MARKERS) == "unknown"
 
-    assert groi_verdict("CONSTA UN OPERADOR INTRACOMUNITARIO") == "valid"
-    assert nif_iva_verdict("CONSTA UN OPERADOR INTRACOMUNITARIO") == "unknown"
+    assert extract_marker_verdict("CONSTA UN OPERADOR INTRACOMUNITARIO", positive_markers=_GROI_POSITIVE_MARKERS) == "valid"
+    assert extract_marker_verdict("CONSTA UN OPERADOR INTRACOMUNITARIO", positive_markers=_NIF_IVA_POSITIVE_MARKERS) == "unknown"
 
 
 def test_empty_and_unanswerable_text_is_unknown() -> None:
-    assert groi_verdict("") == "unknown"
-    assert nif_iva_verdict("") == "unknown"
-    assert groi_verdict("Servicio temporalmente no disponible por mantenimiento") == "unknown"
+    assert extract_marker_verdict("", positive_markers=_GROI_POSITIVE_MARKERS) == "unknown"
+    assert extract_marker_verdict("", positive_markers=_NIF_IVA_POSITIVE_MARKERS) == "unknown"
+    assert (
+        extract_marker_verdict(
+            "Servicio temporalmente no disponible por mantenimiento",
+            positive_markers=_GROI_POSITIVE_MARKERS,
+        )
+        == "unknown"
+    )
 
 
 def test_negative_precedence_beats_a_positive_marker_in_the_same_body() -> None:
@@ -78,5 +84,5 @@ def test_negative_precedence_beats_a_positive_marker_in_the_same_body() -> None:
 def test_every_shared_negative_marker_is_honoured_by_both_checkers() -> None:
     """No checker may quietly drop a marker from the shared table."""
     for marker in SPANISH_NEGATIVE_VERDICT_MARKERS:
-        assert groi_verdict(marker) == "invalid", marker
-        assert nif_iva_verdict(marker) == "invalid", marker
+        assert extract_marker_verdict(marker, positive_markers=_GROI_POSITIVE_MARKERS) == "invalid", marker
+        assert extract_marker_verdict(marker, positive_markers=_NIF_IVA_POSITIVE_MARKERS) == "invalid", marker

@@ -526,7 +526,7 @@ async def _check_single_nif(
         description="NIF-IVA response body text",
         timeout_ms=timeout_ms,
     )
-    return extract_verdict_from_response_text(body_text)
+    return extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS)
 
 
 _POSITIVE_MARKERS: tuple[str, ...] = (
@@ -538,20 +538,6 @@ _POSITIVE_MARKERS: tuple[str, ...] = (
     "nif-iva valido",
     "valid",
 )
-
-
-def extract_verdict_from_response_text(body_text: str) -> IdentityCheckVerdictValue:
-    """Parse the AEAT-rendered VIES verdict from response body text.
-
-    AEAT renders the VIES response in Spanish and phrases a rejection by
-    negating the same word it uses to affirm, so the bare ``valid`` positive
-    marker below is safe only because rejection is classified first, through
-    the shared
-    :data:`~._adapter_utils.SPANISH_NEGATIVE_VERDICT_MARKERS` table every sede
-    checker reads.
-    """
-    return extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS)
-
 
 async def _select_country_code(page: Page, country_code: str, *, timeout_ms: int) -> None:
     locator = await _locate(
@@ -647,5 +633,4 @@ __all__ = [
     "NifIvaCheckSedeDriver",
     "SedeNifIvaCheckObservation",
     "collect_nif_iva_check_observations",
-    "extract_verdict_from_response_text",
 ]

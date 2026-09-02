@@ -28,6 +28,7 @@ from ......tests.aeat_literal_fixtures import (
     configured_path,
 )
 from ......tests.groi_oracle import GROI_ORACLE_ID
+from .._adapter_utils import extract_marker_verdict
 from ..errors import SedeNavigationError
 from ..groi_check import (
     DEFAULT_GROI_TIMEOUT_MS,
@@ -35,9 +36,9 @@ from ..groi_check import (
     GroiNifVerdict,
     GroiResult,
     GroiSedeDriver,
+    _POSITIVE_MARKERS,
     _assert_query_browser_action,
     assert_groi_read_landing,
-    extract_verdict_from_response_text,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -150,38 +151,38 @@ def test_verdict_parser_recognises_valid_response_for_registered_operator() -> N
         "A FECHA 07-05-2026 13:10:51 CONSTA UN OPERADOR INTRACOMUNITARIO EN ESPAÑA "
         "CON EL NÚMERO DE IVA ESA28015865"
     )
-    assert extract_verdict_from_response_text(body_text) == "valid"
+    assert extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS) == "valid"
 
 
 def test_verdict_parser_recognises_invalid_response_for_malformed_input() -> None:
     """Real AEAT response for B00000001 (syntactically invalid Spanish NIF)."""
 
     body_text = "Consulta Operadores IVA intracomunitarios españoles El campo Nif no es un NIF válido. (Ir a error)"
-    assert extract_verdict_from_response_text(body_text) == "invalid"
+    assert extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS) == "invalid"
 
 
 def test_verdict_parser_recognises_no_consta_response() -> None:
     """AEAT phrasing for valid-format but unregistered NIF: 'NO CONSTA'."""
 
     body_text = "A FECHA 07-05-2026 NO CONSTA OPERADOR INTRACOMUNITARIO CON EL NÚMERO DE IVA ESB99999999"
-    assert extract_verdict_from_response_text(body_text) == "invalid"
+    assert extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS) == "invalid"
 
 
 def test_verdict_parser_returns_unknown_for_empty_body() -> None:
-    assert extract_verdict_from_response_text("") == "unknown"
+    assert extract_marker_verdict("", positive_markers=_POSITIVE_MARKERS) == "unknown"
 
 
 def test_verdict_parser_returns_unknown_for_unrecognised_content() -> None:
     """Body without any verdict marker yields 'unknown' rather than guessing."""
 
-    assert extract_verdict_from_response_text("Página de ayuda") == "unknown"
+    assert extract_marker_verdict("Página de ayuda", positive_markers=_POSITIVE_MARKERS) == "unknown"
 
 
 def test_verdict_parser_negative_marker_wins_over_positive_token() -> None:
     """``no consta`` must NOT collapse to ``valid`` because of a generic ``operador`` token."""
 
     body_text = "A FECHA 07-05-2026 NO CONSTA OPERADOR INTRACOMUNITARIO con esos datos"
-    assert extract_verdict_from_response_text(body_text) == "invalid"
+    assert extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS) == "invalid"
 
 
 # ---------------------------------------------------------------------------
@@ -219,7 +220,7 @@ def test_groi_response_samples_parse_to_expected_verdict(expected_verdict: str, 
     from pathlib import Path
 
     body_text = Path(fixture_path).read_text(encoding="utf-8")
-    assert extract_verdict_from_response_text(body_text) == expected_verdict
+    assert extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS) == expected_verdict
 
 
 def test_groi_read_guard_admits_sibling_load_balancer_host() -> None:
