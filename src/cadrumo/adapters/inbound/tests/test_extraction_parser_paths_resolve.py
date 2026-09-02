@@ -18,7 +18,7 @@ See Also:
     :func:`~domain.calculations.registry._validate_extraction_profiles.validate_dotted_callable`
         Domain-side structural validator that deliberately avoids importing
         adapter parser modules.
-    :func:`~adapters.inbound.declaracion.parse_declaracion`
+    :func:`~adapters.inbound.declaracion.parser.parse_declaracion`
         Registry-profile-driven declaración parser facade referenced by
         shipped extraction profiles.
     :mod:`~domain.calculations.registry.tests.test_registry_schema_part2`

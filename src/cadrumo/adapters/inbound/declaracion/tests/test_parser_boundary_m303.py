@@ -1,7 +1,7 @@
 """Modelo 303 parser boundary corpus tests.
 
 See Also:
-    :func:`~adapters.inbound.declaracion.parse_declaracion`
+    :func:`~adapters.inbound.declaracion.parser.parse_declaracion`
         Public declaration-copy parser boundary exercised by this fixture.
     :mod:`~adapters.inbound.declaracion.tests._parser_boundary_m303_support`
         Shared current and historical Modelo 303 profile casilla expectations.

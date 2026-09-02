@@ -11,7 +11,7 @@ per the ``verification_source = "synthetic_from_aeat_published_text"``
 grounding tier the registry profile declares.
 
 See Also:
-    :func:`~adapters.inbound.declaracion.parse_declaracion`
+    :func:`~adapters.inbound.declaracion.parser.parse_declaracion`
         Public declaration-copy parser exercised against the current-year
         synthetic fixtures.
     :class:`~domain.calculations.registry._schema_extraction.ExtractionProfileDefinition`

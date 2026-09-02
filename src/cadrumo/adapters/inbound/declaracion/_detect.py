@@ -11,7 +11,7 @@ The detector returns :class:`~adapters.inbound.declaracion.TemplateRevision`
 records; it does not load
 :class:`~domain.calculations.registry.RegistrySnapshot` data or choose an
 extraction profile. Registry validation happens in
-:func:`~adapters.inbound.declaracion.parse_declaracion`.
+:func:`~adapters.inbound.declaracion.parser.parse_declaracion`.
 """
 
 from __future__ import annotations

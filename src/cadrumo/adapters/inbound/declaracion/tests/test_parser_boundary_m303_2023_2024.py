@@ -1,7 +1,7 @@
 """Modelo 303 parser boundary tests for the 2023-2024 printed template.
 
 See Also:
-    :func:`~adapters.inbound.declaracion.parse_declaracion`
+    :func:`~adapters.inbound.declaracion.parser.parse_declaracion`
         Public declaration-copy parser boundary exercised across the current
         Modelo 303 corpus fixtures.
     :mod:`~adapters.inbound.declaracion.tests.test_parser_boundary_m303`

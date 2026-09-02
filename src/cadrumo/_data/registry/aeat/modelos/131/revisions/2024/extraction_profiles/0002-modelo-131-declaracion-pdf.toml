@@ -5,7 +5,7 @@ artefact_kind = "declaracion"
 accepted_artefact_kinds = ["declaration_pdf"]
 corpus_round_trip_verified = true
 verification_source = "synthetic_from_aeat_published_text"
-parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+parser = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 # M131 ejercicio-2024 layout: identical printed-form line-end box-number
 # structure to the 2026 revision (the same 15-casilla resumen-liquidacion
 # set, unchanged across 2024/2025/2026 per the bundled AEAT DR xlsx

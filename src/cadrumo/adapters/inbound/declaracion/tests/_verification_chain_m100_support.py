@@ -6,7 +6,7 @@ See Also:
     :mod:`~adapters.inbound.declaracion.tests.test_parser_boundary_m100`
         Parser boundary corpus sweep that establishes the same extracted
         casilla surface before engine verification consumes it.
-    :func:`~adapters.inbound.declaracion.parse_declaracion`
+    :func:`~adapters.inbound.declaracion.parser.parse_declaracion`
         Public declaration-copy parser used by the shared corpus loader.
     :class:`~domain.calculations.registry.CasillaId`
         Typed casilla key carried by the expected sets and parsed-value mapping.
@@ -88,7 +88,7 @@ def _parse_m100_corpus(year: int, label: str) -> dict[CasillaId, object]:
     """Parse one M100 annual corpus specimen for verification-chain consumers.
 
     See Also:
-        :func:`~adapters.inbound.declaracion.parse_declaracion`
+        :func:`~adapters.inbound.declaracion.parser.parse_declaracion`
             Parser entry point invoked with explicit Modelo 100 annual context.
         :class:`~domain.calculations.registry.CasillaId`
             Mapping key type returned to engine-verification assertions.

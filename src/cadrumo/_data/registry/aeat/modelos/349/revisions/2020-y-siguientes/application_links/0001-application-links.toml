@@ -41,10 +41,9 @@ source_refs = ["aeat-dr-349-2020-current"]
 [[revisions."2020-y-siguientes".application_links]]
 id = "modelo-349-extractor"
 surface = "extractor"
-consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+consumer = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 requires_snapshot = true
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
 
 # --- Extraction profiles ---
-

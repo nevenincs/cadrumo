@@ -74,7 +74,7 @@ leaving one optional box blank would still be refused by a floor of 1.
 See Also:
     :mod:`~tests.fixtures.manual_annexes.tests.test_manual_annex_provenance`
         The provenance gate over the annex specimens.
-    :func:`~adapters.inbound.declaracion.parse_declaracion`
+    :func:`~adapters.inbound.declaracion.parser.parse_declaracion`
         The full parser boundary. It cannot consume the annex specimens, which
         carry no NIF and are refused at the identity step by design, which is
         why coverage is exercised at the extraction layer for both families

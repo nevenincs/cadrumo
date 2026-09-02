@@ -1,7 +1,7 @@
 [[revisions."2025".application_links]]
 id = "modelo-100-2025-extractor"
 surface = "extractor"
-consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+consumer = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-103"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-modelo-100-procedure"]

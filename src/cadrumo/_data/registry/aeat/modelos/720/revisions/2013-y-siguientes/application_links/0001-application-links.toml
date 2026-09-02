@@ -17,7 +17,7 @@ source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
 [[revisions."2013-y-siguientes".application_links]]
 id = "modelo-720-extractor"
 surface = "extractor"
-consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+consumer = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 requires_snapshot = true
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]

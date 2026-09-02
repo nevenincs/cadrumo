@@ -5,7 +5,7 @@ artefact_kind = "declaracion"
 accepted_artefact_kinds = ["declaration_pdf"]
 corpus_round_trip_verified = true
 verification_source = "synthetic_from_aeat_published_text"
-parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+parser = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 # M111 layout: three-column table on page 2.  Column A box numbers at x0~264
 # (left column, e.g. casillas 01/04/07), Column B at x0~347 (middle column,
 # e.g. casillas 02/05/08), Column C at x0~461 (right column, e.g. casillas

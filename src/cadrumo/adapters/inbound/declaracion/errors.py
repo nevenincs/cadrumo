@@ -19,7 +19,7 @@ class DeclaracionParseError(PdfExtractionCoverageMixin, PdfModeloImportError):
     """Raised when a PDF cannot be parsed into a declaración filing.
 
     Base class for all parse-time errors emitted by
-    :func:`adapters.inbound.declaracion.parse_declaracion`.
+    :func:`adapters.inbound.declaracion.parser.parse_declaracion`.
     :class:`TemplateNotDetectedError` signals a recoverable template
     detection failure; the bare class is raised for low-level failures
     (PDF unreadable, header field missing, missing registry coverage,
@@ -41,5 +41,5 @@ class TemplateNotDetectedError(DeclaracionParseError):
     when neither the header nor the footer of the PDF carries enough signal to
     pin a ``(modelo, año, revision)`` triple. Callers may recover by passing
     explicit ``modelo`` / ``año`` overrides to
-    :func:`~adapters.inbound.declaracion.parse_declaracion`.
+    :func:`~adapters.inbound.declaracion.parser.parse_declaracion`.
     """

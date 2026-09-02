@@ -32,7 +32,7 @@ source_refs = [
 [[revisions."2025-02-03-y-siguientes".application_links]]
 id = "modelo-036-extractor"
 surface = "extractor"
-consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+consumer = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 requires_snapshot = true
 legal_refs = [
     "rd-1065-2007:art-9",
@@ -40,4 +40,3 @@ legal_refs = [
     "orden-hac-1526-2024:art-1",
 ]
 source_refs = ["aeat-dr-036-2025", "aeat-modelo-036-procedure"]
-

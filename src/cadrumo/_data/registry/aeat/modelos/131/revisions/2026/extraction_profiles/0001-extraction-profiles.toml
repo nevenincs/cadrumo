@@ -5,7 +5,7 @@ artefact_kind = "declaracion"
 accepted_artefact_kinds = ["declaration_pdf"]
 corpus_round_trip_verified = true
 verification_source = "synthetic_from_aeat_published_text"
-parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+parser = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 # M131 2026 layout: each row prints the label text followed by dots, then the box number
 # at the end of the label zone (x0 varies 215-309), then the value immediately to the right.
 # There is only one box number per row so no anchor_x_min/max constraints are needed.

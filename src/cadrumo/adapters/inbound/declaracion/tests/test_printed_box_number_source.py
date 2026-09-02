@@ -60,7 +60,7 @@ def _numeric_profile(casilla_id: str) -> ExtractionProfileDefinition:
         surface="declaracion_pdf",
         artefact_kind="declaration_pdf",
         accepted_artefact_kinds=("declaration_pdf",),
-        parser="cadrumo.adapters.inbound.declaracion.parse_declaracion",
+        parser="cadrumo.adapters.inbound.declaracion.parser.parse_declaracion",
         target_casillas=(
             ExtractionTargetDefinition(
                 casilla_id=validated_casilla_id(casilla_id, surface="printed-box-number source probe"),
