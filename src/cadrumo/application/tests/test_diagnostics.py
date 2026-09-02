@@ -1086,7 +1086,7 @@ def test_registry_version_summary_rejects_a_negative_count() -> None:
     """
     for field_name in _REGISTRY_SUMMARY_COUNT_FIELDS:
         with pytest.raises(ValidationError, match=field_name):
-            RegistryVersionSummary(available=True, registry_root="/x", **{field_name: -1})
+            RegistryVersionSummary(available=True, registry_root="/x", **{field_name: -1})  # ty: ignore[invalid-argument-type]  # reason: the negative count IS the refusal under test
 
 
 def test_registry_version_summary_defaults_to_zero_counts_when_unavailable() -> None:

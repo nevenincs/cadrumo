@@ -49,6 +49,7 @@ import binascii
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
+from enum import StrEnum
 from typing import TYPE_CHECKING, override
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -62,6 +63,11 @@ if TYPE_CHECKING:
 
 from ...adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
 from ...adapters.outbound.aeat.sede.walker import capture_justificante, walk_expedientes_tree
+from ...adapters.outbound.aeat.verify.contract import (
+    VerifyBrowserSessionFactory,
+    VerifyBrowserSessionLike,
+    verify_csv,
+)
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ...adapters.persistence.storage.envelope.contract import Envelope
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
@@ -78,6 +84,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.time.clock import now
+from ...domain.justificante.errors import JustificanteVerificationError
 from ..calculations.observations_repository import ObservationSourceKind
 from .errors import (
     LiveApplicationInputError,
@@ -101,6 +108,28 @@ _LIVE_EVIDENCE_STAMPED_PAYLOAD_VERSION = 2
 # ``is_official_aeat`` capability lets a dependent period whose upstream evidence
 # is this capture clear the ``MISSING_JUSTIFICANTE_VERIFICATION`` blocker.
 JUSTIFICANTE_CAPTURE_SOURCE_KIND = ObservationSourceKind.AEAT_SEDE_LIVE_CAPTURE
+
+
+class JustificanteAuthenticity(StrEnum):
+    """Verdict of the read-only AEAT *cotejo* check on a captured receipt.
+
+    The four members are distinct states and never collapse into a boolean.
+    ``NOT_CHECKED`` is the default a capture carries until the cotejo viewer
+    has been consulted; ``UNAVAILABLE`` records that the check was attempted
+    and could not be completed. Neither is a denial, and neither may be read
+    as one. Only ``CONFIRMED`` means AEAT rendered the CSV-bound document
+    viewer for this receipt, and only ``DENIED`` means AEAT answered that it
+    holds no such document.
+
+    A verdict is advisory provenance about the captured PDF. It says nothing
+    about the correctness of the declared values and must never be promoted
+    into a filing-grade figure by a downstream consumer.
+    """
+
+    NOT_CHECKED = "not_checked"
+    CONFIRMED = "confirmed"
+    DENIED = "denied"
+    UNAVAILABLE = "unavailable"
 
 
 class JustificanteCaptureSnapshotNotFoundError(SnapshotNotFoundError):
@@ -135,6 +164,19 @@ class JustificanteCaptureSnapshot(BaseModel):
     def _parse_source_kind(cls, value: object) -> ObservationSourceKind:
         """Parse persisted snapshot JSON into the closed observation taxonomy."""
         return ObservationSourceKind(value)
+
+    authenticity: JustificanteAuthenticity = Field(default=JustificanteAuthenticity.NOT_CHECKED)
+
+    @field_validator("authenticity", mode="before")
+    @classmethod
+    def _parse_authenticity(cls, value: object) -> JustificanteAuthenticity:
+        """Parse persisted snapshot JSON into the closed cotejo-verdict taxonomy.
+
+        A snapshot written before the cotejo stamp existed carries no
+        ``authenticity`` key at all; the field default answers that case as
+        ``NOT_CHECKED`` rather than inventing a verdict for it.
+        """
+        return JustificanteAuthenticity(value)
 
     captured_at: datetime
     state: SnapshotLifecycleState
@@ -467,6 +509,24 @@ class JustificanteCaptureSnapshotService(
         if state is not None:
             snapshots = tuple(snapshot for snapshot in snapshots if snapshot.state is state)
         return snapshots
+
+    def stamp_authenticity(
+        self,
+        *,
+        snapshot: JustificanteCaptureSnapshot,
+        authenticity: JustificanteAuthenticity,
+    ) -> JustificanteCaptureSnapshot:
+        """Persist ``authenticity`` onto ``snapshot`` and return the stamped record.
+
+        The verdict rides the same encrypted snapshot envelope as the receipt
+        it describes, so no plaintext copy of the capture leaves the secure
+        store. Re-stamping is idempotent for an unchanged verdict and
+        overwrites in place otherwise: the cotejo answer is a current-state
+        fact about the document, not an append-only ledger of attempts.
+        """
+        stamped = snapshot.model_copy(update={"authenticity": authenticity})
+        self._repository.save(stamped)
+        return stamped
 
     def show(self, snapshot_id: str) -> JustificanteCaptureSnapshot:
         """Execute this public contract operation."""
@@ -952,6 +1012,60 @@ def stamp_capture_evidence_if_filed(snapshot: JustificanteCaptureSnapshot) -> Mo
         return None
 
 
+async def verify_capture_authenticity(
+    *,
+    snapshot: JustificanteCaptureSnapshot,
+    service: JustificanteCaptureSnapshotService,
+    browser: VerifyBrowserSessionLike | None = None,
+    browser_session_factory: VerifyBrowserSessionFactory | None = None,
+) -> JustificanteCaptureSnapshot:
+    """Ask AEAT's public cotejo viewer about ``snapshot`` and stamp the verdict.
+
+    Runs the read-only :func:`~cadrumo.adapters.outbound.aeat.verify.contract.verify_csv`
+    round trip against the capture's own CSV and persists the resulting
+    :class:`JustificanteAuthenticity` on the snapshot through ``service``.
+
+    The three answers stay distinct. AEAT rendering the CSV-bound document
+    viewer is :attr:`JustificanteAuthenticity.CONFIRMED`; AEAT answering that
+    it holds no such document is :attr:`JustificanteAuthenticity.DENIED`; a
+    round trip that could not be completed at all — no browser, a navigation
+    failure, a guard refusal — is
+    :attr:`JustificanteAuthenticity.UNAVAILABLE`, which is emphatically not a
+    denial and must never be reported as one. The capture itself is already
+    persisted before this runs, so an unreachable cotejo surface downgrades
+    the provenance available for the receipt without losing the receipt.
+
+    Args:
+        snapshot: The already-persisted capture whose CSV is checked.
+        service: Snapshot service owning ``snapshot``'s bucket; it performs
+            the encrypted write of the stamped record.
+        browser: An already-constructed browser session to borrow. When
+            ``None``, the verifier builds and closes its own.
+        browser_session_factory: Optional no-argument factory for the
+            self-owned verifier path. Ignored when ``browser`` is supplied.
+
+    Returns:
+        The stamped :class:`JustificanteCaptureSnapshot`.
+    """
+    try:
+        confirmed = await verify_csv(
+            snapshot.csv,
+            browser=browser,
+            browser_session_factory=browser_session_factory,
+        )
+    except JustificanteVerificationError:
+        return service.stamp_authenticity(
+            snapshot=snapshot,
+            authenticity=JustificanteAuthenticity.UNAVAILABLE,
+        )
+    return service.stamp_authenticity(
+        snapshot=snapshot,
+        authenticity=(
+            JustificanteAuthenticity.CONFIRMED if confirmed else JustificanteAuthenticity.DENIED
+        ),
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class JustificanteCaptureOutcome:
     """Outcome of one live justificante capture and local evidence enrolment."""
@@ -1015,7 +1129,8 @@ async def capture_justificante_snapshot_outcome(
         period=period,
     )
     capture = await capture_justificante(session, expediente, settings=settings)
-    persisted = JustificanteCaptureSnapshotService(bucket_id=bucket_id).capture(
+    service = JustificanteCaptureSnapshotService(bucket_id=bucket_id)
+    persisted = service.capture(
         modelo=modelo,
         filing_year=year,
         period=period,
@@ -1025,6 +1140,7 @@ async def capture_justificante_snapshot_outcome(
         pdf_sha256=capture.pdf_sha256,
         captured_at=now(),
     )
+    persisted = await verify_capture_authenticity(snapshot=persisted, service=service)
     justificante = register_capture_justificante_metadata(snapshot=persisted)
     filing_record = stamp_capture_evidence_if_filed(persisted)
     return JustificanteCaptureOutcome(snapshot=persisted, justificante=justificante, filing_record=filing_record)
@@ -1033,6 +1149,7 @@ async def capture_justificante_snapshot_outcome(
 __all__ = [
     "JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE",
     "JUSTIFICANTE_CAPTURE_SOURCE_KIND",
+    "JustificanteAuthenticity",
     "JustificanteCaptureOutcome",
     "JustificanteCaptureSnapshot",
     "JustificanteCaptureSnapshotNotFoundError",
@@ -1048,4 +1165,5 @@ __all__ = [
     "register_capture_justificante_metadata",
     "resolve_period_expediente",
     "stamp_capture_evidence_if_filed",
+    "verify_capture_authenticity",
 ]
