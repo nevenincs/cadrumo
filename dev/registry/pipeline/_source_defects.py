@@ -26,8 +26,9 @@ incidental:
   the document's own surviving half supports -- a value that does not fill the
   slot the cell declares is refused exactly as it is today.
 
-Source: ADR ``2026-08-31-aeat-export-fragment-generator-authority-source-defect-adjudication-adr``,
-grounded in ``2026-08-31-aeat-export-fragment-generator-authority-m390-2022-page-7-constant-reference``.
+The adjudication that established this reading is recorded outside the codebase
+and cites this module by path; the evidence a declaration needs to stand on its
+own travels with the declaration itself, in its digest, coordinate and literal.
 """
 
 from __future__ import annotations

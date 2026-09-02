@@ -19,7 +19,7 @@ reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 # This retained identity is narrowed to ejercicio 2024. Its calculation
 # authority remains available, while filing refuses until the canonical
-# generator publishes the exact 2024 design under downstream step W04.P08.S22.
+# generator publishes the exact 2024 design.
 authority_grade = "calculation"
 # valid_from tracks the ejercicio this revision computes (2024), matching the
 # registry-wide convention (holds for 44/52 annual-cadence revisions) and its

@@ -23,7 +23,7 @@
 # THE RATE-BLIND iva.anual.autorepercutido.intracomunitaria CASILLA REMAINS
 # THE TOTAL-FEEDING AGGREGATE, unchanged in the annual devengada total
 # formula (civa.anual.repercutido.general__civa.anual.resultado-regimen-general.toml).
-# Its precondition for the two-layer shape (2026-08-07-rate-box-evidence-assertion-adr)
+# Its precondition for the two-layer shape
 # holds: that total sums the rate-blind category casilla directly, never the
 # sum of these rate-specific boxes, so adding this box layer cannot double
 # count. Its export_refs move OFF the ISP slot in that same sibling file, in

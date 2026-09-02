@@ -253,6 +253,4 @@ A release is closed when:
 - `.github/workflows/packaging-smoke.yml` — immutable cohort producer
 - `docs/_release_checklist.yaml` — machine release policy
 - `docs/_release_notes_template.md` — release-note template
-- `.vault/reference/2026-07-19-post-release-distribution-reference.md` — detailed
-  implementation reference
 - `SECURITY.md` — private security reporting

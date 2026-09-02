@@ -8,7 +8,7 @@ not know it exists.
 
 ## Why it drives the harness instead of importing it
 
-`2026-08-11-tui-architecture-adr` D11 makes `cadrumo.entrypoints.tui` an
+The accepted TUI architecture decision makes `cadrumo.entrypoints.tui` an
 outermost entrypoint that no development tool may import, load, re-export,
 annotate against, or register from, and places pilot, replay, screenshot and
 surface tooling inside `cadrumo.entrypoints.tui.devtools`. Out-of-process

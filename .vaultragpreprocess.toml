@@ -1,5 +1,4 @@
-# vaultspec-rag pre-index preprocess rules (docs-terminology-search ADR D1,
-# .vault/adr/2026-07-13-docs-terminology-search-adr.md).
+# vaultspec-rag pre-index preprocess rules.
 #
 # Routes the bundled AEAT grounding corpus - BOE normatives HTML, Diseños de
 # Registro workbooks, and corpus PDFs - plus the committed Terminology
