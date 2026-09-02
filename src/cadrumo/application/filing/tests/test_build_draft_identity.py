@@ -21,6 +21,8 @@ import pytest
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.casilla_membership import format_noncanonical_casilla_reference
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.filing.errors import ModeloBuilderError
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ..draft_construction import _filing_period_date, build_draft
@@ -44,18 +46,14 @@ _M303_REGIMEN_GENERAL_RESULT_CASILLA: CasillaId = validated_casilla_id(
     "iva.resultado-regimen-general",
     surface="_M303_REGIMEN_GENERAL_RESULT_CASILLA",
 )
-_M200_AMBIGUOUS_PRINTED_NUMBER: CasillaId = validated_casilla_id(
-    "00562",
-    surface="_M200_AMBIGUOUS_PRINTED_NUMBER",
-)
-_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA: CasillaId = validated_casilla_id(
-    "DP200010:00562",
-    surface="_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA",
-)
-_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA: CasillaId = validated_casilla_id(
-    "DP200014:00562",
-    surface="_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA",
-)
+# The reused-printed-number invariant is about a printed number that two
+# casillas share, not about any one modelo. It is exercised against Modelo 714
+# (Impuesto sobre el Patrimonio), whose 2025 revision still declares filing
+# authority and genuinely reuses printed numbers between its identificacion and
+# declaracion sections. The pair itself is re-sourced from that revision below
+# rather than transcribed, so the test cannot outlive the reuse it describes.
+_M714_FILING_YEAR = 2025
+_M714_PERIOD_CODE = "0A"
 
 
 def _profile() -> ModeloOperatorProfile:
@@ -198,25 +196,74 @@ def test_build_draft_rejects_noncanonical_casilla_reference_token(
     assert expected_fragment in (casilla.id, *canonical_casilla_ids)
 
 
-def test_build_draft_rejects_ambiguous_reused_printed_number() -> None:
-    """A reused printed number must fail before any filing calculation can run."""
-    period = Period.from_year_and_code(2025, "0A")
+def _reused_printed_number(revision: ModeloRevision) -> tuple[str, tuple[CasillaId, ...]]:
+    """Return a printed number the revision genuinely reuses, with its candidates.
 
-    with pytest.raises(ModeloBuilderError, match="is ambiguous") as exc_info:
+    Re-sourced from the live revision rather than transcribed, so that if the
+    reuse is ever resolved this test fails loudly instead of asserting a
+    condition the registry no longer has.
+    """
+    by_number: dict[str, list[CasillaId]] = {}
+    for casilla in revision.casillas:
+        if casilla.number and casilla.number != casilla.id:
+            by_number.setdefault(casilla.number, []).append(casilla.id)
+    reused = {number: tuple(sorted(ids)) for number, ids in by_number.items() if len(ids) > 1}
+    assert reused, "revision no longer reuses any printed number across casillas"
+    number = sorted(reused)[0]
+    return number, reused[number]
+
+
+def test_build_draft_rejects_ambiguous_reused_printed_number() -> None:
+    """A reused printed number must fail before any filing calculation can run.
+
+    The invariant is the AMBIGUITY, not the modelo: when one printed number
+    names two casillas, build_draft cannot infer which the operator meant, so
+    it must refuse rather than silently pick one. What separates this from the
+    single-candidate refusal next door is that the typed context names MORE
+    THAN ONE canonical candidate -- that is the ambiguity, asserted here.
+    """
+    period = Period.from_year_and_code(_M714_FILING_YEAR, _M714_PERIOD_CODE)
+    snapshot = bundled_authority().snapshot("714", filing_year=_M714_FILING_YEAR, period=_M714_PERIOD_CODE)
+    printed_number, candidates = _reused_printed_number(snapshot.revision)
+    assert len(candidates) > 1
+
+    with pytest.raises(
+        ModeloBuilderError, match=re.escape("application.filing.build_draft.errors.input_key_noncanonical_casilla")
+    ) as exc_info:
         build_draft(
-            modelo="200",
+            modelo="714",
             period=period,
             profile=_profile(),
             inputs={
-                _M200_AMBIGUOUS_PRINTED_NUMBER: Decimal("100.00"),
+                printed_number: Decimal("100.00"),
             },
-            schema_provider=build_runtime_schema_provider(modelos=("200",), filing_year=2025, period=period),
+            schema_provider=build_runtime_schema_provider(
+                modelos=("714",),
+                filing_year=_M714_FILING_YEAR,
+                period=period,
+            ),
         )
 
-    assert (
-        f"{_M200_AMBIGUOUS_PRINTED_NUMBER!r} is ambiguous; candidate casilla.id values: "
-        f"{_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA}, {_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA}"
-    ) in str(exc_info.value)
+    # The refusal renders through the locale catalogue, so the ambiguity lives
+    # in the TYPED context rather than in str(exc), which is only the key.
+    assert exc_info.value.context is not None
+    context = dict(exc_info.value.context)
+    input_keys = context["input_keys"]
+    assert isinstance(input_keys, tuple)
+    assert printed_number in input_keys
+    noncanonical_references = context["noncanonical_references"]
+    assert isinstance(noncanonical_references, tuple)
+    reference = next(ref for ref in noncanonical_references if isinstance(ref, dict) and ref["token"] == printed_number)
+    canonical_casilla_ids = reference["canonical_casilla_ids"]
+    assert isinstance(canonical_casilla_ids, tuple)
+    # Every casilla the registry says shares the number is offered back, so the
+    # operator can disambiguate. Dropping one would make the refusal a guess.
+    assert canonical_casilla_ids == candidates
+
+    # The shared vocabulary for that same real token renders as an ambiguity
+    # rather than as a single-candidate correction.
+    rendered = format_noncanonical_casilla_reference(printed_number, canonical_casilla_ids)
+    assert rendered == f"{printed_number!r} is ambiguous; candidate casilla.id values: {', '.join(candidates)}"
 
 
 def test_typed_extended_and_event_periods_resolve_filing_date_context() -> None:

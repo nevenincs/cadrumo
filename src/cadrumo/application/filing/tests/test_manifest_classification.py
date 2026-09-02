@@ -31,13 +31,22 @@ from typing import Any
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema_input_kind import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # (modelo, filing_year, period, on) — manifest-bearing modelos across the gated set,
 # spanning every shape: pagos fraccionados (130/131), retenciones (111/115/123),
-# IVA (303), sociedades (200), and informativas (190/180/349/232/720).
+# IVA (303), sociedades (202), and informativas (190/180/349/232/720).
+#
+# The sociedades slot names 202 (pago fraccionado del Impuesto sobre Sociedades)
+# rather than 200. The completeness gate reads a FILING-grade snapshot, and 200
+# no longer declares filing authority, so a 200 row here would not be testing
+# the gate at all -- it would refuse at the snapshot boundary before the gate
+# ever ran. That refusal is a real contract, so it is asserted explicitly in
+# ``test_calculation_grade_coordinate_refuses_at_the_manifest_gate`` below
+# rather than being dropped silently.
 _MANIFEST_MODELOS = [
     ("130", 2025, "1T", date(2025, 6, 1)),
     ("111", 2025, "1T", date(2025, 6, 1)),
@@ -45,7 +54,7 @@ _MANIFEST_MODELOS = [
     ("123", 2025, "1T", date(2025, 6, 1)),
     ("131", 2025, "1T", date(2025, 6, 1)),
     ("303", 2025, "1T", date(2025, 6, 1)),
-    ("200", 2025, "0A", date(2025, 6, 1)),
+    ("202", 2025, "1P", date(2025, 6, 1)),
     ("190", 2025, "0A", date(2026, 6, 1)),
     ("180", 2025, "0A", date(2026, 6, 1)),
     ("349", 2025, "1T", date(2025, 6, 1)),
@@ -88,3 +97,30 @@ def test_gate_required_set_equals_computed_plus_schema_required(modelo: str, yea
     # Every manifest-bearing modelo requires at least one casilla (a computed result
     # or a mandatory field), so no gated modelo has a vacuous completeness gate.
     assert required, f"modelo {modelo} has an empty gate-required set (vacuous gate)"
+
+
+# A modelo whose registry declares a rung below filing. Modelo 200 declares
+# `calculation`: it computes, but it ships no export layout, so claiming filing
+# authority for it would be a false capability claim.
+_CALCULATION_GRADE_COORDINATE = ("200", 2025, "0A", date(2025, 6, 1))
+
+
+def test_calculation_grade_coordinate_refuses_at_the_manifest_gate() -> None:
+    """The gate cannot be reached for a coordinate that is not filing grade.
+
+    The table above is meant to be exhaustive over the gated set, so the
+    absence of a modelo from it must be a proven refusal rather than an
+    unexplained gap. This asserts the refusal happens at the snapshot boundary
+    -- before any manifest classification -- and that its message names the
+    declared rung, so a future promotion to filing grade turns this test red
+    instead of letting the modelo re-enter the gate unnoticed.
+    """
+    modelo, year, period, on = _CALCULATION_GRADE_COORDINATE
+
+    with pytest.raises(RegistryValidationError) as exc_info:
+        _manifest_and_casillas(modelo, year, period, on)
+
+    message = str(exc_info.value)
+    assert f"modelo {modelo}" in message
+    assert "'calculation' authority grade" in message
+    assert "'filing' snapshot authority" in message

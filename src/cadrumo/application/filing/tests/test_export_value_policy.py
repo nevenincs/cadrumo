@@ -24,12 +24,32 @@ from ....domain.filing.schema import ModeloDraft, ModeloValue, ModeloValueKind, 
 from ....domain.submission.models import ModeloDraftStatus
 from ..export import _format_field, _projection_field_value
 from ..export_verification import _mismatched_casilla_ids
-from ..runtime import build_runtime_schema_provider
+from ..runtime import RegistrySchemaAccessor, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_LEGAL_REFS = ("ley-27-2014:art-40",)
-_SOURCE_REFS = ("aeat-dr-200-2025",)
+# The layouts below are synthetic: they exist to exercise the value-policy
+# renderer and the verifier's record-and-field identity lookup, both of which
+# are modelo-agnostic. The registry snapshot is needed only for its source
+# resolution (`source_root`/`sources`), so it must simply be a coordinate the
+# authority still admits at filing grade. Modelo 303 / revision 2025 is used
+# because it files, and its refs are quoted here so the synthetic declaration
+# stays grounded in the modelo it names rather than in an unrelated one.
+_MODELO = "303"
+_REVISION_ID = "2025"
+_FILING_YEAR = 2025
+_PERIOD_CODE = "4T"
+_LEGAL_REFS = ("orden-eha-3786-2008:art-1",)
+_SOURCE_REFS = ("aeat-dr-303-2025",)
+
+
+def _filing_schema_provider() -> RegistrySchemaAccessor:
+    """A real filing-grade provider, for source resolution only."""
+    return build_runtime_schema_provider(
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, _PERIOD_CODE),
+        modelos=(_MODELO,),
+    )
 
 
 def _field(
@@ -68,19 +88,19 @@ def _record(record_id: str, field: ExportFieldDefinition, *, order: int) -> Expo
 
 
 def _draft(*, checkbox: bool | None, year: int | str) -> ModeloDraft:
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_FILING_YEAR, _PERIOD_CODE)
     stamped = datetime(2026, 8, 10, tzinfo=UTC)
     return ModeloDraft(
         draft_id="policy-proof",
-        modelo="200",
+        modelo=_MODELO,
         period=period,
         profile_tax_id="12345678Z",
         subject_tax_id="12345678Z",
         snapshot_ref=RegistrySnapshotRef(
-            modelo="200",
-            revision_id="2025",
-            modelo_year=2026,
-            period="1T",
+            modelo=_MODELO,
+            revision_id=_REVISION_ID,
+            modelo_year=_FILING_YEAR,
+            period=_PERIOD_CODE,
         ),
         status=ModeloDraftStatus.APROBADO,
         values=(
@@ -93,7 +113,7 @@ def _draft(*, checkbox: bool | None, year: int | str) -> ModeloDraft:
         ),
         created_at=stamped,
         updated_at=stamped,
-        schema_version=registry_schema_version(modelo="200", revision_id="2025"),
+        schema_version=registry_schema_version(modelo=_MODELO, revision_id=_REVISION_ID),
     )
 
 
@@ -162,11 +182,7 @@ def test_verifier_projects_expected_values_by_record_and_field_identity() -> Non
         layout,
         draft=_draft(checkbox=True, year=2026),
         payload=b"126",
-        schema_provider=build_runtime_schema_provider(
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "0A"),
-            modelos=("200",),
-        ),
+        schema_provider=_filing_schema_provider(),
     )
 
     assert mismatched == ()
@@ -179,11 +195,7 @@ def test_verifier_detects_transformed_value_drift(payload: bytes, expected_misma
         _two_record_layout(),
         draft=_draft(checkbox=True, year=2026),
         payload=payload,
-        schema_provider=build_runtime_schema_provider(
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "0A"),
-            modelos=("200",),
-        ),
+        schema_provider=_filing_schema_provider(),
     )
 
     assert mismatched == (expected_mismatch,)

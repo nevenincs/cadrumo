@@ -38,6 +38,20 @@ from .test_producer_snapshot import _elections, _m303_filing_facts, _m303_profil
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+# The layout below is synthetic -- it exists to give the preflight an exact
+# address to bind -- but a FilingRecordRenderContext must hang off a REAL
+# snapshot, because its validator checks layout ownership by identity. The
+# snapshot is therefore a carrier, and the only thing it must be is a
+# coordinate the authority still admits at filing grade. Modelo 303 / 2025 is
+# used because it files and because the projections under test are M303's own,
+# so the carrier and the subject now name the same modelo.
+_CARRIER_MODELO = "303"
+_CARRIER_YEAR = 2025
+_CARRIER_PERIOD = "4T"
+_CARRIER_LEGAL_REFS = ("orden-eha-3786-2008:art-1",)
+_CARRIER_SOURCE_REFS = ("aeat-dr-303-2025",)
+
+
 def _projection_authority() -> tuple[FilingRecordRenderContext, M303ProrrataActivityProjectionRef]:
     reference = M303ProrrataActivityProjectionRef(
         projection_kind="m303_prorrata_activity",
@@ -56,8 +70,8 @@ def _projection_authority() -> tuple[FilingRecordRenderContext, M303ProrrataActi
         padding="right_space",
         justification="left",
         signed=False,
-        legal_refs=("ley-27-2014:art-40",),
-        source_refs=("aeat-dr-200-2025",),
+        legal_refs=_CARRIER_LEGAL_REFS,
+        source_refs=_CARRIER_SOURCE_REFS,
     )
     record = ExportRecordDefinition(
         id="projection-record",
@@ -72,10 +86,10 @@ def _projection_authority() -> tuple[FilingRecordRenderContext, M303ProrrataActi
         id="projection-layout",
         format="fixed_width",
         records=(record,),
-        legal_refs=("ley-27-2014:art-40",),
-        source_refs=("aeat-dr-200-2025",),
+        legal_refs=_CARRIER_LEGAL_REFS,
+        source_refs=_CARRIER_SOURCE_REFS,
     )
-    base = bundled_authority().snapshot("200", filing_year=2025, period="0A")
+    base = bundled_authority().snapshot(_CARRIER_MODELO, filing_year=_CARRIER_YEAR, period=_CARRIER_PERIOD)
     snapshot = base.model_copy(update={"revision": base.revision.model_copy(update={"export_layouts": (layout,)})})
     return FilingRecordRenderContext(
         registry_snapshot=snapshot,
@@ -139,7 +153,11 @@ def test_projection_preflight_accepts_only_the_exact_address_bijection() -> None
 
 def test_render_context_and_m303_builder_refuse_nonowned_or_cross_period_authority() -> None:
     context, _reference = _projection_authority()
-    unrelated_snapshot = bundled_authority().snapshot("200", filing_year=2025, period="0A")
+    # A real snapshot that does NOT own the synthetic layout: same coordinate,
+    # but its own declared export layouts, so the ownership check must fire.
+    unrelated_snapshot = bundled_authority().snapshot(
+        _CARRIER_MODELO, filing_year=_CARRIER_YEAR, period=_CARRIER_PERIOD
+    )
     with pytest.raises(ValidationError, match="layout is not owned"):
         FilingRecordRenderContext(
             registry_snapshot=unrelated_snapshot,

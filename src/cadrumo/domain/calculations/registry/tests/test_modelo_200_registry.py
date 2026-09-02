@@ -130,6 +130,57 @@ def test_modelo_200_validates_with_deadline_and_schedule_catalogue_refs() -> Non
     } <= linked_surfaces
 
 
+def test_modelo_200_declares_no_export_layouts_and_refuses_a_filing_snapshot() -> None:
+    """Modelo 200 computes but does not file here, and both halves are asserted.
+
+    The export layouts were removed rather than kept partial: a partial fichero
+    would let an incomplete declaration reach disk behind a valid digest, which
+    is exactly the silent under-declaration the removal was made to prevent.
+    With no layout there is nothing to file, so the revision declares
+    ``calculation`` authority and the snapshot boundary must refuse any caller
+    asking for filing grade.
+
+    These two facts are asserted together deliberately. Zero layouts without
+    the refusal would leave a modelo claiming filing authority it cannot
+    honour; the refusal without the layout check would not explain why. If
+    Modelo 200 ever regains a complete, grounded layout, this test is the one
+    that must be revisited before the grade is raised.
+    """
+    modelo, catalogues = _load_modelo_200()
+
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2025,
+        period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
+
+    assert snapshot.revision.authority_grade is RegistryAuthorityGrade.CALCULATION
+    assert snapshot.revision.export_layouts == (), (
+        "modelo 200 must ship no export layout while it declares calculation authority; "
+        "a partial layout would permit silent under-declaration"
+    )
+    # It still computes -- the grade is 'calculation', not 'unsupported'.
+    assert snapshot.revision.casillas
+
+    with pytest.raises(RegistryValidationError) as exc_info:
+        build_snapshot(
+            modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=2025,
+            period="0A",
+            grade=RegistryAuthorityGrade.FILING,
+        )
+
+    message = str(exc_info.value)
+    assert "modelo 200" in message
+    assert "'calculation' authority grade" in message
+    assert "'filing' snapshot authority" in message
+
+
 def test_modelo_200_calendar_year_2024_deadline_matches_boe_order() -> None:
     modelo, catalogues = _load_modelo_200()
     snapshot = build_snapshot(
