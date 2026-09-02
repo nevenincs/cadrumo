@@ -154,6 +154,7 @@ def sphinx_http_server() -> Iterator[int]:
             self.end_headers()
             self.wfile.write(body)
 
+        @override
         def log_message(self, *_args: object) -> None:
             pass
 

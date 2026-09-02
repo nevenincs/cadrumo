@@ -61,7 +61,7 @@ import ast
 import pathlib
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 
 from ..quality.repository_sources import production_sources
 
@@ -168,6 +168,7 @@ class _FunctionScan(ast.NodeVisitor):
     def _snippet(self, line: int) -> str:
         return self.lines[line - 1].strip() if 0 < line <= len(self.lines) else ""
 
+    @override
     def visit_Assign(self, node: ast.Assign) -> None:
         if _is_normalising_chain(node.value):
             root = _base_text(node.value)
@@ -197,6 +198,7 @@ class _FunctionScan(ast.NodeVisitor):
             return node.id
         return None
 
+    @override
     def visit_Compare(self, node: ast.Compare) -> None:
         # `x is None` asks whether a value is absent, not whether two
         # identifiers name one bearer. Reporting it sent the gate at a
@@ -210,12 +212,14 @@ class _FunctionScan(ast.NodeVisitor):
                 self._record(name, node.lineno, "comparison")
         self.generic_visit(node)
 
+    @override
     def visit_Subscript(self, node: ast.Subscript) -> None:
         name = self._operand_is_respelled(node.slice)
         if name:
             self._record(name, node.lineno, "keying")
         self.generic_visit(node)
 
+    @override
     def visit_JoinedStr(self, node: ast.JoinedStr) -> None:
         for value in node.values:
             if isinstance(value, ast.FormattedValue):
@@ -224,6 +228,7 @@ class _FunctionScan(ast.NodeVisitor):
                     self._record(name, node.lineno, "keying")
         self.generic_visit(node)
 
+    @override
     def visit_Call(self, node: ast.Call) -> None:
         for keyword in node.keywords:
             if keyword.arg and any(hint in keyword.arg.lower() for hint in KEY_ARGUMENT_HINTS):
