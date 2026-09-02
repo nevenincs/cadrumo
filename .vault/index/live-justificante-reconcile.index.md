@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#live-justificante-reconcile'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:02194241660f44d2ec3087cd348cf4b5a2adb12e7a8091358c86678359a3ec17'
+body_hash: 'sha256:35d562fc88914542065f630b9667f078adfc61982de0c41eb5c639163cc9e56d'
 related:
   - '[[2026-06-10-live-justificante-reconcile-P01-summary]]'
   - '[[2026-06-10-live-justificante-reconcile-P02-summary]]'
@@ -17,6 +17,7 @@ related:
   - '[[2026-06-10-live-justificante-reconcile-ledger]]'
   - '[[2026-06-10-live-justificante-reconcile-plan]]'
   - '[[2026-06-10-live-justificante-reconcile-research]]'
+  - '[[2026-09-02-live-justificante-reconcile-csv-authenticity-wiring-research]]'
 ---
 
 # `live-justificante-reconcile` feature index
@@ -45,3 +46,4 @@ Auto-generated index of all documents tagged with `#live-justificante-reconcile`
 ### research
 
 - `2026-06-10-live-justificante-reconcile-research` - `live-justificante-reconcile` research: `live-sourced justificante reconciliation`
+- `2026-09-02-live-justificante-reconcile-csv-authenticity-wiring-research` - `live-justificante-reconcile` research: `wiring persisted CSV authenticity`

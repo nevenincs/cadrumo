@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:29811637600f8b0010bfb86d3d01fc9254bdf3e9e8829167b3095d6f0a369b58'
+body_hash: 'sha256:1d8428e817338634779bb578813607dbbbefa2c5148dc82541bf0501d26c9bd8'
 related:
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
 ---
@@ -54,6 +54,10 @@ The accepted ADR's runtime cohort-receipt membership is not implementable: that 
 
 The amendment must replace “five existing screens” and “nothing in the areas changes shape,” distinguish static conformance from runtime admission, expand launcher composition, define authentication visibility and refresh, choose Profile/Secret entry journeys and the flow denominator, decide the Operations meaning, specify the Modelo enclosing journey, and widen `W06.P13.S73` beyond `app.py`. Unresolved product choices are the operations-area meaning, runnable-flow population, profile landing, logout/expiry behavior, actor identity for operation actions, and whether unavailable entries are hidden or visibly disabled.
 
+### Modelo edit admission bypasses its canonical capability projection
+
+The exact reachability findings for `application/modelo/edit_session.py` and `_edit_facade.py` are not removable debt. The session is used by the complete C3 TUI editor chain, but `open_modelo_edit_session()` reaches `admit_modelo_edit()` without consulting the mutation-capability projection. The dormant facade is the only implementation of the accepted D5 projection and can classify that same target as `UNMEASURED`; no production consumer reads it. The empty root currently masks this disagreement. The ADR amendment must require one public canonical capability home and one admission path that refuses session creation unless the projection is available, before the editor becomes a root-reachable route (`src/cadrumo/application/modelo/edit_session.py`, `src/cadrumo/application/modelo/_edit_facade.py`, `src/cadrumo/entrypoints/tui/modelo/edit/controller.py`, `src/cadrumo/entrypoints/tui/modelo/routes.py:35`).
+
 ## Sources
 
 - `src/cadrumo/entrypoints/tui/app.py:39`
@@ -72,3 +76,7 @@ The amendment must replace “five existing screens” and “nothing in the are
 - `src/cadrumo/entrypoints/tui/modelo/view/overview.py:157`
 - `src/cadrumo/entrypoints/cli/_tui_session.py:1`
 - `src/cadrumo/entrypoints/tui/__main__.py:1`
+
+- `src/cadrumo/application/modelo/edit_session.py`
+- `src/cadrumo/application/modelo/_edit_facade.py`
+- `src/cadrumo/entrypoints/tui/modelo/edit/controller.py`
