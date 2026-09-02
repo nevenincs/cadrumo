@@ -8,6 +8,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1994:art-27"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200022.f0016"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01746"
 number = "01746"
@@ -18,3 +19,4 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1994:art-27"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200022.f0017"]
