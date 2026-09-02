@@ -37,7 +37,6 @@ from .._common import activate_subcommand_output_language
 from ..errors import command_error_boundary as _command_error_boundary
 
 if TYPE_CHECKING:
-
     from .....application.wizard.persistence import WizardPersistMode
     from ....core.external_constants import OutputLanguage
 
