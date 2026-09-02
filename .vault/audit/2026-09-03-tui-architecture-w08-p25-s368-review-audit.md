@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:0d3bac687fdc9673b7c1dc615084072dca48eb52fa16e41bf4f056212720b307'
+body_hash: 'sha256:aa6e8789374ea0aff97e363257286a5645641a5ff2dfdc8a1eba73a705c8b373'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
@@ -67,6 +67,30 @@ Non-available destinations correctly reject actions, but an available result's a
 
 The redaction test checks only top-level schema property names, missing protected content, public document serialization and `service.documents`. The no-I/O test checks a short name set only in `search.__code__.co_names`, missing constructor/helper I/O, `Path.open`, and differently named repositories. Current code is pure by inspection, but the test has no detector teeth. Coverage also omits invalid source/kind/status combinations, evidence/notification families, canonical Modelo typing, Unicode-equivalent duplicate IDs and action/destination disagreement.
 
+### remediation-sensitive-boundary | high | Plain labels, source identifiers and reversible token indexes keep the redaction finding open
+
+The public snapshot accessor and plaintext `search_terms` are gone, request plaintext is excluded from model serialization and repr, and query/document terms are normalized before hashing. Those changes close the original direct hidden-term retention shape. They do not establish the claimed redacted boundary. `_RedactedLabel` is only a bounded `str` with a control-character check. A direct probe constructed a declaration labelled `X2482300W Â· ES91 2100 0418 4502 0005 1332`; `model_dump_json()` emitted the NIF and IBAN unchanged. `Hex64Str` similarly proves only spelling and length for `stable_id`: any existing 64-hex transaction, filing, invoice or other protected source ID passes without being search-derived.
+
+The token channel is pseudonymized rather than irreversibly redacted. `digest_operator_safe_tokens` publishes unsalted SHA-256 for each normalized word independently, the document model serializes those digests, and the response serializes the query digests. Low-entropy and enumerable tokens such as modelo numbers, years, `csv`, NIF components and status words are dictionary-recoverable, while splitting punctuation loses the boundary that distinguished a filing reference. The test proves only that one raw string is absent and even asserts against the literal word `secret`; it does not prove safe provenance, irreversibility or absence of protected content in labels and IDs. Ephemeral private service storage is an improvement, but public serializable carrier models remain. `sensitive-search-retention` therefore remains open at high severity.
+
+### remediation-source-semantics | high | The status matrix is keyed by kind, not source, and accepts arbitrary semantic suffixes
+
+First-class `ledger_entry`, `ledger_evidence` and `notification` kinds close the original family-coverage omission. The replacement status rule does not preserve source-native semantics: `_STATUS_PREFIX_BY_KIND` never reads `source`, despite the test name claiming a source-native contract, and `startswith` admits any namespaced suffix rather than a closed status set. Direct probes accepted a Ledger entry from `modelo.local_projection` with `ledger.entry.filed` and a revision from `notification.aeat_projection` with `revision.unread`; a declaration carrying `declaration.nif_exposed` also validated. The shared test helper itself assigns `modelo.local_projection` to every result family, so the positive matrix normalizes rather than detects source/kind disagreement.
+
+The remediation prevents a status from another kind prefix, but does not prove which authority produced a result or that its suffix has meaning for that source. `source-semantics` remains open at high severity until source, kind and a closed source-owned status vocabulary are validated together, or a typed discriminated source projection preserves the native status without caller-authored strings.
+
+### remediation-address-identity | medium | Natural typing improved, but revision identity is the wrong semantic coordinate and exact fields are not discriminated
+
+`ModeloCode`, filing year/period agreement, `FilingRecordId`, canonical fold order and `Hex64Str` stable ordering close the mechanical portions of `natural-address-type` and `identity-normalization`. Revision search, however, carries `domain.calculations.registry.ids.RevisionId`, the legal registry revision coordinate exemplified by `m303-2025-r1`. The navigation decision's declaration revisions are calculation-history records; their canonical exact identity is `CalculationRevisionId`, not the registry law revision. The address also permits `revision_id` and `filing_record_id` on every kind and permits both simultaneously, requiring only the one associated with revision or filing. Thus a declaration, history row or Modelo result can carry irrelevant exact identities, and revision/filing variants are not a discriminated address contract. This residual natural-address defect remains medium severity.
+
+### remediation-admission-localization-purity | low | Candidate authority, localization and current purity are correctly bounded
+
+Renaming the field to `action_candidate_id`, removing `ActionReference`, and explicitly assigning resolution to S369's destination catalogue closes `admission-action-boundary`: the application result no longer claims the candidate is executable authority, while unavailable destinations correctly reject one. The service imports no locale catalogue and keeps source, status, destination, admission and action tokens untranslated; a later presenter may localize a genuinely redacted label. Inspection and the expanded AST/import test found no filesystem, repository, adapter or network I/O. These axes have no remaining production defect at the reviewed scope.
+
+### remediation-test-teeth | medium | Expanded tests still bless the two open high-severity shapes
+
+The suite now covers every kind, prefix rejection, canonical Modelo shape, required revision/filing IDs, Hex64 identity, normalization, absent snapshot accessor, raw-query omission and module imports. It remains unable to detect the live high findings: the serialization case uses a harmless label and checks only the raw filing-reference term, the schema case examines field names rather than content/provenance, and the all-kind helper supplies the same contradictory source for every family. The status-negative case changes only the prefix to `nonsense`, so arbitrary suffixes and wrong source/kind pairs stay green. No test distinguishes registry `RevisionId` from `CalculationRevisionId`, rejects irrelevant/both exact address IDs, or demonstrates that token digests resist a finite sensitive-token dictionary. `gate-teeth` remains medium severity.
+
 <!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
      severity, using the heading form
 
@@ -85,7 +109,13 @@ The redaction test checks only top-level schema property names, missing protecte
 5. Join action capability and operands to admission, or type the action as a non-authoritative candidate requiring later resolution.
 6. Add bite-proven serialization, sensitive-content, retention, constructor/helper I/O and source-family tests. Keep locale catalogues out of this service; stable codes correctly remain untranslated.
 7. No critical finding was identified. Two high-severity findings remain open, so S368 should not be credited in its current form.
+8. Final remediation re-review supersedes neither high disposition: introduce an enforceable redacted-label/search-identity boundary, derive search IDs rather than accepting arbitrary source Hex64 IDs, and avoid serializing reversible low-entropy token indexes or explicitly classify and secure that index as sensitive ephemeral data.
+9. Replace `_STATUS_PREFIX_BY_KIND` with a real source/kind/status authority contract. Tests must vary source independently, enumerate each closed native status, and reject valid-looking statuses under the wrong source.
+10. Use canonical `CalculationRevisionId` for declaration calculation-history results and make revision/filing exact address variants discriminated so irrelevant or simultaneous identities fail closed.
+11. Add bite probes for a NIF/IBAN label, a raw 64-hex source ID, a dictionary-recoverable sensitive token, cross-source valid-prefix statuses, arbitrary suffixes, and wrong/both exact address IDs.
+12. The remediation suite passed with 32 tests; Ruff and Basedpyright were clean. No critical finding remains, but two high and two medium findings remain open, so S368 still should not be credited.
 
 <!-- Actionable recommendations, each tied to a finding above. An
      architecturally significant recommendation names the decision a
      follow-on ADR must make; the decision itself is never recorded here. -->
+
