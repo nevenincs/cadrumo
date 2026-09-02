@@ -158,13 +158,12 @@ class RepeatedRowSet:
         whole rows, and a half-written declaration must not reach it.
         """
         draft = self._drafts.get(correlation_id)
-        if draft is None or not draft.is_complete:
+        if draft is None or not draft.is_complete or draft.row is None:
             return None
-        assert draft.natural_key is not None
-        assert draft.row is not None
+        row = draft.row
         key = RowKey(
             detail_row_kind=draft.detail_row_kind,
-            natural_key=self._session.stage_row(draft.detail_row_kind, draft.row),
+            natural_key=self._session.stage_row(draft.detail_row_kind, row),
         )
         del self._drafts[correlation_id]
         return key

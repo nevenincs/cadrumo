@@ -92,12 +92,14 @@ def fold_event_page(
     if page.operation_id != view.operation_id:
         raise ValueError("modal log view cannot fold a page from a different operation")
     if page.status in RESYNCHRONIZING_REPLAY_STATUSES:
-        assert page.restart_cursor is not None
+        restart_cursor = page.restart_cursor
+        if restart_cursor is None:
+            raise ValueError("a resynchronizing event page must carry the cursor its replay restarts from")
         return OperationModalLogViewV1(
             operation_id=view.operation_id,
             anchor_cursor=page.anchor_cursor,
             next_cursor=page.next_cursor,
-            restart_cursor=page.restart_cursor,
+            restart_cursor=restart_cursor,
             status=page.status,
             resynchronized=True,
             rows=(),

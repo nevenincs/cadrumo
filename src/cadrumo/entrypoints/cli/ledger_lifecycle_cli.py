@@ -937,7 +937,11 @@ def _ledger_split_llm(
         raise ledger_transaction_validation_no_recovery(exc) from None
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
-    assert isinstance(applied, LLMSplitApplyResult)
+    if not isinstance(applied, LLMSplitApplyResult):
+        raise TransactionValidationError(
+            "SPLIT decision returned no evidence-split result",
+            context={"result_type": type(applied).__name__},
+        )
 
     _render_split_llm_applied(
         ctx,

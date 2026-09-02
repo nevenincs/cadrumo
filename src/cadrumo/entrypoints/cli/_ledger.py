@@ -635,8 +635,8 @@ def ledger_allocate(
     transaction_repository = transaction_catalogue_repo(state)
     validated_category_id = validate_category_id(category_id)
     resolved_id = resolve_id(transaction_repository, transaction_id)
-    parsed_business_pct = validate_business_pct_range(parse_required_decimal(business_pct, label="business-pct"))
-    assert parsed_business_pct is not None
+    parsed_business_pct = parse_required_decimal(business_pct, label="business-pct")
+    validate_business_pct_range(parsed_business_pct)
     # The classification follows the proportion: a 100% allocation is
     # BUSINESS, a 0% allocation is PERSONAL, and anything strictly
     # between is genuinely MIXED. Hard-coding MIXED silently mislabels

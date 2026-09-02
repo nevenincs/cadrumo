@@ -21,6 +21,7 @@ from ...domain.contribuyente.inventory.records import (
     InventoryAcquisitionCost,
     InventoryClosingAuthorityRecord,
     InventoryLedger,
+    InventoryLedgerError,
     MovementKind,
 )
 from ._common import (
@@ -43,6 +44,10 @@ def _inventory_service() -> InventoryService:
 
 
 _JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
+#: The dumped ``period_movements`` array. Validated rather than asserted so the
+#: redaction loop below walks a typed row: a movement whose acquisition cost is
+#: left unprojected would carry evidence references into CLI output.
+_JSON_OBJECT_LIST_ADAPTER: TypeAdapter[list[dict[str, object]]] = TypeAdapter(list[dict[str, object]])
 
 
 def _safe_inventory_ledger_payload(ledger: InventoryLedger) -> dict[str, object]:
@@ -59,10 +64,9 @@ def _safe_inventory_ledger_payload(ledger: InventoryLedger) -> dict[str, object]
             ),
             "prior_closing_link": record.prior_closing_link.fingerprint,
         }
-    movements = payload["period_movements"]
-    assert is_object_list(movements)
+    movements = _JSON_OBJECT_LIST_ADAPTER.validate_python(payload["period_movements"])
+    payload["period_movements"] = movements
     for movement in movements:
-        assert is_str_keyed_dict(movement)
         acquisition = movement.get("acquisition_cost")
         if not is_str_keyed_dict(acquisition):
             continue
@@ -245,7 +249,11 @@ def inventory_closing_authority_record(
             param_hint="--file",
         ) from exc
     persisted = result.ledger.closing_authority_record
-    assert persisted is not None
+    if persisted is None:
+        raise InventoryLedgerError(
+            f"inventory ledger for actividad {actividad_id} year {year} retains no closing authority "
+            "record after recording one",
+        )
     payload = InventoryClosingAuthorityRecordResult(
         actividad_id=actividad_id,
         year=year,

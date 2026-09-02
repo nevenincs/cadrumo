@@ -105,7 +105,11 @@ def emit_llm_rejection(
         actor=actor or resolve_active_bucket_id() or "operator",
         transaction_repository=transaction_repository,
     )
-    assert isinstance(result, LLMSuggestionRejectionResult)
+    if not isinstance(result, LLMSuggestionRejectionResult):
+        raise TransactionValidationError(
+            "REJECT decision returned no suggestion-rejection result",
+            context={"decision": LlmReviewDecision.REJECT.value, "result_type": type(result).__name__},
+        )
     payload = LedgerClassifyLlmRejectResult.model_validate(
         {
             "llm": True,
@@ -327,7 +331,11 @@ def _emit_split(
         raise ledger_transaction_validation_no_recovery(exc) from None
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
-    assert isinstance(applied, LLMSplitApplyResult)
+    if not isinstance(applied, LLMSplitApplyResult):
+        raise TransactionValidationError(
+            "SPLIT decision returned no evidence-split result",
+            context={"decision": LlmReviewDecision.SPLIT.value, "result_type": type(applied).__name__},
+        )
     result = LedgerSplitResult.model_validate(
         {
             "bucket_id": applied.bucket_id,
@@ -715,7 +723,11 @@ def ledger_classify_llm(
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
-    assert isinstance(result, ManualLedgerTransactionResult)
+    if not isinstance(result, ManualLedgerTransactionResult):
+        raise TransactionValidationError(
+            "APPLY decision returned no manual ledger transaction result",
+            context={"decision": LlmReviewDecision.APPLY.value, "result_type": type(result).__name__},
+        )
     # D1: the --llm --apply path is a single-transaction mutation; it emits the
     # canonical mutation quintet with the llm provenance in the text lines.
     _emit_llm_single_classify(ctx, result)
@@ -785,7 +797,11 @@ def ledger_saturate_llm(
         raise ledger_transaction_validation_no_recovery(exc) from None
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
-    assert isinstance(result, ManualLedgerTransactionResult)
+    if not isinstance(result, ManualLedgerTransactionResult):
+        raise TransactionValidationError(
+            "saturated APPLY decision returned no manual ledger transaction result",
+            context={"decision": LlmReviewDecision.APPLY.value, "result_type": type(result).__name__},
+        )
     # D1: the --llm --saturate --apply path is a single-transaction mutation; it
     # emits the canonical mutation quintet with the derived IVA category in the lines.
     _emit_llm_single_classify(
