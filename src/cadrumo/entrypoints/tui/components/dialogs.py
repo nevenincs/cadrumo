@@ -90,8 +90,8 @@ class ConfirmScreen(ModalScreen[bool]):
         self.dismiss(True)
 
 
-class TextEditScreen(ModalScreen[str | None]):
-    """Type one text value. Dismisses with the new value, or ``None``."""
+class _FieldEditScreen(ModalScreen[str | None]):
+    """Shared modal mechanics for editors of one immutable form field."""
 
     DEFAULT_CSS = _EDIT_DIALOG_CSS
     BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
@@ -102,6 +102,14 @@ class TextEditScreen(ModalScreen[str | None]):
         self._field = field
         self._cancel_label = cancel_label
         self._save_label = save_label
+
+    def action_cancel(self) -> None:
+        """Dismiss without changing the field value."""
+        self.dismiss(None)
+
+
+class TextEditScreen(_FieldEditScreen):
+    """Type one text value. Dismisses with the new value, or ``None``."""
 
     @override
     def compose(self) -> ComposeResult:
@@ -139,23 +147,9 @@ class TextEditScreen(ModalScreen[str | None]):
             return
         self.dismiss(candidate)
 
-    def action_cancel(self) -> None:
-        """Dismiss without changing the field value."""
-        self.dismiss(None)
 
-
-class ChoiceEditScreen(ModalScreen[str | None]):
+class ChoiceEditScreen(_FieldEditScreen):
     """Pick any number of options. Dismisses with a comma-joined token list."""
-
-    DEFAULT_CSS = _EDIT_DIALOG_CSS
-    BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
-
-    def __init__(self, field: FormField, *, cancel_label: str, save_label: str) -> None:
-        """Store the immutable field descriptor that supplies this dialog."""
-        super().__init__()
-        self._field = field
-        self._cancel_label = cancel_label
-        self._save_label = save_label
 
     @override
     def compose(self) -> ComposeResult:
@@ -189,18 +183,8 @@ class ChoiceEditScreen(ModalScreen[str | None]):
         self.dismiss(_MULTI_CHOICE_SEPARATOR.join(str(token) for token in picked))
 
 
-class OneChoiceEditScreen(ModalScreen[str | None]):
+class OneChoiceEditScreen(_FieldEditScreen):
     """Pick exactly one option. Dismisses with its token."""
-
-    DEFAULT_CSS = _EDIT_DIALOG_CSS
-    BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
-
-    def __init__(self, field: FormField, *, cancel_label: str, save_label: str) -> None:
-        """Store the immutable field descriptor that supplies this dialog."""
-        super().__init__()
-        self._field = field
-        self._cancel_label = cancel_label
-        self._save_label = save_label
 
     @override
     def compose(self) -> ComposeResult:
@@ -241,10 +225,6 @@ class OneChoiceEditScreen(ModalScreen[str | None]):
             self.dismiss(None)
             return
         self.dismiss(self._field.choices[highlighted].value)
-
-    def action_cancel(self) -> None:
-        """Dismiss without changing the field value."""
-        self.dismiss(None)
 
 
 __all__ = ["ChoiceEditScreen", "ConfirmScreen", "OneChoiceEditScreen", "TextEditScreen"]
