@@ -2,7 +2,7 @@
 
 An operator keeps a hand-authored CSV or XLSX spreadsheet of ``casilla_code, value``
 rows — a cert-free reconstruction path for a past filing when neither the
-justificante PDF (:mod:`application.filing._import`) nor a live AEAT pull
+justificante PDF (:mod:`application.modelo.external_import_actions`) nor a live AEAT pull
 is available. This module owns exactly the tabular-to-mapping projection: read
 the two declared columns, coerce every value to :class:`~decimal.Decimal`, and
 hand the caller a plain ``{casilla_code: Decimal}`` mapping keyed by the raw

@@ -25,9 +25,9 @@ Playwright/browser automation belongs in the outbound adapter layer, not the
 domain.
 
 See Also:
-    :func:`application.filing.import_filing_from_justificante`
-        Application import path that composes receipt metadata into local draft
-        and submission-audit records without treating it as casilla authority.
+    :func:`application.modelo.import_external_filing_evidence`
+        Application import path that attaches receipt-backed external evidence
+        to a filing record without treating it as casilla authority.
     :mod:`application.live`
         Read-only live-capture surface that can persist and verify justificante
         evidence against existing filing records.

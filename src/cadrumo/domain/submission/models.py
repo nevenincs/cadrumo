@@ -11,9 +11,9 @@ and application facades compose these records into draft/import flows.
 See Also:
     :class:`cadrumo.domain.submission.SubmissionEngine`
         Runs preflight and reads these records from the repository.
-    :func:`cadrumo.application.filing.import_filing_from_justificante`
-        Builds a companion :class:`ModeloPresentado` when an offline
-        justificante PDF is imported.
+    :func:`cadrumo.application.modelo.import_external_filing_evidence`
+        Attaches external filing evidence to a modelo record from a
+        validated justificante.
     :class:`~ModeloRecord`
         Work-unit filing record used by the modelo application facade.
     :mod:`cadrumo.application.live`
