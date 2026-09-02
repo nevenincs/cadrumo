@@ -100,9 +100,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
         root = _repo_root(Path.cwd())
+        if args.mode == "apply" and (args.receipt is None or not args.receipt_id):
+            raise ObjectNameDeclusteringCliError("apply requires both --receipt and --receipt-id")
+        if args.mode != "apply" and (args.receipt is not None or args.receipt_id is not None):
+            raise ObjectNameDeclusteringCliError("receipt arguments are valid only in apply mode")
+        apply_receipt = None
+        if args.mode == "apply":
+            if args.receipt is None or args.receipt_id is None:
+                raise ObjectNameDeclusteringCliError("apply receipt arguments became unavailable")
+            apply_receipt = _receipt(args.receipt)
+            if apply_receipt.receipt_id != args.receipt_id:
+                raise ObjectNameDeclusteringCliError("explicit receipt identity does not match the receipt file")
         if args.mode == "inventory":
-            if args.receipt is not None or args.receipt_id is not None:
-                raise ObjectNameDeclusteringCliError("receipt arguments are valid only in apply mode")
             _emit(to_json(scan((root / "src", root / "dev"), root)), as_json=args.json)
             return 0
         manifest_path = args.manifest if args.manifest.is_absolute() else root / args.manifest
@@ -114,18 +123,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             _emit({"inventory": to_json(inventory), "mode": "verify"}, as_json=args.json)
             return 0
         if args.mode == "apply":
-            if args.receipt is None or not args.receipt_id:
-                raise ObjectNameDeclusteringCliError("apply requires both --receipt and --receipt-id")
-            receipt = _receipt(args.receipt)
-            if receipt.receipt_id != args.receipt_id:
-                raise ObjectNameDeclusteringCliError("explicit receipt identity does not match the receipt file")
+            if apply_receipt is None:
+                raise ObjectNameDeclusteringCliError("apply receipt was not validated")
             result = replay_object_name_component(
-                manifest, inventory=inventory, component=component, receipt=receipt, repo_root=root
+                manifest, inventory=inventory, component=component, receipt=apply_receipt, repo_root=root
             )
             _emit({"mode": "apply", "result": asdict(result)}, as_json=args.json)
             return 0
-        if args.receipt is not None or args.receipt_id is not None:
-            raise ObjectNameDeclusteringCliError("receipt arguments are valid only in apply mode")
         receipt = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=root)
         _emit({"mode": "rehearse", "receipt": asdict(receipt)}, as_json=args.json)
         return 0
