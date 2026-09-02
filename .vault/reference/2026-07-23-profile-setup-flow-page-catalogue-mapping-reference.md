@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#profile-setup-flow'
 date: '2026-07-23'
-modified: '2026-07-23'
-body_hash: 'sha256:35fc2cbc38a0094d295e36f29d378204a110dbe64a76d49d6632b255591fe075'
+modified: '2026-09-02'
+body_hash: 'sha256:c084ec821082bbd1e4403cd4443e72c2e53fdc68f74f74ae8b3fb05307c0ee6e'
 related:
   - "[[2026-07-23-profile-setup-flow-adr]]"
 ---
@@ -205,15 +205,31 @@ review, catches the construction `ValidationError`, and maps each
 per-field error through the pydantic type/loc-to-key mapping into typed
 verdict rows. The model validators stay the single authority — the flow
 validator pre-runs the same construction rather than duplicating any
-invariant — and submit eligibility blocks until it passes. Review is
-the COMPLETE gate: the substrate never runs `answers_model` validation
-(raw model errors are library prose), so this one re-run validator is
-the coverage for every construction-time cross-field invariant —
-one validator re-running the real constructor, never one restated
-validator per invariant. Receipt tests pin the coverage: each of the
-three named legal checks (impatriado start date, non-resident country,
-representante fiscal) drives an invalid staged answer set and asserts
-its typed verdict row appears at review. Mapped verdicts carry
+invariant — and submit eligibility blocks until it passes.
+
+Wiring: `flow_validators.py` owns the single registry entry at import
+time, and `setup_flow_definition` is the composition point — it applies
+`attach_taxpayer_projection_validator` to the decorated definition
+(before the descendant group, so only top-level pages enrol), which
+enrols that definition's page-id → domain-key rows on the registered
+validator and appends `taxpayer-projection-constructs` to
+`flow_validator_ids`. This mirrors the sibling `attach_descendant_group`
+shape; enrolment is idempotent, so re-composing the definition neither
+duplicates the id nor re-registers the validator.
+
+Review is the COMPLETE gate: the substrate never runs `answers_model`
+validation (raw model errors are library prose), so this one re-run
+validator is the coverage for every construction-time cross-field
+invariant — one validator re-running the real constructor, never one
+restated validator per invariant. Receipt tests pin the coverage at two
+levels. Unit receipts drive each of the three named legal checks
+(impatriado start date, non-resident country, representante fiscal)
+through the registered validator and assert its typed verdict row.
+End-to-end receipts walk the real projected setup definition through the
+engine and assert that an impatriado election without its start date and
+a non-EU/EEA non-resident without a fiscal representative each surface a
+blocking verdict at review and refuse submission, while the same answer
+sets completed legally stay submit-eligible. Mapped verdicts carry
 catalogue KEYS plus redacted context only — the raw model message never
 enters a verdict, since library prose is exactly the leak class the
 mapping exists to eradicate.
