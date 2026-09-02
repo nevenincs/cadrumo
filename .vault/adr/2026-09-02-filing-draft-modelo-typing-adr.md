@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:818b6823e2219f51d34347f403d4f6395d7bb87aef9d86f9fbe16e6de630c2da'
+body_hash: 'sha256:722d453f57db1fae9fb2b9e0faf34d9b0c04ef211a743853bf5bd69b6cb28d95'
 related:
   - "[[2026-08-07-canonical-identifiers-adr]]"
   - "[[2026-06-10-modelo-enum-hardening-adr]]"
