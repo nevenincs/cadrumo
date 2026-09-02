@@ -3,13 +3,12 @@
 The walker is the only side-effectful layer in :mod:`adapters.outbound.aeat.sede`. It
 takes an :class:`AeatSession` whose encrypted browser state carries
 valid AEAT cookies, drives a read-only Playwright session over the
-sede, and exposes three operations to callers:
+sede, and exposes two operations to callers:
 
 * :func:`walk_expedientes_tree` — listing traversal.
-* :func:`resolve_justificante_ref` — expediente → CSV handle.
 * :func:`capture_justificante` — expediente → authoritative PDF capture.
 
-All three are read-only by construction: only ``page.goto`` and
+Both are read-only by construction: only ``page.goto`` and
 ``context.request.get`` cross the wire. No ``click()`` onto submit
 buttons, no form POSTs, no mutation verbs anywhere in the public
 surface.
@@ -41,13 +40,9 @@ from ._browser_constants import (
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
 )
-from .errors import (
-    ExpedienteNotFoundError,
-    SedeFailureMode,
-    SedeNavigationError,
-)
+from .errors import SedeFailureMode, SedeNavigationError
 from .parse import parse_expediente_detail, parse_resumen_tree
-from .schema import Expediente, JustificanteRef, SedeCapture
+from .schema import Expediente, SedeCapture
 
 if TYPE_CHECKING:
     from .....application.auth.session_types import AeatSession
@@ -282,59 +277,6 @@ async def walk_expedientes_tree(
         return expedientes
 
 
-async def resolve_justificante_ref(
-    session: AeatSession,
-    expediente: Expediente,
-    *,
-    settings: Settings | None = None,
-) -> JustificanteRef:
-    """Navigate to an expediente's detail page and extract its CSV ref.
-
-    Args:
-        session: Authenticated session with encrypted cached AEAT cookies.
-        expediente: Expediente to look up. ``expediente.detail_url``
-            is used verbatim.
-        settings: Optional override.
-
-    Returns:
-        A :class:`JustificanteRef` ready for
-        :func:`capture_justificante`.
-
-    Raises:
-        SedeNavigationError: If the detail page cannot be loaded.
-    """
-    settings = settings or Settings()
-    detail_url = str(expediente.detail_url)
-    async with _open_browser_page(session, settings) as (_context, page):
-        # Warm the session on ResumenVlt so AEAT's redirect chain
-        # sees the origin cookie; navigating straight to the
-        # per-year endpoint without this is fine when cookies are
-        # fresh but fails intermittently after idle periods.
-        try:
-            await _goto_guarded(page, _RESUMEN_URL)
-        except PlaywrightError as _exc:
-            log.debug("sede walker: warm-up goto %s suppressed: %s", _RESUMEN_URL, _exc, exc_info=True)
-        # Guarded BEFORE the navigation: detail_url came off a page, not from
-        # this module, so a refusal here must prevent the request rather than
-        # report it afterwards.
-        try:
-            await _goto_guarded(page, detail_url)
-        except PlaywrightError as exc:
-            raise SedeNavigationError(f"goto expediente detail {detail_url!r} failed: {exc}") from exc
-        html = await page.content()
-        ref = parse_expediente_detail(
-            html,
-            expediente_id=expediente.expediente_id,
-            base_url=SEDE_BASE,
-        )
-        log.info(
-            "resolve_justificante_ref: resolved CSV=%s expediente=%s",
-            ref.csv,
-            expediente.expediente_id,
-        )
-        return ref
-
-
 async def capture_justificante(
     session: AeatSession,
     expediente: Expediente,
@@ -343,9 +285,9 @@ async def capture_justificante(
 ) -> SedeCapture:
     """End-to-end: expediente → CSV handle → PDF bytes → :class:`SedeCapture`.
 
-    Bundles :func:`resolve_justificante_ref` + the raw PDF GET into
-    one session-reusing call. The preferred entry point for callers
-    that just want "the AEAT record for this expediente".
+    Navigates to the expediente detail page, extracts its CSV reference, and
+    fetches the raw PDF in one session-reusing call. This is the preferred
+    entry point for callers that just want "the AEAT record for this expediente".
 
     Args:
         session: Authenticated session.
@@ -408,34 +350,6 @@ async def capture_justificante(
             pdf_sha256=sha256,
             captured_at=now(),
         )
-
-
-async def find_expediente(
-    session: AeatSession,
-    *,
-    modelo: str,
-    ejercicio: int,
-    settings: Settings | None = None,
-) -> Expediente:
-    """Convenience lookup: first expediente matching ``(modelo, ejercicio)``.
-
-    Args:
-        session: Authenticated AEAT session.
-        modelo: Modelo code to filter on (e.g. ``"100"``).
-        ejercicio: Tax year to match.
-        settings: Optional :class:`Settings` override.
-
-    Returns:
-        The first :class:`Expediente` whose ``ejercicio`` matches.
-
-    Raises:
-        ExpedienteNotFoundError: If no expediente in the corpus matches the filter.
-    """
-    expedientes = await walk_expedientes_tree(session, modelo=modelo, settings=settings)
-    for expediente in expedientes:
-        if expediente.ejercicio == ejercicio:
-            return expediente
-    raise ExpedienteNotFoundError(f"no expediente found for modelo={modelo!r} ejercicio={ejercicio}")
 
 
 async def _snapshot_html(page: object) -> str:
@@ -552,7 +466,5 @@ __all__ = [
     "assert_landed_url_readable",
     "assert_resumen_landing",
     "capture_justificante",
-    "find_expediente",
-    "resolve_justificante_ref",
     "walk_expedientes_tree",
 ]
