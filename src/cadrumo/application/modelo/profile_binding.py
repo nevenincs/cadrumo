@@ -56,6 +56,7 @@ from ...domain.calculations.registry.runtime_graph import (
     expression_date_binding_refs,
 )
 from ...domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, RegistrySnapshot
+from ...domain.calculations.registry.schema_base import NUMERIC_CASILLA_DATA_TYPES
 from ...domain.calculations.registry.schema_formula import ParameterDefinition
 from ...domain.contribuyente.ccaa import CCAA
 from ...domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
@@ -1245,11 +1246,10 @@ def _select_profile_bindings(snapshot: RegistrySnapshot) -> _ProfileBindingSelec
     for formula in snapshot.revision.formulas:
         formula_consumed.update(expression_binding_refs(formula.expression))
         formula_date_consumed.update(expression_date_binding_refs(formula.expression))
-    _numeric_casilla_data_types = {"decimal", "money", "integer", "ratio"}
     bound_casilla_binding_ids: set[BindingId] = {
         casilla.binding
         for casilla in snapshot.revision.casillas
-        if casilla.binding is not None and casilla.data_type in _numeric_casilla_data_types
+        if casilla.binding is not None and casilla.data_type in NUMERIC_CASILLA_DATA_TYPES
     }
     bindings = tuple(
         binding

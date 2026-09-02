@@ -1,4 +1,10 @@
-"""Regression gates for the base-CLI/harness dependency direction."""
+"""Regression gates for the base-CLI/harness dependency direction.
+
+The harness ships inside the product wheel rather than as its own distribution,
+so the direction is no longer expressed by a dependency declaration between two
+projects. It is expressed by the import graph within one package, which is what
+these gates read.
+"""
 
 from __future__ import annotations
 
@@ -12,7 +18,7 @@ from ..._paths import REPO_ROOT
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BASE_PACKAGE = REPO_ROOT / "src" / "cadrumo"
-_HARNESS_PACKAGE = REPO_ROOT / "src" / "cadrumo-harness"
+_HARNESS_PACKAGE = REPO_ROOT / "src" / "cadrumo_harness"
 
 
 def _import_targets(path: Path) -> tuple[str, ...]:
@@ -37,22 +43,34 @@ def test_base_cli_never_imports_the_harness() -> None:
     assert not crossings
 
 
-def test_harness_declares_and_exercises_its_base_cli_dependency() -> None:
-    """The separately shipped harness depends inward on the base CLI/library."""
-    project_text = (_HARNESS_PACKAGE / "pyproject.toml").read_text(encoding="utf-8")
-    assert '"cadrumo>=0.2.2,<0.3"' in project_text
+def test_the_harness_reaches_the_base_cli_through_its_command_api() -> None:
+    """The harness depends inward, and through the boundary meant to carry it.
 
+    Both halves matter. Importing nothing from the base package would mean the
+    harness had grown its own copy of the command surface; importing it through
+    some module other than the command API would mean the boundary had been
+    bypassed rather than used.
+    """
     production_imports = {
         target
-        for path in (_HARNESS_PACKAGE / "src" / "cadrumo_harness").rglob("*.py")
+        for path in _HARNESS_PACKAGE.rglob("*.py")
         if "tests" not in path.parts
         for target in _import_targets(path)
         if target == "cadrumo" or target.startswith("cadrumo.")
     }
+
+    assert production_imports, "the harness imports nothing from the base package"
     assert "cadrumo.entrypoints.cli.command_api" in production_imports
 
 
-def test_harness_release_lanes_remain_present_and_separate() -> None:
-    """Client-owned build/evaluation lanes remain available beside base release lanes."""
-    assert (REPO_ROOT / ".github/workflows/packaging-claude.yml").is_file()
+def test_the_harness_evaluation_lane_stays_separate_from_the_release_path() -> None:
+    """The harness keeps its own assurance lane and does not ride the release one.
+
+    It ships in the product wheel now, so nothing structural stops its suite
+    being folded into the publish path. Keeping it separate is what stops a
+    harness failure blocking a product release, and the reverse.
+    """
     assert (REPO_ROOT / ".github/workflows/agent-harness-eval.yml").is_file()
+
+    publish = (REPO_ROOT / ".github/workflows/publish.yml").read_text(encoding="utf-8")
+    assert "cadrumo_harness" not in publish, "the publish path runs harness-specific work"

@@ -28,6 +28,7 @@ from ..analysis.load_census import (
     build_reference_map,
     build_runtime_graph,
     census_universe,
+    module_level_importers,
     registry_package_modules,
     run_census,
     static_load_closure,
@@ -108,9 +109,23 @@ def test_the_static_closure_matches_what_a_real_load_imports(
     """The closure is checked against reality, not trusted as a graph artefact.
 
     A closure computed from an import graph is a claim about the running
-    program. Here it is confronted with ``sys.modules`` after the session
-    authority has loaded: every registry module the graph says a load imports
-    must actually be there.
+    program, and it is confronted with ``sys.modules`` after the session
+    authority has loaded rather than trusted.
+
+    The claim is not plain containment, and asserting that was wrong. The graph
+    records function-scoped imports, which a real load never walks unless the
+    function runs, so the closure is a statement about what a load can REACH and
+    ``sys.modules`` is a statement about what it DID import. Demanding they match
+    made the test unsatisfiable by a legitimate construct: ``_withholding_rows``
+    imports ``withholding_bindings`` at module level and is imported back from
+    inside a function, which is the standard way to break an import cycle and
+    cannot be hoisted without restoring the cycle.
+
+    So the difference is required to be exactly the deferred edges. Every module
+    the graph reaches but the load did not import must have no module-level
+    importer at all. A module that goes missing for any other reason - deleted,
+    renamed, or dropped out of the load path - still fails here, which is the
+    detection this test existed for.
     """
     import sys
 
@@ -118,4 +133,8 @@ def test_the_static_closure_matches_what_a_real_load_imports(
     imported = {name for name in sys.modules if name == REGISTRY_PACKAGE or name.startswith(REGISTRY_PACKAGE + ".")}
     closure = {m for m in static_load_closure(build_runtime_graph()) if m.startswith(REGISTRY_PACKAGE)}
 
-    assert closure <= imported
+    eagerly_reachable = {module for module in closure - imported if module_level_importers(module)}
+    assert eagerly_reachable == set(), (
+        "the graph says a load imports these modules and the real load did not, "
+        f"and each has a module-level importer so no deferred edge explains it: {sorted(eagerly_reachable)}"
+    )

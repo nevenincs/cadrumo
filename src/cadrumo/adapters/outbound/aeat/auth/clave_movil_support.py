@@ -24,6 +24,7 @@ from .....core.identity import IdentityDocument, IdentityError, validate_identit
 from .....core.logging import get_logger
 from .....core.operator_progress import OperatorProgress
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
+from .....domain.calculations.registry.schema_base import EvidenceTier
 from ....persistence.storage.secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from ..operator_progress import emit_operator_progress
 from .errors import AuthConfigurationError
@@ -51,7 +52,7 @@ def auth_browser_action_policy(settings: Settings) -> RemoteStateGuardPolicy:
     external = settings.external_constants()
     return RemoteStateGuardPolicy(
         id="aeat-clave-movil-auth-browser-actions",
-        evidence_tier="official_source_guidance",
+        evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
         classification="authenticated_read_surface",
         allowed_hosts=(
             urlsplit(external.aeat.domains.sede).netloc,

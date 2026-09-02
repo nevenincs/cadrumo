@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -49,10 +50,24 @@ def test_invalid_toml_wraps_decode_failure_via_error_factory(tmp_path: Path) -> 
         read_toml(target, error_factory=ValueError)
     assert str(target) in str(file_exc.value)
     assert "invalid TOML" in str(file_exc.value)
+    assert isinstance(file_exc.value.__cause__, tomllib.TOMLDecodeError)
 
     with pytest.raises(ValueError) as text_exc:
         parse_toml_text("not = valid = toml", error_factory=ValueError)
     assert "invalid TOML" in str(text_exc.value)
+    assert isinstance(text_exc.value.__cause__, tomllib.TOMLDecodeError)
+
+
+def test_read_toml_wraps_invalid_utf8_as_invalid_toml(tmp_path: Path) -> None:
+    """The file boundary keeps undecodable UTF-8 inside the public TOML error contract."""
+    target = tmp_path / "invalid-encoding.toml"
+    target.write_bytes(b"name = '\xff'")
+
+    with pytest.raises(ValueError) as exc_info:
+        read_toml(target, error_factory=ValueError)
+
+    assert str(exc_info.value).startswith(f"{target}: invalid TOML:")
+    assert isinstance(exc_info.value.__cause__, UnicodeDecodeError)
 
 
 def test_read_toml_wraps_filesystem_error_via_error_factory(tmp_path: Path) -> None:

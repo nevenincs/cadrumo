@@ -182,16 +182,40 @@ def _tree_bytes(root: Path) -> dict[str, bytes]:
     }
 
 
-def compare_revision_against_committed(
-    authority: ValidatedRegistryAuthority, *, modelo: str, revision: str
-) -> RenderComparison:
-    """Re-render one revision from its authored inputs and diff it against the shipped tree.
+@dataclass(frozen=True, slots=True)
+class RevisionRenderInputs:
+    """Everything the generator needs to render one revision, derived from the authority.
+
+    Assembling these was reachable only from inside the comparison, so the
+    publication path - which needs the same seven values - had no supported way
+    to obtain them and no caller. Naming the assembly makes the second consumer
+    possible without a second derivation that could disagree with this one.
+    """
+
+    revision_id: object
+    layout_id: str
+    joined: object
+    semantic_map: object
+    render_profile: object
+    render_profile_source_evidence: object
+    transport_profile: ExportTreeTransportProfile
+
+
+def revision_render_inputs(
+    authority: ValidatedRegistryAuthority,
+    *,
+    modelo: str,
+    revision: str,
+    source_ref: str | None = None,
+) -> RevisionRenderInputs:
+    """Derive one revision's render inputs from the validated authority.
 
     Raises:
-        ValueError: If the revision declares no generated export layout, or no
-            record-design source, or its authored inputs are absent. Each is
-            reported by name rather than substituted, because a silent fallback
-            would compare the wrong thing and report a match.
+        ValueError: If the revision declares no generated export layout, a requested
+            record-design source is not declared by the revision, or its authored
+            inputs are absent. Each is reported by name rather than substituted,
+            because a silent fallback would derive the wrong thing and look like
+            success.
     """
     definition = authority.modelo(modelo)
     if revision not in definition.revisions:
@@ -211,10 +235,18 @@ def compare_revision_against_committed(
     ]
     if not design_refs:
         raise ValueError(f"{modelo}/{revision} cites no record-design source to render from")
-    source_ref = design_refs[0]
-    epoch = sources[source_ref].record_design_epoch
+    selected_source_ref = next((ref for ref in design_refs if str(ref) == source_ref), None)
+    if source_ref is not None and selected_source_ref is None:
+        raise ValueError(f"{modelo}/{revision} does not declare record-design source {source_ref!r}")
+    if selected_source_ref is None:
+        if len(design_refs) != 1:
+            raise ValueError(
+                f"{modelo}/{revision} declares multiple record-design sources; select one explicitly",
+            )
+        selected_source_ref = design_refs[0]
+    epoch = sources[selected_source_ref].record_design_epoch
     if epoch is None:  # pragma: no cover - filtered above, restated for the type checker
-        raise ValueError(f"source {source_ref} declares no design epoch")
+        raise ValueError(f"source {selected_source_ref} declares no design epoch")
 
     semantic_root = _AUTHORED_ROOT / "mappings" / f"modelo_{modelo}" / epoch
     profile_root = _AUTHORED_ROOT / "render_profiles" / f"modelo_{modelo}" / epoch
@@ -231,7 +263,7 @@ def compare_revision_against_committed(
     intermediate = load_record_design_intermediate(
         bundled_path(),
         design_sources,
-        source_ref=source_ref,
+        source_ref=selected_source_ref,
         filing_year=selected.valid_from.year,
         design_epoch=epoch,
     )
@@ -243,11 +275,14 @@ def compare_revision_against_committed(
         legal_ref_ids=frozenset(authority.catalogues.legal),
     )
     joined = join_record_design_semantics(semantic_map, intermediate, inspection)
-    evidence = load_render_profile_source_evidence(bundled_path() / sources[source_ref].corpus_path, render_profile)
+    evidence = load_render_profile_source_evidence(
+        bundled_path() / sources[selected_source_ref].corpus_path,
+        render_profile,
+    )
     transport = ExportTreeTransportProfile(
         modelo=modelo,
         design_epoch=epoch,
-        source_ref=source_ref,
+        source_ref=selected_source_ref,
         source_sha256=intermediate.source.source_sha256,
         layout_id=str(layout.id),
         format="fixed_width",
@@ -256,18 +291,42 @@ def compare_revision_against_committed(
         serializer_convention=_SERIALIZER_CONVENTION,
     )
 
+    return RevisionRenderInputs(
+        revision_id=selected.id,
+        layout_id=str(layout.id),
+        joined=joined,
+        semantic_map=semantic_map,
+        render_profile=render_profile,
+        render_profile_source_evidence=evidence,
+        transport_profile=transport,
+    )
+
+
+def compare_revision_against_committed(
+    authority: ValidatedRegistryAuthority, *, modelo: str, revision: str
+) -> RenderComparison:
+    """Re-render one revision from its authored inputs and diff it against the shipped tree.
+
+    Raises:
+        ValueError: If the revision declares no generated export layout, or no
+            record-design source, or its authored inputs are absent. Each is
+            reported by name rather than substituted, because a silent fallback
+            would compare the wrong thing and report a match.
+    """
+    inputs = revision_render_inputs(authority, modelo=modelo, revision=revision)
+
     committed_root = bundled_path("registry", "aeat", "modelos", modelo, "revisions", revision, "export")
     committed = _tree_bytes(committed_root)
     with tempfile.TemporaryDirectory(prefix="cadrumo-render-check-") as scratch:
         target = Path(scratch) / "export"
         render_complete_export_tree(
             target,
-            revision_id=selected.id,
-            joined=joined,
-            semantic_map=semantic_map,
-            transport_profile=transport,
-            render_profile=render_profile,
-            render_profile_source_evidence=evidence,
+            revision_id=inputs.revision_id,
+            joined=inputs.joined,
+            semantic_map=inputs.semantic_map,
+            transport_profile=inputs.transport_profile,
+            render_profile=inputs.render_profile,
+            render_profile_source_evidence=inputs.render_profile_source_evidence,
         )
         rendered = _tree_bytes(target)
 
@@ -283,7 +342,7 @@ def compare_revision_against_committed(
     return RenderComparison(
         modelo=modelo,
         revision=revision,
-        layout_id=str(layout.id),
+        layout_id=inputs.layout_id,
         files_compared=len(shared),
         differing=differing,
         serialization_only=serialization_only,

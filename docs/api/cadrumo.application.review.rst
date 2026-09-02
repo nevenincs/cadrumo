@@ -15,8 +15,6 @@ Submodules
 
    cadrumo.application.review._adapters
    cadrumo.application.review._aggregator
-   cadrumo.application.review._edit
-   cadrumo.application.review.actions
    cadrumo.application.review.enums
    cadrumo.application.review.errors
    cadrumo.application.review.filter

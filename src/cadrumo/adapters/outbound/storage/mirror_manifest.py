@@ -13,7 +13,6 @@ revision conflicts without exposing plaintext secure-object payloads.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import datetime
 
 from pydantic import ValidationError
 
@@ -49,19 +48,18 @@ def build_remote_mirror_namespace_manifest(
     derived from the newest ``revision_written_at`` among those entries.
     """
     entries = tuple(_remote_mirror_object_manifest(row) for row in rows if row.namespace == namespace)
-    timed_entries = tuple(entry for entry in entries if entry.revision_written_at is not None)
-
-    def _revision_written_at(entry: RemoteMirrorObjectManifest) -> datetime:
-        assert entry.revision_written_at is not None
-        return entry.revision_written_at
-
-    latest = max(timed_entries, key=_revision_written_at, default=None)
+    # The timestamp travels beside its entry so the watermark is chosen on a
+    # value the tuple already proves present, rather than re-narrowed in a key.
+    timed_entries = tuple(
+        (entry.revision_written_at, entry) for entry in entries if entry.revision_written_at is not None
+    )
+    latest = max(timed_entries, key=lambda timed: timed[0], default=None)
     return RemoteMirrorNamespaceManifest(
         manifest_schema_version=REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION,
         namespace=namespace,
         object_count=len(entries),
-        latest_revision_id=latest.storage_revision_id if latest is not None else None,
-        latest_revision_written_at=latest.revision_written_at if latest is not None else None,
+        latest_revision_id=latest[1].storage_revision_id if latest is not None else None,
+        latest_revision_written_at=latest[0] if latest is not None else None,
         objects=entries,
     )
 

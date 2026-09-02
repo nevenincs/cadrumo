@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
-
+from ...application.live.capture_mode import LiveCaptureMode, LiveCaptureModeValue
 from ...core.identity import (
     AeatExpedienteId,
     BucketId,
@@ -78,7 +77,7 @@ class ExpedientesCaptureResult(OutputSchema):
     declaration data.
     """
 
-    mode: Literal["single", "bulk"] = "single"
+    mode: LiveCaptureModeValue = LiveCaptureMode.SINGLE
     bucket_id: BucketId
     snapshot_id: SnapshotId | None = None
     captured_at: str | None = None

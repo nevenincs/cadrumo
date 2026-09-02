@@ -673,7 +673,10 @@ class GoogleDriveProvider:
 
         service = self._get_service()
         namespace_folder_id = self._resolve_namespace_folder(namespace_clean)
-        assert namespace_folder_id is not None  # create=True so always populated
+        if namespace_folder_id is None:
+            raise OutboundStorageValidationError(
+                f"Drive namespace folder {namespace_clean!r} was neither resolved nor created",
+            )
         target_name = build_provider_object_name(hmac_clean, label_clean, extension=_FILE_EXTENSION)
         existing = self._find_file(namespace_folder_id, hmac_clean)
 

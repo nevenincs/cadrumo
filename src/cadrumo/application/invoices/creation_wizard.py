@@ -492,8 +492,10 @@ def create_invoice_via_wizard(
             },
         )
 
-    assert resolved_date is not None
-    assert resolved_base is not None
+    if resolved_date is None or resolved_base is None:
+        raise InvoiceValidationError(
+            "the invoice wizard recorded no field error yet resolved neither an issue date nor a taxable base",
+        )
 
     repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
 

@@ -39,6 +39,7 @@ from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogue
 from ...core.casilla_id import CasillaId
 from ...core.hashing import content_hash_hex
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
@@ -187,10 +188,12 @@ def _reconstruct_detail_rows(
         rows = by_kind.setdefault(kind, [])
         keys = [detail_row_natural_key(row) for row in rows]
         if intent.kind is ModeloEditDetailRowIntentKind.ADD_ROW:
-            assert intent.row is not None
+            if intent.row is None:
+                return _detail_row_natural_key_refusal(intent.address)
             rows.append(intent.row)
         elif intent.kind is ModeloEditDetailRowIntentKind.UPDATE_ROW:
-            assert intent.row is not None
+            if intent.row is None:
+                return _detail_row_natural_key_refusal(intent.address)
             if intent.address.natural_key not in keys:
                 return _detail_row_natural_key_refusal(intent.address)
             rows[keys.index(intent.address.natural_key)] = intent.row
@@ -311,7 +314,10 @@ def apply_modelo_edit(
         clock=now,
         additional_secure_object_writes_for_revision=_co_commit_receipt,
     )
-    assert captured_receipt, "the calculation boundary must resolve exactly one revision id per call"
+    if not captured_receipt:
+        raise ModeloError(
+            "the calculation boundary resolved no revision id for the applied edit",
+        )
     return ModeloEditExecutionUpdatedV1(receipt=captured_receipt[0])
 
 

@@ -8,11 +8,10 @@ transition completes; it does not attach metadata to behavior callables.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
 
 from ._command_schema import CommandCapabilityClass
+from .command_spec import CommandWriteRouteValue
 
-CommandWriteRouteScope = Literal["none", "profile-bound", "bootstrap-root"]
 """Storage route a state-mutating callback is permitted to use."""
 
 _WRITE_ROUTE_SCOPES = frozenset({"none", "profile-bound", "bootstrap-root"})
@@ -23,7 +22,7 @@ class CommandExecutionPolicy:
     """Validated immutable execution declaration projected from a command graph."""
 
     classification: CommandCapabilityClass
-    write_route: CommandWriteRouteScope
+    write_route: CommandWriteRouteValue
     destructive: bool = False
     handoff: bool = False
     live_write: bool = False
@@ -58,5 +57,4 @@ class CommandExecutionPolicy:
 
 __all__ = [
     "CommandExecutionPolicy",
-    "CommandWriteRouteScope",
 ]

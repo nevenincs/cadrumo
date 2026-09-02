@@ -204,9 +204,13 @@ def _cohort_lock_digest(cohort: Any) -> str:
 def _builder_pin(repo_root: Path) -> str:
     """Return the exact release-builder interpreter identity, if declared."""
     try:
-        value = (_DEFAULT_BUILDER_PIN if repo_root == REPO_ROOT else repo_root / ".python-version").read_text(
-            encoding=_UTF_8,
-        ).strip()
+        value = (
+            (_DEFAULT_BUILDER_PIN if repo_root == REPO_ROOT else repo_root / ".python-version")
+            .read_text(
+                encoding=_UTF_8,
+            )
+            .strip()
+        )
     except OSError as exc:
         raise CompatibilityProbeError(".python-version is unavailable", category="builder-identity-missing") from exc
     if not value:
@@ -363,9 +367,13 @@ def _installed_probe(venv: Path, *, work_dir: Path) -> tuple[list[CommandEvidenc
     install_root = None
     for root in (venv / "Lib" / "site-packages", venv / "lib"):
         if root.is_dir():
-            install_root = root if root.name == "site-packages" else next(
-                (path for path in root.rglob("site-packages") if path.is_dir()),
-                None,
+            install_root = (
+                root
+                if root.name == "site-packages"
+                else next(
+                    (path for path in root.rglob("site-packages") if path.is_dir()),
+                    None,
+                )
             )
             if install_root is not None:
                 break
@@ -442,11 +450,14 @@ def _load_binary_artifacts(
         ("cadrumo-data-manuals", cohort.manuals_wheel),
         ("cadrumo-data-official", cohort.official_wheel),
     )
-    digests = {name: cohort.sha256[key] for name, key in (
-        ("cadrumo", "cadrumo"),
-        ("cadrumo-data-manuals", "cadrumo-data-manuals"),
-        ("cadrumo-data-official", "cadrumo-data-official"),
-    )}
+    digests = {
+        name: cohort.sha256[key]
+        for name, key in (
+            ("cadrumo", "cadrumo"),
+            ("cadrumo-data-manuals", "cadrumo-data-manuals"),
+            ("cadrumo-data-official", "cadrumo-data-official"),
+        )
+    }
     return cohort, artifacts, lock_sha256, _canonical_artifact_digest(digests), builder_python
 
 

@@ -114,7 +114,7 @@ def test_kernel_is_immutable_import_light_and_derives_paths_from_edges() -> None
     )
     assert type(graph).__dataclass_params__.frozen
 
-    module_path = Path(__file__).parents[1] / "_command_spec.py"
+    module_path = Path(__file__).parents[1] / "command_spec.py"
     probe = subprocess.run(  # noqa: S603 - fixed interpreter and literal probe program.
         [
             sys.executable,

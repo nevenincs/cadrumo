@@ -305,8 +305,9 @@ packaging-smoke-dependencies:
 # contract in it -- including the modules named for the packaging-smoke, Scoop,
 # Homebrew, and Docker workflows the campaign driver (`dev.packaging.campaign`)
 # runs this preflight ahead of -- and still exited zero.
-# The excluded `serial` tests are not dropped silently: the installed-oracle
-# cohort is owned by `packaging-smoke-installed-oracles`, and the serving-path
+# The excluded `serial` tests are not dropped silently: every one of them is
+# owned by `packaging-smoke-serial`, the installed-oracle cohort additionally by
+# the narrower `packaging-smoke-installed-oracles`, and the serving-path
 # benchmark by the `-m perf` lane in `.github/workflows/ci-full.yml`. Guarded by
 # `dev/packaging/tests/test_preflight_recipe_selection.py`.
 [doc('Verify the packaging preflight command contracts (dependency surface, source data, Docker/Scoop/Homebrew workflows).')]
@@ -347,6 +348,98 @@ packaging-distributions:
     @uv build --out-dir var/distributions packaging/cadrumo_data_official
     @uv run --no-sync python -m dev.packaging.distribution_cap --directory var/distributions
 
+# Run source and binary compatibility probes for every row in the checked-in
+# runtime inventory. The release cohort is built once; binary rows consume its
+# sealed bytes and never rebuild per runtime. Stable failures are blocking,
+# while the inventory's prerelease canary remains visible as advisory evidence.
+[doc('Run inventory-driven source and binary compatibility probes for every declared Python runtime.')]
+[group('packaging')]
+[unix]
+python-compatibility:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    run_id="$(date -u +%Y%m%dT%H%M%SZ)-$$"
+    run_root="var/python-runtime-compatibility/runs/$run_id"
+    cohort="$run_root/cohort"
+    mkdir -p "$run_root"
+    commit="$(git rev-parse HEAD)"
+    uv run --no-sync python -m dev.packaging.release_cohort build \
+      --output "$cohort" \
+      --expected-commit "$commit"
+    failed=0
+    rows="$(uv run --no-sync python -c 'from dev.ci.python_runtime_matrix import load_runtime_inventory; inventory=load_runtime_inventory(); print("\n".join("\t".join((row.identifier, row.selector, row.phase.value, str(row.blocking).lower())) for row in inventory.rows))')"
+    test -n "$rows"
+    while IFS=$'\t' read -r runtime_id selector stability blocking; do
+      for mode in source binary; do
+        evidence_dir="$run_root/$runtime_id/$mode"
+        evidence="$evidence_dir/compatibility-evidence.json"
+        mkdir -p "$evidence_dir"
+        args=(
+          --mode "$mode"
+          --python "$selector"
+          --runtime-id "$runtime_id"
+          --stability "$stability"
+          --repo-root "$(pwd)"
+          --work-dir "$evidence_dir"
+          --evidence "$evidence"
+        )
+        if [[ "$mode" == binary ]]; then
+          args+=(--cohort-dir "$cohort")
+        fi
+        set +e
+        uv run --no-sync python -m dev.ci.python_runtime_compatibility "${args[@]}"
+        probe_status=$?
+        set -e
+        if [[ "$probe_status" -ne 0 ]]; then
+          if [[ "$blocking" == true ]]; then
+            echo "::error::blocking $mode compatibility probe failed for $runtime_id" >&2
+            failed=1
+          else
+            echo "::warning::advisory $mode compatibility probe failed for $runtime_id" >&2
+          fi
+        fi
+      done
+    done <<< "$rows"
+    exit "$failed"
+
+[doc('Run inventory-driven source and binary compatibility probes for every declared Python runtime.')]
+[group('packaging')]
+[windows]
+python-compatibility:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    $runId = (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssfffZ') + "-$PID"
+    $runRoot = Join-Path (Join-Path (Get-Location) 'var/python-runtime-compatibility/runs') $runId
+    $cohort = Join-Path $runRoot 'cohort'
+    New-Item -ItemType Directory -Force -Path $runRoot | Out-Null
+    $commit = (git rev-parse HEAD).Trim()
+    uv run --no-sync python -m dev.packaging.release_cohort build --output $cohort --expected-commit $commit
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    $rows = @(uv run --no-sync python -c "import json; from dev.ci.python_runtime_matrix import load_runtime_inventory; inventory=load_runtime_inventory(); print(json.dumps([{'runtime_id':row.identifier,'selector':row.selector,'stability':row.phase.value,'blocking':row.blocking} for row in inventory.rows]))" | ConvertFrom-Json)
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    if ($rows.Count -eq 0) { throw 'runtime inventory produced no rows' }
+    $failed = $false
+    foreach ($row in $rows) {
+        foreach ($mode in @('source', 'binary')) {
+            $evidenceDir = Join-Path (Join-Path $runRoot $row.runtime_id) $mode
+            $evidence = Join-Path $evidenceDir 'compatibility-evidence.json'
+            New-Item -ItemType Directory -Force -Path $evidenceDir | Out-Null
+            $args = @('-m', 'dev.ci.python_runtime_compatibility', '--mode', $mode, '--python', $row.selector, '--runtime-id', $row.runtime_id, '--stability', $row.stability, '--repo-root', (Get-Location).Path, '--work-dir', $evidenceDir, '--evidence', $evidence)
+            if ($mode -eq 'binary') { $args += @('--cohort-dir', $cohort) }
+            uv run --no-sync python @args
+            $probeStatus = $LASTEXITCODE
+            if ($probeStatus -ne 0) {
+                if ($row.blocking) {
+                    Write-Host "::error::blocking $mode compatibility probe failed for $($row.runtime_id)"
+                    $failed = $true
+                } else {
+                    Write-Warning "advisory $mode compatibility probe failed for $($row.runtime_id)"
+                }
+            }
+        }
+    }
+    if ($failed) { exit 1 }
+
 # Construct the temporary Python wheel cohort once for the current smoke campaign.
 # The immutable release-cohort builder replaces this transitional constructor.
 [doc('Construct the temporary Python wheel cohort once for the current smoke campaign.')]
@@ -358,6 +451,20 @@ packaging-build-python-cohort: packaging-smoke-source
 [group('packaging')]
 packaging-smoke-installed-oracles: packaging-build-python-cohort
     @uv run --no-sync pytest -q -n0 -m "integration and serial" dev/packaging/tests/test_installed_oracles.py
+
+# Own the rest of the serial contracts in this directory. The preflight lane
+# selects `not serial` because these must not run concurrently, and the oracle
+# lane above names one module, so without this recipe the remaining serial
+# tests here have no packaging-scoped owner: reaching them means running the
+# tree-wide `test-integration-serial`, and someone verifying packaging alone
+# gets a green result that never touched them. Depends on the cohort because
+# several of these install the built wheels; the ones that do not are
+# unaffected by having it. Guarded by
+# `dev/packaging/tests/test_preflight_recipe_selection.py`.
+[doc('Run the serial packaging contracts the preflight lane excludes.')]
+[group('packaging')]
+packaging-smoke-serial: packaging-build-python-cohort
+    @uv run --no-sync pytest -q -n0 -m "integration and serial" dev/packaging/tests
 
 # Local release-artifact smoke gates that do not need host package-manager access.
 # The campaign driver builds the cohort once and runs the flavor lanes
@@ -1048,11 +1155,10 @@ db-upgrade:
 # this file that reach outward at all.
 #
 # The `release` group is adjacent but disjoint, and nothing here re-declares
-# any of it: every release recipe is read-only or evidence-collecting
-# (`release` is a dry-run preview, `release-rollback` prints a procedure,
-# `release-readiness` audits, `release-collect-evidence` downloads), and
-# release publication itself lives in CI behind the `release` environment
-# (`publish-release.yml`). The release lane deliberately publishes nothing.
+# any of it: every release recipe is read-only (`release` is a dry-run preview,
+# `release-rollback` prints a procedure, `release-readiness` audits), and
+# release publication itself lives in CI behind the `pypi` environment
+# (`publish.yml`). The release lane deliberately publishes nothing.
 #
 # These three verbs do NOT share an automation posture, and this group must
 # not be read as granting one. Each states its own authority below.
@@ -1082,9 +1188,9 @@ docs-deploy:
 # most recent packaging-smoke evidence, and (best-effort, via `gh`) no open
 # priority:P0-blocker issue. Read-only — no outward action, ever. Exits 1 on
 # a blocking failure; advisory failures (e.g. no packaging-smoke run yet,
-# `gh` unavailable) are reported but do not fail the gate. Re-run
-# automatically by the release orchestrator's bump stage after every
-# automated bump. See docs/_release_checklist.yaml.
+# `gh` unavailable) are reported but do not fail the gate. Run it before
+# merging a release pull request; nothing in CI runs it for you. See
+# docs/_release_checklist.yaml and RELEASING.md.
 [doc('Audit-state readiness gate: version-surface parity, changelog sanity, and packaging-smoke evidence.')]
 [group('release')]
 release-readiness:
@@ -1097,14 +1203,14 @@ release-readiness-json:
 
 # Print the rollback procedure for a released version that must be pulled.
 # Read-only — never runs a destructive action; every step below is printed
-# for a human to run deliberately. See RELEASING.md#rollback-procedure.
+# for a human to run deliberately. See RELEASING.md#diagnose-and-recover.
 [doc('Print the rollback procedure for a released version that must be pulled (read-only, human-run).')]
 [group('release')]
 [unix]
 release-rollback version:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "Rollback procedure for cadrumo v{{version}} (RELEASING.md#rollback-procedure):"
+    echo "Rollback procedure for cadrumo v{{version}} (RELEASING.md#diagnose-and-recover):"
     echo ""
     echo "1. Confirm the rollback trigger (data loss/corruption, security disclosure,"
     echo "   widespread regression, or a compatibility mis-computation) — see"
@@ -1131,7 +1237,7 @@ release-rollback version:
 release-rollback version:
     #!pwsh
     $ErrorActionPreference = 'Stop'
-    Write-Host "Rollback procedure for cadrumo v{{version}} (RELEASING.md#rollback-procedure):"
+    Write-Host "Rollback procedure for cadrumo v{{version}} (RELEASING.md#diagnose-and-recover):"
     Write-Host ""
     Write-Host "1. Confirm the rollback trigger (data loss/corruption, security disclosure,"
     Write-Host "   widespread regression, or a compatibility mis-computation) - see"
@@ -1183,7 +1289,7 @@ release:
         --dry-run \
         --debug \
         2>&1 | tee "$LOG"
-    echo "✔ dry-run complete — review $LOG. The release orchestrator (dispatched in CI) applies the bump; this recipe is preview-only and mutates nothing."
+    echo "✔ dry-run complete — review $LOG. Merging the release pull request applies the bump; this recipe is preview-only and mutates nothing."
 
 [doc('Preview the next version release via dry-run (release-please).')]
 [group('release')]
@@ -1216,84 +1322,5 @@ release:
         --dry-run `
         --debug 2>&1 | Tee-Object -FilePath $log
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "✔ dry-run complete - review $log. The release orchestrator (dispatched in CI) applies the bump; this recipe is preview-only and mutates nothing."
+    Write-Host "✔ dry-run complete - review $log. Merging the release pull request applies the bump; this recipe is preview-only and mutates nothing."
 
-# Aggregate every distribution-evidence row from the given CI run(s)' evidence
-# drafts into var/distribution-install-readiness/ so `just release-readiness`
-# can reach 11/11. Pass the packaging-smoke run id (mints python-<os> rows +
-# the release cohort) plus any acquisition run ids (Scoop, Homebrew) - every
-# run publishes its rows as assets on a draft release tagged
-# evidence-<lane>-<run_id> (release-asset transport; Actions artifacts are
-# retired). The four real client rows (claude-*) are minted locally by
-# `python -m dev.packaging.emit_real_client_evidence ...` and already live in
-# the dest.
-[doc('Aggregate distribution-evidence rows from the given CI run(s) into var/distribution-install-readiness/.')]
-[group('release')]
-[unix]
-release-collect-evidence *run_ids:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [ -z "{{run_ids}}" ]; then
-        echo "usage: just release-collect-evidence SMOKE_RUN_ID [SCOOP_RUN_ID HOMEBREW_RUN_ID ...]" >&2
-        exit 1
-    fi
-    dest="var/distribution-install-readiness"
-    mkdir -p "$dest"
-    tmp="$(mktemp -d)"
-    for run_id in {{run_ids}}; do
-        tag=""
-        for lane in smoke scoop homebrew claude; do
-            candidate="evidence-$lane-$run_id"
-            if gh release view "$candidate" --json tagName >/dev/null 2>&1; then
-                tag="$candidate"
-                break
-            fi
-        done
-        if [ -z "$tag" ]; then
-            echo "no evidence draft found for run $run_id (expected evidence-<lane>-$run_id)" >&2
-            exit 1
-        fi
-        echo "collecting evidence rows from draft $tag"
-        gh release download "$tag" --pattern '*.json' --dir "$tmp/$run_id" --clobber
-    done
-    n=0
-    while IFS= read -r -d '' f; do cp "$f" "$dest/"; n=$((n + 1)); done \
-        < <(find "$tmp" -name '*.json' ! -name 'evidence-manifest.json' -print0)
-    rm -rf "$tmp"
-    echo "collected $n record(s) into $dest (client-row records from emit_real_client_evidence are already local there)"
-
-[doc('Aggregate distribution-evidence rows from the given CI run(s) into var/distribution-install-readiness/.')]
-[group('release')]
-[windows]
-release-collect-evidence *run_ids:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    $ids = "{{run_ids}}".Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries)
-    if ($ids.Count -eq 0) {
-        Write-Error "usage: just release-collect-evidence SMOKE_RUN_ID [SCOOP_RUN_ID HOMEBREW_RUN_ID ...]"
-        exit 1
-    }
-    $dest = "var/distribution-install-readiness"
-    New-Item -ItemType Directory -Force -Path $dest | Out-Null
-    $tmp = (New-Item -ItemType Directory -Path (Join-Path $env:TEMP ("collect-" + [Guid]::NewGuid().ToString("N")))).FullName
-    foreach ($id in $ids) {
-        $tag = $null
-        foreach ($lane in @("smoke", "scoop", "homebrew", "claude")) {
-            $candidate = "evidence-$lane-$id"
-            & gh release view $candidate --json tagName *> $null
-            if ($LASTEXITCODE -eq 0) { $tag = $candidate; break }
-        }
-        if (-not $tag) {
-            Write-Error "no evidence draft found for run $id (expected evidence-<lane>-$id)"
-            exit 1
-        }
-        Write-Host "collecting evidence rows from draft $tag"
-        & gh release download $tag --pattern '*.json' --dir (Join-Path $tmp $id) --clobber
-        if ($LASTEXITCODE -ne 0) { Write-Error "download failed for $tag"; exit 1 }
-    }
-    $n = 0
-    Get-ChildItem -Path $tmp -Recurse -Filter *.json |
-        Where-Object { $_.Name -ne "evidence-manifest.json" } |
-        ForEach-Object { Copy-Item $_.FullName -Destination $dest -Force; $n++ }
-    Remove-Item -Recurse -Force $tmp
-    Write-Host "collected $n record(s) into $dest (client-row records from emit_real_client_evidence are already local there)"

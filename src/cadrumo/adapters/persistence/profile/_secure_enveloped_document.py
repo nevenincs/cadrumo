@@ -46,10 +46,10 @@ from pydantic import BaseModel
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....core.time.clock import now
-from ..storage.errors import SecureObjectRevisionConflictError
 from ..storage.namespace_registry import secure_object_logical_path
 from ..storage.secure_object_namespaces import SecureObjectNamespaceDefinition
 from ..storage.sql import SecureObjectRepository, SecureObjectWrite
+from ._revision_guarded_singleton_mutation import mutate_revision_guarded_singleton
 
 
 class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
@@ -265,20 +265,19 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
             SecureObjectRevisionConflictError: Contention persisted across every
                 attempt.
         """
-        last_conflict: SecureObjectRevisionConflictError | None = None
-        for _attempt in range(attempts):
-            current, revision_id = self.load_revisioned()
-            updated = mutation(current)
-            write = self.to_secure_object_write(updated).model_copy(
-                update={"expected_revision_id": revision_id},
-            )
-            try:
-                self._objects.save_many((write,))
-            except SecureObjectRevisionConflictError as exc:
-                last_conflict = exc
-                continue
-            return updated
-        raise last_conflict if last_conflict is not None else AssertionError("mutate exhausted without a conflict")
+        def write(document: DocumentT, *, expected_revision_id: str) -> SecureObjectWrite:
+            return self.to_secure_object_write(document, expected_revision_id=expected_revision_id)
+
+        def save(secure_object_write: SecureObjectWrite) -> None:
+            self._objects.save_many((secure_object_write,))
+
+        return mutate_revision_guarded_singleton(
+            mutation,
+            load_revisioned=self.load_revisioned,
+            write=write,
+            save=save,
+            attempts=attempts,
+        )
 
 
 __all__ = [

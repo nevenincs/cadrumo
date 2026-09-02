@@ -146,7 +146,8 @@ def _uncovered_row_kinds(covered: Mapping[type[ModeloDetailRow], tuple[str, ...]
     """Pure comparison: every ``ModeloDetailRow`` union member absent from ``covered``."""
     kinds: set[type] = set()
     for member in get_args(ModeloDetailRow):
-        assert isinstance(member, type)
+        if not isinstance(member, type):
+            raise ModeloError(f"the ModeloDetailRow union carries a non-class member {member!r}")
         kinds.add(member)
     return frozenset(kinds) - frozenset(covered)
 

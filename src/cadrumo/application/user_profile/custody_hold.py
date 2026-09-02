@@ -4,14 +4,18 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import Final, Literal
+from typing import Final
 from uuid import UUID
 
 from ...core.paths import effective_storage_root
 from ...core.storage_taxonomy import StorageCategory
 from ...core.storage_taxonomy_locations import storage_location
 from ...core.time.utc import validate_utc_aware
-from ..profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
+from ..profile_deletion_hold_contract import (
+    ProfileDeletionHoldOwner,
+    ProfileDeletionHoldOwnerProjection,
+    ProfileDeletionHoldOwnerValue,
+)
 from .custody_hold_models import (
     ProfileCustodyHoldAssessment,
     ProfileCustodyHoldEvidence,
@@ -51,7 +55,7 @@ def _write_canonical_file(path: Path, payload: bytes, store: ProfileCustodyLocal
 class _ProfileCustodyHoldEvidenceOwner:
     """Read and persist a derived evidence projection from one external owner."""
 
-    def __init__(self, *, root: Path | None = None, owner: Literal["legal", "filing"]) -> None:
+    def __init__(self, *, root: Path | None = None, owner: ProfileDeletionHoldOwnerValue) -> None:
         self._storage_root = effective_storage_root(root)
         self._owner = owner
         self._root = (
@@ -111,8 +115,8 @@ class ProfileCustodyHoldAuthority:
 
     def __init__(self, *, root: Path | None = None) -> None:
         """Bind the independently-owned legal and filing evidence owners."""
-        self._legal = _ProfileCustodyHoldEvidenceOwner(root=root, owner="legal")
-        self._filing = _ProfileCustodyHoldEvidenceOwner(root=root, owner="filing")
+        self._legal = _ProfileCustodyHoldEvidenceOwner(root=root, owner=ProfileDeletionHoldOwner.LEGAL)
+        self._filing = _ProfileCustodyHoldEvidenceOwner(root=root, owner=ProfileDeletionHoldOwner.FILING)
 
     def assess(self, profile_id: UUID, *, now: datetime) -> ProfileCustodyHoldAssessment:
         """Return the joined deletion-preflight assessment for a profile at ``now``."""

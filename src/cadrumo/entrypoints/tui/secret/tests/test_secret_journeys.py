@@ -16,7 +16,7 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
-from textual.widgets import Button, Input
+from textual.widgets import Button, Input, Static
 
 from .....application.user_profile.login_session import login_profile
 from .....application.user_profile.passphrase_rotation import (
@@ -123,6 +123,34 @@ async def test_a_confirmation_mismatch_refuses_locally_before_any_attempt(tmp_pa
             assert not app.attempt_in_flight, "a local mismatch must never start the worker attempt"
 
         assert app.outcome is None
+
+
+@pytest.mark.asyncio
+async def test_passphrase_strength_line_matches_registration_feedback(tmp_path: Path) -> None:
+    """Passphrase rotation keeps the shared credential-strength presentation."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        profile_id = _enroll()
+        app = _app(profile_id)
+        async with ScreenHostApp(app).run_test(size=(120, 40)) as pilot:
+            await pilot.pause()
+            field = app.query_one("#field-new", Input)
+            line = app.query_one("#strength-line", Static)
+
+            field.value = "abc"
+            await pilot.pause()
+            assert line.has_class("strength-refused")
+
+            field.value = "correct horse battery staple"
+            await pilot.pause()
+            assert line.has_class("strength-strong")
+            assert not line.has_class("strength-refused")
+
+            field.value = ""
+            await pilot.pause()
+            assert not any(
+                line.has_class(name)
+                for name in ("strength-refused", "strength-weak", "strength-fair", "strength-strong")
+            )
 
 
 @pytest.mark.asyncio

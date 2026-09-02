@@ -461,7 +461,6 @@ def _supported_index_urls(
 def _write_manifests(manifests: dict[str, _Manifest]) -> None:
     for modelo, manifest in manifests.items():
         artifacts = manifest["artefacts"]
-        assert isinstance(artifacts, list)
         manifest["artefact_count"] = len(artifacts)
         path = _CORPUS / f"modelo_{modelo}" / "manifest.json"
         path.write_bytes((json.dumps(manifest, ensure_ascii=False, indent=2) + "\n").encode())
@@ -493,7 +492,6 @@ def _pull() -> None:
                 )
                 if existing is not None:
                     source_pages = manifest["source_pages"]
-                    assert isinstance(source_pages, list)
                     if required.source_page not in source_pages:
                         source_pages.append(required.source_page)
                     existing["source_page"] = required.source_page
@@ -522,18 +520,15 @@ def _pull() -> None:
                 )
                 manifests[required.modelo] = manifest
             source_pages = manifest["source_pages"]
-            assert isinstance(source_pages, list)
             if required.source_page not in source_pages:
                 source_pages.append(required.source_page)
             artifacts = manifest["artefacts"]
-            assert isinstance(artifacts, list)
             same = next(
                 (artifact for artifact in artifacts if artifact["sha256"] == digest and artifact["bytes"] == len(data)),
                 None,
             )
             if same is not None:
                 aliases = same.setdefault("url_aliases", [])
-                assert isinstance(aliases, list)
                 aliases.append(required.url)
                 continue
 

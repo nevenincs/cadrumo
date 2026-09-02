@@ -40,6 +40,7 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevisionState,
 )
 from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -125,8 +126,10 @@ def _sibling_work_unit(
     )
     if resolution.state is ModeloWorkSelectorState.ABSENT:
         return None
-    assert resolution.work_unit is not None
-    return resolution.work_unit
+    work_unit = resolution.work_unit
+    if work_unit is None:
+        raise ModeloValidationError("a present work-unit selection must carry the work unit it selected")
+    return work_unit
 
 
 def _reconcile_revision_priority(revision: CalculationRevision) -> tuple[int, datetime]:

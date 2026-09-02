@@ -34,7 +34,7 @@ from .export_parse import xml_dictionary_entries
 from .fixed_width_codec import ExportJustification, ExportPadding
 from .ids import ExportFieldId
 from .schema import DataBindingDefinition, ModeloRevision, RegistrySnapshot
-from .schema_base import RegistryModel
+from .schema_base import ZERO_PADDED_EXPORT_DATA_TYPES, RegistryModel
 from .schema_exports import ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition
 from .schema_references import SourceReference
 
@@ -430,13 +430,13 @@ def _export_field_from_binding(
 
 
 def _padding_for_binding_data_type(data_type: BindingExportDataType) -> ExportPadding:
-    if data_type in {"money", "integer", "decimal"}:
+    if data_type in ZERO_PADDED_EXPORT_DATA_TYPES:
         return ExportPadding.LEFT_ZERO
     return ExportPadding.RIGHT_SPACE
 
 
 def _justification_for_binding_data_type(data_type: BindingExportDataType) -> ExportJustification:
-    if data_type in {"money", "integer", "decimal"}:
+    if data_type in ZERO_PADDED_EXPORT_DATA_TYPES:
         return ExportJustification.RIGHT
     return ExportJustification.LEFT
 

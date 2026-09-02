@@ -71,6 +71,9 @@ from .diagnostic_models import (
     ConfigRepairReport as _ConfigRepairReport,
 )
 from .diagnostic_models import (
+    DiagnosticAudience as _DiagnosticAudience,
+)
+from .diagnostic_models import (
     DiagnosticCheck as _DiagnosticCheck,
 )
 from .diagnostic_models import (
@@ -228,7 +231,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> _ConfigRepa
                     outcome=NoRecoveryOutcome.TERMINAL,
                 )
             ),
-            audience="operator" if registry.available else "internal",
+            audience=_DiagnosticAudience.OPERATOR if registry.available else _DiagnosticAudience.INTERNAL,
         ),
     ]
 
@@ -409,7 +412,7 @@ def render_config_repair_text(report: _ConfigRepairReport) -> str:
     for check in report.checks:
         scope = (
             ""
-            if check.status == _DiagnosticStatus.OK or check.audience == "operator"
+            if check.status == _DiagnosticStatus.OK or check.audience == _DiagnosticAudience.OPERATOR
             else f" [{tr('cli.diagnostics.repair.audience_internal', default='internal application issue')}]"
         )
         lines.append(f"{check.status}\t{check.name}\t{check.summary}{scope}")
@@ -611,7 +614,7 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> _DiagnosticCh
                 values={"registry_root": str(registry_root), "valid": False},
                 outcome=NoRecoveryOutcome.TERMINAL,
             ),
-            audience="internal",
+            audience=_DiagnosticAudience.INTERNAL,
         )
     except Exception as exc:  # pragma: no cover - defensive: registry not loadable
         return _DiagnosticCheck(
@@ -625,7 +628,7 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> _DiagnosticCh
                 values={"observable": False, "registry_root": str(registry_root)},
                 outcome=NoRecoveryOutcome.TERMINAL,
             ),
-            audience="internal",
+            audience=_DiagnosticAudience.INTERNAL,
         )
     return _DiagnosticCheck(
         name="registry.integrity",

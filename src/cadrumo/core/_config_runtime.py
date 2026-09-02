@@ -34,7 +34,11 @@ def active_profile_pointer_observation(
     """
     configured_root = os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT")
     root = normalizer(Path(configured_root)) if configured_root else storage_root()
-    assert root is not None
+    if root is None:
+        raise ValueError(
+            "CADRUMO_LOCAL_STORAGE_ROOT is set but normalises to no path, "
+            "so the active-profile pointer has no coordinate to be read from",
+        )
     from .bucket_pointer import read_pointer
 
     return (root, read_pointer(root))

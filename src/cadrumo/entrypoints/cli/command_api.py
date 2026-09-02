@@ -17,21 +17,19 @@ from ._command_schema import (
 )
 from ._verb_input_schema import (
     DECLARED_UNIMPLEMENTED_SURFACES,
-    JsonType,
     ResolvedVerbLeaf,
     SchemaResolutionError,
     VerbInputSchema,
     VerbLeafKind,
     VerbLeafResolutionFailure,
     VerbParameter,
-    VerbParamKind,
     assert_schema_coverage,
     build_verb_input_schemas,
     cli_argv_for,
     cli_path_for_command_key,
     is_exposable_command,
 )
-from .command_spec import ArgumentSpec, CommandSpec, CommandSpecNode, DefaultKind, OptionSpec
+from .command_spec import ArgumentSpec, CommandSpec, CommandSpecNode, DefaultKind, JsonType, OptionSpec, ParameterKind
 from .command_specs import COMMAND_GRAPH
 
 
@@ -55,13 +53,13 @@ __all__ = [
     "JsonType",
     "MachineSecretPayloadMetadata",
     "OptionSpec",
+    "ParameterKind",
     "ProfileAuthenticationContractMetadata",
     "ResolvedVerbLeaf",
     "SchemaResolutionError",
     "VerbInputSchema",
     "VerbLeafKind",
     "VerbLeafResolutionFailure",
-    "VerbParamKind",
     "VerbParameter",
     "assert_schema_coverage",
     "build_verb_input_schemas",

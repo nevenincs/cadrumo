@@ -11,18 +11,16 @@ delegation live in :mod:`_modelo_work_wizard_cli`. Every payload here is an
 
 from __future__ import annotations
 
-from typing import Literal
-
+from ...application.modelo.work_wizard import ModeloWorkWizardPromptChannel
 from ...core.casilla_id import CasillaId
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr
 from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
-from ._modelo_revision_payload_parts import CalculationRevisionCommandProjectionFields
+from ._modelo_revision_payload_parts import CalculationRevisionProjectionFields
 
 #: Closed set of CLI input channels a wizard step resolves to: a direct
 #: ``--casilla`` override, a registry ``--binding`` override, or a
 #: ``--relation`` override.
-WizardPromptChannel = Literal["casilla", "binding", "relation"]
 
 
 class WizardPromptedCasillaPayload(OutputSchema):
@@ -38,7 +36,7 @@ class WizardPromptedCasillaPayload(OutputSchema):
     casilla_id: CasillaId
     number: str
     label: NonEmptyStr
-    channel: WizardPromptChannel
+    channel: ModeloWorkWizardPromptChannel
     """Either ``casilla`` (a direct ``--casilla`` override) or ``binding``/``relation``."""
     key: NonEmptyStr
     """The ``--casilla`` / ``--binding`` / ``--relation`` key supplied to the calculation."""
@@ -48,12 +46,12 @@ class WizardPromptedCasillaPayload(OutputSchema):
     help_text: str | None = None
 
 
-class WorkWizardResult(CalculationRevisionCommandProjectionFields):
+class WorkWizardResult(CalculationRevisionProjectionFields):
     """Successful ``aeat app modelo work wizard`` result payload.
 
     Mirrors the shape of :class:`~entrypoints.cli._modelo_payloads.WorkCalculateResult`
     (the wizard composes the exact same calculation path, and both share the
-    compact persisted-revision projection) plus the
+    full persisted-revision projection) plus the
     ``prompted_casillas`` audit trail of what the wizard asked and what the
     operator (or the scripted answer queue) supplied.
     """

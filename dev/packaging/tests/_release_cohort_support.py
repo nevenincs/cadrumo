@@ -56,41 +56,31 @@ DEFAULT_COHORT_CREATED_AT = datetime(2026, 1, 1, tzinfo=UTC)
 
 
 @functools.lru_cache(maxsize=1)
-def _real_product_wheels() -> dict[str, Path]:
-    """Build real wheel artifacts once; never counterfeit them from installed files."""
+def _real_product_wheel() -> Path:
+    """Build the product wheel once; never counterfeit it from installed files.
+
+    One wheel, because the harness ships inside it. A second build against a
+    separate harness project is what this fixture used to do, and there is no
+    such project to build.
+    """
     output = Path(tempfile.mkdtemp(prefix="cadrumo-real-cohort-wheels-"))
-    commands = (
-        ("cadrumo-wheel", ["uv", "build", "--wheel", "--out-dir", str(output)]),
-        (
-            "cadrumo-harness-wheel",
-            [
-                "uv",
-                "build",
-                "--wheel",
-                "--project",
-                str(REPO_ROOT / "src" / "cadrumo-harness"),
-                "--out-dir",
-                str(output),
-            ],
-        ),
+    uv = shutil.which("uv")
+    if uv is None:
+        msg = "uv executable not found on PATH"
+        raise RuntimeError(msg)
+    completed = subprocess.run(  # noqa: S603 - fixed uv build argv over repository-owned paths.
+        [uv, "build", "--wheel", "--out-dir", str(output)],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
     )
-    result: dict[str, Path] = {}
-    for name, argv in commands:
-        completed = subprocess.run(  # noqa: S603 - fixed uv build argv over repository-owned paths.
-            argv,
-            cwd=REPO_ROOT,
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        if completed.returncode != 0:
-            raise RuntimeError(f"real wheel fixture build failed: {completed.stderr}")
-        pattern = "cadrumo_harness-*.whl" if "harness" in name else "cadrumo-*.whl"
-        candidates = tuple(output.glob(pattern))
-        if len(candidates) != 1:
-            raise RuntimeError(f"real wheel fixture expected one {pattern}: {candidates!r}")
-        result[name] = candidates[0]
-    return result
+    if completed.returncode != 0:
+        raise RuntimeError(f"real wheel fixture build failed: {completed.stderr}")
+    candidates = tuple(output.glob("cadrumo-*.whl"))
+    if len(candidates) != 1:
+        raise RuntimeError(f"real wheel fixture expected one cadrumo-*.whl: {candidates!r}")
+    return candidates[0]
 
 
 def release_cohort(
@@ -113,15 +103,11 @@ def release_cohort(
     for index, (name, kind) in enumerate(sorted(REQUIRED_ARTIFACT_KINDS.items())):
         path = root / "artifacts" / f"{name}.bin"
         path.parent.mkdir(exist_ok=True)
-        if name in {"cadrumo-wheel", "cadrumo-harness-wheel"}:
-            shutil.copy2(_real_product_wheels()[name], path)
+        if name == "cadrumo-wheel":
+            shutil.copy2(_real_product_wheel(), path)
             if payload_suffix:
-                package = "cadrumo" if name == "cadrumo-wheel" else "cadrumo_harness"
                 with zipfile.ZipFile(path, "a") as archive:
-                    archive.writestr(f"{package}/_foreign_cohort_plant.py", payload_suffix)
-        elif name == "mcpb":
-            with zipfile.ZipFile(path, "w") as archive:
-                archive.write(REPO_ROOT / "pyproject.toml", "pyproject.toml")
+                    archive.writestr("cadrumo/_foreign_cohort_plant.py", payload_suffix)
         else:
             path.write_bytes(f"{index}:{name}:{payload_suffix}\n".encode())
         artifacts.append((name, kind, path))

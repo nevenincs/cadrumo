@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from contextlib import AbstractAsyncContextManager
 from datetime import datetime
-from typing import Literal, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
@@ -19,6 +19,7 @@ from ...core.operations import OperationEffect
 from .capabilities import OperationOwnedResource
 from .events import OperationEventCode, OperationLogSeverity
 from .financial_operand_submission import OperationFinancialOperandContextAccess
+from .interactions import OperationResponseIntentValue
 from .models import (
     OperationDiagnosticReference,
     OperationIdentity,
@@ -167,7 +168,7 @@ class OperationResumeCheckpoint(Protocol):
         ...
 
     @property
-    def response_action(self) -> Literal["apply", "reject"] | None:
+    def response_action(self) -> OperationResponseIntentValue | None:
         """Consumed response action, or ``None`` while still pending."""
         ...
 

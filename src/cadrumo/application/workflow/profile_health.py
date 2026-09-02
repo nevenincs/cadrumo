@@ -479,8 +479,9 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
         # as itself. A session that vanished between the probe above and this
         # read lands here as a lock rather than as a missing record, and a lock
         # is not a broken pointer, so it offers no pointer repair.
-        assert resolution.unavailability is not None
         unavailability = resolution.unavailability
+        if unavailability is None:
+            raise RuntimeError("an absent profile record must carry the reason it is unavailable")
         locked = unavailability is ProfileRecordUnavailability.SESSION_REQUIRED
         return _finalise_health(
             ActiveProfileHealth(

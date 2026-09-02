@@ -24,12 +24,13 @@ from .....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from .....core.hashing import sha256_hex
 from .....core.logging import get_logger
 from .....core.time.clock import now
+from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check with the registry validator. build_snapshot
 # of a Modelo 100 revision fails loudly if that check is unregistered, so
 # the M100 routing referential-integrity gate runs on this declarations path.
-from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
+from .....domain.calculations.registry.schema_base import EvidenceTier
 from .._playwright import BrowserContext, Locator, Page, PlaywrightError
 from ._adapter_utils import assert_pdf_response as _assert_pdf_response
 from ._adapter_utils import assert_read_landing
@@ -174,7 +175,7 @@ def get_ver_click_timeout_ms() -> int:
 # success detection stays on the declarations listing/cotejo PATH prefix.
 READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-declarations-read",
-    evidence_tier="official_source_guidance",
+    evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
     classification="authenticated_read_surface",
     allowed_hosts=(_SEDE_HOST,),
     allowed_host_suffixes=(_AEAT_HOST_SUFFIX,),

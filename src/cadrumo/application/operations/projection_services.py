@@ -376,7 +376,8 @@ class OperationResponseAuthorityBroker:
             self._entries.pop(request.operation_id)
             token = issued_token
         capability.close()
-        assert token is not None
+        if token is None:
+            raise ValueError("a bound secure-response authority requires the token its capability issued")
         try:
             return BoundOperationSecureResponseAuthority.bind(
                 operation_id=request.operation_id,

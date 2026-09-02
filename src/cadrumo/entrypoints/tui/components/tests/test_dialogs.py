@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 from textual.app import App
+from textual.screen import ModalScreen
 from textual.widgets import Input, OptionList, SelectionList, Static
 
 from .....core.presentation import FormField, FormFieldKind, form_choices
@@ -65,6 +66,50 @@ async def test_text_dialog_refuses_an_invalid_value_before_dismissing() -> None:
         await pilot.press("enter")
         await pilot.pause()
         assert dismissed == ["accepted"]
+        app.exit(None)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "dialog",
+    (
+        TextEditScreen(FormField(key="name", label="Name"), cancel_label="Cancel", save_label="Save"),
+        ChoiceEditScreen(
+            FormField(
+                key="scopes",
+                label="Scopes",
+                kind=FormFieldKind.MULTI_CHOICE,
+                choices=form_choices([("READ", "Read")]),
+            ),
+            cancel_label="Cancel",
+            save_label="Save",
+        ),
+        OneChoiceEditScreen(
+            FormField(
+                key="route",
+                label="Route",
+                kind=FormFieldKind.SINGLE_CHOICE,
+                choices=form_choices([("qr", "QR code")]),
+            ),
+            cancel_label="Cancel",
+            save_label="Save",
+        ),
+    ),
+    ids=("text", "multi-choice", "one-choice"),
+)
+async def test_edit_dialog_escape_dismisses_without_saving(dialog: ModalScreen[str | None]) -> None:
+    app = _Host()
+    dismissed: list[str | None] = []
+
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        app.push_screen(dialog, dismissed.append)
+        await pilot.pause()
+
+        await pilot.press("escape")
+        await pilot.pause()
+
+        assert dismissed == [None]
         app.exit(None)
 
 

@@ -98,11 +98,6 @@ dependencies = [
   # Typer imports Rich at runtime for help/error rendering. Keep the direct
   # pin version-bounded here; application code should not import Rich directly.
   "rich>=14.2.0,<16",
-  # Rust-backed TOML parser for the registry/profile-schema read boundary
-  # (`core/_toml.py`). ~2.4x faster than stdlib tomllib on the ~16k-fragment
-  # registry tree with proven byte-identical output; zero transitive
-  # dependencies, MIT license, prebuilt wheels including win_amd64.
-  "rtoml>=0.13.0,<1",
   # Spanish Snowball stemmer for the grounding-search FTS5 stemmed column
   # (bundled-corpus retrieval and the command-search index). Small, pure-Python,
   # BSD, no transitive weight. Core rather than optional so the lexical index
@@ -352,11 +347,19 @@ managed-torch-direct-dependency = true
 registry = [
   # Registry load-census tooling imports grimp directly for the executed import graph.
   "grimp>=3.15,<4",
+  # Rust-backed TOML parser used only by development registry writers and
+  # render tooling; production reads use the stdlib `tomllib` boundary.
+  "rtoml>=0.13.0,<1",
 ]
 dev = [
   { include-group = "registry" },
   # Dependency declaration drift: missing, unused, transitive, and misplaced deps.
   "deptry>=0.24",
+  # `pydantic` does not re-export `PydanticSerializationError`, so the inference
+  # consent-gate test reaches it at its own distribution. Declared here rather
+  # than in `[project] dependencies` because only tests import it, and left
+  # unbounded above so `pydantic`'s exact pin stays the resolver's authority.
+  "pydantic-core>=2.46",
   # torch is the vaultspec-rag embedding backend (dev-only semantic search); no
   # `src/cadrumo/` runtime path imports it. It lives here, not in [project.dependencies],
   # so production installs stay lean — a PEP 735 group is a valid direct-dep location

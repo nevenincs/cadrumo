@@ -13,7 +13,8 @@ import datetime
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
-from dev.registry.analysis.revision_name_window import name_window_findings
+
+from ..analysis.revision_name_window import name_window_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

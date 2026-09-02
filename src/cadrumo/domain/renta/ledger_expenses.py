@@ -407,7 +407,10 @@ def evaluate_renta_deductibility(
         deductible_abs = deductible_basis
         applied_ratio = Decimal("1")
     elif rule.kind is ProportionalityKind.FIXED_PERCENTAGE:
-        assert rule.fixed_pct is not None
+        if rule.fixed_pct is None:
+            raise RentaValidationError(
+                f"proportionality rule for {fact.category.value!r} declares a fixed percentage kind without a rate",
+            )
         applied_ratio = rule.fixed_pct
         deductible_abs = deductible_basis * applied_ratio
     elif rule.kind in {ProportionalityKind.USAGE_RATIO_HOME_AREA, ProportionalityKind.USAGE_RATIO_PERSONAL}:

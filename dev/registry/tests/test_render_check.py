@@ -13,7 +13,8 @@ import pathlib
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
-from dev.registry.pipeline.render_check import compare_revision_against_committed
+
+from ..pipeline.render_check import compare_revision_against_committed
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -95,7 +96,8 @@ def test_every_non_reproducing_tree_is_dispositioned_and_every_disposition_is_li
 
     from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
     from cadrumo.core.resources.bundled_data import bundled_path
-    from dev.registry.pipeline.render_check import compare_revision_against_committed
+
+    from ..pipeline.render_check import compare_revision_against_committed
 
     dispositions_path = pathlib.Path(__file__).resolve().parent.parent / "pipeline" / "generated_tree_dispositions.toml"
     declared = tomllib.loads(dispositions_path.read_text(encoding="utf-8"))

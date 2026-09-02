@@ -6,7 +6,7 @@ import pathlib
 
 import pytest
 
-from dev.registry.analysis.footnote_pointer_notes import (
+from ..analysis.footnote_pointer_notes import (
     POINTER,
     note_definitions,
     resolve_pointer_notes,
@@ -95,7 +95,7 @@ def test_the_transcription_path_comes_from_the_design_the_source_names() -> None
     defines twenty-four. Resolving a note against the wrong year's design is
     worse evidence than none, because it still produces a plausible answer.
     """
-    from dev.registry.analysis.footnote_pointer_notes import design_transcription_path
+    from ..analysis.footnote_pointer_notes import design_transcription_path
 
     assert design_transcription_path(_DESIGN.with_suffix("")).name.endswith(".extracted.md")
     assert design_transcription_path(pathlib.Path("a/b/design.xlsx")) == pathlib.Path("a/b/design.xlsx.extracted.md")
@@ -103,7 +103,7 @@ def test_the_transcription_path_comes_from_the_design_the_source_names() -> None
 
 def test_pointer_evidence_separates_a_note_about_the_wire_from_one_about_periods() -> None:
     """The reading aid points an author at the notes worth opening first."""
-    from dev.registry.analysis.footnote_pointer_notes import pointer_evidence_for_design
+    from ..analysis.footnote_pointer_notes import pointer_evidence_for_design
 
     evidence = pointer_evidence_for_design(["Nota 4.", "Nota 1", 'Constante "353"'], _DESIGN)
     by_cell = {item.cell: item for item in evidence}
@@ -122,6 +122,6 @@ def test_a_design_with_no_transcription_yields_nothing_and_is_the_callers_proble
     is expected to check the transcription exists, which is why this returns
     empty rather than raising.
     """
-    from dev.registry.analysis.footnote_pointer_notes import pointer_evidence_for_design
+    from ..analysis.footnote_pointer_notes import pointer_evidence_for_design
 
     assert pointer_evidence_for_design(["Nota 1"], pathlib.Path("no/such/design.xlsx.extracted.md")) == ()

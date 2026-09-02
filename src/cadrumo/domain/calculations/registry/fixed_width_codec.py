@@ -22,7 +22,7 @@ from .export_value_policy import (
     project_export_value,
     validate_export_wire_value,
 )
-from .schema_base import CasillaDataType
+from .schema_base import ZERO_PADDED_EXPORT_DATA_TYPES, CasillaDataType
 
 
 class ExportPadding(StrEnum):
@@ -504,7 +504,7 @@ def _require_allowed_value(field: _ExportField, value: object) -> None:
         )
 
 
-_NUMERIC_DATA_TYPES = frozenset({"integer", "decimal", "money"})
+_NUMERIC_DATA_TYPES = ZERO_PADDED_EXPORT_DATA_TYPES
 
 
 def _is_absent_slot(field: _ExportField, value: object) -> bool:

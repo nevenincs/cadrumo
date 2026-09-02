@@ -10,8 +10,8 @@ name: Cadrumo Packaging Smoke
 # explicit workflow_dispatch, never per-push. The per-push signal is the
 # lightweight packaging-quick.yml (one cohort build + one core install probe
 # per OS, no evidence minted). This workflow remains the SOLE source of
-# promotable DistributionEvidence; publish-release.yml Gate 2 pins this
-# workflow path. There is deliberately NO pull_request trigger.
+# promotable DistributionEvidence. There is deliberately NO pull_request
+# trigger.
 on:
   workflow_dispatch:
 
@@ -126,7 +126,7 @@ jobs:
 
       # TEST/DEBUG ASSET ONLY. The per-OS smoke cohort feeds the acquisition
       # test lanes (Scoop and Homebrew); it NEVER enters the publication
-      # chain. publish-release.yml ships the SEALED cadrumo-release-cohort only.
+      # chain, which builds its own distributions from the release tag.
       # Enforced by test_no_workflow_consumes_per_os_cohort_for_publication.
       - name: Archive the tested Cadrumo Python cohort
         run: |

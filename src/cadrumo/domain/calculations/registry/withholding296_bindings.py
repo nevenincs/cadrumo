@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
-from typing import Final, Literal
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -194,23 +194,10 @@ def resolve_withholding296_binding_values(
     return resolved
 
 
-#: Amount fields the modelo 296 perceptor record sums across observations sharing one row identity.
-_WITHHOLDING296_AMOUNT_FIELDS: Final[tuple[str, ...]] = (
-    "base_retenciones",
-    "porcentaje_retencion",
-    "retencion_practicada",
-    "compensaciones",
-    "garantias",
-    "otros_importes",
-    "ingreso_a_cuenta_repercutido",
-)
-
-
 def _build_withholding296_rows(
     observations: tuple[Withholding296Observation, ...],
 ) -> tuple[Mapping[str, Decimal | str], ...]:
     accum: dict[tuple[str, str, str, str], dict[str, Decimal | str]] = {}
-    amounts: dict[tuple[str, str, str, str], dict[str, Decimal]] = {}
     for observation in observations:
         key = (
             observation.codigo_pais or "",
@@ -224,6 +211,13 @@ def _build_withholding296_rows(
             "naturaleza": observation.naturaleza,
             "clave": observation.clave,
             "subclave": observation.subclave,
+            "base_retenciones": Decimal("0"),
+            "porcentaje_retencion": Decimal("0"),
+            "retencion_practicada": Decimal("0"),
+            "compensaciones": Decimal("0"),
+            "garantias": Decimal("0"),
+            "otros_importes": Decimal("0"),
+            "ingreso_a_cuenta_repercutido": Decimal("0"),
         }
         for field in (
             "representative_tax_id",
@@ -254,13 +248,25 @@ def _build_withholding296_rows(
             value = getattr(observation, field)
             if value is not None:
                 identity[field] = value
-        accum.setdefault(key, identity)
-        bucket_amounts = amounts.setdefault(key, dict.fromkeys(_WITHHOLDING296_AMOUNT_FIELDS, Decimal("0")))
-        for amount_field in _WITHHOLDING296_AMOUNT_FIELDS:
-            bucket_amounts[amount_field] += getattr(observation, amount_field)
+        bucket = accum.setdefault(key, identity)
+        for amount_field in (
+            "base_retenciones",
+            "porcentaje_retencion",
+            "retencion_practicada",
+            "compensaciones",
+            "garantias",
+            "otros_importes",
+            "ingreso_a_cuenta_repercutido",
+        ):
+            previous = bucket[amount_field]
+            if not isinstance(previous, Decimal):
+                raise RegistryValidationError(
+                    f"withholding296 row accumulator for {key!r} holds a non-numeric running {amount_field}",
+                )
+            bucket[amount_field] = previous + getattr(observation, amount_field)
     rows: list[dict[str, Decimal | str]] = []
     for index, key in enumerate(sorted(accum.keys()), start=1):
-        row: dict[str, Decimal | str] = {**accum[key], **amounts[key]}
+        row = dict(accum[key])
         row["registro_orden"] = str(index)
         if "representative_tax_id" not in row:
             row["representative_tax_id"] = " " * 9

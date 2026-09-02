@@ -1,29 +1,29 @@
 # How to publish a Cadrumo product release
 
-Cadrumo releases are driven by one manual dispatch of
-`.github/workflows/release-orchestrator.yml`. The workflow computes and commits the
-version, builds one immutable cohort, proves it, publishes those exact bytes, and
-retires the sealed candidate only after publication succeeds. There is no release PR,
-normal-path soak, or second approval step.
+A Cadrumo release is cut by merging a pull request. There is no dispatch to start one,
+no rehearsal mode, and no sealed candidate to retire afterwards.
 
-A successful release uses one version, source commit, and set of artifact digests.
-The currently claimed registry tier publishes the three PyPI distributions and the
-GitHub release cohort. Scoop and Homebrew publication remain conditional until the
-channel descriptor claims them and their prerequisites are met.
+`release-please` watches `main`, keeps a release pull request up to date from the
+conventional commits merged since the last release, and does the whole release when that
+pull request merges: it computes the version, writes the version surfaces and the
+changelog, tags `vX.Y.Z`, creates the GitHub release, and dispatches the publish
+workflow. The publish workflow builds the three distributions from that tag, refuses any
+file the index would reject, proves the sealed files on every stable runtime across Linux,
+macOS and Windows, and uploads to PyPI with Trusted Publishing.
+
+PyPI is the primary target. Homebrew and Scoop are downstream of what it serves.
 
 ## Release path
 
 | Stage | Authority | Result |
 | --- | --- | --- |
-| Start | `release-orchestrator.yml` | Computes the version and, for a real release, commits and pushes all version surfaces and `vX.Y.Z` |
-| Build | `packaging-smoke.yml` | Builds and retains the immutable release cohort once |
-| Prove | Packaging and acquisition lanes | Produces the evidence derived from the channels this release claims |
-| Seal | Release orchestrator | Stores the cohort identity in a draft candidate |
-| Publish | `publish-release.yml` | Revalidates the cohort, writes reversible destinations first, and uploads to PyPI last without rebuilding |
-| Close | Release orchestrator | Waits for successful publication, then moves the candidate out of the selectable namespace |
+| Propose | `release-please.yml` | Keeps a release pull request current from conventional commits on `main` |
+| Release | `release-please.yml` | On merge: writes version surfaces and changelog, tags `vX.Y.Z`, creates the GitHub release |
+| Build | `publish.yml` | Builds the three distributions from the tag and refuses any file at or over the index cap |
+| Prove | `publish.yml` | Installs the sealed distributions on every stable inventory runtime across Linux, macOS and Windows |
+| Publish | `publish.yml` | Uploads every distribution to PyPI over OIDC, without rebuilding |
 
-The workflow run and its logs are the authoritative operational record. A
-`release-alert` issue is a notification, not a substitute for the run result.
+The workflow runs and their logs are the authoritative operational record.
 
 ## One-time setup
 
@@ -44,13 +44,17 @@ index does not carry takes the **pending publisher** form at
 index already carries takes the ordinary **project-level** form at
 `https://pypi.org/manage/project/<name>/settings/publishing/`.
 
-- `cadrumo` — held by a pending publisher. The index reports no project for it, which is
-  correct: a pending publisher reserves a name without creating one.
-- `cadrumo-data-manuals` — published at `0.0.0`; owes a project-level publisher.
-- `cadrumo-data-official` — published at `0.0.0`; owes a project-level publisher.
+- `cadrumo` — no project on the index yet, so it takes the pending form, which is also
+  what reserves the name.
+- `cadrumo-data-manuals` — published at `0.0.0`, so it takes the project-level form.
+- `cadrumo-data-official` — published at `0.0.0`, so it takes the project-level form.
 
-An upload is per-file, so until every distribution is bound the publish step succeeds on
-the bound ones and is refused on the rest. Remove any obsolete registration naming
+All three are registered. A registration is visible only from inside the account, so
+neither this document nor any check in this repository can confirm one: the first publish
+run is what demonstrates them. An upload is per-file, so a distribution whose binding is
+missing or misspelled is refused on its own while the others succeed, and re-running the
+workflow against the same tag reconciles the partial upload. Remove any obsolete
+registration naming
 `pypi-upload.yml` or `publish-release.yml`. The `pypi` environment is the OIDC trust
 anchor and must exist on the repository; the workflow does not require environment
 reviewers.
@@ -62,210 +66,157 @@ Confirm the repository configuration used by the destinations that are enabled:
 
 ## Per-release preflight
 
-Confirm the self-hosted runner fleet is online for every requested shape: Linux/X64,
-Linux/ARM64, macOS/ARM64, and Windows/X64. Scoop additionally requires a dedicated
-non-administrator runner carrying the `windows-scoop` label. Do not dispatch while a
-required runner shape is unavailable.
-
-Use a clean `main` checkout with Python 3.13, `uv`, `just`, Git, and an authenticated
-GitHub CLI:
+Both workflows run on hosted runners, so no self-hosted runner needs to be online to
+release. Work from a clean `main` checkout with an authenticated GitHub CLI:
 
 ```console
-python --version
-uv --version
-just --version
-git --version
-gh auth status
 git status --short
-uv run --no-sync python -m dev.release.environment_inventory
+gh auth status
 just release-readiness
 ```
 
-Stop if the checkout is dirty, the repository identity is not
-`nevenincs/cadrumo`, a required external binding is unverified, a required runner is
-offline, or a `priority:P0-blocker` issue is open. `docs/_release_checklist.yaml` is
-machine-validated release policy; it is not proof that external account settings are
-correct.
+Stop if the checkout is dirty, the repository identity is not `nevenincs/cadrumo`, or a
+`priority:P0-blocker` issue is open.
 
-## Start with a rehearsal
-
-Run the complete non-publishing path first. It uses `packaging-quick.yml`, so its child
-run is deliberately different from a real release's `packaging-smoke.yml` run:
+Confirm every deployment environment a workflow claims exists on the forge, and that no
+environment is left behind that none of them claims. A publish job whose environment is
+absent cannot have its OIDC claim attested, and the failure names the token rather than
+the missing environment:
 
 ```console
-gh workflow run release-orchestrator.yml --repo nevenincs/cadrumo --ref main -f dry_run=true
-gh run list --repo nevenincs/cadrumo --workflow release-orchestrator.yml --limit 5
+gh api repos/nevenincs/cadrumo/environments --jq '.environments[].name'
+grep -rhA1 "^\s*environment:$\|^\s*environment: " .github/workflows/ | grep -oE "(environment|name): [a-z-]+" | awk '{print $2}' | sort -u
 ```
 
-A rehearsal computes the candidate version, exercises packaging and evidence
-selection, and seals a dry-run candidate under `release-candidate-<run-id>`. It does
-not push a version commit or tag and
-does not dispatch the publication authority.
+The first list is what the forge has, the second what the workflows claim. Every claimed
+environment must appear in the first, or its job's OIDC claim cannot be attested and the
+failure names the token rather than the missing environment. An environment in the first
+that no workflow claims is residue: delete it, then check separately whether any index
+publisher registration still names it, which is neither in this repository nor on this
+forge.
 
-Inspect the selected run:
+`just release-readiness` also blocks on a distribution-evidence set that cannot be
+satisfied before a first release: every row in it is an acquisition proof that installs
+the product from a channel that does not serve it yet. Read those two checks as
+reporting, not as authorisation, until the first release exists.
+
+To see what will be built before releasing anything:
 
 ```console
-gh run view <RUN_ID> --repo nevenincs/cadrumo
-gh run view <RUN_ID> --repo nevenincs/cadrumo --log-failed
+just packaging-distributions
 ```
 
-Resolve every refusal before continuing. Do not turn a missing prerequisite into a
-skip.
+That runs the same two operations the publish workflow performs, in the same order, and
+writes to `var/distributions`.
 
-## Publish
+## Python runtime evidence and promotion
 
-Start a real release from `main`:
+The checked-in runtime inventory is the authority for the release matrix. The
+publish workflow validates its stable rows, builds the three distributions once
+with the exact [`.python-version`](.python-version) builder identity, seals the
+result with a checksum manifest, and runs the same downloaded files on every
+stable runtime in the Linux/macOS/Windows matrix. A runtime can therefore be
+tested before its metadata classifier is promoted.
+
+Keep source-vs-binary evidence separate. Source evidence builds from a clean
+source snapshot and proves that the package can be produced for a runtime.
+Binary evidence installs wheels from the one sealed cohort and proves that
+native dependencies have compatible wheels. A source pass does not substitute
+for a binary pass, and a failed or missing wheel must not be reported as a
+skipped check. Artifact evidence is the final identity check: each runtime must
+smoke-test the exact checksum-verified files that will be uploaded, without a
+per-runtime rebuild.
+
+When a new CPython minor reaches its final release, promote it in this order:
+
+1. Move the `next` row into `stable`, set `current_stable_minor`, and add the
+   following prerelease row in `dev/ci/python-runtime-matrix.json`. Keep the
+   promoted stable row blocking but `classifier_eligible: false` initially.
+2. Run `just python-compatibility` locally from a clean checkout and run the
+   dedicated compatibility workflow. Require source, binary, and sealed-artifact
+   evidence for the new stable row on every supported platform.
+3. Add the exact `Programming Language :: Python :: 3.N` classifier to the root
+   project and both data companions only after the inventory marks that row
+   eligible and the parity gate passes.
+
+Never add a stable classifier for a prerelease row, and never change
+`.python-version` as part of runtime promotion; the builder identity is an
+independent reproducibility coordinate.
+
+## Release
+
+Merge the open release pull request. Everything else follows from that merge.
 
 ```console
-gh workflow run release-orchestrator.yml --repo nevenincs/cadrumo --ref main -f dry_run=false
+gh pr list --repo nevenincs/cadrumo --label "autorelease: pending"
+gh run list --repo nevenincs/cadrumo --workflow release-please.yml --limit 5
+gh run list --repo nevenincs/cadrumo --workflow publish.yml --limit 5
 ```
 
-Monitor the orchestrator and the child run IDs it resolves:
+If `publish.yml` did not start within a minute of the release being created, the
+dispatch step failed. Start it by hand against the tag that was cut:
 
 ```console
-gh run list --repo nevenincs/cadrumo --workflow release-orchestrator.yml --limit 5
-gh run view <RUN_ID> --repo nevenincs/cadrumo
-gh run view <RUN_ID> --repo nevenincs/cadrumo --log-failed
+gh workflow run publish.yml --repo nevenincs/cadrumo -f tag=v<VERSION>
 ```
 
-The orchestrator performs these steps in order:
-
-1. Computes the next version from conventional commits, updates all seven version
-   surfaces, commits `chore(release): vX.Y.Z`, creates the annotated tag, and pushes
-   the commit and tag directly to `main`.
-2. Dispatches `packaging-smoke.yml` at that exact commit and resolves the run by
-   immutable identity.
-3. Builds the cohort once and gathers the evidence required by the claimed channels.
-   The packaging run ID is always required. Other evidence run IDs are required only
-   for claimed channels; missing, mismatched, or failed evidence is refused.
-4. Seals a typed draft candidate containing the source commit, version, cohort run ID,
-   evidence run IDs, channel set, and artifact identity.
-5. Dispatches `publish-release.yml` at the campaign commit and waits for that exact run
-   to finish successfully.
-6. Revalidates all identities and digests, then writes GitHub Release assets, Scoop,
-   and Homebrew state before the irreversible PyPI uploads.
-7. Replaces `release-candidate-<run-id>` with
-   `release-candidate-consumed-<run-id>` only after publication succeeds.
-
-The publication workflow never rebuilds. PyPI upload uses Trusted Publishing and a
-check-before-upload operation, allowing a retry with the same cohort to converge after
-a partial upload.
-
-## Verify the published cohort
-
-First confirm the resolved publication run succeeded and inspect the final release:
+## Verify the published release
 
 ```console
-gh run view <PUBLICATION_RUN_ID> --repo nevenincs/cadrumo
-gh release view v<VERSION> --repo nevenincs/cadrumo --json isDraft,targetCommitish,tagName,assets
+gh release view v<VERSION> --repo nevenincs/cadrumo --json tagName,targetCommitish,isDraft
+gh run view <PUBLISH_RUN_ID> --repo nevenincs/cadrumo
 ```
 
-Require `isDraft: false`, the expected tag and source commit, and the complete cohort
-asset inventory before reacquisition.
-
-Download the retained cohort from the packaging run recorded by the orchestrator:
+Confirm all three projects serve the released version and that the artifact runs from
+the index rather than from a local build:
 
 ```console
-gh run download <PACKAGING_RUN_ID> --repo nevenincs/cadrumo --name cadrumo-release-cohort --dir var/post-release/v<VERSION>/download
+curl -s https://pypi.org/pypi/cadrumo/json | python -c "import json,sys; print(json.load(sys.stdin)['info']['version'])"
+curl -s https://pypi.org/pypi/cadrumo-data-manuals/json | python -c "import json,sys; print(json.load(sys.stdin)['info']['version'])"
+curl -s https://pypi.org/pypi/cadrumo-data-official/json | python -c "import json,sys; print(json.load(sys.stdin)['info']['version'])"
+uv run --isolated --no-project --with "cadrumo==<VERSION>" dev/smoke/smoke_check.py
 ```
 
-Create a new cohort directory and extract the archive. Stop if the directory already
-exists; mixing files from another attempt invalidates the check.
-
-```powershell
-$cohort = "var/post-release/v<VERSION>/cohort"
-if (Test-Path -LiteralPath $cohort) { throw "$cohort already exists" }
-New-Item -ItemType Directory -Path $cohort | Out-Null
-tar -xzf var/post-release/v<VERSION>/download/cadrumo-release-cohort.tar.gz -C $cohort
-```
-
-Run only the reacquisition commands for destinations the channel descriptor claims:
-
-```console
-uv run --no-sync python -m dev.packaging.acquire_github_release --cohort-dir var/post-release/v<VERSION>/cohort --evidence-dir var/post-release/v<VERSION>/evidence/github-release --repo nevenincs/cadrumo
-uv run --no-sync python -m dev.packaging.acquire_pypi --cohort-dir var/post-release/v<VERSION>/cohort/python --evidence-dir var/post-release/v<VERSION>/evidence/pypi
-uv run --no-sync python -m dev.packaging.acquire_homebrew --cohort-dir var/post-release/v<VERSION>/cohort/python --evidence-dir var/post-release/v<VERSION>/evidence/homebrew --tap <OWNER/TAP>
-```
-
-On the dedicated Windows Scoop runner:
-
-```powershell
-$bucketSource = "OWNER/BUCKET"
-& ./dev/packaging/acquire_scoop.ps1 -CohortDir var/post-release/v<VERSION>/cohort/python -BucketSource $bucketSource -EvidenceDir var/post-release/v<VERSION>/evidence/scoop
-```
-
-Every applicable command must exit zero. Fail closed unless every retained evidence
-JSON file reports `status: passed`:
-
-```console
-uv run --no-sync python -c "import json,pathlib,sys; p=pathlib.Path(sys.argv[1]); rows=list(p.rglob('*.json')); assert rows and all(json.loads(x.read_text(encoding='utf-8')).get('status') == 'passed' for x in rows)" var/post-release/v<VERSION>/evidence
-```
-
-These local records are verification evidence; the current tooling
-does not upload them into a durable release-close ledger, so retain them with the
-operator record.
+The smoke check proves both console scripts: `aeat` reports the released version and
+lists both root command families, and `cadrumo-mcp` resolves with its server runtime
+present.
 
 ## Diagnose and recover
 
-Start from the failed orchestrator or publication run:
-
 ```console
-gh run view <RUN_ID> --repo nevenincs/cadrumo
 gh run view <RUN_ID> --repo nevenincs/cadrumo --log-failed
 ```
 
-Classify the failure before acting:
+**The publish step is refused on some distributions and succeeds on others.** An upload
+is per-file and each distribution carries its own publisher binding. Register the
+missing ones from the one-time setup above and re-run the workflow against the same tag;
+`uv publish` reconciles a partial upload rather than failing on what already landed.
 
-- Before a successful packaging run: fix the cause and start a new orchestrator run.
-- After packaging succeeds but before publication: reuse the proven cohort; do not
-  rebuild or restamp it.
-- During a partial PyPI upload: reuse the same cohort and version. The upload checks
-  existing files and publishes only the missing members.
-- After any PyPI file is public: the version is burned. Never overwrite or reuse it.
+**A distribution is at or over the index file cap.** The build stops before anything is
+uploaded. The corpus split exists to keep every file under that limit, so a refusal here
+means a corpus slice outgrew its share rather than that the limit needs raising.
 
-Only a successful `packaging-smoke.yml` run is resumable. Resume it through the sole
-entry point:
+**The lockfile drifted.** `release-please.yml` opens a reconciling pull request when
+`main` carries the previous version's `uv.lock`. Merge it; every job installing with
+`--frozen` fails until it lands.
 
-```console
-gh workflow run release-orchestrator.yml --repo nevenincs/cadrumo --ref main -f dry_run=false -f resume_packaging_run_id=<PACKAGING_RUN_ID>
-```
+**A version is unusable.** PyPI does not allow a version to be re-uploaded, even after
+deletion. Release the next patch version rather than trying to reuse one.
 
-The resume path neither bumps the version nor rebuilds. It verifies the run identity
-and selects the same sealed bytes. A failed,
-cancelled, or timed-out publication leaves its candidate selectable; only a successful
-publication consumes it.
+## Known limitation: the managed channels
 
-There is no automatic compensation for destinations written before a failure. Inspect
-each destination and record its state before retrying. If a published defect requires
-withdrawal, run:
+The Homebrew formula and the Scoop manifest are generated with a release base URL and
+pin their digests against artifacts served from it. No workflow attaches assets to a
+GitHub release, so a formula or manifest generated today addresses downloads that do not
+exist, and an install through either channel fails.
 
-```console
-just release-rollback X.Y.Z
-```
-
-This command prints a checklist only. Review and perform the required yanks, pointer
-retractions, source revert, rollback tag, and incident updates manually. Preserve the
-public tag and artifacts, never rewrite release history, and ship the correction under
-a new patch version. Follow `SECURITY.md` for vulnerabilities or sensitive data.
-
-## Close the release
-
-A release is closed when:
-
-- the orchestrator and its resolved publication run succeeded;
-- the GitHub release targets the release commit and contains the sealed cohort assets;
-- all three PyPI projects serve the same version and expected files;
-- every claimed destination passed reacquisition against the cohort digests;
-- the selectable candidate is gone and its consumed audit tag remains;
-- release notes and the operator record contain the run IDs, version, source commit,
-  cohort digests, and any recovery actions;
-- no unresolved `release-alert` issue remains for the campaign.
+Publish to PyPI. Do not publish the tap or the bucket until the generators source what
+the index serves.
 
 ## Authorities
 
-- `.github/workflows/release-orchestrator.yml` — sole normal release entry point
-- `.github/workflows/publish-release.yml` — sole publication authority
-- `.github/workflows/packaging-smoke.yml` — immutable cohort producer
-- `docs/_release_checklist.yaml` — machine release policy
-- `docs/_release_notes_template.md` — release-note template
+- `.github/workflows/release-please.yml` — computes the version, cuts the release, dispatches publication
+- `.github/workflows/publish.yml` — sole publication authority
+- `dev/smoke/smoke_check.py` — the check that proves an installed artifact
+- `dev/packaging/_distribution_limits.py` — the index file cap, declared once
 - `SECURITY.md` — private security reporting

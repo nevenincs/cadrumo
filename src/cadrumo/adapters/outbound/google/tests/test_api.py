@@ -2,7 +2,7 @@
 
 Exercises :func:`execute_request` end-to-end using real
 ``googleapiclient.http.HttpRequest`` objects pointed at a local HTTP endpoint.
-The tests verify the typed response shape, HTTP error translation, Google
+The tests verify response mapping behavior, HTTP error translation, Google
 client retry handling, and the re-raise contract for nested
 ``OutboundStorage*`` errors.
 """
@@ -14,7 +14,7 @@ from collections.abc import Callable, Generator
 from contextlib import AbstractContextManager, contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
-from typing import override
+from typing import Any, override
 
 import httplib2
 import pytest
@@ -30,11 +30,11 @@ from ...storage.errors import (
     OutboundStoragePermissionError,
     OutboundStorageQuotaError,
 )
-from ..api import GoogleApiResponseBody, _ExecutableRequest, execute_request
+from ..api import _ExecutableRequest, execute_request
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-PostProcessor = Callable[[httplib2.Response, bytes], GoogleApiResponseBody]
+PostProcessor = Callable[[httplib2.Response, bytes], dict[str, Any]]
 
 
 def _assert_verdict(
@@ -96,12 +96,12 @@ def _local_google_request(
             thread.join(timeout=2)
 
 
-def _json_body(payload: GoogleApiResponseBody) -> bytes:
+def _json_body(payload: dict[str, Any]) -> bytes:
     return json.dumps(payload).encode("utf-8")
 
 
 def _postproc_raises(exc: BaseException) -> PostProcessor:
-    def postproc(_response: httplib2.Response, _content: bytes) -> GoogleApiResponseBody:
+    def postproc(_response: httplib2.Response, _content: bytes) -> dict[str, Any]:
         raise exc
 
     return postproc
@@ -119,20 +119,20 @@ def test_executable_request_protocol_accepts_concrete_impl() -> None:
     # @runtime_checkable.  Instead assert that execute_request accepts it
     # without raising a TypeError — the call itself exercises the protocol.
     with _local_google_request((200, _json_body({"spreadsheetId": "x"}))) as (request, _paths):
-        req: _ExecutableRequest = request
+        req: _ExecutableRequest[dict[str, Any]] = request
         result = execute_request(req, action="test.check")
     assert result == {"spreadsheetId": "x"}
 
 
 # ---------------------------------------------------------------------------
-# Response shape is GoogleApiResponseBody (dict[str, Any])
+# Response body is a generic JSON object (dict[str, Any])
 # ---------------------------------------------------------------------------
 
 
-def test_execute_request_returns_dict_typed_as_google_api_response_body() -> None:
-    """execute_request returns a GoogleApiResponseBody (dict[str, Any])."""
+def test_execute_request_returns_mapping_response() -> None:
+    """execute_request returns a generic JSON object."""
 
-    payload: GoogleApiResponseBody = {"kind": "drive#file", "id": "abc123"}
+    payload: dict[str, Any] = {"kind": "drive#file", "id": "abc123"}
     with _local_google_request((200, _json_body(payload))) as (req, _paths):
         result = execute_request(req, action="drive.files.get")
 
@@ -163,9 +163,7 @@ def test_execute_request_refuses_non_mapping_success_responses(payload: object) 
 def test_execute_request_passes_nested_dict_payload_intact() -> None:
     """Nested dicts in the response survive the execute_request boundary."""
 
-    payload: GoogleApiResponseBody = {
-        "developerMetadata": [{"metadataKey": "cadrumo_vault_app", "metadataValue": "cadrumo"}]
-    }
+    payload: dict[str, Any] = {"developerMetadata": [{"metadataKey": "cadrumo_vault_app", "metadataValue": "cadrumo"}]}
     with _local_google_request((200, _json_body(payload))) as (req, _paths):
         result = execute_request(req, action="sheets.spreadsheets.get")
 
@@ -175,7 +173,7 @@ def test_execute_request_passes_nested_dict_payload_intact() -> None:
 def test_execute_request_enables_google_client_retries() -> None:
     """Requests run through google-api-python-client retry handling."""
 
-    payload: GoogleApiResponseBody = {"spreadsheetId": "retry-check"}
+    payload: dict[str, Any] = {"spreadsheetId": "retry-check"}
     with _local_google_request((500, b"try again"), (200, _json_body(payload))) as (req, requested_paths):
         result = execute_request(req, action="sheets.spreadsheets.get")
 

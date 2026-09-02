@@ -117,7 +117,8 @@ def corpus_search_payload_from_response(response: RetrievalResponse) -> CorpusSe
         # RetrievalResponse's own validator guarantees a CITATION-mode response
         # always carries a resolved citation and no lexical hits.
         citation = response.citation
-        assert citation is not None
+        if citation is None:
+            raise ValueError("a CITATION-mode retrieval response must carry a resolved citation")
         return CorpusSearchPayload(
             query=response.query,
             mode=response.mode,

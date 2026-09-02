@@ -301,8 +301,10 @@ class ConfigResetOperation(BaseModel):
             return
         if any(target.phase is not ConfigResetTargetPhase.DELETED for target in self.targets):
             raise ValueError("complete reset operation requires every target to be deleted")
-        assert self.summary is not None
-        self._validate_summary_reconciliation(self.summary)
+        summary = self.summary
+        if summary is None:
+            raise ValueError("complete reset operation requires exactly one summary")
+        self._validate_summary_reconciliation(summary)
 
     def _expected_summary_counts(self) -> tuple[int, int, int]:
         expected_deleted_count = sum(target.exists_at_snapshot for target in self.targets)

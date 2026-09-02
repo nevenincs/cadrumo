@@ -1033,8 +1033,6 @@ errors:
       66. és 70. cikk). A legkorábbi biztonságos törlési dátum: %{earliest_safe_erase_date}.
       Várjon eddig, vagy futtassa újra a --override-retention és --reason kapcsolóval
       a felülbíráláshoz.'
-    refused_review_edit_parse: A  paramétert nem sikerült elemezni. Ellenőrizze a
-      megadott érték szintaxisát.
     refused_review_filter_parse: A  paramétert nem sikerült elemezni. Ellenőrizze
       a megadott szűrő szintaxisát.
     refused_review_kind_reserved: A megadott  érték foglalt és nem használható.

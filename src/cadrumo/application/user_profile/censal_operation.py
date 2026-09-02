@@ -34,6 +34,7 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from ..operations.interactions import OperationResponseIntentValue
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from ..operations.registry import (
@@ -232,7 +233,7 @@ class CensalReviewResponse(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     response_version: Literal[1]
-    intent: Literal["apply", "reject"]
+    intent: OperationResponseIntentValue
 
 
 class CensalReviewFieldProjectionV1(BaseModel):

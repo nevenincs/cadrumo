@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.quality.workspace_field_population_scan import scan_unfilled_workspace_fields
+from ..quality.workspace_field_population_scan import scan_unfilled_workspace_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

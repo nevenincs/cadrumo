@@ -25,7 +25,9 @@ both call sites.
 
 from __future__ import annotations
 
+import re
 import warnings
+from pathlib import Path
 from typing import Final
 
 import pytest
@@ -150,19 +152,69 @@ def test_the_cold_start_site_still_catches_a_wedged_spawn() -> None:
         )
 
 
+#: Threshold name -> the value this gate proves the advisory behaviour against.
+#: Every declaration of one of these names anywhere under `dev/` must carry the
+#: value here, so a consumer cannot relax its own copy to silence a real wedge.
+_PINNED_THRESHOLDS: Final = {
+    "_P95_WALL_ADVISORY_SECONDS": _LEDGER_WALL_S,
+    "_P95_WEDGE_WALL_TO_CPU_RATIO": _LEDGER_RATIO,
+    "_COLD_START_WALL_ADVISORY_S": _COLD_START_WALL_S,
+    "_COLD_START_WEDGE_WALL_TO_CPU_RATIO": _COLD_START_RATIO,
+}
+
+
+def _threshold_drift(root: Path) -> tuple[list[str], int]:
+    """Return every drifted declaration under ``root``, and how many were read.
+
+    The count is what stops the check passing vacuously: a discovery gate that
+    finds no consumer at all is indistinguishable from one where every consumer
+    agrees, and the first of those is a gate asserting nothing.
+    """
+    declaration = re.compile(rf"^({'|'.join(_PINNED_THRESHOLDS)})\s*(?::[^=]+)?=\s*(\S+)", re.MULTILINE)
+    drifted: list[str] = []
+    checked = 0
+    for source in sorted(root.rglob("*.py")):
+        if source.name == Path(__file__).name:
+            continue
+        for name, declared in declaration.findall(source.read_text(encoding="utf-8")):
+            checked += 1
+            expected = str(_PINNED_THRESHOLDS[name])
+            if declared.rstrip(",") != expected:
+                drifted.append(f"{source.name}: {name} = {declared}, this gate proves {expected}")
+    return drifted, checked
+
+
 def test_the_consumers_pass_the_thresholds_this_gate_asserts() -> None:
-    """The site constants really are the ones proved above.
+    """Every declared copy of a threshold carries the value proved above.
 
     Without this the gate drifts into testing figures no caller uses: a
     consumer could relax its threshold to silence a real wedge and every
     assertion here would keep passing against the stale copy.
+
+    Consumers are discovered rather than named. Naming them made the gate a
+    list to maintain: it raised on a consumer that had been removed, which
+    reads as a threshold failure and is not one, and it said nothing at all
+    about a consumer nobody had added to the list.
     """
+    drifted, checked = _threshold_drift(REPO_ROOT / "dev")
 
-    repo_root = REPO_ROOT
-    ledger = (repo_root / "dev" / "ci" / "tests" / "test_ledger_scale_benchmark.py").read_text(encoding="utf-8")
-    cold_start = (repo_root / "dev" / "ci" / "tests" / "test_lazy_command_tree.py").read_text(encoding="utf-8")
+    assert checked, "no consumer declares any pinned threshold; this gate is asserting nothing"
+    assert not drifted, "a consumer carries a threshold this gate does not prove: " + "; ".join(drifted)
 
-    assert f"_P95_WALL_ADVISORY_SECONDS = {_LEDGER_WALL_S}" in ledger
-    assert f"_P95_WEDGE_WALL_TO_CPU_RATIO = {_LEDGER_RATIO}" in ledger
-    assert f"_COLD_START_WALL_ADVISORY_S = {_COLD_START_WALL_S}" in cold_start
-    assert f"_COLD_START_WEDGE_WALL_TO_CPU_RATIO = {_COLD_START_RATIO}" in cold_start
+
+def test_a_relaxed_consumer_threshold_is_caught(tmp_path: Path) -> None:
+    """The teeth: a consumer that widens its own copy is reported.
+
+    Written to an isolated tree, so the proof runs in the same suite as the
+    clean result that is meant to be meaningful.
+    """
+    (tmp_path / "consumer.py").write_text(
+        f"_P95_WALL_ADVISORY_SECONDS = {_LEDGER_WALL_S + 30.0}\n",
+        encoding="utf-8",
+    )
+
+    drifted, checked = _threshold_drift(tmp_path)
+
+    assert checked == 1
+    assert len(drifted) == 1
+    assert "_P95_WALL_ADVISORY_SECONDS" in drifted[0]

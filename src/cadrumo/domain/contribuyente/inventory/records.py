@@ -777,8 +777,10 @@ class MovementRecord(BaseModel):
     def capitalized_value(self) -> Decimal:
         """Return the sole value capitalized by inventory valuation."""
         if self.kind is MovementKind.PURCHASE:
-            assert self.acquisition_cost is not None
-            return self.acquisition_cost.total_acquisition_cost
+            acquisition_cost = self.acquisition_cost
+            if acquisition_cost is None:
+                raise InventoryValidationError("a purchase movement capitalizes its acquisition cost and declares none")
+            return acquisition_cost.total_acquisition_cost
         return self.value
 
     @property

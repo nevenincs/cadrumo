@@ -353,10 +353,11 @@ def discover_secure_repositories(repo_root: Path) -> tuple[SecureRepositoryCapab
     return tuple(sorted(capabilities, key=lambda item: (item.module, item.repository_name, item.line)))
 
 
-def _command_decorator(node: ast.FunctionDef | ast.AsyncFunctionDef) -> ast.Call | None:
+def _command_decorator(node: ast.FunctionDef | ast.AsyncFunctionDef) -> tuple[ast.Call, ast.Attribute] | None:
+    """Return the ``@group.command(...)`` decorator call with its attribute target."""
     return next(
         (
-            decorator
+            (decorator, decorator.func)
             for decorator in node.decorator_list
             if isinstance(decorator, ast.Call)
             and isinstance(decorator.func, ast.Attribute)
@@ -638,12 +639,12 @@ def discover_ingress_surfaces(repo_root: Path) -> tuple[IngressCapability, ...]:
         for node in ast.walk(tree):
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 continue
-            command = _command_decorator(node)
+            decorated = _command_decorator(node)
             policy = _execution_policy(node)
-            if command is None or policy is None or "WRITE" not in policy:
+            if decorated is None or policy is None or "WRITE" not in policy:
                 continue
-            assert isinstance(command.func, ast.Attribute)
-            group = _dotted_name(command.func.value)
+            command, command_target = decorated
+            group = _dotted_name(command_target.value)
             command_name = node.name
             if command.args and isinstance(command.args[0], ast.Constant) and isinstance(command.args[0].value, str):
                 command_name = command.args[0].value
@@ -772,16 +773,14 @@ def discover_row_assemblers(repo_root: Path) -> tuple[RowAssemblerCapability, ..
     """Derive row-grouping dispatch to typed assembler records from its canonical module."""
     path = repo_root / "src" / "cadrumo" / "application" / "calculations" / "row_set_assembly.py"
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    dispatch_assignment = next(
-        node
+    dispatch_value = next(
+        node.value
         for node in tree.body
         if isinstance(node, ast.AnnAssign)
         and isinstance(node.target, ast.Name)
         and node.target.id == "_GROUPING_DISPATCH"
         and isinstance(node.value, ast.Dict)
     )
-    dispatch_value = dispatch_assignment.value
-    assert isinstance(dispatch_value, ast.Dict)
     grouping_members = [
         (key.value, ast.unparse(value))
         for key, value in zip(dispatch_value.keys, dispatch_value.values, strict=True)

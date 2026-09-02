@@ -40,6 +40,7 @@ import sys
 from collections.abc import Callable, Generator, Mapping, Sequence
 from contextlib import contextmanager
 from contextvars import ContextVar, Token
+from dataclasses import dataclass
 from typing import Final, Never, Protocol, TypeGuard, cast, get_args
 
 import click
@@ -998,7 +999,34 @@ def _is_click_control_flow(error: Exception) -> bool:
 #: One exception family's projection. The parameter type is the family its
 #: :data:`_ERROR_PROJECTIONS` row pairs it with, so the alias stays open in its
 #: first argument: the table's ``isinstance`` walk is what proves the pairing.
-_BoundaryProjection = Callable[..., CadrumoError]
+class _BoundaryProjectionRow(Protocol):
+    """One boundary-projection row, applied to an exception of unknown type."""
+
+    def apply(self, error: Exception, callback: Callable[..., object]) -> CadrumoError | None:
+        """Return the projected error when this row handles ``error``, else None."""
+        ...
+
+
+@dataclass(frozen=True, slots=True)
+class _TypedProjection[ErrorT: Exception]:
+    """Pair an exception type with the projector that accepts exactly that type.
+
+    The previous table typed its projector as ``Callable[..., CadrumoError]`` so
+    the first argument stayed open, and a comment carried the claim that the
+    ``isinstance`` walk proved the pairing. Binding both halves to one type
+    parameter makes the checker prove it instead: the narrow happens inside
+    :meth:`apply`, where ``exc_type`` is ``type[ErrorT]``, so the projector can
+    only ever be handed the type it declares.
+    """
+
+    exc_type: type[ErrorT]
+    project: Callable[[ErrorT, Callable[..., object]], CadrumoError]
+
+    def apply(self, error: Exception, callback: Callable[..., object]) -> CadrumoError | None:
+        """Return the projected error when ``error`` is this row's type, else None."""
+        if not isinstance(error, self.exc_type):
+            return None
+        return self.project(error, callback)
 
 
 def _project_stored_data_drift(error: StoredProfileDriftError, callback: Callable[..., object]) -> CadrumoError:
@@ -1161,11 +1189,11 @@ def _project_validation_error(error: ValidationError, callback: Callable[..., ob
 #: ``except`` ladder exactly: the stored-drift and former-product refusals are
 #: matched before the broad :class:`CadrumoError` arm, and
 #: :exc:`~pydantic.ValidationError` before the unexpected fallback.
-_ERROR_PROJECTIONS: tuple[tuple[type[Exception], _BoundaryProjection], ...] = (
-    (StoredProfileDriftError, _project_stored_data_drift),
-    (FormerProductStateError, _project_former_product_state),
-    (CadrumoError, _project_cadrumo_error),
-    (ValidationError, _project_validation_error),
+_ERROR_PROJECTIONS: tuple[_BoundaryProjectionRow, ...] = (
+    _TypedProjection(StoredProfileDriftError, _project_stored_data_drift),
+    _TypedProjection(FormerProductStateError, _project_former_product_state),
+    _TypedProjection(CadrumoError, _project_cadrumo_error),
+    _TypedProjection(ValidationError, _project_validation_error),
 )
 
 
@@ -1200,17 +1228,19 @@ def _project_boundary_error(error: Exception, callback: Callable[..., object]) -
     under-test re-raise are applied by the caller before this runs, so neither
     reaches the table.
     """
-    for exc_type, project in _ERROR_PROJECTIONS:
-        if isinstance(error, exc_type):
-            return project(error, callback)
+    for row in _ERROR_PROJECTIONS:
+        projected = row.apply(error, callback)
+        if projected is not None:
+            return projected
     return _project_unexpected(error, callback)
 
 
 def project_cli_boundary_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:
     """Project an escaped exception without duplicating terminal crash logging."""
-    for exc_type, project in _ERROR_PROJECTIONS:
-        if isinstance(error, exc_type):
-            return project(error, callback)
+    for row in _ERROR_PROJECTIONS:
+        projected = row.apply(error, callback)
+        if projected is not None:
+            return projected
     wrapped = _unwrap_cadrumo_error(error)
     return _project_cadrumo_error(wrapped, callback) if wrapped is not None else CliUnexpectedBoundaryError(error)
 

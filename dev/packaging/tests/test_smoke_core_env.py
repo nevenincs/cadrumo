@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
 import textwrap
@@ -11,6 +12,7 @@ from pathlib import Path
 import pytest
 
 from ..._paths import REPO_ROOT
+from .._smoke_common import installed_product_env, venv_bin_dir
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -29,14 +31,34 @@ def test_isolated_product_env_refuses_host_settings_and_former_state(tmp_path: P
         import sys
         from pathlib import Path
 
-        from .._smoke_common import isolated_product_env
+        from dev.packaging._smoke_common import isolated_product_env
 
         isolated = Path(sys.argv[1])
+        os.environ.update(
+            {
+                "PYTHONHOME": str(isolated / "host-python"),
+                "PYTHONUSERBASE": str(isolated / "host-userbase"),
+                "VIRTUAL_ENV": str(isolated / "host-venv"),
+                "CONDA_PREFIX": str(isolated / "host-conda"),
+                "CONDA_DEFAULT_ENV": "host",
+                "UV_PROJECT_ENVIRONMENT": str(isolated / "host-uv"),
+            }
+        )
         env = isolated_product_env(isolated)
         assert env["CADRUMO_LOCAL_STORAGE_ROOT"] == str(isolated)
         assert env["CADRUMO_DATABASE_URL"] == f"sqlite:///{(isolated / 'cadrumo.db').as_posix()}"
         assert "CADRUMO_OUTPUT_LANGUAGE" not in env
         assert "CADRUMO_SECRET_PASSPHRASE" not in env
+        for name in (
+            "PYTHONPATH",
+            "PYTHONHOME",
+            "PYTHONUSERBASE",
+            "VIRTUAL_ENV",
+            "CONDA_PREFIX",
+            "CONDA_DEFAULT_ENV",
+            "UV_PROJECT_ENVIRONMENT",
+        ):
+            assert name not in env
         code = "\\n".join(
             (
                 "import sys",
@@ -65,6 +87,7 @@ def test_isolated_product_env_refuses_host_settings_and_former_state(tmp_path: P
         "CADRUMO_DATABASE_URL": f"sqlite:///{(hostile_storage / 'host.db').as_posix()}",
         "CADRUMO_OUTPUT_LANGUAGE": "hostile-language",
         "CADRUMO_SECRET_PASSPHRASE": "hostile-passphrase",
+        "PYTHONPATH": str(tmp_path / "checkout-imports"),
     }
     result = subprocess.run(  # noqa: S603 - fixed interpreter and test-authored worker source.
         [sys.executable, "-c", worker, str(isolated_storage)],
@@ -77,3 +100,56 @@ def test_isolated_product_env_refuses_host_settings_and_former_state(tmp_path: P
 
     assert result.returncode == 0, result.stderr
     assert result.stdout == "isolated-product-env-ok\n"
+
+
+def test_installed_product_env_removes_checkout_imports_and_ambient_executables(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Installed acceptance exposes only the selected venv, never host paths."""
+    checkout = tmp_path / "checkout"
+    checkout.mkdir()
+    ambient_bin = tmp_path / "ambient-bin"
+    ambient_bin.mkdir()
+    ambient_executable = ambient_bin / ("aeat.cmd" if os.name == "nt" else "aeat")
+    ambient_executable.write_text("ambient product executable\n", encoding="utf-8")
+    if os.name != "nt":
+        ambient_executable.chmod(0o700)
+    monkeypatch.setenv("PYTHONPATH", str(checkout))
+    monkeypatch.setenv("VIRTUAL_ENV", str(tmp_path / "host-venv"))
+    monkeypatch.setenv("PATH", str(ambient_bin))
+
+    target_venv = tmp_path / "target-venv"
+    target_bin = venv_bin_dir(target_venv)
+    target_bin.mkdir(parents=True)
+    environment = installed_product_env(tmp_path / "state", target_venv)
+
+    assert environment["PATH"] == str(target_bin.resolve())
+    assert str(checkout) not in environment["PATH"]
+    assert shutil.which("aeat", path=environment["PATH"]) is None
+    for name in (
+        "PYTHONPATH",
+        "PYTHONHOME",
+        "PYTHONUSERBASE",
+        "VIRTUAL_ENV",
+        "CONDA_PREFIX",
+        "CONDA_DEFAULT_ENV",
+        "UV_PROJECT_ENVIRONMENT",
+    ):
+        assert name not in environment
+
+    worker = subprocess.run(
+        [
+            sys.executable,
+            "-I",
+            "-c",
+            "import os; assert 'PYTHONPATH' not in os.environ; print('installed-env-ok')",
+        ],
+        cwd=tmp_path,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert worker.returncode == 0, worker.stderr
+    assert worker.stdout == "installed-env-ok\n"

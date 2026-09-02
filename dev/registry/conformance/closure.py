@@ -25,6 +25,7 @@ from cadrumo.application.registry.closure import (
     RegistryClosureLimb,
     RegistryClosureLimbName,
     RegistryClosureOwnerDisposition,
+    RegistryClosureRefusalReason,
 )
 from cadrumo.application.registry.filing_export_coverage import (
     FilingExportCoverageReport,
@@ -63,20 +64,21 @@ __all__ = [
 
 type RegistryClosurePredicateOutcome = Literal["satisfied", "refused"]
 type RegistryClosureJoinDisagreementKind = Literal["missing_from_limb", "unexpected_limb_coordinate"]
-type RegistryClosurePredicateRefusalReason = Literal[
-    "conflicting_evidence",
-    "cross_limb_disagreement",
-    "missing_evidence",
-    "scope_inadequate_evidence",
-    "stale_evidence",
-    "unreviewed_evidence",
-    "unmeasured",
-    "law_selection_refused",
-    "selected_revision_mismatch",
-    "undeclared_authority_grade",
-    "declared_grade_snapshot_refused",
-    "snapshot_revision_mismatch",
-]
+#: The development predicate vocabulary is the application's refusal vocabulary plus
+#: the temporal-coverage reasons that exist only on this side of the boundary. It is
+#: composed rather than restated: the seven shared reasons previously appeared here as
+#: literal copies, so an eighth reason added to the application would not have reached
+#: this alias and nothing would have reported the divergence.
+type RegistryClosurePredicateRefusalReason = (
+    RegistryClosureRefusalReason
+    | Literal[
+        "law_selection_refused",
+        "selected_revision_mismatch",
+        "undeclared_authority_grade",
+        "declared_grade_snapshot_refused",
+        "snapshot_revision_mismatch",
+    ]
+)
 
 _TEMPORAL_WORK_ITEMS: Final[dict[str, str]] = {
     "law_selection_refused": "registry-temporal-coverage:law-selection",
@@ -444,13 +446,15 @@ def render_registry_closure_report(report: RegistryClosureReport) -> str:
 
 def _temporal_refusal(coverage: TemporalRevisionCoverageSummary) -> RegistryClosurePredicateRefusal:
     """Translate a typed temporal refusal without discarding its specific code."""
-    assert coverage.failure_code is not None
-    assert coverage.failure_detail is not None
-    work_item = _TEMPORAL_WORK_ITEMS[coverage.failure_code]
+    failure_code = coverage.failure_code
+    failure_detail = coverage.failure_detail
+    if failure_code is None or failure_detail is None:
+        raise ValueError("a temporal coverage refusal must carry both its failure code and its detail")
+    work_item = _TEMPORAL_WORK_ITEMS[failure_code]
     return RegistryClosurePredicateRefusal(
         limb="temporal_coverage",
-        reason=coverage.failure_code,
-        detail=coverage.failure_detail,
+        reason=failure_code,
+        detail=failure_detail,
         disposition=RegistryClosureOwnerDisposition(
             limb="temporal_coverage",
             state="blocked",
@@ -490,13 +494,15 @@ def _limb_or_join_refusal(
         )
     if limb.outcome in {"satisfied", "not_applicable"}:
         return ()
-    assert limb.refusal is not None
+    refusal = limb.refusal
+    if refusal is None:
+        raise ValueError(f"{limb_name} limb reports outcome {limb.outcome!r} without a refusal to translate")
     return (
         RegistryClosurePredicateRefusal(
             limb=limb_name,
-            reason=limb.refusal.reason,
-            detail=limb.refusal.detail,
-            disposition=limb.refusal.disposition,
+            reason=refusal.reason,
+            detail=refusal.detail,
+            disposition=refusal.disposition,
         ),
     )
 

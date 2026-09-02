@@ -29,6 +29,7 @@ from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time.clock import now
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
+from .....domain.calculations.registry.schema_base import EvidenceTier
 from .._playwright import PlaywrightError
 from ..browser.factory import default_browser_session_factory
 from ._adapter_utils import assert_pdf_response as _assert_pdf_response
@@ -92,7 +93,7 @@ class _HtmlSnapshotPage(Protocol):
 # refusal we want rather than a gap.
 READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-expedientes-walker-read",
-    evidence_tier="official_source_guidance",
+    evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
     classification="authenticated_read_surface",
     allowed_hosts=(_SEDE_HOST,),
     allowed_host_suffixes=(_AEAT_HOST_SUFFIX,),

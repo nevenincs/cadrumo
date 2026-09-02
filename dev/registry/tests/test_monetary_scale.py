@@ -9,7 +9,8 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
-from dev.registry.analysis.monetary_scale import scale_findings, screen_authority
+
+from ..analysis.monetary_scale import scale_findings, screen_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -102,7 +103,7 @@ def test_sibling_amounts_of_one_record_are_compared_by_outcome_not_spelling(
     comparison on the declared wire type would report five false positives here
     and bury the one real defect beside them.
     """
-    from dev.registry.analysis.monetary_scale import scale_outcome, sibling_findings
+    from ..analysis.monetary_scale import scale_outcome, sibling_findings
 
     assert scale_outcome("money", None) == scale_outcome("decimal", 2) == "cents"
     assert scale_outcome("integer", None) == "unscaled"
@@ -119,7 +120,7 @@ def test_a_record_whose_amounts_all_scale_alike_reports_nothing(
     authority: ValidatedRegistryAuthority,
 ) -> None:
     """Consistent sibling amounts are the normal case and yield no finding."""
-    from dev.registry.analysis.monetary_scale import sibling_findings
+    from ..analysis.monetary_scale import sibling_findings
 
     revision = authority.modelo("303").revisions["2025"]
     assert sibling_findings(revision, modelo_id="303") == ()
@@ -137,7 +138,8 @@ def test_the_sibling_comparison_is_proven_by_a_live_defect_not_a_fixture(
     replaced by a constructed case, and the screen becomes gateable at zero.
     """
     from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
-    from dev.registry.analysis.monetary_scale import screen_authority as scale_screen
+
+    from ..analysis.monetary_scale import screen_authority as scale_screen
 
     modelo_ids = tuple(sorted(str(code) for code in registry_modelo_codes()))
     disagreements = [item for item in scale_screen(authority, modelo_ids) if item.kind == "sibling_scale_disagrees"]

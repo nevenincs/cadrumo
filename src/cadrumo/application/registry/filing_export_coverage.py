@@ -235,7 +235,8 @@ def _compose_revision_limb(
             ),
             filing_channels=proof_failure.filing_channels,
         )
-    assert proof is not None
+    if proof is None:
+        raise ValueError("a satisfied filing-export limb requires the conformance proof it rests on")
     evidence = (*evidence, *_proof_evidence(proof))
     return RegistryClosureLimb(
         modelo=modelo_id,

@@ -607,22 +607,26 @@ def _bound_casilla_producer(
     binding = bindings_by_id.get(casilla.binding) if casilla.binding is not None else None
     if binding is None:
         reason = "upstream production is declared by input_kind='bound' but its binding declaration is missing"
-        return "upstream", reason, _producer_provenance(casilla, "upstream", reason)
+        return CasillaProducerKind.UPSTREAM, reason, _producer_provenance(casilla, CasillaProducerKind.UPSTREAM, reason)
     if binding.source is BindingSourceKind.RELATION_PREFILL:
         reason = f"relation production uses binding {binding.id!r} with source {binding.source.value!r}"
         return (
-            "relation",
+            CasillaProducerKind.RELATION,
             reason,
             _producer_provenance(
                 casilla,
-                "relation",
+                CasillaProducerKind.RELATION,
                 reason,
                 binding=binding,
                 relations=relations_by_binding.get(binding.id, ()),
             ),
         )
     reason = f"upstream production uses binding {binding.id!r} with source {binding.source.value!r}"
-    return "upstream", reason, _producer_provenance(casilla, "upstream", reason, binding=binding)
+    return (
+        CasillaProducerKind.UPSTREAM,
+        reason,
+        _producer_provenance(casilla, CasillaProducerKind.UPSTREAM, reason, binding=binding),
+    )
 
 
 def _casilla_producer(
@@ -641,24 +645,24 @@ def _casilla_producer(
     if casilla.formula is not None:
         reason = f"deterministic formula producer declaration {casilla.formula!r}"
         return (
-            "formula",
+            CasillaProducerKind.FORMULA,
             reason,
             _producer_provenance(
                 casilla,
-                "formula",
+                CasillaProducerKind.FORMULA,
                 reason,
                 formulas=formulas_by_id.get(casilla.formula, ()),
             ),
         )
     if casilla.input_kind is InputKind.COMPUTED:
         reason = "computed casilla requires a deterministic formula producer"
-        return "formula", reason, _producer_provenance(casilla, "formula", reason)
+        return CasillaProducerKind.FORMULA, reason, _producer_provenance(casilla, CasillaProducerKind.FORMULA, reason)
     if casilla.input_kind is InputKind.MANUAL:
         reason = (
             "manual production is intentional operator-supplied input; "
             "casilla legal_refs/source_refs remain its provenance"
         )
-        return "manual", reason, _producer_provenance(casilla, "manual", reason)
+        return CasillaProducerKind.MANUAL, reason, _producer_provenance(casilla, CasillaProducerKind.MANUAL, reason)
     if casilla.input_kind is InputKind.BOUND:
         return _bound_casilla_producer(
             casilla,
@@ -667,9 +671,17 @@ def _casilla_producer(
         )
     if casilla.input_kind is InputKind.PROJECTION_ONLY:
         reason = "projection-only casilla is populated exclusively from its canonical typed row"
-        return "projection_only", reason, _producer_provenance(casilla, "projection_only", reason)
+        return (
+            CasillaProducerKind.PROJECTION_ONLY,
+            reason,
+            _producer_provenance(casilla, CasillaProducerKind.PROJECTION_ONLY, reason),
+        )
     reason = "informational casilla is intentionally not a calculation producer"
-    return "informational", reason, _producer_provenance(casilla, "informational", reason)
+    return (
+        CasillaProducerKind.INFORMATIONAL,
+        reason,
+        _producer_provenance(casilla, CasillaProducerKind.INFORMATIONAL, reason),
+    )
 
 
 class SchemaFamilyDispositionDeclaration(RegistryModel):

@@ -46,6 +46,7 @@ from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.parsing import parse_date
 from .....core.time.clock import now
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
+from .....domain.calculations.registry.schema_base import EvidenceTier
 from .._html import parse_html
 from .._playwright import PlaywrightError
 from ..browser.factory import default_browser_session_factory
@@ -82,7 +83,7 @@ _NOTIFICATIONS_READ_PATHS: tuple[str, ...] = tuple(
 # notifications PATH plus a positive page marker (below).
 READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-notifications-read",
-    evidence_tier="official_source_guidance",
+    evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
     classification="authenticated_read_surface",
     allowed_hosts=(_SEDE_HOST,),
     allowed_host_suffixes=(_AEAT_HOST_SUFFIX,),

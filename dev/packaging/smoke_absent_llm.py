@@ -30,7 +30,7 @@ import argparse
 import ast
 import json
 import sys
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Final
 
 from packaging.requirements import Requirement
@@ -83,53 +83,86 @@ _CLAIM_UNINSTALL_RESTORES_REFUSAL: Final[str] = "uninstalling the extra returns 
 #: The model-bearing surfaces of the inference boundary, each named with the
 #: call that reaches it. Every entry is an operator-reachable entry point that
 #: the governing decision places on the extra's side of the cut, so each must
-#: refuse in a core install. The inventory is explicit rather than derived from
-#: ``cadrumo.llm.__all__`` because most of that export set is interchange DTOs
-#: and error types, which carry no guard and correctly import in a core install
-#: -- deriving the list would silently enroll them and make the lane pass by
-#: driving things that were never gated.
-_INFERENCE_SURFACES: Final[tuple[tuple[str, str], ...]] = (
+#: refuse in a core install. Each entry names the module that defines the
+#: surface, because the package root is an inert namespace and a consumer
+#: reaches the name where it is written. The inventory is explicit rather than
+#: derived from the package's public surface: most of that surface is
+#: interchange DTOs and error types, which carry no guard and correctly import
+#: in a core install -- deriving the list would silently enroll them and make
+#: the lane pass by driving things that were never gated.
+_INFERENCE_SURFACES: Final[tuple[tuple[str, str, str], ...]] = (
     (
+        "cadrumo.llm.providers.local",
         "rasterise_pdf_pages_to_base64_png",
         "rasterise_pdf_pages_to_base64_png(b'%PDF-1.4\\n')",
     ),
     (
+        "cadrumo.llm.evidence_draft_vision",
         "transcribe_document_images",
         "transcribe_document_images(_PAGES, source_content_sha256='0' * 64)",
     ),
     (
+        "cadrumo.llm.evidence_draft_text",
         "extract_invoice_fields_from_text",
         "extract_invoice_fields_from_text(_TRANSCRIPTION)",
     ),
     (
+        "cadrumo.llm.vision_classifier",
         "LocalVisionLLMClassifier",
         "LocalVisionLLMClassifier(spec=None)",
     ),
     (
+        "cadrumo.llm.text_classifier",
         "LocalTextLLMClassifier",
         "LocalTextLLMClassifier(spec=None)",
     ),
     # The three constructors the convenience wrappers above build. Each is
-    # exported and carries the guard itself, so the derivation enrolls it and
-    # the completeness claim covers it. Driven with no arguments, which every
+    # public at its own module and carries the guard itself, so the derivation
+    # enrolls it and the completeness claim covers it. Driven with no
+    # arguments, which every
     # one of them accepts: the guard is the first statement of ``__init__``, so
     # a bare construction reaches it before any settings or model resolution
     # could raise something else.
     (
+        "cadrumo.llm.evidence_draft_vision",
         "LocalVisionDocumentTranscriber",
         "LocalVisionDocumentTranscriber()",
     ),
     (
+        "cadrumo.llm.evidence_draft_text",
         "TextInvoiceFieldExtractor",
         "TextInvoiceFieldExtractor()",
     ),
     # The tabular lane's split point: a known fixed-layout file never reaches
     # this call, an unknown header vocabulary does.
     (
+        "cadrumo.llm.column_role_mapping",
         "SemanticColumnRoleMapper",
         "SemanticColumnRoleMapper()",
     ),
+    # Every argument is keyword-only with a default, so a bare construction
+    # reaches the guard before any model-role resolution could raise instead.
+    (
+        "cadrumo.llm.supply_nature_proposal",
+        "SupplyNatureProposer",
+        "SupplyNatureProposer()",
+    ),
 )
+
+
+def _surface_imports() -> str:
+    """Render one import line per surface, from its own declared module.
+
+    Derived rather than written out beside the inventory. The package root is
+    an inert namespace, so each name is reached where it is defined, and a
+    second hand-maintained list of those modules would be free to disagree with
+    the one the lane drives.
+    """
+    by_module: dict[str, set[str]] = {}
+    for module, name, _call in _INFERENCE_SURFACES:
+        by_module.setdefault(module, set()).add(name)
+    lines = [f"from {module} import {', '.join(sorted(names))}" for module, names in sorted(by_module.items())]
+    return "\n".join(lines)
 
 
 def _guard_symbol_for_the_extra(repo_root: Path) -> str:
@@ -172,42 +205,35 @@ def _guarded_surfaces_from_production_guards(repo_root: Path, symbol: str) -> tu
         silently discarded them would be capping its own denominator.
     """
     package = repo_root / "src" / "cadrumo" / "llm"
-    exported = _exported_names(package / "__init__.py")
     derived: set[str] = set()
+    reachable: set[str] = set()
     for path in scan_directory(package, pattern="*.py", recursive=True):
-        if "tests" in path.relative_to(package).parts:
+        relative = path.relative_to(package)
+        if "tests" in relative.parts:
             continue
         tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
-        derived |= _guarded_definition_names(tree, symbol)
+        names = _guarded_definition_names(tree, symbol)
+        derived |= names
+        if _is_public_module(relative):
+            reachable |= {name for name in names if not name.startswith("_")}
     if not derived:
         raise SystemExit(
             f"no production call to require_optional_extra({symbol}) was found under {package}. The lane's "
             "guarded-surface set would be empty, and an empty set makes every completeness assertion below "
             "vacuously true -- which is indistinguishable from a pass.",
         )
-    return frozenset(derived & exported), frozenset(derived - exported)
+    return frozenset(reachable), frozenset(derived - reachable)
 
 
-def _exported_names(init_path: Path) -> frozenset[str]:
-    """Return the string members of the module's ``__all__``, read structurally."""
-    tree = ast.parse(init_path.read_text(encoding=_UTF_8), filename=str(init_path))
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Assign):
-            targets: list[ast.expr] = list(node.targets)
-        elif isinstance(node, ast.AnnAssign):
-            targets = [node.target]
-        else:
-            continue
-        if not any(isinstance(target, ast.Name) and target.id == "__all__" for target in targets):
-            continue
-        value = node.value
-        if isinstance(value, ast.List | ast.Tuple | ast.Set):
-            return frozenset(
-                element.value
-                for element in value.elts
-                if isinstance(element, ast.Constant) and isinstance(element.value, str)
-            )
-    raise SystemExit(f"no literal __all__ found in {init_path}")
+def _is_public_module(relative: PurePath) -> bool:
+    """Whether a module inside the package is one a consumer may import from.
+
+    Reachability used to be read off the package's ``__all__``. That namespace
+    is retired -- the initialiser is inert, as every package initialiser here
+    must be -- so a name is reachable when the module defining it is public and
+    the name itself is, which is the same rule consumers import by.
+    """
+    return not any(part.startswith("_") and part != "__init__.py" for part in relative.parts)
 
 
 def _guarded_definition_names(tree: ast.Module, symbol: str) -> set[str]:
@@ -241,7 +267,7 @@ def _assert_the_driver_reaches_every_guarded_surface(
     rather than because they carry the guard themselves -- but it is printed, so
     the lane's coverage is legible instead of implied.
     """
-    driven = {name for name, _call in _INFERENCE_SURFACES}
+    driven = {name for _module, name, _call in _INFERENCE_SURFACES}
     unreached = sorted(reachable - driven)
     if unreached:
         raise SystemExit(
@@ -289,7 +315,9 @@ def _assert_guarded_surfaces_do_not_refuse(
     to fail on its own terms, and demanding a success would be asserting the
     feature works rather than that the gate opened.
     """
-    calls = json.dumps([{"name": name, "call": call} for name, call in _INFERENCE_SURFACES if name in reachable])
+    calls = json.dumps(
+        [{"name": name, "call": call} for _module, name, call in _INFERENCE_SURFACES if name in reachable]
+    )
     outcomes = _drive_surfaces(work_dir, venv_path, calls, leaf="present-state")
     refused = [entry for entry in outcomes if entry["outcome"] in {"refused", "module-not-found"}]
     if refused:
@@ -325,7 +353,9 @@ def _assert_uninstall_restores_the_refusal(
 ) -> None:
     """Every guarded surface must return to the instructive refusal after the uninstall."""
     _assert_extra_probes_absent(work_dir, venv_path)
-    calls = json.dumps([{"name": name, "call": call} for name, call in _INFERENCE_SURFACES if name in reachable])
+    calls = json.dumps(
+        [{"name": name, "call": call} for _module, name, call in _INFERENCE_SURFACES if name in reachable]
+    )
     outcomes = _drive_surfaces(work_dir, venv_path, calls, leaf="uninstalled-state")
     driven = {entry["name"] for entry in outcomes}
     if driven != set(reachable):
@@ -348,17 +378,8 @@ import json
 
 from cadrumo.application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from cadrumo.core import FieldOrigin, ImageMediaType, MissingOptionalExtraError
-from cadrumo.llm import (
-    LocalTextLLMClassifier,
-    LocalVisionDocumentTranscriber,
-    LocalVisionLLMClassifier,
-    MultimodalImageInput,
-    SemanticColumnRoleMapper,
-    TextInvoiceFieldExtractor,
-    extract_invoice_fields_from_text,
-    rasterise_pdf_pages_to_base64_png,
-    transcribe_document_images,
-)
+from cadrumo.llm.models import MultimodalImageInput
+{_surface_imports()}
 
 # Both surfaces take a TYPED argument, so the driver builds each one here rather
 # than inline in the call expression. That placement is the point: Python
@@ -546,23 +567,14 @@ def _assert_inference_surfaces_refuse(work_dir: Path, venv_path: Path) -> None:
     convert) and a successful call (a model-bearing surface running without the
     model-bearing dependencies).
     """
-    surfaces = json.dumps([{"name": name, "call": call} for name, call in _INFERENCE_SURFACES])
+    surfaces = json.dumps([{"name": name, "call": call} for _module, name, call in _INFERENCE_SURFACES])
     code = f"""
 import json
 
 from cadrumo.application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from cadrumo.core import FieldOrigin, ImageMediaType, MissingOptionalExtraError
-from cadrumo.llm import (
-    LocalTextLLMClassifier,
-    LocalVisionDocumentTranscriber,
-    LocalVisionLLMClassifier,
-    MultimodalImageInput,
-    SemanticColumnRoleMapper,
-    TextInvoiceFieldExtractor,
-    extract_invoice_fields_from_text,
-    rasterise_pdf_pages_to_base64_png,
-    transcribe_document_images,
-)
+from cadrumo.llm.models import MultimodalImageInput
+{_surface_imports()}
 
 # Both surfaces take a TYPED argument, so the driver builds each one here rather
 # than inline in the call expression. That placement is the point: Python
@@ -609,7 +621,7 @@ print("SURFACE_OUTCOMES:" + json.dumps(outcomes))
     outcomes = json.loads(line[len(marker) :])
 
     driven = {entry["name"] for entry in outcomes}
-    expected = {name for name, _call in _INFERENCE_SURFACES}
+    expected = {name for _module, name, _call in _INFERENCE_SURFACES}
     if driven != expected:
         raise SystemExit(f"the driver did not reach every surface: missing {sorted(expected - driven)!r}")
 
@@ -734,7 +746,7 @@ def main(argv: list[str] | None = None) -> int:
         details={
             "cohort_version": cohort.version,
             "python": args.python,
-            "surfaces": [name for name, _call in _INFERENCE_SURFACES],
+            "surfaces": [name for _module, name, _call in _INFERENCE_SURFACES],
             "guarded_surfaces": sorted(reachable),
             "guarded_but_unexported": sorted(internal),
             "uninstalled_distributions": sorted(exclusive),

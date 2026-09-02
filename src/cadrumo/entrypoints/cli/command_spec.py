@@ -9,14 +9,36 @@ records and resolve deferred targets only at their owning boundary.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, StrEnum
 from types import MappingProxyType
 from typing import Literal
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 
 type CommandNodeKind = Literal["root", "group", "leaf"]
-type ParameterKind = Literal["argument", "option"]
+
+
+class ParameterKind(StrEnum):
+    """Whether a CLI parameter is positional or a flag."""
+
+    ARGUMENT = "argument"
+    OPTION = "option"
+
+
+class JsonType(StrEnum):
+    """The JSON scalar a CLI parameter serialises as.
+
+    Lives here rather than beside its first consumer because both the command schema
+    and the verb input schema need it, and the verb schema imports the command schema,
+    so only the kernel can hold it without a cycle.
+    """
+
+    STRING = "string"
+    INTEGER = "integer"
+    NUMBER = "number"
+    BOOLEAN = "boolean"
+
+
 type LiteralValue = str | int | float | bool | bytes | None
 type Capability = Literal[
     "state-free",
@@ -34,7 +56,33 @@ type Capability = Literal[
 ]
 type SideEffect = Literal["none", "local-state", "network", "browser", "google"]
 type PerformanceClass = Literal["metadata", "local-io", "compute", "external-io", "interactive"]
-type WriteRoute = Literal["none", "profile-bound", "bootstrap-root"]
+
+
+class CommandWriteRoute(StrEnum):
+    """Which storage a command is permitted to write through.
+
+    One vocabulary that carried three names: ``WriteRoute`` here,
+    ``CommandWriteRouteScope`` in the policy module, and an inline spelling in the
+    command schema, with a fourth copy in a validation frozenset. A route added to one
+    of those left the other three validating the old set.
+    """
+
+    NONE = "none"
+    """Writes nothing; the command is safe against an uninitialised installation."""
+
+    PROFILE_BOUND = "profile-bound"
+    """Writes only inside the active profile's own storage."""
+
+    BOOTSTRAP_ROOT = "bootstrap-root"
+    """Writes to the installation root, before any profile exists to bind to."""
+
+
+CommandWriteRouteValue = Literal[
+    CommandWriteRoute.NONE,
+    CommandWriteRoute.PROFILE_BOUND,
+    CommandWriteRoute.BOOTSTRAP_ROOT,
+]
+"""The same vocabulary for a strict spec or payload field."""
 
 _CAPABILITIES = frozenset(
     {
@@ -54,7 +102,6 @@ _CAPABILITIES = frozenset(
 )
 _SIDE_EFFECTS = frozenset({"none", "local-state", "network", "browser", "google"})
 _PERFORMANCE_CLASSES = frozenset({"metadata", "local-io", "compute", "external-io", "interactive"})
-_WRITE_ROUTES = frozenset({"none", "profile-bound", "bootstrap-root"})
 _IMPLIED_CAPABILITIES: dict[Capability, frozenset[Capability]] = {
     "encrypted-facts": frozenset({"profile-custody"}),
     "browser": frozenset({"network"}),
@@ -81,7 +128,7 @@ class ExecutionPolicySpec:
     capabilities: frozenset[Capability]
     side_effects: frozenset[SideEffect]
     performance: PerformanceClass
-    write_route: WriteRoute
+    write_route: CommandWriteRouteValue
     destructive: bool = False
     handoff: bool = False
     live_write: bool = False
@@ -100,7 +147,7 @@ class ExecutionPolicySpec:
             raise ValueError("execution policy has missing or unknown side effects")
         if self.performance not in _PERFORMANCE_CLASSES:
             raise ValueError("execution policy has an unknown performance class")
-        if self.write_route not in _WRITE_ROUTES:
+        if self.write_route not in CommandWriteRoute:
             raise ValueError("execution policy has an unknown write route")
         if "state-free" in self.capabilities and self.capabilities != frozenset({"state-free"}):
             raise ValueError("state-free cannot be combined with authority capabilities")
@@ -115,7 +162,9 @@ class ExecutionPolicySpec:
             for effect, capability in required_by_effect.items()
         ):
             raise ValueError("execution policy side effect lacks its owning capability")
-        if self.write_route != "none" and ("local-state" not in self.side_effects or "profile-custody" not in expanded):
+        if self.write_route != CommandWriteRoute.NONE and (
+            "local-state" not in self.side_effects or "profile-custody" not in expanded
+        ):
             raise ValueError("storage write routes require profile custody and local-state effects")
         if self.destructive and "local-state" not in self.side_effects:
             raise ValueError("destructive execution requires a local-state effect")
@@ -250,12 +299,40 @@ class ProfileSecretChannelKind(Enum):
     FILE_DESCRIPTOR = "file-descriptor"
 
 
-class ProfileAuthenticationPosture(Enum):
+class ProfileAuthenticationPosture(StrEnum):
     """How the root profile-session gate applies to one parsed command."""
 
     NOT_APPLICABLE = "not-applicable"
     RESUME_FALLBACK = "resume-fallback"
     SELF_AUTHENTICATING = "self-authenticating"
+
+
+ProfileAuthenticationPostureValue = Literal[
+    ProfileAuthenticationPosture.NOT_APPLICABLE,
+    ProfileAuthenticationPosture.RESUME_FALLBACK,
+    ProfileAuthenticationPosture.SELF_AUTHENTICATING,
+]
+"""The posture where a strict payload field must accept the plain token.
+
+The enum above was a bare ``Enum``, whose members are not strings, so no payload
+surface could root a literal on it and two of them wrote the three tokens out instead.
+It is a ``StrEnum`` now; every existing comparison uses ``is`` against a member, so
+widening member-to-token equality changes nothing that was relied on.
+"""
+
+
+class MachineSecretPresence(StrEnum):
+    """Whether an option must be present or absent to select a payload variant."""
+
+    ABSENT = "absent"
+    PRESENT = "present"
+
+
+MachineSecretPresenceValue = Literal[
+    MachineSecretPresence.ABSENT,
+    MachineSecretPresence.PRESENT,
+]
+"""The same condition for a strict metadata payload field."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -354,7 +431,7 @@ class MachineSecretConditionSpec:
     """Public option-presence condition selecting a payload variant."""
 
     option_name: str
-    presence: Literal["absent", "present"]
+    presence: MachineSecretPresenceValue
 
     def __post_init__(self) -> None:
         _require_identifier(self.option_name, field="machine-secret condition option")
@@ -506,7 +583,7 @@ class ArgumentSpec:
     transport_shape: TransportShape = TransportShape.NOT_APPLICABLE
     transport_role: TransportRole = TransportRole.NOT_APPLICABLE
 
-    kind: ParameterKind = "argument"
+    kind: ParameterKind = ParameterKind.ARGUMENT
 
     def __post_init__(self) -> None:
         """Validate the argument's name, metavar, and transport coherence, or raise."""
@@ -548,7 +625,7 @@ class OptionSpec:
     transport_shape: TransportShape = TransportShape.NOT_APPLICABLE
     transport_role: TransportRole = TransportRole.NOT_APPLICABLE
 
-    kind: ParameterKind = "option"
+    kind: ParameterKind = ParameterKind.OPTION
 
     def __post_init__(self) -> None:
         """Validate the option's declarations, flags, secret channels, and transport coherence, or raise."""
@@ -900,14 +977,18 @@ __all__ = [
     "DeferredTarget",
     "ExecutionPolicySpec",
     "InvocationSpec",
+    "JsonType",
     "LazyBinding",
     "LiteralValue",
+    "MachineSecretPresence",
+    "MachineSecretPresenceValue",
     "OptionSpec",
     "ParameterConstraint",
     "ParameterDefault",
     "ParameterKind",
     "ParameterSpec",
     "ProfileAuthenticationPosture",
+    "ProfileAuthenticationPostureValue",
     "ProfileSecretChannelKind",
     "ProfileSecretSpec",
     "RecoveryHandoffSpec",

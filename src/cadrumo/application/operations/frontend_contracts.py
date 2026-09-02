@@ -23,7 +23,11 @@ from ...core.operations import (
 from ...core.time.utc import validate_utc_aware
 from .event_replay import OperationEventCursor
 from .events import OperationEventCode, OperationEventSequence, OperationLogSeverity
-from .interactions import OperationActorReference, OperationInteractionId
+from .interactions import (
+    OperationActorReference,
+    OperationInteractionId,
+    OperationResponseIntentValue,
+)
 from .models import (
     OperationDefinitionId,
     OperationDiagnosticReference,
@@ -679,7 +683,7 @@ class OperationResponseControlSuccessV1(BaseModel):
     interaction_id: OperationInteractionId
     revision: OperationRevision
     available: bool
-    permitted_intents: frozenset[Literal["apply", "reject"]]
+    permitted_intents: frozenset[OperationResponseIntentValue]
 
     @model_validator(mode="after")
     def _validate_availability(self) -> OperationResponseControlSuccessV1:
@@ -748,7 +752,7 @@ class OperationResponseMutationSuccessV1(BaseModel):
     operation_id: OperationId
     interaction_id: OperationInteractionId
     revision: OperationRevision
-    response_action: Literal["apply", "reject"]
+    response_action: OperationResponseIntentValue
 
 
 type OperationResponseMutationResultV1 = Annotated[

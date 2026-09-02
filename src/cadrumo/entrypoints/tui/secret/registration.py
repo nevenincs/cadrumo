@@ -56,7 +56,6 @@ from .credentials import (
     CredentialAttempt,
     CredentialScreen,
     assessment_copy,
-    assessment_css_class,
     run_credential_screen,
 )
 
@@ -339,7 +338,11 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         )
         self.query_one("#btn-create", Button).label = tr("flows.registration.create_button", locale=locale)
         self._render_language_choices()
-        self._render_strength(self.query_one("#field-password", Input).value)
+        self._render_strength(
+            self.query_one("#field-password", Input).value,
+            assess=self._assess_profile_password,
+            locale=locale,
+        )
 
     def _render_language_choices(self) -> None:
         """Re-word the chooser's own rows, keeping the current selection.
@@ -358,18 +361,11 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
     def on_input_changed(self, event: Input.Changed) -> None:
         """Re-render the advisory strength line as the password is typed."""
         if event.input.id == "field-password":
-            self._render_strength(event.value)
-
-    def _render_strength(self, candidate: str) -> None:
-        """Update the band line, or clear it while the field is empty."""
-        line = self.query_one("#strength-line", Static)
-        line.remove_class("strength-refused", "strength-weak", "strength-fair", "strength-strong")
-        if not candidate:
-            line.update("")
-            return
-        assessment = self._assess_profile_password(candidate)
-        line.add_class(assessment_css_class(assessment))
-        line.update(assessment_copy(assessment, locale=self._active_language))
+            self._render_strength(
+                event.value,
+                assess=self._assess_profile_password,
+                locale=self._active_language,
+            )
 
     def selected_output_language(self) -> str:
         """Return the closed language selection for the profile being created."""

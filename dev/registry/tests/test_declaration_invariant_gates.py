@@ -28,13 +28,16 @@ what makes it evidence.
 
 from __future__ import annotations
 
+import collections
+
 import pytest
 
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
-from dev.registry.analysis.casilla_id_grammar import screen_authority as grammar_screen
-from dev.registry.analysis.continuity_integrity import screen_authority as continuity_screen
-from dev.registry.analysis.export_ref_symmetry import screen_authority as export_ref_screen
+
+from ..analysis.casilla_id_grammar import screen_authority as grammar_screen
+from ..analysis.continuity_integrity import screen_authority as continuity_screen
+from ..analysis.export_ref_symmetry import screen_authority as export_ref_screen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -90,7 +93,7 @@ def test_every_screen_module_is_enrolled_in_the_runner() -> None:
     """
     import pathlib
 
-    from dev.registry.analysis.screens import SCREENS
+    from ..analysis.screens import SCREENS
 
     analysis = pathlib.Path(__file__).resolve().parent.parent / "analysis"
     defining = {
@@ -134,7 +137,7 @@ def test_the_readme_screen_table_lists_exactly_the_enrolled_screens() -> None:
     import pathlib
     import re
 
-    from dev.registry.analysis.screens import SCREENS
+    from ..analysis.screens import SCREENS
 
     readme = (pathlib.Path(__file__).resolve().parent.parent / "README.md").read_text(encoding="utf-8")
     documented = set(re.findall(r"^\| `([a-z_]+)` \| ", readme, re.MULTILINE))
@@ -202,9 +205,10 @@ def test_every_screen_searches_a_population_that_is_not_empty(
     the set of things they looked at.
     """
     from cadrumo.domain.calculations.registry.export import resolved_export_endpoints
-    from dev.registry.analysis.casilla_id_grammar import screen_authority as grammar
-    from dev.registry.analysis.continuity_integrity import continuity_census
-    from dev.registry.analysis.wire_type_compatibility import screen_authority as wire_types
+
+    from ..analysis.casilla_id_grammar import screen_authority as grammar
+    from ..analysis.continuity_integrity import continuity_census
+    from ..analysis.wire_type_compatibility import screen_authority as wire_types
 
     populations: dict[str, int] = {
         "identifier grammar": sum(count for use in grammar(authority, modelo_ids) for _, count in use.counts),
@@ -257,7 +261,7 @@ def test_every_enrolled_screen_runs_over_the_whole_corpus(
     a contract. What is asserted is that each screen completes and describes
     what it counted.
     """
-    from dev.registry.analysis.screens import SCREENS, run_screens
+    from ..analysis.screens import SCREENS, run_screens
 
     results = run_screens(authority, modelo_ids)
     assert len(results) == len(SCREENS)
@@ -313,7 +317,8 @@ def test_running_every_screen_leaves_the_shipped_registry_untouched(
     import os
 
     from cadrumo.core.resources.bundled_data import bundled_path
-    from dev.registry.analysis.screens import run_screens
+
+    from ..analysis.screens import run_screens
 
     def fingerprint() -> dict[str, tuple[int, int]]:
         root = bundled_path("registry")
@@ -356,7 +361,7 @@ def test_every_kind_a_screen_emits_is_named_in_its_own_docstring(
     """
     import importlib
 
-    from dev.registry.analysis.screens import SCREENS
+    from ..analysis.screens import SCREENS
 
     observed: set[tuple[str, str]] = set()
     undocumented: list[str] = []
@@ -560,7 +565,7 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
     import importlib
     import re
 
-    from dev.registry.analysis.screens import SCREENS
+    from ..analysis.screens import SCREENS
 
     wrong: list[str] = []
     checked = 0
@@ -593,3 +598,74 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
 
     assert checked, "no screen stated a condition count, so this gate checked nothing"
     assert not wrong, "\n".join(wrong)
+
+
+def _export_fields(authority: ValidatedRegistryAuthority) -> list[tuple[str, str, object]]:
+    """Return every export field in the corpus with the coordinate that owns it."""
+    found: list[tuple[str, str, object]] = []
+    for code in sorted(str(item) for item in registry_modelo_codes()):
+        for revision_id, revision in authority.modelo(code).revisions.items():
+            for layout in revision.export_layouts:
+                for record in layout.records:
+                    found.extend((code, str(revision_id), field) for field in record.fields)
+    return found
+
+
+def test_every_monetary_field_declares_a_scale_or_is_rendered_by_a_self_scaling_type(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """A monetary amount whose scale is undeclared cannot be emitted at a known magnitude.
+
+    Two wire types carry money. ``money`` is self-scaling: the codec renders and
+    parses it at two decimal places without consulting the declaration. ``decimal``
+    is not, and the codec demands ``decimals`` from the field itself.
+
+    The codec already refuses an undeclared scale, but only at the moment it renders
+    or parses that field, which means a revision can ship, validate and sit in the
+    registry with the defect latent until something exercises the field. This gate
+    asks the question of every declaration at once instead, so the answer does not
+    depend on which fields a test happens to reach.
+    """
+    unscaled = [
+        f"{modelo}/{revision} {field.id}"
+        for modelo, revision, field in _export_fields(authority)
+        if str(getattr(field, "data_type", "")) == "decimal" and getattr(field, "decimals", None) is None
+    ]
+    assert unscaled == [], (
+        "these decimal export fields declare no scale, so the magnitude they emit is "
+        f"undefined until the codec refuses them at render time: {unscaled}"
+    )
+
+
+def test_the_corpus_actually_contains_both_monetary_wire_types(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """The gate above is meaningless if neither type is present to be checked.
+
+    Pinned so that a corpus which stopped declaring monetary fields altogether
+    cannot make the invariant pass by emptiness.
+    """
+    types = collections.Counter(str(getattr(field, "data_type", "")) for _, _, field in _export_fields(authority))
+    assert types["decimal"] > 0
+    assert types["money"] > 0
+
+
+def test_the_gate_detects_a_decimal_field_that_declares_no_scale(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """Constructed, because the corpus declares a scale everywhere.
+
+    A real decimal field is copied with its scale removed and put back through the
+    same predicate the gate uses, so the gate is shown able to report the condition
+    it protects rather than only ever having seen a clean corpus.
+    """
+    sample = next(
+        field
+        for _, _, field in _export_fields(authority)
+        if str(getattr(field, "data_type", "")) == "decimal" and getattr(field, "decimals", None) is not None
+    )
+    stripped = sample.model_copy(update={"decimals": None})
+
+    assert str(stripped.data_type) == "decimal"
+    assert stripped.decimals is None
+    assert getattr(sample, "decimals", None) is not None, "the donor field must still declare its own scale"

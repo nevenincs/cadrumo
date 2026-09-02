@@ -69,6 +69,7 @@ from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.temporal import select_revision
+from ...domain.iva_compensation.filed_derivation import M303CompensationBasisValue
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from .errors import (
     CalculationRefusalPrecondition,
@@ -263,7 +264,7 @@ class ObservationEnvelopePayload(BaseModel):
             "the externally evidenced baseline U declaration. This is never bank data."
         ),
     )
-    m303_compensation_basis: Literal["generated", "resultado", "refunded"] | None = Field(
+    m303_compensation_basis: M303CompensationBasisValue | None = Field(
         default=None,
         description=(
             "Disposition-aware carry derivation basis after canonical Modelo "

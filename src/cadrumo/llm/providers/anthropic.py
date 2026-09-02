@@ -251,9 +251,8 @@ class AnthropicAdapter(ProviderAdapter):
         # its `Message` record is available to the checker through the
         # TYPE_CHECKING import above, so the response's `content`, `model`,
         # `usage`, and `id` keep their real types instead of being erased.
-        response: Message | None = None
         try:
-            response = await self._client.messages.create(**build_message_kwargs(request))
+            response: Message = await self._client.messages.create(**build_message_kwargs(request))
         except sdk.RateLimitError as exc:
             # `APIStatusError.__init__` requires `response` and dereferences
             # `response.request` immediately, so it can never be None here.
@@ -286,7 +285,6 @@ class AnthropicAdapter(ProviderAdapter):
                 context={"provider": self.provider.value, "http_status": exc.status_code},
             ) from exc
 
-        assert response is not None
         text_parts = [block.text for block in response.content if isinstance(block, sdk.TextBlock)]
         return ProviderCompletion(
             text="\n".join(part for part in text_parts if part).strip(),

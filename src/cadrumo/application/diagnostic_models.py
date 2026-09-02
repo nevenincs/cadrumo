@@ -95,7 +95,25 @@ class CliVersionReport(BaseModel):
     registry: RegistryVersionSummary
 
 
-DiagnosticAudience = Literal["operator", "internal"]
+class DiagnosticAudience(StrEnum):
+    """Who a diagnostic check is written for.
+
+    Not a severity and not a filter on severity: an internal check can be healthy and
+    an operator check can fail. It says who can act on the result.
+    """
+
+    OPERATOR = "operator"
+    """Written for the person running the command, in terms they can act on."""
+
+    INTERNAL = "internal"
+    """Written for whoever maintains the installation, not for the operator."""
+
+
+DiagnosticAudienceValue = Literal[
+    DiagnosticAudience.OPERATOR,
+    DiagnosticAudience.INTERNAL,
+]
+"""The same vocabulary for a strict model field or CLI payload surface."""
 """Who can act on a check."""
 
 
@@ -119,7 +137,7 @@ class DiagnosticCheck(BaseModel):
     summary: str
     detail: str | None = None
     precondition_verdict: PreconditionVerdict | None = None
-    audience: DiagnosticAudience = "operator"
+    audience: DiagnosticAudienceValue = DiagnosticAudience.OPERATOR
     findings: tuple[DiagnosticFinding, ...] = ()
 
     @model_validator(mode="after")

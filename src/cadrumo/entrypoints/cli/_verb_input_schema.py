@@ -15,23 +15,12 @@ from ._command_schema import (
     command_registration_metadata,
     command_registration_projection,
 )
+from .command_spec import JsonType, ParameterKind, ProfileAuthenticationPostureValue
 
 if TYPE_CHECKING:
     from .command_spec import CommandSpec
 
 _FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
-
-
-class VerbParamKind(StrEnum):
-    ARGUMENT = "argument"
-    OPTION = "option"
-
-
-class JsonType(StrEnum):
-    STRING = "string"
-    INTEGER = "integer"
-    NUMBER = "number"
-    BOOLEAN = "boolean"
 
 
 class VerbLeafKind(StrEnum):
@@ -62,7 +51,7 @@ class RecoveryHandoffContract(BaseModel):
 class VerbParameter(BaseModel):
     model_config = _FROZEN
     name: str = Field(min_length=1)
-    kind: VerbParamKind
+    kind: ParameterKind
     cli_flag: str = ""
     off_flag: str = ""
     json_type: JsonType
@@ -108,7 +97,7 @@ class VerbInputSchema(BaseModel):
     parameters: tuple[VerbParameter, ...] = ()
     machine_secret_payloads: tuple[MachineSecretPayloadMetadata, ...] = ()
     recovery_handoff_contract: RecoveryHandoffContract | None = None
-    profile_authentication: Literal["not-applicable", "resume-fallback", "self-authenticating"]
+    profile_authentication: ProfileAuthenticationPostureValue
     profile_authentication_contract: ProfileAuthenticationContractMetadata
     help: str = ""
 
@@ -225,7 +214,7 @@ def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInp
             parameters=tuple(
                 VerbParameter(
                     name=p.name,
-                    kind=VerbParamKind(p.kind),
+                    kind=ParameterKind(p.kind),
                     cli_flag=p.cli_flag,
                     off_flag=p.off_flag,
                     json_type=JsonType(p.json_type),
@@ -255,7 +244,7 @@ def cli_argv_for(schema: VerbInputSchema, arguments: dict[str, object]) -> list[
         if parameter.name not in arguments:
             continue
         value = arguments[parameter.name]
-        if parameter.kind is VerbParamKind.ARGUMENT:
+        if parameter.kind is ParameterKind.ARGUMENT:
             positional.extend(str(item) for item in cast(Sequence[object], value)) if parameter.multiple and isinstance(
                 value, list | tuple
             ) else positional.append(str(value))
@@ -275,12 +264,12 @@ def cli_argv_for(schema: VerbInputSchema, arguments: dict[str, object]) -> list[
 __all__ = [
     "DECLARED_UNIMPLEMENTED_SURFACES",
     "JsonType",
+    "ParameterKind",
     "ResolvedVerbLeaf",
     "SchemaResolutionError",
     "VerbInputSchema",
     "VerbLeafKind",
     "VerbLeafResolutionFailure",
-    "VerbParamKind",
     "VerbParameter",
     "assert_schema_coverage",
     "build_verb_input_schemas",

@@ -144,9 +144,8 @@ def _apply_semantic_column_mapping(
 ) -> bool:
     """Fill unresolved columns from one mapping-lane verdict without displacing exact fields."""
     claimed_fields = {field for field in exact_fields if field is not None}
-    if _mapping_lane_not_needed(mapper, required_fields, claimed_fields):
+    if mapper is None or _mapping_lane_not_needed(mapper, required_fields, claimed_fields):
         return False
-    assert mapper is not None
     proposed_roles = mapper(list(headers))
     if proposed_roles is None:
         return False

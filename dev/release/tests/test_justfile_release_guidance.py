@@ -47,9 +47,9 @@ def _recipe_summary() -> set[str]:
 def test_release_apply_is_absent_from_the_justfile() -> None:
     """The retired local-apply recipe is gone in full, not merely deprecated.
 
-    `dev.release.version_bump` is the sole authority for advancing a version
-    now: a deleted local path cannot be mis-invoked instead of
-    the automated bump. Read directly off the tracked file rather than
+    The release pull request is the sole authority for advancing a version now:
+    a deleted local path cannot be mis-invoked instead of the automated bump.
+    Read directly off the tracked file rather than
     `just --summary` (which lists recipe NAMES only and would not catch a
     stray reference inside another recipe's body).
     """
@@ -73,22 +73,6 @@ def test_release_survives_as_the_read_only_dry_run_preview() -> None:
     # Preview-only: the recipe body must not contain a real (non---dry-run)
     # mutating git push, since nothing downstream of the preview may act.
     assert "git push" not in rendered
-
-
-def test_release_collect_evidence_aggregates_rows_from_evidence_drafts() -> None:
-    """The collect recipe downloads every row from the runs' evidence drafts.
-
-    Release-asset transport: rows ride draft releases tagged
-    evidence-<lane>-<run_id>, never Actions artifacts, and the sealed
-    evidence-manifest.json asset is not a row.
-    """
-    rendered = _render_recipe("release-collect-evidence", "123456")
-
-    assert "gh run download" not in rendered
-    assert "gh release download" in rendered
-    assert "evidence-$lane-" in rendered or "evidence-$lane-$run_id" in rendered
-    assert "evidence-manifest.json" in rendered
-    assert "var/distribution-install-readiness" in rendered
 
 
 def test_release_rollback_names_every_yank_target_and_only_the_rollback_tag() -> None:

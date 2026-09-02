@@ -21,7 +21,6 @@ Submodules
    cadrumo.adapters.outbound.google.api
    cadrumo.adapters.outbound.google.calc_sheets_apply
    cadrumo.adapters.outbound.google.calc_sheets_pull
-   cadrumo.adapters.outbound.google.calc_sheets_pull_coverage
    cadrumo.adapters.outbound.google.calc_sheets_pull_records
    cadrumo.adapters.outbound.google.document_link_resolver
    cadrumo.adapters.outbound.google.errors

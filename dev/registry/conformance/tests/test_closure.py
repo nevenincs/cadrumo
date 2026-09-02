@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import typing
 from datetime import date
 
 import pytest
@@ -9,7 +10,11 @@ from pydantic import ValidationError
 from typer.testing import CliRunner
 
 from cadrumo.application.filing.export_proof import FilingExportProofAssessment, FilingExportProofCoordinate
-from cadrumo.application.registry.closure import RegistryClosureEvidence, RegistryClosureLimb
+from cadrumo.application.registry.closure import (
+    RegistryClosureEvidence,
+    RegistryClosureLimb,
+    RegistryClosureRefusalReason,
+)
 from cadrumo.application.registry.filing_export_coverage import FilingExportCoverageReport
 from cadrumo.application.registry.source_connectivity_coverage import SourceConnectivityCoverageReport
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
@@ -25,6 +30,8 @@ from ...temporal_coverage import TemporalCoverageReport, TemporalRevisionCoverag
 from ..authorities import RegistryClosureAuthorities
 from ..cli import app
 from ..closure import (
+    _TEMPORAL_WORK_ITEMS,
+    RegistryClosurePredicateRefusalReason,
     build_registry_closure_report,
     check_registry_closure_release,
     load_registry_closure_report,
@@ -305,3 +312,79 @@ def test_actual_cli_ignores_exact_hostile_authority_context() -> None:
     assert "secure_replay:authority_unavailable" in result.output
     assert source.calls == []
     assert filing.calls == []
+
+
+def test_the_predicate_vocabulary_contains_the_application_vocabulary_entirely() -> None:
+    """The development refusal reasons extend the application's rather than shadowing them.
+
+    These seven values were once literal copies here. A copy of a closed vocabulary
+    fails in one direction only and does so silently: a reason added to the
+    application would not reach this alias, the copy would keep validating, and it
+    would quietly mean less than the thing it shadows.
+
+    What this gate detects is staleness, not the act of copying, and the distinction
+    is worth stating because the weaker claim is tempting. Re-listing the shared values
+    as literals today would pass here, since all seven would still be present. The
+    failure appears the moment the application adds an eighth reason: the copy stops
+    containing the vocabulary it claims to extend, and this is what says so.
+
+    That is the defect worth catching. A copy that is currently identical is harmless;
+    a copy that has fallen behind is the one that silently means less than the thing
+    it shadows.
+    """
+    application = set(typing.get_args(RegistryClosureRefusalReason.__value__))
+    development = _predicate_reason_values()
+
+    assert application, "the application vocabulary must be readable, or this gate proves nothing"
+    assert application <= development, (
+        "these application refusal reasons are missing from the development vocabulary, "
+        f"so the development alias is a stale copy rather than an extension: {sorted(application - development)}"
+    )
+
+
+def test_the_predicate_vocabulary_adds_only_the_locally_owned_reasons() -> None:
+    """What the development side adds is the temporal-coverage set and nothing else.
+
+    Pinned so that a reason invented here, rather than in the application module that
+    owns the shared concept, has to be added deliberately and be seen while it is.
+    """
+    application = set(typing.get_args(RegistryClosureRefusalReason.__value__))
+    local = _predicate_reason_values() - application
+
+    assert local == {
+        "law_selection_refused",
+        "selected_revision_mismatch",
+        "undeclared_authority_grade",
+        "declared_grade_snapshot_refused",
+        "snapshot_revision_mismatch",
+    }
+
+
+def test_every_locally_owned_reason_carries_a_work_item() -> None:
+    """A temporal refusal names the work that would resolve it, or it cannot be acted on."""
+    application = set(typing.get_args(RegistryClosureRefusalReason.__value__))
+    local = _predicate_reason_values() - application
+
+    assert local <= set(_TEMPORAL_WORK_ITEMS), (
+        f"local refusal reasons with no work item: {sorted(local - set(_TEMPORAL_WORK_ITEMS))}"
+    )
+
+
+def _predicate_reason_values() -> set[str]:
+    """Flatten the composed predicate alias into its concrete reason strings.
+
+    A union of an alias and a literal does not flatten under ``get_args``: reading it
+    naively reports two members rather than twelve. That mistake was made while this
+    composition was being verified, so the flattening lives here where the gate can
+    depend on it instead of being re-derived at each call site.
+    """
+    values: set[str] = set()
+    pending = [RegistryClosurePredicateRefusalReason.__value__]
+    while pending:
+        current = pending.pop()
+        for argument in typing.get_args(current):
+            if isinstance(argument, str):
+                values.add(argument)
+            else:
+                pending.append(getattr(argument, "__value__", argument))
+    return values

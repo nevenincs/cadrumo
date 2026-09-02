@@ -119,9 +119,11 @@ def bind_profile_auth_settings(
     effective settings. This uses the live session resolver and binder rather
     than reproducing their precedence rules in a readiness-only projection.
     """
-    if provider_kind not in (AuthProviderKind.CLAVE_MOVIL, AuthProviderKind.CLAVE_PERMANENTE):
+    if provider_kind is None or provider_kind not in (
+        AuthProviderKind.CLAVE_MOVIL,
+        AuthProviderKind.CLAVE_PERMANENTE,
+    ):
         return settings
-    assert provider_kind is not None
     facts = clave_auth_facts_from_profile_values(_active_profile_path_values(state))
     credentials = resolve_clave_credentials(provider_kind, settings=settings, facts=facts)
     if credentials is None:

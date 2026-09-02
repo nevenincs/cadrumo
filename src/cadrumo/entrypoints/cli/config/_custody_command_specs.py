@@ -32,6 +32,27 @@ _OUTPUT_LANGUAGE = OptionSpec(
     help_key=TranslationKey("cli.config.auth.output_language_help"),
 )
 
+_MACHINE_SECRET_OPTIONS: tuple[OptionSpec, OptionSpec] = (
+    OptionSpec(
+        name="secrets_stdin",
+        declarations=("--secrets-stdin",),
+        value=ValueContract(DeferredTarget("builtins", "bool")),
+        default=ParameterDefault.value(False),
+        help_key=TranslationKey("cli.config.custody.secrets_stdin_help"),
+        is_flag=True,
+        flag_value=True,
+        machine_secret_channel=MachineSecretChannelKind.STDIN,
+    ),
+    OptionSpec(
+        name="secrets_fd",
+        declarations=("--secrets-fd",),
+        value=ValueContract(DeferredTarget("builtins", "int")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.config.custody.secrets_fd_help"),
+        machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
+    ),
+)
+
 
 CONFIG_CUSTODY_COMMAND_SPECS = (
     CommandSpec(
@@ -56,24 +77,7 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(
-            OptionSpec(
-                name="secrets_stdin",
-                declarations=("--secrets-stdin",),
-                value=ValueContract(DeferredTarget("builtins", "bool")),
-                default=ParameterDefault.value(False),
-                help_key=TranslationKey("cli.config.custody.secrets_stdin_help"),
-                is_flag=True,
-                flag_value=True,
-                machine_secret_channel=MachineSecretChannelKind.STDIN,
-            ),
-            OptionSpec(
-                name="secrets_fd",
-                declarations=("--secrets-fd",),
-                value=ValueContract(DeferredTarget("builtins", "int")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.config.custody.secrets_fd_help"),
-                machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
-            ),
+            *_MACHINE_SECRET_OPTIONS,
             _OUTPUT_LANGUAGE,
         ),
         policy=ENCRYPTED_DESTRUCTIVE,
@@ -114,24 +118,7 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.config.login.name_help"),
             ),
-            OptionSpec(
-                name="secrets_stdin",
-                declarations=("--secrets-stdin",),
-                value=ValueContract(DeferredTarget("builtins", "bool")),
-                default=ParameterDefault.value(False),
-                help_key=TranslationKey("cli.config.custody.secrets_stdin_help"),
-                is_flag=True,
-                flag_value=True,
-                machine_secret_channel=MachineSecretChannelKind.STDIN,
-            ),
-            OptionSpec(
-                name="secrets_fd",
-                declarations=("--secrets-fd",),
-                value=ValueContract(DeferredTarget("builtins", "int")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.config.custody.secrets_fd_help"),
-                machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
-            ),
+            *_MACHINE_SECRET_OPTIONS,
             _OUTPUT_LANGUAGE,
         ),
         policy=BOOTSTRAP_WRITE,

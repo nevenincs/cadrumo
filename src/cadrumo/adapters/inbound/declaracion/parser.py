@@ -43,7 +43,6 @@ from ....domain.calculations.registry.casilla_membership import casillas_by_id
 from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ....domain.calculations.registry.schema_extraction import (
-    BboxAnchorSpec,
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
 )
@@ -388,14 +387,12 @@ def _resolve_template(
         )
 
     detected = detect_template_revision_from_pages(pages) if pages is not None else detect_template_revision(path)
-    if detected is None and not (modelo_override and año_override):
-        raise TemplateNotDetectedError(
-            translated_message="adapters.inbound.declaracion.errors.template_not_detected",
-            context={"path": _INPUT_PDF_SOURCE_LABEL},
-        )
-
     if detected is None:
-        assert modelo_override and año_override  # narrowed by the check above
+        if not modelo_override or not año_override:
+            raise TemplateNotDetectedError(
+                translated_message="adapters.inbound.declaracion.errors.template_not_detected",
+                context={"path": _INPUT_PDF_SOURCE_LABEL},
+            )
         return TemplateRevision(
             modelo=modelo_override,
             año=año_override,
@@ -1055,8 +1052,11 @@ def _find_bbox_casilla_hits(
     Ambiguous matches (multiple anchors on a page) are returned as multiple
     entries so the caller can detect and report them as ``ambiguous``.
     """
-    assert target.bbox_anchor is not None  # enforced by model_validator
-    anchor_spec: BboxAnchorSpec = target.bbox_anchor
+    anchor_spec = target.bbox_anchor
+    if anchor_spec is None:
+        raise DeclaracionParseError(
+            f"extraction target {target.casilla_id!r} takes the bbox-anchored path without a bbox anchor",
+        )
     box_re = re.compile(anchor_spec.box_number_pattern)
 
     hits: list[tuple[int, str]] = []

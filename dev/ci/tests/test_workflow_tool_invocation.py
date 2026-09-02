@@ -20,14 +20,11 @@ misreading: the lane looked correctly guarded and was not guarded at all.
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 import pytest
 
 from ..._paths import REPO_ROOT
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -54,6 +51,23 @@ def _workflow_files() -> list[Path]:
     return sorted((REPO_ROOT / ".github" / "workflows").glob("*.yml"))
 
 
+def _script_invocation_offenders(workflows: list[Path], *, repo_root: Path) -> list[str]:
+    """Return workflow calls that execute a relative-importing file directly."""
+    offenders: list[str] = []
+    for workflow in workflows:
+        for match in _SCRIPT_CALL.finditer(workflow.read_text(encoding="utf-8")):
+            target = repo_root / match.group(1)
+            if not target.is_file():
+                continue
+            source = target.read_text(encoding="utf-8")
+            if _SELF_PACKAGING_SHIM.search(source):
+                continue
+            if _MODULE_LEVEL_RELATIVE_IMPORT.search(source):
+                dotted = match.group(1).removesuffix(".py").replace("/", ".")
+                offenders.append(f"{workflow.name} runs {match.group(1)} as a script; use `python3 -m {dotted}`")
+    return offenders
+
+
 def test_no_workflow_runs_a_relative_importing_module_as_a_script() -> None:
     """Every call site of a package-relative tool must use `python -m`.
 
@@ -63,21 +77,42 @@ def test_no_workflow_runs_a_relative_importing_module_as_a_script() -> None:
     combination is reported - so this refuses the real defect without forbidding
     either practice on its own.
     """
-    offenders: list[str] = []
-
-    for workflow in _workflow_files():
-        for match in _SCRIPT_CALL.finditer(workflow.read_text(encoding="utf-8")):
-            target = REPO_ROOT / match.group(1)
-            if not target.is_file():
-                continue
-            source = target.read_text(encoding="utf-8")
-            if _SELF_PACKAGING_SHIM.search(source):
-                continue
-            if _MODULE_LEVEL_RELATIVE_IMPORT.search(source):
-                dotted = match.group(1).removesuffix(".py").replace("/", ".")
-                offenders.append(f"{workflow.name} runs {match.group(1)} as a script; use `python3 -m {dotted}`")
-
+    offenders = _script_invocation_offenders(_workflow_files(), repo_root=REPO_ROOT)
     assert not offenders, "packaged tool(s) invoked as scripts:\n  " + "\n  ".join(offenders)
+
+
+def test_compatibility_workflow_uses_module_entry_points() -> None:
+    """Inventory, probe, and cohort tools run with package context intact."""
+    workflow = REPO_ROOT / ".github" / "workflows" / "python-runtime-compatibility.yml"
+    surface = workflow.read_text(encoding="utf-8")
+    for module in (
+        "dev.ci.python_runtime_matrix",
+        "dev.ci.python_runtime_compatibility",
+        "dev.packaging.release_cohort",
+    ):
+        assert f"uv run --no-sync python -m {module}" in surface
+    assert re.search(r"\bpython3?\s+(?:dev|packaging|src)/[\w/]+\.py", surface) is None
+
+
+def test_direct_script_detector_has_detector_teeth(tmp_path: Path) -> None:
+    """An isolated relative-importing tool called by path is rejected."""
+    tool = tmp_path / "dev" / "ci" / "offender.py"
+    tool.parent.mkdir(parents=True)
+    tool.write_text("from .._paths import REPO_ROOT\n", encoding="utf-8")
+    workflow = tmp_path / "offender.yml"
+    workflow.write_text(
+        "name: offender\n"
+        "on: [workflow_dispatch]\n"
+        "jobs:\n"
+        "  run:\n"
+        "    runs-on: [self-hosted, Linux, X64]\n"
+        "    steps:\n"
+        "      - run: python3 dev/ci/offender.py\n",
+        encoding="utf-8",
+    )
+
+    offenders = _script_invocation_offenders([workflow], repo_root=tmp_path)
+    assert offenders and "offender.py" in offenders[0]
 
 
 def test_the_watchdog_is_importable_as_a_module() -> None:

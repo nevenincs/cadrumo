@@ -240,10 +240,9 @@ def _build_related_party_rows(
 ) -> tuple[Mapping[str, Decimal | str], ...]:
     """Group related-party observations by (party, country, kind, method) summing amounts."""
     accum: dict[tuple[str, str, str, str], dict[str, Decimal | str]] = {}
-    amounts: dict[tuple[str, str, str, str], Decimal] = {}
     for obs in observations:
         key = (obs.country_code, obs.counterparty_tax_id, obs.operation_kind_code, obs.transfer_pricing_method_code)
-        accum.setdefault(
+        bucket = accum.setdefault(
             key,
             {
                 "country_code": obs.country_code,
@@ -251,10 +250,16 @@ def _build_related_party_rows(
                 "counterparty_legal_name": obs.counterparty_legal_name,
                 "operation_kind_code": obs.operation_kind_code,
                 "transfer_pricing_method_code": obs.transfer_pricing_method_code,
+                "amount": Decimal("0"),
             },
         )
-        amounts[key] = amounts.get(key, Decimal("0")) + obs.amount
-    return tuple({**accum[key], "amount": amounts[key]} for key in sorted(accum.keys()))
+        previous = bucket["amount"]
+        if not isinstance(previous, Decimal):
+            raise RegistryValidationError(
+                f"related-party row accumulator for {key!r} holds a non-numeric running amount",
+            )
+        bucket["amount"] = previous + obs.amount
+    return tuple(accum[key] for key in sorted(accum.keys()))
 
 
 # ---------------------------------------------------------------------------

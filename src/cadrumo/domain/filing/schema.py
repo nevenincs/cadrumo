@@ -164,10 +164,12 @@ class ModeloBindingValue(BaseModel):
         identity = self.row_source_identity
         if identity is None:
             return None
-        assert self.row_index is not None
+        row_index = self.row_index
+        if row_index is None:
+            raise FilingValidationError("binding row source identity requires a row index")
         return {
             "binding_id": self.binding_id,
-            "row_index": self.row_index,
+            "row_index": row_index,
             "source_kind": identity.source_kind.value,
             "source_row_identity": identity.source_row_identity,
             "fingerprint": identity.fingerprint,

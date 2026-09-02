@@ -62,6 +62,8 @@ from .records import (
     SheetNumberFormat,
     SheetProtectedRange,
     SheetProvenanceRow,
+    SheetRoundingRule,
+    SheetRoundingRuleValue,
     SheetRowSet,
     SheetRowSetColumn,
     SheetSectionHeader,
@@ -81,7 +83,7 @@ _ACQUISITION_MIRROR_BINDING_SUFFIX: Final[str] = "-adquisicion"
 
 def _rounding_rule_for(
     formula: FormulaDefinition,
-) -> tuple[Literal["money", "integer", "integer-ceiling", "none"], int | None]:
+) -> tuple[SheetRoundingRuleValue, int | None]:
     """Map a registry rounding code to (rule_name, scale).
 
     The workbook is the SECOND interpreter of the registry rounding
@@ -93,13 +95,13 @@ def _rounding_rule_for(
     member must be answered here.
     """
     if formula.rounding is None:
-        return ("none", None)
+        return (SheetRoundingRule.NONE, None)
     if formula.rounding == RegistryRoundingCode.MONEY_2:
-        return ("money", 2)
+        return (SheetRoundingRule.MONEY, 2)
     if formula.rounding == RegistryRoundingCode.INTEGER:
-        return ("integer", 0)
+        return (SheetRoundingRule.INTEGER, 0)
     if formula.rounding == RegistryRoundingCode.INTEGER_CEILING:
-        return ("integer-ceiling", 0)
+        return (SheetRoundingRule.INTEGER_CEILING, 0)
     raise CalcSheetsEngineError(
         context={"formula_id": formula.id},
         translated_message="application.storage.calc_sheets.engine.errors.unsupported_rounding",
@@ -109,7 +111,7 @@ def _rounding_rule_for(
 def _wrap_rounded(expression: str, *, rule: str, scale: int | None) -> str:
     if rule == "none" or scale is None:
         return expression
-    if rule == "integer-ceiling":
+    if rule == SheetRoundingRule.INTEGER_CEILING:
         # Spreadsheet counterpart of decimal.ROUND_CEILING: CEILING(x, 1)
         # takes x to the next whole unit up and leaves an already-integral
         # x untouched, matching LIVA art. 104.Dos ("se redondeará en la

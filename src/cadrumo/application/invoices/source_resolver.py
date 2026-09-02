@@ -751,7 +751,10 @@ def _m347_invoice_observation(invoice: Invoice, *, context: CalculationSourceCon
     is_third_party_collection = clave == "C"
     party_tax_id = invoice.collected_on_behalf_of_tax_id if is_third_party_collection else invoice.counterparty_tax_id
     party_legal_name = invoice.collected_on_behalf_of_name if is_third_party_collection else invoice.counterparty_name
-    assert party_tax_id is not None  # clave "C" only returns when collected_on_behalf_of_tax_id is set
+    if party_tax_id is None:
+        raise RegistryValidationError(
+            f"invoice {invoice.invoice_id!r} resolves modelo 347 clave {clave!r} with no declaring party tax id",
+        )
     return InvoiceObservation(
         invoice_id=invoice.invoice_id,
         source_kind=source_kind,

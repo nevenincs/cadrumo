@@ -61,45 +61,6 @@ class FilterParseError(ReviewError):
         self.reason = reason
 
 
-class EditParseError(ReviewError):
-    """Raised when ``--set KEY=VALUE`` cannot be parsed.
-
-    Attributes:
-        raw_token: The string the operator supplied. Stored for callers
-            that need to build a CLI recovery hint, but intentionally
-            omitted from the rendered error text and structured context
-            because edit values may contain file paths, references, or
-            operator notes.
-        reason: One of ``"missing-equals"``, ``"empty-key"``,
-            ``"empty-value"``, ``"unknown-key-{scope}"``,
-            ``"invalid-value-{scope}"``, ``"duplicate-key-{scope}"``.
-    """
-
-    def __init__(self, raw_token: str, *, reason: str) -> None:
-        """Construct the error with the offending token and stable reason code.
-
-        Args:
-            raw_token: The string the operator supplied.
-            reason: Stable reason code (e.g. ``"missing-equals"``,
-                ``"empty-key"``, ``"invalid-value-{scope}"``).
-        """
-        context: dict[str, object] = {"reason": reason}
-        key = _safe_edit_token_key(raw_token)
-        if key is not None:
-            context["key"] = key
-        super().__init__(
-            context=context,
-            translated_message="review.edit.errors.parse_failed",
-        )
-        self.raw_token = raw_token
-        self.reason = reason
-
-
-def _safe_edit_token_key(raw_token: str) -> str | None:
-    """Return the edit key without exposing the user-supplied value."""
-    return _safe_token_key(raw_token, flag="--set")
-
-
 def _safe_token_key(raw_token: str, *, flag: str) -> str | None:
     """Return a parsed token key without exposing the supplied value."""
     token = raw_token.removeprefix(f"{flag} ").strip()

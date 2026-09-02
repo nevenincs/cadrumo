@@ -21,20 +21,20 @@ jobs:
     steps:
       - name: Run release-please
         id: release
-        uses: googleapis/release-please-action@v4
+        uses: googleapis/release-please-action@8b8fd2cc23b2e18957157a9d923d75aa0c6f6ad5 # v4
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
       - name: Check out the release branch
         if: steps.release.outputs.pr && !steps.release.outputs.release_created
-        uses: actions/checkout@v6
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
 
       - name: Set up uv for the release branch
         if: steps.release.outputs.pr && !steps.release.outputs.release_created
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
 
       - name: Regenerate and push uv.lock onto the release branch
         if: steps.release.outputs.pr && !steps.release.outputs.release_created
@@ -57,13 +57,13 @@ jobs:
       # assuming the window was missed.
       - name: Check out main to verify the released lockfile
         if: steps.release.outputs.release_created == 'true'
-        uses: actions/checkout@v6
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: main
 
       - name: Set up uv for the lockfile verification
         if: steps.release.outputs.release_created == 'true'
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
 
       - name: Open a reconciling pull request when the lockfile drifted
         if: steps.release.outputs.release_created == 'true'

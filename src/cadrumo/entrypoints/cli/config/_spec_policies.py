@@ -5,13 +5,14 @@ from __future__ import annotations
 from ..command_spec import (
     Capability,
     CommandSpec,
+    CommandWriteRoute,
+    CommandWriteRouteValue,
     ExecutionPolicySpec,
     InvocationSpec,
     PerformanceClass,
     ResultSchemaSpec,
     SchemaState,
     SideEffect,
-    WriteRoute,
     translation_key,
 )
 
@@ -21,7 +22,7 @@ def _policy(
     side_effects: frozenset[SideEffect],
     performance: PerformanceClass,
     *,
-    write_route: WriteRoute = "none",
+    write_route: CommandWriteRouteValue = CommandWriteRoute.NONE,
     destructive: bool = False,
     handoff: bool = False,
 ) -> ExecutionPolicySpec:

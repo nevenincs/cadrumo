@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import hashlib
 import json
 import re
 import sys
@@ -68,6 +69,7 @@ _FUNCTION_PLURAL_NOUNS: Final[frozenset[str]] = frozenset(
 )
 _PASCAL_WORD: Final[re.Pattern[str]] = re.compile(r"[A-Z]+(?=[A-Z][a-z]|\d|$)|[A-Z]?[a-z]+|\d+")
 _TEXT_LIMIT: Final[int] = 50
+_INVENTORY_SCHEMA_VERSION: Final[int] = 1
 
 
 class ObjectNameKind(StrEnum):
@@ -98,11 +100,20 @@ class ObjectNameDeclaration:
     public: bool
     test: bool
     overload: bool
+    binding_occurrence: int
+    source_hash: str | None
 
     @property
     def enforced(self) -> bool:
         """Whether this declaration belongs to the zero-tolerance surface."""
         return self.public and not self.test
+
+    @property
+    def qualified_locator(self) -> str:
+        """Return the line-independent, kind-qualified declaration locator."""
+        module = _module_name(self.path)
+        qualified_name = module if self.kind is ObjectNameKind.MODULE else f"{module}.{self.name}"
+        return f"{self.kind}:{qualified_name}#binding={self.binding_occurrence}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -114,6 +125,20 @@ class ObjectNameFinding:
     enforced: bool
     sites: tuple[str, ...]
     detail: str
+    object_kinds: tuple[ObjectNameKind, ...] = ()
+    qualified_sites: tuple[str, ...] = ()
+
+    @property
+    def id(self) -> str:
+        """Return the stable schema-qualified identity of this finding."""
+        identity = {
+            "schema_version": _INVENTORY_SCHEMA_VERSION,
+            "finding_kind": self.kind,
+            "object_kinds": self.object_kinds,
+            "name": self.name,
+            "qualified_sites": self.qualified_sites,
+        }
+        return _sha256(_canonical_json(identity))
 
 
 @dataclass(frozen=True, slots=True)
@@ -156,6 +181,23 @@ def _relative(path: Path, repo_root: Path) -> str:
         return path.as_posix()
 
 
+def _sha256(payload: bytes) -> str:
+    return f"sha256:{hashlib.sha256(payload).hexdigest()}"
+
+
+def _canonical_json(value: object) -> bytes:
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8")
+
+
+def _module_name(path: str) -> str:
+    parts = list(Path(path).with_suffix("").parts)
+    if parts and parts[0] == "src":
+        parts.pop(0)
+    if parts and parts[-1] == "__init__":
+        parts.pop()
+    return ".".join(parts)
+
+
 def _is_overload(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
     return any(_base_name(decorator) == "overload" for decorator in node.decorator_list)
 
@@ -175,21 +217,46 @@ def _module_declarations(tree: ast.Module) -> Iterable[ast.ClassDef | ast.Functi
     return descend(tree)
 
 
-def declarations_in_source(source: str, path: str, *, test: bool = False) -> tuple[ObjectNameDeclaration, ...]:
+def declarations_in_source(
+    source: str,
+    path: str,
+    *,
+    test: bool = False,
+    source_hash: str | None = None,
+) -> tuple[ObjectNameDeclaration, ...]:
     """Parse one source string and return its independently bound declarations."""
     tree = ast.parse(source, filename=path)
-    declarations = (
-        ObjectNameDeclaration(
-            name=node.name,
-            kind=_kind(node),
-            path=path,
-            line=node.lineno,
-            public=not node.name.startswith("_"),
-            test=test,
-            overload=isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and _is_overload(node),
+    byte_hash = source_hash or _sha256(source.encode("utf-8"))
+    occurrences: defaultdict[tuple[ObjectNameKind, str], int] = defaultdict(int)
+    open_overloads: dict[tuple[ObjectNameKind, str], int] = {}
+    declarations: list[ObjectNameDeclaration] = []
+    for node in _module_declarations(tree):
+        kind = _kind(node)
+        key = (kind, node.name)
+        overload = isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and _is_overload(node)
+        if overload:
+            if key not in open_overloads:
+                occurrences[key] += 1
+                open_overloads[key] = occurrences[key]
+            occurrence = open_overloads[key]
+        elif key in open_overloads:
+            occurrence = open_overloads.pop(key)
+        else:
+            occurrences[key] += 1
+            occurrence = occurrences[key]
+        declarations.append(
+            ObjectNameDeclaration(
+                name=node.name,
+                kind=kind,
+                path=path,
+                line=node.lineno,
+                public=not node.name.startswith("_"),
+                test=test,
+                overload=overload,
+                binding_occurrence=occurrence,
+                source_hash=byte_hash,
+            )
         )
-        for node in _module_declarations(tree)
-    )
     return tuple(sorted(declarations, key=lambda item: (item.name, item.kind, item.line)))
 
 
@@ -224,20 +291,14 @@ def collect_declarations(
     for path in _python_files(roots):
         relative = Path(_relative(path, repo_root))
         is_test = _is_test_path(relative)
-        declarations.append(
-            ObjectNameDeclaration(
-                name=path.stem,
-                kind=ObjectNameKind.MODULE,
-                path=relative.as_posix(),
-                line=1,
-                public=not path.stem.startswith("_"),
-                test=is_test,
-                overload=False,
-            )
-        )
+        source_hash: str | None = None
         try:
-            source = path.read_text(encoding="utf-8")
-            declarations.extend(declarations_in_source(source, relative.as_posix(), test=is_test))
+            source_bytes = path.read_bytes()
+            source_hash = _sha256(source_bytes)
+            source = source_bytes.decode("utf-8")
+            declarations.extend(
+                declarations_in_source(source, relative.as_posix(), test=is_test, source_hash=source_hash)
+            )
         except (OSError, UnicodeError, SyntaxError) as exc:
             line = exc.lineno if isinstance(exc, SyntaxError) and exc.lineno is not None else 0
             errors.append(
@@ -247,8 +308,22 @@ def collect_declarations(
                     enforced=True,
                     sites=(f"{relative.as_posix()}:{line}",),
                     detail=f"{type(exc).__name__}: {exc}",
+                    qualified_sites=(relative.as_posix(),),
                 )
             )
+        declarations.append(
+            ObjectNameDeclaration(
+                name=path.stem,
+                kind=ObjectNameKind.MODULE,
+                path=relative.as_posix(),
+                line=1,
+                public=not path.stem.startswith("_"),
+                test=is_test,
+                overload=False,
+                binding_occurrence=1,
+                source_hash=source_hash,
+            )
+        )
     return (
         tuple(sorted(declarations, key=lambda item: (item.path, item.line, item.kind, item.name))),
         tuple(sorted(errors, key=lambda item: item.name)),
@@ -305,7 +380,17 @@ def analyse(
         )
         enforced = sum(item.enforced for item in distinct) > 1
         scope = "public declaration collision" if enforced else "private/test declaration collision"
-        findings.append(ObjectNameFinding(ObjectNameFindingKind.DUPLICATE, name, enforced, sites, scope))
+        findings.append(
+            ObjectNameFinding(
+                ObjectNameFindingKind.DUPLICATE,
+                name,
+                enforced,
+                sites,
+                scope,
+                tuple(sorted({item.kind for item in distinct})),
+                tuple(sorted(item.qualified_locator for item in distinct)),
+            )
+        )
 
     for declaration in declarations:
         noun = _last_noun(declaration)
@@ -318,6 +403,8 @@ def analyse(
                 True,
                 (f"{declaration.path}:{declaration.line} ({declaration.kind})",),
                 f"public declaration ends in plural-looking noun {noun!r}",
+                (declaration.kind,),
+                (declaration.qualified_locator,),
             )
         )
 
@@ -336,14 +423,27 @@ def scan(roots: Sequence[Path], repo_root: Path) -> ObjectNameAuditResult:
 def to_json(result: ObjectNameAuditResult) -> dict[str, object]:
     """Return the stable machine-readable report."""
     enforced = result.enforced_findings
-    return {
+    declarations = [
+        asdict(declaration) | {"qualified_locator": declaration.qualified_locator}
+        for declaration in sorted(
+            result.declarations,
+            key=lambda item: (item.path, item.line, item.kind, item.name),
+        )
+    ]
+    findings = [asdict(finding) | {"id": finding.id} for finding in result.findings]
+    inventory = {
+        "schema_version": _INVENTORY_SCHEMA_VERSION,
+        "declarations": declarations,
+        "findings": findings,
+    }
+    return inventory | {
+        "inventory_digest": _sha256(_canonical_json(inventory)),
         "summary": {
             "declarations": len(result.declarations),
             "findings": len(result.findings),
             "enforced_findings": len(enforced),
             "advisory_findings": len(result.findings) - len(enforced),
         },
-        "findings": [asdict(finding) for finding in result.findings],
     }
 
 

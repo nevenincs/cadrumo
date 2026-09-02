@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Literal, TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
@@ -28,6 +28,9 @@ from ....domain.calculations.registry.ids import (
     SourceRefId,
 )
 
+if TYPE_CHECKING:
+    from googleapiclient._apis.sheets.v4.schemas import ValueRange as SheetsValueRange
+
 
 class ValueRange(TypedDict, total=False):
     """A single batch-get value-range entry from the Sheets API.
@@ -40,6 +43,24 @@ class ValueRange(TypedDict, total=False):
     range: str
     majorDimension: str
     values: list[list[object]]
+
+
+def as_value_range(entry: SheetsValueRange) -> ValueRange:
+    """Translate one Sheets ``valueRanges`` entry into this adapter's record.
+
+    The vendor schema pins ``majorDimension`` to a ``Literal`` and types
+    cell values as ``Any``; this record widens the former to ``str`` and
+    narrows the latter to ``object``, so the two are not mutually
+    assignable and the entry is copied key by key.
+    """
+    translated: ValueRange = {}
+    if "range" in entry:
+        translated["range"] = entry["range"]
+    if "majorDimension" in entry:
+        translated["majorDimension"] = entry["majorDimension"]
+    if "values" in entry:
+        translated["values"] = [list(row) for row in entry["values"]]
+    return translated
 
 
 class OperatorEdit(BaseModel):
@@ -171,20 +192,3 @@ class PullResult(BaseModel):
     metadata: PullMetadata
     metadata_match: MetadataMatchState
     cells_read: NonNegativeInt
-
-
-class PullCoverageDiscrepancy(BaseModel):
-    """One coverage delta between an export plan and pulled workbook records."""
-
-    model_config = _STRICT_FROZEN
-
-    kind: Literal[
-        "metadata_mismatch",
-        "row_set_missing",
-        "row_set_extra",
-        "binding_count_mismatch",
-        "relation_count_mismatch",
-    ]
-    detail: str = Field(min_length=1)
-    expected: str = ""
-    observed: str = ""

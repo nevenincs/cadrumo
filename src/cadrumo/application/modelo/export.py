@@ -835,7 +835,10 @@ def _resolve_m303_filing_facts_for_export(
         work_unit=work_unit,
         revision=revision,
     )
-    assert filing_instance_evidence is not None
+    if filing_instance_evidence is None:
+        raise ModeloExportEvidenceMissingError(
+            f"work unit {work_unit.work_unit_id!r} carries no filing-instance evidence valid for its revision",
+        )
     prorrata_register_repository = ProrrataRegisterRepository(bucket_id=work_unit.bucket_id)
     prorrata_register = prorrata_register_repository.load()
     iva_aggregation = aggregate_iva_ledger_observations_from_repositories(

@@ -762,10 +762,6 @@ review:
         el backend seguro.
       invoices_load_failed: No se pudieron cargar las facturas del adaptador.
       transactions_load_failed: No se pudieron cargar las transacciones del adaptador.
-  edit:
-    errors:
-      parse_failed: No se pudo interpretar el token de edición. El valor suministrado
-        se ha ocultado.
   filing:
     draft_placeholder_summary: Borrador pendiente
     finding_summary: Incidencia detectada en el borrador

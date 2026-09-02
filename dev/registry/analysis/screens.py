@@ -25,17 +25,18 @@ from dataclasses import dataclass
 
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
-from dev.registry.analysis.casilla_id_grammar import screen_authority as grammar_screen
-from dev.registry.analysis.continuity_integrity import screen_authority as continuity_screen
-from dev.registry.analysis.export_ref_symmetry import screen_authority as export_ref_screen
-from dev.registry.analysis.grade_earned import screen_authority as grade_screen
-from dev.registry.analysis.modelo_capability import screen_authority as modelo_capability_screen
-from dev.registry.analysis.monetary_scale import screen_authority as monetary_scale_screen
-from dev.registry.analysis.provenance_consistency import outside_reference_index
-from dev.registry.analysis.provenance_consistency import screen_authority as provenance_screen
-from dev.registry.analysis.revision_name_window import screen_authority as revision_name_screen
-from dev.registry.analysis.temporal_site_agreement import screen_authority as temporal_site_screen
-from dev.registry.analysis.wire_type_compatibility import screen_authority as wire_type_screen
+
+from .casilla_id_grammar import screen_authority as grammar_screen
+from .continuity_integrity import screen_authority as continuity_screen
+from .export_ref_symmetry import screen_authority as export_ref_screen
+from .grade_earned import screen_authority as grade_screen
+from .modelo_capability import screen_authority as modelo_capability_screen
+from .monetary_scale import screen_authority as monetary_scale_screen
+from .provenance_consistency import outside_reference_index
+from .provenance_consistency import screen_authority as provenance_screen
+from .revision_name_window import screen_authority as revision_name_screen
+from .temporal_site_agreement import screen_authority as temporal_site_screen
+from .wire_type_compatibility import screen_authority as wire_type_screen
 
 __all__ = ["SCREENS", "ScreenEntry", "run_screens"]
 

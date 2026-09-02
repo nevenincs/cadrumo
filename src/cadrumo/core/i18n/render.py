@@ -408,7 +408,8 @@ def _extract_format_placeholder_roots(value: str) -> frozenset[str]:
 def _match_group_text(match: re.Match[str], name: str) -> str:
     """Return a regex capture after enforcing the text-node invariant."""
     value = match.group(name)
-    assert isinstance(value, str)
+    if not isinstance(value, str):
+        raise ValueError(f"placeholder capture {name!r} matched no text in {match.string!r}")
     return value
 
 

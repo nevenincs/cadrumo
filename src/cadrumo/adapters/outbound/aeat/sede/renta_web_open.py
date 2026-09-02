@@ -56,6 +56,7 @@ from .....domain.calculations.registry.renta_web_open_oracle import (
     RentaWebOpenSyntheticProfile,
     parse_renta_web_open_live_payload,
 )
+from .....domain.calculations.registry.schema_base import EvidenceTier
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..browser.errors import BrowserError
 from ..browser.factory import DefaultBrowserSession, default_browser_session_factory
@@ -96,7 +97,7 @@ _RENTA_WEB_OPEN_READ_PATH_PREFIXES: tuple[str, ...] = (
 # only gives the landing rule an authority to check the landed host against.
 READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-renta-web-open-direct-driver-read",
-    evidence_tier="executable_parity_evidence",
+    evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
     classification="open_simulator",
     allowed_hosts=(_RENTA_WEB_OPEN_APP_HOST,),
     # Widen to any subdomain under the AEAT apex so a www{n} load-balancer

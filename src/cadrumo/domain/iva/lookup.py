@@ -191,15 +191,14 @@ def cite(
     Raises:
         IvaCatalogueError: If both ``catalogue`` and ``on`` are ``None``.
     """
-    if catalogue is None and on is None:
+    if catalogue is not None:
+        return _render_citation(category, catalogue)
+    if on is None:
         raise IvaCatalogueError(
             translated_message="errors.iva.cite_requires_catalogue_or_date",
             context={"catalogue_supplied": False, "effective_date_supplied": False},
         )
-    if on is None:
-        assert catalogue is not None
-        return _render_citation(category, catalogue)
-    return _render_citation(category, catalogue if catalogue is not None else resolve_catalogue(on=on))
+    return _render_citation(category, resolve_catalogue(on=on))
 
 
 def _render_citation(category: IvaCategory, catalogue: IvaCatalogue) -> str:

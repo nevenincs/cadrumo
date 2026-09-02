@@ -89,10 +89,15 @@ def _split_modelo_prefix(role: str) -> tuple[str | None, str | None]:
     match = _MODELO_PREFIXED_ROLE_RE.match(role)
     if match is None:
         return None, None
-    modelo: str = match.group(1)
+    # ``Match.group`` is typed ``str | Any`` because a non-participating
+    # optional group yields None; both groups here are mandatory, so the
+    # guard is the boundary check that makes that structural fact provable.
+    modelo = match.group(1)
+    stem = match.group(2)
+    if not isinstance(modelo, str) or not isinstance(stem, str):
+        return None, None
     if modelo not in _MODELO_VALUES:
         return None, None
-    stem: str = match.group(2)
     return modelo, stem
 
 

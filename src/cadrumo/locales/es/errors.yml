@@ -1095,8 +1095,6 @@ errors:
       58/2003, LGT art. 66 y 70). La fecha más temprana de borrado seguro es %{earliest_safe_erase_date}.
       Espere hasta esa fecha o vuelva a ejecutar con --override-retention y --reason
       para forzarlo.'
-    refused_review_edit_parse: No se pudo interpretar `--set CLAVE=VALOR`. Comprueba
-      la sintaxis del valor indicado.
     refused_review_filter_parse: No se pudo interpretar `--filter CLAVE=VALOR`. Comprueba
       la sintaxis del filtro indicado.
     refused_review_kind_reserved: El valor de `--kind` indicado está reservado y no

@@ -48,7 +48,7 @@ uv tool upgrade cadrumo
 
 ## Rollback
 
-If this release regresses, see `RELEASING.md#rollback-procedure`. In short:
+If this release regresses, see `RELEASING.md#diagnose-and-recover`. In short:
 the previous version remains installable and this version can be yanked from
 PyPI without breaking anyone pinned to an earlier pin.
 

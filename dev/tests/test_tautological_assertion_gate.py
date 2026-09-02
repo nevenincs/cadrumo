@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.quality.tautological_assertion_scan import (
+from ..quality.tautological_assertion_scan import (
     scan_paths_for_tautological_assertions,
     scan_tautological_assertions,
 )

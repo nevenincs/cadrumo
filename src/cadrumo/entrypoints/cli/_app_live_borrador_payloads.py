@@ -11,6 +11,7 @@ from pydantic import (
 )
 
 from ...application.live.borrador_100 import BorradorSourceUrl
+from ...application.live.snapshot_base import SnapshotLifecycleStateValue
 from ...core.filing_year import FilingYear
 from ...core.identity import (
     BucketId,
@@ -36,7 +37,7 @@ class Borrador100SnapshotSummaryPayload(OutputSchema):
     captured_at: str
     source_url: BorradorSourceUrl
     binding_count: NonNegativeInt
-    state: Literal["active", "superseded", "discarded"]
+    state: SnapshotLifecycleStateValue
 
     @field_validator("period")
     @classmethod

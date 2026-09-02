@@ -162,6 +162,7 @@ Submodules
    cadrumo.core.register_scoping_signal
    cadrumo.core.remote_authority
    cadrumo.core.renta_declaracion_type
+   cadrumo.core.requirement
    cadrumo.core.rescate_type
    cadrumo.core.result_disposition
    cadrumo.core.revision_review

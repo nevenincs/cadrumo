@@ -263,18 +263,38 @@ def _validate_result_transition(result: OperationLeaseResult) -> None:
             _validate_release(result)
 
 
+def _required_current(result: OperationLeaseResult) -> OperationOwnerLease:
+    """Return the current lease witness this disposition requires.
+
+    ``OperationLeaseResult`` leaves both witnesses optional because a given
+    disposition carries only the ones it proves. A disposition that reaches its
+    validator without its witness is a malformed result, so it is refused --
+    not asserted, because ``assert`` is stripped under ``python -O`` and the
+    lease invariant would then go unchecked in an optimised run.
+    """
+    if result.current is None:
+        raise ValueError(f"{result.disposition.value} lease result requires a current lease witness")
+    return result.current
+
+
+def _required_predecessor(result: OperationLeaseResult) -> OperationOwnerLease:
+    """Return the predecessor lease witness this disposition requires."""
+    if result.predecessor is None:
+        raise ValueError(f"{result.disposition.value} lease result requires a predecessor lease witness")
+    return result.predecessor
+
+
 def _validate_acquisition(result: OperationLeaseResult) -> None:
     """Ensure an absent-only acquisition starts and remains live at observation."""
-    assert result.current is not None
-    _raise_if(result.current.operation_id != result.operation_id, "acquired lease must match the operation identity")
-    _raise_if(result.current.acquired_at != result.observed_at, "acquired lease must begin at its observed time")
+    current = _required_current(result)
+    _raise_if(current.operation_id != result.operation_id, "acquired lease must match the operation identity")
+    _raise_if(current.acquired_at != result.observed_at, "acquired lease must begin at its observed time")
     _validate_active_current(result)
 
 
 def _validate_renewal(result: OperationLeaseResult) -> None:
     """Ensure a renewal preserves exact ownership before the predecessor expires."""
-    assert result.predecessor is not None and result.current is not None
-    predecessor, current = result.predecessor, result.current
+    predecessor, current = _required_predecessor(result), _required_current(result)
     _raise_if(
         predecessor.operation_id != result.operation_id or current.operation_id != result.operation_id,
         "lease renewal must preserve the operation identity",
@@ -290,20 +310,23 @@ def _validate_renewal(result: OperationLeaseResult) -> None:
 
 def _validate_active_current(result: OperationLeaseResult) -> None:
     """Ensure the current witness remains live at the observed instant."""
-    assert result.current is not None
-    _raise_if(result.current.expires_at <= result.observed_at, "lease result requires an active current lease")
+    _raise_if(
+        _required_current(result).expires_at <= result.observed_at,
+        "lease result requires an active current lease",
+    )
 
 
 def _validate_expired_predecessor(result: OperationLeaseResult) -> None:
     """Ensure expiry evidence carries a predecessor expired at observation."""
-    assert result.predecessor is not None
-    _raise_if(result.predecessor.expires_at > result.observed_at, "lease result requires an expired predecessor")
+    _raise_if(
+        _required_predecessor(result).expires_at > result.observed_at,
+        "lease result requires an expired predecessor",
+    )
 
 
 def _validate_takeover(result: OperationLeaseResult) -> None:
     """Ensure takeover uses a proved expired predecessor and a new live owner."""
-    assert result.predecessor is not None and result.current is not None
-    predecessor, current = result.predecessor, result.current
+    predecessor, current = _required_predecessor(result), _required_current(result)
     _raise_if(current.operation_id != result.operation_id, "lease takeover successor must match the operation identity")
     _validate_expired_predecessor(result)
     _raise_if(
@@ -316,22 +339,22 @@ def _validate_takeover(result: OperationLeaseResult) -> None:
 
 def _validate_owner_loss(result: OperationLeaseResult) -> None:
     """Require a stale predecessor and, when present, a distinct replacement witness."""
-    assert result.predecessor is not None
+    predecessor = _required_predecessor(result)
     _raise_if(
-        result.predecessor.operation_id != result.operation_id,
+        predecessor.operation_id != result.operation_id,
         "owner-lost predecessor must match the operation identity",
     )
     _raise_if(
-        result.current is not None and result.current == result.predecessor,
+        result.current is not None and result.current == predecessor,
         "owner-lost result cannot report the exact predecessor as current",
     )
 
 
 def _validate_release(result: OperationLeaseResult) -> None:
     """Bind a release refusal or transition to the exact releasing operation."""
-    assert result.predecessor is not None
     _raise_if(
-        result.predecessor.operation_id != result.operation_id, "released predecessor must match the operation identity"
+        _required_predecessor(result).operation_id != result.operation_id,
+        "released predecessor must match the operation identity",
     )
 
 

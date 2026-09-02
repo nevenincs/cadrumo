@@ -807,7 +807,8 @@ def select_filesystem_retention_survivors[EntryT, TimestampT: _RetentionTimestam
         removed += excess_pairs
 
     if max_total_bytes is not None:
-        assert size_fn is not None  # enforced by _validate_retention_bounds
+        if size_fn is None:
+            raise ValueError("a max_total_bytes retention bound requires the size_fn that measures each entry")
         survivors, over_ceiling = _partition_over_byte_ceiling(
             survivors,
             protected_indices=protected_indices,

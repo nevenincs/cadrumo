@@ -420,7 +420,8 @@ class ProfileRecordStore:
         self.session.assert_row_binding(raw, record)
         event_id, event = _load_profile_record_event(objects, raw)
         _assert_event_binding(self.session, record, event_id, event)
-        assert raw.revision_id is not None
+        if raw.revision_id is None:
+            raise ProfileRecordIntegrityError("the stored profile record row carries no revision id")
         return LoadedProfileRecord(
             record=record,
             row_revision_id=raw.revision_id,

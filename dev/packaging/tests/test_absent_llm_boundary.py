@@ -18,6 +18,7 @@ failure this module exists to make visible.
 from __future__ import annotations
 
 import tomllib
+from importlib import import_module
 from importlib.metadata import packages_distributions
 
 import pytest
@@ -109,20 +110,32 @@ def test_the_llm_extra_declares_a_requirement_core_does_not() -> None:
     )
 
 
-def test_the_surface_inventory_names_real_exported_entry_points() -> None:
+def test_the_surface_inventory_names_real_entry_points() -> None:
     """Non-vacuity: an inventory of names that do not exist would drive nothing.
 
-    The lane reaches its surfaces by name in a child interpreter, so a rename in
-    the inference package would surface there as an ImportError inside a
-    minutes-long lane rather than here. It would also be indistinguishable from
-    the lane simply having nothing to drive.
-    """
-    from cadrumo import llm
+    The lane reaches its surfaces by name in a child interpreter, so a rename or
+    a relocation in the inference package would surface there as an ImportError
+    inside a minutes-long lane rather than here. It would also be
+    indistinguishable from the lane simply having nothing to drive.
 
+    Each name is resolved at the module the inventory declares for it, which is
+    where it is defined: the inference package root is an inert namespace and
+    exports nothing, so a membership check against it could only ever fail.
+    """
     assert _INFERENCE_SURFACES, "the lane drives no surfaces"
-    missing = [name for name, _call in _INFERENCE_SURFACES if name not in llm.__all__]
+
+    missing: list[str] = []
+    for module_name, name, _call in _INFERENCE_SURFACES:
+        try:
+            module = import_module(module_name)
+        except ImportError as error:  # pragma: no cover - reported, not raised
+            missing.append(f"{module_name} is not importable: {error}")
+            continue
+        if not hasattr(module, name):
+            missing.append(f"{module_name} does not define {name}")
+
     assert missing == [], (
-        f"the absent-llm lane names surfaces that the inference package does not export: {missing}. "
+        f"the absent-llm lane names surfaces that do not resolve: {missing}. "
         "The lane would fail on the import line having proved nothing about refusals."
     )
 

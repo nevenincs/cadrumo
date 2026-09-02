@@ -9,6 +9,7 @@ from .command_spec import (
     ArgumentSpec,
     Capability,
     CommandSpec,
+    CommandWriteRouteValue,
     DeferredTarget,
     ExecutionPolicySpec,
     InvocationSpec,
@@ -22,7 +23,6 @@ from .command_spec import (
     SideEffect,
     TuiCapability,
     ValueContract,
-    WriteRoute,
 )
 from .command_spec import translation_key as _key
 
@@ -50,7 +50,7 @@ def _policy(
     capabilities: frozenset[Capability],
     side_effects: frozenset[SideEffect],
     performance: PerformanceClass,
-    write_route: WriteRoute,
+    write_route: CommandWriteRouteValue,
     *,
     destructive: bool = False,
     handoff: bool = False,

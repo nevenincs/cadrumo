@@ -46,6 +46,7 @@ from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.objeto_tributario import ObjetoTributario
 from .....core.period import Period
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
+from .....domain.calculations.registry.schema_base import EvidenceTier
 from ._adapter_utils import assert_read_landing
 
 __all__ = [
@@ -152,7 +153,7 @@ class Deuda(BaseModel):
 # named here, so this stays one endpoint rather than a method-wide relaxation.
 READ_GUARD_POLICY: Final = RemoteStateGuardPolicy(
     id="aeat-sede-deudas-consulta-read",
-    evidence_tier="official_source_guidance",
+    evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
     classification="authenticated_read_surface",
     allowed_hosts=(_SEDE_HOST,),
     allowed_host_suffixes=(_AEAT_HOST_SUFFIX,),

@@ -33,11 +33,7 @@ See Also:
     workbook,
     :func:`~adapters.outbound.google.compute_from_pull` maps a matching
     pull into
-    :class:`~domain.calculations.registry.RegistryCalculationResult`, and
-    :func:`~adapters.outbound.google.calc_sheets_pull_coverage.verify_pull_coverage`
-    compares a pull against its source
-    :class:`~application.storage.calc_sheets.SheetExportPlan` when the
-    caller still has that plan.
+    :class:`~domain.calculations.registry.RegistryCalculationResult`.
 """
 
 from __future__ import annotations
@@ -126,6 +122,9 @@ from .calc_sheets_pull_records import (
 )
 from .calc_sheets_pull_records import (
     ValueRange as _ValueRange,
+)
+from .calc_sheets_pull_records import (
+    as_value_range as _as_value_range,
 )
 
 _OWNERSHIP_KEY: Final[str] = "cadrumo_vault_app"
@@ -262,11 +261,6 @@ def _verify_ownership(drive_service: DriveResource, spreadsheet_id: str) -> None
         )
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource exposes
-# .spreadsheets() only via runtime Discovery JSON dispatch; the published typing
-# surface carries .close() alone, so the service helper accepts Any for the dynamic
-# attribute access.
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: runtime discovery Resource.
 def _read_developer_metadata(
     sheets_service: SheetsResource,
     spreadsheet_id: str,
@@ -619,13 +613,8 @@ def _operator_input_addresses(
     return operator_input_ids, operator_input_ranges
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource exposes
-# .spreadsheets() only via runtime Discovery JSON dispatch; the published typing
-# surface carries .close() alone, so the service helper accepts Any for the dynamic
-# attribute access.
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: runtime discovery Resource.
 def _batch_get_values(
-    sheets: Any,
+    sheets: SheetsResource,
     spreadsheet_id: str,
     ranges: list[str],
 ) -> list[_ValueRange]:
@@ -648,7 +637,7 @@ def _batch_get_values(
         ),
         action="sheets.spreadsheets.values.batchGet",
     )
-    return response.get("valueRanges", []) or []
+    return [_as_value_range(entry) for entry in response.get("valueRanges", [])]
 
 
 def _raw_cell_value(value_ranges: list[_ValueRange], cursor: int) -> object:
@@ -872,14 +861,9 @@ def _validated_relation_source_refs(raw: str) -> tuple[SourceRefId, ...]:
         ) from exc
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource exposes
-# .spreadsheets() only via runtime Discovery JSON dispatch; the published typing
-# surface carries .close() alone, so the service helper accepts Any for the dynamic
-# attribute access.
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: runtime discovery Resource.
 def _read_row_set_edits(
     snapshot: RegistrySnapshot,
-    sheets: Any,
+    sheets: SheetsResource,
     spreadsheet_id: str,
 ) -> tuple[tuple[_RowSetEdit, ...], int]:
     """Read each row-set's Detalle-tab data area into typed row edits.
@@ -916,13 +900,8 @@ def _row_set_block_range(row_set: Any) -> str:
     return f"'{row_set.tab.value}'!{start_col_letters}{start_row}:{end_col_letters}{end_row}"
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource exposes
-# .spreadsheets() only via runtime Discovery JSON dispatch; the published typing
-# surface carries .close() alone, so the service helper accepts Any for the dynamic
-# attribute access.
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: runtime discovery Resource.
 def _batch_get_values_for_row_sets(
-    sheets: Any,
+    sheets: SheetsResource,
     spreadsheet_id: str,
     block_ranges: list[str],
 ) -> list[_ValueRange]:
@@ -937,7 +916,7 @@ def _batch_get_values_for_row_sets(
         ),
         action="sheets.spreadsheets.values.batchGet.row_sets",
     )
-    return response.get("valueRanges", []) or []
+    return [_as_value_range(entry) for entry in response.get("valueRanges", [])]
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource

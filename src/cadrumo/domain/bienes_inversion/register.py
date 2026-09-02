@@ -827,13 +827,18 @@ def compute_registro_transmisiones(
     contributions: list[BienesInversionSectorContribution] = []
     proposed = Decimal("0.00")
     for record in register.disposed_records(disposal_year):
-        assert record.disposal is not None  # guaranteed by disposed_records's filter
+        disposal = record.disposal
+        if disposal is None:
+            raise BienInversionValidationError(
+                f"bien de inversion {record.identifier!r} is listed as disposed in {disposal_year} "
+                "but carries no disposal record",
+            )
         result = compute_regularizacion_transmision(
             cuota_soportada=record.cuota_soportada,
             prorrata_inicial_pct=record.prorrata_inicial_pct,
             anos_restantes=record.remaining_regularization_years(disposal_year),
             kind=record.kind,
-            regime=record.disposal.regime,
+            regime=disposal.regime,
             cuota_devengada_entrega=cap_by_identifier.get(record.identifier),
         )
         proposed += result.importe

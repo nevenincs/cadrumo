@@ -39,7 +39,8 @@ from pydantic import TypeAdapter
 
 from ....tests.cli_performance import IMPORT_FAMILY_PREFIXES
 from .. import command_graph
-from .._command_schema import CommandCapability, CommandCapabilityClass
+from .._command_schema import CommandCapabilityClass
+from ..command_spec import Capability
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -64,7 +65,7 @@ _CAPABILITY_FAMILIES: dict[str, frozenset[str]] = {
 #: Capability groups whose resolution graph exceeds their declaration today.
 #: Each states the families and the reason, because this is where the judgement
 #: sits; a bare list would record only that someone found them inconvenient.
-_PENDING_ADJUDICATION: dict[frozenset[CommandCapability], str] = {
+_PENDING_ADJUDICATION: dict[frozenset[Capability], str] = {
     frozenset({"encrypted-facts"}): (
         "loads the registry package root and its `ids` leaf, because "
         "`domain.calculations._row_source_identity` takes `BindingId` from there. "
@@ -104,15 +105,15 @@ _PROBE = textwrap.dedent(
 )
 
 
-def _groups() -> dict[frozenset[CommandCapability], list[list[str]]]:
+def _groups() -> dict[frozenset[Capability], list[list[str]]]:
     """Partition every live node by its exact capability declaration."""
-    groups: dict[frozenset[CommandCapability], list[list[str]]] = {}
+    groups: dict[frozenset[Capability], list[list[str]]] = {}
     for node in command_graph.nodes():
         groups.setdefault(frozenset(node.spec.policy.capabilities), []).append(list(node.path[1:]))
     return groups
 
 
-def _allowed_families(capabilities: frozenset[CommandCapability]) -> frozenset[str]:
+def _allowed_families(capabilities: frozenset[Capability]) -> frozenset[str]:
     expanded = CommandCapabilityClass(
         capabilities=capabilities,
         side_effects=frozenset({"none"}),
@@ -161,7 +162,7 @@ def test_the_declarations_still_partition_every_live_node() -> None:
 
 
 @pytest.mark.parametrize("capabilities", sorted(_GROUPS, key=sorted), ids=lambda caps: ",".join(sorted(caps)) or "none")
-def test_a_group_loads_only_the_families_it_declares(capabilities: frozenset[CommandCapability]) -> None:
+def test_a_group_loads_only_the_families_it_declares(capabilities: frozenset[Capability]) -> None:
     """DISCRIMINATING: resolution stays inside the declared capability set."""
     if capabilities in _PENDING_ADJUDICATION:
         pytest.skip(f"pending adjudication: {_PENDING_ADJUDICATION[capabilities]}")
@@ -181,7 +182,7 @@ def test_a_group_loads_only_the_families_it_declares(capabilities: frozenset[Com
 @pytest.mark.parametrize(
     "capabilities", sorted(_PENDING_ADJUDICATION, key=sorted), ids=lambda caps: ",".join(sorted(caps))
 )
-def test_a_pending_group_that_now_passes_must_be_removed(capabilities: frozenset[CommandCapability]) -> None:
+def test_a_pending_group_that_now_passes_must_be_removed(capabilities: frozenset[Capability]) -> None:
     """STALE-ENTRY: a residue entry that stopped applying must be deleted.
 
     Without this the pending list would outlive the problem and quietly excuse

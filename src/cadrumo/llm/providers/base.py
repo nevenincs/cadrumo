@@ -13,7 +13,7 @@ import logging
 import math
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NoReturn
 
 import httpx
 from pydantic import BaseModel, Field, ValidationError
@@ -224,7 +224,7 @@ def parse_retry_after(value: str | None) -> float | None:
     return parsed if math.isfinite(parsed) and parsed >= 0 else None
 
 
-def raise_rate_limit(*, provider_name: str, model: str, retry_after: str | None) -> None:
+def raise_rate_limit(*, provider_name: str, model: str, retry_after: str | None) -> NoReturn:
     """Raise a normalized rate-limit error with parsed retry hint.
 
     Args:

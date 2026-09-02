@@ -12,7 +12,8 @@ import pytest
 
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
-from dev.registry.analysis.modelo_capability import capability_census, screen_authority
+
+from ..analysis.modelo_capability import capability_census, screen_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

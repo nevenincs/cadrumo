@@ -618,11 +618,12 @@ _SETUP_CATALOGUE_IDS: frozenset[str] = frozenset(
     question.id for section in SETUP_FLOW.sections for question in section.questions
 )
 _missing_option_infos = _SETUP_CATALOGUE_IDS - frozenset(_SETUP_OPTION_INFOS)
-assert not _missing_option_infos, (
-    f"_SETUP_OPTION_INFOS is missing entries for catalogue question ids: "
-    f"{sorted(_missing_option_infos)!r}. "
-    "Add a typer.Option entry for each missing id."
-)
+if _missing_option_infos:  # pragma: no cover - option-coverage invariant
+    raise ValueError(
+        f"_SETUP_OPTION_INFOS is missing entries for catalogue question ids: "
+        f"{sorted(_missing_option_infos)!r}. "
+        "Add a typer.Option entry for each missing id.",
+    )
 
 
 def _required_flag_questions(flow: WizardFlow) -> tuple[WizardQuestion, ...]:

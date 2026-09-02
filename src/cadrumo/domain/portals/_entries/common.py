@@ -97,11 +97,14 @@ def build_entry(
     if path is not None:
         if not path.startswith("/"):
             raise PortalValidationError("build_entry: `path` must start with '/'")
-        url = f"{_resolve_host(subdomain)}{path}"
-    assert url is not None
+        resolved_url = f"{_resolve_host(subdomain)}{path}"
+    elif url is None:
+        raise PortalValidationError("build_entry: pass exactly one of `url=` or `path=`")
+    else:
+        resolved_url = url
     return PortalMetadata(
         portal=portal,
-        url=_to_httpurl(url),
+        url=_to_httpurl(resolved_url),
         subdomain=subdomain,
         category=category,
         auth_methods=frozenset(auth_methods),

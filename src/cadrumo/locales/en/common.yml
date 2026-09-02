@@ -731,9 +731,6 @@ review:
       invoices_load_failed: Failed to load invoices catalogue from secure backend.
       transactions_load_failed: Failed to load transactions catalogue from secure
         backend.
-  edit:
-    errors:
-      parse_failed: Could not parse the edit token. The supplied value has been redacted.
   filing:
     draft_placeholder_summary: Draft pending
     finding_summary: Validation finding on draft

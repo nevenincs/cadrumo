@@ -152,14 +152,14 @@ def build_scaffold_plan(
             entries.append(_reconcile_present(concept_id, candidate, current))
         elif candidate is not None:
             entries.append(_scaffold_empty(candidate, today=today))
+        elif current is None:
+            raise ValueError(f"{concept_id}: neither a derived candidate nor an existing handbook record")
+        elif _is_scaffold_managed(concept_id):
+            entries.append(_retire(current, today=today))
         else:
-            assert current is not None
-            if _is_scaffold_managed(concept_id):
-                entries.append(_retire(current, today=today))
-            else:
-                # Hand-authored concept outside the scaffold's source axes:
-                # the scaffold neither created nor retires it.
-                entries.append(ScaffoldEntry(concept_id=concept_id, action=ScaffoldAction.UNCHANGED, record=current))
+            # Hand-authored concept outside the scaffold's source axes:
+            # the scaffold neither created nor retires it.
+            entries.append(ScaffoldEntry(concept_id=concept_id, action=ScaffoldAction.UNCHANGED, record=current))
     return ScaffoldPlan(entries=tuple(entries))
 
 
