@@ -7,18 +7,12 @@ Both :mod:`adapters.outbound.google.calc_sheets_apply` and
 through so transport failures, HTTP failures, and quota responses become the typed
 :class:`~adapters.outbound.storage.OutboundStorageError` hierarchy
 instead of endpoint-specific ``HttpError`` strings.
-
-See Also:
-    :class:`~adapters.outbound.google.api.GoogleDriveFile`,
-    :class:`~adapters.outbound.google.api.GoogleSheetsRange`, and
-    :class:`~adapters.outbound.google.api.GoogleSpreadsheet` document the
-    shared response shapes the calc Sheets adapters cast at their call sites.
 """
 
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Any, Protocol, TypedDict
+from typing import TYPE_CHECKING, Protocol, cast
 
 from ....application.operator_actions.models import PreconditionVerdict
 from ....application.operator_actions.preconditions import no_action_precondition_verdict
@@ -86,87 +80,6 @@ class _ExecutableRequest[ResponseBodyT](Protocol):
     ) -> ResponseBodyT: ...
 
 
-# The google-api-python-client wire protocol returns JSON-decoded dicts whose
-# exact shape varies per endpoint. The single ``execute_request`` helper routes
-# dozens of distinct calls, so its return type cannot be narrowed to a single
-# TypedDict without a per-endpoint overload explosion. Call-sites annotate their
-# local variables with the appropriate typed shape below and cast once at the
-# boundary; the cast is documented here as the intentional type-system escape.
-# CAST-RATIONALE-GOOGLE-API-RESPONSE: google-api-python-client returns
-# ``dict[str, Any]`` from ``execute()``. The TypedDicts below make the
-# expected shape explicit at each call-site; a single ``cast`` at the
-# assignment narrows the type without repeating the escape everywhere.
-GoogleApiResponseBody = dict[str, Any]
-
-
-class _GoogleDriveFileRequired(TypedDict):
-    """Required fields for a Google Drive Files resource response."""
-
-    id: str
-
-
-class GoogleDriveFile(_GoogleDriveFileRequired, total=False):
-    """Typed shape for a Google Drive Files resource response.
-
-    Covers the file metadata fields consumed by
-    :mod:`adapters.outbound.google.calc_sheets_apply` and
-    :mod:`adapters.outbound.google.calc_sheets_pull`. Additional fields
-    returned by Drive are ignored by :class:`typing.TypedDict` consumers.
-
-    See https://developers.google.com/drive/api/reference/rest/v3/files.
-    """
-
-    name: str
-    mimeType: str
-    parents: list[str]
-    webViewLink: str
-    owners: list[dict[str, Any]]
-
-
-class _GoogleSheetsRangeRequired(TypedDict):
-    """Required fields for a Sheets ``ValueRange`` resource."""
-
-    range: str
-
-
-class GoogleSheetsRange(_GoogleSheetsRangeRequired, total=False):
-    """Typed shape for a Sheets ``ValueRange`` resource.
-
-    Covers fields returned by ``spreadsheets.values.get`` and
-    ``spreadsheets.values.update`` through
-    :func:`~adapters.outbound.google.api.execute_request`.
-
-    See https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values.
-    """
-
-    majorDimension: str
-    values: list[list[Any]]
-    updatedRange: str
-    updatedRows: int
-    updatedColumns: int
-    updatedCells: int
-
-
-class _GoogleSpreadsheetRequired(TypedDict):
-    """Required fields for a Sheets ``Spreadsheet`` resource."""
-
-    spreadsheetId: str
-
-
-class GoogleSpreadsheet(_GoogleSpreadsheetRequired, total=False):
-    """Typed shape for a Sheets ``Spreadsheet`` resource.
-
-    Covers top-level fields returned by ``spreadsheets.get`` through
-    :func:`~adapters.outbound.google.api.execute_request`.
-
-    See https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.
-    """
-
-    spreadsheetUrl: str
-    properties: dict[str, Any]
-    sheets: list[dict[str, Any]]
-
-
 def execute_request[ResponseBodyT](request: _ExecutableRequest[ResponseBodyT], *, action: str) -> ResponseBodyT:
     """Execute a google-api-python-client request, translating failures.
 
@@ -216,7 +129,7 @@ def execute_request[ResponseBodyT](request: _ExecutableRequest[ResponseBodyT], *
                     "google.api.response_not_mapping", action=action, response_type=type(result).__name__
                 ),
             )
-        return result
+        return cast(ResponseBodyT, result)
     except OutboundStorageError:
         raise
     except Exception as exc:
