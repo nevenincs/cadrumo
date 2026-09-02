@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-python-runtime-compatibility-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:3aaa987afee5e0c6d44200007a58de6c2ecc94545040e879e891e198f1b9b6dd'
+body_hash: 'sha256:076819d82910141c2189d9da2191c6c4ad05336d90537e529a39a05aa7a84179'
 ---
 
 <!-- RETIRED: S33, S35, S37, S39, S41, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 -->
@@ -91,7 +91,7 @@ Make stable support claims only after their blocking evidence passes.
 - [x] `P05.S38` - Document local runtime selection and source versus binary evidence; `CONTRIBUTING.md`.
 - [x] `P05.S40` - Document final-runtime promotion and classifier evidence; `RELEASING.md`.
 - [x] `P05.S42` - Add an inventory-driven local compatibility command; `justfile`.
-- [ ] `P05.S64` - Promote 3.14 classifier eligibility after source binary and artifact evidence; `dev/ci/python-runtime-matrix.json`.
+- [x] `P05.S64` - Promote 3.14 classifier eligibility after source binary and artifact evidence; `dev/ci/python-runtime-matrix.json`.
 
 ## Parallelization
 
