@@ -61,7 +61,6 @@ allowed = [
   "cadrumo.adapters.outbound.google.calc_sheets_pull_coverage",  # unreachable
   "cadrumo.adapters.persistence.profile.filing_export_replay",  # unreachable
   "cadrumo.adapters.persistence.profile.fincas",  # unreachable
-  "cadrumo.application.filing._calculate",  # unreachable
   "cadrumo.application.inventory._source_readiness",  # unreachable
   "cadrumo.application.invoices._projection",  # unreachable
   "cadrumo.application.invoices._reconciliation",  # unreachable

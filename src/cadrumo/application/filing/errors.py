@@ -10,11 +10,8 @@ CLI authority.
 
 See Also:
     :mod:`domain.filing.errors`
-        Domain filing error hierarchy raised by draft, import, export, and
-        amendment records.
-    :mod:`application.filing._calculate`
-        Calculation summary that attaches a declared terminal condition for
-        blocking findings rather than a local next-action carrier.
+        Domain filing error hierarchy raised by draft, import, and export
+        records.
     :mod:`application.filing.persistence_wiring`
         Runtime persistence helper that raises :class:`ModeloApplicationError`
         for filing-bucket resolution failures.
@@ -36,8 +33,6 @@ from ..operator_actions.preconditions import no_action_precondition_verdict
 class FilingPreconditionCondition(StrEnum):
     """Application-owned failed conditions for filing-boundary refusals."""
 
-    CALCULATION_FINDINGS_CLEAR = "filing.calculate.findings.clear"
-    CALCULATION_SUMMARY_COHERENT = "filing.calculate.summary.coherent"
     OPERATION_ADMISSIBLE = "filing.application.operation.admissible"
 
 
@@ -106,20 +101,8 @@ class ModeloApplicationError(
     precondition_condition = FilingPreconditionCondition.OPERATION_ADMISSIBLE
 
 
-class ModeloCalculateError(ModeloApplicationError, ValueError):
-    """Raised when calculation-summary invariants are refused.
-
-    The :class:`ValueError` mixin keeps pydantic model validators and callers
-    that expect validation-style failures aligned with
-    :class:`ModeloApplicationError`.
-    """
-
-    precondition_condition = FilingPreconditionCondition.CALCULATION_SUMMARY_COHERENT
-
-
 __all__ = [
     "FilingPreconditionCondition",
     "ModeloApplicationError",
-    "ModeloCalculateError",
     "filing_no_recovery_verdict",
 ]

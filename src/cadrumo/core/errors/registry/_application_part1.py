@@ -678,16 +678,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.filing.errors.ModeloCalculateError",
-        ErrorCode(
-            code="REFUSED_FILING_CALCULATE",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_filing_calculate",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.wizard.errors.WizardError",
         ErrorCode(
             code="ERROR_WIZARD",
