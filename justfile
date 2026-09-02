@@ -288,7 +288,7 @@ check-unreachable-ratchet:
 # Verify dependency declarations for drift or unused packages. Silent on success.
 [group('static-checks')]
 check-dependencies:
-    @uv run --no-sync python -m dev.quality.quiet deptry src/cadrumo dev/registry --known-first-party cadrumo --known-first-party dev --non-dev-dependency-groups registry --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
+    @uv run --no-sync python -m dev.quality.quiet deptry src/cadrumo src/cadrumo_harness dev/registry --known-first-party cadrumo --known-first-party cadrumo_harness --known-first-party dev --non-dev-dependency-groups registry --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
 
 # Cheap dependency-surface preflight: verify pyproject, optional-extra registry,
 # and frozen core/all-extras/all-groups exports before any artifact work.
