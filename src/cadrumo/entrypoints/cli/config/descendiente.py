@@ -216,7 +216,6 @@ def _emit_descendiente_list(
     """Emit the active profile's declared descendant set as the list envelope."""
     from .._config_descendiente_payloads import (
         ConfigProfileDescendienteListResult,
-        GuarderiaMonthSpendPayload,
         ProfileDescendientePayload,
     )
 
@@ -242,10 +241,7 @@ def _emit_descendiente_list(
                 alta_posterior_nacimiento_mes=descendant.alta_posterior_nacimiento_mes,
                 segundo_ciclo_infantil_inicio_mes=descendant.segundo_ciclo_infantil_inicio_mes,
                 gastos_guarderia_euros=descendant.gastos_guarderia_euros,
-                gastos_guarderia_mensuales=tuple(
-                    GuarderiaMonthSpendPayload(month=entry.month, amount_euros=entry.amount_euros)
-                    for entry in descendant.gastos_guarderia_mensuales
-                ),
+                gastos_guarderia_mensuales=descendant.gastos_guarderia_mensuales,
                 nif=descendant.nif,
             )
             for index, descendant in enumerate(descendientes)
