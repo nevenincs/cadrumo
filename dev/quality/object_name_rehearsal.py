@@ -43,6 +43,7 @@ __all__ = [
 
 _RECEIPT_SCHEMA_VERSION: Final[int] = 1
 _DIGEST_PREFIX: Final[str] = "sha256:"
+_COMMAND_TIMEOUT_SECONDS: Final[int] = 1_800
 _EXCLUDED_DIRECTORY_NAMES: Final[frozenset[str]] = frozenset(
     {".git", ".mypy_cache", ".pytest_cache", ".ruff_cache", ".tox", ".venv", "__pycache__", "node_modules"}
 )
@@ -235,8 +236,9 @@ def _run_command(argv: tuple[str, ...], *, cwd: Path, environment: Mapping[str, 
             env=environment,
             capture_output=True,
             check=False,
+            timeout=_COMMAND_TIMEOUT_SECONDS,
         )
-    except OSError as exc:
+    except (OSError, subprocess.TimeoutExpired) as exc:
         raise ObjectNameRehearsalError(f"cannot execute declared command {argv!r}") from exc
     return ObjectNameGateOutcome(
         argv=argv,
@@ -324,10 +326,13 @@ def rehearse_object_name_component(
     root = repo_root.resolve()
     if not (root / ".git").exists() or not (root / "src").is_dir() or not (root / "dev").is_dir():
         raise ObjectNameRehearsalError(f"rehearsal root is not a repository worktree: {root}")
-    selected = tuple(sorted(select_object_name_execution(manifest), key=lambda item: item.operation_id))
-    selected_ids = tuple(operation.operation_id for operation in selected)
-    if selected_ids != component.operation_ids:
-        raise ObjectNameRehearsalError("manifest execution must equal exactly one reviewed graph component")
+    executable = {operation.operation_id: operation for operation in select_object_name_execution(manifest)}
+    try:
+        selected = tuple(executable[operation_id] for operation_id in component.operation_ids)
+    except KeyError as exc:
+        raise ObjectNameRehearsalError(f"reviewed component names a non-executable operation: {exc.args[0]}") from exc
+    component_manifest = manifest.model_copy(update={"operations": selected})
+    allowed_paths = tuple(sorted({path for operation in selected for path in operation.changed_paths}))
     try:
         validate_object_name_manifest(manifest, inventory=inventory, repo_root=root)
     except ObjectNameManifestError as exc:
@@ -354,11 +359,16 @@ def rehearse_object_name_component(
         or system_temporary_root.is_relative_to(root)
     ):
         raise ObjectNameRehearsalError(f"system temporary root is unsafe: {system_temporary_root}")
-    temporary_parent = Path(tempfile.mkdtemp(prefix="cadrumo-object-name-", dir=system_temporary_root)).resolve()
-    if temporary_parent.parent != system_temporary_root or is_link_like(temporary_parent):
-        raise ObjectNameRehearsalError(f"allocated rehearsal parent is unsafe: {temporary_parent}")
-    temporary_root = temporary_parent / "repository"
-    temporary_root.mkdir()
+    try:
+        temporary_parent = Path(tempfile.mkdtemp(prefix="cadrumo-object-name-", dir=system_temporary_root)).resolve()
+        if temporary_parent.parent != system_temporary_root or is_link_like(temporary_parent):
+            raise ObjectNameRehearsalError(f"allocated rehearsal parent is unsafe: {temporary_parent}")
+        temporary_root = temporary_parent / "repository"
+        temporary_root.mkdir()
+    except ObjectNameRehearsalError:
+        raise
+    except OSError as exc:
+        raise ObjectNameRehearsalError("cannot allocate the system-temporary rehearsal root") from exc
     source_unchanged = False
     try:
         _copy_snapshot(root, temporary_root, baseline_files)
@@ -371,11 +381,11 @@ def rehearse_object_name_component(
             raise ObjectNameRehearsalError("verified snapshot inventory differs from reviewed manifest authority")
 
         try:
-            result = plan_object_name_transformation(manifest, repo_root=temporary_root)
+            result = plan_object_name_transformation(component_manifest, repo_root=temporary_root)
         except ObjectNameTransformError as exc:
             raise ObjectNameRehearsalError(f"bounded transformation refused: {exc}") from exc
-        if result.changed_paths != tuple(sorted(component.affected_paths)):
-            raise ObjectNameRehearsalError("transformation paths differ from the reviewed component")
+        if result.changed_paths != allowed_paths:
+            raise ObjectNameRehearsalError("transformation paths differ from the reviewed allowlist")
         _materialise(temporary_root, result)
 
         generator_argv = tuple(command for operation in selected for command in operation.generator_commands)
@@ -413,8 +423,8 @@ def rehearse_object_name_component(
                 if dict(baseline_files).get(path) != dict(after_files).get(path)
             )
         )
-        if changed != tuple(sorted(component.affected_paths)):
-            raise ObjectNameRehearsalError("materialised changed paths differ from the reviewed component")
+        if changed != allowed_paths:
+            raise ObjectNameRehearsalError("materialised changed paths differ from the reviewed allowlist")
         proposed_digests = tuple((path, dict(after_files).get(path)) for path in changed)
         changed_path_digest = _digest_bytes(canonical_json_bytes(list(changed)))
         tool_versions = (
