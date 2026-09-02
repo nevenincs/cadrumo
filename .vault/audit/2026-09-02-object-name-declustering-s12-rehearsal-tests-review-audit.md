@@ -5,49 +5,74 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:be08a906ca36bca02b4aa7b26fd664e0e18d060cab58fa0332fb2278637fd2ea'
+body_hash: 'sha256:6647df3baf7c501562efd906de5ca7ace4a3b2064bc5a935e620fe0b0894033e'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace object-name-declustering with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `object-name-declustering` audit: `s12 rehearsal tests review`
 
 ## Scope
 
-<!-- What was audited and why -->
+Reviewed the S12 rehearsal detector-teeth suite against the accepted object-name
+declustering ADR, research, reference, plan, the final S11 audit, and the current manifest,
+graph, transform, and rehearsal contracts. The review covered exact dirty-tree capture,
+tracked deletion and exclusion behavior, disposable-copy fidelity, component authority,
+generated-owner execution, command isolation and failure behavior, receipt identity,
+retained evidence, source immutability, and pre- and post-command allowlists. No production
+or test code was modified by the review.
 
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
+### receipt-identity-teeth | medium | Constant or incompletely bound receipt identities would pass
 
-       ### s12 rehearsal tests review | {level} | {summary}
+The determinism test repeats an identical silent rehearsal and checks equality, while the
+main success test checks only that receipt and evidence identifiers resemble non-empty
+SHA-256 values. A constant identifier would satisfy both tests. No mutation test proves that
+manifest, inventory, baseline/input/proposed bytes, tool versions, operation/component,
+changed paths, finding delta, argv, or return code changes the stable receipt identity; nor
+does a volatile-output test prove equal stable identity but distinct evidence identity.
+This leaves the immutable authorization binding without non-tautological regression teeth.
 
-     followed by a paragraph carrying the detail. s12 rehearsal tests review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+### copy-verification-teeth | medium | Copy hash verification can be removed without failing the suite
+
+The success fixture confirms that an ordinary copy contains expected dirty and untracked
+bytes, and injected copy failure confirms retention. It does not corrupt one copied byte
+between transfer and verification and require refusal. An implementation that still copies
+normally but drops its source-to-target digest comparison would pass all current assertions,
+so the exact verified-copy precondition is not protected.
+
+### no-shell-teeth | medium | Command tests do not prove shell metacharacters remain inert argv
+
+The suite verifies command argv in receipts, temporary working directory, installed-runtime
+environment, timeout, non-zero output evidence, and retained failure state. It never passes a
+metacharacter-bearing argument with a sentinel file that would be created only by shell
+interpretation. Receipt argv equality is independent of how the subprocess was launched, so
+joining or shell-enabling the command could evade the present tests.
+
+### indivisible-component-teeth | medium | No shared hard-edge fixture rejects a partial component
+
+The multi-component test proves that one independent component can be rehearsed while a
+second is left unchanged, and component-field and generated-owner forgeries are rejected.
+It does not create two operations coupled through one shared consumer or generated surface
+and then submit only one operation. The central connected-component indivisibility contract
+could regress while these independent-component and single-operation forgery tests remain
+green.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+Add exact sensitivity tests that independently perturb every stable receipt binding, plus a
+random-output command proving stable `receipt_id` and changed `evidence_digest`. Inject a
+post-copy byte corruption and assert refusal before transformation. Pass shell metacharacters
+as one literal argv item and assert that no sentinel side effect occurs. Build a two-operation
+fixture with a real shared hard edge, prove the canonical component contains both operations,
+and prove a forged one-operation subset is rejected. Preserve the existing strong coverage:
+dirty, untracked, and tracked-deleted bytes; metadata/cache/link exclusions; generated-owner
+success and forged ownership; cwd/environment/timeout/failure evidence; retained temporary
+roots; write guards and concurrent live mutation refusal; and exact projected and final
+allowlists.
+
+## Validation
+
+The focused suite passed 23 tests. Ruff, Ruff-format, and ty checks passed. Final review
+status is four medium findings and no critical, high, or low findings.

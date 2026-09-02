@@ -10,7 +10,7 @@ related:
   - '[[2026-09-02-object-name-declustering-reference]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:9106b8d84cef18adfa134363c7b59e87e6a1ba20bf8c1645b6b854a0553bae0e'
+body_hash: 'sha256:3162b106dc962df5a0e7a7716fbc6b680f08031475439505af8cb6501c7024f9'
 ---
 
 <!-- RETIRED: S21, S22 -->
@@ -74,7 +74,7 @@ Rehearse the exact plan against a disposable copy of the current dirty tree and 
 
 Replay only a matching receipt against live files and enforce fail-closed postconditions.
 
-- [ ] `W02.P06.S13` - Implement receipt-bound live replay with preflight validation, atomic writes, and required postconditions; `dev/quality/object_name_replay.py`.
+- [x] `W02.P06.S13` - Implement receipt-bound live replay with preflight validation, atomic writes, and required postconditions; `dev/quality/object_name_replay.py`.
 - [ ] `W02.P06.S14` - Test stale receipts, unexpected paths, failed gates, interrupted writes, and successful replay; `dev/quality/tests/test_object_name_replay.py`.
 
 ## Wave `W03` - operator CLI and pilot proof
