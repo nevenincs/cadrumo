@@ -23,7 +23,7 @@ class _RevisionedSingletonWrite[DocumentT, WriteT](Protocol):
 class _RevisionedSingletonSave[WriteT](Protocol):
     """Persist one already revision-guarded singleton write."""
 
-    def __call__(self, write: WriteT) -> None: ...
+    def __call__(self, write: WriteT, /) -> None: ...
 
 
 def mutate_revision_guarded_singleton[DocumentT, WriteT](
