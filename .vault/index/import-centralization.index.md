@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#import-centralization'
 date: '2026-08-23'
-modified: '2026-08-30'
+modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:0ff2f9081a7b0ce3a6ebce21862d2492bf8e5ee65c2c34ec1cb98b632a655172'
+body_hash: 'sha256:51f4eafe66fbc255f5948ff5ea41f2b59ffc8ce525030ea0877b44bac7d282ca'
 related:
   - '[[2026-07-01-import-centralization-adr]]'
   - '[[2026-07-01-import-centralization-ledger]]'
@@ -32,7 +32,7 @@ Auto-generated index of all documents tagged with `#import-centralization`.
 
 - `2026-07-02-import-centralization-audit` - `import-centralization` audit: `closeout synthesis of the structural code review and the fresh-context honesty review`
 - `2026-08-24-import-centralization-audit` - `import-centralization` audit: `S403 import-integrity closure review`
-- `2026-08-30-import-centralization-core-facade-dismantling-inventory-audit` - `import-centralization` audit: `core facade dismantling: measured inventory and why it is promotion-bound`
+- `2026-08-30-import-centralization-core-facade-dismantling-inventory-audit` - `import-centralization` audit: core facade dismantling inventory
 
 ### exec
 

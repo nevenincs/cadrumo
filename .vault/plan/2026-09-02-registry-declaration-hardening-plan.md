@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:28c3ead7e2e93075bfb17d09058750541c774fdd92fdda7bfeef7192982f5f92'
+body_hash: 'sha256:34a0ffa8a352808af3c4441f1bbdf256f2439fa95ce45d7d9ae3cd73ceda3fcb'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -470,7 +470,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S208` - Stop the single-year condition contradicting the unselectable-window condition on the five revisions both were reporting; `dev/registry/analysis/revision_name_window.py,dev/registry/tests/test_revision_name_window.py`.
 - [x] `W06.P13.S209` - Establish that the modelo 369 schemes disambiguate by period family and withdraw the unreachability the probe appeared to show; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S210` - Probe revision selection with the codes each revision declares, so a wrong-shaped question cannot be read as a registry refusal; `dev/registry/analysis/revision_selection_probe.py,dev/registry/tests/test_revision_selection_probe.py`.
-- [ ] `W06.P13.S211` - Sweep every modelo with the declared-code probe and teach it to ask a well-formed question at a mid-year revision split; `dev/registry/analysis/revision_selection_probe.py,dev/registry/tests/test_revision_selection_probe.py`.
+- [x] `W06.P13.S211` - Sweep every modelo with the declared-code probe and teach it to ask a well-formed question at a mid-year revision split; `dev/registry/analysis/revision_selection_probe.py,dev/registry/tests/test_revision_selection_probe.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

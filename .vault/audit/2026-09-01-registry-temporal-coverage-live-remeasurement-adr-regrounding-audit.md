@@ -5009,3 +5009,48 @@ Both behaviours are the authority failing closed, which is what it should do, an
 worth recording for the same reason: in a shared worktree a red result carries a timestamp,
 and the question "was the tree valid when I measured" has a different answer at two points in
 one iteration.
+
+### Swept with the probe, the registry has no unreachable revision
+
+The declared-code probe was run across every modelo: 441 probes, and exactly one did not
+resolve to itself - modelo 308's `2011-julio-2015`, refused as ambiguous.
+
+It is not a defect. All four of modelo 308's revisions declare the single period code
+`AD-HOC`, so the period cannot separate them and only the date can. Two of them split inside
+2011, at the end of June, and the probe asked about the year alone. The registry refused a
+coordinate that genuinely does not decide, which is the behaviour the no-silent-under-
+declaration rule requires of it. Asked with `on` a March date it returns `2009-2011-junio`;
+with a September date, `2011-julio-2015`; and every year falling inside exactly one window
+resolves without a date at all.
+
+That is precisely the assertion the open Step for modelo 308 asks to be proven - that the
+coordinate resolves and that a genuinely ambiguous one still refuses - and the evidence now
+exists, though the test it belongs in lives on the application side and outside this
+iteration's scope. The Step stays open with its ground established.
+
+The probe was the thing at fault and has been corrected: it now retries a refused year-only
+question with a date inside the revision's own window. Reporting that refusal would have been
+this module committing the exact error it was written to prevent, one iteration after it was
+written to prevent it. Two tests hold both halves - every modelo 308 probe resolves, and the
+year-only coordinate still refuses for a caller who asks it.
+
+So across 441 well-formed questions the registry answers every one correctly. That is a
+stronger statement than any of the three false alarms suggested, and it could not have been
+made by the manual probing that produced them.
+
+### A crashed worker, read correctly this time and only just
+
+The corrected test suite then reported a failure on the modelo 369 test. The instinct was to
+treat it as a regression from the retry change, and the output said otherwise: worker `gw0`
+crashed while running it. Re-run serially, all six tests pass.
+
+This audit recorded the same confusion several findings ago and drew the lesson that a crash
+and an assertion are different events a tally spells identically. The lesson held only because
+the log was read before the diagnosis was written - and the first attempt at reading it
+produced nothing, because the terminal escape codes hid the line. It took stripping them to
+see the word "crashed" at all.
+
+Worth noting what made the crash likelier: the retry doubles the authority calls for any
+refused probe, and this suite was already slow. A change that makes a test slower makes a
+timeout-driven crash more likely, and the crash then reads as a failure of the change. The two
+are easy to confuse and were nearly confused here.
