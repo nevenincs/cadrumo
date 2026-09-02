@@ -49,6 +49,7 @@ from ._casilla_export_refs import export_refs_by_casilla, write_generated_casill
 from ._export_tree import RenderedExportTree
 from ._provenance_manifest import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
+    ExportFragmentOutputDigest,
     ExportFragmentProvenanceManifest,
     collect_export_fragment_output_digests,
     load_export_fragment_provenance_manifest,
@@ -66,6 +67,7 @@ from ._tree_validation import (
 
 __all__ = [
     "GeneratedExportTreePublicationContext",
+    "GeneratedExportTreeTargetStateReceipt",
     "PublishedGeneratedExportTree",
     "publish_validated_generated_export_tree",
 ]
@@ -100,8 +102,24 @@ class GeneratedExportTreePublicationContext:
     temporary_root: Path
     target_root: Path
     target_export_root: Path
-    expected_target_absent: bool | None = None
-    expected_target_manifest_sha256: str | None = None
+    expected_target_state: GeneratedExportTreeTargetStateReceipt | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class GeneratedExportTreeTargetStateReceipt:
+    """The target state a read-only check observed before publication."""
+
+    manifest_sha256: str | None
+    output_files: tuple[ExportFragmentOutputDigest, ...]
+
+    @classmethod
+    def observe(cls, export_root: Path) -> GeneratedExportTreeTargetStateReceipt:
+        if not export_root.exists():
+            return cls(manifest_sha256=None, output_files=())
+        return cls(
+            manifest_sha256=_sha256(export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME),
+            output_files=collect_export_fragment_output_digests(export_root),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -271,16 +289,18 @@ def _prepare_publication_paths(context: GeneratedExportTreePublicationContext) -
 
 def _require_expected_target_state(context: GeneratedExportTreePublicationContext, target_export_root: Path) -> None:
     """Refuse a target that changed after the read-only preflight and before lock entry."""
-    if context.expected_target_absent is None:
+    expected = context.expected_target_state
+    if expected is None:
         return
-    if context.expected_target_absent:
+    if expected.manifest_sha256 is None:
         if target_export_root.exists():
             raise RegistryValidationError("generated export target appeared after check and before publication lock")
         return
-    expected = context.expected_target_manifest_sha256
-    if expected is None:
-        raise RegistryValidationError("generated export publication lacks the checked target manifest digest")
-    if not target_export_root.exists() or _sha256(target_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME) != expected:
+    if (
+        not target_export_root.exists()
+        or _sha256(target_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME) != expected.manifest_sha256
+        or collect_export_fragment_output_digests(target_export_root) != expected.output_files
+    ):
         raise RegistryValidationError("generated export target changed after check and before publication lock")
 
 

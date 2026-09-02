@@ -13,7 +13,13 @@ from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..pipeline._export_tree import render_complete_export_tree
-from ..pipeline.cli import _check, _Invocation, _PreparedInvocation, _publish, app
+from ..pipeline._provenance_manifest import EXPORT_FRAGMENT_PROVENANCE_FILENAME
+from ..pipeline._tree_publication import (
+    GeneratedExportTreePublicationContext,
+    GeneratedExportTreeTargetStateReceipt,
+    _require_expected_target_state,
+)
+from ..pipeline.cli import _bootstrap_target, _check, _Invocation, _PreparedInvocation, _publish, app
 from ..pipeline.render_check import (
     GeneratedExportBootstrapTransport,
     RevisionRenderInputs,
@@ -42,6 +48,63 @@ def test_pipeline_cli_refuses_an_undeclared_record_design_source_before_staging(
 
     assert result.exit_code == 1
     assert "does not declare record-design source" in result.output
+
+
+def test_bootstrap_target_refuses_unenrolled_source_digest() -> None:
+    """A generic revision/source convention cannot become a bootstrap permission."""
+    with pytest.raises(ValueError, match="no reviewed generated-export bootstrap target"):
+        _bootstrap_target(
+            _Invocation("200", "2025-y-siguientes", "aeat-dr-200-2025", 2025, "0A"),
+            source_sha256="0" * 64,
+        )
+
+
+def _publication_context_for_target(
+    target: Path,
+    receipt: GeneratedExportTreeTargetStateReceipt,
+) -> GeneratedExportTreePublicationContext:
+    """Build a context only for the lock-state detector's private guard."""
+    return GeneratedExportTreePublicationContext(
+        validation=None,  # type: ignore[arg-type]
+        temporary_root=target.parent / "temporary",
+        target_root=target.parent,
+        target_export_root=target,
+        expected_target_state=receipt,
+    )
+
+
+def test_target_appearing_after_an_absent_receipt_is_refused_without_mutation(tmp_path: Path) -> None:
+    """A check-time ABSENT observation cannot race a new target into publication."""
+    target = tmp_path / "export"
+    receipt = GeneratedExportTreeTargetStateReceipt.observe(target)
+    target.mkdir()
+
+    with pytest.raises(RegistryValidationError, match="appeared after check"):
+        _require_expected_target_state(
+            _publication_context_for_target(target, receipt),
+            target,
+        )
+
+    assert target.is_dir()
+
+
+def test_non_manifest_member_mutation_after_existing_receipt_is_refused_without_mutation(tmp_path: Path) -> None:
+    """Manifest stability alone cannot hide an output-member change before cutover."""
+    target = tmp_path / "export"
+    target.mkdir()
+    (target / EXPORT_FRAGMENT_PROVENANCE_FILENAME).write_text("{}", encoding="utf-8")
+    member = target / "0001-records.toml"
+    member.write_text("id = 'first'\n", encoding="utf-8")
+    receipt = GeneratedExportTreeTargetStateReceipt.observe(target)
+    member.write_text("id = 'mutated'\n", encoding="utf-8")
+
+    with pytest.raises(RegistryValidationError, match="changed after check"):
+        _require_expected_target_state(
+            _publication_context_for_target(target, receipt),
+            target,
+        )
+
+    assert member.read_text(encoding="utf-8") == "id = 'mutated'\n"
 
 
 def _prepared_absent_target(candidate_base: Path, target_root: Path) -> _PreparedInvocation:
@@ -103,7 +166,7 @@ def test_absent_tree_is_validated_then_published_through_the_canonical_authoriti
     shutil.copytree(first.candidate_root, first.target_root)
     _remove_candidate_export_refs(first)
 
-    result, _rendered = _check(first)
+    result, _rendered, _target_state = _check(first)
     assert result == "publishable_absence"
     assert any(
         "export_refs = [" in path.read_text(encoding="utf-8")
@@ -126,8 +189,8 @@ def test_absent_tree_is_validated_then_published_through_the_canonical_authoriti
     assert not first.target_export_root.exists()
 
     publication = _prepared_absent_target(tmp_path / "publish", first.target_root)
-    _publication_result, publication_rendered = _check(publication)
-    _publish(publication, publication_rendered)
+    _publication_result, publication_rendered, publication_target_state = _check(publication)
+    _publish(publication, publication_rendered, publication_target_state)
 
     assert first.target_export_root.is_dir()
 

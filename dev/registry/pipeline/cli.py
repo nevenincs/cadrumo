@@ -20,16 +20,19 @@ from typing import Annotated, Literal
 import typer
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.hashing import hash_file
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryError
 
 from ._casilla_export_refs import export_refs_by_casilla, write_generated_casilla_export_refs
 from ._export_tree import RenderedExportTree, render_complete_export_tree
-from ._provenance_manifest import EXPORT_FRAGMENT_PROVENANCE_FILENAME, ExportFragmentTarget
+from ._provenance_manifest import ExportFragmentTarget
 from ._tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
-from ._tree_publication import GeneratedExportTreePublicationContext, publish_validated_generated_export_tree
+from ._tree_publication import (
+    GeneratedExportTreePublicationContext,
+    GeneratedExportTreeTargetStateReceipt,
+    publish_validated_generated_export_tree,
+)
 from ._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
 from .render_check import GeneratedExportBootstrapTransport, RevisionRenderInputs, revision_render_inputs
 
@@ -259,7 +262,9 @@ def _render_candidate(prepared: _PreparedInvocation) -> RenderedExportTree:
     return rendered
 
 
-def _check(prepared: _PreparedInvocation) -> tuple[Literal["matched", "publishable_absence"], RenderedExportTree]:
+def _check(
+    prepared: _PreparedInvocation,
+) -> tuple[Literal["matched", "publishable_absence"], RenderedExportTree, GeneratedExportTreeTargetStateReceipt]:
     """Drive the canonical checker, or validate a fresh candidate for an owed tree.
 
     An absent tree has no bytes to compare and therefore cannot be called a
@@ -269,6 +274,7 @@ def _check(prepared: _PreparedInvocation) -> tuple[Literal["matched", "publishab
     same pre-cutover validation boundary publication uses.
     """
     if not prepared.target_export_root.exists():
+        target_state = GeneratedExportTreeTargetStateReceipt.observe(prepared.target_export_root)
         rendered = _render_candidate(prepared)
         validate_generated_export_tree(
             context=_bootstrap_validation(prepared.validation),
@@ -278,7 +284,7 @@ def _check(prepared: _PreparedInvocation) -> tuple[Literal["matched", "publishab
             render_profile=prepared.inputs.render_profile,
             render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
         )
-        return "publishable_absence", rendered
+        return "publishable_absence", rendered, target_state
     checked: CheckedGeneratedExportTree = check_generated_export_tree(
         context=GeneratedExportTreeCheckContext(
             validation=prepared.validation,
@@ -293,7 +299,7 @@ def _check(prepared: _PreparedInvocation) -> tuple[Literal["matched", "publishab
         render_profile=prepared.inputs.render_profile,
         render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
     )
-    return "matched", checked.rendered
+    return "matched", checked.rendered, GeneratedExportTreeTargetStateReceipt.observe(prepared.target_export_root)
 
 
 def _bootstrap_validation(context: GeneratedExportTreeValidationContext) -> GeneratedExportTreeValidationContext:
@@ -301,24 +307,23 @@ def _bootstrap_validation(context: GeneratedExportTreeValidationContext) -> Gene
     return replace(context, required_grade=RegistryAuthorityGrade.CALCULATION)
 
 
-def _publish(prepared: _PreparedInvocation, rendered: RenderedExportTree) -> None:
+def _publish(
+    prepared: _PreparedInvocation,
+    rendered: RenderedExportTree,
+    target_state: GeneratedExportTreeTargetStateReceipt,
+) -> None:
     """Publish the exact prepared candidate the read-only check just validated."""
     write_generated_casilla_export_refs(
         prepared.candidate_root / "modelos" / prepared.invocation.modelo / "revisions" / prepared.invocation.revision,
         export_refs_by_casilla=export_refs_by_casilla(rendered),
     )
-    target_absent = not prepared.target_export_root.exists()
-    target_digest = None
-    if not target_absent:
-        target_digest, _size = hash_file(prepared.target_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME)
     publish_validated_generated_export_tree(
         context=GeneratedExportTreePublicationContext(
             validation=_bootstrap_validation(prepared.validation),
             temporary_root=prepared.candidate_root.parents[2],
             target_root=prepared.target_root,
             target_export_root=prepared.target_export_root,
-            expected_target_absent=target_absent,
-            expected_target_manifest_sha256=target_digest,
+            expected_target_state=target_state,
         ),
         joined=prepared.inputs.joined,
         semantic_map=prepared.inputs.semantic_map,
@@ -340,7 +345,7 @@ def _run(
             root = Path(temporary_name)
             prepared = _prepare(invocation, root)
             if action == "check":
-                result, _rendered = _check(prepared)
+                result, _rendered, _target_state = _check(prepared)
                 typer.echo(
                     "checked "
                     f"modelo={invocation.modelo} revision={invocation.revision} source={invocation.source_ref} "
@@ -349,8 +354,8 @@ def _run(
             else:
                 # Publishing is never the first question: a candidate must first
                 # pass the independent read-only proof against its live target.
-                _result, rendered = _check(prepared)
-                _publish(prepared, rendered)
+                _result, rendered, target_state = _check(prepared)
+                _publish(prepared, rendered, target_state)
     except (RegistryError, ValueError) as error:
         typer.echo(f"refused: {error}", err=True)
         raise typer.Exit(code=1) from error

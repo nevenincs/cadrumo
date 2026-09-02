@@ -21,6 +21,7 @@ import libcst as cst
 from libcst.metadata import (
     CodeRange,
     MetadataWrapper,
+    ParentNodeProvider,
     PositionProvider,
     QualifiedName,
     QualifiedNameProvider,
@@ -179,7 +180,7 @@ def _qualified_names(transformer: _RenameTransformer, node: cst.CSTNode) -> froz
 
 
 class _RenameTransformer(cst.CSTTransformer):
-    METADATA_DEPENDENCIES = (PositionProvider, QualifiedNameProvider)
+    METADATA_DEPENDENCIES = (ParentNodeProvider, PositionProvider, QualifiedNameProvider)
 
     def __init__(
         self,
@@ -196,7 +197,7 @@ class _RenameTransformer(cst.CSTTransformer):
         self.operations = operations
         self.definition_lines = definition_lines
         self.definition_hits: defaultdict[str, int] = defaultdict(int)
-        self.reference_hits: defaultdict[str, int] = defaultdict(int)
+        self.evidence: defaultdict[str, set[str]] = defaultdict(set)
         self._declaration_name_nodes: set[int] = set()
 
     def _operation_names(self, operation: ObjectNameRenameOperation) -> tuple[str, str, str, str]:
@@ -211,6 +212,27 @@ class _RenameTransformer(cst.CSTTransformer):
         if old_module != new_module:
             raise ObjectNameTransformError(f"symbol operation {operation.operation_id!r} changes its owning module")
         return old_module, old_name, new_module, new_name
+
+    def _inside_type_checking(self, node: cst.CSTNode) -> bool:
+        child = node
+        while True:
+            parent = self.get_metadata(ParentNodeProvider, child, None)
+            if parent is None:
+                return False
+            if isinstance(parent, cst.If) and child is parent.body:
+                test = _dotted_name(parent.test)
+                if test in {"TYPE_CHECKING", "typing.TYPE_CHECKING"}:
+                    return True
+            child = parent
+
+    def _record_reference(self, operation: ObjectNameRenameOperation, node: cst.CSTNode) -> None:
+        if self._inside_type_checking(node):
+            reference_class = "type-only-import"
+        elif self.package_module and isinstance(node, cst.ImportFrom):
+            reference_class = "export"
+        else:
+            reference_class = "static-import"
+        self.evidence[operation.operation_id].add(reference_class)
 
     @override
     def visit_ClassDef(self, node: cst.ClassDef) -> bool | None:
@@ -269,6 +291,7 @@ class _RenameTransformer(cst.CSTTransformer):
                     f"operation {operation.operation_id!r} definition line no longer names {old_name!r}"
                 )
             self.definition_hits[operation.operation_id] += 1
+            self.evidence[operation.operation_id].add("definition")
             return updated.with_changes(value=new_name)
         return updated
 
@@ -280,7 +303,7 @@ class _RenameTransformer(cst.CSTTransformer):
         for operation in self.operations:
             old_module, old_name, new_module, _new_name = self._operation_names(operation)
             if operation.operation_kind == "module-rename" and dotted == old_module:
-                self.reference_hits[operation.operation_id] += 1
+                self._record_reference(operation, original_node)
                 return updated_node.with_changes(name=_dotted_expression(new_module))
             if operation.operation_kind == "symbol-rename" and dotted == old_name:
                 # ImportFrom ownership is handled by leave_ImportFrom; an unqualified
@@ -330,12 +353,12 @@ class _RenameTransformer(cst.CSTTransformer):
                         aliases.append(alias)
                 if changed:
                     rewritten_aliases = aliases
-                    self.reference_hits[operation.operation_id] += 1
+                    self._record_reference(operation, original_node)
             elif operation.operation_kind == "module-rename":
                 if absolute == old_module:
                     rewritten_module = _dotted_expression(new_module)
                     rewritten_relative = ()
-                    self.reference_hits[operation.operation_id] += 1
+                    self._record_reference(operation, original_node)
                 elif absolute == old_module.rpartition(".")[0]:
                     old_parent, _, _ = old_module.rpartition(".")
                     new_parent, _, _ = new_module.rpartition(".")
@@ -354,7 +377,7 @@ class _RenameTransformer(cst.CSTTransformer):
                         if old_parent != new_parent:
                             rewritten_module = _dotted_expression(new_parent)
                             rewritten_relative = ()
-                        self.reference_hits[operation.operation_id] += 1
+                        self._record_reference(operation, original_node)
         return updated_node.with_changes(
             module=rewritten_module,
             relative=rewritten_relative,
@@ -374,7 +397,7 @@ class _RenameTransformer(cst.CSTTransformer):
                 raise ObjectNameTransformError(
                     f"operation {operation.operation_id!r} has an ambiguous qualified attribute reference"
                 )
-            self.reference_hits[operation.operation_id] += 1
+            self._record_reference(operation, original_node)
             if operation.operation_kind == "symbol-rename":
                 return updated_node.with_changes(attr=cst.Name(new_name))
             return _dotted_expression(new_module)
@@ -405,7 +428,10 @@ class _RenameTransformer(cst.CSTTransformer):
                 raise ObjectNameTransformError(
                     f"operation {operation.operation_id!r} has an ambiguous qualified name reference"
                 )
-            self.reference_hits[operation.operation_id] += 1
+            if operation.operation_kind == "symbol-rename" and self.module_name == old_module:
+                pass
+            else:
+                self._record_reference(operation, original_node)
             return updated_node.with_changes(value=new_name)
         return updated_node
 
@@ -418,6 +444,17 @@ def _definition_lines(operation: ObjectNameRenameOperation, source: bytes) -> fr
     except UnicodeDecodeError as exc:
         raise ObjectNameTransformError(f"operation {operation.operation_id!r} definition source is not UTF-8") from exc
     declarations = declarations_in_source(text, operation.old_path)
+    kind, qualified, _occurrence = _locator_parts(operation.old_locator)
+    old_name = qualified.rsplit(".", 1)[-1]
+    matching_bindings = {
+        declaration.qualified_locator
+        for declaration in declarations
+        if declaration.kind.value == kind and declaration.name == old_name
+    }
+    if len(matching_bindings) > 1:
+        raise ObjectNameTransformError(
+            f"operation {operation.operation_id!r} selects one of multiple ambiguous rebindings"
+        )
     line_values: set[int] = set()
     for declaration in declarations:
         if declaration.qualified_locator == operation.old_locator:
@@ -448,7 +485,9 @@ def _transform_python(
     )
     try:
         changed = MetadataWrapper(module).visit(transformer)
-    except (KeyError, RecursionError) as exc:
+    except ObjectNameTransformError:
+        raise
+    except Exception as exc:
         raise ObjectNameTransformError(f"cannot resolve metadata for {relative}: {exc}") from exc
     return changed.bytes, transformer
 
@@ -519,7 +558,8 @@ def plan_object_name_transformation(
 
     proposed: dict[str, bytes | None] = dict(before)
     all_definition_hits: defaultdict[str, int] = defaultdict(int)
-    all_reference_hits: defaultdict[str, int] = defaultdict(int)
+    evidence_by_operation: defaultdict[str, set[str]] = defaultdict(set)
+    referencing_operations_by_path: defaultdict[str, set[str]] = defaultdict(set)
     for relative, path_operations in sorted(operations_by_path.items()):
         if PurePosixPath(relative).suffix != ".py":
             raise ObjectNameTransformError(f"unsupported non-Python changed path: {relative}")
@@ -532,8 +572,15 @@ def plan_object_name_transformation(
         proposed[relative] = transformed
         for operation_id, count in transformer.definition_hits.items():
             all_definition_hits[operation_id] += count
-        for operation_id, count in transformer.reference_hits.items():
-            all_reference_hits[operation_id] += count
+        for operation_id, evidence in transformer.evidence.items():
+            evidence_by_operation[operation_id].update(evidence)
+            if evidence - {"definition"}:
+                referencing_operations_by_path[relative].add(operation_id)
+
+    for operations_on_path in referencing_operations_by_path.values():
+        if len(operations_on_path) > 1:
+            for operation_id in operations_on_path:
+                evidence_by_operation[operation_id].add("shared-consumer")
 
     for operation in selected:
         if operation.operation_kind == "symbol-rename":
@@ -543,9 +590,15 @@ def plan_object_name_transformation(
                     f"operation {operation.operation_id!r} transformed "
                     f"{all_definition_hits[operation.operation_id]} of {expected_definitions} definitions"
                 )
-        elif all_reference_hits[operation.operation_id] == 0:
-            # The move itself is the definition transformation; references are optional.
-            pass
+        else:
+            # A module's explicit move is its definition transformation.
+            evidence_by_operation[operation.operation_id].add("definition")
+        missing_evidence = set(operation.expected_reference_classes) - evidence_by_operation[operation.operation_id]
+        if missing_evidence:
+            raise ObjectNameTransformError(
+                f"operation {operation.operation_id!r} did not prove expected reference classes: "
+                f"{sorted(missing_evidence)!r}"
+            )
 
     for source, target in sorted(move_by_source.items()):
         if source not in proposed:

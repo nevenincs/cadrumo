@@ -163,6 +163,52 @@ def test_module_proposal_returns_exact_move_and_rewrites_import_forms_without_mu
     assert _tree_bytes(tmp_path) == before
 
 
+def test_same_package_module_move_preserves_relative_import(tmp_path: Path) -> None:
+    inventory = _inventory(
+        tmp_path,
+        {
+            "src/cadrumo/old/widgets.py": "from .support import VALUE\n",
+            "src/cadrumo/old/support.py": "VALUE = 1\n",
+        },
+    )
+    declaration = _declaration(inventory, path="src/cadrumo/old/widgets.py", name="widgets")
+    operation = _operation(
+        declaration,
+        target_name="widget",
+        target_path="src/cadrumo/old/widget.py",
+        sources={declaration.path: (tmp_path / declaration.path).read_bytes()},
+        changed_paths=("src/cadrumo/old/widget.py", "src/cadrumo/old/widgets.py"),
+        expected_reference_classes=("definition",),
+    )
+
+    result = plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
+
+    assert result.content_by_path()["src/cadrumo/old/widget.py"] == b"from .support import VALUE\n"
+
+
+def test_cross_package_module_move_preserves_absolute_import(tmp_path: Path) -> None:
+    inventory = _inventory(
+        tmp_path,
+        {
+            "src/cadrumo/old/widgets.py": "from cadrumo.support import VALUE\n",
+            "src/cadrumo/support.py": "VALUE = 1\n",
+        },
+    )
+    declaration = _declaration(inventory, path="src/cadrumo/old/widgets.py", name="widgets")
+    operation = _operation(
+        declaration,
+        target_name="widget",
+        target_path="src/cadrumo/new/widget.py",
+        sources={declaration.path: (tmp_path / declaration.path).read_bytes()},
+        changed_paths=("src/cadrumo/new/widget.py", "src/cadrumo/old/widgets.py"),
+        expected_reference_classes=("definition",),
+    )
+
+    result = plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
+
+    assert result.content_by_path()["src/cadrumo/new/widget.py"] == b"from cadrumo.support import VALUE\n"
+
+
 def test_locator_renames_only_the_selected_distinct_declaration(tmp_path: Path) -> None:
     inventory = _inventory(
         tmp_path,
@@ -255,7 +301,7 @@ def test_ambiguous_qualified_symbol_reference_is_refused(tmp_path: Path) -> None
     operation = _operation(declaration, target_name="Widget", sources=_tree_bytes(tmp_path))
 
     with pytest.raises(ObjectNameTransformError, match="ambiguous qualified name reference"):
-        plan_object_name_transformations(_manifest(inventory, operation), repo_root=tmp_path)
+        plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
 
 
 def test_unparseable_affected_source_is_refused(tmp_path: Path) -> None:
@@ -272,7 +318,7 @@ def test_unparseable_affected_source_is_refused(tmp_path: Path) -> None:
     )
 
     with pytest.raises(ObjectNameTransformError, match="cannot parse affected Python source"):
-        plan_object_name_transformations(_manifest(inventory, operation), repo_root=tmp_path)
+        plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
 
 
 def test_stale_byte_precondition_is_refused_before_proposal(tmp_path: Path) -> None:
@@ -282,12 +328,10 @@ def test_stale_byte_precondition_is_refused_before_proposal(tmp_path: Path) -> N
     _write_source(tmp_path, declaration.path, "class Widgets:\n    changed = True\n")
 
     with pytest.raises(ObjectNameTransformError, match="byte precondition is stale"):
-        plan_object_name_transformations(manifest, repo_root=tmp_path)
+        plan_object_name_transformation(manifest, repo_root=tmp_path)
 
 
-def test_unsafe_precondition_path_and_link_component_are_refused(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_unsafe_precondition_path_and_link_component_are_refused(tmp_path: Path) -> None:
     inventory = _inventory(tmp_path, {"src/cadrumo/contracts.py": "class Widgets:\n    pass\n"})
     declaration = _declaration(inventory, path="src/cadrumo/contracts.py", name="Widgets")
     operation = _operation(declaration, target_name="Widget", sources=_tree_bytes(tmp_path))
@@ -295,13 +339,24 @@ def test_unsafe_precondition_path_and_link_component_are_refused(
     with pytest.raises(ValueError, match="normalized repository-relative"):
         _manifest(inventory, operation)
 
-    operation = _operation(declaration, target_name="Widget", sources=_tree_bytes(tmp_path))
-    monkeypatch.setattr(
-        "dev.quality.object_name_transform.is_link_like",
-        lambda path: path == tmp_path.resolve() / "src",
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    linked = tmp_path / "linked"
+    try:
+        linked.symlink_to(outside, target_is_directory=True)
+    except OSError as exc:
+        pytest.skip(f"symlinks unavailable: {exc}")
+    linked_source = b"value = 1\n"
+    (outside / "consumer.py").write_bytes(linked_source)
+    sources = _tree_bytes(tmp_path) | {"linked/consumer.py": linked_source}
+    operation = _operation(
+        declaration,
+        target_name="Widget",
+        sources=sources,
+        changed_paths=("linked/consumer.py", declaration.path),
     )
     with pytest.raises(ObjectNameTransformError, match="link-like component"):
-        plan_object_name_transformations(_manifest(inventory, operation), repo_root=tmp_path)
+        plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
 
 
 def test_occupied_module_target_is_refused(tmp_path: Path) -> None:
@@ -318,7 +373,7 @@ def test_occupied_module_target_is_refused(tmp_path: Path) -> None:
     )
 
     with pytest.raises(ObjectNameTransformError, match="move target already exists"):
-        plan_object_name_transformations(_manifest(inventory, operation), repo_root=tmp_path)
+        plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
 
 
 def test_changed_path_allowlist_mismatch_is_refused(tmp_path: Path) -> None:
@@ -329,20 +384,29 @@ def test_changed_path_allowlist_mismatch_is_refused(tmp_path: Path) -> None:
         target_name="Widget",
         sources=_tree_bytes(tmp_path),
         changed_paths=tuple(sorted((declaration.path, "dev/reviewed_but_unchanged.py"))),
+        expected_reference_classes=("definition",),
     )
 
     with pytest.raises(ObjectNameTransformError, match="proposed changed paths differ from the reviewed allowlist"):
-        plan_object_name_transformations(_manifest(inventory, operation), repo_root=tmp_path)
+        plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
 
 
 def test_proposal_is_deterministic_read_only_and_returns_fresh_content_views(tmp_path: Path) -> None:
     inventory = _inventory(tmp_path, {"src/cadrumo/contracts.py": "class Widgets:\n    pass\n"})
     declaration = _declaration(inventory, path="src/cadrumo/contracts.py", name="Widgets")
-    manifest = _manifest(inventory, _operation(declaration, target_name="Widget", sources=_tree_bytes(tmp_path)))
+    manifest = _manifest(
+        inventory,
+        _operation(
+            declaration,
+            target_name="Widget",
+            sources=_tree_bytes(tmp_path),
+            expected_reference_classes=("definition",),
+        ),
+    )
     before = _tree_bytes(tmp_path)
 
-    first = plan_object_name_transformations(manifest, repo_root=tmp_path)
-    second = plan_object_name_transformations(manifest, repo_root=tmp_path)
+    first = plan_object_name_transformation(manifest, repo_root=tmp_path)
+    second = plan_object_name_transformation(manifest, repo_root=tmp_path)
     mutable_view = first.content_by_path()
     assert isinstance(mutable_view, dict)
     mutable_view.clear()
