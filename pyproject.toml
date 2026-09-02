@@ -98,11 +98,6 @@ dependencies = [
   # Typer imports Rich at runtime for help/error rendering. Keep the direct
   # pin version-bounded here; application code should not import Rich directly.
   "rich>=14.2.0,<16",
-  # Rust-backed TOML parser for the registry/profile-schema read boundary
-  # (`core/_toml.py`). ~2.4x faster than stdlib tomllib on the ~16k-fragment
-  # registry tree with proven byte-identical output; zero transitive
-  # dependencies, MIT license, prebuilt wheels including win_amd64.
-  "rtoml>=0.13.0,<1",
   # Spanish Snowball stemmer for the grounding-search FTS5 stemmed column
   # (bundled-corpus retrieval and the command-search index). Small, pure-Python,
   # BSD, no transitive weight. Core rather than optional so the lexical index
@@ -355,6 +350,9 @@ registry = [
 ]
 dev = [
   { include-group = "registry" },
+  # Rust-backed TOML parser used only by development registry writers and
+  # render tooling; production reads use the stdlib `tomllib` boundary.
+  "rtoml>=0.13.0,<1",
   # Dependency declaration drift: missing, unused, transitive, and misplaced deps.
   "deptry>=0.24",
   # torch is the vaultspec-rag embedding backend (dev-only semantic search); no
