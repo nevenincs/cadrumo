@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:fa3ba8b4cb4e56bcbad2573c16fd146ce14629f66b625d478c87739b895436cd'
+body_hash: 'sha256:6a889ad8788cb384f5c6f009582678746936830e531f506be7e329fc29610099'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -3586,3 +3586,63 @@ pair matches at 0 and is also two things.
 The screen exits 0 whatever it finds. A gate belongs here once the nine same-layer
 collisions have been adjudicated, and not before: refusing a condition the corpus still
 contains would only teach the next contributor to route around it.
+
+### The drift screen now separates a changed serializer from a changed value
+
+The previous finding recorded that a one-character quote flip had reclassified 141
+semantically unchanged export records as drifted. The screen has been taught the
+distinction rather than the finding merely noted.
+
+`render_check` still compares bytes, because bytes are the truth about what ships. What
+changed is that a differing file is now also parsed, and a file whose bytes moved while
+its parsed content did not is recorded as `serialization_only`. `record_differing` means
+what its name always claimed: a record that now means something its inputs do not
+produce. A new `semantically_reproduced` answers the question the old `reproduced` was
+being asked to answer and could not.
+
+An unparseable file is never excused. `_parsed` returns `None` on a file that does not
+decode or does not parse, and `None` is deliberately not equal to `None` for this
+purpose - the comparison requires the committed side to parse before it will consider
+the two equal. A corrupted record must not be forgiven as a spelling change, which is
+the failure mode a looser implementation would have introduced.
+
+`provenance_only` was tightened in the same pass, because the first version of this
+change made it lie. Under the new parsing it reported True for a tree whose records
+differed in spelling, which claims the manifest was the only file that moved. It now
+requires the manifest to be the single differing file, and the broader question is asked
+of `semantically_reproduced`.
+
+The discrimination was proved in both directions on live trees, not asserted. Across
+every published generated tree the screen now reports 25 in `provenance_only` and 2 in
+`record_drift`, and the two are exactly modelo 347's revisions - the genuine defect this
+audit already documents, whose declarado record must repeat over binding rows and no
+longer does. Before this change that real pair sat among roughly twenty-three false
+verdicts of the same class. A gate whose alarming category is mostly false is worse than
+no gate, because the one member that matters is indistinguishable from the noise.
+
+### The disposition gate now fails accurately, and that failure is the finding
+
+The gate that requires every non-reproducing tree to carry a written disposition was
+keyed on byte equality. It has been re-keyed onto a `disposition_class` that returns
+`record_drift`, `provenance_only`, or nothing at all for a tree differing only in
+spelling. Putting the classification in the module rather than in the test matters:
+the test was deciding what counted as an explained state, which is the screen's job.
+
+The gate still fails, and it should. Twenty-one trees that previously reproduced
+byte-for-byte now carry a stale attestation, because the manifest attests the inputs and
+an input changed. That is a true statement about the corpus and the gate is right to
+refuse it. It was already failing before this change; what changed is that its message
+now names the twenty-one trees and their state instead of reporting an undifferentiated
+byte difference.
+
+No disposition rows were added for them. Twenty-one rows describing one shared cause
+would be documentation of a mass condition dressed as twenty-one explained states, and
+the disposition file's own header says a row must name a tree that genuinely does not
+reproduce. The remedy is republication, which is safe for all twenty-five
+`provenance_only` trees and must never be applied to 347's two. Republishing generated
+registry data is neither this campaign's scope nor its author's to perform, so the state
+is reported with the remedy named and left for the owner of that commit.
+
+A note on what was not claimed: no type checker is installed in this environment, so the
+change carries lint and format verification and real-behaviour test evidence, and no
+type-check evidence. Saying so is cheaper than the reader discovering it.

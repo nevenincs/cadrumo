@@ -5,14 +5,14 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:adae672575e30d20ba3126a44e27da4cf422863664c0005495a7e0c36375c365'
+body_hash: 'sha256:69878e76bd10a4a53a0ad43cbdce466c33b1526ee85c4845c69a206f86627a78'
 related:
   - '[[2026-09-02-python-runtime-compatibility-research]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-adr]]'
   - '[[2026-07-27-canonical-release-pipeline-adr]]'
 ---
-# `python-runtime-compatibility` adr: `one source tree with an open Python floor and rolling CPython evidence` | (**status:** `proposed`)
+# `python-runtime-compatibility` adr: `one source tree with an open Python floor and rolling CPython evidence` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -93,3 +93,4 @@ This is the smallest policy that supports one evolving codebase while keeping in
 - Future annotations remain a deliberate compatibility contract. A later Python semantic change may require a focused migration and ADR amendment.
 - Alternative Python implementations and unexecuted platform rows remain outside the claim.
 - When CPython publishes a final release, the current `next` row must be promoted, its evidence reviewed, and a new prerelease canary enrolled.
+

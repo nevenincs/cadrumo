@@ -21,6 +21,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+
 from cadrumo_harness.mcp import (
     IDENTITY_READ_CONSOLE_TOOLS,
     SessionIdentityState,

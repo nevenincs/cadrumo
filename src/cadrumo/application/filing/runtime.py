@@ -56,7 +56,6 @@ from ...core.identity import SubjectTaxId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.resources.bundled_data import bundled_path
-from ...domain.calculations.registry.schema_base import SettlementDirectionField
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.errors import (
     RegistryFailureCondition,
@@ -84,6 +83,7 @@ from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
+from ...domain.calculations.registry.schema_base import SettlementDirectionField
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.calculations.registry.schema_references import SourceReference
 from ...domain.calculations.registry.schema_scalars import registry_scalar_value_type

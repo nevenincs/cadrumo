@@ -52,6 +52,7 @@ from ..pipeline._semantic_map_loader import load_semantic_map
 from ..pipeline._source_defects import SourceDefectDeclaration
 from ..pipeline._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
 from ..pipeline._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
+from ..pipeline.render_check import parsed_tree_file
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -518,9 +519,18 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
         f"committed-only: {sorted(committed_members - fresh_members)}; "
         f"fresh-only: {sorted(fresh_members - committed_members)}"
     )
-    differing = sorted(
+    byte_differing = sorted(
         name for name in fresh_members if not filecmp.cmp(fresh_root / name, tree.committed / name, shallow=False)
     )
+    # A differing file whose parsed content is identical is a serializer change, not a
+    # change to what the tree declares. The distinction is drawn by the one helper the
+    # render comparison uses, so both surfaces agree on what "the same record" means.
+    differing = [
+        name
+        for name in byte_differing
+        if (parsed := parsed_tree_file(name, (tree.committed / name).read_bytes())) is None
+        or parsed != parsed_tree_file(name, (fresh_root / name).read_bytes())
+    ]
     assert differing == [], f"{tree}: committed export fragment(s) differ from a fresh render: {differing}"
 
     candidate_root = tmp_path / "candidate"

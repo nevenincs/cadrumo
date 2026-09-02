@@ -48,6 +48,7 @@ from pathlib import Path
 
 import mcp.types as mcp_types
 import pytest
+
 from cadrumo_harness.mcp import (
     ConfirmationPolicy,
     McpToolDescriptor,

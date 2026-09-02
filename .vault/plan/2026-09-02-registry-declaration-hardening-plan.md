@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:8537e801a5d02abd857369a620d602921e7afeb13b557b8903769aa2595f13c6'
+body_hash: 'sha256:06194d485bf3420ee0c75bd04278e32e8656bd48835da14ce951ac2c2a4e01b1'
 ---
 
 <!-- RETIRED: S73 -->
@@ -403,6 +403,8 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S164` - Census the public names more than one module defines, classifying entrypoint convention, typing overload, cross-layer and same-layer collisions; `dev/quality/name_collision_census.py,dev/quality/tests/test_name_collision_census.py`.
 - [x] `W06.P13.S165` - Canonicalise the export record encoding spelling in the provenance fixtures onto the ExportEncoding enum; `dev/registry/tests/test_provenance_manifest.py`.
 - [x] `W06.P13.S166` - Report that the closed-vocabulary enum conversion reclassified 141 semantically unchanged export records as record drift; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S167` - Teach the render comparison to separate a changed serializer from a changed value, so record drift names a tree whose meaning moved; `dev/registry/pipeline/render_check.py,dev/registry/tests/test_render_check.py`.
+- [x] `W06.P13.S168` - Key the generated tree disposition gate on the explained state rather than on byte equality; `dev/registry/pipeline/render_check.py,dev/registry/tests/test_render_check.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

@@ -62,7 +62,7 @@ from ._render_profile import load_render_profile, load_render_profile_source_evi
 from ._semantic_map_join import join_record_design_semantics
 from ._semantic_map_loader import load_semantic_map
 
-__all__ = ["RenderComparison", "compare_revision_against_committed"]
+__all__ = ["RenderComparison", "compare_revision_against_committed", "parsed_tree_file"]
 
 _SERIALIZER_CONVENTION = "rtoml-pretty-v1"
 
@@ -156,7 +156,7 @@ class RenderComparison:
         return not (self.differing or self.only_committed or self.only_rendered)
 
 
-def _parsed(name: str, raw: bytes) -> object | None:
+def parsed_tree_file(name: str, raw: bytes) -> object | None:
     """Return the parsed content of a tree file, or ``None`` when it does not parse.
 
     Returning ``None`` matters: an unparseable file must never compare equal to
@@ -277,8 +277,8 @@ def compare_revision_against_committed(
         name
         for name in differing
         if name != _PROVENANCE_MANIFEST
-        and (parsed := _parsed(name, committed[name])) is not None
-        and parsed == _parsed(name, rendered[name])
+        and (parsed := parsed_tree_file(name, committed[name])) is not None
+        and parsed == parsed_tree_file(name, rendered[name])
     )
     return RenderComparison(
         modelo=modelo,

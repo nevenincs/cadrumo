@@ -15,8 +15,8 @@ from cadrumo.core.filing_projection_ref import (
 )
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
 
 from ..pipeline import _provenance_manifest

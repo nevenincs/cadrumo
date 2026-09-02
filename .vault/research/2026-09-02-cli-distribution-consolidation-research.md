@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:68766cd4e34ffed02611fccc7a288c801e5c50d2970baaad3e74e9bc5cc86f80'
+body_hash: 'sha256:2e68b3a2504f308d5c5fddfced6a972ed8f4806de3e2418ff07ad5eeb831ebf2'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -334,6 +334,22 @@ without it the publish job claims an environment the OIDC token cannot attest. T
 repository also carries an orphaned `release` environment: no workflow references it, it
 holds no secret or variable, and its only protection rule is a branch policy. It is
 residue of the deleted release machinery and can be removed.
+
+### Two gaps survive the consolidation
+
+The index already carries `cadrumo-data-manuals` and `cadrumo-data-official`, both at
+`0.0.0` and both uploaded on 2026-07-19. Only the primary name was ever unregistered.
+That asymmetry matters for the trust bindings: a pending publisher applies only to a
+name with no project behind it, so the two corpus distributions take the ordinary
+project-level publisher form instead, registered per project. Until both carry one,
+`uv publish dist/*` uploads the primary distribution and is refused on the other two.
+
+The release runbook still drives the retired orchestrator. `release-orchestrator.yml`
+no longer exists in the workflow directory, yet `RELEASING.md` names it eight times as
+the command that starts a release, and its publisher section still states that no
+publisher is registered. The document therefore describes a path that cannot be
+followed, and it is the only tracked file the plan left pointing at the deleted
+machinery.
 
 ### Not investigated
 
