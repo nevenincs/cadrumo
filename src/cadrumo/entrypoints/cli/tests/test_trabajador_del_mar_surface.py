@@ -42,6 +42,7 @@ from ....domain.renta.maritime_exemption import (
     MaritimeExemptionInactiveError,
     MaritimeWorkerFacts,
     ProfileCompletenessError,
+    VesselRegistry,
 )
 from ....domain.user_profile.loader import load_user_profile_schema
 
@@ -93,7 +94,7 @@ class TestMaritimeExemptionEnvelopeCarriesLegalRefs:
         result = resolve_maritime_exemption(
             facts=MaritimeWorkerFacts(
                 worker_class="trabajador_del_mar",
-                vessel_registry="REBECA",
+                vessel_registry=VesselRegistry.REBECA,
             ),
             gross_navigation_income=Decimal("30000"),
         )
@@ -108,7 +109,7 @@ class TestMaritimeExemptionEnvelopeCarriesLegalRefs:
         result = resolve_maritime_exemption(
             facts=MaritimeWorkerFacts(
                 worker_class="trabajador_del_mar",
-                vessel_registry="REBECA",
+                vessel_registry=VesselRegistry.REBECA,
             ),
             gross_navigation_income=Decimal("30000"),
         )

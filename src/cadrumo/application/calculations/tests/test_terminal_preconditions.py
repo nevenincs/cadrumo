@@ -29,6 +29,7 @@ from ....domain.iva_compensation.filed_derivation import (
     M303_COMPENSATION_POSTERIOR_CASILLA,
     M303_COMPENSATION_RESULTADO_CASILLA,
     M303CompensationAvailableDerivation,
+    M303CompensationBasis,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import errors as errors_module
@@ -441,7 +442,7 @@ def test_m303_registry_formula_contradiction_has_an_exact_safety_verdict() -> No
     contradictory_derivation = M303CompensationAvailableDerivation(
         available=Decimal("27.00"),
         generated=Decimal("20.00"),
-        basis="generated",
+        basis=M303CompensationBasis.GENERATED,
         operand_refs=(M303_COMPENSATION_POSTERIOR_CASILLA, M303_COMPENSATION_RESULTADO_CASILLA),
         operand_values=(Decimal("7.00"), Decimal("20.00")),
     )
