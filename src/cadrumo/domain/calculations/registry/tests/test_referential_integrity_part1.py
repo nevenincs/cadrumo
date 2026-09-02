@@ -457,7 +457,7 @@ def test_text_casilla_without_named_label_strategy_fails_gate() -> None:
         surface="declaracion_pdf",
         artefact_kind="declaration_pdf",
         accepted_artefact_kinds=("declaration_pdf",),
-        parser="cadrumo.adapters.inbound.declaracion.parse_declaracion",
+        parser="cadrumo.adapters.inbound.declaracion.parser.parse_declaracion",
         target_casillas=(
             ExtractionTargetDefinition(
                 casilla_id=_TEXT_CASILLA,
@@ -487,7 +487,7 @@ def test_text_casilla_with_named_label_strategy_passes_gate() -> None:
         surface="declaracion_pdf",
         artefact_kind="declaration_pdf",
         accepted_artefact_kinds=("declaration_pdf",),
-        parser="cadrumo.adapters.inbound.declaracion.parse_declaracion",
+        parser="cadrumo.adapters.inbound.declaracion.parser.parse_declaracion",
         target_casillas=(
             ExtractionTargetDefinition(
                 casilla_id=_TEXT_CASILLA,

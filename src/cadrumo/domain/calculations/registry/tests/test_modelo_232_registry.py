@@ -146,7 +146,7 @@ def test_committed_modelo_232_declaration_pdf_extraction_profile_targets_declara
         pdf_profiles = [profile for profile in revision.extraction_profiles if profile.surface == "declaracion_pdf"]
         assert pdf_profiles, revision.id
         for profile in pdf_profiles:
-            assert profile.parser == "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+            assert profile.parser == "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
             assert profile.confidence == "strict"
             assert profile.failure_semantics == "fail_hard"
             assert {t.casilla_id for t in profile.target_casillas} <= casilla_ids

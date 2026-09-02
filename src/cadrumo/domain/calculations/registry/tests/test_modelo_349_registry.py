@@ -599,7 +599,7 @@ def test_committed_modelo_349_extraction_profiles_target_declarant_summary_casil
 
     pdf_profile = profiles_by_id["modelo-349-declaracion-pdf"]
     assert pdf_profile.surface == "declaracion_pdf"
-    assert pdf_profile.parser == "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+    assert pdf_profile.parser == "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
     assert pdf_profile.failure_semantics == "fail_hard"
     assert {t.casilla_id for t in pdf_profile.target_casillas} == set(_DECLARANT_SUMMARY_CASILLAS)
 
@@ -616,7 +616,7 @@ def test_committed_modelo_349_extractor_app_link_is_registered() -> None:
     extractor_links = [link for link in revision.application_links if link.surface == "extractor"]
     assert len(extractor_links) == 1
     assert extractor_links[0].id == "modelo-349-extractor"
-    assert extractor_links[0].consumer == "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+    assert extractor_links[0].consumer == "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 
 
 def test_committed_modelo_349_construct_includes_extraction_profiles() -> None:

@@ -27,6 +27,7 @@ from ..schema import (
     RegistryCatalogues,
     RegistrySnapshot,
 )
+from ..schema_base import EvidenceTier
 from ..schema_exports import ExportFieldDefinition, FilingEnvelopePrefixRole
 from ..schema_extraction import BboxAnchorSpec, ExtractionTargetDefinition
 from ..schema_formula import FormulaExpression
@@ -231,8 +232,8 @@ def test_model_law_coverage_ledger_does_not_count_layout_source_as_guidance() ->
     }
     by_tier = {gate.tier: gate for gate in layout_only_ledger.gates}
 
-    assert by_tier["official_source_guidance"].status == "gap"
-    assert by_tier["layout_authority"].status == "satisfied"
+    assert by_tier[EvidenceTier.OFFICIAL_SOURCE_GUIDANCE].status == "gap"
+    assert by_tier[EvidenceTier.LAYOUT_AUTHORITY].status == "satisfied"
 
 
 def test_model_law_coverage_ledger_moves_status_when_evidence_tier_changes() -> None:
@@ -265,8 +266,8 @@ def test_model_law_coverage_ledger_moves_status_when_evidence_tier_changes() -> 
 
     by_tier = {gate.tier: gate for gate in build_model_law_coverage_ledger(parity_snapshot).gates}
 
-    assert by_tier["executable_parity_evidence"].status == "satisfied"
-    assert by_tier["layout_authority"].status == "gap"
+    assert by_tier[EvidenceTier.EXECUTABLE_PARITY_EVIDENCE].status == "satisfied"
+    assert by_tier[EvidenceTier.LAYOUT_AUTHORITY].status == "gap"
 
 
 def test_modelo_file_rejects_local_source_catalogue(tmp_path: Path) -> None:

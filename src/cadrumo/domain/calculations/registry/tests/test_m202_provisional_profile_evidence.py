@@ -41,7 +41,7 @@ def _provisional_m202_profile(modelo: ModeloDefinition) -> ExtractionProfileDefi
         surface="declaracion_pdf",
         artefact_kind="declaration_pdf",
         accepted_artefact_kinds=("declaration_pdf",),
-        parser="cadrumo.adapters.inbound.declaracion.parse_declaracion",
+        parser="cadrumo.adapters.inbound.declaracion.parser.parse_declaracion",
         provisional_pending_specimen=True,
         target_casillas=tuple(
             ExtractionTargetDefinition(

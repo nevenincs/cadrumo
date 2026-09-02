@@ -77,7 +77,7 @@ def test_extraction_profile_target_casillas_uniqueness_rejects_duplicate_casilla
             surface="declaracion_pdf",
             artefact_kind="declaration_pdf",
             accepted_artefact_kinds=("declaration_pdf",),
-            parser="cadrumo.adapters.inbound.declaracion.parse_declaracion",
+            parser="cadrumo.adapters.inbound.declaracion.parser.parse_declaracion",
             target_casillas=(
                 ExtractionTargetDefinition(
                     casilla_id=_NUMERIC_CASILLA_01,
@@ -107,7 +107,7 @@ def test_extraction_profile_rejects_zero_minimum_coverage() -> None:
             surface="declaracion_pdf",
             artefact_kind="declaration_pdf",
             accepted_artefact_kinds=("declaration_pdf",),
-            parser="cadrumo.adapters.inbound.declaracion.parse_declaracion",
+            parser="cadrumo.adapters.inbound.declaracion.parser.parse_declaracion",
             target_casillas=(
                 ExtractionTargetDefinition(
                     casilla_id=_NUMERIC_CASILLA_01,

@@ -23,6 +23,7 @@ from ..counterpart_bindings import (
     resolve_counterpart_binding_values,
 )
 from ..errors import RegistryValidationError
+from ..invoice_bindings import RectificationScope
 from ..schema import DataBindingDefinition, ModeloRevision
 from ._registry_schema_support import _committed_modelo
 
@@ -287,13 +288,15 @@ def test_counterpart_binding_requirements_groups_bindings_by_clave_and_scope() -
 
     assert len(requirements) == 2
     by_scope = {req.rectification_scope: req for req in requirements}
-    assert by_scope["exclude_rectifications"].binding_ids == (
+    assert by_scope[RectificationScope.EXCLUDE_RECTIFICATIONS].binding_ids == (
         "iva-349-declarante-importe-operaciones",
         "iva-349-declarante-numero-operadores",
     )
-    assert by_scope["exclude_rectifications"].claves == ("E", "M")
-    assert by_scope["only_rectifications"].binding_ids == ("iva-349-declarante-importe-rectificaciones",)
-    assert by_scope["only_rectifications"].claves == ("E",)
+    assert by_scope[RectificationScope.EXCLUDE_RECTIFICATIONS].claves == ("E", "M")
+    assert by_scope[RectificationScope.ONLY_RECTIFICATIONS].binding_ids == (
+        "iva-349-declarante-importe-rectificaciones",
+    )
+    assert by_scope[RectificationScope.ONLY_RECTIFICATIONS].claves == ("E",)
 
 
 def test_counterpart_binding_requirements_keep_source_kind_cohorts_distinct() -> None:
