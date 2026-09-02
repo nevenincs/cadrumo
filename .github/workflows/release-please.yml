@@ -1,0 +1,126 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - name: Check out the release branch
+        if: steps.release.outputs.pr && !steps.release.outputs.release_created
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+
+      - name: Set up uv for the release branch
+        if: steps.release.outputs.pr && !steps.release.outputs.release_created
+        uses: astral-sh/setup-uv@v7
+
+      - name: Regenerate and push uv.lock onto the release branch
+        if: steps.release.outputs.pr && !steps.release.outputs.release_created
+        run: |
+          uv lock
+          if git diff --quiet uv.lock; then
+            echo "uv.lock is already up to date"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add uv.lock
+            git commit -m "chore: update uv.lock for release"
+            git push
+          fi
+
+      # The lockfile push lands after release-please makes the pull request
+      # mergeable. A release merged inside that window ships the previous
+      # version's lockfile, and every job installing with `--frozen` then fails
+      # at dependency install. Reconcile through a pull request rather than
+      # assuming the window was missed.
+      - name: Check out main to verify the released lockfile
+        if: steps.release.outputs.release_created == 'true'
+        uses: actions/checkout@v6
+        with:
+          ref: main
+
+      - name: Set up uv for the lockfile verification
+        if: steps.release.outputs.release_created == 'true'
+        uses: astral-sh/setup-uv@v7
+
+      - name: Open a reconciling pull request when the lockfile drifted
+        if: steps.release.outputs.release_created == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.release.outputs.tag_name }}
+        run: |
+          if uv lock --locked; then
+            echo "uv.lock on main matches the released version"
+            exit 0
+          fi
+          echo "::warning::uv.lock on main did not match the released version; opening a reconciling pull request"
+          uv lock
+          BRANCH="chore/reconcile-uv-lock-${TAG}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "${BRANCH}"
+          git add uv.lock
+          git commit -m "chore(deps): reconcile uv.lock with ${TAG}"
+          git push --set-upstream origin "${BRANCH}"
+          gh pr create --base main --head "${BRANCH}" \
+            --title "chore(deps): reconcile uv.lock with ${TAG}" \
+            --body "Main carries the previous version's \`uv.lock\`. Every job installing with \`--frozen\` fails until this merges."
+
+      - name: Dispatch the publish workflow
+        if: steps.release.outputs.release_created == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.release.outputs.tag_name }}
+        run: |
+          if [ -z "${TAG}" ]; then
+            echo "::error::release_created is true but tag_name is empty"
+            exit 1
+          fi
+          gh api --method POST \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/publish.yml/dispatches" \
+            -f "ref=${TAG}" \
+            -f "inputs[tag]=${TAG}"
+          echo "Dispatched publish.yml for ${TAG}" >> "$GITHUB_STEP_SUMMARY"
+
+      # GitHub raises no workflow events for refs created with the default
+      # GITHUB_TOKEN, so a `release: published` trigger never fires for a
+      # release cut here. Documentation delivery is dispatched explicitly.
+      # docs-publish.yml takes `source_commit`, not a tag.
+      - name: Dispatch the documentation publish workflow
+        if: steps.release.outputs.release_created == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.release.outputs.tag_name }}
+          SHA: ${{ steps.release.outputs.sha }}
+        run: |
+          if [ -z "${SHA}" ]; then
+            echo "::error::release_created is true but sha is empty"
+            exit 1
+          fi
+          gh api --method POST \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/docs-publish.yml/dispatches" \
+            -f "ref=${TAG}" \
+            -f "inputs[source_commit]=${SHA}"
+          echo "Dispatched docs-publish.yml for ${TAG} at ${SHA}" >> "$GITHUB_STEP_SUMMARY"

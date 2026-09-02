@@ -1,0 +1,133 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish (e.g. v0.3.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build
+    # Hosted. The three distributions are py3-none-any, so the build host
+    # cannot affect the artifact, and this repository is public. A release
+    # must not depend on a self-hosted runner being free or a laptop being
+    # on AC power.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.tag }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install Python
+        run: uv python install
+
+      # cadrumo pins its two data corpora at `==`, so a build that silently
+      # omitted one would produce a root wheel no index can resolve.
+      - name: Build the three distributions
+        run: |
+          uv build --out-dir dist .
+          uv build --out-dir dist packaging/cadrumo_data_manuals
+          uv build --out-dir dist packaging/cadrumo_data_official
+          ls -l dist
+
+      # PyPI rejects any file over 100 MB (decimal). The corpus split exists
+      # to stay under it; check here rather than discovering it at upload,
+      # after the reversible destinations have already been written.
+      - name: Refuse a distribution over the index file cap
+        run: |
+          fail=0
+          for f in dist/*; do
+            size=$(stat -c%s "$f")
+            if [ "$size" -gt 100000000 ]; then
+              echo "::error::$f is ${size} bytes, over the 100000000 byte index cap"
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+          retention-days: 5
+
+  smoke-test:
+    name: Smoke Test
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.tag }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install Python
+        run: uv python install
+
+      - name: Download dist artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+
+      # `--find-links dist` resolves cadrumo and both corpora from the built
+      # files while everything else comes from the index, so the exact `==`
+      # pins are satisfied without the corpora being published first.
+      # `--isolated --no-project` means the only project content present is
+      # the artifact under test.
+      - name: Smoke test the built wheels
+        shell: bash
+        run: |
+          VERSION="${TAG#v}"
+          uv run --isolated --no-project --find-links dist \
+            --with "cadrumo==${VERSION}" \
+            dev/smoke/smoke_check.py
+        env:
+          TAG: ${{ inputs.tag }}
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: smoke-test
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Download dist artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+
+      # `--check-url` lets a retry converge after a partial upload: six files
+      # go up and the operation is not atomic.
+      - name: Publish to PyPI
+        run: uv publish --trusted-publishing always --check-url https://pypi.org/simple/ dist/*
