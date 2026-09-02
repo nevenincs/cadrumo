@@ -25,8 +25,19 @@ from __future__ import annotations
 import typer
 from pydantic import ValidationError
 
+from ...application.prorrata_register.sector_lifecycle import (
+    seed_sector_carried_definitive_from_register,
+    settle_sector_definitive,
+)
+from ...application.prorrata_register.seed import (
+    ProrrataPriorDefinitivaSeed,
+    ProrrataSeedFinding,
+    cross_check_prorrata_entry_against_prior_observation,
+    evaluate_carried_prior_definitiva_seed,
+)
 from ...application.prorrata_register.service import ProrrataRegisterService
 from ...core.i18n.render import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.prorrata_register import (
     ProrrataEspecialTransitionKind,
     ProrrataProvisionalProvenance,
@@ -51,8 +62,23 @@ from ._prorrata_register_payloads import (
     ProrrataEntryPayload,
     ProrrataListResult,
     ProrrataRevokeEspecialResult,
+    ProrrataSeedFindingPayload,
+    ProrrataSeedResult,
+    ProrrataSeedSectorResult,
+    ProrrataSeedSourcePayload,
+    ProrrataSettleSectorResult,
     SectorDefinitionPayload,
 )
+
+#: Machine-readable notice codes for the carried-seed advisory channel. They are
+#: transport tokens, never localised presentation text.
+_SEED_LOCAL_AUTHORITY_NOTICE_CODE = "ledger.prorrata.seed.local_authority"
+_SEED_ADVISORY_NOTICE_CODE = "ledger.prorrata.seed.advisory"
+
+#: Stable authority token emitted on the seed source payload. The carried
+#: percentage is the taxpayer's own locally stored prior observation, never a
+#: value AEAT issued for the seeded ejercicio.
+_SEED_AUTHORITY_TOKEN = "local_prior_observation"
 
 #: The art. 105 provenances an operator may declare at election time. The
 #: art. 105.Cinco interrupted-activity percentage is computed by the seed walk
@@ -312,6 +338,301 @@ def prorrata_declare_sector(
             f"letra\t{definition.letra.value}",
             f"member_activity_codes\t{','.join(definition.member_activity_codes)}",
             f"count\t{len(register.sector_definitions)}",
+        ),
+    )
+
+
+def _seed_finding_payload(finding: ProrrataSeedFinding) -> ProrrataSeedFindingPayload:
+    return ProrrataSeedFindingPayload(
+        code=finding.code,
+        blocking=finding.blocking,
+        message=finding.message,
+        source_modelo=finding.source_modelo,
+        source_filing_year=finding.source_filing_year,
+        source_period=finding.source_period,
+        stamped_revision_id=finding.stamped_revision_id,
+        selected_revision_id=finding.selected_revision_id,
+    )
+
+
+def _refuse_blocking_findings(findings: tuple[ProrrataSeedFinding, ...]) -> None:
+    """Refuse the seed while any finding blocks trusting the carry.
+
+    The application layer's blocking findings are the point of the seed
+    evaluation, so every one of them is named in the refusal rather than being
+    collapsed into a single boolean outcome.
+    """
+    blocking = tuple(finding for finding in findings if finding.blocking)
+    if not blocking:
+        return
+    raise bad(
+        tr(
+            "cli.app.ledger.prorrata.seed_blocked",
+            default=(
+                "The carried prior-definitive prorrata seed is blocked and nothing was written. "
+                "Blocking findings: {detail}"
+            ),
+            detail=" | ".join(f"[{finding.code}] {finding.message}" for finding in blocking),
+        ),
+    )
+
+
+def _seed_source_payload(seed: ProrrataPriorDefinitivaSeed) -> ProrrataSeedSourcePayload:
+    return ProrrataSeedSourcePayload(
+        modelo=seed.source_modelo,
+        filing_year=seed.source_filing_year,
+        period=seed.source_period,
+        casilla_id=str(seed.source_casilla_id),
+        stamped_revision_id=seed.stamped_revision_id,
+        authority=_SEED_AUTHORITY_TOKEN,
+    )
+
+
+def _seed_notices(
+    seed: ProrrataPriorDefinitivaSeed,
+    advisories: tuple[ProrrataSeedFinding, ...],
+) -> tuple[Notice, ...]:
+    origin = Notice(
+        severity=NoticeSeverity.INFO,
+        code=_SEED_LOCAL_AUTHORITY_NOTICE_CODE,
+        message=tr(
+            "cli.app.ledger.prorrata.seed_local_authority",
+            default=(
+                "The provisional percentage was carried locally from your stored {modelo} "
+                "{filing_year} {period} settlement observation (LIVA art. 105.Uno). It is not a "
+                "percentage AEAT issued for this ejercicio."
+            ),
+            modelo=seed.source_modelo,
+            filing_year=seed.source_filing_year,
+            period=seed.source_period,
+        ),
+        context={
+            "source_modelo": seed.source_modelo,
+            "source_filing_year": str(seed.source_filing_year),
+            "source_period": seed.source_period,
+            "stamped_revision_id": seed.stamped_revision_id,
+            "authority": _SEED_AUTHORITY_TOKEN,
+        },
+    )
+    advisory_notices = tuple(
+        Notice(
+            severity=NoticeSeverity.WARNING,
+            code=_SEED_ADVISORY_NOTICE_CODE,
+            message=finding.message,
+            context={"finding_code": finding.code},
+        )
+        for finding in advisories
+    )
+    return (origin, *advisory_notices)
+
+
+def prorrata_seed(
+    ctx: typer.Context,
+    ejercicio: int,
+    sector: str | None = None,
+) -> None:
+    """Seed the LIVA art. 105.Uno carried prior-definitive entry for an ejercicio.
+
+    The percentage is resolved by
+    :func:`~application.prorrata_register.seed.evaluate_carried_prior_definitiva_seed`
+    and any entry already standing at the key is cross-checked through
+    :func:`~application.prorrata_register.seed.cross_check_prorrata_entry_against_prior_observation`
+    before anything is written. A blocking finding refuses the command; an
+    absent prior observation refuses as absent rather than seeding a zero.
+    """
+    bucket_id = _register_bucket_id()
+    evaluation = evaluate_carried_prior_definitiva_seed(ejercicio=ejercicio, sector_id=sector)
+    _refuse_blocking_findings(evaluation.findings)
+    seed = evaluation.seed
+    if seed is None:
+        raise bad(
+            tr(
+                "cli.app.ledger.prorrata.seed_source_absent",
+                default=(
+                    "No stamped Modelo 303 settlement observation for {prior_ejercicio} carries a "
+                    "definitive prorrata percentage, so ejercicio {ejercicio} cannot be seeded. "
+                    "The prior definitive is missing, not zero: capture the prior settlement first."
+                ),
+                prior_ejercicio=ejercicio - 1,
+                ejercicio=ejercicio,
+            ),
+        )
+
+    service = ProrrataRegisterService()
+    findings = evaluation.findings
+    existing = service.get(ejercicio, sector_id=sector)
+    if existing is not None:
+        cross_findings = cross_check_prorrata_entry_against_prior_observation(existing)
+        _refuse_blocking_findings(cross_findings)
+        standing_provenance = existing.provisional_provenance
+        if (
+            standing_provenance is not None
+            and standing_provenance is not ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA
+        ):
+            raise bad(
+                tr(
+                    "cli.app.ledger.prorrata.seed_regulated_override_standing",
+                    default=(
+                        "Ejercicio {ejercicio} already carries a {provenance} provisional prorrata, "
+                        "which outranks the art. 105.Uno carry. Nothing was written; replace that "
+                        "declaration explicitly before seeding."
+                    ),
+                    ejercicio=ejercicio,
+                    provenance=standing_provenance.value,
+                ),
+            )
+        findings = (*findings, *cross_findings)
+
+    try:
+        register = service.declare(seed.entry)
+    except (ProrrataRegisterValidationError, ValidationError) as exc:
+        raise bad(str(exc)) from exc
+
+    advisories = tuple(finding for finding in findings if finding.advisory)
+    payload = ProrrataSeedResult(
+        bucket_id=bucket_id,
+        entry=_entry_payload(seed.entry),
+        source=_seed_source_payload(seed),
+        findings=[_seed_finding_payload(finding) for finding in findings],
+        count=len(register.entries),
+    )
+    notices = _seed_notices(seed, advisories)
+    emit_envelope(
+        ctx,
+        command="ledger.prorrata.seed",
+        result=payload,
+        lines=(
+            f"bucket\t{bucket_id}",
+            f"ejercicio\t{seed.entry.ejercicio}",
+            f"sector_id\t{seed.entry.sector_id or ''}",
+            f"provisional_percentage\t{seed.entry.provisional_percentage}",
+            f"provisional_provenance\t{ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA.value}",
+            f"source\t{seed.source_modelo}:{seed.source_filing_year}:{seed.source_period}",
+            f"source_casilla_id\t{seed.source_casilla_id}",
+            f"stamped_revision_id\t{seed.stamped_revision_id}",
+            f"authority\t{_SEED_AUTHORITY_TOKEN}",
+            f"findings\t{len(findings)}",
+            *(f"notice\t{notice.code}\t{notice.message}" for notice in notices),
+            f"count\t{len(register.entries)}",
+        ),
+        notices=notices,
+    )
+
+
+def prorrata_seed_sector(
+    ctx: typer.Context,
+    ejercicio: int,
+    sector_id: str,
+) -> None:
+    """Seed one differentiated sector's provisional from its own prior definitive.
+
+    LIVA art. 105.Uno applied per sector (art. 101.Uno): the source is the
+    register's own ``(ejercicio - 1, sector_id)`` settled definitive, never the
+    whole-entity Modelo 303 observation.
+    """
+    bucket_id = _register_bucket_id()
+    service = ProrrataRegisterService()
+    register = service.list_all()
+    entry = seed_sector_carried_definitive_from_register(register, ejercicio=ejercicio, sector_id=sector_id)
+    if entry is None:
+        raise bad(
+            tr(
+                "cli.app.ledger.prorrata.seed_sector_prior_definitive_absent",
+                default=(
+                    "Sector {sector_id} holds no settled definitive percentage for {prior_ejercicio}, "
+                    "so ejercicio {ejercicio} cannot be seeded. The prior definitive is missing, not "
+                    "zero: settle {prior_ejercicio} for this sector first."
+                ),
+                sector_id=sector_id,
+                prior_ejercicio=ejercicio - 1,
+                ejercicio=ejercicio,
+            ),
+        )
+    try:
+        updated = service.declare(entry)
+    except (ProrrataRegisterValidationError, ValidationError) as exc:
+        raise bad(str(exc)) from exc
+    payload = ProrrataSeedSectorResult(
+        bucket_id=bucket_id,
+        entry=_entry_payload(entry),
+        prior_ejercicio=ejercicio - 1,
+        count=len(updated.entries),
+    )
+    emit_envelope(
+        ctx,
+        command="ledger.prorrata.seed_sector",
+        result=payload,
+        lines=(
+            f"bucket\t{bucket_id}",
+            f"ejercicio\t{entry.ejercicio}",
+            f"sector_id\t{entry.sector_id or ''}",
+            f"prior_ejercicio\t{ejercicio - 1}",
+            f"provisional_percentage\t{entry.provisional_percentage}",
+            f"provisional_provenance\t{ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA.value}",
+            f"source_observation_ref\t{entry.source_observation_ref or ''}",
+            f"count\t{len(updated.entries)}",
+        ),
+    )
+
+
+def prorrata_settle_sector(
+    ctx: typer.Context,
+    ejercicio: int,
+    sector_id: str,
+    con_derecho_volume: str,
+    sin_derecho_volume: str,
+) -> None:
+    """Settle one sector's year-end definitive from its own annual volumes.
+
+    LIVA art. 105.Cuatro applied per sector: the definitive percentage is
+    derived by
+    :func:`~application.prorrata_register.sector_lifecycle.settle_sector_definitive`
+    from the sector's own con-derecho / sin-derecho volumes, never re-derived
+    here.
+    """
+    bucket_id = _register_bucket_id()
+    con_derecho = parse_decimal_amount(con_derecho_volume, label="con-derecho-volume", signed=False)
+    sin_derecho = parse_decimal_amount(sin_derecho_volume, label="sin-derecho-volume", signed=False)
+    service = ProrrataRegisterService()
+    entry = service.get(ejercicio, sector_id=sector_id)
+    if entry is None:
+        raise bad(
+            tr(
+                "cli.app.ledger.prorrata.settle_sector_entry_absent",
+                default=(
+                    "No register entry exists for ejercicio {ejercicio} sector {sector_id}, so there "
+                    "is nothing to settle. Elect the sector's regime for that ejercicio first."
+                ),
+                ejercicio=ejercicio,
+                sector_id=sector_id,
+            ),
+        )
+    try:
+        settled = settle_sector_definitive(
+            entry,
+            con_derecho_volume=con_derecho,
+            sin_derecho_volume=sin_derecho,
+        )
+        updated = service.declare(settled)
+    except (ProrrataRegisterValidationError, ValidationError) as exc:
+        raise bad(str(exc)) from exc
+    payload = ProrrataSettleSectorResult(
+        bucket_id=bucket_id,
+        entry=_entry_payload(settled),
+        count=len(updated.entries),
+    )
+    emit_envelope(
+        ctx,
+        command="ledger.prorrata.settle_sector",
+        result=payload,
+        lines=(
+            f"bucket\t{bucket_id}",
+            f"ejercicio\t{settled.ejercicio}",
+            f"sector_id\t{settled.sector_id or ''}",
+            f"definitive_percentage\t{settled.definitive_percentage}",
+            f"definitive_volume_con_derecho\t{settled.definitive_volume_con_derecho}",
+            f"definitive_volume_sin_derecho\t{settled.definitive_volume_sin_derecho}",
+            f"count\t{len(updated.entries)}",
         ),
     )
 

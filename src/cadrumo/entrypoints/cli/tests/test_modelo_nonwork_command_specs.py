@@ -11,6 +11,11 @@ import pytest
 
 from .._command_runtime import _behavior_wrapper
 from .._modelo_nonwork_command_specs import MODELO_NONWORK_COMMAND_SPECS
+from .._modelo_nonwork_discovery_command_specs import (
+    _REGISTRY_YEAR_OPTION,
+    CASILLA_LOOKUP_SCOPE,
+    MODELO_NONWORK_DISCOVERY_COMMAND_SPECS,
+)
 from .._modelo_nonwork_m036_command_specs import (
     M036_DECLARATION_PARAMETERS,
     MODELO_NONWORK_M036_COMMAND_SPECS,
@@ -105,6 +110,58 @@ def test_nonwork_modelo_specs_are_the_exact_54_node_set() -> None:
     assert sum(spec.kind == "group" for spec in MODELO_NONWORK_COMMAND_SPECS) == 8
     assert sum(spec.kind == "leaf" for spec in MODELO_NONWORK_COMMAND_SPECS) == 46
     assert sum(len(spec.parameters) for spec in MODELO_NONWORK_COMMAND_SPECS) == 197
+
+
+def test_discovery_lookup_parameters_keep_exact_order_and_identity() -> None:
+    specs = {spec.key: spec for spec in MODELO_NONWORK_DISCOVERY_COMMAND_SPECS}
+    expected_orders = {
+        "app_modelo_list": ("year", "domain"),
+        "app_modelo_describe": ("modelo", "year", "period", "as_of"),
+        "app_modelo_casillas": (
+            "modelo",
+            "year",
+            "period",
+            "as_of",
+            "input_kind",
+            "required",
+            "form_number",
+            "casilla_number",
+            "explain",
+        ),
+        "app_modelo_casilla": ("modelo", "casilla_id", "year", "period", "as_of"),
+    }
+
+    assert type(CASILLA_LOOKUP_SCOPE) is tuple
+    assert tuple(parameter.name for parameter in CASILLA_LOOKUP_SCOPE) == (
+        "modelo",
+        "year",
+        "period",
+        "as_of",
+    )
+    assert _REGISTRY_YEAR_OPTION.name == "year"
+    assert _REGISTRY_YEAR_OPTION.declarations == ("--year",)
+    assert {
+        key: tuple(parameter.name for parameter in specs[key].parameters) for key in expected_orders
+    } == expected_orders
+    assert specs["app_modelo_list"].parameters[0] is _REGISTRY_YEAR_OPTION
+    assert specs["app_modelo_describe"].parameters[1] is _REGISTRY_YEAR_OPTION
+    assert all(
+        actual is expected
+        for actual, expected in zip(specs["app_modelo_casillas"].parameters[:4], CASILLA_LOOKUP_SCOPE, strict=True)
+    )
+    casilla_parameters = specs["app_modelo_casilla"].parameters
+    assert casilla_parameters[0] is CASILLA_LOOKUP_SCOPE[0]
+    assert casilla_parameters[1] is not CASILLA_LOOKUP_SCOPE[0]
+    assert all(
+        actual is expected for actual, expected in zip(casilla_parameters[2:], CASILLA_LOOKUP_SCOPE[1:], strict=True)
+    )
+    for token, key in (
+        ("list", "app_modelo_list"),
+        ("describe", "app_modelo_describe"),
+        ("casillas", "app_modelo_casillas"),
+        ("casilla", "app_modelo_casilla"),
+    ):
+        assert COMMAND_GRAPH.resolve_path(("aeat", "app", "modelo", token)) is specs[key]
 
 
 def test_reconcile_target_parameters_keep_order_and_import_extras_local() -> None:
