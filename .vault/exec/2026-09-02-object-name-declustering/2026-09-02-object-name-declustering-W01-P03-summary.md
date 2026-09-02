@@ -34,3 +34,9 @@ path-scoped commit, but concurrent broad staging captured them in commits
 `6ce6496a27` and `94380d6237` while `.git/index.lock` was held. The executor did
 not remove or bypass the lock and did not rewrite shared history. S06 restores
 path-scoped execution from the already-landed S05 bytes.
+
+Feature validation passed structure, frontmatter, Markdown, links, mappings,
+schema, and encoding. Attestation and template-annotation warnings remain on
+the P03 records and summary because the available fixer is feature-wide while
+the concurrent P02 S04 audit and Step Record are still incomplete. A coordinated
+feature-wide refresh is deferred until both phases are finalized.
