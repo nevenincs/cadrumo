@@ -322,6 +322,7 @@ def local_calendar_filing_evidence(
         aeat=CalendarEvidenceReadOutcome(
             state=available,
             value=AeatCalendarEvidenceSources(
+                filing_records=filing_records,
                 observed_events=events,
                 filed_declaration_observations=tuple(filed_declaration_observations),
                 verified_filed_declaration_artefact_refs=tuple(verified_filed_artefact_csvs),

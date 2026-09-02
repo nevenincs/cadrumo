@@ -735,54 +735,53 @@ def _stronger_filing_evidence(
     existing: OverviewCalendarFilingEvidence,
     candidate: OverviewCalendarFilingEvidence,
 ) -> OverviewCalendarFilingEvidence:
-    """Return a merged row preserving the strongest local and AEAT axes."""
-    local = existing
+    """Return a deterministic merge preserving the strongest independent axes."""
+    local = max((existing, candidate), key=_local_evidence_semantic_key)
+    aeat = max((existing, candidate), key=_aeat_evidence_semantic_key)
     conflict_reference_ids = _merged_conflict_reference_ids(existing, candidate)
-    if (
-        existing.local_filing_state is OverviewLocalFilingState.NOT_READY_TO_FILE
-        and candidate.local_filing_state is not OverviewLocalFilingState.NOT_READY_TO_FILE
-    ):
-        local = local.model_copy(
-            update={
-                "local_filing_state": candidate.local_filing_state,
-                "local_filing_record_id": candidate.local_filing_record_id,
-                "local_calculation_revision_id": candidate.local_calculation_revision_id,
-                "local_filed_at": candidate.local_filed_at,
-            },
-        )
-    if conflict_reference_ids != local.aeat_evidence_conflict_reference_ids:
-        local = local.model_copy(update={"aeat_evidence_conflict_reference_ids": conflict_reference_ids})
-    if _AEAT_SUBMISSION_RANK[candidate.aeat_submission_state] >= _AEAT_SUBMISSION_RANK[local.aeat_submission_state]:
-        local = local.model_copy(
-            update={
-                "aeat_submission_state": candidate.aeat_submission_state,
-                "aeat_submitted_at": _merged_aeat_submitted_at(local, candidate),
-                "aeat_reference_id": candidate.aeat_reference_id or local.aeat_reference_id,
-                "aeat_snapshot_id": candidate.aeat_snapshot_id or local.aeat_snapshot_id,
-                "aeat_evidence_kind": candidate.aeat_evidence_kind or local.aeat_evidence_kind,
-                "aeat_evidence_conflict_reference_ids": conflict_reference_ids,
-                "verified_justificante_csv": candidate.verified_justificante_csv or local.verified_justificante_csv,
-                "justificante_verified": candidate.justificante_verified or local.justificante_verified,
-                "evidence_source": candidate.evidence_source or local.evidence_source,
-            },
-        )
-    return local
+    return existing.model_copy(
+        update={
+            "local_filing_state": local.local_filing_state,
+            "local_filing_record_id": local.local_filing_record_id,
+            "local_calculation_revision_id": local.local_calculation_revision_id,
+            "local_filed_at": local.local_filed_at,
+            "aeat_submission_state": aeat.aeat_submission_state,
+            "aeat_submitted_at": aeat.aeat_submitted_at,
+            "aeat_reference_id": aeat.aeat_reference_id,
+            "aeat_snapshot_id": aeat.aeat_snapshot_id,
+            "aeat_evidence_kind": aeat.aeat_evidence_kind,
+            "aeat_evidence_conflict_reference_ids": conflict_reference_ids,
+            "verified_justificante_csv": aeat.verified_justificante_csv,
+            "justificante_required": existing.justificante_required or candidate.justificante_required,
+            "justificante_verified": aeat.justificante_verified,
+            "evidence_source": aeat.evidence_source,
+        },
+    )
 
 
-def _merged_aeat_submitted_at(
-    existing: OverviewCalendarFilingEvidence,
-    candidate: OverviewCalendarFilingEvidence,
-) -> datetime | None:
-    """Prefer official justificante presentation time over local capture time."""
-    if (
-        existing.justificante_verified
-        and candidate.justificante_verified
-        and existing.aeat_submitted_at is not None
-        and _AEAT_SUBMISSION_RANK[candidate.aeat_submission_state]
-        == _AEAT_SUBMISSION_RANK[existing.aeat_submission_state]
-    ):
-        return existing.aeat_submitted_at
-    return candidate.aeat_submitted_at or existing.aeat_submitted_at
+def _local_evidence_semantic_key(evidence: OverviewCalendarFilingEvidence) -> tuple[object, ...]:
+    """Return a complete deterministic precedence key for the local axis."""
+    return (
+        evidence.local_filing_state is not OverviewLocalFilingState.NOT_READY_TO_FILE,
+        evidence.local_filing_state.value,
+        evidence.local_filed_at.isoformat() if evidence.local_filed_at is not None else "",
+        evidence.local_filing_record_id or "",
+        evidence.local_calculation_revision_id or "",
+    )
+
+
+def _aeat_evidence_semantic_key(evidence: OverviewCalendarFilingEvidence) -> tuple[object, ...]:
+    """Return a complete deterministic precedence key for the AEAT axis."""
+    return (
+        _AEAT_SUBMISSION_RANK[evidence.aeat_submission_state],
+        evidence.justificante_verified,
+        evidence.aeat_submitted_at.isoformat() if evidence.aeat_submitted_at is not None else "",
+        _clean_reference_id(evidence.aeat_reference_id) or "",
+        str(evidence.aeat_snapshot_id or ""),
+        evidence.aeat_evidence_kind or "",
+        _clean_reference_id(evidence.verified_justificante_csv) or "",
+        evidence.evidence_source or "",
+    )
 
 
 def _merged_conflict_reference_ids(
@@ -829,9 +828,25 @@ def _clean_reference_id(reference_id: str | None) -> str | None:
 
 def _calendar_filing_evidence_sort_key(
     evidence: OverviewCalendarFilingEvidence,
-) -> tuple[str, int, str]:
+) -> tuple[object, ...]:
     _p = evidence.period
-    return (evidence.modelo or "", evidence.filing_year or 0, _p.registry_token if _p is not None else "")
+    return (
+        evidence.modelo or "",
+        evidence.filing_year or 0,
+        _p.registry_token if _p is not None else "",
+        _local_evidence_semantic_key(evidence),
+        _aeat_evidence_semantic_key(evidence),
+    )
+
+
+def merge_calendar_filing_evidence(
+    *groups: tuple[OverviewCalendarFilingEvidence, ...],
+) -> tuple[OverviewCalendarFilingEvidence, ...]:
+    """Join reconciled evidence groups by natural address deterministically."""
+    by_key: dict[tuple[str, int, str], OverviewCalendarFilingEvidence] = {}
+    for item in (row for group in groups for row in group):
+        _merge_filing_evidence(by_key, item)
+    return tuple(sorted(by_key.values(), key=_calendar_filing_evidence_sort_key))
 
 
 def _calendar_entry_filing_evidence(

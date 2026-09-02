@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from .calendar_evidence import calendar_filing_evidence_from_sources
+from .calendar_evidence import calendar_filing_evidence_from_sources, merge_calendar_filing_evidence
 from .calendar_models import OverviewAeatSubmissionState, OverviewCalendarFilingEvidence, OverviewLocalFilingState
 from .home import HomeAvailability, HomeZoneState
 
@@ -39,6 +39,7 @@ class AeatCalendarEvidenceSources:
     the source bundle stays immutable and has a deterministic representation.
     """
 
+    filing_records: tuple[ModeloRecord, ...] = ()
     observed_events: tuple[OverviewCalendarEvent, ...] = ()
     filed_declaration_observations: tuple[FiledDeclaracionObservation, ...] = ()
     verified_filed_declaration_artefact_refs: tuple[str, ...] = ()
@@ -103,8 +104,12 @@ def build_calendar_evidence_projection(
         raise TypeError("the AEAT evidence outcome requires AeatCalendarEvidenceSources")
     local_sources = local.value or LocalCalendarEvidenceSources()
     aeat_sources = aeat.value or AeatCalendarEvidenceSources()
-    evidence = calendar_filing_evidence_from_sources(
+    local_evidence = calendar_filing_evidence_from_sources(
         filing_records=local_sources.filing_records,
+        expected_tax_id=expected_tax_id,
+    )
+    aeat_evidence = calendar_filing_evidence_from_sources(
+        filing_records=aeat_sources.filing_records,
         observed_events=aeat_sources.observed_events,
         filed_declaration_observations=aeat_sources.filed_declaration_observations,
         verified_filed_declaration_artefact_refs=aeat_sources.verified_filed_declaration_artefact_refs,
@@ -117,8 +122,29 @@ def build_calendar_evidence_projection(
     return CalendarEvidenceProjection(
         local_state=local.state,
         aeat_state=aeat.state,
-        evidence=tuple(
-            _mask_unobservable_axes(row, local_state=local.state, aeat_state=aeat.state) for row in evidence
+        evidence=merge_calendar_filing_evidence(
+            tuple(
+                _mask_unobservable_axes(
+                    row,
+                    local_state=local.state,
+                    aeat_state=HomeZoneState(
+                        availability=HomeAvailability.NEVER_CAPTURED,
+                        reason_code="evidence.axis_not_loaded",
+                    ),
+                )
+                for row in local_evidence
+            ),
+            tuple(
+                _mask_unobservable_axes(
+                    row,
+                    local_state=HomeZoneState(
+                        availability=HomeAvailability.NEVER_CAPTURED,
+                        reason_code="evidence.axis_not_loaded",
+                    ),
+                    aeat_state=aeat.state,
+                )
+                for row in aeat_evidence
+            ),
         ),
     )
 
