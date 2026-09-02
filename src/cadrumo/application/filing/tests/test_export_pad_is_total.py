@@ -33,6 +33,7 @@ from __future__ import annotations
 import pytest
 
 from ....domain.calculations.registry.fixed_width_codec import ExportJustification, ExportPadding, pad_fixed_width_text
+from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ..export import _RecordRenderRow, _render_record
 from ._export_support import _approved_registry_draft, _typed_producer_snapshot
@@ -63,7 +64,7 @@ def _field(
         length=length,
         kind="literal",
         literal=literal,
-        data_type="text",
+        data_type=CasillaDataType.TEXT,
         required=False,
         padding=padding,
         justification=_JUSTIFICATION_BY_PADDING[padding],

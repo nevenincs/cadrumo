@@ -19,7 +19,7 @@ from ..corpus_catalogue import verify_source_catalogue, verify_source_file
 from ..errors import RegistryValidationError
 from ..legal import assert_legal_ref_ids_resolve, verify_legal_catalogue
 from ..schema import RegistryCatalogues
-from ..schema_base import SourceCitation
+from ..schema_base import EvidenceTier, SourceCitation
 from ..schema_references import LegalReference, SourceReference
 from ._registry_schema_support import _committed_registry_tree
 
@@ -865,7 +865,7 @@ def test_verify_legal_reference_checks_manual_section_json(tmp_path: Path) -> No
 
     reference = LegalReference(
         id="renta-2020-manual:sec1",
-        evidence_tier="legal_authority",
+        evidence_tier=EvidenceTier.LEGAL_AUTHORITY,
         authority="aeat",
         kind="manual",
         corpus_ref="corpus/manuals/renta/2020/part1/structure/sections/cap1/sec1.json#sec1",

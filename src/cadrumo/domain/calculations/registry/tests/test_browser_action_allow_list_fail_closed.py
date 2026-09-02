@@ -29,6 +29,7 @@ from ..remote_state_guard import (
     RemoteStateGuardResult,
     evaluate_remote_operation,
 )
+from ..schema_base import EvidenceTier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -51,7 +52,7 @@ def _policy(*, patterns: tuple[str, ...]) -> RemoteStateGuardPolicy:
     """Return an authenticated-read policy carrying ``patterns`` as its action gate."""
     return RemoteStateGuardPolicy(
         id="fail-closed-probe",
-        evidence_tier="official_source_guidance",
+        evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
         classification="authenticated_read_surface",
         allowed_hosts=(_HOST,),
         allowed_browser_action_patterns=patterns,

@@ -28,6 +28,7 @@ from ..renta_web_open_oracle import (
     serialize_renta_web_open_replay_decimal,
     validate_renta_web_open_expected_casilla_ids,
 )
+from ..schema_base import EvidenceTier
 from ..schema_verification import LiveCrossReferenceDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -51,7 +52,7 @@ def _casilla_id_from_payload(value: object) -> CasillaId:
 def _open_simulator_policy() -> RemoteStateGuardPolicy:
     decision = LiveCrossReferenceDecision(
         id="modelo-100-renta-web-open",
-        evidence_tier="executable_parity_evidence",
+        evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
         surface="open_simulator",
         guard_policy_id="modelo-100-renta-web-open-read-only",
         oracle_id="modelo-100-renta-web-open",

@@ -38,6 +38,7 @@ from ..export import (
 from ..export_semantics import ExportDraftAttribute
 from ..fixed_width_codec import ExportJustification, ExportPadding
 from ..schema import DataBindingDefinition, ModeloRevision
+from ..schema_base import CasillaDataType
 from ..schema_exports import ExportFieldDefinition, FilingEnvelopePrefixFieldDeclaration, FilingEnvelopePrefixRole
 from ._loader_directory_mode_support import _committed_modelo, _committed_registry_modelos
 
@@ -237,7 +238,7 @@ def test_every_fixed_width_export_surface_refuses_zero_offset() -> None:
     with pytest.raises(ValidationError):
         _field(offset=0, length=1)
     with pytest.raises(ValidationError):
-        BindingFixedExportSelector(record="DPA", offset=0, length=1, data_type="text")
+        BindingFixedExportSelector(record="DPA", offset=0, length=1, data_type=CasillaDataType.TEXT)
 
 
 def _export_eligible_revision() -> ModeloRevision:

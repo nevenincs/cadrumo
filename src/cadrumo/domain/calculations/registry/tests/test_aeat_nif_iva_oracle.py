@@ -24,6 +24,7 @@ from ..remote_state_guard import (
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
 )
+from ..schema_base import EvidenceTier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -37,7 +38,7 @@ def _aeat_policy() -> RemoteStateGuardPolicy:
     # the no-synthetic-sede-live-surfaces rule.
     return RemoteStateGuardPolicy(
         id="aeat-nif-iva-public",
-        evidence_tier="executable_parity_evidence",
+        evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
         classification="open_simulator",
         # The form servlet lives on www1.agenciatributaria.gob.es; the sede
         # entry point that the live driver visits first lives on
@@ -62,7 +63,7 @@ def _aeat_policy() -> RemoteStateGuardPolicy:
 def _wrong_host_policy() -> RemoteStateGuardPolicy:
     return RemoteStateGuardPolicy(
         id="wrong-host",
-        evidence_tier="executable_parity_evidence",
+        evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
         classification="open_simulator",
         allowed_hosts=(_WWW6_HOST,),
         forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,

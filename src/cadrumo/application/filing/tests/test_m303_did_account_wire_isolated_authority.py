@@ -30,6 +30,7 @@ from ....domain.calculations.registry.loader import load_modelo_directory
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.record_design import extract_record_design
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -344,7 +345,7 @@ def _projection_rows_envelope_layout(
                 length=10,
                 kind=CasillaFieldKind.PROJECTION,
                 projection_ref=projection_ref,
-                data_type="text",
+                data_type=CasillaDataType.TEXT,
                 required=True,
                 padding="right_space",
                 justification="left",

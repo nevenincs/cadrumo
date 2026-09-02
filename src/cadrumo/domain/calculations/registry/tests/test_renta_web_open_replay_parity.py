@@ -29,6 +29,7 @@ from ..renta_web_open_oracle import (
     RentaWebOpenOracle,
     RentaWebOpenReplayDriver,
 )
+from ..schema_base import EvidenceTier
 from ..schema_verification import LiveCrossReferenceDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -45,7 +46,7 @@ def _discovered_payloads() -> tuple[Path, ...]:
 def _open_simulator_policy() -> RemoteStateGuardPolicy:
     decision = LiveCrossReferenceDecision(
         id="modelo-100-renta-web-open",
-        evidence_tier="executable_parity_evidence",
+        evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
         surface="open_simulator",
         guard_policy_id="modelo-100-renta-web-open-read-only",
         allowed_hosts=(_SEDE_HOST, _WWW2_HOST),

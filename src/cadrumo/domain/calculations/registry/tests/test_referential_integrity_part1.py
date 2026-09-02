@@ -14,6 +14,7 @@ from ..authority import ValidatedRegistryAuthority
 from ..binding_selector_utils import BindingFixedExportSelector
 from ..errors import RegistryValidationError
 from ..schema import DataBindingDefinition, FormulaDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues
+from ..schema_base import CasillaDataType
 from ..schema_extraction import (
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
@@ -151,7 +152,7 @@ def test_bound_casilla_dangling_alternate_binding_fails_snapshot_integrity() -> 
     binding = DataBindingDefinition(
         id="test.binding",
         source=BindingSourceKind.MANUAL_INPUT,
-        selector=BindingFixedExportSelector(record="DPA", field="test", offset=1, length=1, data_type="integer"),
+        selector=BindingFixedExportSelector(record="DPA", field="test", offset=1, length=1, data_type=CasillaDataType.INTEGER),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
     )
@@ -380,7 +381,7 @@ def test_dangling_binding_source_refs() -> None:
     binding = DataBindingDefinition(
         id="test.binding",
         source=BindingSourceKind.MANUAL_INPUT,
-        selector=BindingFixedExportSelector(record="DPA", field="test", offset=1, length=1, data_type="integer"),
+        selector=BindingFixedExportSelector(record="DPA", field="test", offset=1, length=1, data_type=CasillaDataType.INTEGER),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID, _extra),
     )

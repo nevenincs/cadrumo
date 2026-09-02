@@ -17,6 +17,7 @@ from ..schema import (
     ModeloRevision,
     RegistryCatalogues,
 )
+from ..schema_base import CasillaDataType
 from ..schema_deadlines import DeadlineWindowDefinition, ModeloScheduleDefinition
 from ..schema_exports import (
     ExportFieldDefinition,
@@ -225,7 +226,7 @@ def test_dangling_export_field_casilla_ref() -> None:
         id="el.test.field-01",
         kind=CasillaFieldKind.CASILLA,
         casilla_id=_NONEXISTENT_CASILLA,
-        data_type="money",
+        data_type=CasillaDataType.MONEY,
         required=True,
         padding="left_zero",
         justification="right",

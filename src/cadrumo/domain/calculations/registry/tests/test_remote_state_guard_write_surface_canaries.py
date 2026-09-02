@@ -49,6 +49,7 @@ from ..remote_state_guard import (
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
 )
+from ..schema_base import EvidenceTier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -63,7 +64,7 @@ def _open_policy() -> RemoteStateGuardPolicy:
     """
     return RemoteStateGuardPolicy(
         id="state-creating-canaries",
-        evidence_tier="executable_parity_evidence",
+        evidence_tier=EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
         classification="open_simulator",
         allowed_hosts=(_SEDE_HOST,),
         synthetic_data_allowed=False,

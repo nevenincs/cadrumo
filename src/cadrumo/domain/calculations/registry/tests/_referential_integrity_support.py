@@ -27,6 +27,7 @@ from ..schema import (
     RegistryCatalogues,
     RegistrySnapshot,
 )
+from ..schema_base import EvidenceTier
 from ..schema_deadlines import DeadlineWindowDefinition
 from ..schema_exports import (
     ExportFieldDefinition,
@@ -124,7 +125,7 @@ _SINGLE_SEGMENT_CASILLA_ID: CasillaId = validated_casilla_id("00592", surface="_
 def _minimal_legal_ref() -> LegalReference:
     return LegalReference(
         id=_REFERENCE_LEGAL_ID,
-        evidence_tier="legal_authority",
+        evidence_tier=EvidenceTier.LEGAL_AUTHORITY,
         authority="boe",
         kind="ley",
         corpus_ref="boe/lirpf#art-1",

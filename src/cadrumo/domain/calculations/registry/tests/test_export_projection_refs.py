@@ -32,6 +32,7 @@ from ..errors import RegistryLoadError, RegistryValidationError
 from ..export import derive_export_layouts_from_bindings
 from ..fixed_width_codec import ExportEncoding
 from ..schema import ModeloRevision
+from ..schema_base import CasillaDataType
 from ..schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -64,7 +65,7 @@ def _field(*, field_id: str = "projection.field", projection_ref: object) -> Exp
         length=4,
         kind="projection",
         projection_ref=projection_ref,
-        data_type="text",
+        data_type=CasillaDataType.TEXT,
         required=False,
         padding="right_space",
         justification="left",
@@ -89,7 +90,7 @@ def _binding_field(*, field_id: str = "binding.field") -> ExportFieldDefinition:
         length=4,
         kind="binding",
         binding="projection-test-binding",
-        data_type="text",
+        data_type=CasillaDataType.TEXT,
         required=False,
         padding="right_space",
         justification="left",

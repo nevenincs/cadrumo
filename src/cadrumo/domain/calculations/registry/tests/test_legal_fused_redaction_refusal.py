@@ -35,6 +35,7 @@ from .....core.corpus_text import (
 from .....core.resources.bundled_data import bundled_path
 from ..errors import RegistryValidationError
 from ..legal import verify_legal_reference, verify_legal_reference_grounding
+from ..schema_base import EvidenceTier
 from ..schema_references import LegalReference
 from ._catalogue_verification_support import _registry_tree
 
@@ -100,7 +101,7 @@ def _reference(corpus_ref: str, *, required_text: tuple[str, ...]) -> LegalRefer
     """Build a minimal filing-grade reference citing ``corpus_ref``."""
     return LegalReference(
         id="probe:art-1",
-        evidence_tier="legal_authority",
+        evidence_tier=EvidenceTier.LEGAL_AUTHORITY,
         authority="boe",
         kind="real_decreto",
         corpus_ref=corpus_ref,

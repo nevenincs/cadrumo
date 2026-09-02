@@ -39,6 +39,7 @@ from ._m303_orden_source import (
 )
 from .errors import RegistryValidationError
 from .ids import LegalRefId
+from .schema_base import EvidenceTier
 from .schema_references import LegalReference, SourceReference
 
 
@@ -349,7 +350,7 @@ def _add_annual_orden_legal_reference(
         raise RegistryValidationError("annual Orden compiler generated duplicate legal identity")
     output[key] = LegalReference(
         id=_axis_legal_ref_id(source, axis=axis, identity=key.rsplit(":", maxsplit=1)[-1]),
-        evidence_tier="legal_authority",
+        evidence_tier=EvidenceTier.LEGAL_AUTHORITY,
         authority="boe",
         kind="orden",
         corpus_ref=f"{source.corpus_path}{anchor}",

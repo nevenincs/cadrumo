@@ -13,6 +13,7 @@ from ....core.filing_projection_ref import (
 )
 from ....core.period import Period
 from ....domain.calculations.registry.export_value_policy import ExportValuePolicy
+from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -65,7 +66,7 @@ def _field(
         length=1 if policy is ExportValuePolicy.SELECTED_1_UNSELECTED_0 else 2,
         kind="casilla",
         casilla_id=casilla_id,
-        data_type="integer",
+        data_type=CasillaDataType.INTEGER,
         required=False,
         padding="left_zero",
         justification="right",
@@ -213,7 +214,7 @@ def _projection_field() -> ExportFieldDefinition:
             slot=1,
             field=M303Exonerado390ActivityField.ACTIVITY_CODE,
         ),
-        data_type="text",
+        data_type=CasillaDataType.TEXT,
         required=True,
         padding="right_space",
         justification="left",
