@@ -11,7 +11,16 @@ from typing import TYPE_CHECKING, Literal, cast
 
 from ...core.i18n.render import output_language, tr
 from ...core.type_guards import is_object_list_or_tuple
-from .command_spec import DefaultKind, OptionSpec, SchemaState
+from .command_spec import (
+    Capability,
+    CommandWriteRouteValue,
+    DefaultKind,
+    OptionSpec,
+    ParameterKind,
+    PerformanceClass,
+    SchemaState,
+    SideEffect,
+)
 
 if TYPE_CHECKING:
     from ...application.operator_surface.manifest import CommandSchemaRef
@@ -19,36 +28,19 @@ if TYPE_CHECKING:
     from ._command_policy import CommandExecutionPolicy
     from .command_spec import CommandSpec, ParameterSpec
 
-CommandCapability = Literal[
-    "state-free",
-    "local-storage",
-    "registry",
-    "profile-custody",
-    "encrypted-facts",
-    "network",
-    "browser",
-    "google",
-    "calculation",
-    "filing",
-    "crypto",
-    "subprocess",
-]
-CommandSideEffectClass = Literal["none", "local-state", "network", "browser", "google"]
-CommandPerformanceClass = Literal["metadata", "local-io", "compute", "external-io", "interactive"]
-CommandParameterKind = Literal["argument", "option"]
 CommandJsonType = Literal["string", "integer", "number", "boolean"]
 CommandParameterDefault = bool | int | float | str | tuple[bool | int | float | str | None, ...] | None
 
 
 @dataclass(frozen=True, slots=True)
 class CommandCapabilityClass:
-    capabilities: frozenset[CommandCapability]
-    side_effects: frozenset[CommandSideEffectClass]
-    performance: CommandPerformanceClass
+    capabilities: frozenset[Capability]
+    side_effects: frozenset[SideEffect]
+    performance: PerformanceClass
 
     @property
-    def expanded_capabilities(self) -> frozenset[CommandCapability]:
-        implications: dict[CommandCapability, tuple[CommandCapability, ...]] = {
+    def expanded_capabilities(self) -> frozenset[Capability]:
+        implications: dict[Capability, tuple[Capability, ...]] = {
             "encrypted-facts": ("profile-custody",),
             "browser": ("network",),
             "google": ("network",),
@@ -74,7 +66,7 @@ class SchemaModuleLoadFailure:
 @dataclass(frozen=True, slots=True)
 class CommandParameterMetadata:
     name: str
-    kind: CommandParameterKind
+    kind: ParameterKind
     cli_flag: str
     off_flag: str
     json_type: CommandJsonType
@@ -147,10 +139,10 @@ def machine_secret_payload_metadata(spec: CommandSpec) -> tuple[MachineSecretPay
 
 @dataclass(frozen=True, slots=True)
 class CommandPolicyMetadata:
-    capabilities: frozenset[CommandCapability]
-    side_effects: frozenset[CommandSideEffectClass]
-    performance: CommandPerformanceClass
-    write_route: Literal["none", "profile-bound", "bootstrap-root"]
+    capabilities: frozenset[Capability]
+    side_effects: frozenset[SideEffect]
+    performance: PerformanceClass
+    write_route: CommandWriteRouteValue
     destructive: bool
     handoff: bool
     live_write: bool

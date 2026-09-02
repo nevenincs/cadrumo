@@ -11,9 +11,10 @@ import pytest
 
 from .._command_policy import (
     CommandExecutionPolicy,
-    CommandWriteRouteScope,
+    CommandWriteRouteValue,
 )
-from .._command_schema import CommandCapability, CommandCapabilityClass, CommandSideEffectClass
+from .._command_schema import CommandCapabilityClass
+from ..command_spec import Capability, SideEffect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -48,8 +49,8 @@ def _classification(
     side_effects: frozenset[str],
 ) -> CommandCapabilityClass:
     return CommandCapabilityClass(
-        capabilities=cast("frozenset[CommandCapability]", capabilities),
-        side_effects=cast("frozenset[CommandSideEffectClass]", side_effects),
+        capabilities=cast("frozenset[Capability]", capabilities),
+        side_effects=cast("frozenset[SideEffect]", side_effects),
         performance="metadata",
     )
 
@@ -94,7 +95,7 @@ def test_policy_rejects_contradictory_execution_judgments(
                 capabilities=frozenset(capabilities),
                 side_effects=frozenset(effects),
             ),
-            write_route=cast("CommandWriteRouteScope", write_route),
+            write_route=cast("CommandWriteRouteValue", write_route),
             destructive=destructive,
             handoff=handoff,
             live_write=live_write,

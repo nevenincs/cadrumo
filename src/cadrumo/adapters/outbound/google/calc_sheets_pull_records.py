@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Literal, TypedDict
+from typing import TypedDict
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
@@ -171,20 +171,3 @@ class PullResult(BaseModel):
     metadata: PullMetadata
     metadata_match: MetadataMatchState
     cells_read: NonNegativeInt
-
-
-class PullCoverageDiscrepancy(BaseModel):
-    """One coverage delta between an export plan and pulled workbook records."""
-
-    model_config = _STRICT_FROZEN
-
-    kind: Literal[
-        "metadata_mismatch",
-        "row_set_missing",
-        "row_set_extra",
-        "binding_count_mismatch",
-        "relation_count_mismatch",
-    ]
-    detail: str = Field(min_length=1)
-    expected: str = ""
-    observed: str = ""

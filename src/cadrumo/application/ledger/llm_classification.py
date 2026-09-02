@@ -91,6 +91,7 @@ from ...llm.vision_classifier import LocalVisionLLMClassifier
 from .actions_common import (
     build_ledger_bucket_event,
     build_manual_ledger_result,
+    require_concrete_repository,
     resolve_transaction_repository,
     save_transaction_catalogue_and_events,
 )
@@ -224,7 +225,11 @@ def _bytes_bearing_evidence_input(
     if attachment_ids:
         reference = attachment_ids[0]
         return resolve_attachment_evidence_input(reference, store=store), reference
-    assert evidence_id is not None  # narrowed by the caller's no-evidence early return
+    if evidence_id is None:
+        # The caller returns early when neither an attachment nor an evidence id is present.
+        raise TransactionValidationError(
+            "evidence resolution reached the document-bytes refusal without an evidence id",
+        )
     raise refuse_reference_without_document_bytes(evidence_id)
 
 
@@ -642,12 +647,11 @@ def apply_llm_classification(
         )
     occurred = coerce_utc_aware(occurred_at or now())
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    _event_repo_arg = bucket_event_repository or BucketEventHistoryRepository()
-    assert isinstance(_event_repo_arg, BucketEventHistoryRepository), (
-        "apply_llm_classification requires a concrete BucketEventHistoryRepository "
-        "(to_secure_object_write is not on the protocol)"
+    event_repository = require_concrete_repository(
+        bucket_event_repository or BucketEventHistoryRepository(),
+        BucketEventHistoryRepository,
+        reason="apply_llm_classification",
     )
-    event_repository = _event_repo_arg
     catalogue = repository.load()
     current = catalogue.get(suggestion.transaction_id)
     if current is None:
@@ -677,7 +681,11 @@ def apply_llm_classification(
         confidence=suggestion.confidence,
     )
     updated_transaction = updated_catalogue.get(suggestion.transaction_id)
-    assert updated_transaction is not None  # set_classification preserves the id
+    if updated_transaction is None:
+        raise TransactionValidationError(
+            "classification write dropped the transaction it was applied to",
+            context={"transaction_id": str(suggestion.transaction_id)},
+        )
     event = build_ledger_bucket_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_TRANSACTION_CLASSIFIED,
@@ -1523,10 +1531,10 @@ def reject_llm_suggestion(
     # (the unchanged catalogue rides along as a no-op), exactly as the apply path
     # does — a bare BucketEventHistoryRepository().save() does not bind to the
     # active bucket store in the CLI flow.
-    _event_repo_arg = bucket_event_repository or BucketEventHistoryRepository()
-    assert isinstance(_event_repo_arg, BucketEventHistoryRepository), (
-        "reject_llm_suggestion requires a concrete BucketEventHistoryRepository "
-        "(to_secure_object_write is not on the protocol)"
+    _event_repo_arg = require_concrete_repository(
+        bucket_event_repository or BucketEventHistoryRepository(),
+        BucketEventHistoryRepository,
+        reason="reject_llm_suggestion",
     )
     save_transaction_catalogue_and_events(
         transaction_repository=repository,

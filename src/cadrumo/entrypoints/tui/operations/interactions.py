@@ -28,6 +28,7 @@ from ....application.operations.frontend_contracts import (
     OperationReviewProjectionSuccessV1,
     OperationUnsupportedInteractionV1,
 )
+from ....application.operations.interactions import OperationResponseIntentValue
 from .controller import OperationBoundResponseControl, OperationController
 
 
@@ -128,7 +129,7 @@ async def resolve_modal_interaction_state[ReviewProjectionT: BaseModel](
         revision=pending.revision,
     )
     availability = await control.inspect()
-    permitted: frozenset[Literal["apply", "reject"]] = (
+    permitted: frozenset[OperationResponseIntentValue] = (
         availability.permitted_intents if isinstance(availability, OperationResponseControlSuccessV1) else frozenset()
     )
     return OperationModalReviewInteractionV1[ReviewProjectionT](

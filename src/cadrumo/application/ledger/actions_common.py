@@ -75,6 +75,28 @@ _REMOVAL_ADVISORY_REVISION_STATES = frozenset(
 )
 
 
+def require_concrete_repository[RepositoryT](
+    repository: object,
+    concrete: type[RepositoryT],
+    *,
+    reason: str,
+) -> RepositoryT:
+    """Return an injected repository once it is the concrete class this call needs.
+
+    These resolvers accept a Protocol so a caller can inject a stand-in, but
+    return the concrete repository because the write path uses methods the
+    Protocol does not declare. A stand-in that reaches here cannot serve the
+    call, so it is refused -- not asserted, because ``assert`` is stripped under
+    ``python -O`` and the substitution would then fail later, mid-write.
+    """
+    if not isinstance(repository, concrete):
+        raise TransactionValidationError(
+            f"{reason} requires a concrete {concrete.__name__}",
+            context={"supplied_repository": type(repository).__name__},
+        )
+    return repository
+
+
 def resolve_transaction_repository(
     *,
     bucket_id: str,
@@ -87,8 +109,9 @@ def resolve_transaction_repository(
             "transaction repository bucket_id does not match the manual ledger command bucket",
             context={"command_bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
-    assert isinstance(repository, TransactionCatalogueRepository)
-    return repository
+    return require_concrete_repository(
+        repository, TransactionCatalogueRepository, reason="the manual ledger transaction path"
+    )
 
 
 def resolve_invoice_repository(
@@ -103,8 +126,9 @@ def resolve_invoice_repository(
             "invoice repository bucket_id does not match the manual ledger command bucket",
             context={"command_bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
-    assert isinstance(repository, InvoiceCatalogueRepository)
-    return repository
+    return require_concrete_repository(
+        repository, InvoiceCatalogueRepository, reason="the manual ledger invoice path"
+    )
 
 
 def resolve_bucket_event_repository(
@@ -113,8 +137,9 @@ def resolve_bucket_event_repository(
     repository: BucketEventHistoryRepositoryProtocol | None,
 ) -> BucketEventHistoryRepository:
     if repository is not None:
-        assert isinstance(repository, BucketEventHistoryRepository)
-        return repository
+        return require_concrete_repository(
+            repository, BucketEventHistoryRepository, reason="the bucket-event history path"
+        )
     from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
     return BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
@@ -499,7 +524,12 @@ def _verify_purchase_invoice_evidence(
             context={"purchase_invoice_evidence_id": evidence_id},
         )
     invoice = reference.invoice
-    assert invoice is not None  # every remaining outcome carries its catalogue invoice
+    if invoice is None:
+        # Every outcome that survives the screens above carries its catalogue invoice.
+        raise TransactionValidationError(
+            "purchase invoice evidence reference resolved without its catalogue invoice",
+            context={"purchase_invoice_evidence_id": evidence_id},
+        )
     if reference.outcome is EvidenceReferenceOutcome.INVOICE_OUTSIDE_BUCKET:
         raise TransactionValidationError(
             "purchase_invoice_evidence_id must belong to the manual ledger command bucket",

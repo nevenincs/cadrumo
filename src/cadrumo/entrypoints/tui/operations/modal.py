@@ -32,6 +32,7 @@ from ....application.operations.frontend_contracts import (
     OperationResponseMutationSuccessV1,
     OperationResponseRejectRequestV1,
 )
+from ....application.operations.interactions import OperationResponseIntentValue
 from ....application.operations.models import OperationId, OperationRevision
 from ....core.i18n.render import tr
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -295,7 +296,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1]):
                 OperationModalDetachedOutcomeV1(operation_id=self._controller.operation_id, revision=result.revision)
             )
 
-    async def _respond(self, *, intent: Literal["apply", "reject"]) -> None:
+    async def _respond(self, *, intent: OperationResponseIntentValue) -> None:
         interaction = self._interaction
         if not isinstance(interaction, OperationModalReviewInteractionV1):
             return

@@ -9,7 +9,7 @@ records and resolve deferred targets only at their owning boundary.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, StrEnum
 from types import MappingProxyType
 from typing import Literal
 
@@ -34,7 +34,31 @@ type Capability = Literal[
 ]
 type SideEffect = Literal["none", "local-state", "network", "browser", "google"]
 type PerformanceClass = Literal["metadata", "local-io", "compute", "external-io", "interactive"]
-type WriteRoute = Literal["none", "profile-bound", "bootstrap-root"]
+class CommandWriteRoute(StrEnum):
+    """Which storage a command is permitted to write through.
+
+    One vocabulary that carried three names: ``WriteRoute`` here,
+    ``CommandWriteRouteScope`` in the policy module, and an inline spelling in the
+    command schema, with a fourth copy in a validation frozenset. A route added to one
+    of those left the other three validating the old set.
+    """
+
+    NONE = "none"
+    """Writes nothing; the command is safe against an uninitialised installation."""
+
+    PROFILE_BOUND = "profile-bound"
+    """Writes only inside the active profile's own storage."""
+
+    BOOTSTRAP_ROOT = "bootstrap-root"
+    """Writes to the installation root, before any profile exists to bind to."""
+
+
+CommandWriteRouteValue = Literal[
+    CommandWriteRoute.NONE,
+    CommandWriteRoute.PROFILE_BOUND,
+    CommandWriteRoute.BOOTSTRAP_ROOT,
+]
+"""The same vocabulary for a strict spec or payload field."""
 
 _CAPABILITIES = frozenset(
     {
@@ -54,7 +78,6 @@ _CAPABILITIES = frozenset(
 )
 _SIDE_EFFECTS = frozenset({"none", "local-state", "network", "browser", "google"})
 _PERFORMANCE_CLASSES = frozenset({"metadata", "local-io", "compute", "external-io", "interactive"})
-_WRITE_ROUTES = frozenset({"none", "profile-bound", "bootstrap-root"})
 _IMPLIED_CAPABILITIES: dict[Capability, frozenset[Capability]] = {
     "encrypted-facts": frozenset({"profile-custody"}),
     "browser": frozenset({"network"}),
@@ -81,7 +104,7 @@ class ExecutionPolicySpec:
     capabilities: frozenset[Capability]
     side_effects: frozenset[SideEffect]
     performance: PerformanceClass
-    write_route: WriteRoute
+    write_route: CommandWriteRouteValue
     destructive: bool = False
     handoff: bool = False
     live_write: bool = False
@@ -100,7 +123,7 @@ class ExecutionPolicySpec:
             raise ValueError("execution policy has missing or unknown side effects")
         if self.performance not in _PERFORMANCE_CLASSES:
             raise ValueError("execution policy has an unknown performance class")
-        if self.write_route not in _WRITE_ROUTES:
+        if self.write_route not in CommandWriteRoute:
             raise ValueError("execution policy has an unknown write route")
         if "state-free" in self.capabilities and self.capabilities != frozenset({"state-free"}):
             raise ValueError("state-free cannot be combined with authority capabilities")
@@ -115,7 +138,9 @@ class ExecutionPolicySpec:
             for effect, capability in required_by_effect.items()
         ):
             raise ValueError("execution policy side effect lacks its owning capability")
-        if self.write_route != "none" and ("local-state" not in self.side_effects or "profile-custody" not in expanded):
+        if self.write_route != CommandWriteRoute.NONE and (
+            "local-state" not in self.side_effects or "profile-custody" not in expanded
+        ):
             raise ValueError("storage write routes require profile custody and local-state effects")
         if self.destructive and "local-state" not in self.side_effects:
             raise ValueError("destructive execution requires a local-state effect")

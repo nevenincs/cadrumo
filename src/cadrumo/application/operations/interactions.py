@@ -53,6 +53,20 @@ class OperationResponseIntent(StrEnum):
     REJECT = "reject"
 
 
+OperationResponseIntentValue = Literal[
+    OperationResponseIntent.APPLY,
+    OperationResponseIntent.REJECT,
+]
+"""Both members of the operator decision, for a surface that admits either.
+
+An operation model graph must not customise its Pydantic core schema and a bare enum
+under strict validation refuses the plain token a serialised response carries, so the
+contracts, the TUI and the censal review all take this literal. Rooted in the enum
+above; the single-member narrowings on the concrete response models are rooted the same
+way and stay narrow.
+"""
+
+
 class _OperationInteractionResponseBase(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
@@ -220,7 +234,7 @@ class OperationConsumedInteraction(BaseModel):
         return self.checkpoint.reviewed_proposal_digest
 
     @property
-    def response_action(self) -> Literal["apply", "reject"]:
+    def response_action(self) -> OperationResponseIntentValue:
         """Project the private intent enum as a safe closed action literal."""
         return self.intent.value
 
