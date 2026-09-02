@@ -5,7 +5,7 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.operator_actions.models import ActionReference, DeclaredNextAction
+from cadrumo.application.operator_actions.models import ActionArgumentBinding, ActionReference, DeclaredNextAction
 from cadrumo.application.overview.calendar_models import (
     CalendarCompleteness,
     OverviewAeatSubmissionState,
@@ -14,9 +14,9 @@ from cadrumo.application.overview.calendar_models import (
     OverviewLocalFilingState,
     OverviewPeriodState,
 )
+from cadrumo.core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from cadrumo.core.period import Period
 from cadrumo.domain.deadlines.models import ObligationStatus
-from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
 from ..agenda import OverviewAgenda
 from ..home import (
@@ -26,9 +26,9 @@ from ..home import (
     HomeDeclarationState,
     HomeLedgerReadiness,
     HomeNextAction,
+    HomeProjectionInput,
     HomeSessionPosture,
     HomeZoneState,
-    HomeProjectionInput,
     compose_home_projection,
 )
 
@@ -39,26 +39,16 @@ _AVAILABLE = HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=
 _ACCOUNT = HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Local profile")
 
 
-def _work_unit(label: str, *, updated_hour: int, calculated: bool = False) -> WorkUnit:
+def _declaration(*, name: str = "return", work_unit_id: str = "a" * 64) -> HomeDeclarationResume:
     period = Period.from_year_and_code(2026, "3T")
-    work_unit_id = derive_work_unit_id(
-        bucket_id="a" * 64,
-        modelo="303",
-        filing_year=2026,
-        period=period,
-        revision_id="2026-v1",
-    )
-    return WorkUnit(
+    return HomeDeclarationResume(
         work_unit_id=work_unit_id,
-        bucket_id="a" * 64,
         modelo="303",
         filing_year=2026,
         period=period,
         revision_id="2026-v1",
-        name=label,
-        created_at=datetime(2026, 9, 1, tzinfo=UTC),
-        updated_at=datetime(2026, 9, 3, updated_hour, tzinfo=UTC),
-        current_calculation_revision_id="b" * 64 if calculated else None,
+        name=name,
+        state=HomeDeclarationState.NEEDS_REVIEW,
     )
 
 
@@ -109,14 +99,12 @@ def _input(**updates: object) -> HomeProjectionInput:
     return HomeProjectionInput.model_validate(values)
 
 
-def test_work_units_make_only_states_the_work_unit_itself_proves() -> None:
-    older = _work_unit("older", updated_hour=8)
-    newer = _work_unit("newer", updated_hour=9, calculated=True)
+def test_composes_only_exact_declaration_and_ledger_reader_outputs() -> None:
+    exact = _declaration()
 
-    projection = compose_home_projection(_input(work_units=(older, newer)))
+    projection = compose_home_projection(_input(declarations=(exact,)))
 
-    assert [item.name for item in projection.declarations] == ["newer"]
-    assert projection.declarations[0].state is HomeDeclarationState.DRAFT
+    assert projection.declarations == (exact,)
     assert projection.ledger is not None
     assert projection.ledger.model_dump() == {
         "entries": 4,
@@ -126,21 +114,9 @@ def test_work_units_make_only_states_the_work_unit_itself_proves() -> None:
     }
 
 
-def test_exact_declaration_reader_output_carries_richer_state_without_inference() -> None:
-    unit = _work_unit("return", updated_hour=9, calculated=True)
-    exact = HomeDeclarationResume(
-        work_unit_id=unit.work_unit_id,
-        modelo="303",
-        filing_year=2026,
-        period=unit.period,
-        name=unit.name,
-        state=HomeDeclarationState.NEEDS_REVIEW,
-        revision_id=unit.revision_id,
-    )
-
-    projection = compose_home_projection(_input(work_units=(unit,), declarations=(exact,)))
-
-    assert projection.declarations == (exact,)
+def test_duplicate_declaration_reader_identity_is_rejected_not_overwritten() -> None:
+    with pytest.raises(ValidationError, match="unique work_unit_id"):
+        _input(declarations=(_declaration(name="first"), _declaration(name="second")))
 
 
 def test_actions_are_deterministically_sorted_trimmed_and_reranked() -> None:
@@ -161,6 +137,42 @@ def test_actions_are_deterministically_sorted_trimmed_and_reranked() -> None:
         "home.action_c",
     ]
     assert [item.rank for item in projection.actions] == [0, 1, 2]
+
+
+def test_action_tie_order_includes_argument_bindings_and_is_input_order_independent() -> None:
+    def action(value: str) -> HomeNextAction:
+        binding = ActionArgumentBinding(
+            argument_name="profile_key",
+            status=ActionArgumentStatus.RESOLVED,
+            value=value,
+            source=ActionArgumentSource.REQUEST_CONTEXT,
+            source_key="profile_key",
+        )
+        return HomeNextAction(
+            rank=1,
+            action=DeclaredNextAction(
+                action=ActionReference(action_id="home.open_profile"),
+                argument_bindings=(binding,),
+            ),
+            reason_code="profile.review",
+        )
+
+    first = compose_home_projection(_input(actions=(action("zeta"), action("alpha"))))
+    second = compose_home_projection(_input(actions=(action("alpha"), action("zeta"))))
+
+    assert first.actions == second.actions
+    assert [item.action.argument_bindings[0].value for item in first.actions] == ["alpha", "zeta"]
+
+
+def test_duplicate_action_semantic_identity_is_rejected_before_preview_trimming() -> None:
+    duplicate = HomeNextAction(
+        rank=7,
+        action=DeclaredNextAction(action=ActionReference(action_id="home.review")),
+        reason_code="review.required",
+    )
+
+    with pytest.raises(ValidationError, match="unique semantic identities"):
+        _input(actions=(duplicate, duplicate.model_copy(update={"rank": 99})))
 
 
 def test_agenda_uses_legal_due_date_top_three_and_masks_unobservable_aeat_evidence() -> None:
@@ -205,13 +217,14 @@ def test_locked_declaration_zone_refuses_an_already_local_reader_result() -> Non
     locked = HomeZoneState(availability=HomeAvailability.LOCKED, reason_code="profile.locked")
 
     with pytest.raises(ValidationError, match="non-available declarations zone"):
-        compose_home_projection(_input(declarations_state=locked, work_units=(_work_unit("draft", updated_hour=9),)))
+        compose_home_projection(_input(declarations_state=locked, declarations=(_declaration(),)))
 
 
 def test_composer_contract_contains_results_not_repository_or_network_callables() -> None:
     fields = HomeProjectionInput.model_fields
 
-    assert "work_units" in fields
+    assert "declarations" in fields
+    assert "work_units" not in fields
     assert "overview_agenda" in fields
     assert "ledger_readiness" in fields
     assert all("repository" not in name and "client" not in name and "reader" not in name for name in fields)

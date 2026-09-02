@@ -19,10 +19,14 @@ from ...core.identity import WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...domain.calculations.registry.ids import ModeloId, RevisionId
-from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
 from ..operator_actions.models import DeclaredNextAction
 from .agenda import OverviewAgenda
-from .calendar_models import OverviewAeatSubmissionState, OverviewCalendarEntry
+from .calendar_models import (
+    OverviewAeatSubmissionState,
+    OverviewCalendarEntry,
+    OverviewLocalFilingState,
+    OverviewPeriodState,
+)
 
 
 class HomeAvailability(StrEnum):
@@ -241,7 +245,6 @@ class HomeProjectionInput(BaseModel):
     actions: tuple[HomeNextAction, ...] = ()
     declarations_state: HomeZoneState
     declarations: tuple[HomeDeclarationResume, ...] = ()
-    work_units: tuple[WorkUnit, ...] = ()
     ledger_state: HomeZoneState
     ledger_readiness: HomeLedgerReadiness | None = None
     agenda_state: HomeZoneState
@@ -249,6 +252,16 @@ class HomeProjectionInput(BaseModel):
     overview_agenda: OverviewAgenda | None = None
     messages_state: HomeZoneState
     messages_requiring_attention: int | None = None
+
+    @model_validator(mode="after")
+    def _reject_duplicate_reader_identities(self) -> Self:
+        declaration_ids = tuple(item.work_unit_id for item in self.declarations)
+        if len(set(declaration_ids)) != len(declaration_ids):
+            raise ValueError("Home declarations require unique work_unit_id values")
+        action_keys = tuple(_action_semantic_key(item) for item in self.actions)
+        if len(set(action_keys)) != len(action_keys):
+            raise ValueError("Home actions require unique semantic identities")
+        return self
 
 
 def compose_home_projection(source: HomeProjectionInput) -> HomeProjectionV1:
@@ -259,7 +272,7 @@ def compose_home_projection(source: HomeProjectionInput) -> HomeProjectionV1:
         actions_state=source.actions_state,
         actions=_rank_actions(source.actions),
         declarations_state=source.declarations_state,
-        declarations=_project_declarations(source.declarations, source.work_units),
+        declarations=_project_declarations(source.declarations),
         ledger_state=source.ledger_state,
         ledger=source.ledger_readiness,
         agenda_state=source.agenda_state,
@@ -273,51 +286,28 @@ def compose_home_projection(source: HomeProjectionInput) -> HomeProjectionV1:
 def _rank_actions(actions: tuple[HomeNextAction, ...]) -> tuple[HomeNextAction, ...]:
     ordered = sorted(
         actions,
-        key=lambda item: (
-            item.rank,
-            item.reason_code,
-            item.action.action.action_id,
-            item.modelo or "",
-            item.filing_year or 0,
-            item.period.registry_token if item.period is not None else "",
-        ),
+        key=lambda item: (item.rank, _action_semantic_key(item)),
     )[:3]
     return tuple(item.model_copy(update={"rank": rank}) for rank, item in enumerate(ordered))
 
 
-def _project_declarations(
-    declarations: tuple[HomeDeclarationResume, ...],
-    work_units: tuple[WorkUnit, ...],
-) -> tuple[HomeDeclarationResume, ...]:
-    projected_work_units = tuple(
-        HomeDeclarationResume(
-            work_unit_id=unit.work_unit_id,
-            modelo=str(unit.modelo),
-            filing_year=unit.filing_year,
-            period=unit.period,
-            name=unit.name,
-            state=(
-                HomeDeclarationState.DISCARDED if unit.state is WorkUnitState.DESCARTADO else HomeDeclarationState.DRAFT
+def _action_semantic_key(item: HomeNextAction) -> str:
+    """Canonical ordering identity covering the complete declared action."""
+    return item.model_dump_json(exclude={"rank"}, exclude_none=False)
+
+
+def _project_declarations(declarations: tuple[HomeDeclarationResume, ...]) -> tuple[HomeDeclarationResume, ...]:
+    return tuple(
+        sorted(
+            declarations,
+            key=lambda unit: (
+                str(unit.modelo),
+                unit.filing_year,
+                unit.period.registry_token,
+                unit.work_unit_id,
             ),
-            revision_id=unit.revision_id,
         )
-        for unit in work_units
     )
-    # A WorkUnit proves only draft/discarded lifecycle.  Richer READY,
-    # NEEDS_REVIEW, and FILED claims arrive as exact declaration-reader output.
-    by_id = {item.work_unit_id: item for item in projected_work_units}
-    by_id.update({item.work_unit_id: item for item in declarations})
-    ordered = sorted(
-        by_id.values(),
-        key=lambda unit: (
-            unit.state is HomeDeclarationState.DISCARDED,
-            str(unit.modelo),
-            unit.filing_year,
-            unit.period.registry_token,
-            unit.work_unit_id,
-        ),
-    )
-    return tuple(ordered)
 
 
 def _project_agenda(
