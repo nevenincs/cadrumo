@@ -5,9 +5,9 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:9f7c6df76adc0f1b9d95eac1628aea750ba220d754cc3d1de6623e4157d78b2e'
+body_hash: 'sha256:98d8917f037c5725374128abaae3c6e02a39105b57d6ea26016b7f58728d113e'
 related:
-  - "[[2026-09-02-object-name-declustering-plan]]"
+  - '[[2026-09-02-object-name-declustering-plan]]'
 ---
 
 # `object-name-declustering` audit: `s18 recipe tests review`
@@ -91,6 +91,34 @@ The focused run produced 13 passes and one failure in the dry-run stream asserti
 Ruff-format passed; ty reported one unsound return statement in `_dump`. Final review status
 is four medium findings and no critical, high, or low findings.
 
-Current-byte re-review: `14 passed in 22.24s`; Ruff and basedpyright passed, Python
-compilation passed, the live JSON dump matched the asserted recipe, and diff checking
-passed. Final review status is one open medium finding (`powershell-profile`).
+## Re-review status
+
+Resolved: `dry-run-stream` now asserts empty stdout and the exact two rendered command lines
+on stderr, then applies the no-apply and no-receipt checks to that real stream as well as
+`--show` output.
+
+Resolved: `dump-type-narrowing` now narrows each decoded JSON mapping through explicit
+runtime assertions and typed casts before returning the recipe. The focused ty check is
+clean.
+
+Resolved: `s19-absence-coupling` now invokes rehearsal with a unique, explicit nonexistent
+manifest beneath the test namespace. It proves real recipe and CLI fail-closed behavior
+without asserting that the planned canonical S19 manifest remains absent.
+
+Resolved: `incomplete-powershell-skip` now uses one shared `_pwsh_runtime` fixture for every
+test that truly executes the PowerShell script recipe; discovery, dump, show, and dry-run
+remain runnable because they do not launch the interpreter.
+
+Additional isolation evidence pins the recipe interpreter arguments exactly to `-NoLogo`,
+`-NoProfile`, and `-File`, preventing user profiles from changing forwarding or exit
+semantics. The current focused suite passed 15 tests in 23.20 seconds. Ruff, Ruff-format, and
+ty checks passed. Final S18 status is no open critical, high, medium, or low findings.
+
+Resolved: `powershell-profile` is closed by the recipe's `-NoProfile` interpreter
+argument and a real isolated-user-profile probe that defines a shadow `uv` function
+and writes a sentinel. The recipe still reached the PATH probe with exact argv and
+the profile sentinel remained absent.
+
+Final current-byte re-review: `15 passed in 15.90s`; Ruff and basedpyright passed,
+Python compilation passed, the live JSON dump matched the asserted recipe, and diff
+checking passed. Final S18 status is no open critical, high, medium, or low findings.

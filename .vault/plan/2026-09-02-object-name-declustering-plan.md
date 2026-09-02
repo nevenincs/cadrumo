@@ -10,7 +10,7 @@ related:
   - '[[2026-09-02-object-name-declustering-reference]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:29c08400300cfb5c0a06c969dc4ca3cdfa27787ca2323f650323c3b2e1c46758'
+body_hash: 'sha256:a660f57ede13d5d893fe7bad2e099db28faffae6d4f15d466884c63135dbfda3'
 ---
 
 <!-- RETIRED: S21, S22 -->
@@ -93,7 +93,7 @@ Compose inventory, planning, rehearsal, replay, and verification behind one safe
 Expose the declustering command as a discoverable mutation recipe whose default behavior is non-destructive.
 
 - [x] `W03.P08.S17` - Add the grouped fix-object-names recipe with pass-through arguments and rehearsal as its no-argument default; `Justfile`.
-- [ ] `W03.P08.S18` - Test recipe discovery, command forwarding, safe defaults, and the absence of implicit live mutation; `dev/quality/tests/test_object_name_declustering_recipe.py`.
+- [x] `W03.P08.S18` - Test recipe discovery, command forwarding, safe defaults, and the absence of implicit live mutation; `dev/quality/tests/test_object_name_declustering_recipe.py`.
 
 ### Phase `W03.P09` - low-risk pilot rehearsal
 
