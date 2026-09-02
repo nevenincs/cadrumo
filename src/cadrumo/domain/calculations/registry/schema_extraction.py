@@ -35,22 +35,136 @@ See Also:
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Literal
+from enum import StrEnum
+from typing import Annotated, Literal
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from ....core.casilla_id import CasillaId
 from .errors import RegistryValidationError
 from .ids import ExtractionProfileId
-from .schema_base import LegalRefs, RegistryModel, SourceRefs
+from .schema_base import LegalRefs, RegistryModel, SourceRefs, coerce_enum_member
 from .schema_scalars import DecimalValue
+
+
+class ExtractionSurface(StrEnum):
+    """The artefact an extraction profile reads casilla values out of."""
+
+    BORRADOR_PDF = "borrador_pdf"
+    DECLARACION_PDF = "declaracion_pdf"
+    JUSTIFICANTE_PDF = "justificante_pdf"
+    EXPORT_RECORD = "export_record"
+    OFFICIAL_WORKBOOK = "official_workbook"
+
+
+ExtractionSurfaceField = Annotated[
+    ExtractionSurface, BeforeValidator(coerce_enum_member(ExtractionSurface))
+]
+"""Registry ``surface`` token hydrated into a member."""
+
+
+class ExtractionArtefactKind(StrEnum):
+    """A stored artefact an extraction profile will accept as its input.
+
+    Deliberately NOT the same vocabulary as :class:`ExtractionSurface`, despite the
+    overlap: a surface says what the profile was designed to read, an artefact kind says
+    what a caller may hand it. ``submitted_file`` is an artefact and never a surface, and
+    ``borrador_pdf`` is a surface with no artefact kind of its own.
+    """
+
+    SUBMITTED_FILE = "submitted_file"
+    DECLARATION_PDF = "declaration_pdf"
+    JUSTIFICANTE_PDF = "justificante_pdf"
+    OFFICIAL_WORKBOOK = "official_workbook"
+
+
+ExtractionArtefactKindField = Annotated[
+    ExtractionArtefactKind, BeforeValidator(coerce_enum_member(ExtractionArtefactKind))
+]
+"""Registry ``accepted_artefact_kinds`` token hydrated into a member."""
+
+
+class ExtractionMatchStrategy(StrEnum):
+    """How a target casilla is located on the surface."""
+
+    NUMERIC_CASILLA = "numeric_casilla"
+    NAMED_LABEL = "named_label"
+    BBOX_ANCHORED = "bbox_anchored"
+
+
+ExtractionMatchStrategyField = Annotated[
+    ExtractionMatchStrategy, BeforeValidator(coerce_enum_member(ExtractionMatchStrategy))
+]
+"""Registry ``match_strategy`` token hydrated into a member."""
+
+
+class ExtractionValueKind(StrEnum):
+    """What kind of value the extractor expects to read."""
+
+    AMOUNT = "amount"
+    TEXT = "text"
+    ENUM = "enum"
+
+
+ExtractionValueKindField = Annotated[
+    ExtractionValueKind, BeforeValidator(coerce_enum_member(ExtractionValueKind))
+]
+"""Registry ``value_kind`` token hydrated into a member."""
+
+
+class BboxValueOffset(StrEnum):
+    """Where the value sits relative to its anchoring box number."""
+
+    LEFT_OF_NUMBER = "left_of_number"
+    ABOVE_NUMBER = "above_number"
+    RIGHT_OF_NUMBER = "right_of_number"
+
+
+BboxValueOffsetField = Annotated[
+    BboxValueOffset, BeforeValidator(coerce_enum_member(BboxValueOffset))
+]
+"""Registry ``value_offset`` token hydrated into a member."""
+
+
+class ExtractionConfidence(StrEnum):
+    """How far a profile's output may be trusted without review."""
+
+    STRICT = "strict"
+    REVIEW_REQUIRED = "review_required"
+
+
+ExtractionConfidenceField = Annotated[
+    ExtractionConfidence, BeforeValidator(coerce_enum_member(ExtractionConfidence))
+]
+"""Registry ``confidence`` token hydrated into a member."""
+
+
+class ExtractionVerificationSource(StrEnum):
+    """What evidence backs a profile's extraction accuracy.
+
+    ``NOT_APPLICABLE`` and ``HISTORICAL_SUPPRESSION`` are distinct on purpose: the first
+    says verification does not apply, the second says it was deliberately withheld for a
+    historical revision. Collapsing them would report a suppression as an absence.
+    """
+
+    REAL_AEAT_CORPUS_PDF = "real_aeat_corpus_pdf"
+    SYNTHETIC_FROM_AEAT_PUBLISHED_TEXT = "synthetic_from_aeat_published_text"
+    HISTORICAL_SUPPRESSION = "historical_suppression"
+    NOT_APPLICABLE = "not_applicable"
+
+
+ExtractionVerificationSourceField = Annotated[
+    ExtractionVerificationSource,
+    BeforeValidator(coerce_enum_member(ExtractionVerificationSource)),
+]
+"""Registry ``verification_source`` token hydrated into a member."""
 
 
 class BboxAnchorSpec(RegistryModel):
     r"""Spatial anchor configuration for the ``bbox_anchored`` extraction strategy."""
 
     box_number_pattern: str
-    value_offset: Literal["left_of_number", "above_number", "right_of_number"]
+    value_offset: BboxValueOffsetField
     anchor_x_min: float | None = None
     anchor_x_max: float | None = None
     value_x_max: float | None = None
@@ -104,8 +218,8 @@ class ExtractionTargetDefinition(RegistryModel):
     """
 
     casilla_id: CasillaId
-    match_strategy: Literal["numeric_casilla", "named_label", "bbox_anchored"]
-    value_kind: Literal["amount", "text", "enum"]
+    match_strategy: ExtractionMatchStrategyField
+    value_kind: ExtractionValueKindField
     label_pattern: str | None = None
     bbox_anchor: BboxAnchorSpec | None = None
 
@@ -126,26 +240,15 @@ class ExtractionProfileDefinition(RegistryModel):
     """Registry extraction profile for declaration/borrador/workbook artefacts."""
 
     id: ExtractionProfileId
-    surface: Literal["borrador_pdf", "declaracion_pdf", "justificante_pdf", "export_record", "official_workbook"]
+    surface: ExtractionSurfaceField
     artefact_kind: str
-    accepted_artefact_kinds: tuple[
-        Literal["submitted_file", "declaration_pdf", "justificante_pdf", "official_workbook"],
-        ...,
-    ] = Field(min_length=1)
+    accepted_artefact_kinds: tuple[ExtractionArtefactKindField, ...] = Field(min_length=1)
     parser: str
     target_casillas: tuple[ExtractionTargetDefinition, ...] = Field(min_length=1)
-    confidence: Literal["strict", "review_required"]
+    confidence: ExtractionConfidenceField
     provisional_pending_specimen: bool = False
     corpus_round_trip_verified: bool = False
-    verification_source: (
-        Literal[
-            "real_aeat_corpus_pdf",
-            "synthetic_from_aeat_published_text",
-            "historical_suppression",
-            "not_applicable",
-        ]
-        | None
-    ) = None
+    verification_source: ExtractionVerificationSourceField | None = None
     min_coverage: DecimalValue = Field(gt=Decimal("0"), le=Decimal("1"))
     failure_semantics: Literal["fail_hard"]
     legal_refs: LegalRefs

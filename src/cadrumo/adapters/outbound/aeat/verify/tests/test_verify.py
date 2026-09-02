@@ -158,3 +158,29 @@ def test_browser_adapter_type_error_round_trips_build_error_envelope() -> None:
 def test_verify_csv_guard_rejects_non_read_method() -> None:
     with pytest.raises(RegistryValidationError, match="remote write method"):
         verify_module._assert_verify_http("POST", verify_module._VERIFY_URL)
+
+
+@pytest.mark.parametrize("method", ["POST", "PUT", "PATCH", "DELETE"])
+def test_verify_guard_refuses_every_write_method(method: str) -> None:
+    """The verifier stays read-only: no write verb reaches the reviewed URL.
+
+    Guarded explicitly because the cotejo verdict is now stamped onto a
+    persisted capture, which gives the adapter a production caller for the
+    first time. The caller may consume the answer; it may not widen how the
+    answer is obtained.
+    """
+    with pytest.raises(RegistryValidationError, match="remote write method"):
+        verify_module._assert_verify_http(method, verify_module._VERIFY_URL)
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        f"https://attacker.example{_AEAT.sede_paths.cotejo_query}?CSV={_CSV}",
+        f"{_AEAT.domains.www1}{_AEAT.sede_paths.cotejo_query}?CSV={_CSV}",
+    ],
+)
+def test_verify_guard_refuses_a_host_outside_the_reviewed_surface(url: str) -> None:
+    """Only the single reviewed cotejo host is reachable, on a read verb too."""
+    with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
+        verify_module._assert_verify_http("GET", url)
