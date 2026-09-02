@@ -92,6 +92,7 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId
 from ....core.export_exemption_reason import ExportExemptionReason
 from ....core.export_layout_format import ExportLayoutFormat
+from .schema_base import RegistrySourceKind
 from .bindings import binding_source_casilla_ids, binding_source_modelo
 from .export import derive_export_layouts_from_bindings, fixed_width_record_casilla_ids
 from .runtime_graph import expression_casilla_refs
@@ -273,7 +274,7 @@ def modelo_publishes_a_record_design(
     refs = set(modelo.source_refs)
     for revision in modelo.revisions.values():
         refs |= set(revision.source_refs)
-    return any((source := source_refs.get(ref)) is not None and source.kind == "record_design" for ref in refs)
+    return any((source := source_refs.get(ref)) is not None and source.kind is RegistrySourceKind.RECORD_DESIGN for ref in refs)
 
 
 def validate_export_exemption_declarations(

@@ -39,6 +39,7 @@ from ....core.aggregation import BindingAggregationOp
 from ....core.casilla_id import CasillaId
 from ....core.filing_projection_ref import FilingProjectionRef
 from ..export_field_kind import CasillaFieldKind
+from .schema_base import RegistrySourceKind
 from ._validate_evidence import EvidenceValidator
 from ._validate_export_field_widths import validate_draft_field_slot_width
 from ._validate_helpers import missing_refs as _missing_refs
@@ -166,7 +167,7 @@ def _validate_embedded_envelope_source_authority(
                 f"{prefix}: {owner} source catalogue key {declaration.source_ref!r} resolves to source id "
                 f"{source.id!r}; embedded source identity must equal its canonical catalogue key",
             )
-        if source.kind != "record_design":
+        if source.kind is not RegistrySourceKind.RECORD_DESIGN:
             failures.append(
                 f"{prefix}: {owner} source {declaration.source_ref!r} is {source.kind!r}, not a record-design source",
             )

@@ -125,6 +125,7 @@ from ....core.aggregation import BindingSourceKind
 from ....core.export_layout_format import ExportLayoutFormat
 from ....core.resources.bundled_data import resolve_corpus_binary
 from ..export_field_kind import CasillaFieldKind
+from .schema_base import RegistrySourceKind
 from .binding_selector_utils import selector_as_dict
 from .errors import RegistryValidationError
 from .export import derive_export_layouts_from_bindings
@@ -918,7 +919,7 @@ def _design_sources(
     return tuple(
         source
         for ref in layout.source_refs
-        if (source := source_refs.get(ref)) is not None and source.kind == "record_design"
+        if (source := source_refs.get(ref)) is not None and source.kind is RegistrySourceKind.RECORD_DESIGN
     )
 
 
