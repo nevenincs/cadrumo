@@ -88,6 +88,7 @@ def test_overloads_in_one_module_are_one_object_name() -> None:
     )
 
     assert analyse(declarations).findings == ()
+    assert {item.binding_occurrence for item in declarations} == {1}
 
 
 def test_same_module_redeclaration_is_not_mistaken_for_an_overload() -> None:
@@ -100,6 +101,10 @@ def test_same_module_redeclaration_is_not_mistaken_for_an_overload() -> None:
 
     assert len(result.enforced_findings) == 1
     assert len(result.enforced_findings[0].sites) == 2
+    assert result.enforced_findings[0].qualified_sites == (
+        "class:cadrumo.invoice.Invoice#binding=1",
+        "class:cadrumo.invoice.Invoice#binding=2",
+    )
 
 
 def test_conditional_module_declarations_are_enrolled() -> None:

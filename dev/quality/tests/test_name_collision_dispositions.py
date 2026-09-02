@@ -17,7 +17,7 @@ import tomllib
 
 import pytest
 
-from dev.quality.name_collision_census import (
+from ..name_collision_census import (
     _PACKAGE_ROOT,
     PublicDefinition,
     collect_public_definitions,

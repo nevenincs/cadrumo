@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev.quality.name_collision_census import (
+from ..name_collision_census import (
     PublicDefinition,
     collect_public_definitions,
     collision_census,
@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 @pytest.fixture(scope="module")
 def definitions() -> tuple[PublicDefinition, ...]:
-    from dev.quality.name_collision_census import _PACKAGE_ROOT
+    from ..name_collision_census import _PACKAGE_ROOT
 
     return collect_public_definitions(_PACKAGE_ROOT)
 
