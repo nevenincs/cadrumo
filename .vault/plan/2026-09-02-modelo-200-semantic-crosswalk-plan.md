@@ -10,7 +10,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:a781689029bdf6c947badebebdc62c41aa376cacea0b604d2e7c246f83da73b9'
+body_hash: 'sha256:cee97186e823a124f2e944cb84c37f7e18c9d740526f21106260bf1afa30a57d'
 ---
 
 # `modelo-200-semantic-crosswalk` plan
@@ -31,8 +31,8 @@ Freeze the exact pinned 2024 design as the sole target identity authority and re
 
 Separate current declarations from semantic adjudications and bind every result to the exact 2024 source SHA.
 
-- [ ] `W01.P01.S01` - Extend the deterministic census across 3,173 current declarations, 156 reconstructed candidates, 3,171 exact map-owned rebinds, 2 unmapped declarations, 15 printed-identity diagnostics, 185 map-owner mismatches, and declaration and map legal gaps; `dev/registry/analysis/m200_2024_full_reconciliation.py`.
-- [ ] `W01.P01.S02` - Prove census completeness, determinism, source-SHA binding, contamination visibility, and partition-drift refusal; `dev/registry/tests/test_m200_2024_full_reconciliation.py`.
+- [x] `W01.P01.S01` - Extend the deterministic census across 3,173 current declarations, 156 reconstructed candidates, 3,171 exact map-owned rebinds, 2 unmapped declarations, 15 printed-identity diagnostics, 185 map-owner mismatches, and declaration and map legal gaps; `dev/registry/analysis/m200_2024_full_reconciliation.py`.
+- [x] `W01.P01.S02` - Prove census completeness, determinism, source-SHA binding, contamination visibility, and partition-drift refusal; `dev/registry/tests/test_m200_2024_full_reconciliation.py`.
 
 ### Phase `W01.P02` - remove non-authoritative historic semantic reuse
 
