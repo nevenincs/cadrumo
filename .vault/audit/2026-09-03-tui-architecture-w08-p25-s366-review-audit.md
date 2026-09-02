@@ -13,8 +13,6 @@ related:
   - "[[2026-09-02-unreachable-capability-tui-homepage-product-design-research]]"
 ---
 
-
-
 # `tui-architecture` audit: `w08 p25 s366 review`
 
 ## Scope
