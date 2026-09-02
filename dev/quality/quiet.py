@@ -17,6 +17,7 @@ The command runs inside the active environment, so venv console scripts
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from typing import Final, TextIO
@@ -39,6 +40,12 @@ def main() -> int:
     # (box drawing, arrows, accented source excerpts), so the reader thread
     # died on the first non-cp1252 byte, left stdout as None, and turned a
     # clean gate into a bogus failure.
+    # The decode above fixes OUR side. The child still picks its own stdout
+    # encoding, and rich falls back to a legacy Windows console writer that
+    # encodes to cp1252 -- lint-imports then died inside its own progress
+    # rendering before any contract verdict reached us. Naming the child's
+    # stdio encoding keeps the tool's UTF-8 output writable at the source.
+    child_env = {**os.environ, "PYTHONIOENCODING": _UTF_8}
     result = subprocess.run(
         command,
         capture_output=True,
@@ -46,6 +53,7 @@ def main() -> int:
         encoding=_UTF_8,
         errors="replace",
         check=False,
+        env=child_env,
     )
 
     if result.returncode != 0:

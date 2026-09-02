@@ -786,12 +786,7 @@ ignore_imports =
     cadrumo.application.modelo.history -> cadrumo.adapters.persistence.profile.modelos_filing
     cadrumo.application.modelo.participation_index_rebuild -> cadrumo.adapters.persistence.profile.modelos_filing
     cadrumo.application.modelo.verification_actions -> cadrumo.adapters.persistence.profile.modelos_filing
-    cadrumo.application.filing._complementaria -> cadrumo.adapters.persistence.profile.filing_drafts
     cadrumo.application.review._adapters -> cadrumo.adapters.persistence.profile.filing_drafts
-    # ── filing amendment repository ports-inversion (W03.P08.S11):
-    #    the concrete ModeloAmendmentRepository moved to the persistence
-    #    adapter behind ModeloAmendmentRepositoryProtocol ──
-    cadrumo.application.filing._complementaria -> cadrumo.adapters.persistence.profile.filing_amendments
     # ── invoices catalogue repository ports-inversion (W02.P04.S06):
     #    the concrete InvoiceCatalogueRepository moved to the persistence
     #    adapter behind InvoiceCatalogueRepositoryProtocol ──
