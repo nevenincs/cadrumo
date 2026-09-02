@@ -236,6 +236,6 @@ campaign.
 - `src/cadrumo/domain/fincas/source_readiness.py:34` — the persistence reason
 - `src/cadrumo/application/registry/source_connectivity.py:190` — the uniqueness-only validator
 - `.vault/plan/2026-08-22-source-casilla-integration-plan.md` — W02 through W04, and the hard sequencing statement
-- `.vault/adr/2026-08-22-source-casilla-integration-adr.md` — the accepted ratcheted-connectivity decision
-- `src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf.extracted.md` — chapter 4, casillas `[0062]`-`[0082]` and the two-tenancy worked example
+- `.vault/adr/2026-08-22-source-casilla-integration-adr.md` — the accepted ratcheted-connectivity decision
+- `src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf.extracted.md` — chapter 4, casillas `[0062]`-`[0082]` and the two-tenancy worked example
 - `dev/source_connectivity/check.py` — `check_capability_locators` and `discovered_source_capability_evidence`
