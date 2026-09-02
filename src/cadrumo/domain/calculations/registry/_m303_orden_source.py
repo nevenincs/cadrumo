@@ -47,6 +47,7 @@ from ._m303_orden_raw_models import (
     M303AnnualOrdenRawSeasonalIndex,
     M303AnnualOrdenSourceCensus,
 )
+from .schema_base import PublishingAuthority
 from .errors import RegistryLoadError, RegistryValidationError
 from .schema_references import SourceReference
 
@@ -75,7 +76,7 @@ def validate_pinned_boe_orden_source(source: SourceReference, *, ejercicio: int)
     """Validate that a source is the official BOE artefact for the full filing year."""
     filing_start = date(ejercicio, 1, 1)
     filing_end = date(ejercicio, 12, 31)
-    if source.authority != "boe" or source.kind != "instructions":
+    if source.authority is not PublishingAuthority.BOE or source.kind != "instructions":
         raise RegistryValidationError("annual Orden authority requires a BOE normative instruction source")
     if urlsplit(str(source.source_url)).hostname != _BOE_HOST:
         raise RegistryValidationError("annual Orden authority source must retain its official boe.es URL")

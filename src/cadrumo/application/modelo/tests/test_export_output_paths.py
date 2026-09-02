@@ -274,7 +274,7 @@ def test_public_rectificativa_nota_three_keep_exports_full_refund_account_not_ch
         clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
     )
 
-    exported = output_path.read_text(encoding="latin-1")
+    exported = output_path.read_text(encoding="iso-8859-1")
     did_start = exported.index("<T303DID00>")
     did = exported[did_start : did_start + 823]
     assert did[11:22].rstrip() == refund_account.swift_bic
@@ -453,7 +453,7 @@ def test_prior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_p
     }
     assert {key: export_event.payload[key] for key in expected_event_proof} == expected_event_proof
     assert result.prior_domiciliation_election.baseline_source_header_locator == source_header_locator
-    assert "<T303DID00>" not in output_path.read_text(encoding="latin-1")
+    assert "<T303DID00>" not in output_path.read_text(encoding="iso-8859-1")
     assert "iban" not in export_event.model_dump_json().casefold()
 
     filing = persist_filed_revision(

@@ -21,14 +21,16 @@ from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, Revision
 from .errors import RegistryValidationError
 from .ids import LegalRefId, ModeloId, ParameterId, RevisionId, SourceRefId
 from .schema_base import (
+    CorpusTierField,
+    PublishingAuthorityField,
     DateAxis,
     DesignAuthority,
     EvidenceTier,
     EvidenceTierField,
     LegalRefs,
     RegistryModel,
-    coerce_enum_member,
     RevisionReviewStatusField,
+    coerce_enum_member,
 )
 
 __all__ = [
@@ -203,7 +205,7 @@ class LegalReference(RegistryModel):
     evidence_tier: Annotated[
         Literal[EvidenceTier.LEGAL_AUTHORITY], BeforeValidator(coerce_enum_member(EvidenceTier))
     ]
-    authority: Literal["boe", "aeat", "eu", "autonomous_community", "other"]
+    authority: PublishingAuthorityField
     kind: Literal[
         "ley",
         "real_decreto",
@@ -231,7 +233,7 @@ class LegalReference(RegistryModel):
     notes: str | None = None
     required_text: tuple[str, ...] = Field(min_length=1)
     forbidden_text: tuple[str, ...] = ()
-    corpus_tier: Literal["full_consolidated", "provision_excerpt"] | None = None
+    corpus_tier: CorpusTierField | None = None
     """Which kind of corpus evidence ``corpus_ref`` resolves to, when declared.
 
     Deliberately optional and deliberately two-valued. Optional: nothing in
@@ -328,7 +330,7 @@ class SourceReference(RegistryModel):
 
     id: SourceRefId
     evidence_tier: EvidenceTierField
-    authority: Literal["aeat", "boe", "eu", "autonomous_community", "other"]
+    authority: PublishingAuthorityField
     kind: Literal[
         "record_design",
         "manual_pdf",
@@ -377,7 +379,7 @@ class SourceReference(RegistryModel):
     published text states the period boundary; leave it undeclared rather
     than infer one.
     """
-    corpus_tier: Literal["full_consolidated", "provision_excerpt"] | None = None
+    corpus_tier: CorpusTierField | None = None
     """Mirrors :attr:`LegalReference.corpus_tier` in philosophy, recalibrated here.
 
     Same two-valued, verified-not-merely-typed contract: optional so adding

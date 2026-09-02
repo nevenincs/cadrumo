@@ -18,6 +18,7 @@ from ....core.hashing import blake2b_hex
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES
 from ._citation_blocklist import CitationSource, find_known_bad
 from .errors import RegistryValidationError
+from .schema_base import CorpusTier
 from .schema_references import LegalReference
 
 #: ``corpus_catalogue.py``'s own corpus-tier declaration check reuses the same
@@ -197,7 +198,7 @@ def _validate_corpus_tier_declaration(reference: LegalReference, source_root: Pa
     size = path.stat().st_size
     is_provision_suffixed = bool(_PROVISION_SUFFIXED_FILENAME.search(filename))
 
-    if reference.corpus_tier == "full_consolidated":
+    if reference.corpus_tier is CorpusTier.FULL_CONSOLIDATED:
         if is_provision_suffixed or size < _FULL_CONSOLIDATED_SIZE_FLOOR:
             raise RegistryValidationError(
                 f"legal reference {reference.id!r} declares corpus_tier='full_consolidated' but "
@@ -206,7 +207,7 @@ def _validate_corpus_tier_declaration(reference: LegalReference, source_root: Pa
                 "bytes) -- reclassify as 'provision_excerpt', or confirm this really is the full "
                 "consolidated instrument and not a thin paraphrase",
             )
-    elif reference.corpus_tier == "provision_excerpt":
+    elif reference.corpus_tier is CorpusTier.PROVISION_EXCERPT:
         if is_provision_suffixed:
             return
         # A bare-named file can still legitimately be a short excerpt (M216's shape:

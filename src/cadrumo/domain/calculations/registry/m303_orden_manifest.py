@@ -15,6 +15,7 @@ from ._m303_orden_legal import compile_annual_orden_legal_references
 from ._m303_orden_projection_compiler import compile_m303_annual_orden_projection
 from ._m303_orden_raw_models import M303AnnualOrdenSourceCensus
 from ._m303_orden_source import extract_m303_annual_orden_source
+from .schema_base import PublishingAuthority
 from .errors import RegistryLoadError, RegistryValidationError
 from .ids import LegalRefId, SourceRefId
 from .loader_cache import toml_file_fingerprint
@@ -466,7 +467,7 @@ def _single_annual_orden_source_for_year(
         source
         for source in sources.values()
         if source.id.endswith("-iva-authority")
-        and source.authority == "boe"
+        and source.authority is PublishingAuthority.BOE
         and source.kind == "instructions"
         and source.applies_from == filing_start
         and source.applies_to == filing_end
@@ -493,7 +494,7 @@ def _annual_orden_years_from_sources(
             source.applies_from.year
             for source in sources.values()
             if source.id.endswith("-iva-authority")
-            and source.authority == "boe"
+            and source.authority is PublishingAuthority.BOE
             and source.kind == "instructions"
             and source.applies_from is not None
             and source.applies_to is not None

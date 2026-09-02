@@ -9,11 +9,10 @@ per-revision ``authority_grade`` token.
 
 from __future__ import annotations
 
-from enum import StrEnum
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
+from enum import StrEnum
 from typing import Annotated, Literal, get_args, get_origin
 
 from pydantic import BaseModel, BeforeValidator, Field, TypeAdapter, field_validator
@@ -427,6 +426,51 @@ REGISTRY_SOURCE_GROUNDING_TIERS: tuple[EvidenceTier, ...] = (
     EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
     EvidenceTier.LAYOUT_AUTHORITY,
 )
+
+class CorpusTier(StrEnum):
+    """How much of a legal instrument the bundled corpus artefact carries."""
+
+    FULL_CONSOLIDATED = "full_consolidated"
+    """The whole consolidated instrument, not a provision-suffixed extract."""
+
+    PROVISION_EXCERPT = "provision_excerpt"
+    """A single provision lifted from the instrument."""
+
+
+CorpusTierField = Annotated[CorpusTier, BeforeValidator(coerce_enum_member(CorpusTier))]
+"""Registry ``corpus_tier`` token hydrated into a member.
+
+Registry schema models validate strictly, which refuses a bare TOML string for an
+enum-typed field, so the token is coerced at the boundary.
+"""
+
+class PublishingAuthority(StrEnum):
+    """Who published the instrument or artefact a registry row cites."""
+
+    BOE = "boe"
+    """The Boletin Oficial del Estado, where Spanish law is promulgated."""
+
+    AEAT = "aeat"
+    """The Agencia Estatal de Administracion Tributaria."""
+
+    EU = "eu"
+    """A European Union instrument."""
+
+    AUTONOMOUS_COMMUNITY = "autonomous_community"
+    """An autonomous community exercising its own competence."""
+
+    OTHER = "other"
+    """A publisher outside the four named above, recorded rather than assumed."""
+
+
+PublishingAuthorityField = Annotated[
+    PublishingAuthority, BeforeValidator(coerce_enum_member(PublishingAuthority))
+]
+"""Registry ``authority`` token hydrated into a member.
+
+Registry schema models validate strictly, which refuses a bare TOML string for an
+enum-typed field, so the token is coerced at the boundary.
+"""
 
 LegalRefs = Annotated[tuple[LegalRefId, ...], Field(min_length=1)]
 SourceRefs = Annotated[tuple[SourceRefId, ...], Field(min_length=1)]

@@ -45,8 +45,8 @@ consumed BY that validation. Housing both here inverted the dependency.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from enum import StrEnum
 from datetime import date
+from enum import StrEnum
 from typing import Annotated, Literal
 
 from pydantic import BeforeValidator, Field, PrivateAttr, computed_field, model_validator
@@ -55,7 +55,6 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.filing_year import FilingYear
 from ....core.period import RegistrySelectorPeriodCode
 from ....core.revision_review import RevisionReviewStatus
-from .schema_base import coerce_enum_member
 from ._schema_family_coverage import (
     CoverageModel,
 )
@@ -70,7 +69,7 @@ from .schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
-from .schema_base import EvidenceTier
+from .schema_base import EvidenceTier, EvidenceTierField, coerce_enum_member
 from .schema_formula import ParameterDefinition
 from .schema_references import SourceReference
 from .schema_surfaces import RelationDefinition
@@ -119,7 +118,7 @@ absence as a defect.
 class EvidenceTierCoverageGate(CoverageModel):
     """Coverage state for one evidence tier."""
 
-    tier: EvidenceTier
+    tier: EvidenceTierField
     status: CoverageGateStatus
     legal_refs: tuple[LegalRefId, ...] = ()
     source_refs: tuple[SourceRefId, ...] = ()
