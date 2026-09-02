@@ -26,6 +26,7 @@ from ...domain.calculations.registry.schema import ModeloRevision
 from .closure import (
     RegistryClosureEvidence,
     RegistryClosureLimb,
+    RegistryClosureLimbOutcomeKind,
     RegistryClosureOwnerDisposition,
     RegistryClosureRefusal,
     RegistryClosureRefusalReason,
@@ -152,7 +153,7 @@ def _compose_revision_limb(
             modelo=modelo_id,
             revision=revision.id,
             name="source_connectivity",
-            outcome="unmeasured",
+            outcome=RegistryClosureLimbOutcomeKind.UNMEASURED,
             refusal=RegistryClosureRefusal(
                 reason="unmeasured",
                 detail="the canonical source-connectivity census declares no evidence scoped to this revision",
@@ -224,7 +225,7 @@ def _compose_revision_limb(
         modelo=modelo_id,
         revision=revision.id,
         name="source_connectivity",
-        outcome="satisfied",
+        outcome=RegistryClosureLimbOutcomeKind.SATISFIED,
         evidence=evidence,
     )
 
@@ -312,7 +313,7 @@ def _refused_connected_claim_limb(
         modelo=modelo_id,
         revision=revision.id,
         name="source_connectivity",
-        outcome="refused",
+        outcome=RegistryClosureLimbOutcomeKind.REFUSED,
         evidence=evidence,
         refusal=RegistryClosureRefusal(
             reason=reason,
@@ -346,7 +347,7 @@ def _expired_terminal_limb(
         modelo=modelo_id,
         revision=revision.id,
         name="source_connectivity",
-        outcome="refused",
+        outcome=RegistryClosureLimbOutcomeKind.REFUSED,
         evidence=evidence,
         refusal=RegistryClosureRefusal(
             reason="stale_evidence",
@@ -384,7 +385,7 @@ def _refused_limb(
         modelo=modelo_id,
         revision=revision.id,
         name="source_connectivity",
-        outcome="refused",
+        outcome=RegistryClosureLimbOutcomeKind.REFUSED,
         evidence=evidence,
         refusal=RegistryClosureRefusal(
             reason=reason,

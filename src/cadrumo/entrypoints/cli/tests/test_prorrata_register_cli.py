@@ -23,8 +23,14 @@ from ....core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
+from ....domain.prorrata_register.register import (
+    ProrrataEspecialTransitionEvidence,
+    ProrrataRegister,
+    ProrrataRegisterEntry,
+    SectorDefinition,
+)
 from ....tests.secure_sql import isolated_runtime_profile
+from .._prorrata_register_cli import _entry_payload
 from ._cli_surface_profile_fixture import _isolated_backend
 from ._cli_surface_support import (
     _invoke,
@@ -616,3 +622,39 @@ def test_sector_tag_naming_declared_sector_is_silent() -> None:
     result = _add_row(key="tx-sector-declared", sector="arrendamiento")
     assert result.exit_code == 0, result.output
     assert "ledger.add.sector_unmatched" not in _envelope_notice_codes(result)
+
+
+@pytest.mark.parametrize(
+    ("regime", "kind", "expected_token"),
+    [
+        (ProrrataRegisterRegime.ESPECIAL, ProrrataEspecialTransitionKind.OPCION, "opcion"),
+        (ProrrataRegisterRegime.GENERAL, ProrrataEspecialTransitionKind.REVOCACION, "revocacion"),
+    ],
+)
+def test_entry_payload_round_trips_the_especial_transition_kind_as_a_stable_token(
+    regime: ProrrataRegisterRegime,
+    kind: ProrrataEspecialTransitionKind,
+    expected_token: str,
+) -> None:
+    """The strict payload accepts a real entry's serialized form and re-emits the token.
+
+    ``ProrrataEspecialTransitionPayload.kind`` is enum-typed under the strict
+    :class:`OutputSchema` config, so projecting a register entry must reconstruct
+    the enum member rather than hand it the bare string ``model_dump(mode="json")``
+    renders. The emitted value stays the untranslated transport token.
+    """
+    entry = ProrrataRegisterEntry(
+        ejercicio=2024,
+        regime=regime,
+        especial_transition=ProrrataEspecialTransitionEvidence(
+            kind=kind,
+            evidence_reference="acta-2024-001",
+        ),
+    )
+
+    payload = _entry_payload(entry)
+
+    assert payload.especial_transition is not None
+    assert payload.especial_transition.kind is kind
+    emitted = payload.model_dump(mode="json")["especial_transition"]
+    assert emitted == {"kind": expected_token, "evidence_reference": "acta-2024-001"}

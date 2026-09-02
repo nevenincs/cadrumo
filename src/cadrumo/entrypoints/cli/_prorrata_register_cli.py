@@ -22,6 +22,8 @@ is authoritative profile-scoped taxpayer state, not an AEAT filing surface.
 
 from __future__ import annotations
 
+import json
+
 import typer
 from pydantic import ValidationError
 
@@ -104,6 +106,16 @@ _REFERENCED_PROVENANCES = frozenset(
 
 
 def _entry_payload(entry: ProrrataRegisterEntry) -> ProrrataEntryPayload:
+    """Project a register entry into its strict CLI payload.
+
+    The projection goes through a genuine JSON-text parse rather than
+    ``model_validate`` on the dumped mapping: under the strict
+    :class:`~core.json_contract.OutputSchema` config a ``StrEnum``-typed field
+    such as ``especial_transition.kind`` rejects the bare string that
+    ``model_dump(mode="json")`` renders, and only ``model_validate_json``
+    reconstructs the enum member. The emitted JSON still carries the stable
+    ``opcion`` / ``revocacion`` transport token.
+    """
     data = entry.model_dump(mode="json")
     for decimal_field in (
         "provisional_percentage",
@@ -113,7 +125,7 @@ def _entry_payload(entry: ProrrataRegisterEntry) -> ProrrataEntryPayload:
     ):
         value = getattr(entry, decimal_field)
         data[decimal_field] = str(value) if value is not None else None
-    return ProrrataEntryPayload.model_validate(data)
+    return ProrrataEntryPayload.model_validate_json(json.dumps(data))
 
 
 def _sector_payload(definition: SectorDefinition) -> SectorDefinitionPayload:

@@ -45,6 +45,7 @@ from .closure import (
     RegistryClosureEvidence,
     RegistryClosureFilingChannelRefusal,
     RegistryClosureLimb,
+    RegistryClosureLimbOutcomeKind,
     RegistryClosureOwnerDisposition,
     RegistryClosureRefusal,
     RegistryClosureRefusalReason,
@@ -144,7 +145,7 @@ def _compose_revision_limb(
             modelo=modelo_id,
             revision=revision.id,
             name="filing_export",
-            outcome="not_applicable",
+            outcome=RegistryClosureLimbOutcomeKind.NOT_APPLICABLE,
         )
     if revision.review_status not in REVIEWED_REVISION_REVIEW_STATUSES:
         return _refused_limb(
@@ -243,7 +244,7 @@ def _compose_revision_limb(
         modelo=modelo_id,
         revision=revision.id,
         name="filing_export",
-        outcome="satisfied",
+        outcome=RegistryClosureLimbOutcomeKind.SATISFIED,
         evidence=evidence,
     )
 
@@ -450,7 +451,7 @@ def _refused_limb(
         modelo=modelo_id,
         revision=revision_id,
         name="filing_export",
-        outcome="refused",
+        outcome=RegistryClosureLimbOutcomeKind.REFUSED,
         refusal=RegistryClosureRefusal(
             reason=reason,
             detail=detail,

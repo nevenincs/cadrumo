@@ -16,16 +16,19 @@ fixture was unbuildable for some unrelated reason.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Literal
 
 import pytest
 
 from ......core.filing_producer_key import FilingProducerKey
-from ......domain.calculations.casilla_data_type import CasillaDataType
 from ......domain.calculations.export_field_kind import CasillaFieldKind
 from ......domain.calculations.registry.export_value_policy import ExportValuePolicy
 from ......domain.calculations.registry.fixed_width_codec import ExportJustification, ExportPadding
-from ......domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
+from ......domain.calculations.registry.schema_base import CasillaDataType
+from ......domain.calculations.registry.schema_exports import (
+    ExportFieldDataType,
+    ExportFieldDefinition,
+    ExportRecordDefinition,
+)
 from ......domain.modelos.errors import ModeloExportError
 from ..registry_record_renderer import RegistryFixedWidthRecordRenderer
 
@@ -48,7 +51,7 @@ def _field(
     offset: int | None,
     length: int | None,
     kind: CasillaFieldKind,
-    data_type: CasillaDataType = CasillaDataType.TEXT,
+    data_type: ExportFieldDataType = CasillaDataType.TEXT,
     casilla_id: str | None = None,
     literal: str | None = None,
     producer_key: FilingProducerKey | None = None,

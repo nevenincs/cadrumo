@@ -14,6 +14,7 @@ from __future__ import annotations
 import ast
 import inspect
 import pathlib
+from collections.abc import Mapping
 
 import pytest
 
@@ -21,6 +22,7 @@ from .....application.modelo.operation_definitions import (
     MODELO_WORK_AMEND_OPERATION_DEFINITION_ID,
     ModeloWorkAmendRequest,
 )
+from .....application.operations.models import OperationRequest
 from .....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ..action import amend as amend_action
 from ..actions import MODELO_ACTION_DISPATCH
@@ -31,16 +33,21 @@ _FILING_RECORD_ID = "fr-2026-1T-0001"
 _KIND = next(iter(CalculationRevisionAmendmentKind))
 
 
-def _request(**overrides: object):
-    kwargs: dict[str, object] = {
-        "from_filing_record_id": _FILING_RECORD_ID,
-        "amendment_kind": _KIND,
-        "overrides": {"01": "150.00"},
-        "reason": "corrected the declared base",
-        "actor_ref": "operator:test",
-    }
-    kwargs.update(overrides)
-    return amend_action.build_amend_operation_request(**kwargs)  # type: ignore[arg-type]
+def _request(
+    *,
+    from_filing_record_id: str = _FILING_RECORD_ID,
+    amendment_kind: CalculationRevisionAmendmentKind = _KIND,
+    overrides: Mapping[str, str] | None = None,
+    reason: str = "corrected the declared base",
+    actor_ref: str = "operator:test",
+) -> OperationRequest[ModeloWorkAmendRequest]:
+    return amend_action.build_amend_operation_request(
+        from_filing_record_id=from_filing_record_id,
+        amendment_kind=amendment_kind,
+        overrides={"01": "150.00"} if overrides is None else overrides,
+        reason=reason,
+        actor_ref=actor_ref,
+    )
 
 
 def test_the_request_is_addressed_to_the_registered_amend_operation() -> None:

@@ -25,7 +25,7 @@ from ...core.storage_taxonomy_locations import storage_location
 from ...core.time.utc import validate_utc_aware
 from ...domain.modelos.filing_record import ModeloRecord
 from ...domain.retention.floor import RetentionFloorAssessment, assess_retention_floor
-from ..profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
+from ..profile_deletion_hold_contract import ProfileDeletionHoldOwner, ProfileDeletionHoldOwnerProjection
 from ..user_profile.custody_ports import (
     ProfileCustodyLocalRecordStore,
     canonical_snapshot_bytes,
@@ -247,7 +247,7 @@ class FilingRetentionAuthority:
         snapshot = self._verified_snapshot(profile_id)
         assessment = assess_retention_floor(snapshot.filing_records, as_of=now.astimezone(UTC))
         return ProfileDeletionHoldOwnerProjection(
-            owner="filing",
+            owner=ProfileDeletionHoldOwner.FILING,
             profile_id=profile_id,
             blocks_local_deletion=assessment.blocks_erase,
             source_record_id=f"filing-retention-snapshot-{profile_id}",

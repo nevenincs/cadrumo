@@ -83,8 +83,10 @@ def _collected_count(terminalreporter: TerminalReporter) -> int | None:
 
 def _lane_markers(config: pytest.Config) -> frozenset[str]:
     """Return the recorded marker names, or an empty set when unknown."""
-    recorded = getattr(config, _COLLECTED_MARKERS_KEY, frozenset())
-    return recorded if isinstance(recorded, frozenset) else frozenset()
+    recorded = getattr(config, _COLLECTED_MARKERS_KEY, None)
+    if not isinstance(recorded, frozenset):
+        return frozenset[str]()
+    return frozenset(str(marker) for marker in recorded)
 
 
 def _remediation(expression: str, markers: frozenset[str] = frozenset()) -> str:
