@@ -4797,3 +4797,38 @@ a live instance with a measurable cost rather than a general argument. Nothing i
 here: choosing an axis for modelo 720 is a filing-grade decision about what `valid_from`
 means across the registry, and this campaign has no authority to make it by guessing which
 reading keeps a loader quiet.
+
+### The four misstated openings are three different defects
+
+The revision-name screen reports four revisions whose name claims an opening year their
+window does not declare. Read against the declarations themselves, they are not four
+instances of one problem.
+
+Two are plain naming errors with no coverage consequence. Modelo 185's
+`2025-y-siguientes` declares `valid_from` 2026-01-01 and a selector opening in 2026, while
+its sibling `2003-2025` runs through 2025 - so coverage is continuous and the revision is
+simply named a year early. Modelo 151's `2025-y-siguientes` declares `valid_from` 2023-01-01
+and a selector opening in 2023, while `2015-2022` ends in 2022 - again continuous, and the
+name is two years late. Both were confirmed against the live authority: filing years 2023 and
+2024 admit the revision named `2025-y-siguientes`, which is the name misleading a reader about
+work the registry performs correctly.
+
+Modelo 322 is a different defect wearing the same label. Its `2008-2022` declares `valid_from`
+2022-01-01 and a period selector carrying neither `year_from` nor `year_to`, while all three
+of its siblings carry explicit bounds. The name asserts a fourteen-year span; the window opens
+in the last of those years; the selector declares nothing at all. That is under-declaration
+rather than misnaming, and the name is the only place the fourteen years are stated.
+
+Modelo 720 is the axis question recorded in the previous finding, and remains open.
+
+So the screen's single condition covers a name to correct, a name to correct, a declaration to
+author, and a decision to take. The label was accurate and the remedy is not shared, which is
+the argument this audit has made about every other collapsed category: a category is useful
+when its members want the same thing done, and this one needs splitting before it can be
+acted on.
+
+One correction to method, made mid-measurement. The first attempt passed a `Period` object
+where the accessor takes a period code string, and three of the four modelos returned an
+`AttributeError` that could have been read as a registry refusal. The two genuine
+`NoRevisionForPeriodError` results that arrived before it were real, but they were sitting
+beside an artefact of the call. Reading the signature took one command and separated them.

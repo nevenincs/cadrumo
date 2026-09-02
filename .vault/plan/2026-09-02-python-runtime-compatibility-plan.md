@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-python-runtime-compatibility-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:253d314f4bbea7bde6359b21e5960ce59f7b8d6f85378b5248bf09157aa372d3'
+body_hash: 'sha256:49aa5cec58198511c8afaa6cd2f1534bfc7d62eafc7d65f89b989bb53ae6f633'
 ---
 
 <!-- RETIRED: S33, S35, S37, S39, S41, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 -->
@@ -97,11 +97,12 @@ Make stable support claims only after their blocking evidence passes.
 
 Make every selected runtime carry focused behavioral and MCP evidence, keep the future-directive policy in a blocking compatibility lane, and classify binary resolver failures precisely.
 
-- [ ] `P06.S65` - Run a focused behavioral test set under the selected target interpreter and bind its results to the compatibility verdict; `dev/ci/python_runtime_compatibility.py`.
-- [ ] `P06.S66` - Smoke the installed cadrumo-mcp entry point and import contract in every compatibility mode; `dev/ci/python_runtime_compatibility.py`.
-- [ ] `P06.S67` - Wire the future-directive AST policy into the blocking compatibility workflow; `.github/workflows/python-runtime-compatibility.yml`.
-- [ ] `P06.S68` - Classify binary missing-wheel failures only from resolver-specific diagnostics; `dev/ci/python_runtime_compatibility.py`.
+- [x] `P06.S65` - Run a focused behavioral test set under the selected target interpreter and bind its results to the compatibility verdict; `dev/ci/python_runtime_compatibility.py`.
+- [x] `P06.S66` - Smoke the installed cadrumo-mcp entry point and import contract in every compatibility mode; `dev/ci/python_runtime_compatibility.py`.
+- [x] `P06.S67` - Wire the future-directive AST policy into the blocking compatibility workflow; `.github/workflows/python-runtime-compatibility.yml`.
+- [x] `P06.S68` - Classify binary missing-wheel failures only from resolver-specific diagnostics; `dev/ci/python_runtime_compatibility.py`.
 - [x] `P06.S69` - Align the prerelease selector with the provisionable rolling minor; `dev/ci/python-runtime-matrix.json`.
+- [x] `P06.S70` - Close binary compatibility dependency resolution to the sealed runtime wheelhouse; `dev/ci/python_runtime_compatibility.py`.
 
 ## Parallelization
 
