@@ -17,6 +17,7 @@ import tomllib
 import urllib.parse
 import urllib.request
 import zipfile
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final
@@ -30,11 +31,16 @@ from ._hashing import sha256_path
 from .uv_constraints import export_runtime_constraints
 
 _UTF_8: Final[str] = "utf-8"
-WHEELHOUSE_SCHEMA: Final[str] = "cadrumo.runtime-wheelhouse.v2"
+WHEELHOUSE_SCHEMA: Final[str] = "cadrumo.runtime-wheelhouse.v3"
 WHEELHOUSE_MANIFEST: Final[str] = "runtime-wheelhouse.json"
 WHEELHOUSE_PREFIX: Final[str] = "wheels/"
 _ZIP_TIMESTAMP: Final[tuple[int, int, int, int, int, int]] = (1980, 1, 1, 0, 0, 0)
-_PYTHON_VERSION: Final[str] = "3.13"
+_DEFAULT_RUNTIME_ROWS: Final[tuple[tuple[str, bool], ...]] = (
+    ("3.13", True),
+    ("3.14", True),
+    ("3.15", False),
+)
+_PYTHON_MINOR_RE: Final[re.Pattern[str]] = re.compile(r"^3\.(?P<minor>[0-9]+)$")
 _DOWNLOAD_TIMEOUT_SECONDS: Final[float] = 180.0
 
 
@@ -115,6 +121,16 @@ class LockedWheel:
 
 
 @dataclass(frozen=True)
+class RuntimeWheelhousePlan:
+    """The selected wheels and target rows for one Python minor."""
+
+    python_version: str
+    platforms: dict[str, dict[str, str]]
+    wheels: tuple[LockedWheel, ...]
+    missing: tuple[dict[str, str], ...] = ()
+
+
+@dataclass(frozen=True)
 class RuntimeWheelhouse:
     """Validated wheelhouse archive paired with its strict manifest."""
 
@@ -122,37 +138,72 @@ class RuntimeWheelhouse:
     manifest: dict[str, Any]
 
 
-def _marker_environment(target: TargetPlatform) -> dict[str, str]:
+def _canonical_python_minor(value: str) -> str:
+    """Return one canonical ``3.N`` runtime key from a selector or minor."""
+    match = _PYTHON_MINOR_RE.fullmatch(value) or re.fullmatch(r"3\.(?P<minor>[0-9]+)\.[0-9]+", value)
+    if match is None:
+        raise SystemExit(f"runtime wheelhouse Python selector is not a CPython 3.x minor: {value!r}")
+    return f"3.{int(match.group('minor'))}"
+
+
+def _runtime_rows(repo_root: Path, python_versions: Sequence[str] | None) -> tuple[tuple[str, bool], ...]:
+    """Return stable and advisory runtime rows from the canonical inventory."""
+    if python_versions is not None:
+        rows = tuple((_canonical_python_minor(value), True) for value in python_versions)
+    else:
+        inventory_path = repo_root / "dev" / "ci" / "python-runtime-matrix.json"
+        if not inventory_path.is_file():
+            rows = _DEFAULT_RUNTIME_ROWS
+        else:
+            try:
+                from ..ci.python_runtime_matrix import RuntimeMatrixError, load_runtime_inventory
+
+                inventory = load_runtime_inventory(inventory_path)
+            except RuntimeMatrixError as exc:
+                raise SystemExit(f"runtime inventory cannot drive wheelhouse construction: {exc}") from exc
+            rows = tuple((row.minor, True) for row in inventory.stable) + ((inventory.next.minor, False),)
+    if not rows:
+        raise SystemExit("runtime wheelhouse runtime set is empty")
+    if len({minor for minor, _blocking in rows}) != len(rows):
+        raise SystemExit(f"runtime wheelhouse runtime set contains duplicates: {rows!r}")
+    return rows
+
+
+def _marker_environment(target: TargetPlatform, python_version: str) -> dict[str, str]:
+    python_minor = _canonical_python_minor(python_version)
+    python_full_version = f"{python_minor}.0"
     environment = dict(default_environment())
     environment.update(
         {
             "implementation_name": "cpython",
-            "implementation_version": "3.13.0",
+            "implementation_version": python_full_version,
             "os_name": target.os_name,
             "platform_machine": target.platform_machine,
             "platform_python_implementation": "CPython",
             "platform_system": target.platform_system,
-            "python_full_version": "3.13.0",
-            "python_version": _PYTHON_VERSION,
+            "python_full_version": python_full_version,
+            "python_version": python_minor,
             "sys_platform": target.sys_platform,
         }
     )
     return environment
 
 
-def _interpreter_rank(tag: Tag) -> int | None:
+def _interpreter_rank(tag: Tag, python_version: str) -> int | None:
+    target_minor = int(_canonical_python_minor(python_version).split(".", maxsplit=1)[1])
+    target_interpreter = f"cp{target_minor}"
     interpreter = tag.interpreter
     abi = tag.abi
-    if interpreter in {"py3", "py313"} and abi == "none":
+    if interpreter in {"py3", f"py{target_minor}"} and abi == "none":
         return 0
-    if interpreter == "cp313" and abi == "cp313":
+    if interpreter == target_interpreter and abi == target_interpreter:
         return 1
-    if interpreter == "cp313" and abi == "abi3":
+    if interpreter == target_interpreter and abi == "abi3":
         return 2
     if interpreter.startswith("cp3") and interpreter[3:].isdigit() and abi == "abi3":
         minor = int(interpreter[3:])
-        if minor <= 13:
-            return 3 + (13 - minor)
+        if minor <= target_minor:
+            return 3 + (target_minor - minor)
     return None
 
 
@@ -211,14 +262,14 @@ def _platform_rank(platform: str, target: TargetPlatform) -> int | None:
     return 10_000 + minimum_glibc[0] * 100 + minimum_glibc[1]
 
 
-def _wheel_rank(filename: str, target: TargetPlatform) -> tuple[int, int, int] | None:
+def _wheel_rank(filename: str, target: TargetPlatform, python_version: str) -> tuple[int, int, int] | None:
     try:
         _name, _version, _build, tags = parse_wheel_filename(filename)
     except ValueError:
         return None
     ranks = []
     for tag in tags:
-        interpreter_rank = _interpreter_rank(tag)
+        interpreter_rank = _interpreter_rank(tag, python_version)
         platform_rank = _platform_rank(tag.platform, target)
         if interpreter_rank is not None and platform_rank is not None:
             ranks.append((0 if platform_rank == 0 else 1, interpreter_rank, -platform_rank))
@@ -232,8 +283,8 @@ def _wheel_filename(url: str) -> str:
     return filename
 
 
-def _active_requirements(repo_root: Path, target: TargetPlatform) -> dict[str, Requirement]:
-    environment = _marker_environment(target)
+def _active_requirements(repo_root: Path, target: TargetPlatform, python_version: str) -> dict[str, Requirement]:
+    environment = _marker_environment(target, python_version)
     active: dict[str, Requirement] = {}
     for line in export_runtime_constraints(repo_root=repo_root):
         requirement = Requirement(line)
@@ -252,9 +303,10 @@ def _active_requirements(repo_root: Path, target: TargetPlatform) -> dict[str, R
     return active
 
 
-def plan_runtime_wheelhouse(repo_root: Path) -> tuple[dict[str, dict[str, str]], tuple[LockedWheel, ...]]:
-    """Resolve the exact lock wheels required across every supported platform."""
+def _plan_runtime_wheelhouse(repo_root: Path, python_version: str) -> RuntimeWheelhousePlan:
+    """Resolve one runtime's exact lock wheels across every supported platform."""
     root = repo_root.resolve(strict=True)
+    python_minor = _canonical_python_minor(python_version)
     lock = tomllib.loads((root / "uv.lock").read_text(encoding=_UTF_8))
     by_name: dict[str, list[dict[str, Any]]] = {}
     for package in lock.get("package", []):
@@ -262,9 +314,10 @@ def plan_runtime_wheelhouse(repo_root: Path) -> tuple[dict[str, dict[str, str]],
             by_name.setdefault(canonicalize_name(package["name"]), []).append(package)
     selected: dict[str, LockedWheel] = {}
     platforms: dict[str, dict[str, str]] = {}
+    missing: list[dict[str, str]] = []
     for target in SUPPORTED_TARGETS:
         target_rows: dict[str, str] = {}
-        for name, requirement in sorted(_active_requirements(root, target).items()):
+        for name, requirement in sorted(_active_requirements(root, target, python_minor).items()):
             candidates = [
                 package
                 for package in by_name.get(name, [])
@@ -288,11 +341,19 @@ def plan_runtime_wheelhouse(repo_root: Path) -> tuple[dict[str, dict[str, str]],
                 if not isinstance(url, str) or not isinstance(digest, str) or not isinstance(size, int):
                     continue
                 filename = _wheel_filename(url)
-                rank = _wheel_rank(filename, target)
+                rank = _wheel_rank(filename, target, python_minor)
                 if rank is not None:
                     wheels.append((rank, filename, url, digest.removeprefix("sha256:"), size))
             if not wheels:
-                raise SystemExit(f"runtime lock has no {target.name} wheel for {requirement!s}")
+                missing.append(
+                    {
+                        "distribution": name,
+                        "platform": target.name,
+                        "reason": "no-compatible-wheel",
+                        "requirement": str(requirement),
+                    }
+                )
+                continue
             # Compatibility rank is authoritative: universal first, then the
             # exact CPython/ABI order and closest platform tag at or below the
             # declared OS floor. Filename only breaks an equivalent-tag tie.
@@ -314,18 +375,70 @@ def plan_runtime_wheelhouse(repo_root: Path) -> tuple[dict[str, dict[str, str]],
             selected[filename] = wheel
             target_rows[name] = filename
         platforms[target.name] = target_rows
-    return platforms, tuple(selected[name] for name in sorted(selected))
+    return RuntimeWheelhousePlan(
+        python_version=python_minor,
+        platforms=platforms,
+        wheels=tuple(selected[name] for name in sorted(selected)),
+        missing=tuple(missing),
+    )
 
 
-def _manifest_document(repo_root: Path) -> tuple[dict[str, Any], tuple[LockedWheel, ...]]:
-    platforms, wheels = plan_runtime_wheelhouse(repo_root)
-    return (
-        {
-            "lock_sha256": sha256_path(repo_root / "uv.lock"),
-            "platform_floors": PLATFORM_FLOORS,
-            "platforms": platforms,
-            "python": _PYTHON_VERSION,
-            "schema": WHEELHOUSE_SCHEMA,
+def _missing_wheel_message(plan: RuntimeWheelhousePlan) -> str:
+    missing = "; ".join(
+        f"{item['distribution']} ({item['platform']}, {item['requirement']})" for item in plan.missing
+    )
+    return f"runtime lock has no complete {plan.python_version} wheelhouse: {missing}"
+
+
+def plan_runtime_wheelhouse(
+    repo_root: Path,
+    *,
+    python_version: str = "3.13",
+) -> tuple[dict[str, dict[str, str]], tuple[LockedWheel, ...]]:
+    """Resolve the exact lock wheels for one Python minor and all platforms."""
+    plan = _plan_runtime_wheelhouse(repo_root, python_version)
+    if plan.missing:
+        raise SystemExit(_missing_wheel_message(plan))
+    return plan.platforms, plan.wheels
+
+
+def plan_runtime_wheelhouses(
+    repo_root: Path,
+    *,
+    python_versions: Sequence[str] | None = None,
+) -> dict[str, RuntimeWheelhousePlan]:
+    """Resolve every requested runtime, retaining advisory missing-wheel rows."""
+    root = repo_root.resolve(strict=True)
+    plans: dict[str, RuntimeWheelhousePlan] = {}
+    for python_version, blocking in _runtime_rows(root, python_versions):
+        plan = _plan_runtime_wheelhouse(root, python_version)
+        if plan.missing and blocking:
+            raise SystemExit(_missing_wheel_message(plan))
+        plans[plan.python_version] = plan
+    return plans
+
+
+def _manifest_document(
+    repo_root: Path,
+    *,
+    python_versions: Sequence[str] | None = None,
+) -> tuple[dict[str, Any], tuple[RuntimeWheelhousePlan, ...]]:
+    plans_by_runtime = plan_runtime_wheelhouses(repo_root, python_versions=python_versions)
+    entries: dict[str, dict[str, Any]] = {}
+    ready_plans: list[RuntimeWheelhousePlan] = []
+    for python_version, plan in sorted(plans_by_runtime.items()):
+        if plan.missing:
+            entries[python_version] = {
+                "missing": list(plan.missing),
+                "python": python_version,
+                "status": "missing-wheel",
+            }
+            continue
+        ready_plans.append(plan)
+        entries[python_version] = {
+            "platforms": plan.platforms,
+            "python": python_version,
+            "status": "ready",
             "wheels": {
                 wheel.filename: {
                     "distribution": wheel.distribution,
@@ -333,10 +446,17 @@ def _manifest_document(repo_root: Path) -> tuple[dict[str, Any], tuple[LockedWhe
                     "size": wheel.size,
                     "version": wheel.version,
                 }
-                for wheel in wheels
+                for wheel in plan.wheels
             },
+        }
+    return (
+        {
+            "lock_sha256": sha256_path(repo_root / "uv.lock"),
+            "platform_floors": PLATFORM_FLOORS,
+            "runtimes": entries,
+            "schema": WHEELHOUSE_SCHEMA,
         },
-        wheels,
+        tuple(ready_plans),
     )
 
 
@@ -359,18 +479,26 @@ def _download(wheel: LockedWheel, destination: Path) -> None:
         )
 
 
-def build_runtime_wheelhouse(repo_root: Path, destination: Path) -> RuntimeWheelhouse:
-    """Download lock-selected wheels and write one deterministic sealed archive."""
+def build_runtime_wheelhouse(
+    repo_root: Path,
+    destination: Path,
+    *,
+    python_versions: Sequence[str] | None = None,
+) -> RuntimeWheelhouse:
+    """Download lock-selected wheels and write one deterministic multi-runtime archive."""
     root = repo_root.resolve(strict=True)
     output = destination.resolve()
     if output.exists():
         raise FileExistsError(output)
-    manifest, wheels = _manifest_document(root)
+    manifest, plans = _manifest_document(root, python_versions=python_versions)
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="cadrumo-runtime-wheelhouse-") as temporary:
         wheel_dir = Path(temporary)
-        for wheel in wheels:
-            _download(wheel, wheel_dir / wheel.filename)
+        for plan in plans:
+            runtime_dir = wheel_dir / plan.python_version
+            runtime_dir.mkdir()
+            for wheel in plan.wheels:
+                _download(wheel, runtime_dir / wheel.filename)
         with zipfile.ZipFile(output, mode="x", compression=zipfile.ZIP_STORED) as archive:
             manifest_info = zipfile.ZipInfo(WHEELHOUSE_MANIFEST, date_time=_ZIP_TIMESTAMP)
             manifest_info.external_attr = (0o100644 & 0xFFFF) << 16
@@ -378,10 +506,14 @@ def build_runtime_wheelhouse(repo_root: Path, destination: Path) -> RuntimeWheel
                 manifest_info,
                 json.dumps(manifest, indent=2, sort_keys=True).encode(_UTF_8) + b"\n",
             )
-            for wheel in wheels:
-                info = zipfile.ZipInfo(f"{WHEELHOUSE_PREFIX}{wheel.filename}", date_time=_ZIP_TIMESTAMP)
-                info.external_attr = (0o100644 & 0xFFFF) << 16
-                archive.writestr(info, (wheel_dir / wheel.filename).read_bytes())
+            for plan in plans:
+                for wheel in plan.wheels:
+                    info = zipfile.ZipInfo(
+                        f"{WHEELHOUSE_PREFIX}{plan.python_version}/{wheel.filename}",
+                        date_time=_ZIP_TIMESTAMP,
+                    )
+                    info.external_attr = (0o100644 & 0xFFFF) << 16
+                    archive.writestr(info, (wheel_dir / plan.python_version / wheel.filename).read_bytes())
     return load_runtime_wheelhouse(output, expected_lock_sha256=manifest["lock_sha256"])
 
 
@@ -389,8 +521,9 @@ def load_runtime_wheelhouse(
     archive_path: Path,
     *,
     expected_lock_sha256: str | None = None,
+    expected_python: str | None = None,
 ) -> RuntimeWheelhouse:
-    """Validate a closed wheelhouse archive and every declared wheel byte."""
+    """Validate a closed multi-runtime wheelhouse archive and every wheel byte."""
     archive = archive_path.resolve(strict=True)
     with zipfile.ZipFile(archive) as bundle:
         names = bundle.namelist()
@@ -400,13 +533,11 @@ def load_runtime_wheelhouse(
         if not isinstance(manifest, dict) or set(manifest) != {
             "lock_sha256",
             "platform_floors",
-            "platforms",
-            "python",
+            "runtimes",
             "schema",
-            "wheels",
         }:
             raise SystemExit("runtime wheelhouse manifest schema drifted")
-        if manifest.get("schema") != WHEELHOUSE_SCHEMA or manifest.get("python") != _PYTHON_VERSION:
+        if manifest.get("schema") != WHEELHOUSE_SCHEMA:
             raise SystemExit("runtime wheelhouse identity drifted")
         if manifest.get("platform_floors") != PLATFORM_FLOORS:
             raise SystemExit("runtime wheelhouse platform support floor drifted")
@@ -415,46 +546,120 @@ def load_runtime_wheelhouse(
             raise SystemExit("runtime wheelhouse lock digest is invalid")
         if expected_lock_sha256 is not None and lock_sha256 != expected_lock_sha256:
             raise SystemExit("runtime wheelhouse does not bind the tested uv.lock")
-        platforms = manifest.get("platforms")
-        wheels = manifest.get("wheels")
-        if not isinstance(platforms, dict) or set(platforms) != {target.name for target in SUPPORTED_TARGETS}:
-            raise SystemExit("runtime wheelhouse platform closure is incomplete")
-        if not isinstance(wheels, dict) or not wheels:
-            raise SystemExit("runtime wheelhouse declares no wheels")
-        declared = {WHEELHOUSE_MANIFEST, *(f"{WHEELHOUSE_PREFIX}{name}" for name in wheels)}
+        runtimes = manifest.get("runtimes")
+        if not isinstance(runtimes, dict) or not runtimes:
+            raise SystemExit("runtime wheelhouse declares no runtimes")
+        if expected_python is not None:
+            expected_runtime = _canonical_python_minor(expected_python)
+            if expected_runtime not in runtimes:
+                raise SystemExit(f"runtime wheelhouse has no entry for Python {expected_runtime}")
+            selected = runtimes[expected_runtime]
+            if not isinstance(selected, dict) or selected.get("status") != "ready":
+                raise SystemExit(f"runtime wheelhouse has no ready entry for Python {expected_runtime}")
+
+        declared = {WHEELHOUSE_MANIFEST}
+        for python_version, runtime in runtimes.items():
+            canonical_runtime = _canonical_python_minor(python_version) if isinstance(python_version, str) else ""
+            if canonical_runtime != python_version or not isinstance(runtime, dict):
+                raise SystemExit(f"runtime wheelhouse runtime declaration is invalid: {python_version!r}")
+            status = runtime.get("status")
+            if runtime.get("python") != python_version:
+                raise SystemExit(f"runtime wheelhouse runtime identity drifted: {python_version!r}")
+            if status == "missing-wheel":
+                if set(runtime) != {"missing", "python", "status"}:
+                    raise SystemExit(f"runtime wheelhouse missing-wheel record drifted: {python_version!r}")
+                missing = runtime.get("missing")
+                if not isinstance(missing, list) or not missing:
+                    raise SystemExit(f"runtime wheelhouse missing-wheel record is empty: {python_version!r}")
+                for item in missing:
+                    if not isinstance(item, dict) or set(item) != {
+                        "distribution",
+                        "platform",
+                        "reason",
+                        "requirement",
+                    } or any(not isinstance(item[key], str) or not item[key] for key in item):
+                        raise SystemExit(
+                            f"runtime wheelhouse missing-wheel attribution is invalid: {python_version!r}"
+                        )
+                continue
+            if status != "ready" or set(runtime) != {"platforms", "python", "status", "wheels"}:
+                raise SystemExit(f"runtime wheelhouse runtime status is invalid: {python_version!r}")
+            platforms = runtime.get("platforms")
+            wheels = runtime.get("wheels")
+            if not isinstance(platforms, dict) or set(platforms) != {target.name for target in SUPPORTED_TARGETS}:
+                raise SystemExit(f"runtime wheelhouse platform closure is incomplete: {python_version!r}")
+            if not isinstance(wheels, dict) or not wheels:
+                raise SystemExit(f"runtime wheelhouse declares no wheels: {python_version!r}")
+            for filename, raw in wheels.items():
+                if not isinstance(filename, str) or Path(filename).name != filename or not filename.endswith(".whl"):
+                    raise SystemExit(f"runtime wheelhouse wheel declaration is invalid: {filename!r}")
+                if not isinstance(raw, dict) or set(raw) != {"distribution", "sha256", "size", "version"}:
+                    raise SystemExit(f"runtime wheelhouse wheel record drifted: {filename!r}")
+                digest = raw.get("sha256")
+                if (
+                    not isinstance(digest, str)
+                    or len(digest) != 64
+                    or any(character not in "0123456789abcdef" for character in digest)
+                    or not isinstance(raw.get("size"), int)
+                    or raw["size"] < 0
+                    or not isinstance(raw.get("distribution"), str)
+                    or not raw["distribution"]
+                    or not isinstance(raw.get("version"), str)
+                    or not raw["version"]
+                ):
+                    raise SystemExit(f"runtime wheelhouse wheel record is invalid: {filename!r}")
+                member = f"{WHEELHOUSE_PREFIX}{python_version}/{filename}"
+                declared.add(member)
+                payload = bundle.read(member)
+                if len(payload) != raw["size"] or hashlib.sha256(payload).hexdigest() != digest:
+                    raise SystemExit(f"runtime wheelhouse wheel bytes drifted: {python_version}/{filename!r}")
+            for target, rows in platforms.items():
+                if not isinstance(rows, dict) or not rows:
+                    raise SystemExit(f"runtime wheelhouse target closure is empty: {python_version}/{target!r}")
+                for distribution, filename in rows.items():
+                    record = wheels.get(filename) if isinstance(filename, str) else None
+                    if (
+                        not isinstance(distribution, str)
+                        or not distribution
+                        or not isinstance(filename, str)
+                        or not isinstance(record, dict)
+                        or record.get("distribution") != distribution
+                    ):
+                        raise SystemExit(
+                            f"runtime wheelhouse target references an unknown wheel: {python_version}/{target!r}"
+                        )
         if set(names) != declared:
             raise SystemExit("runtime wheelhouse member inventory drifted")
-        for filename, raw in wheels.items():
-            if not isinstance(filename, str) or Path(filename).name != filename or not isinstance(raw, dict):
-                raise SystemExit("runtime wheelhouse wheel declaration is invalid")
-            if set(raw) != {"distribution", "sha256", "size", "version"}:
-                raise SystemExit(f"runtime wheelhouse wheel record drifted: {filename!r}")
-            payload = bundle.read(f"{WHEELHOUSE_PREFIX}{filename}")
-            if len(payload) != raw.get("size") or hashlib.sha256(payload).hexdigest() != raw.get("sha256"):
-                raise SystemExit(f"runtime wheelhouse wheel bytes drifted: {filename!r}")
-        for target, rows in platforms.items():
-            if not isinstance(rows, dict) or not rows:
-                raise SystemExit(f"runtime wheelhouse target closure is empty: {target!r}")
-            for distribution, filename in rows.items():
-                record = wheels.get(filename) if isinstance(filename, str) else None
-                if not isinstance(distribution, str) or not isinstance(record, dict):
-                    raise SystemExit(f"runtime wheelhouse target references an unknown wheel: {target!r}")
-                if record.get("distribution") != distribution:
-                    raise SystemExit(f"runtime wheelhouse target swaps distribution bytes: {target!r}/{distribution!r}")
     return RuntimeWheelhouse(archive=archive, manifest=manifest)
 
 
-def extract_runtime_wheelhouse(archive_path: Path, destination: Path) -> RuntimeWheelhouse:
-    """Validate then extract only declared wheel bytes into a new directory."""
-    wheelhouse = load_runtime_wheelhouse(archive_path)
+def extract_runtime_wheelhouse(
+    archive_path: Path,
+    destination: Path,
+    *,
+    python_version: str | None = None,
+) -> RuntimeWheelhouse:
+    """Validate then extract one ready runtime's wheel bytes into a directory."""
+    wheelhouse = load_runtime_wheelhouse(archive_path, expected_python=python_version)
+    runtimes = wheelhouse.manifest["runtimes"]
+    ready = [name for name, value in runtimes.items() if isinstance(value, dict) and value.get("status") == "ready"]
+    if python_version is None:
+        if len(ready) != 1:
+            raise SystemExit("runtime-specific wheelhouse extraction requires --python-version")
+        selected_runtime = ready[0]
+    else:
+        selected_runtime = _canonical_python_minor(python_version)
+    runtime = runtimes.get(selected_runtime)
+    if not isinstance(runtime, dict) or runtime.get("status") != "ready":
+        raise SystemExit(f"runtime wheelhouse has no ready entry for Python {selected_runtime}")
     target = destination.resolve()
     if target.exists():
         raise FileExistsError(target)
     target.mkdir(parents=True)
-    wheels = wheelhouse.manifest["wheels"]
+    wheels = runtime["wheels"]
     with zipfile.ZipFile(wheelhouse.archive) as bundle:
         for filename in sorted(wheels):
-            (target / filename).write_bytes(bundle.read(f"{WHEELHOUSE_PREFIX}{filename}"))
+            (target / filename).write_bytes(bundle.read(f"{WHEELHOUSE_PREFIX}{selected_runtime}/{filename}"))
         (target / WHEELHOUSE_MANIFEST).write_text(
             json.dumps(wheelhouse.manifest, indent=2, sort_keys=True) + "\n",
             encoding=_UTF_8,
@@ -470,8 +675,10 @@ __all__ = [
     "WHEELHOUSE_PREFIX",
     "WHEELHOUSE_SCHEMA",
     "RuntimeWheelhouse",
+    "RuntimeWheelhousePlan",
     "build_runtime_wheelhouse",
     "extract_runtime_wheelhouse",
     "load_runtime_wheelhouse",
     "plan_runtime_wheelhouse",
+    "plan_runtime_wheelhouses",
 ]
