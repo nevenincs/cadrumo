@@ -29,6 +29,16 @@ def lane() -> tuple[str, frozenset[str]]:
     return default_lane_predicate(_REPO_ROOT / "pyproject.toml")
 
 
+def test_the_screen_reads_a_real_population(lane: tuple[str, frozenset[str]]) -> None:
+    """A scan reaching nothing would report a clean tree and an empty census alike."""
+    required, excluded = lane
+    roots = tuple(path for path in (_REPO_ROOT / "dev", _REPO_ROOT / "tests") if path.is_dir())
+    findings = visibility_census(roots, required=required, excluded=excluded)
+
+    assert roots, "neither test root exists, so the census scanned nothing"
+    assert len(findings) > 50, f"only {len(findings)} modules classified; the scan is not reaching the tree"
+
+
 def test_the_lane_predicate_is_read_from_the_project_configuration(lane: tuple[str, frozenset[str]]) -> None:
     """The screen describes the lane that actually runs, not a copy of it."""
     required, excluded = lane

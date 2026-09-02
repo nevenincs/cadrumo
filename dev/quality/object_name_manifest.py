@@ -354,6 +354,10 @@ def validate_object_name_manifest(
             raise ObjectNameManifestError(f"operation {operation.operation_id!r} is not a module declaration")
         if operation.operation_kind == "symbol-rename" and old_kind is ObjectNameKind.MODULE:
             raise ObjectNameManifestError(f"operation {operation.operation_id!r} is not a symbol declaration")
+        if operation.new_locator is not None and _locator_name(operation.new_locator) == declarations[0].name:
+            raise ObjectNameManifestError(
+                f"operation {operation.operation_id!r} target must change the audited object name",
+            )
         if operation.operation_kind == "module-rename" and (
             PurePosixPath(operation.old_path).suffix != ".py"
             or operation.new_path is None

@@ -46,10 +46,26 @@ def observed() -> dict[str, tuple[str, ...]]:
     }
 
 
+def test_the_census_and_the_dispositions_are_both_a_real_population() -> None:
+    """Neither side may be empty, or the equality below holds by saying nothing.
+
+    The equality is safe today because the file carries rows: a census that
+    silently returned nothing would fail loudly against them. It stops being safe
+    the moment both sides empty together, and a check that only works while
+    someone remembers not to empty a file is not a check.
+    """
+    definitions = collect_public_definitions(_PACKAGE_ROOT)
+    same_layer = [item for item in collision_census(definitions) if item.kind == "same_layer_collision"]
+
+    assert len(definitions) > 500, f"only {len(definitions)} definitions scanned; the scan is not reaching the package"
+    assert same_layer, "the census reports no same-layer collision at all, which the corpus is not expected to satisfy"
+
+
 def test_every_same_layer_collision_is_adjudicated_and_every_row_is_live(
     dispositions: dict[str, dict[str, object]], observed: dict[str, tuple[str, ...]]
 ) -> None:
     """No shared name inside a layer sits unexplained, and no explanation outlives its cause."""
+    assert dispositions, "the dispositions file carries no rows, so this equality would assert nothing"
     assert set(observed) == set(dispositions), (
         f"collisions carrying no disposition: {sorted(set(observed) - set(dispositions))}; "
         f"dispositions whose collision is gone: {sorted(set(dispositions) - set(observed))}"
