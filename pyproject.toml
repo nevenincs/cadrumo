@@ -347,14 +347,19 @@ managed-torch-direct-dependency = true
 registry = [
   # Registry load-census tooling imports grimp directly for the executed import graph.
   "grimp>=3.15,<4",
-]
-dev = [
-  { include-group = "registry" },
   # Rust-backed TOML parser used only by development registry writers and
   # render tooling; production reads use the stdlib `tomllib` boundary.
   "rtoml>=0.13.0,<1",
+]
+dev = [
+  { include-group = "registry" },
   # Dependency declaration drift: missing, unused, transitive, and misplaced deps.
   "deptry>=0.24",
+  # `pydantic` does not re-export `PydanticSerializationError`, so the inference
+  # consent-gate test reaches it at its own distribution. Declared here rather
+  # than in `[project] dependencies` because only tests import it, and left
+  # unbounded above so `pydantic`'s exact pin stays the resolver's authority.
+  "pydantic-core>=2.46",
   # torch is the vaultspec-rag embedding backend (dev-only semantic search); no
   # `src/cadrumo/` runtime path imports it. It lives here, not in [project.dependencies],
   # so production installs stay lean — a PEP 735 group is a valid direct-dep location

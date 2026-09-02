@@ -282,6 +282,7 @@ dev = [
     { name = "playwright-stealth" },
     { name = "prek" },
     { name = "psutil" },
+    { name = "pydantic-core" },
     { name = "pydoclint" },
     { name = "pyrefly" },
     { name = "pytest" },
@@ -321,6 +322,7 @@ dev = [
 ]
 registry = [
     { name = "grimp" },
+    { name = "rtoml" },
 ]
 
 [package.metadata]
@@ -399,6 +401,7 @@ dev = [
     { name = "playwright-stealth", specifier = ">=2.0.3,<3" },
     { name = "prek", specifier = ">=0.2.0" },
     { name = "psutil", specifier = ">=5.9" },
+    { name = "pydantic-core", specifier = ">=2.46" },
     { name = "pydoclint", specifier = ">=0.6" },
     { name = "pyrefly", specifier = ">=1.1.1" },
     { name = "pytest", specifier = ">=9.0.3" },
@@ -436,7 +439,10 @@ dev = [
     { name = "vaultspec-rag", extras = ["mcp"], specifier = ">=0.3.8" },
     { name = "vulture", specifier = ">=2.16" },
 ]
-registry = [{ name = "grimp", specifier = ">=3.15,<4" }]
+registry = [
+    { name = "grimp", specifier = ">=3.15,<4" },
+    { name = "rtoml", specifier = ">=0.13.0,<1" },
+]
 
 [[package]]
 name = "cadrumo-data-manuals"
