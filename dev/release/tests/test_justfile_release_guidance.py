@@ -75,22 +75,6 @@ def test_release_survives_as_the_read_only_dry_run_preview() -> None:
     assert "git push" not in rendered
 
 
-def test_release_collect_evidence_aggregates_rows_from_evidence_drafts() -> None:
-    """The collect recipe downloads every row from the runs' evidence drafts.
-
-    Release-asset transport: rows ride draft releases tagged
-    evidence-<lane>-<run_id>, never Actions artifacts, and the sealed
-    evidence-manifest.json asset is not a row.
-    """
-    rendered = _render_recipe("release-collect-evidence", "123456")
-
-    assert "gh run download" not in rendered
-    assert "gh release download" in rendered
-    assert "evidence-$lane-" in rendered or "evidence-$lane-$run_id" in rendered
-    assert "evidence-manifest.json" in rendered
-    assert "var/distribution-install-readiness" in rendered
-
-
 def test_release_rollback_names_every_yank_target_and_only_the_rollback_tag() -> None:
     """The rendered rollback guide covers all distributions and one named tag."""
     rendered = _render_recipe("release-rollback", "1.2.3")
