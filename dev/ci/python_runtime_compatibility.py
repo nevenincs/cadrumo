@@ -52,6 +52,13 @@ _SCHEMA: Final[str] = "cadrumo.python-runtime-compatibility.v1"
 _SHA256_RE: Final[re.Pattern[str]] = re.compile(r"^[0-9a-f]{64}$")
 _RUNTIME_VERSION_RE: Final[re.Pattern[str]] = re.compile(r"^3\.(?P<minor>[0-9]+)")
 _DEFAULT_BUILDER_PIN: Final[Path] = REPO_ROOT / ".python-version"
+_MISSING_WHEEL_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
+    re.compile(r"\bno solution found\b"),
+    re.compile(r"\bno matching distribution\b"),
+    re.compile(r"\bno compatible wheels?\b"),
+    re.compile(r"\bcould not find a version\b"),
+    re.compile(r"\bno wheels? (?:are|were) available\b"),
+)
 
 
 class ProbeMode(StrEnum):
@@ -73,6 +80,13 @@ class DependencyStatus(StrEnum):
 
     RESOLVED = "resolved"
     MISSING_WHEEL = "missing-wheel"
+    FAILED = "failed"
+
+
+class FocusedTestStatus(StrEnum):
+    """Outcomes for the small behavioral suite run by a target interpreter."""
+
+    PASSED = "passed"
     FAILED = "failed"
 
 
@@ -112,6 +126,16 @@ class CommandEvidence:
 
 
 @dataclass(frozen=True, slots=True)
+class FocusedTestEvidence:
+    """One named target-runtime behavior test and its subprocess evidence."""
+
+    name: str
+    status: str
+    command: CommandEvidence
+    detail: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class ProbeEvidence:
     """One immutable JSON-compatible compatibility verdict."""
 
@@ -129,6 +153,7 @@ class ProbeEvidence:
     dependency: dict[str, str]
     isolation: dict[str, bool]
     commands: tuple[CommandEvidence, ...]
+    focused_tests: tuple[FocusedTestEvidence, ...] = ()
     failure: dict[str, str] | None = None
     observed_at: str = ""
 
@@ -153,6 +178,16 @@ class ProbeEvidence:
             raise CompatibilityProbeError("failed compatibility evidence must name its failure")
         if self.dependency.get("status") == "skipped":
             raise CompatibilityProbeError("compatibility dependency evidence cannot be skipped")
+        names = tuple(test.name for test in self.focused_tests)
+        if any(not name for name in names) or len(names) != len(set(names)):
+            raise CompatibilityProbeError("focused runtime tests must have unique non-empty names")
+        if any(test.status not in {item.value for item in FocusedTestStatus} for test in self.focused_tests):
+            raise CompatibilityProbeError("focused runtime tests have an invalid status")
+        if self.status == ProbeStatus.PASSED.value:
+            if not self.focused_tests:
+                raise CompatibilityProbeError("passing compatibility evidence must include focused runtime tests")
+            if any(test.status != FocusedTestStatus.PASSED.value for test in self.focused_tests):
+                raise CompatibilityProbeError("passing compatibility evidence cannot contain a failed focused test")
 
     def to_dict(self) -> dict[str, object]:
         """Return deterministic JSON data suitable for workflow artifact upload."""
@@ -338,16 +373,7 @@ def _install(
     command = [CommandEvidence.from_result(result)]
     if result.returncode != 0:
         text = f"{result.stdout}\n{result.stderr}".lower()
-        missing_wheel = mode is ProbeMode.BINARY and any(
-            phrase in text
-            for phrase in (
-                "no solution found",
-                "no matching distribution",
-                "no compatible wheel",
-                "could not find a version",
-                "wheel",
-            )
-        )
+        missing_wheel = mode is ProbeMode.BINARY and any(pattern.search(text) for pattern in _MISSING_WHEEL_PATTERNS)
         category = DependencyStatus.MISSING_WHEEL if missing_wheel else DependencyStatus.FAILED
         return command, category, result.stderr.strip()[-500:] or result.stdout.strip()[-500:] or "install failed"
     check = run_command(
