@@ -36,7 +36,7 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.export import resolved_export_endpoints
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
-__all__ = ["ProvenanceFinding", "provenance_findings", "screen_authority"]
+__all__ = ["ProvenanceFinding", "outside_reference_index", "provenance_findings", "screen_authority"]
 
 type ProvenanceChildKind = Literal[
     "casilla",
@@ -139,19 +139,42 @@ def _bundled_modelo_ids() -> tuple[str, ...]:
     return tuple(sorted(str(code) for code in registry_modelo_codes()))
 
 
+def outside_reference_index(
+    findings: tuple[ProvenanceFinding, ...],
+) -> dict[tuple[str, str, str, str], int]:
+    """Collapse per-child findings onto the reference that is actually outside.
+
+    The raw finding is per citing child, which is the right measurement and the
+    wrong report: one reference missing from a revision manifest is cited by many
+    children, so the site count exceeds the number of things to fix by roughly
+    nineteen to one. The unit someone acts on is the reference; the number of
+    children citing it is how much of the revision depends on that fix.
+    """
+    index: dict[tuple[str, str, str, str], int] = {}
+    for finding in findings:
+        for reference in finding.outside:
+            key = (finding.modelo, finding.revision, str(finding.ref_kind), reference)
+            index[key] = index.get(key, 0) + 1
+    return index
+
+
 def main() -> int:
-    """Print one greppable row per finding and a per-kind summary; always exit 0."""
+    """Print one greppable row per outside reference and a per-kind summary; always exit 0."""
     findings = screen_authority(bundled_authority(), _bundled_modelo_ids())
-    for f in findings:
+    index = outside_reference_index(findings)
+    for (modelo, revision, ref_kind, reference), sites in sorted(index.items()):
         sys.stdout.write(
-            f"provenance_outside_manifest modelo={f.modelo} revision={f.revision} child={f.child_kind}:{f.child_id} "
-            f"ref_kind={f.ref_kind} outside={','.join(f.outside)}\n",
+            f"provenance_outside_manifest modelo={modelo} revision={revision} "
+            f"ref_kind={ref_kind} outside={reference} citing_children={sites}\n",
         )
     by_kind: dict[str, int] = {}
     for f in findings:
         by_kind[f"{f.child_kind}.{f.ref_kind}"] = by_kind.get(f"{f.child_kind}.{f.ref_kind}", 0) + 1
     census = " ".join(f"{key}={value}" for key, value in sorted(by_kind.items()))
-    sys.stdout.write(f"summary surface=authored_families+resolved_fields findings={len(findings)} {census}\n")
+    sys.stdout.write(
+        f"summary surface=authored_families+resolved_fields outside_references={len(index)} "
+        f"distinct_references={len({key[3] for key in index})} citing_sites={len(findings)} {census}\n"
+    )
     return 0
 
 

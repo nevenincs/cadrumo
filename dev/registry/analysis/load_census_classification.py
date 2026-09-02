@@ -432,15 +432,6 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
     ),
     ClassificationRule(
         classification="conditionally_reachable",
-        trigger="temporal-coherence advisory gate",
-        reason=(
-            "The temporal-coherence gate imports this validator to inspect a loaded revision; "
-            "the validated load itself does not invoke its advisory surface."
-        ),
-        members=_registry("validate_temporal_coherence"),
-    ),
-    ClassificationRule(
-        classification="conditionally_reachable",
         trigger="cross-revision contiguity advisory raised during registry validation",
         reason=(
             "Reached from _validate_cross_revision_evolution, which runs on a cold load. The "

@@ -27,7 +27,7 @@ pair together is complete. Those are reported as their own kind, not as missing
 scale.
 
 What is left unsettled is a monetary casilla rendered by a single field of a
-wire type that performs no scaling. Three conditions are reported:
+wire type that performs no scaling. Four conditions are reported:
 
 - ``money_without_scale`` - a monetary casilla rendered as an integer, text or
   another unscaled wire type. The renderer emits the value as it stands, so

@@ -24,6 +24,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from rich.console import Console
+from textual._compositor import Compositor
 from textual.app import App
 from textual.widget import Widget
 
@@ -52,7 +53,12 @@ def screen_text(app: App[Any], width: int, height: int) -> str:
         legacy_windows=False,
     )
     # The compositor IS the frame: the same object export_screenshot renders.
-    console.print(app.screen._compositor, end="")
+    # Textual exposes no public accessor for the screen's compositor, and
+    # rendering it is the only way to capture the frame exactly as
+    # ``export_screenshot`` does. The dynamic reach is annotated so the
+    # compositor keeps its real type rather than leaking ``Any``.
+    compositor: Compositor = getattr(app.screen, "_compositor")  # noqa: B009
+    console.print(compositor, end="")
     return console.export_text(styles=False).rstrip("\n")
 
 
@@ -140,8 +146,11 @@ def geometry_band(app: App[Any], width: int) -> list[str]:
     # isinstance test. A screen once carried two visible vertical scrollbars,
     # one of them such a Static, and this reader called it clean -- a gate
     # whose name promises a behaviour must not filter on a type.
-    for host in app.screen.walk_children():
-        if not getattr(host, "allow_vertical_scroll", False) or not host.display:
+    # ``Widget`` is not a narrowing of the population: scroll geometry
+    # (``virtual_size`` / ``container_size`` / ``max_scroll_y``) is declared on
+    # ``Widget``, so a plain ``DOMNode`` could never have been a candidate.
+    for host in app.screen.walk_children(Widget):
+        if not host.allow_vertical_scroll or not host.display:
             continue
         if host.virtual_size.height > host.container_size.height and host.max_scroll_y <= 0:
             findings.append(
