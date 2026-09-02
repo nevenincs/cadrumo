@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:e54cc53a06e516a4e9fe0f001803aeffb7783dcf9a107777a3390528ef140075'
+body_hash: 'sha256:106eedc5c8c931cdb03fb6fcc0b518722e8f2365a9be3b076c996ed57d3bf316'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -1716,6 +1716,56 @@ a caller behind is the failure that rule describes. It is recorded rather than
 corrected here because the rename belongs to another contributor's in-flight work
 and they may still be sweeping consumers; a second writer on that surface would
 be the more expensive mistake. The fix is a single path.
+
+### correction-the-single-channel-authority-does-not-refuse-on-construction | medium | The finding above said construction; the refusal is conditional and sits one level in
+
+An earlier finding here recorded that `LiveFilingExportProofAuthority` "now
+refuses on construction". That was inferred from a traceback whose raise site sat
+near a construction call, and it is wrong. Constructing it with no entries
+succeeds, which was checked directly rather than re-read.
+
+The refusal lives in `proof_for`, and only after a matching entry is found: with
+no entry for the requested coordinate the method returns `None`. So the class has
+two live paths and one dead one. Asked about a coordinate it does not carry, it
+answers honestly that it has no proof. Asked about a coordinate it *does* carry -
+the only path that could ever produce a proof - it refuses. The canonical entry
+tuple is empty, so in production it always takes the first path and always
+answers `None`.
+
+That makes the surface dead in substance while remaining constructible, which is
+why retiring it is still right and why the retiring step's own premise needed
+correcting too. The step said no test drives it. One does:
+`test_real_closure_outcomes.py` builds the authority with a real modelo 151 entry
+and asserts a satisfied filing-export outcome over 11,618 emitted bytes. That
+test fails today. Deleting the authority therefore means rewriting that test onto
+the two-channel authority, not simply removing an unused class, and the step now
+says so.
+
+The deletion is deliberately not being made yet. That same test file is failing
+for a second and unrelated reason - `RegistryClosureRevisionReport` now rejects
+the `temporal_coverage` fields `status`, `failure_code`, `failure_detail` and
+`refused_coordinates` as `extra_forbidden` - which is a model change in the
+application registry package belonging to another contributor's in-flight work.
+Editing that file now would put a second writer on a surface already moving.
+
+### the-conformance-test-directory-is-outside-every-lane-run-this-campaign-has-made | medium | A whole directory of real-authority tests whose state was simply unknown
+
+Every full-lane measurement in this campaign ran `dev/registry/tests`. The
+conformance suite lives at `dev/registry/conformance/tests` and was never in that
+path, so its results have not once been observed while this plan reported lane
+state to two decimal places.
+
+Run directly, it gives 2 failed, 5 passed in 11m36s. Both failures are real and
+neither was known: the live-filing closure row above, and a grade-scope guard
+whose expected refusal message no longer matches what the code raises.
+
+The lesson is not that these two failures matter most - they are both downstream
+of other work - but that a measurement's scope is a claim in itself. "The lane is
+fifteen failures" was true of the path measured and silently excluded a sibling
+directory of tests that exercise the real closure authority. Its runtime is also
+why it is easy to omit: at nearly twelve minutes for seven tests it exceeds the
+default foreground timeout, so it drops out of any run that is not deliberately
+backgrounded.
 
 
 ## Recommendations

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:dfaca064a834492c299851c4ad2671edddcec9bd588d79638410773c053831c0'
+body_hash: 'sha256:e07e032a544308ccbd56f5052f721334fd0e0fb453e6225c4d66ba4f5e0acc3b'
 ---
 
 <!-- RETIRED: S73 -->
@@ -174,9 +174,10 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S97` - Sweep the registry suites for gates that cannot pass and record each as owned, dispositioned or retired; `dev/registry/tests`.
 - [x] `W02.P02.S107` - Retire the developer registry package re-export facade and its enforcing inventory assertion, repointing the one symbol consumer at the defining module; `dev/registry/__init__.py`.
 - [ ] `W02.P02.S108` - Decide whether the pipeline defining modules are public or private, then either name them publicly or stop importing them from sibling packages; `dev/registry/pipeline`.
-- [ ] `W02.P02.S109` - Delete the disabled single-channel filing proof authority and its remaining references now no test drives it; `dev/registry/filing_export_proof.py`.
+- [ ] `W02.P02.S109` - Rewrite the modelo 151 live-filing closure test onto the two-channel authority, then delete the single-channel proof authority whose only proof-producing path refuses; `dev/registry/conformance/tests/test_real_closure_outcomes.py`.
 - [ ] `W02.P02.S110` - Resolve the twenty-four filing tests demanding filing grade from modelos 200, 038 and 036, which now declare calculation or applicability grade; `src/cadrumo/application/filing/tests`.
 - [x] `W02.P02.S111` - Retire the generation pipeline package re-export facade so the initialiser is an inert namespace marker; `dev/registry/pipeline/__init__.py`.
+- [ ] `W02.P02.S112` - Bring the conformance test directory into the lane measurement, since every full-lane run so far covered only dev/registry/tests; `dev/registry/conformance/tests`.
 
 ### Phase `W02.P03` - release predicate relocation
 
@@ -402,7 +403,7 @@ the boundary contract, the ratchet residue deletion and the dependency move.
 
 ## Verification
 
-The plan is complete when every Step is closed. Beyond that, seven criteria decide whether the work
+The plan is complete when every Step is closed. Beyond that, eight criteria decide whether the work
 achieved what it was for. Each names the evidence that settles it, because a criterion whose proof is
 a reading rather than a command is one nobody can check later.
 
@@ -424,11 +425,14 @@ acceptance suite asserts the structured refusal, naming which channel is empty, 
 that rephrasing once broke. The first half cannot be satisfied by engineering until the official
 reference exists.
 
-Every screen is reachable, exercised and honest about what it measured. Six gates cover this: a screen
-is enrolled in the runner, documented in the contributor README, carries a test module, searches a
-non-empty population, completes over the whole corpus, and leaves the shipped registry byte-for-byte
-untouched. Each was added after finding the hole it closes, and two caught the author within one
-iteration of being written.
+Every screen is reachable, exercised and honest about what it measured. Seven gates cover this: a
+screen is enrolled in the runner, documented in the contributor README, carries a test module,
+searches a non-empty population, completes over the whole corpus, leaves the shipped registry
+byte-for-byte untouched, and names in its own docstring every finding kind it emits. Each was added
+after finding the hole it closes, and two caught the author within one iteration of being written.
+The seventh collects its kinds by running the screens rather than reading their source, because two
+earlier static extractors were each wrong in a different direction: one under-read a screen to a
+single kind and another to none, and a regex reported function names as undocumented kinds.
 
 Each declaration gate demonstrates detection of a representative defect from a constructed fixture or
 an isolated temporary registry tree, never by mutating the working tree. Two gates are exempt and
@@ -444,6 +448,25 @@ the first test and one fails the second; that one is the plan's only known filin
 Every revision directory name agrees with the window that revision declares, and a gate refuses a name
 that does not. Temporal selection resolves every coordinate the law can decide and refuses only those
 it genuinely cannot. Fourteen names fail the first today and two coordinates fail the second.
+
+The development registry lane passes, and until it does every failure in it is named and attributed.
+The lane is red: seventeen failures, fifteen under `dev/registry/tests` against eight hundred and
+twenty-three passes and two more in the conformance suite beside it. The first figure was down from
+twenty-six when the inventory was first taken; the second went unmeasured until the scope of the
+measurement was itself questioned, because every run had named only the first directory. Every one is accounted for - eight generated trees that do not
+reproduce or were never published, four over files another contributor is holding uncommitted, two
+classification modules, and one boundary check naming modules an in-flight rename moved. None belongs
+to this plan, and that was established by name rather than assumed. The two conformance failures are a
+closure row driven by a proof authority whose only proof-producing path refuses, and a guard whose
+expected refusal message no longer matches what the code raises.
+
+The lane figure is only as honest as the path it was taken over, so the run names both directories.
+The conformance suite takes nearly twelve minutes for seven tests, which exceeds the default
+foreground timeout and is exactly why it fell out of every earlier measurement. The criterion is deliberately not
+"the lane is green", because this plan cannot make it green while another campaign holds the files;
+it is that no failure in it is unexplained, so a new one is visible immediately. Read the exit status
+from pytest itself: a run piped through a filter reports the filter, which once made a red lane read
+as exit code zero.
 
 ## Verification
 
