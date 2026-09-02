@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:d6b68038fa147e7b65b51878ad8d646a10efff3e3bfc1046bdd15ead198afbf5'
+body_hash: 'sha256:51c5663f73a215106f437c4c49442b8ae74d4491a6dabea5fcbc8a439612c9b4'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -3910,3 +3910,132 @@ wrong than right.
 The measurement is kept because it is cheap to re-run and answers a question someone will
 ask again. What it does not support is a rule, and inventing one anyway would have been
 the easier and worse outcome.
+
+### The conformance closure tests sit outside every lane, and one of them holds a failure this campaign has been carrying
+
+This campaign built a lane-visibility screen after a marker deselection twice turned a
+change's own test suite into an empty selection reported as success. The tree already had
+a stronger answer to that question, and finding it changed what this work should keep.
+
+`dev/tests/test_lane_reachability.py` asks the same question per TEST rather than per
+module, and asks both halves of it: whether a lane's path scope names the file, and
+whether that lane's marker expression selects the test. Its own docstring records that it
+replaced a `dev/`-only path-only predecessor and strictly subsumes it. Measured against
+the same tree, it reports 73 marker-unreachable tests and two files outside every lane
+path. The screen written here is the weaker instrument, and this campaign has spent
+several findings arguing that two declarations of one question is the defect - so the
+honest conclusion is that the older gate is canonical and the newer screen earns its place
+only by what it adds, which is a static classification and no pytest run.
+
+Running it produced something the campaign needed. Two files sit outside every lane's path
+scope, so no marker expression could ever reach them:
+`dev/registry/conformance/tests/test_closure.py` and
+`dev/registry/conformance/tests/test_real_closure_outcomes.py`.
+
+The second matters directly. Its one failure has appeared in every lane measurement in
+this audit and was carried as inherited baseline, which was correct as far as it went and
+missed the sharper fact: no CI lane runs that file at all. A failure nobody's pipeline
+observes is not a baseline, it is an unobserved regression that happens to be visible only
+because this campaign named the path by hand. The conformance closure suite is the one
+that proves real filing outcomes, which makes it a poor candidate for the tree's only
+path-unreachable corner.
+
+None of this campaign's own gates are among the findings. All five modules authored here -
+the two collision gates, the lane screen, the constant gate and the canonical-definitions
+gate - are lane-reachable, and `dev/quality/tests` is named by the justfile and by
+`ci-full.yml`. That was checked rather than assumed, because the alternative was to author
+five gates that nothing runs while writing an audit finding about tests that nothing runs.
+
+A smaller contradiction sits beside it. That module's docstring states its location is
+load-bearing, that it lives under `src/cadrumo/tests`, and that it must not be moved back
+under `dev/`. It is under `dev/tests`, moved there deliberately by a relocation commit
+that carried its lane and justfile consumers with it. The instruction now forbids the state
+the tree is in, which is the same class of defect as an annotation that promises what the
+function stopped doing.
+
+### The campaign removed its own duplicate rather than arguing for it
+
+The previous finding established that the lane-visibility screen written here overlaps a
+stronger gate. Acting on that was the test of whether this campaign's rule applies to its
+own output, and the answer had to be more precise than deleting the screen or keeping it
+whole.
+
+The overlap was verified rather than assumed. Every lane's marker expression was read from
+the justfile, and each requires at least one execution marker; the project's marker
+contract requires exactly one of `unit`, `integration` and `aeat_live`. So a module
+carrying none is selected by no lane, and the reachability gate catches that per test,
+which is strictly finer than the module-level verdict written here. The screen's sharpest
+class added no detection value.
+
+That assertion is deleted. What remains is the part the gate has no reason to answer:
+given a module that IS reachable, why did the default lane not select it. A green
+reachability gate is silent on that, and it is the question behind a run reporting three
+passing tests over a file holding twenty-four. The screen's docstring now names the gate
+as the authority so a later reader does not mistake the weaker instrument for the stronger
+one.
+
+The distinction matters because the same tree argues the other way elsewhere, and
+correctly. The reachability gate deliberately keeps a cheap path-level check beside its
+per-test one, because the per-test question is blind to a module holding no test functions
+at all, and it records that dropping the weaker check would be "a regression wearing a
+consolidation's clothes". Overlap is justified by distinct detection value and by nothing
+else. Here there was none, so the overlap went.
+
+### An instruction that forbade the state the tree was already in
+
+That gate's docstring stated its location was load-bearing, that it lived under
+`src/cadrumo/tests`, and that it must not be moved back under `dev/`. It sits under
+`dev/tests`, moved there deliberately by the full-corpus collectability relocation, which
+carried its lane and justfile consumers with it. The note was not describing a constraint
+the tree honoured; it was forbidding what had already been done, which is the same defect
+class as the return annotation that went on promising what its function had stopped
+checking.
+
+The note now records the requirement rather than the address: what is load-bearing is
+reach, not a particular directory. Measured from where the module actually is, `dev/tests`
+is named by five justfile recipes and four workflow invocations, and the note asks the next
+mover to count the lanes naming the destination and confirm the number does not fall. The
+reasoning that made the original worth writing is preserved; only the claim that had become
+false was replaced. Twenty-six tests pass and three fail exactly as before the edit, so the
+change is behaviour-neutral and was shown to be.
+
+### No CI lane runs the conformance closure suite, and the omission is one path
+
+The previous finding reported two conformance files sitting outside every lane's path
+scope. Measured precisely, the situation is worse than a path-scope curiosity and simpler
+to fix than it looks.
+
+Across the tree, 170 tests are unreachable by any CI-invoked lane. Ninety-seven of those
+carry a marker declaring a precondition a headless runner genuinely cannot satisfy, which
+is the only excuse the reachability gate accepts. Seventy-three carry no such marker and
+are therefore unexplained, concentrated in three subsystems: 39 in the TUI, 18 in
+packaging, and 16 in the registry.
+
+The registry's 16 are exactly the two conformance files - 9 tests in `test_closure.py`
+and 7 in `test_real_closure_outcomes.py`. They carry `unit` and `hex_core` and nothing
+else. There is no absent precondition, no heavy external tool, no credential store: they
+are ordinary unit tests that no lane happens to name.
+
+The omission is a single path. `dev/registry/tests`, `dev/registry/newmodelo/tests` and
+`dev/registry/aeip/tests` are all named by the dev tooling recipe;
+`dev/registry/conformance/tests` is named by no recipe and no workflow. One directory in a
+list of siblings.
+
+This bears directly on how this audit has been reading its own measurements. The single
+failure in `test_real_closure_outcomes.py` has appeared in every lane run recorded here and
+was each time attributed to inherited baseline. That attribution was true and incomplete in
+the way that matters: the test is not a known-failing member of a suite CI watches, it is a
+failing member of a suite CI has never executed. The conformance closure tests are the ones
+that prove real filing outcomes against the live registry, which makes them the worst
+candidates in the tree for that status.
+
+The remedy is deliberately not applied here. The change belongs in the justfile, outside
+this iteration's scope, and it is exactly the kind of one-line edit that should be made by
+someone who can watch what turns red when sixteen previously unrun tests begin running -
+at least one of them will, because one of them is failing now. The Step naming it is left
+open rather than closed, because reporting a remedy is not performing it.
+
+A marker would also silence the gate, and it would be the wrong fix. The gate's own text
+refuses it: the only accepted excuse is a precondition genuinely absent from a runner, and
+"nobody wired a lane" is explicitly not on the list. Marking these tests CI-incapable would
+convert a wiring omission into a permanent exemption and lose the finding entirely.

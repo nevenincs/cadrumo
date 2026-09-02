@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:73dad923c2a5a68199de5cc308a4e7fbe31023812c9a86479743219369377512'
+body_hash: 'sha256:5b65ab5837c4ca486bce41d26ba5da04e8e56420ce9e7780a59c3bf5f98ea2ef'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -364,6 +364,53 @@ legitimately needs at the same time.
 The console script itself works: it resolves from the built wheel, reaches its argument
 parser, and the server runtime it defers importing is present in the artifact. This is a
 placement defect, not a packaging one.
+
+### The container base-image gate outlived one of its two surfaces
+
+Retiring the nested-container install proof deleted `dev/packaging/smoke_docker`, and
+two of the four assertions in the base-image singularity gate were written about that
+module. They did not start reporting a problem; they started erroring on a missing path,
+which is a different failure and a louder one. The gate has been red since the proof
+mechanism was replaced.
+
+The resolver those assertions used is not residue. The repository-root `Dockerfile`
+still declares the base image, the devcontainer still builds from it, and the resolver
+is what reads the declaration back so nothing can restate it. Deleting the module would
+delete the only enforcement over a surface that is still live, so the step proposing its
+removal rests on a premise the tree disproves.
+
+The surviving invariant was widened while repairing it. It previously named three files,
+one of which no longer existed, so it asserted nothing about that surface at all - the
+characteristic failure of an enumerated list. It now walks the tree, and distinguishes a
+binding from a mention structurally: in Python a bare tag counts only where it is
+assigned or passed as a keyword argument, never in a docstring or an assertion message.
+Documentation is out of scope by construction, because a table describing the declared
+tag is not a second declaration.
+
+### Neither managed channel ships the second console script
+
+Rendered against a real cohort, the Scoop manifest exposes one shim, `aeat`, and the
+Homebrew formula asserts one executable, `aeat`. `cadrumo-mcp` appears in neither. A user
+who installs through either managed channel receives the application and not the server
+that fronts it, so the two-console-script product is only actually two on the index.
+
+The wheel is not at fault - it declares both entry points and both were proven to run
+from the built artifact. The gap is in what each channel chooses to expose, which means
+the generators are where it closes.
+
+### The managed channels source release assets, not the index
+
+Both generators take a release base URL and pin digests against artifacts served from it:
+the Scoop manifest fetches three wheels from a release tag, and the Homebrew formula
+fetches the source archive from the same place. The accepted decision says the managed
+channels install what the index serves, and these install what a release page serves -
+the same bytes by construction today, but a second distribution surface with its own
+availability and its own retention.
+
+Whether that is a divergence to close or a deliberate consequence of pinning digests -
+which the index's URLs do not carry in a form Homebrew consumes - is unresolved. It is
+recorded here rather than acted on because the answer changes the accepted decision
+rather than following from it.
 
 ### Not investigated
 

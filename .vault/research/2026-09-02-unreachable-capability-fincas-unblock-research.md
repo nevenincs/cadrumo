@@ -5,36 +5,10 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:df3688ab611869de77fdb4f37588bd8451e2b8278e6fb3f6925d864dd5f13d8a'
+body_hash: 'sha256:34d6066397f9af43a9bd0e0659863bcf74310eb4112564867168fe155bfa091a'
 related:
   - "[[2026-09-02-unreachable-capability-research]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #research) and one feature tag.
-     Replace unreachable-capability with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown [label](path) links in the document body.
-     - Cite external sources as bare URLs. Cite code, commits, packages, and
-       standards as inline backtick locators: `src/module.py:42`, commit
-       `abc1234`, `package@1.2.3`, RFC 9110. -->
-
-<!-- DOCUMENT BOUNDARY:
-     Research grounds; the ADR decides. Frame the option space with evidence
-     and trade-offs; at most name the option the evidence favors and what
-     the ADR must settle. Never record the decision here - a decision
-     outside the ADR forks and goes stale when the ADR chooses otherwise. -->
 
 # `unreachable-capability` research: `what actually blocks the fincas calculation source`
 

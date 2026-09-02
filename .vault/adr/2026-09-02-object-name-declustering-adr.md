@@ -5,12 +5,12 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:8db6904a93ffa78ed533b274035344ed5e7efa50ca6fdfc94ca302b173112671'
+body_hash: 'sha256:6d4235532385e14b64846fe96e4625f47b0629724d257b93134830e2bed57919'
 related:
   - "[[2026-09-02-object-name-declustering-research]]"
   - "[[2026-09-02-object-name-declustering-reference]]"
 ---
-# `object-name-declustering` adr: `manifest-governed graph batches with receipt-bound rehearsal` | (**status:** `proposed`)
+# `object-name-declustering` adr: `manifest-governed graph batches with receipt-bound rehearsal` | (**status:** `accepted`)
 
 ## Problem Statement
 

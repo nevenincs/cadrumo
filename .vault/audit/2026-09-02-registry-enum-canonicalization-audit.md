@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:ff262f67fc00caf430ac6ecb16cd3fbca91a3be4e08db49a5703854e19c0047c'
+body_hash: 'sha256:a9749b8d06b2f6f9acc17f053b3c9ce5eee615b4ff72a6a9168c00c2fb58aeff'
 related: []
 ---
 
@@ -920,3 +920,35 @@ refusal.
 
 Package-wide after five targets: 22 duplicated, 0 crossing the registry boundary. Across
 those five, the scan reported 15 declaration sites and the raw tokens had 38.
+
+## Finding 43 — diagnostic status, and a near-miss that must NOT be unified
+
+`[fail, ok, warn]` had one alias (`DiagnosticStatus`) and two inline copies in the CLI
+payloads, plus 26 produced values and four comparisons in `diagnostics.py` that no
+annotation scan reaches. The alias became the enum, and every producer now returns a
+member.
+
+`config_payloads.py:1004` declares `Literal["ok", "fail"]` -- the same vocabulary minus
+`warn`. That is a genuine narrowing, not a fourth declaration, and it was rooted as
+`Literal[DiagnosticStatus.OK, DiagnosticStatus.FAIL]` rather than collapsed. A surface
+that cannot warn should keep saying so in its type.
+
+The near-miss is `HealthSeverity` in `preflight.py`: `ok`, `warn`, `error`. Two of three
+members are identical and the third means the same thing under a different token. This
+is the first case the campaign has met where two vocabularies are arguably one and the
+member-set predicate cannot tell -- the scan groups on members, so it will never report
+these as duplicates however long they diverge.
+
+It was NOT unified, and the reason is not squeamishness: `ok`, `warn` and `error` are
+serialised tokens on a preflight surface, and rewriting `error` to `fail` changes what
+that surface emits. That is a wire-format change, which needs its own decision rather
+than being smuggled in under a de-duplication sweep. Recorded here so the decision is
+visible rather than lost.
+
+386 diagnostics and payload tests pass. Eight failures in that batch were each traced to
+cause: four are the known modelo 200 authority-grade refusal, and three more were
+re-run in isolation -- two passed, proving them xdist contention rather than regressions,
+and the third fails in `external_import_actions.py` on missing M303 filing evidence,
+which touches none of the three edited files.
+
+Package-wide after six targets: 21 duplicated, 0 crossing the registry boundary.

@@ -8,8 +8,9 @@ body_schema: 'body-v2'
 body_hash: 'sha256:c9b687e263692cb078e81d1dad5f7c65fd2cc3d1ed04790318b92b921e6e1644'
 related:
   - "[[2026-09-02-unreachable-capability-research]]"
+  - '[[2026-09-02-unreachable-capability-fincas-unblock-research]]'
+  - '[[2026-09-02-unreachable-capability-tui-root-composition-research]]'
 ---
-
 # `unreachable-capability` adr: `one tui entrypoint and a home-screen navigation join` | (**status:** `accepted`)
 
 ## Problem Statement

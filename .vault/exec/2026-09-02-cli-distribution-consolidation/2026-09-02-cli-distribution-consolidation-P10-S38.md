@@ -5,16 +5,11 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:396bd301c92de4db554b1f3dcb4cb0862a85b74d101ff2f397437a0cd2755192'
+body_hash: 'sha256:8ae0e0cb7e608583c526cced7c441231cfa7bbbfc2f8399591c28caa0ceca286'
 step_id: 'S38'
 related:
   - "[[2026-09-02-cli-distribution-consolidation-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Remove the publication-input dispatcher left without a consumer
 

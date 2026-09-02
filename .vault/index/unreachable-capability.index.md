@@ -6,8 +6,9 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:3e541d0c26682a6618ff980170733851fdadfd520fd88ec52923ca722871aa58'
+body_hash: 'sha256:83f774cc4f5a554f400ed3cbdf37f5f534484403bc6133b0fd166f186f4b2e2a'
 related:
+  - '[[2026-09-02-unreachable-capability-fincas-unblock-research]]'
   - '[[2026-09-02-unreachable-capability-research]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 ---
@@ -24,4 +25,5 @@ Auto-generated index of all documents tagged with `#unreachable-capability`.
 
 ### research
 
+- `2026-09-02-unreachable-capability-fincas-unblock-research` - `unreachable-capability` research: `what actually blocks the fincas calculation source`
 - `2026-09-02-unreachable-capability-research` - `unreachable-capability` research: `why unreachable shipped modules exist`

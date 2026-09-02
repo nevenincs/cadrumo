@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:b94e55ffcb5c359d949a54c0ab9a17db3ba79c694d329d5df225730ec8d13744'
+body_hash: 'sha256:6d8bd61ca5b4374b92be0d62a1672c9eafe18b641992df7b6b09995ab4279d60'
 ---
 
 <!-- RETIRED: S73 -->
@@ -414,6 +414,10 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S175` - Keep the evidence tier change inside the reviewed module size rather than raising the baseline; `dev/registry/parity/_workbook_parity.py`.
 - [x] `W06.P13.S176` - Measure the load census residue left by the concurrent rename campaign and record it as inherited rather than adjudicating another writer's moving modules; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S177` - Measure type declarations sharing a field shape and establish that shape identity is not concept identity, so no gate follows; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S178` - Confirm this campaign's gates are lane-reachable and report the conformance files that no lane path covers; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S179` - Retire the lane screen's duplicate reachability assertion and scope it to the question the canonical gate does not answer; `dev/quality/default_lane_visibility.py,dev/quality/tests/test_default_lane_visibility.py`.
+- [x] `W06.P13.S180` - Reconcile the reachability gate's location note with the directory it actually occupies; `dev/tests/test_lane_reachability.py`.
+- [ ] `W06.P13.S181` - Name dev/registry/conformance/tests in the dev tooling lane so the sixteen closure tests CI never runs are executed; `justfile`.
 
 ### Phase `W06.P14` - declaration contract migration
 
