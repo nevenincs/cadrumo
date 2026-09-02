@@ -70,7 +70,12 @@ def _evidence(*, mode: str, status: str = "passed", dependency_status: str = "re
         dependency=dependency,
         isolation={"checkout_imports_removed": True, "ambient_product_executables_removed": True},
         commands=(),
-        focused_tests=(_focused_test(),) if status == "passed" else (),
+        focused_tests=(
+            _focused_test("installed-package-behavior"),
+            _focused_test("installed-cadrumo-mcp-help"),
+        )
+        if status == "passed"
+        else (),
         failure={"category": "fixture", "detail": "failed"} if status == "failed" else None,
         observed_at="2026-09-02T00:00:00+00:00",
     )
@@ -114,6 +119,24 @@ def test_passing_evidence_requires_focused_runtime_tests() -> None:
     payload["focused_tests"] = ()
 
     with pytest.raises(compatibility.CompatibilityProbeError, match="must include focused runtime tests"):
+        compatibility.ProbeEvidence(**payload)
+
+
+def test_passing_evidence_rejects_an_incomplete_focused_runtime_test_set() -> None:
+    """A green row must retain both the package and MCP target-runtime checks."""
+    payload = _evidence(mode="source").to_dict()
+    payload["focused_tests"] = (_focused_test("installed-package-behavior"),)
+
+    with pytest.raises(compatibility.CompatibilityProbeError, match="complete focused runtime test set"):
+        compatibility.ProbeEvidence(**payload)
+
+
+def test_passing_binary_evidence_requires_wheelhouse_binding() -> None:
+    """A binary green row cannot launder a product-only artifact digest."""
+    payload = _evidence(mode="binary").to_dict()
+    payload["artifact_digests"] = {"cadrumo": hashlib.sha256(b"fixture").hexdigest()}
+
+    with pytest.raises(compatibility.CompatibilityProbeError, match="runtime wheelhouse bytes"):
         compatibility.ProbeEvidence(**payload)
 
 

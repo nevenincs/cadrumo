@@ -61,6 +61,12 @@ _MISSING_WHEEL_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
     re.compile(r"\bcould not find a version\b"),
     re.compile(r"\bno wheels? (?:are|were) available\b"),
 )
+_REQUIRED_FOCUSED_TESTS: Final[frozenset[str]] = frozenset(
+    {
+        "installed-package-behavior",
+        "installed-cadrumo-mcp-help",
+    },
+)
 
 
 class ProbeMode(StrEnum):
@@ -195,6 +201,10 @@ class ProbeEvidence:
         if self.status == ProbeStatus.PASSED.value:
             if not self.focused_tests:
                 raise CompatibilityProbeError("passing compatibility evidence must include focused runtime tests")
+            if set(names) != _REQUIRED_FOCUSED_TESTS:
+                raise CompatibilityProbeError(
+                    "passing compatibility evidence must include the complete focused runtime test set",
+                )
             if any(test.status != FocusedTestStatus.PASSED.value for test in self.focused_tests):
                 raise CompatibilityProbeError("passing compatibility evidence cannot contain a failed focused test")
 

@@ -68,7 +68,7 @@ def test_google_drive_explicit_constructor_does_not_build_google_client() -> Non
                 from cadrumo.adapters.outbound.storage._google_drive import GoogleDriveProvider
 
                 provider = GoogleDriveProvider(
-                    credentials=unused_google_credentials(),
+                    credentials=object(),
                     root_folder_id="drive-root",
                     vault_folder_name="cadrumo-vault",
                 )

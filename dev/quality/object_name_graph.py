@@ -175,9 +175,7 @@ def operation_locators(manifest: RenameManifestLike) -> tuple[OperationLocator, 
         else:
             module, separator, symbol = qualified.rpartition(".")
             if not separator:
-                raise ObjectNameGraphError(
-                    f"operation {operation.operation_id!r} symbol locator has no owning module"
-                )
+                raise ObjectNameGraphError(f"operation {operation.operation_id!r} symbol locator has no owning module")
         locators.append(OperationLocator(operation.operation_id, module, operation.old_path, symbol))
     return tuple(sorted(locators, key=lambda item: item.operation_id))
 
@@ -200,11 +198,7 @@ def build_manifest_components(
         finding = findings_by_id.get(operation.finding_id)
         if finding is None:
             raise ObjectNameGraphError(f"operation {operation.operation_id!r} names an unknown finding")
-        paths = {
-            path
-            for locator in finding.qualified_sites
-            for path in declarations_by_locator.get(locator, ())
-        }
+        paths = {path for locator in finding.qualified_sites for path in declarations_by_locator.get(locator, ())}
         if not paths:
             raise ObjectNameGraphError(
                 f"finding {operation.finding_id!r} has no declaration paths in the canonical inventory"
@@ -234,10 +228,7 @@ def build_manifest_components(
         if any(
             operation.operation_id in operations_by_path[path]
             and len(operations_by_path[path]) > 1
-            and bool(
-                operation_kinds_by_path[path]
-                - {ReferenceKind.COLLISION_MEMBER, ReferenceKind.DEFINITION}
-            )
+            and bool(operation_kinds_by_path[path] - {ReferenceKind.COLLISION_MEMBER, ReferenceKind.DEFINITION})
             for path in component.affected_paths
         ):
             observed.add("shared-consumer")
@@ -333,9 +324,7 @@ def _validated_edge(edge: HardEdge, operation_ids: frozenset[str]) -> HardEdge:
         raise ObjectNameGraphError("direct importer count cannot be negative")
     path = _normalise_path(edge.path)
     if edge.kind is ReferenceKind.GENERATED_ARTIFACT and not edge.generator_owner:
-        raise ObjectNameGraphError(
-            f"generated artifact {path!r} for {edge.operation_id!r} has no owning generator"
-        )
+        raise ObjectNameGraphError(f"generated artifact {path!r} for {edge.operation_id!r} has no owning generator")
     return HardEdge(
         operation_id=edge.operation_id,
         path=path,
@@ -495,9 +484,7 @@ def _bound_import_root(repo_root: Path) -> Iterator[None]:
         loaded = sys.modules.get(package)
         loaded_file = getattr(loaded, "__file__", None)
         if loaded_file is not None and not Path(loaded_file).resolve().is_relative_to(resolved):
-            raise ObjectNameGraphError(
-                f"loaded package {package!r} belongs to a different tree: {loaded_file}"
-            )
+            raise ObjectNameGraphError(f"loaded package {package!r} belongs to a different tree: {loaded_file}")
     original_path = list(sys.path)
     original_directory = Path.cwd()
     sys.path[:0] = [str(resolved / "src"), str(resolved)]

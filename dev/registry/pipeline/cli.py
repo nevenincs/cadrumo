@@ -273,8 +273,8 @@ def _check(
     case keeps an owed tree from deadlocking the publisher while preserving the
     same pre-cutover validation boundary publication uses.
     """
+    target_state = GeneratedExportTreeTargetStateReceipt.observe(prepared.target_export_root)
     if not prepared.target_export_root.exists():
-        target_state = GeneratedExportTreeTargetStateReceipt.observe(prepared.target_export_root)
         rendered = _render_candidate(prepared)
         validate_generated_export_tree(
             context=_bootstrap_validation(prepared.validation),
@@ -299,7 +299,7 @@ def _check(
         render_profile=prepared.inputs.render_profile,
         render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
     )
-    return "matched", checked.rendered, GeneratedExportTreeTargetStateReceipt.observe(prepared.target_export_root)
+    return "matched", checked.rendered, target_state
 
 
 def _bootstrap_validation(context: GeneratedExportTreeValidationContext) -> GeneratedExportTreeValidationContext:

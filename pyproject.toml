@@ -87,6 +87,11 @@ dependencies = [
   # Data validation & models
   "pydantic>=2.12.5,<3",
   "pydantic-settings>=2.9.1,<3",
+  # `pydantic` does not re-export `PydanticSerializationError`, so ten production
+  # modules reach it at its own distribution. A direct import needs a direct
+  # declaration; left unbounded above so `pydantic`'s exact pin stays the
+  # resolver's authority.
+  "pydantic-core>=2.46",
   # Interactive prompt backend for the wizard descriptor runtime.
   "questionary>=2.1.1,<3",
   # Direct prompt_toolkit imports support wizard console validation and tests.
@@ -356,11 +361,6 @@ dev = [
   { include-group = "registry" },
   # Dependency declaration drift: missing, unused, transitive, and misplaced deps.
   "deptry>=0.24",
-  # `pydantic` does not re-export `PydanticSerializationError`, so the inference
-  # consent-gate test reaches it at its own distribution. Declared here rather
-  # than in `[project] dependencies` because only tests import it, and left
-  # unbounded above so `pydantic`'s exact pin stays the resolver's authority.
-  "pydantic-core>=2.46",
   # torch is the vaultspec-rag embedding backend (dev-only semantic search); no
   # `src/cadrumo/` runtime path imports it. It lives here, not in [project.dependencies],
   # so production installs stay lean — a PEP 735 group is a valid direct-dep location

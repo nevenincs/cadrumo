@@ -29,8 +29,9 @@ from libcst.metadata import (
 )
 
 from cadrumo.core.link_safety import is_link_like
-from dev.audit.object_names import declarations_in_source
-from dev.quality.object_name_manifest import (
+
+from ..audit.object_names import declarations_in_source
+from .object_name_manifest import (
     ObjectNameRenameManifest,
     ObjectNameRenameOperation,
     select_object_name_execution,

@@ -277,17 +277,11 @@ class LiveCrossReferenceDecision(RegistryModel):
         executable parity evidence; read surfaces and static
         documentation carry observation evidence only.
         """
-        if (
-            self.surface in SIMULATOR_SURFACES
-            and self.evidence_tier != "executable_parity_evidence"
-        ):
+        if self.surface in SIMULATOR_SURFACES and self.evidence_tier != "executable_parity_evidence":
             raise RegistryValidationError(
                 f"cross-reference {self.id!r} live surface requires executable parity evidence",
             )
-        if (
-            self.surface in READ_SURFACES
-            and self.evidence_tier == "executable_parity_evidence"
-        ):
+        if self.surface in READ_SURFACES and self.evidence_tier == "executable_parity_evidence":
             raise RegistryValidationError(
                 f"cross-reference {self.id!r} read surface is observation evidence, not parity",
             )

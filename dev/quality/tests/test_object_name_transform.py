@@ -9,9 +9,9 @@ from typing import Any
 
 import pytest
 
-from dev.audit.object_names import ObjectNameAuditResult, ObjectNameDeclaration, ObjectNameKind, scan, to_json
-from dev.quality.object_name_manifest import ObjectNameRenameManifest
-from dev.quality.object_name_transform import ObjectNameTransformError, plan_object_name_transformation
+from ...audit.object_names import ObjectNameAuditResult, ObjectNameDeclaration, ObjectNameKind, scan, to_json
+from ..object_name_manifest import ObjectNameRenameManifest
+from ..object_name_transform import ObjectNameTransformError, plan_object_name_transformation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
