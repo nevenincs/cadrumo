@@ -175,6 +175,19 @@ def test_successful_symbol_replay_applies_exact_receipt_and_preserves_unrelated_
     ).exists()
 
 
+def test_successful_symbol_replay_tolerates_unrelated_post_receipt_bytes(tmp_path: Path) -> None:
+    repo, inventory, manifest, component, receipt = _case(tmp_path)
+    unrelated = repo / "dev/untracked.txt"
+    unrelated.write_bytes(b"concurrent unrelated bytes\n")
+
+    replay_object_name_component(
+        manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
+    )
+
+    assert unrelated.read_bytes() == b"concurrent unrelated bytes\n"
+    assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
+
+
 def test_successful_generator_backed_replay_applies_and_reports_exact_owner_output(tmp_path: Path) -> None:
     repo, inventory, manifest, component, receipt = _generated_case(tmp_path)
 
@@ -381,7 +394,7 @@ def test_invalid_receipt_integrity_refuses_before_any_live_write(
 
 @pytest.mark.parametrize(
     "drift",
-    ["manifest", "inventory", "component", "file", "tool", "generator", "gate", "content"],
+    ["manifest", "inventory", "component", "tool", "generator", "gate", "content"],
 )
 def test_authority_and_regenerated_evidence_drift_refuses_before_transaction(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, drift: str
@@ -400,8 +413,6 @@ def test_authority_and_regenerated_evidence_drift_refuses_before_transaction(
         supplied_inventory = replace(inventory, declarations=())
     elif drift == "component":
         supplied_component = replace(component, component_id=_digest(b"other-component"))
-    elif drift == "file":
-        (repo / "dev/untracked.txt").write_bytes(b"drift\n")
     elif drift == "tool":
         supplied_receipt = _retag(replace(receipt, tool_versions=((*receipt.tool_versions[:-1], ("uv", "changed")))))
     elif drift == "generator":

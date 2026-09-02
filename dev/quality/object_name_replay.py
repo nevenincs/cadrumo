@@ -452,8 +452,7 @@ def replay_object_name_component(
         after_inventory = scan((root / "src", root / "dev"), root)
         if _finding_delta(inventory, after_inventory) != receipt.finding_delta:
             raise ObjectNameReplayError("post-apply object-name finding delta differs from the receipt")
-        after_paths = _git_snapshot_paths(root)
-        after_files = _snapshot(root, after_paths)
+        after_files = _snapshot(root, snapshot_paths)
         actual_changed = tuple(
             sorted(
                 path
