@@ -27,12 +27,13 @@ See Also:
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from ...core.json_contract import OutputSchema
+from ...core.type_guards import is_str_keyed_dict
 
 
 def _help_document_branch() -> type[BaseModel]:
@@ -75,7 +76,7 @@ def _canonical_branch_payload(
     branch that validates still wins, and a payload matching none still raises
     naming every candidate.
     """
-    if not isinstance(value, Mapping):
+    if not is_str_keyed_dict(value):
         raise ValueError("root result must be a mapping")
 
     serialized = json.dumps(dict(value))

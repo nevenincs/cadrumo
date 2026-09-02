@@ -304,7 +304,7 @@ def assert_read_landing(
     try:
         assert_remote_operation_allowed(
             policy,
-            RemoteOperation(kind="http", method="GET", url=raw_landing),
+            RemoteOperation(kind="http", method="GET", url=AnyUrl(raw_landing)),
         )
     except (RegistryValidationError, PydanticValidationError) as exc:
         # A landing that is not a well-formed absolute URL is refused here
