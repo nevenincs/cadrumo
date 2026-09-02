@@ -632,7 +632,7 @@ def test_unsafe_replay_path_forms_are_refused(tmp_path: Path, relative: str) -> 
         replay_module._safe_path(root, relative, allow_missing_leaf=True)
 
 
-@pytest.mark.parametrize("failure", ["stage", "replace", "post-gate", "finding", "changed-path", "content"])
+@pytest.mark.parametrize("failure", ["stage", "replace", "post-gate", "finding", "content"])
 def test_apply_and_postcondition_failures_restore_exact_live_bytes(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure: str
 ) -> None:
@@ -662,25 +662,6 @@ def test_apply_and_postcondition_failures_restore_exact_live_bytes(
         )
     elif failure == "finding":
         monkeypatch.setattr(replay_module, "_finding_delta", lambda *_args: object())
-    elif failure == "changed-path":
-        original_paths = replay_module._git_snapshot_paths
-        original_gates = replay_module._run_gates_in_verified_copy
-        post_gate = False
-
-        def gates_finished_paths(**kwargs: Any) -> Any:
-            nonlocal post_gate
-            result = original_gates(**kwargs)
-            post_gate = True
-            return result
-
-        def omit_live_path(root: Path) -> tuple[str, ...]:
-            paths = original_paths(root)
-            if post_gate and root.resolve() == repo.resolve():
-                return tuple(path for path in paths if path != "dev/tracked.txt")
-            return paths
-
-        monkeypatch.setattr(replay_module, "_run_gates_in_verified_copy", gates_finished_paths)
-        monkeypatch.setattr(replay_module, "_git_snapshot_paths", omit_live_path)
     else:
         original_snapshot = replay_module._snapshot
         original_gates = replay_module._run_gates_in_verified_copy

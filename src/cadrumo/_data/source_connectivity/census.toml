@@ -58,19 +58,19 @@ owner = "source-connectivity-campaign"
 review_condition = "Registry bindings, encrypted schema-v3 persistence, supported inventory ingress, canonical InventorySourceResolver enrollment, calculation orchestration, source identity, and caller-override refusal are connected for M100/2025. Promote this connection candidate only after grounded repeated activity-row values are rendered through the supported official filing structure and the resulting filing is verified end to end without fabricated activity-envelope facts."
 expires_on = 2026-12-31
 capability_locators = [
-  "src/cadrumo/adapters/persistence/profile/inventory.py:121",
+  "src/cadrumo/adapters/persistence/profile/inventory.py:119",
   "src/cadrumo/application/aggregation/_inventory.py:63",
   "src/cadrumo/application/modelo/calculation_actions.py:838",
-  "src/cadrumo/domain/contribuyente/inventory/__init__.py:1161",
-  "src/cadrumo/domain/contribuyente/inventory/__init__.py:1367",
+  "src/cadrumo/domain/contribuyente/inventory/records.py:1150",
+  "src/cadrumo/domain/contribuyente/inventory/valuation.py:192",
   "src/cadrumo/application/inventory/service.py:413",
   "src/cadrumo/entrypoints/cli/_app_ledger_inventory_command_specs.py:28",
   "src/cadrumo/entrypoints/cli/_app_ledger_inventory_analysis_command_specs.py:26",
 ]
 capability_ids = [
   "secure_repository:src/cadrumo/adapters/persistence/profile/inventory.py:InventoryLedgerRepository",
-  "calculation_helper:src/cadrumo/domain/contribuyente/inventory/__init__.py:resolve_inventory_authoritative_closing",
-  "calculation_helper:src/cadrumo/domain/contribuyente/inventory/__init__.py:compute_inventory_anexo_d_projection",
+  "calculation_helper:src/cadrumo/domain/contribuyente/inventory/records.py:resolve_inventory_authoritative_closing",
+  "calculation_helper:src/cadrumo/domain/contribuyente/inventory/valuation.py:compute_inventory_anexo_d_projection",
   "ingress:src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:inventory_create",
   "ingress:src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:inventory_movement_add",
 ]
@@ -87,7 +87,7 @@ registry_destination_candidates = [
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/adapters/persistence/profile/inventory.py:121"
+reference = "src/cadrumo/adapters/persistence/profile/inventory.py:119"
 summary = "Encrypted FINANCIAL schema-v3 inventory ledger repository persists activity/year movements, valuation inputs, complete acquisition cost, and closing authority."
 
 [[entries.grounding]]
@@ -102,8 +102,13 @@ summary = "The production calculation action enrolls InventorySourceResolver in 
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/domain/contribuyente/inventory/__init__.py:1367"
-summary = "The strict 2025 source-owned projection emits complete acquisition cost to 0181 and the mutually exclusive authoritative closing variation to 0177 or 0182 with continuity and conflict provenance."
+reference = "src/cadrumo/domain/contribuyente/inventory/records.py:1150"
+summary = "The inventory closing-authority helper resolves the reviewed physical closing decision while preserving conflict and continuity provenance for the source-owned ledger."
+
+[[entries.grounding]]
+locator_kind = "repository"
+reference = "src/cadrumo/domain/contribuyente/inventory/valuation.py:192"
+summary = "The strict 2025 compute_inventory_anexo_d_projection helper emits complete acquisition cost to 0181 and the mutually exclusive authoritative closing variation to 0177 or 0182 with continuity and conflict provenance."
 
 [[entries.grounding]]
 locator_kind = "repository"

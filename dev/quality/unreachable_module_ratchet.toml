@@ -53,7 +53,6 @@ frozen_prefixes = [
 allowed = [
   "cadrumo.adapters.outbound.aeat.sede._renta_web_open_safety",  # unreachable
   "cadrumo.adapters.outbound.aeat.sede.renta_web_open",  # unreachable
-  "cadrumo.adapters.outbound.aeat.verify",  # unreachable
   "cadrumo.adapters.persistence.profile.filing_export_replay",  # unreachable
   "cadrumo.adapters.persistence.profile.fincas",  # unreachable
   "cadrumo.application.modelo._edit_facade",  # unreachable

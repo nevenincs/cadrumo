@@ -14,7 +14,7 @@ from cadrumo.core.fsync import fsync_parent_dir
 from cadrumo.core.hashing import canonical_json_bytes, prefixed_digest, sha256_file
 from cadrumo.core.link_safety import is_link_like
 
-from ..audit.object_names import ObjectNameAuditResult, scan, to_json
+from ..audit.object_names import ObjectNameAuditResult, scan
 from .object_name_graph import OperationComponent, ReferenceKind
 from .object_name_manifest import ObjectNameRenameManifest, object_name_manifest_digest
 from .object_name_rehearsal import (

@@ -12,11 +12,16 @@ def test_empty_canonical_restoration_tree_still_yields_full_worklist_and_finding
     by_id = {item.casilla_id: item for item in audits}
 
     assert len(audits) == 156
+    assert {item.source_ref for item in audits} == {"aeat-dr-200-2024"}
+    assert len({item.source_sha256 for item in audits}) == 1
+    assert len(audits[0].source_sha256) == 64
     for casilla_id in ("01683", "01684", "01685"):
         finding = by_id[casilla_id]
         assert finding.disposition is subject.AuditDisposition.UNRESOLVED
         assert "exceptional-public-interest" in finding.reason
         assert "innovation semantic role" in finding.reason
+        assert finding.cross_revision_status == "unique_non_authoritative"
+        assert finding.cross_revision_proposed is not None
 
     nivelacion = by_id["02239"]
     assert nivelacion.disposition is subject.AuditDisposition.REPAIRABLE
@@ -24,6 +29,10 @@ def test_empty_canonical_restoration_tree_still_yields_full_worklist_and_finding
     assert nivelacion.proposed.semantic_role == "is_reserva_nivelacion_adicion_realizada"
     assert "ley-27-2014:art-105" in nivelacion.proposed.legal_refs
     assert "capitalizacion" in nivelacion.reason
+
+    rendered = subject.render_review_toml(audits)
+    assert "cross_revision_proposed_non_authoritative" in rendered
+    assert audits[0].source_sha256 in rendered
 
 
 def test_patch_emitter_omits_unresolved_and_emits_only_proved_repair() -> None:

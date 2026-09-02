@@ -94,6 +94,8 @@ def test_inventory_census_tracks_only_the_live_connection_gap() -> None:
     summaries = " ".join(item.summary for item in inventory.grounding)
     assert "schema-v3" in summaries
     assert "0181" in summaries
+    assert "resolve_inventory_authoritative_closing" in summaries
+    assert "compute_inventory_anexo_d_projection" in summaries
     assert inventory.review_condition.endswith(
         "Promote this connection candidate only after grounded repeated activity-row values are rendered through the "
         "supported official filing structure and the resulting filing is verified end to end without fabricated "
@@ -205,23 +207,32 @@ def test_inventory_repository_ownership_uses_its_live_discovery_locator() -> Non
     entry = next(item for item in manifest.entries if item.candidate_id == "inventory.stock-valuation")
     focused_manifest = manifest.model_copy(update={"entries": (entry,)})
     evidence = discovered_source_capability_evidence(REPO_ROOT)
-    repository_locator = "src/cadrumo/adapters/persistence/profile/inventory.py:121"
-    projection_locator = "src/cadrumo/domain/contribuyente/inventory/__init__.py:1367"
+    repository_locator = "src/cadrumo/adapters/persistence/profile/inventory.py:119"
+    closing_locator = "src/cadrumo/domain/contribuyente/inventory/records.py:1150"
+    projection_locator = "src/cadrumo/domain/contribuyente/inventory/valuation.py:192"
     create_locator = "src/cadrumo/entrypoints/cli/_app_ledger_inventory_command_specs.py:28"
     movement_locator = "src/cadrumo/entrypoints/cli/_app_ledger_inventory_analysis_command_specs.py:26"
 
     assert repository_locator in entry.capability_locators
+    assert closing_locator in entry.capability_locators
     assert projection_locator in entry.capability_locators
     assert create_locator in entry.capability_locators
     assert movement_locator in entry.capability_locators
     check_capability_locators(REPO_ROOT, focused_manifest, capability_evidence=evidence)
 
+    stale_locators = {
+        repository_locator,
+        closing_locator,
+        projection_locator,
+        create_locator,
+        movement_locator,
+    }
     stale = entry.model_copy(
         update={
             "capability_locators": tuple(
                 item
                 for item in entry.capability_locators
-                if item not in {repository_locator, projection_locator, create_locator, movement_locator}
+                if item not in stale_locators
             )
         }
     )
@@ -240,8 +251,12 @@ def test_new_calculation_helpers_preserve_their_reviewed_inventory_or_non_source
     assignments = assign_capabilities_to_census(discovered, manifest)
     inventory = next(item for item in manifest.entries if item.candidate_id == "inventory.stock-valuation")
     inventory_closing = (
-        "calculation_helper:src/cadrumo/domain/contribuyente/inventory/__init__.py:"
+        "calculation_helper:src/cadrumo/domain/contribuyente/inventory/records.py:"
         "resolve_inventory_authoritative_closing"
+    )
+    inventory_projection = (
+        "calculation_helper:src/cadrumo/domain/contribuyente/inventory/valuation.py:"
+        "compute_inventory_anexo_d_projection"
     )
     registry_helpers = {
         "calculation_helper:src/cadrumo/domain/calculations/registry/deadline_coordinate.py:"
@@ -253,6 +268,8 @@ def test_new_calculation_helpers_preserve_their_reviewed_inventory_or_non_source
 
     assert inventory_closing in inventory.capability_ids
     assert inventory_closing not in assignments["coverage.remaining-calculation-helpers"]
+    assert inventory_projection in inventory.capability_ids
+    assert inventory_projection not in assignments["coverage.remaining-calculation-helpers"]
     assert registry_helpers <= set(assignments["coverage.remaining-calculation-helpers"])
 
     manual_m036_ingress = {
