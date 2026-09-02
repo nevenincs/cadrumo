@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#live-justificante-reconcile'
 date: '2026-06-10'
-modified: '2026-08-15'
-body_hash: 'sha256:03bbd39b742ad0058c1e383565f2be33e913af35b939c5423b289646b89130fe'
+modified: '2026-09-02'
+body_hash: 'sha256:783673e345d923e76e3a2e0e5e7f0b4ce249153791272766264dd727c3ee5178'
 related:
   - '[[2026-06-10-live-justificante-reconcile-research]]'
   - '[[2026-06-09-modelo-iva-routing-carry-adr]]'
