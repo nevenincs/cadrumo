@@ -178,7 +178,7 @@ def _continuity_backing() -> dict[str, str]:
                     continue
                 backing[
                     casilla_occurrence_locale_key(modelo_id, revision_id, casilla_id, ModeloLocalizationFieldKind.LABEL)
-                ] = casilla_continuity_locale_key(modelo_id, continuidad_id, "label")
+                ] = casilla_continuity_locale_key(modelo_id, continuidad_id, ModeloLocalizationFieldKind.LABEL)
     assert backing, "no casilla declares a continuidad_id; the continuity exemption below would be vacuous"
     return backing
 
