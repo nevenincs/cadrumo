@@ -10,10 +10,9 @@
 #
 # EVIDENCE HONESTY: this workflow mints NO promotable evidence. It creates no
 # draft release, uploads no assets, and emits no DistributionEvidence rows.
-# publish-release.yml Gate 2 pins the source workflow path to
-# .github/workflows/packaging-smoke.yml, so a quick run is structurally
-# non-promotable; test_packaging_quick_workflow.py pins the no-evidence and
-# no-release-surface invariants.
+# Only packaging-smoke.yml mints promotable rows, so a quick run is
+# structurally non-promotable; test_packaging_quick_workflow.py pins the
+# no-evidence and no-release-surface invariants.
 
 name: Cadrumo Packaging Quick
 

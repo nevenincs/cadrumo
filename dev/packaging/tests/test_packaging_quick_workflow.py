@@ -11,6 +11,7 @@ campaign or into an evidence producer.
 
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any, Final
 
 import pytest
@@ -44,22 +45,41 @@ def _run_surface(document: dict[str, Any]) -> str:
     )
 
 
+def _assert_quick_single_runtime(document: dict[str, Any]) -> None:
+    """Require each protected quick leg to use one exact repository runtime."""
+    jobs = document["jobs"]
+    assert isinstance(jobs, dict)
+    for job_name in _EXPECTED_JOBS:
+        job = jobs[job_name]
+        assert "strategy" not in job, f"{job_name}: the quick profile must not grow a flavor matrix"
+        assert "python_runtime_compatibility" not in _run_surface({"jobs": {job_name: job}})
+        commands = [str(step.get("run", "")).strip() for step in job["steps"] if "run" in step]
+        assert "just packaging-quick" in commands, job_name
+
+
+
 def test_quick_workflow_is_exactly_three_probe_jobs() -> None:
     """One probe job per OS, no matrix, each running the quick recipe with a hard ceiling."""
     document = _quick_document()
     assert document["name"] == "Cadrumo Packaging Quick"
+    _assert_quick_single_runtime(document)
     # The watchdog is not a probe leg and carries no OS profile; it exists so a
     # probe leg whose runner is offline fails fast instead of queueing.
     assert set(document["jobs"]) == set(_EXPECTED_JOBS) | {"runner-queue-watchdog"}
     for job_name, runs_on in _EXPECTED_JOBS.items():
         job = document["jobs"][job_name]
         assert job["runs-on"] == runs_on, job_name
-        assert "strategy" not in job, f"{job_name}: the quick profile must not grow a flavor matrix"
         # Per-push budget enforcement: a wedged probe dies inside the ceiling,
         # never inherits the 6-hour default.
         assert job["timeout-minutes"] <= 25, job_name
-        commands = [str(step.get("run", "")).strip() for step in job["steps"] if "run" in step]
-        assert "just packaging-quick" in commands, job_name
+
+
+def test_quick_single_runtime_gate_has_detector_teeth() -> None:
+    """A matrix added to one protected leg is rejected by the quick gate."""
+    document = deepcopy(_quick_document())
+    document["jobs"]["quick-linux"]["strategy"] = {"matrix": {"python": ["3.13", "3.14"]}}
+    with pytest.raises(AssertionError, match="flavor matrix"):
+        _assert_quick_single_runtime(document)
 
 
 def test_quick_workflow_mints_no_promotable_evidence() -> None:
