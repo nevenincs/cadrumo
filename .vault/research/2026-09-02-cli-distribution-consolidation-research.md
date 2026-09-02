@@ -565,26 +565,27 @@ green across recent runs; the release path was the only failing workflow in the 
 the publish workflow has no runs at all, which is what never being dispatched looks
 like.
 
-### The first release pull request would carry five weeks of history
+### What the first release pull request actually carries
 
-With the pin refusal removed, the next push opens the first release pull request, and its
-prerequisites all hold: the manifest names `0.2.2`, the configured bootstrap commit is a
-real ancestor of the default branch, and no version tag exists to narrow the window. That
-last fact is the problem. The bootstrap commit is the `v0.1.0` release chore from five
-weeks earlier, so the changelog spans every commit since - 8,640 conventional commits, of
-which all but the 161 hidden `ci` and `style` entries would be rendered. The subject
-lines alone are roughly 820 KB, an order of magnitude past what a pull request body
-accepts.
+With the pin refusal lifted, release-please ran to completion: it created the release
+branch, wrote the version bump across the manifest, `pyproject.toml` and the package
+initialiser, and rendered the changelog. The computed version is `0.3.0`. Five commits
+carry a breaking marker, and the configuration sets `bump-minor-pre-major`, so below
+`1.0.0` those bump the minor rather than the major - the setting exists for exactly this
+and is doing its job.
 
-Five commits carry a breaking marker. The configuration sets `bump-minor-pre-major`, so
-below `1.0.0` those bump the minor rather than the major and the computed version is
-`0.3.0` rather than `1.0.0` - the setting exists for exactly this and is doing its job.
+An earlier version of this record predicted the changelog would span every commit since
+the bootstrap point: 8,640 of them, roughly 820 KB of subject lines, past what a pull
+request body accepts. That was wrong, and the run disproved it. The changelog added 461
+lines and renders the range as `v0.2.2...v0.3.0`, because release-please takes its base
+from the version in the manifest; the bootstrap commit only bounds where a search may
+begin. The prediction was arithmetic over the commit log rather than a reading of what
+the tool does with it, and it named a decision the operator did not need to make.
 
-The version is therefore right and the changelog is not. Moving the bootstrap commit
-nearer the head narrows the first release to a window someone can review, at the cost of
-the first changelog no longer claiming to describe everything before it. That is a
-decision about what the first release says it contains rather than a defect to repair,
-and it wants an operator rather than a default.
+The run still failed, at the last step and for a reason unrelated to any of the above:
+the repository does not permit GitHub Actions to create pull requests. Everything the
+release needed was computed and committed to the branch; only the pull request that would
+carry it could not be opened.
 
 ### The publish step offered the index files it would refuse
 

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:692656a08bb508177fe341639e9f2f1d1d643429daf975ae2b8180e45c3f70b7'
+body_hash: 'sha256:ad5edb1fb88a6fa957ce3cbe153ac2ccbc71b1158c270e6c2e91b946ed8f4b3a'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -453,6 +453,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S191` - Gate that the derived render inputs keep supplying every revision-describing value the publication limb requires; `dev/registry/tests/test_generated_tree_publication.py`.
 - [x] `W06.P13.S192` - Apply the empty-population defence to this campaign's own gates, which two of them lacked; `dev/quality/tests/test_name_collision_dispositions.py,dev/quality/tests/test_default_lane_visibility.py`.
 - [x] `W06.P13.S193` - Establish that the empty filing export proof authority refuses rather than passing, and correct the enrolment Step to name its real blocker; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [ ] `W06.P13.S194` - Establish that the closure test rewrite is blocked behind vector enrolment and record the ordering constraint; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -555,6 +556,23 @@ them here would assert facts about code another writer is still moving, and the
 adjudications would be stale before they were read. The same reasoning holds for the
 twenty-five generated trees whose attestation that campaign staled: the remedy is
 republication by the commit's owner, and this plan carries the measurement instead.
+
+A fourth ordering constraint was found by measurement and binds two Steps that read as
+independent. The modelo 151 live-filing closure test currently fails on interface drift: it
+builds the single-channel proof authority, which no longer carries `assess_for`, and the
+obvious repair is the one its Step already names - rewrite it onto the two-channel
+authority. Doing that today changes what the test fails on rather than fixing it. The
+two-channel authority was constructed against the live registry and asked for the same
+coordinate, and it returns no proof at all: the conformance channel refuses with
+`evidence_missing` because the canonical vector set is empty, and the secure-replay channel
+refuses with `authority_unavailable`. The test asserts a satisfied filing-export limb, and
+no arrangement of the two-channel authority can satisfy it while the vectors are empty.
+
+So the closure-test rewrite sits behind the vector enrolment, and the vector enrolment sits
+behind official record-design examples that this campaign cannot author. The dependency is
+recorded rather than worked around, because the available workaround - stubbing the channel
+the test cannot satisfy - would convert a real gap in filing evidence into a passing test,
+which is the outcome the whole plan exists to prevent.
 
 What remains fully available is the dev-owned surface, which is why the twelve Steps of
 `W06.P13` all live there. A screen, its dispositions and its gate can be authored, proved

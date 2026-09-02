@@ -30,5 +30,3 @@ related:
 - `verify:` `uv run --no-sync ty check dev/quality/tests/test_object_name_manifest.py dev/quality/object_name_manifest.py` -> `pass`
 - `verify:` `uv run basedpyright dev/quality/tests/test_object_name_manifest.py` -> `pass`
 - `verify:` `independent current-byte S03+S04 review` -> `pass`
-
-
