@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-python-runtime-compatibility-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:6705f9b1ad9ab42f70b4341b1371652692a93934d1c3d11c4747e8a7ab4c8242'
+body_hash: 'sha256:e27bf15d427068f875dcc8cbcb903c41355043989617a660b9852e24a434f5b5'
 ---
 
 <!-- RETIRED: S33, S35, S37, S39, S41, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 -->
@@ -48,7 +48,7 @@ Keep one annotation model and detect APIs removed or deprecated across the suppo
 - [x] `P02.S13` - Harden dynamic wizard signatures against annotation representation changes; `src/cadrumo/application/wizard/commands.py`.
 - [x] `P02.S14` - Test dynamic signatures type hints metadata and CLI discovery; `src/cadrumo/application/wizard/tests/test_commands_helpers.py`.
 - [x] `P02.S15` - Compile every dev and src module against the oldest supported grammar; `dev/tests/test_every_source_file_parses.py`.
-- [ ] `P02.S16` - Enforce annotations as the sole project future directive; `dev/tests/test_import_hygiene_scan.py`.
+- [x] `P02.S16` - Enforce annotations as the sole project future directive; `dev/tests/test_import_hygiene_scan.py`.
 
 ### Phase `P03` - produce attributable source and binary evidence
 

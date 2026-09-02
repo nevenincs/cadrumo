@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -22,10 +23,13 @@ from ..quality.import_hygiene_scan import (
     find_shim_modules,
     find_underscore_in_all_violations,
     is_underscore_named,
+    tracked_live_files,
     walk_module_imports,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_ALLOWED_FUTURE_FEATURES: Final[frozenset[str]] = frozenset({"annotations"})
 
 
 def _parse_single_statement(src: str) -> ast.stmt:
@@ -33,6 +37,45 @@ def _parse_single_statement(src: str) -> ast.stmt:
     module = ast.parse(src)
     (stmt,) = module.body
     return stmt
+
+
+def _future_directive_violations(paths: tuple[Path, ...]) -> tuple[str, ...]:
+    """Return project future imports other than the one supported directive.
+
+    The check reads the AST rather than matching text, so a mention in a
+    docstring or a test fixture cannot masquerade as an executable future
+    statement.  Explicit paths keep the detector-teeth tests isolated; the
+    live-tree gate supplies the tracked project inventory below.
+    """
+    violations: list[str] = []
+    for path in paths:
+        try:
+            source = path.read_text(encoding="utf-8")
+        except OSError as error:  # pragma: no cover - unreadable file is its own defect
+            violations.append(f"{path}: unreadable: {error}")
+            continue
+        try:
+            tree = ast.parse(source, filename=str(path), mode="exec")
+        except SyntaxError as error:
+            violations.append(f"{path}:{error.lineno}: SyntaxError: {error.msg}")
+            continue
+        for statement in tree.body:
+            if not isinstance(statement, ast.ImportFrom) or statement.module != "__future__":
+                continue
+            forbidden = sorted(alias.name for alias in statement.names if alias.name not in _ALLOWED_FUTURE_FEATURES)
+            if forbidden:
+                relative = path
+                if path.is_relative_to(REPO_ROOT):
+                    relative = path.relative_to(REPO_ROOT)
+                violations.append(
+                    f"{relative}:{statement.lineno}: unsupported future directive(s): " + ", ".join(forbidden),
+                )
+    return tuple(sorted(violations))
+
+
+def _project_python_files() -> tuple[Path, ...]:
+    """Return every tracked Python file in the live project inventory."""
+    return tuple(path for path in tracked_live_files() if path.suffix == ".py")
 
 
 def test_dunder_all_assignment_value_recognises_plain_form() -> None:
@@ -497,3 +540,34 @@ def test_module_import_bindings_prefer_the_runtime_binding_over_the_guarded_one(
     bindings = module_import_bindings(tree, "cadrumo.application.ports", is_package=False)
 
     assert bindings["read_record"] == "cadrumo.adapters.persistence.storage"
+
+
+def test_future_directive_scan_detects_legacy_directives(tmp_path: Path) -> None:
+    """A removed future feature cannot re-enter the project unnoticed."""
+    source = tmp_path / "legacy_future.py"
+    source.write_text(
+        "from __future__ import annotations, division\nvalue = 1 / 2\n",
+        encoding="utf-8",
+    )
+
+    violations = _future_directive_violations((source,))
+
+    assert len(violations) == 1
+    assert "unsupported future directive(s): division" in violations[0]
+
+
+def test_future_directive_scan_accepts_annotations_and_plain_modules(tmp_path: Path) -> None:
+    """The established directive and modules without one are both valid."""
+    annotated = tmp_path / "annotated.py"
+    annotated.write_text("from __future__ import annotations\nvalue: Missing = None\n", encoding="utf-8")
+    plain = tmp_path / "plain.py"
+    plain.write_text("value = 1\n", encoding="utf-8")
+
+    assert _future_directive_violations((annotated, plain)) == ()
+
+
+def test_live_project_uses_annotations_as_its_only_future_directive() -> None:
+    """Every tracked project module must share the one annotation model."""
+    violations = _future_directive_violations(_project_python_files())
+
+    assert violations == ()
