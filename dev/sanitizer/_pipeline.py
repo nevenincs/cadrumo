@@ -134,8 +134,6 @@ def sanitize_pdf(
     if refuse_if_already_sanitized and source_sha in _fixtures.SANITIZED_SHAS:
         raise AlreadySanitizedError(source_sha256=source_sha)
 
-    pdf: pikepdf.Pdf | None = None
-    source_parse_error: SanitizerSourceParseError | None = None
     try:
         # Path inputs feed pikepdf directly so QPDF's memory-mapping
         # path can avoid a full in-memory copy of the source bytes.
@@ -147,10 +145,9 @@ def sanitize_pdf(
             "sanitize_pdf: source=<input-pdf> failure=%s",
             type(exc).__name__,
         )
-        source_parse_error = SanitizerSourceParseError(failure=type(exc).__name__)
-    if source_parse_error is not None:
-        raise source_parse_error
-    assert pdf is not None
+        # `from None`: the refusal deliberately carries the exception TYPE and no
+        # message, so the pikepdf cause stays out of the traceback with it.
+        raise SanitizerSourceParseError(failure=type(exc).__name__) from None
 
     _refuse_if_signed(pdf)
 

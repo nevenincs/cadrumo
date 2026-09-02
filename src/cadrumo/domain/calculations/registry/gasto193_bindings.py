@@ -134,20 +134,23 @@ def _build_gasto193_rows(
     observations: tuple[Gasto193Observation, ...],
 ) -> tuple[Mapping[str, Decimal | str], ...]:
     accum: dict[str, dict[str, Decimal | str]] = {}
-    importe_gastos: dict[str, Decimal] = {}
     for observation in observations:
         identity: dict[str, Decimal | str] = {
             "contributor_tax_id": observation.contributor_tax_id,
             "contributor_legal_name": observation.contributor_legal_name,
+            "importe_gastos": Decimal("0"),
         }
         if observation.representative_tax_id is not None:
             identity["representative_tax_id"] = observation.representative_tax_id
-        contributor_tax_id = observation.contributor_tax_id
-        accum.setdefault(contributor_tax_id, identity)
-        importe_gastos[contributor_tax_id] = (
-            importe_gastos.get(contributor_tax_id, Decimal("0")) + observation.importe_gastos
-        )
-    return tuple({**accum[key], "importe_gastos": importe_gastos[key]} for key in sorted(accum.keys()))
+        bucket = accum.setdefault(observation.contributor_tax_id, identity)
+        previous = bucket["importe_gastos"]
+        if not isinstance(previous, Decimal):
+            raise RegistryValidationError(
+                f"gasto193 row accumulator for {observation.contributor_tax_id!r} holds a "
+                "non-numeric running importe_gastos",
+            )
+        bucket["importe_gastos"] = previous + observation.importe_gastos
+    return tuple(accum[key] for key in sorted(accum.keys()))
 
 
 def resolve_gasto193_binding_row_values(

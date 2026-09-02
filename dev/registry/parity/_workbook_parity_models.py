@@ -35,7 +35,11 @@ from ._workbook_parity_types import (
 _WorkbookExtension = Literal[".xlsx", ".xls"]
 _ConvertedExtension = Literal[".xlsx"]
 WorkbookExtension = _WorkbookExtension
-assert _XLSX_EXTENSION == ".xlsx" and _XLS_EXTENSION == ".xls"
+if _XLSX_EXTENSION != ".xlsx" or _XLS_EXTENSION != ".xls":  # pragma: no cover - pinning invariant
+    raise ValueError(
+        "the workbook-extension Literal aliases above are pinned to the central extension constants; "
+        "a constant moved and the aliases no longer describe it",
+    )
 
 __all__ = [
     "SyntheticInputSet",

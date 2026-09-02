@@ -166,9 +166,9 @@ def compare_transcript_to_golden(
                 # sentence describing the HOST drops out of both.
                 masked_expected = mask_host_conditional_details(mask_document(expected.envelope))
                 masked_actual = mask_host_conditional_details(mask_document(live_envelope))
-                assert isinstance(masked_expected, Mapping)
-                assert isinstance(masked_actual, Mapping)
-                if canonicalise(masked_expected) != canonicalise(masked_actual):
+                if not isinstance(masked_expected, Mapping) or not isinstance(masked_actual, Mapping):
+                    problems.append(f"{at}: masking returned a non-document, so the envelopes cannot be compared")
+                elif canonicalise(masked_expected) != canonicalise(masked_actual):
                     diff = ", ".join(sorted(differing_paths(masked_expected, masked_actual)))
                     problems.append(f"{at}: envelope diverged at post-mask paths: {diff or '<whole-document>'}")
         elif actual.envelope is not None:

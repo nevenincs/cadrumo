@@ -444,13 +444,15 @@ def render_registry_closure_report(report: RegistryClosureReport) -> str:
 
 def _temporal_refusal(coverage: TemporalRevisionCoverageSummary) -> RegistryClosurePredicateRefusal:
     """Translate a typed temporal refusal without discarding its specific code."""
-    assert coverage.failure_code is not None
-    assert coverage.failure_detail is not None
-    work_item = _TEMPORAL_WORK_ITEMS[coverage.failure_code]
+    failure_code = coverage.failure_code
+    failure_detail = coverage.failure_detail
+    if failure_code is None or failure_detail is None:
+        raise ValueError("a temporal coverage refusal must carry both its failure code and its detail")
+    work_item = _TEMPORAL_WORK_ITEMS[failure_code]
     return RegistryClosurePredicateRefusal(
         limb="temporal_coverage",
-        reason=coverage.failure_code,
-        detail=coverage.failure_detail,
+        reason=failure_code,
+        detail=failure_detail,
         disposition=RegistryClosureOwnerDisposition(
             limb="temporal_coverage",
             state="blocked",
@@ -490,13 +492,15 @@ def _limb_or_join_refusal(
         )
     if limb.outcome in {"satisfied", "not_applicable"}:
         return ()
-    assert limb.refusal is not None
+    refusal = limb.refusal
+    if refusal is None:
+        raise ValueError(f"{limb_name} limb reports outcome {limb.outcome!r} without a refusal to translate")
     return (
         RegistryClosurePredicateRefusal(
             limb=limb_name,
-            reason=limb.refusal.reason,
-            detail=limb.refusal.detail,
-            disposition=limb.refusal.disposition,
+            reason=refusal.reason,
+            detail=refusal.detail,
+            disposition=refusal.disposition,
         ),
     )
 

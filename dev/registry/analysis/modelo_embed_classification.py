@@ -412,46 +412,53 @@ def _require(condition: bool, message: str) -> None:
         raise ClassificationLedgerError(message)
 
 
+def _require_str(value: object, message: str) -> str:
+    """Return ``value`` as ledger text, refusing any other TOML shape."""
+    if not isinstance(value, str):
+        raise ClassificationLedgerError(message)
+    return value
+
+
+def _require_table(value: object, message: str) -> Mapping[str, object]:
+    """Return ``value`` as a ledger table, refusing any other TOML shape."""
+    if not isinstance(value, Mapping):
+        raise ClassificationLedgerError(message)
+    return value
+
+
+def _require_array(value: object, message: str) -> list[object]:
+    """Return ``value`` as a ledger array, refusing any other TOML shape."""
+    if not isinstance(value, list):
+        raise ClassificationLedgerError(message)
+    return value
+
+
 def _entry_from_row(row: Mapping[str, object]) -> ClassificationEntry:
-    path = row.get("path")
-    _require(isinstance(path, str) and bool(path), f"ledger row without a path: {row!r}")
-    assert isinstance(path, str)
-    raw_classification = row.get("classification")
-    _require(
-        isinstance(raw_classification, str) and raw_classification in set(Classification),
-        f"{path}: classification must be one of {sorted(Classification)}",
-    )
-    assert isinstance(raw_classification, str)
-    justification = row.get("justification", "")
-    _require(isinstance(justification, str), f"{path}: justification must be a string")
-    assert isinstance(justification, str)
+    path = _require_str(row.get("path"), f"ledger row without a path: {row!r}")
+    _require(bool(path), f"ledger row without a path: {row!r}")
+    classification_message = f"{path}: classification must be one of {sorted(Classification)}"
+    raw_classification = _require_str(row.get("classification"), classification_message)
+    _require(raw_classification in set(Classification), classification_message)
+    justification = _require_str(row.get("justification", ""), f"{path}: justification must be a string")
     ownership_value = row.get("tree_ownership")
     ownership: TreeOwnership | None = None
     if ownership_value is not None:
-        _require(
-            isinstance(ownership_value, str) and ownership_value in set(TreeOwnership),
-            f"{path}: tree_ownership must be one of {sorted(TreeOwnership)}",
-        )
-        assert isinstance(ownership_value, str)
-        ownership = TreeOwnership(ownership_value)
-    destination = row.get("destination", "")
-    _require(isinstance(destination, str), f"{path}: destination must be a string")
-    assert isinstance(destination, str)
+        ownership_message = f"{path}: tree_ownership must be one of {sorted(TreeOwnership)}"
+        ownership_token = _require_str(ownership_value, ownership_message)
+        _require(ownership_token in set(TreeOwnership), ownership_message)
+        ownership = TreeOwnership(ownership_token)
+    destination = _require_str(row.get("destination", ""), f"{path}: destination must be a string")
     dispositions: list[tuple[tuple[str, str, str, str], str]] = []
-    for raw in row.get("evidence_disposition", ()) or ():
-        _require(isinstance(raw, Mapping), f"{path}: evidence_disposition rows must be tables")
-        assert isinstance(raw, Mapping)
-        symbol = raw.get("symbol", "")
-        enclosing = raw.get("enclosing_symbol")
-        kind = raw.get("kind")
-        reason = raw.get("reason", "")
-        _require(
-            isinstance(enclosing, str) and isinstance(kind, str) and isinstance(symbol, str),
-            f"{path}: evidence_disposition needs enclosing_symbol, kind and symbol",
-        )
-        assert isinstance(enclosing, str) and isinstance(kind, str) and isinstance(symbol, str)
-        _require(isinstance(reason, str) and bool(reason.strip()), f"{path}: evidence_disposition needs a reason")
-        assert isinstance(reason, str)
+    table_message = f"{path}: evidence_disposition rows must be tables"
+    for raw in _require_array(row.get("evidence_disposition", []) or [], table_message):
+        disposition = _require_table(raw, table_message)
+        member_message = f"{path}: evidence_disposition needs enclosing_symbol, kind and symbol"
+        symbol = _require_str(disposition.get("symbol", ""), member_message)
+        enclosing = _require_str(disposition.get("enclosing_symbol"), member_message)
+        kind = _require_str(disposition.get("kind"), member_message)
+        reason_message = f"{path}: evidence_disposition needs a reason"
+        reason = _require_str(disposition.get("reason", ""), reason_message)
+        _require(bool(reason.strip()), reason_message)
         dispositions.append(((path, enclosing, kind, symbol), reason))
     return ClassificationEntry(
         path=path,
@@ -466,17 +473,14 @@ def _entry_from_row(row: Mapping[str, object]) -> ClassificationEntry:
 def load_ledger(ledger_path: Path = LEDGER_PATH) -> tuple[ClassificationEntry, ...]:
     """Read and structurally validate the checked-in adjudication ledger."""
     payload = tomllib.loads(ledger_path.read_text(encoding=_UTF_8))
-    meta = payload.get("meta", {})
-    _require(isinstance(meta, Mapping), "ledger [meta] must be a table")
-    assert isinstance(meta, Mapping)
+    meta = _require_table(payload.get("meta", {}), "ledger [meta] must be a table")
     _require(
         meta.get("schema_version") == _SCHEMA_VERSION,
         f"ledger schema_version must be {_SCHEMA_VERSION}",
     )
-    rows = payload.get("classification", ())
-    _require(isinstance(rows, list), "ledger [[classification]] must be an array of tables")
-    assert isinstance(rows, list)
-    entries = tuple(_entry_from_row(row) for row in rows)
+    rows_message = "ledger [[classification]] must be an array of tables"
+    rows = _require_array(payload.get("classification", []), rows_message)
+    entries = tuple(_entry_from_row(_require_table(row, rows_message)) for row in rows)
     seen: set[str] = set()
     for entry in entries:
         _require(entry.path not in seen, f"{entry.path}: classified more than once")

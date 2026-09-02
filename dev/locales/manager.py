@@ -1119,10 +1119,10 @@ def _set_nested_leaf(root: dict[str, LocaleNode], dotted_key: str, value: Locale
     parts = dotted_key.split(".")
     curr: dict[str, LocaleNode] = root
     for part in parts[:-1]:
-        if part not in curr or not isinstance(curr[part], dict):
-            curr[part] = {}
-        child = curr[part]
-        assert isinstance(child, dict)  # narrowed by the line above
+        child = curr.get(part)
+        if not isinstance(child, dict):
+            child = {}
+            curr[part] = child
         curr = child
     curr[parts[-1]] = value
 

@@ -340,7 +340,9 @@ class _FixtureDraft:
 
     record: FixtureRecord
     module: str
-    is_conftest: bool
+    #: The directory a conftest fixture is visible under, or ``None`` for a
+    #: fixture declared in a test module. Its presence IS the conftest fact:
+    #: a separate boolean flag beside it could disagree with it.
     conftest_directory: Path | None
 
 
@@ -922,7 +924,6 @@ class _ModuleVisitor(ast.NodeVisitor):
                 _FixtureDraft(
                     record=record,
                     module=_module_name(self.path, self.root),
-                    is_conftest=self.path.name == _ROOT_CONFTEXT,
                     conftest_directory=Path(relative).parent if self.path.name == _ROOT_CONFTEXT else None,
                 ),
             )
@@ -939,9 +940,9 @@ class _ModuleVisitor(ast.NodeVisitor):
 def _visible_to(fixture: _FixtureDraft, consumer: _FunctionFact) -> bool:
     """Return whether a consumer can see a fixture by static pytest topology."""
     provider = fixture.record
-    if fixture.is_conftest:
-        assert fixture.conftest_directory is not None
-        return Path(consumer.path).is_relative_to(fixture.conftest_directory)
+    conftest_directory = fixture.conftest_directory
+    if conftest_directory is not None:
+        return Path(consumer.path).is_relative_to(conftest_directory)
     if consumer.path != provider.path:
         return False
     if provider.owner_kind != "class":
@@ -1250,9 +1251,9 @@ def _binding_visible_to(binding: FixtureImport, consumer: _FunctionFact) -> bool
 
 def _fixture_tests(fixture: _FixtureDraft, index: _FunctionIndex) -> tuple[_FunctionFact, ...]:
     """Return test functions visible to a provider from its indexed topology."""
-    if fixture.is_conftest:
-        assert fixture.conftest_directory is not None
-        return index.tests_by_directory.get(fixture.conftest_directory.as_posix(), ())
+    conftest_directory = fixture.conftest_directory
+    if conftest_directory is not None:
+        return index.tests_by_directory.get(conftest_directory.as_posix(), ())
     return tuple(
         function for function in index.tests_by_path.get(fixture.record.path, ()) if _visible_to(fixture, function)
     )
