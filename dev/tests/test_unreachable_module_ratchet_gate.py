@@ -171,6 +171,28 @@ def test_a_listed_intentional_module_passes_but_remains_visible(planted: Shipped
     assert "pkg.stranded" not in verdict.regressions
 
 
+def test_an_intentional_module_does_not_exempt_an_unlisted_unreachable_neighbour(planted: ShippedTreeSpec) -> None:
+    """An exact intentional disposition cannot turn the whole population into an exception."""
+    _write(planted.repo_root, "src/pkg/unlisted.py", "def helper() -> None: ...\n")
+    result = scan_unreachable_code(planted)
+    disposition = IntentionalReachabilityDisposition(
+        module="pkg.stranded",
+        kind=IntentionalReachabilityKind.DESIGN_TIME_AUTHORITY,
+        rationale="Synthetic design-time vocabulary authority.",
+    )
+    baseline = UnreachableBaseline(
+        allowed=frozenset({"pkg.deferred"}),
+        frozen_prefixes=(),
+        intentional=(disposition,),
+    )
+
+    verdict = evaluate(result, baseline)
+
+    assert verdict.intentional == (disposition,)
+    assert verdict.regressions == ("pkg.unlisted",)
+    assert not verdict.is_clean
+
+
 def test_a_paid_down_baseline_entry_is_reported_as_stale(planted: ShippedTreeSpec) -> None:
     """Naming a module the tree no longer reports fails, so the baseline cannot rot."""
     result = scan_unreachable_code(planted)
@@ -246,9 +268,23 @@ def test_a_frozen_prefix_is_excluded_in_both_directions(planted: ShippedTreeSpec
             "intentional reachability entries cannot be frozen",
         ),
         (
+            'allowed = ["pkg.stranded"]\nfrozen_prefixes = ["pkg"]\n',
+            "allowed reachability entries cannot be frozen",
+        ),
+        (
             "allowed = []\nfrozen_prefixes = []\n"
             '[[intentional]]\nmodule = 1\nkind = "design_time_authority"\nrationale = "reason"\n',
             "intentional entries require string module, kind, and rationale",
+        ),
+        (
+            "allowed = []\nfrozen_prefixes = []\n"
+            '[[intentional]]\nmodule = "   "\nkind = "design_time_authority"\nrationale = "reason"\n',
+            "intentional reachability disposition module must be non-empty",
+        ),
+        (
+            "allowed = []\nfrozen_prefixes = []\n"
+            '[[intentional]]\nmodule = "pkg.stranded"\nkind = "design_time_authority"\nrationale = "   "\n',
+            "needs a rationale",
         ),
     ),
 )
