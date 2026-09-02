@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:481dd7dc4eb3ec307b684f638f927de42b4bcd9a86502e8d2077d73ce4f25f32'
+body_hash: 'sha256:68766cd4e34ffed02611fccc7a288c801e5c50d2970baaad3e74e9bc5cc86f80'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -322,6 +322,18 @@ both distributions from the merged tree - a 74.5 MB wheel and a 59.6 MB source
 distribution - and each sits comfortably under the index's 100 MB per-file cap, the one
 limit that could have forced a repackaging before a first upload. The remaining action
 is the upload itself, and it is external to this tree.
+
+The binding a publisher registration must claim is fully determined by the adopted
+workflow: owner `nevenincs`, repository `cadrumo`, workflow `publish.yml`, environment
+`pypi` - the same environment name the sibling publish workflow claims. One registration
+per distribution, so three. Because none of the three names exists on the index yet,
+each is registered as a pending publisher, which is also what reserves the name.
+
+The deployment environment `pypi` did not exist on the repository and has been created;
+without it the publish job claims an environment the OIDC token cannot attest. The
+repository also carries an orphaned `release` environment: no workflow references it, it
+holds no secret or variable, and its only protection rule is a branch policy. It is
+residue of the deleted release machinery and can be removed.
 
 ### Not investigated
 

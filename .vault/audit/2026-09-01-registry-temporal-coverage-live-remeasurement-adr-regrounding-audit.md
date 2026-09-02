@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:95961007910f33e791b86609d6cbf05037a70ab952a9247b945cb98cce3ae559'
+body_hash: 'sha256:fa3ba8b4cb4e56bcbad2573c16fd146ce14629f66b625d478c87739b895436cd'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -3305,7 +3305,6 @@ that were read, judged to be one fact, and collapsed are listed.
 Its teeth were proven rather than assumed: planting a second
 `is_str_keyed_mapping` beside the canonical one is caught and named, and both
 probes were removed afterwards.
-
 
 ## Recommendations
 
