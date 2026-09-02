@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:a81daff04005229f03fb122c3d65070ce5ce169e11f559cf06704c99d7d18faf'
+body_hash: 'sha256:1c63c1e20a38e9fae48507cedca27a557c3d515cf39a3817ff32abe8af53ae9b'
 step_id: 'S09'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
@@ -19,6 +19,7 @@ related:
 ## Changes
 
 - `A` `dev/quality/object_name_transform.py`
+- `verify:` `uv run --no-sync pytest -q -p no:randomly dev/quality/tests/test_object_name_transform.py` -> `pass`
 - `verify:` `uv run --no-sync ruff check dev/quality/object_name_transform.py` -> `pass`
 - `verify:` `uv run --no-sync ruff format --check dev/quality/object_name_transform.py` -> `pass`
 - `verify:` `uv run --no-sync ty check dev/quality/object_name_transform.py --output-format concise` -> `pass`
@@ -28,4 +29,4 @@ related:
 
 ## Notes
 
-Shared-tree concurrency landed the initial transform in `fff7631e84` and its read-only replacement in `d791f14b36` while the assigned S09 executor was working. This closure retains that committed baseline and carries the independent-review remediation.
+Shared-tree concurrency landed S09 across `fff7631e84`, `d791f14b36`, `ea8a1be31e`, `c451e4e69a`, and the mixed-path `08aefc8e41` while the assigned executor was working. This record captures the final current-byte review and validation after resolving all high findings.

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:6b2e06fb5484e1b5b8849339b795ecc09498bc2a1b4ca55b817b97840927ed79'
+body_hash: 'sha256:0586f4cab6360115f782550567fe85531d7e90f4653850fe0f3eae2c2c35bb8f'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
@@ -131,3 +131,40 @@ the module locator and its corresponding source or target path. Package initiali
 use their module locator; ordinary modules use the locator parent. Every move that
 would change that context is refused before a proposal is returned. The final
 independent full-file review found no remaining high or critical issue.
+
+### ambiguous-rebinding-reference | high | References were not bound to the selected redeclaration occurrence
+
+S10 grounding showed that an operation's binding occurrence constrained definition
+lines but not local qualified-name references. When the same public name was rebound
+more than once in one module, LibCST could not prove which binding a reference owned,
+so a selected occurrence could over-rename another occurrence's consumers.
+
+### missing-reference-class-evidence | high | Supported manifest claims were accepted without observed evidence
+
+The transform rejected unsupported dynamic and generated classes but did not prove
+that each declared definition, static import, type-only import, export, or shared
+consumer was actually observed for its operation. A claim could therefore remain
+unresolved while another edit made the changed-path allowlist appear complete.
+
+### type-only-export-classification | high | Type-checking imports in package initializers looked like runtime exports
+
+The first evidence classifier gave package-initializer imports export precedence over
+`TYPE_CHECKING`. A guarded import could therefore satisfy a claimed runtime export even
+though it never executes at runtime.
+
+## Evidence re-review status
+
+Resolved: symbol operations now refuse multiple qualified rebinding identities for the
+same kind and name before transforming references. Overload-family lines remain valid
+because they share one complete qualified locator.
+
+Resolved: every operation now accumulates per-class evidence for its exact definition,
+static imports, type-only imports, exports, and actual multi-operation shared-consumer
+paths. Any declared supported class that is not observed fails before outputs return,
+and metadata-provider exceptions are normalized as transform refusals.
+
+Resolved: `TYPE_CHECKING` classification precedes package export classification, so a
+type-only initializer import cannot prove a runtime export. The final independent
+full-file review found no remaining high or critical issue. The committed detector
+suite passes all 18 tests, and Ruff, `ty`, basedpyright, compilation, and diff checks
+pass for the transform.
