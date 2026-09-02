@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:73b600ca7d2413150e4aa054ba6ca0cd3adf9836de69dc3aa3b995513fbbbc7d'
+body_hash: 'sha256:fb5aa9c79b5f52e7d93fa7f2906b373f4b15389906602df7d7b9a2725eb195ab'
 step_id: 'S17'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
@@ -37,4 +37,4 @@ related:
 
 ## Notes
 
-The two live forwarding probes intentionally exercised safe CLI refusals and propagated exit code 2. A no-argument smoke was not executed because the S19 default manifest does not yet exist; dry-run proved the no-argument expansion. Repository-wide `just --unstable --fmt --check` remains red on broad pre-existing Justfile formatting drift, so no unrelated whole-file formatting was applied.
+The two live forwarding probes intentionally exercised safe CLI refusals and propagated exit code 2. A no-argument smoke was not executed because the S19 default manifest does not yet exist; dry-run proved the no-argument expansion. Repository-wide `just --unstable --fmt --check` remains red on broad pre-existing Justfile formatting drift, so no unrelated whole-file formatting was applied. Shared-tree commit `105b889e30` landed the recipe together with separately owned S16 test changes; this record claims only `justfile`. Mixed commit `37b6ecf94c` landed the review audit, Step Record scaffold, and plan closure with unrelated Vaultspec documents.
