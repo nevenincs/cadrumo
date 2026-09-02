@@ -20,11 +20,12 @@ from ..command_spec import (
     SchemaState,
     ValueContract,
 )
+from ..command_spec import translation_key as _key
 from ._spec_policies import (
     GOOGLE_DESTRUCTIVE,
     GOOGLE_READ,
     GOOGLE_WRITE,
-    STATE_FREE,
+    state_free_group_spec,
 )
 
 _BOOL = ValueContract(DeferredTarget("builtins", "bool"))
@@ -58,22 +59,6 @@ def _schema(module: str, name: str, identity: str) -> ResultSchemaSpec:
         SchemaState.TARGET,
         target=DeferredTarget(_HANDLER_MODULES[module], name),
         identity=identity,
-    )
-
-
-def _group(key: str, parent: str, token: str, help_key: str) -> CommandSpec:
-    return CommandSpec(
-        key=key,
-        parent_key=parent,
-        token=token,
-        kind="group",
-        help_key=_key(help_key),
-        short_help_key=None,
-        invocation=InvocationSpec(no_args_is_help=True),
-        parameters=(),
-        policy=STATE_FREE,
-        handler=None,
-        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     )
 
 
@@ -137,7 +122,7 @@ def _leaf(
 
 
 GOOGLE_COMMAND_SPECS = (
-    _group("config_google", "config", "google", "cli.config.google.help"),
+    state_free_group_spec("config_google", "config", "google", "cli.config.google.help"),
     _leaf(
         "config_google_register",
         "config_google",
@@ -204,7 +189,7 @@ GOOGLE_COMMAND_SPECS = (
         "GoogleLogoutResult",
         GOOGLE_DESTRUCTIVE,
     ),
-    _group(
+    state_free_group_spec(
         "config_google_credential_source",
         "config_google",
         "credential-source",
@@ -261,7 +246,7 @@ GOOGLE_COMMAND_SPECS = (
         "GoogleCredentialSourceViewResult",
         GOOGLE_READ,
     ),
-    _group("config_google_folder", "config_google", "folder", "cli.config.google.folder.help"),
+    state_free_group_spec("config_google_folder", "config_google", "folder", "cli.config.google.folder.help"),
     _leaf(
         "config_google_folder_set",
         "config_google_folder",
@@ -320,8 +305,3 @@ GOOGLE_COMMAND_SPECS = (
 
 
 __all__ = ["GOOGLE_COMMAND_SPECS"]
-
-
-def _key(value: str) -> TranslationKey:
-    """TEMPORARY A/B copy."""
-    return TranslationKey(value)

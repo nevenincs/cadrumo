@@ -23,10 +23,6 @@ import typer
 from ._common import active_bucket_id_or_refuse, emit_envelope
 
 
-def _bucket_id() -> str:
-    return active_bucket_id_or_refuse()
-
-
 def deudas_list(ctx: typer.Context) -> None:
     """List persisted deudas snapshots for the active bucket.
 
@@ -37,7 +33,7 @@ def deudas_list(ctx: typer.Context) -> None:
     from ...application.live.deudas import DeudasService
     from ._app_live_deudas_payloads import DeudasListResult, DeudaSnapshotSummaryPayload
 
-    bucket_id = _bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     rows = DeudasService().list_snapshots(bucket_id=bucket_id)
     result = DeudasListResult(
         bucket_id=bucket_id,
@@ -73,7 +69,7 @@ def deudas_view(
     from ...application.live.deudas import DeudasService
     from ._app_live_deudas_payloads import DeudaRowPayload, DeudasViewResult
 
-    bucket_id = _bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     record = DeudasService().show(bucket_id=bucket_id, snapshot_id=snapshot_id)
     result = DeudasViewResult(
         bucket_id=bucket_id,
@@ -120,7 +116,7 @@ def deudas_latest(ctx: typer.Context) -> None:
     from ...application.live.deudas import DeudasService
     from ._app_live_deudas_payloads import DeudasLatestResult
 
-    bucket_id = _bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     record = DeudasService().latest(bucket_id=bucket_id)
     if record is None:
         empty = DeudasLatestResult(bucket_id=bucket_id, snapshot_id=None)

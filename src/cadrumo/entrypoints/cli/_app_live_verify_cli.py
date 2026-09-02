@@ -34,10 +34,6 @@ class _VerifyRow(TypedDict):
     checked_at: str
 
 
-def _bucket_id() -> str:
-    return active_bucket_id_or_refuse()
-
-
 def _expected(value: str | None) -> VerifyVerdict | None:
     if value in (None, "valid", "invalid", "unknown"):
         return value
@@ -71,7 +67,7 @@ def verify_list(
     from ...application.live.verify import VerifyService
     from ._app_live_verify_payloads import VerifyListResult, VerifyObservationSummaryPayload
 
-    bucket_id = _bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     rows = VerifyService().list_observations(
         bucket_id=bucket_id,
         surface=surface,
@@ -101,7 +97,7 @@ def verify_show(
     from ...application.live.verify import VerifyService
     from ._app_live_verify_payloads import VerifyViewResult
 
-    bucket_id = _bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     record = VerifyService().show(bucket_id=bucket_id, observation_id=observation_id)
     result = VerifyViewResult(bucket_id=bucket_id, **_verify_row(record))
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
@@ -123,7 +119,7 @@ def verify_latest(
     from ...application.live.verify import VerifyService
     from ._app_live_verify_payloads import VerifyLatestResult
 
-    bucket_id = _bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     record = VerifyService().latest_for_nif(
         bucket_id=bucket_id,
         surface=surface,
@@ -179,7 +175,7 @@ def verify_nif_iva(
     if not result.observations:
         raise typer.BadParameter(tr("cli.app.live.verify.no_observation_for_nif", nif=nif))
     observation = result.observations[0]
-    bucket_id = _bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     record = VerifyService(settings=settings).record(
         bucket_id=bucket_id,
         surface=VerifySurface.NIF_IVA,
@@ -220,7 +216,7 @@ def verify_tgvi(
     if not result.observations:
         raise typer.BadParameter(tr("cli.app.live.verify.no_observation_for_nif", nif=nif))
     observation = result.observations[0]
-    bucket_id = _bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     record = VerifyService(settings=settings).record(
         bucket_id=bucket_id,
         surface=VerifySurface.TGVI,

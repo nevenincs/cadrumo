@@ -18,10 +18,6 @@ from ._app_live_auth_preflight import emit_live_auth_preflight
 from ._common import active_bucket_id_or_refuse, emit_envelope
 
 
-def _bucket_id() -> str:
-    return active_bucket_id_or_refuse()
-
-
 def _period_option(period: str, *, year: int) -> Period:
     try:
         return Period.from_year_and_code(year, period)
@@ -45,7 +41,7 @@ def justificante_pull(
     from ...application.live.justificante import capture_justificante_snapshot_outcome
     from ._app_live_justificante_payloads import JustificanteCaptureResult
 
-    bucket_id = _bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     emit_live_auth_preflight()
     outcome = asyncio.run(
         capture_justificante_snapshot_outcome(
@@ -109,7 +105,7 @@ def justificante_list(ctx: typer.Context) -> None:
     from ...application.live.justificante import JustificanteCaptureSnapshotService
     from ._app_live_justificante_payloads import JustificanteListResult, JustificanteSnapshotSummaryPayload
 
-    bucket_id = _bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     rows = JustificanteCaptureSnapshotService(bucket_id=bucket_id).list_snapshots()
     result = JustificanteListResult(
         bucket_id=bucket_id,
@@ -148,7 +144,7 @@ def justificante_view(
     from ...application.live.justificante import JustificanteCaptureSnapshotService
     from ._app_live_justificante_payloads import JustificanteViewResult
 
-    bucket_id = _bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     record = JustificanteCaptureSnapshotService(bucket_id=bucket_id).show(snapshot_id)
     result = JustificanteViewResult(
         bucket_id=bucket_id,

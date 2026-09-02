@@ -2,7 +2,18 @@
 
 from __future__ import annotations
 
-from ..command_spec import Capability, ExecutionPolicySpec, PerformanceClass, SideEffect, WriteRoute
+from ..command_spec import (
+    Capability,
+    CommandSpec,
+    ExecutionPolicySpec,
+    InvocationSpec,
+    PerformanceClass,
+    ResultSchemaSpec,
+    SchemaState,
+    SideEffect,
+    WriteRoute,
+    translation_key,
+)
 
 
 def _policy(
@@ -141,3 +152,25 @@ __all__ = [
     "REGISTRY_READ",
     "STATE_FREE",
 ]
+
+
+def state_free_group_spec(key: str, parent: str, token: str, help_key: str) -> CommandSpec:
+    """Return the spec for a state-free group command.
+
+    A group command carries no parameters, no handler and no result schema: it
+    exists to hold subcommands and print help. Two config spec modules each built
+    that same eleven-field construction, so two places decided what a group is.
+    """
+    return CommandSpec(
+        key=key,
+        parent_key=parent,
+        token=token,
+        kind="group",
+        help_key=translation_key(help_key),
+        short_help_key=None,
+        invocation=InvocationSpec(no_args_is_help=True),
+        parameters=(),
+        policy=STATE_FREE,
+        handler=None,
+        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
+    )
