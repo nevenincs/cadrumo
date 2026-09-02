@@ -203,7 +203,6 @@ def test_modelo_721_threshold_continuity_has_registry_parameters_without_calcula
     expected_link_ids_by_surface = {
         "portal": "modelo-721-portal",
         "filing": "modelo-721-filing",
-        "extractor": "modelo-721-extractor",
         "deadline": "modelo-721-deadline",
     }
 
