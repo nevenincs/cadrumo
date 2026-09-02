@@ -18,9 +18,9 @@ from ..command_spec import (
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
-    TranslationKey,
     ValueContract,
 )
+from ..command_spec import translation_key as _key
 from ._spec_policies import (
     GOOGLE_DESTRUCTIVE,
     GOOGLE_READ,
@@ -33,10 +33,6 @@ _INT = ValueContract(DeferredTarget("builtins", "int"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _STR = ValueContract(DeferredTarget("builtins", "str"))
 _CREDENTIAL_KIND = ValueContract(DeferredTarget("cadrumo.core.google_credential_source", "GoogleCredentialSourceKind"))
-
-
-def _key(value: str) -> TranslationKey:
-    return TranslationKey(value)
 
 
 # Every dynamically resolved handler module is named here as a WHOLE dotted path.

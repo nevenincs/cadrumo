@@ -44,3 +44,20 @@ def resolve_active_profile_pointer() -> ProfileBucketPointer | None:
 
     active = resolve_active_bucket_id()
     return None if active is None else read_profile_bucket_by_id(active)
+
+
+def require_active_profile_pointer() -> ProfileBucketPointer:
+    """Return the active profile pointer, refusing when none is selected.
+
+    The refusing form beside the resolving one, because two command modules each
+    wrapped the optional result in the same refusal and so each decided
+    independently which message a missing profile produces.
+    """
+    from ..errors import CliRefusedBoundaryError
+
+    pointer = resolve_active_profile_pointer()
+    if pointer is None:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.no_active_profile",
+        )
+    return pointer

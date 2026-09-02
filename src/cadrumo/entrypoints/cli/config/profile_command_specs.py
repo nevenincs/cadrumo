@@ -24,10 +24,10 @@ from ..command_spec import (
     RecoveryHandoffSpec,
     ResultSchemaSpec,
     SchemaState,
-    TranslationKey,
     TuiCapability,
     ValueContract,
 )
+from ..command_spec import translation_key as _key
 from ._spec_policies import (
     BOOTSTRAP_DESTRUCTIVE,
     BOOTSTRAP_WRITE,
@@ -52,10 +52,6 @@ _TOGGLE = ValueContract(
     DeferredTarget("builtins", "str"),
     choices=("on", "off"),
 )
-
-
-def _key(value: str) -> TranslationKey:
-    return TranslationKey(value)
 
 
 # Every dynamically resolved handler module is named here as a WHOLE dotted path.

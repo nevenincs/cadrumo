@@ -168,6 +168,15 @@ class TranslationKey:
             raise ValueError("translation key must be a non-empty dotted key")
 
 
+def translation_key(value: str) -> TranslationKey:
+    """Return the translation key for ``value``.
+
+    Ten command-spec modules each defined this one-line construction privately,
+    so ten places named the type a help or label string becomes.
+    """
+    return TranslationKey(value)
+
+
 class BindingState(Enum):
     """Whether an implementation exists or is explicitly unavailable."""
 

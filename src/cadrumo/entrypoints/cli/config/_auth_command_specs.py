@@ -20,10 +20,10 @@ from ..command_spec import (
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
-    TranslationKey,
     TuiCapability,
     ValueContract,
 )
+from ..command_spec import translation_key as _key
 from ._command_spec_schema import config_payload_schema as _schema
 from ._spec_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, STATE_FREE
 
@@ -33,10 +33,6 @@ _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _STR = ValueContract(DeferredTarget("builtins", "str"))
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 _PHONE_STATE = ValueContract(DeferredTarget("cadrumo.application.auth.diagnostics", "AuthDiagnosticPhoneState"))
-
-
-def _key(value: str) -> TranslationKey:
-    return TranslationKey(value)
 
 
 def _option(

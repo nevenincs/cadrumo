@@ -2,11 +2,6 @@
 
 from __future__ import annotations
 
-from .command_spec import TranslationKey
-
-
-def _key(value: str) -> TranslationKey:
-    return TranslationKey(value)
-
+from .command_spec import translation_key as _key
 
 __all__ = ["_key"]

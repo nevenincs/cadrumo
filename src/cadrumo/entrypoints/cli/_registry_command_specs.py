@@ -15,9 +15,9 @@ from .command_spec import (
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
-    TranslationKey,
     ValueContract,
 )
+from .command_spec import translation_key as _key
 
 _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", "none")
 _READ = ExecutionPolicySpec(frozenset({"registry"}), frozenset({"none"}), "compute", "none")
@@ -26,10 +26,6 @@ _INT = ValueContract(DeferredTarget("builtins", "int"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _MANUAL = ValueContract(DeferredTarget("cadrumo.application.registry.corpus", "RegistryManualId"))
 _PART = ValueContract(DeferredTarget("cadrumo.domain.manuals._ids", "ManualPart"))
-
-
-def _key(value: str) -> TranslationKey:
-    return TranslationKey(value)
 
 
 def _option(

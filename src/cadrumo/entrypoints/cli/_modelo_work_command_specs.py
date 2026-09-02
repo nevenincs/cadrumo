@@ -20,11 +20,11 @@ from .command_spec import (
     ResultSchemaSpec,
     SchemaState,
     SideEffect,
-    TranslationKey,
     TuiCapability,
     ValueContract,
     WriteRoute,
 )
+from .command_spec import translation_key as _key
 
 _STR = ValueContract(DeferredTarget("builtins", "str"))
 _INT = ValueContract(DeferredTarget("builtins", "int"))
@@ -44,10 +44,6 @@ _PAYMENT = ValueContract(DeferredTarget("cadrumo.core.payment_election", "Paymen
 _DOMICILIATION = ValueContract(
     DeferredTarget("cadrumo.core.prior_domiciliation_election", "PriorDomiciliationElection")
 )
-
-
-def _key(value: str) -> TranslationKey:
-    return TranslationKey(value)
 
 
 def _policy(

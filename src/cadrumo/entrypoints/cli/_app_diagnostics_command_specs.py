@@ -13,9 +13,9 @@ from .command_spec import (
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
-    TranslationKey,
     ValueContract,
 )
+from .command_spec import translation_key as _key
 
 _READ = ExecutionPolicySpec(frozenset({"local-storage"}), frozenset({"none"}), "local-io", "none")
 _WRITE = ExecutionPolicySpec(frozenset({"local-storage"}), frozenset({"local-state"}), "local-io", "none")
@@ -25,10 +25,6 @@ _INT = ValueContract(DeferredTarget("builtins", "int"))
 _BOOL = ValueContract(DeferredTarget("builtins", "bool"))
 _TIER = ValueContract(DeferredTarget("cadrumo.core.telemetry.tier", "TelemetryTier"))
 _PAYLOADS = "cadrumo.entrypoints.cli._diagnostics_payloads"
-
-
-def _key(value: str) -> TranslationKey:
-    return TranslationKey(value)
 
 
 def _option(

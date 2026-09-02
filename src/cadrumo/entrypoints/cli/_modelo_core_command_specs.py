@@ -13,9 +13,9 @@ from .command_spec import (
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
-    TranslationKey,
     ValueContract,
 )
+from .command_spec import translation_key as _key
 
 _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", "none")
 _CALCULATION_READ = ExecutionPolicySpec(
@@ -41,10 +41,6 @@ _AMENDMENT_KIND = ValueContract(
 _M303_MOTIVE = ValueContract(
     DeferredTarget("cadrumo.domain.modelos.calculation_revision_amendment", "M303RectificativaMotive")
 )
-
-
-def _key(value: str) -> TranslationKey:
-    return TranslationKey(value)
 
 
 def _option(

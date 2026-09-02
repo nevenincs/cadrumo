@@ -7,24 +7,14 @@ from typing import TYPE_CHECKING
 import typer
 
 if TYPE_CHECKING:
-    from ....application.workflow.profile_bucket_models import ProfileBucketPointer
+    pass
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-
-
-def _active_profile_pointer() -> ProfileBucketPointer:
-    from ._profile_support import resolve_active_profile_pointer
-
-    pointer = resolve_active_profile_pointer()
-    if pointer is None:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.no_active_profile",
-        )
-    return pointer
+from ._profile_support import require_active_profile_pointer as _active_profile_pointer
 
 
 def apoderado_scopes_list(

@@ -13,9 +13,9 @@ from .command_spec import (
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
-    TranslationKey,
     ValueContract,
 )
+from .command_spec import translation_key as _key
 
 _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", "none")
 _READ = ExecutionPolicySpec(frozenset({"encrypted-facts"}), frozenset({"none"}), "local-io", "none")
@@ -27,10 +27,6 @@ _STATE = ValueContract(
     DeferredTarget("cadrumo.application.review.enums", "ReviewState"),
     parser=DeferredTarget("cadrumo.entrypoints.cli._review", "parse_review_state"),
 )
-
-
-def _key(value: str) -> TranslationKey:
-    return TranslationKey(value)
 
 
 def _option(
