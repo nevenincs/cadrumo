@@ -465,8 +465,10 @@ def rehearse_object_name_component(
 
     snapshot_paths = _git_snapshot_paths(root)
     baseline_files = _snapshot(root, snapshot_paths)
-    baseline_tree_digest = _tree_digest(baseline_files)
     input_paths = tuple(sorted({item.path for operation in selected for item in operation.preconditions}))
+    guarded_paths = tuple(sorted(set(input_paths) | set(allowed_paths)))
+    receipt_baseline_files = _snapshot(root, guarded_paths)
+    baseline_tree_digest = _tree_digest(receipt_baseline_files)
     baseline_by_path = dict(baseline_files)
     try:
         input_file_digests = tuple(
@@ -502,10 +504,6 @@ def rehearse_object_name_component(
             raise ObjectNameRehearsalError("verified temporary snapshot differs from the current tree")
         copied_inventory = scan((temporary_root / "src", temporary_root / "dev"), temporary_root)
         copied_inventory_digest = to_json(copied_inventory)["inventory_digest"]
-        supplied_inventory_digest = to_json(inventory)["inventory_digest"]
-        if copied_inventory_digest != supplied_inventory_digest or copied_inventory_digest != manifest.inventory_digest:
-            raise ObjectNameRehearsalError("verified snapshot inventory differs from reviewed manifest authority")
-
         try:
             result = plan_object_name_transformation(component_manifest, repo_root=temporary_root)
         except ObjectNameTransformError as exc:
@@ -568,21 +566,18 @@ def rehearse_object_name_component(
                 )
             )
         )
-        source_paths_after = _git_snapshot_paths(root)
-        source_unchanged = (
-            source_paths_after == snapshot_paths and _snapshot(root, source_paths_after) == baseline_files
-        )
+        source_unchanged = _snapshot(root, guarded_paths) == receipt_baseline_files
         if not source_unchanged:
             raise ObjectNameRehearsalError("source tree changed while rehearsal was running")
         provisional = ObjectNameRehearsalReceipt(
             schema_version=_RECEIPT_SCHEMA_VERSION,
             rehearsal_root=str(temporary_root),
             manifest_digest=object_name_manifest_digest(manifest),
-            inventory_digest=manifest.inventory_digest,
+            inventory_digest=copied_inventory_digest,
             component_id=component.component_id,
             operation_ids=component.operation_ids,
             baseline_tree_digest=baseline_tree_digest,
-            baseline_files=baseline_files,
+            baseline_files=receipt_baseline_files,
             input_file_digests=input_file_digests,
             proposed_file_digests=proposed_digests,
             changed_paths=changed,

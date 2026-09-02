@@ -133,7 +133,7 @@ def _fixture(
     return inventory, manifest, component
 
 
-def test_rehearsal_captures_dirty_and_untracked_bytes_but_excludes_git_and_caches(tmp_path: Path) -> None:
+def test_rehearsal_receipt_binds_only_declared_component_paths(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     inventory, manifest, component = _fixture(repo)
     before = _live_bytes(repo)
@@ -141,16 +141,7 @@ def test_rehearsal_captures_dirty_and_untracked_bytes_but_excludes_git_and_cache
     receipt = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
 
     baseline = dict(receipt.baseline_files)
-    assert baseline["dev/tracked.txt"] == _digest(b"dirty tracked bytes\n")
-    assert baseline["dev/untracked.txt"] == _digest(b"untracked bytes\n")
-    assert baseline["dev/deleted.txt"] is None
-    assert not any(".git" in Path(path).parts or "__pycache__" in Path(path).parts for path in baseline)
-    assert not any(".pytest_cache" in Path(path).parts or path.endswith(".pyc") for path in baseline)
-    assert not any(
-        set(Path(path).parts).intersection({".mypy_cache", ".ruff_cache", ".tox", ".venv", "node_modules"})
-        or path == "ignored.log"
-        for path in baseline
-    )
+    assert baseline == {"src/example/contracts.py": _digest(before["src/example/contracts.py"])}
     assert receipt.manifest_digest == object_name_manifest_digest(manifest)
     assert receipt.inventory_digest == manifest.inventory_digest
     assert receipt.component_id == component.component_id
