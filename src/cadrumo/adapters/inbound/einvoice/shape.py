@@ -14,13 +14,13 @@ document cannot resolve an external entity or expand a billion-laughs payload.
 from __future__ import annotations
 
 from io import BytesIO
+from typing import Protocol, cast
 from xml.etree.ElementTree import Element
 
 from ....core.document_shape import DocumentShape
 from ....core.errors.hierarchy import CoreValidationError
 from ....core.image_media_type import detect_image_media_type
 from .xml import EInvoiceXmlParseError, parse_hardened_xml
-from typing import Protocol, cast
 
 __all__ = ["EMBEDDED_XML_SUFFIXES", "iter_pdf_embedded_files", "probe_document_shape"]
 

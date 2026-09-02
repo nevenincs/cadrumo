@@ -14,12 +14,12 @@ from ....application.filing.export_proof import (
 )
 from ....application.filing.export_verification import FilingExportValidatedPayload
 from ....core.classification.policies import SensitivityClass
+from ....core.config import Settings
 from ....core.hashing import sha256_hex
 from ....core.time.clock import now
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
 from ..storage.secure_object_namespaces import FILING_EXPORT_REPLAY_PROOFS_NAMESPACE
 from ..storage.sql.secure_objects import SecureObjectRepository
-from ....core.config import Settings
 
 
 class FilingExportReplayCustodyRepository(SecureBoundRepository[FilingExportSecureCustodyRecord]):

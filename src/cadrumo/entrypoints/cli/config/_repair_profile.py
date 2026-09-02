@@ -18,6 +18,7 @@ from ....core.redaction.rules import (
     CLI_PROFILE_ID_PLACEHOLDER,
     redact_structured_for_cli_output,
 )
+from ....core.type_guards import is_object_dict
 from .._common import emit_envelope, resolve_cli_precondition_action
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from .errors import ConfigBoundaryError as _ConfigBoundaryError
@@ -151,7 +152,7 @@ def _repair_profile_label(health: ActiveProfileHealth) -> str | None:
 def _redact_profile_repair_payload(payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
     """Return a paste-safe repair payload with internal profile ids removed."""
     redacted = redact_structured_for_cli_output(payload)
-    if not isinstance(redacted, dict):
+    if not is_object_dict(redacted):
         return {}
     return {str(k): v for k, v in redacted.items()}
 

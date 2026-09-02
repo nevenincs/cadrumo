@@ -209,7 +209,7 @@ class PdfN26Provider(FinancialProvider):
             raise InvalidFinancialSourceError("pdfplumber is not installed") from exc
         try:
             with pdfplumber.open(str(path)) as pdf:
-                pages = []
+                pages: list[tuple[str, ...]] = []
                 for page in pdf.pages:
                     text = page.extract_text() or ""
                     lines = tuple(line.strip() for line in text.splitlines() if line.strip())

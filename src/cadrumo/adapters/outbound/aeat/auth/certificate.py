@@ -317,7 +317,7 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
             ) from exc
         raise CertificateLoadError(f"could not parse PKCS#12 bundle at {bundle.path}: malformed bytes") from exc
 
-    if parsed.cert is None or parsed.cert.certificate is None:
+    if parsed.cert is None:
         raise CertificateLoadError(f"PKCS#12 bundle at {bundle.path} contains no end-entity certificate")
 
     x509_cert = parsed.cert.certificate
@@ -503,7 +503,7 @@ def health(
             raise CertificateLoadError(
                 f"could not re-decode PKCS#12 bundle at {path} for expired-cert health report: {exc}",
             ) from exc
-        if parsed.cert is None or parsed.cert.certificate is None:  # pragma: no cover - defended above
+        if parsed.cert is None:  # pragma: no cover - defended above
             raise
         x509_cert = parsed.cert.certificate
         not_before = coerce_utc_aware(x509_cert.not_valid_before_utc)

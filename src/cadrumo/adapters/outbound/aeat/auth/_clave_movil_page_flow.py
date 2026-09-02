@@ -21,7 +21,8 @@ import base64
 import contextlib
 import json
 import time
-from typing import TYPE_CHECKING, NoReturn
+from collections.abc import Awaitable, Callable
+from typing import TYPE_CHECKING, NoReturn, Protocol, cast
 from urllib.parse import urlsplit
 
 from .....application.auth.protocols import BrowserPagePort
@@ -64,8 +65,6 @@ from .clave_movil_support import (
 from .clave_movil_support import (
     url_diagnostic as _url_diagnostic,
 )
-from collections.abc import Awaitable, Callable
-from typing import Protocol, cast
 
 if TYPE_CHECKING:
     from playwright.async_api import Dialog

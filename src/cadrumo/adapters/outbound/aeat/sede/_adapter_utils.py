@@ -37,6 +37,7 @@ from pydantic import AnyUrl, BaseModel
 from pydantic import ValidationError as PydanticValidationError
 
 from .....core.logging import get_logger
+from .....core.type_guards import is_str_keyed_dict
 from .....domain.calculations.registry.errors import RegistryValidationError
 from .....domain.calculations.registry.remote_state_guard import (
     RemoteOperation,
@@ -51,7 +52,6 @@ from .errors import (
     SedeNavigationError,
     SedeParseError,
 )
-from .....core.type_guards import is_str_keyed_dict
 
 _log = get_logger(__name__)
 _WHITESPACE_RE = compile(r"\s+")
