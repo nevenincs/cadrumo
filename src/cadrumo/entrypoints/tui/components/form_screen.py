@@ -290,7 +290,7 @@ class FormScreen(TypedAppAccess, Screen["Mapping[str, str] | None"]):
         self.dismiss(None)
 
 
-class FormApp(ScreenHostApp["Mapping[str, str] | None"]):
+class FormApp(ScreenHostApp["Mapping[str, str]"]):
     """Standalone host for :class:`FormScreen`.
 
     Everything that makes the page a page lives on the screen; this exists

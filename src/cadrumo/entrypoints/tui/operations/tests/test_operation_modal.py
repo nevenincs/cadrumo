@@ -741,7 +741,7 @@ _ACTION_BUTTON_IDS = (
 )
 
 
-async def _mounted_modal(host: App[None], pilot: Pilot[None]) -> OperationModal:
+async def _mounted_modal[ResultT](host: App[ResultT], pilot: Pilot[ResultT]) -> OperationModal:
     """Wait for the pushed modal to mount, or fail rather than assert on nothing."""
     for _ in range(200):
         await pilot.pause()

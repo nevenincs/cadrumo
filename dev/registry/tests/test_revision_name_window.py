@@ -9,6 +9,7 @@ for the schema.
 from __future__ import annotations
 
 import datetime
+import pathlib
 
 import pytest
 
@@ -180,3 +181,73 @@ def test_a_selectable_open_end_still_reports_the_name_understating_its_reach(
 
     assert "name_claims_single_year" in kinds
     assert "open_ended_window_not_selectable" not in kinds
+
+
+def test_an_open_ended_name_over_a_closing_window_is_reported(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """A name promising every later year over a window that ends is caught.
+
+    Constructed, and it has to be: the corpus contains no such revision, so this
+    condition has never fired. A condition that has never fired is
+    indistinguishable from one that cannot, and the screen documents eight
+    conditions while emitting five.
+
+    Built from modelo 151's open-ended revision by giving it a closing date, so
+    the name still promises "y-siguientes" while the window stops in 2027.
+    """
+    revision = authority.modelo("151").revisions["2025-y-siguientes"]
+    closed = revision.model_copy(update={"valid_to": datetime.date(2027, 12, 31)})
+
+    kinds = {finding.kind for finding in name_window_findings(closed, modelo_id="151")}
+
+    assert "name_claims_open_ended" in kinds
+
+
+def test_a_name_closing_at_the_wrong_year_is_reported(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """A name stating a span whose closing year is not the declared one is caught.
+
+    Also constructed, and the second of the two conditions the corpus never
+    exercises. Modelo 151's ``2015-2022`` agrees with its window today; moving
+    the window's close to 2021 leaves the name claiming a year the revision no
+    longer serves.
+    """
+    revision = authority.modelo("151").revisions["2015-2022"]
+    assert name_window_findings(revision, modelo_id="151") == ()
+
+    moved = revision.model_copy(update={"valid_to": datetime.date(2021, 12, 31)})
+    findings = name_window_findings(moved, modelo_id="151")
+
+    assert "name_misstates_closing" in {finding.kind for finding in findings}
+    detail = next(item.detail for item in findings if item.kind == "name_misstates_closing")
+    assert "2022" in detail and "2021" in detail
+
+
+def test_every_condition_the_screen_documents_can_be_reached(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """No documented condition is unreachable code.
+
+    Five conditions fire on the corpus and three are constructed across this
+    module. This pins the total so that a condition added to the docstring
+    without a way to reach it, or one whose predicate stops matching, is caught
+    here rather than by a reader counting bullets.
+    """
+    import re
+
+    from ..analysis import revision_name_window as screen
+
+    documented = set(re.findall(r"^- ``([a-z_]+)``", screen.__doc__ or "", re.M))
+    emitted = set(re.findall(r'kind=\(?"([a-z_]+)"', screen.name_window_findings.__doc__ or ""))
+    source = pathlib.Path(screen.__file__).read_text(encoding="utf-8")
+    emitted |= set(re.findall(r'kind=\(?\s*"([a-z_]+)"', source))
+    emitted |= set(re.findall(r'"([a-z_]+)"\s+if\s+claimed_open', source))
+    emitted |= set(re.findall(r'else\s+"([a-z_]+)"', source))
+
+    assert documented, "the screen documents no conditions, so this gate proves nothing"
+    assert documented == emitted, (
+        f"documented but never emitted: {sorted(documented - emitted)}; "
+        f"emitted but undocumented: {sorted(emitted - documented)}"
+    )
