@@ -162,19 +162,26 @@ def test_a_frozen_prefix_is_excluded_in_both_directions(planted: ShippedTreeSpec
 
 
 def test_an_unscannable_tree_refuses_rather_than_reporting_clean(tmp_path: Path) -> None:
-    """A gate that cannot see the tree must fail loudly, not pass by default."""
-    _write(tmp_path, "src/pkg/__init__.py")
-    _write(tmp_path, "src/pkg/cli.py", "def main(:\n")
-    spec = ShippedTreeSpec(
-        repo_root=tmp_path,
-        src_root=tmp_path / "src",
-        package="pkg",
-        entry_points=(EntryPoint("pkg.cli", "main"),),
-        exclude_globs=_EXCLUDES,
+    """A gate that cannot parse the tree must fail loudly, not pass by default.
+
+    The dangerous failure is not a crash but a false all-clear: if an
+    unparseable module let the scan return an empty finding set, every
+    baselined entry would read as paid down and the gate would report the
+    boundary repaired at the moment it stopped being able to see it.
+    """
+    _write(
+        tmp_path,
+        "pyproject.toml",
+        # A complete, readable packaging config, so the refusal below is caused
+        # by the unparseable module and not by a config the scan could not read.
+        '[project]\nname = "cadrumo"\nversion = "0"\n'
+        '[project.scripts]\ncadrumo = "cadrumo.cli:main"\n'
+        "[tool.hatch.build.targets.wheel]\nexclude = []\n",
     )
-    baseline_path = tmp_path / "absent_baseline.toml"
+    _write(tmp_path, "src/cadrumo/__init__.py")
+    _write(tmp_path, "src/cadrumo/cli.py", "def main(:\n")
+    baseline = tmp_path / "baseline.toml"
+    baseline.write_text("allowed = []\nfrozen_prefixes = []\n", encoding="utf-8")
 
     with pytest.raises(RuntimeError, match="ratchet unproven"):
-        run_gate(tmp_path, baseline_path=baseline_path)
-
-    assert not spec.entry_points[0].attribute == ""
+        run_gate(tmp_path, baseline_path=baseline)

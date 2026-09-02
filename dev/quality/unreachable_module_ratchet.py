@@ -53,10 +53,9 @@ from typing import Final
 from .._paths import REPO_ROOT, UTF_8
 from ..audit.unreachable_code import (
     ModuleReach,
-    ShippedTreeSpec,
     UnreachableCodeOutcome,
     UnreachableCodeResult,
-    scan_unreachable_code,
+    run_unreachable_code_scan,
 )
 
 BASELINE_PATH: Final[Path] = Path(__file__).with_name("unreachable_module_ratchet.toml")
@@ -168,7 +167,7 @@ def run_gate(repo_root: Path = REPO_ROOT, *, baseline_path: Path = BASELINE_PATH
         RuntimeError: If the scan cannot produce a trustworthy result. A gate
             that cannot see the tree must refuse rather than report clean.
     """
-    result = scan_unreachable_code(ShippedTreeSpec.from_repository(repo_root))
+    result = run_unreachable_code_scan(repo_root)
     if result.outcome is UnreachableCodeOutcome.ERROR:
         msg = f"reachability scan unavailable, ratchet unproven: {result.reason}"
         raise RuntimeError(msg)
