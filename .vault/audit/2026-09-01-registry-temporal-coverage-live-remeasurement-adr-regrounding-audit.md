@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:d76d1e7702137353cf2eac76c80e76dca2c83e8f69276a5018663d048937faa4'
+body_hash: 'sha256:67e56685b74ac1718da149dd242c8632d2318ef0980f7d1c66c5306c8ab3cb7d'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -5171,3 +5171,33 @@ Worth noting what did not catch this. The merge verified paragraph counts and no
 clean, and reported success - and the section it produced said five where it should have said
 twelve. The check answered the question it was asked, which was whether anything was dropped,
 and the thing that was wrong was never in its scope. Reading the output was what found it.
+
+### A gate written here caught this campaign changing a screen without updating what it claims
+
+The full lane reconciles: 1,281 collected, 41 failed plus 1,240 passed, and no lost-worker
+marker. Against the previous run's 35 failures, six are new, and one of them was this
+campaign's.
+
+`test_a_screen_that_counts_its_conditions_states_the_right_number` is a gate written earlier
+in this work, asserting that a screen documenting a condition count documents the number it
+actually emits. The revision-name screen said "Six conditions are reported". Over the last
+several iterations its conditions were split by direction, one was added, one was withdrawn
+and one was narrowed - and the sentence stating how many there are was never touched. There
+are eight. The gate failed, correctly, and the count now says eight.
+
+That is the first time in this campaign that a gate written here caught its author rather than
+the tree. It is worth recording for what it says about the parity gate's value: the defect it
+found is invisible to every other check, reads as harmless prose, and is precisely the shape -
+a declaration that stopped describing what it declares - that this entire plan exists to
+remove. The gate was written against other people's screens and the first thing it caught was
+mine.
+
+The remaining five new failures are not this campaign's. Two are in the publication suite and
+three in modules the concurrent campaign has added or changed - a monetary-scale test, a
+restored-semantic audit for modelo 200, a generated-tree CLI - all committed, none carrying a
+pending diff. The two gates this campaign added to the publication suite were run in isolation
+and pass; the failures beside them are in tests that predate this work.
+
+Attribution before repair, as this audit has argued throughout. The one that was mine took a
+one-word fix; assuming the other five were also mine would have cost an iteration chasing
+another writer's in-flight work.

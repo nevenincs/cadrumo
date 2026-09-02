@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:80d5b29a1452035773d0a883adbdd26cd1e356f1d4884a09049b6adcb738eb13'
+body_hash: 'sha256:4611e381880b766f9dda741c33163369222718966336cb0672c5c98ac3a3c930'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -446,6 +446,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S214` - Measure the plan's duplicated top-level sections against the template and establish that they predate this campaign; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S215` - Merge the plan's triplicated Description and Verification and duplicated Parallelization into one of each, proving no paragraph was lost; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S216` - Move the acceptance criteria out of Parallelization where the duplicated structure had them accumulating and retire the superseded opener; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S217` - Correct the revision name screen's stated condition count that this campaign's own parity gate caught after the conditions were split; `dev/registry/analysis/revision_name_window.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
