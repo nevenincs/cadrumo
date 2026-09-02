@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:ef572b818901ba3e67944eac1be2ed7f76367d003c5e6a25bd9355b438c8a5fe'
+body_hash: 'sha256:d91a4c735818abd2e742a74fcf6b3e29bfdc5559f376e726ae5cfdbefcd33fc4'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -451,6 +451,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S221` - Prove the two revision-name conditions the corpus never exercises and gate that every documented condition is reachable; `dev/registry/tests/test_revision_name_window.py`.
 - [x] `W06.P13.S222` - Sweep every screen for conditions documented but never emitted and establish that only the revision-name screen carried the defect; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S223` - Ground the twenty-one load classifications by measuring which modules a real load imports rather than which the graph reaches; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S224` - Repoint the load classification member the canonicalisation renamed and separate the one ambiguous stale name from the twelve outside the census universe; `dev/registry/analysis/load_census_classification.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

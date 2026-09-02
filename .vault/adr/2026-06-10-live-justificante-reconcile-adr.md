@@ -146,8 +146,12 @@ that resolves the persisted capture and runs the unchanged local
 contacts AEAT — so it is distinct from the rejected `--from-sede` flag (which
 would trigger a live pull from `reconcile`); the capture and reconcile services
 stay separate so the local-only boundary holds. CSV authenticity via the existing
-`verify_csv` / `application/live/_verify.py` surface is recorded as a deferred
-increment that can stamp an authenticity result onto the captured snapshot.
+`verify_csv` surface is recorded as a deferred increment that can stamp an
+authenticity result onto the captured snapshot. That increment has since
+landed: the stamp lives in `application/live/justificante.py`, alongside the
+capture it annotates. The `application/live/_verify.py` path named here never
+existed under that name; the module is `application/live/verify.py`, and it is
+scoped to NIF-IVA and TGVI, so it was not a safe home for this.
 
 ## Rationale
 

@@ -5397,3 +5397,30 @@ tree being broken by someone else. The tell is the same both times: an error who
 contradicts the source that would have produced it. Reading the file the error blames, rather
 than trusting the error, is what separates them - and it costs one command against an
 iteration spent reporting another writer's imaginary defect.
+
+### Thirteen of the fourteen stale rules were never stale
+
+Reading the stale-rule entries rather than pattern-matching them changed what they are. Only
+two named a registry module that had moved. The other twelve name modules under
+`cadrumo.core`, and the message is not that they vanished but that they are "not in the census
+universe" - the census covers the registry package, and those rules list core dependencies as
+members. Whether that is a rule-authoring choice or an error is a question for whoever wrote
+them; it is not fourteen renamed modules, which is what the count suggested and what an earlier
+finding here implied.
+
+Of the two genuine ones, one is repaired and one is deliberately not. `_validate_references`
+became `validate_references` when the concurrent campaign dropped the leading underscore, the
+successor is in the census universe, and the member is repointed - the stale count falls from
+fourteen to thirteen, confirming exactly one entry was resolved.
+
+`snapshot` is left alone. The registry has `snapshot_coordinate` and `_snapshot_internals` and
+no plain `snapshot`, and the rule's own reason cites a third filename that is also gone. Any
+of those could be the successor and the difference matters, because the rule classifies when a
+module loads and pointing it at the wrong sibling would produce a confident wrong answer rather
+than a visible gap. The stale entry is the honest state until the author of that rename says
+which module inherited the members.
+
+That distinction - repair what the rename makes unambiguous, leave what it does not - is the
+same one this campaign applied to the export trees and to the twenty-one classifications. A
+gap that stays visible costs a failing check. A guess that looks like a repair costs the next
+reader their assumption that the file means what it says.
