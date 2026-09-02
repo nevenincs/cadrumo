@@ -103,7 +103,8 @@ class _OfxStatementLike(Protocol):
     """Minimal OFX statement surface (``STMTRS`` / ``CCSTMTRS``)."""
 
     curdef: object
-    account: _OfxAccountLike
+    #: Absent on statement kinds that carry no account block.
+    account: _OfxAccountLike | None
     transactions: Iterable[_OfxTransactionLike]
 
 

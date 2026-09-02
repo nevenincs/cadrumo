@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
+from enum import StrEnum
 from typing import Annotated, Literal, get_args, get_origin
 
 from pydantic import BaseModel, BeforeValidator, Field, TypeAdapter, field_validator
@@ -393,22 +394,84 @@ designs whose selection window is merely not assigned yet.
 """
 
 DateAxis = Literal["filing_period", "devengo_date", "transaction_date", "invoice_date", "submission_date"]
-EvidenceTier = Literal[
-    "legal_authority",
-    "official_source_guidance",
-    "executable_parity_evidence",
-    "layout_authority",
-]
-#: The tiers that ground a registry entity on AEAT-published MATERIAL, as
-#: distinct from the law itself (``legal_authority``) and from executable
-#: parity artefacts. Three section validators require exactly this pair
-#: through ``require_any_source_tier``; named once because a tier added to
-#: one copy alone would let the same source ground a casilla while failing
-#: the revision that declares it.
+class EvidenceTier(StrEnum):
+    """What kind of authority grounds a registry entity."""
+
+    LEGAL_AUTHORITY = "legal_authority"
+    """The law itself: a BOE provision or the orden that approves a design."""
+
+    OFFICIAL_SOURCE_GUIDANCE = "official_source_guidance"
+    """AEAT-published guidance, instructions or a form specification."""
+
+    EXECUTABLE_PARITY_EVIDENCE = "executable_parity_evidence"
+    """An artefact that can be executed and compared, such as a safe calculator."""
+
+    LAYOUT_AUTHORITY = "layout_authority"
+    """A published record design fixing field offsets, widths and order."""
+
+
+EvidenceTierField = Annotated[EvidenceTier, BeforeValidator(coerce_enum_member(EvidenceTier))]
+"""Registry ``evidence_tier`` token hydrated into a member.
+
+Registry schema models validate strictly, which refuses a bare TOML string for an
+enum-typed field, so the token is coerced at the boundary.
+"""
+
+#: The tiers that ground a registry entity on AEAT-published MATERIAL, as distinct
+#: from the law itself and from executable parity artefacts. Three section validators
+#: require exactly this pair through ``require_any_source_tier``. Derived from the
+#: vocabulary above rather than restated, so a tier added there cannot leave this
+#: narrowing silently measuring the old set.
 REGISTRY_SOURCE_GROUNDING_TIERS: tuple[EvidenceTier, ...] = (
-    "official_source_guidance",
-    "layout_authority",
+    EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
+    EvidenceTier.LAYOUT_AUTHORITY,
 )
+
+class CorpusTier(StrEnum):
+    """How much of a legal instrument the bundled corpus artefact carries."""
+
+    FULL_CONSOLIDATED = "full_consolidated"
+    """The whole consolidated instrument, not a provision-suffixed extract."""
+
+    PROVISION_EXCERPT = "provision_excerpt"
+    """A single provision lifted from the instrument."""
+
+
+CorpusTierField = Annotated[CorpusTier, BeforeValidator(coerce_enum_member(CorpusTier))]
+"""Registry ``corpus_tier`` token hydrated into a member.
+
+Registry schema models validate strictly, which refuses a bare TOML string for an
+enum-typed field, so the token is coerced at the boundary.
+"""
+
+class PublishingAuthority(StrEnum):
+    """Who published the instrument or artefact a registry row cites."""
+
+    BOE = "boe"
+    """The Boletin Oficial del Estado, where Spanish law is promulgated."""
+
+    AEAT = "aeat"
+    """The Agencia Estatal de Administracion Tributaria."""
+
+    EU = "eu"
+    """A European Union instrument."""
+
+    AUTONOMOUS_COMMUNITY = "autonomous_community"
+    """An autonomous community exercising its own competence."""
+
+    OTHER = "other"
+    """A publisher outside the four named above, recorded rather than assumed."""
+
+
+PublishingAuthorityField = Annotated[
+    PublishingAuthority, BeforeValidator(coerce_enum_member(PublishingAuthority))
+]
+"""Registry ``authority`` token hydrated into a member.
+
+Registry schema models validate strictly, which refuses a bare TOML string for an
+enum-typed field, so the token is coerced at the boundary.
+"""
+
 LegalRefs = Annotated[tuple[LegalRefId, ...], Field(min_length=1)]
 SourceRefs = Annotated[tuple[SourceRefId, ...], Field(min_length=1)]
 SourceCitationText = Annotated[tuple[str, ...], Field(min_length=1)]

@@ -29,7 +29,7 @@ from .schema import (
     ModeloRevision,
     SchemaFamilyDispositionDeclaration,
 )
-from .schema_base import RegistryModel
+from .schema_base import CorpusTierField, RegistryModel
 from .schema_exports import ProjectionEndpointDeclaration
 from .schema_formula import ParameterDefinition
 from .schema_references import SourceReference, source_window_applies_across
@@ -54,7 +54,6 @@ type _GeneratedArtifactSourceKind = Literal[
     "form_spec",
     "suppression_notice",
 ]
-type _GeneratedArtifactCorpusTier = Literal["full_consolidated", "provision_excerpt"]
 
 
 class GeneratedArtifactSource(Protocol):
@@ -68,7 +67,7 @@ class GeneratedArtifactSource(Protocol):
     applies_from: date | None
     applies_to: date | None
     record_design_epoch: str | None
-    corpus_tier: _GeneratedArtifactCorpusTier | None
+    corpus_tier: CorpusTierField | None
 
     def applies_across(self, span_from: date, span_to: date | None) -> bool:
         """Report whether this source's applicability window overlaps one date span.
@@ -115,7 +114,7 @@ class StaticGeneratedArtifactSource:
     applies_from: date | None
     applies_to: date | None
     record_design_epoch: str | None
-    corpus_tier: _GeneratedArtifactCorpusTier | None
+    corpus_tier: CorpusTierField | None
 
     def applies_across(self, span_from: date, span_to: date | None) -> bool:
         """Report whether this copied window overlaps one date span.

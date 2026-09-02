@@ -12,11 +12,6 @@ from ....core.aggregation import RelationAggregation
 from ....core.casilla_id import CasillaId
 from ....core.identity import AeatBoxNumber, ContinuidadId
 from ....core.period import FilingPeriodCode, RegistrySelectorPeriodCode
-from .relation_dependency import (
-    RelationDependencyRoleField,
-    RelationDependencyTreatmentField,
-    RelationKindField,
-)
 from ._schema_export_exemption import ExportExemptionReasonValue
 from .errors import RegistryValidationError
 from .ids import (
@@ -30,6 +25,10 @@ from .ids import (
     SourceRefId,
 )
 from .modelo_localization import resolve_modelo_localization
+from .relation_dependency import (
+    RelationDependencyRoleField,
+    RelationKindField,
+)
 from .schema_base import LegalRefs, RegistryModel, SourceRefs
 from .schema_input_kind import InputKind, InputKindValue
 from .schema_scalars import DecimalValue

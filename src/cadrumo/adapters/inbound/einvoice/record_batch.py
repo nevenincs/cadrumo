@@ -66,6 +66,7 @@ from ....core.document_shape import DocumentShape
 from ._aeat_record_schema import mandatory_child_elements
 from .shape import probe_document_shape
 from .xml import EInvoiceXmlParseError, parse_hardened_xml
+from .xml import local_tag_name as _local
 
 __all__ = [
     "AeatRecordBatch",
@@ -207,10 +208,6 @@ class AeatRecordBatch:
     def record_count(self) -> int:
         """Total records seen, whether read or refused."""
         return len(self.records) + len(self.refusals)
-
-
-def _local(tag: str) -> str:
-    return tag.rsplit("}", 1)[-1] if "}" in tag else tag
 
 
 def _child(parent: Element, name: str) -> Element | None:

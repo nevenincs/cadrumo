@@ -19,11 +19,6 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import FilingPeriodCode, RegistrySelectorPeriodCode
-from .relation_dependency import (
-    RelationDependencyRoleField,
-    RelationDependencyTreatmentField,
-    RelationKindField,
-)
 from ._relation_aggregation import relation_aggregation_op
 from ._validate import RegistryValidator
 from .authority import ValidatedRegistryAuthority
@@ -31,6 +26,11 @@ from .binding_targets import bound_casilla_binding_ids
 from .errors import RegistryValidationError
 from .ids import BindingId, LegalRefId, ModeloId, RelationId, RevisionId, SourceRefId
 from .iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
+from .relation_dependency import (
+    RelationDependencyRoleField,
+    RelationDependencyTreatmentField,
+    RelationKindField,
+)
 from .relations import RegistryFoldRequirement, relation_source_requirements
 from .runtime_graph import expression_binding_refs, expression_relation_refs
 from .schema import (

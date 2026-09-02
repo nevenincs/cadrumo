@@ -278,6 +278,13 @@ check-relative-imports:
 check-architecture:
     @uv run --no-sync pytest -q -n0 dev/tests/test_cross_package_private_imports.py dev/tests/test_import_edge_integrity_gate.py dev/tests/test_facade_export_gate.py
 
+# Verify no shipped module has become unreachable from the declared entrypoints.
+# The baseline in dev/quality/unreachable_module_ratchet.toml may only shrink;
+# a new unreachable module fails rather than being absorbed into it.
+[group('static-checks')]
+check-unreachable-ratchet:
+    @uv run --no-sync python -m dev.quality.unreachable_module_ratchet
+
 # Verify dependency declarations for drift or unused packages. Silent on success.
 [group('static-checks')]
 check-dependencies:

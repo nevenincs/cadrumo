@@ -18,13 +18,13 @@ from .....core.filing_projection_ref import (
     filing_projection_ref_casilla_id,
 )
 from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_snapshot import build_snapshot
 from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..legal import verify_legal_catalogue
 from ..runtime_graph import expression_casilla_refs
 from ..schema_input_kind import InputKind
-from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

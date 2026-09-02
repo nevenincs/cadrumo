@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources.bundled_data import bundled_path
-from ..snapshot import build_snapshot
+from .....tests.registry_snapshot import build_snapshot
 from ._modelo_303_registry_support import (
     load_modelo_303,
 )

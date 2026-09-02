@@ -41,7 +41,7 @@ source_refs = ["aeat-manual"]
 id = "modelo-999-record"
 record_type = "1"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "crlf"
 required = true
 
@@ -115,7 +115,7 @@ source_refs = ["aeat-manual"]
 id = "modelo-999-record"
 record_type = "1"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "crlf"
 required = true
 """.lstrip(),
@@ -184,7 +184,7 @@ id = "modelo-999-layout"
 id = "modelo-999-record"
 record_type = "1"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "crlf"
 required = true
 """.lstrip(),
@@ -289,7 +289,7 @@ source_refs = ["aeat-manual"]
 id = "modelo-999-record"
 record_type = "1"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "crlf"
 required = true
 
@@ -340,7 +340,7 @@ source_refs = ["aeat-manual"]
 id = "modelo-999-record"
 record_type = "1"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "crlf"
 required = true
 
@@ -532,7 +532,7 @@ source_refs = ["aeat-manual"]
 id = "modelo-999-record"
 record_type = "1"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 required = true
 

@@ -39,7 +39,6 @@ from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.secure_object_namespaces import LIVE_DEUDAS_SNAPSHOT_NAMESPACE
 from ...core.config import Settings, load_settings
-from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, SnapshotId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.source_locator import SourceUrl
@@ -49,6 +48,7 @@ from .snapshot_base import (
     SnapshotNotFoundError,
     StatelessSnapshotService,
 )
+from .snapshot_identity import derive_snapshot_id as _derive_snapshot_id
 
 
 class DeudasSnapshotNotFoundError(SnapshotNotFoundError):
@@ -84,11 +84,6 @@ class PersistedDeudasSnapshot(BaseModel):
     authenticated_identity: str | None = Field(default=None, max_length=32)
     deudas: tuple[Deuda, ...]
     persisted_at: datetime
-
-
-def _derive_snapshot_id(capture: DeudasCapture) -> str:
-    canonical = capture.model_dump_json()
-    return sha256_hex(canonical.encode("utf-8"))
 
 
 def deudas_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:

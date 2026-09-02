@@ -46,7 +46,7 @@ from typing import Annotated, Final, Literal, cast
 from pydantic import BaseModel, Field, JsonValue, StringConstraints, ValidationError, model_validator
 
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo.core.observability.golden import GOLDEN_MASK_FIELDS, MASK_SENTINEL
+from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, MASK_SENTINEL
 
 from ..._paths import REPO_ROOT, UTF_8
 from ._runner import CapturedValue, EnvelopeSource, SequenceTranscript

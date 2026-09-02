@@ -30,15 +30,20 @@ The workflow run and its logs are the authoritative operational record. A
 Before a first real publication, issue
 [#612](https://github.com/nevenincs/cadrumo/issues/612) must record the three exact
 PyPI Trusted Publisher bindings. Each binding uses owner `nevenincs`, repository
-`cadrumo`, workflow `publish-release.yml`, and environment `release`, for:
+`cadrumo`, workflow `publish.yml`, and environment `pypi`, for:
 
 - `cadrumo`
 - `cadrumo-data-manuals`
 - `cadrumo-data-official`
 
-Remove any obsolete publisher registration for `pypi-upload.yml`. The `release`
-environment is the OIDC trust anchor; the workflow does not require environment
-reviewers.
+No publisher is registered yet, so the bindings are specified against the publishing
+workflow and the environment name the account's other products use, rather than
+against a workflow this repository no longer runs. Remove any obsolete registration
+naming `pypi-upload.yml` or `publish-release.yml`. The `pypi` environment is the OIDC
+trust anchor; the workflow does not require environment reviewers.
+
+`cadrumo` itself is unregistered on the index while both corpus distributions hold a
+reservation, so the primary name is the one still to claim.
 
 Confirm the repository configuration used by the destinations that are enabled:
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Annotated, Final, Literal
 
-from pydantic import AfterValidator, AnyHttpUrl, Field, TypeAdapter, field_validator, model_validator
+from pydantic import AfterValidator, AnyHttpUrl, BeforeValidator, Field, TypeAdapter, field_validator, model_validator
 
 from ....core.external_constants import (
     PDF_EXTENSION,
@@ -21,12 +21,16 @@ from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, Revision
 from .errors import RegistryValidationError
 from .ids import LegalRefId, ModeloId, ParameterId, RevisionId, SourceRefId
 from .schema_base import (
+    CorpusTierField,
     DateAxis,
     DesignAuthority,
     EvidenceTier,
+    EvidenceTierField,
     LegalRefs,
+    PublishingAuthorityField,
     RegistryModel,
     RevisionReviewStatusField,
+    coerce_enum_member,
 )
 
 __all__ = [
@@ -198,8 +202,10 @@ class LegalReference(RegistryModel):
     """Legal-authority citation row carried by registry definitions."""
 
     id: LegalRefId
-    evidence_tier: Literal["legal_authority"]
-    authority: Literal["boe", "aeat", "eu", "autonomous_community", "other"]
+    evidence_tier: Annotated[
+        Literal[EvidenceTier.LEGAL_AUTHORITY], BeforeValidator(coerce_enum_member(EvidenceTier))
+    ]
+    authority: PublishingAuthorityField
     kind: Literal[
         "ley",
         "real_decreto",
@@ -227,7 +233,7 @@ class LegalReference(RegistryModel):
     notes: str | None = None
     required_text: tuple[str, ...] = Field(min_length=1)
     forbidden_text: tuple[str, ...] = ()
-    corpus_tier: Literal["full_consolidated", "provision_excerpt"] | None = None
+    corpus_tier: CorpusTierField | None = None
     """Which kind of corpus evidence ``corpus_ref`` resolves to, when declared.
 
     Deliberately optional and deliberately two-valued. Optional: nothing in
@@ -323,8 +329,8 @@ class SourceReference(RegistryModel):
     """Official-source evidence row with bundled-corpus integrity metadata."""
 
     id: SourceRefId
-    evidence_tier: EvidenceTier
-    authority: Literal["aeat", "boe", "eu", "autonomous_community", "other"]
+    evidence_tier: EvidenceTierField
+    authority: PublishingAuthorityField
     kind: Literal[
         "record_design",
         "manual_pdf",
@@ -373,7 +379,7 @@ class SourceReference(RegistryModel):
     published text states the period boundary; leave it undeclared rather
     than infer one.
     """
-    corpus_tier: Literal["full_consolidated", "provision_excerpt"] | None = None
+    corpus_tier: CorpusTierField | None = None
     """Mirrors :attr:`LegalReference.corpus_tier` in philosophy, recalibrated here.
 
     Same two-valued, verified-not-merely-typed contract: optional so adding
@@ -486,7 +492,9 @@ class LegalParameter(RegistryModel):
     """Versioned legal parameter value cited by registry formulas."""
 
     id: ParameterId
-    evidence_tier: Literal["legal_authority"]
+    evidence_tier: Annotated[
+        Literal[EvidenceTier.LEGAL_AUTHORITY], BeforeValidator(coerce_enum_member(EvidenceTier))
+    ]
     value: str
     unit: str
     applies_to: str

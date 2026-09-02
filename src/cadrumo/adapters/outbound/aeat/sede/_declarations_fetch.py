@@ -233,7 +233,7 @@ async def capture_row_pdf_artefact(
     button = row_locator.locator(".z-listcell").nth(cell_index).locator(".z-button").first
     try:
         async with context.expect_page(timeout=get_ver_click_timeout_ms()) as new_page_info:
-            _assert_read_browser_action("open-cotejo-pdf", policy=read_policy)
+            assert_declarations_read_browser_action("open-cotejo-pdf", policy=read_policy)
             await button.click(timeout=get_form_interaction_timeout_ms())
         cotejo_page = await new_page_info.value
     except PlaywrightError as exc:
@@ -259,7 +259,7 @@ async def capture_row_pdf_artefact(
 
     csv = _extract_csv_from_url(cotejo_url)
     pdf_url = AnyHttpUrl(cotejo_document_url(origin_of(cotejo_url), csv))
-    _assert_read_http("GET", str(pdf_url), policy=read_policy)
+    assert_declarations_read_http("GET", str(pdf_url), policy=read_policy)
     response = await context.request.get(str(pdf_url))
     content_type = response.headers.get("content-type", "")
     body = await response.body()
@@ -314,7 +314,7 @@ async def capture_submitted_file_artefact(
     button = row_locator.locator(".z-listcell").nth(cell_index).locator(".z-button").first
     try:
         async with page.expect_download(timeout=get_ver_click_timeout_ms()) as download_info:
-            _assert_read_browser_action("download-filed-data-file", policy=read_policy)
+            assert_declarations_read_browser_action("download-filed-data-file", policy=read_policy)
             await button.click(timeout=get_form_interaction_timeout_ms())
         download = await download_info.value
     except PlaywrightError as exc:
@@ -341,7 +341,7 @@ async def capture_submitted_file_artefact(
             f"submitted-file download for {declaration.expediente_id!r} exposed no source URL",
         )
     source_url = AnyHttpUrl(download_url)
-    _assert_read_http("GET", str(source_url), policy=read_policy)
+    assert_declarations_read_http("GET", str(source_url), policy=read_policy)
     response = await context.request.get(str(source_url))
     body = await response.body()
     if not body:
@@ -361,7 +361,7 @@ async def capture_submitted_file_artefact(
     )
 
 
-def _assert_read_http(
+def assert_declarations_read_http(
     method: str,
     url: str,
     *,
@@ -370,7 +370,7 @@ def _assert_read_http(
     _remote_assert_read_http(method, url, policy=policy)
 
 
-def _assert_read_browser_action(
+def assert_declarations_read_browser_action(
     action: str,
     *,
     policy: RemoteStateGuardPolicy = READ_GUARD_POLICY,

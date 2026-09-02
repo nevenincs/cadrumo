@@ -45,13 +45,13 @@ import json
 from collections.abc import Mapping
 from typing import cast
 
-from ..json_contract import (
+from ..core.json_contract import (
     OutputSchema,
     RegisteredSchema,
     SchemaEnvelope,
 )
-from ..type_guards import is_object_dict, is_object_list_or_tuple, is_object_mapping
-from .errors import GoldenCaptureError, GoldenReplayMismatchError
+from ..core.observability.errors import GoldenCaptureError, GoldenReplayMismatchError
+from ..core.type_guards import is_object_dict, is_object_list_or_tuple, is_object_mapping
 
 #: The sentinel a masked leaf is replaced with before comparison.
 MASK_SENTINEL = "<masked>"

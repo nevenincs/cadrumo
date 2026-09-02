@@ -7,10 +7,10 @@ from decimal import Decimal
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_snapshot import build_snapshot
 from ..formula_runtime import _evaluate_expression
 from ..schema import CasillaId, DataBindingDefinition, ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from ..schema_formula import FormulaExpression, ParameterDefinition
-from ..snapshot import build_snapshot
 
 
 def _evaluate(

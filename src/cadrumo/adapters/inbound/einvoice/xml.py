@@ -30,7 +30,18 @@ from defusedxml.ElementTree import fromstring as _defused_fromstring
 
 from ....core.errors.hierarchy import CadrumoError
 
-__all__ = ["MAX_XML_DEPTH", "MAX_XML_PAYLOAD_BYTES", "EInvoiceXmlParseError", "parse_hardened_xml"]
+
+def local_tag_name(tag: str) -> str:
+    """Return an XML tag without its namespace prefix.
+
+    ElementTree reports a namespaced tag as ``{uri}local``. Three parsers each
+    carried this strip, which meant three places decided what a tag's local name
+    is.
+    """
+    return tag.rsplit("}", 1)[-1] if "}" in tag else tag
+
+
+__all__ = ["MAX_XML_DEPTH", "MAX_XML_PAYLOAD_BYTES", "EInvoiceXmlParseError", "local_tag_name", "parse_hardened_xml"]
 
 MAX_XML_PAYLOAD_BYTES = 32 * 1024 * 1024
 """Largest e-invoice payload accepted. Two orders of magnitude above any real

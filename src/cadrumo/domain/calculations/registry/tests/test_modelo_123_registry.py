@@ -9,11 +9,11 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_snapshot import build_snapshot
 from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
-from ..snapshot import build_snapshot
 from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 

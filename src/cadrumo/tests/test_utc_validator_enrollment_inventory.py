@@ -18,7 +18,7 @@ recognise these near neighbours, and the difference is worth knowing before
 reading a green run as proof the invariant holds:
 
 - ``value.utcoffset() is None`` **alone**. One production site uses it —
-  :mod:`~application.filing._import` tests a receipt instant for naivety and,
+  :mod:`~application.modelo.external_import_actions` tests a receipt instant for naivety and,
   when naive, attaches Madrid civil time rather than raising. That is not a
   reimplementation of the canonical validator: the validator *rejects* a naive
   value, whereas this site *repairs* one into a non-UTC civil zone that the

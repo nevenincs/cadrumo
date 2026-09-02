@@ -237,17 +237,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "os.write",
     ): "per-bucket concurrency lockfile writes the holding PID, not sensitive data",
     (
-        "src/cadrumo/application/registry/source_connectivity_authority.py",
-        "digest",
-        "os.open",
-    ): "READ-ONLY evidence-descriptor verification, captured because this inventory catalogues "
-    "every os.open regardless of flags -- the flags are a runtime value a static scan cannot "
-    "judge, so a read is listed rather than guessed at. It opens O_RDONLY|O_NOFOLLOW, reads "
-    "through os.fdopen(..., 'rb') to a SHA-256, and writes nothing. Its subject is repository "
-    "SOURCE files under an explicitly injected root, not operator financial data, and the open "
-    "is confined to that root by a final-path comparison, an is_relative_to check and a "
-    "regular-file test",
-    (
         "src/cadrumo/adapters/outbound/aeat/sede/iva_compensation_wallet.py",
         "_dump_wallet_diagnostic",
         "write_text",

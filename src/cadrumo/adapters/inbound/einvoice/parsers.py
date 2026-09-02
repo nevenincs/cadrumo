@@ -34,6 +34,7 @@ from ....core.decimal.coercion import coerce_decimal
 from ....core.document_shape import DocumentShape
 from .shape import iter_pdf_embedded_files, probe_document_shape
 from .xml import EInvoiceXmlParseError, parse_hardened_xml
+from .xml import local_tag_name as _local
 
 __all__ = ["FacturaeInvoiceClass", "ParsedEInvoice", "ParsedEInvoiceLine", "parse_einvoice_document"]
 
@@ -218,10 +219,6 @@ def _record_text(root: Element) -> str:
             if raw and raw.strip():
                 fragments.append(raw.strip())
     return _TEXT_NODE_SEPARATOR.join(fragments)
-
-
-def _local(tag: str) -> str:
-    return tag.rsplit("}", 1)[-1] if "}" in tag else tag
 
 
 def _find_all(root: Element, name: str) -> list[Element]:

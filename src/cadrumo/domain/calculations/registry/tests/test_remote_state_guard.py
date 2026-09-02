@@ -19,6 +19,7 @@ from .....tests.aeat_literal_fixtures import (
     aeat_url,
     configured_path,
 )
+from .....tests.registry_snapshot import build_snapshot
 from ..aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from ..errors import RegistrySnapshotError, RegistryValidationError
 from ..groi_oracle import GROI_ORACLE_ID, GroiOracle
@@ -35,7 +36,6 @@ from ..remote_state_guard import (
 from ..renta_web_open_oracle import RentaWebOpenOracle
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..schema_verification import LiveCrossReferenceDecision
-from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

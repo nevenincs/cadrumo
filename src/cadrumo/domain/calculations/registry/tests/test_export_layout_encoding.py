@@ -14,8 +14,8 @@ from pydantic import ValidationError
 
 from .....core.export_layout_format import ExportLayoutFormat
 from ...export_field_kind import CasillaFieldKind
-from ..fixed_width_codec import ExportEncoding
 from ..authority import bundled_authority
+from ..fixed_width_codec import ExportEncoding
 from ..schema_exports import ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

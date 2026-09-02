@@ -34,6 +34,7 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.field_role import FieldRole
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...core.type_guards import is_object_list_or_tuple
 from ...domain.invoices.enums import InvoiceClass
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice
@@ -128,7 +129,7 @@ def _wire_scalar(value: object) -> object:
         return value.isoformat()
     if isinstance(value, Enum):
         return value.value
-    if isinstance(value, tuple | list):
+    if is_object_list_or_tuple(value):
         return list(value)
     return value
 

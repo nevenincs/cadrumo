@@ -11,11 +11,11 @@ from .....core.casilla_id import CasillaId
 from .....core.resources.bundled_data import bundled_path
 from .....domain.deadlines.festivos import shift_deadline
 from .....tests.registry_observations import registry_grounded_modelo_observation
+from .....tests.registry_snapshot import build_snapshot
 from .._validate import RegistryValidator
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import relation_source_requirements, resolve_relation_values_from_observations
-from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

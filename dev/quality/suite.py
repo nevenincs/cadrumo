@@ -72,6 +72,10 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
             "dev/tests/test_facade_export_gate.py",
         ),
     ),
+    (
+        "check-unreachable-ratchet",
+        (sys.executable, "-m", "dev.quality.unreachable_module_ratchet"),
+    ),
 )
 
 

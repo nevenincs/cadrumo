@@ -76,7 +76,7 @@ def test_the_published_dictionary_still_says_element(filing_year: int) -> None:
     _modelos_by_id, catalogues = _loaded_registry()
     layout = _modelo_100_layout(filing_year)
     source = catalogues.sources[str(layout.dictionary_source_ref)]
-    published = (_source_root() / source.corpus_path).read_text(encoding="latin-1")
+    published = (_source_root() / source.corpus_path).read_text(encoding="iso-8859-1")
 
     assert "PH18=[/DatosIdentificativos/Hijos/PH18]" in published
 

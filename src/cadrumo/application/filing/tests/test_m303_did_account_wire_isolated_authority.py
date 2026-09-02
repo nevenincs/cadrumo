@@ -39,7 +39,6 @@ from ....domain.calculations.registry.schema_exports import (
     FilingEnvelopePrefixRole,
 )
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.snapshot import build_snapshot
 from ....domain.deadlines.models import (
     ChargeAccount,
     IVARegime,
@@ -63,6 +62,7 @@ from ....domain.modelos.calculation_revision_m303_evidence import M303Exonerado3
 from ....domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
 from ....domain.prorrata_register.register import ProrrataRegister
 from ....domain.submission.models import ModeloDraftStatus
+from ....tests.registry_snapshot import build_snapshot
 from ...aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
 from ...calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from ..export import _filing_producer_values, _render_layout, export_draft, render_filing_envelope
@@ -189,7 +189,7 @@ source_refs = ["{_SOURCE_REF}"]
 id = "test-owned-m303-page-did"
 record_type = "page_did"
 order = 1
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 required = true
 
@@ -255,7 +255,7 @@ source_refs = ["{_SOURCE_REF}"]
     revision = modelo.revisions[_REVISION_ID]
     layout = revision.export_layouts[0]
     record = layout.records[0]
-    assert record.encoding == "latin-1"
+    assert record.encoding == "iso-8859-1"
     assert record.line_ending == "none"
     assert tuple((field.offset, field.length) for field in record.fields) == tuple(
         (offset, length) for _ordinal, offset, length, _type_code, _content in _OFFICIAL_DID_ROWS
@@ -333,7 +333,7 @@ def _projection_rows_envelope_layout(
         id="test-owned-m303-projection-rows",
         record_type="REGIMEN_SIMPLIFICADO",
         order=1,
-        encoding="latin-1",
+        encoding="iso-8859-1",
         line_ending="none",
         required=required,
         repeat="projection_rows",

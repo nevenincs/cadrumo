@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import ClassVar, Final
 
 from .....core.product_identity import PRODUCT_IDENTITY
+from .....core.type_guards import is_str_keyed_dict
 from ._sealed_archive_errors import (
     SealedArchiveHeaderError,
     SealedArchiveLayoutError,
@@ -36,7 +37,6 @@ from .sealed_archive_writer import (
     PAYLOAD_MEMBER_NAME,
     SEALED_ARCHIVE_MEMBER_NAMES,
 )
-from .....core.type_guards import is_str_keyed_dict
 
 
 @dataclass(frozen=True)

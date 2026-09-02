@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 
 from .....core.period import Period
 from .....core.resources.bundled_data import bundled_path
-from ..snapshot import build_snapshot
+from .....tests.registry_snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo
 
 if TYPE_CHECKING:

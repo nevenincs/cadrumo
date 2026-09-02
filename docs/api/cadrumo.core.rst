@@ -116,8 +116,8 @@ Submodules
    cadrumo.core.iva_compensation_provenance
    cadrumo.core.iva_deduction_fact
    cadrumo.core.json_contract
+   cadrumo.core.json_shapes
    cadrumo.core.ledger_sort
-   cadrumo.core.legal_review
    cadrumo.core.link_safety
    cadrumo.core.lockfile_unlink
    cadrumo.core.locks
@@ -183,6 +183,7 @@ Submodules
    cadrumo.core.transport_locus
    cadrumo.core.tty
    cadrumo.core.type_adapters
+   cadrumo.core.type_guards
    cadrumo.core.unit_proportion
    cadrumo.core.validity_window
    cadrumo.core.windows_contention

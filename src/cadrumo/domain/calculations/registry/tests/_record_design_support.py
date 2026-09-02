@@ -11,6 +11,7 @@ from reportlab.pdfgen import canvas
 
 from .....core.directory_scan import scan_directory
 from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_snapshot import build_snapshot
 from ...export_field_kind import CasillaFieldKind
 from ..binding_selector_utils import BindingFixedExportSelector, binding_export_selector
 from ..export import resolve_export_layout
@@ -27,7 +28,6 @@ from ..record_design_coverage import (
 )
 from ..record_design_schema import RecordDesignSheet
 from ..schema import DataBindingDefinition, ModeloRevision
-from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_registry_tree
 
 __all__ = [

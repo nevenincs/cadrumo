@@ -31,11 +31,6 @@ from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import RegistrySelectorPeriodCode
-from .relation_dependency import (
-    RelationDependencyRoleField,
-    RelationDependencyTreatmentField,
-    RelationKindField,
-)
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import invariant_diagnostics, selector_against_model
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
@@ -43,6 +38,9 @@ from .errors import RegistryValidationError
 from .ids import BindingId, LegalRefId, ModeloId, SourceRefId
 from .observation_fold import fold_sum_or_copy
 from .period_offset_math import apply_period_offset, same_ejercicio_prior_quarter_anchors
+from .relation_dependency import (
+    RelationDependencyTreatmentField,
+)
 from .relations import RegistryFoldRequirement
 from .schema import DataBindingDefinition, ModeloRevision, filing_period_from_scope
 

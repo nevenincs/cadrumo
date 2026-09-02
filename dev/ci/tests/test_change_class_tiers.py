@@ -249,22 +249,53 @@ def test_every_pull_request_workflow_guards_every_job_against_fork_heads() -> No
             assert job.get("if") == _SAME_REPO_GUARD, f"{path.name}:{job_name} lacks the fork guard"
 
 
-def test_no_workflow_anywhere_uses_actions_artifact_storage() -> None:
-    """Zero-Actions-artifact posture, promoted from per-family to repo-wide.
+def _workflow_paths() -> list[Path]:
+    return sorted(
+        {*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}
+    )
 
-    Evidence rides draft releases; diagnostics live in job logs.
+
+def test_no_workflow_downloads_an_artifact_from_another_run() -> None:
+    """Artifact storage hands files between jobs of one run, and no further.
+
+    Handing a built cohort from the job that produced it to the jobs that prove
+    it is what artifact storage is for, and several lanes rely on it. Reaching
+    into a *different* run is the case worth refusing: a run's inputs must be
+    derivable from the commit it was dispatched at, and ``download-artifact``
+    leaves that guarantee the moment it is given ``run-id``.
     """
     offending: list[str] = []
-    for path in sorted(
-        {*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}
-    ):
+    for path in _workflow_paths():
         document = _document(path)
         for job_name, job in (document.get("jobs") or {}).items():
             for step in job.get("steps") or []:
-                uses = str(step.get("uses", ""))
-                if "upload-artifact" in uses or "download-artifact" in uses:
+                if "download-artifact" not in str(step.get("uses", "")):
+                    continue
+                if "run-id" in (step.get("with") or {}):
                     offending.append(f"{path.name}:{job_name}")
     assert offending == [], offending
+
+
+def test_the_cross_run_artifact_gate_refuses_a_run_id_read(tmp_path: Path) -> None:
+    """The gate has teeth: a cross-run read in a fixture workflow is detected."""
+    workflow = tmp_path / "offender.yml"
+    workflow.write_text(
+        "name: offender\n"
+        "on: [workflow_dispatch]\n"
+        "jobs:\n"
+        "  take:\n"
+        "    runs-on: [self-hosted, Linux, X64]\n"
+        "    steps:\n"
+        "      - uses: actions/download-artifact@v8\n"
+        "        with:\n"
+        "          name: dist\n"
+        "          run-id: 1234567890\n",
+        encoding="utf-8",
+    )
+    document = yaml.safe_load(workflow.read_text(encoding="utf-8"))
+    step = document["jobs"]["take"]["steps"][0]
+    assert "download-artifact" in step["uses"]
+    assert "run-id" in step["with"]
 
 
 def test_no_workflow_carries_a_schedule_trigger() -> None:

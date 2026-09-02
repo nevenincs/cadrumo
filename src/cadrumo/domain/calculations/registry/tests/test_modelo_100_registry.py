@@ -126,7 +126,7 @@ def _official_dictionary_type(year: int, *, field_id: str) -> str:
     """
     _modelos_by_id, catalogues = _loaded_registry()
     source = catalogues.sources[f"aeat-dr-100-{year}-dictionary"]
-    text = (_source_root() / source.corpus_path).read_text(encoding="latin-1")
+    text = (_source_root() / source.corpus_path).read_text(encoding="iso-8859-1")
     for line in text.splitlines():
         name, separator, remainder = line.partition("=[")
         if not separator or name != field_id:

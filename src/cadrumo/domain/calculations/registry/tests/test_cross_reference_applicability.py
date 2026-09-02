@@ -7,14 +7,13 @@ only when the filing profile satisfies their official conditions.
 
 from __future__ import annotations
 
-
 import pytest
 from pydantic import ValidationError
 
 from .....core.resources.bundled_data import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
-from ..condition_mode import ConditionMode
 from .._validate import RegistryValidator
+from ..condition_mode import ConditionMode
 from ..errors import RegistryValidationError
 from ..live_parity import (
     CrossReferenceApplicability,

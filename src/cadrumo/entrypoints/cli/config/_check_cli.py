@@ -94,7 +94,7 @@ def config_check(ctx: typer.Context) -> None:
 
     profile_id = resolve_active_bucket_id()
 
-    capabilities = []
+    capabilities: list[dict[str, object]] = []
     for cap in ServiceCapability:
         decision = resolve_active_capability(cap)
         capabilities.append(

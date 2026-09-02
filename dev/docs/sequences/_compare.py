@@ -44,7 +44,7 @@ import difflib
 import json
 from collections.abc import Mapping
 
-from cadrumo.core.observability.golden import canonicalise, differing_paths, mask_document
+from cadrumo.tests.golden_comparison import canonicalise, differing_paths, mask_document
 
 from ._golden_store import (
     SequenceGolden,

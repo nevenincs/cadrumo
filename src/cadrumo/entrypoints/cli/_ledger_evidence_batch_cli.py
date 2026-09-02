@@ -40,6 +40,7 @@ from ...application.operator_actions.models import ActionReference
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
 from ...core.output_rendering import OutputFormat
+from ...core.type_guards import is_object_dict
 from ...domain.iva.classification import InvoiceKind
 from ._common import (
     bad,
@@ -139,7 +140,7 @@ def _unresolved_payload(source: UnresolvedBatchSource) -> dict[str, object]:
 
 def _string_keyed_payload(value: object) -> dict[str, object]:
     """Validate a JSON model dump's mapping shape at the CLI boundary."""
-    if not isinstance(value, dict):
+    if not is_object_dict(value):
         raise TypeError("CLI payload dump must be a mapping")
     payload: dict[str, object] = {}
     for key, item in value.items():

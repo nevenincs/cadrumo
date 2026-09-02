@@ -74,8 +74,9 @@ class ProfileDescendientePayload(DescendantRecordFields, OutputSchema):
     """
 
     index: NonNegativeInt
-    convive_con_contribuyente: bool
-    custodia_compartida: bool
+    # ``convive_con_contribuyente`` and ``custodia_compartida`` are inherited
+    # from the shared field vocabulary with their canonical defaults; the
+    # projection always states both explicitly.
     gastos_guarderia_mensuales: tuple[GuarderiaMonthSpendPayload, ...] = ()
     nif: DescendantNif | None = None
 

@@ -298,7 +298,7 @@ def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
                 id="m303-regimen-simplificado-result",
                 record_type="REGIMEN_SIMPLIFICADO",
                 order=1,
-                encoding="latin-1",
+                encoding="iso-8859-1",
                 line_ending="none",
                 repeat="projection_rows",
                 fields=tuple(

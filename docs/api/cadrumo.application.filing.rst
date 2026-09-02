@@ -18,7 +18,6 @@ Submodules
    cadrumo.application.filing._envelope_modelo_policy
    cadrumo.application.filing._export_parity
    cadrumo.application.filing._export_xml_dictionary
-   cadrumo.application.filing._import
    cadrumo.application.filing._m200_projection
    cadrumo.application.filing._m296_projection
    cadrumo.application.filing._m303_exonerado_390

@@ -15,6 +15,7 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.directory_scan import scan_directory
 from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_snapshot import build_snapshot
 from .._loader_internals import load_modelo_file
 from .._validate import RegistryValidator
 from ..authority import bundled_authority
@@ -26,7 +27,6 @@ from ..schema_exports import ExportFieldDefinition
 from ..schema_extraction import ExtractionTargetDefinition
 from ..schema_formula import FormulaExpression, KeyedBracketEntry
 from ..schema_surfaces import CasillaContinuidadEvolutionDefinition, CasillaDefinition
-from ..snapshot import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

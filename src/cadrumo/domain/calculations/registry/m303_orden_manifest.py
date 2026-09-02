@@ -30,6 +30,7 @@ from .m303_orden_projection_models import (
     M303AnnualOrdenGeneratedSource,
     M303AnnualOrdenProjection,
 )
+from .schema_base import PublishingAuthority
 from .schema_references import LegalReference, SourceReference
 
 if TYPE_CHECKING:
@@ -466,7 +467,7 @@ def _single_annual_orden_source_for_year(
         source
         for source in sources.values()
         if source.id.endswith("-iva-authority")
-        and source.authority == "boe"
+        and source.authority is PublishingAuthority.BOE
         and source.kind == "instructions"
         and source.applies_from == filing_start
         and source.applies_to == filing_end
@@ -493,7 +494,7 @@ def _annual_orden_years_from_sources(
             source.applies_from.year
             for source in sources.values()
             if source.id.endswith("-iva-authority")
-            and source.authority == "boe"
+            and source.authority is PublishingAuthority.BOE
             and source.kind == "instructions"
             and source.applies_from is not None
             and source.applies_to is not None

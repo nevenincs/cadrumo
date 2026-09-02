@@ -24,13 +24,13 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_snapshot import build_snapshot
 from ..binding_selector_utils import selector_as_dict
 from ..irnr_ledger_bindings import (
     resolve_ledger_irnr_income_aggregation_binding_values,
     unsupported_ledger_irnr_income_observations,
     validate_ledger_irnr_income_aggregation_binding_definition,
 )
-from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

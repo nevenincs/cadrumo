@@ -9,12 +9,12 @@ import pytest
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources.bundled_data import bundled_path
 from .....core.revision_review import RevisionReviewStatus
+from .....tests.registry_snapshot import build_validated_snapshot
 from .....tests.registry_tree import bundled_registry_tree
 from .._snapshot_internals import _check_snapshot_filing_capability
 from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistryValidationError
 from ..export import derive_export_layouts_from_bindings
-from ..snapshot import build_validated_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

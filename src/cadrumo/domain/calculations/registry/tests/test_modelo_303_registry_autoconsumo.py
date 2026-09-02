@@ -8,8 +8,8 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_snapshot import build_snapshot
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
-from ..snapshot import build_snapshot
 from ._modelo_303_registry_support import (
     _M303_AUTOCONSUMO_PROMOTOR_BASE_CASILLA,
     _M303_AUTOCONSUMO_PROMOTOR_CUOTA_CASILLA,

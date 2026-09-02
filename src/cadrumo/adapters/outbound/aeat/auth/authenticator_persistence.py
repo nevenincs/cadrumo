@@ -13,7 +13,6 @@ non-sensitive strings carried through :class:`AeatLoginAssertionError`.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import datetime
 from typing import Final, Literal
 

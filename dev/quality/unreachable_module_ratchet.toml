@@ -1,0 +1,94 @@
+# Baseline for the unreachable-module ratchet.
+#
+# Every entry names a module under src/cadrumo that no declared console script
+# can reach. The gate in dev/quality/unreachable_module_ratchet.py compares this
+# list against the live tree as a set, in both directions:
+#
+#   * a module the tree reports that is not listed here fails the gate --
+#     new unreachable code entered the shipped package;
+#   * an entry here that the tree no longer reports also fails -- the debt was
+#     paid and this file must shrink to record it.
+#
+# So the correct response to a failure is never to add a line. Adding one is
+# how a boundary erodes. Resolve the module instead:
+#
+#   * harness code -> move it beside the dev/ consumer that drives it;
+#   * shared test support -> move it into src/cadrumo/tests/, which is
+#     wheel-excluded (see the exclude globs in pyproject.toml);
+#   * capability that lost its last caller -> delete it, with its tests;
+#   * capability that should be live -> wire it to the entrypoint that needs it.
+#
+# Regenerate the current set for comparison with:
+#   just audit-unreachable-code
+#
+# What is listed below is a backlog, not an endorsement. Two clusters dominate
+# it and are tracked as their own work: the orphaned-domain cluster (product
+# capability whose caller is gone -- borrador ingestion, the fincas domain, the
+# wizard flow surfaces, the filing sub-steps) and the sede/renta-web-open
+# cluster (a live browser driver and its oracle, which stand or fall together).
+
+frozen_prefixes = [
+  # The TUI is in-flight work owned elsewhere; its modules churn in both
+  # directions and this gate does not adjudicate them. The audit still reports
+  # everything under this prefix -- freezing it sets scope, not permission.
+  "cadrumo.entrypoints.tui",
+]
+
+allowed = [
+  "cadrumo.adapters.inbound.borrador",
+  "cadrumo.adapters.inbound.einvoice._aeat_record_schema",
+  "cadrumo.adapters.inbound.einvoice.record_batch",
+  "cadrumo.adapters.outbound.aeat.export._submitters",
+  "cadrumo.adapters.outbound.aeat.export.errors",
+  "cadrumo.adapters.outbound.aeat.sede._renta_web_open_safety",
+  "cadrumo.adapters.outbound.aeat.sede.renta_web_open",
+  "cadrumo.adapters.outbound.aeat.verify",
+  "cadrumo.adapters.outbound.google.calc_sheets_pull_coverage",
+  "cadrumo.adapters.persistence.profile.filing_amendments",
+  "cadrumo.adapters.persistence.profile.filing_export_replay",
+  "cadrumo.adapters.persistence.profile.fincas",
+  "cadrumo.application.filing._calculate",
+  "cadrumo.application.filing._complementaria",
+  "cadrumo.application.filing.validation",
+  "cadrumo.application.inventory._source_readiness",
+  "cadrumo.application.invoices._projection",
+  "cadrumo.application.invoices._reconciliation",
+  "cadrumo.application.ledger.aeat_record_projection",
+  "cadrumo.application.modelo._edit_facade",
+  "cadrumo.application.modelo.edit_session",
+  "cadrumo.application.operator_surface.calculation_workflows",
+  "cadrumo.application.operator_surface.crud_contract",
+  "cadrumo.application.operator_surface.crud_registry",
+  "cadrumo.application.portals",
+  "cadrumo.application.prorrata_register.sector_lifecycle",
+  "cadrumo.application.prorrata_register.seed",
+  "cadrumo.application.registry.conformance",
+  "cadrumo.application.registry.filing_export_authority",
+  "cadrumo.application.review._edit",
+  "cadrumo.application.review.actions",
+  "cadrumo.application.storage.calc_sheets._row_set_assembly",
+  "cadrumo.application.storage.calc_sheets.evidence",
+  "cadrumo.application.wizard._registered_values",
+  "cadrumo.application.wizard._translations",
+  "cadrumo.application.wizard.copy_sources",
+  "cadrumo.application.wizard.flow_validators",
+  "cadrumo.application.wizard.legal_zone",
+  "cadrumo.core.address_components",
+  "cadrumo.core.compatibility_lifecycle",
+  "cadrumo.core.corpus_manifest._bundle_signing",
+  "cadrumo.core.observability.replay",
+  "cadrumo.core.telemetry._producers",
+  "cadrumo.domain.calculations.registry.aeat_nif_iva_oracle",
+  "cadrumo.domain.calculations.registry.classification_coherence",
+  "cadrumo.domain.calculations.registry.coverage",
+  "cadrumo.domain.calculations.registry.groi_oracle",
+  "cadrumo.domain.calculations.registry.record_spec",
+  "cadrumo.domain.calculations.registry.renta_web_open_oracle",
+  "cadrumo.domain.filing.amendment",
+  "cadrumo.domain.fincas",
+  "cadrumo.domain.iva.place_of_supply",
+  "cadrumo.domain.iva.verify",
+  "cadrumo.domain.manuals.rule_id",
+  "cadrumo.domain.modelos.iae_exemption",
+  "cadrumo.domain.renta._substrate",
+]

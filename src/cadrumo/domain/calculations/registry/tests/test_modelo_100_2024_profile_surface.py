@@ -10,13 +10,13 @@ import pytest
 from .....core.aggregation import BindingSourceKind
 from .....core.directory_scan import scan_directory
 from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_snapshot import build_snapshot
 from .. import bindings as _bindings
 from .._validate import RegistryValidator
 from ..bindings import ProfileSelector, selector_model_for_source
 from ..loader import load_catalogue_file, load_modelo_path
 from ..schema import RegistryCatalogues, RegistrySnapshot
 from ..schema_input_kind import InputKind
-from ..snapshot import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -133,7 +133,7 @@ class _TripwireProvider:
 
     def __init__(self) -> None:
         self.session: BucketSession | None = None
-        self._activation_cm: AbstractContextManager[None] | None = None
+        self.activation_cm: AbstractContextManager[None] | None = None
 
     def get_master_key(self) -> bytes:
         raise AssertionError("master key consulted before the outer envelope gate refused")
@@ -151,7 +151,7 @@ class _TripwireProvider:
         tb: TracebackType | None,
     ) -> None:
         self.session = None
-        self._activation_cm = None
+        self.activation_cm = None
 
 
 def test_a_written_envelope_round_trips_at_the_declared_version(tmp_path: Path) -> None:

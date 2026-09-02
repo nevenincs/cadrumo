@@ -177,7 +177,7 @@ def _output_view(golden_frame: GoldenFrame) -> dict[str, str]:
     normalised stdout text is shown, or an empty view when the frame produced no
     stdout content.
     """
-    from cadrumo.core.observability.golden import canonicalise, mask_document
+    from cadrumo.tests.golden_comparison import canonicalise, mask_document
 
     if golden_frame.envelope is not None:
         # canonicalise already renders the key-sorted, indented JSON string;

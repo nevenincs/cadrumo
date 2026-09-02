@@ -19,7 +19,7 @@ encrypted AUDIT data under ``cadrumo.domain.submission.records``. It is distinct
 :class:`~ModeloRecord`:
 :func:`application.modelo.file_modelo_revision` creates a local work-unit filing
 record with ``aeat_accepted=False`` and no external evidence, while
-:func:`application.filing.import_filing_from_justificante` imports historical
+:func:`application.modelo.import_external_filing_evidence` imports historical
 filing evidence into the audit trail.
 
 Live AEAT writes are blocked by
@@ -49,7 +49,7 @@ See Also:
     :mod:`application.live`
         Read-only AEAT evidence capture and justificante verification surface;
         it is not a live-submit path.
-    :func:`application.filing.import_filing_from_justificante`
+    :func:`application.modelo.import_external_filing_evidence`
         Historical filing-evidence import into the submission audit trail.
     :mod:`domain.justificante`
         Receipt metadata that can seed imported submission-audit baselines

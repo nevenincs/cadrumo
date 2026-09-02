@@ -9,11 +9,11 @@ import pytest
 
 from .....core.corpus_text import normalise_corpus_text
 from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_snapshot import build_snapshot
 from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..ids import LegalRefId
 from ..schema import ModeloDefinition, RegistryCatalogues
-from ..snapshot import build_snapshot
 from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 

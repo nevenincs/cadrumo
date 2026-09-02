@@ -77,7 +77,7 @@ def _projection_authority() -> tuple[FilingRecordRenderContext, M303ProrrataActi
         id="projection-record",
         record_type="detalle",
         order=1,
-        encoding="latin-1",
+        encoding="iso-8859-1",
         line_ending="none",
         repeat="projection_rows",
         fields=(field,),

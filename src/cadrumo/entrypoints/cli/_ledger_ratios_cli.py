@@ -187,7 +187,7 @@ def ratios_set(
             censo_override_warning(
                 category=category,
                 override_ratio=parsed,
-                raw_afectacion_ratio=raw_afectacion if raw_afectacion is not None else parsed,
+                raw_afectacion_ratio=raw_afectacion,
                 year=_resolved_ratio_year(year),
             )
             if raw_afectacion is not None

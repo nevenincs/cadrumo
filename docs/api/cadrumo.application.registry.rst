@@ -24,7 +24,5 @@ Submodules
    cadrumo.application.registry.filing_export_authority
    cadrumo.application.registry.filing_export_coverage
    cadrumo.application.registry.source_connectivity
-   cadrumo.application.registry.source_connectivity_authority
    cadrumo.application.registry.source_connectivity_coverage
-   cadrumo.application.registry.temporal_coverage
    cadrumo.application.registry.tree

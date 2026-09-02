@@ -32,9 +32,9 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources.bundled_data import bundled_path
 from .....core.revision_review import RevisionReviewStatus
 from .....core.tax_domain import TaxDomain
+from .....tests.registry_snapshot import build_snapshot, build_validated_snapshot
 from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
-from ..snapshot import build_snapshot, build_validated_snapshot
 from ..support_matrix import revision_capability_probe
 from ._registry_schema_support import _committed_modelo
 

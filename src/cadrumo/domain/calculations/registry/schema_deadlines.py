@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
-
 from collections.abc import Mapping
 from datetime import date
-from typing import Annotated, Literal
+from enum import StrEnum
+from typing import Annotated
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
@@ -17,8 +16,7 @@ from ....core.result_disposition import ResultDisposition
 from .condition_mode import ConditionMode, ConditionModeField
 from .errors import RegistryValidationError
 from .ids import DeadlineWindowId
-from .schema_base import coerce_enum_member
-from .schema_base import LegalRefs, RegistryModel, SourceRefs
+from .schema_base import LegalRefs, RegistryModel, SourceRefs, coerce_enum_member
 from .schema_verification import ProfilePredicateDefinition
 
 __all__ = [

@@ -116,4 +116,28 @@ LIVE_PROFILE_WRITE = _policy(
 BROWSER_CONNECTIVITY = _policy(frozenset({"browser"}), frozenset({"browser"}), "interactive")
 
 
-__all__ = [name for name in globals() if name.isupper()]
+__all__ = [
+    "BOOTSTRAP_DESTRUCTIVE",
+    "BOOTSTRAP_WRITE",
+    "BROWSER_CONNECTIVITY",
+    "CALCULATION_READ",
+    "CALCULATION_WRITE",
+    "ENCRYPTED_DESTRUCTIVE",
+    "ENCRYPTED_READ",
+    "ENCRYPTED_WRITE",
+    "GOOGLE_CALCULATION_HANDOFF",
+    "GOOGLE_CALCULATION_READ",
+    "GOOGLE_CALCULATION_WRITE",
+    "GOOGLE_DESTRUCTIVE",
+    "GOOGLE_HANDOFF",
+    "GOOGLE_READ",
+    "GOOGLE_WRITE",
+    "LIVE_PROFILE_WRITE",
+    "LOCAL_READ",
+    "NETWORK_WRITE",
+    "PROFILE_DESTRUCTIVE",
+    "PROFILE_READ",
+    "PROFILE_WRITE",
+    "REGISTRY_READ",
+    "STATE_FREE",
+]

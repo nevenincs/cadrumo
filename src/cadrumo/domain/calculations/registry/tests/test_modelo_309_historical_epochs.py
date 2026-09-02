@@ -11,13 +11,13 @@ import pytest
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.hashing import hash_file
 from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_snapshot import build_snapshot
 from .._validate_export_layout_coverage import validate_export_layout_record_coverage
 from .._validate_semantic_roles import semantic_role_consistency_failures
 from ..errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError, RegistryValidationError
 from ..loader import _load_shared_catalogue_files, load_modelo_directory
 from ..record_design import extract_record_design
 from ..schema import ModeloDefinition, RegistryCatalogues
-from ..snapshot import build_snapshot
 from ..temporal import select_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

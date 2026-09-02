@@ -880,7 +880,7 @@ def load_committed_profile_custody_summary_witness(
     label_path = capsule_path / "data" / PROFILE_CUSTODY_LABEL_FILENAME
     if os.name != "nt":
         with _posix_directory_fd(capsule_path) as capsule_fd:
-            if not _posix_child_exists(capsule_fd, marker_path.name, display_path=marker_path):
+            if not _posix_child_exists(capsule_fd, marker_path.name, display_path=marker_path, trace=[]):
                 raise ProfileCustodyRecordError("profile capsule is not committed")
             commit_payload = _read_regular_file_fd(
                 capsule_fd,

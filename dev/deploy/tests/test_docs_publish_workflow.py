@@ -26,7 +26,7 @@ from ...deploy import docs_static_site
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _WORKFLOW = REPO_ROOT / ".github" / "workflows" / "docs-publish.yml"
-_PUBLICATION = REPO_ROOT / ".github" / "workflows" / "publish-release.yml"
+_PUBLICATION = REPO_ROOT / ".github" / "workflows" / "publish.yml"
 
 
 def _document() -> dict[str, Any]:

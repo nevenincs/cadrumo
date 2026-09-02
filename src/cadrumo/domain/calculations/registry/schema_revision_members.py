@@ -13,11 +13,6 @@ from typing import Annotated, Literal
 from pydantic import Field, field_validator, model_validator
 
 from ....core.casilla_id import CasillaId
-from .relation_dependency import (
-    RelationDependencyRoleField,
-    RelationDependencyTreatmentField,
-    RelationKindField,
-)
 from .errors import RegistryValidationError
 from .ids import (
     ApplicabilityRuleId,
@@ -37,6 +32,9 @@ from .ids import (
     WorkbookParityRefId,
 )
 from .modelo_localization import resolve_modelo_localization
+from .relation_dependency import (
+    RelationDependencyTreatmentField,
+)
 from .schema_base import LegalRefs, RegistryModel, SourceRefs
 
 __all__ = [

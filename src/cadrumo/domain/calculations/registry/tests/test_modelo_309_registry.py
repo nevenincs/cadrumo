@@ -9,11 +9,11 @@ import pytest
 
 from .....core.iva_deduction_fact import IvaDeductionFactKind
 from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_snapshot import build_snapshot
 from ....iva.schema import IvaLedgerObservationRole
 from .._validate import RegistryValidator
 from ..loader import _load_shared_catalogue_files, load_modelo_directory
 from ..schema import ModeloDefinition, RegistryCatalogues
-from ..snapshot import build_snapshot
 from ._ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

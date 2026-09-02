@@ -677,8 +677,7 @@ class AeatAuthenticator:
             )
         # Raise outside the except block so __context__ stays None —
         # the sensitive original exception must not leak through the chain.
-        if _deferred_error is not None:
-            raise _deferred_error
+        raise _deferred_error
 
     async def close(self) -> None:
         """Release the browser context + session. Idempotent.
