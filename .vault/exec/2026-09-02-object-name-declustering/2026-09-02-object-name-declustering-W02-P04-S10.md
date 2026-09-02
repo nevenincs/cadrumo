@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:4bdd7f6f3a9eefa729849f6e4a890cc46578fa053a9082f363077590c8a101ed'
+body_hash: 'sha256:0355581130e200258e6951d0a9fb11a945c22d0f17e213745c765b098a1ae775'
 step_id: 'S10'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
@@ -25,6 +25,20 @@ related:
 ## Changes
 
 - `A` `dev/quality/tests/test_object_name_transform.py`
-- `verify:` `uv run --no-sync pytest -q -n0 dev/quality/tests/test_object_name_transform.py` -> `pass`
+- `M` `dev/quality/object_name_transform.py`
+- `verify:` `uv run --no-sync pytest dev/quality/tests/test_object_name_transform.py -q` -> `pass` (`30 passed`)
+- `verify:` `uv run --no-sync ruff format --check dev/quality/tests/test_object_name_transform.py dev/quality/object_name_transform.py` -> `pass`
 - `verify:` `uv run --no-sync ruff check dev/quality/tests/test_object_name_transform.py dev/quality/object_name_transform.py` -> `pass`
 - `verify:` `uv run --no-sync ty check dev/quality/tests/test_object_name_transform.py dev/quality/object_name_transform.py` -> `pass`
+- `verify:` `uv run --no-sync basedpyright dev/quality/object_name_transform.py dev/quality/tests/test_object_name_transform.py` -> `pass`
+- `verify:` `uv run --no-sync python -m compileall -q dev/quality/object_name_transform.py dev/quality/tests/test_object_name_transform.py` -> `pass`
+- `verify:` `git diff --check -- dev/quality/object_name_transform.py dev/quality/tests/test_object_name_transform.py` -> `pass`
+- `verify:` `independent S10 CRITICAL/HIGH re-review` -> `pass`
+
+## Notes
+
+Independent review exposed two high-severity detector gaps: same-package relative
+consumer imports were normalized to absolute imports, and all repeated bindings
+were refused before reference ambiguity was established. The minimal engine
+correction preserves relative syntax and permits an isolated selected binding
+while continuing to refuse references spanning ambiguous rebindings.
