@@ -2,8 +2,8 @@
 
 ``from ..__init__ import app`` does not address the package. Python resolves it
 as a SUBMODULE named ``__init__``, enters
-``cadrumo.entrypoints.cli._config.__init__`` in ``sys.modules`` beside
-``cadrumo.entrypoints.cli._config``, and executes the package body a SECOND
+``cadrumo.entrypoints.cli.config.__init__`` in ``sys.modules`` beside
+``cadrumo.entrypoints.cli.config``, and executes the package body a SECOND
 time. Any import-time side effect in that body therefore happens twice.
 
 This is not theoretical. One test module carried that spelling and the config
@@ -93,7 +93,7 @@ def test_the_detector_recognises_the_spelling_it_forbids() -> None:
     shipped, plus the absolute spelling of the same hazard.
     """
     relative = ast.parse("from ..__init__ import app")
-    absolute = ast.parse("from cadrumo.entrypoints.cli._config.__init__ import app")
+    absolute = ast.parse("from cadrumo.entrypoints.cli.config.__init__ import app")
 
     assert _dunder_init_imports(relative) == [1]
     assert _dunder_init_imports(absolute) == [1]

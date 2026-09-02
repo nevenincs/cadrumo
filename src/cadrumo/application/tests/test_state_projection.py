@@ -33,6 +33,7 @@ from pydantic import SecretStr
 from ...adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from ...adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
 from ...adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from ...adapters.persistence.storage.master_key.bucket_session import BucketSession
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core.config import SecretStoreBackend, Settings, override_settings
 from ...core.period import Period
@@ -154,7 +155,7 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
     material = load_committed_profile_password_material(UUID(outcome.profile_id), root=storage_root)
     unlocked = unlock_profile_custody(material.envelope, _OPERATOR_PASSPHRASE, sentinel=material.sentinel)
     instant = datetime.now(UTC)
-    session = master_key.BucketSession.open_resumed(
+    session = BucketSession.open_resumed(
         bucket_id=outcome.profile_id,
         dek=unlocked.dek,
         idle_minutes=15,

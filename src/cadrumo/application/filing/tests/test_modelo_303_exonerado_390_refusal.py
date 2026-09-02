@@ -36,8 +36,8 @@ from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegi
 from ....domain.submission.models import ModeloDraftStatus
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ...aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
-from .._export import FilingExportError, export_draft
 from ..draft_construction import build_draft
+from ..export import FilingExportError, export_draft
 from ..producer_snapshot import (
     FilingElectionFacts,
     FilingProducerSnapshotError,

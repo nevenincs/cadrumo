@@ -13,6 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.application.bucket_maintenance._contracts
    cadrumo.application.bucket_maintenance._deletion_paths
-   cadrumo.application.bucket_maintenance._service
+   cadrumo.application.bucket_maintenance.contracts
+   cadrumo.application.bucket_maintenance.service

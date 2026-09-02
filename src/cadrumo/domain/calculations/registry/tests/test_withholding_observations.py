@@ -14,7 +14,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.aggregation import RetencionClave
-from .._withholding_rows import _build_withholding_rows
+from .._withholding_rows import build_withholding_rows
 from ..errors import RegistryValidationError
 from ..withholding_bindings import WithholdingObservation
 
@@ -118,7 +118,7 @@ def test_build_withholding_rows_per_perceptor_sums_amounts() -> None:
         ),
     )
 
-    rows = _build_withholding_rows("per_perceptor", obs)
+    rows = build_withholding_rows("per_perceptor", obs)
 
     assert len(rows) == 2
     by_nif = {row["perceptor_tax_id"]: row for row in rows}
@@ -145,7 +145,7 @@ def test_build_withholding_rows_per_perceptor_clave_distinguishes_clave_tuples()
         ),
     )
 
-    rows = _build_withholding_rows("per_perceptor_clave", obs)
+    rows = build_withholding_rows("per_perceptor_clave", obs)
 
     assert len(rows) == 2
     keys = {(row["perceptor_tax_id"], row["clave"]) for row in rows}
@@ -171,8 +171,8 @@ def test_build_withholding_rows_omits_the_key_for_an_unstated_country() -> None:
             clave=RetencionClave.A,
         )
 
-    stated = _build_withholding_rows("per_perceptor", (_observation("FR"),))[0]
-    unstated = _build_withholding_rows("per_perceptor", (_observation(None),))[0]
+    stated = build_withholding_rows("per_perceptor", (_observation("FR"),))[0]
+    unstated = build_withholding_rows("per_perceptor", (_observation(None),))[0]
 
     assert stated["country_code"] == "FR"
     assert "country_code" not in unstated
@@ -281,7 +281,7 @@ def _observation(**overrides: object) -> WithholdingObservation:
 def _build(*observations: WithholdingObservation, declared: bool = True) -> tuple[dict[str, object], ...]:
     fields = _M190_DECLARED_FIELDS if declared else frozenset()
     return tuple(
-        dict(row) for row in _build_withholding_rows("per_perceptor_clave", observations, required_fields=fields)
+        dict(row) for row in build_withholding_rows("per_perceptor_clave", observations, required_fields=fields)
     )
 
 
@@ -825,7 +825,7 @@ _COMPLETE_CLAVE_A_193 = {
 def _build193(*observations: WithholdingObservation) -> tuple[dict[str, object], ...]:
     return tuple(
         dict(row)
-        for row in _build_withholding_rows("per_perceptor_clave", observations, required_fields=_M193_DECLARED_FIELDS)
+        for row in build_withholding_rows("per_perceptor_clave", observations, required_fields=_M193_DECLARED_FIELDS)
     )
 
 

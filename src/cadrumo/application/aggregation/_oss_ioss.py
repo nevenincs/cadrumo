@@ -116,7 +116,7 @@ class OssIossLedgerCandidate(BaseModel):
 #: Tolerance applied when comparing a persisted IVA amount against the
 #: amount derived from ``base_amount * lookup_rate(...) / 100``.
 #:
-_STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
+STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
 
 def _expected_iva_amount(candidate: OssIossLedgerCandidate) -> Decimal:
@@ -570,7 +570,7 @@ class OssIossLedgerSourceResolver:
                 else OssIossInvoiceProjection(candidates=self._candidates)
             )
             candidates = projection.candidates
-        except _STORAGE_DEGRADATION_ERRORS as exc:
+        except STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

@@ -908,12 +908,12 @@ class InventoryLedger(BaseModel):
     @model_validator(mode="after")
     def _opening_stock_matches_layers(self) -> InventoryLedger:
         """Enforce that ``opening_layers`` value-balances with ``opening_stock``."""
-        from .valuation import _layers_value
+        from .valuation import layers_value
 
         movement_ids = tuple(movement.movement_id for movement in self.period_movements)
         if len(set(movement_ids)) != len(movement_ids):
             raise InventoryValidationError("inventory ledger movement_id values must be unique")
-        if self.opening_layers and _quantize(_layers_value(self.opening_layers)) != _quantize(self.opening_stock):
+        if self.opening_layers and _quantize(layers_value(self.opening_layers)) != _quantize(self.opening_stock):
             raise InventoryValidationError("opening_stock must equal the value of opening_layers")
         if self.closing_authority_record is not None:
             record = self.closing_authority_record
@@ -1066,7 +1066,7 @@ class InventoryAnexoDResult(BaseModel):
     @model_validator(mode="after")
     def _variation_split_matches_audited_values(self) -> InventoryAnexoDResult:
         """Require an exact, mutually exclusive split of the audited basis."""
-        from .valuation import _derive_inventory_anexo_d_values
+        from .valuation import derive_inventory_anexo_d_values
 
         monetary_values = (
             self.opening_value,
@@ -1130,7 +1130,7 @@ class InventoryAnexoDResult(BaseModel):
         if self.issues != expected_issues:
             raise InventoryValidationError("inventory projection issues must exactly reflect retained conflicts")
         try:
-            expected_source_values = _derive_inventory_anexo_d_values(self.source_ledger)
+            expected_source_values = derive_inventory_anexo_d_values(self.source_ledger)
         except InventoryLedgerError as exc:
             raise InventoryValidationError("inventory projection retained source is invalid") from exc
         for field in dataclass_fields(expected_source_values):

@@ -4,7 +4,7 @@ This is the local-filing sibling of the live-AEAT-capture persistence path
 (:func:`~cadrumo.application.live.persist_filed_calculation_observation`). It does
 NOT introduce a parallel write path: it is an additional projection of the
 single-writer filing transition
-(:func:`~cadrumo.application.modelo._revision_persistence.persist_filed_revision`),
+(:func:`~cadrumo.application.modelo.revision_persistence.persist_filed_revision`),
 co-emitted with ``MODELO_FILED``, that records the filed
 :class:`~CalculationRevision` outputs into the
 cross-period observation store so a later period's ``calculate`` can carry them
@@ -33,7 +33,7 @@ Modelo 303 filings, and persists a
 :class:`~cadrumo.domain.calculations.registry.RegistryModeloObservation` record.
 
 See Also:
-    :func:`~cadrumo.application.modelo._revision_persistence.persist_filed_revision`:
+    :func:`~cadrumo.application.modelo.revision_persistence.persist_filed_revision`:
         Calls this projection after the filing catalogue write and
         ``MODELO_FILED`` event succeed.
     :func:`~cadrumo.domain.calculations.registry.resolve_previous_filing_binding_values`:

@@ -32,7 +32,7 @@ import pytest
 
 from .....core.resources.bundled_data import bundled_path
 from ..record_design import extract_record_design
-from ..record_design_pdf_repairs import _repair_truncated_offset_rows
+from ..record_design_pdf_repairs import repair_truncated_offset_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -84,7 +84,7 @@ def test_the_row_is_restored_when_all_three_conditions_hold() -> None:
         "19 232 17 N Inst. inversion colectiva.",
     )
 
-    repaired = _repair_truncated_offset_rows(lines)
+    repaired = repair_truncated_offset_rows(lines)
 
     assert repaired == (
         "17 198 17 N Inst. inversion colectiva.",
@@ -105,7 +105,7 @@ def test_a_row_already_at_the_resuming_position_is_left_alone() -> None:
         "18 215",
     )
 
-    assert _repair_truncated_offset_rows(lines) == lines
+    assert repair_truncated_offset_rows(lines) == lines
 
 
 def test_a_pair_naming_another_ordinal_is_left_alone() -> None:
@@ -116,7 +116,7 @@ def test_a_pair_naming_another_ordinal_is_left_alone() -> None:
         "19 215",
     )
 
-    assert _repair_truncated_offset_rows(lines) == lines
+    assert repair_truncated_offset_rows(lines) == lines
 
 
 def test_a_pair_that_does_not_resume_the_previous_row_is_left_alone() -> None:
@@ -127,4 +127,4 @@ def test_a_pair_that_does_not_resume_the_previous_row_is_left_alone() -> None:
         "18 999",
     )
 
-    assert _repair_truncated_offset_rows(lines) == lines
+    assert repair_truncated_offset_rows(lines) == lines

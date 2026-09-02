@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import os
 import threading
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
@@ -34,7 +34,7 @@ def _settings_for(url: str) -> Settings:
 
 
 @contextmanager
-def _engine_for(settings: Settings) -> Iterator[Any]:
+def _engine_for(settings: Settings) -> Generator[Any]:
     engine = create_engine_from_settings(settings)
     try:
         yield engine

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import traceback
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -79,7 +79,7 @@ def _orphan_row_source_identity(document: dict[str, Any]) -> None:
 @contextmanager
 def _persist_blocked_review(
     tmp_path: Path,
-) -> Iterator[tuple[ModeloWorkReview, VerificationReport, SecureObjectRepository]]:
+) -> Generator[tuple[ModeloWorkReview, VerificationReport, SecureObjectRepository]]:
     """Build the application record from genuine encrypted repositories."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
         objects = runtime.repository

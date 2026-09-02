@@ -26,7 +26,6 @@ from ...domain.calculations.registry.authority import bundled_authority as _bund
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId, RelationId
 from ._common import emit_envelope
-from ._config.google_errors import _google_refusal
 from ._modelo_spreadsheet_payloads import (
     ModeloSpreadsheetCalculateCasillaPayload,
     ModeloSpreadsheetCalculateResult,
@@ -36,6 +35,7 @@ from ._modelo_spreadsheet_payloads import (
     ModeloSpreadsheetVerifyDivergencePayload,
     ModeloSpreadsheetVerifyResult,
 )
+from .config.google_errors import google_refusal
 from .errors import CliRefusedBoundaryError
 
 if TYPE_CHECKING:
@@ -107,12 +107,12 @@ def _pull_operator_edits_for_command(
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
-        raise _google_refusal(exc) from exc
+        raise google_refusal(exc) from exc
 
     try:
         credentials, _ = resolve_credentials_and_root(active)
     except (GoogleAuthError, OutboundStorageError) as exc:
-        raise _google_refusal(exc) from exc
+        raise google_refusal(exc) from exc
 
     snapshot = load_snapshot(modelo, filing_period_or_refusal(modelo=modelo, period=period, year=year))
 
@@ -123,7 +123,7 @@ def _pull_operator_edits_for_command(
             credentials=credentials,
         )
     except (GoogleAuthError, OutboundStorageError) as exc:
-        raise _google_refusal(exc) from exc
+        raise google_refusal(exc) from exc
 
     return active, snapshot, result
 
@@ -231,7 +231,7 @@ def execute_google_sheets_export(
             translated_message="cli.app.modelo.spreadsheet.push.root_folder_required",
         ) from exc
     except (GoogleAuthError, OutboundStorageError) as exc:
-        raise _google_refusal(exc) from exc
+        raise google_refusal(exc) from exc
     return active, result
 
 
@@ -259,12 +259,12 @@ def modelo_spreadsheet_verify(
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
-        raise _google_refusal(exc) from exc
+        raise google_refusal(exc) from exc
 
     try:
         credentials, root_folder_id = resolve_credentials_and_root(active)
     except (GoogleAuthError, OutboundStorageError) as exc:
-        raise _google_refusal(exc) from exc
+        raise google_refusal(exc) from exc
 
     snapshot = load_snapshot(modelo, filing_period_or_refusal(modelo=modelo, period=period, year=year))
 
@@ -512,7 +512,7 @@ def modelo_spreadsheet_calculate(
     try:
         calc = compute_from_pull(snapshot, result)
     except OutboundStorageError as exc:
-        raise _google_refusal(exc) from exc
+        raise google_refusal(exc) from exc
 
     computed_casilla_entries = [
         ModeloSpreadsheetCalculateCasillaPayload(
@@ -583,7 +583,7 @@ def _assemble_pull_observations(
                 snapshot,
             )
         except OutboundStorageError as exc:
-            raise _google_refusal(exc) from exc
+            raise google_refusal(exc) from exc
         total += len(observations)
         groupings.append(
             {

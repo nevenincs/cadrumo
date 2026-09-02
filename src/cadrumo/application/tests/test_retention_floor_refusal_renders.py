@@ -21,12 +21,12 @@ import pytest
 from ...core.errors.error_codes import render_error_text
 from ...domain.retention.errors import RetentionFloorError
 from .._bucket_deletion_contracts import BucketDeletionFingerprint
-from .._config_reset_models import (
+from ..config_reset import _refuse_erase_inside_the_retention_floor
+from ..config_reset_models import (
     ConfigResetRetentionDecision,
     ConfigResetTarget,
     ConfigResetTargetPhase,
 )
-from ..config_reset import _refuse_erase_inside_the_retention_floor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -60,7 +60,7 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._modelo_discovery_cli", "list_modelos")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_aux_payloads", "ModeloListResult"),
+            DeferredTarget("cadrumo.entrypoints.cli.modelo_aux_payloads", "ModeloListResult"),
             identity="modelo.list",
         ),
     ),
@@ -119,7 +119,7 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_aux_payloads", "ModeloDescribeResult"),
+            DeferredTarget("cadrumo.entrypoints.cli.modelo_aux_payloads", "ModeloDescribeResult"),
             identity="modelo.describe",
         ),
     ),

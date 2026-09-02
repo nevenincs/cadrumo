@@ -8,7 +8,7 @@ service. This keeps the provider boundary real while remaining fully on-host.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from http import HTTPStatus
 from pathlib import Path
@@ -58,7 +58,7 @@ def _client(tmp_path: Path, *, run_recorder: LLMRunTelemetryRecorder | None = No
 
 
 @contextmanager
-def _serve_ollama(status: HTTPStatus = HTTPStatus.OK) -> Iterator[tuple[str, Queue[dict[str, object]]]]:
+def _serve_ollama(status: HTTPStatus = HTTPStatus.OK) -> Generator[tuple[str, Queue[dict[str, object]]]]:
     events: Queue[dict[str, object]] = Queue()
 
     class _OllamaEndpoint(SilentLoopbackHandler):

@@ -78,13 +78,13 @@ from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...live.filed_observation_persistence import persist_filed_calculation_observation
 from ...modelo.filed_revision_observation import persist_filed_revision_observation
-from .._iva_compensation_annual_partition import (
-    _period_state_from_303_envelope,
-    resolve_iva_compensation_annual_partition_binding_values,
-)
 from ..binding_prefill import (
     _observation_from_iva_compensation_history,
     extract_modelo_303_local_iva_compensation_recurrence,
+)
+from ..iva_compensation_annual_partition import (
+    _period_state_from_303_envelope,
+    resolve_iva_compensation_annual_partition_binding_values,
 )
 from ..iva_compensation_history import (
     IvaCompensationHistoryRepository,

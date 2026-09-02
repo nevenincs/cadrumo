@@ -37,7 +37,7 @@ from ..operations.models import OperationDefinitionId, OperationId, OperationRef
 from ..operations.registry import OperationSchemaIdentityV1
 
 
-class _EditModel(BaseModel):
+class EditModel(BaseModel):
     """The common fail-closed boundary posture for Edit Contract V1 records."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
@@ -57,7 +57,7 @@ class ModeloEditExecutionEffect(StrEnum):
     NONE = "none"
 
 
-class ModeloEditMutationResultReceiptV1(_EditModel):
+class ModeloEditMutationResultReceiptV1(EditModel):
     """The safe domain proof co-committed with one guarded compare-and-swap edit.
 
     Carries no financial value, raw input, row content, or input digest. A
@@ -88,7 +88,7 @@ class ModeloEditMutationResultReceiptV1(_EditModel):
         return self
 
 
-class ModeloEditCompatibilityTupleV1(_EditModel):
+class ModeloEditCompatibilityTupleV1(EditModel):
     """Every distinct current-only version and digest axis this edit binds to.
 
     No member is collapsed into a generic shared ``version``, and a manifest

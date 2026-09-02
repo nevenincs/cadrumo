@@ -35,7 +35,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....application.calculations._maritime_exemption_service import resolve_maritime_exemption
+from ....application.calculations.maritime_exemption_service import resolve_maritime_exemption
 from ....core.errors.error_codes import get_registered_error_code
 from ....core.i18n.render import tr
 from ....domain.renta.maritime_exemption import (

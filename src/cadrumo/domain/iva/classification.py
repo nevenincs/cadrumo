@@ -323,7 +323,7 @@ def domestic_rate_tier_is_required(
     # else on this axis.
     return (
         issuer_residency is IvaTerritorialScope.ES_MAINLAND
-        and customer_residency in _OUTSIDE_THE_COMUNIDAD
+        and customer_residency in OUTSIDE_THE_COMUNIDAD
         and kind is TransactionKind.SERVICES_GENERAL
         and (customer_tax_status is None or customer_tax_status is CustomerTaxStatus.B2C_CONSUMER)
     )
@@ -545,29 +545,29 @@ def art_69_dos_exception_applies(
 
 
 from ._classification_rules import (  # noqa: E402
-    _OUTSIDE_THE_COMUNIDAD,
-    _SPANISH_SCOPES,
-    _r01_construction_rc,
-    _r02_waste_rc,
-    _r03_electronics_rc,
-    _r04_immovable_b2c_exempt,
-    _r05_domestic_at_rate,
-    _r10_ic_supply_goods,
-    _r11_ic_acquisition_goods,
-    _r12_services_b2b_eu_outbound,
-    _r13_services_b2b_eu_inbound,
-    _r15_distance_sales_b2c_outbound,
-    _r16_external_scheme_services,
-    _r17_oss_union_goods_distance_sale,
-    _r18_oss_union_goods_interface_facilitated,
-    _r19_oss_union_services,
-    _r20_export_goods,
-    _r21_import_goods,
-    _r22_services_outbound_b2b,
-    _r23_ioss_distance_sale_low_value,
-    _r24_services_outbound_b2c,
-    _r25_services_outbound_b2c_art_69_dos,
-    _r30_canarias_ceuta_melilla,
+    OUTSIDE_THE_COMUNIDAD,
+    SPANISH_SCOPES,
+    r01_construction_rc,
+    r02_waste_rc,
+    r03_electronics_rc,
+    r04_immovable_b2c_exempt,
+    r05_domestic_at_rate,
+    r10_ic_supply_goods,
+    r11_ic_acquisition_goods,
+    r12_services_b2b_eu_outbound,
+    r13_services_b2b_eu_inbound,
+    r15_distance_sales_b2c_outbound,
+    r16_external_scheme_services,
+    r17_oss_union_goods_distance_sale,
+    r18_oss_union_goods_interface_facilitated,
+    r19_oss_union_services,
+    r20_export_goods,
+    r21_import_goods,
+    r22_services_outbound_b2b,
+    r23_ioss_distance_sale_low_value,
+    r24_services_outbound_b2c,
+    r25_services_outbound_b2c_art_69_dos,
+    r30_canarias_ceuta_melilla,
 )
 
 _RATE_TIER_TO_CATEGORY: dict[IvaRateKind, IvaCategory] = {
@@ -661,56 +661,56 @@ _CLASSIFICATION_RULES: tuple[_IvaClassificationRule, ...] = (
     _IvaClassificationRule(
         "R01_construction_reverse_charge",
         "ES-to-ES construction RC",
-        _r01_construction_rc,
+        r01_construction_rc,
         IvaCategory.DOMESTIC_REVERSE_CHARGE,
         consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R02_waste_reverse_charge",
         "ES-to-ES waste RC",
-        _r02_waste_rc,
+        r02_waste_rc,
         IvaCategory.DOMESTIC_REVERSE_CHARGE,
         consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R03_electronics_reverse_charge",
         "ES-to-ES B2B electronics RC",
-        _r03_electronics_rc,
+        r03_electronics_rc,
         IvaCategory.DOMESTIC_REVERSE_CHARGE,
         consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R04_immovable_property_exempt",
         "ES-to-ES immovable B2C exempt",
-        _r04_immovable_b2c_exempt,
+        r04_immovable_b2c_exempt,
         IvaCategory.DOMESTIC_EXEMPT,
         consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R05_domestic_at_rate_tier",
         "ES-to-ES default by rate_tier",
-        _r05_domestic_at_rate,
+        r05_domestic_at_rate,
         None,
         consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R10_intra_community_supply",
         "ES to EU_MEMBER B2B goods supply",
-        _r10_ic_supply_goods,
+        r10_ic_supply_goods,
         IvaCategory.INTRA_COMMUNITY_SUPPLY,
         consumes=_ESTABLISHMENT_AND_IDENTIFICATION,
     ),
     _IvaClassificationRule(
         "R11_intra_community_acquisition",
         "EU_MEMBER to ES B2B goods acquisition",
-        _r11_ic_acquisition_goods,
+        r11_ic_acquisition_goods,
         IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
         consumes=_ESTABLISHMENT_AND_IDENTIFICATION,
     ),
     _IvaClassificationRule(
         "R12_services_b2b_eu_outbound",
         "ES to EU_MEMBER B2B services",
-        _r12_services_b2b_eu_outbound,
+        r12_services_b2b_eu_outbound,
         IvaCategory.DOMESTIC_NOT_SUBJECT,
         consumes=_ESTABLISHMENT_AND_IDENTIFICATION,
     ),
@@ -731,91 +731,91 @@ _CLASSIFICATION_RULES: tuple[_IvaClassificationRule, ...] = (
     _IvaClassificationRule(
         "R13_services_b2b_eu_inbound",
         "EU_MEMBER to ES B2B services",
-        _r13_services_b2b_eu_inbound,
+        r13_services_b2b_eu_inbound,
         IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
         consumes=_ESTABLISHMENT_AND_IDENTIFICATION,
     ),
     _IvaClassificationRule(
         "R15_distance_sales_b2c",
         "ES to EU_MEMBER B2C distance sales",
-        _r15_distance_sales_b2c_outbound,
+        r15_distance_sales_b2c_outbound,
         IvaCategory.DOMESTIC_NOT_SUBJECT,
         consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R16_external_scheme_services",
         "3rd-country to EU_MEMBER B2C services routed through Esquema Exterior",
-        _r16_external_scheme_services,
+        r16_external_scheme_services,
         IvaCategory.OPERACION_NO_SUJETA,
         consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R17_oss_union_goods_distance_sale",
         "ES to EU_MEMBER B2C OSS-Union goods distance sale",
-        _r17_oss_union_goods_distance_sale,
+        r17_oss_union_goods_distance_sale,
         IvaCategory.DOMESTIC_NOT_SUBJECT,
         consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R18_oss_union_goods_interface_facilitated",
         "ES to EU_MEMBER B2C OSS-Union interface-facilitated supply",
-        _r18_oss_union_goods_interface_facilitated,
+        r18_oss_union_goods_interface_facilitated,
         IvaCategory.DOMESTIC_NOT_SUBJECT,
         consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R19_oss_union_services",
         "ES to EU_MEMBER B2C OSS-Union services",
-        _r19_oss_union_services,
+        r19_oss_union_services,
         IvaCategory.DOMESTIC_NOT_SUBJECT,
         consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R20_export_goods",
         "ES goods export outside the Comunidad",
-        _r20_export_goods,
+        r20_export_goods,
         IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
         consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R21_import_goods",
         "3rd-country to ES goods import",
-        _r21_import_goods,
+        r21_import_goods,
         IvaCategory.IMPORT_THIRD_COUNTRY,
         consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R22_services_outbound_b2b",
         "ES B2B services localised outside the TAI",
-        _r22_services_outbound_b2b,
+        r22_services_outbound_b2b,
         IvaCategory.OPERACION_NO_SUJETA,
         consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R25_services_outbound_b2c_art_69_dos",
         "ES B2C services art. 69.Dos lifts out of the TAI",
-        _r25_services_outbound_b2c_art_69_dos,
+        r25_services_outbound_b2c_art_69_dos,
         IvaCategory.OPERACION_NO_SUJETA,
         consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R24_services_outbound_b2c_at_rate_tier",
         "ES B2C services the TAI keeps, by rate_tier",
-        _r24_services_outbound_b2c,
+        r24_services_outbound_b2c,
         None,
         consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R23_ioss_distance_sale_low_value",
         "Low-value imported-goods distance sale routed through IOSS",
-        _r23_ioss_distance_sale_low_value,
+        r23_ioss_distance_sale_low_value,
         IvaCategory.OPERACION_NO_SUJETA,
         consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R30_canarias_ceuta_melilla",
         "Issuer outside TAI",
-        _r30_canarias_ceuta_melilla,
+        r30_canarias_ceuta_melilla,
         IvaCategory.DOMESTIC_NOT_SUBJECT,
         consumes=_ESTABLISHMENT_ONLY,
     ),
@@ -982,7 +982,7 @@ def _resolve_rate_for_category(
     tier = _CATEGORY_TO_RATE_TIER.get(category)
     if tier is None:
         return None
-    if criteria.issuer_residency not in _SPANISH_SCOPES:
+    if criteria.issuer_residency not in SPANISH_SCOPES:
         # Every tiered category above is a DOMESTIC_* one, which only an issuer
         # inside Spain can reach. Returning nothing rather than defaulting to the
         # Spanish schedule keeps an unreachable combination unpriced instead of

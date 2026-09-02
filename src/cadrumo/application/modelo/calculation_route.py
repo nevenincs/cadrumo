@@ -25,9 +25,9 @@ from ..aggregation import (
     WithholdingSourceResolver,
     build_binding_source_dispositions,
 )
-from ..aggregation._modelo_bindings_renta_expenses import LedgerRentaGastosEstimacionDirectaAggregationSourceResolver
-from ..calculations._iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
+from ..aggregation.modelo_bindings_renta_expenses import LedgerRentaGastosEstimacionDirectaAggregationSourceResolver
 from ..calculations.bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
+from ..calculations.iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
 from ..calculations.iva_wallet_reconciliation import IvaWalletDecisionSourceResolver
 from ..calculations.m303_regimen_simplificado_annual_summary import M303RegimenSimplificadoAnnualSummarySourceResolver
 from ..calculations.multi_year import PreviousFilingSourceResolver

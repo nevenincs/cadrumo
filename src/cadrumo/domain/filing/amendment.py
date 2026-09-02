@@ -36,10 +36,10 @@ from ...core.identity import AeatCsv
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.time.utc import UtcInstant
+from ..modelos.codes import ModeloCode
 from .protocols import ModeloInputs
 from .schema import ModeloDraft
 
-type ModeloCode = str
 type CasillaInputs = ModeloInputs
 """Updated casilla inputs supplied to an amendment build.
 
@@ -125,7 +125,6 @@ __all__ = [
     "CasillaChange",
     "CasillaDelta",
     "CasillaInputs",
-    "ModeloCode",
     "ModeloComplementaria",
     "ModeloSustitutiva",
     "make_amendment_id",

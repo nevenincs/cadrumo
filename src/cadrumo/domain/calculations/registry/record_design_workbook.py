@@ -15,8 +15,8 @@ if TYPE_CHECKING:
     from xlrd.sheet import Sheet as XlrdSheet
 
 from .errors import RegistryValidationError
-from .record_design_layout_markers import _split_record_terminator
-from .record_design_pdf_rows import _PdfRow
+from .record_design_layout_markers import split_record_terminator
+from .record_design_pdf_rows import PdfRow
 from .record_design_schema import (
     RecordDesignAuxiliaryEnvelopeHeader,
     RecordDesignAuxiliaryEnvelopeHeaderField,
@@ -33,22 +33,22 @@ from .record_design_schema import (
     RecordDesignVariableEnvelope,
     RecordDesignVariableTotalMarker,
 )
-from .record_design_sources import _EMPTY_CORRECTIONS, _CorrectionIndex, _TypeCorrectionIndex
+from .record_design_sources import EMPTY_CORRECTIONS, CorrectionIndex, TypeCorrectionIndex
 from .record_design_workbook_headers import (
-    _cell,
-    _field_description_text,
-    _find_header,
-    _find_xls_header,
-    _int_or_none,
-    _is_blank_row,
-    _optional_header_text,
-    _optional_text,
-    _ordinal_text,
-    _positive_integer_after,
-    _required_text,
-    _required_type_code,
-    _total_label_index,
-    _WorkbookHeader,
+    WorkbookHeader,
+    cell_at,
+    field_description_text,
+    find_header,
+    find_xls_header,
+    int_or_none,
+    is_blank_row,
+    optional_header_text,
+    optional_text,
+    ordinal_text,
+    positive_integer_after,
+    required_text,
+    required_type_code,
+    total_label_index,
 )
 
 
@@ -72,8 +72,8 @@ class _WorkbookSheetRows:
     notes: dict[str, str] = field(default_factory=dict)
 
 
-def _extract_sheet(worksheet: Worksheet, corrections: _CorrectionIndex = _EMPTY_CORRECTIONS) -> RecordDesignSheet:
-    header, header_correction = _find_header(worksheet, corrections.header_corrections)
+def extract_sheet(worksheet: Worksheet, corrections: CorrectionIndex = EMPTY_CORRECTIONS) -> RecordDesignSheet:
+    header, header_correction = find_header(worksheet, corrections.header_corrections)
     return _extract_sheet_rows(
         worksheet.title,
         header,
@@ -86,8 +86,8 @@ def _extract_sheet(worksheet: Worksheet, corrections: _CorrectionIndex = _EMPTY_
     )
 
 
-def _extract_xls_sheet(worksheet: XlrdSheet, corrections: _CorrectionIndex = _EMPTY_CORRECTIONS) -> RecordDesignSheet:
-    header, header_correction = _find_xls_header(worksheet, corrections.header_corrections)
+def extract_xls_sheet(worksheet: XlrdSheet, corrections: CorrectionIndex = EMPTY_CORRECTIONS) -> RecordDesignSheet:
+    header, header_correction = find_xls_header(worksheet, corrections.header_corrections)
     return _extract_sheet_rows(
         worksheet.name,
         header,
@@ -99,9 +99,9 @@ def _extract_xls_sheet(worksheet: XlrdSheet, corrections: _CorrectionIndex = _EM
 
 def _extract_sheet_rows(
     sheet_name: str,
-    header: _WorkbookHeader,
+    header: WorkbookHeader,
     rows: Iterator[tuple[int, tuple[object, ...]]],
-    corrections: _CorrectionIndex = _EMPTY_CORRECTIONS,
+    corrections: CorrectionIndex = EMPTY_CORRECTIONS,
     header_correction: RecordDesignHeaderCellCorrection | None = None,
 ) -> RecordDesignSheet:
     # AEAT Diseño workbooks occasionally carry surrounding whitespace on a
@@ -113,7 +113,7 @@ def _extract_sheet_rows(
     parsed_rows = _scan_sheet_rows(sheet_name, header, rows, corrections.type_corrections)
     if header_correction is not None:
         parsed_rows.corrections_applied.insert(0, header_correction)
-    parsed_rows.fields[:] = _fold_untagged_desglose_components(parsed_rows.fields)
+    parsed_rows.fields[:] = fold_untagged_desglose_components(parsed_rows.fields)
     terminal_extent = _require_contiguous_field_geometry(sheet_name, parsed_rows.fields)
     if parsed_rows.total_positions is not None and terminal_extent != parsed_rows.total_positions:
         raise RegistryValidationError(
@@ -139,15 +139,15 @@ def _extract_sheet_rows(
 
 def _scan_sheet_rows(
     sheet_name: str,
-    header: _WorkbookHeader,
+    header: WorkbookHeader,
     rows: Iterator[tuple[int, tuple[object, ...]]],
-    corrections: _TypeCorrectionIndex | None = None,
+    corrections: TypeCorrectionIndex | None = None,
 ) -> _WorkbookSheetRows:
     parsed_rows = _WorkbookSheetRows()
     trailing_blank_rows = 0
     for row_number, row in rows:
         values = tuple(row)
-        if _is_blank_row(values):
+        if is_blank_row(values):
             trailing_blank_rows += 1
             if parsed_rows.fields and trailing_blank_rows >= 25:
                 break
@@ -210,11 +210,11 @@ def _consume_total_row(
     row_number: int,
     values: tuple[object, ...],
 ) -> bool:
-    total_label_index = _total_label_index(values)
-    if total_label_index is None:
+    label_index = total_label_index(values)
+    if label_index is None:
         return False
-    row_total = _positive_integer_after(values, total_label_index)
-    has_variable_total = any(_optional_text(candidate) == "Variable" for candidate in values[total_label_index + 1 :])
+    row_total = positive_integer_after(values, label_index)
+    has_variable_total = any(optional_text(candidate) == "Variable" for candidate in values[label_index + 1 :])
     if has_variable_total:
         parsed_rows.variable_total_marker_rows.append(row_number)
     if row_total is not None and has_variable_total:
@@ -238,10 +238,10 @@ def _consume_total_row(
 def _consume_field_row(
     sheet_name: str,
     parsed_rows: _WorkbookSheetRows,
-    header: _WorkbookHeader,
+    header: WorkbookHeader,
     row_number: int,
     values: tuple[object, ...],
-    corrections: _TypeCorrectionIndex,
+    corrections: TypeCorrectionIndex,
 ) -> None:
     # ``RecordDesignField.ordinal`` is the printed LABEL (``ordinal_text``), never
     # an arithmetic value -- it is now representable verbatim, so there is no more
@@ -249,12 +249,12 @@ def _consume_field_row(
     # (variable-body, relative-suffix) are unrelated types whose own ``ordinal``
     # field is still a plain sequential ``int``, so they keep reading the
     # int-or-None form.
-    ordinal_int = _int_or_none(_cell(values, header.ordinal_index))
-    ordinal_text = _ordinal_text(_cell(values, header.ordinal_index))
-    offset = _int_or_none(_cell(values, header.offset_index))
-    length = _int_or_none(_cell(values, header.length_index))
-    raw_offset = _optional_text(_cell(values, header.offset_index))
-    raw_length = _optional_text(_cell(values, header.length_index))
+    ordinal_int = int_or_none(cell_at(values, header.ordinal_index))
+    ordinal_label = ordinal_text(cell_at(values, header.ordinal_index))
+    offset = int_or_none(cell_at(values, header.offset_index))
+    length = int_or_none(cell_at(values, header.length_index))
+    raw_offset = optional_text(cell_at(values, header.offset_index))
+    raw_length = optional_text(cell_at(values, header.length_index))
     if raw_length == "Variable":
         parsed_rows.variable_body_marker_rows.append(row_number)
         if ordinal_int is not None and offset is not None:
@@ -276,14 +276,14 @@ def _consume_field_row(
         header,
         row_number,
         values,
-        ordinal_text,
+        ordinal_label,
         offset,
         length,
         corrections,
     )
     if applied_correction is not None:
         parsed_rows.corrections_applied.append(applied_correction)
-    parent_index = _matching_component_parent_index(parsed_rows.fields, ordinal_text, offset, length)
+    parent_index = _matching_component_parent_index(parsed_rows.fields, ordinal_label, offset, length)
     if parent_index is not None:
         parent = parsed_rows.fields[parent_index]
         parsed_rows.fields[parent_index] = parent.model_copy(update={"components": (*parent.components, field)})
@@ -323,7 +323,7 @@ def _matching_component_parent_index(
     return parent_index
 
 
-def _fold_untagged_desglose_components(fields: list[RecordDesignField]) -> list[RecordDesignField]:
+def fold_untagged_desglose_components(fields: list[RecordDesignField]) -> list[RecordDesignField]:
     """Nest a desglose AEAT printed WITHOUT dotted ordinals under its parent.
 
     :func:`_matching_component_parent_index` nests on a dotted ordinal, which is
@@ -374,7 +374,7 @@ def _fold_untagged_desglose_components(fields: list[RecordDesignField]) -> list[
                 break
             run.append(candidate)
             cursor += 1
-        if run and not parent.components and _tiles_exactly(parent, run):
+        if run and not parent.components and tiles_exactly(parent, run):
             folded.append(parent.model_copy(update={"components": tuple(run)}))
             index = cursor
             continue
@@ -405,7 +405,7 @@ _DECLARED_SUBDIVISION: Final = re.compile(
 )
 
 
-def _declared_subdivision_count(field: RecordDesignField) -> int | None:
+def declared_subdivision_count(field: RecordDesignField) -> int | None:
     """Return how many sub-fields ``field`` says it divides into, else ``None``."""
     text = f"{field.description or ''} {field.content or ''}"
     normalised = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
@@ -416,13 +416,13 @@ def _declared_subdivision_count(field: RecordDesignField) -> int | None:
     return int(token) if token.isdigit() else _SUBDIVISION_COUNT_WORDS[token]
 
 
-def _solve_declared_desglose_holes(
+def solve_declared_desglose_holes(
     *,
     parent: RecordDesignField,
     covered: set[int],
-    by_offset: Mapping[int, list[_PdfRow]],
+    by_offset: Mapping[int, list[PdfRow]],
     wanted: int,
-) -> list[_PdfRow] | None:
+) -> list[PdfRow] | None:
     """Return the ``wanted`` staged candidates that exactly fill ``parent``'s holes.
 
     A search rather than a walk, because AEAT nests these declarations and
@@ -437,7 +437,7 @@ def _solve_declared_desglose_holes(
     """
     end = parent.offset + parent.length
 
-    def walk(position: int, remaining: int) -> list[_PdfRow] | None:
+    def walk(position: int, remaining: int) -> list[PdfRow] | None:
         while position < end and position in covered:
             position += 1
         if position >= end:
@@ -456,7 +456,7 @@ def _solve_declared_desglose_holes(
     return walk(parent.offset, wanted)
 
 
-def _tiles_exactly(parent: RecordDesignField, run: list[RecordDesignField]) -> bool:
+def tiles_exactly(parent: RecordDesignField, run: list[RecordDesignField]) -> bool:
     """Return whether ``run`` covers ``parent``'s span end to end with no gap."""
     expected = parent.offset
     for component in run:
@@ -468,7 +468,7 @@ def _tiles_exactly(parent: RecordDesignField, run: list[RecordDesignField]) -> b
 
 def _variable_body_marker(
     sheet_name: str,
-    header: _WorkbookHeader,
+    header: WorkbookHeader,
     row_number: int,
     values: tuple[object, ...],
     ordinal: int,
@@ -481,7 +481,7 @@ def _variable_body_marker(
         ordinal=ordinal,
         offset=offset,
         length="Variable",
-        type_code=_required_text(_cell(values, header.type_index), sheet_name, row_number, "type"),
+        type_code=required_text(cell_at(values, header.type_index), sheet_name, row_number, "type"),
         description=description,
         validation=validation,
         content=content,
@@ -490,7 +490,7 @@ def _variable_body_marker(
 
 def _relative_suffix_marker(
     sheet_name: str,
-    header: _WorkbookHeader,
+    header: WorkbookHeader,
     row_number: int,
     values: tuple[object, ...],
     ordinal: int,
@@ -503,7 +503,7 @@ def _relative_suffix_marker(
         ordinal=ordinal,
         offset="***",
         length=length,
-        type_code=_required_text(_cell(values, header.type_index), sheet_name, row_number, "type"),
+        type_code=required_text(cell_at(values, header.type_index), sheet_name, row_number, "type"),
         description=description,
         validation=validation,
         content=content,
@@ -512,17 +512,17 @@ def _relative_suffix_marker(
 
 def _record_design_field(
     sheet_name: str,
-    header: _WorkbookHeader,
+    header: WorkbookHeader,
     row_number: int,
     values: tuple[object, ...],
     ordinal: str | None,
     offset: int,
     length: int,
-    corrections: _TypeCorrectionIndex,
+    corrections: TypeCorrectionIndex,
 ) -> tuple[RecordDesignField, RecordDesignFieldTypeCorrection | None]:
     validation, content, description = _field_texts(sheet_name, header, row_number, values)
-    type_code, applied_correction = _required_type_code(
-        _cell(values, header.type_index),
+    type_code, applied_correction = required_type_code(
+        cell_at(values, header.type_index),
         sheet_name,
         row_number,
         corrections,
@@ -535,7 +535,7 @@ def _record_design_field(
             offset=offset,
             length=length,
             type_code=type_code,
-            complementary=_optional_header_text(values, header.complementary_index),
+            complementary=optional_header_text(values, header.complementary_index),
             description=description,
             validation=validation,
             content=content,
@@ -546,16 +546,16 @@ def _record_design_field(
 
 def _field_texts(
     sheet_name: str,
-    header: _WorkbookHeader,
+    header: WorkbookHeader,
     row_number: int,
     values: tuple[object, ...],
 ) -> tuple[str | None, str | None, str]:
-    validation = _optional_header_text(values, header.validation_index)
-    content = _optional_header_text(values, header.content_index)
+    validation = optional_header_text(values, header.validation_index)
+    content = optional_header_text(values, header.content_index)
     return (
         validation,
         content,
-        _field_description_text(
+        field_description_text(
             values,
             header=header,
             content=content,
@@ -579,7 +579,7 @@ def _variable_envelope(
         )
     _require_valid_variable_envelope_markers(sheet_name, parsed_rows)
     variable_body = parsed_rows.variable_bodies[0]
-    closing_suffixes, terminator = _split_record_terminator(parsed_rows.relative_suffixes)
+    closing_suffixes, terminator = split_record_terminator(parsed_rows.relative_suffixes)
     closing = _relative_closing(sheet_name, closing_suffixes)
     closing_parts = _relative_closing_parts(closing)
     variable_total = parsed_rows.variable_totals[0]

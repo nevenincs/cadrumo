@@ -21,7 +21,7 @@ import json
 import re
 import shutil
 import threading
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Never
@@ -36,6 +36,7 @@ from ..paths import directory_byte_total, select_filesystem_retention_survivors
 from ..storage_taxonomy import StorageCategory
 from ..storage_taxonomy_locations import storage_path
 from ..time.clock import now
+from ..type_guards import is_object_mapping
 from .errors import RunTracePersistenceError, RunTraceValidationError
 from .models import RUN_ID_PATTERN, RunEvent, RunTrace
 from .redaction_rules import diagnostic_rules
@@ -55,7 +56,7 @@ constants into their grammar rather than re-typing the names)."""
 # Both the public direct append path and JsonlRunSink write the same per-run
 # JSONL artefacts.  One process-wide lock keeps their independent file handles
 # from interleaving or losing lines under concurrent worker activity.
-_EVENTS_APPEND_LOCK = threading.Lock()
+EVENTS_APPEND_LOCK = threading.Lock()
 
 
 # Run ids are minted by :func:`core.observability.context._mint_run_id`
@@ -68,7 +69,7 @@ def _raise_persistence_error(operation: str, target: Path, exc: OSError) -> Neve
     raise RunTracePersistenceError(operation=operation, path=target) from exc
 
 
-def _validate_run_id(run_id: str) -> str:
+def validate_run_id(run_id: str) -> str:
     """Return ``run_id`` if it matches the canonical shape, else raise.
 
     The canonical shape is 16 lowercase hex characters — the form
@@ -113,7 +114,7 @@ def runs_dir(settings: Settings | None = None) -> Path:
     the member's resolution ever gains a case.
 
     A pure path resolver. Materialisation is a write-side concern: the one
-    production writer (:func:`_run_dir`) creates the full ``<runs_dir>/<run_id>``
+    production writer (:func:`run_dir`) creates the full ``<runs_dir>/<run_id>``
     chain itself via ``mkdir(parents=True)`` when it stages a run for writing,
     which brings this root into existence as a side effect of that single
     ``mkdir`` call -- it does not depend on this function creating anything.
@@ -134,7 +135,7 @@ def runs_dir(settings: Settings | None = None) -> Path:
     return storage_path(StorageCategory.RUNS, settings=settings)
 
 
-def _run_dir(run_id: str, *, settings: Settings | None = None) -> Path:
+def run_dir(run_id: str, *, settings: Settings | None = None) -> Path:
     """Return the per-run directory, creating it (and the runs root) when absent.
 
     The one production write path that materialises anything under the runs
@@ -151,12 +152,12 @@ def _run_dir(run_id: str, *, settings: Settings | None = None) -> Path:
     Returns:
         Absolute path to the per-run subdirectory (created if absent).
     """
-    _validate_run_id(run_id)
+    validate_run_id(run_id)
     target = runs_dir(settings) / run_id
     try:
         target.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
-        _raise_persistence_error("_run_dir", target, exc)
+        _raise_persistence_error("run_dir", target, exc)
     return target
 
 
@@ -178,7 +179,7 @@ def save_trace(trace: RunTrace, *, settings: Settings | None = None) -> Path:
     """
     from ..redaction.rules import redact_structured
 
-    target = _run_dir(trace.run_id, settings=settings) / TRACE_FILENAME
+    target = run_dir(trace.run_id, settings=settings) / TRACE_FILENAME
     redacted = redact_structured(trace.model_dump(mode="json"), rules=diagnostic_rules())
     try:
         atomic_write_text(target, json.dumps(redacted, indent=2, sort_keys=True), encoding="utf-8")
@@ -220,7 +221,7 @@ def load_trace(run_id: str, *, settings: Settings | None = None) -> RunTrace:
             when the file is missing, when its contents fail strict
             validation, or when its embedded identity names another run.
     """
-    _validate_run_id(run_id)
+    validate_run_id(run_id)
     target = runs_dir(settings) / run_id / TRACE_FILENAME
     try:
         exists = target.exists()
@@ -266,7 +267,7 @@ def save_envelope(
     Returns:
         Absolute path of the written ``envelope.json`` file.
     """
-    target = _run_dir(run_id, settings=settings) / ENVELOPE_FILENAME
+    target = run_dir(run_id, settings=settings) / ENVELOPE_FILENAME
     try:
         atomic_write_text(
             target,
@@ -300,7 +301,7 @@ def load_envelope_document(
         RunTraceValidationError: When ``run_id`` has an invalid shape,
             the file is missing, or its contents are not a JSON object.
     """
-    _validate_run_id(run_id)
+    validate_run_id(run_id)
     target = runs_dir(settings) / run_id / ENVELOPE_FILENAME
     try:
         exists = target.exists()
@@ -320,7 +321,7 @@ def load_envelope_document(
         raise RunTraceValidationError(
             f"envelope.json for run {run_id!r} is not valid JSON: {exc}",
         ) from exc
-    if not isinstance(parsed, Mapping):
+    if not is_object_mapping(parsed):
         raise RunTraceValidationError(
             f"envelope.json for run {run_id!r} must be a JSON object, got {type(parsed).__name__}",
         )
@@ -360,11 +361,11 @@ def save_events_append(
     """
     from ..redaction.rules import redact_structured
 
-    target = _run_dir(run_id, settings=settings) / EVENTS_FILENAME
+    target = run_dir(run_id, settings=settings) / EVENTS_FILENAME
     redacted = redact_structured(event.model_dump(mode="json"), rules=diagnostic_rules())
     line = json.dumps(redacted, sort_keys=True, separators=(",", ":")) + "\n"
     try:
-        with _EVENTS_APPEND_LOCK, target.open("a", encoding="utf-8", newline="") as handle:
+        with EVENTS_APPEND_LOCK, target.open("a", encoding="utf-8", newline="") as handle:
             handle.write(line)
             handle.flush()
     except OSError as exc:
@@ -394,7 +395,7 @@ def iter_events(
     Returns:
         An iterator of :class:`RunEvent` records in append order.
     """
-    _validate_run_id(run_id)
+    validate_run_id(run_id)
     target = runs_dir(settings) / run_id / EVENTS_FILENAME
 
     def _stream() -> Iterator[RunEvent]:

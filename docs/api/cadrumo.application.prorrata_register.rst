@@ -13,6 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.application.prorrata_register._sector_lifecycle
-   cadrumo.application.prorrata_register._seed
-   cadrumo.application.prorrata_register._service
+   cadrumo.application.prorrata_register.sector_lifecycle
+   cadrumo.application.prorrata_register.seed
+   cadrumo.application.prorrata_register.service

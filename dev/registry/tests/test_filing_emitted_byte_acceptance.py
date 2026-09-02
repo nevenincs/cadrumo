@@ -35,7 +35,7 @@ from cadrumo.domain.calculations.registry.temporal import (
 
 from ..filing_export_proof import (
     CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES,
-    canonical_live_filing_export_proof_authority,
+    canonical_two_channel_filing_export_proof_authority,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -45,13 +45,23 @@ _EXPORT_OWNER = "aeat-export-fragment-generator-authority"
 
 
 def _canonical_filing_authority():
-    """Bind the one live filing proof authority without opening source proof."""
+    """Bind the two-channel filing proof authority the coverage composer requires.
+
+    The composer asks this authority to assess a coordinate, and only the
+    two-channel authority carries that. The single-channel one this fixture used
+    to build offers the older proof lookup instead, so every test through it
+    failed on a missing attribute rather than on the assertion it exists to make.
+    Both secure-replay inputs are absent because these tests exercise the public
+    channel; an operator supplies those.
+    """
     authority = bundled_authority()
-    return authority, canonical_live_filing_export_proof_authority(
+    return authority, canonical_two_channel_filing_export_proof_authority(
         workspace_root=_REPOSITORY_ROOT,
         registry_root=bundled_path("registry", "aeat"),
         source_root=bundled_path(),
         authority=authority,
+        secure_replay_source=None,
+        secure_replay_custody=None,
     )
 
 
@@ -160,8 +170,15 @@ def test_an_empty_canonical_live_proof_cannot_turn_a_declared_layout_into_emitte
     assert limb.refusal.reason == "missing_evidence"
     assert limb.refusal.disposition.owner == _EXPORT_OWNER
     assert limb.refusal.disposition.work_item == f"{_EXPORT_OWNER}:production-emission-proof"
-    assert "canonical generation" in limb.refusal.detail
-    assert "emitted-byte" in limb.refusal.detail
+
+    # Assert the structured refusal rather than its prose. The guard is that an
+    # empty channel refuses for want of evidence and names which channel is
+    # empty; the wording of the detail is the composer's to change, and this
+    # test previously broke on exactly that when the two-channel migration
+    # rephrased it, which left the guard silent for as long as it stayed broken.
+    channels = {refusal.channel: refusal.reason for refusal in limb.refusal.filing_channels}
+    assert channels["conformance"] == "evidence_missing"
+    assert not limb.evidence
 
 
 def test_modelo_353_revisions_keep_distinct_law_coordinates_and_each_require_production_emission_proof() -> None:

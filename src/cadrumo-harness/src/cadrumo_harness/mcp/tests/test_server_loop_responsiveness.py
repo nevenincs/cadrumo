@@ -43,7 +43,7 @@ from __future__ import annotations
 import asyncio
 import json
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -186,7 +186,7 @@ def test_warm_in_process_verb_is_served_with_the_loop_free() -> None:
 
 
 @contextmanager
-def _provisioned_profile_env(tmp_path: Path) -> Iterator[None]:
+def _provisioned_profile_env(tmp_path: Path) -> Generator[None]:
     """Provision a real encrypted profile under an env-isolated storage root.
 
     The warm runtime runs the CLI in a raw worker thread that inherits

@@ -17,6 +17,7 @@ Submodules
    cadrumo.domain.transactions.dates
    cadrumo.domain.transactions.enums
    cadrumo.domain.transactions.errors
+   cadrumo.domain.transactions.gross_validation
    cadrumo.domain.transactions.irpf_categories
    cadrumo.domain.transactions.lineage_models
    cadrumo.domain.transactions.llm

@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import json
 import threading
-from collections.abc import Iterator, Mapping
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -237,7 +237,7 @@ def openai_chat_reply(
 
 
 @contextmanager
-def serving_loopback(handler: type[BaseHTTPRequestHandler], *, path: str) -> Iterator[str]:
+def serving_loopback(handler: type[BaseHTTPRequestHandler], *, path: str) -> Generator[str]:
     """Serve ``handler`` on an ephemeral loopback port for the duration of the block.
 
     Binding port ``0`` lets the OS pick a free one, so parallel workers cannot

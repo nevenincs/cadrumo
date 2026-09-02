@@ -69,9 +69,9 @@ from ._m145_communication import (
     build_m145_communication_service_contract,
 )
 from ._ports import FicheroBoeRecordRenderer
-from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
-from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
 from .m145_communication_period import M145CommunicationPeriod
+from .revision_persistence import build_modelo_bucket_event as _build_bucket_event
+from .revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
 
 if TYPE_CHECKING:
     from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository

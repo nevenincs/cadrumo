@@ -7,6 +7,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from dev.registry.newmodelo.checklist import CHECKLIST
+
 from ...._paths import REPO_ROOT
 from ..cli import _default_manager, app
 
@@ -36,12 +38,12 @@ def _scaffold_args(tmp_path: Path, *extra: str) -> list[str]:
 
 
 def test_cli_scaffold_writes_tree_and_prints_checklist(tmp_path: Path) -> None:
-    """``newmodelo scaffold`` writes the skeleton and prints the 12-item checklist."""
+    """``newmodelo scaffold`` writes the skeleton and prints the whole checklist."""
     result = CliRunner().invoke(app, _scaffold_args(tmp_path))
 
     assert result.exit_code == 0, result.stdout
     assert "written" in result.stdout
-    assert "Contributor checklist for a new modelo revision (12 items):" in result.stdout
+    assert f"Contributor checklist for a new modelo revision ({len(CHECKLIST)} items):" in result.stdout
     assert (tmp_path / _THROWAWAY_MODELO_ID / "manifest.toml").is_file()
 
 
@@ -76,7 +78,7 @@ def test_cli_checklist_command_prints_all_items() -> None:
     result = CliRunner().invoke(app, ["checklist"])
 
     assert result.exit_code == 0
-    assert "Contributor checklist for a new modelo revision (12 items):" in result.stdout
+    assert f"Contributor checklist for a new modelo revision ({len(CHECKLIST)} items):" in result.stdout
 
 
 def test_cli_scaffold_rejects_malformed_modelo_id(tmp_path: Path) -> None:

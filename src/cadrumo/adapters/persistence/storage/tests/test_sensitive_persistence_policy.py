@@ -113,9 +113,9 @@ _SENSITIVE_SURFACES = (
     SRC_CADRUMO / "llm",
     # Successor of the vanished `entrypoints/cli/oauth.py`: the OAuth credential
     # flow now lives across the `_config/_google*` modules.
-    SRC_CADRUMO / "entrypoints" / "cli" / "_config" / "_google.py",
-    SRC_CADRUMO / "entrypoints" / "cli" / "_config" / "_google_credential_source_cli.py",
-    SRC_CADRUMO / "entrypoints" / "cli" / "_config" / "_google_credential_source_payloads.py",
+    SRC_CADRUMO / "entrypoints" / "cli" / "config" / "_google.py",
+    SRC_CADRUMO / "entrypoints" / "cli" / "config" / "_google_credential_source_cli.py",
+    SRC_CADRUMO / "entrypoints" / "cli" / "config" / "_google_credential_source_payloads.py",
     SRC_CADRUMO / "entrypoints" / "cli" / "_ledger.py",
 )
 _FORBIDDEN_CALLS = {
@@ -163,7 +163,7 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "sequence, a state, a timestamp and two optional enums"
     ),
     (
-        "src/cadrumo/entrypoints/cli/_config/_scripted_registration.py",
+        "src/cadrumo/entrypoints/cli/config/_scripted_registration.py",
         "_write_recovery_handoff",
         "os.write",
     ): (
@@ -434,7 +434,7 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
     ): "writes those sentinel proof bytes; the sentinel is a verifier, never key material",
     # --- operator-facing secret display -------------------------------------
     (
-        "src/cadrumo/entrypoints/cli/_config/secure_input.py",
+        "src/cadrumo/entrypoints/cli/config/secure_input.py",
         "write_to_controlling_terminal",
         "open",
     ): "opens the controlling terminal DEVICE (CONOUT$ / /dev/tty) to show a recovery mnemonic, "

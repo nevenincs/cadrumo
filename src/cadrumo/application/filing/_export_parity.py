@@ -53,7 +53,7 @@ than being mirrored into a second copy that can drift out of agreement with the
 gate it is supposed to describe.
 
 See Also:
-    :mod:`application.filing._export`
+    :mod:`application.filing.export`
         Renders the layout and calls :func:`assert_export_mirrors_manifest`
         before writing the bytes.
 """

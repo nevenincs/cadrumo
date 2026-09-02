@@ -7,6 +7,7 @@ storage namespace or key material themselves.
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
@@ -18,7 +19,6 @@ from .runtime import StorageRuntimeReadinessCode, inspect_bucket_storage_runtime
 from .sql import SecureObjectRepository
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
     from pathlib import Path
 
 
@@ -114,7 +114,7 @@ def secure_object_repository_for_staged_bucket(
     bucket_id: str,
     *,
     database_file: Path,
-) -> Iterator[SecureObjectRepository]:
+) -> Generator[SecureObjectRepository]:
     """Yield a repository for a bucket's database BEFORE its capsule is published.
 
     The one route the storage runtime cannot serve, and the reason is

@@ -16,7 +16,7 @@ manifest helpers (:func:`build_remote_mirror_namespace_manifest`,
 :func:`next_drive_page_token`, and the typed :class:`OutboundStorageError`
 hierarchy.
 
-Concrete backends in :mod:`adapters.outbound.storage._local` and
+Concrete backends in :mod:`adapters.outbound.storage.local` and
 :mod:`adapters.outbound.storage._google_drive` remain private
 implementation details; consumers depend on this Protocol, these records, the
 manifest helpers, and the factory.

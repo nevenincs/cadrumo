@@ -20,6 +20,7 @@ Submodules
    cadrumo.domain.iva.classification
    cadrumo.domain.iva.components
    cadrumo.domain.iva.corpus
+   cadrumo.domain.iva.country_vocabulary
    cadrumo.domain.iva.deduction_facts
    cadrumo.domain.iva.errors
    cadrumo.domain.iva.establishment

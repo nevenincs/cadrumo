@@ -24,7 +24,7 @@ A truthy answer here is necessary but NOT always sufficient. On Windows both
 the ``NUL`` device and a console-less host can report ``isatty() is True``
 while no console exists to type into, so a caller that must genuinely read
 from a console pairs this with a real-console probe (see
-``entrypoints/cli/_config/secure_input.py``) rather than replacing that
+``entrypoints/cli/config/secure_input.py``) rather than replacing that
 stricter check with this one.
 """
 

@@ -29,7 +29,7 @@ from threading import RLock
 
 from ..errors.hierarchy import CoreError
 from ._catalogue_cache import compute_directory_source_digest
-from .render import _locale_map, _normalise_supported_language, lookup_translation_entry
+from .render import locale_map, lookup_translation_entry, normalise_supported_language
 
 _LOCALE_CATALOGUE_CAPTURE_MAX_ATTEMPTS = 8
 _locale_catalogue_process_pid = os.getpid()
@@ -113,7 +113,7 @@ def _require_locale_catalogue_process_domain(domain: str) -> None:
 
 def _supported_locale(locale: str) -> str:
     """Return the normalized supported locale or refuse an unsupported one."""
-    normalized = _normalise_supported_language(locale)
+    normalized = normalise_supported_language(locale)
     if normalized is None:
         raise LocaleCatalogueCaptureError(
             translated_message="errors.refused.locale_catalogue_capture_not_current",
@@ -124,7 +124,7 @@ def _supported_locale(locale: str) -> str:
 
 def _locale_catalogue_observation(locale: str) -> tuple[str, ...]:
     """Fingerprint the shard directory backing one locale, through its own digest."""
-    catalogue = _locale_map(locale)
+    catalogue = locale_map(locale)
     shard_dir = getattr(catalogue, "shard_dir", None)
     if shard_dir is None or not shard_dir.is_dir():
         raise LocaleCatalogueCaptureError(

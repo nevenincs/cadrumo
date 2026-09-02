@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..confirmed_field_resolution import _confirmed_counterparty_name
+from ..confirmed_field_resolution import confirmed_counterparty_name
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..preconditions import LedgerPreconditionCondition
 
@@ -34,7 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def test_neither_side_stating_a_name_refuses() -> None:
     """The motivating case: no extraction, no override, no record."""
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as refusal:
-        _confirmed_counterparty_name(None, None)
+        confirmed_counterparty_name(None, None)
 
     verdict = refusal.value.terminal_precondition_verdict
     assert verdict is not None
@@ -53,7 +53,7 @@ def test_the_refusal_carries_the_typed_precondition_rather_than_prose_alone() ->
     still reads correctly.
     """
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as refusal:
-        _confirmed_counterparty_name(None, None)
+        confirmed_counterparty_name(None, None)
 
     verdict = refusal.value.terminal_precondition_verdict
     assert verdict is not None, "the refusal carried no verdict, so no surface can project it"
@@ -74,11 +74,11 @@ def test_a_blank_name_is_treated_as_absent_on_both_sides(blank: str) -> None:
     a stray cell in a structured document arrives as whitespace, not as None.
     """
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        _confirmed_counterparty_name(blank, None)
+        confirmed_counterparty_name(blank, None)
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        _confirmed_counterparty_name(None, blank)
+        confirmed_counterparty_name(None, blank)
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        _confirmed_counterparty_name(blank, blank)
+        confirmed_counterparty_name(blank, blank)
 
 
 def test_the_read_name_is_used_when_the_operator_supplies_nothing() -> None:
@@ -87,12 +87,12 @@ def test_the_read_name_is_used_when_the_operator_supplies_nothing() -> None:
     Without this the whole module is satisfiable by a function that refuses
     always, which is the failure mode a refusal test cannot detect about itself.
     """
-    assert _confirmed_counterparty_name(None, "Mayorista Ejemplo SL") == "Mayorista Ejemplo SL"
+    assert confirmed_counterparty_name(None, "Mayorista Ejemplo SL") == "Mayorista Ejemplo SL"
 
 
 def test_the_operator_override_wins_over_what_was_read() -> None:
     """Extraction is best-effort, so a supplied name corrects it rather than losing to it."""
-    assert _confirmed_counterparty_name("Corrected SL", "Misread SL") == "Corrected SL"
+    assert confirmed_counterparty_name("Corrected SL", "Misread SL") == "Corrected SL"
 
 
 def test_a_surrounding_whitespace_name_is_kept_but_trimmed() -> None:
@@ -102,4 +102,4 @@ def test_a_surrounding_whitespace_name_is_kept_but_trimmed() -> None:
     strips before testing rather than after: refusing a padded value would send
     an operator to correct a name the document states perfectly well.
     """
-    assert _confirmed_counterparty_name(None, "  Acme Suministros SL  ") == "Acme Suministros SL"
+    assert confirmed_counterparty_name(None, "  Acme Suministros SL  ") == "Acme Suministros SL"

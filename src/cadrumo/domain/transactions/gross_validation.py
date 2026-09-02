@@ -11,7 +11,7 @@ from .irpf_categories import (
 )
 
 
-def _gross_mismatch_detail(
+def gross_mismatch_detail(
     *,
     direction: TransactionDirection,
     category_id: str | None,

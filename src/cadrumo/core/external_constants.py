@@ -39,6 +39,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 from .errors.hierarchy import CoreValidationError
 from .modelo import Modelo
 from .models import STRICT_FROZEN_CONFIG
+from .type_guards import is_object_list
 
 #: ISO 4217 currency code for the Euro, used as the functional currency throughout AEAT.
 DEFAULT_CURRENCY: Final[str] = "EUR"
@@ -172,7 +173,7 @@ class AeatClaveMovilSurface(_Frozen):
     )
     @classmethod
     def _markers_from_toml_arrays(cls, value: object) -> object:
-        if isinstance(value, list):
+        if is_object_list(value):
             return tuple(value)
         return value
 
@@ -237,7 +238,7 @@ class AeatPre303Surface(_Frozen):
     )
     @classmethod
     def _tuples_from_toml_arrays(cls, value: object) -> object:
-        if isinstance(value, list):
+        if is_object_list(value):
             return tuple(value)
         return value
 
@@ -312,7 +313,7 @@ class AeatLiveSafety(_Frozen):
     )
     @classmethod
     def _tuples_from_toml_arrays(cls, value: object) -> object:
-        if isinstance(value, list):
+        if is_object_list(value):
             return tuple(value)
         return value
 

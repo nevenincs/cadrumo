@@ -58,7 +58,7 @@ class AsyncResourceCleanupError(CoreError, RuntimeError):
             primary_error=None,
         )
 
-    def _merged_with(self, later: AsyncResourceCleanupError) -> AsyncResourceCleanupError:
+    def merged_with(self, later: AsyncResourceCleanupError) -> AsyncResourceCleanupError:
         """Combine nested cleanup failures without losing either owner."""
         return AsyncResourceCleanupError(
             self._resources + later._resources,
@@ -126,7 +126,7 @@ def _merge_cleanup_failure_into_cancellation(
             cleanup_error,
             AsyncResourceCleanupError,
         ):
-            cleanup_error = previous_cleanup_error._merged_with(cleanup_error)
+            cleanup_error = previous_cleanup_error.merged_with(cleanup_error)
         cancellation.__dict__["cleanup_error"] = cleanup_error
         cancellation.add_note(f"Retained asynchronous cleanup also failed ({type(cleanup_error).__name__})")
 
@@ -236,7 +236,7 @@ def _attach_cleanup_error_to_body(
         return False
     previous_cleanup_error = active_error.__dict__.get("async_cleanup_error")
     if isinstance(previous_cleanup_error, AsyncResourceCleanupError):
-        cleanup_error = previous_cleanup_error._merged_with(cleanup_error)
+        cleanup_error = previous_cleanup_error.merged_with(cleanup_error)
     active_error.__dict__["async_cleanup_error"] = cleanup_error
     active_error.add_note("Asynchronous resource cleanup also failed; retry through the attached async_cleanup_error")
     return True

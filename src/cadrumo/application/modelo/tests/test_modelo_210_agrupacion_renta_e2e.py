@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -24,9 +24,9 @@ from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import seed_modelo_ready_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from .._m303_regimen_simplificado_scope import active_taxpayer_profile
 from ..calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from ..calculation_actions import calculate_modelo_revision
+from ..m303_regimen_simplificado_scope import active_taxpayer_profile
 from ..work_lifecycle import create_work_unit
 from ..work_plazo import calculated_m210_plazo_resolution
 
@@ -41,7 +41,7 @@ __all__ = ["register_wizard_catalogue"]
 
 
 @contextmanager
-def _secure_backend(tmp_path: Path) -> Iterator[None]:
+def _secure_backend(tmp_path: Path) -> Generator[None]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
         _seed_minimal_profile(runtime.repository)
         yield

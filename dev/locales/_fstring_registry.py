@@ -74,7 +74,7 @@ _LEY_49_2002_QUESTION_IDS: tuple[str, ...] = (
 )
 
 # The `cli.config.google.errors.*` refusal-frame suffixes
-# `_GOOGLE_ERROR_KEY_SUFFIX` (`entrypoints.cli._config._google_errors`) maps
+# `_GOOGLE_ERROR_KEY_SUFFIX` (`entrypoints.cli.config.google_errors`) maps
 # each concrete `GoogleAuthError` subclass name to. The map's values are the
 # complete bounded enumeration; the dynamic `f"cli.config.google.errors.{suffix}"`
 # build site is not otherwise visible to the static AST scanner.
@@ -100,7 +100,7 @@ _GOOGLE_ERROR_SUFFIXES: tuple[str, ...] = (
 )
 
 # The `cli.config.profile.bundle_flow.*` copy slots referenced by the profile
-# bundle interactive flow (`entrypoints.cli._config._profile_bundle_flow`).
+# bundle interactive flow (`entrypoints.cli.config._profile_bundle_flow`).
 # The references are CopyRef string literals resolved by the flow substrate's
 # render-time copy assembler, so the static AST scanner cannot see them; this
 # bounded enumeration is what keeps scaffold from stripping the entries.

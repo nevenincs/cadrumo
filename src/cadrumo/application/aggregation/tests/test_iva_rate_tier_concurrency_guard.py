@@ -33,7 +33,7 @@ from decimal import Decimal
 
 import pytest
 
-from .._iva_ledger import _iva_rate_kind_for
+from ..iva_ledger import _iva_rate_kind_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

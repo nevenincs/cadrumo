@@ -13,7 +13,7 @@ from ..locale_catalogue import (
     capture_locale_catalogue,
     read_locale_catalogue_current_coordinate,
 )
-from ..render import _override_locales_root, lookup_translation_entry
+from ..render import lookup_translation_entry, override_locales_root
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -37,7 +37,7 @@ def test_capture_republishes_the_reader_entry_without_a_second_lookup(tmp_path: 
     """The capture carries exactly what the sole catalogue reader returned."""
     _write_catalogue(tmp_path, locale="es", value="Total")
 
-    with _override_locales_root(tmp_path):
+    with override_locales_root(tmp_path):
         captured = capture_locale_catalogue(_KEY, locale="es")
         present, value = lookup_translation_entry(_KEY, locale="es")
 
@@ -51,7 +51,7 @@ def test_capture_is_singleflight_and_refuses_a_superseded_catalogue(tmp_path: Pa
     """An unchanged catalogue shares a generation; a rewrite supersedes the capture."""
     _write_catalogue(tmp_path, locale="es", value="Total")
 
-    with _override_locales_root(tmp_path):
+    with override_locales_root(tmp_path):
         first = capture_locale_catalogue(_KEY, locale="es")
         second = capture_locale_catalogue(_KEY, locale="es")
 
@@ -74,7 +74,7 @@ def test_a_capture_from_another_locale_scope_is_not_current(tmp_path: Path) -> N
     _write_catalogue(tmp_path, locale="es", value="Total")
     _write_catalogue(tmp_path, locale="en", value="Total")
 
-    with _override_locales_root(tmp_path):
+    with override_locales_root(tmp_path):
         spanish = capture_locale_catalogue(_KEY, locale="es")
         english_coordinate = read_locale_catalogue_current_coordinate(locale="en")
 
@@ -87,7 +87,7 @@ def test_an_unsupported_locale_refuses_rather_than_capturing_nothing(tmp_path: P
     """A locale outside the supported set fails closed instead of reading blank."""
     _write_catalogue(tmp_path, locale="es", value="Total")
 
-    with _override_locales_root(tmp_path), pytest.raises(LocaleCatalogueCaptureError):
+    with override_locales_root(tmp_path), pytest.raises(LocaleCatalogueCaptureError):
         capture_locale_catalogue(_KEY, locale="de")
 
 
@@ -95,7 +95,7 @@ def test_the_published_digest_is_the_catalogue_it_was_read_under(tmp_path: Path)
     """The digest names the exact shard set, and changes only when the shards do."""
     _write_catalogue(tmp_path, locale="es", value="Total")
 
-    with _override_locales_root(tmp_path):
+    with override_locales_root(tmp_path):
         first = capture_locale_catalogue(_KEY, locale="es")
         unchanged = capture_locale_catalogue(_KEY, locale="es")
 

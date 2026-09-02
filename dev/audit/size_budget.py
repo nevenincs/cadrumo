@@ -27,7 +27,6 @@ The audit FAILS (exit 1) on either side of the band:
   or that names a subject no longer in the tree. A stale pin IS the window of
   invisible regrowth, so it fails rather than merely being reported.
 
-Regenerate with ``--write-baseline`` after splitting a module, after paying size
 debt down, or when deliberately accepting growth. Review and commit the diff:
 the baseline is declared debt, not a mute button.
 
@@ -42,12 +41,9 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from contextlib import nullcontext
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
-
-from dev.quality.stable_tree_generation import refuse_if_tree_moves
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT / "src") not in sys.path:  # pragma: no cover - import bootstrap
@@ -57,7 +53,6 @@ from cadrumo.tests import (  # noqa: E402
     CALLABLE_POLICY,
     MODULE_POLICY,
     assert_real_corpus,
-    build_limits,
     evaluate_budget,
     measure_callable_lines,
     measure_module_lines,
@@ -78,7 +73,7 @@ class SizeBudgetBaseline:
 
 _BASELINE_COMMENT = (
     "GENERATED limit table for the dev-side size ratchet. Do NOT hand-edit the 'modules' or "
-    "'callables' numbers: regenerate with `python -m dev.audit.size_budget --write-baseline`, "
+    "'callables' numbers are measured, never pinned. ",
     "then review and commit the diff. Every limit is a measured size plus a declared headroom, "
     "and the gate fails BOTH when an entry grows past its limit and when a limit drifts further "
     "above its subject than the declared slack tolerance, so a pin cannot silently outlive the "
@@ -89,15 +84,19 @@ _BASELINE_COMMENT = (
 
 
 def load_size_budget_baseline(path: Path = SIZE_BUDGET_BASELINE_PATH) -> SizeBudgetBaseline:
-    """Load the committed baseline, or an empty one when none is committed yet."""
-    if not path.is_file():
-        return SizeBudgetBaseline(modules={}, callables={}, notes={})
-    document = json.loads(path.read_text(encoding="utf-8"))
-    return SizeBudgetBaseline(
-        modules={str(key): int(value) for key, value in document.get("modules", {}).items()},
-        callables={str(key): int(value) for key, value in document.get("callables", {}).items()},
-        notes={str(key): str(value) for key, value in document.get("notes", {}).items()},
-    )
+    """Return an empty budget: this audit grandfathers no module or callable.
+
+    The committed per-module limit table was retired. Every module and callable
+    is measured against the declared budget alone, with no pinned ceiling.
+
+    Args:
+        path: Retained for signature compatibility with callers.
+
+    Returns:
+        An empty :class:`SizeBudgetBaseline`.
+    """
+    del path
+    return SizeBudgetBaseline(modules={}, callables={}, notes={})
 
 
 def write_size_budget_baseline(
@@ -138,64 +137,16 @@ def _emit(label: str, lines: tuple[str, ...]) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Report the size budget against the committed baseline, or regenerate it."""
+    """Report every module and callable that exceeds the declared size budget."""
     parser = argparse.ArgumentParser(description="Audit module/callable sizes against a generated limit baseline.")
-    parser.add_argument(
-        "--write-baseline",
-        action="store_true",
-        help="Regenerate the committed limit table from the current tree. Review and commit the diff.",
-    )
-    parser.add_argument(
-        "--accept-growth",
-        action="store_true",
-        help=(
-            "Also raise ceilings for subjects that have BROKEN THROUGH them. Off by default so a "
-            "re-measure cannot launder a live offender; use only when deliberately absorbing growth."
-        ),
-    )
     args = parser.parse_args(argv)
 
-    # Bracketed ONLY when writing, for the same reason as the complexity
-    # baseline: a race during a WRITE persists into the artefact as limits keyed
-    # to modules that no longer exist, while a race during the comparison run
-    # costs at most one noisy verdict. Guarding the comparison would refuse the
-    # CI gate whenever any lane touched the tree.
-    guard = refuse_if_tree_moves(_REPO_ROOT) if args.write_baseline else nullcontext()
-    with guard:
-        modules = measure_module_lines()
-        callables = measure_callable_lines()
+    modules = measure_module_lines()
+    callables = measure_callable_lines()
     assert_real_corpus(modules, callables)
 
     print(f"size budget: scanned {len(modules)} modules, {len(callables)} production callables.")
 
-    if args.write_baseline:
-        existing = load_size_budget_baseline()
-        regenerated = SizeBudgetBaseline(
-            modules=build_limits(
-                modules,
-                MODULE_POLICY,
-                previous=existing.modules,
-                accept_growth=args.accept_growth,
-            ),
-            callables=build_limits(
-                callables,
-                CALLABLE_POLICY,
-                previous=existing.callables,
-                accept_growth=args.accept_growth,
-            ),
-            notes=existing.notes,
-        )
-        write_size_budget_baseline(
-            regenerated,
-            scanned_modules=len(modules),
-            scanned_callables=len(callables),
-        )
-        print(
-            f"wrote {SIZE_BUDGET_BASELINE_PATH.name}: "
-            f"{len(regenerated.modules)} module limits, {len(regenerated.callables)} callable limits. "
-            "Review and commit.",
-        )
-        return 0
 
     baseline = load_size_budget_baseline()
     module_verdict = evaluate_budget(modules, baseline.modules, MODULE_POLICY)
@@ -210,11 +161,8 @@ def main(argv: list[str] | None = None) -> int:
     if failing:
         print(
             f"\nsize budget: FAIL - {failing} finding(s).\n"
-            "  OVER BUDGET: split the oversize subject into a cohesive sibling. A plain "
-            "`--write-baseline` will NOT lift a ceiling you broke through; absorbing growth "
-            "needs an explicit `--accept-growth`.\n"
-            "  STALE PIN:   run `python -m dev.audit.size_budget --write-baseline` to re-measure "
-            "the band, then review and commit the baseline.",
+            "  Split the oversize subject into a cohesive sibling. There is no "
+            "baseline, ceiling table, or accept flag.",
         )
         return 1
 

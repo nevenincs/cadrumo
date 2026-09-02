@@ -84,13 +84,15 @@ def _canonical_branch_payload(
         attempted.append(branch.__name__)
         try:
             dumped = branch.model_validate_json(serialized).model_dump(mode="json")
+            # The mapping check IS load-bearing: `branches` is `type[BaseModel]`,
+            # which permits a `RootModel` whose `model_dump` returns a list while
+            # pydantic still annotates it `dict[str, Any]`.
             if not isinstance(dumped, dict):
                 raise ValueError("canonical root branch did not produce a mapping")
-            payload: dict[str, object] = {}
-            for key, item in dumped.items():
-                if not isinstance(key, str):
-                    raise ValueError("canonical root branch produced a non-text key")
-                payload[key] = item
+            # A key check is not: `mode="json"` coerces every key to `str`
+            # (verified for int, float and bool key types), so a non-text key
+            # cannot survive the dump.
+            payload: dict[str, object] = dict(dumped)
             return payload
         except ValueError:
             continue

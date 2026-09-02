@@ -1,0 +1,74 @@
+# Why a published generated export tree does not reproduce from its authored
+# inputs today. Every non-reproducing tree carries a row here, and every row
+# must name a tree that genuinely does not reproduce: the gate refuses in both
+# directions, so a state nobody explained fails, and an explanation that has
+# been repaired fails too rather than lingering.
+#
+# This is not a ratchet. It stores no counts and no ceilings, and shrinking it
+# is not the measure of progress; the requirement is that no tree sits in an
+# unexplained state. A seventh non-reproducing tree fails the gate whatever the
+# other six are doing.
+#
+# `class` is one of:
+#   provenance_only - the record bytes are correct and only the generation
+#                     manifest is stale. Safe to republish.
+#   record_drift    - the shipped record bytes are not what the current inputs
+#                     produce. Republishing ships whatever the inputs now say,
+#                     which may be worse than what is there. NOT safe.
+
+schema_version = 1
+
+[["184/2023-2024"]]
+class = "provenance_only"
+reason = """
+Record bytes are byte-identical to a fresh render; only the generation manifest
+differs, so an authored input or the generator changed without republication.
+The shipped filing data is correct and the attestation is stale.
+"""
+
+[["184/2025-y-siguientes"]]
+class = "provenance_only"
+reason = """
+Same as the sibling revision: records reproduce exactly and only the manifest
+differs.
+"""
+
+[["185/2025-y-siguientes"]]
+class = "provenance_only"
+reason = """
+Records reproduce exactly; the generation manifest no longer attests the inputs
+that produced them.
+"""
+
+[["296/2024-y-siguientes"]]
+class = "provenance_only"
+reason = """
+Records reproduce exactly; the generation manifest no longer attests the inputs
+that produced them.
+"""
+
+[["347/2011-2024"]]
+class = "record_drift"
+reason = """
+The shipped declarado record repeats over binding rows and carries nine
+binding-kind fields, so one authored row becomes one emitted record. A fresh
+render of the current inputs produces neither the repeat nor the binding
+fields, which would emit a single declarado record however many counterparties
+the declaration has. The official design requires as many type-two records as
+the declaration has declarados and inmuebles, so the shipped bytes are correct
+and the current inputs are not. This tree must not be republished until the
+inputs reproduce the repeat.
+
+The pipeline already refuses a regeneration that would drop this repeat, in
+`_tree_check._refuse_repeat_the_candidate_would_drop`, and that refusal names
+the three things to author on the map: the record repeat, the binding record,
+and the per-row casilla identities. Read it before attempting the repair; it is
+the authoritative statement of the remedy and it predates this disposition.
+"""
+
+[["347/2025-y-siguientes"]]
+class = "record_drift"
+reason = """
+Same defect as the earlier revision of this modelo, in the same declarado
+record. Must not be republished.
+"""

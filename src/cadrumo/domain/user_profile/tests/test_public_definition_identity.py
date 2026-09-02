@@ -20,6 +20,8 @@ _PROJECT_ROOT = _SOURCE_ROOT.parent
 PUBLIC_DEFINITIONS: dict[str, frozenset[str]] = {
     "errors": frozenset(
         {
+            "PROFILE_SNAPSHOT_CLASSIFICATION_MISMATCH_MESSAGE",
+            "PROFILE_SNAPSHOT_VERSION_UNSUPPORTED_MESSAGE",
             "SCHEMA_LOAD_MESSAGE_KEY",
             "STORED_PROFILE_DRIFT_MESSAGE_KEY",
             "UserProfileError",
@@ -37,6 +39,8 @@ PUBLIC_DEFINITIONS: dict[str, frozenset[str]] = {
             "ProfileImportError",
             "ProfileImportSignatureError",
             "ProfileImportCollisionError",
+            "ProfileSnapshotClassificationError",
+            "ProfileSnapshotVersionError",
             "StoredProfileDriftError",
         },
     ),
@@ -97,6 +101,7 @@ PUBLIC_DEFINITIONS: dict[str, frozenset[str]] = {
             "declared_provenance_sources",
             "declared_field_paths",
             "section_field_key",
+            "PayloadSchemaVersion",
             "UserProfileFactValue",
             "ProfileSetupState",
             "new_profile_id",

@@ -11,7 +11,7 @@ from .....application.aggregation import (
     IvaDifferentiatedDeductionContribution,
     resolve_iva_differentiated_deduction_contributions,
 )
-from .....application.aggregation._iva_ledger import IvaLedgerProrrataApportionment, IvaLedgerSectorApportionment
+from .....application.aggregation.iva_ledger import IvaLedgerProrrataApportionment, IvaLedgerSectorApportionment
 from .....core.filing_projection_ref import (
     M303DifferentiatedDeductionProjectionField,
     M303DifferentiatedDeductionProjectionRef,

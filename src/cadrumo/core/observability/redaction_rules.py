@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 # Cached at module scope after first resolution so repeated emits do not
 # re-import the redaction substrate.
-_DIAGNOSTIC_RULES: tuple[RedactionRule, ...] | None = None
+_diagnostic_rules: tuple[RedactionRule, ...] | None = None
 
 
 def diagnostic_rules() -> tuple[RedactionRule, ...]:
@@ -31,10 +31,10 @@ def diagnostic_rules() -> tuple[RedactionRule, ...]:
         A tuple of :class:`RedactionRule` instances for the
         ``DIAGNOSTIC`` sensitivity class.
     """
-    global _DIAGNOSTIC_RULES
-    if _DIAGNOSTIC_RULES is None:
+    global _diagnostic_rules
+    if _diagnostic_rules is None:
         from ..classification.policies import SensitivityClass
         from ..redaction.rules import default_rules_for_class
 
-        _DIAGNOSTIC_RULES = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
-    return _DIAGNOSTIC_RULES
+        _diagnostic_rules = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
+    return _diagnostic_rules

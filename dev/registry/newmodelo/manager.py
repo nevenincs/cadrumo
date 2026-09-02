@@ -11,7 +11,7 @@ The scaffolded tree is a *skeleton*: every section fragment starts empty (a
 commented placeholder, since registry section fields default to ``()``/``None``
 and the loader tolerates an absent or empty fragment file). The tree does not
 validate as calc-grade on its own — a contributor fills in the regulated
-content named by the 12-item checklist in
+content named by the contributor checklist in
 :mod:`dev.registry.newmodelo.checklist`. ``scaffold(..., check=True)`` never
 writes; it reports whether the expected skeleton exists.
 """

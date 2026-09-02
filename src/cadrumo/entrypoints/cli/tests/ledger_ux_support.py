@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Generator, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -59,7 +59,7 @@ def _invoke(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Res
 
 
 @contextmanager
-def open_ledger_ux_session(tmp_path: Path) -> Iterator[None]:
+def open_ledger_ux_session(tmp_path: Path) -> Generator[None]:
     with open_bucket_session(tmp_path):
         yield
 

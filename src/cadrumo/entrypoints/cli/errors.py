@@ -779,8 +779,8 @@ def _boundary_no_recovery_verdict(error: CadrumoError) -> PreconditionVerdict | 
         CliExceptionPrecondition,
         cli_exception_no_recovery_verdict,
     )
-    from ._config.errors import ConfigBoundaryError
     from ._tty import NonTtyRefusedError
+    from .config.errors import ConfigBoundaryError
 
     if isinstance(error, CliValidationBoundaryError):
         condition = CliExceptionPrecondition.VALIDATION_BOUNDARY
@@ -902,8 +902,9 @@ def _callback_name(callback: Callable[..., object] | None) -> str:
         return "<unknown>"
     if inspect.isfunction(callback):
         return callback.__name__
-    class_name = callback.__class__.__name__
-    return class_name if isinstance(class_name, str) else "<unknown>"
+    # `type.__name__` is `str` by the language definition, so the former
+    # fallback branch was unreachable.
+    return callback.__class__.__name__
 
 
 def _is_memoised_wrapper(obj: object) -> TypeGuard[Callable[..., object]]:

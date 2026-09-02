@@ -52,9 +52,9 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict
 
 from ..core.config import Settings, load_settings
-from ..core.telemetry._consent import telemetry_emit_permitted
-from ..core.telemetry._emit import emit_telemetry_event
-from ..core.telemetry._http_sink import HttpTelemetrySink
+from ..core.telemetry.consent import telemetry_emit_permitted
+from ..core.telemetry.emit import emit_telemetry_event
+from ..core.telemetry.http_sink import HttpTelemetrySink
 from ..core.telemetry.schema import TelemetryEventPayload, build_telemetry_payload
 from ..core.telemetry.tier import TelemetryTier
 from ..core.telemetry.workspace import workspace_hash

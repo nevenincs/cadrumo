@@ -96,7 +96,7 @@ from ..aggregation import CalculationSourceDiagnostic
 
 # Intra-package reuse of a sibling module's cap, permitted by the architecture
 # rule; only cross-package private reaches are barred, and that gate is separate.
-from ._minimo_descendientes_advisory import _MAX_NAMED_DESCENDANTS  # pyright: ignore[reportPrivateUsage]
+from ._minimo_descendientes_advisory import MAX_NAMED_DESCENDANTS
 from ._registry_helpers import validate_casilla_input_ids
 from .profile_binding import MaternidadMesesResolution
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
@@ -354,7 +354,7 @@ def calculate_modelo_work_revision(
     )
     plazo_resolutions: tuple[M210PlazoResolution, ...] = ()
     if work_unit.modelo == Modelo.M210:
-        from ._m303_regimen_simplificado_scope import active_taxpayer_profile
+        from .m303_regimen_simplificado_scope import active_taxpayer_profile
         from .work_plazo import calculated_m210_plazo_resolution
 
         resolution = calculated_m210_plazo_resolution(
@@ -915,13 +915,13 @@ def _bounded_descendant_ids(ids: Sequence[str]) -> str:
     and a NON-blocking advisory becomes a hard validation error that stops the
     filing -- at exactly the moment it had something to say.
 
-    Shares :data:`_MAX_NAMED_DESCENDANTS` with the sibling advisory module that
+    Shares :data:`MAX_NAMED_DESCENDANTS` with the sibling advisory module that
     first hit this rather than restating the number, so the two bounds cannot
     drift apart. The rendering differs (bare ids here, fact paths there) but the
     judgement being made is one judgement.
     """
-    shown = ", ".join(ids[:_MAX_NAMED_DESCENDANTS])
-    remainder = len(ids) - _MAX_NAMED_DESCENDANTS
+    shown = ", ".join(ids[:MAX_NAMED_DESCENDANTS])
+    remainder = len(ids) - MAX_NAMED_DESCENDANTS
     return f"{shown} and {remainder} more" if remainder > 0 else shown
 
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import ExitStack, contextmanager
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -90,7 +90,7 @@ def _profile() -> TaxpayerProfile:
 
 
 @contextmanager
-def isolated_backend_context(tmp_path: Path) -> Iterator[None]:
+def isolated_backend_context(tmp_path: Path) -> Generator[None]:
     global _ACTIVE_STORAGE_STACK, _PROFILE_SPAN_OPEN
 
     with ExitStack() as stack:

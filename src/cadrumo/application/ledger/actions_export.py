@@ -178,7 +178,7 @@ def _ledger_export_rows(
     )
 
 
-def _optional_text(value: str | None) -> str:
+def optional_text(value: str | None) -> str:
     """Render an unset optional text field as an empty export cell.
 
     The sibling of :func:`optional_decimal` for the string columns: an export
@@ -202,28 +202,28 @@ def _ledger_export_row(*, bucket_id: str, transaction: Transaction) -> LedgerExp
         direction=transaction.direction.value,
         counterparty=raw.display_counterparty,
         description=raw.description,
-        source_jurisdiction=_optional_text(transaction.source_jurisdiction),
+        source_jurisdiction=optional_text(transaction.source_jurisdiction),
         business_classification=transaction.business_classification.value,
         business_pct=optional_decimal(transaction.business_pct),
-        category_id=_optional_text(transaction.category_id),
+        category_id=optional_text(transaction.category_id),
         taxable_base=optional_decimal(transaction.taxable_base),
         iva_rate=optional_decimal(transaction.iva_rate),
         iva_amount=optional_decimal(transaction.iva_amount),
         iva_category=transaction.iva_category.value if transaction.iva_category is not None else "",
-        counterparty_country=_optional_text(transaction.counterparty_country),
+        counterparty_country=optional_text(transaction.counterparty_country),
         counterparty_identification_state=(
             transaction.counterparty_identification_state.value
             if transaction.counterparty_identification_state is not None
             else ""
         ),
-        irpf_category=_optional_text(transaction.irpf_category),
-        usage_ratio_id=_optional_text(transaction.usage_ratio_id),
-        prorrata_reference=_optional_text(transaction.prorrata_reference),
-        purchase_invoice_evidence_id=_optional_text(transaction.purchase_invoice_evidence_id),
+        irpf_category=optional_text(transaction.irpf_category),
+        usage_ratio_id=optional_text(transaction.usage_ratio_id),
+        prorrata_reference=optional_text(transaction.prorrata_reference),
+        purchase_invoice_evidence_id=optional_text(transaction.purchase_invoice_evidence_id),
         attachment_ids=",".join(transaction.attachment_ids),
         notes=transaction.notes,
-        created_by=_optional_text(transaction.created_by),
-        created_source_command=_optional_text(transaction.source_command),
+        created_by=optional_text(transaction.created_by),
+        created_source_command=optional_text(transaction.source_command),
         value_in_eur=optional_decimal(transaction.value_in_eur),
         fx_rate=optional_decimal(transaction.fx_rate),
     )

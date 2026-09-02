@@ -41,8 +41,8 @@ import pytest
 
 from ....tests.loopback_recording_server import run_loopback_server, stop_loopback_server
 from ...config import Settings
-from .._emit import emit_telemetry_event
-from .._http_sink import HttpTelemetrySink
+from ..emit import emit_telemetry_event
+from ..http_sink import HttpTelemetrySink
 from ..schema import TelemetryEventPayload, build_telemetry_payload
 from ..tier import TelemetryTier
 from ._telemetry_endpoint_support import RecordingTelemetryEndpoint

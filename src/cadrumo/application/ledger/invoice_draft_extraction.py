@@ -114,7 +114,7 @@ from .invoice_draft_records import (
     InvoiceDraft,
     InvoiceDraftLine,
     InvoiceDraftRateBreakdown,
-    _facturae_invoice_class_findings,
+    facturae_invoice_class_findings,
 )
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
@@ -659,7 +659,7 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
         update={
             "discrepancies": (
                 *deterministic_findings(draft),
-                *_facturae_invoice_class_findings(
+                *facturae_invoice_class_findings(
                     declared=parsed.facturae_invoice_class,
                     rectifies_invoice_number=parsed.rectifies_invoice_number,
                 ),

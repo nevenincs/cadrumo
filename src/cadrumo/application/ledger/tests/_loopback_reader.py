@@ -33,7 +33,7 @@ See Also:
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from http import HTTPStatus
 from typing import ClassVar, override
@@ -94,7 +94,7 @@ def serving_a_loopback_reader(
     replies: Sequence[ReaderReply],
     *,
     fallback: Mapping[str, str] | None = None,
-) -> Iterator[str]:
+) -> Generator[str]:
     """Serve a real reading endpoint for the duration of the block.
 
     Args:

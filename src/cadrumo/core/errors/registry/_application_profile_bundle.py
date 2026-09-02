@@ -2,7 +2,7 @@
 
 from ..error_codes import ErrorCategory, ErrorCode
 
-_PROFILE_BUNDLE_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
+PROFILE_BUNDLE_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "cadrumo.application.user_profile.bundle_export_operation.ProfileBundleExportJournalError",
         ErrorCode(

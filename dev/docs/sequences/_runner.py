@@ -56,7 +56,7 @@ import re
 import shutil
 import time
 import warnings
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import chdir, contextmanager, nullcontext
 from contextvars import ContextVar
 from dataclasses import dataclass
@@ -372,7 +372,7 @@ def _frame_at(frame: SequenceFrame) -> str:
 
 
 @contextmanager
-def _sequence_progress_scope(page: str) -> Iterator[None]:
+def _sequence_progress_scope(page: str) -> Generator[None]:
     """Bind the owning docs page while its sequences execute.
 
     The binding is invocation-scoped, so a child interpreter that checks more
@@ -472,7 +472,7 @@ def _refuse_live_opt_in(sequence_id: str) -> None:
 
 
 @contextmanager
-def _provisioned_sandbox_profile() -> Iterator[None]:
+def _provisioned_sandbox_profile() -> Generator[None]:
     """Publish the deterministic sandbox profile and hold its custody span open.
 
     Mirrors production exactly, so the sandbox introduces no parallel write
@@ -537,7 +537,7 @@ _ENV_SCRUB_ALLOWLIST: frozenset[str] = frozenset({"CADRUMO_LOCAL_STORAGE_ROOT"})
 
 
 @contextmanager
-def _neutralized_ambient_env() -> Iterator[None]:
+def _neutralized_ambient_env() -> Generator[None]:
     """Remove ambient ``CADRUMO_*`` / ``AEAT_*`` env vars for the scope.
 
     Settings resolution inside the sandbox re-reads the process environment on
@@ -566,7 +566,7 @@ def _neutralized_ambient_env() -> Iterator[None]:
 
 
 @contextmanager
-def _isolated_external_tool_env(sandbox_root: Path) -> Iterator[None]:
+def _isolated_external_tool_env(sandbox_root: Path) -> Generator[None]:
     """Pin external-tool discovery to empty sandbox-owned directories.
 
     ``PATH`` and the Playwright browser cache are workstation state just as
@@ -598,7 +598,7 @@ def _isolated_external_tool_env(sandbox_root: Path) -> Iterator[None]:
 
 
 @contextmanager
-def _isolated_diagnostic_log() -> Iterator[None]:
+def _isolated_diagnostic_log() -> Generator[None]:
     """Bind diagnostic file logging to THIS sequence's own storage root.
 
     Mirrors :func:`dev.docs.build.ensure_private_diagnostic_log`'s reasoning one
@@ -649,7 +649,7 @@ def _isolated_diagnostic_log() -> Iterator[None]:
 
 
 @contextmanager
-def _absent_credential_vault() -> Iterator[None]:
+def _absent_credential_vault() -> Generator[None]:
     """Pin the OS credential vault to a stable absence for the scope.
 
     The host's credential vault is workstation state exactly as ``PATH`` and the
@@ -701,7 +701,7 @@ def sequence_sandbox(
     sequence_id: str,
     sandbox_root: Path,
     fixtures_root: Path | None = None,
-) -> Iterator[SequenceSandbox]:
+) -> Generator[SequenceSandbox]:
     """Open one hermetic per-sequence sandbox under ``sandbox_root``.
 
     Inside the scope: an isolated real-crypto storage root, the frozen

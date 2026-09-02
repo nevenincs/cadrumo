@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -14,7 +14,7 @@ __all__ = ["_isolated_cli_state"]
 
 
 @contextmanager
-def _runtime_profile_state(tmp_path: Path) -> Iterator[None]:
+def _runtime_profile_state(tmp_path: Path) -> Generator[None]:
     with isolated_runtime_profile(tmp_path=tmp_path):
         yield
 

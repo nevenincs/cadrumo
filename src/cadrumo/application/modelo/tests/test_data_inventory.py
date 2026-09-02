@@ -19,7 +19,7 @@ from __future__ import annotations
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from .._data_inventory import DataInventoryCasilla
+from ..data_inventory import DataInventoryCasilla
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

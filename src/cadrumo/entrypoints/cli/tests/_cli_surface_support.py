@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -13,7 +13,7 @@ from ....tests.user_profile import register_cli_profile
 
 
 @contextmanager
-def isolated_cli_surface_backend(tmp_path: Path) -> Iterator[None]:
+def isolated_cli_surface_backend(tmp_path: Path) -> Generator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(

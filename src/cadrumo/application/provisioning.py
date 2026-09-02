@@ -10,7 +10,7 @@ The vision read consults :func:`probe_ollama_vision` before expensive inference,
 so a down server or an unpulled model becomes an instructive refusal instead of
 a raw stack trace. The ``aeat config check`` command renders this module's
 statuses as
-:class:`~cadrumo.entrypoints.cli._config._check_payloads.CheckDependencyPayload`
+:class:`~cadrumo.entrypoints.cli.config._check_payloads.CheckDependencyPayload`
 rows beside the active profile's capability posture from
 :func:`~cadrumo.application.user_profile.resolve_active_capability`. Optional-extra
 probes walk the core :data:`~cadrumo.core.OPTIONAL_EXTRAS` catalogue of
@@ -134,7 +134,7 @@ class DependencyStatus(ProvisioningOutcome):
     generic so Ollama, subprocess CLIs, Playwright browser binaries, and
     :class:`~cadrumo.core.OptionalExtra` package extras all render through the same
     payload shape and can be validated into
-    :class:`~cadrumo.entrypoints.cli._config._check_payloads.CheckDependencyPayload`.
+    :class:`~cadrumo.entrypoints.cli.config._check_payloads.CheckDependencyPayload`.
     """
 
     service: str = Field(min_length=1)

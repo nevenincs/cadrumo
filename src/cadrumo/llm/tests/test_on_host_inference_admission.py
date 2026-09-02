@@ -17,7 +17,7 @@ from __future__ import annotations
 import asyncio
 import contextvars
 import threading
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from http import HTTPStatus
 from pathlib import Path
@@ -82,7 +82,7 @@ class _HeldRuntime:
 
 
 @contextmanager
-def _serve_held_ollama(runtime: _HeldRuntime) -> Iterator[str]:
+def _serve_held_ollama(runtime: _HeldRuntime) -> Generator[str]:
     """Serve ``/api/chat`` on loopback, blocking every request until released."""
 
     class _Endpoint(SilentLoopbackHandler):

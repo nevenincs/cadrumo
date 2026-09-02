@@ -1178,7 +1178,7 @@ class ModeloEditApplyBaselineV1(BaseModel):
 #: serialization already produces, and what real fixtures already pass
 #: (``value="150.00"``) - removes the asymmetry with no loss of expressible
 #: values, though NOT where this once said. ``to_submission`` does not restore
-#: the ``Decimal``: ``ModeloScalar`` is a plain union and ``_EditModel`` is
+#: the ``Decimal``: ``ModeloScalar`` is a plain union and ``EditModel`` is
 #: strict, so a string crosses back as a string. The reconstruction happens one
 #: layer further in, at the execution boundary, which coerces with
 #: ``Decimal(str(value))`` keyed on the CASILLA'S DECLARED ``data_type`` from
@@ -1561,7 +1561,9 @@ type ModeloEditApplyDetailRowV1 = Annotated[
 """The wire mirror of the per-modelo detail-row union, discriminated as it is."""
 
 
-_DETAIL_ROW_ADAPTER: Final = TypeAdapter(ModeloEditApplyDetailRowV1)
+_DETAIL_ROW_ADAPTER: Final[TypeAdapter[ModeloEditApplyDetailRowV1]] = TypeAdapter(
+    ModeloEditApplyDetailRowV1,
+)
 
 
 def wire_detail_row(row: BaseModel) -> ModeloEditApplyDetailRowV1:

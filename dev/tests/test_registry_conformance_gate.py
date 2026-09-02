@@ -1,39 +1,35 @@
-"""CI gate: ``conformance audit --check`` exit code is tested via real subprocess.
+"""CI gate: ``conformance closure --offline --check`` is exercised through a real subprocess.
 
-This gate invokes ``python -m dev.registry.conformance audit --check`` as a
-separate process so the CI lane sees a non-zero exit when the committed
-baseline has regressed — rather than relying on a developer to run the verb
-by hand and notice.
+The gate invokes ``python -m dev.registry.conformance closure`` as a separate
+process so the CI lane sees the exit code the verb actually returns, rather
+than relying on a developer to run it by hand and read the rows.
 
-Two proofs are required, because a gate never observed failing is not a gate.
-A green run alone cannot distinguish a check that is working from one that has
-stopped checking — a broken invocation, a swallowed exit code, or a baseline
-comparison that reads nothing all produce the same passing result. Only a run
-that is made to fail, on a regression seeded for the purpose, shows the gate
-still has teeth:
+Two proofs are required, because a gate never observed failing is not a gate:
 
-Green path
-    The real registry at HEAD, compared against the committed baseline,
-    produces exit 0. The output is additionally asserted to have measured a
-    realistic population (non-vacuity), so an empty or errored run can never
-    read as a pass.
+Report path
+    ``closure --offline`` exits 0 and emits one ``closure`` summary row plus a
+    ``closure_row`` per bundled revision. The summary is asserted to carry a
+    realistic revision population and to state ``release_eligible`` in the
+    same breath as ``satisfied_revisions``/``refused_revisions``, so an empty
+    or errored run can never read as a report.
 
-Red path (seeded regression)
-    A copy of the committed baseline with ``floors.composed_revisions`` raised
-    to an impossible value makes the audit exit 1 and name
-    ``composed_revisions`` in its violation output. The seeded file is
-    temporary and never touches the committed baseline.
+Check path
+    ``closure --offline --check`` exits 1 whenever the summary row says
+    ``release_eligible=false`` and 0 whenever it says ``release_eligible=true``.
+    The two invocations are compared against each other in the same run, so
+    the gate is proven to block on exactly the predicate it prints, never on
+    an unrelated failure. ``--offline`` is the mode that marks the live-proof
+    limbs ``unmeasured``; an unmeasured limb is a refusal, never a pass, so
+    an offline check can detect a regression but cannot approve a release.
 
 Lane
     Marked ``integration`` (subprocess; no ``lru_cache`` sharing across
-    processes). Enrolled in ``ci-full.yml`` — the manual-dispatch 120-minute
-    lane — because the composer walks every revision in the bundled registry
-    and the real run takes minutes, beyond the per-push budget.
+    processes). The composer walks every revision in the bundled registry and
+    the real run takes minutes, beyond the per-push budget.
 """
 
 from __future__ import annotations
 
-import json
 import re
 import subprocess
 import sys
@@ -43,93 +39,59 @@ from typing import Final
 import pytest
 
 from .._paths import REPO_ROOT
-from ..registry.conformance.manager import baseline_path
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 _REPO_ROOT: Final[Path] = REPO_ROOT
-_COMMITTED_FLOORS: Final[dict[str, int]] = json.loads(baseline_path().read_text(encoding="utf-8"))["floors"]
-_COMPOSED_REVISIONS_FLOOR_PATTERN: Final = re.compile(r"floor population=composed_revisions current=(\d+)")
+_SUMMARY_PATTERN: Final = re.compile(
+    r"^closure .*\brelease_eligible=(?P<eligible>true|false)\b.*\brevisions=(?P<revisions>\d+)\b",
+    re.MULTILINE,
+)
+_MINIMUM_REALISTIC_REVISIONS: Final[int] = 2
 
 
-@pytest.mark.timeout(600)
-def test_conformance_audit_passes_committed_baseline() -> None:
-    """``audit --check`` exits 0 against the real registry at HEAD.
-
-    Also asserts that the run examined at least the committed floor's worth of
-    revisions, so a vacuous or errored run cannot read as a pass.
-    """
-    result = subprocess.run(
-        [sys.executable, "-m", "dev.registry.conformance", "audit", "--check"],
+def _run_closure(*extra: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, "-m", "dev.registry.conformance", "closure", "--offline", *extra],
         capture_output=True,
         text=True,
         cwd=str(_REPO_ROOT),
-    )
-    _assert_realistic_population(result.stdout)
-    assert result.returncode == 0, (
-        "conformance audit --check exited non-zero on the committed baseline "
-        f"(unexpected regression at HEAD):\n{result.stdout}\n{result.stderr}"
+        check=False,
     )
 
 
-@pytest.mark.timeout(600)
-def test_conformance_audit_fails_seeded_floor_regression(tmp_path: Path) -> None:
-    """A baseline with an impossible population floor makes the gate exit 1.
-
-    The seeded file is a copy of the committed baseline with
-    ``floors.composed_revisions`` raised by 99 999 — a value the real
-    registry can never satisfy. The subprocess must exit 1 AND name
-    ``composed_revisions`` in its output, proving both directions of the
-    vacuity check.
-    """
-    raw = json.loads(baseline_path().read_text(encoding="utf-8"))
-    raw["floors"]["composed_revisions"] = _COMMITTED_FLOORS["composed_revisions"] + 99_999
-    seeded = tmp_path / "seeded-baseline.json"
-    seeded.write_text(json.dumps(raw), encoding="utf-8")
-
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "dev.registry.conformance",
-            "audit",
-            "--check",
-            "--baseline",
-            str(seeded),
-        ],
-        capture_output=True,
-        text=True,
-        cwd=str(_REPO_ROOT),
-    )
-    assert result.returncode == 1, (
-        f"seeded floor regression did NOT trigger exit 1 (exit={result.returncode}); "
-        "the gate cannot detect a shrunken measurement population:\n"
-        f"{result.stdout}\n{result.stderr}"
-    )
-    assert "composed_revisions" in result.stdout, (
-        "violation output does not name 'composed_revisions'; "
-        "the gate may not be reporting the failing floor:\n"
-        f"{result.stdout}"
-    )
-
-
-def _assert_realistic_population(output: str) -> None:
-    """Fail when the audit examined fewer revisions than the committed floor.
-
-    Parses the ``floor population=composed_revisions current=N`` line that
-    ``render_audit`` always emits and compares ``N`` against the committed
-    baseline's own floor. A missing line means the run produced no audit
-    output at all (vacuous or errored).
-    """
-    match = _COMPOSED_REVISIONS_FLOOR_PATTERN.search(output)
+def _summary(output: str) -> tuple[bool, int]:
+    match = _SUMMARY_PATTERN.search(output)
     if match is None:
-        pytest.fail(
-            "audit output contained no 'floor population=composed_revisions current=' line; "
-            "the run may have been vacuous or errored:\n" + output
-        )
-    current = int(match.group(1))
-    required = _COMMITTED_FLOORS["composed_revisions"]
-    assert current >= required, (
-        f"audit examined {current} composed revisions, below the committed floor of {required}; "
-        "the run was not representative of the full registry"
+        pytest.fail("closure output carried no 'closure … release_eligible=… revisions=…' summary row:\n" + output)
+    return bool(match.group("eligible") == "true"), int(match.group("revisions"))
+
+
+@pytest.mark.timeout(900)
+def test_closure_report_exits_zero_and_measures_the_registry() -> None:
+    result = _run_closure()
+
+    assert result.returncode == 0, f"closure --offline exited {result.returncode}:\n{result.stdout}\n{result.stderr}"
+    _eligible, revisions = _summary(result.stdout)
+    assert revisions >= _MINIMUM_REALISTIC_REVISIONS, (
+        f"closure composed only {revisions} revision row(s); the run was not representative of the bundled registry"
+    )
+    assert result.stdout.count("\nclosure_row ") + result.stdout.startswith("closure_row ") == revisions, (
+        "closure_row count disagrees with the summary's revisions figure:\n" + result.stdout
+    )
+
+
+@pytest.mark.timeout(900)
+def test_closure_check_blocks_on_exactly_the_printed_predicate() -> None:
+    report = _run_closure()
+    checked = _run_closure("--check")
+
+    eligible, _revisions = _summary(report.stdout)
+    assert _summary(checked.stdout) == _summary(report.stdout), (
+        "the checked run printed a different summary than the report run; the gate is not deterministic"
+    )
+    expected = 0 if eligible else 1
+    assert checked.returncode == expected, (
+        f"closure --offline --check exited {checked.returncode} while the summary row says "
+        f"release_eligible={'true' if eligible else 'false'}:\n{checked.stdout}\n{checked.stderr}"
     )

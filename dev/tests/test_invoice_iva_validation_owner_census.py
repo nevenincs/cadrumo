@@ -61,12 +61,12 @@ _INVOICE_FAMILIES = (
         ("'expected a datetime or ISO-8601 string'",),
         _MODEL_TRANSPORTS,
     ),
-    _InvoiceFamily("_normalise_invoice_currency", ("str(exc)",), _MODEL_TRANSPORTS),
-    _InvoiceFamily("_raise_first_invoice_violation", ("message",), _MODEL_TRANSPORTS),
-    _InvoiceFamily("_require_optional_non_negative", ("message",), _MODEL_TRANSPORTS),
-    _InvoiceFamily("_require_equal", ("message",), _MODEL_TRANSPORTS),
+    _InvoiceFamily("normalise_invoice_currency", ("str(exc)",), _MODEL_TRANSPORTS),
+    _InvoiceFamily("raise_first_invoice_violation", ("message",), _MODEL_TRANSPORTS),
+    _InvoiceFamily("require_optional_non_negative", ("message",), _MODEL_TRANSPORTS),
+    _InvoiceFamily("require_equal", ("message",), _MODEL_TRANSPORTS),
     _InvoiceFamily(
-        "_normalise_invoice_monetary_fields",
+        "normalise_invoice_monetary_fields",
         (
             "f'{key} could not be parsed as a decimal: {_bounded_rejected_value(raw)}. "
             "Leave it out (or set it to null) to declare it absent; a value that "
@@ -81,12 +81,12 @@ _INVOICE_FAMILIES = (
         _MODEL_TRANSPORTS,
     ),
     _InvoiceFamily(
-        "_derive_invoice_id_when_complete",
+        "derive_invoice_id_when_complete",
         ("'invoice_id must match the stable hash derived from identity fields'",),
         _MODEL_TRANSPORTS,
     ),
     _InvoiceFamily(
-        "_normalise_invoice_payment_id",
+        "normalise_invoice_payment_id",
         ("'payment_id must be a 64-character lowercase hex digest'",),
         _MODEL_TRANSPORTS,
     ),

@@ -33,8 +33,8 @@ from pydantic import TypeAdapter
 
 from ......domain.transactions.enums import TransactionDirection
 from ......tests import FIXTURES_DIR
-from .._detection import detect_provider
-from .._pdf_n26 import PdfN26Provider
+from ..detection import detect_provider
+from ..pdf_n26 import PdfN26Provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -104,7 +104,7 @@ def test_pdf_n26_provider_invalid_pdf_does_not_expose_filename(
     source = tmp_path / "12345678Z-private-account-statement.pdf"
     source.write_bytes(b"not a valid PDF document")
 
-    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.financial.providers._pdf_n26"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.financial.providers.pdf_n26"):
         validation = PdfN26Provider().validate_source(source)
 
     rendered_logs = "\n".join(record.getMessage() for record in caplog.records)
@@ -174,7 +174,7 @@ def test_extract_statement_currency_uses_default_currency() -> None:
     DEFAULT_CURRENCY so that the authoritative constant governs all currency logic.
     """
     from ......core.external_constants import DEFAULT_CURRENCY
-    from .._pdf_n26 import _extract_statement_currency
+    from ..pdf_n26 import _extract_statement_currency
 
     # A page with a EUR marker must yield DEFAULT_CURRENCY.
     pages = (("Umsatz 100,00 EUR Kontostand",),)
@@ -184,8 +184,8 @@ def test_extract_statement_currency_uses_default_currency() -> None:
 
 def test_extract_statement_currency_raises_on_missing_currency() -> None:
     """Pages with no currency marker must raise InvalidFinancialSourceError."""
-    from .._pdf_n26 import _extract_statement_currency
     from ..base import InvalidFinancialSourceError
+    from ..pdf_n26 import _extract_statement_currency
 
     pages = (("no currency info here",),)
     with pytest.raises(InvalidFinancialSourceError):

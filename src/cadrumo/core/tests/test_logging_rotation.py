@@ -34,9 +34,9 @@ def _rotating_file_handlers(log_dir: Path) -> list[logging.handlers.RotatingFile
 
 def test_file_handler_is_rotating_with_settings_cap_and_backups(tmp_path: Path) -> None:
     log_dir = tmp_path / "probe-logs"
-    original_configured = _logging_mod._CONFIGURED
+    original_configured = _logging_mod._configured
     try:
-        _logging_mod._CONFIGURED = False
+        _logging_mod._configured = False
         with override_settings(
             cadrumo_log_dir=log_dir,
             cadrumo_log_file_max_bytes=1024,
@@ -49,16 +49,16 @@ def test_file_handler_is_rotating_with_settings_cap_and_backups(tmp_path: Path) 
             assert handler.maxBytes == 1024
             assert handler.backupCount == 3
     finally:
-        _logging_mod._CONFIGURED = False
+        _logging_mod._configured = False
         configure_logging()
-        _logging_mod._CONFIGURED = original_configured or True
+        _logging_mod._configured = original_configured or True
 
 
 def test_log_rolls_over_and_bounds_backups(tmp_path: Path) -> None:
     log_dir = tmp_path / "probe-logs"
-    original_configured = _logging_mod._CONFIGURED
+    original_configured = _logging_mod._configured
     try:
-        _logging_mod._CONFIGURED = False
+        _logging_mod._configured = False
         with override_settings(
             cadrumo_log_dir=log_dir,
             cadrumo_log_file_max_bytes=512,
@@ -79,6 +79,6 @@ def test_log_rolls_over_and_bounds_backups(tmp_path: Path) -> None:
             assert backups, "writing past the cap must produce at least one rotated backup"
             assert len(backups) <= 2, "retained backups must not exceed cadrumo_log_file_backup_count"
     finally:
-        _logging_mod._CONFIGURED = False
+        _logging_mod._configured = False
         configure_logging()
-        _logging_mod._CONFIGURED = original_configured or True
+        _logging_mod._configured = original_configured or True

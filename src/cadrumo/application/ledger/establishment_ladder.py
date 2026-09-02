@@ -821,7 +821,7 @@ def _draft_date(draft: InvoiceDraft) -> date | None:
     could not recover is an ordinary outcome of reading, and it makes the rate
     check inconclusive rather than making the whole resolution fail.
     """
-    from ...core.parsing import parse_iso8601_date
+    from ...core.parsing.dates import parse_iso8601_date
 
     return parse_iso8601_date(draft.invoice_date)
 

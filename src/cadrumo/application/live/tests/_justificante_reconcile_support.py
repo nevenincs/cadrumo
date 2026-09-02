@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -26,7 +26,7 @@ _WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 15, 45, tzinfo=UTC)
 
 
 @contextmanager
-def isolated_justificante_backend(tmp_path: Path) -> Iterator[None]:
+def isolated_justificante_backend(tmp_path: Path) -> Generator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session("11111111-1111-4111-8111-111111111111"),

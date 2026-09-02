@@ -16,7 +16,7 @@ Submodules
    cadrumo.core.i18n._auth_provider
    cadrumo.core.i18n._catalogue_cache
    cadrumo.core.i18n._lazy_catalogue
-   cadrumo.core.i18n._render
-   cadrumo.core.i18n._routing
    cadrumo.core.i18n._translatable
    cadrumo.core.i18n.locale_catalogue
+   cadrumo.core.i18n.render
+   cadrumo.core.i18n.routing

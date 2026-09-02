@@ -97,7 +97,6 @@ from .complexity import (
 from .complexity import (
     load_baseline as load_complexity_baseline,
 )
-from .complexity_allowlist import load_allowlist as load_complexity_allowlist
 from .duplication import DuplicationOutcome, run_duplication_scan
 
 _UTF_8: Final[str] = UTF_8
@@ -134,10 +133,15 @@ class DimensionReport:
 
 
 def _load_import_hygiene_baseline() -> dict[str, object]:
-    """Load the checked-in Family-3 pinned-symbol baseline, or an empty shell."""
-    if not _IMPORT_HYGIENE_BASELINE_PATH.is_file():
-        return {"family3_pinned_duplicate_symbols": {"tolerated_multi_sourced_symbols": []}}
-    return json.loads(_IMPORT_HYGIENE_BASELINE_PATH.read_text(encoding=_UTF_8))
+    """Return an empty shell: no symbol is tolerated as a pinned duplicate.
+
+    The Family-3 pinned-symbol baseline was retired, so every multi-sourced
+    symbol is classified on its own merits.
+
+    Returns:
+        An empty tolerated-symbol shell.
+    """
+    return {"family3_pinned_duplicate_symbols": {"tolerated_multi_sourced_symbols": []}}
 
 
 def audit_shadowing() -> DimensionReport:
@@ -145,8 +149,8 @@ def audit_shadowing() -> DimensionReport:
 
     RED: a "high"-confidence symbol declared in more than one owning
     package's ``__all__`` that is NOT in the pinned-tolerated set (a new,
-    undocumented structural duplicate). AMBER: the pinned/tolerated set is
-    non-empty (grandfathered debt). GREEN: no multi-facade duplicates at all.
+    undocumented structural duplicate). GREEN: no multi-facade duplicates at
+    all. Nothing is grandfathered.
     """
     baseline = _load_import_hygiene_baseline()
     tolerated_entries = baseline.get("family3_pinned_duplicate_symbols", {}).get("tolerated_multi_sourced_symbols", [])
@@ -343,15 +347,11 @@ def audit_complexity() -> DimensionReport:
     cog = collect_cog(_PRODUCT_SOURCE_ROOT, is_test_run=False, threshold=20)
 
     baseline: ComplexityBaseline = load_complexity_baseline(is_test_run=False, path=_COMPLEXITY_BASELINE_PATH)
-    # Reviewed acceptances must be merged HERE too, not only in the complexity
-    # CLI. This dimension is what `just audit-health-report` reports, so an
-    # allowlist consulted by the tool but not by the report would leave the
-    # signal anyone actually watches unchanged -- the acceptance would look
-    # applied while the number it exists to move stayed put.
-    allowlist = load_complexity_allowlist(is_test_run=False)
-    cc_verdict = _classify_cc(cc, {**baseline.cyclomatic, **allowlist.ceilings("cyclomatic")})
-    mi_verdict = _classify_mi(mi, {**baseline.maintainability, **allowlist.ceilings("maintainability")})
-    cog_verdict = _classify_cog(cog, {**baseline.cognitive, **allowlist.ceilings("cognitive")})
+    # No baseline and no reviewed-acceptance allowlist: every hotspot the
+    # scanners report is classified on its own merits.
+    cc_verdict = _classify_cc(cc, baseline.cyclomatic)
+    mi_verdict = _classify_mi(mi, baseline.maintainability)
+    cog_verdict = _classify_cog(cog, baseline.cognitive)
 
     failing = [*cc_verdict.failing, *mi_verdict.failing, *cog_verdict.failing]
     allowed = len(cc_verdict.allowed) + len(mi_verdict.allowed) + len(cog_verdict.allowed)

@@ -25,9 +25,9 @@ checksum table directly.
 from __future__ import annotations
 
 from ._documents import (
-    _CIF_KIND_LETTERS,
-    _NIE_PREFIX_MAP,
-    _PREFIXED_NIF_LEADERS,
+    CIF_KIND_LETTERS,
+    NIE_PREFIX_MAP,
+    PREFIXED_NIF_LEADERS,
     IdentityError,
     nif_check_letter,
     validate_identity,
@@ -164,9 +164,9 @@ def validate_spanish_tax_id(value: str) -> str:
     leader = normalized[0]
     recognised = (
         leader.isdigit()
-        or leader in _PREFIXED_NIF_LEADERS
-        or leader in _NIE_PREFIX_MAP
-        or leader in _CIF_KIND_LETTERS
+        or leader in PREFIXED_NIF_LEADERS
+        or leader in NIE_PREFIX_MAP
+        or leader in CIF_KIND_LETTERS
     )
     if not recognised:
         raise IdentityError(

@@ -20,7 +20,7 @@ from typing import NamedTuple
 from ...core.aggregation import BindingSourceKind as _BindingSourceKind
 from ...core.casilla_id import CasillaId as _CasillaId
 from ...core.parsing import parse_bool as _parse_bool
-from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
+from ...core.parsing.dates import parse_iso8601_date as _parse_iso8601_date
 from ...core.period import Period as _Period
 from ...core.time.clock import now as _utc_now
 from ...core.type_adapters import STR_KEYED_MAPPING_ADAPTER

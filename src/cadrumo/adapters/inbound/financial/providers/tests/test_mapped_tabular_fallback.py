@@ -17,11 +17,11 @@ from ......core.field_role import FieldRole
 from ......core.tabular import NormalizedTable
 from ......domain.transactions.enums import TransactionDirection
 from ......tests import FIXTURES_DIR
-from .._detection import _ordered_candidates, detect_provider
 from .._mapped_tabular import MappedTabularProvider, default_tabular_mapping_resolver
 from .._tabular_projection import ColumnRoleMapping
 from ..base import InvalidFinancialSourceError
 from ..csv import CsvProvider
+from ..detection import _ordered_candidates, detect_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

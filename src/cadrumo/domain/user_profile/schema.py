@@ -15,13 +15,14 @@ from enum import StrEnum
 from functools import lru_cache
 from typing import Annotated, Final, Self
 
-from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, field_validator, model_validator
 
 from ...core.classification.policies import SensitivityClass
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.parsing import parse_bool, parse_iso8601_date
+from ...core.parsing import parse_bool
+from ...core.parsing.dates import parse_iso8601_date
 from .errors import UserProfileNotFoundError, UserProfileValidationError
 
 _SchemaId = Annotated[
@@ -95,6 +96,11 @@ class ProfileRemovePolicy(StrEnum):
     LIVE_PROFILE_TOMBSTONE_RETAIN_SNAPSHOTS = "live_profile_tombstone_retain_snapshots"
 
 
+#: Proves the "sequence of something" shape a bare `isinstance(..., Iterable)`
+#: check cannot express, so element handling is typed rather than unknown.
+_OBJECT_SEQUENCE_ADAPTER: TypeAdapter[tuple[object, ...]] = TypeAdapter(tuple[object, ...])
+
+
 def _parse_str_enum(enum_type: type[StrEnum], value: object) -> object:
     if isinstance(value, enum_type):
         return value
@@ -150,7 +156,12 @@ class ProfileFieldDefinition(BaseModel):
         if isinstance(value, str):
             raise UserProfileValidationError("required_for_modelos must be a sequence of modelo ids")
         if isinstance(value, Iterable):
-            return tuple(_parse_str_enum(Modelo, item) for item in value)
+            # Validated rather than asserted: `isinstance(value, Iterable)` narrows
+            # to an unparameterised Iterable, so every element would read as
+            # unknown and each `_parse_str_enum` call would take an untyped
+            # argument. The adapter proves the sequence shape instead.
+            entries = _OBJECT_SEQUENCE_ADAPTER.validate_python(value)
+            return tuple(_parse_str_enum(Modelo, entry) for entry in entries)
         return value
 
     @field_validator("sensitivity", mode="before")

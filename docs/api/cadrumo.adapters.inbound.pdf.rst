@@ -13,7 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.adapters.inbound.pdf._label_regex
-   cadrumo.adapters.inbound.pdf._pdfplumber
-   cadrumo.adapters.inbound.pdf._shared
-   cadrumo.adapters.inbound.pdf._utils
+   cadrumo.adapters.inbound.pdf.extracted_casilla
+   cadrumo.adapters.inbound.pdf.label_regex
+   cadrumo.adapters.inbound.pdf.page_text_extraction
+   cadrumo.adapters.inbound.pdf.source_provenance

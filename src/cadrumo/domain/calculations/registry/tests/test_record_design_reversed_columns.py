@@ -25,13 +25,13 @@ from __future__ import annotations
 
 import pytest
 
-from ..record_design_pdf_repairs import _rejoin_reversed_column_rows, _row_identities_by_record
+from ..record_design_pdf_repairs import _row_identities_by_record, rejoin_reversed_column_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_the_two_halves_of_a_swapped_row_are_reassembled() -> None:
-    joined = _rejoin_reversed_column_rows(
+    joined = rejoin_reversed_column_rows(
         ("17 Num Ret. e ingr. a cuenta participaciones I.I.C.", "30 419 [596]"),
     )
 
@@ -46,7 +46,7 @@ def test_the_two_halves_are_reassembled_in_natural_order_too() -> None:
     split over two lines as the swapped case, so it is read the same way -- and
     refused the same way when either half stands on its own.
     """
-    joined = _rejoin_reversed_column_rows(
+    joined = rejoin_reversed_column_rows(
         ("7 28", "17 Num Deducc para incentivar determinadas actividades"),
     )
 
@@ -57,7 +57,7 @@ def test_a_head_half_that_is_already_a_whole_row_is_left_alone() -> None:
     """The second line here needs no help; absorbing the first would duplicate it."""
     lines = ("17 N Sociedades de garantia reciproca - Cuenta", "30 419 17 N Sociedades de garantia reciproca")
 
-    assert _rejoin_reversed_column_rows(lines) == lines
+    assert rejoin_reversed_column_rows(lines) == lines
 
 
 def test_a_pair_whose_identity_an_intact_row_already_claims_is_left_alone() -> None:
@@ -68,13 +68,13 @@ def test_a_pair_whose_identity_an_intact_row_already_claims_is_left_alone() -> N
         "30 419",
     )
 
-    assert _rejoin_reversed_column_rows(lines) == lines
+    assert rejoin_reversed_column_rows(lines) == lines
 
 
 def test_ordinary_lines_are_untouched() -> None:
     lines = ("28 385 17 N Cuota liquida positiva [592]", "alguna prosa cualquiera")
 
-    assert _rejoin_reversed_column_rows(lines) == lines
+    assert rejoin_reversed_column_rows(lines) == lines
 
 
 def test_the_duplicate_guard_is_scoped_to_the_record_that_states_the_row() -> None:
@@ -94,7 +94,7 @@ def test_the_duplicate_guard_is_scoped_to_the_record_that_states_the_row() -> No
         "30 419 [596]",
     )
 
-    joined = _rejoin_reversed_column_rows(lines)
+    joined = rejoin_reversed_column_rows(lines)
 
     assert joined[-1] == "30 419 17 Num Mitad partida del SEGUNDO registro [596]"
     assert len(joined) == len(lines) - 1
@@ -108,7 +108,7 @@ def test_an_identity_the_same_record_states_intact_still_blocks_the_join() -> No
         "30 419",
     )
 
-    assert _rejoin_reversed_column_rows(lines) == lines
+    assert rejoin_reversed_column_rows(lines) == lines
 
 
 def test_record_identities_are_partitioned_at_each_position_one_row() -> None:
@@ -136,7 +136,7 @@ def test_a_head_carrying_bled_description_text_joins_when_it_continues() -> None
         "79 1236 (2 a 6) [021]",
     )
 
-    joined = _rejoin_reversed_column_rows(lines)
+    joined = rejoin_reversed_column_rows(lines)
 
     assert joined[-1].startswith("79 1236 17 Num ")
     assert len(joined) == len(lines) - 1
@@ -150,4 +150,4 @@ def test_a_bled_head_that_does_not_continue_is_refused() -> None:
         "90 5000 prosa cualquiera que empieza con numeros",
     )
 
-    assert _rejoin_reversed_column_rows(lines) == lines
+    assert rejoin_reversed_column_rows(lines) == lines

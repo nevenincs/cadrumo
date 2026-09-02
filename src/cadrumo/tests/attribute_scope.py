@@ -17,14 +17,14 @@ submodule-direct reach rather than promotion to the package facade.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 
 __all__ = ["scoped_attribute"]
 
 
 @contextmanager
-def scoped_attribute(target: object, name: str, value: object) -> Iterator[None]:
+def scoped_attribute(target: object, name: str, value: object) -> Generator[None]:
     """Replace ``target.name`` for the with-block, restoring the original on exit."""
     original = getattr(target, name)
     setattr(target, name, value)

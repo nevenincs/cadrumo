@@ -33,10 +33,10 @@ from enum import StrEnum
 from ..errors.hierarchy import CadrumoError
 
 _NIF_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"
-_NIE_PREFIX_MAP = {"X": "0", "Y": "1", "Z": "2"}
-_PREFIXED_NIF_LEADERS = "KLM"
+NIE_PREFIX_MAP = {"X": "0", "Y": "1", "Z": "2"}
+PREFIXED_NIF_LEADERS = "KLM"
 """Natural-person NIF leaders for taxpayers without a DNI or NIE."""
-_CIF_KIND_LETTERS = "ABCDEFGHJNPQRSUVW"
+CIF_KIND_LETTERS = "ABCDEFGHJNPQRSUVW"
 """Closed catalogue of CIF leading kind characters per AEAT current spec (17 letters).
 
 K, L, and M are excluded from CIF because they are current natural-person
@@ -62,7 +62,7 @@ _CIF_LETTER_TABLE = "JABCDEFGHI"
 _NIF_PATTERN = re.compile(r"^(\d{8})([A-Z])$")
 _PREFIXED_NIF_PATTERN = re.compile(r"^([KLM])(\d{7})([A-Z])$")
 _NIE_PATTERN = re.compile(r"^([XYZ])(\d{7})([A-Z])$")
-_CIF_PATTERN = re.compile(rf"^([{_CIF_KIND_LETTERS}])(\d{{7}})(.)$")
+_CIF_PATTERN = re.compile(rf"^([{CIF_KIND_LETTERS}])(\d{{7}})(.)$")
 
 
 class IdentityDocument(StrEnum):
@@ -190,7 +190,7 @@ def _validate_nie(candidate: str) -> IdentityDocument:
             context={"candidate": candidate},
         )
     prefix, digits, letter = match.group(1), match.group(2), match.group(3)
-    numeric_str = _NIE_PREFIX_MAP[prefix] + digits
+    numeric_str = NIE_PREFIX_MAP[prefix] + digits
     expected = nif_check_letter(int(numeric_str))
     if letter != expected:
         raise IdentityError(
@@ -266,7 +266,7 @@ def validate_identity(candidate: object) -> IdentityDocument:
 
     Disambiguates by leading character: ``K``/``L``/``M`` route to prefixed
     NIF, ``X``/``Y``/``Z`` route to NIE,
-    leading letters in :data:`_CIF_KIND_LETTERS` route to CIF, and
+    leading letters in :data:`CIF_KIND_LETTERS` route to CIF, and
     everything else is attempted as NIF. The check-letter / check-digit
     algorithm is then applied for the chosen shape and the parsed
     :class:`IdentityDocument` is returned.
@@ -297,10 +297,10 @@ def validate_identity(candidate: object) -> IdentityDocument:
         )
     # Try prefixed NIF and NIE first (they have unambiguous prefixes);
     # then CIF (also unambiguous on its leading letter set); then NIF.
-    if normalised[0] in _PREFIXED_NIF_LEADERS:
+    if normalised[0] in PREFIXED_NIF_LEADERS:
         return _validate_prefixed_nif(normalised)
-    if normalised[0] in _NIE_PREFIX_MAP:
+    if normalised[0] in NIE_PREFIX_MAP:
         return _validate_nie(normalised)
-    if normalised[0] in _CIF_KIND_LETTERS:
+    if normalised[0] in CIF_KIND_LETTERS:
         return _validate_cif(normalised)
     return _validate_nif(normalised)

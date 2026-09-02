@@ -242,11 +242,6 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
     from ...core.config import load_settings
     from ...core.storage_taxonomy import StorageCategory
     from ...core.storage_taxonomy_locations import storage_location
-    from .._config_reset_models import (
-        ConfigResetAuthClearanceMode,
-        ConfigResetOperationStatus,
-        ConfigResetTargetPhase,
-    )
     from .._config_reset_repository import ConfigResetJournalRepository
     from ..auth.acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
     from ..auth.certificate_source_operations import (
@@ -254,6 +249,11 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
         set_operator_certificate_source_secret,
     )
     from ..config_reset import start_config_reset
+    from ..config_reset_models import (
+        ConfigResetAuthClearanceMode,
+        ConfigResetOperationStatus,
+        ConfigResetTargetPhase,
+    )
 
     with _isolated_reset_root(tmp_path) as root:
         root.mkdir(parents=True, exist_ok=True)
@@ -373,13 +373,13 @@ def test_a_locked_dangling_target_has_its_key_free_lock_cleared_and_says_what_it
     """
     from ...core.auth_provider import AuthProviderKind
     from ...core.config import load_settings
-    from .._config_reset_models import (
+    from ..auth.acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
+    from ..config_reset import start_config_reset
+    from ..config_reset_models import (
         ConfigResetAuthClearanceMode,
         ConfigResetOperationStatus,
         ConfigResetTargetPhase,
     )
-    from ..auth.acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
-    from ..config_reset import start_config_reset
 
     with _isolated_reset_root(tmp_path) as root:
         root.mkdir(parents=True, exist_ok=True)
@@ -452,15 +452,15 @@ def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
     tmp_path: Path,
 ) -> None:
     from ...core.bucket_pointer import pointer_path
-    from .._config_reset_models import (
-        ConfigResetOperationStatus,
-        ConfigResetPauseReason,
-        ConfigResetTargetPhase,
-    )
     from ..config_reset import (
         ConfigResetAlreadyRunningError,
         resume_config_reset,
         start_config_reset,
+    )
+    from ..config_reset_models import (
+        ConfigResetOperationStatus,
+        ConfigResetPauseReason,
+        ConfigResetTargetPhase,
     )
 
     with _isolated_reset_root(tmp_path) as root:
@@ -509,12 +509,12 @@ def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
 def test_resume_converges_after_a_target_is_removed_out_of_band(
     tmp_path: Path,
 ) -> None:
-    from .._config_reset_models import (
+    from ..config_reset import resume_config_reset, start_config_reset
+    from ..config_reset_models import (
         ConfigResetOperationStatus,
         ConfigResetPauseReason,
         ConfigResetTargetPhase,
     )
-    from ..config_reset import resume_config_reset, start_config_reset
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
@@ -568,8 +568,8 @@ def test_status_is_a_read_only_journal_view(tmp_path: Path) -> None:
 def test_resume_pauses_once_when_target_content_changed_then_accepts_new_snapshot(
     tmp_path: Path,
 ) -> None:
-    from .._config_reset_models import ConfigResetOperationStatus, ConfigResetPauseReason
     from ..config_reset import resume_config_reset, start_config_reset
+    from ..config_reset_models import ConfigResetOperationStatus, ConfigResetPauseReason
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
@@ -609,8 +609,8 @@ def test_resume_adds_changed_pointer_target_under_the_same_operation(
     tmp_path: Path,
 ) -> None:
     from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
-    from .._config_reset_models import ConfigResetOperationStatus, ConfigResetPauseReason
     from ..config_reset import resume_config_reset, start_config_reset
+    from ..config_reset_models import ConfigResetOperationStatus, ConfigResetPauseReason
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
@@ -650,8 +650,8 @@ def test_resume_adds_changed_pointer_target_under_the_same_operation(
 
 def test_resume_detects_an_a_to_b_to_a_pointer_coordinate_change(tmp_path: Path) -> None:
     """ABA selection equality cannot hide a changed reset preflight witness."""
-    from .._config_reset_models import ConfigResetPauseReason
     from ..config_reset import resume_config_reset, start_config_reset
+    from ..config_reset_models import ConfigResetPauseReason
     from ..user_profile.profile_pointer import active_profile_pointer_transaction
 
     with _isolated_reset_root(tmp_path) as root:

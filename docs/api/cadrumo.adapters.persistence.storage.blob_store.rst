@@ -13,5 +13,5 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.adapters.persistence.storage.blob_store._blob_store
-   cadrumo.adapters.persistence.storage.blob_store._materialisation
+   cadrumo.adapters.persistence.storage.blob_store.blob_store
+   cadrumo.adapters.persistence.storage.blob_store.materialisation

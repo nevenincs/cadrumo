@@ -33,6 +33,7 @@ from pydantic import BaseModel, Field
 from .errors.hierarchy import CadrumoError
 from .models import STRICT_FROZEN_CONFIG
 from .redaction.rules import redact_for_cli_output, redact_structured_for_cli_output
+from .type_guards import is_object_collection, is_object_dict, is_object_set_or_frozenset
 
 
 class OutputRenderingError(CadrumoError):
@@ -159,7 +160,7 @@ def _json_default(value: object) -> object:
         return value.isoformat()
     if isinstance(value, Decimal):
         return format(value, "f")
-    if isinstance(value, set | frozenset):
+    if is_object_set_or_frozenset(value):
         # Element types are heterogeneous scalars by construction (this is the
         # last-resort JSON fallback for whatever residual set/frozenset content
         # reaches here), so there is no single comparable element type to sort
@@ -191,9 +192,9 @@ def jsonable_output_payload(payload: object) -> object:
     """
     if isinstance(payload, BaseModel):
         return jsonable_output_payload(payload.model_dump(mode="python"))
-    if isinstance(payload, dict):
+    if is_object_dict(payload):
         return {key: jsonable_output_payload(value) for key, value in payload.items()}
-    if isinstance(payload, list | tuple | set | frozenset):
+    if is_object_collection(payload):
         return [jsonable_output_payload(item) for item in payload]
     if isinstance(payload, Path):
         return payload.as_posix()

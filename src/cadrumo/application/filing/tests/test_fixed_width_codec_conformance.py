@@ -23,7 +23,7 @@ from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.schema import ModeloDraft, registry_schema_version
 from ....domain.modelos.errors import ModeloExportError
 from ....domain.submission.models import ModeloDraftStatus
-from .._export import _RecordRenderRow, _render_record
+from ..export import _RecordRenderRow, _render_record
 from ._export_support import _typed_producer_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -397,7 +397,7 @@ def test_codec_has_one_owner_and_active_consumers_import_the_public_facade() -> 
     root = Path("src/cadrumo")
     owner = root / "domain/calculations/registry/fixed_width_codec.py"
     consumers = (
-        root / "application/filing/_export.py",
+        root / "application/filing/export.py",
         root / "domain/calculations/registry/export_parse.py",
         root / "adapters/outbound/aeat/export/registry_record_renderer.py",
     )

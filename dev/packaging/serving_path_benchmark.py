@@ -54,7 +54,7 @@ import shutil
 import sys
 import tempfile
 import time
-from collections.abc import Iterator, Sequence
+from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -237,7 +237,7 @@ def measure_subprocess(cli: Path, *, work_dir: Path, storage_root: Path, timeout
 
 
 @contextmanager
-def _server_environment(storage_root: Path) -> Iterator[None]:
+def _server_environment(storage_root: Path) -> Generator[None]:
     """Point the in-process runtime at a fresh env-isolated encrypted root.
 
     The warm runtime runs the CLI in a worker thread that inherits ``os.environ``
@@ -298,8 +298,7 @@ def _timed_build_server_read(command_key: str, *, timeout_s: float) -> tuple[flo
     from cadrumo_harness.mcp._harness_tools import WHOAMI_TOOL
     from cadrumo_harness.mcp._server import build_server
     from cadrumo_harness.mcp._tools import build_tool_descriptors
-
-    from cadrumo.tests import connected_server_and_client_session as connect
+    from cadrumo_harness.mcp.tests._session import connected_server_and_client_session as connect
 
     async def _drive() -> tuple[float, float]:
         server = build_server(build_tool_descriptors())

@@ -431,7 +431,7 @@ ignore_imports =
     # the core/resources/_repos deferred loaders) so a NEW non-deferred
     # production edge still fails loudly. The prorrata-owned production edges
     # (application._revision_persistence, application.calculations.
-    # _prorrata_regularizacion, application.aggregation._iva_ledger ->
+    # _prorrata_regularizacion, application.aggregation.iva_ledger ->
     # adapters.persistence.profile.prorrata_register / adapters.persistence.
     # storage) were inverted behind ProrrataRegisterRepositoryProtocol and now
     # ride the sanctioned construction-edge pins below (see the prorrata-register
@@ -522,7 +522,7 @@ ignore_imports =
     cadrumo.application.auth.sessions -> cadrumo.adapters.outbound.aeat.browser.factory
     cadrumo.application.auth.sessions -> cadrumo.adapters.persistence.**
     cadrumo.application.bucket_maintenance._deletion_paths -> cadrumo.adapters.persistence.**
-    cadrumo.application.calculations._iva_compensation_annual_partition -> cadrumo.adapters.persistence.**
+    cadrumo.application.calculations.iva_compensation_annual_partition -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations.iva_compensation_history -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations.multi_year -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations.observations_repository -> cadrumo.adapters.persistence.**
@@ -570,7 +570,7 @@ ignore_imports =
     # production edge still fails loudly.
     cadrumo.application.**.tests.** -> cadrumo.llm
     cadrumo.application.**.tests.** -> cadrumo.llm.**
-    cadrumo.application.evidence._service -> cadrumo.adapters.persistence.**
+    cadrumo.application.evidence.service -> cadrumo.adapters.persistence.**
     # Two ledger stores added by llm-package-split, same shape as the ledger
     # repositories pinned around them: derived financial data is STORAGE, so
     # it routes through the core's encrypted repository rather than living
@@ -776,12 +776,12 @@ ignore_imports =
     cadrumo.core.resources._repos.recargo_bands -> cadrumo.domain.deadlines.recargo
     # ── application production edges: participation-index derived-cache co-write
     #    (module-granularity replaces the pre-refactor deep-submodule edge) ──
-    cadrumo.application.modelo._revision_persistence -> cadrumo.adapters.persistence.profile.participation_index
+    cadrumo.application.modelo.revision_persistence -> cadrumo.adapters.persistence.profile.participation_index
     cadrumo.application.modelo.participation_index_rebuild -> cadrumo.adapters.persistence.profile.participation_index
     cadrumo.application.modelo.verification_actions -> cadrumo.adapters.persistence.profile.participation_index
     cadrumo.application.modelo.export -> cadrumo.adapters.persistence.profile.modelos_verification_reports
     cadrumo.application.modelo.filing_actions -> cadrumo.adapters.persistence.profile.modelos_verification_reports
-    cadrumo.application.modelo._history -> cadrumo.adapters.persistence.profile.modelos_verification_reports
+    cadrumo.application.modelo.history -> cadrumo.adapters.persistence.profile.modelos_verification_reports
     cadrumo.application.modelo.verification_actions -> cadrumo.adapters.persistence.profile.modelos_verification_reports
     # ── modelos_filing catalogue repository ports-inversion (W04.P09.S14):
     #    the concrete ModeloRecordCatalogueRepository moved to the persistence
@@ -789,7 +789,7 @@ ignore_imports =
     cadrumo.application.modelo.amendment_actions -> cadrumo.adapters.persistence.profile.modelos_filing
     cadrumo.application.modelo.export -> cadrumo.adapters.persistence.profile.modelos_filing
     cadrumo.application.modelo.filing_actions -> cadrumo.adapters.persistence.profile.modelos_filing
-    cadrumo.application.modelo._history -> cadrumo.adapters.persistence.profile.modelos_filing
+    cadrumo.application.modelo.history -> cadrumo.adapters.persistence.profile.modelos_filing
     cadrumo.application.modelo.participation_index_rebuild -> cadrumo.adapters.persistence.profile.modelos_filing
     cadrumo.application.modelo.verification_actions -> cadrumo.adapters.persistence.profile.modelos_filing
     cadrumo.application.filing._complementaria -> cadrumo.adapters.persistence.profile.filing_drafts
@@ -819,8 +819,8 @@ ignore_imports =
     cadrumo.application.modelo.calculation_actions -> cadrumo.adapters.persistence.profile.modelos_calculation
     cadrumo.application.modelo.export -> cadrumo.adapters.persistence.profile.modelos_calculation
     cadrumo.application.modelo.filing_actions -> cadrumo.adapters.persistence.profile.modelos_calculation
-    cadrumo.application.modelo._history -> cadrumo.adapters.persistence.profile.modelos_calculation
-    cadrumo.application.modelo._iva_wallet_seed -> cadrumo.adapters.persistence.profile.modelos_calculation
+    cadrumo.application.modelo.history -> cadrumo.adapters.persistence.profile.modelos_calculation
+    cadrumo.application.modelo.iva_wallet_seed -> cadrumo.adapters.persistence.profile.modelos_calculation
     cadrumo.application.modelo.participation_index_rebuild -> cadrumo.adapters.persistence.profile.modelos_calculation
     cadrumo.application.modelo.selectors -> cadrumo.adapters.persistence.profile.modelos_calculation
     cadrumo.application.modelo.verification_actions -> cadrumo.adapters.persistence.profile.modelos_calculation
@@ -831,8 +831,8 @@ ignore_imports =
     cadrumo.application.modelo.calculation_actions -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo.export -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo.filing_actions -> cadrumo.adapters.persistence.profile.modelos_work_units
-    cadrumo.application.modelo._history -> cadrumo.adapters.persistence.profile.modelos_work_units
-    cadrumo.application.modelo._iva_wallet_seed -> cadrumo.adapters.persistence.profile.modelos_work_units
+    cadrumo.application.modelo.history -> cadrumo.adapters.persistence.profile.modelos_work_units
+    cadrumo.application.modelo.iva_wallet_seed -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo.participation_index_rebuild -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo.taxation_comparison -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo.verification_actions -> cadrumo.adapters.persistence.profile.modelos_work_units
@@ -847,8 +847,8 @@ ignore_imports =
     cadrumo.application.modelo.calculation_actions -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo.export -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo.filing_actions -> cadrumo.adapters.persistence.profile.buckets
-    cadrumo.application.modelo._history -> cadrumo.adapters.persistence.profile.buckets
-    cadrumo.application.modelo._iva_wallet_seed -> cadrumo.adapters.persistence.profile.buckets
+    cadrumo.application.modelo.history -> cadrumo.adapters.persistence.profile.buckets
+    cadrumo.application.modelo.iva_wallet_seed -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo.m036_lifecycle -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo.m145_communication_records -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo.verification_actions -> cadrumo.adapters.persistence.profile.buckets
@@ -857,7 +857,7 @@ ignore_imports =
     #    the concrete TransactionCatalogueRepository moved to the persistence
     #    adapter behind TransactionCatalogueRepositoryProtocol ──
     cadrumo.application.aggregation._impatriado_income_ledger -> cadrumo.adapters.persistence.profile.transactions
-    cadrumo.application.aggregation._iva_ledger -> cadrumo.adapters.persistence.profile.transactions
+    cadrumo.application.aggregation.iva_ledger -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.aggregation._renta_gasto_ledger -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.aggregation._renta_income_ledger -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.aggregation._renta_ledger -> cadrumo.adapters.persistence.profile.transactions
@@ -880,4 +880,4 @@ ignore_imports =
     #    of the ClassificationError/DecryptionError/EnvelopeVersionError boundary
     #    exception classes (plain exceptions, no port to invert). ──
     cadrumo.application.calculations.prorrata_regularizacion -> cadrumo.adapters.persistence.storage.errors
-    cadrumo.application.modelo._revision_persistence -> cadrumo.adapters.persistence.profile.prorrata_register
+    cadrumo.application.modelo.revision_persistence -> cadrumo.adapters.persistence.profile.prorrata_register

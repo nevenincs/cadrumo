@@ -332,7 +332,7 @@ def _serialize_xlsx(rows: tuple[dict[str, str], ...], *, fieldnames: tuple[str, 
 
     Every cell is written as text so a deterministic, locale-independent
     round-trip is preserved; the workbook re-reads through
-    :class:`~adapters.inbound.financial.providers._xlsx.XlsxProvider`,
+    :class:`~adapters.inbound.financial.providers.xlsx.XlsxProvider`,
     which shares the CSV bank-layout catalogue.
     """
     from openpyxl import Workbook

@@ -2,16 +2,16 @@
 
 Extraction is best-effort, so every field a confirm persists may be corrected.
 The layering rule is named once here rather than restated per field
-(:func:`_operator_value_or_reading`): an explicit operator value outranks the
+(:func:`operator_value_or_reading`): an explicit operator value outranks the
 reading, and a field that quietly inverted the order would prefer a misread
 document over the person confirming it. The three fields that do NOT simply
 layer -- currency, counterparty name, invoice date -- each carry their own
 resolver stating why, and a field neither side supplies refuses through
-:func:`_require_confirmed_field` rather than reaching the catalogue empty.
+:func:`require_confirmed_field` rather than reaching the catalogue empty.
 
 Two resolutions read the document's own per-rate breakdown rather than a single
 flat triple, and both are skipped the moment the operator restates any of the
-base, rate or cuota (:func:`_operator_restated_the_amounts`), because their
+base, rate or cuota (:func:`operator_restated_the_amounts`), because their
 figures are then the authority and two authorities on one set of amounts is
 exactly the condition that must not arise:
 
@@ -19,7 +19,7 @@ exactly the condition that must not arise:
   the document charged, against the rates in force on the invoice's own issue
   date, and DECLINES rather than approximating whenever the document does not
   settle it unambiguously.
-- :func:`_confirmed_lines_from_the_document` preserves WHICH part of the base
+- :func:`confirmed_lines_from_the_document` preserves WHICH part of the base
   carried which rate, which Modelo 303 needs because it sums cuota devengada per
   tier.
 
@@ -35,7 +35,7 @@ from decimal import Decimal
 from ...adapters.inbound.einvoice.parsers import FacturaeInvoiceClass
 from ...application.invoices.catalogue_creation import resolve_iva_rate_slot
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...core.parsing import parse_iso8601_date
+from ...core.parsing.dates import parse_iso8601_date
 from ...domain.invoices.enums import InvoiceClass
 from ...domain.invoices.models import InvoiceLine
 from ...domain.iva.lookup import rate_kinds_for_declared_rate
@@ -47,7 +47,7 @@ from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdi
 __all__ = ["domestic_rate_tier_from_the_document"]
 
 
-def _operator_value_or_reading[T](supplied: T | None, read: T) -> T:
+def operator_value_or_reading[T](supplied: T | None, read: T) -> T:
     """Return the operator's value when they supplied one, else the document's.
 
     The layering rule every confirmable field follows, named once rather than
@@ -58,7 +58,7 @@ def _operator_value_or_reading[T](supplied: T | None, read: T) -> T:
     return supplied if supplied is not None else read
 
 
-def _require_confirmed_field(value: Decimal | str | None, *, field: str) -> Decimal | str:
+def require_confirmed_field(value: Decimal | str | None, *, field: str) -> Decimal | str:
     if value is None:
         raise PurchaseInvoiceEvidenceInputError(
             translated_message="errors.refused.refused_ledger_evidence_input",
@@ -70,7 +70,7 @@ def _require_confirmed_field(value: Decimal | str | None, *, field: str) -> Deci
     return value
 
 
-def _confirmed_currency(supplied: str | None, read: str | None) -> str:
+def confirmed_currency(supplied: str | None, read: str | None) -> str:
     """Return the ISO-4217 code the invoice is minted in.
 
     Same override-on-extraction layering as every other field: an explicit
@@ -83,7 +83,7 @@ def _confirmed_currency(supplied: str | None, read: str | None) -> str:
     return (supplied or read or DEFAULT_CURRENCY).strip().upper()
 
 
-def _confirmed_counterparty_name(supplied: str | None, read: str | None) -> str:
+def confirmed_counterparty_name(supplied: str | None, read: str | None) -> str:
     """Return the counterparty display name, refusing when neither side states one.
 
     Unlike the tax id there is no extraction heuristic strong enough to stand
@@ -102,7 +102,7 @@ def _confirmed_counterparty_name(supplied: str | None, read: str | None) -> str:
     return resolved
 
 
-def _resolve_confirmed_invoice_date(invoice_date: date | None, draft: InvoiceDraft) -> date:
+def resolve_confirmed_invoice_date(invoice_date: date | None, draft: InvoiceDraft) -> date:
     if invoice_date is not None:
         return invoice_date
     if draft.invoice_date is not None:
@@ -118,7 +118,7 @@ def _resolve_confirmed_invoice_date(invoice_date: date | None, draft: InvoiceDra
     )
 
 
-def _resolved_invoice_class(
+def resolve_invoice_class(
     draft: InvoiceDraft,
     *,
     invoice_class: InvoiceClass | None,
@@ -139,7 +139,7 @@ def _resolved_invoice_class(
     return InvoiceClass.RECTIFICATIVA if rectifies_invoice_number is not None else InvoiceClass.ORDINARIA
 
 
-def _operator_restated_the_amounts(
+def operator_restated_the_amounts(
     *,
     taxable_base: Decimal | None,
     iva_rate: Decimal | None,
@@ -220,7 +220,7 @@ def domestic_rate_tier_from_the_document(draft: InvoiceDraft, *, invoice_date: d
     return tiers[0]
 
 
-def _rate_tier_the_document_charged(
+def rate_tier_the_document_charged(
     draft: InvoiceDraft,
     *,
     invoice_date: date | None,
@@ -241,7 +241,7 @@ def _rate_tier_the_document_charged(
     return domestic_rate_tier_from_the_document(draft, invoice_date=invoice_date)
 
 
-def _confirmed_lines_from_the_document(
+def confirmed_lines_from_the_document(
     *,
     draft: InvoiceDraft,
     invoice_number: str,

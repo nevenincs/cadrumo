@@ -24,7 +24,7 @@ Composition order:
    :func:`adapters.outbound.google.active_profile.resolve_active_profile`.
 2. Read settings via :func:`~core.config.load_settings`.
 3. Dispatch on :class:`ProviderKind`. ``LOCAL_FILESYSTEM`` builds a
-   :class:`adapters.outbound.storage._local.LocalFileSystemProvider`
+   :class:`adapters.outbound.storage.local.LocalFileSystemProvider`
    rooted at ``cadrumo_local_storage_root / profile``; ``GOOGLE_DRIVE`` calls
    :func:`build_google_credentials`, which reads the profile's persisted
    :class:`~adapters.outbound.google.GoogleCredentialSourceSelection` (a
@@ -50,8 +50,8 @@ from ....application.operator_actions.preconditions import no_action_preconditio
 from ....core.config import Settings, load_settings
 from ....core.google_credential_source import GoogleCredentialSourceKind
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ._protocol import StorageProvider
 from .errors import OutboundStorageError, OutboundStorageValidationError
+from .protocol import StorageProvider
 from .records import ProviderKind
 
 
@@ -257,7 +257,7 @@ def get_storage_provider(
 
     if kind is ProviderKind.LOCAL_FILESYSTEM:
         from ...persistence.storage.bucket.directory_layout import bucket_paths
-        from ._local import LocalFileSystemProvider
+        from .local import LocalFileSystemProvider
 
         root = bucket_paths(settings_resolved.cadrumo_local_storage_root, profile).blobs_dir
         return LocalFileSystemProvider(root)

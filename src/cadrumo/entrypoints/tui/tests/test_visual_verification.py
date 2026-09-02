@@ -20,7 +20,7 @@ would have caught by looking.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -90,7 +90,7 @@ _THEMES = [CADRUMO_LIGHT_THEME_NAME, CADRUMO_DARK_THEME_NAME]
 
 
 @contextmanager
-def _registration(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
+def _registration(tmp_path: Path) -> Generator[ScreenHostApp[None]]:
     from ....core.credentials import assess_profile_password
     from ..devtools.fixture import registration_attempt
 
@@ -99,7 +99,7 @@ def _registration(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
 
 
 @contextmanager
-def _form(tmp_path: Path) -> Iterator[FormApp]:
+def _form(tmp_path: Path) -> Generator[FormApp]:
     del tmp_path  # unused: FormApp holds no storage of its own
     yield FormApp(
         FormPage(
@@ -112,7 +112,7 @@ def _form(tmp_path: Path) -> Iterator[FormApp]:
 
 
 @contextmanager
-def _status(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
+def _status(tmp_path: Path) -> Generator[ScreenHostApp[None]]:
     del tmp_path  # unused: the projection is hand-built, matching this file's existing status fixture
     yield ScreenHostApp(
         StatusScreen(
@@ -125,7 +125,7 @@ def _status(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
 
 
 @contextmanager
-def _manager(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
+def _manager(tmp_path: Path) -> Generator[ScreenHostApp[None]]:
     """The manager, composed the way ``present_profile_manager`` composes it.
 
     ``manager`` was absent from every gate in this module -- the geometry
@@ -173,7 +173,7 @@ def _manager(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
 
 
 @contextmanager
-def _login(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
+def _login(tmp_path: Path) -> Generator[ScreenHostApp[None]]:
     """The login screen, composed through the application interaction contract.
 
     Needs a real profile that exists but is LOCKED -- registration leaves it
@@ -210,7 +210,7 @@ def _login(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
 
 
 @contextmanager
-def _status_populated(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
+def _status_populated(tmp_path: Path) -> Generator[ScreenHostApp[None]]:
     """The status page with its NOTICES region genuinely populated.
 
     Built through the real production door, ``build_status_page_data()``,
@@ -251,7 +251,7 @@ def _status_populated(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
 
 
 @contextmanager
-def _manager_populated(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
+def _manager_populated(tmp_path: Path) -> Generator[ScreenHostApp[None]]:
     """The manager with a REPEATABLE section's row count grown past one.
 
     ``manager`` (:func:`_manager`) always renders its full declared field
@@ -307,7 +307,7 @@ def _manager_populated(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
 
 
 @contextmanager
-def _question(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
+def _question(tmp_path: Path) -> Generator[ScreenHostApp[None]]:
     """The wizard question screen, carrying more content than a short terminal holds.
 
     Enrolled here because it is the surface the operator sees on every page
@@ -382,7 +382,7 @@ def _many_page_flow() -> FlowScreen:
 
 
 @contextmanager
-def _modelo_review(tmp_path: Path) -> Iterator[ModeloWorkReviewApp]:
+def _modelo_review(tmp_path: Path) -> Generator[ModeloWorkReviewApp]:
     """The real M100 review surface, built from genuine registry data.
 
     Enrolled because it was covered by NONE of these gates while carrying

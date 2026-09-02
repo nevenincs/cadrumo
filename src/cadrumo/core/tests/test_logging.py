@@ -75,12 +75,12 @@ def _render_info(message: str, *args: object) -> str:
 
 
 def _force_configure_logging() -> None:
-    original_configured = _logging_mod._CONFIGURED
-    _logging_mod._CONFIGURED = False
+    original_configured = _logging_mod._configured
+    _logging_mod._configured = False
     try:
         _logging_mod.configure_logging()
     finally:
-        _logging_mod._CONFIGURED = original_configured or True
+        _logging_mod._configured = original_configured or True
 
 
 def test_default_logging_routes_warnings_to_file_not_stderr(capsys: pytest.CaptureFixture[str]) -> None:
@@ -155,9 +155,9 @@ def test_configure_logging_degrades_to_stderr_only_when_log_dir_uncreatable(
     dead_log_dir = blocker / "probe-logs"
 
     root_logger = logging.getLogger()
-    original_configured = _logging_mod._CONFIGURED
+    original_configured = _logging_mod._configured
     try:
-        _logging_mod._CONFIGURED = False
+        _logging_mod._configured = False
         with override_settings(cadrumo_log_dir=dead_log_dir):
             # Must not raise despite the uncreatable directory.
             configure_logging()
@@ -178,9 +178,9 @@ def test_configure_logging_degrades_to_stderr_only_when_log_dir_uncreatable(
         assert not dead_log_dir.exists()
     finally:
         # Rebuild the normal configuration so sibling tests see a healthy logger.
-        _logging_mod._CONFIGURED = False
+        _logging_mod._configured = False
         configure_logging()
-        _logging_mod._CONFIGURED = original_configured or True
+        _logging_mod._configured = original_configured or True
 
 
 def test_secret_scrubbing_redacts_sensitive_fields_in_rendered_output() -> None:

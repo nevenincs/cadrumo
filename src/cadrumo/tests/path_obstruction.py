@@ -68,7 +68,7 @@ See Also:
 from __future__ import annotations
 
 import os
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -129,7 +129,7 @@ def _assert_writes_refused(path: Path) -> None:
 
 
 @contextmanager
-def obstructed_path(path: Path) -> Iterator[Path]:
+def obstructed_path(path: Path) -> Generator[Path]:
     """Make every write to ``path`` fail with a real :exc:`OSError` for the block.
 
     Replaces ``path`` with a non-empty directory, verifies that a write to it

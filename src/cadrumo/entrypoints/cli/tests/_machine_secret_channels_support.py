@@ -82,7 +82,7 @@ _HARNESS = (
     composition = ExitStack()
     composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
     composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
-    token = config_module._settings_override.set(settings)
+    token = config_module.settings_override.set(settings)
     exit_code = 0
     try:
         if payload.get("preauthenticate_label") is not None:
@@ -133,7 +133,7 @@ _HARNESS = (
                 exit_code = exit_code or 98
     finally:
         try:
-            config_module._settings_override.reset(token)
+            config_module.settings_override.reset(token)
         finally:
             composition.__exit__(None, None, None)
     raise SystemExit(exit_code)
@@ -180,7 +180,7 @@ _WINDOWS_HANDLE_HARNESS = (
             descriptor = int(argv[argv.index(option) + 1])
             if descriptor not in descriptors:
                 descriptors.append(descriptor)
-    token = config_module._settings_override.set(settings)
+    token = config_module.settings_override.set(settings)
     exit_code = 0
     try:
         if payload.get("preauthenticate_label") is not None:
@@ -233,7 +233,7 @@ _WINDOWS_HANDLE_HARNESS = (
                 exit_code = exit_code or 98
     finally:
         try:
-            config_module._settings_override.reset(token)
+            config_module.settings_override.reset(token)
         finally:
             composition.__exit__(None, None, None)
     raise SystemExit(exit_code)

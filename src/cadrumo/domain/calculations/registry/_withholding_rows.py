@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from .errors import RegistryValidationError
-from .withholding_bindings import WithholdingObservation, _WithholdingGrouping
+from .withholding_bindings import WithholdingGrouping, WithholdingObservation
 
 _DATOS_ADICIONALES_CLAVES: frozenset[str] = frozenset({"A", "C"})
 _DATOS_ADICIONALES_B_SUBCLAVES: frozenset[str] = frozenset({"01", "03", "04", "99"})
@@ -852,8 +852,8 @@ def _finalise_withholding_row(
     return finalised
 
 
-def _build_withholding_rows(
-    grouping: _WithholdingGrouping,
+def build_withholding_rows(
+    grouping: WithholdingGrouping,
     observations: tuple[WithholdingObservation, ...],
     *,
     required_fields: frozenset[str] = frozenset(),

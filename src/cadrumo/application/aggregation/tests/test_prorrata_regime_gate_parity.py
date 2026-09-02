@@ -31,7 +31,7 @@ from ....domain.prorrata_register.register import (
     ProrrataRegisterEntry,
     resolve_provisional_percentage,
 )
-from .._iva_ledger import _sector_scoped_apportionment
+from ..iva_ledger import _sector_scoped_apportionment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

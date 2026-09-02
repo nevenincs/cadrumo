@@ -20,7 +20,7 @@ from ..semantic_role_resolution import (
 )
 
 art20_advisory = import_module("cadrumo.application.modelo._art20_advisory")
-binding_resolution = import_module("cadrumo.application.modelo._binding_resolution")
+binding_resolution = import_module("cadrumo.application.modelo.binding_resolution")
 calculate_input = import_module("cadrumo.application.modelo.calculate_input")
 dt12_advisory = import_module("cadrumo.application.modelo._dt12_advisory")
 taxation_comparison = import_module("cadrumo.application.modelo.taxation_comparison")

@@ -5,11 +5,11 @@ Provides a unified :func:`_parse_date` helper that combines format selection wit
 The two variants are intentionally separate because they accept *different*
 wire formats:
 
-* :func:`_parse_iso8601_date` — ``YYYY-MM-DD`` (ISO 8601).  Used wherever
+* :func:`parse_iso8601_date` — ``YYYY-MM-DD`` (ISO 8601).  Used wherever
   AEAT systems or profile storage serialises dates in the standard form
   (e.g. deadline-profile censo dates).
 
-* :func:`_parse_ddmmyyyy_date` — ``DD-MM-YYYY`` or ``DD/MM/YYYY`` (day-first,
+* :func:`parse_ddmmyyyy_date` — ``DD-MM-YYYY`` or ``DD/MM/YYYY`` (day-first,
   separator is ``-`` or ``/``).  Used wherever the AEAT G313 (Mis Datos
   Censales) HTML page publishes dates in the Spanish day-first convention.
 
@@ -37,7 +37,7 @@ _DATE_DDMMYYYY_RE: Final = re.compile(r"^\s*(\d{2}[-/]\d{2}[-/]\d{4})\s*$")
 _ISO_8601_EXTENDED_LENGTH: Final[int] = 10
 
 
-def _parse_iso8601_date(raw: str | None) -> date | None:
+def parse_iso8601_date(raw: str | None) -> date | None:
     """Parse an ISO-8601 date string (``YYYY-MM-DD``) into a :class:`date`.
 
     Args:
@@ -60,7 +60,7 @@ def _parse_iso8601_date(raw: str | None) -> date | None:
     try:
         return date.fromisoformat(cleaned)
     except ValueError as exc:
-        _log.debug("_parse_iso8601_date: %r is not a valid ISO-8601 date", cleaned)
+        _log.debug("parse_iso8601_date: %r is not a valid ISO-8601 date", cleaned)
         # BROAD-EXCEPT-RATIONALE-PYDANTIC-PARSE-PROXY:
         # Called from @field_validator stacks; ValueError propagates into the
         # pydantic ValidationError chain.
@@ -72,7 +72,7 @@ def _parse_iso8601_date(raw: str | None) -> date | None:
 def require_iso8601_date(raw: str) -> date:
     """Parse a required extended-form ISO-8601 date, refusing every other shape.
 
-    The strict counterpart of :func:`_parse_iso8601_date` for values that must
+    The strict counterpart of :func:`parse_iso8601_date` for values that must
     be present and must be a real calendar date. Absence is a refusal rather
     than ``None``, and the compact ``YYYYMMDD`` form
     :meth:`~datetime.date.fromisoformat` also accepts is refused, so the one
@@ -100,7 +100,7 @@ def require_iso8601_date(raw: str) -> date:
         raise ValueError(
             f"date value {raw!r} is not a valid ISO-8601 date (expected YYYY-MM-DD)",
         )
-    parsed = _parse_iso8601_date(cleaned)
+    parsed = parse_iso8601_date(cleaned)
     if parsed is None:  # pragma: no cover - a length-10 non-empty string always parses or raises.
         raise ValueError(
             f"date value {raw!r} is not a valid ISO-8601 date (expected YYYY-MM-DD)",
@@ -128,7 +128,7 @@ transported contract.
 """
 
 
-def _parse_ddmmyyyy_date(raw: str | None) -> date | None:
+def parse_ddmmyyyy_date(raw: str | None) -> date | None:
     """Parse a Spanish day-first date string (``DD-MM-YYYY`` / ``DD/MM/YYYY``).
 
     Both separator characters (``-`` and ``/``) are accepted because the AEAT
@@ -153,7 +153,7 @@ def _parse_ddmmyyyy_date(raw: str | None) -> date | None:
         return None
     match = _DATE_DDMMYYYY_RE.match(cleaned)
     if match is None:
-        _log.debug("_parse_ddmmyyyy_date: %r does not match dd-mm-yyyy / dd/mm/yyyy", cleaned)
+        _log.debug("parse_ddmmyyyy_date: %r does not match dd-mm-yyyy / dd/mm/yyyy", cleaned)
         # BROAD-EXCEPT-RATIONALE-PYDANTIC-PARSE-PROXY:
         # Called from @field_validator stacks; ValueError propagates into the
         # pydantic ValidationError chain.
@@ -166,7 +166,7 @@ def _parse_ddmmyyyy_date(raw: str | None) -> date | None:
         return date(year, month, day)
     except ValueError as exc:
         _log.debug(
-            "_parse_ddmmyyyy_date: %r parsed to (%d, %d, %d) which is not a valid calendar date",
+            "parse_ddmmyyyy_date: %r parsed to (%d, %d, %d) which is not a valid calendar date",
             cleaned,
             day,
             month,
@@ -215,8 +215,8 @@ def _parse_date(
     Args:
         raw: Input string; ``None`` and blank strings return ``None`` regardless
              of *on_error*.
-        fmt: ``"iso8601"`` delegates to :func:`_parse_iso8601_date`;
-             ``"ddmmyyyy"`` delegates to :func:`_parse_ddmmyyyy_date`.
+        fmt: ``"iso8601"`` delegates to :func:`parse_iso8601_date`;
+             ``"ddmmyyyy"`` delegates to :func:`parse_ddmmyyyy_date`.
         on_error: ``"raise"`` re-raises the :exc:`ValueError` from the delegate
                   (callers wrap it in their domain exception); ``"none"``
                   silently returns ``None`` on any parse failure.
@@ -229,7 +229,7 @@ def _parse_date(
         ValueError: When *on_error* is ``"raise"`` and *raw* is non-empty but
                     cannot be parsed by the selected format delegate.
     """
-    delegate = _parse_iso8601_date if fmt == "iso8601" else _parse_ddmmyyyy_date
+    delegate = parse_iso8601_date if fmt == "iso8601" else parse_ddmmyyyy_date
     try:
         return delegate(raw)
     except ValueError:

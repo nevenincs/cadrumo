@@ -11,7 +11,7 @@ from ....core.logging import get_logger
 from ....core.tabular import coerce_cell_text
 from .errors import RegistryValidationError
 from .record_design_schema import RecordDesignFieldTypeCorrection, RecordDesignHeaderCellCorrection
-from .record_design_sources import _EMPTY_HEADER_CORRECTIONS, _HeaderCorrectionIndex, _TypeCorrectionIndex
+from .record_design_sources import EMPTY_HEADER_CORRECTIONS, HeaderCorrectionIndex, TypeCorrectionIndex
 
 if TYPE_CHECKING:
     from openpyxl.worksheet.worksheet import Worksheet
@@ -22,7 +22,7 @@ _log = get_logger(__name__)
 
 
 @dataclass(frozen=True)
-class _WorkbookHeader:
+class WorkbookHeader:
     row_number: int
     ordinal_index: int
     offset_index: int
@@ -34,7 +34,7 @@ class _WorkbookHeader:
     content_index: int | None
 
 
-def _is_blank_row(values: tuple[object, ...]) -> bool:
+def is_blank_row(values: tuple[object, ...]) -> bool:
     return all(value is None or str(value).strip() == "" for value in values)
 
 
@@ -44,8 +44,8 @@ def _probe_header_row(
     *,
     label: str,
     sheet_name: str,
-    header_corrections: _HeaderCorrectionIndex,
-) -> tuple[_WorkbookHeader, RecordDesignHeaderCellCorrection | None] | None:
+    header_corrections: HeaderCorrectionIndex,
+) -> tuple[WorkbookHeader, RecordDesignHeaderCellCorrection | None] | None:
     """Match one row against either recognised AEAT record-design header shape.
 
     Shape A is AEAT's ordinary header: ``Posic.``/``Lon``/``Tipo``/``Descripcion``,
@@ -67,7 +67,7 @@ def _probe_header_row(
     ``Com.`` token, or a blank column following ``Com.`` -- matches neither
     shape and still refuses.
     """
-    if not _is_ordinal_header(_cell(values, 0)):
+    if not _is_ordinal_header(cell_at(values, 0)):
         return None
     try:
         offset_index = _required_header_index(values, "posic.")
@@ -106,7 +106,7 @@ def _probe_header_row(
             )
             return None
         caption_index = complementary_index + 1
-        if caption_index >= len(values) or not coerce_cell_text(_cell(values, caption_index)):
+        if caption_index >= len(values) or not coerce_cell_text(cell_at(values, caption_index)):
             _log.debug(
                 "record-design header probe (%s): row %d has 'com'/'comp' but no caption in the "
                 "following column; trying next",
@@ -116,7 +116,7 @@ def _probe_header_row(
             return None
         description_index = caption_index
         validation_index = None
-    header = _WorkbookHeader(
+    header = WorkbookHeader(
         row_number=row_number,
         ordinal_index=0,
         offset_index=offset_index,
@@ -130,10 +130,10 @@ def _probe_header_row(
     return header, length_correction
 
 
-def _find_header(
+def find_header(
     worksheet: Worksheet,
-    header_corrections: _HeaderCorrectionIndex | None = None,
-) -> tuple[_WorkbookHeader, RecordDesignHeaderCellCorrection | None]:
+    header_corrections: HeaderCorrectionIndex | None = None,
+) -> tuple[WorkbookHeader, RecordDesignHeaderCellCorrection | None]:
     sheet_name = worksheet.title.strip()
     for row_number, row in enumerate(worksheet.iter_rows(min_row=1, max_row=10, values_only=True), start=1):
         matched = _probe_header_row(
@@ -141,19 +141,19 @@ def _find_header(
             row_number,
             label=f"xlsx {worksheet.title}",
             sheet_name=sheet_name,
-            header_corrections=header_corrections or _EMPTY_HEADER_CORRECTIONS,
+            header_corrections=header_corrections or EMPTY_HEADER_CORRECTIONS,
         )
         if matched is not None:
             return matched
     raise RegistryValidationError(f"{worksheet.title!r} has no record-design header")
 
 
-def _find_xls_header(
+def find_xls_header(
     worksheet: XlrdSheet,
-    header_corrections: _HeaderCorrectionIndex | None = None,
-) -> tuple[_WorkbookHeader, RecordDesignHeaderCellCorrection | None]:
+    header_corrections: HeaderCorrectionIndex | None = None,
+) -> tuple[WorkbookHeader, RecordDesignHeaderCellCorrection | None]:
     sheet_name = worksheet.name.strip()
-    header_corrections = header_corrections or _EMPTY_HEADER_CORRECTIONS
+    header_corrections = header_corrections or EMPTY_HEADER_CORRECTIONS
     for rowx in range(min(10, worksheet.nrows)):
         matched = _probe_header_row(
             tuple(worksheet.row_values(rowx)),
@@ -172,16 +172,16 @@ def _is_ordinal_header(value: object | None) -> bool:
     return normalized in {"no", "n"} or re.fullmatch(r"version \d+(?:\.\d+)*", normalized) is not None
 
 
-def _cell(values: tuple[object, ...], index: int) -> object | None:
+def cell_at(values: tuple[object, ...], index: int) -> object | None:
     return values[index] if index < len(values) else None
 
 
-def _optional_text(value: object | None) -> str | None:
+def optional_text(value: object | None) -> str | None:
     cleaned = coerce_cell_text(value)
     return cleaned or None
 
 
-def _ordinal_text(value: object | None) -> str | None:
+def ordinal_text(value: object | None) -> str | None:
     """Render a printed ordinal cell verbatim, including a non-numeric label.
 
     ``integral_floats_as_int=True`` because openpyxl hands back a whole-number
@@ -194,16 +194,16 @@ def _ordinal_text(value: object | None) -> str | None:
     return cleaned or None
 
 
-def _optional_header_text(values: tuple[object, ...], index: int | None) -> str | None:
+def optional_header_text(values: tuple[object, ...], index: int | None) -> str | None:
     if index is None:
         return None
-    return _optional_text(_cell(values, index))
+    return optional_text(cell_at(values, index))
 
 
-def _required_text(value: object | None, sheet: str, row: int, field: str) -> str:
+def required_text(value: object | None, sheet: str, row: int, field: str) -> str:
     """Render a required cell verbatim, as an integer where the sheet stored a float.
 
-    ``integral_floats_as_int=True`` for the same reason :func:`_ordinal_text`
+    ``integral_floats_as_int=True`` for the same reason :func:`ordinal_text`
     carries it: a spreadsheet hands back a whole-number cell as a ``float``, so
     a ``Tipo`` of ``6`` arrives as ``6.0`` and renders as ``"6.0"``. AEAT never
     prints a type code that way, and the artifact is reader-dependent rather
@@ -221,11 +221,11 @@ def _required_text(value: object | None, sheet: str, row: int, field: str) -> st
     return cleaned
 
 
-def _required_type_code(
+def required_type_code(
     value: object | None,
     sheet: str,
     row: int,
-    corrections: _TypeCorrectionIndex,
+    corrections: TypeCorrectionIndex,
 ) -> tuple[str, RecordDesignFieldTypeCorrection | None]:
     """Return the row's ``Tipo`` value, applying a declared correction for a blank cell.
 
@@ -236,7 +236,7 @@ def _required_type_code(
     into a read.
 
     Carries ``integral_floats_as_int=True`` for the same reason
-    :func:`_required_text` does: this is the other read path for the same
+    :func:`required_text` does: this is the other read path for the same
     ``Tipo`` column, and leaving one of the two uncoerced would make the
     rendered type code depend on whether a correction sidecar happened to
     exist for the row.
@@ -250,15 +250,15 @@ def _required_type_code(
     raise RegistryValidationError(f"{sheet!r} row {row} missing type")
 
 
-def _field_description_text(
+def field_description_text(
     values: tuple[object, ...],
     *,
-    header: _WorkbookHeader,
+    header: WorkbookHeader,
     content: str | None,
     sheet: str,
     row: int,
 ) -> str:
-    description = _optional_text(_cell(values, header.description_index))
+    description = optional_text(cell_at(values, header.description_index))
     if description is not None:
         return description
     if content is not None:
@@ -266,7 +266,7 @@ def _field_description_text(
     raise RegistryValidationError(f"{sheet!r} row {row} missing description")
 
 
-def _int_or_none(value: object | None) -> int | None:
+def int_or_none(value: object | None) -> int | None:
     if isinstance(value, bool):
         return None
     if isinstance(value, int):
@@ -363,16 +363,16 @@ def _optional_header_index(values: tuple[object, ...], *header_names: str) -> in
     return None
 
 
-def _total_label_index(values: tuple[object, ...]) -> int | None:
+def total_label_index(values: tuple[object, ...]) -> int | None:
     for index, value in enumerate(values):
         if _normalise_header_cell(value) in {"total", "total:"}:
             return index
     return None
 
 
-def _positive_integer_after(values: tuple[object, ...], label_index: int) -> int | None:
+def positive_integer_after(values: tuple[object, ...], label_index: int) -> int | None:
     for candidate in values[label_index + 1 :]:
-        total = _int_or_none(candidate)
+        total = int_or_none(candidate)
         if total is not None and total > 0:
             return total
     return None

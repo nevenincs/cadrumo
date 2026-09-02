@@ -26,7 +26,7 @@ from ..models import (
     InvoiceLine,
     derive_invoice_id,
 )
-from ..normalization import _normalise_invoice_monetary_fields
+from ..normalization import normalise_invoice_monetary_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -602,7 +602,7 @@ def test_optional_monetary_field_refuses_an_unreadable_value(field: str) -> None
     were refused only because pydantic rejects ``None`` for a required field.
     """
     with pytest.raises(InvoiceValidationError) as caught:
-        _normalise_invoice_monetary_fields({field: "not-a-number"})
+        normalise_invoice_monetary_fields({field: "not-a-number"})
 
     message = str(caught.value)
     assert field in message, "the refusal must name the field"
@@ -625,7 +625,7 @@ def test_optional_monetary_field_still_accepts_what_it_should(raw: object, expec
     is not an error, and conflating that with an unreadable value in the other
     direction would be just as wrong as the defect this replaces.
     """
-    assert _normalise_invoice_monetary_fields({"retention_rate": raw}) == {"retention_rate": expected}
+    assert normalise_invoice_monetary_fields({"retention_rate": raw}) == {"retention_rate": expected}
 
 
 def test_refusal_bounds_what_it_quotes_back() -> None:
@@ -641,7 +641,7 @@ def test_refusal_bounds_what_it_quotes_back() -> None:
     overlong = "x" * 500
 
     with pytest.raises(InvoiceValidationError) as caught:
-        _normalise_invoice_monetary_fields({"fx_rate": overlong})
+        normalise_invoice_monetary_fields({"fx_rate": overlong})
 
     message = str(caught.value)
     assert overlong not in message, "the full value must not reach the message"

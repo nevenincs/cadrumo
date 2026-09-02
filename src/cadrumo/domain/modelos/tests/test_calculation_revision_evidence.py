@@ -476,7 +476,7 @@ def test_production_revision_id_derivations_name_the_single_annual_summary_input
     assert set(direct_derivations) == {
         "cadrumo/application/modelo/amendment_actions.py",
         "cadrumo/application/modelo/external_import_actions.py",
-        "cadrumo/application/modelo/_revision_persistence.py",
+        "cadrumo/application/modelo/revision_persistence.py",
     }
     omissions = [
         f"{path}:{call.lineno}"

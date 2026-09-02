@@ -146,12 +146,6 @@ from ._registry_helpers import assert_revision_content_integrity as _assert_revi
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
-from ._revision_persistence import (
-    emit_modelo_bucket_event as _emit_bucket_event,
-)
-from ._revision_persistence import (
-    require_filing_instance_evidence_for_work_unit,
-)
 from ._verification_cross_period import (
     CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
     CROSS_PERIOD_DEPENDENCY_LEGAL_REFS,
@@ -191,6 +185,12 @@ from .iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
 from .preconditions import ModeloPreconditionFailure
+from .revision_persistence import (
+    emit_modelo_bucket_event as _emit_bucket_event,
+)
+from .revision_persistence import (
+    require_filing_instance_evidence_for_work_unit,
+)
 from .verification_preconditions import (
     ModeloVerificationResult,
     build_verification_precondition_failure,
@@ -204,7 +204,6 @@ if TYPE_CHECKING:
     from ...adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
     from ..calculations.observations_repository import IvaWalletDecisionRepository
 
-from ._m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
 from ._verification_predicates import (
     M349_IMPORTE_RECTIFICACIONES_CASILLA as _M349_IMPORTE_RECTIFICACIONES_CASILLA,
 )
@@ -227,6 +226,7 @@ from ._verification_predicates import (
 from ._verification_predicates import (
     m210_unresolved_outcome_findings as _m210_unresolved_outcome_findings,
 )
+from .m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
 
 # Retain pinned verification-actions test imports while consuming public helper contracts.
 _CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS = CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS

@@ -523,45 +523,10 @@ class StorageLocation(BaseModel):
         return Path(*self.subpath.split("/"))
 
 
-def _location(
-    category: StorageCategory,
-    subpath: str,
-    *,
-    lifecycle: StorageLifecycle,
-    grouping: StorageGrouping,
-    consumer_module: str | None = None,
-    dormant_reason: str | None = None,
-    settings_field: str | None = None,
-    node_kind: StorageNodeKind = StorageNodeKind.DIRECTORY,
-    scope: StorageScope = StorageScope.ROOT,
-    override_policy: StorageOverridePolicy = StorageOverridePolicy.OPERATOR_OVERRIDABLE,
-    fingerprint_participation: FingerprintParticipation = FingerprintParticipation.PARTICIPATING,
-    derives_settings_default: bool = True,
-    test_pinned_exception: str | None = None,
-) -> StorageLocation:
-    """Build one declaration, defaulting the axes most members share."""
-    return StorageLocation(
-        category=category,
-        subpath=subpath,
-        node_kind=node_kind,
-        scope=scope,
-        override_policy=override_policy,
-        lifecycle=lifecycle,
-        grouping=grouping,
-        fingerprint_participation=fingerprint_participation,
-        consumer_module=consumer_module,
-        dormant_reason=dormant_reason,
-        settings_field=settings_field,
-        derives_settings_default=derives_settings_default and settings_field is not None,
-        test_pinned_exception=test_pinned_exception,
-    )
-
-
 # Deliberately not at module top: this closes a circular import.
-# ``_storage_taxonomy_locations`` imports the axis enums, ``StorageLocation``
-# and ``_location`` from THIS module, so it can only be imported back here
-# once those names are already bound -- i.e. after the class/function
-# definitions above, not before them.
+# ``storage_taxonomy_locations`` imports the axis enums and ``StorageLocation``
+# from THIS module, so it can only be imported back here once those names are
+# already bound -- i.e. after the class definitions above, not before them.
 from .storage_taxonomy_locations import (  # noqa: E402 - see comment above
     FINGERPRINT_EXCLUDED_STORAGE_FIELDS,
     ROOT_DERIVED_STORAGE_FIELDS,

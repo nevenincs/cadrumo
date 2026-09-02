@@ -13,8 +13,8 @@ if TYPE_CHECKING:
     from pdfplumber.page import Page
 
 from .errors import RegistryValidationError
-from .record_design_pdf_rows import _clean_pdf_line, _join_pdf_parts, _normalise_pdf_sheet_name, _pdf_page_name
-from .record_design_pdf_state import _validate_pdf_sheet
+from .record_design_pdf_rows import clean_pdf_line, join_pdf_parts, normalise_pdf_sheet_name, pdf_page_name
+from .record_design_pdf_state import validate_pdf_sheet
 from .record_design_schema import RecordDesignField, RecordDesignSheet
 
 _NUMERIC_TUPLE_ADAPTER: TypeAdapter[tuple[int | float, ...]] = TypeAdapter(
@@ -56,7 +56,7 @@ class _VisualChartFragment:
     description: str
 
 
-def _extract_pdf_text_lines(pdf_bytes: bytes, *, source_label: str) -> tuple[str, ...]:
+def extract_pdf_text_lines(pdf_bytes: bytes, *, source_label: str) -> tuple[str, ...]:
     import pypdfium2 as pdfium
 
     try:
@@ -77,7 +77,7 @@ def _extract_pdf_text_lines(pdf_bytes: bytes, *, source_label: str) -> tuple[str
         document.close()
 
 
-def _extract_pdfplumber_text_lines(pdf_bytes: bytes, *, source_label: str) -> tuple[str, ...]:
+def extract_pdfplumber_text_lines(pdf_bytes: bytes, *, source_label: str) -> tuple[str, ...]:
     import pdfplumber
 
     try:
@@ -87,11 +87,11 @@ def _extract_pdfplumber_text_lines(pdf_bytes: bytes, *, source_label: str) -> tu
         raise RegistryValidationError(f"pdfplumber could not open record-design PDF {source_label}: {exc}") from exc
 
 
-def _uses_page_record_layout(lines: tuple[str, ...]) -> bool:
-    return any(_pdf_page_name(_clean_pdf_line(line)) is not None for line in lines)
+def uses_page_record_layout(lines: tuple[str, ...]) -> bool:
+    return any(pdf_page_name(clean_pdf_line(line)) is not None for line in lines)
 
 
-def _snapshot_pdf_page(page: Page) -> _PdfPageSnapshot:
+def snapshot_pdf_page(page: Page) -> _PdfPageSnapshot:
     return _PdfPageSnapshot(
         lines=_extract_pdf_page_lines(page),
         words=tuple(
@@ -136,7 +136,7 @@ def _extract_pdf_page_lines(page: Page) -> tuple[str, ...]:
     return tuple(text.splitlines())
 
 
-def _extract_visual_record_design_chart(
+def extract_visual_record_design_chart(
     pages: tuple[_PdfPageSnapshot, ...],
     *,
     source_label: str,
@@ -158,9 +158,9 @@ def _extract_visual_record_design_chart(
 
 def _visual_chart_page_sheet_name(page: _PdfPageSnapshot) -> str | None:
     for line in page.lines:
-        match = _VISUAL_CHART_HEADER_RE.match(_clean_pdf_line(line))
+        match = _VISUAL_CHART_HEADER_RE.match(clean_pdf_line(line))
         if match is not None:
-            title = _normalise_pdf_sheet_name(match.group("title"))
+            title = normalise_pdf_sheet_name(match.group("title"))
             return f"Tipo {match.group('record')} - {title}"
     return None
 
@@ -183,7 +183,7 @@ def _extract_visual_chart_sheet(
             ordinal=str(ordinal),
             offset=fragment.start,
             length=fragment.end - fragment.start + 1,
-            type_code=_VISUAL_CHART_TYPE_CODE,
+            type_code=VISUAL_CHART_TYPE_CODE,
             description=fragment.description,
             content="Extracted from visual record-design chart geometry.",
         )
@@ -191,7 +191,7 @@ def _extract_visual_chart_sheet(
     )
     total_positions = max((field.offset + field.length - 1 for field in fields), default=None)
     sheet = RecordDesignSheet(name=name, fields=fields, total_positions=total_positions)
-    _validate_pdf_sheet(sheet, source_label=source_label)
+    validate_pdf_sheet(sheet, source_label=source_label)
     return sheet
 
 
@@ -397,14 +397,14 @@ def _visual_chart_fragments_should_merge(
 
 def _merge_visual_chart_descriptions(previous: str, current: str) -> str:
     parts = [description for description in (previous, current) if description != "BLANCOS."]
-    return _clean_visual_chart_description(_join_pdf_parts(parts)) or "BLANCOS."
+    return _clean_visual_chart_description(join_pdf_parts(parts)) or "BLANCOS."
 
 
 _VISUAL_CHART_HEADER_RE = re.compile(
     r"^MODELO\s+\d+\s+REGISTRO DE TIPO\s+(?P<record>\d+)\.?\s+(?P<title>REGISTRO DE .+)$",
     re.IGNORECASE,
 )
-_VISUAL_CHART_TYPE_CODE = "No consta en gráfico"
+VISUAL_CHART_TYPE_CODE = "No consta en gráfico"
 
 _REVERSED_VISUAL_CHART_WORDS = {
     "AICNIVORP",

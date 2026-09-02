@@ -17,7 +17,7 @@ from __future__ import annotations
 import asyncio
 import json
 import threading
-from collections.abc import Iterator, Mapping
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from http import HTTPStatus
@@ -90,7 +90,7 @@ class _Script:
 
 
 @contextmanager
-def _serve_scripted(script: _Script) -> Iterator[str]:
+def _serve_scripted(script: _Script) -> Generator[str]:
     """Serve ``/api/chat`` on loopback following ``script``."""
     lock = threading.Lock()
 

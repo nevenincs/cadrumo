@@ -52,7 +52,7 @@ See Also:
         Trusted-recipient public-key registry used before encryption.
     :mod:`~entrypoints.cli._modelo_review_package_payloads`
         Typed JSON payload schemas emitted by this CLI group.
-    :mod:`~entrypoints.cli._config._collab`
+    :mod:`~entrypoints.cli.config._collab`
         Configuration surface that registers recipient fingerprints.
 """
 
@@ -66,14 +66,6 @@ import typer
 from ...adapters.persistence.profile.recipient_replay_guard import (
     RecipientPackageReplayedError,
     RecipientReplayGuardRepository,
-)
-from ...application.modelo._review_package_collab_audit import emit_collab_feedback_countersign_attached_event
-from ...application.modelo._review_package_feedback import (
-    FeedbackCounterSignatureInvalidError,
-    ReviewPackageFeedbackError,
-    build_feedback_package,
-    encrypt_feedback_package_for_originator,
-    import_feedback_package,
 )
 from ...application.modelo.action_errors import (
     CalculationRevisionNotFoundError,
@@ -99,11 +91,19 @@ from ...application.modelo.review_package import (
     build_review_package,
     verify_review_package,
 )
+from ...application.modelo.review_package_collab_audit import emit_collab_feedback_countersign_attached_event
 from ...application.modelo.review_package_counter_sign import (
     CounterSignedReceipt,
     ReviewPackageCounterSigningError,
     counter_sign_review_package,
     verify_counter_signed_receipt,
+)
+from ...application.modelo.review_package_feedback import (
+    FeedbackCounterSignatureInvalidError,
+    ReviewPackageFeedbackError,
+    build_feedback_package,
+    encrypt_feedback_package_for_originator,
+    import_feedback_package,
 )
 from ...application.modelo.review_package_recipient_encryption import (
     RecipientDecryptionError,

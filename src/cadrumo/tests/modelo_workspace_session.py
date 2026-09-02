@@ -21,7 +21,7 @@ geometry proof pass while proving nothing about the screens it names.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -93,7 +93,7 @@ def real_workspace_inspection_result(
     filing_year: int = _FILING_YEAR,
     period_code: str = _PERIOD_CODE,
     revision_id: str | None = None,
-) -> Iterator[_SeededWorkspace]:
+) -> Generator[_SeededWorkspace]:
     """Yield one seeded workspace address over isolated encrypted storage.
 
     Held open as a context manager rather than returned, because the profile
@@ -125,11 +125,14 @@ def real_workspace_inspection_result(
         # caller choosing an address does not also have to know which revision
         # governs it -- a hand-written revision id is the shape that goes stale
         # silently when the legal window moves.
-        selected_revision = revision_id or select_revision(
-            authority.validate_modelo(ModeloCode(modelo)),
-            filing_year=filing_year,
-            period=period.registry_token,
-        ).id
+        selected_revision = (
+            revision_id
+            or select_revision(
+                authority.validate_modelo(ModeloCode(modelo)),
+                filing_year=filing_year,
+                period=period.registry_token,
+            ).id
+        )
         create_work_unit(
             bucket_id=profile.bucket_id,
             modelo=modelo,

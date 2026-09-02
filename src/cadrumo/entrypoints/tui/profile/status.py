@@ -24,7 +24,7 @@ rendered here rather than re-modelled as a bespoke TUI-only advisory.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, ClassVar, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -71,7 +71,7 @@ class StatusScreen(Screen[None]):
 
     # Keys and actions only; descriptions resolve in on_mount so the footer
     # tracks the active language, not the import-time language.
-    BINDINGS = [
+    BINDINGS: ClassVar[list[Binding]] = [
         Binding("q", "quit", ""),
         Binding("escape", "quit", ""),
         Binding("f3", "toggle_appearance", "", show=False),

@@ -32,7 +32,7 @@ from .schema import (
 from .schema_base import RegistryModel
 from .schema_exports import ProjectionEndpointDeclaration
 from .schema_formula import ParameterDefinition
-from .schema_references import SourceReference
+from .schema_references import SourceReference, source_window_applies_across
 from .schema_surfaces import RelationDefinition
 from .schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
 
@@ -85,11 +85,22 @@ class GeneratedArtifactInspection(Protocol):
     modelo_id: ModeloId
     revision_id: RevisionId
     revision_source_refs: tuple[SourceRefId, ...]
-    sources: Mapping[SourceRefId, GeneratedArtifactSource]
     legal_ref_ids: frozenset[LegalRefId]
     casilla_ids: frozenset[CasillaId]
     binding_ids: frozenset[BindingId]
     projection_endpoints: tuple[ProjectionEndpointDeclaration, ...]
+
+    @property
+    def sources(self) -> Mapping[SourceRefId, GeneratedArtifactSource]:
+        """The sources this revision cites, read-only.
+
+        Declared as a property rather than an attribute so the protocol matches
+        covariantly. A mutable attribute is invariant, which made a carrier
+        holding a richer source type fail to satisfy this protocol even though
+        every value satisfies :class:`GeneratedArtifactSource`. The verifier
+        only reads these, so read-only is the honest declaration.
+        """
+        ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -105,6 +116,22 @@ class StaticGeneratedArtifactSource:
     applies_to: date | None
     record_design_epoch: str | None
     corpus_tier: _GeneratedArtifactCorpusTier | None
+
+    def applies_across(self, span_from: date, span_to: date | None) -> bool:
+        """Report whether this copied window overlaps one date span.
+
+        Delegates to the same rule the live :class:`SourceReference` uses, so a
+        diagnostic copy can never answer the applicability question differently
+        from the source it was copied from. Without this method the generated
+        provenance verifier raised on every probe, because it asks a copied
+        source the question it asks a live one.
+        """
+        return source_window_applies_across(
+            applies_from=self.applies_from,
+            applies_to=self.applies_to,
+            span_from=span_from,
+            span_to=span_to,
+        )
 
     @classmethod
     def from_source(cls, source: SourceReference) -> StaticGeneratedArtifactSource:

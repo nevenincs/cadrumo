@@ -25,7 +25,7 @@ from __future__ import annotations
 import html
 import json
 from functools import cache
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, ClassVar, override
 
 from docutils import nodes
 from docutils.parsers.rst import Directive, directives
@@ -433,7 +433,7 @@ class CliSequenceDirective(Directive):
     optional_arguments = 0
     final_argument_whitespace = False
     has_content = True
-    option_spec = {
+    option_spec: ClassVar[dict[str, object]] = {
         "seed": directives.unchanged,
         "verify": directives.unchanged,
         "shells": directives.unchanged,

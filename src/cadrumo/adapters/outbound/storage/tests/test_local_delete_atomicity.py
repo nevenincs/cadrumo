@@ -28,8 +28,8 @@ from pathlib import Path
 import pytest
 
 from .....tests.path_obstruction import obstructed_path
-from .._local import LocalFileSystemProvider
 from ..errors import OutboundStoragePermissionError
+from ..local import LocalFileSystemProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

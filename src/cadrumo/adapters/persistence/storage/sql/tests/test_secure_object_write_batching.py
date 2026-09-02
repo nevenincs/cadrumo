@@ -22,7 +22,7 @@ from __future__ import annotations
 import hashlib
 import json
 import sqlite3
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -54,7 +54,7 @@ def _write(key: str, payload: bytes, *, written_at: datetime = _WRITTEN_AT) -> S
 
 
 @contextmanager
-def _statement_log(engine: Any) -> Iterator[list[str]]:
+def _statement_log(engine: Any) -> Generator[list[str]]:
     """Record the first SQL verb of every cursor execution on ``engine``.
 
     An ``executemany`` batch is one cursor execution regardless of how many

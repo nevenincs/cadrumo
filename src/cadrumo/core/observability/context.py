@@ -14,7 +14,7 @@ a new step identifier.
 from __future__ import annotations
 
 import uuid
-from collections.abc import Iterator, Sequence
+from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from contextvars import ContextVar
 from datetime import datetime
@@ -26,7 +26,7 @@ from ..identity import ContentDigest, ContentDigestOrAbsent
 from ..logging import attach_run_sink, detach_run_sink, get_logger
 from ..models import STRICT_FROZEN_CONFIG
 from ..time.clock import now
-from .capture import _CAPTURE_SINK
+from .capture import CAPTURE_SINK
 from .fingerprint import (
     compute_corpus_sha256,
     compute_data_root_sha256,
@@ -41,7 +41,7 @@ from .models import (
     StepBoundaryPayload,
 )
 from .sink import JsonlRunSink
-from .store import EVENTS_FILENAME, _run_dir, _validate_run_id, save_envelope, save_trace
+from .store import EVENTS_FILENAME, run_dir, save_envelope, save_trace, validate_run_id
 
 _log = get_logger(__name__)
 
@@ -119,12 +119,12 @@ def _build_initial_context(
 
     A caller-supplied ``run_id`` is validated against the canonical
     shape (16 lowercase hex) by
-    :func:`cadrumo.core.observability.store._validate_run_id` before
+    :func:`cadrumo.core.observability.store.validate_run_id` before
     anything touches the filesystem — this prevents a malicious or
     buggy caller from escaping the configured runs directory through
     inputs like ``"../etc"``.
     """
-    effective_run_id = _validate_run_id(run_id) if run_id is not None else _mint_run_id()
+    effective_run_id = validate_run_id(run_id) if run_id is not None else _mint_run_id()
     # `load_settings()` honours `override_settings`; bare `Settings()`
     # bypasses the context-var so test-side corpus-sha overrides never
     # propagate to the run-context fingerprint.
@@ -175,7 +175,7 @@ def run_context(
     arguments: Sequence[ArgumentRecord] = (),
     run_id: str | None = None,
     step_id: str | None = None,
-) -> Iterator[RunContextInfo]:
+) -> Generator[RunContextInfo]:
     """Enter a run context, emitting ``STEP_START`` / ``STEP_END`` boundary events.
 
     The outermost enter mints a ``run_id``, fingerprints the corpus /
@@ -254,7 +254,7 @@ def run_context(
         run_id=run_id,
         step_id=step_id,
     )
-    target = _run_dir(info.run_id)
+    target = run_dir(info.run_id)
     sink = JsonlRunSink(target / EVENTS_FILENAME, run_id=info.run_id)
 
     # Arm result-envelope capture for the run so the emitted
@@ -263,10 +263,10 @@ def run_context(
     # aware: if an outer scope (e.g. ``replay_run``) already armed a
     # sink, reuse it and do not persist here — that outer scope owns the
     # comparison. Capture is a no-op cost when no JSON is emitted.
-    pre_existing_capture = _CAPTURE_SINK.get()
+    pre_existing_capture = CAPTURE_SINK.get()
     owns_capture = pre_existing_capture is None
     envelope_sink: list[dict[str, object]] = [] if owns_capture else pre_existing_capture
-    capture_token = _CAPTURE_SINK.set(envelope_sink) if owns_capture else None
+    capture_token = CAPTURE_SINK.set(envelope_sink) if owns_capture else None
 
     # Set the contextvars BEFORE attaching the sink. Symmetric with
     # detach-before-reset on unwind. Without this ordering, log records
@@ -352,7 +352,7 @@ def run_context(
             STEP_CONTEXT_VAR.reset(step_token)
             RUN_CONTEXT_VAR.reset(run_token)
             if capture_token is not None:
-                _CAPTURE_SINK.reset(capture_token)
+                CAPTURE_SINK.reset(capture_token)
             try:
                 sink.close()
             except Exception:

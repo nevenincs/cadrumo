@@ -74,7 +74,7 @@ _SETTINGS_PREAMBLE = dedent(
         cadrumo_secret_passphrase=DEV_TEST_DATABASE_PASSWORD,
         cadrumo_output_language="en",
     )
-    token = config_module._settings_override.set(settings)
+    token = config_module.settings_override.set(settings)
     from cadrumo.application.wizard.compiler import ensure_profile_keys_registered
 
     ensure_profile_keys_registered()
@@ -176,7 +176,7 @@ _CRASH_HARNESS = _SETTINGS_PREAMBLE + dedent(
     try:
         start_config_reset(confirmed=True)
     finally:
-        config_module._settings_override.reset(token)
+        config_module.settings_override.reset(token)
     if boundary in effect_return_by_boundary and not effect_frame_seen:
         filename, function_name = effect_return_by_boundary[boundary]
         raise RuntimeError(
@@ -202,7 +202,7 @@ _RESUME_HARNESS = _SETTINGS_PREAMBLE + dedent(
         )
         print(operation.model_dump_json())
     finally:
-        config_module._settings_override.reset(token)
+        config_module.settings_override.reset(token)
     """,
 )
 
@@ -330,13 +330,13 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
     from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
     from ...adapters.persistence.storage.sql.engine import dispose_engine
     from ...core.bucket_pointer import read_pointer
-    from .._config_reset_models import (
+    from .._config_reset_repository import ConfigResetJournalRepository
+    from ..auth.operator import configure_operator_auth
+    from ..config_reset_models import (
         ConfigResetOperation,
         ConfigResetOperationStatus,
         ConfigResetTargetPhase,
     )
-    from .._config_reset_repository import ConfigResetJournalRepository
-    from ..auth.operator import configure_operator_auth
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
@@ -377,9 +377,9 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
 
 def test_pointer_reconciling_resume_refuses_a_later_absent_tombstone(tmp_path: Path) -> None:
     """A later clear is not the reset's exact expected pointer successor."""
-    from .._config_reset_models import ConfigResetOperationStatus, ConfigResetPauseReason
     from .._config_reset_repository import ConfigResetJournalRepository
     from ..config_reset import resume_config_reset
+    from ..config_reset_models import ConfigResetOperationStatus, ConfigResetPauseReason
     from ..user_profile.profile_pointer import active_profile_pointer_transaction
 
     with _isolated_reset_root(tmp_path) as root:
@@ -413,8 +413,8 @@ def test_fresh_resume_canonicalizes_journal_bucket_identity_before_target_lock(
 ) -> None:
     """A whitespace-bearing durable identity resumes under its canonical lock key."""
     from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
-    from .._config_reset_models import ConfigResetOperation, ConfigResetOperationStatus
     from .._config_reset_repository import ConfigResetJournalRepository
+    from ..config_reset_models import ConfigResetOperation, ConfigResetOperationStatus
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
@@ -483,8 +483,8 @@ def test_a_deletion_marker_cannot_attest_an_erase_that_is_not_its_own(tmp_path: 
 
     from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
     from ...adapters.persistence.storage.sql.engine import dispose_engine
-    from .._config_reset_models import ConfigResetOperation
     from .._config_reset_repository import ConfigResetJournalRepository
+    from ..config_reset_models import ConfigResetOperation
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")

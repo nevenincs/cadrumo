@@ -13,4 +13,4 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.evidence_consent._record
+   cadrumo.domain.evidence_consent.record

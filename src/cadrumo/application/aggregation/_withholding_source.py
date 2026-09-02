@@ -39,7 +39,7 @@ from ._source_mesh import (
 )
 from .source_resolution_operations import storage_degradation_resolution
 
-_STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
+STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
 _WITHHOLDING_SOURCE = BindingSourceKind.WITHHOLDING
 
@@ -87,7 +87,7 @@ class WithholdingSourceResolver:
         repository = self._withholding_repository or PercepcionObservationRepository()
         try:
             observations = repository.load_observations(str(context.modelo), context.period)
-        except _STORAGE_DEGRADATION_ERRORS as exc:
+        except STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

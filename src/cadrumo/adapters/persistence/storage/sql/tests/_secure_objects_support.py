@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib as hashlib
 import logging as logging
 import sqlite3 as sqlite3
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -53,7 +53,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 @contextmanager
 def _ephemeral_secure_repo_at(
     db_path: Path,
-) -> Iterator[tuple[Any, SecureObjectRepository]]:
+) -> Generator[tuple[Any, SecureObjectRepository]]:
     """Open ``db_path`` under a fresh, self-managed ephemeral key.
 
     This is intentionally distinct from :func:`_repo_at`: callers of the
@@ -72,7 +72,7 @@ def _ephemeral_secure_repo_at(
 def _ephemeral_secure_repo(
     tmp_path: Path,
     database_name: str,
-) -> Iterator[tuple[Path, Any, SecureObjectRepository]]:
+) -> Generator[tuple[Path, Any, SecureObjectRepository]]:
     """Open a filename-derived repository under a fresh ephemeral key.
 
     Yields ``(db_path, engine, repo)`` so callers can inspect the raw engine
@@ -84,7 +84,7 @@ def _ephemeral_secure_repo(
 
 
 @contextmanager
-def _repo_at(db_path: Path) -> Iterator[SecureObjectRepository]:
+def _repo_at(db_path: Path) -> Generator[SecureObjectRepository]:
     """Open a real :class:`SecureObjectRepository` against a fresh schema at ``db_path``."""
     engine = bootstrap_sqlite_engine(db_path)
     try:

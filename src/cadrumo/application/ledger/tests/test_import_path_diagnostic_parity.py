@@ -26,7 +26,7 @@ from ....adapters.inbound.financial.providers.base import ParsedLedgerRow
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import TransactionCatalogue, derive_import_fingerprint, derive_transaction_id
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ...transactions._import import import_ledger_with_diagnostics
+from ...transactions.import_diagnostics import import_ledger_with_diagnostics
 from ..actions_import import _evaluate_import_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

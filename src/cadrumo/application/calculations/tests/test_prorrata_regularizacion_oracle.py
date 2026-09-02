@@ -46,7 +46,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.external_grounding import ManualWorkedExamplePayload
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from ....domain.calculations.registry.tests._manual_oracle_support import (
+from ....domain.calculations.registry.tests.manual_oracle_support import (
     oracle_declared_figures,
     read_manual_worked_example,
 )

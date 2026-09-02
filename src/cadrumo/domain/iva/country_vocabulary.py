@@ -17,7 +17,7 @@ _ALPHA2_LENGTH = 2
 _ALPHA3_LENGTH = 3
 
 
-def _normalise_printed_country_name(printed: str) -> str:
+def normalise_printed_country_name(printed: str) -> str:
     """Return the form a printed country name is matched under.
 
     Three normalisations and no more. Case is folded because a document sets its
@@ -34,7 +34,7 @@ def _normalise_printed_country_name(printed: str) -> str:
 
 
 @lru_cache(maxsize=1)
-def _country_codes_by_printed_name() -> dict[str, str]:
+def country_codes_by_printed_name() -> dict[str, str]:
     """Return every vocabulary name, normalised, mapped to its alpha-2 code.
 
     Read from ``registry/aeat/iva/country_names.toml`` rather than written here,
@@ -101,11 +101,11 @@ def _index_country_names(payload: object, *, source: str) -> dict[str, str]:
     from .errors import IvaCatalogueError
 
     target = source
-    if not _establishment._is_str_keyed_mapping(payload):
+    if not _establishment.is_str_keyed_mapping(payload):
         raise IvaCatalogueError(f"{target}: the country-name vocabulary is not a table")
 
     countries = payload.get("country", ())
-    if not _establishment._is_object_list(countries):
+    if not _establishment.is_object_list(countries):
         raise IvaCatalogueError(f"{target}: the country-name vocabulary carries a malformed country table")
 
     resolved: dict[str, str] = {}
@@ -127,13 +127,13 @@ def _country_record_code_and_names(record: object, *, target: str) -> tuple[str,
     """
     from .errors import IvaCatalogueError
 
-    if not _establishment._is_str_keyed_mapping(record):
+    if not _establishment.is_str_keyed_mapping(record):
         raise IvaCatalogueError(f"{target}: country record is not a table: {record!r}")
     code = str(record.get("code", "")).strip().upper()
     if len(code) != _ALPHA2_LENGTH or not code.isalpha():
         raise IvaCatalogueError(f"{target}: country record names no alpha-2 code: {record!r}")
     names = record.get("names", ())
-    if not _establishment._is_object_list(names) or not names:
+    if not _establishment.is_object_list(names) or not names:
         raise IvaCatalogueError(f"{target}: country {code} carries no printed name")
     return code, names
 
@@ -153,7 +153,7 @@ def _claim_printed_country_name(
     """
     from .errors import IvaCatalogueError
 
-    normalised = _normalise_printed_country_name(str(name))
+    normalised = normalise_printed_country_name(str(name))
     if not normalised:
         raise IvaCatalogueError(f"{target}: country {code} carries a blank printed name")
     claimed = resolved.get(normalised)
@@ -166,7 +166,7 @@ def _claim_printed_country_name(
 
 
 @lru_cache(maxsize=1)
-def _country_codes_by_alpha3() -> dict[str, str]:
+def country_codes_by_alpha3() -> dict[str, str]:
     """Return every vocabulary record's alpha-3 code mapped to its alpha-2 code.
 
     Read from the same ``registry/aeat/iva/country_names.toml`` the printed names
@@ -215,17 +215,17 @@ def _index_country_alpha3(payload: object, *, source: str) -> dict[str, str]:
     from .errors import IvaCatalogueError
 
     target = source
-    if not _establishment._is_str_keyed_mapping(payload):
+    if not _establishment.is_str_keyed_mapping(payload):
         raise IvaCatalogueError(f"{target}: the country-name vocabulary is not a table")
 
     countries = payload.get("country", ())
-    if not _establishment._is_object_list(countries):
+    if not _establishment.is_object_list(countries):
         raise IvaCatalogueError(f"{target}: the country-name vocabulary carries a malformed country table")
 
     resolved: dict[str, str] = {}
     alpha3_by_code: dict[str, str] = {}
     for record in countries:
-        if not _establishment._is_str_keyed_mapping(record):
+        if not _establishment.is_str_keyed_mapping(record):
             raise IvaCatalogueError(f"{target}: country record is not a table: {record!r}")
         code = str(record.get("code", "")).strip().upper()
         if len(code) != _ALPHA2_LENGTH or not code.isalpha():

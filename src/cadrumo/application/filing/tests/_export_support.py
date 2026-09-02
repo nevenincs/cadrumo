@@ -542,40 +542,6 @@ def _approved_modelo_123_2019_registry_draft():
 
 
 @cache
-def _approved_modelo_200_registry_draft():
-    # A complete Modelo 200 (sociedades) draft: accounting profit 200 drives the
-    # cuota chain, and 450 of Modelo 202 pagos fraccionados produces a negative
-    # cuota diferencial. Every computed casilla in the calculation closure is
-    # populated, so the completeness gate has a full result set to check.
-    provider = _schema_provider(filing_year=2025, period="0A", modelos=("200",))
-    draft = build_draft(
-        modelo="200",
-        period=Period.from_year_and_code(2025, "0A"),
-        profile=ModeloOperatorProfile(
-            tax_id="B12345674",
-            display_name="Emilio Export Test SL",
-        ),
-        inputs={
-            validated_casilla_id("00040", surface="_approved_modelo_200_registry_draft"): "0",
-            validated_casilla_id("00501", surface="_approved_modelo_200_registry_draft"): Decimal("200.00"),
-            validated_casilla_id("DP200014:01033", surface="_approved_modelo_200_registry_draft"): Decimal("0.00"),
-            validated_casilla_id("DP200014:01034", surface="_approved_modelo_200_registry_draft"): Decimal("0.00"),
-            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-2024-profile-incn-prior-12-months": Decimal("500000"),
-            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
-            "modelo-200-2024-profile-legal-entity-form": "sl",
-            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
-            "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("450"),
-            "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
-        },
-        schema_provider=provider,
-    )
-    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
-
-
-@cache
 def _approved_modelo_390_registry_draft():
     # Modelo 390 (IVA resumen anual): the ledger_iva_aggregation and
     # relation_prefill/previous_filing bindings behind these bound casillas
@@ -628,3 +594,50 @@ def _field_slice(layout: ExportLayoutDefinition, record_id: str, field_id: str) 
         elif record.line_ending == "lf":
             cursor += 1
     raise AssertionError(f"export record {record_id!r} not found")
+
+
+def _m151_producer_snapshot() -> FilingProducerSnapshot:
+    """Producer facts for the Modelo 151 export coordinate."""
+    return build_filing_producer_snapshot(
+        modelo=Modelo.M151,
+        taxpayer_tax_id="12345678Z",
+        taxpayer_identity=TaxpayerIdentityFacts(
+            legal_name=None,
+            given_name="Ana",
+            surnames="Prueba",
+            full_name="Ana Prueba",
+        ),
+        presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
+        model_profile=GeneralFilingProfileFacts(),
+        elections=FilingElectionFacts(
+            result_disposition=ResultDisposition.INGRESO,
+            payment=PaymentElection.INGRESO,
+            refund=RefundElection.COMPENSAR,
+            prior_domiciliation=PriorDomiciliationElection.KEEP,
+        ),
+        amendment_evidence=None,
+        m303_filing_facts=None,
+        refund_account=None,
+        charge_account=None,
+    )
+
+
+@cache
+def _modelo_151_export_coordinate_draft():
+    """A Modelo 151 draft at the annual coordinate whose layout carries a filing envelope.
+
+    Deliberately built from no inputs and left in its constructed status. The
+    payload-acceptance surface this supports re-hashes emitted bytes against
+    recorded acceptance evidence and never reads the draft; the draft exists
+    because the proof entry refuses a coordinate its draft does not match. Giving
+    it contrived values would suggest a completeness this fixture does not have
+    and does not need.
+    """
+    period = Period.from_year_and_code(2025, "0A")
+    return build_draft(
+        modelo="151",
+        period=period,
+        profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="Emilio Export Test"),
+        inputs={},
+        schema_provider=_schema_provider(filing_year=2025, period="0A", modelos=("151",)),
+    )

@@ -76,7 +76,7 @@ from .ledger_binding_selector_support import casilla_id_set
 # observations per the one-aggregation-path discipline.
 
 
-def _mapping_lacks_fact(value: object) -> bool:
+def mapping_lacks_fact(value: object) -> bool:
     """Whether *value* is a mapping with no ``fact`` key.
 
     Extracted so the ``isinstance`` narrowing stays local. Inline, it widened
@@ -129,7 +129,7 @@ class _ImpatriadoLedgerIncomeSelector(BaseModel):
         closes the missing-value half so a binding author reads the choice
         instead of guessing it.
         """
-        if _mapping_lacks_fact(value):
+        if mapping_lacks_fact(value):
             raise ValueError(
                 "ledger_impatriado_income_aggregation selector requires an explicit 'fact'; "
                 f"accepted facts are {sorted(_IMPATRIADO_SUPPORTED_FACTS)!r}",

@@ -9,7 +9,7 @@ Ollama endpoint and a controlled Playwright cache directory; no mocks.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from http import HTTPStatus
 from pathlib import Path
@@ -57,7 +57,7 @@ class _OllamaTagsEndpoint(SilentLoopbackHandler):
 
 
 @contextmanager
-def _serve_ollama_tags(payload: object) -> Iterator[str]:
+def _serve_ollama_tags(payload: object) -> Generator[str]:
     _OllamaTagsEndpoint.payload = payload
     with serving_loopback(_OllamaTagsEndpoint, path="") as endpoint:
         yield endpoint

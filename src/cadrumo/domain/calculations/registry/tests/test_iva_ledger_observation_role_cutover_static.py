@@ -71,7 +71,7 @@ def test_direct_iva_ledger_constructors_declare_the_required_role() -> None:
     # Only IvaLedgerObservation has a production construction site to anchor on;
     # IvaLedgerCandidate is built solely by the aggregation tests, so its
     # non-vacuity guard is that the scan found any construction at all.
-    production_anchors = {"IvaLedgerObservation": "application/aggregation/_iva_ledger.py"}
+    production_anchors = {"IvaLedgerObservation": "application/aggregation/iva_ledger.py"}
 
     for name in ("IvaLedgerObservation", "IvaLedgerCandidate"):
         calls = tuple(_constructor_calls(name))

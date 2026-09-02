@@ -41,7 +41,6 @@ from ...domain.filing.amendment import (
     CasillaChange,
     CasillaDelta,
     CasillaInputs,
-    ModeloCode,
     ModeloComplementaria,
     ModeloSustitutiva,
     make_amendment_id,
@@ -49,6 +48,7 @@ from ...domain.filing.amendment import (
 from ...domain.filing.errors import ModeloAmendmentError
 from ...domain.filing.protocols import CasillaSchemaProvider, ModeloInputs, ModeloInputValue
 from ...domain.filing.schema import ModeloDraft, ModeloValueKind
+from ...domain.modelos.codes import ModeloCode
 from .errors import ModeloApplicationError as ModeloBuilderError
 
 _logger = get_logger(__name__)
@@ -141,7 +141,10 @@ def build_complementaria(
         ),
         submission_id=original_submission.submission_id,
         original_csv=original_csv,
-        original_model=original_submission.modelo,
+        # The stored submission carries its modelo as a loose `str`; the
+        # amendment declares the canonical typed identity. Validate at this
+        # boundary rather than passing an unchecked code into a filing record.
+        original_model=ModeloCode(original_submission.modelo),
         original_period=original_draft.period,
         delta=delta,
         amended_draft=amended_draft,

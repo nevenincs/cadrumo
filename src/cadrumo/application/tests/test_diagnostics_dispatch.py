@@ -31,7 +31,7 @@ from ...core.operator_action_enums import (
     ActionConditionality,
     NoRecoveryOutcome,
 )
-from ..diagnostic_models import DiagnosticCheck, _diagnostic_no_recovery_verdict
+from ..diagnostic_models import DiagnosticCheck, diagnostic_no_recovery_verdict
 from ..diagnostics import (
     _auth_check,
     _overall_status,
@@ -41,13 +41,13 @@ from ..wizard.status import WizardStatusReport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_ROLLUP_WARN_VERDICT = _diagnostic_no_recovery_verdict(
+_ROLLUP_WARN_VERDICT = diagnostic_no_recovery_verdict(
     condition_id="diagnostics.test.rollup.warn",
     evidence_id="diagnostics.test.rollup.warn.observation",
     values={"available": False},
     outcome=NoRecoveryOutcome.OPERATOR_DECISION,
 )
-_ROLLUP_FAIL_VERDICT = _diagnostic_no_recovery_verdict(
+_ROLLUP_FAIL_VERDICT = diagnostic_no_recovery_verdict(
     condition_id="diagnostics.test.rollup.fail",
     evidence_id="diagnostics.test.rollup.fail.observation",
     values={"available": False},

@@ -39,7 +39,7 @@ try:
 except WizardCatalogueNotRegisteredError:
     print("CATALOGUE:UNREGISTERED")
 
-from cadrumo.domain.deadlines import taxpayer_profile_from_mapping
+from cadrumo.domain.deadlines.profiles import taxpayer_profile_from_mapping
 
 profile = taxpayer_profile_from_mapping(
     {

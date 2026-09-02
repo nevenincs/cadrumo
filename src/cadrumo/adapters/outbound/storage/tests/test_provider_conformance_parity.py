@@ -40,9 +40,9 @@ import pytest
 
 from .._google_drive import GoogleDriveProvider
 from .._key_validation import assert_admissible_object_key_hmac
-from .._local import LocalFileSystemProvider
-from .._protocol import StorageProvider
 from ..errors import OutboundStorageValidationError
+from ..local import LocalFileSystemProvider
+from ..protocol import StorageProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -364,7 +364,7 @@ def test_the_namespace_divergence_stays_permitted_and_stated() -> None:
     contract-level value both were answering differently.
     """
     from .._google_drive import _validate_namespace as drive_namespace
-    from .._local import _validate_namespace as local_namespace
+    from ..local import _validate_namespace as local_namespace
 
     with pytest.raises(OutboundStorageValidationError):
         local_namespace(".hidden")

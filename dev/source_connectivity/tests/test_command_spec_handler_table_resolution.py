@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 
-_AUTH_SPECS = Path("src/cadrumo/entrypoints/cli/_config/_auth_command_specs.py")
+_AUTH_SPECS = Path("src/cadrumo/entrypoints/cli/config/_auth_command_specs.py")
 
 #: A spec module shaped exactly like the four production ones: a policy constant,
 #: a ``_handler`` helper indexing a module-level table, and a ``_leaf`` wrapper
@@ -172,7 +172,7 @@ def test_the_real_config_auth_configure_leaf_resolves_to_its_production_handler(
         (row.capability_id, row.command_group_symbol, row.evidence_locator, row.execution_policy) for row in rows
     ] == [
         (
-            "ingress:src/cadrumo/entrypoints/cli/_config/_auth.py:auth_configure",
+            "ingress:src/cadrumo/entrypoints/cli/config/_auth.py:auth_configure",
             "config_auth",
             f"{declaration}:{key_line - 1}",
             "ENCRYPTED_WRITE",

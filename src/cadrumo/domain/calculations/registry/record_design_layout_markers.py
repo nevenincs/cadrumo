@@ -6,14 +6,14 @@ import re
 
 from .record_design_schema import RecordDesignRelativeSuffixMarker
 
-_RECORD_TERMINATOR_PHRASE = r"fin de registro|salto de l[íi]nea|\bCRLF\b"
+RECORD_TERMINATOR_PHRASE = r"fin de registro|salto de l[íi]nea|\bCRLF\b"
 #: Matched on the declared MEANING rather than on width: a two-byte relative
 #: suffix that is not a line terminator is part of the closing identifier and
 #: must not be mistaken for one.
-_RECORD_TERMINATOR = re.compile(_RECORD_TERMINATOR_PHRASE, re.IGNORECASE)
+_RECORD_TERMINATOR = re.compile(RECORD_TERMINATOR_PHRASE, re.IGNORECASE)
 
 
-def _split_record_terminator(
+def split_record_terminator(
     suffixes: list[RecordDesignRelativeSuffixMarker],
 ) -> tuple[list[RecordDesignRelativeSuffixMarker], RecordDesignRelativeSuffixMarker | None]:
     """Separate a trailing physical end-of-record row from the closing identifier.

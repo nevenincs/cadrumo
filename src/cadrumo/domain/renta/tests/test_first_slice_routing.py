@@ -145,7 +145,7 @@ def test_first_slice_check_is_registered_with_the_registry_validator() -> None:
     ``renta``).
     """
 
-    from ...calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+    from ...calculations.registry.validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
     from ..first_slice_routing_integrity import check_first_slice_routing
 
     assert check_first_slice_routing in _CROSS_DOMAIN_SNAPSHOT_CHECKS

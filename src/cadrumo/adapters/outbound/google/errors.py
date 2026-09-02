@@ -3,7 +3,7 @@
 Every subclass is an :class:`core.errors.CadrumoError` with a stable
 :class:`core.errors.ErrorCode` declared in the adapter error registry.
 That keeps the public CLI taxonomy explicit while
-:mod:`entrypoints.cli._config._google_errors` can map concrete
+:mod:`entrypoints.cli.config.google_errors` can map concrete
 :class:`GoogleAuthError` subclasses to localised refusal text. Constructors
 carry structured diagnostic context (``context={...}``) without leaking the
 secret material handled by :mod:`adapters.outbound.google.oauth_flow`.

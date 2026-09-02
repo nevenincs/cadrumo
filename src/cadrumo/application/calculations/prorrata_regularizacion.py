@@ -25,7 +25,7 @@ See Also:
     :mod:`~application.modelo._prorrata_regularizacion_advisory`
         Calculate-path collector that calls this advisory projection from
         Modelo 303 values and prior-year observations.
-    :mod:`~application.aggregation._iva_ledger`
+    :mod:`~application.aggregation.iva_ledger`
         Source of typed IVA ledger observations used for declared-volume
         divergence checks.
     :mod:`~domain.prorrata_register`
@@ -96,8 +96,8 @@ from ..aggregation import (
     CalculationSourceResolution,
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
-from ._revision_carry_gate import revision_carry_outcome
 from .observations_repository import CalculationObservationRepository
+from .revision_carry_gate import revision_carry_outcome
 
 #: The Modelo 303 casilla the annual prorrata regularización feeds. Deducciones
 #: block, "Regularización prorrata por porcentaje definitivo - Cuota"
@@ -108,7 +108,7 @@ CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA: CasillaId = validated_casilla_id(
 )
 
 _SOURCE_KIND: Final = BindingSourceKind.PRORRATA_REGULARIZACION
-_STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError, ProrrataRegisterError)
+STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError, ProrrataRegisterError)
 _LEDGER_VOLUME_DIVERGENCE_SOURCE_KIND = "prorrata_regularizacion_ledger_volume_divergence"
 _OUTPUT_MODELO_303_CASILLA_44: Final = "modelo_303_casilla_44"
 _OUTPUT_MODELO_390_REGULARIZACION_ANUAL: Final = "modelo_390_regularizacion_anual"
@@ -883,7 +883,7 @@ class ProrrataRegularizacionSourceResolver:
                 revision=revision,
                 filing_year=context.filing_year,
             )
-        except _STORAGE_DEGRADATION_ERRORS as exc:
+        except STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
@@ -933,7 +933,7 @@ class ProrrataRegularizacionSourceResolver:
                 self._observation_repository,
                 filing_year=context.filing_year,
             )
-        except _STORAGE_DEGRADATION_ERRORS as exc:
+        except STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

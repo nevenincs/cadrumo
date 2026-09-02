@@ -79,24 +79,18 @@ from ._invoice_devengo import (
     devengo_proxy_attribution_diagnostics,
 )
 from ._irnr_income_ledger import IrnrIncomeObservation, aggregate_irnr_income_ledger_from_repositories
-from ._iva_ledger import (
-    IvaLedgerAggregationIssueReason,
-    IvaLedgerProrrataApportionment,
-    aggregate_iva_ledger_observations_from_repositories,
-    resolve_iva_ledger_binding_values,
-)
 from ._modelo_bindings_invoice_iva import (
-    _category_counterparty_mismatch_diagnostics,
-    _missing_invoice_deduction_authority_diagnostics,
-    _out_of_window_summary_diagnostics,
-    _recargo_rate_mismatch_diagnostics,
-    _reverse_charge_underivable_diagnostics,
+    category_counterparty_mismatch_diagnostics,
+    missing_invoice_deduction_authority_diagnostics,
+    out_of_window_summary_diagnostics,
+    recargo_rate_mismatch_diagnostics,
+    reverse_charge_underivable_diagnostics,
 )
-from ._modelo_bindings_invoice_iva_refusal import _raise_if_invoice_iva_would_be_silent
+from ._modelo_bindings_invoice_iva_refusal import raise_if_invoice_iva_would_be_silent
 from ._modelo_bindings_support import (
-    _STORAGE_DEGRADATION_ERRORS,
-    _empty_source_resolution,
-    _revision_has_binding_source,
+    STORAGE_DEGRADATION_ERRORS,
+    empty_source_resolution,
+    revision_has_binding_source,
 )
 from ._renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
 from ._renta_income_ledger import (
@@ -122,8 +116,14 @@ from ._source_mesh import (
 )
 from ._undeclared_activity_advisory import undeclared_activity_income_advisory_observations
 from .errors import AggregationValidationError, t
+from .iva_ledger import (
+    IvaLedgerAggregationIssueReason,
+    IvaLedgerProrrataApportionment,
+    aggregate_iva_ledger_observations_from_repositories,
+    resolve_iva_ledger_binding_values,
+)
 from .source_resolution_operations import (
-    sorted_source_ids as _sorted_ids,
+    sorted_source_ids as sorted_ids,
 )
 from .source_resolution_operations import (
     source_diagnostics_for as _diagnostics_for,
@@ -196,8 +196,8 @@ class LedgerIvaAggregationSourceResolver:
         self._investment_asset_profile_id = investment_asset_profile_id
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
-        if not _revision_has_binding_source(context.revision, "ledger_iva_aggregation"):
-            return _empty_source_resolution(self.resolver_id, self.owned_sources)
+        if not revision_has_binding_source(context.revision, "ledger_iva_aggregation"):
+            return empty_source_resolution(self.resolver_id, self.owned_sources)
 
         aggregation_period = aggregation_period_for_modelo(
             filing_year=context.filing_year,
@@ -212,7 +212,7 @@ class LedgerIvaAggregationSourceResolver:
                 investment_asset_register=self._investment_asset_register,
                 investment_asset_profile_id=self._investment_asset_profile_id,
             )
-        except _STORAGE_DEGRADATION_ERRORS as exc:
+        except STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
@@ -226,7 +226,7 @@ class LedgerIvaAggregationSourceResolver:
             aggregation.observations,
             prorrata_apportionment=aggregation.prorrata_apportionment,
         )
-        silence_report = _raise_if_invoice_iva_would_be_silent(
+        silence_report = raise_if_invoice_iva_would_be_silent(
             context=context,
             period=aggregation_period,
             transaction_binding_values=binding_values,
@@ -271,7 +271,7 @@ class LedgerIvaAggregationSourceResolver:
             owned_sources=self.owned_sources,
             binding_values=binding_values,
             source_transaction_ids=tuple(sorted(transaction_ids)),
-            diagnostics=_out_of_window_summary_diagnostics(
+            diagnostics=out_of_window_summary_diagnostics(
                 aggregation.out_of_window_summary,
                 source_kind="ledger_iva_aggregation",
                 resolver_id=self.resolver_id,
@@ -281,19 +281,19 @@ class LedgerIvaAggregationSourceResolver:
                 source_kind="ledger_iva_aggregation",
                 resolver_id=self.resolver_id,
             )
-            + _reverse_charge_underivable_diagnostics(
+            + reverse_charge_underivable_diagnostics(
                 silence_report.reverse_charge_underivable,
                 resolver_id=self.resolver_id,
             )
-            + _missing_invoice_deduction_authority_diagnostics(
+            + missing_invoice_deduction_authority_diagnostics(
                 silence_report.deduction_authority_missing,
                 resolver_id=self.resolver_id,
             )
-            + _category_counterparty_mismatch_diagnostics(
+            + category_counterparty_mismatch_diagnostics(
                 silence_report.category_counterparty_mismatches,
                 resolver_id=self.resolver_id,
             )
-            + _recargo_rate_mismatch_diagnostics(
+            + recargo_rate_mismatch_diagnostics(
                 silence_report.recargo_rate_divergences,
                 resolver_id=self.resolver_id,
             )
@@ -407,8 +407,8 @@ class LedgerRentaIncomeAggregationSourceResolver:
         self._invoice_repository = invoice_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
-        if not _revision_has_binding_source(context.revision, "ledger_renta_income_aggregation"):
-            return _empty_source_resolution(self.resolver_id, self.owned_sources)
+        if not revision_has_binding_source(context.revision, "ledger_renta_income_aggregation"):
+            return empty_source_resolution(self.resolver_id, self.owned_sources)
 
         aggregation_period = aggregation_period_for_modelo(
             filing_year=context.filing_year,
@@ -431,7 +431,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 transaction_repository=self._transaction_repository,
                 invoice_repository=self._invoice_repository,
             )
-        except _STORAGE_DEGRADATION_ERRORS as exc:
+        except STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
@@ -466,10 +466,8 @@ class LedgerRentaIncomeAggregationSourceResolver:
             owned_sources=self.owned_sources,
             binding_values=binding_values,
             bound_inputs_by_casilla_id=_m130_retenciones_backend_inputs(context, binding_values),
-            source_transaction_ids=_sorted_ids(
-                aggregation.observations, lambda observation: observation.transaction_id
-            ),
-            diagnostics=_out_of_window_summary_diagnostics(
+            source_transaction_ids=sorted_ids(aggregation.observations, lambda observation: observation.transaction_id),
+            diagnostics=out_of_window_summary_diagnostics(
                 aggregation.out_of_window_summary,
                 source_kind="ledger_renta_income_aggregation",
                 resolver_id=self.resolver_id,
@@ -682,8 +680,8 @@ class LedgerImpatriadoIncomeAggregationSourceResolver:
         self._transaction_repository = transaction_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
-        if not _revision_has_binding_source(context.revision, "ledger_impatriado_income_aggregation"):
-            return _empty_source_resolution(self.resolver_id, self.owned_sources)
+        if not revision_has_binding_source(context.revision, "ledger_impatriado_income_aggregation"):
+            return empty_source_resolution(self.resolver_id, self.owned_sources)
 
         aggregation_period = aggregation_period_for_modelo(
             filing_year=context.filing_year,
@@ -695,7 +693,7 @@ class LedgerImpatriadoIncomeAggregationSourceResolver:
                 period=aggregation_period,
                 transaction_repository=self._transaction_repository,
             )
-        except _STORAGE_DEGRADATION_ERRORS as exc:
+        except STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
@@ -714,10 +712,8 @@ class LedgerImpatriadoIncomeAggregationSourceResolver:
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=binding_values,
-            source_transaction_ids=_sorted_ids(
-                aggregation.observations, lambda observation: observation.transaction_id
-            ),
-            diagnostics=_out_of_window_summary_diagnostics(
+            source_transaction_ids=sorted_ids(aggregation.observations, lambda observation: observation.transaction_id),
+            diagnostics=out_of_window_summary_diagnostics(
                 aggregation.out_of_window_summary,
                 source_kind="ledger_impatriado_income_aggregation",
                 resolver_id=self.resolver_id,
@@ -778,9 +774,9 @@ class LedgerIrnrIncomeAggregationSourceResolver:
             # its selector remains validated.  Manual mode deliberately elects
             # not to produce a value, though, and that is a handled source
             # state—not an unenrolled-source advisory on every manual M210 run.
-            return _empty_source_resolution(self.resolver_id, self.owned_sources)
-        if not _revision_has_binding_source(context.revision, "ledger_irnr_income_aggregation"):
-            return _empty_source_resolution(self.resolver_id, self.owned_sources)
+            return empty_source_resolution(self.resolver_id, self.owned_sources)
+        if not revision_has_binding_source(context.revision, "ledger_irnr_income_aggregation"):
+            return empty_source_resolution(self.resolver_id, self.owned_sources)
         selected_official_tipo_renta_code = context.m210_official_tipo_renta_code
         if selected_official_tipo_renta_code is None:
             return CalculationSourceResolution(
@@ -811,7 +807,7 @@ class LedgerIrnrIncomeAggregationSourceResolver:
                 selected_official_tipo_renta_code=selected_official_tipo_renta_code,
                 transaction_repository=self._transaction_repository,
             )
-        except _STORAGE_DEGRADATION_ERRORS as exc:
+        except STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
@@ -835,10 +831,8 @@ class LedgerIrnrIncomeAggregationSourceResolver:
                 ),
             },
             detail_rows=_irnr_annual_agrupacion_renta_rows(context, aggregation.observations),
-            source_transaction_ids=_sorted_ids(
-                aggregation.observations, lambda observation: observation.transaction_id
-            ),
-            diagnostics=_out_of_window_summary_diagnostics(
+            source_transaction_ids=sorted_ids(aggregation.observations, lambda observation: observation.transaction_id),
+            diagnostics=out_of_window_summary_diagnostics(
                 aggregation.out_of_window_summary,
                 source_kind="ledger_irnr_income_aggregation",
                 resolver_id=self.resolver_id,
@@ -925,8 +919,8 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
         self._prorrata_register_repository = prorrata_register_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
-        if not _revision_has_binding_source(context.revision, "ledger_renta_gastos_pago_fraccionado_aggregation"):
-            return _empty_source_resolution(self.resolver_id, self.owned_sources)
+        if not revision_has_binding_source(context.revision, "ledger_renta_gastos_pago_fraccionado_aggregation"):
+            return empty_source_resolution(self.resolver_id, self.owned_sources)
 
         aggregation_period = aggregation_period_for_modelo(
             filing_year=context.filing_year,
@@ -939,7 +933,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 transaction_repository=self._transaction_repository,
                 prorrata_register_repository=self._prorrata_register_repository,
             )
-        except _STORAGE_DEGRADATION_ERRORS as exc:
+        except STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
@@ -961,10 +955,8 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 context.revision,
                 aggregation.observations,
             ),
-            source_transaction_ids=_sorted_ids(
-                aggregation.observations, lambda observation: observation.transaction_id
-            ),
-            diagnostics=_out_of_window_summary_diagnostics(
+            source_transaction_ids=sorted_ids(aggregation.observations, lambda observation: observation.transaction_id),
+            diagnostics=out_of_window_summary_diagnostics(
                 aggregation.out_of_window_summary,
                 source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
                 resolver_id=self.resolver_id,
@@ -1091,7 +1083,7 @@ def _iva_deducible_cuota_casillas(revision: ModeloRevision) -> tuple[CasillaDefi
 #:
 #: The calculate path is scoped to the modelos whose registry declares a
 #: ``retenciones_aggregation`` binding (111/115/180/193 today) by the resolver's
-#: binding-guard (:func:`_revision_has_binding_source`), NOT by membership of this
+#: binding-guard (:func:`revision_has_binding_source`), NOT by membership of this
 #: table — so the scoping tracks the registry, not a hand-maintained sub-list.
 #: Modelo 115 uses the quarterly URBAN_RENTAL aggregate for casillas 01/02; modelos
 #: 180/193 use the annual aggregate for the distinct-NIF perceptor count (their

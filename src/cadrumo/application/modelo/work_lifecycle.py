@@ -59,7 +59,6 @@ from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitSta
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence
 from ._registry_resources import reject_unknown_period_for_revision, reject_unknown_revision
-from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from .action_errors import (
     CalculationRevisionNotFoundError,
     WorkUnitAlreadyDiscardedError,
@@ -67,6 +66,7 @@ from .action_errors import (
     WorkUnitNotFoundError,
 )
 from .preconditions import build_modelo_precondition_failure_for_scenario
+from .revision_persistence import build_modelo_bucket_event as _build_bucket_event
 
 
 class ActiveWorkUnitUse(StrEnum):

@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import hashlib
 import os
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 
@@ -33,7 +33,6 @@ import pytest
 from .....core.logging import get_logger
 from .....tests.live_gate import requires_live_enabled, requires_live_google_enabled
 from .....tests.profile_capsule import open_test_profile_session
-from .._protocol import StorageProvider
 from ..errors import OutboundStorageNotFoundError
 from ..factory import get_storage_provider
 from ..mirror_manifest import (
@@ -43,6 +42,7 @@ from ..mirror_manifest import (
     put_remote_mirror_namespace_manifest,
     remote_mirror_object_key_hmac,
 )
+from ..protocol import StorageProvider
 from ..records import RemoteMirrorNamespaceManifest, RemoteMirrorObjectManifest
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
@@ -73,7 +73,7 @@ def _require_drive_configured() -> None:
 
 
 @contextmanager
-def _active_profile_storage_session() -> Iterator[None]:
+def _active_profile_storage_session() -> Generator[None]:
     from .....core.bucket_pointer import resolve_active_bucket_id
 
     active = resolve_active_bucket_id()

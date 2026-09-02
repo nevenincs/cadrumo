@@ -13,7 +13,7 @@ from .command_spec import CommandSpec, ProfileAuthenticationPosture
 
 if TYPE_CHECKING:
     from ._common import RequestedCliLeaf
-    from ._config.secure_input import MachineSecretSelection, ProfileSecretSelection
+    from .config.secure_input import MachineSecretSelection, ProfileSecretSelection
 
 
 class RootAuthenticator(Protocol):

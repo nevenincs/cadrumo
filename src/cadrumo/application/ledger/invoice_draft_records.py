@@ -358,7 +358,7 @@ class DraftDiscrepancyFinding(BaseModel):
     observed: Decimal | None = None
 
 
-def _facturae_invoice_class_findings(
+def facturae_invoice_class_findings(
     *,
     declared: FacturaeInvoiceClass | None,
     rectifies_invoice_number: str | None,

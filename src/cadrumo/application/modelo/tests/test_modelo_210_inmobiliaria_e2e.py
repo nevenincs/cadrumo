@@ -50,7 +50,7 @@ while still exercising the real calculate-then-verify pipeline end to end.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -104,7 +104,7 @@ _INMOBILIARIA_LEGAL_REF = "trlirnr-rdleg-5-2004:art-13.1.h"
 
 
 @contextmanager
-def _secure_backend(tmp_path: Path) -> Iterator[None]:
+def _secure_backend(tmp_path: Path) -> Generator[None]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
         _seed_minimal_m210_profile(runtime.repository)
         yield

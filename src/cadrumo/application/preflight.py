@@ -19,7 +19,7 @@ referential-integrity gate the registry runs at snapshot build
 (``check_all_id_references``) by driving
 :meth:`~domain.calculations.registry.ValidatedRegistryAuthority.snapshot`
 over every bundled revision. ``aeat config check`` renders these rows through
-:class:`~entrypoints.cli._config._check_payloads.CheckPreflightPayload`
+:class:`~entrypoints.cli.config._check_payloads.CheckPreflightPayload`
 beside the capability posture and dependency probes.
 """
 

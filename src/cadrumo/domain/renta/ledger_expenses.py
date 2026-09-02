@@ -123,7 +123,7 @@ class RentaDeductibilityContext(_RentaStrictFrozenModel):
 
     Populated by :func:`~application.aggregation._renta_ledger.aggregate_renta_ledger_expenses_from_repositories`
     for the M100 annual first slice, via
-    ``application.aggregation._renta_ledger._resolve_iva_deduction_ratio``: a
+    ``application.aggregation._renta_ledger.resolve_iva_deduction_ratio``: a
     wholly ``EXENTO`` ``iva.regime`` profile fact resolves to ``0`` outright;
     otherwise the bucket's ``domain.prorrata_register.ProrrataRegister``
     whole-entity entry for the ejercicio contributes its in-force provisional

@@ -443,7 +443,7 @@ def test_fromisoformat_detector_catches_every_alias_spelling(source: str, expect
             id="datetime-class-is-out-of-scope",
         ),
         pytest.param(
-            "from ..core.parsing import parse_iso8601_date\n\nd = parse_iso8601_date(raw)\n",
+            "from ..core.parsing.dates import parse_iso8601_date\n\nd = parse_iso8601_date(raw)\n",
             id="canonical-helper-call",
         ),
         pytest.param(

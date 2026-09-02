@@ -12,7 +12,7 @@ from ....core.modelo import Modelo
 from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.export_parse import parse_export_payload
 from ....domain.filing.errors import FilingExportError
-from .._export import export_draft
+from ..export import export_draft
 from ..export_verification import (
     DeclaracionExportResult,
     DeclaracionVerifyVerdict,

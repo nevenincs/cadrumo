@@ -70,7 +70,7 @@ def test_check_letter_mismatches_carry_operator_context() -> None:
 
 def test_invalid_documents_rejected_with_expected_message() -> None:
     # "not-an-identity-doc" upper-cases to "NOTANIDENTITYDOC"; leading
-    # 'N' is in _CIF_KIND_LETTERS so the validator dispatches to CIF,
+    # 'N' is in CIF_KIND_LETTERS so the validator dispatches to CIF,
     # whose regex expects exactly [kind-letter][7 digits][char].
     non_string: object = 12345
     assert not isinstance(non_string, str)
@@ -143,10 +143,10 @@ class TestCifKindCatalogue:
     """Pin the distinction between NIF prefixes and CIF kind letters."""
 
     def test_nif_prefix_absent_from_cif_kind_letters(self) -> None:
-        from .._documents import _CIF_KIND_LETTERS
+        from .._documents import CIF_KIND_LETTERS
 
         for nif_prefix in ("K", "L", "M"):
-            assert nif_prefix not in _CIF_KIND_LETTERS
+            assert nif_prefix not in CIF_KIND_LETTERS
 
     def test_current_prefixed_nif_variants_validate_as_nif(self) -> None:
         from .._tax_id import validate_spanish_tax_id

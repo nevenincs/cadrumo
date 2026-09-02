@@ -7,8 +7,10 @@ them against a :class:`RegistrySnapshot`. The resolved layout is a
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 from ....core.aggregation import BindingAggregationOp
 from ....core.casilla_id import CasillaId
@@ -539,11 +541,73 @@ def _reject_overlapping_ranges(record_id: str, sorted_ranges: list[tuple[int, in
             raise RegistryValidationError(f"export record {record_id!r} fields {current[2]!r} and {other[2]!r} overlap")
 
 
+type ResolvedExportEndpointPath = Literal["field", "projection", "row_field"]
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedExportEndpoint:
+    """One casilla the resolved export surface carries, and the path carrying it.
+
+    ``field`` is the resolved field for the ``field`` and ``projection`` paths.
+    It is ``None`` for ``row_field``: after binding derivation that slot is a
+    binding-kind field naming the binding rather than the casilla, so no field
+    on the resolved layout carries the casilla's own type.
+    """
+
+    layout_id: str
+    record_id: str
+    casilla_id: CasillaId
+    path: ResolvedExportEndpointPath
+    field: ExportFieldDefinition | None
+
+
+def resolved_export_endpoints(revision: ModeloRevision) -> tuple[ResolvedExportEndpoint, ...]:
+    """Return every casilla the resolved layouts of ``revision`` carry, with its path.
+
+    Three linkage paths reach a casilla on the resolved surface and a walk that
+    skips any one of them under-reports it:
+
+    - ``field`` - the field names its casilla directly through ``casilla_id``;
+    - ``projection`` - the field names a ``projection_ref`` instead, resolved
+      through :attr:`~.schema_exports.ExportFieldDefinition.endpoint_casilla_id`;
+    - ``row_field`` - the record's ``row_field_casilla_ids`` maps a repeated
+      row's slot to its casilla, on the record rather than on any field.
+
+    :func:`fixed_width_record_casilla_ids` deliberately covers a narrower scope
+    for the exemption and parity gates that own it. This function is the whole
+    surface, and is what a completeness or coverage measurement wants.
+    """
+    return tuple(_walk_resolved_endpoints(revision))
+
+
+def resolved_export_casillas(revision: ModeloRevision) -> frozenset[CasillaId]:
+    """Return the complete set of casillas the resolved layouts of ``revision`` carry."""
+    return frozenset(endpoint.casilla_id for endpoint in resolved_export_endpoints(revision))
+
+
+def _walk_resolved_endpoints(revision: ModeloRevision) -> Iterator[ResolvedExportEndpoint]:
+    for layout in derive_export_layouts_from_bindings(revision):
+        for record in layout.records:
+            for field in record.fields:
+                if field.casilla_id is not None:
+                    yield ResolvedExportEndpoint(str(layout.id), str(record.id), field.casilla_id, "field", field)
+                    continue
+                endpoint = field.endpoint_casilla_id
+                if endpoint is not None:
+                    yield ResolvedExportEndpoint(str(layout.id), str(record.id), endpoint, "projection", field)
+            for casilla_id in record.row_field_casilla_ids.values():
+                yield ResolvedExportEndpoint(str(layout.id), str(record.id), casilla_id, "row_field", None)
+
+
 __all__ = [
+    "ResolvedExportEndpoint",
+    "ResolvedExportEndpointPath",
     "ResolvedExportLayout",
     "clasificar_casillas_oficiales",
     "derive_export_layouts_from_bindings",
     "export_fields_for_casilla",
     "fixed_width_record_casilla_ids",
     "resolve_export_layout",
+    "resolved_export_casillas",
+    "resolved_export_endpoints",
 ]

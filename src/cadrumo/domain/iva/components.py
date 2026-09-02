@@ -394,10 +394,10 @@ class IvaCategoryComponents(IvaStrictFrozen):
             )
 
 
-from ._component_rows import _COMPONENT_ROWS  # noqa: E402
+from ._component_rows import COMPONENT_ROWS  # noqa: E402
 
 IVA_CATEGORY_COMPONENTS: Final[Mapping[tuple[IvaCategory, InvoiceKind], IvaCategoryComponents]] = MappingProxyType(
-    dict(_COMPONENT_ROWS),
+    dict(COMPONENT_ROWS),
 )
 """Axis-A component-expectation table, one row per (category, kind) PAIR.
 

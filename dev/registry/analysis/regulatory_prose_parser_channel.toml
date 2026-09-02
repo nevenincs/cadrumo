@@ -81,7 +81,7 @@ corpus = "AEAT justificante de presentación"
 reason = "Extracts the CSV and filing coordinates AEAT prints on a submission receipt."
 
 [[parser]]
-module = "src/cadrumo/adapters/outbound/aeat/sede/_declarations.py"
+module = "src/cadrumo/adapters/outbound/aeat/sede/declarations.py"
 corpus = "AEAT sede consulta pages"
 reason = "Reads the read-only consulta listing; the sede's own markup is external prose that changes without notice."
 

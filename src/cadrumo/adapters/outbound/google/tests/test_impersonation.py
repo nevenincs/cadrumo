@@ -21,7 +21,7 @@ See Also:
         Frozen target-principal and scope record under test.
     :func:`~adapters.outbound.google.resolve_impersonated_credentials`:
         ADC discovery and impersonation wrapper validated by these tests.
-    :mod:`~entrypoints.cli._config._google_credential_source_cli`:
+    :mod:`~entrypoints.cli.config._google_credential_source_cli`:
         CLI surface that persists the chosen credential source.
 """
 

@@ -99,7 +99,7 @@ LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="kind",
                 declarations=("--kind",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.contribuyente.inventory", "MovementKind")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.contribuyente.inventory.records", "MovementKind")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.ledger.inventory.movement_kind_help"),
                 metavar=None,

@@ -64,7 +64,6 @@ from ...domain.iva_compensation.reconciliation import (
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnit
-from ..calculations._revision_carry_gate import revision_carry_outcome
 from ..calculations.binding_prefill import LocalIvaCompensationRecurrence
 from ..calculations.iva_compensation_casillas import (
     M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
@@ -72,6 +71,7 @@ from ..calculations.iva_compensation_casillas import (
 )
 from ..calculations.m303_carry_ingress import M303CarryIngressError, validate_normalized_m303_carry_observation_envelope
 from ..calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
+from ..calculations.revision_carry_gate import revision_carry_outcome
 from .action_errors import ModeloPreconditionErrorMixin
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure
 
@@ -679,7 +679,7 @@ def _profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
 
 def _activity_start_date_for_modelo_profile(bucket_id: str) -> date | None:
     """Return the lifecycle profile's declared activity-start date, if parseable."""
-    from ...core.parsing import parse_iso8601_date
+    from ...core.parsing.dates import parse_iso8601_date
 
     values = _profile_path_values_for_bucket(bucket_id)
     if values is None:

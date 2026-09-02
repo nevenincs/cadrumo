@@ -104,7 +104,7 @@ from ...aggregation import (
     RetencionObservationRepository,
     RetencionScheme,
 )
-from ...modelo._binding_resolution import resolve_declaration_period_inputs
+from ...modelo.binding_resolution import resolve_declaration_period_inputs
 from ...modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ...modelo.work_lifecycle import create_work_unit
 from ..observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository

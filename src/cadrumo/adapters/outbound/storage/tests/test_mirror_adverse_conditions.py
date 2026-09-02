@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from ....persistence.storage.sql.secure_objects import SecureObjectRawRow
-from .._local import LocalFileSystemProvider
+from ..local import LocalFileSystemProvider
 from ..mirror_manifest import (
     build_remote_mirror_namespace_manifest,
     inspect_remote_mirror_download,

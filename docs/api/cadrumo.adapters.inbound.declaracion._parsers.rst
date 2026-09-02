@@ -13,4 +13,4 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.adapters.inbound.declaracion._parsers._pdfplumber_backend
+   cadrumo.adapters.inbound.declaracion._parsers.pdfplumber_backend

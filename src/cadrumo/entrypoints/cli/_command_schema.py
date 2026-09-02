@@ -123,7 +123,7 @@ class ProfileAuthenticationContractMetadata:
 
 def machine_secret_payload_metadata(spec: CommandSpec) -> tuple[MachineSecretPayloadMetadata, ...]:
     """Project value-free secret shapes directly from their owning command spec."""
-    from ._config.secure_input import MACHINE_SECRET_MAX_BYTES
+    from .config.secure_input import MACHINE_SECRET_MAX_BYTES
 
     contract = spec.machine_secret
     if contract is None:
@@ -271,9 +271,9 @@ def command_registration_projection() -> CommandRegistrationProjection:
 
 @cache
 def _command_registration_projection(language: str) -> CommandRegistrationProjection:
-    from ._config.secure_input import MACHINE_SECRET_MAX_BYTES
     from ._profile_authentication_contract import profile_authentication_posture
     from .command_specs import COMMAND_GRAPH
+    from .config.secure_input import MACHINE_SECRET_MAX_BYTES
 
     root_profile_secret = COMMAND_GRAPH.by_key()["root"].profile_secret
     if root_profile_secret is None:

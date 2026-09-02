@@ -33,17 +33,17 @@ from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from ....core.logging import get_logger
 from ....core.paths import path_stat_fingerprint
 from .errors import RegistryValidationError
-from .record_design_pdf_orchestration import _extract_record_design_pdf_cached, _extract_record_design_pdf_stream
+from .record_design_pdf_orchestration import extract_record_design_pdf_cached, extract_record_design_pdf_stream
 from .record_design_schema import (
     RecordDesignExtraction,
     RecordDesignSheet,
     RecordDesignSkippedSheet,
 )
 from .record_design_sources import (
-    _load_corrections,
-    _load_declared_non_record_sheet_reasons,
+    load_corrections,
+    load_declared_non_record_sheet_reasons,
 )
-from .record_design_workbook import _extract_sheet, _extract_xls_sheet
+from .record_design_workbook import extract_sheet, extract_xls_sheet
 
 _log = get_logger(__name__)
 
@@ -137,8 +137,8 @@ def _extract_record_design_workbook_cached(
     from openpyxl import load_workbook
 
     source_path = Path(path)
-    corrections = _load_corrections(source_path)
-    declared_skip_reasons = _load_declared_non_record_sheet_reasons(source_path)
+    corrections = load_corrections(source_path)
+    declared_skip_reasons = load_declared_non_record_sheet_reasons(source_path)
     with _ignore_openpyxl_header_footer_metadata_warnings():
         workbook = load_workbook(source_path, read_only=True, data_only=True)
         try:
@@ -146,7 +146,7 @@ def _extract_record_design_workbook_cached(
             skipped: list[RecordDesignSkippedSheet] = []
             for worksheet in workbook.worksheets:
                 try:
-                    sheets.append(_extract_sheet(worksheet, corrections))
+                    sheets.append(extract_sheet(worksheet, corrections))
                 except ValueError as exc:
                     if "has no record-design header" not in str(exc):
                         raise
@@ -174,8 +174,8 @@ def _extract_record_design_xls_workbook_cached(
     import xlrd
 
     source_path = Path(path)
-    corrections = _load_corrections(source_path)
-    declared_skip_reasons = _load_declared_non_record_sheet_reasons(source_path)
+    corrections = load_corrections(source_path)
+    declared_skip_reasons = load_declared_non_record_sheet_reasons(source_path)
     workbook = xlrd.open_workbook(str(source_path), on_demand=True)
     try:
         sheets: list[RecordDesignSheet] = []
@@ -183,7 +183,7 @@ def _extract_record_design_xls_workbook_cached(
         for sheet_name in workbook.sheet_names():
             worksheet = workbook.sheet_by_name(sheet_name)
             try:
-                sheets.append(_extract_xls_sheet(worksheet, corrections))
+                sheets.append(extract_xls_sheet(worksheet, corrections))
             except ValueError as exc:
                 if "has no record-design header" not in str(exc):
                     raise
@@ -224,7 +224,7 @@ def extract_record_design_pdf(path: Path) -> RecordDesignExtraction:
     resolved = path.resolve()
     if not resolved.is_file():
         raise FileNotFoundError(f"record-design PDF not found: {path}")
-    return _extract_record_design_pdf_cached(*path_stat_fingerprint(resolved))
+    return extract_record_design_pdf_cached(*path_stat_fingerprint(resolved))
 
 
 #: The two halves of a row whose columns were emitted out of order. The first
@@ -243,7 +243,7 @@ def extract_record_design_pdf_bytes(
     Returns:
         The :class:`RecordDesignExtraction` for the PDF content.
     """
-    return _extract_record_design_pdf_stream(BytesIO(pdf_bytes), source_label=source_label)
+    return extract_record_design_pdf_stream(BytesIO(pdf_bytes), source_label=source_label)
 
 
 __all__ = [

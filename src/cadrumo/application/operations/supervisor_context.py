@@ -18,7 +18,7 @@ from .projection_services import OperationResponseAuthorityIssuer
 from .secret_submission import BoundEphemeralSecretAccess
 
 
-def _new_response_token() -> str:
+def new_response_token() -> str:
     """Create one unpersisted capability bearer for an exact REVIEW checkpoint."""
     return secrets.token_hex(32)
 
@@ -87,7 +87,7 @@ class _SupervisorInteractionAccess:
             response_token = ""
 
 
-class _SupervisorExecutorContext:
+class SupervisorExecutorContext:
     """Delegate definition checks while adding supervisor-owned secure publication."""
 
     def __init__(

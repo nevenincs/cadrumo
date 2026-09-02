@@ -82,7 +82,7 @@ def scaffold(
     application_links) under
     ``src/cadrumo/_data/registry/aeat/modelos/<modelo_id>/``. The tree is a
     skeleton only: it does not validate as calc-grade until a contributor
-    fills in the 12-item checklist (``python -m dev.registry.newmodelo
+    fills in the contributor checklist (``python -m dev.registry.newmodelo
     checklist``), printed again below after a successful scaffold.
     """
     manager = (
@@ -111,7 +111,7 @@ def scaffold(
 
 @app.command("checklist")
 def checklist() -> None:
-    """Print the 12-item contributor checklist for taking a modelo revision calc-grade."""
+    """Print the contributor checklist for taking a modelo revision calc-grade."""
     typer.echo(render_checklist())
 
 

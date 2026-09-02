@@ -24,14 +24,14 @@ from __future__ import annotations
 import pytest
 
 from ..record_design import extract_record_design
-from ..record_design_pdf_repairs import _join_wrapped_row_descriptions
+from ..record_design_pdf_repairs import join_wrapped_row_descriptions
 from .test_every_bundled_design_is_read_or_reported import _bundled_designs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_a_wrapped_description_is_reattached_to_its_row() -> None:
-    joined = _join_wrapped_row_descriptions(
+    joined = join_wrapped_row_descriptions(
         ("15 80 1 Num", "Datos adicionales (3) - Cooperativa fiscalmente protegida"),
     )
 
@@ -40,14 +40,14 @@ def test_a_wrapped_description_is_reattached_to_its_row() -> None:
 
 def test_a_following_row_is_never_absorbed() -> None:
     """Absorbing the next row would lose a field outright."""
-    joined = _join_wrapped_row_descriptions(("15 80 1 Num", "16 81 5 An Tipo de gravamen"))
+    joined = join_wrapped_row_descriptions(("15 80 1 Num", "16 81 5 An Tipo de gravamen"))
 
     assert joined == ("15 80 1 Num", "16 81 5 An Tipo de gravamen")
 
 
 def test_a_following_record_heading_is_never_absorbed() -> None:
     """Absorbing a heading would lose a record boundary."""
-    joined = _join_wrapped_row_descriptions(
+    joined = join_wrapped_row_descriptions(
         ("15 80 1 Num", "Pág. 2 DISEÑO DE REGISTRO"),
     )
 
@@ -57,11 +57,11 @@ def test_a_following_record_heading_is_never_absorbed() -> None:
 def test_a_row_that_already_carries_its_description_is_untouched() -> None:
     lines = ("16 81 5 An Tipo de gravamen del Impuesto sobre Sociedades", "otra prosa")
 
-    assert _join_wrapped_row_descriptions(lines) == lines
+    assert join_wrapped_row_descriptions(lines) == lines
 
 
 def test_a_bare_row_with_nothing_usable_after_it_is_left_alone() -> None:
-    assert _join_wrapped_row_descriptions(("15 80 1 Num", "   ")) == ("15 80 1 Num", "   ")
+    assert join_wrapped_row_descriptions(("15 80 1 Num", "   ")) == ("15 80 1 Num", "   ")
 
 
 @pytest.mark.parametrize(

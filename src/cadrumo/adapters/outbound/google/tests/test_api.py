@@ -10,7 +10,7 @@ client retry handling, and the re-raise contract for nested
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from contextlib import AbstractContextManager, contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
@@ -62,7 +62,7 @@ def _assert_verdict(
 def _local_google_request(
     *responses: tuple[int, bytes],
     postproc: PostProcessor | None = None,
-) -> Iterator[tuple[HttpRequest, list[str]]]:
+) -> Generator[tuple[HttpRequest, list[str]]]:
     requested_paths: list[str] = []
     response_sequence = responses or ((200, _json_body({})),)
 

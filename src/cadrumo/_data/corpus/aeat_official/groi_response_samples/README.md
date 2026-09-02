@@ -5,7 +5,7 @@ Verbatim text fragments captured from live AEAT GROI servlet responses
 during cl@ve-movil authenticated probing on 2026-05-07.
 
 The samples are the **authority** for the GROI verdict parser at
-`src/cadrumo/adapters/outbound/aeat/sede/_groi_check.py`. Each filename
+`src/cadrumo/adapters/outbound/aeat/sede/groi_check.py`. Each filename
 encodes the expected verdict so the parametrized regression test
 (`test_groi_response_samples_parse_to_expected_verdict`) reads the
 file, runs the parser, and asserts the result matches the prefix.

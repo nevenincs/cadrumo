@@ -18,7 +18,7 @@ from __future__ import annotations
 import ast
 import asyncio
 import socket
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import closing, contextmanager
 from http import HTTPStatus
 from pathlib import Path
@@ -54,7 +54,7 @@ _NO_RETRY = LLMRetryPolicy(max_attempts=1)
 
 
 @contextmanager
-def _cloud_recorder() -> Iterator[tuple[str, list[str]]]:
+def _cloud_recorder() -> Generator[tuple[str, list[str]]]:
     """Serve a loopback endpoint standing in for the vendor, recording arrivals.
 
     A real HTTP listener rather than an assertion about code paths: the question

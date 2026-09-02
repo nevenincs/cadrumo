@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from base64 import b64encode
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import datetime
 from hashlib import sha256
@@ -59,7 +59,7 @@ def test_profile_recovery_envelope(
     *,
     dek: bytes,
     dek_epoch: str,
-) -> Iterator[ProfileCustodyRecoveryEnvelopePort]:
+) -> Generator[ProfileCustodyRecoveryEnvelopePort]:
     """Mint a production recovery wrapper and bound its secret lifetime."""
     enrollment = mint_profile_creation_recovery(profile_id=profile_id, dek=dek, dek_epoch=dek_epoch)
     try:

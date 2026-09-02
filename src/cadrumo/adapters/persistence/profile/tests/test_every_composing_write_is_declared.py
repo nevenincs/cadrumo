@@ -105,11 +105,11 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     ): "per-TRANSACTION participation rows, not a singleton catalogue, so the exposure narrows to two writers "
     "touching the same transaction; unclassified beyond that",
     (
-        "src/cadrumo/application/modelo/_revision_persistence.py",
+        "src/cadrumo/application/modelo/revision_persistence.py",
         "_build_filed_participation_writes",
     ): "per-transaction participation rows, as above; unclassified beyond that",
     (
-        "src/cadrumo/application/modelo/_revision_persistence.py",
+        "src/cadrumo/application/modelo/revision_persistence.py",
         "persist_filed_revision",
     ): "the work-unit and filing catalogues arrive as parameters; the calculation catalogue is guarded "
     "here. Threading the other two is blocked on cost rather than capability: this function has 26 test "

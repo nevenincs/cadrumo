@@ -147,7 +147,7 @@ def _child_settings(storage_root: Path) -> tuple[Settings, Token[Settings | None
     composition = ExitStack()
     composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
     composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
-    return settings, config_module._settings_override.set(settings), composition
+    return settings, config_module.settings_override.set(settings), composition
 
 
 def _close_child_login(
@@ -156,7 +156,7 @@ def _close_child_login(
 ) -> None:
     try:
         _close_live_login()
-        config_module._settings_override.reset(token)
+        config_module.settings_override.reset(token)
     finally:
         composition.__exit__(None, None, None)
 

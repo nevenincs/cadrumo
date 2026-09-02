@@ -134,7 +134,7 @@ import json
 import sys
 
 from cadrumo.adapters.outbound.google.document_link_resolver import _drive_service
-from cadrumo.adapters.outbound.storage import OutboundStorageNetworkError
+from cadrumo.adapters.outbound.storage.errors import OutboundStorageNetworkError
 
 
 class _MissingGoogleApiFinder(importlib.abc.MetaPathFinder):

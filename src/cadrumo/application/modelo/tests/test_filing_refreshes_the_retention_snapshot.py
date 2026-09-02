@@ -23,7 +23,7 @@ from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
 from ...filing.retention import FilingRetentionAuthority
-from .._revision_persistence import _refresh_filing_retention_snapshot
+from ..revision_persistence import _refresh_filing_retention_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

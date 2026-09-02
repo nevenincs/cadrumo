@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from .._config import secure_input
-from .._config._custody import LoginSecrets
+from ..config import secure_input
+from ..config.custody import LoginSecrets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

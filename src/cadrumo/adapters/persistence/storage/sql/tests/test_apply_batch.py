@@ -9,7 +9,7 @@ is its decryption-free diff companion: an entry whose freshly-serialised
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -45,7 +45,7 @@ def _write(key: str, body: bytes, *, expected_revision_id: str | None = None) ->
 
 
 @contextmanager
-def _repo(tmp_path: Path) -> Iterator[SecureObjectRepository]:
+def _repo(tmp_path: Path) -> Generator[SecureObjectRepository]:
     engine = bootstrap_sqlite_engine(tmp_path / "batch.db")
     try:
         yield SecureObjectRepository(engine=engine)

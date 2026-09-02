@@ -24,7 +24,7 @@ exactly as today.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from datetime import UTC, date, datetime
@@ -117,7 +117,7 @@ def _refuse_under_live_opt_in() -> None:
 
 
 @contextmanager
-def frozen_clock(instant: datetime) -> Iterator[datetime]:
+def frozen_clock(instant: datetime) -> Generator[datetime]:
     """Freeze :func:`now` to ``instant`` for the duration of the scope.
 
     This is the replay/golden-capture-only seam behind the

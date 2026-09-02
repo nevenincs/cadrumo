@@ -45,10 +45,54 @@ contracts.
 - `pipeline/` — the generation pipeline: render → validate → publish → check.
 - `parity/` — official-workbook parity harness (`python -m
   dev.registry.parity.maintenance_cli`).
-- `analysis/` — registry census and classification tools.
+- `analysis/` — registry census, classification, and the declaration screens
+  (`python -m dev.registry.analysis.screens`).
 - `aeip/` — the anexo-A AEIP continuity planner.
 - `conformance/` — registry governance surface (`python -m
-  dev.registry.conformance report|audit`).
+  dev.registry.conformance report|coverage|closure|stamp`).
 - `newmodelo/` — scaffold a new modelo revision and its calc-grade checklist.
 - `mappings/`, `render_profiles/` — the authored inputs described above.
 - `tests/` — the pipeline, parity, and analysis suites.
+
+## Declaration screens
+
+The registry declares the same fact in several places and reconciles the copies
+afterwards. The screens under `analysis/` measure whether those copies agree.
+Run them all against one loaded registry:
+
+```bash
+uv run --no-sync python -m dev.registry.analysis.screens
+```
+
+Each screen also runs on its own, prints one greppable row per finding, and
+always exits 0. A screen reports; it never gates. What each one owns:
+
+| Screen | Condition it measures |
+| --- | --- |
+| `export_ref_symmetry` | casillas claiming an export field the resolved layouts do not carry |
+| `casilla_id_grammar` | which identifier grammar each modelo uses, and which mix several |
+| `continuity_integrity` | modelos with no continuity, and chains crossing a grammar or standing alone |
+| `revision_name_window` | revision names that misstate the window they declare, or claim none |
+| `temporal_site_agreement` | a revision's window, selector and deadline windows falling silent or disagreeing |
+| `wire_type_compatibility` | the transition from a casilla's declared type to its rendered wire type |
+| `monetary_scale` | monetary fields whose scale is missing, unusual, split across two fields, or unlike their siblings |
+| `grade_earned` | declared grades not matching what their prerequisites support, either way |
+| `provenance_consistency` | child citations falling outside their revision's own manifest |
+
+Two rules keep the suite honest.
+
+**Read the resolved surface, never the authored one.** Export fields are
+derived from bindings when a revision loads, and a casilla is reached by three
+different linkage paths. Four separate wrong figures in this campaign came from
+walking the authored fragments instead. `resolved_export_endpoints` in the
+registry export module returns the surface whole; a screen that reassembles it
+is reintroducing the defect.
+
+**Gate invariants, never counts.** The conditions that are clean across the
+whole corpus are gated in `tests/test_declaration_invariant_gates.py`, and each
+gate asserts that a class of defect does not occur rather than that a number has
+not grown. Conditions still carrying findings are not gated: gating them would
+need a tolerance, and a tolerance is the baseline ratchet this project retired.
+Each becomes a gate when its data is corrected, not before. Detector teeth live
+in each screen's own test, where a representative defect is constructed and
+shown to be caught.

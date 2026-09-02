@@ -290,7 +290,7 @@ def test_profile_repeatable_row_ingress_stays_in_structural_coverage() -> None:
     """A profile write surface is not a new source owner or connection claim."""
     manifest = load_source_connectivity_census()
     assignments = assign_capabilities_to_census(discovered_source_capability_ids(REPO_ROOT), manifest)
-    capability_id = "ingress:src/cadrumo/entrypoints/cli/_config/_profile_repeatable_row.py:profile_add_row"
+    capability_id = "ingress:src/cadrumo/entrypoints/cli/config/_profile_repeatable_row.py:profile_add_row"
 
     assert capability_id in assignments["coverage.remaining-ingress-surfaces"]
     assert all(capability_id not in entry.capability_ids for entry in manifest.entries)

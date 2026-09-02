@@ -6,7 +6,7 @@ Rows map domain-layer exception qualnames to stable
 
 from ..error_codes import ErrorCategory, ErrorCode
 
-_DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
+DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "cadrumo.domain.portals.errors.UnknownPortalError",
         ErrorCode(
@@ -468,7 +468,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._iva_wallet_seed.ModeloIvaWalletSeedError",
+        "cadrumo.application.modelo.iva_wallet_seed.ModeloIvaWalletSeedError",
         ErrorCode(
             code="ERROR_MODELO_IVA_WALLET_SEED",
             category=ErrorCategory.ERROR,
@@ -478,7 +478,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._iva_wallet_seed.ModeloIvaWalletSeedNoTaxpayerError",
+        "cadrumo.application.modelo.iva_wallet_seed.ModeloIvaWalletSeedNoTaxpayerError",
         ErrorCode(
             code="REFUSED_MODELO_IVA_WALLET_SEED_NO_TAXPAYER",
             category=ErrorCategory.REFUSED,
@@ -488,7 +488,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._iva_wallet_seed.ModeloIvaWalletSeedNegativeAmountError",
+        "cadrumo.application.modelo.iva_wallet_seed.ModeloIvaWalletSeedNegativeAmountError",
         ErrorCode(
             code="REFUSED_MODELO_IVA_WALLET_SEED_NEGATIVE_AMOUNT",
             category=ErrorCategory.REFUSED,
@@ -498,7 +498,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._iva_wallet_seed.ModeloIvaWalletCorrectionNoRecordError",
+        "cadrumo.application.modelo.iva_wallet_seed.ModeloIvaWalletCorrectionNoRecordError",
         ErrorCode(
             code="REFUSED_MODELO_IVA_WALLET_CORRECTION_NO_RECORD",
             category=ErrorCategory.REFUSED,
@@ -508,7 +508,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._iva_wallet_seed.ModeloIvaWalletCorrectionSealedError",
+        "cadrumo.application.modelo.iva_wallet_seed.ModeloIvaWalletCorrectionSealedError",
         ErrorCode(
             code="REFUSED_MODELO_IVA_WALLET_CORRECTION_SEALED",
             category=ErrorCategory.REFUSED,
@@ -518,7 +518,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._iva_wallet_seed.ModeloIvaWalletOverrideSealedError",
+        "cadrumo.application.modelo.iva_wallet_seed.ModeloIvaWalletOverrideSealedError",
         ErrorCode(
             code="REFUSED_MODELO_IVA_WALLET_OVERRIDE_SEALED",
             category=ErrorCategory.REFUSED,
@@ -528,7 +528,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._iva_wallet_seed.ModeloIvaWalletOverrideFreshWalletError",
+        "cadrumo.application.modelo.iva_wallet_seed.ModeloIvaWalletOverrideFreshWalletError",
         ErrorCode(
             code="REFUSED_MODELO_IVA_WALLET_OVERRIDE_FRESH_WALLET",
             category=ErrorCategory.REFUSED,

@@ -12,7 +12,7 @@ from typing import cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
+from ...core.parsing.dates import parse_iso8601_date as _parse_iso8601_date
 from ...core.text_fold import fold_diacritics as _fold_diacritics
 from .ccaa import CCAA
 from .constants import SUPPORTED_PROFILE_SCHEMA_VERSION, ProfileSchemaVersion

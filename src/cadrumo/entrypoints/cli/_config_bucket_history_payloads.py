@@ -11,7 +11,7 @@ timestamp reached the operator unchallenged even though the encrypted
 refuses all three. :class:`BucketHistoryEventPayload` re-uses the canonical
 identity aliases and closed enums from :mod:`cadrumo.domain.buckets` rather than
 re-declaring their shape, following the projection pattern
-:class:`~cadrumo.entrypoints.cli._modelo_aux_payloads.WorkUnitHistoryEventPayload`
+:class:`~cadrumo.entrypoints.cli.modelo_aux_payloads.WorkUnitHistoryEventPayload`
 already established for the work-unit history surface.
 
 The content-addressed ``event_id`` derivation is deliberately *not* re-run here:

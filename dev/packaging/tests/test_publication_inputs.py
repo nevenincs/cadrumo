@@ -8,7 +8,7 @@ therefore mutates a channel's availability and asserts the demand moves with it.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator
+from collections.abc import Generator, Iterable
 from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from typing import Final
@@ -285,7 +285,7 @@ def test_emitted_outputs_cover_every_known_input_in_both_states(tmp_path: Path) 
 
 
 @contextmanager
-def _workflow_inputs(*, absent: Iterable[str], present: dict[str, str] | None = None) -> Iterator[None]:
+def _workflow_inputs(*, absent: Iterable[str], present: dict[str, str] | None = None) -> Generator[None]:
     """Pin the workflow's GitHub Actions input slots for the with-block.
 
     ``main`` reads its inputs from ``os.environ`` under the upper-cased input

@@ -18,11 +18,11 @@ captured document against the schema registry lives in
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
 
-_CAPTURE_SINK: ContextVar[list[dict[str, object]] | None] = ContextVar(
+CAPTURE_SINK: ContextVar[list[dict[str, object]] | None] = ContextVar(
     "_aeat_envelope_capture_sink",
     default=None,
 )
@@ -30,7 +30,7 @@ _CAPTURE_SINK: ContextVar[list[dict[str, object]] | None] = ContextVar(
 
 
 @contextmanager
-def capture_envelopes() -> Iterator[list[dict[str, object]]]:
+def capture_envelopes() -> Generator[list[dict[str, object]]]:
     """Arm envelope capture for the current context, yielding the sink list.
 
     Nesting-aware: when a sink is already active (e.g. armed by an outer
@@ -42,16 +42,16 @@ def capture_envelopes() -> Iterator[list[dict[str, object]]]:
         The list that :func:`record_emitted_envelope` appends to; each
         entry is a shallow copy of an emitted envelope document.
     """
-    existing = _CAPTURE_SINK.get()
+    existing = CAPTURE_SINK.get()
     if existing is not None:
         yield existing
         return
     sink: list[dict[str, object]] = []
-    token = _CAPTURE_SINK.set(sink)
+    token = CAPTURE_SINK.set(sink)
     try:
         yield sink
     finally:
-        _CAPTURE_SINK.reset(token)
+        CAPTURE_SINK.reset(token)
 
 
 def record_emitted_envelope(envelope: Mapping[str, object]) -> None:
@@ -60,14 +60,14 @@ def record_emitted_envelope(envelope: Mapping[str, object]) -> None:
     Args:
         envelope: The already-redacted, emitted envelope document.
     """
-    sink = _CAPTURE_SINK.get()
+    sink = CAPTURE_SINK.get()
     if sink is not None:
         sink.append(dict(envelope))
 
 
 def capture_is_armed() -> bool:
     """Return whether an envelope-capture scope is active for the current context."""
-    return _CAPTURE_SINK.get() is not None
+    return CAPTURE_SINK.get() is not None
 
 
 __all__ = [

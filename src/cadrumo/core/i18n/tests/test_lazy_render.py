@@ -9,7 +9,7 @@ import pytest
 
 from .. import tr
 from .._lazy_catalogue import LazyLocaleCatalogue
-from ..render import _override_locales_root
+from ..render import override_locales_root
 from ..routing import route_key_to_shard
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -87,13 +87,13 @@ def test_lazy_catalogue_missing_key_behavior() -> None:
 
 
 def test_override_locales_root_with_shards() -> None:
-    """Verify _override_locales_root works seamlessly with sharded directory trees."""
+    """Verify override_locales_root works seamlessly with sharded directory trees."""
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp = Path(tmpdir)
         en_dir = tmp / "en"
         en_dir.mkdir(parents=True)
         (en_dir / "cli.yml").write_text("cli:\n  test:\n    msg: 'English message'\n", encoding="utf-8")
 
-        with _override_locales_root(tmp):
+        with override_locales_root(tmp):
             rendered = tr("cli.test.msg", locale="en")
             assert rendered == "English message"

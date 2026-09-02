@@ -32,7 +32,7 @@ The package exposes three layers:
   the same plan into XLSX bytes plus the machine-readable evidence sidecar.
 
 Operator-facing CLI surface lives under
-`src/cadrumo/entrypoints/cli/_config/_google.py`; this package contains
+`src/cadrumo/entrypoints/cli/config/google.py`; this package contains
 domain and application logic only.
 
 See Also:

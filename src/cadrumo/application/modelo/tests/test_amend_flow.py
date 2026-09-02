@@ -10,7 +10,7 @@ bucket event.
 
 from __future__ import annotations
 
-from collections.abc import Generator, Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -133,7 +133,7 @@ class _AmendRuntime:
 
 
 @contextmanager
-def _amend_runtime(tmp_path: Path) -> Iterator[_AmendRuntime]:
+def _amend_runtime(tmp_path: Path) -> Generator[_AmendRuntime]:
     """Provision the shared ready-profile runtime used by every amend-flow test."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID, label=_PROFILE_LABEL) as profile:
         objects = profile.repository

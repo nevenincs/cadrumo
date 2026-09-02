@@ -657,7 +657,7 @@ def test_unmarked_unclassified_row_still_reports_the_generic_state() -> None:
 # IVA-deduction ratio derived from the profile's ``iva.regime`` fact and the
 # bucket's ProrrataRegister, driven through the real repository path -- the
 # SAME resolver the M100 annual first slice uses
-# (application.aggregation._renta_ledger._resolve_iva_deduction_ratio), for the
+# (application.aggregation._renta_ledger.resolve_iva_deduction_ratio), for the
 # SAME ejercicio, so the two filings cannot diverge on it.
 # ---------------------------------------------------------------------------
 
@@ -827,7 +827,7 @@ def test_m130_and_m100_resolve_the_same_iva_deduction_ratio_for_the_same_ejercic
     ``aggregate_renta_gasto_ledger_from_repositories`` (M130) and
     ``aggregate_renta_ledger_expenses_from_repositories`` (M100) both read the
     SAME transaction from the SAME bucket and resolve the SAME 70% GENERAL
-    register entry through the SAME ``_resolve_iva_deduction_ratio`` function
+    register entry through the SAME ``resolve_iva_deduction_ratio`` function
     for the SAME ejercicio -- verified end to end through both real repository
     paths rather than assumed from the shared-resolver claim alone.
     """

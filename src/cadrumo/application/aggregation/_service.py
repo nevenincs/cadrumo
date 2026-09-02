@@ -357,6 +357,13 @@ def aggregate_per_modelo(command: PerModeloAggregationCommand) -> PerModeloAggre
     Returns a :class:`PerModeloAggregationResult`.
     """
     provider = provider_for_modelo(command.modelo)
+    # `command.modelo` is deliberately a loose `str` so an unsupported code earns
+    # the late refusal above, which names the accepted set. `provider_for_modelo`
+    # has now proven the code is one of those supported members, so this is the
+    # boundary where the loose input becomes the typed identity the result and
+    # log fields declare. `ModeloCode` re-validates the three-digit shape rather
+    # than asserting it.
+    modelo = ModeloCode(command.modelo)
     if provider is PerModeloAggregationContributor.RETENCIONES:
         aggregation = _aggregate_retenciones(command.modelo, command.period, command.retencion_observations)
     elif provider is PerModeloAggregationContributor.COUNTERPART:
@@ -365,13 +372,13 @@ def aggregate_per_modelo(command: PerModeloAggregationCommand) -> PerModeloAggre
         aggregation = aggregate_foreign_assets_720(command.foreign_asset_observations, period=command.period)
 
     result = PerModeloAggregationResult(
-        modelo=command.modelo,
+        modelo=modelo,
         period=command.period,
         provider=provider,
         aggregation=aggregation,
         source_kinds=_source_kinds_for_payload(aggregation),
         log_fields=PerModeloAggregationLogFields(
-            modelo=command.modelo,
+            modelo=modelo,
             period=command.period,
             provider=provider,
             observation_count=_observation_count_for_command(command, provider),

@@ -20,7 +20,7 @@ reimplementations.
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -38,7 +38,7 @@ async def connected_server_and_client_session(
     *,
     raise_exceptions: bool = False,
     elicitation_callback: ElicitationFnT | None = None,
-) -> AsyncIterator[ClientSession]:
+) -> AsyncGenerator[ClientSession]:
     """Start ``server`` on the in-process memory transport; yield an initialized session.
 
     Drives the real handshake (``mode="legacy"``: ``initialize`` request/response,

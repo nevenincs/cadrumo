@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....application.evidence._service import EvidenceBundleService
+from ....application.evidence.service import EvidenceBundleService
 from ....application.workflow.persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli

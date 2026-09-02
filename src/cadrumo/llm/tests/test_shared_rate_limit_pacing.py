@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
 from pathlib import Path
@@ -65,7 +65,7 @@ def _fresh_process_state() -> Iterator[None]:
 
 
 @contextmanager
-def _serve(*, rate_limited: bool) -> Iterator[tuple[str, list[float]]]:
+def _serve(*, rate_limited: bool) -> Generator[tuple[str, list[float]]]:
     """Serve a loopback runtime, recording the arrival time of every request."""
     arrivals: list[float] = []
 

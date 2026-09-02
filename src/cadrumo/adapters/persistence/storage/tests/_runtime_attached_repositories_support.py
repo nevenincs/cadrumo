@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -236,7 +236,7 @@ _CALCULATION_OUTPUT_CASILLA: CasillaId = validated_casilla_id("casilla-01")
 
 
 @contextmanager
-def _active_runtime(tmp_path: Path, bucket_id: str) -> Iterator[None]:
+def _active_runtime(tmp_path: Path, bucket_id: str) -> Generator[None]:
     # The repositories below open a real engine inside the bucket root, and the
     # engine refuses to create that root: a bucket exists only once its profile
     # capsule is published. Registering here is that publication, so every span

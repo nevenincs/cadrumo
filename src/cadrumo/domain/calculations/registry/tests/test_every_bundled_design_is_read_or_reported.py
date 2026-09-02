@@ -53,9 +53,9 @@ import pytest
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.resources.bundled_data import bundled_path
 from ..record_design import extract_record_design
-from ..record_design_pdf_repairs import _collapse_stuttered_row_prefix, _join_wrapped_row_descriptions
-from ..record_design_pdf_rows import _parse_pdf_row
-from ..record_design_pdf_visual import _extract_pdf_text_lines
+from ..record_design_pdf_repairs import collapse_stuttered_row_prefix, join_wrapped_row_descriptions
+from ..record_design_pdf_rows import parse_pdf_row
+from ..record_design_pdf_visual import extract_pdf_text_lines
 from ..record_design_schema import (
     RecordDesignCorrection,
     RecordDesignFieldTypeCorrection,
@@ -256,10 +256,10 @@ def _partial_read_shape(path: Path, extraction: object) -> str:
     if covered:
         return f"TABLE ({covered} position(s) already read; the rest is a parser gap)"
 
-    lines = _collapse_stuttered_row_prefix(
-        _join_wrapped_row_descriptions(_extract_pdf_text_lines(path.read_bytes(), source_label=path.name)),
+    lines = collapse_stuttered_row_prefix(
+        join_wrapped_row_descriptions(extract_pdf_text_lines(path.read_bytes(), source_label=path.name)),
     )
-    rows = sum(1 for index, line in enumerate(lines) if _parse_pdf_row(line, index + 1) is not None)
+    rows = sum(1 for index, line in enumerate(lines) if parse_pdf_row(line, index + 1) is not None)
     if rows:
         return "TABLE"
     rulers = sum(1 for line in lines if _POSITION_RULER.match(line))

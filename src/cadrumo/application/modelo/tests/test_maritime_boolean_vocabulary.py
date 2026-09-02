@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._maritime_preview import _bool_from_raw
+from ..maritime_preview import _bool_from_raw
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

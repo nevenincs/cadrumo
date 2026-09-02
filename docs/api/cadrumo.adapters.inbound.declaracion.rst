@@ -22,6 +22,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.adapters.inbound.declaracion._detect
-   cadrumo.adapters.inbound.declaracion._parser
-   cadrumo.adapters.inbound.declaracion._schema
    cadrumo.adapters.inbound.declaracion.errors
+   cadrumo.adapters.inbound.declaracion.parser
+   cadrumo.adapters.inbound.declaracion.schema

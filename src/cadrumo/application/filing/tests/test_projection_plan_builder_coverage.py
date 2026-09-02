@@ -4,7 +4,7 @@ A projection-kind export field resolves through a preflighted address:
 ``_projection_field_value`` (``application/filing/_record_field_renderer.py``) looks the
 value up by ``(record id, occurrence, projection_ref)`` and raises when the record has no
 render context. Those contexts come from a :class:`FilingProjectionPlan`, and
-``_projection_plan_for_layout`` (``application/filing/_export.py``) builds one for M303 and
+``_projection_plan_for_layout`` (``application/filing/export.py``) builds one for M303 and
 returns an EMPTY plan for every other modelo.
 
 Modelo 200's generated layout carries 578 projection-kind fields. With an empty plan every

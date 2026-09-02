@@ -14,3 +14,4 @@ Submodules
    :maxdepth: 4
 
    cadrumo.domain.contribuyente.inventory.records
+   cadrumo.domain.contribuyente.inventory.valuation

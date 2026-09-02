@@ -25,7 +25,7 @@ from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from .. import _edit_execution, _edit_facade, _revision_persistence
+from .. import _edit_execution, _edit_facade, revision_persistence
 from .. import edit_models as _edit_models
 from .. import edit_services as _edit_services
 from ..edit_contract import ModeloEditCompatibilityTupleV1
@@ -43,7 +43,7 @@ from ..workspace_models import ModeloWorkspaceExactWorkUnitTargetV1, ModeloWorks
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_EDIT_CONTRACT_MODULES = (_edit_models, _edit_services, _edit_execution, _edit_facade, _revision_persistence)
+_EDIT_CONTRACT_MODULES = (_edit_models, _edit_services, _edit_execution, _edit_facade, revision_persistence)
 
 _MODELO = "131"
 _FILING_YEAR = 2025

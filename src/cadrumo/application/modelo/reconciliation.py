@@ -625,7 +625,7 @@ def _finalise_reconciliation(
     ``MODELO_RECONCILED`` :class:`~domain.buckets.BucketEvent` land in ONE
     persistence unit of work through the bound
     :class:`ModeloReconciliationPersistencePort` — the same co-emit discipline
-    :func:`~application.modelo._revision_persistence.persist_filed_revision`
+    :func:`~application.modelo.revision_persistence.persist_filed_revision`
     uses to keep the participation index from drifting from the filing
     catalogue. Writing them separately would let a crash between the two leave
     an event log claiming a reconciliation whose detail was never stored, or a

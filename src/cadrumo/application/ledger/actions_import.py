@@ -11,7 +11,7 @@ records ``LEDGER_TRANSACTION_IMPORTED`` bucket events, and returns
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -48,9 +48,9 @@ from ...domain.transactions.models import (
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.raw_transaction import RawTransaction
 from ...domain.transactions.repository import ImportSummary
-from ..transactions._import import import_ledger_with_diagnostics
 from ..transactions.diagnostics import LedgerImportDiagnostic
 from ..transactions.import_classification import classify_import_row
+from ..transactions.import_diagnostics import import_ledger_with_diagnostics
 from .actions_common import (
     build_ledger_bucket_event,
     normalise_timestamp,
@@ -445,11 +445,11 @@ def import_ledger_source(
 
 
 def _resolve_financial_provider(provider: str, path: Path) -> FinancialProviderProtocol:
-    from ...adapters.inbound.financial.providers._detection import detect_provider
-    from ...adapters.inbound.financial.providers._ofx import OfxProvider
-    from ...adapters.inbound.financial.providers._pdf_n26 import PdfN26Provider
-    from ...adapters.inbound.financial.providers._xlsx import XlsxProvider
     from ...adapters.inbound.financial.providers.csv import CsvProvider
+    from ...adapters.inbound.financial.providers.detection import detect_provider
+    from ...adapters.inbound.financial.providers.ofx import OfxProvider
+    from ...adapters.inbound.financial.providers.pdf_n26 import PdfN26Provider
+    from ...adapters.inbound.financial.providers.xlsx import XlsxProvider
 
     try:
         provider_id = LedgerProviderID(provider.strip().lower())
@@ -653,8 +653,12 @@ def aggregate_ledger_import_results(
                 f"import results disagree on {field!r}, so they are not one import: {sorted(map(str, values))}"
             )
 
-    def _concat(field: str) -> tuple[object, ...]:
-        return tuple(entry for result in results for entry in getattr(result, field))
+    def _concat[T](select: Callable[[LedgerSourceImportResult], tuple[T, ...]]) -> tuple[T, ...]:
+        # Selected by accessor rather than by field NAME: a stringly-typed
+        # getattr erased every element type to `object` at each call below, so
+        # a renamed or retyped field would have folded silently instead of
+        # failing here.
+        return tuple(entry for result in results for entry in select(result))
 
     return LedgerSourceImportResult(
         rows=sum(result.rows for result in results),
@@ -666,13 +670,13 @@ def aggregate_ledger_import_results(
         period=first.period,
         bucket_id=first.bucket_id,
         import_batch_id=first.import_batch_id,
-        bucket_event_ids=_concat("bucket_event_ids"),
-        imported_transaction_refs=_concat("imported_transaction_refs"),
-        skipped_transaction_refs=_concat("skipped_transaction_refs"),
-        likely_duplicate_transaction_refs=_concat("likely_duplicate_transaction_refs"),
-        validations=_concat("validations"),
-        sources=_concat("sources"),
-        diagnostics=_concat("diagnostics"),
+        bucket_event_ids=_concat(lambda result: result.bucket_event_ids),
+        imported_transaction_refs=_concat(lambda result: result.imported_transaction_refs),
+        skipped_transaction_refs=_concat(lambda result: result.skipped_transaction_refs),
+        likely_duplicate_transaction_refs=_concat(lambda result: result.likely_duplicate_transaction_refs),
+        validations=_concat(lambda result: result.validations),
+        sources=_concat(lambda result: result.sources),
+        diagnostics=_concat(lambda result: result.diagnostics),
     )
 
 

@@ -675,13 +675,13 @@ def test_no_devengo_basis_selector_exists_on_iva_aggregation_surface() -> None:
     """
     import inspect
 
-    from .. import _iva_ledger
+    from .. import iva_ledger
 
     forbidden_tokens = ("devengo", "accrual", "basis")
     for entry_point in (
-        _iva_ledger.aggregate_iva_ledger_observations,
-        _iva_ledger.aggregate_iva_ledger_observations_from_repositories,
-        _iva_ledger.aggregate_iva_ledger_candidates,
+        iva_ledger.aggregate_iva_ledger_observations,
+        iva_ledger.aggregate_iva_ledger_observations_from_repositories,
+        iva_ledger.aggregate_iva_ledger_candidates,
     ):
         params = inspect.signature(entry_point).parameters
         assert not any(token in name.lower() for name in params for token in forbidden_tokens), (
@@ -689,8 +689,8 @@ def test_no_devengo_basis_selector_exists_on_iva_aggregation_surface() -> None:
         )
 
     # No basis-selector symbol is exported from the aggregation package surface.
-    assert not any(token in symbol.lower() for symbol in _iva_ledger.__all__ for token in forbidden_tokens), (
-        _iva_ledger.__all__
+    assert not any(token in symbol.lower() for symbol in iva_ledger.__all__ for token in forbidden_tokens), (
+        iva_ledger.__all__
     )
 
 

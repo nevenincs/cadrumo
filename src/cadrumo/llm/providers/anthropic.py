@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     )
     from anthropic.types import (
         ImageBlockParam,
+        Message,
         TextBlock,
         TextBlockParam,
     )
@@ -225,7 +226,11 @@ class AnthropicAdapter(ProviderAdapter):
                 other non-2xx API status codes.
         """
         sdk = self._sdk
-        response: Any = None
+        # Typed rather than `Any`: the SDK is an optional runtime dependency, but
+        # its `Message` record is available to the checker through the
+        # TYPE_CHECKING import above, so the response's `content`, `model`,
+        # `usage`, and `id` keep their real types instead of being erased.
+        response: Message | None = None
         try:
             response = await self._client.messages.create(**build_message_kwargs(request))
         except sdk.RateLimitError as exc:

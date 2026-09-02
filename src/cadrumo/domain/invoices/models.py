@@ -12,7 +12,7 @@ Counterparty identity validation is delegated to
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
@@ -464,23 +464,27 @@ class Invoice(BaseModel):
         if not isinstance(data, Mapping):
             return data
         payload = STR_KEYED_MAPPING_ADAPTER.validate_python(data)
-        for normalise in (
+        # Typed explicitly: the tuple mixes named normalisers with two lambdas,
+        # and without a declared element type the lambda parameters and the
+        # loop variable all read as unknown.
+        normalisers: tuple[Callable[[dict[str, object]], dict[str, object]], ...] = (
             normalise_invoice_enum_fields,
             normalise_invoice_string_fields,
-            _normalization._normalise_invoice_dates,
-            _normalization._normalise_invoice_counterparty,
-            _normalization._normalise_invoice_currency,
-            _normalization._normalise_invoice_monetary_fields,
-            lambda payload: _normalization._derive_invoice_id_when_complete(
+            _normalization.normalise_invoice_dates,
+            _normalization.normalise_invoice_counterparty,
+            _normalization.normalise_invoice_currency,
+            _normalization.normalise_invoice_monetary_fields,
+            lambda payload: _normalization.derive_invoice_id_when_complete(
                 payload,
                 derive_invoice_id=derive_invoice_id,
             ),
-            lambda payload: _normalization._normalise_invoice_collections(
+            lambda payload: _normalization.normalise_invoice_collections(
                 payload,
                 normalise_linked_transaction_ids=_normalise_linked_transaction_ids,
             ),
-            _normalization._normalise_invoice_payment_id,
-        ):
+            _normalization.normalise_invoice_payment_id,
+        )
+        for normalise in normalisers:
             payload = normalise(payload)
         return payload
 
@@ -515,7 +519,7 @@ class Invoice(BaseModel):
         )
         stamp_present = any(stamp_flags)
         fx_rate = self.fx_rate if self.fx_rate is not None else Decimal("0")
-        _normalization._raise_first_invoice_violation(
+        _normalization.raise_first_invoice_violation(
             (
                 (
                     (self.currency == DEFAULT_CURRENCY, stamp_present) == (True, True),
@@ -563,19 +567,19 @@ class Invoice(BaseModel):
     def _validate_totals_and_exempt_invariants(self) -> Self:
         line_subtotal_sum = sum((line.subtotal for line in self.lines), start=Decimal("0"))
         line_iva_sum = sum((line.iva_amount for line in self.lines), start=Decimal("0"))
-        _normalization._require_equal(
+        _normalization.require_equal(
             self.base_total,
             line_subtotal_sum,
             "base_total must equal the exact sum of line subtotals",
         )
-        _normalization._require_equal(
+        _normalization.require_equal(
             self.iva_total,
             line_iva_sum,
             "iva_total must equal the exact sum of line iva amounts",
         )
         recargo = self.recargo_amount or Decimal("0")
         suplido = self.suplido_amount or Decimal("0")
-        _normalization._require_equal(
+        _normalization.require_equal(
             self.grand_total,
             self.base_total + self.iva_total + recargo + suplido,
             "grand_total must equal base_total + iva_total + recargo_amount + suplido_amount exactly",
@@ -590,7 +594,7 @@ class Invoice(BaseModel):
             # suplido is unrelated to whether the underlying supply is taxable
             # -- it is a disbursement made in the client's name (LIVA
             # art. 78.Tres.3.º) -- so it stays permitted here.
-            _normalization._raise_first_invoice_violation(
+            _normalization.raise_first_invoice_violation(
                 (
                     (
                         self.iva_total != Decimal("0"),
@@ -643,7 +647,7 @@ class Invoice(BaseModel):
         proportion of nothing, and inferring the amount from it would
         manufacture a figure the document never stated.
         """
-        _normalization._require_optional_non_negative(self.retention_amount, "retention_amount must be non-negative")
+        _normalization.require_optional_non_negative(self.retention_amount, "retention_amount must be non-negative")
         if self.retention_rate is not None:
             if self.retention_rate < Decimal("0") or self.retention_rate > Decimal("1"):
                 raise InvoiceValidationError(
@@ -700,7 +704,7 @@ class Invoice(BaseModel):
         """
         if self.recargo_amount is None:
             return self
-        _normalization._require_optional_non_negative(self.recargo_amount, "recargo_amount must be non-negative")
+        _normalization.require_optional_non_negative(self.recargo_amount, "recargo_amount must be non-negative")
         if self.recargo_amount > self.iva_total:
             raise InvoiceValidationError(
                 "recargo_amount must not exceed iva_total; every recargo tier is a smaller "
@@ -732,7 +736,7 @@ class Invoice(BaseModel):
         """
         if self.suplido_amount is None:
             return self
-        _normalization._require_optional_non_negative(self.suplido_amount, "suplido_amount must be non-negative")
+        _normalization.require_optional_non_negative(self.suplido_amount, "suplido_amount must be non-negative")
         return self
 
     @model_validator(mode="after")
@@ -784,7 +788,7 @@ class Invoice(BaseModel):
         missing_tax_id = self.counterparty_tax_id is None
         category_value = getattr(category, "value", "")
         relief_case = (self.invoice_class, self.kind) == (InvoiceClass.SIMPLIFICADA, InvoiceKind.ISSUED)
-        _normalization._raise_first_invoice_violation(
+        _normalization.raise_first_invoice_violation(
             (
                 (
                     (self.invoice_class is InvoiceClass.RECTIFICATIVA, not self.series) == (True, True),
@@ -898,7 +902,7 @@ class Invoice(BaseModel):
         has_oss_line_rate = any(line.oss_rate_kind is not None for line in self.lines)
         axis_flags = (self.oss_ioss_regime is None, self.oss_transaction_kind is None)
         if axis_flags != (False, False):
-            _normalization._raise_first_invoice_violation(
+            _normalization.raise_first_invoice_violation(
                 (
                     (
                         (axis_flags, has_oss_line_rate) == ((True, True), True),
@@ -925,7 +929,7 @@ class Invoice(BaseModel):
             ),
             OssIossRegime.IMPORT_SCHEME: frozenset({TransactionKind.IOSS_DISTANCE_SALE_LOW_VALUE}),
         }
-        _normalization._raise_first_invoice_violation(
+        _normalization.raise_first_invoice_violation(
             (
                 (
                     self.kind is not InvoiceKind.ISSUED,
@@ -975,7 +979,7 @@ class Invoice(BaseModel):
 
 def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
     """Deduplicate-preserve-order and validate the shape of linked transaction IDs."""
-    _normalization._raise_first_invoice_violation(
+    _normalization.raise_first_invoice_violation(
         (
             (
                 isinstance(value, str | bytes),
@@ -986,11 +990,11 @@ def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
     )
     seen: dict[str, None] = {}
     for item in OBJECT_TUPLE_ADAPTER.validate_python(value):
-        _normalization._raise_first_invoice_violation(
+        _normalization.raise_first_invoice_violation(
             ((not isinstance(item, str), "each linked_transaction_id must be a string"),),
         )
         normalized = cast(str, item).strip().lower()
-        _normalization._raise_first_invoice_violation(
+        _normalization.raise_first_invoice_violation(
             (
                 (
                     not _is_hex_digest(normalized, length=64),

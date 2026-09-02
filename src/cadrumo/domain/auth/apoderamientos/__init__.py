@@ -18,7 +18,7 @@ See Also:
     - :class:`application.auth.ApoderadoService` for the encrypted
       bucket-scoped configuration service that consumes these parsed scope
       codes.
-    - :mod:`entrypoints.cli._config._apoderado` for CLI commands that
+    - :mod:`entrypoints.cli.config._apoderado` for CLI commands that
       collect repeated ``--scope`` options before calling the application
       service.
 """

@@ -26,7 +26,8 @@ from ...core.identity import BucketId, TransactionId
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.money.rounding import round_to_cents
-from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction, parse_iso8601_date
+from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction
+from ...core.parsing.dates import parse_iso8601_date
 from ...core.prorrata_exclusions import ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS, Art104TresExclusion
 from ...core.text_fold import fold_diacritics
 from ...core.time.clock import now
@@ -45,7 +46,7 @@ from ..iva.schema import (
 )
 from .enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from .errors import TransactionValidationError
-from .gross_validation import _gross_mismatch_detail
+from .gross_validation import gross_mismatch_detail
 from .irpf_categories import (
     PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING,
     RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING,
@@ -1017,7 +1018,7 @@ class Transaction(BaseModel):
             and reconstituted > expected
         ):
             return self
-        detail = _gross_mismatch_detail(
+        detail = gross_mismatch_detail(
             direction=self.direction,
             category_id=self.category_id,
             recargo_amount=self.recargo_amount,

@@ -9,7 +9,7 @@ See Also:
     :mod:`~application.modelo._calculate_input`
         Work-unit input shortcuts that resolve operator-facing semantic-role
         tokens through a registry snapshot.
-    :mod:`~application.modelo._binding_resolution`
+    :mod:`~application.modelo.binding_resolution`
         Declaration-period metadata binding path that only accepts
         informational semantic-role casillas.
     :mod:`~application.modelo._taxation_comparison`

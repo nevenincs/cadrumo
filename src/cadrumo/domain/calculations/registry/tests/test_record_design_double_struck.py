@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..record_design_pdf_repairs import _undouble_struck_rows
+from ..record_design_pdf_repairs import undouble_struck_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -29,31 +29,31 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def test_a_double_struck_row_is_undoubled() -> None:
     line = "4422 662255 1177 NN 55.. OOppeerraacciioonneess"
 
-    assert _undouble_struck_rows((line,)) == ("42 625 17 N 5. Operaciones",)
+    assert undouble_struck_rows((line,)) == ("42 625 17 N 5. Operaciones",)
 
 
 def test_a_row_that_already_parses_is_never_touched() -> None:
     """Even where its tokens happen to look doubled."""
     line = "44 6600 22 An Alguna descripcion"
 
-    assert _undouble_struck_rows((line,)) == (line,)
+    assert undouble_struck_rows((line,)) == (line,)
 
 
 def test_a_line_that_does_not_become_a_row_is_left_alone() -> None:
     """Undoing the doubling has to PRODUCE something, or it is not evidence."""
     line = "aabbcc ddeeff gghhii"
 
-    assert _undouble_struck_rows((line,)) == (line,)
+    assert undouble_struck_rows((line,)) == (line,)
 
 
 def test_prose_is_untouched() -> None:
     line = "Los campos numericos solo admiten numeros"
 
-    assert _undouble_struck_rows((line,)) == (line,)
+    assert undouble_struck_rows((line,)) == (line,)
 
 
 def test_an_odd_length_token_disqualifies_that_token_only() -> None:
     """A single-struck fragment beside doubled ones must not veto the row."""
     line = "4422 662255 1177 NN 55.. Operaciones"
 
-    assert _undouble_struck_rows((line,)) == ("42 625 17 N 5. Operaciones",)
+    assert undouble_struck_rows((line,)) == ("42 625 17 N 5. Operaciones",)

@@ -106,7 +106,7 @@ class TestCliEnvelopeParity:
     """
 
     def _envelope(self) -> type:
-        from ....entrypoints.cli._config_payloads import AuthProvidersResult
+        from ....entrypoints.cli.config_payloads import AuthProvidersResult
 
         return AuthProvidersResult
 

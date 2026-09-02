@@ -1,7 +1,0 @@
-cadrumo.application.corpus_search._models module
-================================================
-
-.. automodule:: cadrumo.application.corpus_search._models
-   :members:
-   :show-inheritance:
-   :ignore-module-all:

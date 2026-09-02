@@ -48,7 +48,7 @@ class ServiceCapability(StrEnum):
         :class:`~application.user_profile.CapabilityDecision`
             Resolved posture after applying gestor mode, profile facts, defaults,
             and global settings.
-        :mod:`entrypoints.cli._config._capabilities_cli`
+        :mod:`entrypoints.cli.config._capabilities_cli`
             Operator-facing ``show`` and ``set`` commands that expose these enum
             values directly.
 

@@ -110,13 +110,13 @@ from .._impatriado_income_ledger import (
     ImpatriadoIncomeLedgerAggregationIssue,
     _classify_impatriado_income_transaction,
 )
-from .._iva_ledger import IvaLedgerAggregationIssueReason
 from .._iva_transaction import _substrate_admission_issue
 from .._modelo_bindings_invoice_iva import _screened_invoice_line_observations
 from .._oss_ioss import _candidate_for_invoice_line
 from .._renta_gasto_ledger import RentaGastoLedgerAggregationIssue, _classify_gasto_transaction
 from .._renta_income_ledger import RentaIncomeLedgerAggregationIssue, _classify_income_transaction
 from .._renta_ledger import RentaLedgerAggregationIssue, _classify_renta_transaction
+from ..iva_ledger import IvaLedgerAggregationIssueReason
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

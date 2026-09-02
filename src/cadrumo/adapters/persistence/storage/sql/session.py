@@ -9,7 +9,7 @@ engine.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 
 from sqlalchemy import Engine
@@ -35,7 +35,7 @@ def get_sessionmaker(engine: Engine | None = None) -> sessionmaker[Session]:
 
 
 @contextmanager
-def session_scope(engine: Engine | None = None) -> Iterator[Session]:
+def session_scope(engine: Engine | None = None) -> Generator[Session]:
     """Context-managed unit of work.
 
     Commits on normal exit, rolls back on exception, and always closes the

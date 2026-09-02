@@ -55,7 +55,8 @@ from ...core.identity import (
 )
 from ...core.invoice_link import LinkInconsistencyDirection
 from ...core.json_contract import OutputRootSchema, OutputSchema
-from ...core.parsing import IsoCurrencyCode, parse_iso8601_date
+from ...core.parsing import IsoCurrencyCode
+from ...core.parsing.dates import parse_iso8601_date
 from ...core.period import Period
 from ...core.prose_elision import IssueDetail
 from ...core.text_bounds import NonEmptyStr

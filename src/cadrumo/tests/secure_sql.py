@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -206,7 +206,7 @@ def isolated_injected_secure_object_repository(
     tmp_path: Path,
     bucket_id: str,
     database_name: str,
-) -> Iterator[SecureObjectRepository]:
+) -> Generator[SecureObjectRepository]:
     """Yield a second real secure-object store under the active bucket session.
 
     The repository uses its own SQLite engine and production schema while row
@@ -234,7 +234,7 @@ def isolated_ephemeral_secure_sql(
     *,
     tmp_path: Path,
     database_name: str = "cadrumo.db",
-) -> Iterator[None]:
+) -> Generator[None]:
     """Run test code with a temp SQL database and real ephemeral master key."""
 
     database_url = f"sqlite:///{(tmp_path / database_name).as_posix()}"
@@ -251,7 +251,7 @@ def isolated_ephemeral_secure_sql(
 
 
 @contextmanager
-def isolated_sessionless_storage_root(*, tmp_path: Path) -> Iterator[Path]:
+def isolated_sessionless_storage_root(*, tmp_path: Path) -> Generator[Path]:
     """Run tests against an empty storage root with no active bucket session.
 
     Unlike :func:`isolated_profile_storage_root`, this helper does not
@@ -303,7 +303,7 @@ def isolated_storage_root(tmp_path: Path) -> Iterator[None]:
 
 
 @contextmanager
-def isolated_profile_storage_root(*, tmp_path: Path) -> Iterator[Path]:
+def isolated_profile_storage_root(*, tmp_path: Path) -> Generator[Path]:
     """Run profile-bootstrap tests against an empty real storage root.
 
     Unlike :func:`isolated_runtime_profile`, this helper does not
@@ -369,7 +369,7 @@ def isolated_runtime_profile(
     tmp_path: Path,
     bucket_id: str = _DEFAULT_RUNTIME_BUCKET_ID,
     label: str | None = None,
-) -> Iterator[TestRuntimeProfile]:
+) -> Generator[TestRuntimeProfile]:
     """Create a real active-profile bucket runtime for tests.
 
     The helper provisions the same durable surfaces used by production:
@@ -460,7 +460,7 @@ class MultiBucketTestRuntime:
     _secondary_session: BucketSession
 
     @contextmanager
-    def switch_to_secondary(self) -> Iterator[None]:
+    def switch_to_secondary(self) -> Generator[None]:
         """Swap the active profile to ``secondary`` for the block's duration.
 
         Restores ``primary`` as active on exit so the outer test
@@ -486,7 +486,7 @@ def isolated_two_bucket_runtime(
     secondary_bucket_id: str = _DEFAULT_SECONDARY_BUCKET_ID,
     primary_label: str = "Primary test runtime",
     secondary_label: str = "Secondary test runtime",
-) -> Iterator[MultiBucketTestRuntime]:
+) -> Generator[MultiBucketTestRuntime]:
     """Provision two buckets sharing a storage root; primary is active.
 
     The fixture is the operator-active-vs-target distinction that
@@ -584,7 +584,7 @@ def isolated_cli_runtime_profile(
     tmp_path: Path,
     bucket_id: str = _DEFAULT_RUNTIME_BUCKET_ID,
     label: str | None = None,
-) -> Iterator[TestRuntimeProfile]:
+) -> Generator[TestRuntimeProfile]:
     """Create a real runtime profile with CLI-adjacent directories isolated.
 
     CLI work-unit tests need the active bucket database plus the

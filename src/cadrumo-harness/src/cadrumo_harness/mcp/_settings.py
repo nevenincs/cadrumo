@@ -19,7 +19,7 @@ scalars with no derived consumers.
 from __future__ import annotations
 
 import contextvars
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from functools import cache
 
@@ -78,7 +78,7 @@ class McpServingSettings(BaseSettings):
     )
 
 
-_settings_override: contextvars.ContextVar[McpServingSettings | None] = contextvars.ContextVar(
+settings_override: contextvars.ContextVar[McpServingSettings | None] = contextvars.ContextVar(
     "mcp_serving_settings_override",
     default=None,
 )
@@ -96,7 +96,7 @@ def load_mcp_settings() -> McpServingSettings:
     A context-local override installed by :func:`override_mcp_settings` wins
     inside its block; otherwise this returns the process-wide instance.
     """
-    override = _settings_override.get()
+    override = settings_override.get()
     if override is not None:
         return override
     return _constructed_settings()
@@ -108,7 +108,7 @@ def reset_mcp_settings_cache() -> None:
 
 
 @contextmanager
-def override_mcp_settings(**overrides: object) -> Iterator[McpServingSettings]:
+def override_mcp_settings(**overrides: object) -> Generator[McpServingSettings]:
     """Override one or more serving fields for the with-block.
 
     Routed through ``model_validate`` rather than ``model_copy(update=)``, which
@@ -118,11 +118,11 @@ def override_mcp_settings(**overrides: object) -> Iterator[McpServingSettings]:
     merged = load_mcp_settings().model_dump()
     merged.update(overrides)
     replacement = McpServingSettings.model_validate(merged)
-    token = _settings_override.set(replacement)
+    token = settings_override.set(replacement)
     try:
         yield replacement
     finally:
-        _settings_override.reset(token)
+        settings_override.reset(token)
 
 
 __all__ = [

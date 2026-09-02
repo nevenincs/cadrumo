@@ -30,9 +30,9 @@ from ...google.impersonation import (
 )
 from ...google.records import DriveConfig, OAuthClient
 from ...google.session_store import save_client, save_credential_source_selection, save_drive_config
-from .._protocol import StorageProvider
 from ..errors import OutboundStorageValidationError
 from ..factory import build_google_credentials, get_storage_provider, resolve_drive_root_folder_id
+from ..protocol import StorageProvider
 from ..records import ProviderKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -77,7 +77,7 @@ def test_factory_import_does_not_import_concrete_backends() -> None:
 
                 watched = (
                     "cadrumo.adapters.outbound.storage._google_drive",
-                    "cadrumo.adapters.outbound.storage._local",
+                    "cadrumo.adapters.outbound.storage.local",
                 )
                 print(json.dumps({name: name in sys.modules for name in watched}, sort_keys=True))
                 """
@@ -91,7 +91,7 @@ def test_factory_import_does_not_import_concrete_backends() -> None:
     assert probe.returncode == 0, probe.stderr
     assert json.loads(probe.stdout) == {
         "cadrumo.adapters.outbound.storage._google_drive": False,
-        "cadrumo.adapters.outbound.storage._local": False,
+        "cadrumo.adapters.outbound.storage.local": False,
     }
 
 

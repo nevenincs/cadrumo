@@ -14,7 +14,7 @@ external evidence. A successful transition sets the target revision to
 ``PRESENTADO``, creates a ``VIGENTE``
 :class:`ModeloRecord` with ``aeat_accepted=False``, and
 delegates cross-period carry projection to
-:func:`~cadrumo.application.modelo._revision_persistence.persist_filed_revision`,
+:func:`~cadrumo.application.modelo.revision_persistence.persist_filed_revision`,
 which stamps locally-filed observations as non-official ``app_filing`` evidence.
 
 See Also:
@@ -22,7 +22,7 @@ See Also:
         Separate AEAT-attested import path that creates
         :class:`ExternalEvidence` baselines; this local
         filing action deliberately does not.
-    :func:`~cadrumo.application.modelo._revision_persistence.persist_filed_revision`:
+    :func:`~cadrumo.application.modelo.revision_persistence.persist_filed_revision`:
         Persists the filing catalogue, revision state, work-unit pointers,
         bucket events, participation index rows, and optional carry observation.
     :func:`~cadrumo.application.modelo.filed_revision_observation.persist_filed_revision_observation`:
@@ -77,12 +77,10 @@ from ..calculations.observations_repository import CalculationObservationReposit
 from ..workflow.engine import WorkflowEngine
 from ..workflow.persistence import WorkflowRunRepository
 from ._ledger_evidence_gate import raise_if_deductible_iva_evidence_missing
-from ._m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
 from ._prior_domiciliation import resolve_prior_domiciliation_election
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
-from ._revision_persistence import persist_filed_revision, require_filing_instance_evidence_for_work_unit
 from .action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -94,8 +92,10 @@ from .action_errors import (
 from .iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
+from .m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
 from .preconditions import build_modelo_work_file_unverified_revision_failure
 from .result_disposition_resolution import resolve_modelo_result_disposition
+from .revision_persistence import persist_filed_revision, require_filing_instance_evidence_for_work_unit
 from .verification_actions import cross_period_expected_member_sets_from_profile, require_cross_period_clean_state
 from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
 from .workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
@@ -267,7 +267,7 @@ def file_modelo_revision(
             unit cannot be loaded.
 
     See Also:
-        :func:`~cadrumo.application.modelo._revision_persistence.persist_filed_revision`:
+        :func:`~cadrumo.application.modelo.revision_persistence.persist_filed_revision`:
             Performs the repository writes once all gates pass.
         :func:`~cadrumo.application.modelo.import_external_filing_evidence`:
             Creates official-evidence baselines for imported filings; use that

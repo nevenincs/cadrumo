@@ -26,7 +26,6 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
 from ...operations.registry import OperationSchemaIdentityV1
-from .._revision_persistence import persist_calculation_revision
 from ..edit_contract import ModeloEditCompatibilityTupleV1
 from ..edit_models import (
     ModeloEditAdmissionRequestV1,
@@ -40,6 +39,7 @@ from ..edit_services import (
     modelo_edit_result_schema_identity,
     reconfirm_modelo_edit_baseline,
 )
+from ..revision_persistence import persist_calculation_revision
 from ..work_addressing import ModeloExactWorkUnitTarget
 from ..workspace_models import ModeloWorkspaceExactWorkUnitTargetV1, ModeloWorkspaceTargetV1
 

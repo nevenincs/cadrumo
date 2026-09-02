@@ -15,8 +15,8 @@ from .....core.operator_action_enums import ActionConditionality, ActionEvidence
 from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ....persistence.storage.namespace_taxonomy import StorageRemoteMirrorPolicy
-from .._local import LocalFileSystemProvider
 from ..errors import OutboundStorageIntegrityError
+from ..local import LocalFileSystemProvider
 from ..mirror_manifest import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,
     REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION,

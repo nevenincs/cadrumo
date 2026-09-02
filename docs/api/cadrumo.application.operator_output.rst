@@ -13,5 +13,5 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.application.operator_output._emit
-   cadrumo.application.operator_output._sandbox_notice
+   cadrumo.application.operator_output.emit
+   cadrumo.application.operator_output.sandbox_notice

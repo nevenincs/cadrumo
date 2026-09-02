@@ -129,7 +129,7 @@ from .binding_selector_utils import selector_as_dict
 from .errors import RegistryValidationError
 from .export import derive_export_layouts_from_bindings
 from .record_design import extract_record_design
-from .record_design_pdf_rows import _naturaleza_or_none
+from .record_design_pdf_rows import naturaleza_or_none
 from .record_design_schema import RecordDesignField, RecordDesignSheet
 from .schema import ModeloRevision
 from .schema_exports import (
@@ -473,7 +473,7 @@ def _declared_fill_naturaleza(field: RecordDesignField) -> bool:
     ``OBLIGATORIO`` still wins outright: the caller checks it first, so a
     position AEAT marks obligatorio stays required whatever its naturaleza says.
     """
-    return _naturaleza_or_none(field.type_code or "") == "Blancos"
+    return naturaleza_or_none(field.type_code or "") == "Blancos"
 
 
 def _position(sheet_name: str, field: RecordDesignField) -> _RequiredPosition:
@@ -821,14 +821,7 @@ def _sheet_run_is_filler(sheet: RecordDesignSheet, offset: int, length: int) -> 
     idea.
     """
     span = range(offset, offset + length)
-    covering = [
-        item
-        for item in sheet.fields
-        if item.offset is not None
-        and item.length is not None
-        and item.offset < offset + length
-        and offset < item.offset + item.length
-    ]
+    covering = [item for item in sheet.fields if item.offset < offset + length and offset < item.offset + item.length]
     if not covering:
         return None
     described = {position for item in covering for position in range(item.offset, item.offset + item.length)}

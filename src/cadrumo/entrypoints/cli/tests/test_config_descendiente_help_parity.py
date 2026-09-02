@@ -115,7 +115,7 @@ def _rendered_option_tokens() -> set[str]:
     """
     import inspect
 
-    from .._config.descendiente import descendiente_add
+    from ..config.descendiente import descendiente_add
 
     option = inspect.signature(descendiente_add).parameters["descendiente"].default
     return set(_TOKEN_RE.findall(getattr(option, "help", "") or ""))

@@ -23,11 +23,6 @@ from pathlib import Path
 
 import pytest
 
-# Imported absolutely, not as `from .. import <module>`: the test needs
-# the MODULE object, and the package-facade gate reads any `from ..
-# import` edge as reaching through the inert namespace.
-import cadrumo.application.ledger.invoice_draft_extraction as invoice_draft_extraction_module
-
 from ....core.config import load_settings
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
@@ -40,6 +35,7 @@ from ....tests.attribute_scope import scoped_attribute
 
 # The MODULE object, not names from it: the tests below scope an attribute
 # on it. `from .. import <module>` is the relative form that yields one.
+from .. import invoice_draft_extraction as invoice_draft_extraction_module
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..evidence_input import EvidenceInput

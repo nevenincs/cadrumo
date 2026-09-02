@@ -38,11 +38,8 @@ excluded so unrelated edits above a function do not churn the baseline.
 
 The baseline file holds two independent scopes — ``production`` (the default
 run) and ``tests`` (the ``--tests`` run) — so the test-scope ratchet never
-mixes with the production debt. ``--write-baseline`` regenerates only the scope
 of the current run and preserves the other.
 
-Regenerate the baseline with ``--write-baseline`` ONLY when intentionally
-accepting new debt (or after paying debt down, to shrink it). The regenerated
 baseline must be reviewed and committed; it is grandfathered debt, not a mute
 button.
 
@@ -52,21 +49,17 @@ Pass ``--full`` to list every current finding (uncapped) for deep review.
 from __future__ import annotations
 
 import argparse
-import json
 import re
 import subprocess
 import sys
 from collections.abc import Callable
-from contextlib import nullcontext
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final
 
 from cadrumo.core.directory_scan import scan_directory
-from dev.quality.stable_tree_generation import refuse_if_tree_moves
 
 from .._paths import UTF_8
-from .complexity_allowlist import load_allowlist
 
 file_complexity: Callable[[str], Any] | None
 try:
@@ -256,15 +249,6 @@ def build_baseline(cc: list[CcHit], mi: list[MiHit], cog: list[CogHit]) -> Basel
     return Baseline(cyclomatic=cyclomatic, maintainability=maintainability, cognitive=cognitive)
 
 
-_BASELINE_COMMENT = (
-    "Grandfathered complexity debt for dev/audit/complexity.py. Each entry is a "
-    "SPLIT-CANDIDATE its owning area should pay down. Regenerate ONLY via "
-    "`python -m dev.audit.complexity --write-baseline` (production) or "
-    "`python -m dev.audit.complexity --tests --write-baseline` when intentionally "
-    "accepting new debt or after paying debt down. The 'production' and 'tests' "
-    "sections are independent scopes. Keys: 'path::function' (cyclomatic, cognitive) "
-    "and 'path' (maintainability). Values are the worst tolerated score."
-)
 
 
 def _scope_key(is_test_run: bool) -> str:
@@ -273,16 +257,20 @@ def _scope_key(is_test_run: bool) -> str:
 
 
 def load_baseline(is_test_run: bool, path: Path = _BASELINE_PATH) -> Baseline:
-    """Load the committed baseline for the run scope, or empty when absent."""
-    if not path.exists():
-        return Baseline.empty()
-    document = json.loads(path.read_text(encoding=_UTF_8))
-    raw = document.get(_scope_key(is_test_run), {})
-    return Baseline(
-        cyclomatic={str(k): int(v) for k, v in raw.get("cyclomatic", {}).items()},
-        maintainability={str(k): float(v) for k, v in raw.get("maintainability", {}).items()},
-        cognitive={str(k): int(v) for k, v in raw.get("cognitive", {}).items()},
-    )
+    """Return an empty baseline: this audit grandfathers nothing.
+
+    The committed baseline and the reviewed allowlist were both retired. Every
+    hit the scanners report is now reported as-is, against no ceiling.
+
+    Args:
+        is_test_run: Retained for signature compatibility with callers.
+        path: Retained for signature compatibility with callers.
+
+    Returns:
+        An empty :class:`Baseline`.
+    """
+    del is_test_run, path
+    return Baseline.empty()
 
 
 def _scope_payload(baseline: Baseline) -> dict[str, dict[str, float]]:
@@ -293,30 +281,6 @@ def _scope_payload(baseline: Baseline) -> dict[str, dict[str, float]]:
         "cognitive": dict(sorted(baseline.cognitive.items())),
     }
 
-
-def write_baseline(baseline: Baseline, is_test_run: bool, path: Path = _BASELINE_PATH) -> None:
-    """Write the baseline for the run scope, preserving the other scope's data."""
-    document: dict[str, object] = {}
-    if path.exists():
-        document = json.loads(path.read_text(encoding=_UTF_8))
-    document["_comment"] = _BASELINE_COMMENT
-    document[_scope_key(is_test_run)] = _scope_payload(baseline)
-    # Keep a stable top-level ordering: comment, production, tests.
-    ordered: dict[str, object] = {"_comment": _BASELINE_COMMENT}
-    for scope in ("production", "tests"):
-        if scope in document:
-            ordered[scope] = document[scope]
-    # newline="\n" pins the terminator. The default translates on write, and
-    # the committed baseline is a gate INPUT: a translated capture leaves the
-    # bytes the gate reads differing from the bytes that were reviewed, while
-    # `.gitattributes` normalisation keeps `git diff` silent about it. Measured
-    # on 2026-07-28 this file carried 660 CRLF terminators on disk against a
-    # committed blob with none.
-    path.write_text(
-        json.dumps(ordered, indent=2, ensure_ascii=False) + "\n",
-        encoding=_UTF_8,
-        newline="\n",
-    )
 
 
 @dataclass(frozen=True)
@@ -432,11 +396,6 @@ def main() -> int:
     parser.add_argument("--threshold", type=int, default=20, help="Cognitive complexity threshold for complexipy.")
     parser.add_argument("--full", action="store_true", help="List every current finding (uncapped).")
     parser.add_argument(
-        "--write-baseline",
-        action="store_true",
-        help="Regenerate the committed baseline from the current tree (accepts current debt). Review and commit.",
-    )
-    parser.add_argument(
         "--strict",
         action="store_true",
         help="Also fail when the baseline lists entries that no longer violate (stale baseline).",
@@ -452,32 +411,17 @@ def main() -> int:
     # corrects. Guarding the comparison too would refuse the CI gate every time
     # any lane touched the tree -- which is how a guard gets removed rather than
     # fixed.
-    guard = refuse_if_tree_moves(_REPO_ROOT) if args.write_baseline else nullcontext()
-    with guard:
-        cc = collect_cc(exclude)
-        mi = collect_mi(exclude)
-        cog = collect_cog(Path(_TARGET), args.tests, args.threshold)
+    cc = collect_cc(exclude)
+    mi = collect_mi(exclude)
+    cog = collect_cog(Path(_TARGET), args.tests, args.threshold)
 
-    if args.write_baseline:
-        baseline = build_baseline(cc, mi, cog)
-        write_baseline(baseline, args.tests)
-        print(
-            f"complexity ({scope}): wrote '{_scope_key(args.tests)}' baseline to {_BASELINE_PATH.name} - "
-            f"{len(baseline.cyclomatic)} cyclomatic, {len(baseline.maintainability)} maintainability, "
-            f"{len(baseline.cognitive)} cognitive entries. Review and commit.",
-        )
-        return 0
 
+    # Nothing is grandfathered: the baseline is empty by construction, so every
+    # hit the scanners report is classified as a violation on its own merits.
     baseline = load_baseline(args.tests)
-    # Reviewed acceptances are merged OVER the generated baseline rather than
-    # replacing it: the baseline records what was grandfathered wholesale, the
-    # allowlist records what a human looked at and accepted, at the score they
-    # accepted it at. Merging this way means an allowlisted row that grows
-    # further is measured against the reviewed value and fails again.
-    allowlist = load_allowlist(args.tests)
-    cc_verdict = _classify_cc(cc, {**baseline.cyclomatic, **allowlist.ceilings("cyclomatic")})
-    mi_verdict = _classify_mi(mi, {**baseline.maintainability, **allowlist.ceilings("maintainability")})
-    cog_verdict = _classify_cog(cog, {**baseline.cognitive, **allowlist.ceilings("cognitive")})
+    cc_verdict = _classify_cc(cc, baseline.cyclomatic)
+    mi_verdict = _classify_mi(mi, baseline.maintainability)
+    cog_verdict = _classify_cog(cog, baseline.cognitive)
 
     failing = len(cc_verdict.failing) + len(mi_verdict.failing) + len(cog_verdict.failing)
     allowed = len(cc_verdict.allowed) + len(mi_verdict.allowed) + len(cog_verdict.allowed)
@@ -502,23 +446,22 @@ def main() -> int:
 
     if failing:
         print(
-            f"\ncomplexity ({scope}): FAIL - {failing} new or regressed hotspot(s). "
-            "Refactor them, or run `python -m dev.audit.complexity --write-baseline` "
-            "to intentionally accept the new debt (review + commit the baseline).",
+            f"\ncomplexity ({scope}): FAIL - {failing} hotspot(s) over threshold. "
+            "Refactor them. There is no baseline, allowlist, or accept flag.",
         )
         return 1
 
     if args.strict and resolved:
         print(
-            f"\ncomplexity ({scope}): FAIL (--strict) - {resolved} baseline entry(ies) no longer "
-            "violate; regenerate the baseline with --write-baseline to shrink it.",
+            f"\ncomplexity ({scope}): FAIL (--strict) - {resolved} entry(ies) no longer "
+            "violate.",
         )
         return 1
 
     if resolved:
         print(
-            f"\ncomplexity ({scope}): PASS - within baseline. {resolved} baselined entry(ies) "
-            "resolved; consider `--write-baseline` to shrink the baseline.",
+            f"\ncomplexity ({scope}): PASS. {resolved} previously-violating entry(ies) "
+            "resolved.",
         )
     else:
         print(f"\ncomplexity ({scope}): PASS — all current violations are within the baseline.")

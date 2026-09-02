@@ -22,7 +22,7 @@ from ....domain.calculations.registry.schema_references import RegistrySnapshotR
 from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.schema import ModeloDraft, ModeloValue, ModeloValueKind, registry_schema_version
 from ....domain.submission.models import ModeloDraftStatus
-from .._export import _format_field, _projection_field_value
+from ..export import _format_field, _projection_field_value
 from ..export_verification import _mismatched_casilla_ids
 from ..runtime import build_runtime_schema_provider
 

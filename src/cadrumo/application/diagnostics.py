@@ -38,7 +38,7 @@ See Also:
     degraded.
     :mod:`application.wizard.status` supplies semantic profile/auth
     readiness once the workflow state has loaded.
-    :mod:`entrypoints.cli._config._repair_cli` wires these reports into
+    :mod:`entrypoints.cli.config._repair_cli` wires these reports into
     ``aeat config repair`` commands.
 """
 
@@ -88,10 +88,10 @@ from .diagnostic_models import (
     SecureObjectIntegrityReport as _SecureObjectIntegrityReport,
 )
 from .diagnostic_models import (
-    _diagnostic_action_verdict,
-    _diagnostic_no_recovery_verdict,
-    _missing_verdict_binding,
-    _resolved_verdict_binding,
+    diagnostic_action_verdict,
+    diagnostic_no_recovery_verdict,
+    missing_verdict_binding,
+    resolved_verdict_binding,
 )
 from .diagnostic_models import (
     ensure_models_rebuilt as _ensure_models_rebuilt,
@@ -190,7 +190,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> _ConfigRepa
             precondition_verdict=(
                 None
                 if log_parent_exists
-                else _diagnostic_no_recovery_verdict(
+                else diagnostic_no_recovery_verdict(
                     condition_id="diagnostics.logging.file_parent.available",
                     evidence_id="diagnostics.logging.file_parent.observation",
                     values={
@@ -217,7 +217,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> _ConfigRepa
             precondition_verdict=(
                 None
                 if registry.available
-                else _diagnostic_no_recovery_verdict(
+                else diagnostic_no_recovery_verdict(
                     condition_id="diagnostics.registry.load.available",
                     evidence_id="diagnostics.registry.load.observation",
                     values={"available": False, "registry_root": registry.registry_root},
@@ -277,12 +277,12 @@ def build_config_repair_report(registry_root: Path | None = None) -> _ConfigRepa
                 precondition_verdict=(
                     _required_profile_health_verdict(profile_health)
                     if missing_active_bucket_session
-                    else _diagnostic_action_verdict(
+                    else diagnostic_action_verdict(
                         condition_id="diagnostics.secure_state.load.readable",
                         evidence_id="diagnostics.secure_state.load.observation",
                         values={"readable": False},
                         action_id="operator.diagnostics.workflow.reset_progress",
-                        argument_bindings=(_resolved_verdict_binding("yes", True),),
+                        argument_bindings=(resolved_verdict_binding("yes", True),),
                     )
                 ),
             ),
@@ -556,7 +556,7 @@ def _secure_objects_integrity_check(report: _SecureObjectIntegrityReport) -> _Di
             readable=report.readable_total,
         ),
         detail=affected,
-        precondition_verdict=_diagnostic_action_verdict(
+        precondition_verdict=diagnostic_action_verdict(
             condition_id="diagnostics.secure_objects.integrity.readable",
             evidence_id="diagnostics.secure_objects.integrity.observation",
             values={
@@ -564,7 +564,7 @@ def _secure_objects_integrity_check(report: _SecureObjectIntegrityReport) -> _Di
                 "unreadable_total": report.unreadable_total,
             },
             action_id="operator.diagnostics.secure_objects.quarantine",
-            argument_bindings=(_resolved_verdict_binding("yes", True),),
+            argument_bindings=(resolved_verdict_binding("yes", True),),
         ),
     )
 
@@ -601,7 +601,7 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> _DiagnosticCh
             status="fail",
             summary=tr("cli.diagnostics.summary.registry_integrity_failed"),
             detail=str(exc),
-            precondition_verdict=_diagnostic_no_recovery_verdict(
+            precondition_verdict=diagnostic_no_recovery_verdict(
                 condition_id="diagnostics.registry.integrity.valid",
                 evidence_id="diagnostics.registry.integrity.validation",
                 values={"registry_root": str(registry_root), "valid": False},
@@ -615,7 +615,7 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> _DiagnosticCh
             status="warn",
             summary=tr("cli.diagnostics.summary.registry_integrity_skipped"),
             detail=f"{type(exc).__name__}: {exc}",
-            precondition_verdict=_diagnostic_no_recovery_verdict(
+            precondition_verdict=diagnostic_no_recovery_verdict(
                 condition_id="diagnostics.registry.integrity.observable",
                 evidence_id="diagnostics.registry.integrity.observation",
                 values={"observable": False, "registry_root": str(registry_root)},
@@ -792,12 +792,12 @@ def _profile_check(
             precondition_verdict=(
                 _required_profile_health_verdict(profile_health)
                 if profile_health is not None
-                else _diagnostic_action_verdict(
+                else diagnostic_action_verdict(
                     condition_id="diagnostics.profile.active.available",
                     evidence_id="diagnostics.profile.active.observation",
                     values={"active_profile_present": False},
                     action_id="operator.profile.create",
-                    argument_bindings=(_missing_verdict_binding("profile_name"),),
+                    argument_bindings=(missing_verdict_binding("profile_name"),),
                     missing_argument_names=("profile_name",),
                 )
             ),
@@ -869,7 +869,7 @@ def _profile_not_ready_verdict(
     *,
     finding_count: int,
 ) -> PreconditionVerdict:
-    return _diagnostic_action_verdict(
+    return diagnostic_action_verdict(
         condition_id="diagnostics.profile.required_fields.complete",
         evidence_id="diagnostics.profile.required_fields.observation",
         values={
@@ -878,7 +878,7 @@ def _profile_not_ready_verdict(
         },
         action_id="operator.profile.edit",
         argument_bindings=(
-            _resolved_verdict_binding(
+            resolved_verdict_binding(
                 "profile_name",
                 report.active_profile or CLI_PROFILE_ID_PLACEHOLDER,
             ),
@@ -944,14 +944,14 @@ def _auth_check(report: WizardStatusReport) -> _DiagnosticCheck:
             name="auth.readiness",
             status="warn",
             summary=tr("cli.diagnostics.summary.auth_none"),
-            precondition_verdict=_diagnostic_action_verdict(
+            precondition_verdict=diagnostic_action_verdict(
                 condition_id="diagnostics.auth.provider.configured",
                 evidence_id="diagnostics.auth.provider.observation",
                 values={"configured": False},
                 action_id="operator.auth.configure",
                 argument_bindings=(
-                    _missing_verdict_binding("file"),
-                    _resolved_verdict_binding("provider", "certificate"),
+                    missing_verdict_binding("file"),
+                    resolved_verdict_binding("provider", "certificate"),
                 ),
                 missing_argument_names=("file",),
             ),
@@ -965,12 +965,12 @@ def _auth_check(report: WizardStatusReport) -> _DiagnosticCheck:
                 default="Authentication provider %{provider} has no ready session",
                 provider=report.auth_provider,
             ),
-            precondition_verdict=_diagnostic_action_verdict(
+            precondition_verdict=diagnostic_action_verdict(
                 condition_id="diagnostics.auth.session.ready",
                 evidence_id="diagnostics.auth.session.observation",
                 values={"login_ready": False, "provider": report.auth_provider},
                 action_id="operator.auth.login",
-                argument_bindings=(_resolved_verdict_binding("provider", report.auth_provider),),
+                argument_bindings=(resolved_verdict_binding("provider", report.auth_provider),),
             ),
         )
     return _DiagnosticCheck(

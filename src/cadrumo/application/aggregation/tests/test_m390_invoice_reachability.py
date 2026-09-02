@@ -40,7 +40,7 @@ import pytest
 
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import bundled_authority
-from .._modelo_bindings_invoice_iva import _INVOICE_LEDGER_SCREEN_BINDINGS
+from .._modelo_bindings_invoice_iva import INVOICE_LEDGER_SCREEN_BINDINGS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -74,8 +74,8 @@ def test_the_invoice_versus_ledger_screen_now_covers_m390() -> None:
     screen, because what matters is that M390 has an ENTRY -- a screen that ran
     but compared an empty binding set would pass this call and guard nothing.
     """
-    assert Modelo.M390.value in _INVOICE_LEDGER_SCREEN_BINDINGS
-    assert _INVOICE_LEDGER_SCREEN_BINDINGS[Modelo.M390.value]
+    assert Modelo.M390.value in INVOICE_LEDGER_SCREEN_BINDINGS
+    assert INVOICE_LEDGER_SCREEN_BINDINGS[Modelo.M390.value]
 
 
 def test_the_two_screened_modelos_cover_the_same_concepts() -> None:
@@ -89,7 +89,7 @@ def test_the_two_screened_modelos_cover_the_same_concepts() -> None:
     """
     stripped = {
         modelo: sorted(str(binding).removeprefix(f"modelo-{modelo}-").removeprefix("iva-") for binding in bindings)
-        for modelo, bindings in _INVOICE_LEDGER_SCREEN_BINDINGS.items()
+        for modelo, bindings in INVOICE_LEDGER_SCREEN_BINDINGS.items()
     }
 
     assert stripped[Modelo.M303.value] == stripped[Modelo.M390.value]

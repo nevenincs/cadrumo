@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -287,7 +287,7 @@ class RoutedStealthEvasion:
 
 
 @asynccontextmanager
-async def opened_http_boundary() -> AsyncIterator[LocalHttpBoundary]:
+async def opened_http_boundary() -> AsyncGenerator[LocalHttpBoundary]:
     boundary = LocalHttpBoundary()
     try:
         yield boundary

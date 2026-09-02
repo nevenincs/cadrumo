@@ -108,7 +108,7 @@ class RentaLedgerAggregationIssueReason(StrEnum):
     The five upstream filter rejections (``UNSUPPORTED_DIRECTION``,
     ``UNSUPPORTED_CURRENCY``, ``UNCLASSIFIED_BUSINESS_STATE``,
     ``PERSONAL_TRANSACTION``, ``OUTSIDE_PERIOD``) are shared with
-    :class:`~application.aggregation._iva_ledger.IvaLedgerAggregationIssueReason`
+    :class:`~application.aggregation.iva_ledger.IvaLedgerAggregationIssueReason`
     through :mod:`._shared_issue_reasons`. ``UNSUPPORTED_PERIOD`` is a
     Renta-only refusal raised against quarter-level requests; the
     remaining values describe Renta-specific deductibility checks.
@@ -272,7 +272,7 @@ def _resolve_residence_ccaa(
         return None
 
 
-def _resolve_iva_deduction_ratio(
+def resolve_iva_deduction_ratio(
     *,
     bucket_id: str,
     ejercicio: int,
@@ -294,7 +294,7 @@ def _resolve_iva_deduction_ratio(
        whole-entity (``sector_id=None``) entry for ``ejercicio``: a ``GENERAL``
        or ``ESPECIAL`` regime entry contributes its in-force provisional
        percentage (LIVA art. 104.Uno + 105.Uno) as a ``0``-``1`` ratio, mirroring
-       the resolution :func:`~application.aggregation._iva_ledger._active_prorrata_apportionment`
+       the resolution :func:`~application.aggregation.iva_ledger._active_prorrata_apportionment`
        already applies on the M303 side -- the SAME percentage that governed
        what this ejercicio's ledger rows actually recovered through IVA, so the
        two filings stay consistent for the same ejercicio. A ``NINGUNA`` regime,
@@ -367,7 +367,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
     :func:`aggregate_renta_ledger_expenses` (defaulting to the empty
     registry-provisioned layer, :func:`resolve_region_category_profiles`).
 
-    Also derives the activity's IVA-deduction ratio (:func:`_resolve_iva_deduction_ratio`)
+    Also derives the activity's IVA-deduction ratio (:func:`resolve_iva_deduction_ratio`)
     from the bucket's ``iva.regime`` profile fact and its
     :class:`~domain.prorrata_register.ProrrataRegister`, so the non-recoverable
     share of input IVA joins the IRPF-deductible cost basis (PGC NRV 12.ª) for
@@ -403,7 +403,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
     invoices = invoices_repository.load()
     residence_ccaa = _resolve_residence_ccaa(bucket_id=bucket_id, profile_record=profile_record)
     resolved_ejercicio = profile_year if profile_year is not None else period.filing_year
-    iva_deduction_ratio = _resolve_iva_deduction_ratio(
+    iva_deduction_ratio = resolve_iva_deduction_ratio(
         bucket_id=bucket_id,
         ejercicio=resolved_ejercicio,
         profile_record=profile_record,

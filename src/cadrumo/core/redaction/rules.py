@@ -73,6 +73,7 @@ from ..hashing import sha256_hex as _sha256_hex
 from ..iban import IBAN_SHAPE_RE as _IBAN_SHAPE_RE
 from ..iban import iban_mod_97 as _iban_mod_97
 from ..iban import normalise_iban as _normalise_iban
+from ..type_guards import is_object_dict, is_object_list, is_object_tuple
 
 ALWAYS_REDACT_KEY_TERMS: frozenset[str] = frozenset(
     {
@@ -802,15 +803,15 @@ def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> ob
         for rule in rules:
             result_str = _apply_one(rule, result_str)
         return result_str
-    if isinstance(value, dict):
+    if is_object_dict(value):
         redacted: dict[object, object] = {}
         for item_key, item_value in value.items():
             redacted_key = redact_structured(item_key, rules=rules) if isinstance(item_key, str) else item_key
             redacted[_unique_mapping_key(redacted_key, redacted)] = redact_structured(item_value, rules=rules)
         return redacted
-    if isinstance(value, list):
+    if is_object_list(value):
         return [redact_structured(item, rules=rules) for item in value]
-    if isinstance(value, tuple):
+    if is_object_tuple(value):
         return tuple(redact_structured(item, rules=rules) for item in value)
     return value
 
@@ -966,7 +967,7 @@ def _redact_structured_for_cli_output(
         return value
     if isinstance(value, str):
         return _redact_cli_string(value, reveal_identifiers=reveal_identifiers)
-    if isinstance(value, dict):
+    if is_object_dict(value):
         redacted: dict[object, object] = {}
         for item_key, item_value in value.items():
             redacted_key = (
@@ -981,11 +982,11 @@ def _redact_structured_for_cli_output(
                 reveal_identifiers=reveal_identifiers,
             )
         return redacted
-    if isinstance(value, list):
+    if is_object_list(value):
         return [
             _redact_structured_for_cli_output(item, key=key, reveal_identifiers=reveal_identifiers) for item in value
         ]
-    if isinstance(value, tuple):
+    if is_object_tuple(value):
         return tuple(
             _redact_structured_for_cli_output(item, key=key, reveal_identifiers=reveal_identifiers) for item in value
         )

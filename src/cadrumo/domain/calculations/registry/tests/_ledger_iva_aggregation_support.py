@@ -7,7 +7,7 @@ from decimal import Decimal
 from functools import lru_cache
 from typing import Final
 
-from .....application.calculations._iva_compensation_annual_partition import (
+from .....application.calculations.iva_compensation_annual_partition import (
     resolve_iva_compensation_annual_partition_binding_values,
 )
 from .....application.calculations.m303_carry_ingress import normalize_m303_carry_observation_envelope

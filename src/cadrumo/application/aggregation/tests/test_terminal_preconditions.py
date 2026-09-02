@@ -336,7 +336,7 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
                 "payment_status": PaymentStatus.PAID,
             },
         )
-        screened = modelo_bindings_module._ScreenedInvoiceIva(deduction_authority_missing=(invoice,))
+        screened = modelo_bindings_module.ScreenedInvoiceIva(deduction_authority_missing=(invoice,))
         expected_facts = {
             "modelo": "303",
             "filing_year": "2025",
@@ -346,7 +346,7 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
             "missing_binding_count": 0,
         }
     else:
-        screened = modelo_bindings_module._ScreenedInvoiceIva(
+        screened = modelo_bindings_module.ScreenedInvoiceIva(
             observations=(
                 IvaLedgerObservation(
                     ledger_id="invoice-unmatched",
@@ -376,7 +376,7 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
     with pytest.raises(AggregationValidationError) as raised:
         _raise_if_screened_invoice_iva_would_be_silent(
             context=context,
-            screened_bindings=modelo_bindings_module._INVOICE_LEDGER_SCREEN_BINDINGS["303"],
+            screened_bindings=modelo_bindings_module.INVOICE_LEDGER_SCREEN_BINDINGS["303"],
             screened=screened,
             transaction_binding_values={},
             prorrata_apportionment=None,

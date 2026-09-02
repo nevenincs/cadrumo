@@ -25,8 +25,8 @@ import pytest
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.hashing import sha256_hex
 from .....tests.path_obstruction import obstructed_path
-from .._local import LocalFileSystemProvider, _sidecar_filename
 from ..errors import OutboundStorageError
+from ..local import LocalFileSystemProvider, _sidecar_filename
 from ..records import ProviderKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

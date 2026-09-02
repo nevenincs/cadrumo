@@ -190,11 +190,11 @@ def test_process_state_rebuild_refuses_preexisting_public_coordinates(
     source_root = tmp_path / "source-root"
     registry_root.mkdir()
     source_root.mkdir()
-    identity = authority_module._canonical_authority_root_pair(  # pyright: ignore[reportPrivateUsage]  # process-boundary proof
+    identity = authority_module.canonical_authority_root_pair(  # process-boundary proof
         registry_root,
         source_root,
     )
-    domain = authority_module._authority_comparison_domain(identity)  # pyright: ignore[reportPrivateUsage]  # process-boundary proof
+    domain = authority_module._authority_comparison_domain(identity)  # process-boundary proof
     capture = RegistryAuthorityCapture(
         projection=cast(RegistryAuthorityProjection, object()),
         comparison_domain=domain,
@@ -244,18 +244,18 @@ def test_native_capture_refuses_a_coordinate_from_a_distinct_source_root_only(
     registry_root.mkdir()
     source_root.mkdir()
     alternate_source_root.mkdir()
-    owner_identity = authority_module._canonical_authority_root_pair(  # pyright: ignore[reportPrivateUsage]  # exact owner-domain proof
+    owner_identity = authority_module.canonical_authority_root_pair(  # exact owner-domain proof
         registry_root,
         source_root,
     )
-    foreign_identity = authority_module._canonical_authority_root_pair(  # pyright: ignore[reportPrivateUsage]  # exact owner-domain proof
+    foreign_identity = authority_module.canonical_authority_root_pair(  # exact owner-domain proof
         registry_root,
         alternate_source_root,
     )
-    owner_domain = authority_module._authority_comparison_domain(  # pyright: ignore[reportPrivateUsage]  # exact owner-domain proof
+    owner_domain = authority_module._authority_comparison_domain(  # exact owner-domain proof
         owner_identity
     )
-    foreign_domain = authority_module._authority_comparison_domain(  # pyright: ignore[reportPrivateUsage]  # exact owner-domain proof
+    foreign_domain = authority_module._authority_comparison_domain(  # exact owner-domain proof
         foreign_identity
     )
     capture = RegistryAuthorityCapture(

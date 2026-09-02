@@ -19,14 +19,14 @@ work is worse than one that does not run, because the artefact then carries the
 race forward as fact and the next reader has no way to tell.
 
 See Also:
-    :mod:`dev.quality.registry_authority_consumer_census`
+    the registry authority consumer scan
         One of the generators this guards.
 """
 
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Iterator, Sequence
+from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -69,7 +69,7 @@ def tree_fingerprint(root: Path, *, roots: Sequence[str] = _SOURCE_ROOTS) -> str
 
 
 @contextmanager
-def refuse_if_tree_moves(root: Path, *, roots: Sequence[str] = _SOURCE_ROOTS) -> Iterator[None]:
+def refuse_if_tree_moves(root: Path, *, roots: Sequence[str] = _SOURCE_ROOTS) -> Generator[None]:
     """Run a generation and refuse its output if the tree moved underneath it.
 
     A file that DISAPPEARS mid-body is reported as the same refusal, not as an

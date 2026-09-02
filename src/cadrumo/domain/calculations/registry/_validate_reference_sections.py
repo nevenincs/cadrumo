@@ -6,7 +6,7 @@ Per-section walkers that traverse the typed-ID fields of a
 to accumulate dangling-reference diagnostics.
 
 See Also:
-    :func:`domain.calculations.registry._validate_references.check_all_id_references`
+    :func:`domain.calculations.registry.validate_references.check_all_id_references`
         Snapshot-level referential-integrity gate that invokes these walkers.
     :mod:`cadrumo.domain.calculations.registry._validate_reference_checker`
         Accumulator that owns the per-kind typed-id sets used here.

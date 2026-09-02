@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import re
 import unicodedata
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Annotated, Final, Literal
@@ -436,7 +436,7 @@ def _cell_indices(cell: str) -> tuple[int, int]:
 
 
 @contextmanager
-def _ooxml_cell_reader(source_path: Path) -> Iterator[Callable[[str, str], object]]:
+def _ooxml_cell_reader(source_path: Path) -> Generator[Callable[[str, str], object]]:
     from openpyxl import load_workbook
 
     workbook = load_workbook(source_path, read_only=True, data_only=True)
@@ -453,7 +453,7 @@ def _ooxml_cell_reader(source_path: Path) -> Iterator[Callable[[str, str], objec
 
 
 @contextmanager
-def _legacy_xls_cell_reader(source_path: Path) -> Iterator[Callable[[str, str], object]]:
+def _legacy_xls_cell_reader(source_path: Path) -> Generator[Callable[[str, str], object]]:
     """Read evidence cells out of a legacy binary XLS design.
 
     AEAT still publishes many diseños de registro in the pre-OOXML format, and
@@ -748,7 +748,7 @@ def _is_numeric_aeat_type(aeat_type: str) -> bool:
     an empty profile satisfied exhaustive coverage completely.
 
     Matched on an accent-stripped stem for the same reason
-    ``_naturaleza_or_none`` is: AEAT does not spell consistently, and every
+    ``naturaleza_or_none`` is: AEAT does not spell consistently, and every
     unmatched spelling is a field that silently escapes review.
     """
     normalised = unicodedata.normalize("NFKD", aeat_type.strip(" .")).encode("ascii", "ignore").decode("ascii").lower()

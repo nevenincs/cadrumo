@@ -226,7 +226,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_STATE_FREE,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._config._root_cli", "config_root")),
+        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.config._root_cli", "config_root")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("cadrumo.entrypoints.cli._config_help_payloads", "ConfigRootResult"),

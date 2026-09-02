@@ -102,9 +102,9 @@ class TestStderrRunEventFilter:
     """
 
     def test_filter_drops_run_event_records(self) -> None:
-        from ...logging import _DropRunEventFilter
+        from ...logging import DropRunEventFilter
 
-        filt = _DropRunEventFilter()
+        filt = DropRunEventFilter()
         cases = (
             (_record_with_optional_run_event(message="plain"), True),
             (_record_with_optional_run_event(message="run event", run_event=object()), False),

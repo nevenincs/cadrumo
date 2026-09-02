@@ -21,7 +21,7 @@ from __future__ import annotations
 import pytest
 
 from ..record_design import extract_record_design
-from ..record_design_pdf_state import _PdfParseState, _PdfSheetResult, _recovered_record_identity
+from ..record_design_pdf_state import PdfParseState, _PdfSheetResult, _recovered_record_identity
 from ..record_design_schema import RecordDesignField, RecordDesignSheet
 from .test_every_bundled_design_is_read_or_reported import _bundled_designs
 
@@ -95,7 +95,7 @@ def test_two_bodies_claiming_one_page_both_stay_anonymous() -> None:
     is the exact failure the unidentified-body report exists to surface. Leaving
     both anonymous keeps them on the worklist where a reader can adjudicate.
     """
-    state = _PdfParseState(source_label="collision.pdf")
+    state = PdfParseState(source_label="collision.pdf")
     for index in (1, 2):
         body = RecordDesignSheet(
             name=f"<unidentified body {index}>",

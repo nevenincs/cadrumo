@@ -36,9 +36,9 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices.errors import InvoicePersistenceError
 from ....domain.invoices.models import InvoiceCatalogue
 from .._modelo_bindings_invoice_iva import (
-    _screened_invoice_iva_observations,
+    screened_invoice_iva_observations,
 )
-from .._modelo_bindings_invoice_iva_refusal import _raise_if_invoice_iva_would_be_silent
+from .._modelo_bindings_invoice_iva_refusal import raise_if_invoice_iva_would_be_silent
 from .._source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -88,7 +88,7 @@ def test_the_screen_records_that_it_could_not_read_the_catalogue() -> None:
     where the information exists and is thrown away. Anything downstream can only
     report what the screen chose to carry.
     """
-    screened = _screened_invoice_iva_observations(
+    screened = screened_invoice_iva_observations(
         context=_context(),
         period=Period.from_year_and_code(_YEAR, _PERIOD_CODE),
         invoice_repository=_UnreadableInvoiceCatalogue(),
@@ -108,7 +108,7 @@ def test_the_silence_guard_carries_the_degradation_to_its_caller() -> None:
     judgement at all, and returning quietly is the outcome that reads as "checked
     and fine".
     """
-    report = _raise_if_invoice_iva_would_be_silent(
+    report = raise_if_invoice_iva_would_be_silent(
         context=_context(),
         period=Period.from_year_and_code(_YEAR, _PERIOD_CODE),
         transaction_binding_values={},
@@ -142,7 +142,7 @@ def test_a_readable_empty_catalogue_is_not_reported_as_degraded() -> None:
         def save(self, catalogue: InvoiceCatalogue) -> None:
             raise NotImplementedError("the screen under test reads the catalogue and never writes it")
 
-    screened = _screened_invoice_iva_observations(
+    screened = screened_invoice_iva_observations(
         context=_context(),
         period=Period.from_year_and_code(_YEAR, _PERIOD_CODE),
         invoice_repository=_EmptyCatalogue(),

@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from pydantic import SecretStr
 
 from ._bootstrap_exempt import is_bootstrap_exempt
-from ._config.secure_input import MachineSecretPayload
 from .command_spec import CommandSpecNode, ProfileAuthenticationPosture, ProfileSecretSpec
+from .config.secure_input import MachineSecretPayload
 
 
 class ProfileAuthenticationSecrets(MachineSecretPayload):

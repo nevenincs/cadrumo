@@ -481,3 +481,35 @@ def test_encrypted_revision_match_is_not_tautological_over_resolver_identity() -
         evidence_verifier=cast(Any, object()),
     )
     assert not contributor_authority.encrypted_revision_matches(cast(Any, proof(connection)))
+
+
+def test_design_constant_ownership_is_matched_on_owner_id_not_resolver_id(tmp_path: Path) -> None:
+    """A design-constant source enrolls through `owner_id`, the field its row actually carries.
+
+    `CalculationRouteDesignConstantSourceOwnership` is a sibling of the manual
+    pseudo-owner, not a resolver row: it carries `owner_id`, never `resolver_id`.
+    Narrowing the union on the manual row alone routed the design constant into
+    the resolver branch, where reading `.resolver_id` raised `AttributeError`
+    instead of deciding enrollment. Both pseudo-owners are matched here so a
+    future third sibling cannot silently re-open the same hole.
+    """
+    source_ownership = build_calculation_route_source_ownership_catalogue()
+    authority = LiveSourceConnectivityProofAuthority(
+        source_ownership=source_ownership,
+        workflows=_workflow_catalogue(*_WORKFLOW_PATHS),
+        calculation_revisions=cast(Any, _RevisionRepository(_revision(calculation_revision_id="a" * 64))),
+        evidence_verifier=RepositoryRootEvidenceDigestVerifier(repository_root=tmp_path),
+    )
+    for pseudo_owner, source_kind, source_ref in (
+        (source_ownership.design_constant, BindingSourceKind.DESIGN_CONSTANT, "design_constant:dc-0001"),
+        (source_ownership.manual_input, BindingSourceKind.MANUAL_INPUT, "manual_input:mi-0001"),
+    ):
+        connection = SourceConnectivityConnectionIdentity(
+            candidate_id=f"pseudo.{pseudo_owner.owner_id}",
+            source_kind=source_kind,
+            source_ref=source_ref,
+            resolver_id=pseudo_owner.owner_id,
+            calculation_revision_id="a" * 64,
+        )
+        assert authority.source_is_enrolled(connection), pseudo_owner.owner_id
+        assert not authority.source_is_enrolled(connection.model_copy(update={"resolver_id": "not-the-owner"}))

@@ -1,6 +1,6 @@
 """Collaboration bucket-event audit-tag emission: real encrypted-catalogue proofs.
 
-Exercises :mod:`~application.modelo._review_package_collab_audit` against
+Exercises :mod:`~application.modelo.review_package_collab_audit` against
 a REAL encrypted :class:`~adapters.persistence.storage.SecureObjectRepository`-backed
 :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository`
 (:func:`~tests.secure_sql.isolated_runtime_profile` -- a genuine
@@ -59,7 +59,9 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
-from .._review_package_collab_audit import (
+from .._review_package_review_only_workspace import open_review_only_workspace
+from ..review_package import verify_review_package
+from ..review_package_collab_audit import (
     emit_collab_package_counter_signed_event,
     emit_collab_package_decrypted_event,
     emit_collab_package_encrypted_event,
@@ -67,8 +69,6 @@ from .._review_package_collab_audit import (
     emit_collab_recipient_removed_event,
     emit_collab_review_only_workspace_opened_event,
 )
-from .._review_package_review_only_workspace import open_review_only_workspace
-from ..review_package import verify_review_package
 from ..review_package_counter_sign import counter_sign_review_package
 from ..review_package_recipient_encryption import (
     decrypt_review_package_for_recipient,

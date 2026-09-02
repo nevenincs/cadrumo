@@ -14,7 +14,7 @@ from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.profile_grounding import binding_profile_keys
 from ...aggregation import AtribucionMemberSourceResolver
-from .._data_inventory import _LIVE_OBSERVATION_SOURCE_KINDS, _profile_keys_for_bindings
+from ..data_inventory import _LIVE_OBSERVATION_SOURCE_KINDS, _profile_keys_for_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

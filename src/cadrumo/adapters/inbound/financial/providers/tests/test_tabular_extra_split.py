@@ -112,7 +112,7 @@ def _probe_worker(
 
         result: _ProbeResult = {"extra_available": optional_extra_available(LLM_EXTRA)}
         if case == "known":
-            from .._detection import detect_provider
+            from ..detection import detect_provider
 
             provider = detect_provider(_KNOWN_LAYOUT)
             result["provider"] = type(provider).__name__ if provider else None

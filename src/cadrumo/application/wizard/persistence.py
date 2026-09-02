@@ -30,7 +30,8 @@ if TYPE_CHECKING:
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.descendant_relacion import DescendantRelacion
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR
-from ...core.parsing import parse_bool, parse_iso8601_date
+from ...core.parsing import parse_bool
+from ...core.parsing.dates import parse_iso8601_date
 from ...core.setup_answers import register_project_answers as _register_project_answers
 from ...core.time.clock import today_madrid
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord

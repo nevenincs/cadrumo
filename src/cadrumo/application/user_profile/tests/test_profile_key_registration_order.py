@@ -81,7 +81,7 @@ def test_the_domain_accessor_still_refuses_an_unregistered_registry() -> None:
         [
             sys.executable,
             "-c",
-            "from cadrumo.domain.contribuyente import profile_keys\nprofile_keys()\n",
+            "from cadrumo.domain.contribuyente.keys import profile_keys\nprofile_keys()\n",
         ],
         capture_output=True,
         text=True,

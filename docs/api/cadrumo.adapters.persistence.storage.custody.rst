@@ -15,7 +15,6 @@ Submodules
 
    cadrumo.adapters.persistence.storage.custody._capsule_data
    cadrumo.adapters.persistence.storage.custody._capsule_filesystem
-   cadrumo.adapters.persistence.storage.custody._filesystem_primitives
    cadrumo.adapters.persistence.storage.custody._inventory
    cadrumo.adapters.persistence.storage.custody._kdf_attestation
    cadrumo.adapters.persistence.storage.custody._kdf_codec
@@ -34,6 +33,7 @@ Submodules
    cadrumo.adapters.persistence.storage.custody.envelope
    cadrumo.adapters.persistence.storage.custody.errors
    cadrumo.adapters.persistence.storage.custody.filesystem
+   cadrumo.adapters.persistence.storage.custody.filesystem_primitives
    cadrumo.adapters.persistence.storage.custody.kdf_supervision
    cadrumo.adapters.persistence.storage.custody.label_head_models
    cadrumo.adapters.persistence.storage.custody.label_head_repository

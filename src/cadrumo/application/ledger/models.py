@@ -35,8 +35,8 @@ from ...core.parsing import (
     IsoCurrencyCode,
     normalise_iso_3166_alpha2_jurisdiction,
     normalise_iso_4217_currency,
-    parse_iso8601_date,
 )
+from ...core.parsing.dates import parse_iso8601_date
 from ...core.period import Period
 from ...core.prorrata_exclusions import Art104TresExclusion
 from ...core.text_bounds import NonEmptyStr

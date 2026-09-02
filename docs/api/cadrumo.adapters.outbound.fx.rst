@@ -13,4 +13,4 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.adapters.outbound.fx._ecb_provider
+   cadrumo.adapters.outbound.fx.ecb_provider

@@ -12,7 +12,7 @@ row is authored to project cleanly through the three aggregation pipelines:
 
 | Pipeline | Module | Feeds |
 | --- | --- | --- |
-| IVA ledger | `application/aggregation/_iva_ledger.py` | M303 / M390 |
+| IVA ledger | `application/aggregation/iva_ledger.py` | M303 / M390 |
 | Renta expenses | `application/aggregation/_renta_ledger.py` | M100 |
 | Renta income | `application/aggregation/_renta_income_ledger.py` | M130 |
 

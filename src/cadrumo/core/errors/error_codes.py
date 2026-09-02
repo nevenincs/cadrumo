@@ -196,7 +196,8 @@ def register(code: ErrorCode) -> ErrorCode:
     return code
 
 
-from .registry.declared_codes import _ALL_DECLARED_ERROR_CODES
+from ..type_guards import is_object_mapping
+from .registry.declared_codes import ALL_DECLARED_ERROR_CODES
 
 
 def _build_declared_code_map(rows: tuple[tuple[str, ErrorCode], ...]) -> Mapping[str, ErrorCode]:
@@ -209,7 +210,7 @@ def _build_declared_code_map(rows: tuple[tuple[str, ErrorCode], ...]) -> Mapping
     return MappingProxyType(declared)
 
 
-_DECLARED_CODE_BY_QUALNAME: Mapping[str, ErrorCode] = _build_declared_code_map(_ALL_DECLARED_ERROR_CODES)
+_DECLARED_CODE_BY_QUALNAME: Mapping[str, ErrorCode] = _build_declared_code_map(ALL_DECLARED_ERROR_CODES)
 ERROR_REGISTRY: Mapping[str, ErrorCode] = MappingProxyType(_ERROR_REGISTRY_MUTABLE)
 
 
@@ -275,7 +276,7 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode | None:
         # _DECLARED_CODE_BY_QUALNAME is absent during the circular-import window;
         # get_registered_error_code drains _DEFERRED_BIND after loading.
         return None
-    if not isinstance(declared, Mapping):
+    if not is_object_mapping(declared):
         raise RuntimeError("the declared error-code registry is not a mapping")
     qualname = _qualname(error_type)
     code = declared.get(qualname)

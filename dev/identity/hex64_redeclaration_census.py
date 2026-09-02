@@ -51,7 +51,7 @@ from dataclasses import asdict, dataclass
 from enum import StrEnum
 from typing import Final
 
-from ..quality.cli_action_census import production_sources
+from ..quality.repository_sources import production_sources
 
 #: The canonical home. A declaration here is the definition, not a bypass.
 CANONICAL_HOME: Final[str] = "src/cadrumo/core/hex.py"

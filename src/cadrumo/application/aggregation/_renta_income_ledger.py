@@ -864,7 +864,7 @@ def _classify_income_transaction(
 
     # taxable_base carries the IVA-exclusive base imponible when set; it
     # feeds the taxable_base_sum fact path for the rendimiento-neto binding.
-    evidence, evidence_refusal = _renta_income_evidence._sales_invoice_evidence_payload(
+    evidence, evidence_refusal = _renta_income_evidence.sales_invoice_evidence_payload(
         invoices=invoices,
         bucket_id=bucket_id,
         transaction=transaction,
@@ -888,7 +888,7 @@ def _classify_income_transaction(
     # retención derived from the undivided base stayed whole.
     taxable_base_amount: Decimal | None = None if declared_base is None else declared_base * proportion
 
-    withheld = _renta_income_evidence._income_withheld_amount(transaction, evidence=evidence)
+    withheld = _renta_income_evidence.income_withheld_amount(transaction, evidence=evidence)
 
     return RentaIncomeObservation(
         transaction_id=transaction_id,
@@ -1008,7 +1008,7 @@ def _income_business_proportion(transaction: Transaction) -> Decimal | None:
     RIRPF art. 95.1 (RD 439/2007) fixes the rate "sobre los ingresos íntegros
     satisfechos", a fact about the payment, carrying no affectation term at
     all. So an activity-tagged row is undivided on every figure, and because
-    ``_income_withheld_amount`` derives a retención for activity rows only,
+    ``income_withheld_amount`` derives a retención for activity rows only,
     every row that carries one is a row this returns ``1`` for.
     """
     if has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction):

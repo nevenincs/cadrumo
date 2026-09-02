@@ -42,13 +42,13 @@ from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
-from .._iva_ledger import resolve_iva_ledger_binding_values
 from .._modelo_bindings_invoice_iva import (
     _invoice_line_iva_observation,
     _reverse_charge_cuota_not_derivable,
     _screened_invoice_iva_result,
 )
 from .._modelo_bindings_invoice_iva_refusal import _uncovered_withheld_invoice_cuota
+from ..iva_ledger import resolve_iva_ledger_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

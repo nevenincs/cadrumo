@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -33,7 +33,7 @@ class DriveMediaEndpoint:
 
 
 @contextmanager
-def drive_media_endpoint(*, payload: bytes, status: int = 200) -> Iterator[DriveMediaEndpoint]:
+def drive_media_endpoint(*, payload: bytes, status: int = 200) -> Generator[DriveMediaEndpoint]:
     """Serve Drive media bytes through a real google-api-python-client resource."""
     requested_paths: list[str] = []
 
@@ -83,7 +83,7 @@ def drive_files_list_endpoint(
     *,
     pages: Sequence[Mapping[str, object]],
     status: int = 200,
-) -> Iterator[DriveFilesListEndpoint]:
+) -> Generator[DriveFilesListEndpoint]:
     """Serve ``files.list`` responses (optionally paginated) through a real client resource.
 
     ``pages`` is served in order, one JSON body per ``files.list`` call —

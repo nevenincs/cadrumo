@@ -48,7 +48,8 @@ from ...core.decimal.coercion import coerce_decimal, normalize_decimal_separator
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.parsing import IsoCurrencyCode, parse_iso8601_date
+from ...core.parsing import IsoCurrencyCode
+from ...core.parsing.dates import parse_iso8601_date
 from ...core.tabular import TabularSourceError, coerce_cell_text, normalize_tabular_bytes
 from ...core.workbook import FORMULA_CELL_REFUSAL, WorkbookCell, first_formula_cell_column
 from ...domain.invoices.errors import InvoiceValidationError

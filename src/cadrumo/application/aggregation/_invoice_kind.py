@@ -3,7 +3,7 @@
 Every ledger surface that needs to know whether a bank movement represents an
 invoice the taxpayer *issued* or one they *received* asks this module, so the
 answer is decided once. Three private copies of the mapping previously lived in
-:mod:`~application.aggregation._iva_ledger`,
+:mod:`~application.aggregation.iva_ledger`,
 :mod:`~application.aggregation._evidence_advisory` and
 :mod:`~application.modelo._ledger_evidence_gate`, byte-identical and
 independently maintained.

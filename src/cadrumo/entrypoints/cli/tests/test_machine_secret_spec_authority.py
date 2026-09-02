@@ -10,7 +10,6 @@ import pytest
 
 from .._command_runtime import resolve_deferred_target
 from .._command_schema import command_registration_metadata
-from .._config.secure_input import MachineSecretPayload
 from .._verb_input_schema import build_verb_input_schemas
 from ..command_spec import (
     DeferredTarget,
@@ -20,6 +19,7 @@ from ..command_spec import (
     MachineSecretVariantSpec,
 )
 from ..command_specs import COMMAND_GRAPH
+from ..config.secure_input import MachineSecretPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -163,7 +163,7 @@ def test_duplicate_machine_secret_contract_is_refused() -> None:
     variant = MachineSecretVariantSpec(
         "passphrase",
         (MachineSecretFieldSpec("passphrase"),),
-        DeferredTarget("cadrumo.entrypoints.cli._config._custody", "LoginSecrets"),
+        DeferredTarget("cadrumo.entrypoints.cli.config.custody", "LoginSecrets"),
     )
     with pytest.raises(ValueError, match="variant keys must be unique"):
         MachineSecretSpec((variant, variant))

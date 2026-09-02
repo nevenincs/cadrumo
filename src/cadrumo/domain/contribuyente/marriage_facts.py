@@ -24,7 +24,7 @@ import re
 from datetime import date
 
 from ...core.errors.hierarchy import ProfileAnswerTypeError
-from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
+from ...core.parsing.dates import parse_iso8601_date as _parse_iso8601_date
 
 _MARRIAGE_DATE_PATH = "renta_taxpayer.marriage_date"
 _MONTH_START_PATH = "renta_taxpayer.marriage_month_start"

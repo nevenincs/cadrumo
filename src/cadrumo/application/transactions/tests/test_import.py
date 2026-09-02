@@ -1,4 +1,4 @@
-"""Focused unit tests for application.transactions._import.
+"""Focused unit tests for application.transactions.import_diagnostics.
 
 `import_ledger_with_diagnostics` orchestrates four classes of
 diagnostic over an imported batch of raw transactions:
@@ -44,8 +44,8 @@ from ....domain.transactions.models import (
     derive_transaction_id,
 )
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from .._import import LedgerImportResult, import_ledger_with_diagnostics
 from ..diagnostics import LedgerImportDiagnosticKind
+from ..import_diagnostics import LedgerImportResult, import_ledger_with_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

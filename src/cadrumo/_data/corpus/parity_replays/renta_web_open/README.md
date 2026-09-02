@@ -7,7 +7,7 @@ Renta WEB Open simulator at
 Each file is named after the scenario it grounds:
 `{scenario_id}.json`. The contents are loaded by
 `RentaWebOpenReplayDriver` (see
-`src/cadrumo/domain/calculations/registry/_renta_web_open_oracle.py`)
+`src/cadrumo/domain/calculations/registry/renta_web_open_oracle.py`)
 and consumed by `RentaWebOpenOracle.verify_payload` to compare the
 registry's computed casilla values against AEAT's open-simulator
 output for the same synthetic inputs.
@@ -48,7 +48,7 @@ inputs and must never replace the canonical casilla-id blocks.
 Capture is a live operation; it requires `AEAT_LIVE_TESTS_ENABLED=1`
 plus a Playwright runtime with network access to AEAT. Use the live
 capture entry point in
-`src/cadrumo/adapters/outbound/aeat/sede/_renta_web_open.py`
+`src/cadrumo/adapters/outbound/aeat/sede/renta_web_open.py`
 (`collect_renta_web_open_observation`). After capture, copy the
 observation into a JSON file named after the scenario id and commit
 both the payload and the Playwright trace.

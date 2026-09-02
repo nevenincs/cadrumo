@@ -212,21 +212,32 @@ class IvaCompensationWalletObservationProtocol(Protocol):
     @property
     def taxpayer_nif(self) -> str:
         """The NIF the wallet observation was captured for."""
+        ...
+
     @property
     def target_year(self) -> int:
         """The filing year the pending balance is carried into."""
+        ...
+
     @property
     def target_period(self) -> Period:
         """The period the pending balance is carried into."""
+        ...
+
     @property
     def total_pending(self) -> Decimal:
         """The cuota AEAT still shows as pending compensation."""
+        ...
+
     @property
     def source_url(self) -> object:
         """Where on the sede the observation was read from."""
+        ...
+
     @property
     def captured_at(self) -> datetime:
         """When the observation was taken."""
+        ...
 
 
 @runtime_checkable
@@ -241,24 +252,37 @@ class LocalIvaCompensationRecurrenceProtocol(Protocol):
     @property
     def amount(self) -> Decimal:
         """The recurrence amount the local record carries."""
+        ...
+
     @property
     def binding_id(self) -> object:
         """The binding this recurrence resolves for."""
+        ...
+
     @property
     def source_kind(self) -> str:
         """Which source family produced the recurrence."""
+        ...
+
     @property
     def source_modelo(self) -> object:
         """The modelo the recurrence was derived from."""
+        ...
+
     @property
     def source_filing_year(self) -> int:
         """The filing year the source belongs to."""
+        ...
+
     @property
     def source_periods(self) -> tuple[Period, ...]:
         """The periods the source covers."""
+        ...
+
     @property
     def resolved_at(self) -> datetime:
         """When the recurrence was resolved."""
+        ...
 
 
 @dataclass(frozen=True)

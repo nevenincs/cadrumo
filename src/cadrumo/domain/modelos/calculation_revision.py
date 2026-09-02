@@ -70,13 +70,13 @@ from ..calculations.row_casilla import DirectRowMaterializationProvenance, RowCa
 from ..calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from .calculation_revision_amendment import CalculationRevisionAmendmentIdentity, CalculationRevisionAmendmentKind
 from .calculation_revision_identity import (
-    _canonical_row_binding_values,
-    _canonical_row_casilla_provenance,
-    _canonical_row_casilla_values,
-    _canonical_row_source_identities,
-    _derive_calculation_revision_id_from_identity_inputs,
-    _outputs_for_hash_from_mapping,
-    _outputs_for_hash_from_observations,
+    canonical_row_binding_values,
+    canonical_row_casilla_provenance,
+    canonical_row_casilla_values,
+    canonical_row_source_identities,
+    derive_calculation_revision_id_from_identity_inputs,
+    outputs_for_hash_from_mapping,
+    outputs_for_hash_from_observations,
 )
 from .calculation_revision_m303_handoff import (
     M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
@@ -273,7 +273,7 @@ def derive_calculation_revision_id(
     cleared_casilla_ids: Sequence[CasillaId] = (),
 ) -> str:
     """Return the deterministic SHA-256 id for a calculation attempt."""
-    return _derive_calculation_revision_id_from_identity_inputs(
+    return derive_calculation_revision_id_from_identity_inputs(
         calculation_revision_identity_inputs(
             work_unit_id=work_unit_id,
             input_values_by_casilla_id=input_values_by_casilla_id,
@@ -501,8 +501,8 @@ def _validate_observation_projection(revision: CalculationRevision) -> None:
             "source_refs, and formula provenance survive the domain boundary.",
         )
     if revision.observations:
-        projected = _outputs_for_hash_from_observations(revision.observations)
-        persisted = _outputs_for_hash_from_mapping(revision.casilla_values)
+        projected = outputs_for_hash_from_observations(revision.observations)
+        persisted = outputs_for_hash_from_mapping(revision.casilla_values)
         if projected != persisted:
             raise ModeloValidationError(
                 "casilla_values is inconsistent with the typed observations envelope: "
@@ -909,7 +909,7 @@ class CalculationRevision(BaseModel):
         if not isinstance(value, Mapping):
             raise ModeloValidationError("row_binding_values must be a binding -> row-index mapping")
         raw_mapping = TypeAdapter(dict[object, object]).validate_python(value)
-        return _canonical_row_binding_values(
+        return canonical_row_binding_values(
             raw_mapping,
             surface="row_binding_values",
         )
@@ -1031,9 +1031,9 @@ class CalculationRevision(BaseModel):
             payload.pop("row_casilla_values", None)
             payload.pop("row_casilla_provenance", None)
             return payload
-        payload["row_source_identities"] = _canonical_row_source_identities(self.row_source_identities)
-        payload["row_casilla_values"] = _canonical_row_casilla_values(self.row_casilla_values)
-        payload["row_casilla_provenance"] = _canonical_row_casilla_provenance(self.row_casilla_provenance)
+        payload["row_source_identities"] = canonical_row_source_identities(self.row_source_identities)
+        payload["row_casilla_values"] = canonical_row_casilla_values(self.row_casilla_values)
+        payload["row_casilla_provenance"] = canonical_row_casilla_provenance(self.row_casilla_provenance)
         return payload
 
 
@@ -1073,7 +1073,7 @@ def calculation_revision_identity_inputs_from_revision(
 
 def derive_calculation_revision_id_from_revision(revision: CalculationRevision) -> str:
     """Derive a :class:`~CalculationRevision` id from its complete canonical input set."""
-    return _derive_calculation_revision_id_from_identity_inputs(
+    return derive_calculation_revision_id_from_identity_inputs(
         calculation_revision_identity_inputs_from_revision(revision),
     )
 

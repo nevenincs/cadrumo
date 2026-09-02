@@ -5,11 +5,11 @@ from __future__ import annotations
 from ....core.period import Period
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
 from ....domain.transactions.models import TransactionCatalogue
-from .._iva_ledger import (
+from ..iva_ledger import (
     IvaLedgerAggregation,
     IvaLedgerProrrataApportionment,
 )
-from .._iva_ledger import (
+from ..iva_ledger import (
     aggregate_iva_ledger_observations as _aggregate,
 )
 

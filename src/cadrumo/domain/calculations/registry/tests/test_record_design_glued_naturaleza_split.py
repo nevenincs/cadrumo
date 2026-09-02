@@ -30,7 +30,7 @@ import pytest
 
 from .....core.resources.bundled_data import bundled_path
 from ..record_design import extract_record_design
-from ..record_design_pdf_repairs import _split_glued_naturaleza_rows
+from ..record_design_pdf_repairs import split_glued_naturaleza_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -76,7 +76,7 @@ def test_the_glued_row_is_separated_when_it_continues_the_previous_row() -> None
         "171 1706 1 Num C Agrup. interes economico y UTES.",
     )
 
-    split = _split_glued_naturaleza_rows(lines)
+    split = split_glued_naturaleza_rows(lines)
 
     assert split[1].startswith("170 1697 9 An C ")
     assert split[0] == lines[0]
@@ -95,7 +95,7 @@ def test_a_glued_row_that_does_not_continue_is_left_alone() -> None:
         "170 1699 9 AnC A mangled description",
     )
 
-    assert _split_glued_naturaleza_rows(lines) == lines
+    assert split_glued_naturaleza_rows(lines) == lines
 
 
 def test_the_damaged_description_is_carried_through_unchanged() -> None:
@@ -106,6 +106,6 @@ def test_the_damaged_description_is_carried_through_unchanged() -> None:
         f"170 1697 9 AnC {damaged}",
     )
 
-    split = _split_glued_naturaleza_rows(lines)
+    split = split_glued_naturaleza_rows(lines)
 
     assert split[1] == f"170 1697 9 An C {damaged}"

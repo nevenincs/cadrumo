@@ -22,6 +22,7 @@ point composes.
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, ClassVar, override
@@ -50,7 +51,7 @@ from .theme import (
 from .widgets import ContentDataTable, ContentScroll
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator, Mapping
+    from collections.abc import Callable, Mapping
 
 type FormRebuild = Callable[[Mapping[str, str]], FormPage]
 """Recomputes a page from the answers given to it so far."""
@@ -342,7 +343,7 @@ this so the same call opens a page on the host instead.
 
 
 @contextmanager
-def presenting_forms_through(presenter: FormPresenter) -> Iterator[None]:
+def presenting_forms_through(presenter: FormPresenter) -> Generator[None]:
     """Route form presentation through ``presenter`` for this context.
 
     A context variable rather than an argument because the callers that

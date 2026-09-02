@@ -65,7 +65,7 @@ from ....domain.prorrata_register.register import ProrrataRegister
 from ....domain.submission.models import ModeloDraftStatus
 from ...aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
 from ...calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
-from .._export import _filing_producer_values, _render_layout, export_draft, render_filing_envelope
+from ..export import _filing_producer_values, _render_layout, export_draft, render_filing_envelope
 from ..export_envelope import FilingEnvelopeRenderRequest
 from ..producer_snapshot import (
     FilingElectionFacts,

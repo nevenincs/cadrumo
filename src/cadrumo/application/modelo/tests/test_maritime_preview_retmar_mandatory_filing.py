@@ -25,12 +25,12 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.calculations._maritime_exemption_service import (
+from ....application.calculations.maritime_exemption_service import (
     resolve_maritime_exemption,
     retmar_mandatory_filing,
 )
 from ....domain.renta.maritime_exemption import MaritimeWorkerFacts, ProfileCompletenessError
-from .._maritime_preview import ModeloMaritimeExemptionPreview
+from ..maritime_preview import ModeloMaritimeExemptionPreview
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

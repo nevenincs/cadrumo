@@ -18,6 +18,7 @@ from ....adapters.persistence.storage.custody.records import (
 )
 from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from ....adapters.persistence.storage.master_key.bucket_session import BucketSession
 from ....application.state_projection import _build_active_profile
 from ....application.user_profile.capsule_record import ProfileRecordSession
 from ....application.user_profile.lifecycle import ProfileCapsuleLifecycle
@@ -246,7 +247,7 @@ def test_health_observes_current_or_degraded_state_without_provider_or_recovery_
     previous_profile = sys.getprofile()
     sys.setprofile(observe_filesystem_calls)
     instant = datetime.now(UTC)
-    ready_custody_session = master_key.BucketSession.open_resumed(
+    ready_custody_session = BucketSession.open_resumed(
         bucket_id=_PROFILE_ID,
         dek=_DEK,
         idle_minutes=15,

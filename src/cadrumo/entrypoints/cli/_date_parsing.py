@@ -26,7 +26,7 @@ def _parse_iso_date(
     translation_key: str = "cli.common.errors.invalid_iso_date",
     default: str | None = None,
 ) -> _date:
-    from ...core.parsing import parse_iso8601_date
+    from ...core.parsing.dates import parse_iso8601_date
 
     message = tr(
         translation_key,

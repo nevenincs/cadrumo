@@ -276,7 +276,7 @@ check-relative-imports:
 # Verify the core facade, import-edge, and no-shim architecture invariants.
 [group('static-checks')]
 check-architecture:
-    @uv run --no-sync pytest -q -n0 dev/tests/test_import_hygiene_gate.py dev/tests/test_import_edge_integrity_gate.py dev/tests/test_facade_export_gate.py
+    @uv run --no-sync pytest -q -n0 dev/tests/test_cross_package_private_imports.py dev/tests/test_import_edge_integrity_gate.py dev/tests/test_facade_export_gate.py
 
 # Verify dependency declarations for drift or unused packages. Silent on success.
 [group('static-checks')]
@@ -491,7 +491,7 @@ harness_exclusions := prepend("--ignore=", harness_members)
 # Run the fast test-framework ratchets for discovery, markers, skip/xfail, mock/test-double, monkeypatch, broad raises, bare except, and tautology drift.
 [group('testing')]
 test-ratchets:
-    @uv run --no-sync pytest -q -p no:cacheprovider -rsf dev/tests/test_test_inventory.py dev/tests/test_marker_integrity.py src/cadrumo/tests/test_relative_imports_only.py dev/tests/test_no_skip_xfail.py dev/tests/test_mock_inventory.py dev/tests/test_monkeypatch_inventory.py dev/tests/test_no_broad_exception_raises.py dev/tests/test_no_bare_except.py dev/tests/test_no_tautology.py --tb=short
+    @uv run --no-sync pytest -q -p no:cacheprovider -rsf dev/tests/test_test_inventory.py src/cadrumo/tests/test_relative_imports_only.py dev/tests/test_no_skip_xfail.py dev/tests/test_mock_inventory.py dev/tests/test_monkeypatch_inventory.py dev/tests/test_no_broad_exception_raises.py dev/tests/test_no_bare_except.py dev/tests/test_no_tautology.py --tb=short
 
 # The real-proof pass raises the per-test wall ceiling above the product suite's
 # 300 s ini default, for the reason `test-dev-ci` already states: this lane's

@@ -8,7 +8,7 @@ from decimal import Decimal
 import typer
 
 from ...application.calculations.iva_wallet_balance import query_iva_wallet_balance
-from ...application.modelo._iva_wallet_seed import (
+from ...application.modelo.iva_wallet_seed import (
     ModeloIvaWalletCorrectionNoRecordError,
     ModeloIvaWalletCorrectionSealedError,
     ModeloIvaWalletSeedNegativeAmountError,

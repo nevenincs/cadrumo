@@ -187,8 +187,8 @@ def _behavior_wrapper(spec: CommandSpec) -> Callable[..., object]:
         if context_parameter is not None and (
             spec.kind == "leaf" or (spec.kind == "group" and spec.invocation.terminal_behavior == "executable")
         ):
-            from ._config.secure_input import clear_staged_machine_secret_payloads
             from ._profile_authentication_gate import preflight_parsed_leaf
+            from .config.secure_input import clear_staged_machine_secret_payloads
 
             context = bound.arguments.get(context_parameter)
             if context is None or not hasattr(context, "find_root"):

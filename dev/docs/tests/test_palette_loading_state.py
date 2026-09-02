@@ -35,7 +35,7 @@ import http.server
 import socketserver
 import threading
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from functools import partial
 from pathlib import Path
@@ -88,7 +88,7 @@ class _SlowPagefindHandler(http.server.SimpleHTTPRequestHandler):
 
 
 @contextmanager
-def _serve(directory: Path, handler_cls: type) -> Iterator[tuple[socketserver.TCPServer, int]]:
+def _serve(directory: Path, handler_cls: type) -> Generator[tuple[socketserver.TCPServer, int]]:
     # Threading: the slow handler must delay only its own response, not stall
     # the page's other assets behind it.
     handler = partial(handler_cls, directory=str(directory))
