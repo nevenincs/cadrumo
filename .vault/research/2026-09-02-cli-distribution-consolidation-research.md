@@ -603,6 +603,25 @@ the same enumerate-your-subject weakness found five times elsewhere in this work
 The marker `uv build` leaves in the output directory was never at risk - a shell glob
 skips a dotfile - but it is the same class of passenger and the suffix rule covers both.
 
+### The smoke gate could have passed by proving nothing
+
+The publish path derives its smoke matrix from the stable runtime inventory and guarded
+the result with a non-empty-string test. `{"include":[]}` is a non-empty string. An
+inventory that yielded no stable rows would therefore emit a valid matrix expanding to
+zero jobs, and a matrix job with no combinations does not fail - so the smoke stage would
+report success having installed the artifact nowhere, and publication would proceed on
+that.
+
+The inventory currently yields two rows and six targets, so nothing was actually
+unproven. The defect is that the only thing standing between an empty inventory and an
+unproven publication was a test that could not tell the difference. It now counts the
+entries and refuses at zero, naming the reason.
+
+This is the third fail-open found in the release path in one pass, after a gate that
+enumerated deleted subjects and a completeness claim over an empty set. The shape is
+consistent: each measured something adjacent to what it claimed - a string's length, a
+file's presence, a namespace's contents - rather than the property itself.
+
 ### Not investigated
 
 Nothing outstanding for this decision.
