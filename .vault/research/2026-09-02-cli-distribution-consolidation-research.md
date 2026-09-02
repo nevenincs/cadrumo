@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:2348ef29c3c40aa1a832aedb25933ca958b20f26023e293680123ab1ce199103'
+body_hash: 'sha256:5fe50bb6da555f71e7dd36213192e7efcba1bc24e8ebb1e56721bf2430cd1cc8'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -622,6 +622,31 @@ This is the third fail-open found in the release path in one pass, after a gate 
 enumerated deleted subjects and a completeness claim over an empty set. The shape is
 consistent: each measured something adjacent to what it claimed - a string's length, a
 file's presence, a namespace's contents - rather than the property itself.
+
+### The release would have been cut and then refused by the product's own gate
+
+Six surfaces have to report one version before this product may release: the root
+project, both companion projects, the package initialiser, the release manifest, and the
+two exact pins binding the companions to the root. The blocking readiness check compares
+all six, and the cohort builder refuses a set of distributions that do not share a
+version.
+
+Release-please was configured to bump three of them. Its Python release type moves the
+root project version, the manifest, and - confirmed by an actual run rather than assumed
+- the initialiser's `__version__` without needing to be told. The two companion
+`pyproject.toml` files and the two `==` pins it never touched.
+
+The failure mode is the expensive one. Nothing refuses at configuration time: the release
+branch is written, the version bump is committed, the tag is cut, and only then does the
+product's own gate refuse a version that already exists and cannot be reminted. The tool
+and the gate disagreed about what a version is, and the tool goes first.
+
+Every surface outside the release type's own knowledge now carries the annotation the
+generic updater rewrites, and all four are configured. A gate compares the two sides
+directly - what the readiness check demands against what the tool is configured to move -
+so a new companion cannot be added without the versioning learning to bump it, and a
+configured path carrying no annotation is reported rather than silently written back
+unchanged.
 
 ### Not investigated
 

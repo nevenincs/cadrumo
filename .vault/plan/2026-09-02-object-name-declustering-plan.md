@@ -10,7 +10,7 @@ related:
   - '[[2026-09-02-object-name-declustering-reference]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:8ef3dfb4788ccb6a1d552880d66a1dc70436e485324ca3799a9ddb2bc1be0e41'
+body_hash: 'sha256:f6b7232c885a46aaf5c5b07184ce7c8df79af3ad4a4a89502bba5bab5197e521'
 ---
 
 <!-- RETIRED: S21, S22 -->
@@ -58,7 +58,7 @@ Implement controlled transformations, disposable current-tree rehearsal, and ide
 
 Implement syntax-aware edits whose changed paths and bytes are bounded by the reviewed manifest.
 
-- [ ] `W02.P04.S07` - Declare LibCST as a direct development dependency for controlled syntax-preserving Python edits; `pyproject.toml`.
+- [x] `W02.P04.S07` - Declare LibCST as a direct development dependency for controlled syntax-preserving Python edits; `pyproject.toml`.
 - [ ] `W02.P04.S08` - Refresh the locked dependency graph after the direct LibCST declaration; `uv.lock`.
 - [ ] `W02.P04.S09` - Implement bounded syntax-aware rename transformations with byte-precondition and allowlist enforcement; `dev/quality/object_name_transform.py`.
 - [ ] `W02.P04.S10` - Test exact edits, unsupported constructs, changed-path bounds, and byte-level refusal behavior; `dev/quality/tests/test_object_name_transform.py`.

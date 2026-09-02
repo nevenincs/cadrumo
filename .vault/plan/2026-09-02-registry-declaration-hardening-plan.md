@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:6b5044279752545dffcd5658cae2367c7fb04072e5018d170466f5288df0e6ef'
+body_hash: 'sha256:5234e6b9a61625ef6d0b32cf59be7255ccd6a972eac52f3133a2e625b8a81028'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -454,6 +454,8 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S192` - Apply the empty-population defence to this campaign's own gates, which two of them lacked; `dev/quality/tests/test_name_collision_dispositions.py,dev/quality/tests/test_default_lane_visibility.py`.
 - [x] `W06.P13.S193` - Establish that the empty filing export proof authority refuses rather than passing, and correct the enrolment Step to name its real blocker; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S194` - Establish that the closure test rewrite is blocked behind vector enrolment and record the ordering constraint; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S195` - Distinguish a crashed pytest worker from a failing assertion and re-run the affected path serially before concluding; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S196` - Sweep every recorded run in this campaign for lost-worker markers and establish that its headline numbers are from clean runs; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

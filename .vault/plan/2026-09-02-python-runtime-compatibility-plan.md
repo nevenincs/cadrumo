@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-python-runtime-compatibility-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:515ab580ee60486477752993d4b6c125d050ee0ab84cd2f0e7332bcb8b5cddab'
+body_hash: 'sha256:3aaa987afee5e0c6d44200007a58de6c2ecc94545040e879e891e198f1b9b6dd'
 ---
 
 <!-- RETIRED: S33, S35, S37, S39, S41, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 -->
@@ -77,7 +77,7 @@ Add a separately verdictable workflow without expanding protected CI or release-
 - [x] `P04.S58` - Invoke clean release-cohort construction through its package module; `dev/packaging/release_cohort.py`.
 - [x] `P04.S59` - Prove clean release-cohort subprocess imports remain package-correct; `dev/packaging/tests/test_release_cohort.py`.
 - [x] `P04.S62` - Scope hash enforcement without rejecting locally built cohort artifacts; `dev/packaging/release_cohort.py`.
-- [ ] `P04.S63` - Prove clean cohort construction accepts digest-bound local wheels; `dev/packaging/tests/test_release_cohort.py`.
+- [x] `P04.S63` - Prove clean cohort construction accepts digest-bound local wheels; `dev/packaging/tests/test_release_cohort.py`.
 
 ### Phase `P05` - align stable metadata release gates and documentation
 
@@ -91,6 +91,7 @@ Make stable support claims only after their blocking evidence passes.
 - [x] `P05.S38` - Document local runtime selection and source versus binary evidence; `CONTRIBUTING.md`.
 - [x] `P05.S40` - Document final-runtime promotion and classifier evidence; `RELEASING.md`.
 - [x] `P05.S42` - Add an inventory-driven local compatibility command; `justfile`.
+- [ ] `P05.S64` - Promote 3.14 classifier eligibility after source binary and artifact evidence; `dev/ci/python-runtime-matrix.json`.
 
 ## Parallelization
 

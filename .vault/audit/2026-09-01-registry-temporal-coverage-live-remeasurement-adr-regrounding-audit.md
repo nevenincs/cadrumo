@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:34581c6b8267e65059bd95c1e13bf703ab64e987162b5e42cd23f409642d2515'
+body_hash: 'sha256:f75d370555c19ed9013183f46beff0c14b376e879930f41d9d12f27207fe3972'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -4493,3 +4493,60 @@ suite green today. It would also convert a real absence of filing evidence into 
 test, in the one suite whose subject is whether real filing outcomes can be proven. The
 failure is more useful than the green would be, and it is the second time in this campaign
 that the honest move has been to leave a test failing and say precisely why.
+
+### A crashed worker is not a failing test, and this audit reported one as the other
+
+The filing suites were run and reported "1 failed, 7 passed", and that was recorded here as a
+failure. Reading the log rather than its summary line shows something different: worker
+`gw1` crashed while running the named test. The test did not fail an assertion. It stopped
+existing, along with however many tests were queued behind it on that worker.
+
+The tree says so itself, loudly, and the warning was in the output that was skimmed. A
+session hook prints that the counts describe only what came back, that a dying worker takes
+its remaining tests with it and they are not redistributed, and that the failure list must
+not be read as the set of things wrong because it is a subset of unknown size. The
+configuration backs it with `--max-worker-restart=0`, which makes a worker death terminal
+rather than silently retried.
+
+So the correct reading of that run is not "one test fails". It is "this run's results are
+unusable, and the affected path must be re-run serially" - which the hook states in plain
+words and which is now being done. The number of tests that never ran is not knowable from
+the log.
+
+This is the same error this campaign has documented in other people's work all campaign, in
+its most literal form: a summary line was trusted over the evidence beneath it. The specific
+habit that failed was the one already established here for exit codes - never read the
+wrapper's status, read the tool's own - and it does not go far enough. An exit code and a
+pass/fail tally are both summaries. When a run reports a failure, the failure's own text
+decides what happened, and a crash reads nothing like an assertion.
+
+Two things stand undamaged. The empty-proof refusal recorded in the previous finding was
+established by reading the code and its test, not by that run. And this campaign's own five
+gates were re-run against the concurrent campaign's latest commits and pass at 28 tests.
+
+### Auditing this campaign's own measurements for the defect just found in one of them
+
+Having recorded a crashed worker as a failing test, the obvious next question is how many of
+this audit's other numbers were taken from runs with the same defect. Every lane and suite
+run whose figures appear in these findings was re-read for the three markers a lost worker
+leaves: `node down`, `crashed while running`, and the hook's own `subset of unknown size`.
+
+Eight runs, zero markers. The three full-lane measurements that carry this campaign's
+headline numbers - 46 failures, then 36, then 36 against 978 passing - are clean, as are the
+conformance, declaration-gate, publication and generated-tree runs. The detection was
+confirmed against the one run that did crash, which carries three markers, so a zero here
+means the marker was absent rather than the check being blind.
+
+One integrity check was attempted and does not conclude, which is worth recording as
+carefully as the one that did. Comparing a run's reported total against a fresh collection
+would catch tests that vanished, and the lane path now collects 1,090 where the run reported
+1,014. That gap is not evidence of loss: this campaign and the concurrent one have both added
+tests since, and the tree is not the tree that run measured. A comparison against a moved
+baseline answers nothing, which is a lesson this audit recorded early about type-check
+burndowns and had to relearn here in a different material.
+
+The method changes accordingly. A run's own log must carry its collected count, so the
+comparison is between two numbers from the same invocation rather than between a remembered
+number and a later tree. Until then the crash-marker sweep is the available integrity signal,
+and it is a check on the run rather than on the result, which is the weaker of the two things
+worth knowing.

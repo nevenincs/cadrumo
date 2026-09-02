@@ -112,7 +112,10 @@ threshold matches, and the proportional co-tenant rule is implemented with the
 governing BOE sentence quoted at the implementation site in
 `domain/fincas/tier_resolver.py`.
 
-**Why not connected.** SEQUENCED, with a real modelling gap behind it. The
+**Why not connected.** SEQUENCED, on top of a deleted-caller origin. It had a
+caller: a full `aeat rental` command family covering fincas, contracts,
+expenses and the Anexo C aggregate, deleted in the May 2026 restructure and
+never replaced. It is now blocked forward as well. The
 source-connectivity census row `fincas.annual-aggregates` is
 `grounding_blocked`, and the plan that owns it hard-sequences fincas behind
 amortization, whose own promotion step is still open. The row's stated blocker
@@ -725,6 +728,232 @@ catalogue equals the constants it is built from, and nothing anywhere compares
 it against the live command tree. A group could drop a verb tomorrow and every
 test here would pass. What it needs is teeth, not wiring: one conformance test
 walking the live tree, with a defect-injection proof.
+
+## Capability whose downstream is already live
+
+### `adapters/inbound/borrador/`
+
+**What it is.** The Modelo 100 PDF reader for all three artefacts a taxpayer
+meets: the AEAT pre-filing borrador, a Renta Web predeclaración or simulación,
+and the post-filing declaración with its CSV stamp. It extracts printed casilla
+and value rows into a typed observation. An operator today cannot load their
+AEAT draft into the product at all.
+
+**How complete.** 745 implementation lines against 703 test lines. Artefact
+kind is auto-detected, extractors are year-keyed, a registry profile parse mode
+filters to a declared extraction profile's target casillas and fails below its
+coverage minimum, and source references derive from the PDF digest rather than
+the local path so no filesystem location is retained. One defect: the package
+initializer still documents a public API while exporting nothing, and every
+module inside is private, so the promotion campaign left it without a public
+defining module to import from.
+
+**Why not connected.** BUG. It had a caller. A `--from-borrador` flag on the
+filing command called the parser directly, and it is absent from the tree from
+May 2026 onward with no replacement; searching the whole history of the
+entrypoints and application trees for the parser turns up nothing since. The
+ratchet names borrador ingestion as the first member of what it calls the
+orphaned-domain cluster, product capability whose caller is gone.
+
+**What it adds.** This is the sharpest finding in the inventory, because
+everything downstream of it is already live and starved. The snapshot record,
+its encrypted namespace and its repository are reachable. The binding module is
+reachable and enrolled in the calculation source mesh, resolving prefilled
+bindings with typed provenance stamped onto the durable calculation revision.
+The CLI ships three borrador commands. And nothing in production ever
+constructs a snapshot: the repository appears only in tests.
+
+So the operator has three commands that read a store nothing can fill, and a
+prefill tier that can never fire. Connecting the parser turns "type every
+Modelo 100 casilla by hand" into "load the AEAT draft and let the engine check
+it", and it is the only path to the borrador-sourced provenance the revision
+record is already designed to carry.
+
+**Wiring needed.** Promote the package to public defining modules, since the
+initializer must stay inert and cannot re-export, then add a capture verb
+following the established import-file flow that parses and calls the existing
+repository. A local PDF is an import, not a pull, which is why the command set
+has pull on the remote lanes and nothing here.
+
+## The independent oracle, and the registry row that names it
+
+### `sede/renta_web_open.py`, `sede/_renta_web_open_safety.py`, `registry/renta_web_open_oracle.py`
+
+**What it is.** An independent-oracle parity check for Modelo 100. The driver
+opens AEAT's public no-authentication Renta WEB Open simulator, fills a
+synthetic identification profile, applies casilla overrides and scrapes back
+AEAT's own computed summary; the oracle compares those values field by field
+against the engine's and returns a match, mismatch or unverifiable verdict.
+
+**How complete.** 1,537 lines across the three modules, registry-grounded and
+legally referenced. Crucially it ships a replay path as well as a live one,
+with five bundled fixtures varying by autonomous community, so the oracle can
+run offline with no browser and no network. The safety layer is unusually
+thorough: every click routes through a target check against a Spanish
+forbidden-action denylist, dialogs auto-dismiss, and navigation toward
+presenting, signing or paying raises before the request leaves the browser.
+Part of the mechanism is already reachable, since the remote state guard
+special-cases this oracle to select its browser-action patterns.
+
+**Why not connected.** OVERSIGHT. Searching the entire history of the
+entrypoints and application trees for the collection entry point returns
+nothing; this trio never had a production caller. The ratchet lists it as its
+own cluster under a heading that calls the file a backlog rather than an
+endorsement.
+
+This is the registry row that names an unreachable consumer. The Modelo 100
+revision 2025 application link declares the portal surface, names the driver
+module as its consumer, sets `requires_snapshot = true`, and carries both a
+legal reference and a source reference. The consumer field is typed as a
+free-form string, and nothing imports it, resolves it, or checks the module
+exists. So shipped, legally referenced registry data asserts a consumer the
+product cannot reach, and no gate objects.
+
+**What it adds.** High value, of a kind nothing else supplies. The grounding
+rule requires cross-checking against an independent official example or a
+separately implemented oracle, and states that expected values copied from the
+implementation under test are not independent evidence. This is that oracle for
+the largest and most complex modelo, and the bundled replays make it usable as
+a routine offline gate. It removes the risk that the engine and AEAT's own
+calculator diverge silently, which is exactly the defect class that reaches a
+taxpayer as a wrong filing. The regional spread in the fixtures exercises the
+autonomous-community variation that is hardest to get right.
+
+**Wiring needed.** Two levels, and the first is nearly free: wire the replay
+path into the existing parity audit lane, offline and with no AEAT contact,
+which makes all three modules reachable. Separately, add a validator resolving
+every declared consumer to an importable module, which would have caught this
+row on the commit that orphaned it. Expect that red on arrival, so it lands
+second. The live driver is a third, larger step needing operator-initiated
+invocation.
+
+### `adapters/outbound/aeat/verify/`
+
+**What it is.** Read-only cotejo verification of an AEAT secure verification
+code against the Sede: open the viewer keyed by that code, read the response,
+and answer whether AEAT confirms the document valid.
+
+**How complete.** 322 lines against 266 test lines covering malformed-code
+refusal, hostile host and route rejection, session ownership and cleanup, POST
+refusal, and an opt-in live round trip. Read-only by construction and guarded
+to the single reviewed URL.
+
+**Why not connected.** EXPLICIT DECISION, with a citation. It had a caller,
+dropped in the same restructure, but re-attachment is a recorded deferral
+rather than an oversight: an accepted decision record names the authenticity
+check as a deferred increment that can stamp a result onto the captured
+snapshot. The plan that record governs completed without it.
+
+**What it adds.** Moderate, real and cheap. It converts "the product holds a
+PDF that says it is a justificante" into "AEAT confirms this justificante is
+genuine and unaltered". The live justificante lane already persists captures
+and the decision record names a missing-verification gate. It is unrelated to
+the existing verify command family, which covers identity checks; cotejo has no
+surface at all.
+
+**Wiring needed.** One real import from the justificante capture service,
+stamping the result onto the persisted snapshot. The increment is already
+scoped in the accepted record.
+
+### The einvoice trio
+
+**What it is.** A reader for the taxpayer's own SII and VERI\*FACTU submissions
+as a batch of declared records, the schema derivation behind it, and a
+projection of one record onto the single-counterparty ledger shape.
+
+**How complete.** 768 lines against 381 test lines. The mandatory-element set
+is derived from the bundled schemas at runtime rather than transcribed, through
+the same hardened parser every other document uses, with the real schema engine
+validating the derivation independently. The walk handles what the schemas
+force and a sample would not reveal: an absent minimum occurrence meaning
+mandatory, extension inheritance, and elements inside a choice not being
+individually required. Classification is per record, cancellations are refused
+rather than coerced into invoices, zero recipients is valid for a simplified
+invoice, and multi-recipient records refuse by name with each party enumerated.
+
+**Why not connected.** OVERSIGHT, self-documented. The reader's docstring says
+it has no caller and that this is a recorded gap rather than an open question,
+and no caller ever existed. Note this is not an explicit decision: the
+docstring records the gap and names the intended consumer, which was then
+written as a second unreachable module, so the pair closes a loop connecting to
+nothing.
+
+**What it adds.** Modest today, and the honest answer is that the value depends
+on work that does not exist. Production already recognises these files by shape
+and refuses them cleanly with a message saying they carry no structured invoice
+record. So wiring the reader upgrades a refusal to a capability rather than
+fixing a wrong answer. The capability it unlocks is declared-versus-recorded
+reconciliation: proving what you told AEAT matches what your books say. Both
+docstrings are emphatic that these records must not enter evidence extraction,
+since a record the filer produced is not evidence of what a counterparty
+billed, so the wiring must reach a reconciliation surface that has not been
+built.
+
+**Wiring needed.** The smallest reachable step routes the recognised shapes to
+the batch reader with an explicit filing-artefact classification, which makes
+all three modules reachable and turns a generic refusal into an accurate one.
+The full reconciliation lane needs its own decision record.
+
+## The domain singles, ranked honestly
+
+Two carry real value. `domain/iva/place_of_supply.py` is the registry-backed
+table of which LIVA provision places an operation and whether that provision
+fixes the supply's nature, and its own docstring states the gap it closes: the
+reachable classifier carries those articles in Python comments only, so the
+regulatory content exists nowhere as data. Wiring it moves versioned regulatory
+content out of prose for the cross-border branches where the goods-services
+fork changes the answer for identical parties and amounts. `domain/iva/verify.py`
+is catalogue-level cross-record verification that every regulation carries a
+citation, that each citation resolves to a verified article-qualified
+reference, and that each claimed quotation actually occurs in the bundled
+corpus. Little as a product feature, genuine as a gate, and nothing currently
+runs that assertion over the shipped catalogue.
+
+`domain/modelos/iae_exemption.py` is narrow but concrete: the Modelo 840
+turnover exemption decides whether the taxpayer files at all, and its
+multi-year continuity proof already runs through the real observation store.
+
+Three are deletion candidates rather than wiring candidates, and saying so is
+the useful answer. `domain/renta/_substrate.py` is closed enums for Renta axes
+whose intended migration never happened, so it is a convention with no
+adherents; promote and migrate, or delete, but do not leave it in a third
+state. `domain/manuals/rule_id.py` generates ids for a manual-rule extraction
+pipeline that does not run, and the bundled manuals are used through corpus
+text sidecars instead. `domain/calculations/registry/record_spec.py` is an
+encoding alias map that the production path bypassed: a typed enum in the
+fixed-width codec covers the export path and the layout check uses that enum
+directly, so a parallel alias map is a second normalisation mechanism rather
+than an asset.
+
+## What the repository already says about all this
+
+The ratchet baseline is not a neutral list. Its header calls itself a backlog
+rather than an endorsement and names two dominating clusters: the
+orphaned-domain cluster, product capability whose caller is gone, naming
+borrador ingestion, the fincas domain, the wizard flow surfaces and the filing
+sub-steps; and the sede and Renta WEB Open cluster, a live browser driver and
+its oracle which stand or fall together. That is the closest thing to a project
+position on these modules, and the position is that they should be resolved
+rather than exempted.
+
+One structural defect appears twice, on two independent registry surfaces. The
+application link's consumer field is an unvalidated free-form string, and the
+connectivity census has a thorough locator checker that never sees the live
+manifest. In both cases shipped declarations point at modules nobody verifies
+exist.
+
+## Ranked by what reaches the operator soonest
+
+Borrador first: its entire downstream is already live and starved, so the
+parser is the one missing link in a chain that is otherwise complete. Then the
+Renta WEB Open replay path, the cheapest route to an independent oracle for the
+largest modelo, offline and needing no AEAT contact. Then the cotejo import,
+one call already authorised by an accepted decision record.
+
+Fincas is the largest capability but cannot honestly be promoted before its
+grounding steps close. The einvoice trio needs a reconciliation surface that
+does not exist. Of the singles, only the place-of-supply table and the IVA
+catalogue verifier are worth wiring.
 
 ## A fifth disposition the ratchet does not offer
 
