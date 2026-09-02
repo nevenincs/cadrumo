@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-python-runtime-compatibility-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:9d55a1fb449fcc895aeeb80d33a7d96d4445dbaf1cd6730c4f8cfdfee9eff7c2'
+body_hash: 'sha256:63d6bfad6d73cc696e880416a19d66b04a9ffd2ae769fbd9730e5be13292eb5d'
 ---
 
 <!-- RETIRED: S33, S35, S37, S39, S41, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 -->
@@ -31,7 +31,7 @@ Make metadata, inventory, and release-cohort boundaries authoritative.
 - [x] `P01.S01` - Change the root package floor to >=3.13 and preserve py313 static-analysis targets; `pyproject.toml`.
 - [x] `P01.S02` - Regenerate lock metadata without dependency upgrades; `uv.lock`.
 - [x] `P01.S03` - Add explicit stable and prerelease runtime records and classifier eligibility; `dev/ci/python-runtime-matrix.json`.
-- [ ] `P01.S04` - Parse and validate the runtime inventory and emit GitHub matrix JSON; `dev/ci/python_runtime_matrix.py`.
+- [x] `P01.S04` - Parse and validate the runtime inventory and emit GitHub matrix JSON; `dev/ci/python_runtime_matrix.py`.
 - [ ] `P01.S05` - Add detector-teeth tests for runtime inventory gaps duplicates and invalid states; `dev/ci/tests/test_python_runtime_matrix.py`.
 - [ ] `P01.S06` - Replace the stale Python ceiling assertion with the open-floor policy; `dev/audit/security.py`.
 - [ ] `P01.S07` - Update security-audit expectations for the open-ended floor; `dev/audit/tests/test_security.py`.
