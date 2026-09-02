@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:3f08161736f94f4b8bfc484cb200ae6f8e1f1ad4ae74ab1da7faa4b6f5e311a7'
+body_hash: 'sha256:a86478588855a4b7ddb8ffd03cb83493cd6ba86152b543f9c5b3228d8dc15805'
 ---
 
 # `cli-distribution-consolidation` plan
@@ -60,11 +60,11 @@ Replace bespoke orchestration with the sibling release-please and publish pair, 
 
 Merge the MCP console script into the product distribution and remove the two host-extension channels.
 
-- [ ] `P04.S11` - Move the MCP console script into the product distribution and assert it in the distribution smoke check; `pyproject.toml`.
-- [ ] `P04.S12` - Remove the harness distribution and its workspace membership; `src/cadrumo-harness/pyproject.toml`.
+- [x] `P04.S11` - Move the MCP console script into the product distribution and assert it in the distribution smoke check; `pyproject.toml`.
+- [x] `P04.S12` - Remove the harness distribution and its workspace membership; `src/cadrumo-harness/pyproject.toml`.
 - [x] `P04.S13` - Delete the host-extension channel artifacts and their acquisition lanes; `packaging/mcpb/build.py`.
-- [ ] `P04.S14` - Rewrite the agent connection guide around the installed console script; `docs/how-to/connect-an-agent.md`.
-- [ ] `P04.S15` - Unlist the superseded plugin from the marketplace descriptor; `packaging/marketplace/.claude-plugin/marketplace.json`.
+- [x] `P04.S14` - Rewrite the agent connection guide around the installed console script; `docs/how-to/connect-an-agent.md`.
+- [x] `P04.S15` - Unlist the superseded plugin from the marketplace descriptor; `packaging/marketplace/.claude-plugin/marketplace.json`.
 
 ### Phase `P05` - Collapse the full-screen surface into the application
 

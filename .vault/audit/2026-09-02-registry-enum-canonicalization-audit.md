@@ -718,6 +718,39 @@ the regression, named both, and cost nothing to run. A campaign whose verificati
 depended on a forty-minute suite would have reported completion and learned this much
 later, if at all.
 
+### three-sessions-share-one-worktree-and-this-one-swept-the-others | critical | The vanishing work is mutual, the git identity cannot separate us, and an earlier finding misattributed it
+
+An earlier finding said a peer session's commits dropped two of this campaign's
+promotions. The peer has since stated it has made no commits at all this session and
+has never edited the five files involved, and the evidence supports that: sixty-five
+commits landed after this campaign's own, every one under the same author identity, so
+authorship cannot distinguish which session produced any of them. A third writer is
+batch-committing the shared tree, and one of its commits lands three seconds after a
+commit carrying the peer's helper work. The attribution in that finding was a guess
+presented as a fact and is withdrawn.
+
+The real condition is worse and symmetric: three sessions are working in ONE worktree,
+not in worktrees of their own. This campaign's own commit swept the peer's uncommitted
+consumer-repointing three times -- a shared key helper across nine command-spec
+modules, a bucket identifier across six live CLI modules, and a record index. In each
+case the peer's new canonical definition survived, because a new file is added rather
+than reverted, while the consumer side went back. That leaves the worst available
+state: the shared helper and the duplicates it was written to replace, sitting side by
+side, with nothing failing to announce it. The peer found it only by re-running its own
+census and seeing two counts that had reached zero standing at nine and five.
+
+That failure mode is this campaign's central defect wearing someone else's clothes. A
+de-duplication effort whose consumer sweep is silently reverted produces exactly the
+duplication it exists to remove, and produces it invisibly, because a duplicate is not
+a crash.
+
+Two practices follow, and the second is the one that generalises. Sessions sharing a
+tree must not use a whole-tree commit, because a whole-tree commit in a shared tree is
+indistinguishable from a revert of everything uncommitted. And a campaign that measures
+its own progress must re-run its counter after any commit it did not make, since the
+count is the only thing that reports a silent revert -- no test failed for the peer, and
+none failed here either until the canonicalization gate went red.
+
 ## Recommendations
 
 Collapse the duplicate codec members to one, which is a correctness repair
