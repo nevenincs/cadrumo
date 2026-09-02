@@ -21,6 +21,7 @@ from typing import Literal
 import pytest
 
 from .....core.casilla_id import validated_casilla_id
+from ..schema_base import SettlementDirection
 from ..errors import RegistryValidationError
 from ..schema_verification import (
     DiscrepancyCause,
@@ -36,7 +37,7 @@ _SOURCE = ("aeat-dr-303-2026",)
 
 def _expectation(
     identifier: str,
-    totals: dict[Literal["ingresar", "devolver"], str],
+    totals: dict[SettlementDirection, str],
     *,
     computed: tuple[str, ...] = ("01",),
 ) -> VerificationExpectationDefinition:

@@ -168,6 +168,7 @@ from ...domain.calculations.registry.schema import ModeloDefinition as _ModeloDe
 from ...domain.calculations.registry.schema import ModeloRevision as _ModeloRevision
 from ...domain.calculations.registry.schema import RegistrySnapshot as _RegistrySnapshot
 from ...domain.calculations.registry.schema_base import EvidenceTier as _EvidenceTier
+from ...domain.calculations.registry.schema_base import EvidenceTierField as _EvidenceTierField
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition as _ExportLayoutDefinition
 from ...domain.calculations.registry.schema_input_kind import InputKind as _InputKind
 from ...domain.calculations.registry.schema_references import SourceReference as _SourceReference
@@ -656,8 +657,8 @@ class RevisionModelLawCoverage(ConformanceModel):
             from a non-filing inspection projection.
     """
 
-    satisfied_tiers: tuple[_EvidenceTier, ...]
-    gap_tiers: tuple[_EvidenceTier, ...]
+    satisfied_tiers: tuple[_EvidenceTierField, ...]
+    gap_tiers: tuple[_EvidenceTierField, ...]
     required_tier_gaps: tuple[_RequiredCoverageTier, ...]
     authority_scope: RevisionCoverageAuthorityScope = "filing"
     coordinates: tuple[tuple[int, str], ...] = Field(min_length=1)
