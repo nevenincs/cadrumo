@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
-
+from ...application.live.capture_mode import LiveCaptureMode, LiveCaptureModeValue
 from ...core.identity import AeatExpedienteId
 from ...core.json_contract import OutputSchema
 from ...core.period import Period
@@ -210,7 +209,7 @@ class FiledCaptureResult(OutputSchema):
     records.
     """
 
-    mode: Literal["single", "bulk"] = "single"
+    mode: LiveCaptureModeValue = LiveCaptureMode.SINGLE
     output_root: str
     modelo: str | None = None
     year: int | None = None

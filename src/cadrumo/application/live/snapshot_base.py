@@ -41,7 +41,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import datetime
 from enum import StrEnum
-from typing import Protocol, runtime_checkable
+from typing import Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
@@ -82,6 +82,14 @@ class SnapshotLifecycleState(StrEnum):
     ACTIVE = "active"
     SUPERSEDED = "superseded"
     DISCARDED = "discarded"
+
+
+SnapshotLifecycleStateValue = Literal[
+    SnapshotLifecycleState.ACTIVE,
+    SnapshotLifecycleState.SUPERSEDED,
+    SnapshotLifecycleState.DISCARDED,
+]
+"""The same lifecycle where a CLI row or payload must accept the plain token."""
 
 
 class SnapshotStateFilter(StrEnum):

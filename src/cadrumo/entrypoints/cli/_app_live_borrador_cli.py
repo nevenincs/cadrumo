@@ -17,6 +17,7 @@ import typer
 from ...application.live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotService
 from ...application.live.snapshot_base import (
     SnapshotLifecycleState,
+    SnapshotLifecycleStateValue,
     SnapshotStateFilter,
 )
 from ._app_live_borrador_payloads import (
@@ -35,7 +36,7 @@ class _BorradorRow(TypedDict):
     captured_at: str
     source_url: str
     binding_count: int
-    state: Literal["active", "superseded", "discarded"]
+    state: SnapshotLifecycleStateValue
 
 
 def borrador_100_list(ctx: typer.Context, state: SnapshotStateFilter = SnapshotStateFilter.ACTIVE) -> None:

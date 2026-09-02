@@ -8,6 +8,7 @@ modules own the durable records and the semantic mutations that refresh them.
 from __future__ import annotations
 
 from datetime import datetime
+from enum import StrEnum
 from typing import Literal
 from uuid import UUID
 
@@ -18,12 +19,33 @@ from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import validate_utc_aware
 
 
+class ProfileDeletionHoldOwner(StrEnum):
+    """Which duty keeps a profile from being deleted.
+
+    The two are not interchangeable and not ordered: a legal hold and a filing hold
+    can be present independently, and clearing one never clears the other.
+    """
+
+    LEGAL = "legal"
+    """A retention duty imposed by law."""
+
+    FILING = "filing"
+    """An obligation still open against a tax filing."""
+
+
+ProfileDeletionHoldOwnerValue = Literal[
+    ProfileDeletionHoldOwner.LEGAL,
+    ProfileDeletionHoldOwner.FILING,
+]
+"""The same owner for a strict projection or evidence field."""
+
+
 class ProfileDeletionHoldOwnerProjection(BaseModel):
     """Authenticated owner result consumed by custody deletion preflight."""
 
     model_config = STRICT_FROZEN_CONFIG
 
-    owner: Literal["legal", "filing"]
+    owner: ProfileDeletionHoldOwnerValue
     profile_id: UUID
     blocks_local_deletion: bool
     source_record_id: str = Field(min_length=3, max_length=256)

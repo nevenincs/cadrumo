@@ -26,6 +26,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
+from enum import StrEnum
 from typing import Literal
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
@@ -52,6 +53,27 @@ others did.
 """
 
 
+class M303CompensationBasis(StrEnum):
+    """Which figure a modelo 303 compensation carry was derived from."""
+
+    GENERATED = "generated"
+    """The compensation generated in the source period."""
+
+    RESULTADO = "resultado"
+    """The period's declared resultado."""
+
+    REFUNDED = "refunded"
+    """An amount already refunded, which cannot also be carried."""
+
+
+M303CompensationBasisValue = Literal[
+    M303CompensationBasis.GENERATED,
+    M303CompensationBasis.RESULTADO,
+    M303CompensationBasis.REFUNDED,
+]
+"""The same basis for a strict persisted payload field."""
+
+
 @dataclass(frozen=True, slots=True)
 class M303CompensationAvailableDerivation:
     """One policy-authoritative available-compensation result from filed casillas.
@@ -71,7 +93,7 @@ class M303CompensationAvailableDerivation:
 
     available: Decimal
     generated: Decimal
-    basis: Literal["generated", "resultado", "refunded"]
+    basis: M303CompensationBasisValue
     operand_refs: tuple[CasillaId, ...]
     operand_values: tuple[Decimal, ...]
 

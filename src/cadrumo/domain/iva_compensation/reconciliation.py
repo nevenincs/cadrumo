@@ -419,12 +419,12 @@ def _override_reconciliation_decision(ctx: _ReconciliationContext) -> IvaCompens
         selected_amount=override.amount,
         wallet_amount=ctx.wallet_amount,
         local_recurrence_amount=ctx.local_recurrence_amount,
-        override_amount=ctx.override.amount,
+        override_amount=override.amount,
         divergence="override",
         blocked=False,
         stale_wallet=ctx.stale_wallet,
         reason_identity=IvaCompensationDecisionReason.TAXPAYER_OVERRIDE,
-        operator_explanation=ctx.override.operator_explanation,
+        operator_explanation=override.operator_explanation,
         wallet_captured_at=ctx.wallet_captured_at,
     )
 

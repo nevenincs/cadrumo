@@ -644,7 +644,8 @@ def _batch_get_values(
         ),
         action="sheets.spreadsheets.values.batchGet",
     )
-    return response.get("valueRanges", []) or []
+    raw_ranges = response.get("valueRanges")
+    return [entry for entry in raw_ranges] if is_object_list(raw_ranges) else []
 
 
 def _raw_cell_value(value_ranges: list[_ValueRange], cursor: int) -> object:
@@ -933,7 +934,8 @@ def _batch_get_values_for_row_sets(
         ),
         action="sheets.spreadsheets.values.batchGet.row_sets",
     )
-    return response.get("valueRanges", []) or []
+    raw_ranges = response.get("valueRanges")
+    return [entry for entry in raw_ranges] if is_object_list(raw_ranges) else []
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource

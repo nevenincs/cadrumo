@@ -11,8 +11,7 @@ delegation live in :mod:`_modelo_work_wizard_cli`. Every payload here is an
 
 from __future__ import annotations
 
-from typing import Literal
-
+from ...application.modelo.work_wizard import ModeloWorkWizardPromptChannel
 from ...core.casilla_id import CasillaId
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr
@@ -22,7 +21,6 @@ from ._modelo_revision_payload_parts import CalculationRevisionCommandProjection
 #: Closed set of CLI input channels a wizard step resolves to: a direct
 #: ``--casilla`` override, a registry ``--binding`` override, or a
 #: ``--relation`` override.
-WizardPromptChannel = Literal["casilla", "binding", "relation"]
 
 
 class WizardPromptedCasillaPayload(OutputSchema):
@@ -38,7 +36,7 @@ class WizardPromptedCasillaPayload(OutputSchema):
     casilla_id: CasillaId
     number: str
     label: NonEmptyStr
-    channel: WizardPromptChannel
+    channel: ModeloWorkWizardPromptChannel
     """Either ``casilla`` (a direct ``--casilla`` override) or ``binding``/``relation``."""
     key: NonEmptyStr
     """The ``--casilla`` / ``--binding`` / ``--relation`` key supplied to the calculation."""

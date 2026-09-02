@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core.identity import PrefixedContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import validate_utc_aware
-from ..profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
+from ..profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection, ProfileDeletionHoldOwnerValue
 
 #: Current write version for :class:`ProfileCustodyHoldEvidence`. This format is
 #: REGENERABLE (see the campaign's nested-persisted-format-boundary ADR): its
@@ -146,7 +146,7 @@ class ProfileCustodyHoldEvidence(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     schema_version: Literal[1] = CUSTODY_HOLD_EVIDENCE_SCHEMA_VERSION
-    owner: Literal["legal", "filing"]
+    owner: ProfileDeletionHoldOwnerValue
     profile_id: UUID
     disposition: Literal["cleared", "held"]
     source_record_id: str = Field(min_length=3, max_length=256)
