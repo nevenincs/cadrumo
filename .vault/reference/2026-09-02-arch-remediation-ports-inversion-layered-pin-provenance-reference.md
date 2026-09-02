@@ -95,7 +95,7 @@ and the storage substrate they resolve through -
 
 Inbound-format consumption. Reading an externally authored format is
 inbound-adapter work and the application layer consumes the answer. Targets:
-`inbound.einvoice.parsers`, `.xml`, `.shape`, `.record_batch`,
+`inbound.einvoice.parsers`, `.xml`, `.shape`,
 `inbound.financial.providers.{base,csv,detection,ofx,pdf_n26,xlsx}`,
 `inbound.pdf.page_text_extraction`.
 

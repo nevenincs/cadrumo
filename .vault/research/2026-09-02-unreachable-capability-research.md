@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:e9d9c65d2f2c9522c7f08f4ebf7f9ce3d5c50c6fae734a00e1b75ac857b2c48d'
+body_hash: 'sha256:49173ffde3043dcd810abe721a0b5597f106ad7311a6856990cac5ab52919d6a'
 related: []
 ---
 
@@ -13,11 +13,14 @@ related: []
 
 A reachability audit proved that a large block of the `cadrumo` wheel cannot be
 reached from any shipped entrypoint. This research answers the next question:
-why does each of those modules exist. Deletion was explicitly out of scope. The
-finding that matters is that almost none of it is abandoned code — 38 of 91
-findings are complete capability that was never connected to a surface, and 16
-more are finished work waiting on one navigation decision. Only 10 findings
-across the whole tree are superseded or displaced.
+why does each of those modules exist. At the audit snapshot, deletion was
+explicitly out of scope. The live follow-up has since applied a deletion
+disposition to the producerless SII/VERI*FACTU reader trio; the historical
+classification below remains useful for the other findings. The finding that
+matters is that almost none of the remaining inventory is abandoned code — 38
+of 91 findings are complete capability that was never connected to a surface,
+and 16 more are finished work waiting on one navigation decision. Only 10
+findings across the whole tree are superseded or displaced.
 
 Ninety-one findings spanning 155 modules were classified individually against
 the live source, git history, the open plans, and the registry declarations.
@@ -86,11 +89,13 @@ operator. Ranked by value and readiness:
   independent oracle the calculation-grounding rule requires, and
   `aeat app live verify` is a ready host.
 - **SII and VERI\*FACTU batch ingestion**, `adapters/inbound/einvoice/record_batch.py`
-  with its schema derivation and `application/ledger/aeat_record_projection.py`.
-  All three are finished with refusal semantics for multi-recipient records, and
-  production already detects these files: `adapters/inbound/einvoice/shape.py:145`
-  recognises the batch shape and refuses to route it, because there is nowhere
-  to send it.
+  with its schema derivation and `application/ledger/aeat_record_projection.py`,
+  was an incorporation candidate at the audit snapshot. The live follow-up
+  retired all three producerless modules because no consumer was ever built.
+  The disposition does not remove the classifier: `adapters/inbound/einvoice/shape.py:145`
+  still recognises these filing-artifact shapes, and the evidence path refuses
+  them before rendered-document fallbacks. The bundled AEAT schemas remain
+  available as corpus/reference data.
 - **Setup-flow validation and grounding**, the four `application/wizard`
   modules. The most consequential is `flow_validators.py`: nothing calls
   `register_taxpayer_projection_validator`, so cross-field invariants on the

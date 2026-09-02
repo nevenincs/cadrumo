@@ -1528,3 +1528,34 @@ happened as one that did.
 Registry annotation-scope inline declarations fell from 72 to 69 fields. Blind-spot
 scope: 14 -> 11 member sets declared in more than one place. Package-wide annotation
 scope remains 1, still the M184/IVA false positive.
+
+## Finding 71 — a casilla has no title, and the type now says so
+
+`ModeloLocalizationField` already held four localizable fields. The two-field subset a
+CASILLA can carry was written out twice, and a further single-field narrowing twice more.
+
+`CasillaLocalizationField` now names the pair. A casilla has no title and no official
+name -- those belong to the modelo and its revision -- so keeping the narrowing narrow
+stops a caller asking for a casilla key that can never resolve. The single-field default
+is rooted as `Literal[ModeloLocalizationFieldKind.LABEL]` rather than widened.
+
+## Finding 72 — two rules stated three times each, declared none
+
+`export_value_policy.py` tested `{"0", "1"}` in a projector and again in a validator,
+and both error messages already spelled out "exactly ASCII 0 or 1". The rule was stated
+three times and declared nowhere. `SelectedUnselectedFlag` names it: the field is a
+checkbox, not a quantity, and the tokens carry meaning the digits do not.
+
+`_validate_semantic_role_axes.py` tested `{"1".."5"}` twice on adjacent lines, as the
+two halves of one comparison. Declared once as `_RELATED_PARTY_AXIS_ORDINALS`, and
+deliberately NOT an enum: these are positional indices into a record design, not names,
+and the set is closed by that design rather than by any domain meaning. Widening the
+design previously meant remembering to widen both halves of a single expression.
+
+The distinction between these two is the point. One vocabulary earned an enum because
+its tokens mean something; the other earned only a name because they do not. Promoting
+both to enums would have dressed an index up as a domain concept.
+
+Blind-spot scope: 11 -> 8 member sets declared in more than one place. Registry
+annotation-scope inline declarations hold at 69; package-wide annotation scope remains 1,
+the M184/IVA false positive.

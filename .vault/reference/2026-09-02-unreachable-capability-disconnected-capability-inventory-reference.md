@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:523cede8be3cb83f69b0046d6fafc4cda80c3bc197a4b19862cc7f3473c07fc0'
+body_hash: 'sha256:4dec4f72f5fc730bd675dd213116cceb9d8a16b579f9299a26dbc72c4b3ab8bc'
 related:
   - "[[2026-09-02-unreachable-capability-research]]"
 ---
@@ -17,12 +17,16 @@ related:
 An inventory of capability that is built, tested, and shipped inside the wheel,
 and that no console-script entrypoint can reach. It is not a dead-code list:
 the superseded and duplicated surfaces were retired earlier and are gone. What
-remains is, in the main, work that functions and was never connected.
+remains is, in the main, work that functions and was never connected. The
+einvoice reader trio described below was subsequently retired after its
+producerless status was confirmed; the live DocumentShape classifier and
+bundled AEAT schemas remain in place.
 
 The reachability facts come from `python -m dev.audit.unreachable_code`, which
 walks the import graph from the declared console scripts, the shipped
 `__main__.py` surfaces, and the sibling workspace distribution. At the time of
-writing it reports 49 findings spanning 86 modules.
+writing it reports 49 findings spanning 86 modules; the live follow-up removes
+the three-module einvoice reader finding from that backlog.
 
 Each entry answers five questions: what the capability is in tax terms, how
 complete it is, why it is not connected, what it adds to the filing product,
@@ -855,7 +859,7 @@ surface at all.
 stamping the result onto the persisted snapshot. The increment is already
 scoped in the accepted record.
 
-### The einvoice trio
+### The former einvoice trio — retired
 
 **What it is.** A reader for the taxpayer's own SII and VERI\*FACTU submissions
 as a batch of declared records, the schema derivation behind it, and a
@@ -871,12 +875,13 @@ individually required. Classification is per record, cancellations are refused
 rather than coerced into invoices, zero recipients is valid for a simplified
 invoice, and multi-recipient records refuse by name with each party enumerated.
 
-**Why not connected.** OVERSIGHT, self-documented. The reader's docstring says
-it has no caller and that this is a recorded gap rather than an open question,
-and no caller ever existed. Note this is not an explicit decision: the
-docstring records the gap and names the intended consumer, which was then
-written as a second unreachable module, so the pair closes a loop connecting to
-nothing.
+**Current disposition.** RETIRED. The reader, schema derivation, and
+single-counterparty projection had no production consumer and no reconciliation
+surface to build toward. The live tree deletes those three modules, their
+orphaned tests, and the producerless VERI*FACTU fixture rather than retaining a
+shipped dead path. This does not delete `DocumentShape`'s SII/VERI*FACTU
+classifiers or the bundled AEAT schemas: the evidence path still identifies
+these filing artifacts and refuses them before invoice fallbacks.
 
 **What it adds.** Modest today, and the honest answer is that the value depends
 on work that does not exist. Production already recognises these files by shape
@@ -889,10 +894,11 @@ since a record the filer produced is not evidence of what a counterparty
 billed, so the wiring must reach a reconciliation surface that has not been
 built.
 
-**Wiring needed.** The smallest reachable step routes the recognised shapes to
-the batch reader with an explicit filing-artefact classification, which makes
-all three modules reachable and turns a generic refusal into an accurate one.
-The full reconciliation lane needs its own decision record.
+**Historical wiring note.** The smallest possible wiring would have routed the
+recognised shapes to the batch reader with an explicit filing-artefact
+classification, but no reconciliation lane existed. That option is no longer
+the current disposition; a future reconciliation feature would need a new
+decision and implementation boundary.
 
 ## The domain singles, ranked honestly
 
@@ -951,9 +957,10 @@ largest modelo, offline and needing no AEAT contact. Then the cotejo import,
 one call already authorised by an accepted decision record.
 
 Fincas is the largest capability but cannot honestly be promoted before its
-grounding steps close. The einvoice trio needs a reconciliation surface that
-does not exist. Of the singles, only the place-of-supply table and the IVA
-catalogue verifier are worth wiring.
+grounding steps close. The former einvoice trio is retired; any future
+reconciliation surface would be a new capability rather than a wiring task.
+Of the singles, only the place-of-supply table and the IVA catalogue verifier
+are worth wiring.
 
 ## A fifth disposition the ratchet does not offer
 
