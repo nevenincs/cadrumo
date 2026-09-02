@@ -106,6 +106,7 @@ from .._paths import REPO_ROOT
 from ..quality.import_hygiene_scan import resolve_relative_import
 from .unreachable_code import (
     ShippedTreeSpec,
+    _is_test_path,
     _iter_python_files,
     _module_edges,
     _non_reference_nodes,
@@ -502,6 +503,16 @@ def _spelled_attributes(tree: ast.Module) -> frozenset[str]:
     return frozenset(names)
 
 
+def _loaded_names(tree: ast.Module) -> frozenset[str]:
+    """Bare identifier loads, used only where no import can bind the name."""
+    skipped = _non_reference_nodes(tree)
+    return frozenset(
+        node.id
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load) and id(node) not in skipped
+    )
+
+
 def _binds_surface(resolved: set[_Symbol], module: str, service: str) -> bool:
     return (module, service) in resolved
 
@@ -543,17 +554,26 @@ def _callers(
 
 
 def _outside_write_labels(spec: ShippedTreeSpec, surface: _SurfaceClass, verbs: _SurfaceVerbs) -> tuple[str, ...]:
-    """Non-shipped trees that write the surface, for labelling only."""
+    """Non-shipped trees that write the surface, for labelling only.
+
+    A label answers the reader's first question -- "then why does this look
+    alive?" -- and never clears the finding: neither ``tests`` nor ``dev/`` is
+    installed, so neither can fill a store for a user. The class name is
+    matched as a bare load here as well as an attribute, because the natural
+    spelling in a test is ``DeudasService().capture(...)``.
+    """
     labels: set[str] = set()
     write_verbs = frozenset(verbs.write)
     for corpus in spec.outside:
         for path in _iter_python_files(corpus.root):
+            if corpus.test_modules_only and not _is_test_path(path, spec.src_root):
+                continue
             try:
                 tree = _parse(path)
             except (OSError, SyntaxError, UnicodeDecodeError):
                 continue
             spelled = _spelled_attributes(tree)
-            if surface.node.name in spelled and spelled & write_verbs:
+            if surface.node.name in spelled | _loaded_names(tree) and spelled & write_verbs:
                 labels.add(corpus.label)
     return tuple(sorted(labels))
 
