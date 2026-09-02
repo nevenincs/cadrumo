@@ -1,31 +1,27 @@
 schema_version = 1
-inventory_digest = "sha256:0fe08d3dff00c9abbdfda3c916384c57dd4394402453724c401bc9097b63ef81"
+inventory_digest = "sha256:d30b815a0d3360087c3de7dac35603ba7b3517e32b18228a178d0d4a8bb4bc88"
 
 [[operations]]
-operation_id = "rename-dev-tui-surface-inventory"
-finding_id = "sha256:2adf2941c55a0c8041bf98cbfaa271e9f383db6975f97aaab01dd4239ad11ef6"
-operation_kind = "symbol-rename"
+operation_id = "rename-result-disposition-fragment-generator"
+finding_id = "sha256:185e22d79ce6fa25f26b4d2086037944c305aa0b206078537c8fb89484b0f026"
+operation_kind = "module-rename"
 disposition = "rename-distinct"
 lifecycle = "reviewed"
-old_locator = "function:dev.tui._harness.surfaces#binding=1"
-old_path = "dev/tui/_harness.py"
-new_locator = "function:dev.tui._harness.surface_inventory#binding=1"
-new_path = "dev/tui/_harness.py"
-owner = "dev-tui"
-rationale = "The function inventories every harness-driven visual surface; the responsibility-specific singular target distinguishes that catalogue operation from an individual surface."
-expected_reference_classes = ["definition", "static-import"]
-changed_paths = ["dev/tui/_harness.py", "dev/tui/cli.py"]
+old_locator = "module:dev.registry.generate_result_disposition_fragments#binding=1"
+old_path = "dev/registry/generate_result_disposition_fragments.py"
+new_locator = "module:dev.registry.result_disposition_fragment_generator#binding=1"
+new_path = "dev/registry/result_disposition_fragment_generator.py"
+owner = "dev-registry"
+rationale = "The module is the single generator responsible for result-disposition fragments; the target names that responsibility rather than plural output instances."
+expected_reference_classes = ["definition"]
+changed_paths = ["dev/registry/generate_result_disposition_fragments.py", "dev/registry/result_disposition_fragment_generator.py"]
 generator_commands = []
 focused_gates = [
-  ["uv", "run", "--no-sync", "pytest", "-q", "-n0", "dev/tui/tests/test_tui_visual_inventory.py"],
-  ["uv", "run", "--no-sync", "ruff", "check", "dev/tui/_harness.py", "dev/tui/cli.py"],
+  ["uv", "run", "--no-sync", "python", "-m", "dev.registry.result_disposition_fragment_generator"],
+  ["uv", "run", "--no-sync", "ruff", "check", "dev/registry/result_disposition_fragment_generator.py"],
 ]
-moves = []
+moves = [{ source = "dev/registry/generate_result_disposition_fragments.py", target = "dev/registry/result_disposition_fragment_generator.py" }]
 
 [[operations.preconditions]]
-path = "dev/tui/_harness.py"
-sha256 = "sha256:895b0b2c41742985578bb65d55ceeec2bf5e391923454269bd675fd00a05dd8d"
-
-[[operations.preconditions]]
-path = "dev/tui/cli.py"
-sha256 = "sha256:7b84e73ef33f148e4ce12cd11256da8ede3a28bccf36e2d4449ba21507bc4307"
+path = "dev/registry/generate_result_disposition_fragments.py"
+sha256 = "sha256:4eed2284f884c35c18242e230e88f45b350f792bccba10ac888741657414c6ad"
