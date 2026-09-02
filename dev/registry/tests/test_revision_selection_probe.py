@@ -124,7 +124,7 @@ def test_the_registry_still_refuses_a_genuinely_ambiguous_coordinate(
 
     from cadrumo.core.authority_grade import RegistryAuthorityGrade
 
-    with pytest.raises(Exception, match="[Aa]mbiguous"):
+    with pytest.raises(Exception, match=r"[Aa]mbiguous"):
         authority.admitted_revision_id(
             "308", filing_year=2011, period="AD-HOC", grade=RegistryAuthorityGrade.APPLICABILITY
         )

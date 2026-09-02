@@ -5,8 +5,9 @@ from types import SimpleNamespace
 
 import pytest
 
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 
 from ..analysis import m200_2024_sibling_remediation as remediation
 from ..analysis import m200_semantic_casilla_candidates as subject
@@ -66,12 +67,12 @@ def test_cli_check_refuses_stale_review_without_writing(monkeypatch, tmp_path: P
 
 def test_m200_2024_dp200018_00588_is_qualified_independently_of_dp200014b() -> None:
     """A repeated printed box number resolves through its 2024 source segment."""
-    snapshot = bundled_authority().snapshot("200", filing_year=2024, period="0A")
+    modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "200"))
     semantic_map = load_semantic_map(Path("dev/registry/mappings/modelo_200/2024"))
     entry = next(item for item in semantic_map.entries if item.export_field_id == "m200-2024.dp200018.f0172")
 
     assert entry.casilla_id == "DP200018:00588"
-    assert {"DP200018:00588", "DP200014B:00588"} <= set(snapshot.casillas)
+    assert {"DP200018:00588", "DP200014B:00588"} <= {item.id for item in modelo.revisions["2024"].casillas}
 
 
 def test_current_printed_identity_beats_sibling_casilla_identity() -> None:
