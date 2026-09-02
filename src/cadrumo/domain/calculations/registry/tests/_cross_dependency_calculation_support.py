@@ -7,12 +7,12 @@ from functools import cache
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_snapshot import build_snapshot
 from .....tests.registry_tree import bundled_registry_tree
 from ..bindings import CasillaObservation, RegistryModeloObservation
 from ..errors import NoRevisionForPeriodError
 from ..relations import RegistryFoldRequirement
 from ..schema import ModeloRevision
-from ..snapshot import build_snapshot
 
 _M202_CUOTA_BASE_CASILLA: CasillaId = validated_casilla_id("01", surface="_M202_CUOTA_BASE_CASILLA")
 _M200_CUOTA_DIFERENCIAL_CASILLA: CasillaId = validated_casilla_id(

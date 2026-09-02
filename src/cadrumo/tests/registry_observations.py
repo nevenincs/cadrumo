@@ -13,7 +13,7 @@ from ..core.authority_grade import RegistryAuthorityGrade
 from ..core.casilla_id import CasillaId
 from ..core.resources.bundled_data import bundled_path
 from ..domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from ..domain.calculations.registry.snapshot import build_snapshot
+from .registry_snapshot import build_snapshot
 from ..tests.registry_tree import bundled_registry_tree
 
 

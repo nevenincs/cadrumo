@@ -132,7 +132,7 @@ def replay_run(
     the research F1 gap so replay proves "the same JSON came out", not
     only "the same argv re-runs". The capture/canonicalise/mask/compare
     logic lives in the shared substrate primitive
-    (:mod:`cadrumo.core.observability.golden`); the operator golden gate
+    (:mod:`cadrumo.tests.golden_comparison`); the operator golden gate
     reuses the same primitive.
 
     Args:

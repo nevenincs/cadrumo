@@ -6,7 +6,7 @@ from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.convenio import load_convenio_authority
 from ....domain.calculations.registry.loader import load_registry_tree
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.snapshot import build_snapshot
+from ....tests.registry_snapshot import build_snapshot
 
 
 @pytest.fixture(scope="module")

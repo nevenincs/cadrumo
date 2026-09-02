@@ -20,7 +20,6 @@ from ...config_payloads import (
     ApoderadoConfigureResult,
     ApoderadoStatusResult,
 )
-from .._command_tree import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
@@ -52,7 +51,9 @@ def test_apoderado_status_fails_without_profile(tmp_path: Path) -> None:
 
 
 def test_apoderado_scopes_list() -> None:
-    result = invoke_typer_app(app, ["auth", "apoderado", "scopes", "list"])
+    # Through the ROOT app, for the reason the sibling case above records: the
+    # config subtree is never composed standalone in production.
+    result = invoke_typer_app(root_app, ["config", "auth", "apoderado", "scopes", "list"])
     assert result.exit_code == 0
     assert "GENERAL" in result.output
 

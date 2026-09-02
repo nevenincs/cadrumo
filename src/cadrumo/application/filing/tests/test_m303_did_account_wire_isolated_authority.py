@@ -39,7 +39,7 @@ from ....domain.calculations.registry.schema_exports import (
     FilingEnvelopePrefixRole,
 )
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.snapshot import build_snapshot
+from ....tests.registry_snapshot import build_snapshot
 from ....domain.deadlines.models import (
     ChargeAccount,
     IVARegime,
@@ -189,7 +189,7 @@ source_refs = ["{_SOURCE_REF}"]
 id = "test-owned-m303-page-did"
 record_type = "page_did"
 order = 1
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 required = true
 
@@ -255,7 +255,7 @@ source_refs = ["{_SOURCE_REF}"]
     revision = modelo.revisions[_REVISION_ID]
     layout = revision.export_layouts[0]
     record = layout.records[0]
-    assert record.encoding == "latin-1"
+    assert record.encoding == "iso-8859-1"
     assert record.line_ending == "none"
     assert tuple((field.offset, field.length) for field in record.fields) == tuple(
         (offset, length) for _ordinal, offset, length, _type_code, _content in _OFFICIAL_DID_ROWS
@@ -333,7 +333,7 @@ def _projection_rows_envelope_layout(
         id="test-owned-m303-projection-rows",
         record_type="REGIMEN_SIMPLIFICADO",
         order=1,
-        encoding="latin-1",
+        encoding="iso-8859-1",
         line_ending="none",
         required=required,
         repeat="projection_rows",

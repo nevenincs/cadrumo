@@ -6,11 +6,11 @@ import pytest
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.resources.bundled_data import bundled_path
+from ....tests.registry_snapshot import build_snapshot
 from ....tests.registry_tree import bundled_registry_tree
 from .authority import ValidatedRegistryAuthority, bundled_authority
 from .ids import RevisionId
 from .schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
-from .snapshot import build_snapshot
 
 
 @pytest.fixture(scope="session")

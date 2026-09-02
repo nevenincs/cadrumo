@@ -26,7 +26,7 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.export import ResolvedExportLayout, resolve_export_layout
 from ....domain.calculations.registry.schema_exports import ExportFieldDefinition
-from ....domain.calculations.registry.snapshot import build_snapshot
+from ....tests.registry_snapshot import build_snapshot
 from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
 from ..m145_communication_records import (
@@ -95,7 +95,7 @@ def test_export_m145_communication_record_renders_registry_fixed_width_payload(t
     birth_year = resolved.fields_by_id["modelo-145-dr-07-perceptor-anio-nacimiento"]
     assert isinstance(result, M145CommunicationExportResult)
     assert result.export_layout_id == resolved.layout.id
-    assert result.encoding == "latin-1"
+    assert result.encoding == "iso-8859-1"
     assert result.record_count == 1
     assert result.byte_length == _content_length(resolved)
     assert result.payload_sha256 == sha256(result.payload).hexdigest()

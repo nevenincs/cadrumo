@@ -22,12 +22,12 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_snapshot import build_snapshot
 from .._snapshot_internals import _SUBSTANTIVE_LAW_KINDS, collect_snapshot_ref_ids
 from .._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow
 from ..errors import RegistryValidationError
 from ..schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from ..schema_references import LegalReference
-from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

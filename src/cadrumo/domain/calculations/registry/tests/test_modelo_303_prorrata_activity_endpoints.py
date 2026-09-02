@@ -18,6 +18,7 @@ from .....core.modelo import Modelo
 from .....core.prorrata_register import ProrrataActivityRowType, ProrrataRegisterRegime
 from .....core.resources.bundled_data import bundled_path
 from .....domain.prorrata_register.register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry
+from .....tests.registry_snapshot import build_snapshot
 from .._validate import RegistryValidator
 from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import RegistryValidationError
@@ -27,7 +28,6 @@ from ..loader import load_catalogue_file
 from ..m303_prorrata_activity_projection import project_m303_prorrata_activity_rows
 from ..record_design import extract_record_design
 from ..schema_input_kind import InputKind
-from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -22,7 +22,7 @@ from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.snapshot import build_snapshot
+from ....tests.registry_snapshot import build_snapshot
 from ....domain.justificante import Justificante
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,

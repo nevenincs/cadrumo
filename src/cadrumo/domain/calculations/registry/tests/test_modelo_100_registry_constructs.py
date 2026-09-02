@@ -11,6 +11,7 @@ from pydantic import AnyUrl, ValidationError
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId
+from .....tests.registry_snapshot import build_snapshot
 from ....contribuyente.family_profile import RentaFamilyProfile
 from ....contribuyente.family_types import RentaAscendantProfile, RentaDescendantProfile
 from ....contribuyente.keys import PROFILE_KEYS
@@ -29,7 +30,6 @@ from ..remote_state_guard import (
 from ..schema import DataBindingDefinition, RegistrySnapshot
 from ..schema_input_kind import InputKind
 from ..schema_surfaces import CasillaDefinition
-from ..snapshot import build_snapshot
 from ._modelo_100_registry_support import (
     _DECLARATIONS_LISTING_URL,
     _MEMBER_GROUNDED_2025_CONSTRUCT_IDS,

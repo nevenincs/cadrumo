@@ -84,6 +84,7 @@ from .....core.aggregation import LedgerIncomeGrounding
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_snapshot import build_snapshot
 from ....iva.classification import InvoiceKind
 from ....iva.components import category_cuota_is_zero_by_law
 from ....iva.schema import IvaCategory
@@ -96,7 +97,6 @@ from ..ledger_renta_income_bindings import (
 )
 from ..schema import ModeloRevision
 from ..schema_input_kind import InputKind
-from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo
 from ._scenarios import (
     RegistryCalculationScenario,

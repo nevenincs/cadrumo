@@ -40,7 +40,7 @@ import pytest
 from sphinx.application import Sphinx
 from sphinx.errors import SphinxError
 
-from cadrumo.core.observability.golden import GOLDEN_MASK_FIELDS, differing_paths
+from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, differing_paths
 from cadrumo.tests.env_scope import scoped_env_var
 
 from ..sequences import (

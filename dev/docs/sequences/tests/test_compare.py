@@ -23,7 +23,7 @@ from typing import cast
 import pytest
 from pydantic import JsonValue
 
-from cadrumo.core.observability.golden import MASK_SENTINEL
+from cadrumo.tests.golden_comparison import MASK_SENTINEL
 
 from .. import (
     REPO_ROOT_TOKEN,

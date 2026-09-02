@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_snapshot import build_snapshot
 from ....categories.registry import resolve_category_profiles
 from ....categories.spending_category import SpendingCategory
 from ....renta.ledger_expenses import (
@@ -29,7 +30,6 @@ from ..ledger_renta_gastos_estimacion_directa_bindings import (
     validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition,
 )
 from ..schema import DataBindingDefinition, ModeloRevision, RegistrySnapshot
-from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

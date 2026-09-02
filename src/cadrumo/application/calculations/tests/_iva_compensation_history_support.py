@@ -24,7 +24,7 @@ from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.snapshot import build_snapshot
+from ....tests.registry_snapshot import build_snapshot
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....tests.registry_tree import bundled_registry_tree
 

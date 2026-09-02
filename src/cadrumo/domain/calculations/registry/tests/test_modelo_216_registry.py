@@ -35,9 +35,9 @@ import pytest
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import PeriodKind, registry_period_kind
 from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_snapshot import build_snapshot
 from .._validate import RegistryValidator
 from ..formula_runtime import calculate_registry_snapshot
-from ..snapshot import build_snapshot
 from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 

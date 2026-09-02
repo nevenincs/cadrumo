@@ -7,9 +7,9 @@ from datetime import date
 import pytest
 
 from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_snapshot import build_snapshot
 from ..authority import bundled_authority
 from ..schema import ModeloDefinition, RegistryCatalogues
-from ..snapshot import build_snapshot
 from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 

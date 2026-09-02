@@ -7,9 +7,9 @@ from datetime import date, timedelta
 import pytest
 
 from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_snapshot import build_snapshot
 from .._validate import RegistryValidator
 from ..errors import NoRevisionForPeriodError
-from ..snapshot import build_snapshot
 from ..temporal import select_revision
 from ._modelo_303_registry_support import (
     _M303_ANNUAL_ORDEN_SOURCE_BY_REVISION,

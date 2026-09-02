@@ -35,9 +35,9 @@ import pytest
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources.bundled_data import bundled_path
 from .....core.tax_domain import TaxDomain
+from .....tests.registry_snapshot import build_snapshot
 from .._validate import RegistryValidator
 from ..errors import NoRevisionForPeriodError
-from ..snapshot import build_snapshot
 from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 

@@ -34,6 +34,7 @@ from .....domain.iva.flow import IvaFlowDirection
 from .....domain.iva.prorrata import InputClassification
 from .....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from .....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
+from .....tests.registry_snapshot import build_snapshot
 from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import RegistryValidationError
 from ..ledger_iva_bindings import IvaLedgerObservation
@@ -43,7 +44,6 @@ from ..m303_differentiated_deduction_projection import (
 )
 from ..record_design import extract_record_design
 from ..schema_input_kind import InputKind
-from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

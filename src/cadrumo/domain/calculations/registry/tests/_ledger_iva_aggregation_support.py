@@ -25,6 +25,7 @@ from .....core.result_disposition import (
     derive_result_disposition,
     result_disposition_casilla_ids,
 )
+from .....tests.registry_snapshot import build_snapshot
 from .....tests.registry_tree import bundled_registry_tree
 from ....iva.deduction_facts import IvaDeductionClassificationProvenance, required_deduction_evidence_authority
 from ....iva.flow import IvaFlowDirection
@@ -43,7 +44,6 @@ from ..ledger_iva_bindings import (
 )
 from ..relations import materialize_relation_binding_values, resolve_relation_values_from_observations
 from ..schema import DataBindingDefinition, ModeloRevision
-from ..snapshot import build_snapshot
 
 _M303_APP_FILING_CAPTURED_AT = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
 

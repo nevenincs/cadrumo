@@ -29,7 +29,7 @@ from ...time.clock import frozen_clock, now
 from ..capture import capture_envelopes, capture_is_armed, record_emitted_envelope
 from ..context import _mint_run_id
 from ..errors import GoldenCaptureError, GoldenReplayMismatchError
-from ..golden import (
+from ....tests.golden_comparison import (
     GOLDEN_MASK_FIELDS,
     GOLDEN_MASK_PATHS,
     MASK_SENTINEL,

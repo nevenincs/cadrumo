@@ -213,7 +213,7 @@ def test_totals_parity_default_is_exact_equality_not_a_hardcoded_cent() -> None:
     positive statement.
     """
     from .....core.resources.bundled_data import bundled_path
-    from ..snapshot import build_snapshot
+    from .....tests.registry_snapshot import build_snapshot
 
     # Scoped to M349 alone rather than through ``bundled_authority()``,
     # whose ``.load()`` validates every modelo in the bundled tree before

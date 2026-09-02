@@ -23,12 +23,12 @@ from datetime import date
 import pytest
 
 from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_snapshot import build_snapshot
 from .._validate_orden_aplicabilidad import validate_orden_aplicabilidad
 from ..errors import RegistryValidationError
 from ..ids import LegalRefId, SourceRefId
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ..schema_references import LegalReference, PeriodSelector
-from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

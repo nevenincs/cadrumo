@@ -10,14 +10,14 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
-from ....core.authority_grade import RegistryAuthorityGrade
-from ._snapshot_internals import (
+from ..core.authority_grade import RegistryAuthorityGrade
+from ..domain.calculations.registry._snapshot_internals import (
     _SNAPSHOT_CACHE,
     _build_validated_snapshot,
     _validate_modelo_once,
 )
-from .ids import RevisionId
-from .schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from ..domain.calculations.registry.ids import RevisionId
+from ..domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 
 
 def build_snapshot(
