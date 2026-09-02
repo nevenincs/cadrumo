@@ -110,4 +110,3 @@ components from qualified sites before scheduling work.
 - https://github.com/kucherenko/jscpd/blob/master/apps/jscpd/README.md
 - https://ast-grep.github.io/guide/rewrite-code
 - https://docs.python.org/3/library/ast.html
-

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:8c03a2c357e5a43f24a5ee6c4a4b25c8452a83d6e0acc9a461ada18157b0701b'
+body_hash: 'sha256:b94e55ffcb5c359d949a54c0ab9a17db3ba79c694d329d5df225730ec8d13744'
 ---
 
 <!-- RETIRED: S73 -->
@@ -413,6 +413,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S174` - Report constants whose name carries more than one value and gate that no public name does; `dev/quality/constant_value_agreement.py,dev/quality/tests/test_constant_value_agreement.py`.
 - [x] `W06.P13.S175` - Keep the evidence tier change inside the reviewed module size rather than raising the baseline; `dev/registry/parity/_workbook_parity.py`.
 - [x] `W06.P13.S176` - Measure the load census residue left by the concurrent rename campaign and record it as inherited rather than adjudicating another writer's moving modules; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S177` - Measure type declarations sharing a field shape and establish that shape identity is not concept identity, so no gate follows; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

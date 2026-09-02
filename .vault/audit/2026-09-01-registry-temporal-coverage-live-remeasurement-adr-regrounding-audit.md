@@ -3875,3 +3875,38 @@ applied to the 25 staled attestations: measure it, attribute it, name the owner,
 leave the remedy where the knowledge is. The distinction this audit keeps returning to is
 between work that is blocked and work that belongs to somebody else; only the second kind
 is finished by reporting it.
+
+### Shape identity is not concept identity, so this screen was measured and not built
+
+The obvious next sweep after names, values and bodies is shapes: type declarations whose
+field names and annotations match exactly under different class names. Across the shipped
+package there are 81 such shapes - 39 spanning layers, 35 inside one layer, and 7 inside a
+single module. On the pattern established earlier in this campaign the seven same-module
+cases should have been the sharp ones, and a gate should have followed.
+
+Every one of the seven was read, and every one is correct as it stands.
+
+`GeneratedArtifactSource` is a `Protocol` and `StaticGeneratedArtifactSource` is a
+structural implementation of it. They share a shape because that is precisely what a
+protocol means. A gate reporting this pair would be reporting the type system working.
+
+`WorkStatusResult`, `WorkRenameResult` and `WorkDiscardResult` share 21 fields in one
+module and are the strongest-looking case in the set. They are the declared output schemas
+of three distinct CLI commands, and each is registered by name in the command specs, so
+the class name is part of the machine-readable output contract rather than an internal
+label. Collapsing them would not remove a duplicate; it would remove three commands'
+ability to name what they return. The same holds for `RatiosSetResult` against
+`RatiosUnsetResult`, and for `CounterSpec` against `TimingSpec`, where the type distinction
+is what makes dispatch safe at all.
+
+So no gate was built, and that is the finding rather than an absence of one. A screen
+reporting 81 shapes of which the great majority are correct by construction would behave
+exactly like the `record_drift` class did before it was repaired earlier in this audit:
+the alarming category fills with true-but-harmless members until the one that matters
+cannot be picked out. This campaign has now argued that three times, and the consistent
+conclusion is that a category is only worth gating when a member of it is more likely
+wrong than right.
+
+The measurement is kept because it is cheap to re-run and answers a question someone will
+ask again. What it does not support is a rule, and inventing one anyway would have been
+the easier and worse outcome.

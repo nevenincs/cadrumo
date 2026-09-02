@@ -5,91 +5,71 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:e6c7ea36f39509da1c634df3b803f05051c11e00082b24c961e1a8b96e53606e'
+body_hash: 'sha256:8db6904a93ffa78ed533b274035344ed5e7efa50ca6fdfc94ca302b173112671'
 related:
   - "[[2026-09-02-object-name-declustering-research]]"
   - "[[2026-09-02-object-name-declustering-reference]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #adr) and one feature tag.
-     Replace object-name-declustering with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     Status convention: the H1 status value is one of proposed, accepted,
-     rejected, superseded, or deprecated. A new ADR starts as proposed; it
-     moves to accepted or rejected when the decision is made; it becomes
-     superseded when a later ADR replaces it (set by vault adr supersede,
-     which also records superseded_by); and deprecated when it is retired
-     without a direct successor.
-
-     Amend vs supersede: refinements and concretization rewrite the accepted
-     record's body in place (modified: carries the revision); a new ADR with
-     supersession is only for a major pivot. One accepted record per
-     decision.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-# `object-name-declustering` adr: `{title}` | (**status:** `{proposed|accepted|rejected|superseded|deprecated}`)
-
-<!-- DOCUMENT BOUNDARY:
-     This record owns the decision and only the decision. Grounding evidence
-     lives in the related research/reference documents and is cited by stem
-     (e.g. `2026-02-04-editor-demo-research`), never restated - a restated
-     fact forks and goes stale. A fact this record needs but the grounding
-     lacks is added to the grounding first, then cited. -->
+# `object-name-declustering` adr: `manifest-governed graph batches with receipt-bound rehearsal` | (**status:** `proposed`)
 
 ## Problem Statement
 
-<!-- The problem and why a decision is needed now, in this record's own
-     terms. Do not re-narrate the research's evidence; cite it. -->
+The object-name audit identifies lexical collisions and plural names, but its findings are not safe rename units. Renames can cross directories, layers, dynamic targets, generated artifacts, tests, and shared consumers. The repository needs a fail-closed contract that turns findings into reviewable operations, rehearses the exact current working bytes outside the live tree, and permits live mutation only while reviewed scope and rehearsal evidence remain current. Grounding is in `2026-09-02-object-name-declustering-research` and `2026-09-02-object-name-declustering-reference`.
 
 ## Considerations
 
-<!-- Only the forces that bear on the choice, each a terse line citing its
-     grounding by stem or locator. Nothing the research already
-     establishes is re-argued here. -->
+- Paths provide ownership and test-selection metadata, not atomicity boundaries.
+- Finding identity must survive unrelated movement, while execution must refuse concurrent byte changes; these require separate hashes.
+- Existing name, import, semantic, and clone analyzers provide complementary evidence, but none owns the complete workflow.
+- `2026-07-01-import-centralization-adr` requires one defining module, direct imports, exact dynamic targets, atomic relocation, deletion of old paths, and no aliases, facades, shims, or fallbacks.
+- Lexical collision does not establish substitutability, and semantic similarity does not authorize consolidation.
 
 ## Considered options
 
-<!-- Name each alternative evaluated, compared at the same level of abstraction, with its
-key pros and cons and why it was kept or rejected. Naming the rejected options - not only
-the chosen one - is what lets a future reader reconstruct the decision. Keep each option
-to a terse claim-first line or two; the chosen option's full reasoning belongs under
-Rationale. -->
+- **Directory batches.** Rejected because imports, shared consumers, generators, and dynamic targets cross directory boundaries.
+- **Similarity- or digest-derived batches.** Retained as advisory evidence but rejected as authority because similarity cannot choose canonical ownership.
+- **Rope as the execution authority.** Rejected because its published compatibility does not cover Python 3.13; it remains probe-only.
+- **Unreviewed LibCST codemods.** Rejected because syntax-aware transforms do not discover arbitrary strings, generated ownership, architecture constraints, or intended scope.
+- **Chosen: repository-owned manifest planning, bipartite dependency batches, controlled transforms, and receipt-bound rehearsal.**
 
 ## Constraints
 
-<!-- Technical limitations, e.g.: depends on non-mature library, frontier feature, requires rigorous research. 'Frontier' risk, e.g. technology is new and falls outside the implementing model's training cutoff.
-
-List out the blocking constraints, and features, gaps needed for reliable implementation. Must explicitly evaluate how stable 'parent' features are if this adr
-relies on another feature. -->
+- The accepted import-centralization decision remains binding and stable.
+- Planning and inventory are read-only.
+- Every mutation batch must first run against a verified disposable copy of the current dirty tree, including tracked modifications and untracked inputs but excluding repository metadata and caches.
+- The planner refuses ambiguous ownership, duplicate or claimed targets, stale bytes, unresolved dynamic references, generated files without an owning generator, paths outside the allowlist, and new enforced findings.
+- Generated outputs change only through their owning generators.
+- AST fingerprints, semantic findings, clone evidence, and path proximity are annotations or gates, never rename or merge authority.
+- Lexical batches cannot execute `merge-authority`. Consolidation requires a separate approved semantic-consolidation decision and plan.
+- Module moves and symbol renames remain distinct operation kinds.
 
 ## Implementation
 
-<!-- A high-level overview (not a plan!) of HOW and WHAT will be implemented. Focus on condensed but clear prose that describes functionality layering.
+A repository-owned development tool will implement `inventory` -> `plan` -> `rehearse` -> `apply` -> `verify`. It will extend or consume the canonical object-name inventory and compose the existing import graph, import-hygiene surfaces, semantic candidates, clone evidence, and generator authorities.
 
-Do not add code; code references must be persisted in a separate `{reference}` document. Important `{reference}` snippets must be summarized and referenced explicitly. -->
+The reviewed manifest is the sole authority between discovery and mutation. Each operation records its schema and operation ID, stable finding ID, operation kind, old and proposed qualified locators and paths, disposition, owner, rationale, byte preconditions, expected reference classes, exact moves, changed-path allowlist, generator commands, focused gates, and lifecycle state. Its dispositions are `lexical-singular`, `rename-distinct`, `keep-distinct`, and non-executable-in-this-lane `merge-authority`. Bidirectional completeness is mandatory: every selected finding has one disposition, and stale or unmatched rows fail.
+
+The planner constructs a bipartite graph of rename-operation nodes and affected file or generated-surface nodes. Definitions, collision membership, static and type-only imports, exact dynamic targets, exports, shared consumers, and generated artifacts create hard edges. Connected components are indivisible review units. Directory, layer, owner, fan-in, semantic similarity, and clone evidence annotate risk and ordering without establishing authority.
+
+Two SHA-256 families are mandatory. A stable finding ID hashes a canonical schema-versioned tuple of finding kind, object kind, old name, and sorted qualified sites. Execution preconditions hash every affected file's bytes and the canonical baseline inventory. Neither digest establishes semantic equivalence.
+
+`rehearse` creates and verifies a system-temporary copy of the current working bytes, applies exactly one reviewed component, compares actual changed paths with the allowlist, and runs applicable residue, parsing/import, architecture, generator, focused-test, type, lint, object-name delta, semantic-duplication, and clone non-regression gates. It emits a receipt binding the manifest digest, baseline and file digests, tool versions, actual changed-path digest, finding delta, and every gate outcome.
+
+`apply` accepts only a successful matching receipt, rechecks all byte and inventory preconditions, and replays the identical operation sequence in the live worktree. Any drift causes refusal. The same verification then runs against the live result.
+
+LibCST is the controlled formatting-preserving engine for repository-owned symbol transforms. Filesystem moves and non-Python surfaces remain explicit typed operations. Rope may run only as a no-authority probe in disposable rehearsal until detector-teeth fixtures prove Python 3.13 compatibility and exact changed-path containment; it cannot authorize or perform live mutation.
 
 ## Rationale
 
-<!-- Why this option wins against the drivers: a knockout criterion or a
-     clear edge over the alternatives. Cite `{research}` findings and
-     grounding `{reference}` by stem; do not restate them. A new fact
-     surfacing here first belongs in the grounding document. -->
+The manifest, not directory proximity or a third-party refactorer's reach, must own intent. The bipartite graph exposes shared surfaces that make operations inseparable. Dual hashes separately preserve stable finding identity and enforce fresh source bytes. Receipt-bound rehearsal makes the temporary-copy safety net a mechanical replay precondition instead of a convention. Repository ownership also lets existing analyzers and accepted architecture boundaries refuse unsafe operations before mutation.
 
 ## Consequences
 
-<!-- Gains, but framed honestly. Difficulties. Pathways this feature opens. Pitfalls. -->
+- Rename batches become deterministic, reviewable, stale-input-safe, and bounded by exact changed-path contracts.
+- Cross-directory components may be larger than path batches, but their coupling is visible before mutation.
+- Highly connected components can be deferred instead of partially renamed.
+- The planner and receipt schema introduce repository-owned tooling and detector-teeth maintenance.
+- LibCST transforms require operation-specific fixtures; Rope remains unavailable as live authority unless its compatibility gap is closed and proven locally.
+- Findings may resolve to `keep-distinct`, preserving adjudication without pretending a rename or merge occurred.
+- Semantic consolidation remains separately governed.
+- Old paths disappear atomically; consumers move in the same component without a compatibility window.
