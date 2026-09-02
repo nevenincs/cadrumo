@@ -609,6 +609,14 @@ fix-format:
 [group('mutations')]
 fix-all: fix-style fix-format
 
+# Rehearse a reviewed object-name component by default; live application requires explicit arguments.
+[script('pwsh.exe', '-NoLogo', '-File')]
+[positional-arguments]
+[group('mutations')]
+fix-object-names *ARGS:
+    & uv run --no-sync python -m dev.quality.object_name_declustering @args
+    exit $LASTEXITCODE
+
 # Trigger incremental vector re-indexing via the loopback service.
 [group('mutations')]
 fix-rag:

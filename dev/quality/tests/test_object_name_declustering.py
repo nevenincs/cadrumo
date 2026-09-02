@@ -6,7 +6,7 @@ import json
 import os
 import subprocess
 import sys
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any
 
@@ -18,7 +18,7 @@ from .. import object_name_graph as graph_module
 from ..object_name_rehearsal import ObjectNameRehearsalReceipt
 from ..object_name_replay import ObjectNameReplayResult
 from .test_object_name_rehearsal import _fixture, _live_bytes
-from .test_object_name_replay import _case
+from .test_object_name_replay import _case, _generated_case
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -282,6 +282,89 @@ def test_plan_uses_real_manifest_context_without_writing_live_tree(
     assert _live_bytes(root) == before
 
 
+def test_generator_backed_plan_and_rehearsal_use_canonical_cli_context(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root, inventory, manifest, _component, _receipt = _generated_case(tmp_path)
+    operation = manifest.operations[0].model_copy(
+        update={
+            "changed_paths": tuple(sorted(manifest.operations[0].changed_paths)),
+            "preconditions": tuple(sorted(manifest.operations[0].preconditions, key=lambda item: item.path)),
+        }
+    )
+    manifest = manifest.model_copy(update={"operations": (operation,)})
+    component = cli.canonical_object_name_component_set(manifest, inventory=inventory, repo_root=root)[0]
+    manifest_path = root / "manifest.toml"
+    _write_manifest(manifest_path, manifest)
+    before = _live_bytes(root)
+    monkeypatch.chdir(root)
+
+    assert cli.main(["plan", "--manifest=manifest.toml", "--json"]) == 0
+    assert json.loads(capsys.readouterr().out) == {
+        "component": json.loads(json.dumps(asdict(component))),
+        "mode": "plan",
+    }
+
+    real_rehearse = cli.rehearse_object_name_component
+    captured_receipts: list[ObjectNameRehearsalReceipt] = []
+
+    def capture_rehearsal(*args: Any, **kwargs: Any) -> ObjectNameRehearsalReceipt:
+        result = real_rehearse(*args, **kwargs)
+        captured_receipts.append(result)
+        return result
+
+    monkeypatch.setattr(cli, "rehearse_object_name_component", capture_rehearsal)
+    assert cli.main(["rehearse", "--manifest=manifest.toml", "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload == {
+        "mode": "rehearse",
+        "receipt": json.loads(json.dumps(asdict(captured_receipts[0]))),
+    }
+    assert payload["receipt"]["generator_outcomes"][0]["argv"] == list(manifest.operations[0].generator_commands[0])
+    assert _live_bytes(root) == before
+
+
+def test_context_refuses_manifest_with_two_independent_components(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root, inventory, manifest, _component = _context_case(tmp_path)
+    second_path = root / "src/example/reports.py"
+    second_path.write_bytes(b"class Reports:\n    pass\n")
+    inventory = scan((root / "src", root / "dev"), root)
+    declaration = next(item for item in inventory.declarations if item.name == "Reports")
+    finding = next(item for item in inventory.findings if item.name == "Reports")
+    second = manifest.operations[0].model_copy(
+        update={
+            "operation_id": "rename-reports",
+            "finding_id": finding.id,
+            "old_locator": declaration.qualified_locator,
+            "old_path": declaration.path,
+            "new_locator": replace(declaration, name="Report").qualified_locator,
+            "new_path": declaration.path,
+            "preconditions": (
+                manifest.operations[0]
+                .preconditions[0]
+                .model_copy(update={"path": declaration.path, "sha256": declaration.source_hash}),
+            ),
+            "changed_paths": (declaration.path,),
+        }
+    )
+    manifest = manifest.model_copy(
+        update={
+            "inventory_digest": cli.to_json(inventory)["inventory_digest"],
+            "operations": tuple(sorted((manifest.operations[0], second), key=lambda item: item.operation_id)),
+        }
+    )
+    manifest_path = root / "manifest.toml"
+    _write_manifest(manifest_path, manifest)
+    monkeypatch.chdir(root)
+
+    assert cli.main(["plan", "--manifest=manifest.toml", "--json"]) == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "manifest must select exactly one complete component; found 2" in captured.err
+
+
 def test_plan_refuses_malformed_manifest_without_rehearsal_or_replay(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -328,6 +411,39 @@ def test_mode_dispatches_only_to_its_owned_operation(
     assert cli.main(["apply", f"--receipt={receipt_path}", f"--receipt-id={receipt.receipt_id}", "--json"]) == 0
     assert json.loads(capsys.readouterr().out)["mode"] == "apply"
     assert calls == ["apply"]
+
+
+def test_apply_uses_real_replay_and_emits_exact_result_envelope(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root, _inventory, manifest, _component, receipt = _case(tmp_path)
+    monkeypatch.chdir(root)
+    monkeypatch.setattr(cli, "_manifest_path", lambda *_args: root / "manifest.toml")
+    monkeypatch.setattr(cli, "_receipt", lambda *_args: receipt)
+    monkeypatch.setattr(cli, "_context", lambda *_args: (_inventory, manifest, _component))
+
+    assert (
+        cli.main(
+            [
+                "apply",
+                "--manifest=manifest.toml",
+                "--receipt=receipt.json",
+                f"--receipt-id={receipt.receipt_id}",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    payload = json.loads(capsys.readouterr().out)
+    expected = ObjectNameReplayResult(
+        receipt_id=receipt.receipt_id,
+        changed_paths=receipt.changed_paths,
+        post_tree_digest=payload["result"]["post_tree_digest"],
+        generator_outcomes=receipt.generator_outcomes,
+        gate_outcomes=receipt.gate_outcomes,
+    )
+    assert payload == {"mode": "apply", "result": json.loads(json.dumps(asdict(expected)))}
+    assert (root / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
 
 
 def test_json_and_human_output_keep_stdout_clean_and_deterministic(
@@ -422,3 +538,16 @@ def test_inventory_success_with_advisory_or_enforced_findings_is_informational(t
     result = scan((root / "src", root / "dev"), root)
 
     assert result.enforced_findings
+
+
+def test_verify_returns_zero_for_clean_inventory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = _repository(tmp_path)
+    (root / "src/example.py").write_bytes(b"class Widget:\n    pass\n")
+    monkeypatch.chdir(root)
+
+    assert cli.main(["verify", "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["mode"] == "verify"
+    assert payload["inventory"]["summary"]["enforced_findings"] == 0
