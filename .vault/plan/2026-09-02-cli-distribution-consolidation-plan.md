@@ -118,6 +118,13 @@ P04, P05 and P06 are mutually independent and may run in parallel once P03 has l
 Each touches a disjoint surface; only P04 and P05 both edit `pyproject.toml`, so they
 take one writer between them or sequence those two Steps.
 
+Within P04 the deletion Step precedes the merge Step. The harness is referenced from
+forty-four files outside its own tree; roughly a third are host-extension surfaces the
+deletion removes, so merging first means editing consumers that are about to disappear.
+Order inside the Phase is therefore: delete the host-extension artifacts and lanes,
+then merge the console script into the product distribution, then rewrite the
+connection guide against the merged surface.
+
 P07 depends on P04, which deletes the channels most of the vocabulary describes.
 Cleaning the descriptor first would rewrite code that P04 removes.
 

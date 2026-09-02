@@ -45,7 +45,6 @@ from cadrumo.domain.calculations.registry._supplementary_orden import compile_su
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory, load_registry_tree
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
-from cadrumo.tests.registry_snapshot import build_snapshot
 from cadrumo.domain.filing.errors import FilingExportValidationError
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
 from cadrumo.domain.iva.regimen_simplificado_rows import (
@@ -63,6 +62,7 @@ from cadrumo.domain.prorrata_register.register import (
     ProrrataRegisterEntry,
     SectorDefinition,
 )
+from cadrumo.tests.registry_snapshot import build_snapshot
 
 from ..pipeline._export_tree import render_complete_export_tree
 from ..pipeline._provenance_manifest import (

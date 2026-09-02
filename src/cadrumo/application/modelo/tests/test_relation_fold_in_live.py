@@ -53,10 +53,10 @@ from ....domain.calculations.registry.bindings import (
     resolve_available_bound_inputs_by_casilla_id,
 )
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from ....tests.registry_snapshot import build_snapshot
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
+from ....tests.registry_snapshot import build_snapshot
 from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (

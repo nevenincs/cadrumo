@@ -23,8 +23,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, differing_field_names, differing_paths
 from cadrumo.tests.env_scope import scoped_env_var
+from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, differing_field_names, differing_paths
 
 from .. import (
     SANDBOX_PROFILE_ID,

@@ -27,7 +27,6 @@ from ....core.external_constants import load_external_constants
 from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path
-from ....tests.registry_snapshot import build_snapshot
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import ExternalEvidence, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
 from ....domain.modelos.filing_repository import upsert_filing_record
@@ -35,6 +34,7 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests import FIXTURES_DIR
 from ....tests.profile_capsule import open_test_profile_session
+from ....tests.registry_snapshot import build_snapshot
 from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ....tests.user_profile import register_minimal_profile

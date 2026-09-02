@@ -17,7 +17,6 @@ from ....domain.calculations.registry.bindings import resolve_available_bound_in
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....tests.registry_snapshot import build_snapshot
 from ....domain.filing.schema import (
     ModeloCasillaProvenance,
     ModeloDraft,
@@ -38,6 +37,7 @@ from ....entrypoints.cli._modelo_rendering import (
     calculation_revision_lines,
     calculation_revision_payload,
 )
+from ....tests.registry_snapshot import build_snapshot
 from ...filing.draft_construction import _filing_binding_values
 from .._calculation_helpers import build_typed_observations
 from .._revision_replay_inputs import _m349_detail_row_replay_inputs

@@ -24,11 +24,6 @@ from typing import Any, cast
 import pytest
 
 from ....domain.user_profile.values import new_profile_snapshot_id
-from ...json_contract import OutputSchema, emit_json_success
-from ...time.clock import frozen_clock, now
-from ..capture import capture_envelopes, capture_is_armed, record_emitted_envelope
-from ..context import _mint_run_id
-from ..errors import GoldenCaptureError, GoldenReplayMismatchError
 from ....tests.golden_comparison import (
     GOLDEN_MASK_FIELDS,
     GOLDEN_MASK_PATHS,
@@ -40,6 +35,11 @@ from ....tests.golden_comparison import (
     mask_document,
     validate_captured_envelope,
 )
+from ...json_contract import OutputSchema, emit_json_success
+from ...time.clock import frozen_clock, now
+from ..capture import capture_envelopes, capture_is_armed, record_emitted_envelope
+from ..context import _mint_run_id
+from ..errors import GoldenCaptureError, GoldenReplayMismatchError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

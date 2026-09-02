@@ -39,7 +39,6 @@ from ....domain.calculations.registry.schema_exports import (
     FilingEnvelopePrefixRole,
 )
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....tests.registry_snapshot import build_snapshot
 from ....domain.deadlines.models import (
     ChargeAccount,
     IVARegime,
@@ -63,6 +62,7 @@ from ....domain.modelos.calculation_revision_m303_evidence import M303Exonerado3
 from ....domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
 from ....domain.prorrata_register.register import ProrrataRegister
 from ....domain.submission.models import ModeloDraftStatus
+from ....tests.registry_snapshot import build_snapshot
 from ...aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
 from ...calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from ..export import _filing_producer_values, _render_layout, export_draft, render_filing_envelope

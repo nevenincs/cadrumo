@@ -23,8 +23,8 @@ from cadrumo.domain.calculations.registry.loader import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
-from cadrumo.tests.registry_snapshot import build_snapshot
 from cadrumo.domain.calculations.registry.validate_registry_scope import validate_registry_scope
+from cadrumo.tests.registry_snapshot import build_snapshot
 
 from ._export_tree import RenderedExportTree
 from ._provenance_manifest import (
