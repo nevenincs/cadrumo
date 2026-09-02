@@ -161,6 +161,11 @@ def test_module_proposal_returns_exact_move_and_rewrites_import_forms_without_mu
         b"value = cadrumo.widget.VALUE + source.VALUE + alias.VALUE\n"
     )
     assert _tree_bytes(tmp_path) == before
+    outputs = {output.path: output for output in result.outputs}
+    assert outputs["src/cadrumo/widgets.py"].original_sha256 == _digest(b"VALUE = 1\n")
+    assert outputs["src/cadrumo/widgets.py"].content is None
+    assert outputs["src/cadrumo/widget.py"].original_sha256 is None
+    assert _digest(outputs["src/cadrumo/widget.py"].content or b"") == _digest(b"VALUE = 1\n")
 
 
 def test_same_package_module_move_preserves_relative_import(tmp_path: Path) -> None:
@@ -169,6 +174,7 @@ def test_same_package_module_move_preserves_relative_import(tmp_path: Path) -> N
         {
             "src/cadrumo/old/widgets.py": "from .support import VALUE\n",
             "src/cadrumo/old/support.py": "VALUE = 1\n",
+            "src/cadrumo/old/consumer.py": "from .widgets import VALUE\n",
         },
     )
     declaration = _declaration(inventory, path="src/cadrumo/old/widgets.py", name="widgets")
@@ -176,14 +182,21 @@ def test_same_package_module_move_preserves_relative_import(tmp_path: Path) -> N
         declaration,
         target_name="widget",
         target_path="src/cadrumo/old/widget.py",
-        sources={declaration.path: (tmp_path / declaration.path).read_bytes()},
-        changed_paths=("src/cadrumo/old/widget.py", "src/cadrumo/old/widgets.py"),
-        expected_reference_classes=("definition",),
+        sources={
+            declaration.path: (tmp_path / declaration.path).read_bytes(),
+            "src/cadrumo/old/consumer.py": (tmp_path / "src/cadrumo/old/consumer.py").read_bytes(),
+        },
+        changed_paths=(
+            "src/cadrumo/old/consumer.py",
+            "src/cadrumo/old/widget.py",
+            "src/cadrumo/old/widgets.py",
+        ),
     )
 
     result = plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
 
     assert result.content_by_path()["src/cadrumo/old/widget.py"] == b"from .support import VALUE\n"
+    assert result.content_by_path()["src/cadrumo/old/consumer.py"] == b"from .widget import VALUE\n"
 
 
 def test_cross_package_module_move_preserves_absolute_import(tmp_path: Path) -> None:
@@ -414,3 +427,196 @@ def test_proposal_is_deterministic_read_only_and_returns_fresh_content_views(tmp
     assert first == second
     assert first.content_by_path() == {declaration.path: b"class Widget:\n    pass\n"}
     assert _tree_bytes(tmp_path) == before
+
+
+def test_overload_family_is_renamed_as_one_binding(tmp_path: Path) -> None:
+    source = (
+        "from typing import overload\n\n"
+        "@overload\ndef widgets(value: int) -> int: ...\n"
+        "@overload\ndef widgets(value: str) -> str: ...\n"
+        "def widgets(value: object) -> object:\n    return value\n"
+    )
+    inventory = _inventory(tmp_path, {"src/cadrumo/contracts.py": source})
+    declarations = [item for item in inventory.declarations if item.name == "widgets"]
+    assert len(declarations) == 3
+    assert {item.qualified_locator for item in declarations} == {declarations[0].qualified_locator}
+    operation = _operation(
+        declarations[0],
+        target_name="widget",
+        sources=_tree_bytes(tmp_path),
+        expected_reference_classes=("definition",),
+    )
+
+    result = plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
+
+    assert result.content_by_path()[declarations[0].path] == source.replace("widgets", "widget").encode()
+
+
+def test_repeated_binding_with_unprovable_reference_is_refused(tmp_path: Path) -> None:
+    inventory = _inventory(
+        tmp_path,
+        {"src/cadrumo/contracts.py": "class Widgets:\n    pass\n\nvalue = Widgets()\n\nclass Widgets:\n    pass\n"},
+    )
+    declaration = _declaration(inventory, path="src/cadrumo/contracts.py", name="Widgets", occurrence=1)
+    operation = _operation(
+        declaration,
+        target_name="Widget",
+        sources=_tree_bytes(tmp_path),
+        expected_reference_classes=("definition",),
+    )
+
+    with pytest.raises(ObjectNameTransformError, match="reference across ambiguous rebindings"):
+        plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
+
+
+def test_repeated_binding_without_reference_renames_only_selected_declaration(tmp_path: Path) -> None:
+    inventory = _inventory(
+        tmp_path,
+        {"src/cadrumo/contracts.py": "class Widgets:\n    pass\n\nclass Widgets:\n    pass\n"},
+    )
+    declaration = _declaration(inventory, path="src/cadrumo/contracts.py", name="Widgets", occurrence=1)
+    operation = _operation(
+        declaration,
+        target_name="Widget",
+        sources=_tree_bytes(tmp_path),
+        expected_reference_classes=("definition",),
+    )
+
+    result = plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
+
+    assert result.content_by_path()[declaration.path] == b"class Widget:\n    pass\n\nclass Widgets:\n    pass\n"
+
+
+def test_ambiguous_qualified_attribute_reference_is_refused(tmp_path: Path) -> None:
+    inventory = _inventory(
+        tmp_path,
+        {
+            "src/cadrumo/contracts.py": "class Widgets:\n    pass\n",
+            "dev/consumer.py": (
+                "import cadrumo.contracts as contract\nif flag:\n    contract = fallback\nvalue = contract.Widgets()\n"
+            ),
+        },
+    )
+    declaration = _declaration(inventory, path="src/cadrumo/contracts.py", name="Widgets")
+    operation = _operation(declaration, target_name="Widget", sources=_tree_bytes(tmp_path))
+
+    with pytest.raises(ObjectNameTransformError, match="ambiguous qualified attribute reference"):
+        plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
+
+
+def test_declared_reference_class_must_have_actual_evidence(tmp_path: Path) -> None:
+    inventory = _inventory(tmp_path, {"src/cadrumo/contracts.py": "class Widgets:\n    pass\n"})
+    declaration = _declaration(inventory, path="src/cadrumo/contracts.py", name="Widgets")
+    operation = _operation(declaration, target_name="Widget", sources=_tree_bytes(tmp_path))
+
+    with pytest.raises(ObjectNameTransformError, match=r"did not prove expected reference classes.*static-import"):
+        plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
+
+
+def test_conflicting_byte_preconditions_are_refused(tmp_path: Path) -> None:
+    inventory = _inventory(
+        tmp_path,
+        {
+            "src/cadrumo/alpha.py": "class Widgets:\n    pass\n",
+            "src/cadrumo/beta.py": "class Gadgets:\n    pass\n",
+        },
+    )
+    sources = _tree_bytes(tmp_path)
+    first = _operation(
+        _declaration(inventory, path="src/cadrumo/alpha.py", name="Widgets"),
+        target_name="Widget",
+        sources=sources,
+        expected_reference_classes=("definition",),
+    )
+    second = _operation(
+        _declaration(inventory, path="src/cadrumo/beta.py", name="Gadgets"),
+        target_name="Gadget",
+        sources=sources,
+        expected_reference_classes=("definition",),
+    )
+    second["preconditions"] = tuple(
+        {**item, "sha256": _digest(b"conflict")} if item["path"] == "src/cadrumo/alpha.py" else item
+        for item in second["preconditions"]
+    )
+    second["operation_id"] = "rename-gadgets-1"
+    manifest = ObjectNameRenameManifest.model_validate(
+        {
+            "schema_version": 1,
+            "inventory_digest": to_json(inventory)["inventory_digest"],
+            "operations": tuple(sorted((first, second), key=lambda item: item["operation_id"])),
+        }
+    )
+
+    with pytest.raises(ObjectNameTransformError, match="disagree on the byte precondition"):
+        plan_object_name_transformation(manifest, repo_root=tmp_path)
+
+
+def test_missing_and_non_python_precondition_paths_are_refused(tmp_path: Path) -> None:
+    inventory = _inventory(tmp_path, {"src/cadrumo/contracts.py": "class Widgets:\n    pass\n"})
+    declaration = _declaration(inventory, path="src/cadrumo/contracts.py", name="Widgets")
+    operation = _operation(declaration, target_name="Widget", sources=_tree_bytes(tmp_path))
+    operation["preconditions"] = tuple(
+        sorted(
+            (*operation["preconditions"], {"path": "dev/missing.py", "sha256": _digest(b"")}),
+            key=lambda item: item["path"],
+        )
+    )
+    operation["changed_paths"] = ("dev/missing.py", declaration.path)
+    with pytest.raises(ObjectNameTransformError, match="not a regular file"):
+        plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
+
+    readme = tmp_path / "dev" / "notes.txt"
+    readme.write_bytes(b"Widgets\n")
+    operation = _operation(
+        declaration,
+        target_name="Widget",
+        sources={**_tree_bytes(tmp_path), "dev/notes.txt": readme.read_bytes()},
+        changed_paths=("dev/notes.txt", declaration.path),
+    )
+    with pytest.raises(ObjectNameTransformError, match="unsupported non-Python changed path"):
+        plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
+
+
+def test_crlf_formatting_and_terminal_newline_are_preserved(tmp_path: Path) -> None:
+    inventory = _inventory(tmp_path, {"src/cadrumo/contracts.py": "class Widgets:\n    pass\n"})
+    path = tmp_path / "src/cadrumo/contracts.py"
+    raw = b"@decorator(  1 )\r\nclass Widgets:  # exact\r\n    pass"
+    path.write_bytes(raw)
+    inventory = scan((tmp_path / "src", tmp_path / "dev"), tmp_path)
+    declaration = _declaration(inventory, path="src/cadrumo/contracts.py", name="Widgets")
+    operation = _operation(
+        declaration,
+        target_name="Widget",
+        sources=_tree_bytes(tmp_path),
+        expected_reference_classes=("definition",),
+    )
+
+    result = plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
+
+    assert result.content_by_path()[declaration.path] == raw.replace(b"Widgets", b"Widget")
+
+
+def test_output_original_digest_and_mutation_method_canary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    inventory = _inventory(tmp_path, {"src/cadrumo/contracts.py": "class Widgets:\n    pass\n"})
+    declaration = _declaration(inventory, path="src/cadrumo/contracts.py", name="Widgets")
+    original = (tmp_path / declaration.path).read_bytes()
+    manifest = _manifest(
+        inventory,
+        _operation(
+            declaration,
+            target_name="Widget",
+            sources=_tree_bytes(tmp_path),
+            expected_reference_classes=("definition",),
+        ),
+    )
+
+    def forbidden(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("planner attempted a live filesystem mutation")
+
+    for method in ("write_bytes", "write_text", "unlink", "rename", "replace"):
+        monkeypatch.setattr(Path, method, forbidden)
+
+    result = plan_object_name_transformation(manifest, repo_root=tmp_path)
+
+    assert result.outputs[0].original_sha256 == _digest(original)
+    assert _digest(result.outputs[0].content or b"") == _digest(b"class Widget:\n    pass\n")

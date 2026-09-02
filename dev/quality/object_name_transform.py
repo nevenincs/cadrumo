@@ -191,12 +191,14 @@ class _RenameTransformer(cst.CSTTransformer):
         package_module: bool,
         operations: Sequence[ObjectNameRenameOperation],
         definition_lines: Mapping[str, frozenset[int]],
+        ambiguous_bindings: frozenset[str],
     ) -> None:
         self.path = path
         self.module_name = module_name
         self.package_module = package_module
         self.operations = operations
         self.definition_lines = definition_lines
+        self.ambiguous_bindings = ambiguous_bindings
         self.definition_hits: defaultdict[str, int] = defaultdict(int)
         self.evidence: defaultdict[str, set[str]] = defaultdict(set)
         self._declaration_name_nodes: set[int] = set()
@@ -357,8 +359,21 @@ class _RenameTransformer(cst.CSTTransformer):
                     self._record_reference(operation, original_node)
             elif operation.operation_kind == "module-rename":
                 if absolute == old_module:
-                    rewritten_module = _dotted_expression(new_module)
-                    rewritten_relative = ()
+                    old_parent, _, _ = old_module.rpartition(".")
+                    new_parent, _, _ = new_module.rpartition(".")
+                    if original_node.relative and old_parent == new_parent:
+                        relative_module = _dotted_name(original_node.module)
+                        if not relative_module:
+                            raise ObjectNameTransformError(
+                                f"operation {operation.operation_id!r} has an unsupported relative module import"
+                            )
+                        relative_parent, separator, _ = relative_module.rpartition(".")
+                        rewritten_module = _dotted_expression(
+                            f"{relative_parent}{separator}{new_name}" if separator else new_name
+                        )
+                    else:
+                        rewritten_module = _dotted_expression(new_module)
+                        rewritten_relative = ()
                     self._record_reference(operation, original_node)
                 elif absolute == old_module.rpartition(".")[0]:
                     old_parent, _, _ = old_module.rpartition(".")
@@ -420,6 +435,10 @@ class _RenameTransformer(cst.CSTTransformer):
                 and self.module_name == old_module
                 and QualifiedName(old_name, QualifiedNameSource.LOCAL) in names
             )
+            if local_definition_reference and operation.operation_id in self.ambiguous_bindings:
+                raise ObjectNameTransformError(
+                    f"operation {operation.operation_id!r} has a reference across ambiguous rebindings"
+                )
             if not matching and not local_definition_reference:
                 continue
             permitted: set[QualifiedName] = set(matching)
@@ -447,15 +466,6 @@ def _definition_lines(operation: ObjectNameRenameOperation, source: bytes) -> fr
     declarations = declarations_in_source(text, operation.old_path)
     kind, qualified, _occurrence = _locator_parts(operation.old_locator)
     old_name = qualified.rsplit(".", 1)[-1]
-    matching_bindings = {
-        declaration.qualified_locator
-        for declaration in declarations
-        if declaration.kind.value == kind and declaration.name == old_name
-    }
-    if len(matching_bindings) > 1:
-        raise ObjectNameTransformError(
-            f"operation {operation.operation_id!r} selects one of multiple ambiguous rebindings"
-        )
     line_values: set[int] = set()
     for declaration in declarations:
         if declaration.qualified_locator == operation.old_locator:
@@ -472,6 +482,7 @@ def _transform_python(
     relative: str,
     operations: Sequence[ObjectNameRenameOperation],
     definition_lines: Mapping[str, frozenset[int]],
+    ambiguous_bindings: frozenset[str],
 ) -> tuple[bytes, _RenameTransformer]:
     try:
         module = cst.parse_module(source)
@@ -483,6 +494,7 @@ def _transform_python(
         package_module=PurePosixPath(relative).name == "__init__.py",
         operations=operations,
         definition_lines=definition_lines,
+        ambiguous_bindings=ambiguous_bindings,
     )
     try:
         changed = MetadataWrapper(module).visit(transformer)
@@ -551,6 +563,22 @@ def plan_object_name_transformation(
     lines_by_operation = {
         operation.operation_id: _definition_lines(operation, before[operation.old_path]) for operation in selected
     }
+    ambiguous_bindings = frozenset(
+        operation.operation_id
+        for operation in selected
+        if operation.operation_kind == "symbol-rename"
+        and len(
+            {
+                declaration.qualified_locator
+                for declaration in declarations_in_source(
+                    before[operation.old_path].decode("utf-8"), operation.old_path
+                )
+                if declaration.kind.value == _locator_parts(operation.old_locator)[0]
+                and declaration.name == _locator_parts(operation.old_locator)[1].rsplit(".", 1)[-1]
+            }
+        )
+        > 1
+    )
     operations_by_path: defaultdict[str, list[ObjectNameRenameOperation]] = defaultdict(list)
     for relative in expected_hashes:
         for operation in selected:
@@ -569,6 +597,7 @@ def plan_object_name_transformation(
             relative=relative,
             operations=path_operations,
             definition_lines=lines_by_operation,
+            ambiguous_bindings=ambiguous_bindings,
         )
         proposed[relative] = transformed
         for operation_id, count in transformer.definition_hits.items():
