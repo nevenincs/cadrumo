@@ -52,7 +52,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
@@ -105,16 +105,57 @@ __all__ = [
 ProfileFactValue = bool | int | str
 
 
+class LiveVerificationSurface(StrEnum):
+    """The kind of AEAT surface a live cross-reference verifies against.
+
+    Declared because six tokens were compared as bare strings across this module and
+    its two neighbours, and two of the groupings below were written out three times
+    each. The `surface` annotations stay `str` deliberately: a member compares equal to
+    its token, so nothing about validation changes here, and retyping a validated field
+    is a separate decision from naming the vocabulary.
+    """
+
+    OPEN_SIMULATOR = "open_simulator"
+    INTEGRATION_TEST_SERVICE = "integration_test_service"
+    AUTHENTICATED_SIMULATOR = "authenticated_simulator"
+    PUBLIC_READ_SURFACE = "public_read_surface"
+    AUTHENTICATED_READ_SURFACE = "authenticated_read_surface"
+    STATIC_OFFICIAL_DOCUMENTATION = "static_official_documentation"
+
+
+READ_SURFACES: Final[frozenset[LiveVerificationSurface]] = frozenset(
+    {
+        LiveVerificationSurface.PUBLIC_READ_SURFACE,
+        LiveVerificationSurface.AUTHENTICATED_READ_SURFACE,
+    },
+)
+"""Surfaces that read live AEAT data rather than a simulator or a static document.
+
+Written out at three sites in this module before this existed. These are the surfaces
+that must refuse synthetic data and are restricted to safe HTTP methods, so a surface
+added to this set inherits both rules at once instead of one of them.
+"""
+
+SIMULATOR_SURFACES: Final[frozenset[LiveVerificationSurface]] = frozenset(
+    {
+        LiveVerificationSurface.OPEN_SIMULATOR,
+        LiveVerificationSurface.INTEGRATION_TEST_SERVICE,
+        LiveVerificationSurface.AUTHENTICATED_SIMULATOR,
+    },
+)
+"""Surfaces that are not AEAT production infrastructure."""
+
+
 def _validate_open_or_public_authentication(
     surface: str,
     requires_authentication: bool,
     cross_reference_id: CrossReferenceId,
 ) -> None:
-    if surface == "open_simulator" and requires_authentication:
+    if surface == LiveVerificationSurface.OPEN_SIMULATOR and requires_authentication:
         raise RegistryValidationError(
             f"cross-reference {cross_reference_id!r} open simulator must not require authentication",
         )
-    if surface == "public_read_surface" and requires_authentication:
+    if surface == LiveVerificationSurface.PUBLIC_READ_SURFACE and requires_authentication:
         raise RegistryValidationError(
             f"cross-reference {cross_reference_id!r} public read surface must not require authentication",
         )
@@ -143,7 +184,7 @@ def _validate_authenticated_simulator_authentication(
     requires_authentication: bool,
     cross_reference_id: CrossReferenceId,
 ) -> None:
-    if surface == "authenticated_simulator" and not requires_authentication:
+    if surface == LiveVerificationSurface.AUTHENTICATED_SIMULATOR and not requires_authentication:
         raise RegistryValidationError(
             f"cross-reference {cross_reference_id!r} authenticated simulator must require authentication",
         )
@@ -237,20 +278,23 @@ class LiveCrossReferenceDecision(RegistryModel):
         documentation carry observation evidence only.
         """
         if (
-            self.surface in {"open_simulator", "integration_test_service", "authenticated_simulator"}
+            self.surface in SIMULATOR_SURFACES
             and self.evidence_tier != "executable_parity_evidence"
         ):
             raise RegistryValidationError(
                 f"cross-reference {self.id!r} live surface requires executable parity evidence",
             )
         if (
-            self.surface in {"public_read_surface", "authenticated_read_surface"}
+            self.surface in READ_SURFACES
             and self.evidence_tier == "executable_parity_evidence"
         ):
             raise RegistryValidationError(
                 f"cross-reference {self.id!r} read surface is observation evidence, not parity",
             )
-        if self.surface == "static_official_documentation" and self.evidence_tier == "executable_parity_evidence":
+        if (
+            self.surface == LiveVerificationSurface.STATIC_OFFICIAL_DOCUMENTATION
+            and self.evidence_tier == "executable_parity_evidence"
+        ):
             raise RegistryValidationError(
                 f"cross-reference {self.id!r} static documentation is not executable parity evidence",
             )
@@ -297,9 +341,9 @@ class LiveCrossReferenceDecision(RegistryModel):
         shape (``open_simulator`` / ``authenticated_simulator``) does not
         license synthetic input against AEAT infrastructure.
         """
-        if self.surface in {"public_read_surface", "authenticated_read_surface"} and self.synthetic_data_allowed:
+        if self.surface in READ_SURFACES and self.synthetic_data_allowed:
             raise RegistryValidationError(f"cross-reference {self.id!r} read surface must not accept synthetic data")
-        if self.surface == "static_official_documentation" and self.synthetic_data_allowed:
+        if self.surface == LiveVerificationSurface.STATIC_OFFICIAL_DOCUMENTATION and self.synthetic_data_allowed:
             raise RegistryValidationError(
                 f"cross-reference {self.id!r} static documentation cannot accept synthetic data",
             )
@@ -316,7 +360,7 @@ class LiveCrossReferenceDecision(RegistryModel):
         """Per-surface HTTP method allowlist + uppercase shape requirement."""
         if method.upper() != method:
             raise RegistryValidationError(f"cross-reference {self.id!r} allowed_methods must be uppercase")
-        if self.surface in {"public_read_surface", "authenticated_read_surface"} and method not in {
+        if self.surface in READ_SURFACES and method not in {
             "GET",
             "HEAD",
             "OPTIONS",
@@ -329,7 +373,12 @@ class LiveCrossReferenceDecision(RegistryModel):
         # remote-state guard's HTTP-method check stays strict for
         # ``kind="http"`` operations; only the cross-reference's
         # allowed_methods declaration is widened.
-        if self.surface == "authenticated_simulator" and method not in {"GET", "HEAD", "OPTIONS", "POST"}:
+        if self.surface == LiveVerificationSurface.AUTHENTICATED_SIMULATOR and method not in {
+            "GET",
+            "HEAD",
+            "OPTIONS",
+            "POST",
+        }:
             raise RegistryValidationError(
                 f"cross-reference {self.id!r} authenticated simulator method "
                 f"{method!r} not in (GET, HEAD, OPTIONS, POST)",

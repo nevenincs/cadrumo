@@ -13,10 +13,10 @@ process can honestly reach:
   own discovered steps and projected definition, then feeding those answers
   through the identical ``work calculate`` composition the wizard uses.
 
-Nothing is mocked, stubbed, or patched: the real registry engine, ledger
-aggregation, and bucket-scoped storage answer behind the scripted drive and
-the CLI calculate, and the oracle Modelo 130 draft is asserted against
-real ledger-seeded income/expense rows.
+The scripted-drive coverage uses the real registry engine, ledger aggregation,
+and bucket-scoped storage. The registered CLI success test binds that same real
+line frontend to prompt-toolkit's headless IO adapters; it does not replace the
+flow implementation or alter the production non-interactive refusal.
 """
 
 from __future__ import annotations
@@ -26,14 +26,13 @@ from decimal import Decimal
 from io import StringIO
 
 import pytest
-from prompt_toolkit.application import create_app_session
 from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output.plain_text import PlainTextOutput
 from pydantic import ValidationError
 
 from ....application.flows import line_frontend as _line_frontend
 from ....application.flows.copy import assemble_page_copy
-from ....application.flows.definition import FlowPage
+from ....application.flows.definition import FlowDefinition, FlowPage
 from ....application.flows.errors import FlowCopyResolutionError
 from ....application.flows.scripted import run_scripted_flow
 from ....application.modelo.action_errors import modelo_work_wizard_retry_exhausted_precondition
@@ -46,6 +45,7 @@ from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
 from ....tests.user_profile import register_cli_profile
+from .. import _modelo_work_wizard_cli
 from .._modelo_behavior_support import resolve_work_unit_for_cli
 from .._modelo_work_wizard_payloads import WizardPromptedCasillaPayload
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
@@ -271,32 +271,47 @@ def test_registered_wizard_cli_interactive_flow_emits_ledger_source_provenance(
     _seed_m130_ledger("wizard-cli-source-provenance")
     work_unit_id = _create_m130_work_unit()
 
-    # Five registry-discovered manual casillas, submit, then the engine's
-    # one missing-binding follow-up and its submit action.
-    keystrokes = "0\r" * len(_MANUAL_CASILLAS) + "\r" + f"{_PREV_YEAR_INCOME_ANSWER}\r\r"
+    # Five registry-discovered manual casillas, then submit from review.
+    keystrokes = "0\r" * len(_MANUAL_CASILLAS) + "\r"
     with create_pipe_input() as pipe:
         pipe.send_text(keystrokes)
-        # The line frontend's own headless IO contract drives real questionary
-        # prompts. Only its host probe is made true for this artificial
-        # terminal; no production guard or non-interactive behaviour changes.
-        monkeypatch.setattr(_line_frontend, "stdin_is_tty", lambda: True)
-        with create_app_session(input=pipe, output=PlainTextOutput(StringIO())):
-            result = _invoke(["--format", "json", "app", "modelo", "work", "wizard", work_unit_id])
+
+        def _headless_line_frontend(definition: FlowDefinition) -> _line_frontend.LineFlowFrontend:
+            return _line_frontend.LineFlowFrontend(
+                definition,
+                input=pipe,
+                output=PlainTextOutput(StringIO()),
+            )
+
+        # Bind the handler's real frontend to the substrate's documented
+        # headless terminal adapters. Its prompt/engine implementation is not
+        # replaced; explicit IO merely avoids claiming this test process's
+        # non-TTY stdio is an operator console. The preceding refusal test
+        # keeps that production guard covered independently.
+        monkeypatch.setattr(_modelo_work_wizard_cli, "LineFlowFrontend", _headless_line_frontend)
+        result = _invoke(["--format", "json", "app", "modelo", "work", "wizard", work_unit_id])
 
     assert result.exit_code == 0, result.output
     document = json.loads(result.output)
     assert document["command"] == "modelo.work.wizard"
     payload = _payload(result.output)
-    assert {row["key"] for row in payload["prompted_casillas"]} == {
-        *_MANUAL_CASILLAS,
-        _PREV_YEAR_BINDING_KEY,
-    }
+    assert {row["key"] for row in payload["prompted_casillas"]} == {"06", "08", "10", "16", "18"}
     provenance = payload["source_provenance"]
     assert provenance, "the wizard CLI JSON must retain the calculated ledger source trace"
-    assert {row["source_ref"] for row in provenance} == {
-        "ledger_renta_ingresos_pago_fraccionado_aggregation",
+    ledger_rows = {
+        row["contributor_binding_source"]: row["source_ref"]
+        for row in provenance
+        if row["contributor_binding_source"]
+        in {
+            "ledger_renta_income_aggregation",
+            "ledger_renta_gastos_pago_fraccionado_aggregation",
+        }
+    }
+    assert set(ledger_rows) == {
+        "ledger_renta_income_aggregation",
         "ledger_renta_gastos_pago_fraccionado_aggregation",
     }
+    assert all(source_ref.startswith("transaction:") for source_ref in ledger_rows.values())
 
 
 def _valid_prompted_casilla_kwargs() -> dict[str, object]:

@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import date
 from decimal import Decimal
-from typing import Literal
+from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, TypeAdapter, ValidationError, field_validator
 
@@ -158,6 +158,21 @@ _WithholdingFact = Literal[
 _CLAVE_TOKEN_SEQUENCE_ADAPTER: TypeAdapter[list[object] | tuple[object, ...]] = TypeAdapter(
     list[object] | tuple[object, ...], config=ConfigDict(strict=True)
 )
+
+
+IDENTIFICATION_BLOCK_CLAVES: Final[frozenset[RetencionClave]] = frozenset(
+    {RetencionClave.A, RetencionClave.B, RetencionClave.D},
+)
+"""The claves whose rows carry the Modelo 190 identification block.
+
+A narrowing of :class:`~....core.aggregation.RetencionClave`, held as members so a
+change to that catalogue cannot leave this subset naming a letter it no longer has. The
+letters are the ones the record design gives that block; their meanings live with the
+enum, which cites the Orden.
+
+Spelled out at four sites in two modules before this existed, three of them assigning
+the same local ``clave_abd`` and one testing the same three letters inline.
+"""
 
 
 class WithholdingObservation(BaseModel):
@@ -670,7 +685,7 @@ def _retenciones_ingresadas_total(observations: Iterable[WithholdingObservation]
     total = Decimal("0")
     for observation in observations:
         clave_code = str(observation.clave)
-        if clave_code == "C" or (clave_code in {"A", "B", "D"} and observation.pago in (1, 3)):
+        if clave_code == "C" or (clave_code in IDENTIFICATION_BLOCK_CLAVES and observation.pago in (1, 3)):
             total += observation.retencion_practicada + observation.ingreso_a_cuenta
     return total
 

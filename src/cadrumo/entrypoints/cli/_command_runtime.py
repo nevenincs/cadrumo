@@ -201,13 +201,15 @@ def _behavior_wrapper(spec: CommandSpec) -> Callable[..., object]:
                 target = resolve_deferred_target(target_ref)
                 if not callable(target):
                     raise TypeError(f"command target is not callable: {target_ref.identity!r}")
-                return cast(Callable[..., object], target)(**bound.arguments)
+                invoke: Callable[..., object] = target
+                return invoke(**bound.arguments)
             finally:
                 clear_staged_machine_secret_payloads()
         target = resolve_deferred_target(target_ref)
         if not callable(target):
             raise TypeError(f"command target is not callable: {target_ref.identity!r}")
-        return cast(Callable[..., object], target)(**bound.arguments)
+        invoke_target: Callable[..., object] = target
+        return invoke_target(**bound.arguments)
 
     parameters: list[inspect.Parameter] = []
     context_parameter = spec.invocation.context_parameter

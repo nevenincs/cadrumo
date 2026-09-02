@@ -859,12 +859,12 @@ def _profile_not_ready_findings(
     missing_required = tuple(f for f in unset_findings if f.requirement == "required")
     if not missing_required:
         missing_required = tuple(
-            _DiagnosticFinding(summary=_grounded_profile_key_summary(key), requirement="required")
+            _DiagnosticFinding(summary=_grounded_profile_key_summary(key), requirement=Requirement.REQUIRED)
             for key in report.missing_required
         )
     already_named = {finding.summary.split(" — ", 1)[0] for finding in missing_required}
     enrolment_findings = tuple(
-        _DiagnosticFinding(summary=_grounded_profile_key_summary(key), requirement="required")
+        _DiagnosticFinding(summary=_grounded_profile_key_summary(key), requirement=Requirement.REQUIRED)
         for key in report.missing_enrolment
         if key not in already_named
     )
