@@ -73,7 +73,13 @@ def declared_destination_ids() -> frozenset[str]:
     second definition that agrees with the first only until someone edits
     one of them.
     """
-    return frozenset(get_args(ModeloWorkspaceDestinationIdV1.__value__))
+    destinations: set[str] = set()
+    for argument in get_args(ModeloWorkspaceDestinationIdV1.__value__):
+        if not isinstance(argument, str):
+            message = f"destination alias must hold only string literals, found {argument!r}"
+            raise TypeError(message)
+        destinations.add(argument)
+    return frozenset(destinations)
 
 
 def _require_total_destination_table() -> None:
