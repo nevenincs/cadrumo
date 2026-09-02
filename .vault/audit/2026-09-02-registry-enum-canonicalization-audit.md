@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:44c9b807672a98e72d323fcaf6462188d257eeba14397f436644bfd46ab2501d'
+body_hash: 'sha256:5497d11656dc49ab840c0eca6d4884a720d3a9bf7d4862792175d6da90453811'
 related: []
 ---
 
@@ -790,3 +790,45 @@ Seven legal-parameter rows assert an operator countersignature transcribed from 
 free-text token, covering IRPF imputacion and IVA recargo de equivalencia rates. They
 are the only place in the tree where an unverifiable string became typed countersigned
 authority, and they warrant either verification or downgrade.
+
+## Finding 36 — the identity-check verdict had five declarations, not three
+
+The scan named three sites for `[invalid, unknown, valid]`. Reading the members rather
+than the key found two more that no field annotation could expose: `SedeVerdict`, a
+private alias in `adapters/outbound/aeat/sede/_adapter_utils.py`, and a membership
+tuple in `entrypoints/cli/_app_live_verify_cli.py` testing `value in (None, "valid",
+"invalid", "unknown")`. The private alias is the sharper defect: it sat in an
+underscore module, so no other package was permitted to import it, which is precisely
+why the two checkers beside it spelled the union inline instead.
+
+Resolved as `core/identity_check_verdict.py` with two rooted forms — the `StrEnum` for
+the producer, and `IdentityCheckVerdictValue` for the payload fields. `SedeVerdict` and
+`VerifyVerdict` are both deleted; six modules now import one definition.
+
+The producer's output still compares equal to its raw token, so no downstream string
+comparison changed behaviour. Verified, not assumed.
+
+## Finding 37 — the last registry-boundary crossing is closed
+
+`[any, non_negative, non_positive]` was declared by `CasillaConstraints.sign` in the
+registry schema and restated by `SheetCellConstraint.sign` in the spreadsheet storage
+layer. This was the one vocabulary the wide scan reported as crossing the boundary, and
+it is the exact shape of the concern that opened this campaign: the registry declares
+the schema, and a second layer had quietly declared it again. A member added to the
+registry would have left the workbook accepting a value the engine rejects.
+
+Promoted to `schema_base.py` in all three rooted forms. 811 shipped TOML rows declare
+`sign`, and the tree loads, which is what proves the coercion hop accepts the real
+tokens rather than only the synthetic one a unit test would have supplied.
+
+Package-wide count after both: 26 duplicated vocabularies, **0 crossing the registry
+boundary**. Registry-scoped duplicated remains 0.
+
+## Finding 38 — the scan's blind spot is now measured, not just declared
+
+Both findings above turned on declarations the scan structurally cannot see: a function
+return type, a private alias, and a membership tuple in a validator. The module has
+always documented this limit. What is new is that it has now cost two real defects in
+two consecutive targets, which makes it the campaign's dominant remaining risk rather
+than a footnote — the annotation count can reach zero while the vocabulary surface has
+not.

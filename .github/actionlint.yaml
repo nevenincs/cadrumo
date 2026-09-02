@@ -13,7 +13,9 @@
 # makes the typo detectable.
 self-hosted-runner:
   labels:
-    # Carried by `gw-workstation-win`, which owns the Scoop bucket publication
-    # path. The plain `[self-hosted, Windows, X64]` lanes must NOT land on it by
-    # accident, which is why the distinction is a label rather than a comment.
+    # Carried by the Windows runner that owns the Scoop bucket publication path.
+    # Labels are additive and this fleet has one Windows runner, so the label
+    # selects that runner for the Scoop lane; it does not keep other Windows
+    # lanes off it. Isolating the publication path needs a second runner, not a
+    # second label.
     - windows-scoop

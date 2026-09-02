@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:adaa7bfc01b93958001133c473a86a7d961f54a3782da719a9b48f03ce42de59'
+body_hash: 'sha256:95961007910f33e791b86609d6cbf05037a70ab952a9247b945cb98cce3ae559'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -3080,6 +3080,232 @@ module-scoped name as equal wherever the name matches, whatever it holds. It
 finds candidates. Only reading them decides, and five of nine here died on
 reading.
 
+### the-duplicate-body-sweep-is-finished-and-every-survivor-is-a-false-positive | high | Twenty-seven bodies to five, and the five must not be collapsed
+
+Duplicate top-level function bodies across the shipped package are down from 27
+(45 redundant copies) to 5 (8 copies). Every collapse was verified by object
+identity rather than by reading the imports, and the canonical home was chosen by
+what already owns the concept: a type guard beside its siblings in core, a JSON
+locator beside the parsers that need it, a flow traversal beside the types it
+walks, a snapshot identity beside the serialisation rule it states.
+
+The five survivors are all false positives of the same shape, and each was
+settled by reading the constant its body references rather than by pattern. Two
+sede guards call `assert_*_for(READ_GUARD_POLICY, ...)` where the policy is
+declared separately in each module; a command-spec helper indexes a per-module
+table; a repository helper calls a per-module factory; and the verdict extractor
+reads per-module marker phrases while both callers already delegate to one shared
+extractor. Collapsing any of them would replace five honest declarations with one
+function taking five arguments, which is the opposite of the goal.
+
+So the sweep is complete rather than stalled: what remains is not work deferred,
+it is work that would be wrong to do.
+
+The largest single item was a module left behind by its own split - 2,139 lines,
+59 of 60 definitions duplicated in the modules that replaced it, zero importers.
+The subtlest was an alias: `ModeloEditCasillaDataType = CasillaDataTypeField`,
+exported with no consumers outside its own module. That is not a duplicated
+declaration at all - the object is shared - but it is a second public NAME for
+one concept, which is the same ambiguity in a form no duplicate-body scan can
+see.
+
+### three-instruments-and-three-different-blind-spots | medium | Traded with a peer session working the same tree
+
+A second session is running a vocabulary-canonicalisation campaign over the same
+worktree, and comparing instruments produced something neither had alone. Its
+scan cannot separate a repeated vocabulary from a deliberate NARROWING of one -
+five surfaces declare a data-type vocabulary and four are intentional subsets, so
+the mechanical collapse would have widened what four surfaces accept. This
+campaign's scan cannot separate a body over a shared constant from a body over a
+per-module one. And neither can separate an alias from a declaration, which is
+how the `edit_models` hit was classified as a duplicated vocabulary when it was a
+renamed re-export.
+
+All three reduce to one rule worth keeping: the instrument finds candidates, and
+only reading decides. Of nine candidates surviving into the final pass here, five
+died on reading.
+
+One concrete defect came out of the exchange in the other direction. That
+session's promotion of the casilla data type to a typed enum makes
+`CasillaDataTypeField` an annotated type, and an operation-schema gate refuses a
+field whose type customises its Pydantic core schema:
+`schema.submission.baseline.permitted_surface.data_type must not customize its
+Pydantic core schema`. It is reported to them with the commit that introduced it.
+The alias removal recorded above was ruled out as a cause first, on the ground
+that substituting an identical object cannot change a schema shape.
+
+### the-alias-sweep-found-eleven-second-names-and-only-two-were-wrong | medium | Naming a primitive after the domain is the opposite of duplication
+
+The duplicate-body scan cannot see an alias, so a second scan looked for type and
+constant aliases: an assignment giving an imported name a second name in the
+importing module. Eleven exist across the shipped package, and the interesting
+result is that nine are right.
+
+`ContentDigest = Hex64Str`, `BucketEventId = Hex64Str`,
+`M145CommunicationRecordId = Hex64Str`, `ModeloDraftContentAddress = Hex16Str` -
+these give a domain name to a primitive shape, and a reader of
+`ContentDigest` learns what the value MEANS where `Hex64Str` says only what it
+looks like. Collapsing them would trade meaning for uniformity, which is the
+opposite of what this work is for. Two more rename a constant to the spelling the
+rest of the codebase actually uses.
+
+Two were genuinely wrong: `BINDING_SOURCE_DISPOSITIONS` and
+`ENROLLED_SOURCE_KINDS` in the calculation source policy, each exported in
+`__all__` and each carrying exactly one reference repository-wide - its own
+definition line. A second public name with no reader is pure ambiguity: it
+survives long enough that someone eventually imports it, and then two names for
+one constant are in the tree with nothing recording which is preferred. Both are
+removed; the module imports, the registry loads, and the owning tests pass.
+
+A measurement error inside this sweep is worth recording because it nearly caused
+four removals instead of two. The first pass counted a name's occurrences within
+its DEFINING FILE and read four aliases as unused. Counted repository-wide,
+`MAX_AGE_MENOR_TRES` has twenty references - it is the name the codebase prefers,
+and the longer canonical spelling is the one nobody uses. An in-file count answers
+a different question from the one being asked, and it answered it plausibly.
+
+### two-classes-shared-a-name-and-only-one-of-them-could-be-collapsed | medium | The other had to be renamed, because the architecture forbids merging it
+
+A third scan looked for the form the first two miss: a class declared under one
+name in more than one module. Two existed, and neither had an identical body -
+which is the worse shape, because one name meant two different contracts.
+
+`_IdentifiedRecord` was declared three times in the registry package, spelling
+the same protocol two ways: `id: str` in one, a read-only property in another.
+One site was collapsed earlier in this campaign and a third was found only by
+this scan, which is the pattern already recorded here - removing one duplicate
+exposes the next. All three now resolve to one protocol.
+
+`CustodyDigestModel` was the interesting case, because it could not be collapsed.
+One is declared in the application layer and one in the persistence adapter, and
+both docstrings open with the same claim to be the shared canonical digest
+behaviour for custody records. They genuinely differ - the adapter's declares a
+`self_digest` field and a third class variable - and merging them is forbidden
+rather than merely awkward: application code must not depend on an adapter, so
+the dependency that would share the definition cannot exist.
+
+The remedy was therefore a rename, not a collapse. The application class had
+twelve fewer consumers than the adapter's - in fact none outside its own module,
+despite being exported - and its three subclasses were already named
+`ProfileCustody*`. It is now `ProfileCustodyDigestModel`, and its docstring
+records why the name carries the layer: sharing one name across a boundary that
+forbids sharing the definition made a reader guess which contract they were
+reading.
+
+That distinction is worth keeping for the rest of this work. Where two
+declarations of one concept can be merged, merge them; where an architectural
+rule forbids the merge, the duplication is legitimate and the NAME is the defect.
+No classes share a name across modules now.
+
+The custody lock-order test fails either way, verified by renaming back, running,
+and renaming forward - a threading assertion about an event that never sets,
+untouched by any of this.
+
+### a-redaction-token-was-declared-eight-times | high | Eight places had to agree, and disagreement leaks a taxpayer's filename with nothing failing
+
+A fourth scan looked at module-level constants sharing a name AND a value across
+modules: the same fact stated twice. Twenty-three existed. The largest is
+security-relevant.
+
+`_INPUT_PDF_SOURCE_LABEL = "<input-pdf>"` was declared separately in eight
+inbound PDF modules. It is the token that stands in for a taxpayer's document
+path in logs, diagnostics and error messages, because the filename alone can
+disclose who they are, which return it is, or where it was stored. Eight
+independent declarations mean eight places must agree; the failure mode of
+disagreement is that one surface emits a real path and nothing fails, which is
+exactly the shape of defect a test does not catch.
+
+It now lives in one module whose docstring states why it exists, and all eight
+consumers resolve to that object. The two packages that exercise it pass 194
+tests.
+
+Two further constants were collapsed on the same reasoning: a wizard section
+identifier declared in three modules, now owned by the catalogue that defines the
+section, and the modelo edit responsible owner declared in three modules, now
+owned by the service the other two build on.
+
+### a-shared-value-is-not-always-a-shared-fact | medium | Three manifests at version one are three facts that agree, not one fact repeated
+
+The constant scan's obvious failure mode is the mirror of the alias scan's:
+assuming that two declarations carrying the same value carry the same MEANING.
+
+`_MANIFEST_VERSION = 1` appears in three modules - an attachment envelope, an
+evidence service and a modelo workspace manifest. Three unrelated manifests, each
+independently at its first version. Collapsing them would couple their
+versioning: the next time one manifest's format changes, either all three claim a
+new version or the shared constant has to be un-collapsed under pressure. They
+agree today by coincidence and must remain free to disagree.
+
+That is the fourth distinct shape this campaign has had to separate by reading
+rather than by measurement, after a body over a per-module constant, an alias
+versus a declaration, and a narrowing versus a repeat. The scans are worth having
+precisely because each one finds a class the others cannot; none of them can tell
+whether two things that look alike mean the same thing.
+
+Twenty duplicated name-and-value constants remain and are recorded as a step
+rather than swept, because that judgement has to be made per constant.
+
+### the-constant-sweep-is-judged-rather-than-swept | medium | Twenty-three to sixteen, and the seven removed were chosen one at a time
+
+Every remaining duplicated constant was read and classified, because the scan
+cannot tell a shared fact from two facts that agree. Seven were collapsed and the
+rest were left, each for a stated reason.
+
+Collapsed as one fact: the PDF redaction token declared eight times; a wizard
+section identifier declared three times, now owned by the catalogue that defines
+the section; the modelo edit responsible owner declared three times, now owned by
+the service the other two build on; five wizard locale keys, now owned by the
+format-hints module that already declared four of them and gained the fifth; and
+`SHA256_HEX_LENGTH = 64`, which is a property of the algorithm and cannot
+differ between two modules without one of them being wrong.
+
+Left as separate facts: three manifest versions that agree at one by coincidence
+and must stay free to diverge; a signature envelope version on the same
+reasoning; a default page limit and a file extension shared by unrelated
+surfaces.
+
+One was left for a different reason worth recording, because the naive answer
+would have been to collapse it. The W3C XML Schema namespace is declared in two
+production modules - a filing XML dictionary and an AEAT e-invoice schema reader
+- and it genuinely is one fact. But the only home shared by those two layers is
+the external-constants registry, which is documented as a read-only mirror of
+remote endpoints and hostnames, and a format namespace is not that. Creating a
+new core module to hold one immutable W3C string would couple two subsystems that
+otherwise never meet, to remove a divergence risk that is zero because the string
+cannot change. The duplication is cheaper than the coupling, and that is a
+different judgement from "these are separate facts" - both end in leaving the
+code alone, and conflating them would lose the reason.
+
+### the-collapsed-concepts-are-now-gated-because-a-sweep-already-undid-them-once | high | A canonicalisation is undone silently, and the duplicate that returns works
+
+Sixteen concepts examined and collapsed during this work are now held at one
+definition by a gate. It exists because they were already lost once: a whole-tree
+commit in the shared worktree restored nine local key helpers, six alias
+wrappers and a record protocol, leaving each canonical definition sitting beside
+the duplicates it had replaced. Nothing failed, because the restored local copy
+works. The census noticed on its next run; no test would have.
+
+The gate names each collapsed concept and its owning module and asserts a single
+definition across the shipped package. It carries no count and no tolerance - one
+definition is the contract, and a second is a regression whatever the total. An
+import of the symbol is deliberately not a definition, since every consumer is
+expected to import it and only a second declaration is the fault. It also checks
+the definition has not silently moved module, which would leave the gate watching
+an address nothing lives at.
+
+What it deliberately does NOT do is refuse duplication generally, and the reason
+is the whole finding of this campaign's second half. Several duplicate-looking
+declarations in this tree are correct: a guard over a per-module policy, an alias
+giving a primitive a domain name, two manifests agreeing at version one by
+coincidence, a W3C namespace whose single shared home would cost more coupling
+than the duplication costs risk. A gate that refused those would be refusing the
+codebase's own judgement, and would be argued down within a week. Only concepts
+that were read, judged to be one fact, and collapsed are listed.
+
+Its teeth were proven rather than assumed: planting a second
+`is_str_keyed_mapping` beside the canonical one is caught and named, and both
+probes were removed afterwards.
+
 
 ## Recommendations
 
@@ -3287,3 +3513,77 @@ aux-version token that must not be invented. Modelo 222 needs re-review rather t
 because its attestation reaches scheduling and applicability only while the revision it describes has
 since tripled. The twenty-four filing tests demanding grades three modelos no longer declare are
 resolved; the grades themselves were correct and it was the consumers that were owed the change.
+
+### A one-character serialization change reclassified 141 correct export records as drifted
+
+The closed-vocabulary enum conversion turned the export record `encoding` field from a
+plain string into `ExportEncoding`. The value did not change and the encoding did not
+change, but the TOML serializer now emits it single-quoted where the committed trees
+carry it double-quoted. Every one of the 141 committed export record files uses the
+double-quoted form and none uses the single-quoted form, so the flip is uniform and the
+committed spelling is the anomaly: every other string field in those same files is
+single-quoted.
+
+The consequence is not cosmetic. `render_check` classifies any difference in a record
+file as `record_drift`, and its own documentation states that a tree in that state ships
+bytes its inputs no longer produce and must not be republished. That verdict is now
+wrong for these trees. The bytes mean exactly what they meant before; only the quoting
+differs. A screen that compares bytes cannot tell a changed value from a changed
+serializer, and here it reported the more alarming of the two.
+
+This is worth stating plainly because the safe-looking reading is the dangerous one. The
+`record_drift` class exists to stop someone republishing a tree whose inputs have gone
+bad, and modelo 347 genuinely sits in that state for a proven reason. Filling the class
+with 141 false members is how a real member stops being noticed.
+
+The remedy is not mine to apply: republishing generated trees is registry data governed
+by its own disposition file, and the enum conversion is another contributor's committed
+work. What belongs here is the attribution and the measurement. The regression is
+commit `2606941009`, the failure count moved from 15 to 46 across the two registry test
+directories, and 30 of the 31 new failures are this single field.
+
+The three fixtures that fed the encoding as the literal `latin-1` were repaired here,
+because they are dev-owned and the spelling was never canonical: `latin-1` and
+`iso-8859-1` resolve to the same codec, which was verified rather than assumed, and
+`ExportEncoding` admits only the second. Those six failures are gone. The remaining
+twenty-four are the quote flip and are reported, not patched.
+
+### Duplication and ambiguity are different defects and only one of them was being counted
+
+Every duplication measurement in this campaign counted things said twice. None counted
+things that say two things under one word, which is the harder defect: a duplicated body
+is repaired by deleting a copy, but a name defined in two modules loses behaviour if
+either copy is deleted, and a reader who greps it cannot tell which definition runs.
+
+The census now separates four classes, because a count that lumped them would be mostly
+noise. A module's `main` is convention and is reached by module path, never by the bare
+name. Several definitions inside one module are an `@overload` set - one implementation,
+several signatures - and the naive scan that started this counted `redact_structured`
+five times before the eight overload stubs in that file were read. Both are reported so
+the total is honest and excluded so the findings are not diluted.
+
+That leaves 12 names claimed across architectural layers and 9 claimed inside a single
+layer. The cross-layer class is often legitimate: a layer states a concept in its own
+vocabulary and the hexagonal boundary is what stops the two from being merged, which is
+the same reasoning that kept nine aliases and five duplicate bodies earlier in this
+campaign. The same-layer class has no such excuse.
+
+`resolve_bucket_event_repository` is the sharpest instance and shows why the class is
+worth separating. Two definitions sit in one package, `application/ledger`, under an
+identical signature, and they do not agree. One returns the protocol and accepts any
+implementation of it. The other returns the concrete class and asserts the passed
+repository is that class, so a caller supplying a valid protocol implementation that is
+not the concrete type fails - and because the guard is an `assert`, it disappears
+entirely under `python -O`, leaving the return annotation stating something the function
+no longer checks. Neither definition is dead and neither is a copy of the other. They
+are two contracts wearing one name, and the arity that would normally distinguish them
+is identical, which is why nothing had surfaced them.
+
+Arity is carried in every row for that reason: differing arity is the cheapest evidence
+that two same-named functions are not the same function. It is a hint and never a
+verdict - `review_view` differs at 2 against 4 and is plainly two things, while this
+pair matches at 0 and is also two things.
+
+The screen exits 0 whatever it finds. A gate belongs here once the nine same-layer
+collisions have been adjudicated, and not before: refusing a condition the corpus still
+contains would only teach the next contributor to route around it.

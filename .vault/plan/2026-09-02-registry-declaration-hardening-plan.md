@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:b3ffc2bd763742e0b55c23c38cbe172d6a851e52fb9e7fff62ce71a4b99a3aab'
+body_hash: 'sha256:8537e801a5d02abd857369a620d602921e7afeb13b557b8903769aa2595f13c6'
 ---
 
 <!-- RETIRED: S73 -->
@@ -213,6 +213,13 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S153` - Collapse the duplicated list type guard and mapping predicate onto their canonical definitions; `src/cadrumo/domain/iva`.
 - [x] `W02.P02.S154` - Collapse the config payload result schema onto one construction, replacing four identical private helpers and one inline copy; `src/cadrumo/entrypoints/cli/config/_command_spec_schema.py`.
 - [x] `W02.P02.S155` - Collapse the duplicated JSON locator, flow traversals and profile projection onto canonical definitions; `src/cadrumo`.
+- [x] `W02.P02.S157` - Collapse the remaining duplicate function bodies across the shipped package onto canonical definitions, from twenty-seven bodies to five; `src/cadrumo`.
+- [x] `W02.P02.S158` - Remove the exported casilla data type alias that gave a canonical registry type a second public name; `src/cadrumo/application/modelo/edit_models.py`.
+- [x] `W02.P02.S159` - Remove the two dead source-policy aliases that gave canonical constants a second unused name; `src/cadrumo/application/modelo/calculation_source_policy.py`.
+- [x] `W02.P02.S160` - Resolve the two classes sharing a name across modules, collapsing the duplicated record protocol and naming the profile custody digest model for its layer; `src/cadrumo`.
+- [x] `W02.P02.S161` - Collapse the redaction label, the familia section identifier and the modelo edit responsible owner onto single declarations; `src/cadrumo`.
+- [x] `W02.P02.S162` - Judge the remaining twenty duplicated name-and-value constants, separating one fact stated twice from two facts that happen to agree; `src/cadrumo`.
+- [x] `W02.P02.S163` - Gate that every deliberately collapsed concept keeps exactly one definition, so a whole-tree sweep cannot silently restore the duplicates; `dev/tests/test_canonical_definitions_stay_singular.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
@@ -393,6 +400,9 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S66` - Gate that no continuity chain crosses an identifier grammar and no evolution names a chain that does not exist; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W06.P13.S99` - Prove the continuity screen detects a chain crossing a grammar and an evolution naming a chain no casilla carries; `dev/registry/tests/test_continuity_integrity.py`.
 - [ ] `W06.P13.S134` - Decide a typed slot for withheld promotion, since a revision can declare a family inapplicable but cannot record why it carries filing machinery at a lower grade; `src/cadrumo/domain/calculations/registry/schema.py`.
+- [x] `W06.P13.S164` - Census the public names more than one module defines, classifying entrypoint convention, typing overload, cross-layer and same-layer collisions; `dev/quality/name_collision_census.py,dev/quality/tests/test_name_collision_census.py`.
+- [x] `W06.P13.S165` - Canonicalise the export record encoding spelling in the provenance fixtures onto the ExportEncoding enum; `dev/registry/tests/test_provenance_manifest.py`.
+- [x] `W06.P13.S166` - Report that the closed-vocabulary enum conversion reclassified 141 semantically unchanged export records as record drift; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -477,7 +487,7 @@ the boundary contract, the ratchet residue deletion and the dependency move.
 
 ## Verification
 
-The plan is complete when every Step is closed. Beyond that, nine criteria decide whether the work
+The plan is complete when every Step is closed. Beyond that, ten criteria decide whether the work
 achieved what it was for. Each names the evidence that settles it, because a criterion whose proof is
 a reading rather than a command is one nobody can check later.
 
@@ -552,6 +562,21 @@ The lane figure is only as honest as the path it was taken over, so the run name
 The conformance suite once took nearly twelve minutes for seven tests, which exceeds the default
 foreground timeout and is exactly why it fell out of every earlier measurement; that cost is the
 subject of the criterion below.
+
+One concept has one declaration, and the exceptions are reasoned rather than tolerated. Duplicate
+function bodies across the shipped package fell from 27 to 5, redundant copies from 45 to 8, classes
+sharing a name from 2 to 0, and duplicated name-and-value constants from 23 to 16. Sixteen collapsed
+concepts are held at a single definition by a gate that names each one, because a whole-tree commit
+in the shared worktree had already restored a set of them silently - the duplicate that returns
+works, so nothing fails.
+
+What makes this criterion met rather than merely reduced is that every survivor was read and has a
+recorded reason. Five duplicate bodies guard per-module constants and would lose the thing that
+distinguishes their modules. Nine aliases give a primitive a domain name, which is meaning rather
+than repetition. Three manifest versions agree at one by coincidence and must stay free to diverge.
+One namespace is genuinely a single fact whose only shared home would couple two subsystems that
+never otherwise meet, so the duplication is cheaper than the collapse. A criterion that counted
+instead of reading would call this incomplete; the work is to distinguish them.
 
 The registry's own audits complete well inside the budget the tests give them, and each remedy
 preserves the isolation contract rather than trading it away. This was not a criterion when the plan

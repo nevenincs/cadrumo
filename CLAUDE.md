@@ -13,6 +13,7 @@ You MUST respect these rules at all times:
 @.claude/rules/aeat-local-execution.md
 @.claude/rules/aeat-locales-cli.md
 @.claude/rules/aeat-naming.md
+@.claude/rules/aeat-no-destructive-git.md
 @.claude/rules/aeat-quality-gates.md
 @.claude/rules/aeat-registry-authority-flow.md
 @.claude/rules/aeat-registry-bindings.md
