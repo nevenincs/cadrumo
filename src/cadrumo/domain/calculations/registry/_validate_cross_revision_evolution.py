@@ -222,5 +222,5 @@ def _format_unmatched_continuity_evolution_failure(
         f"modelo {modelo_id} declaring_revision {declaring_revision_id!r} "
         f"evolution {evolution.id!r} continuidad_id {evolution.continuidad_id!r} "
         f"revisions {evolution.from_revision!r}->{evolution.to_revision!r} "
-        f"evolution_kind {evolution.evolution_kind!r}: {reason}"
+        f"evolution_kind {str(evolution.evolution_kind)!r}: {reason}"
     )

@@ -17,6 +17,8 @@ canonical binding values for this source family.
 
 from __future__ import annotations
 
+from enum import StrEnum
+
 from decimal import Decimal
 from typing import Annotated, Literal, Protocol
 
@@ -29,7 +31,21 @@ from .binding_selector_utils import selector_against_model
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .ids import BindingId
 from .schema import DataBindingDefinition, ModeloRevision
-from .schema_base import coerce_enum_tuple
+from .schema_base import coerce_enum_tuple, coerce_enum_member
+
+
+class RetencionesAggregationFact(StrEnum):
+    """A figure a retenciones aggregation binding totals across matched rows."""
+
+    PERCEPTOR_COUNT_DISTINCT = "perceptor_count_distinct"
+    TAXABLE_BASE_SUM = "taxable_base_sum"
+    RETENCION_AMOUNT_SUM = "retencion_amount_sum"
+
+
+RetencionesAggregationFactField = Annotated[
+    RetencionesAggregationFact, BeforeValidator(coerce_enum_member(RetencionesAggregationFact))
+]
+"""Registry token hydrated into a RetencionesAggregationFact member."""
 
 
 class _RetencionesAggregationProtocol(Protocol):
@@ -77,7 +93,7 @@ class _RetencionesAggregationSelector(BaseModel):
 
     target_casilla_id: CasillaId
     schemes: Annotated[tuple[RetencionScheme, ...], BeforeValidator(coerce_enum_tuple(RetencionScheme))] = ()
-    fact: Literal["perceptor_count_distinct", "taxable_base_sum", "retencion_amount_sum"] = "perceptor_count_distinct"
+    fact: RetencionesAggregationFactField = RetencionesAggregationFact.PERCEPTOR_COUNT_DISTINCT
 
 
 def validate_retenciones_aggregation_binding(binding: DataBindingDefinition) -> list[str]:

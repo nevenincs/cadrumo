@@ -139,29 +139,6 @@ class TelemetryEventPayload(BaseModel):
 
 TELEMETRY_METRIC_REGISTRY: Mapping[str, MetricSchema] = MappingProxyType(
     {
-        "diagnostics.command_invocation": MetricSchema(
-            command="diagnostics.command_invocation",
-            counters={
-                "invocations": CounterSpec(
-                    description="Count of completed CLI command invocations, regardless of outcome.",
-                    remote_allowed=True,
-                ),
-                "succeeded": CounterSpec(
-                    description="Count of completed CLI command invocations that succeeded.",
-                    remote_allowed=True,
-                ),
-                "failed": CounterSpec(
-                    description="Count of completed CLI command invocations that raised.",
-                    remote_allowed=True,
-                ),
-            },
-            timings_ms={
-                "duration": TimingSpec(
-                    description="Wall-clock CLI command invocation duration in milliseconds.",
-                    remote_allowed=True,
-                ),
-            },
-        ),
         "diagnostics.llm_run": MetricSchema(
             command="diagnostics.llm_run",
             counters={
@@ -181,18 +158,6 @@ TELEMETRY_METRIC_REGISTRY: Mapping[str, MetricSchema] = MappingProxyType(
             timings_ms={
                 "duration": TimingSpec(
                     description="Wall-clock local LLM run duration in milliseconds.",
-                    remote_allowed=True,
-                ),
-            },
-        ),
-        "diagnostics.error_frequency": MetricSchema(
-            command="diagnostics.error_frequency",
-            counters={
-                "occurrences": CounterSpec(
-                    description=(
-                        "Count of occurrences of a single closed error-kind label "
-                        "(an exception class name, never free exception text)."
-                    ),
                     remote_allowed=True,
                 ),
             },

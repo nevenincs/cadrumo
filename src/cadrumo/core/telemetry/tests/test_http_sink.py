@@ -56,8 +56,8 @@ _CAPTURED_AT = "2026-07-04T00:00:00+00:00"
 def _payload() -> TelemetryEventPayload:
     return build_telemetry_payload(
         workspace_hash=_WORKSPACE_HASH,
-        command="diagnostics.command_invocation",
-        counters={"invocations": 1, "succeeded": 1, "failed": 0},
+        command="diagnostics.llm_run",
+        counters={"runs": 1, "succeeded": 1, "failed": 0},
         timings_ms={"duration": 42},
         succeeded=True,
         captured_at=_CAPTURED_AT,
