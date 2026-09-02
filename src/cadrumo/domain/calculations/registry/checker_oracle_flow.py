@@ -210,7 +210,7 @@ class CheckerOracle:
             return ParityResult(
                 oracle_id=self.oracle_id,
                 cross_reference_id=policy.id,
-                verdict="blocked",
+                verdict=ParityVerdictKind.BLOCKED,
                 narrative=f"{self.surface_label} oracle blocked by remote-state guard: {exc}",
             )
         driver = self._driver
@@ -218,7 +218,7 @@ class CheckerOracle:
             return ParityResult(
                 oracle_id=self.oracle_id,
                 cross_reference_id=policy.id,
-                verdict="unverifiable",
+                verdict=ParityVerdictKind.UNVERIFIABLE,
                 narrative=(
                     f"{self.surface_label} oracle has no executable driver configured. "
                     "Guard preflight passed, but no AEAT or replay observation was available "
@@ -231,7 +231,7 @@ class CheckerOracle:
             return ParityResult(
                 oracle_id=self.oracle_id,
                 cross_reference_id=policy.id,
-                verdict="unverifiable",
+                verdict=ParityVerdictKind.UNVERIFIABLE,
                 narrative=f"{self.surface_label} driver could not produce comparable observations: {exc}",
             )
         fields = tuple(

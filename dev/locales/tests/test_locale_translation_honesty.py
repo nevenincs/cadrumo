@@ -37,6 +37,7 @@ from functools import cache
 import pytest
 
 from cadrumo.domain.calculations.registry.modelo_localization import (
+    ModeloLocalizationFieldKind,
     casilla_continuity_locale_key,
     casilla_occurrence_locale_key,
 )
@@ -175,9 +176,9 @@ def _continuity_backing() -> dict[str, str]:
                 continuidad_id = casilla.get("continuidad_id")
                 if not isinstance(casilla_id, str) or not isinstance(continuidad_id, str):
                     continue
-                backing[casilla_occurrence_locale_key(modelo_id, revision_id, casilla_id, "label")] = (
-                    casilla_continuity_locale_key(modelo_id, continuidad_id, "label")
-                )
+                backing[
+                    casilla_occurrence_locale_key(modelo_id, revision_id, casilla_id, ModeloLocalizationFieldKind.LABEL)
+                ] = casilla_continuity_locale_key(modelo_id, continuidad_id, "label")
     assert backing, "no casilla declares a continuidad_id; the continuity exemption below would be vacuous"
     return backing
 

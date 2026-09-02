@@ -362,14 +362,14 @@ class RentaWebOpenOracle:
             return ParityResult(
                 oracle_id=self.oracle_id,
                 cross_reference_id=policy.id,
-                verdict="blocked",
+                verdict=ParityVerdictKind.BLOCKED,
                 narrative=f"Renta WEB Open oracle blocked by remote-state guard: {exc}",
             )
         if self._driver is None:
             return ParityResult(
                 oracle_id=self.oracle_id,
                 cross_reference_id=policy.id,
-                verdict="unverifiable",
+                verdict=ParityVerdictKind.UNVERIFIABLE,
                 narrative=(
                     "Renta WEB Open browser driver is not configured. Guard preflight passed, "
                     "but no outbound AEAT Sede adapter was available to execute the open simulator."
@@ -381,7 +381,7 @@ class RentaWebOpenOracle:
             return ParityResult(
                 oracle_id=self.oracle_id,
                 cross_reference_id=policy.id,
-                verdict="unverifiable",
+                verdict=ParityVerdictKind.UNVERIFIABLE,
                 narrative=f"Renta WEB Open driver could not produce comparable observations: {exc}",
             )
         fields = tuple(
@@ -516,9 +516,9 @@ def serialize_renta_web_open_replay_decimal(value: str) -> str | None:
 
 
 def _overall_verdict(fields: tuple[ParityFieldComparison, ...]) -> ParityFieldVerdict:
-    if any(field.verdict == "mismatch" for field in fields):
+    if any(field.verdict == ParityVerdictKind.MISMATCH for field in fields):
         return ParityVerdictKind.MISMATCH
-    if any(field.verdict == "unverifiable" for field in fields):
+    if any(field.verdict == ParityVerdictKind.UNVERIFIABLE for field in fields):
         return ParityVerdictKind.UNVERIFIABLE
     return ParityVerdictKind.MATCH
 
@@ -528,9 +528,9 @@ def _narrative_for_verdict(
     *,
     driver_mode: CheckerDriverModeValue,
 ) -> str:
-    if verdict == "match":
+    if verdict == ParityVerdictKind.MATCH:
         return f"Renta WEB Open {driver_mode} parity matched every expected field"
-    if verdict == "mismatch":
+    if verdict == ParityVerdictKind.MISMATCH:
         return f"Renta WEB Open {driver_mode} parity found at least one mismatched field"
     return f"Renta WEB Open {driver_mode} parity could not observe every expected field"
 
