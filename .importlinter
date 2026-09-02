@@ -747,6 +747,7 @@ ignore_imports =
     #    adapters.persistence.profile.usage_ratios; the ledger callers now import
     #    the adapter directly (narrow target keeps the source-module set flat) ──
     cadrumo.application.ledger.actions_common -> cadrumo.adapters.persistence.profile.usage_ratios
+    cadrumo.application.user_profile.usage_ratio_resolution -> cadrumo.adapters.persistence.profile.usage_ratios
     # ── arch-remediation-ports-inversion: submission repository relocated to
     #    adapters.persistence.profile.submission; the workflow gate constructs the
     #    concrete and injects it into the SubmissionEngine, tests seed via it ──
@@ -755,6 +756,7 @@ ignore_imports =
     #    adapters.persistence.profile.justificante (no domain port; no domain
     #    caller); application/entrypoint callers import the adapter directly ──
     cadrumo.application.calculations.cross_period_clean_state -> cadrumo.adapters.persistence.profile.justificante
+    cadrumo.application.calculations.cross_period_external_evidence -> cadrumo.adapters.persistence.profile.justificante
     # ── application/live, registry and diagnostics narrowed from `adapters.**`
     #    to what each module reaches. This package DRIVES the AEAT Sede and its
     #    authentication: an outbound edge here is the package's purpose, not an
@@ -767,6 +769,20 @@ ignore_imports =
     #    previously admitted by the wildcard without review. ──
     cadrumo.application.live.borrador_100 -> cadrumo.adapters.persistence.**
     cadrumo.application.live.errors -> cadrumo.adapters.outbound.aeat.sede.errors
+    # The Clave Movil support surface is the same outbound-authentication class
+    # as the certificate edge pinned with the auth probes above: the failure-mode
+    # enum and the configuration/timeout errors are the integration's own
+    # vocabulary, and this layer translates them into user-facing refusals.
+    cadrumo.application.live.errors -> cadrumo.adapters.outbound.aeat.auth.clave_movil_support
+    cadrumo.application.auth.operator_probes -> cadrumo.adapters.outbound.aeat.auth.clave_movil_support
+    # Driving the Sede is this package's purpose: the censal-datos fetch, the
+    # declarations register and its expediente walker, and the filed-observation
+    # capture are each pinned at the named outbound module they call rather than
+    # at a wildcard over adapters.outbound.aeat.sede.
+    cadrumo.application.live.censo -> cadrumo.adapters.outbound.aeat.sede.censal_datos
+    cadrumo.application.live.filed_data_capture -> cadrumo.adapters.outbound.aeat.sede.declarations_capture
+    cadrumo.application.live.justificante -> cadrumo.adapters.outbound.aeat.sede.declarations
+    cadrumo.application.live.justificante -> cadrumo.adapters.outbound.aeat.sede.walker
     # ── live-snapshot family: concrete relocated, construction edge retained ──
     # SecureSnapshotRepository -- the encrypted secure-object backend these
     # services persist through -- now lives in the persistence adapter, as
@@ -898,6 +914,7 @@ ignore_imports =
     cadrumo.application.invoices.creation_wizard -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.modelo.calculation_actions -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.review._adapters -> cadrumo.adapters.persistence.profile.invoices
+    cadrumo.application.aggregation._modelo_bindings_invoice_iva -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.modelo.amendment_actions -> cadrumo.adapters.persistence.profile.modelos_calculation
     cadrumo.application.modelo.calculation_actions -> cadrumo.adapters.persistence.profile.modelos_calculation
     cadrumo.application.modelo.export -> cadrumo.adapters.persistence.profile.modelos_calculation
@@ -907,6 +924,8 @@ ignore_imports =
     cadrumo.application.modelo.participation_index_rebuild -> cadrumo.adapters.persistence.profile.modelos_calculation
     cadrumo.application.modelo.selectors -> cadrumo.adapters.persistence.profile.modelos_calculation
     cadrumo.application.modelo.verification_actions -> cadrumo.adapters.persistence.profile.modelos_calculation
+    cadrumo.application.modelo._edit_execution -> cadrumo.adapters.persistence.profile.modelos_calculation
+    cadrumo.application.modelo.calculation -> cadrumo.adapters.persistence.profile.modelos_calculation
     # ── application production edges: modelos_work_units catalogue repository
     #    consolidation (import-centralization refactor; module-granularity) ──
     cadrumo.application.modelo.amendment_actions -> cadrumo.adapters.persistence.profile.modelos_work_units
@@ -920,6 +939,11 @@ ignore_imports =
     cadrumo.application.modelo.taxation_comparison -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo.verification_actions -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo.work_lifecycle -> cadrumo.adapters.persistence.profile.modelos_work_units
+    cadrumo.application.modelo._edit_execution -> cadrumo.adapters.persistence.profile.modelos_work_units
+    # The guarded edit executor persists an encrypted receipt per mutation; the
+    # receipt repository is a relocated concrete like its three siblings above,
+    # and this module is its only application-layer construction site.
+    cadrumo.application.modelo._edit_execution -> cadrumo.adapters.persistence.profile.modelos_edit_receipts
     # ── buckets event-history repository ports-inversion (W01.P03.S05):
     #    the concrete BucketEventHistoryRepository moved to the persistence
     #    adapter behind BucketEventHistoryRepositoryProtocol ──
@@ -936,6 +960,7 @@ ignore_imports =
     cadrumo.application.modelo.m145_communication_records -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo.verification_actions -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo.work_lifecycle -> cadrumo.adapters.persistence.profile.buckets
+    cadrumo.application.modelo._edit_execution -> cadrumo.adapters.persistence.profile.buckets
     # ── transactions catalogue repository ports-inversion (W02.P07.S09):
     #    the concrete TransactionCatalogueRepository moved to the persistence
     #    adapter behind TransactionCatalogueRepositoryProtocol ──
@@ -964,3 +989,27 @@ ignore_imports =
     #    exception classes (plain exceptions, no port to invert). ──
     cadrumo.application.calculations.prorrata_regularizacion -> cadrumo.adapters.persistence.storage.errors
     cadrumo.application.modelo.revision_persistence -> cadrumo.adapters.persistence.profile.prorrata_register
+    cadrumo.application.modelo._prorrata_regularizacion_advisory -> cadrumo.adapters.persistence.profile.prorrata_register
+    cadrumo.application.modelo.calculation_actions -> cadrumo.adapters.persistence.profile.prorrata_register
+    cadrumo.application.modelo.export -> cadrumo.adapters.persistence.profile.prorrata_register
+    cadrumo.application.prorrata_register.service -> cadrumo.adapters.persistence.profile.prorrata_register
+    # The same boundary-exception import the prorrata regularizacion above makes:
+    # the modelo-binding support helper classifies a storage failure by its
+    # exception class. Plain exceptions carry no behaviour, so there is nothing
+    # to invert behind a port -- naming the class IS consuming the contract.
+    cadrumo.application.aggregation._modelo_bindings_support -> cadrumo.adapters.persistence.storage.errors
+    # ── bienes-inversion IVA register repository ports-inversion: the concrete
+    #    BienesInversionIvaRegisterRepository sits in the persistence adapter
+    #    behind its register protocol, and these four modules retain only the
+    #    sanctioned default-construction edge (ADR sec. 538). The service is the
+    #    composition site; the regularizacion calculation, the advisory and the
+    #    export each resolve the register for the revision they are computing. ──
+    cadrumo.application.bienes_inversion.service -> cadrumo.adapters.persistence.profile.bienes_inversion
+    cadrumo.application.calculations.bienes_inversion_regularizacion -> cadrumo.adapters.persistence.profile.bienes_inversion
+    cadrumo.application.modelo._bienes_inversion_advisory -> cadrumo.adapters.persistence.profile.bienes_inversion
+    cadrumo.application.modelo.export -> cadrumo.adapters.persistence.profile.bienes_inversion
+    # ── The secure-object namespace integrity report is a DIAGNOSTIC read of the
+    #    SQL substrate's own invariant, not a data path: the report model names
+    #    the integrity type the substrate defines so the diagnostic can state
+    #    which namespaces it checked. Pinned at the exact sql module. ──
+    cadrumo.application.diagnostic_models -> cadrumo.adapters.persistence.storage.sql.secure_objects
