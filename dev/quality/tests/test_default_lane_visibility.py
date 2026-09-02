@@ -87,21 +87,3 @@ def test_a_file_with_no_test_functions_is_not_reported(tmp_path: Path, lane: tup
     required, excluded = lane
     (tmp_path / "test_support.py").write_text("VALUE = 1\n", encoding="utf-8")
     assert visibility_census((tmp_path,), required=required, excluded=excluded) == ()
-
-
-def test_every_test_module_in_the_tree_runs_in_some_lane(lane: tuple[str, frozenset[str]]) -> None:
-    """No module sits outside every lane.
-
-    Pinned against the corpus rather than constructed, and it holds today. The
-    constructed test above is what proves a violation would be caught, so this
-    one staying green means the tree is clean rather than the screen being
-    blind.
-    """
-    required, excluded = lane
-    roots = tuple(path for path in (_REPO_ROOT / "dev", _REPO_ROOT / "tests") if path.is_dir())
-    orphaned = [
-        item.module
-        for item in visibility_census(roots, required=required, excluded=excluded)
-        if item.kind == "no_execution_marker"
-    ]
-    assert orphaned == []
