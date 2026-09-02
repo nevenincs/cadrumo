@@ -142,6 +142,38 @@ DESTINATION MAPPING: which casilla each computed aggregate lands in, at which
 of the four grains, and how attribution splits across owners. That is
 `W04.P12.S72` and `S73`, and both can be executed by reading bundled material.
 
+### The manual answers the grain question with a worked example
+
+The previous section claimed the grounding step is a reading task. That claim
+is now verified rather than asserted, and the material is more specific than
+expected. Chapter 4 of the bundled 2025 Renta manual, "Rendimientos del capital
+inmobiliario", names the destination casillas individually with their meaning.
+
+Property identity and attribution, which the review condition calls out, are
+explicit: the owning contribuyente at `[0062]`, ownership percentage at
+`[0063]`, usufruct percentage at `[0064]`, cadastral reference at `[0066]`, and
+the use classification across `[0067]` through `[0075]`, where `[0075]` is the
+let property and `[0074]` an accessory let. Day counts sit beside several of
+them, which is how a property that changes use mid-year is apportioned.
+
+The six quantities the condition enumerates appear together as the declaration
+set: ingresos íntegros computables, gastos deducibles, rendimiento neto,
+reducciones del rendimiento neto, and the rendimiento mínimo computable.
+
+The grain question is settled by an official worked example rather than by
+inference. It computes a single property across two successive tenancies in one
+year, stating the ingresos íntegros for the first contract and then for the new
+contract, before summing deductible expenses once for the year. So the official
+treatment is per-contract for income within a per-property, per-year envelope.
+That is the answer the census asks for, and it is an independent worked example
+of exactly the kind the calculation-grounding rule prefers over a derived
+reading.
+
+What remains genuinely undecided is narrower still: how our per-finca
+aggregates map onto that envelope when a taxpayer holds a share rather than
+full title, and whether the reducción tier resolution we already ship agrees
+with the manual's tier conditions for the same year.
+
 ### The census locator gate exists, is thorough, and never sees the live census
 
 The six dead fincas pointers were not a fincas problem. `check_capability_locators`
@@ -204,4 +236,6 @@ campaign.
 - `src/cadrumo/domain/fincas/source_readiness.py:34` — the persistence reason
 - `src/cadrumo/application/registry/source_connectivity.py:190` — the uniqueness-only validator
 - `.vault/plan/2026-08-22-source-casilla-integration-plan.md` — W02 through W04, and the hard sequencing statement
-- `.vault/adr/2026-08-22-source-casilla-integration-adr.md` — the accepted ratcheted-connectivity decision
+- `.vault/adr/2026-08-22-source-casilla-integration-adr.md` — the accepted ratcheted-connectivity decision
+- `src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf.extracted.md` — chapter 4, casillas `[0062]`-`[0082]` and the two-tenancy worked example
+- `dev/source_connectivity/check.py` — `check_capability_locators` and `discovered_source_capability_evidence`
