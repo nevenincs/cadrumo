@@ -60,8 +60,8 @@ def extract_pages_text_from_path(
         error_class: Format-specific exception class to raise on every
             failure mode (missing file, pdfplumber failure, empty PDF).
             Each per-format backend injects its own (e.g.
-            ``BorradorParseError``, ``DeclaracionParseError``) so callers
-            can ``except`` by their familiar concrete type.
+            ``DeclaracionParseError``) so callers can ``except`` by their
+            familiar concrete type.
         not_found_label: Prefix the file-not-found message uses (e.g.
             ``"Modelo 100 PDF not found"``, ``"declaración PDF not found"``).
         pdf_label: Article-prefixed phrase the empty-PDF message uses

@@ -1,12 +1,11 @@
 """Shared label-anchored regex extraction primitive.
 
 Every casilla-complete extractor under :mod:`adapters.inbound.declaracion`
-and :mod:`adapters.inbound.borrador` runs essentially the same primitive:
+runs essentially the same primitive:
 for a mapping of ``casilla_id`` to compiled pattern, search the PDF's text
 stream and return the first match per casilla. This module is the single
 authoritative implementation; the caller still decides which casillas are in
-scope through registry extraction profiles or a caller-supplied borrador
-profile.
+scope through registry extraction profiles.
 
 The Spanish amount capture group :data:`SPANISH_AMOUNT_GROUP` is the canonical
 AEAT printed-amount format. Extractor modules import it and compose per-casilla

@@ -2,9 +2,8 @@
 
 This package root exports no parser classes. Focused child packages own the
 actual import contracts: :mod:`declaracion` for filed declaration PDFs,
-:mod:`borrador` for Renta draft PDFs, :mod:`justificante` for receipt metadata,
-:mod:`pdf` for shared PDF helpers, :mod:`financial` for bank-statement providers,
-:mod:`censo` for the Certificado de Situación Censal, :mod:`einvoice` for
+:mod:`justificante` for receipt metadata, :mod:`pdf` for shared PDF helpers,
+:mod:`financial` for bank-statement providers, :mod:`censo` for the Certificado de Situación Censal, :mod:`einvoice` for
 structured electronic invoices, and :mod:`notificacion` for AEAT notification
 documents.
 
