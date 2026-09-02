@@ -14,6 +14,8 @@ Nothing here is mocked. The reference under test comes from the real
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 import pytest
 from pydantic import ValidationError
 
@@ -31,7 +33,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _DIAGNOSTIC_ID = "clave-diagnostic-private-object-key"
 
 
-def _outcome_fields() -> dict[str, object]:
+class _OutcomeFields(TypedDict):
+    """The auth-outcome fields held constant while the reference varies.
+
+    Naming the keys lets the ``**`` splat below check against the model's
+    real parameters; a ``dict[str, object]`` would type every one of them
+    as ``object``.
+    """
+
+    status: LiveIvaReadStatus
+    outcome_mode: LiveIvaAcquisitionFailureMode
+
+
+def _outcome_fields() -> _OutcomeFields:
     """Return a well-formed auth outcome except the reference under test."""
     return {
         "status": LiveIvaReadStatus.FAILED,
