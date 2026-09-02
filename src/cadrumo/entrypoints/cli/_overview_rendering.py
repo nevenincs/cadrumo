@@ -27,6 +27,8 @@ import json
 from collections.abc import Sequence
 
 from ...application.operator_actions.models import ActionReference, DeclaredNextAction
+from ...application.overview.agenda import OverviewAgenda
+from ...application.overview.backlog import OverviewBacklog
 from ...application.overview.calendar import actionable_post_filing_events
 from ...application.overview.calendar_evidence import NO_AEAT_HISTORY_NOTICE_CODE
 from ...application.overview.calendar_models import (
@@ -34,18 +36,21 @@ from ...application.overview.calendar_models import (
     OverviewCalendar,
     OverviewCalendarEntry,
     OverviewCalendarEvent,
+    OverviewCalendarFilingEvidence,
     OverviewCalendarRange,
     OverviewStatusReport,
     SuppressedCalendarEntry,
 )
 from ...application.overview.coverage import CoverageAdviceReason, ObligationCoverageReport
 from ...application.overview.data_prep import DataPrepStepState as _DataPrepStepState
+from ...application.overview.data_prep import DataPrepWalkthrough
+from ...application.overview.explain import OverviewExplain
 from ...application.overview.next_actions import (
     OverviewStatusNextStep,
     OverviewStatusNextStepId,
     build_overview_status_next_steps,
 )
-from ...application.overview.pipeline_health import ModeloReadinessState
+from ...application.overview.pipeline_health import ModeloReadinessState, PipelineHealthReport
 from ...core.i18n.render import tr
 from ...core.json_contract import (
     Notice,
@@ -57,6 +62,7 @@ from ...core.json_contract import (
 from ...core.notificacion_estado_servicio import NotificacionEstadoServicio
 from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from ._common import resolve_notice_action
+from ._ledger_payloads import LedgerStatusResult
 from ._overview_payloads import (
     OverviewAgendaResult,
     OverviewBacklogResult,
@@ -602,7 +608,7 @@ def _next_due_entry(cal: OverviewCalendar) -> OverviewCalendarEntry | None:
     return min(upcoming, key=lambda entry: entry.adjusted_closes_on)
 
 
-def overview_agenda_output(agenda) -> tuple[OverviewAgendaResult, list[str], list[Notice]]:
+def overview_agenda_output(agenda: OverviewAgenda) -> tuple[OverviewAgendaResult, list[str], list[Notice]]:
     """Project an overview agenda into payload, text lines, and notices."""
     typed_agenda = strict_round_trip(OverviewAgendaResult, agenda)
     lines: list[str] = [
@@ -635,7 +641,7 @@ def overview_agenda_output(agenda) -> tuple[OverviewAgendaResult, list[str], lis
 
 
 def overview_backlog_output(
-    backlog,
+    backlog: OverviewBacklog,
     *,
     work_units_notice: Notice | None,
 ) -> tuple[OverviewBacklogResult, list[str], list[Notice]]:
@@ -665,7 +671,7 @@ def overview_backlog_output(
     return typed_backlog, lines, backlog_notices
 
 
-def overview_explain_output(result) -> tuple[OverviewExplainResult, list[str]]:
+def overview_explain_output(result: OverviewExplain) -> tuple[OverviewExplainResult, list[str]]:
     """Project an overview applicability explanation into payload and text lines."""
     typed_explain = strict_round_trip(OverviewExplainResult, result)
     lines: list[str] = [
@@ -685,7 +691,7 @@ def overview_explain_output(result) -> tuple[OverviewExplainResult, list[str]]:
     return typed_explain, lines
 
 
-def overview_prepare_output(walkthrough) -> tuple[OverviewPrepareResult, list[str], list[Notice]]:
+def overview_prepare_output(walkthrough: DataPrepWalkthrough) -> tuple[OverviewPrepareResult, list[str], list[Notice]]:
     """Project a data-prep walkthrough into payload, text lines, and notices."""
     resolved_by_step = {step.step_id: _resolved_action(step.next_action) for step in walkthrough.steps}
     typed_result = OverviewPrepareResult(
@@ -730,7 +736,11 @@ def overview_prepare_output(walkthrough) -> tuple[OverviewPrepareResult, list[st
     return typed_result, lines, notices
 
 
-def overview_pipeline_output(report, *, ledger) -> tuple[OverviewPipelineResult, list[str], list[Notice]]:
+def overview_pipeline_output(
+    report: PipelineHealthReport,
+    *,
+    ledger: LedgerStatusResult,
+) -> tuple[OverviewPipelineResult, list[str], list[Notice]]:
     """Project a pipeline-health report into payload, text lines, and notices."""
     resolved_by_modelo = {row.modelo: _resolved_action(row.next_action) for row in report.modelos}
     typed_result = OverviewPipelineResult(
@@ -913,7 +923,7 @@ def _filing_obligation_lines(report: OverviewStatusReport) -> tuple[str, ...]:
     return tuple(lines)
 
 
-def _calendar_filing_evidence_text_fields(filing_evidence) -> str:
+def _calendar_filing_evidence_text_fields(filing_evidence: OverviewCalendarFilingEvidence) -> str:
     """Return stable text metrics for one calendar row's filing evidence."""
     fields = [
         f"local={filing_evidence.local_filing_state.value}",
@@ -937,7 +947,7 @@ def _calendar_filing_evidence_text_fields(filing_evidence) -> str:
     return "\t".join(fields)
 
 
-def _calendar_entry_work_unit_text_fields(entry) -> str:
+def _calendar_entry_work_unit_text_fields(entry: OverviewCalendarEntry) -> str:
     fields = [f"source={entry.source.value}"]
     if entry.local_work_unit_id:
         fields.append(f"work_unit={entry.local_work_unit_id}")
