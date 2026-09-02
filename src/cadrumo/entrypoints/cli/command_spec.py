@@ -167,6 +167,7 @@ class TranslationKey:
     value: str
 
     def __post_init__(self) -> None:
+        """Validate that ``value`` is a non-empty, unpadded, dotted key, or raise."""
         if not self.value or self.value.strip() != self.value or "." not in self.value:
             raise ValueError("translation key must be a non-empty dotted key")
 
@@ -197,6 +198,7 @@ class LazyBinding:
     optional_dependencies: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
+        """Validate the binding's state-dependent shape and optional-dependency tokens, or raise."""
         if len(set(self.optional_dependencies)) != len(self.optional_dependencies):
             raise ValueError("optional dependency names must be unique")
         for dependency in self.optional_dependencies:
