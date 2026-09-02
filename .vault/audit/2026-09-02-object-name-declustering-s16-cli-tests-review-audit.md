@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:0c325724536f058a023d7d3fd04ba805d9f9467169637bdb83da142b84521d6a'
+body_hash: 'sha256:5af0fea0897d4a13514b453f372acbc81d9f319907707ba16dd36708832a18f0'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
@@ -73,3 +73,27 @@ stderr/exit-two mapping, and unexpected programming-defect traceback behavior.
 
 The focused suite passed 35 tests in 14.18 seconds. Ruff, Ruff-format, and ty checks passed.
 Final review status is one high and three medium findings, with no critical or low findings.
+
+## Re-review status
+
+Resolved: `generated-context-coverage` is closed by moving canonical component derivation into
+the shared `canonical_object_name_component_set` authority used by both CLI context and
+rehearsal. The new generator-backed CLI case loads a real manifest, produces the exact plan
+component envelope, executes real disposable rehearsal, asserts the exact receipt envelope
+and owner command outcome, and proves live bytes remain unchanged.
+
+Resolved: `canonical-component-count` now builds a real manifest containing two independent
+operations and declarations. Plan mode returns exit two with empty stdout and the exact
+two-component refusal before either mutation mode can run.
+
+Resolved: `structured-result-adapters` now asserts complete plan and rehearsal envelopes
+against serialized typed objects and runs the real replay implementation through CLI apply.
+The apply case verifies exact `ObjectNameReplayResult` serialization and the expected live
+symbol mutation, so omitted fields or incorrect replay dispatch no longer pass.
+
+Resolved: `clean-verify-exit` now runs verify against a clean source inventory and asserts
+exit zero, the verify mode envelope, and zero enforced findings.
+
+The four targeted closure cases passed in 7.09 seconds. The reported full focused suite
+passed 39 tests. Ruff, Ruff-format, and ty checks passed for CLI, shared rehearsal authority,
+and the CLI tests. Final S16 status is no open critical, high, medium, or low findings.

@@ -22,3 +22,4 @@ related:
 - `M` `dev/ci/python_runtime_compatibility.py`
 - `M` `dev/ci/tests/test_python_runtime_compatibility.py`
 - `verify:` `uv run --no-sync pytest -q dev/ci/tests/test_python_runtime_compatibility.py -o addopts='' && uv run --no-sync ruff check dev/ci/python_runtime_compatibility.py dev/ci/tests/test_python_runtime_compatibility.py` -> `pass`
+- `verify:` `same-commit matrix at ea2f347ba22a5d566f18f8c97a995c22348eb3d9 with cohort d57b1de3c709...: source CPython 3.13.14, 3.14.6, 3.15.0b4; sealed offline binary CPython 3.13.14 and 3.14.6` -> `pass`

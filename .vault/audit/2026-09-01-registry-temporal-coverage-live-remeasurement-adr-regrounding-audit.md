@@ -5076,3 +5076,33 @@ The narrower point is about what a retry is for. Retrying a failed question make
 when something about the second attempt could change the answer. Retrying because the first
 attempt failed is how a probe turns a definite refusal into twice as much evidence for the
 same conclusion, and this one did that for an iteration.
+
+### The tracking plan declares three Descriptions and three Verifications
+
+Counting the plan's own headings found `## Description` three times, `## Parallelization`
+twice, and `## Verification` three times. The template declares exactly one of each, so this
+is the campaign's subject appearing in the campaign's own tracking document: one section
+declared repeatedly, with the copies drifting apart.
+
+They have drifted. The first Description opens "the registry declares the same fact in many
+places"; the third opens "at many sites". Same sentence, two spellings, which is what a copy
+does when someone edits the one they happened to open.
+
+Content is spread rather than duplicated wholesale, which is what makes this a merge and not
+a deletion. The three Descriptions run 54, 36 and 45 non-blank lines; only the third carries
+the paragraph recording how this work extended from the registry into the codebase. The two
+Parallelization sections run 41 and 145 lines, the longer one holding the concurrency
+constraints written during this campaign. Deleting any of them by heading alone would lose
+material that exists in only one copy.
+
+The duplication predates this session and was not introduced by it: the plan's first commit
+already carried three Descriptions and four Verifications. That is worth stating plainly
+because this campaign has been appending to these sections all along, and a reader could
+reasonably assume the appends caused it. They did not; they added to a structure that was
+already wrong, which is why some of this campaign's own prose now sits in a section a reader
+may never reach.
+
+No merge is attempted in this iteration. Reconciling roughly four hundred lines across eight
+sections, on a document the concurrent campaign commits, is focused work rather than a
+tidy-up at the end of an iteration - and a hasty merge that drops a paragraph would be
+strictly worse than the duplication, which at least keeps everything.

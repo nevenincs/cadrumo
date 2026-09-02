@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:44c51801318e9d1ebf2b1216530982bceaa9068e23019d203242f218ea12b40d'
+body_hash: 'sha256:7fadbb0784b2321bd4510e143b8f4a73a8fbd4bb657b4545a3b1d5275e661cff'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -82,26 +82,6 @@ official emitted-byte reference and a vector whose expected bytes came from this
 would prove only self-consistency. Wave six waits on four decisions that are written and proposed but
 not accepted.
 
-## Description
-
-The registry declares the same fact in many places and reconciles the copies afterwards with
-agreement validators. The governing audit measured the breadth: a revision's temporal validity
-is expressed at eight sites, one citation can be restated at eleven, applicability at seven,
-capability grade in five encodings, and a rendered amount's semantics at six, against 51
-validator modules whose job is to notice when the copies disagree. Detection after the fact is
-the wrong shape. This plan moves the registry toward declaring a fact once and deriving its
-projections, and builds the tooling that can prove it.
-
-It is sequenced so that measurement comes first. Four figures published during the audit were
-wrong, each because a consumer reassembled the resolved export surface by hand and dropped one
-of its three linkage paths. Wave one removes that whole class of error by providing the surface
-whole; every later gate reads it through that accessor rather than rebuilding it. Wave two
-returns the project to having a standing regression gate at all, which means moving the
-release-eligibility predicate out of contributor tooling into the shipped application, since a
-predicate that only exists development-side cannot gate anything. Wave three makes the
-filing-export proof real. Wave four adds the missing edge gates. Wave five corrects the data
-defects that need no decision. Wave six applies the general contract.
-
 Measurement has since changed what the later Waves are for, and the Steps record it. Eight
 screens now measure the declaration conditions, run from one entry point over a single loaded
 registry, and each proves its own detection against a constructed defect. Several conditions
@@ -124,16 +104,6 @@ and the feature's proposed coverage decision is itself resting on a problem stat
 refactor has overtaken. Every Step in Wave six is authoring or migration that cannot begin until
 those records exist and are accepted, and the Phase that holds the four decisions gates the
 Phase that applies them.
-
-## Description
-
-The registry declares the same fact at many sites and reconciles the copies afterwards
-with agreement validators. The governing audit measured the breadth: a revision's temporal
-validity is expressed at eight sites, one citation can be restated at eleven, applicability
-at seven, capability grade in five encodings, and a rendered amount's semantics at six,
-against 51 validator modules whose job is to notice when the copies disagree. Detection
-after the fact is the wrong shape. This plan moves the registry toward declaring a fact
-once and deriving its projections, and builds the tooling that can prove it.
 
 It is sequenced so that measurement comes first. Four figures published during the audit
 were wrong, each because a consumer reassembled the resolved export surface by hand and
@@ -472,7 +442,8 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S210` - Probe revision selection with the codes each revision declares, so a wrong-shaped question cannot be read as a registry refusal; `dev/registry/analysis/revision_selection_probe.py,dev/registry/tests/test_revision_selection_probe.py`.
 - [x] `W06.P13.S211` - Sweep every modelo with the declared-code probe and teach it to ask a well-formed question at a mid-year revision split; `dev/registry/analysis/revision_selection_probe.py,dev/registry/tests/test_revision_selection_probe.py`.
 - [x] `W06.P13.S212` - Retry only an ambiguity refusal with a date, halving the probe suite runtime that was driving worker crashes; `dev/registry/analysis/revision_selection_probe.py`.
-- [ ] `W06.P13.S213` - Add the category membership criterion the three withdrawn and narrowed conditions make due; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S213` - Add the category membership criterion the three withdrawn and narrowed conditions make due; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S214` - Measure the plan's duplicated top-level sections against the template and establish that they predate this campaign; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -535,14 +506,6 @@ That set is not static, and it is not a property of the file: two package initia
 when this constraint was written were released by a commit and became workable the same day. Re-read
 `git status --porcelain` for the specific path before assuming a Step is still blocked, and before
 every write. A Step deferred once is not deferred permanently.
-
-## Parallelization
-
-Waves are sequenced. Wave one must land before Waves three and four, because both measure
-the resolved surface and the accessor is what makes that measurement trustworthy. Wave two
-is independent of Wave one and may run beside it. Wave three depends on Wave two for the
-gate that holds its result. Wave five is independent of every other Wave except that its
-revision renames must not land while another contributor holds the same directories.
 
 Within Waves, the four Phases of Wave four are mutually independent once the accessor
 exists and may proceed in parallel; each screen owns its own module and test. The three
@@ -707,8 +670,8 @@ as exit code zero.
 
 ## Verification
 
-The plan is complete when every Step is closed. Beyond that, six criteria decide whether the work
-achieved what it was for.
+The plan is complete when every Step is closed. Beyond that, five criteria decide whether
+the work achieved what it was for.
 
 No gate, screen or audit reassembles the resolved export surface. Every consumer calls the accessor,
 and a test proves the accessor fails if any one of its three linkage paths is dropped.
@@ -716,14 +679,6 @@ and a test proves the accessor fails if any one of its three linkage paths is dr
 The release-eligibility predicate is evaluable from the shipped application, and a coordinate-identity
 gate runs in the repository gate lane, comparing the satisfied filing coordinate set by identity and
 naming the limb that regressed. It asserts no count, no ceiling and no floor.
-
-At least one generated export tree carries an enrolled conformance vector that proves its emitted
-bytes against the official record design, and a generated tree carrying no vector refuses as missing
-evidence rather than reading as unmeasured. The second half already holds and must not regress: the
-refusal is the designed behaviour of an unenrolled channel, not a defect. The first half cannot be
-satisfied by engineering until the official reference this plan's evidence Step acquires exists,
-because a vector whose expected bytes came from this project's own writer would prove only that the
-writer agrees with itself.
 
 Each gate demonstrates detection of a representative defect from a constructed fixture or an isolated
 temporary registry tree, never by mutating the working tree, and each passes the normal path in the
@@ -739,15 +694,6 @@ this today is the plan's only known filing-correctness defect.
 Every revision directory name agrees with the window that revision declares, and a gate refuses a name
 that does not. Temporal selection resolves every coordinate the law can decide and refuses only those
 it genuinely cannot.
-
-## Verification
-
-The plan is complete when every Step is closed. Beyond that, five criteria decide whether
-the work achieved what it was for.
-
-No gate, screen or audit reassembles the resolved export surface. Every consumer calls the
-accessor, and a test proves the accessor fails if any one of its three linkage paths is
-dropped.
 
 The release-eligibility predicate is evaluable from the shipped application, and a
 coordinate-identity gate runs in the repository gate lane, comparing the satisfied filing
@@ -766,10 +712,6 @@ with itself.
 Each of the four edge gates demonstrates detection of a representative defect from a
 constructed fixture or an isolated temporary registry tree, never by mutating the working
 tree, and each passes the normal path in the same suite.
-
-Every revision directory name agrees with the window that revision declares, and a gate
-refuses a name that does not. Temporal selection resolves every coordinate the law can
-decide and refuses only those it genuinely cannot.
 
 Every measurement this plan rests on is one a reader can check, and the plan says how it was
 taken rather than only what it showed. This criterion exists because the measurements failed
@@ -804,29 +746,3 @@ each case the count was the least informative thing about the finding.
 What satisfies the criterion is that each condition names what a member has that a non-member
 lacks, that the boundary is tested from both sides, and that a condition whose members are
 mostly correct is withdrawn rather than kept for the sake of the one that is not.
-
-## Verification
-
-The plan is complete when every Step is closed. Beyond that, five criteria decide whether
-the work achieved what it was for.
-
-No gate, screen or audit reassembles the resolved export surface. Every consumer calls the
-accessor, and a test proves the accessor fails if any one of its three linkage paths is
-dropped.
-
-The release-eligibility predicate is evaluable from the shipped application, and a
-coordinate-identity gate runs in the repository gate lane, comparing the satisfied filing
-coordinate set by identity and naming the limb that regressed. It asserts no count, no
-ceiling and no floor.
-
-At least one generated export tree carries an enrolled conformance vector that proves its
-emitted bytes against the official record design, and a generated tree carrying no vector
-refuses as missing evidence rather than reading as unmeasured.
-
-Each of the four edge gates demonstrates detection of a representative defect from a
-constructed fixture or an isolated temporary registry tree, never by mutating the working
-tree, and each passes the normal path in the same suite.
-
-Every revision directory name agrees with the window that revision declares, and a gate
-refuses a name that does not. Temporal selection resolves every coordinate the law can
-decide and refuses only those it genuinely cannot.
