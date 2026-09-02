@@ -123,7 +123,9 @@ def render_apply_patch(
     if refusals:
         raise ValueError(f"cannot emit registry patch with {len(refusals)} restoration refusals")
     targets = tuple((_canonical_relative_path(candidate), candidate) for candidate in candidates)
-    duplicate_paths = tuple(sorted(path for path in {item[0] for item in targets} if sum(p == path for p, _ in targets) > 1))
+    duplicate_paths = tuple(
+        sorted(path for path in {item[0] for item in targets} if sum(p == path for p, _ in targets) > 1)
+    )
     if duplicate_paths:
         raise ValueError(f"duplicate canonical restoration paths: {duplicate_paths!r}")
     collisions = tuple(path for path, _candidate in targets if (workspace_root / path).exists())
