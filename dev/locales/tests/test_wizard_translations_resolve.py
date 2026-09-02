@@ -3,7 +3,7 @@
 ``audit_wizard_translations`` walks every ``Translatable`` referenced
 by :data:`WIZARD_FLOWS`, the descriptor-derived flag-help keys, and
 the fixed runtime error keys. ``audit_cli_translations`` walks every
-``cli.<group>.*`` key referenced statically by any module under
+``cli.<group>.*`` key supplied to a ``tr(...)`` call by any module under
 ``cadrumo.entrypoints.cli``. Both audits assert every key resolves to
 non-empty content in every locale.
 """
@@ -32,12 +32,11 @@ def test_every_cli_translation_resolves_in_every_locale() -> None:
 
 
 def test_cli_keys_extracted_from_source_are_non_empty() -> None:
-    """The regex extractor must surface CLI keys referenced in entrypoint modules."""
+    """The call-site extractor must surface CLI keys used by entrypoints."""
 
     keys = cli_keys_referenced_in_source()
     assert keys, "no cli.* keys extracted from entrypoint sources"
     # Spot-check: representative keys from distinct namespaces are extracted.
-    assert "cli.config.list.help" in keys
     assert "cli.config.errors.no_active_profile" in keys
-    assert "cli.app.modelo.app_help" in keys
-    assert "cli.app.live.iva_wallet.app_help" in keys
+    assert "cli.app.modelo.describe.label_title" in keys
+    assert "cli.app.live.iva_wallet.acquisition.outcome.aeat_403" in keys

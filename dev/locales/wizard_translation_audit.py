@@ -16,6 +16,7 @@ itself -- as a structured failure.
 
 from __future__ import annotations
 
+import ast
 import re
 from collections.abc import Iterable
 from pathlib import Path
@@ -23,6 +24,7 @@ from pathlib import Path
 from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
 from cadrumo.application.wizard.models import WizardFlow, WizardQuestion
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 
 from ._paths import SRC_DIR
@@ -96,7 +98,7 @@ def audit_wizard_translations() -> tuple[str, ...]:
     return tuple(missing)
 
 
-_CLI_KEY_PATTERN = re.compile(r"['\"](cli\.\w+(?:\.\w+)+)['\"]", re.UNICODE)
+_CLI_KEY_PATTERN = re.compile(r"cli\.\w+(?:\.\w+)+", re.UNICODE)
 
 
 def _cli_entrypoints_root() -> Path:
@@ -107,11 +109,11 @@ def cli_keys_referenced_in_source() -> tuple[str, ...]:
     """Return every ``cli.<group>.*`` translation key referenced statically.
 
     Walks every ``.py`` module under :mod:`cadrumo.entrypoints.cli` and
-    extracts literal ``cli.<group>.<rest>`` strings by regex. f-string
-    interpolations that build keys at runtime (for example
-    ``f"cli.config.{flow.id}.help"``) are not captured here; those keys
-    are walked by :func:`audit_wizard_translations` through the wizard
-    descriptor catalogue instead.
+    extracts literal ``cli.<group>.<rest>`` first arguments from actual
+    :func:`tr` call sites. f-string interpolations that build keys at runtime
+    (for example ``f"cli.config.{flow.id}.help"``) are not captured here;
+    those keys are walked by :func:`audit_wizard_translations` through the
+    wizard descriptor catalogue instead.
     """
     keys: set[str] = set()
     for module in scan_directory(_cli_entrypoints_root(), pattern="*.py", recursive=True):
@@ -122,10 +124,36 @@ def cli_keys_referenced_in_source() -> tuple[str, ...]:
         # as required catalogue entries would fabricate dead translations.
         if module.name.startswith(("test_", "_test_")):
             continue
-        source = module.read_text(encoding="utf-8")
-        for match in _CLI_KEY_PATTERN.finditer(source):
-            keys.add(match.group(1))
+        source = module.read_text(encoding=UTF_8_ENCODING)
+        tree = ast.parse(source, filename=str(module))
+        call_names = _translation_call_names(tree)
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Name) or node.func.id not in call_names:
+                continue
+            key = _literal_cli_translation_key(node)
+            if key is not None:
+                keys.add(key)
     return tuple(sorted(keys))
+
+
+def _translation_call_names(tree: ast.AST) -> frozenset[str]:
+    """Return local names bound to the project translation function in ``tree``."""
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ImportFrom) or node.module is None:
+            continue
+        if "i18n" not in node.module.split("."):
+            continue
+        names.update(alias.asname or alias.name for alias in node.names if alias.name == "tr")
+    return frozenset(names)
+
+
+def _literal_cli_translation_key(call: ast.Call) -> str | None:
+    """Return a literal CLI key passed as the first argument to ``tr``."""
+    if not call.args or not isinstance(call.args[0], ast.Constant) or not isinstance(call.args[0].value, str):
+        return None
+    key = call.args[0].value
+    return key if _CLI_KEY_PATTERN.fullmatch(key) else None
 
 
 def audit_cli_translations() -> tuple[str, ...]:

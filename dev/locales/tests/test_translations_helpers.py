@@ -4,7 +4,7 @@ The audit-wizard-translations / audit-cli-translations surface
 exercises the helpers indirectly through three high-level tests in
 `test_wizard_translations_resolve.py`. This module pins the helpers'
 own contracts at the unit level so a regression in the key-walker's
-derived-key rule, the regex grammar for CLI-key extraction, or the
+derived-key rule, the CLI translation-call extraction, or the
 locale-resolution dispatch does not silently let translation gaps
 slip past the audit.
 """
@@ -189,23 +189,43 @@ def test_cli_keys_referenced_in_source_only_returns_cli_dot_prefixed_strings() -
 
 
 def test_cli_keys_referenced_in_source_extracts_representative_namespaces() -> None:
-    """Spot-check that representative keys from distinct CLI namespaces
-    are surfaced — guards against regressions in the regex grammar."""
+    """Spot-check representative keys from distinct CLI namespaces."""
     keys = set(cli_keys_referenced_in_source())
 
-    assert "cli.config.list.help" in keys
     assert "cli.config.errors.no_active_profile" in keys
+    assert "cli.app.modelo.describe.label_title" in keys
+
+
+def test_cli_keys_referenced_in_source_only_harvests_translation_call_sites(tmp_path: Path, monkeypatch) -> None:
+    """A condition identifier is data, even when its spelling begins ``cli.``."""
+    source = tmp_path / "translation_contexts.py"
+    source.write_text(
+        "\n".join(
+            (
+                "from cadrumo.core.i18n import tr",
+                "label = tr('cli.config.list.help')",
+                "condition_id = 'cli.log_level.environment_value.recognised'",
+            )
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr("dev.locales.wizard_translation_audit._cli_entrypoints_root", lambda: tmp_path)
+
+    keys = cli_keys_referenced_in_source()
+
+    assert keys == ("cli.config.list.help",)
 
 
 def test_cli_keys_referenced_in_source_omits_f_string_interpolated_keys() -> None:
-    """The regex matches literal quoted strings only. An f-string key
-    like ``f"cli.config.{flow.id}.help"`` is not captured (those are
-    walked through the wizard descriptor catalogue instead)."""
+    """Only literal call arguments are collected; interpolated keys are not.
+
+    A key like ``f"cli.config.{flow.id}.help"`` is walked through the
+    wizard descriptor catalogue instead.
+    """
     keys = set(cli_keys_referenced_in_source())
 
-    # An f-string-interpolated key literal would contain `{` which the
-    # regex's character class explicitly excludes; if any made it
-    # through, this would surface here.
+    # An f-string is not an ``ast.Constant`` and therefore cannot be
+    # mistaken for a literal translation-key argument.
     for key in keys:
         assert "{" not in key
         assert "}" not in key
@@ -213,7 +233,7 @@ def test_cli_keys_referenced_in_source_omits_f_string_interpolated_keys() -> Non
 
 def test_cli_keys_referenced_in_source_root_resolves_under_entrypoints_cli() -> None:
     """Sanity-check that the helper's root path resolution lands on the
-    real entrypoints/cli directory (the regex walks every .py under it)."""
+    real entrypoints/cli directory (the AST walk visits every .py under it)."""
     from dev.locales.wizard_translation_audit import _cli_entrypoints_root
 
     root = _cli_entrypoints_root()
