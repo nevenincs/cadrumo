@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:aadba544f25cb9f1fe96ea8d8cee16970bf4f463d86763c22a2bb923a6d188e1'
+body_hash: 'sha256:4fd72b2af90328d90492e6a63212d659b615b9b82562d56ff246019a05ab701b'
 related: []
 ---
 # `registry-declaration-hardening` audit: `modelo 200 publication review`
@@ -36,6 +36,14 @@ Re-review confirms a partial fix: `GeneratedExportBootstrapTransport` now carrie
 
 Re-review confirms that `_run` now carries the same prepared candidate and `RenderedExportTree` from `_check` into `_publish`, closing the authored-input drift caused by a second `_prepare`. The checked target state is still discarded: `CheckedGeneratedExportTree` retains the published manifest, but `_check` returns only the result token and rendered candidate, and publication receives no expected target absence or target manifest/tree digest. Another writer can create or replace the target after check and before the publication lock; the publisher then treats that newer tree as the rollback target and replaces it without proving it is the tree that passed check. The original HIGH remains open under the shared-worktree concurrency contract.
 
+### check-publish-state-binding-final | high | the expected target is sampled after check and covers only the manifest file
+
+Final re-review finds that the under-lock assertion does not yet carry the state established by `_check`. `_publish` recomputes `target_absent` and `target_digest` immediately before calling the publisher, after the read-only check has returned. A target created or replaced in that interval is therefore accepted as the new expected state instead of refused. For an existing target, the receipt hashes only `_generation.provenance.json`; a concurrent change to another generated member with the manifest left unchanged also passes `_require_expected_target_state`. The assertion is correctly placed under the exclusive lock, but its expected value is neither check-minted nor a complete tree/package identity. The target-state HIGH remains open.
+
+### bootstrap-target-detector | medium | exact enrolment has no focused mutation gate
+
+The reviewed bootstrap TOML and `_bootstrap_target` now close the transport-authority code defect: only the exact Modelo 200 2025 target, source reference, and source SHA-256 are enrolled, and the reviewed row supplies the layout identity and line ending. No focused test mutates the enrolment source digest, line ending, duplicate row, or target identity and proves refusal through the CLI boundary. The implementation refused an unenrolled target in a direct fast probe, but the quality gate still lacks durable detector teeth for this authority file.
+
 ## Recommendations
 
 - For `bootstrap-transport-authority`, make absent-tree transport an explicit reviewed declaration bound to the exact official `source_ref` and SHA-256, and enroll only exact owed targets. Refuse missing or mismatched transport authority. Add negative tests for changed source hash, wrong line ending, wrong layout id, and an unenrolled absent tree.
@@ -43,3 +51,11 @@ Re-review confirms that `_run` now carries the same prepared candidate and `Rend
 - For `filing-refusal-regression-proof`, add an isolated real-Modelo-200 post-publication authority test that asserts the generated layout loads and exports while the revision remains calculation-grade and a filing-grade snapshot still refuses.
 - Re-review update: retain the source-ref and source-digest checks, but move `line_ending` and any non-derived layout identity into an explicit source-bound reviewed bootstrap declaration. Do not infer enrolment from directory absence.
 - Re-review update: carry the checked target absence or exact manifest/tree digest into `GeneratedExportTreePublicationContext` and compare it under the exclusive lock before candidate validation or cutover.
+- Final re-review update: return a typed target-state receipt from `_check`, including exact absence or a complete regular-tree/package identity, pass that receipt unchanged into `_publish`, and verify it under the lock. Add mutations both for target appearance and for a non-manifest member changing with the manifest unchanged.
+- Final re-review update: retain the exact reviewed bootstrap row and add focused CLI-boundary mutation tests for every enrolled identity and transport field.
+
+## Final re-review status
+
+- `bootstrap-transport-authority`: resolved in code by the exact, source-hash-bound reviewed target enrolment; the missing mutation gate is tracked separately at MEDIUM.
+- `check-publish-state-binding`: open at HIGH because the expected target is sampled after check and does not cover the complete target tree.
+- `filing-refusal-regression-proof`: remains open at MEDIUM.

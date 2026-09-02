@@ -1295,3 +1295,37 @@ Blind-spot scope after three targets: 28 -> 24 member sets declared in more than
 place. Annotation scope is unchanged at 1, which is the point: this work is invisible to
 the shipped gate, and the gate's number would have looked identical had none of it
 happened.
+
+## Finding 60 — a six-token registry vocabulary compared as bare strings
+
+`schema_verification.py` decides what a live cross-reference may do by comparing
+`surface` against six bare string tokens, and two of the groupings were written out
+repeatedly: the read surfaces three times and the simulator surfaces once, with the same
+tokens also compared in `remote_state_guard.py` and `live_parity.py`.
+
+Declared as `LiveVerificationSurface` with two named subsets. `READ_SURFACES` is the
+one that carries weight: those surfaces must refuse synthetic data AND are restricted to
+safe HTTP methods, and both rules were enforced by separately written pairs. A surface
+added to the set now inherits both rules at once rather than one of them, which is
+exactly the failure mode a duplicated membership test produces -- it does not break, it
+under-enforces.
+
+The `surface` parameters stay annotated `str`. A member compares equal to its token so
+nothing about validation changes, and retyping a validated field is a separate decision
+from naming the vocabulary. Verified the two subsets are disjoint rather than assuming
+it.
+
+333 verification, remote-state and parity tests pass; the single failure is the known
+modelo 714 coverage gap.
+
+## Finding 61 — two tokens for what may be one concept, left alone
+
+`schema_verification.py` uses `static_official_documentation`; the
+`CrossReferenceClassification` alias in `remote_state_guard.py` uses
+`static_official_only`. The two vocabularies overlap on three tokens and diverge on the
+rest, and this pair reads like one concept under two spellings.
+
+Not unified, for the same reason as `HealthSeverity`: these are declared tokens on a
+registry surface, and deciding they are one concept means changing what one of them
+emits. That is a registry-declaration change with its own grounding requirement, not a
+de-duplication edit. Recorded so the question is visible.

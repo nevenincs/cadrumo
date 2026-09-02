@@ -4736,3 +4736,32 @@ declaration of where work lives, and fifteen of them describe a tree that is gon
 shape as the export list naming a retired surface and the location note forbidding a move
 already made, now in the campaign's own tracking document. It is recorded here before it is
 repaired so that the repair is not mistaken for the discovery.
+
+### The stale-scope finding is withdrawn: the scopes were right and the reading was wrong
+
+The previous finding reported fifteen Step scopes naming files absent from the tree, called it
+the plan committing the defect the plan exists to remove, and promised a repair. There is no
+defect. The finding is withdrawn.
+
+Splitting the fifteen by Step state is what settles it, and it was not done before the claim
+was written. Nine belong to closed Steps. A closed Step's scope records where the work
+happened, and some of that work was deletion - the ledger-bindings module and the
+applicability-fragment migrator were removed by this campaign, so a scope naming them is
+accurate history rather than a dangling pointer. Repairing those would have erased the record
+of what was touched.
+
+The remaining six belong to open Steps, and every one names a file the Step exists to create:
+"author the conformance vector for the modelo 303 revision" scoped to the vector file, "record
+the satisfied filing-coordinate set as registry data" scoped to the TOML that would hold it,
+and four tests scoped to the modules that would prove them. For creative work a scope names a
+destination. A destination that already existed would be the thing worth questioning.
+
+So the check was measuring file existence and calling absence a defect, without asking what
+the scope was for. It is the same failure this audit has now recorded five times in
+measurements - a number produced without establishing what it counts - and this is the second
+one caught, though later than the last: it had already been written into a finding and
+described as a defect in the campaign's own document before the split was run.
+
+What the episode leaves is a narrower true statement. Nothing in the plan's scope clauses is
+known to be wrong, and a check that would detect a genuinely stale scope has to distinguish a
+path the work will create from one it once touched, which file existence alone cannot do.

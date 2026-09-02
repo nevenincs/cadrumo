@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-python-runtime-compatibility-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:b6c977e381430f1af19e31da09ea7e6e32b38c80a557d5f26091093daa42ea95'
+body_hash: 'sha256:253d314f4bbea7bde6359b21e5960ce59f7b8d6f85378b5248bf09157aa372d3'
 ---
 
 <!-- RETIRED: S33, S35, S37, S39, S41, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 -->
@@ -101,7 +101,7 @@ Make every selected runtime carry focused behavioral and MCP evidence, keep the 
 - [ ] `P06.S66` - Smoke the installed cadrumo-mcp entry point and import contract in every compatibility mode; `dev/ci/python_runtime_compatibility.py`.
 - [ ] `P06.S67` - Wire the future-directive AST policy into the blocking compatibility workflow; `.github/workflows/python-runtime-compatibility.yml`.
 - [ ] `P06.S68` - Classify binary missing-wheel failures only from resolver-specific diagnostics; `dev/ci/python_runtime_compatibility.py`.
-- [ ] `P06.S69` - Align the prerelease selector with the provisionable rolling minor; `dev/ci/python-runtime-matrix.json`.
+- [x] `P06.S69` - Align the prerelease selector with the provisionable rolling minor; `dev/ci/python-runtime-matrix.json`.
 
 ## Parallelization
 
