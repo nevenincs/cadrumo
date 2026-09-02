@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .command_spec import (
+    CommandNodeKind,
     CommandSpec,
     CommandWriteRoute,
     DeferredTarget,
@@ -64,7 +65,7 @@ def _leaf(
         key=key,
         parent_key=parent,
         token=token,
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=_key(help_key),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -101,7 +102,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_diagnostics",
         "app",
         "diagnostics",
-        "group",
+        CommandNodeKind.GROUP,
         _key("cli.diagnostics.app_help"),
         None,
         InvocationSpec(
@@ -174,7 +175,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_diagnostics_telemetry",
         "app_diagnostics",
         "telemetry",
-        "group",
+        CommandNodeKind.GROUP,
         _key("cli.diagnostics.telemetry.app_help"),
         None,
         InvocationSpec(no_args_is_help=True),

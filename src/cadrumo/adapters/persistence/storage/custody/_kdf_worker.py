@@ -24,6 +24,7 @@ from ._kdf_codec import (
     read_kdf_frame,
     write_kdf_frame,
 )
+from ._kdf_operations import UNWRAP_OPERATIONS, WRAP_OPERATIONS, KdfOperation
 from ._kdf_worker_supervision import (
     KDF_CALIBRATED_FRAME,
     KDF_FAILED_FRAME,
@@ -63,12 +64,12 @@ def main() -> int:
             raise ValueError("profile KDF request frame kind is invalid")
         payload = _parse_request(request)
         operation = cast(str, payload["operation"])
-        if operation == "calibrate-v1":
+        if operation == KdfOperation.CALIBRATE:
             _derive_calibration(payload)
             write_kdf_frame(result_fd, KDF_CALIBRATED_FRAME, kind=KDF_FRAME_CONTROL)
-        elif operation in {"password-unwrap-v1", "recovery-unwrap-v1"}:
+        elif operation in UNWRAP_OPERATIONS:
             write_kdf_frame(result_fd, _unwrap(payload, recovery=operation.startswith("recovery-")), kind=KDF_FRAME_DEK)
-        elif operation in {"password-wrap-v1", "recovery-wrap-v1"}:
+        elif operation in WRAP_OPERATIONS:
             write_kdf_frame(
                 result_fd,
                 _wrap(payload, recovery=operation.startswith("recovery-")),
@@ -126,11 +127,11 @@ def _parse_request(value: bytes) -> dict[str, object]:
     if record.get("version") != 1:
         raise ValueError("profile KDF request is invalid")
     operation = record.get("operation")
-    if operation == "calibrate-v1":
+    if operation == KdfOperation.CALIBRATE:
         required = {"version", "operation", "kdf"}
-    elif operation in {"password-unwrap-v1", "recovery-unwrap-v1"}:
+    elif operation in UNWRAP_OPERATIONS:
         required = {"version", "operation", "kdf", "wrapped_dek", "password_b64", "associated_data_b64"}
-    elif operation in {"password-wrap-v1", "recovery-wrap-v1"}:
+    elif operation in WRAP_OPERATIONS:
         required = {"version", "operation", "kdf", "dek_b64", "secret_b64", "associated_data_b64"}
     else:
         raise ValueError("profile KDF operation is invalid")

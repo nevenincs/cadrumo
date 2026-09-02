@@ -14,7 +14,7 @@ See Also:
     :func:`~adapters.inbound.declaracion.parser.parse_declaracion`
         Public declaration-copy parser exercised against the current-year
         synthetic fixtures.
-    :class:`~domain.calculations.registry._schema_extraction.ExtractionProfileDefinition`
+    :class:`~domain.calculations.registry.schema_extraction.ExtractionProfileDefinition`
         Registry-owned ``declaracion_pdf`` profile contract asserted here.
     :mod:`~adapters.inbound.declaracion.tests._parser_boundary_m100_current_support`
         Shared typed expected-casilla set for the 2024/2025 fixtures.

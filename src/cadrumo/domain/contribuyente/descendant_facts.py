@@ -52,7 +52,7 @@ import re
 from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Literal, TypedDict
+from typing import Final, Literal, TypedDict
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.descendant_relacion import DescendantRelacion
@@ -118,6 +118,17 @@ advertised at all -- a typo, a stale flag from a script, a future locale edit th
 gate's extraction misses -- now fails loudly instead of vanishing. Every other
 structured-token surface in this tree already refuses unknown keys, through a
 typed enum, a strict model, or an explicit check. This one was the exception.
+"""
+
+
+_FALSE_PROFILE_TOKENS: Final[frozenset[str]] = frozenset({"false", "0"})
+"""The lower-cased stored tokens a profile row uses to mean NO.
+
+Two descendant flags tested this pair independently, each with a different default, so
+the two agreed on what counts as false only by hand. A token added to one and not the
+other would have made one flag read a stored NO as a YES -- which for
+``convive_con_contribuyente`` decides whether a descendant counts toward the minimo
+familiar at all.
 """
 
 
@@ -393,13 +404,13 @@ def _stored_family_fields(row: dict[str, str], *, index: int) -> _FamilyFields:
     declaracion_raw = row.get("declaracion_propia")
     prorrata_raw = row.get("prorrata_minimo")
     return {
-        "convive_con_contribuyente": row.get("convivencia", "true").lower() not in ("false", "0"),
+        "convive_con_contribuyente": row.get("convivencia", "true").lower() not in _FALSE_PROFILE_TOKENS,
         "dependencia_economica": (
             _flag_bool(dependencia_raw, key=f"renta_family.descendiente.{index}.dependencia_economica")
             if dependencia_raw is not None
             else None
         ),
-        "custodia_compartida": row.get("custodia_compartida", "false").lower() not in ("false", "0"),
+        "custodia_compartida": row.get("custodia_compartida", "false").lower() not in _FALSE_PROFILE_TOKENS,
         "rentas_anuales_euros": _stored_rentas_anuales(row.get("rentas_anuales"), index=index),
         "presenta_declaracion_propia": (
             _flag_bool(declaracion_raw, key=f"renta_family.descendiente.{index}.declaracion_propia")

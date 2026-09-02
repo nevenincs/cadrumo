@@ -22,6 +22,9 @@ from .....application.modelo.operation_definitions import (
     ModeloWorkFileRequest,
 )
 from .....application.modelo.workspace_models import ModeloWorkspaceCapabilityName
+from .....application.operations.models import OperationRequest
+from .....core.payment_election import PaymentElection
+from .....core.refund_election import RefundElection
 from ..action import file as file_action
 from ..actions import MODELO_ACTION_DISPATCH
 
@@ -32,15 +35,26 @@ _REVISION_ID = "rev-2026-1T-0001"
 _REPORT_ID = "vr-2026-1T-0001"
 
 
-def _request(**overrides: object):
-    kwargs: dict[str, object] = {
-        "work_unit_id": _WORK_UNIT_ID,
-        "calculation_revision_id": _REVISION_ID,
-        "verification_report_id": _REPORT_ID,
-        "actor_ref": "operator:test",
-    }
-    kwargs.update(overrides)
-    return file_action.build_file_operation_request(**kwargs)  # type: ignore[arg-type]
+def _request(
+    *,
+    work_unit_id: str = _WORK_UNIT_ID,
+    calculation_revision_id: str = _REVISION_ID,
+    verification_report_id: str = _REPORT_ID,
+    actor_ref: str = "operator:test",
+    refund_election: RefundElection | None = None,
+    payment_election: PaymentElection | None = None,
+    notes: str | None = None,
+) -> OperationRequest[ModeloWorkFileRequest]:
+    """Build one file request, each field defaulted and individually overridable."""
+    return file_action.build_file_operation_request(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=calculation_revision_id,
+        verification_report_id=verification_report_id,
+        actor_ref=actor_ref,
+        refund_election=refund_election,
+        payment_election=payment_election,
+        notes=notes,
+    )
 
 
 def test_the_request_is_addressed_to_the_registered_file_operation() -> None:

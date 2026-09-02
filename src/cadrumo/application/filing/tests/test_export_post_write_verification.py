@@ -11,6 +11,7 @@ import pytest
 from ....core.modelo import Modelo
 from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.export_parse import parse_export_payload
+from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
 from ....domain.filing.errors import FilingExportError
 from ..export import export_draft
 from ..export_verification import (
@@ -102,8 +103,18 @@ def test_post_write_tripwire_refuses_real_casilla_drift_and_preserves_the_artifa
     # envelope_header record was prepended: the slice then read the envelope's
     # blanks instead of the casilla. Mirror the parser's own walk -- records in
     # `order`, each consuming the extent its fields declare.
-    def _record_extent(candidate: object) -> int:
-        return max(item.offset - 1 + item.length for item in candidate.fields)
+    def _record_extent(candidate: ExportRecordDefinition) -> int:
+        # offset and length are both optional on the model: a field that declares
+        # neither occupies no span and cannot extend the record.
+        extents = [
+            item.offset - 1 + item.length
+            for item in candidate.fields
+            if item.offset is not None and item.length is not None
+        ]
+        if not extents:
+            message = "export record declares no positioned field, so its extent is unmeasurable"
+            raise AssertionError(message)
+        return max(extents)
 
     record_start = sum(_record_extent(earlier) for earlier in layout.records if earlier.order < record.order)
     start = record_start + field.offset - 1
@@ -125,7 +136,9 @@ def test_post_write_tripwire_refuses_real_casilla_drift_and_preserves_the_artifa
     with pytest.raises(FilingExportError) as refusal:
         verify_written_export(draft, file_path=output_path, schema_provider=provider)
     assert refusal.value.translated_message == ("application.filing.export.errors.post_write_verification_refused")
-    assert refusal.value.context["mismatched_casilla_ids"] == ("03",)
+    context = refusal.value.context
+    assert context is not None, "the refusal must carry the context that names the drifted casilla"
+    assert context["mismatched_casilla_ids"] == ("03",)
 
     assert output_path.read_bytes() != payload
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ..command_spec import (
+    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -32,7 +33,7 @@ PROFILE_INVENTORY_COMMAND_SPECS = (
         key="config_profile_list",
         parent_key="config_profile",
         token="list",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.list.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -51,7 +52,7 @@ PROFILE_INVENTORY_COMMAND_SPECS = (
         key="config_profile_status",
         parent_key="config_profile",
         token="status",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.status.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),

@@ -1,0 +1,207 @@
+from __future__ import annotations
+
+from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
+
+from ..analysis import m200_2024_restoration_candidates as subject
+from ..analysis.m200_semantic_casilla_candidates import M200CasillaDisposition
+from ..pipeline._casilla_export_refs import write_generated_casilla_export_refs
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def _gap() -> SimpleNamespace:
+    return SimpleNamespace(
+        disposition=M200CasillaDisposition.REVISION_MISSING_DECLARATION,
+        export_field_id="m200-2024.dp200012.f0013",
+        authored_token="93",  # noqa: S106 - official casilla token
+        label="Importe [00093]",
+        source_ref="aeat-dr-200-2024",
+        source_sha256="a" * 64,
+        aeat_type="Num",
+        length=17,
+    )
+
+
+def _historic() -> dict[str, object]:
+    return {
+        "id": "93",
+        "number": "93",
+        "section": ["liquidacion_i"],
+        "semantic_role": "is_correcciones_aumentos",
+        "data_type": "money",
+        "required": False,
+        "input_kind": "manual",
+        "legal_refs": ["ley-27-2014:art-41"],
+        "source_refs": ["aeat-dr-200-2024"],
+        "export_refs": ["m200-2024.dp200012.f0013"],
+    }
+
+
+def _restoration() -> subject.RestorationCandidate:
+    return subject.RestorationCandidate(
+        id="00093",
+        number="00093",
+        section=("liquidacion_i",),
+        semantic_role="is_correcciones_aumentos",
+        data_type="money",
+        required=False,
+        input_kind="manual",
+        legal_refs=("ley-27-2014:art-41",),
+        source_refs=("aeat-dr-200-2024",),
+        export_refs=("m200-2024.dp200012.f0013",),
+        current_source_sha256="a" * 64,
+        historic_commit=subject.HISTORIC_COMMIT,
+        historic_path="historic/z2024only-dp200012.toml",
+    )
+
+
+def test_build_uses_current_padded_identity_and_historic_semantics(monkeypatch) -> None:
+    entry = SimpleNamespace(
+        export_field_id="m200-2024.dp200012.f0013",
+        source_refs=("aeat-dr-200-2024",),
+        legal_refs=("ley-27-2014:art-41",),
+    )
+    monkeypatch.setattr(subject, "_load_bundled_candidates", lambda: (_gap(),))
+    monkeypatch.setattr(subject, "load_semantic_map", lambda _path: SimpleNamespace(entries=(entry,)))
+    monkeypatch.setattr(
+        subject,
+        "_historic_index",
+        lambda: {"m200-2024.dp200012.f0013": (("z2024only-dp200012.toml", _historic()),)},
+    )
+
+    accepted, refused = subject.build_bundled_restoration_candidates()
+
+    assert not refused
+    assert accepted[0].id == "00093"
+    assert accepted[0].export_refs == ("m200-2024.dp200012.f0013",)
+    assert accepted[0].semantic_role == "is_correcciones_aumentos"
+
+
+def test_build_refuses_ambiguous_historic_export_identity(monkeypatch) -> None:
+    entry = SimpleNamespace(
+        export_field_id="m200-2024.dp200012.f0013",
+        source_refs=("aeat-dr-200-2024",),
+        legal_refs=("ley-27-2014:art-41",),
+    )
+    match = ("z2024only-dp200012.toml", _historic())
+    monkeypatch.setattr(subject, "_load_bundled_candidates", lambda: (_gap(),))
+    monkeypatch.setattr(subject, "load_semantic_map", lambda _path: SimpleNamespace(entries=(entry,)))
+    monkeypatch.setattr(subject, "_historic_index", lambda: {entry.export_field_id: (match, match)})
+
+    accepted, refused = subject.build_bundled_restoration_candidates()
+
+    assert not accepted
+    assert refused[0].reason == "historic export match count is 2"
+
+
+def test_semantic_or_type_mismatch_refuses() -> None:
+    entry = SimpleNamespace(source_refs=("aeat-dr-200-2024",), legal_refs=("different",))
+
+    assert subject._refusal_reason(_gap(), entry, _historic()) == (
+        "historic semantic legal payload disagrees with current reviewed map"
+    )
+
+
+def test_apply_patch_has_deterministic_canonical_path_and_registry_only_content(tmp_path: Path) -> None:
+    patch = subject.render_apply_patch((_restoration(),), (), workspace_root=tmp_path)
+
+    assert patch == subject.render_apply_patch((_restoration(),), (), workspace_root=tmp_path)
+    assert "*** Add File: src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas/c00093.toml" in patch
+    assert 'id = "00093"' in patch
+    assert "Physical export placement is current field m200-2024.dp200012.f0013" in patch
+    assert "export_refs =" not in patch
+    assert subject.HISTORIC_COMMIT in patch
+    assert "historic_path" not in patch
+    assert "current_source_sha256" not in patch
+
+
+def test_apply_patch_refuses_existing_canonical_target(tmp_path: Path) -> None:
+    target = tmp_path / subject._canonical_relative_path(_restoration())
+    target.parent.mkdir(parents=True)
+    target.write_text("existing", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="already exist"):
+        subject.render_apply_patch((_restoration(),), (), workspace_root=tmp_path)
+
+
+def test_apply_patch_refuses_any_dry_run_refusal(tmp_path: Path) -> None:
+    refusals = (subject.RestorationRefusal("m200-2024.dp200012.f0013", "ambiguous"),)
+
+    with pytest.raises(ValueError, match="1 restoration refusals"):
+        subject.render_apply_patch((_restoration(),), refusals, workspace_root=tmp_path)
+
+
+def test_bootstrap_fragment_gets_reciprocal_ref_only_after_render_staging(tmp_path: Path) -> None:
+    casillas_root = tmp_path / "casillas"
+    casillas_root.mkdir()
+    fragment = casillas_root / "c00093.toml"
+    fragment.write_text(subject._render_registry_fragment(_restoration()), encoding="utf-8")
+    assert "export_refs =" not in fragment.read_text(encoding="utf-8")
+
+    written = write_generated_casilla_export_refs(
+        tmp_path,
+        export_refs_by_casilla={"00093": ("m200-2024.dp200012.f0013",)},
+    )
+
+    assert written == (fragment,)
+    assert 'export_refs = ["m200-2024.dp200012.f0013"]' in fragment.read_text(encoding="utf-8")
+
+
+def test_f0014_restoration_uses_current_02971_not_sibling_00355(monkeypatch) -> None:
+    gap = SimpleNamespace(
+        disposition=M200CasillaDisposition.REVISION_MISSING_DECLARATION,
+        export_field_id="m200-2024.dp200012.f0014",
+        authored_token="2971",  # noqa: S106 - official casilla token
+        label="Importe [02971]",
+        source_ref="aeat-dr-200-2024",
+        source_sha256="a" * 64,
+        aeat_type="Num",
+        length=17,
+    )
+    entry = SimpleNamespace(
+        export_field_id=gap.export_field_id,
+        source_refs=(gap.source_ref,),
+        legal_refs=("ley-27-2014:art-41",),
+    )
+    historic = {**_historic(), "id": "2971", "number": "2971", "export_refs": [gap.export_field_id]}
+    monkeypatch.setattr(subject, "_load_bundled_candidates", lambda: (gap,))
+    monkeypatch.setattr(subject, "load_semantic_map", lambda _path: SimpleNamespace(entries=(entry,)))
+    monkeypatch.setattr(subject, "_historic_index", lambda: {gap.export_field_id: (("historic.toml", historic),)})
+
+    accepted, refused = subject.build_bundled_restoration_candidates()
+
+    assert not refused
+    assert accepted[0].id == "02971"
+    assert accepted[0].number == "02971"
+    assert "00355" not in subject._render_registry_fragment(accepted[0])
+
+
+def test_f0165_historic_exact_export_proof_restores_current_01683(monkeypatch) -> None:
+    gap = SimpleNamespace(
+        disposition=M200CasillaDisposition.REVISION_MISSING_DECLARATION,
+        export_field_id="m200-2024.dp200018.f0165",
+        authored_token="1683",  # noqa: S106 - official casilla token
+        label="Importe [01683]",
+        source_ref="aeat-dr-200-2024",
+        source_sha256="a" * 64,
+        aeat_type="Num",
+        length=17,
+    )
+    entry = SimpleNamespace(
+        export_field_id=gap.export_field_id,
+        source_refs=(gap.source_ref,),
+        legal_refs=("ley-27-2014:art-41",),
+    )
+    historic = {**_historic(), "id": "1683", "number": "1683", "export_refs": [gap.export_field_id]}
+    monkeypatch.setattr(subject, "_load_bundled_candidates", lambda: (gap,))
+    monkeypatch.setattr(subject, "load_semantic_map", lambda _path: SimpleNamespace(entries=(entry,)))
+    monkeypatch.setattr(subject, "_historic_index", lambda: {gap.export_field_id: (("historic.toml", historic),)})
+
+    accepted, refused = subject.build_bundled_restoration_candidates()
+
+    assert not refused
+    assert accepted[0].id == "01683"
+    assert accepted[0].export_refs == (gap.export_field_id,)

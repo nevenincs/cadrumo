@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .command_spec import (
+    CommandNodeKind,
     CommandSpec,
     CommandWriteRoute,
     DeferredTarget,
@@ -46,7 +47,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         tui_capability=TuiCapability.AVAILABLE,
         parent_key=None,
         token="aeat",  # noqa: S106 - CLI operator token, not a credential
-        kind="root",
+        kind=CommandNodeKind.ROOT,
         help_key=TranslationKey("cli.root.app_help"),
         short_help_key=None,
         invocation=InvocationSpec(
@@ -183,7 +184,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app",
         parent_key="root",
         token="app",  # noqa: S106 - CLI operator token, not a credential
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.root.app_app_help"),
         short_help_key=None,
         invocation=InvocationSpec(
@@ -215,7 +216,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="config",
         parent_key="root",
         token="config",  # noqa: S106 - CLI operator token, not a credential
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.config.app_help"),
         short_help_key=None,
         invocation=InvocationSpec(

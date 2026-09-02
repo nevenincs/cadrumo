@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 from shutil import rmtree
 from types import SimpleNamespace
+from typing import Literal
 
 import pytest
 
@@ -177,7 +178,7 @@ def _legacy_orphan_journal(
     *,
     candidate_export: Path,
     backup_export: Path,
-    state: str = "intent",
+    state: Literal["intent", "backup_staged", "candidate_live", "committed"] = "intent",
 ) -> Path:
     journal = _tree_publication._PublicationJournal(
         schema_version=1,
@@ -231,7 +232,11 @@ def test_recovery_retires_only_a_provably_completed_legacy_cross_volume_orphan(t
         ("non-intent", "backup_staged"),
     ),
 )
-def test_recovery_refuses_unsafe_legacy_orphan_shapes(tmp_path, case: str, state: str) -> None:
+def test_recovery_refuses_unsafe_legacy_orphan_shapes(
+    tmp_path,
+    case: str,
+    state: Literal["intent", "backup_staged", "candidate_live", "committed"],
+) -> None:
     context = _legacy_orphan_context(tmp_path)
     candidate_export = tmp_path / "former-system-temporary" / "export"
     backup_export = _tree_publication._rollback_sibling(

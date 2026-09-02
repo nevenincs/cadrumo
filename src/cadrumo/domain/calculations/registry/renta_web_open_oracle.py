@@ -24,7 +24,9 @@ from .ids import OracleId
 from .live_parity import (
     OracleSurfaceKind,
     ParityFieldComparison,
+    ParityFieldVerdict,
     ParityResult,
+    ParityVerdictKind,
     assert_oracle_operations_allowed,
     decode_replay_json_payload,
 )
@@ -360,14 +362,14 @@ class RentaWebOpenOracle:
             return ParityResult(
                 oracle_id=self.oracle_id,
                 cross_reference_id=policy.id,
-                verdict="blocked",
+                verdict=ParityVerdictKind.BLOCKED,
                 narrative=f"Renta WEB Open oracle blocked by remote-state guard: {exc}",
             )
         if self._driver is None:
             return ParityResult(
                 oracle_id=self.oracle_id,
                 cross_reference_id=policy.id,
-                verdict="unverifiable",
+                verdict=ParityVerdictKind.UNVERIFIABLE,
                 narrative=(
                     "Renta WEB Open browser driver is not configured. Guard preflight passed, "
                     "but no outbound AEAT Sede adapter was available to execute the open simulator."
@@ -379,7 +381,7 @@ class RentaWebOpenOracle:
             return ParityResult(
                 oracle_id=self.oracle_id,
                 cross_reference_id=policy.id,
-                verdict="unverifiable",
+                verdict=ParityVerdictKind.UNVERIFIABLE,
                 narrative=f"Renta WEB Open driver could not produce comparable observations: {exc}",
             )
         fields = tuple(
@@ -479,9 +481,13 @@ def _is_non_finite_numeric_text(value: str) -> bool:
 def _compare_expected_field(casilla_id: CasillaId, expected: object, *, observed: str | None) -> ParityFieldComparison:
     expected_text = str(expected)
     if observed is None:
-        return ParityFieldComparison(name=casilla_id, expected=expected_text, observed="", verdict="unverifiable")
-    verdict: Literal["match", "mismatch"] = (
-        "match" if equivalent_renta_web_open_value(expected_text, observed) else "mismatch"
+        return ParityFieldComparison(
+            name=casilla_id, expected=expected_text, observed="", verdict=ParityVerdictKind.UNVERIFIABLE
+        )
+    verdict: Literal[ParityVerdictKind.MATCH, ParityVerdictKind.MISMATCH] = (
+        ParityVerdictKind.MATCH
+        if equivalent_renta_web_open_value(expected_text, observed)
+        else ParityVerdictKind.MISMATCH
     )
     return ParityFieldComparison(name=casilla_id, expected=expected_text, observed=observed, verdict=verdict)
 
@@ -509,22 +515,22 @@ def serialize_renta_web_open_replay_decimal(value: str) -> str | None:
     return None if parsed is None else format(parsed, "f")
 
 
-def _overall_verdict(fields: tuple[ParityFieldComparison, ...]) -> Literal["match", "mismatch", "unverifiable"]:
-    if any(field.verdict == "mismatch" for field in fields):
-        return "mismatch"
-    if any(field.verdict == "unverifiable" for field in fields):
-        return "unverifiable"
-    return "match"
+def _overall_verdict(fields: tuple[ParityFieldComparison, ...]) -> ParityFieldVerdict:
+    if any(field.verdict == ParityVerdictKind.MISMATCH for field in fields):
+        return ParityVerdictKind.MISMATCH
+    if any(field.verdict == ParityVerdictKind.UNVERIFIABLE for field in fields):
+        return ParityVerdictKind.UNVERIFIABLE
+    return ParityVerdictKind.MATCH
 
 
 def _narrative_for_verdict(
-    verdict: Literal["match", "mismatch", "unverifiable"],
+    verdict: ParityFieldVerdict,
     *,
     driver_mode: CheckerDriverModeValue,
 ) -> str:
-    if verdict == "match":
+    if verdict == ParityVerdictKind.MATCH:
         return f"Renta WEB Open {driver_mode} parity matched every expected field"
-    if verdict == "mismatch":
+    if verdict == ParityVerdictKind.MISMATCH:
         return f"Renta WEB Open {driver_mode} parity found at least one mismatched field"
     return f"Renta WEB Open {driver_mode} parity could not observe every expected field"
 

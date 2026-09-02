@@ -26,7 +26,6 @@ live_cross_references = [
 application_links = [
     "modelo-360-portal",
     "modelo-360-filing",
-    "modelo-360-extractor",
     "modelo-360-deadline",
 ]
 filing_schedules = ["modelo-360-ad-hoc"]

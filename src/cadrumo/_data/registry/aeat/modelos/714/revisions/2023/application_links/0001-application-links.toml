@@ -26,14 +26,6 @@ legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31"]
 source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2023".application_links]]
-id = "modelo-714-extractor"
-surface = "extractor"
-consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
-requires_snapshot = true
-legal_refs = ["ley-19-1991:art-28"]
-source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
-
-[[revisions."2023".application_links]]
 id = "modelo-714-deadline"
 surface = "deadline"
 consumer = "cadrumo.domain.deadlines"

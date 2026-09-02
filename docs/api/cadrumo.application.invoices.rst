@@ -15,7 +15,6 @@ Submodules
 
    cadrumo.application.invoices._bulk_import_columns
    cadrumo.application.invoices._catalogue_mutation
-   cadrumo.application.invoices._reconciliation
    cadrumo.application.invoices.bulk_import
    cadrumo.application.invoices.catalogue_creation
    cadrumo.application.invoices.catalogue_lifecycle

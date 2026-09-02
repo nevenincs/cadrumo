@@ -5,6 +5,7 @@ from __future__ import annotations
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
     ArgumentSpec,
+    CommandNodeKind,
     CommandSpec,
     CommandWriteRoute,
     DeferredTarget,
@@ -46,7 +47,7 @@ MODELO_ROOT_COMMAND_SPEC = CommandSpec(
     key="app_modelo",
     parent_key="app",
     token="modelo",  # noqa: S106 - CLI operator token, not a credential
-    kind="group",
+    kind=CommandNodeKind.GROUP,
     help_key=TranslationKey("cli.app.modelo.app_help"),
     short_help_key=None,
     invocation=InvocationSpec(no_args_is_help=True),
@@ -71,7 +72,7 @@ def _leaf(
         key=key,
         parent_key="app_modelo_audit",
         token=token,
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey(help_key),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -98,7 +99,7 @@ MODELO_AUDIT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_modelo_audit",
         parent_key="app_modelo",
         token="audit",  # noqa: S106 - CLI operator token, not a credential
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.modelo.audit.group_help"),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),

@@ -10,6 +10,7 @@ from ._app_ledger_command_spec_policies import (
 )
 from .command_spec import (
     ArgumentSpec,
+    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -28,7 +29,7 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_ledger_classify",
         parent_key="app_ledger",
         token="classify",
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.classify.help"),
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),

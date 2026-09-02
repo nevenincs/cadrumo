@@ -11,11 +11,27 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum, StrEnum
 from types import MappingProxyType
-from typing import Literal
+from typing import Final, Literal
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 
-type CommandNodeKind = Literal["root", "group", "leaf"]
+
+class CommandNodeKind(StrEnum):
+    """Where a command sits in the CLI tree."""
+
+    ROOT = "root"
+    GROUP = "group"
+    LEAF = "leaf"
+
+
+NON_LEAF_COMMAND_KINDS: Final[frozenset[CommandNodeKind]] = frozenset(
+    {CommandNodeKind.ROOT, CommandNodeKind.GROUP},
+)
+"""The kinds that carry children.
+
+Derived from the members rather than relisted. A node kind added to the tree cannot be
+silently omitted here, which a hand-written pair invited -- and this pair was written
+twice, in two comprehensions of one reconciliation module."""
 
 
 class ParameterKind(StrEnum):
@@ -769,9 +785,9 @@ class CommandSpec:
         if self.parent_key is not None:
             _require_identifier(self.parent_key, field="command parent key")
         _require_token(self.token, field="command token")
-        if self.kind not in {"root", "group", "leaf"}:
+        if self.kind not in CommandNodeKind:
             raise ValueError(f"unknown command node kind: {self.kind}")
-        if self.kind == "root" and self.parent_key is not None:
+        if self.kind == CommandNodeKind.ROOT and self.parent_key is not None:
             raise ValueError("root command cannot declare a parent")
         if self.kind != "root" and self.parent_key is None:
             raise ValueError("non-root command must declare a parent")
@@ -967,6 +983,7 @@ class CommandSpecGraph:
 
 
 __all__ = [
+    "NON_LEAF_COMMAND_KINDS",
     "ArgumentSpec",
     "BindingState",
     "CommandNodeKind",

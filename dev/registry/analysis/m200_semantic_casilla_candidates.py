@@ -21,7 +21,6 @@ import rtoml
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
 
 from ..pipeline._record_design_ir import (
@@ -111,8 +110,6 @@ def classify_m200_casilla_candidates(
             sibling_field,
             sibling_entry,
             authored_token=token,
-            target_casilla_ids=target_casilla_ids,
-            sibling_casilla_ids=sibling_casilla_ids,
             target_ids_by_number=target_ids_by_number or {},
         )
         candidates.append(
@@ -258,58 +255,46 @@ def _classify_sibling(
     sibling_entry: SemanticMapEntry | None,
     *,
     authored_token: CasillaId,
-    target_casilla_ids: frozenset[CasillaId],
-    sibling_casilla_ids: frozenset[CasillaId],
     target_ids_by_number: Mapping[str, tuple[CasillaId, ...]],
 ) -> tuple[M200CasillaDisposition, str, str | None, str | None]:
-    if sibling_field is None or sibling_entry is None:
-        printed_number = _printed_number(target_field)
-        if printed_number is None or printed_number.lstrip("0") != authored_token.lstrip("0"):
-            return M200CasillaDisposition.UNRESOLVED, "no exact sibling anchor", None, None
-        token_ids = tuple(
-            identifier
-            for number, identifiers in target_ids_by_number.items()
-            if number.lstrip("0") == printed_number.lstrip("0")
-            for identifier in identifiers
-        )
-        if len(token_ids) == 1 and ":" in token_ids[0]:
-            return (
-                M200CasillaDisposition.SEGMENT_QUALIFIED_IDENTITY,
-                "official number has only a segment-qualified target identity; ownership cannot be inferred",
-                str(token_ids[0]),
-                None,
-            )
-        if not token_ids:
-            return (
-                M200CasillaDisposition.REVISION_MISSING_DECLARATION,
-                "official numeric casilla field has no exact sibling anchor or target-revision declaration",
-                None,
-                None,
-            )
-        return M200CasillaDisposition.UNRESOLVED, "no exact sibling anchor", None, None
-    if sibling_entry.kind is not CasillaFieldKind.CASILLA or sibling_entry.casilla_id is None:
+    printed_number = _printed_number(target_field)
+    if printed_number is None or printed_number.lstrip("0") != authored_token.lstrip("0"):
         return (
-            M200CasillaDisposition.NON_CASILLA,
-            "exact unchanged sibling is explicitly reviewed as non-casilla",
+            M200CasillaDisposition.UNRESOLVED,
+            "current official printed number disagrees with authored token",
             None,
-            str(sibling_entry.kind),
-        )
-    sibling_id = sibling_entry.casilla_id
-    if sibling_id not in sibling_casilla_ids:
-        return M200CasillaDisposition.UNRESOLVED, "sibling semantic identity is not sibling-authoritative", None, None
-    if sibling_id not in target_casilla_ids:
-        return (
-            M200CasillaDisposition.REVISION_MISSING_DECLARATION,
-            "exact unchanged sibling identity is absent from the target revision",
-            str(sibling_id),
             None,
         )
-    disposition = (
-        M200CasillaDisposition.SEGMENT_QUALIFIED_IDENTITY
-        if ":" in sibling_id
-        else M200CasillaDisposition.EXISTING_IDENTITY
+    target_ids = tuple(
+        identifier
+        for number, identifiers in target_ids_by_number.items()
+        if number.lstrip("0") == printed_number.lstrip("0")
+        for identifier in identifiers
     )
-    return disposition, "exact unchanged sibling identity exists in the target revision", str(sibling_id), None
+    unqualified = tuple(identifier for identifier in target_ids if ":" not in identifier)
+    qualified = tuple(identifier for identifier in target_ids if ":" in identifier)
+    if qualified:
+        return (
+            M200CasillaDisposition.SEGMENT_QUALIFIED_IDENTITY,
+            "official number has segment-qualified target identities; ownership cannot be inferred",
+            str(qualified[0]) if len(qualified) == 1 else None,
+            None,
+        )
+    if len(unqualified) == 1:
+        return (
+            M200CasillaDisposition.EXISTING_IDENTITY,
+            "current official printed identity exists in the target revision",
+            str(unqualified[0]),
+            None,
+        )
+    if len(unqualified) > 1:
+        return M200CasillaDisposition.UNRESOLVED, "current official printed identity is ambiguous", None, None
+    return (
+        M200CasillaDisposition.REVISION_MISSING_DECLARATION,
+        "current official printed identity is absent from the target revision",
+        printed_number,
+        None,
+    )
 
 
 def _unique_left_pad(token: CasillaId, casilla_ids: frozenset[CasillaId]) -> CasillaId | None:

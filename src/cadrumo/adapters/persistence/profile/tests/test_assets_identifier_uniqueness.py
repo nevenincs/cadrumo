@@ -1,7 +1,7 @@
 """One asset identifier, one asset -- on every write path into the ledger.
 
 ``AssetsLedgerRepository.add`` refused a repeated ``AssetRecord.identifier``,
-but the public ``save`` / ``save_assets`` path accepted any
+but the public ``save`` path accepted any
 ``AssetsLedgerDocument`` and wrote it straight through. The same repository
 therefore held two competing uniqueness contracts: incremental writes rejected
 a duplicate natural key while bulk replacement persisted two rows under one,

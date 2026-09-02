@@ -126,10 +126,6 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     ): "the transaction store writes a row PER TRANSACTION rather than one singleton document, so its "
     "batch carries no whole-collection risk; the singleton invoice catalogue beside it IS guarded",
     (
-        "src/cadrumo/application/invoices/_reconciliation.py",
-        "reconcile_invoice_repositories",
-    ): "per-transaction rows as above; the singleton invoice catalogue beside it IS guarded",
-    (
         "src/cadrumo/application/ledger/actions_common.py",
         "save_transaction_catalogue_and_events",
     ): "the transaction catalogue arrives as a parameter; its EVENT side is guarded by _commit_with_guarded_events",

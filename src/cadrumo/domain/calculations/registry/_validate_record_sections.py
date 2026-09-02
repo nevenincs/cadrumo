@@ -284,7 +284,7 @@ def validate_extraction_profile_section(
     """Return extraction-profile reference, artefact, and specimen failures.
 
     The :class:`~domain.calculations.registry.ModeloRevision` supplies
-    :class:`~domain.calculations.registry._schema_extraction.ExtractionProfileDefinition`
+    :class:`~domain.calculations.registry.schema_extraction.ExtractionProfileDefinition`
     rows. Each profile must target declared/exported casillas as required,
     declare layout-authority evidence, use a dotted parser callable, and satisfy
     bundled justificante PDF specimen/round-trip gates when a corpus root is

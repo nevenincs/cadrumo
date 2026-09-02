@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
 from pydantic import ValidationError
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+
+if TYPE_CHECKING:
+    from ....domain.modelos.verification_report import VerificationReport
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -374,7 +379,7 @@ def test_verification_report_view_lists_missing_required_casillas() -> None:
     assert "missing_required_casillas" in message
 
 
-def _blocked_report() -> object:
+def _blocked_report() -> VerificationReport:
     """Build one real, fully-validated canonical report to project."""
     from datetime import UTC, datetime
 

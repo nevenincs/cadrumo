@@ -7,6 +7,7 @@ from __future__ import annotations
 from ._modelo_nonwork_command_spec_policies import _MODEL_READ
 from .command_spec import (
     ArgumentSpec,
+    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -25,7 +26,7 @@ MODELO_NONWORK_VERIFICATION_REPORT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_modelo_verification_report_list",
         parent_key="app_modelo_verification_report",
         token="list",
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.verification_report.list_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -56,7 +57,7 @@ MODELO_NONWORK_VERIFICATION_REPORT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_modelo_verification_report_view",
         parent_key="app_modelo_verification_report",
         token="view",
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.verification_report.view_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),

@@ -29,6 +29,7 @@ from ....domain.iva_compensation.filed_derivation import (
     M303_COMPENSATION_POSTERIOR_CASILLA,
     M303_COMPENSATION_RESULTADO_CASILLA,
     M303CompensationAvailableDerivation,
+    M303CompensationBasis,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import errors as errors_module
@@ -72,7 +73,7 @@ def _contract(condition: CalculationRefusalPrecondition, facts: tuple[tuple[str,
 # expressions are retained rather than reduced to keys so a polarity/value
 # mutation cannot pass the proof accidentally.
 _TERMINAL_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
-    "_m303_carry_ingress:_resolve_result_disposition:M303CarryIngressError:1": _contract(
+    "m303_carry_ingress:_resolve_result_disposition:M303CarryIngressError:1": _contract(
         CalculationRefusalPrecondition.M303_CARRY_DISPOSITION_CONSISTENT,
         (
             ("source_kind", "str(envelope.source_kind)"),
@@ -80,7 +81,7 @@ _TERMINAL_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
             ("header_disposition", "str(header_projection.disposition)"),
         ),
     ),
-    "_m303_carry_ingress:_resolve_result_disposition:M303CarryIngressError:2": _contract(
+    "m303_carry_ingress:_resolve_result_disposition:M303CarryIngressError:2": _contract(
         CalculationRefusalPrecondition.M303_CARRY_DISPOSITION_CONSISTENT,
         (
             ("source_kind", "str(envelope.source_kind)"),
@@ -88,7 +89,7 @@ _TERMINAL_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
             ("header_disposition", "str(header_projection.disposition)"),
         ),
     ),
-    "_m303_carry_ingress:_assert_result_sign_compatible:M303CarryIngressError:1": _contract(
+    "m303_carry_ingress:_assert_result_sign_compatible:M303CarryIngressError:1": _contract(
         CalculationRefusalPrecondition.M303_CARRY_DISPOSITION_CONSISTENT,
         (
             ("disposition", "str(disposition)"),
@@ -96,7 +97,7 @@ _TERMINAL_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
             ("casilla_id", "str(M303_COMPENSATION_RESULTADO_CASILLA)"),
         ),
     ),
-    "_m303_carry_ingress:_require_supplied_pair_matches_derivation:M303CarryIngressError:1": _contract(
+    "m303_carry_ingress:_require_supplied_pair_matches_derivation:M303CarryIngressError:1": _contract(
         CalculationRefusalPrecondition.M303_CARRY_DERIVATION_CONSISTENT,
         (
             ("supplied_available", "str(current_available)"),
@@ -104,7 +105,7 @@ _TERMINAL_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
             ("basis", "str(derivation.basis)"),
         ),
     ),
-    "_m303_carry_ingress:_require_supplied_pair_matches_derivation:M303CarryIngressError:2": _contract(
+    "m303_carry_ingress:_require_supplied_pair_matches_derivation:M303CarryIngressError:2": _contract(
         CalculationRefusalPrecondition.M303_CARRY_DERIVATION_CONSISTENT,
         (
             ("supplied_available", "str(current_available)"),
@@ -113,7 +114,7 @@ _TERMINAL_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
             ("basis", "str(derivation.basis)"),
         ),
     ),
-    "_m303_carry_ingress:_resolve_available_compensation_formula_id:M303CarryIngressError:1": _contract(
+    "m303_carry_ingress:_resolve_available_compensation_formula_id:M303CarryIngressError:1": _contract(
         CalculationRefusalPrecondition.M303_CARRY_MATCHES_REGISTRY_FORMULA,
         (
             ("formula_id", "str(formula.id)"),
@@ -441,7 +442,7 @@ def test_m303_registry_formula_contradiction_has_an_exact_safety_verdict() -> No
     contradictory_derivation = M303CompensationAvailableDerivation(
         available=Decimal("27.00"),
         generated=Decimal("20.00"),
-        basis="generated",
+        basis=M303CompensationBasis.GENERATED,
         operand_refs=(M303_COMPENSATION_POSTERIOR_CASILLA, M303_COMPENSATION_RESULTADO_CASILLA),
         operand_values=(Decimal("7.00"), Decimal("20.00")),
     )

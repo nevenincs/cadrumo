@@ -20,6 +20,7 @@ from ...application.modelo.work_lifecycle import lifecycle_continuation_for_work
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language
 from ...core.json_contract import Notice, NoticeSeverity
+from ...domain.modelos.errors import ModeloError
 from ._common import (
     activate_subcommand_output_language,
     active_profile_label,
@@ -62,11 +63,19 @@ def _run_select_destination(*, bucket_id: str | None, include_discarded: bool) -
         include_discarded=include_discarded,
         output_language=output_language(),
     )
-    if outcome.kind is FullScreenOutcomeKind.NOT_ADMITTED:
-        return outcome.work_unit_id, outcome.detail
-    if outcome.kind is FullScreenOutcomeKind.SELECTED:
-        return outcome.work_unit_id, None
-    return None, None
+    match outcome.kind:
+        case FullScreenOutcomeKind.SELECTED:
+            return outcome.work_unit_id, None
+        case FullScreenOutcomeKind.NOT_ADMITTED:
+            return outcome.work_unit_id, outcome.detail
+        case FullScreenOutcomeKind.CANCELLED:
+            return None, None
+        case FullScreenOutcomeKind.COMPLETED:
+            # A picker either yields a choice or is left; it has no third
+            # ending. Refusing here keeps an outcome this command cannot read
+            # from being folded into the nearest one it can, which would
+            # report an unread session as a cancellation.
+            raise ModeloError(f"the work-unit picker reported {outcome.kind.value}, which it cannot produce")
 
 
 def work_select(

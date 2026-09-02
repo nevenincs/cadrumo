@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .command_spec import (
     ArgumentSpec,
+    CommandNodeKind,
     CommandSpec,
     CommandWriteRoute,
     DeferredTarget,
@@ -59,7 +60,7 @@ def _leaf(
         key,
         "app_overview",
         token,
-        "leaf",
+        CommandNodeKind.LEAF,
         _key(help_key),
         None,
         InvocationSpec(context_parameter="ctx"),
@@ -79,7 +80,7 @@ OVERVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_overview",
         "app",
         "overview",
-        "group",
+        CommandNodeKind.GROUP,
         _key("cli.overview.app_help"),
         None,
         InvocationSpec(no_args_is_help=True),

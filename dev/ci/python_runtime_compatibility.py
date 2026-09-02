@@ -30,7 +30,7 @@ from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Final, cast
+from typing import Any, Final, TypedDict, cast
 
 from .._paths import REPO_ROOT, UTF_8
 from ..packaging._command import CommandResult, run_command
@@ -53,6 +53,9 @@ _UTF_8: Final[str] = UTF_8
 _SCHEMA: Final[str] = "cadrumo.python-runtime-compatibility.v1"
 _SHA256_RE: Final[re.Pattern[str]] = re.compile(r"^[0-9a-f]{64}$")
 _RUNTIME_VERSION_RE: Final[re.Pattern[str]] = re.compile(r"^3\.(?P<minor>[0-9]+)")
+_OBSERVED_RUNTIME_VERSION_RE: Final[re.Pattern[str]] = re.compile(
+    r"^3\.(?P<minor>[0-9]+)(?:\.[0-9]+)?(?:[._-]?(?:a|b|rc|dev)[0-9]+)?$"
+)
 _DEFAULT_BUILDER_PIN: Final[Path] = REPO_ROOT / ".python-version"
 _MISSING_WHEEL_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
     re.compile(r"\bno solution found\b"),
@@ -143,6 +146,34 @@ class FocusedTestEvidence:
     detail: str | None = None
 
 
+class ProbeEvidenceData(TypedDict):
+    """The evidence record as plain data, field for field.
+
+    `asdict` produces exactly these keys, so naming their types keeps a
+    round trip through the mapping checkable: a caller that splats this
+    back into :class:`ProbeEvidence` is verified per field rather than
+    widened to `object` at every one.
+    """
+
+    schema: str
+    runtime: dict[str, str]
+    mode: str
+    status: str
+    stability: str
+    lock_sha256: str
+    artifact_sha256: str
+    artifact_digests: dict[str, str]
+    source_commit: str | None
+    cohort_manifest_sha256: str | None
+    builder_python: str | None
+    dependency: dict[str, str]
+    isolation: dict[str, bool]
+    commands: tuple[CommandEvidence, ...]
+    focused_tests: tuple[FocusedTestEvidence, ...]
+    failure: dict[str, str] | None
+    observed_at: str
+
+
 @dataclass(frozen=True, slots=True)
 class ProbeEvidence:
     """One immutable JSON-compatible compatibility verdict."""
@@ -212,9 +243,9 @@ class ProbeEvidence:
             if any(test.status != FocusedTestStatus.PASSED.value for test in self.focused_tests):
                 raise CompatibilityProbeError("passing compatibility evidence cannot contain a failed focused test")
 
-    def to_dict(self) -> dict[str, object]:
+    def to_dict(self) -> ProbeEvidenceData:
         """Return deterministic JSON data suitable for workflow artifact upload."""
-        return cast(dict[str, object], asdict(self))
+        return cast(ProbeEvidenceData, asdict(self))
 
 
 def _digest_bytes(payload: bytes) -> str:
@@ -414,7 +445,7 @@ def _wheelhouse_platform(runtime: Mapping[str, str]) -> str:
 def _runtime_minor(runtime: Mapping[str, str]) -> str:
     """Return the observed interpreter's canonical ``3.N`` wheelhouse key."""
     observed = runtime.get("python", "")
-    match = re.fullmatch(r"3\.(?P<minor>[0-9]+)(?:\.[0-9]+)?", observed)
+    match = _OBSERVED_RUNTIME_VERSION_RE.fullmatch(observed)
     if match is None:
         raise CompatibilityProbeError(
             f"selected interpreter reported an invalid Python version: {observed!r}",

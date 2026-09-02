@@ -48,6 +48,7 @@ from ...filing.retention import FilingRetentionAuthority
 from ..custody_service import (
     _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService,
 )
+from ..custody_transactions import CustodyReceiptOwner
 from ..lifecycle import ProfileCapsuleLifecycle
 from ..login_session import (
     ProfileCustodySessionOwnerEffect,
@@ -205,11 +206,11 @@ def test_destroying_a_profile_records_both_session_owner_effects(tmp_path: Path)
 
             process_receipt = service._repository.load_owner_receipt(
                 journal.transaction_id,
-                "process-secret-revocation",
+                CustodyReceiptOwner.PROCESS_SECRET_REVOCATION,
             )
             acceleration_receipt = service._repository.load_owner_receipt(
                 journal.transaction_id,
-                "local-session-acceleration",
+                CustodyReceiptOwner.LOCAL_SESSION_ACCELERATION,
             )
             assert process_receipt is not None
             assert process_receipt.effect == ProfileCustodySessionOwnerEffect.REVOKED.value

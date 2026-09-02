@@ -17,9 +17,9 @@ Where the contracts live:
   :class:`InvoiceCatalogueSourceResolver` and the single
   ``invoice_direction_to_source_kind`` mapping shared with the
   ``aeat app ledger invoice`` operator surface.
-- Linking and reconciliation -- ``transaction_linking`` for the bidirectional
-  invoice/transaction links, and the private ``_reconciliation`` and
-  ``_projection`` modules, which no consumer outside this package reaches.
+- Linking -- ``transaction_linking`` for the bidirectional invoice/transaction
+  links. The private ``_projection`` module has no consumer outside this
+  package.
 - Tax-position helpers -- ``issuer_establishment`` and ``self_counterparty``.
 
 ``domain.invoices`` remains the sole canonical source for ``find_invoice``,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ..command_spec import (
+    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -62,7 +63,7 @@ CONFIG_RESET_COMMAND_SPECS = (
         key="config_reset",
         parent_key="config",
         token="reset",  # noqa: S106 - CLI token, not a credential.
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.config.reset.help"),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),
@@ -75,7 +76,7 @@ CONFIG_RESET_COMMAND_SPECS = (
         key="config_reset_start",
         parent_key="config_reset",
         token="start",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.reset.start_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -88,7 +89,7 @@ CONFIG_RESET_COMMAND_SPECS = (
         key="config_reset_status",
         parent_key="config_reset",
         token="status",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.reset.status_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -101,7 +102,7 @@ CONFIG_RESET_COMMAND_SPECS = (
         key="config_reset_resume",
         parent_key="config_reset",
         token="resume",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.reset.resume_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),

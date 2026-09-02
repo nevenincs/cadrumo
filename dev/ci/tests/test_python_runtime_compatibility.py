@@ -267,7 +267,7 @@ def test_binary_selection_attributes_advisory_missing_wheels() -> None:
     }
 
     with pytest.raises(compatibility.CompatibilityProbeError, match="pydantic-core") as failure:
-        compatibility._select_runtime_wheelhouse(manifest, {"python": "3.15.0"})
+        compatibility._select_runtime_wheelhouse(manifest, {"python": "3.15.0b4"})
 
     assert failure.value.category == "missing-wheel"
 

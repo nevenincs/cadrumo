@@ -12,6 +12,7 @@ from .._command_runtime import (
     resolve_deferred_target,
 )
 from ..command_spec import (
+    CommandNodeKind,
     CommandSpec,
     CommandSpecGraph,
     CommandWriteRoute,
@@ -54,7 +55,7 @@ def _graph() -> CommandSpecGraph:
         key="root",
         parent_key=None,
         token="aeat",  # noqa: S106 - CLI operator token, not a credential
-        kind="root",
+        kind=CommandNodeKind.ROOT,
         help_key=TranslationKey("cli.root.app_help"),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),
@@ -67,7 +68,7 @@ def _graph() -> CommandSpecGraph:
         key="greet",
         parent_key="root",
         token="greet",  # noqa: S106 - CLI operator token, not a credential
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.root.version_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),

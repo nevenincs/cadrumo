@@ -140,14 +140,14 @@ def derive_m303_compensation_available_from_casillas(
                 # excluded the period's generated credit, so recording the
                 # ordinary fallback basis would make later evidence claim the
                 # wrong policy path.
-                basis="refunded",
+                basis=M303CompensationBasis.REFUNDED,
                 operand_refs=(),
                 operand_values=(),
             )
         return M303CompensationAvailableDerivation(
             available=posterior + generated,
             generated=generated,
-            basis="generated",
+            basis=M303CompensationBasis.GENERATED,
             operand_refs=(M303_COMPENSATION_POSTERIOR_CASILLA, M303_COMPENSATION_GENERADA_CASILLA),
             operand_values=(posterior, generated),
         )
@@ -167,7 +167,7 @@ def derive_m303_compensation_available_from_casillas(
         # it in this module is how the two would drift apart on the next
         # regulatory change to the conversion.
         generated=available - posterior,
-        basis="refunded" if refunded else "resultado",
+        basis=M303CompensationBasis.REFUNDED if refunded else M303CompensationBasis.RESULTADO,
         operand_refs=(),
         operand_values=(),
     )

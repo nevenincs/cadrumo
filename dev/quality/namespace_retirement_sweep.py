@@ -30,6 +30,7 @@ Run with no arguments to report, ``--apply`` to rewrite.
 import ast
 import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 SRC = Path("src/cadrumo")
@@ -141,7 +142,22 @@ def fix_module_object_imports() -> int:
     return fixed
 
 
-def _constants(text: str) -> list[ast.Constant]:
+@dataclass(slots=True)
+class _StringConstant:
+    """One literal proven to be text, anchored to a line of the outer file.
+
+    ``ast.Constant.value`` admits every literal type, so handing the raw node
+    onward keeps the bytes and numeric cases alive for every consumer of the
+    walk below. This carries only what the walk proved -- a string and the
+    parent line it belongs to -- so a pin comparison cannot be handed a
+    ``bytes`` literal.
+    """
+
+    value: str
+    lineno: int
+
+
+def _constants(text: str) -> list[_StringConstant]:
     """Every string constant, INCLUDING those inside embedded Python source.
 
     A test that reproduces a crash in a fresh interpreter passes the child's
@@ -159,7 +175,7 @@ def _constants(text: str) -> list[ast.Constant]:
     Any constant that itself parses as Python is therefore re-walked. Most
     strings are not Python and raise, which is the filter.
     """
-    found: list[ast.Constant] = []
+    found: list[_StringConstant] = []
     try:
         tree = ast.parse(text)
     except SyntaxError:
@@ -167,7 +183,7 @@ def _constants(text: str) -> list[ast.Constant]:
     for node in ast.walk(tree):
         if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
             continue
-        found.append(node)
+        found.append(_StringConstant(value=node.value, lineno=node.lineno))
         if "\n" in node.value and len(node.value) > 40:
             for inner in _constants(node.value):
                 # The child's own line numbers mean nothing in the parent, so

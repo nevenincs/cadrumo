@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .command_spec import (
     ArgumentSpec,
+    CommandNodeKind,
     CommandSpec,
     CommandWriteRoute,
     DeferredTarget,
@@ -80,7 +81,7 @@ def _leaf(
         key,
         parent_key,
         token,
-        "leaf",
+        CommandNodeKind.LEAF,
         _key(help_key),
         None,
         InvocationSpec(context_parameter="ctx"),
@@ -108,7 +109,7 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_modelo_work",
         "app_modelo",
         "work",
-        "group",
+        CommandNodeKind.GROUP,
         _key("cli.app.modelo.work.app_help"),
         None,
         InvocationSpec(no_args_is_help=True),

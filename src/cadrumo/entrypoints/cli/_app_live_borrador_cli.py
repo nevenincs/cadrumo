@@ -134,15 +134,15 @@ def _borrador_row(snapshot: Borrador100Snapshot) -> _BorradorRow:
     )
 
 
-def _borrador_state(state: SnapshotLifecycleState) -> Literal["active", "superseded", "discarded"]:
-    """Project the lifecycle enum onto the exact summary-payload vocabulary."""
+def _borrador_state(state: SnapshotLifecycleState) -> SnapshotLifecycleStateValue:
+    """Narrow the lifecycle enum to the three members a summary row may carry."""
     match state:
         case SnapshotLifecycleState.ACTIVE:
-            return "active"
+            return SnapshotLifecycleState.ACTIVE
         case SnapshotLifecycleState.SUPERSEDED:
-            return "superseded"
+            return SnapshotLifecycleState.SUPERSEDED
         case SnapshotLifecycleState.DISCARDED:
-            return "discarded"
+            return SnapshotLifecycleState.DISCARDED
 
 
 def _active_borrador_state(state: SnapshotLifecycleState) -> Literal["active"]:

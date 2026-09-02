@@ -38,7 +38,12 @@ from ...application.calculations.maritime_exemption_service import (
 )
 from ...application.user_profile.projections import fact_value
 from ...core.parsing import parse_bool
-from ...domain.renta.maritime_exemption import MaritimeWorkerFacts, ProfileCompletenessError
+from ...domain.renta.maritime_exemption import (
+    MaritimeWorkerFacts,
+    ProfileCompletenessError,
+    VesselRegistry,
+    VesselRegistryValue,
+)
 from ..calculations.maritime_exemption_service import MaritimeExemptionResult
 from ..workflow.persistence import workflow_state_repository
 
@@ -103,14 +108,14 @@ def _waters_type(value: str | None) -> Literal["national", "international"] | No
 
 def _vessel_registry(
     value: str | None,
-) -> Literal["REBECA", "rebeca_eu_eea", "scheduled_canary_route"] | None:
+) -> VesselRegistryValue | None:
     match value:
         case "REBECA":
-            return "REBECA"
+            return VesselRegistry.REBECA
         case "rebeca_eu_eea":
-            return "rebeca_eu_eea"
+            return VesselRegistry.REBECA_EU_EEA
         case "scheduled_canary_route":
-            return "scheduled_canary_route"
+            return VesselRegistry.SCHEDULED_CANARY_ROUTE
         case _:
             return None
 

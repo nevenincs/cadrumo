@@ -15,14 +15,6 @@ legal_refs = ["orden-hfp-886-2023:art-1", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-721-2023-layout", "aeat-modelo-721-procedure"]
 
 [[revisions."2023".application_links]]
-id = "modelo-721-extractor"
-surface = "extractor"
-consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
-requires_snapshot = true
-legal_refs = ["orden-hfp-886-2023:art-1", "ley-58-2003:art-93"]
-source_refs = ["boe-modelo-721-2023-layout", "aeat-modelo-721-procedure"]
-
-[[revisions."2023".application_links]]
 id = "modelo-721-deadline"
 surface = "deadline"
 consumer = "cadrumo.domain.deadlines"

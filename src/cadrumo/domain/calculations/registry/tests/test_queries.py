@@ -485,7 +485,7 @@ def test_resolved_query_context_is_frozen_and_rejects_unknown_fields() -> None:
     assert (context.filing_year, context.registry_period) == (None, None)
 
     with pytest.raises(ValidationError):
-        context.filing_year = 2026  # type: ignore[misc]  # ty: ignore[invalid-assignment]  # reason: the refusal is what this asserts
+        context.filing_year = 2026  # type: ignore[misc]  # reason: the refusal is what this asserts
 
     # An unknown field is refused rather than silently carried, so a builder
     # cannot smuggle extra state through the shared context.

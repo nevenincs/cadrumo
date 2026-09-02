@@ -109,7 +109,7 @@ def _require_select_app(app: object) -> ModeloWorkSelectApp:
     return app
 
 
-class ModeloWorkSelectApp(ScreenHostApp[str]):
+class ModeloWorkSelectApp(ScreenHostApp["str | None"]):
     """Standalone host for the canonical modelo work-unit picker.
 
     ``run()``/``run_async()`` returns the chosen ``work_unit_id``, or

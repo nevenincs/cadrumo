@@ -24,6 +24,7 @@ from .live_parity import (
     ParityFieldComparison,
     ParityResult,
     ParityVerdict,
+    ParityVerdictKind,
     assert_oracle_operations_allowed,
     decode_replay_json_payload,
 )
@@ -209,7 +210,7 @@ class CheckerOracle:
             return ParityResult(
                 oracle_id=self.oracle_id,
                 cross_reference_id=policy.id,
-                verdict="blocked",
+                verdict=ParityVerdictKind.BLOCKED,
                 narrative=f"{self.surface_label} oracle blocked by remote-state guard: {exc}",
             )
         driver = self._driver
@@ -217,7 +218,7 @@ class CheckerOracle:
             return ParityResult(
                 oracle_id=self.oracle_id,
                 cross_reference_id=policy.id,
-                verdict="unverifiable",
+                verdict=ParityVerdictKind.UNVERIFIABLE,
                 narrative=(
                     f"{self.surface_label} oracle has no executable driver configured. "
                     "Guard preflight passed, but no AEAT or replay observation was available "
@@ -230,14 +231,18 @@ class CheckerOracle:
             return ParityResult(
                 oracle_id=self.oracle_id,
                 cross_reference_id=policy.id,
-                verdict="unverifiable",
+                verdict=ParityVerdictKind.UNVERIFIABLE,
                 narrative=f"{self.surface_label} driver could not produce comparable observations: {exc}",
             )
         fields = tuple(
             compare_verdict_field(key, expected_value, observed=observed_verdict(observation.values, key))
             for key, expected_value in sorted(self._expected_values(expected).items())
         )
-        verdict: ParityVerdict = "match" if fields and all(field.verdict == "match" for field in fields) else "mismatch"
+        verdict: ParityVerdict = (
+            ParityVerdictKind.MATCH
+            if fields and all(field.verdict == ParityVerdictKind.MATCH for field in fields)
+            else ParityVerdictKind.MISMATCH
+        )
         return ParityResult(
             oracle_id=self.oracle_id,
             cross_reference_id=policy.id,
@@ -300,11 +305,13 @@ def observed_verdict(values: Mapping[str, str], key: str) -> str | None:
 def compare_verdict_field(key: str, expected: str, *, observed: str | None) -> ParityFieldComparison:
     """Compare one expected verdict against one observed verdict."""
     if observed is None:
-        return ParityFieldComparison(name=key, expected=expected, observed="<missing>", verdict="mismatch")
+        return ParityFieldComparison(
+            name=key, expected=expected, observed="<missing>", verdict=ParityVerdictKind.MISMATCH
+        )
     normalized_observed = observed.strip().lower()
     return ParityFieldComparison(
         name=key,
         expected=expected,
         observed=normalized_observed,
-        verdict="match" if normalized_observed == expected else "mismatch",
+        verdict=ParityVerdictKind.MATCH if normalized_observed == expected else ParityVerdictKind.MISMATCH,
     )

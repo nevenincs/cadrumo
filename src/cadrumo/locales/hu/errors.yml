@@ -800,8 +800,6 @@ errors:
     refused_access_gate_live_read_not_enabled: Az AEAT élő olvasási hozzáférés le
       van tiltva. Ez a művelet az aktuális konfiguráció alatt nem léphet kapcsolatba
       az AEAT-tal.
-    refused_aeat_record_multi_recipient: A bejelentett rekord több címzettet is megnevez,
-      ezért nem alakítható egyetlen partnerhez tartozó tételsorrá. Egyeztesse címzettenként.
     refused_apoderado_invalid_represented_nif: A képviselt fél adóazonosítója nem
       érvényes NIF, NIE vagy CIF.
     refused_apoderado_live_check_unavailable: A képviselők élő ellenőrzése nem érhető

@@ -13,6 +13,5 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.application.inventory._source_readiness
    cadrumo.application.inventory.errors
    cadrumo.application.inventory.service

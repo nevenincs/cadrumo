@@ -42,7 +42,6 @@ live_cross_references = [
 application_links = [
     "modelo-309-portal",
     "modelo-309-filing",
-    "modelo-309-extractor",
     "modelo-309-review",
     "modelo-309-approval",
     "modelo-309-reconciliation",

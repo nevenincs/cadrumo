@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Final
 
 from ..command_spec import (
+    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -71,7 +72,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         key="config_repair",
         parent_key="config",
         token="repair",  # noqa: S106 - CLI token, not a credential.
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.config.repair.help"),
         short_help_key=None,
         invocation=InvocationSpec(
@@ -89,7 +90,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         key="config_repair_integrity",
         parent_key="config_repair",
         token="integrity",  # noqa: S106 - CLI token, not a credential.
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.config.repair.integrity_help"),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),
@@ -102,7 +103,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         key="config_repair_logs",
         parent_key="config_repair",
         token="logs",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.repair.logs_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -124,7 +125,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         key="config_repair_quarantine",
         parent_key="config_repair",
         token="quarantine",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.repair.quarantine_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -140,7 +141,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         key="config_repair_reset_progress",
         parent_key="config_repair",
         token="reset-progress",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.repair.reset_progress_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -156,7 +157,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         key="config_repair_integrity_objects",
         parent_key="config_repair_integrity",
         token="objects",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.repair.integrity.objects_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -177,7 +178,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         key="config_repair_integrity_registry",
         parent_key="config_repair_integrity",
         token="registry",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.repair.integrity.registry_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -190,7 +191,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         key="config_repair_connectivity",
         parent_key="config_repair",
         token="connectivity",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.repair.connectivity_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
@@ -203,7 +204,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         key="config_repair_profile",
         parent_key="config_repair",
         token="profile",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.repair.profile_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),

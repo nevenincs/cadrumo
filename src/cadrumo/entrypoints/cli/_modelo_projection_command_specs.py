@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ...core.modelo import Modelo
 from .command_spec import (
+    CommandNodeKind,
     CommandSpec,
     CommandWriteRoute,
     DeferredTarget,
@@ -61,7 +62,7 @@ def _leaf(
         key,
         "app_modelo",
         token,
-        "leaf",
+        CommandNodeKind.LEAF,
         TranslationKey(help_key),
         None,
         InvocationSpec(context_parameter="ctx"),

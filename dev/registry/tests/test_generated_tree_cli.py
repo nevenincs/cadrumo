@@ -59,6 +59,18 @@ def test_bootstrap_target_refuses_unenrolled_source_digest() -> None:
         )
 
 
+def test_bootstrap_target_enrolls_only_the_pinned_modelo_200_2024_design() -> None:
+    """The absent 2024 tree may bootstrap only from its own reviewed source."""
+    target = _bootstrap_target(
+        _Invocation("200", "2024", "aeat-dr-200-2024", 2024, "0A"),
+        source_sha256="ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218",
+    )
+
+    assert target.layout_id == "generated-modelo-200-2024-fichero"
+    assert target.line_ending == "crlf"
+    assert target.source_ref == "aeat-dr-200-2024"
+
+
 def _publication_context_for_target(
     target: Path,
     receipt: GeneratedExportTreeTargetStateReceipt,

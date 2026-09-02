@@ -18,23 +18,35 @@ from __future__ import annotations
 
 import pytest
 
+from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ..data_inventory import DataInventoryCasilla
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _a_grounded_entry(**overrides: object) -> DataInventoryCasilla:
+_GROUNDED_CASILLA_ID: CasillaId = "iva.devengado.base"
+_GROUNDED_LEGAL_REFS: tuple[LegalRefId, ...] = ("liva-art-78",)
+_GROUNDED_SOURCE_REFS: tuple[SourceRefId, ...] = ("aeat-modelo-303-instrucciones",)
+
+
+def _a_grounded_entry(
+    *,
+    casilla_id: CasillaId = _GROUNDED_CASILLA_ID,
+    number: str = "01",
+    label: str = "Base imponible",
+    legal_refs: tuple[LegalRefId, ...] = _GROUNDED_LEGAL_REFS,
+    source_refs: tuple[SourceRefId, ...] = _GROUNDED_SOURCE_REFS,
+) -> DataInventoryCasilla:
     """Build one checklist entry, grounded unless an override empties it."""
-    fields: dict[str, object] = {
-        "casilla_id": "iva.devengado.base",
-        "number": "01",
-        "label": "Base imponible",
-        "legal_refs": ("liva-art-78",),
-        "source_refs": ("aeat-modelo-303-instrucciones",),
-    }
-    fields.update(overrides)
-    return DataInventoryCasilla(**fields)  # type: ignore[arg-type]
+    return DataInventoryCasilla(
+        casilla_id=casilla_id,
+        number=number,
+        label=label,
+        legal_refs=legal_refs,
+        source_refs=source_refs,
+    )
 
 
 def test_a_grounded_entry_builds() -> None:
@@ -78,7 +90,7 @@ def test_grounding_cannot_be_omitted_at_construction() -> None:
     which is precisely how an ungrounded entry would be built by accident.
     """
     with pytest.raises(TypeError, match="legal_refs"):
-        DataInventoryCasilla(  # type: ignore[call-arg]
+        DataInventoryCasilla(  # type: ignore[call-arg]  # ty: ignore[missing-argument]  # reason: omitting the grounding IS the refusal under test
             casilla_id="iva.devengado.base",
             number="01",
             label="Base imponible",

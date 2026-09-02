@@ -23,7 +23,7 @@ from ....core.remote_authority import (
 )
 from .errors import RegistryValidationError
 from .schema_base import EvidenceTier
-from .schema_verification import LiveCrossReferenceDecision
+from .schema_verification import READ_ONLY_HTTP_METHODS, LiveCrossReferenceDecision
 
 CrossReferenceClassification = Literal[
     "open_simulator",
@@ -41,7 +41,6 @@ RemoteEvidenceTier = Literal[
     EvidenceTier.LAYOUT_AUTHORITY,
 ]
 
-_READ_ONLY_HTTP_METHODS = {"GET", "HEAD", "OPTIONS"}
 # Canonical AEAT write-class action labels that EVERY guard policy
 # attached to a live cross-reference / oracle MUST include. This is the
 # read-only mandate enforced as code: AEAT writes are PERMANENTLY
@@ -432,7 +431,7 @@ def evaluate_remote_operation(policy: RemoteStateGuardPolicy, operation: RemoteO
 
 
 def _http_method_is_allowed(policy: RemoteStateGuardPolicy, method: str, path: str | None) -> bool:
-    return method in _READ_ONLY_HTTP_METHODS or (
+    return method in READ_ONLY_HTTP_METHODS or (
         method == "POST"
         and policy.classification == "authenticated_read_surface"
         and path in policy.allowed_read_post_paths

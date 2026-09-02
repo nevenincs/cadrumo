@@ -9,6 +9,7 @@ import pytest
 
 from ..command_spec import (
     ArgumentSpec,
+    CommandNodeKind,
     CommandSpec,
     CommandSpecGraph,
     CommandWriteRoute,
@@ -41,7 +42,7 @@ def _root() -> CommandSpec:
         key="root",
         parent_key=None,
         token="aeat",  # noqa: S106 - CLI token, not a credential.
-        kind="root",
+        kind=CommandNodeKind.ROOT,
         help_key=TranslationKey("cli.root.help"),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),
@@ -57,7 +58,7 @@ def _group() -> CommandSpec:
         key="config",
         parent_key="root",
         token="config",  # noqa: S106 - CLI token, not a credential.
-        kind="group",
+        kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.config.help"),
         short_help_key=TranslationKey("cli.config.short_help"),
         invocation=InvocationSpec(no_args_is_help=True),
@@ -73,7 +74,7 @@ def _leaf() -> CommandSpec:
         key="profile_list",
         parent_key="config",
         token="list",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.profile.list_help"),
         short_help_key=None,
         invocation=InvocationSpec(),

@@ -76,7 +76,7 @@ def _vendored_exceptions() -> tuple[type[BaseException], type[BaseException], ty
     """
     from typer._click import exceptions as ty_exceptions
 
-    vendored_abort = getattr(ty_exceptions, "Abort", click.Abort)
+    vendored_abort = cast("type[BaseException]", getattr(ty_exceptions, "Abort", click.Abort))
     return ty_exceptions.ClickException, ty_exceptions.UsageError, vendored_abort
 
 

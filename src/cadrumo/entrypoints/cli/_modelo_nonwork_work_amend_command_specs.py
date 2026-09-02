@@ -7,6 +7,7 @@ from __future__ import annotations
 from ._modelo_nonwork_command_spec_policies import _INTERACTIVE_MODEL_WRITE
 from .command_spec import (
     ArgumentSpec,
+    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -26,7 +27,7 @@ MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_modelo_work_amend_wizard",
         parent_key="app_modelo_work",
         token="amend-wizard",
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.work.amend_wizard_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),

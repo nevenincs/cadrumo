@@ -28,7 +28,7 @@ from .._validate_cross_revision import (
 from ..errors import RegistryValidationError
 from ..ids import LegalRefId
 from ..loader import load_modelo_directory
-from ..modelo_localization import casilla_occurrence_locale_key
+from ..modelo_localization import ModeloLocalizationFieldKind, casilla_occurrence_locale_key
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ..schema_references import PeriodSelector
 from ..schema_surfaces import CasillaConstraints, CasillaDefinition
@@ -306,7 +306,7 @@ source_refs = ["aeat-manual"]
     _write_test_label("Old")
     _write_test_label("New")
     for revision_id, label in (("2024", "Old"), ("2025", "New")):
-        key = casilla_occurrence_locale_key("999", revision_id, "0700", "label")
+        key = casilla_occurrence_locale_key("999", revision_id, "0700", ModeloLocalizationFieldKind.LABEL)
         if synthetic_locale_state.root is not None:
             with (synthetic_locale_state.root / "es.yml").open("a", encoding="utf-8") as handle:
                 handle.write(f"{json.dumps(key)}: {json.dumps(label)}\n")

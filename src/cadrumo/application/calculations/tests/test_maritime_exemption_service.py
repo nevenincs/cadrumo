@@ -23,6 +23,7 @@ from ....domain.renta.maritime_exemption import (
     MaritimeExemptionInactiveError,
     MaritimeWorkerFacts,
     ProfileCompletenessError,
+    VesselRegistry,
 )
 from ..maritime_exemption_service import (
     MaritimeExemptionResult,
@@ -126,7 +127,7 @@ class TestResolveMaritimeExemptionRebeca:
 
     _FACTS = MaritimeWorkerFacts(
         worker_class="trabajador_del_mar",
-        vessel_registry="REBECA",
+        vessel_registry=VesselRegistry.REBECA,
     )
 
     def test_returns_typed_observation_for_eligible_profile(self) -> None:
@@ -210,7 +211,7 @@ class TestResolveMaritimeExemptionRetmarGate:
         # We test via the result directly: no warning is raised when retmar=False.
         facts = MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
-            vessel_registry="REBECA",
+            vessel_registry=VesselRegistry.REBECA,
             retmar_registered=False,
         )
         result = resolve_maritime_exemption(

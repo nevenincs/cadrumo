@@ -42,42 +42,6 @@ _log = get_logger(__name__)
 BIENES_INVERSION_REGISTER_FILENAME = "bienes-inversion-iva-register.secure-object"
 
 
-def load_bienes_inversion_register() -> BienesInversionIvaRegister:
-    """Load the register, returning an empty register when absent.
-
-    Returns:
-        Persisted :class:`BienesInversionIvaRegister`, or an empty one when no
-        envelope exists.
-    """
-    return BienesInversionIvaRegisterRepository().load()
-
-
-def save_bienes_inversion_register(register: BienesInversionIvaRegister) -> Path:
-    """Persist ``register`` as a governed FINANCIAL-class encrypted envelope.
-
-    Args:
-        register: Register document to encrypt and write.
-
-    Returns:
-        Logical secure-object marker for the persisted register.
-    """
-    repository = BienesInversionIvaRegisterRepository()
-    repository.save(register)
-    return repository.envelope_path
-
-
-def declare_bien_inversion(record: BienInversionIvaRecord) -> BienesInversionIvaRegister:
-    """Atomically add ``record`` to the encrypted register.
-
-    Args:
-        record: Capital-good record to insert.
-
-    Returns:
-        The updated :class:`BienesInversionIvaRegister` including the new record.
-    """
-    return BienesInversionIvaRegisterRepository().add(record)
-
-
 class BienesInversionIvaRegisterRepository:
     """Governed repository for the encrypted register singleton.
 
@@ -205,7 +169,4 @@ class BienesInversionIvaRegisterRepository:
 
 __all__ = [
     "BienesInversionIvaRegisterRepository",
-    "declare_bien_inversion",
-    "load_bienes_inversion_register",
-    "save_bienes_inversion_register",
 ]

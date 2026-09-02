@@ -33,7 +33,11 @@ from ...core.period import Period
 from ...core.schema_family_disposition import RegistrySchemaFamilyDisposition
 from ...domain.calculations.registry.errors import RegistryFailureCondition, RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.modelo_localization import casilla_occurrence_locale_key, revision_locale_key
+from ...domain.calculations.registry.modelo_localization import (
+    ModeloLocalizationFieldKind,
+    casilla_occurrence_locale_key,
+    revision_locale_key,
+)
 from ...domain.calculations.registry.schema import (
     DataBindingDefinition,
     FormulaDefinition,
@@ -1146,7 +1150,9 @@ def static_inspection_casilla_schema_records(
     relations = inspection.relations
     records: list[ModeloWorkspaceSchemaRecordV1] = []
     for casilla_id in sorted(inspection.casilla_ids):
-        key = casilla_occurrence_locale_key(target.modelo, target.law_selected_revision_id, casilla_id, "label")
+        key = casilla_occurrence_locale_key(
+            target.modelo, target.law_selected_revision_id, casilla_id, ModeloLocalizationFieldKind.LABEL
+        )
         locale_summary, value = _resolve_locale_summary_and_value(key, output_language=output_language)
         records.append(
             ModeloWorkspaceSchemaRecordV1(
@@ -1197,7 +1203,9 @@ def graded_snapshot_casilla_schema_records(
     records: list[ModeloWorkspaceSchemaRecordV1] = []
     for casilla in sorted(casillas, key=lambda item: item.id):
         casilla_id = casilla.id
-        key = casilla_occurrence_locale_key(target.modelo, target.law_selected_revision_id, casilla_id, "label")
+        key = casilla_occurrence_locale_key(
+            target.modelo, target.law_selected_revision_id, casilla_id, ModeloLocalizationFieldKind.LABEL
+        )
         locale_summary, value = _resolve_locale_summary_and_value(key, output_language=output_language)
         records.append(
             ModeloWorkspaceSchemaRecordV1(

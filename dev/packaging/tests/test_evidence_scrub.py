@@ -15,6 +15,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import JsonValue
 
 from ..cohort_manifest import LoadedReleaseCohort
 from ..evidence import (
@@ -50,13 +51,31 @@ _TOKENS = (_HOSTNAME, _USERNAME)
 _HOME = f"C:\\Users\\{_USERNAME}"
 
 
+def _text_observations(evidence: DistributionEvidence, group: str) -> dict[str, str]:
+    """Return one observation group as text, proving its shape on the way.
+
+    ``observations`` is typed as free JSON, so a group is only a mapping and a
+    leaf only a string once something checks. Checking here turns a wrong-shaped
+    observation into a named test failure instead of an index into a list.
+    """
+    observed = evidence.result.observations[group]
+    if not isinstance(observed, dict):
+        raise AssertionError(f"observation {group!r} is not a mapping")
+    text: dict[str, str] = {}
+    for key, value in observed.items():
+        if not isinstance(value, str):
+            raise AssertionError(f"observation {group}.{key} is not text")
+        text[key] = value
+    return text
+
+
 def _release_cohort(root: Path) -> LoadedReleaseCohort:
     """Materialise a genuine release cohort with every required artifact kind."""
     return release_cohort(root)
 
 
 def _leaking_evidence(
-    cohort: LoadedReleaseCohort, *, observations: dict[str, object] | None = None
+    cohort: LoadedReleaseCohort, *, observations: dict[str, JsonValue] | None = None
 ) -> DistributionEvidence:
     """Build a real validated row saturated with runner metadata."""
     transcript = CommandTranscript.from_output(
@@ -232,7 +251,7 @@ def test_windows_workspace_root_is_redacted_tail_preserved(tmp_path: Path) -> No
         },
     )
     scrubbed = scrub_distribution_evidence(evidence, tokens=_TOKENS, workspace_roots=(_WIN_WORKSPACE,))
-    diag = scrubbed.result.observations["workspace_diag"]
+    diag = _text_observations(scrubbed, "workspace_diag")
     assert diag["resolved_executable"] == f"{SCRUBBED_WORKSPACE}\\var\\pip-venv\\Scripts\\aeat.exe"
     assert diag["storage_root"] == f"{SCRUBBED_WORKSPACE}\\var\\tax-oracle-state"
 
@@ -244,7 +263,7 @@ def test_posix_workspace_root_redaction_precedes_home_scrub(tmp_path: Path) -> N
         observations={"workspace_diag": {"cwd": f"{_POSIX_WORKSPACE}/var/outside-checkout"}},
     )
     scrubbed = scrub_distribution_evidence(evidence, tokens=_TOKENS, workspace_roots=(_POSIX_WORKSPACE,))
-    cwd = scrubbed.result.observations["workspace_diag"]["cwd"]
+    cwd = _text_observations(scrubbed, "workspace_diag")["cwd"]
     assert cwd == f"{SCRUBBED_WORKSPACE}/var/outside-checkout"
     assert "runner" not in cwd
 

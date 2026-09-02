@@ -9,6 +9,7 @@ from ._app_ledger_command_spec_policies import (
     _POLICY_2,
 )
 from .command_spec import (
+    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -27,7 +28,7 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_ledger_invoice_add",
         parent_key="app_ledger_invoice",
         token="add",
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.invoice.add_help"),
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
@@ -353,7 +354,7 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         key="app_ledger_invoice_import",
         parent_key="app_ledger_invoice",
         token="import",
-        kind="leaf",
+        kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.invoice.import_help"),
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),

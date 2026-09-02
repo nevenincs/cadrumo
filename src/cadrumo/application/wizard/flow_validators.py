@@ -25,7 +25,7 @@ from pydantic import ValidationError
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ..flows.definition import FlowDefinition, iter_flow_pages
-from ..flows.validators import CrossFieldValidator, ValidationVerdict, register_cross_field_validator
+from ..flows.validators import ValidationVerdict, register_cross_field_validator
 from ..user_profile.projections import projection_for_taxpayer
 
 TAXPAYER_PROJECTION_VALIDATOR_ID = "taxpayer-projection-constructs"
@@ -124,22 +124,6 @@ def _verdicts_for_answers(
     return (ValidationVerdict.passed(),)
 
 
-def build_taxpayer_projection_validator(
-    page_domain_keys: Mapping[str, str | None],
-) -> CrossFieldValidator:
-    """Build a standalone flow-scope validator over a page-id → domain-key mapping.
-
-    The returned closure snapshots the mapping, so it validates exactly
-    the pages handed to it.
-    """
-    domain_keys = {page_id: key for page_id, key in page_domain_keys.items() if key}
-
-    def _validate(answers: Mapping[str, str]) -> tuple[ValidationVerdict, ...]:
-        return _verdicts_for_answers(domain_keys, answers)
-
-    return _validate
-
-
 # The registered validator reads the enrolled mapping live, so the single
 # registry entry is owned by this module at import time (the sibling flow
 # validators register the same way) while each concrete definition enrols
@@ -188,6 +172,5 @@ def attach_taxpayer_projection_validator(definition: FlowDefinition) -> FlowDefi
 __all__ = [
     "TAXPAYER_PROJECTION_VALIDATOR_ID",
     "attach_taxpayer_projection_validator",
-    "build_taxpayer_projection_validator",
     "register_taxpayer_projection_validator",
 ]

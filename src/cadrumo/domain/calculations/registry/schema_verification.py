@@ -105,6 +105,25 @@ __all__ = [
 ProfileFactValue = bool | int | str
 
 
+READ_ONLY_HTTP_METHODS: Final[frozenset[str]] = frozenset({"GET", "HEAD", "OPTIONS"})
+"""The HTTP methods that cannot change state on an AEAT surface.
+
+Not an enum: HTTP methods are an external vocabulary this codebase does not close, and
+declaring one here would assert a completeness the registry has no authority over. What
+is closed is THIS set -- the methods a read surface may use -- and it was written out
+here and again as a private set in `remote_state_guard`, where the read-only mandate is
+enforced. Two copies of a security allowlist is one copy too many.
+"""
+
+SIMULATOR_HTTP_METHODS: Final[frozenset[str]] = READ_ONLY_HTTP_METHODS | {"POST"}
+"""Read-only methods plus POST, which a simulator may accept.
+
+Derived from the read-only set rather than relisted, so a method admitted to the
+read-only allowlist cannot be accidentally withheld from the simulator one -- and, more
+importantly, so a method removed from read-only cannot silently survive here.
+"""
+
+
 class LiveVerificationSurface(StrEnum):
     """The kind of AEAT surface a live cross-reference verifies against.
 
@@ -354,11 +373,7 @@ class LiveCrossReferenceDecision(RegistryModel):
         """Per-surface HTTP method allowlist + uppercase shape requirement."""
         if method.upper() != method:
             raise RegistryValidationError(f"cross-reference {self.id!r} allowed_methods must be uppercase")
-        if self.surface in READ_SURFACES and method not in {
-            "GET",
-            "HEAD",
-            "OPTIONS",
-        }:
+        if self.surface in READ_SURFACES and method not in READ_ONLY_HTTP_METHODS:
             raise RegistryValidationError(
                 f"cross-reference {self.id!r} read surface method {method!r} is not read-only",
             )
@@ -367,12 +382,7 @@ class LiveCrossReferenceDecision(RegistryModel):
         # remote-state guard's HTTP-method check stays strict for
         # ``kind="http"`` operations; only the cross-reference's
         # allowed_methods declaration is widened.
-        if self.surface == LiveVerificationSurface.AUTHENTICATED_SIMULATOR and method not in {
-            "GET",
-            "HEAD",
-            "OPTIONS",
-            "POST",
-        }:
+        if self.surface == LiveVerificationSurface.AUTHENTICATED_SIMULATOR and method not in SIMULATOR_HTTP_METHODS:
             raise RegistryValidationError(
                 f"cross-reference {self.id!r} authenticated simulator method "
                 f"{method!r} not in (GET, HEAD, OPTIONS, POST)",

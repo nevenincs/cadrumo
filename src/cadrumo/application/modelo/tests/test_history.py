@@ -404,25 +404,33 @@ def test_the_projection_refuses_an_actorless_event() -> None:
     timeline attribute an act to nobody.
     """
     with pytest.raises(ValidationError):
-        WorkUnitHistoryEvent(**{**_projected_event_fields(), "actor": ""})
+        fields = _projected_event_fields()
+        fields["actor"] = ""
+        WorkUnitHistoryEvent(**fields)
 
 
 def test_the_projection_refuses_an_actor_longer_than_the_log_records() -> None:
     """A label past the bound would be a value the event log could never hold."""
     with pytest.raises(ValidationError):
-        WorkUnitHistoryEvent(**{**_projected_event_fields(), "actor": "x" * 65})
+        fields = _projected_event_fields()
+        fields["actor"] = "x" * 65
+        WorkUnitHistoryEvent(**fields)
 
 
 def test_the_projection_refuses_an_event_id_that_is_not_a_content_address() -> None:
     """``event_id`` is derived from the event body, so a free string is not one."""
     with pytest.raises(ValidationError):
-        WorkUnitHistoryEvent(**{**_projected_event_fields(), "event_id": "not-a-digest"})
+        fields = _projected_event_fields()
+        fields["event_id"] = "not-a-digest"
+        WorkUnitHistoryEvent(**fields)
 
 
 def test_the_projection_refuses_an_object_id_past_the_event_log_bound() -> None:
     """The projected object id is bounded exactly where the event's own id is."""
     with pytest.raises(ValidationError):
-        WorkUnitHistoryEvent(**{**_projected_event_fields(), "object_id": "c" * 129})
+        fields = _projected_event_fields()
+        fields["object_id"] = "c" * 129
+        WorkUnitHistoryEvent(**fields)
 
 
 def test_a_real_assembled_row_satisfies_the_tightened_identities(repos: _Repos) -> None:

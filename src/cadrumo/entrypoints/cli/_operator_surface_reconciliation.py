@@ -19,6 +19,8 @@ from typing import TYPE_CHECKING
 
 import click
 
+from .command_spec import NON_LEAF_COMMAND_KINDS
+
 if TYPE_CHECKING:
     from ...application.operator_surface.manifest import (
         CommandSchemaRef,
@@ -131,7 +133,7 @@ def _current_operator_surface_schema_rows(
     root_landing_schema_keys = frozenset(
         identity
         for identity, spec in COMMAND_GRAPH.by_schema_identity().items()
-        if spec.kind in {"root", "group"} and identity.startswith("root.")
+        if spec.kind in NON_LEAF_COMMAND_KINDS and identity.startswith("root.")
     )
 
     return _CurrentOperatorSurfaceSchemaInventory(
@@ -229,7 +231,7 @@ def _current_operator_surface_exclusions() -> tuple[ExplicitExclusionInventoryRo
     root_landing_schema_keys = frozenset(
         identity
         for identity, spec in COMMAND_GRAPH.by_schema_identity().items()
-        if spec.kind in {"root", "group"} and identity.startswith("root.")
+        if spec.kind in NON_LEAF_COMMAND_KINDS and identity.startswith("root.")
     )
 
     return tuple(

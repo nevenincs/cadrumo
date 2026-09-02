@@ -53,6 +53,7 @@ from ..custody_service import (
     _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService,
 )
 from ..custody_transactions import (
+    CustodyReceiptOwner,
     ProfileCustodyTransactionConflictError,
     ProfileCustodyTransactionCorruptError,
     ProfileCustodyTransactionJournal,
@@ -746,8 +747,12 @@ def test_delete_owner_receipts_are_durable_and_idempotent(tmp_path: Path) -> Non
     receipt = service.execute_delete(service.confirmation_for(journal), now=_INSTANT)
 
     assert receipt.transaction_id == journal.transaction_id
-    process_receipt = service._repository.load_owner_receipt(journal.transaction_id, "process-secret-revocation")
-    acceleration_receipt = service._repository.load_owner_receipt(journal.transaction_id, "local-session-acceleration")
+    process_receipt = service._repository.load_owner_receipt(
+        journal.transaction_id, CustodyReceiptOwner.PROCESS_SECRET_REVOCATION
+    )
+    acceleration_receipt = service._repository.load_owner_receipt(
+        journal.transaction_id, CustodyReceiptOwner.LOCAL_SESSION_ACCELERATION
+    )
     assert process_receipt is not None and process_receipt.effect == "revoked"
     assert acceleration_receipt is not None and acceleration_receipt.effect == "removed"
     assert service.execute_delete(service.confirmation_for(journal), now=_INSTANT) == receipt
@@ -1053,7 +1058,9 @@ def test_owner_receipts_resume_after_owner_effect_precedes_journal_state(tmp_pat
     journal = service.prepare_delete(profile_id=_PROFILE_ID, now=_INSTANT)
 
     service._revoke_process_secrets(journal, _INSTANT)
-    process_receipt = service._repository.load_owner_receipt(journal.transaction_id, "process-secret-revocation")
+    process_receipt = service._repository.load_owner_receipt(
+        journal.transaction_id, CustodyReceiptOwner.PROCESS_SECRET_REVOCATION
+    )
     assert process_receipt is not None and process_receipt.effect == "verified_absent"
 
     receipt = service.execute_delete(service.confirmation_for(journal), now=_INSTANT)

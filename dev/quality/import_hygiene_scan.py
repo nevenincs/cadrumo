@@ -334,17 +334,21 @@ class _CanonicalAuthorityAnalyzer:
                     for alias in node.names:
                         scope.qualified[alias.asname or alias.name] = f"{target}.{alias.name}"
         assignments = sorted(
-            (node for node in nodes if isinstance(node, (ast.Assign, ast.AnnAssign)) and node.value is not None),
-            key=lambda node: (node.lineno, node.col_offset),
+            (
+                (node, node.value)
+                for node in nodes
+                if isinstance(node, (ast.Assign, ast.AnnAssign)) and node.value is not None
+            ),
+            key=lambda pair: (pair[0].lineno, pair[0].col_offset),
         )
-        for node in assignments:
+        for node, assigned in assignments:
             targets = node.targets if isinstance(node, ast.Assign) else (node.target,)
             for target in targets:
                 if not isinstance(target, ast.Name):
                     continue
-                scope.literals[target.id] = node.value
-                string = _static_string(node.value, scope)
-                qualified = _qualified_value(node.value, scope)
+                scope.literals[target.id] = assigned
+                string = _static_string(assigned, scope)
+                qualified = _qualified_value(assigned, scope)
                 if string is None:
                     scope.strings.pop(target.id, None)
                 else:
@@ -601,8 +605,10 @@ def _selection_decision(
             if (selects_collection or aliases_selected) and not target_names <= selected_names:
                 selected_names.update(target_names)
                 changed = True
-    for returned in (item for item in _scope_nodes(node.body) if isinstance(item, ast.Return) and item.value):
-        if isinstance(returned.value, ast.Call) and _bare_callable_name(returned.value.func) in {
+    for returned_value in (
+        item.value for item in _scope_nodes(node.body) if isinstance(item, ast.Return) and item.value is not None
+    ):
+        if isinstance(returned_value, ast.Call) and _bare_callable_name(returned_value.func) in {
             "dict",
             "frozenset",
             "len",
@@ -615,13 +621,13 @@ def _selection_decision(
             "tuple",
         }:
             continue
-        names = {child.id for child in ast.walk(returned.value) if isinstance(child, ast.Name)}
+        names = {child.id for child in ast.walk(returned_value) if isinstance(child, ast.Name)}
         if names & selected_names:
             return True
         if (
             names & produced_collections
-            and isinstance(returned.value, ast.Call)
-            and _bare_callable_name(returned.value.func)
+            and isinstance(returned_value, ast.Call)
+            and _bare_callable_name(returned_value.func)
             not in {"dict", "frozenset", "len", "list", "max", "min", "set", "sorted", "sum", "tuple"}
         ):
             return True
@@ -629,16 +635,18 @@ def _selection_decision(
             isinstance(child, ast.Subscript)
             and isinstance(child.value, ast.Name)
             and child.value.id in produced_collections
-            for child in ast.walk(returned.value)
+            for child in ast.walk(returned_value)
         ):
             return True
-    for yielded in (
-        item for item in _scope_nodes(node.body) if isinstance(item, (ast.Yield, ast.YieldFrom)) and item.value
+    for yielded_value in (
+        item.value
+        for item in _scope_nodes(node.body)
+        if isinstance(item, (ast.Yield, ast.YieldFrom)) and item.value is not None
     ):
-        if isinstance(yielded.value, ast.Name):
-            names = {yielded.value.id}
-        elif isinstance(yielded.value, (ast.Tuple, ast.List)):
-            names = {child.id for child in yielded.value.elts if isinstance(child, ast.Name)}
+        if isinstance(yielded_value, ast.Name):
+            names = {yielded_value.id}
+        elif isinstance(yielded_value, (ast.Tuple, ast.List)):
+            names = {child.id for child in yielded_value.elts if isinstance(child, ast.Name)}
         else:
             names = set()
         if names & selected_names:
@@ -653,16 +661,16 @@ def _direct_repository_first_match(
     rule: SubstitutableWorkSelectorRule,
 ) -> bool:
     decisions = (
-        item
+        item.value
         for item in _scope_nodes(node.body)
         if isinstance(item, (ast.Return, ast.Yield, ast.YieldFrom)) and item.value is not None
     )
-    for decision in decisions:
+    for decision_value in decisions:
         if not any(
-            isinstance(call, ast.Call) and _bare_callable_name(call.func) == "next" for call in ast.walk(decision.value)
+            isinstance(call, ast.Call) and _bare_callable_name(call.func) == "next" for call in ast.walk(decision_value)
         ):
             continue
-        for call in ast.walk(decision.value):
+        for call in ast.walk(decision_value):
             if not isinstance(call, ast.Call) or not isinstance(call.func, ast.Attribute):
                 continue
             if call.func.attr not in rule.collection_methods:
@@ -995,6 +1003,8 @@ def discover_facades() -> dict[str, FacadeInfo]:
         all_names: list[str] = []
         has_real_all = False
         for node in ast.walk(tree):
+            if not isinstance(node, ast.stmt):
+                continue
             value = dunder_all_assignment_value(node)
             if value is None or not isinstance(value, (ast.List, ast.Tuple, ast.Set)):
                 continue

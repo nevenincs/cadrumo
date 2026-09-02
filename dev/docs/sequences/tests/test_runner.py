@@ -22,6 +22,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import JsonValue
 
 from cadrumo.tests.env_scope import scoped_env_var
 from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, differing_field_names, differing_paths
@@ -56,6 +57,21 @@ _CHAIN_BODY = "\n".join(
         "@expect exit_code == 1",
     ],
 )
+
+
+def _envelope_result(envelope: dict[str, JsonValue] | None) -> dict[str, JsonValue]:
+    """Return one envelope's ``result`` object, proving the envelope carries one.
+
+    An envelope is typed as free JSON, so ``result`` is an object only once
+    something checks. Checking here names the wrong shape instead of indexing
+    into whatever the frame happened to carry.
+    """
+    if envelope is None:
+        raise AssertionError("frame carries no JSON envelope")
+    result = envelope["result"]
+    if not isinstance(result, dict):
+        raise AssertionError("envelope result is not an object")
+    return result
 
 
 def _chain_sequence() -> ParsedSequence:
@@ -117,10 +133,8 @@ def test_logout_then_delete_uses_durable_pointer_not_the_sandbox_override(tmp_pa
 
     transcript = execute_sequence(sequence, sandbox_root=tmp_path / "delete")
 
-    assert transcript.frames[0].envelope is not None
-    assert transcript.frames[0].envelope["result"]["logged_out_profile"] == "docs-sequence-sandbox"
-    assert transcript.result_frame.envelope is not None
-    assert transcript.result_frame.envelope["result"]["deleted"] is True
+    assert _envelope_result(transcript.frames[0].envelope)["logged_out_profile"] == "docs-sequence-sandbox"
+    assert _envelope_result(transcript.result_frame.envelope)["deleted"] is True
     assert not (Path(transcript.storage_root) / "buckets" / SANDBOX_PROFILE_ID).exists()
 
 

@@ -23,6 +23,7 @@ from ..live_parity import (
     OracleSurfaceKind,
     ParityFieldComparison,
     ParityResult,
+    ParityVerdictKind,
     ReplayPayload,
     decode_replay_json_payload,
     evaluate_planned_operations,
@@ -168,8 +169,8 @@ def test_parity_field_comparison_rejects_duplicate_field_names() -> None:
             verdict="match",
             narrative="dup",
             fields=(
-                ParityFieldComparison(name="x", expected="1", observed="1", verdict="match"),
-                ParityFieldComparison(name="x", expected="2", observed="2", verdict="match"),
+                ParityFieldComparison(name="x", expected="1", observed="1", verdict=ParityVerdictKind.MATCH),
+                ParityFieldComparison(name="x", expected="2", observed="2", verdict=ParityVerdictKind.MATCH),
             ),
         )
 

@@ -90,7 +90,10 @@ Membership means "one document, one invoice, readable by
 purpose: they are equally structured and equally model-free, but they carry a
 COLLECTION of ledger records, so admitting them here would route a batch into a
 reader that returns one invoice and silently drop every record after the first.
-Their reader is a separate entry point with a collection return type.
+No single-invoice reader accepts them: the evidence path leaves them outside
+this set and refuses them as filing artefacts until a dedicated reconciliation
+reader exists. A future reader would need a collection return type rather than
+silently discarding records.
 
 Hand-listed rather than derived, so adding a structured member forces a
 deliberate decision about which of the two readers it belongs to.

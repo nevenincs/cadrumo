@@ -82,7 +82,7 @@ def _revision(
 def _modelo(
     modelo_id: str = "130",
     *,
-    calculation_class: CalculationClass = "filing",
+    calculation_class: CalculationClass = CalculationClass.FILING,
     tax_domain: TaxDomain = TaxDomain.IRPF,
     revision: ModeloRevision | None = None,
 ) -> ModeloDefinition:

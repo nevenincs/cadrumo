@@ -15,14 +15,6 @@ legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-modelo-353-procedure"]
 
 [[revisions."2026-desde-02".application_links]]
-id = "modelo-353-extractor"
-surface = "extractor"
-consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
-requires_snapshot = true
-legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
-source_refs = ["aeat-modelo-353-procedure"]
-
-[[revisions."2026-desde-02".application_links]]
 id = "modelo-353-review"
 surface = "review"
 consumer = "cadrumo.application.filing.review"

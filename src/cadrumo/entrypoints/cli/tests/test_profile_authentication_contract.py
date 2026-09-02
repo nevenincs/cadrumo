@@ -97,7 +97,7 @@ def test_profile_payload_is_strict_frozen_secretstr_and_value_free_in_repr() -> 
             {"profile_passphrase": "not-a-real-passphrase", "extra": "forbidden"}
         )
     with pytest.raises(ValidationError):
-        payload.profile_passphrase = payload.profile_passphrase  # ty: ignore[invalid-assignment]  # reason: frozen-model refusal probe
+        payload.profile_passphrase = payload.profile_passphrase  # reason: frozen-model refusal probe
 
 
 def test_graph_profile_payload_model_is_exact_runtime_authority() -> None:

@@ -1035,7 +1035,7 @@ def _wizard_command_metadata(
     or ``typing`` implementation detail.
     """
     signature = inspect.Signature(parameters=parameters)
-    annotations = {
+    annotations: dict[str, object] = {
         parameter.name: parameter.annotation
         for parameter in signature.parameters.values()
         if parameter.annotation is not inspect.Parameter.empty

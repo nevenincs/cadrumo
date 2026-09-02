@@ -41,6 +41,7 @@ from ..filing.export_proof import (
     FilingExportProofRefusalReason,
 )
 from .closure import (
+    CLOSURE_SATISFYING_OUTCOMES,
     RegistryClosureEvidence,
     RegistryClosureFilingChannelRefusal,
     RegistryClosureLimb,
@@ -75,13 +76,13 @@ class FilingExportCoverageReport(BaseModel):
     @property
     def fully_satisfied(self) -> bool:
         """Return whether every participating revision has filing-capable byte evidence."""
-        return all(limb.outcome in {"satisfied", "not_applicable"} for limb in self.limbs)
+        return all(limb.outcome in CLOSURE_SATISFYING_OUTCOMES for limb in self.limbs)
 
     @computed_field
     @property
     def unsatisfied_limbs(self) -> tuple[RegistryClosureLimb, ...]:
         """Return every filing participant that lacks required export evidence."""
-        return tuple(limb for limb in self.limbs if limb.outcome not in {"satisfied", "not_applicable"})
+        return tuple(limb for limb in self.limbs if limb.outcome not in CLOSURE_SATISFYING_OUTCOMES)
 
 
 def compose_filing_export_coverage(

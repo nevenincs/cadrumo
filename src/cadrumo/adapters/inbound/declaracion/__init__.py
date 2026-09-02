@@ -6,7 +6,7 @@ points return :class:`InboundDeclaracionObservation` records interpreted through
 validated :class:`~domain.calculations.registry.RegistrySnapshot`.
 
 Parsing resolves :class:`TemplateRevision` and period, selects one
-:class:`~domain.calculations.registry._schema_extraction.ExtractionProfileDefinition` with
+:class:`~domain.calculations.registry.schema_extraction.ExtractionProfileDefinition` with
 ``surface == "declaracion_pdf"`` and accepted artefact kind
 ``"declaration_pdf"``, and extracts filed-declaration casilla values. Without
 an explicit profile id, registry profile selection must find exactly one match.
@@ -28,14 +28,18 @@ remains public, while malformed, ambiguous, or low-coverage extraction raises
 
 Public API::
 
-    from cadrumo.adapters.inbound.declaracion import (
-        InboundDeclaracionObservation,
-        DeclaracionParseError,
-        ExtractionWarning,
-        TemplateNotDetectedError,
-        TemplateRevision,
+    from cadrumo.adapters.inbound.declaracion.parser import (
         parse_declaracion,
         parse_declaracion_bytes,
+    )
+    from cadrumo.adapters.inbound.declaracion.schema import (
+        ExtractionWarning,
+        InboundDeclaracionObservation,
+        TemplateRevision,
+    )
+    from cadrumo.adapters.inbound.declaracion.errors import (
+        DeclaracionParseError,
+        TemplateNotDetectedError,
     )
 
 See Also:
@@ -44,7 +48,7 @@ See Also:
     :func:`parse_declaracion_bytes`
         In-memory entry point used by live-read flows that already hold
         decrypted PDF bytes.
-    :class:`~domain.calculations.registry._schema_extraction.ExtractionProfileDefinition`
+    :class:`~domain.calculations.registry.schema_extraction.ExtractionProfileDefinition`
         Registry-owned extraction contract consumed by this parser.
 """
 

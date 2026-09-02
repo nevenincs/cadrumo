@@ -89,6 +89,17 @@ _M303_PRIOR_COMPENSATION_CASILLA_ID: Final[CasillaId] = M303_COMPENSACION_PENDIE
 _M303_AVAILABLE_COMPENSATION_CASILLA_ID: Final[CasillaId] = M303_DISPONIBLE_CASILLA
 
 
+_LOCAL_EVIDENCE_SOURCE_KINDS: Final[frozenset[str]] = frozenset(
+    {"local_recurrence", "filed_history_observation"},
+)
+"""Source kinds that are locally derived rather than observed at AEAT.
+
+Tested twice in this module, each time paired with a different second condition, so the
+two checks agreed on the kinds only by hand. Held as a name so a kind added to one check
+cannot be missed by the other.
+"""
+
+
 class _WalletBindingTarget(NamedTuple):
     bucket_id: str
     modelo: str
@@ -761,7 +772,7 @@ def _decision_uses_observation_envelope_recurrence(decision: object) -> bool:
     }:
         return False
     return any(
-        str(getattr(source, "source_kind", "")) in {"local_recurrence", "filed_history_observation"}
+        str(getattr(source, "source_kind", "")) in _LOCAL_EVIDENCE_SOURCE_KINDS
         and str(getattr(source, "source_locator", "")).startswith("observation-envelope:")
         for source in getattr(decision, "authority_sources", ()) or ()
     )
@@ -804,7 +815,7 @@ def _decision_has_concrete_zero_authority(decision: object) -> bool:
         source_kind = str(getattr(source, "source_kind", ""))
         if source_kind == "aeat_wallet" and getattr(source, "captured_at", None) is not None:
             return True
-        if source_kind in {"local_recurrence", "filed_history_observation"} and tuple(
+        if source_kind in _LOCAL_EVIDENCE_SOURCE_KINDS and tuple(
             getattr(source, "source_periods", ()) or (),
         ):
             return True
