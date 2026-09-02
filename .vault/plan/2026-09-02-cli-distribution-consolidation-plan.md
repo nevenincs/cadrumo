@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:35caf167b0411c7a064de36174d3d90ef90481c12ace26fccf751293db511329'
+body_hash: 'sha256:f098b4f2c01a946e5a9d1fd407f426292ca3e90f6d9b244c7ec13964cc8ea674'
 ---
 
 # `cli-distribution-consolidation` plan
@@ -43,7 +43,7 @@ Correct the import-budget gate so packaging lanes can build a cohort; nothing do
 Hold the primary PyPI name and register the Trusted Publisher bindings against the adopted workflow and environment.
 
 - [ ] `P02.S03` - Publish an initial reservation for the primary distribution name; `pyproject.toml`.
-- [ ] `P02.S04` - Respecify the three Trusted Publisher bindings against the adopted workflow and environment; `RELEASING.md`.
+- [x] `P02.S04` - Respecify the three Trusted Publisher bindings against the adopted workflow and environment; `RELEASING.md`.
 
 ### Phase `P03` - Adopt the account release path
 

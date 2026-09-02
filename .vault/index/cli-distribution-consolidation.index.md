@@ -6,10 +6,11 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:ebbca63d7f190d97e780e23c976ea7f43017900a2d6d4c2956c0db3a5498fefa'
+body_hash: 'sha256:fcd5c4b504c394350d9fe723b754214747ffb6a0b7216f79621e62e75f93d0f1'
 related:
   - '[[2026-09-02-cli-distribution-consolidation-P01-S01]]'
   - '[[2026-09-02-cli-distribution-consolidation-P01-S02]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P02-S04]]'
   - '[[2026-09-02-cli-distribution-consolidation-adr]]'
   - '[[2026-09-02-cli-distribution-consolidation-plan]]'
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
@@ -29,6 +30,7 @@ Auto-generated index of all documents tagged with `#cli-distribution-consolidati
 
 - `2026-09-02-cli-distribution-consolidation-P01-S01` - Warm the root surface before the import-budget measurement window opens
 - `2026-09-02-cli-distribution-consolidation-P01-S02` - Re-pin the three selected-path import contracts against a real cohort run
+- `2026-09-02-cli-distribution-consolidation-P02-S04` - Respecify the three Trusted Publisher bindings against the adopted workflow and environment
 
 ### plan
 
