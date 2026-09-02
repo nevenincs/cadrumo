@@ -84,6 +84,30 @@ class Borrador100ViewResult(Borrador100SnapshotSummaryPayload):
     binding_values: dict[BindingId, str]
 
 
+class Borrador100ImportResult(Borrador100SnapshotSummaryPayload):
+    """Typed response for a locally imported Modelo 100 borrador PDF.
+
+    Emitted by the ``app live borrador 100 import`` verb after
+    :func:`~adapters.inbound.borrador.parser.parse_borrador` reads the operator's
+    PDF and :class:`Borrador100SnapshotService` persists the capture through the
+    encrypted snapshot boundary. The inherited ``source_url`` is the parser's
+    digest-derived reference; the operator's filesystem path is never carried
+    here or persisted.
+
+    ``blank_casillas`` and ``warnings`` keep absence distinguishable from zero:
+    a target casilla the extractor located but found blank is listed there and
+    contributes no binding value, rather than being persisted as ``0``.
+    """
+
+    bucket_id: BucketId
+    extraction_profile_id: str
+    extraction_coverage: str
+    artefact_kind: str
+    source_pdf_sha256: str
+    blank_casillas: list[str] = []
+    warnings: list[str] = []
+
+
 class Borrador100LatestResult(OutputSchema):
     """Typed newest-active response for Modelo 100 borrador snapshots.
 

@@ -9,7 +9,9 @@ not file, submit, or refresh live AEAT data.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 from typing import Literal, TypedDict
 
 import typer
@@ -21,6 +23,7 @@ from ...application.live.snapshot_base import (
     SnapshotStateFilter,
 )
 from ._app_live_borrador_payloads import (
+    Borrador100ImportResult,
     Borrador100LatestResult,
     Borrador100ListResult,
     Borrador100SnapshotSummaryPayload,
@@ -37,6 +40,103 @@ class _BorradorRow(TypedDict):
     source_url: str
     binding_count: int
     state: SnapshotLifecycleStateValue
+
+
+def borrador_100_import(ctx: typer.Context, file: Path, filing_year: int, period: str = "0A") -> None:
+    """Import a local Modelo 100 borrador PDF into the encrypted snapshot store.
+
+    Parses ``file`` through :func:`~adapters.inbound.borrador.parser.parse_borrador`
+    in :attr:`BorradorParseMode.REGISTRY_PROFILE` mode, driven by the
+    ``borrador_pdf`` extraction profile the registry declares for
+    ``filing_year``/``period``, then persists the observed casilla values through
+    the existing :meth:`Borrador100SnapshotService.capture`. The snapshot the
+    ``list`` / ``view`` / ``latest`` verbs already read is the same record.
+
+    The profile's ``min_coverage`` is authority: a PDF that yields fewer target
+    casillas than the profile requires raises
+    :exc:`BorradorParseError` and nothing is persisted. A target casilla found
+    blank on the page is reported in ``blank_casillas`` and contributes no
+    binding value; it is never persisted as a zero.
+
+    Only the parser's digest-derived source reference is stored. The operator's
+    filesystem path never reaches the snapshot.
+    """
+    from ...adapters.inbound.borrador.parser import parse_borrador
+    from ...adapters.inbound.borrador.schema import BorradorParseMode
+    from ...core.i18n import tr
+    from ...core.period import Period
+    from ...domain.calculations.registry.authority import bundled_authority
+    from ...domain.calculations.registry.schema_extraction import ExtractionSurface
+
+    bucket_id = active_bucket_id_or_refuse()
+    try:
+        resolved_period = Period.from_year_and_code(filing_year, period)
+    except ValueError as exc:
+        raise typer.BadParameter(tr("cli.app.live.borrador.import_period_invalid")) from exc
+
+    registry = bundled_authority().snapshot("100", filing_year=filing_year, period=period)
+    profiles = tuple(
+        profile
+        for profile in registry.revision.extraction_profiles
+        if profile.surface == ExtractionSurface.BORRADOR_PDF
+    )
+    if len(profiles) != 1:
+        raise typer.BadParameter(tr("cli.app.live.borrador.import_profile_unresolved"))
+    profile = profiles[0]
+
+    observation = parse_borrador(
+        file,
+        extraction_profile=profile,
+        parse_mode=BorradorParseMode.REGISTRY_PROFILE,
+    )
+
+    if observation.ejercicio != str(filing_year):
+        raise typer.BadParameter(tr("cli.app.live.borrador.import_ejercicio_mismatch"))
+
+    binding_values: dict[str, Decimal | str] = {}
+    blank_casillas: list[str] = []
+    for casilla in observation.values:
+        if casilla.printed_value is None:
+            blank_casillas.append(casilla.casilla_id)
+            continue
+        value = casilla.printed_value
+        binding_values[f"casilla.{casilla.casilla_id}"] = (
+            value if isinstance(value, Decimal) else str(value)
+        )
+
+    coverage = observation.extraction_coverage
+    if coverage is None:
+        raise typer.BadParameter(tr("cli.app.live.borrador.import_coverage_absent"))
+
+    record = Borrador100SnapshotService(bucket_id=bucket_id).capture(
+        filing_year=filing_year,
+        period=resolved_period,
+        captured_at=datetime.now(UTC),
+        source_url=f"file-import:sha256:{observation.source_pdf_sha256}",
+        binding_values=binding_values,
+    )
+    result = Borrador100ImportResult(
+        bucket_id=bucket_id,
+        **_borrador_row(record),
+        extraction_profile_id=profile.id,
+        extraction_coverage=format(coverage, "f"),
+        artefact_kind=observation.artefact_kind.value,
+        source_pdf_sha256=observation.source_pdf_sha256,
+        blank_casillas=sorted(blank_casillas),
+        warnings=list(observation.warnings),
+    )
+    lines = [
+        f"bucket	{bucket_id}",
+        f"snapshot_id	{record.snapshot_id}",
+        f"filing_year	{record.filing_year}",
+        f"period	{record.period}",
+        f"extraction_profile_id	{profile.id}",
+        f"extraction_coverage	{format(coverage, 'f')}",
+        f"artefact_kind	{observation.artefact_kind.value}",
+        f"binding_count	{len(record.binding_values)}",
+        f"blank_casillas	{len(blank_casillas)}",
+    ]
+    emit_envelope(ctx, command="app.live.borrador.100.import", result=result, lines=lines)
 
 
 def borrador_100_list(ctx: typer.Context, state: SnapshotStateFilter = SnapshotStateFilter.ACTIVE) -> None:
@@ -152,4 +252,4 @@ def _active_borrador_state(state: SnapshotLifecycleState) -> Literal["active"]:
     return "active"
 
 
-__all__ = ["borrador_100_latest", "borrador_100_list", "borrador_100_show"]
+__all__ = ["borrador_100_import", "borrador_100_latest", "borrador_100_list", "borrador_100_show"]
