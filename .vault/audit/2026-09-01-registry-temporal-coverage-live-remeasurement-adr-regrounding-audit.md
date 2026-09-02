@@ -5264,3 +5264,37 @@ merged text wraps it elsewhere. Normalising whitespace before comparing showed a
 present. It is the third time in this campaign that a literal newline inside a search string
 has produced a false result, twice in a check and once in an edit anchor - the same lesson each
 time, and cheap enough to keep relearning only because the checks are run at all.
+
+### The name-window findings were already in the plan, and had been for the whole campaign
+
+Sweeping the plan's numeric claims found one stale and, more usefully, found that several
+iterations of this campaign re-derived work the plan had already recorded.
+
+Phase `W05.P12` carries eight Steps naming the exact revisions the name-window screen reports:
+modelo 151 claiming 2025 while opening in 2023, modelo 185 claiming 2025 while opening in
+2026, modelo 720 claiming 2013 while opening in 2012, modelo 322 claiming a 2008-to-2022 span
+while declaring 2022 only, and modelo 194 and modelo 721 named for a single year while
+declared open-ended. All open, authored from the audit's earlier measurement, and every one of
+them presented in recent findings here as though newly found.
+
+The correction matters more than it costs. What those iterations actually added is not the
+list but its consequences, and those are new: that modelo 720's opening year makes its own
+record design unloadable, so every corpus sweep this campaign ran covered 111 designs and not
+112; that modelo 322 serves only 2022 when asked with its declared monthly code, which was
+established after a wrong-code artefact first appeared to show it refusing everything; and
+that modelo 194 and modelo 721 genuinely admit filing year 2026 under names saying 2024, which
+separates them from the five whose open-endedness selection does not honour. The condition
+split and the two withdrawn false alarms are also new. The findings are not.
+
+Independent re-derivation is worth something and is worth naming as what it is: two
+measurements taken from different directions agreeing on the same six revisions is stronger
+evidence than either alone. It is not discovery, and reporting it as discovery inflates a
+campaign's apparent yield while burying the fact that the plan was right the first time.
+
+Separately, one numeric claim was stale and is now gone rather than corrected. The
+Parallelization section described "the twelve Steps of `W06.P13`", a phase that now holds
+sixty-five. Updating the number would have bought a few iterations before it was wrong again,
+so the sentence now says every Step of that phase lives on the dev-owned surface, which stays
+true however many there are. A count in prose is a declaration that has to be maintained, and
+this plan has spent several findings on declarations that stopped describing what they
+describe.

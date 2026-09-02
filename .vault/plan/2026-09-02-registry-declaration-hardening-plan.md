@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:78e40fb2e21f7c790fc20750dd1cd2b26c0883c3af554800da51f66852eabb49'
+body_hash: 'sha256:d130038b4ca49fd08f9f477db07d9d0ce45fcb2095f1d465727f662c939f4d55'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -447,6 +447,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S217` - Correct the revision name screen's stated condition count that this campaign's own parity gate caught after the conditions were split; `dev/registry/analysis/revision_name_window.py`.
 - [x] `W06.P13.S218` - Reconcile the four superseded criterion wordings the similarity merge could not judge, preserving the unique clause in each; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S219` - Reconcile the two Description paragraphs whose screen counts disagreed, settling the count against the entry point rather than by length; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S220` - Retire the Steps-count claim that goes stale and record that the name-window findings were already stepped; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
