@@ -33,7 +33,7 @@ import os
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path, PurePath
-from typing import Union, get_args, get_origin, override
+from typing import TypedDict, Union, get_args, get_origin, override
 
 import pytest
 from pydantic import BaseModel, ValidationError
@@ -41,7 +41,9 @@ from pydantic import BaseModel, ValidationError
 from ....adapters.inbound.notificacion.document_reader import NotificationDocumentReader
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.crypto.encrypted_columns import encrypt_secure_object_payload
+from ....core.hex import Hex64Str
 from ....core.i18n import tr
+from ....core.identity import AeatCertificadoId, BucketId, ContentDigest
 from ....domain.attachments.enums import AttachmentKind
 from ....domain.attachments.models import Attachment
 from ....domain.notifications.sancion import SancionLiquidacion
@@ -233,7 +235,19 @@ def test_every_persisted_field_is_classified_by_the_re_store_match() -> None:
     assert "fetched_at" in _NON_IDENTITY_FIELDS
 
 
-def _record_fields() -> dict[str, object]:
+class _RecordFields(TypedDict):
+    """The record's fields minus the two each caller supplies itself."""
+
+    certificado_id: AeatCertificadoId
+    bucket_id: BucketId
+    attachment_id: Hex64Str
+    document_sha256: ContentDigest
+    byte_size: int
+    source_url: str
+    fetched_at: datetime
+
+
+def _record_fields() -> _RecordFields:
     """Return every field of a valid record except the two under test."""
     return {
         "certificado_id": CERT_READ,
