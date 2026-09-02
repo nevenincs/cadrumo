@@ -336,6 +336,17 @@ regenerate-corpus-text:
 check-corpus-text:
     @uv run --no-sync python -m dev.corpus.extract_manual_corpus_text --check
 
+# Build every distribution the release publishes, then refuse any file the index
+# would reject on size. Same two operations the publish workflow performs, in the
+# same order, so the local run and the hosted one can disagree only about the host.
+[doc('Build every published distribution and refuse any file over the index cap.')]
+[group('packaging')]
+packaging-distributions:
+    @uv build --out-dir var/distributions .
+    @uv build --out-dir var/distributions packaging/cadrumo_data_manuals
+    @uv build --out-dir var/distributions packaging/cadrumo_data_official
+    @uv run --no-sync python -m dev.packaging.distribution_cap --directory var/distributions
+
 # Construct the temporary Python wheel cohort once for the current smoke campaign.
 # The immutable release-cohort builder replaces this transitional constructor.
 [doc('Construct the temporary Python wheel cohort once for the current smoke campaign.')]
