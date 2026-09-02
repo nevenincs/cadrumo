@@ -5487,3 +5487,35 @@ So a single number covered a census too narrow, a rule too broad, and a rename n
 completed - three defects wanting three different owners, presented as one count of stale
 rules. This audit has made that observation about the registry's own categories repeatedly;
 it applies to the tooling that measures the registry just as well.
+
+### The census could not see the packages every import loads
+
+The six stale members a real load imports had one cause between them, and it is a property of
+import graphs rather than of this tree. The graph records the edges written in source, and
+importing `cadrumo.core.hashing` writes no edge to `cadrumo.core`. The interpreter loads that
+parent regardless, and every ancestor above it. A universe built from edges alone therefore
+omits packages a running load certainly holds, and rules naming those packages were reported
+stale for naming something real.
+
+Four of the five missing modules were packages, which is what pointed at the cause. The census
+universe now includes every ancestor package of every member it already had, and the stale
+count falls from thirteen to seven.
+
+Including them surfaced three modules no rule covered - `cadrumo.domain`,
+`cadrumo.domain.manuals` and `cadrumo.domain.modelos` - because a universe that grows must have
+its new members ruled. All three are in `sys.modules` after a load, and they are ruled `live`
+with the reason stated plainly: they are inert namespace markers carrying no load behaviour of
+their own, and they are live because a load holds them, not because they do anything. The
+census returns to zero unclassified.
+
+Four stale entries survive and they are the ones already separated: `snapshot`, which does not
+exist; the two justificante modules under a rule that over-claims, still unverified against the
+cold regime; and `cadrumo.core.errors.not_found`, which is a module rather than a package and
+so is not explained by the ancestor fix. That last one is a residue of this repair rather than
+a new finding, and it is left named rather than absorbed.
+
+The wider point is about what a graph is evidence of. This campaign has twice now found the
+static closure and a real load disagreeing - once over function-scoped imports, which the graph
+records and the interpreter skips, and now over ancestor packages, which the interpreter loads
+and the graph never records. The disagreements run in opposite directions and both were
+invisible until `sys.modules` was consulted directly.
