@@ -143,6 +143,7 @@ from ..domain.calculations.registry.ids import RelationId as _RelationId
 from ..domain.calculations.registry.ids import RevisionId as _RevisionId
 from ..domain.calculations.registry.ids import SourceRefId as _SourceRefId
 from ..domain.calculations.registry.loader import load_registry_tree as _load_registry_tree
+from ..domain.calculations.registry.schema import CasillaProducerKind as _CasillaProducerKind
 from ..domain.calculations.registry.schema import ModeloDefinition as _ModeloDefinition
 from ..domain.calculations.registry.schema import ModeloRevision as _ModeloRevision
 from ..domain.calculations.registry.schema import RegistrySnapshot as _RegistrySnapshot
@@ -166,6 +167,7 @@ from .registry_classification_coherence import (
 from .registry_coverage import REQUIRED_COVERAGE_TIERS as _REQUIRED_COVERAGE_TIERS
 from .registry_coverage import ConstructEvidenceLedger as _ConstructEvidenceLedger
 from .registry_coverage import ConstructEvidenceRow as _ConstructEvidenceRow
+from .registry_coverage import CoverageAuthorityScope as _CoverageAuthorityScope
 from .registry_coverage import EvidenceTierCoverageGate as _EvidenceTierCoverageGate
 from .registry_coverage import ModelLawCoverageLedger as _ModelLawCoverageLedger
 from .registry_coverage import RegistryConstructEvidenceAudit as _RegistryConstructEvidenceAudit
@@ -208,8 +210,8 @@ type _MeasurementStatus = Literal["measured", "unsupported", "unmeasured"]
 # The coverage audit can inspect every revision without giving every revision
 # filing authority.  Keep that distinction on the application projection so a
 # renderer cannot infer filing-grade scope merely because a ledger is present.
-type CoverageAuthorityScope = Literal["filing", "inspection_only"]
-type RevisionCoverageAuthorityScope = Literal["filing", "inspection_only", "mixed"]
+type CoverageAuthorityScope = _CoverageAuthorityScope
+type RevisionCoverageAuthorityScope = _CoverageAuthorityScope | Literal["mixed"]
 
 _XML_DICTIONARY_PARSER_ATTRIBUTES = ("field_id", "path", "data_type", "casilla_id")
 _UNMEASURED_DICTIONARY_ATTRIBUTES = ("label", "data_type", "number", "segmento")
@@ -279,7 +281,7 @@ class AnnualCasillaPopulationComparison(ConformanceModel):
     layout_comparisons: tuple[DictionaryLayoutCasillaComparison, ...]
     printed_form_source_refs: tuple[str, ...] = ()
     xsd_source_refs: tuple[str, ...] = ()
-    authority_scope: CoverageAuthorityScope = "filing"
+    authority_scope: CoverageAuthorityScope = _CoverageAuthorityScope.FILING
 
     @property
     def missing_casilla_ids(self) -> tuple[str, ...]:
@@ -356,7 +358,7 @@ def compare_annual_casilla_population(
             filing_year=snapshot.filing_year,
             period=snapshot.period,
             sources=snapshot.sources,
-            authority_scope="filing",
+            authority_scope=_CoverageAuthorityScope.FILING,
         ),
         source_root=source_root,
     )
@@ -387,7 +389,7 @@ def compare_annual_casilla_population_for_revision(
             filing_year=filing_year,
             period=period,
             sources=sources,
-            authority_scope="inspection_only",
+            authority_scope=_CoverageAuthorityScope.INSPECTION_ONLY,
         ),
         source_root=source_root,
     )
@@ -660,13 +662,13 @@ class RevisionModelLawCoverage(ConformanceModel):
     satisfied_tiers: tuple[_EvidenceTierField, ...]
     gap_tiers: tuple[_EvidenceTierField, ...]
     required_tier_gaps: tuple[_RequiredCoverageTier, ...]
-    authority_scope: RevisionCoverageAuthorityScope = "filing"
+    authority_scope: RevisionCoverageAuthorityScope = _CoverageAuthorityScope.FILING
     coordinates: tuple[tuple[int, str], ...] = Field(min_length=1)
 
     @property
     def filing_eligible(self) -> bool:
         """Whether this coverage ledger may contribute filing-grade gaps."""
-        return self.authority_scope == "filing"
+        return self.authority_scope == _CoverageAuthorityScope.FILING
 
     @property
     def has_required_gap(self) -> bool:
@@ -725,7 +727,7 @@ class RevisionCasillaProducerTrace(ConformanceModel):
 
     casilla_id: _CasillaId
     input_kind: _InputKind
-    producer_kind: Literal["formula", "manual", "upstream", "relation", "informational", "projection_only"]
+    producer_kind: _CasillaProducerKind
     reason: str = Field(min_length=1, max_length=1024)
     formula_id: _FormulaId | None = None
     binding_id: _BindingId | None = None
@@ -1347,7 +1349,7 @@ def _model_law_coverage(ledgers: tuple[_ModelLawCoverageLedger, ...]) -> Revisio
         raise _RegistryValidationError("revision model-law coverage requires at least one selector coordinate")
     gates_by_tier: dict[_EvidenceTier, tuple[_EvidenceTierCoverageGate, ...]] = {
         tier: tuple(next(gate for gate in ledger.gates if gate.tier == tier) for ledger in ledgers)
-        for tier in (*_REQUIRED_COVERAGE_TIERS, "executable_parity_evidence")
+        for tier in (*_REQUIRED_COVERAGE_TIERS, _EvidenceTier.EXECUTABLE_PARITY_EVIDENCE)
     }
     satisfied: tuple[_EvidenceTier, ...] = tuple(
         tier for tier, gates in gates_by_tier.items() if all(gate.status == "satisfied" for gate in gates)
