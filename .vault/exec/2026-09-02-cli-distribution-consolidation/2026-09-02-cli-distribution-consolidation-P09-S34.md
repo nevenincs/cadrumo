@@ -5,16 +5,11 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:3ef68cd40bd4d1458cf657e53366d848f6aa9a9e20e2e760fe65f85a41ba5e9a'
+body_hash: 'sha256:0206f5f5cd8c302170f336b40c8afef3264932f07ba391ccc85955cf095d89df'
 step_id: 'S34'
 related:
   - "[[2026-09-02-cli-distribution-consolidation-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Build every declared distribution from one command and refuse any file over the index cap
 
@@ -24,19 +19,28 @@ related:
 
 ## Changes
 
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
+- `A` `dev/packaging/distribution_cap.py`
+- `A` `dev/packaging/tests/test_distribution_cap.py`
+- `M` `justfile`
+- `M` `.github/workflows/publish.yml`
+- `verify:` `just packaging-distributions` -> `pass`
+- `verify:` `uv run --no-sync pytest -q -n0 dev/packaging/tests/test_distribution_cap.py` -> `pass`
 
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
+## Notes
 
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
+The publish workflow carried a bash copy of the index cap as the literal
+`100000000`, which is the drifting duplicate `dev/packaging/_distribution_limits`
+exists to prevent. The check now reaches that single declaration. It lives in its own
+module rather than as a subcommand of the cohort builder because the publish job runs
+before any development dependency is installed, and importing the cohort builder there
+fails on its unresolved third-party imports; the new module imports only the standard
+library and was exercised under a bare system interpreter to prove it.
 
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
+All six distributions build and clear the cap: the two product distributions at 74.5 MB
+and 59.6 MB, and the four corpus files between 76.2 MB and 77.5 MB. Measured on Windows
+against the local interpreter rather than a hosted runner.
+
+The immutable cohort builder refuses to run here at all, because it requires a clean
+source snapshot and this worktree carries other contributors' work. Cohort-based
+evidence needs a detached worktree at `HEAD`, which is how the remaining Phase `P09`
+steps should obtain it.

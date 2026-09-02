@@ -219,6 +219,7 @@ class ProrrataDeclaredVolumeLedgerRollup(BaseModel):
 
     @property
     def diverges(self) -> bool:
+        """Report whether any declared annual volume disagrees with its ledger counterpart."""
         return (
             self.declared_volume_total != self.ledger_volume_total
             or self.declared_volume_con_derecho != self.ledger_volume_con_derecho
@@ -856,6 +857,17 @@ class ProrrataRegularizacionSourceResolver:
         observation_repository: CalculationObservationRepository,
         registry_snapshot: RegistrySnapshot | None = None,
     ) -> None:
+        """Bind the current-year prorrata inputs and repositories used to resolve carries.
+
+        ``current_year_values`` supplies the casillas already known for the active
+        ejercicio, while ``missing_current_year_casilla_ids`` and
+        ``unresolved_current_year_casilla_ids`` preserve the distinction between an
+        input that is absent and one that is present but not yet computable. The
+        prorrata register and observation repositories back the annual regularisation
+        lookup and its diagnostics; ``registry_snapshot`` pins the compiled revision
+        when the caller already holds one, avoiding a redundant registry load in
+        :meth:`resolve`.
+        """
         self._current_year_values = dict(current_year_values or {})
         self._missing_current_year_casilla_ids = tuple(missing_current_year_casilla_ids)
         self._unresolved_current_year_casilla_ids = tuple(unresolved_current_year_casilla_ids)
@@ -864,6 +876,13 @@ class ProrrataRegularizacionSourceResolver:
         self._registry_snapshot = registry_snapshot
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve the annual prorrata regularisation casilla for the active revision.
+
+        Loads the compiled revision (reusing ``registry_snapshot`` when set) to
+        discover the declared prorrata binding ids, then delegates to the governed
+        carry lookup to produce the bound value or an explicit missing/unresolved
+        diagnostic.
+        """
         revision = self._registry_snapshot.revision if self._registry_snapshot is not None else None
         if revision is None:
             modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
@@ -979,7 +998,10 @@ class ProrrataRegularizacionSourceResolver:
                     revision=revision,
                 ),
             )
-            assert provisional.percentage is not None
+            if provisional.percentage is None:
+                raise ValueError(
+                    "prorrata register reported a resolved provisional percentage without a value",
+                )
             provisional_percentage = provisional.percentage
         elif prior_definitiva is not None:
             provenance = (

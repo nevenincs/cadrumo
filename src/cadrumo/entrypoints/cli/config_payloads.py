@@ -34,6 +34,7 @@ from ...application.config_reset import (
     ConfigResetPauseReason,
     ConfigResetTargetPhase,
 )
+from ...application.diagnostic_models import DiagnosticStatus, DiagnosticStatusValue
 from ...application.user_profile.aggregate import ProfileRestoreAuthority
 from ...application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportTransport
 from ...application.workflow.events import WorkflowReasonClass
@@ -167,7 +168,7 @@ class ConfigRepairCheckPayload(OutputSchema):
     """JSON-safe projection of one actionable config-repair check."""
 
     name: str
-    status: Literal["ok", "warn", "fail"]
+    status: DiagnosticStatusValue
     summary: str
     detail: str | None = None
     precondition_action: ResolvedPreconditionAction | None = None
@@ -183,7 +184,7 @@ class ConfigRepairResult(OutputSchema):
     top-level contract while preserving those already validated nested DTOs.
     """
 
-    overall: Literal["ok", "warn", "fail"]
+    overall: DiagnosticStatusValue
     package_name: str
     package_version: str
     python_version: str
@@ -1001,7 +1002,7 @@ class RepairIntegrityCheckPayload(OutputSchema):
     unreadable-row verdict and its summary.
     """
 
-    status: Literal["ok", "fail"]
+    status: Literal[DiagnosticStatus.OK, DiagnosticStatus.FAIL]
     summary: str
 
 

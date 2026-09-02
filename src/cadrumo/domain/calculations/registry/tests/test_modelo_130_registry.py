@@ -406,14 +406,14 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
     # Seed each prior quarter with a chosen 07/16 pair (the prior quarter that
     # carries the saldo seed also carries its casilla 07 and 16). All prior 07
     # are positive here, so casilla 05 = Σ 07_q − Σ 16_q over the prior quarters.
-    _PRIOR_07 = {"1T": Decimal("300.00"), "2T": Decimal("400.00"), "3T": Decimal("500.00")}
-    _PRIOR_16 = {"1T": Decimal("20.00"), "2T": Decimal("30.00"), "3T": Decimal("40.00")}
+    _prior_07 = {"1T": Decimal("300.00"), "2T": Decimal("400.00"), "3T": Decimal("500.00")}
+    _prior_16 = {"1T": Decimal("20.00"), "2T": Decimal("30.00"), "3T": Decimal("40.00")}
     prior_quarters = {"3T": ("1T", "2T"), "4T": ("1T", "2T", "3T")}[target_period]
 
     def _prior_obs(period: str) -> RegistryModeloObservation:
         casilla_values = {
-            _M130_PAGO_FRACCIONADO_CASILLA: _PRIOR_07[period],
-            _M130_HOME_DEDUCTION_CASILLA: _PRIOR_16[period],
+            _M130_PAGO_FRACCIONADO_CASILLA: _prior_07[period],
+            _M130_HOME_DEDUCTION_CASILLA: _prior_16[period],
         }
         if period == prior_period:
             casilla_values[_M130_SALDO_NEGATIVO_CASILLA] = saldo_seed
@@ -443,9 +443,9 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
     # casilla 05 = Σ max(0, 07_q) − Σ 16_q computed independently from the seeded
     # prior-quarter inputs (a different code path than the span binding).
     expected_casilla_05 = sum(
-        (max(Decimal("0"), _PRIOR_07[q]) for q in prior_quarters),
+        (max(Decimal("0"), _prior_07[q]) for q in prior_quarters),
         Decimal("0"),
-    ) - sum((_PRIOR_16[q] for q in prior_quarters), Decimal("0"))
+    ) - sum((_prior_16[q] for q in prior_quarters), Decimal("0"))
     assert resolved_bindings["modelo-130-pagos-fraccionados-anteriores"] == expected_casilla_05
 
     result = calculate_registry_snapshot(

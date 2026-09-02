@@ -200,7 +200,11 @@ def refuse_unsecured_bucket_with_real_profile(session: BucketSession) -> None:
 # profile-load time guard against accidental real-data use.
 _UNSECURED_KEY_PREFIX: Final[bytes] = b"AEAT_UNSECURED_TEST_KEY"
 _UNSECURED_PUBLISHED_KEY: Final[bytes] = _UNSECURED_KEY_PREFIX + b"\x00" * (KEY_SIZE - len(_UNSECURED_KEY_PREFIX))
-assert len(_UNSECURED_PUBLISHED_KEY) == KEY_SIZE
+if len(_UNSECURED_PUBLISHED_KEY) != KEY_SIZE:  # pragma: no cover - construction invariant
+    raise ValueError(
+        f"unsecured test key must be exactly {KEY_SIZE} bytes; "
+        f"the prefix no longer fits and the key would be the wrong size",
+    )
 
 
 def _provider_enter(
@@ -301,6 +305,11 @@ class UnsecuredMasterKeyProvider:
     """
 
     def __init__(self) -> None:
+        """Prepare unset session and activation-gate handles for later activation.
+
+        ``session`` and ``activation_cm`` stay ``None`` until ``__enter__`` opens the
+        unsecured backend session and its activation-gate context manager.
+        """
         self.session: BucketSession | None = None
         self.activation_cm: AbstractContextManager[None] | None = None
 
@@ -332,6 +341,7 @@ class UnsecuredMasterKeyProvider:
         return _UNSECURED_PUBLISHED_KEY
 
     def __enter__(self) -> object:
+        """Activate the unsecured backend session, falling back to the ``unsecured`` bucket."""
         return _provider_enter(self, fallback_bucket_id="unsecured")
 
     def __exit__(
@@ -340,6 +350,7 @@ class UnsecuredMasterKeyProvider:
         exc: BaseException | None,
         tb: TracebackType | None,
     ) -> None:
+        """Tear down the unsecured backend session on block exit."""
         exit_provider_session(self, exc_type, exc, tb)
 
 

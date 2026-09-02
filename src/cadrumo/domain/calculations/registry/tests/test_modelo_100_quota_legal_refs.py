@@ -61,7 +61,7 @@ def test_modelo_100_state_quota_formula_refs_match_lirpf_articles(filing_year: i
     form_order_refs = {_MODELO_100_2025_FORM_ORDER_REF} if filing_year == 2025 else set()
     regime_modelled = filing_year in _SEPARATE_ESCALA_MODELLED_YEARS
     regime_refs = {_STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF} if regime_modelled else set()
-    _SAVINGS_STATE_SCALE_ART_66_REF = _SAVINGS_STATE_SCALE_ART_66_REF_BY_YEAR[filing_year]
+    _savings_state_scale_art_66_ref = _SAVINGS_STATE_SCALE_ART_66_REF_BY_YEAR[filing_year]
     general_scale_art_63_ref = _GENERAL_SCALE_ART_63_REF_BY_YEAR[filing_year]
     expected_refs_by_formula = {
         f"renta-{filing_year}-tipo-medio-gravamen-estatal-base-liquidable-general": {
@@ -69,11 +69,11 @@ def test_modelo_100_state_quota_formula_refs_match_lirpf_articles(filing_year: i
             general_scale_art_63_ref,
         },
         f"renta-{filing_year}-tipo-medio-gravamen-estatal-base-liquidable-ahorro": {
-            _SAVINGS_STATE_SCALE_ART_66_REF,
+            _savings_state_scale_art_66_ref,
         },
         f"renta-{filing_year}-minimo-personal-base-liquidable-ahorro-estatal": {
             _PERSONAL_FAMILY_MINIMUM_ART_56_REF,
-            _SAVINGS_STATE_SCALE_ART_66_REF,
+            _savings_state_scale_art_66_ref,
             *form_order_refs,
         },
         f"renta-{filing_year}-cuota-escala-estatal-sobre-base-liquidable-general": {
@@ -97,7 +97,7 @@ def test_modelo_100_state_quota_formula_refs_match_lirpf_articles(filing_year: i
         f"renta-{filing_year}-cuota-integra-estatal": {
             _STATE_INTEGRAL_QUOTA_ART_62_REF,
             general_scale_art_63_ref,
-            _SAVINGS_STATE_SCALE_ART_66_REF,
+            _savings_state_scale_art_66_ref,
             *form_order_refs,
         },
     }

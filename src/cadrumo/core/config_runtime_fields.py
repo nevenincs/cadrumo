@@ -1,3 +1,10 @@
+"""LLM provider endpoint and runtime tuning settings layered on top of timeout config.
+
+Defines :class:`CadrumoRuntimeSettings`, which adds the OpenAI/Gemini/Ollama endpoint
+URLs and model-runtime tuning fields (context window, per-request timeouts) consumed by
+the LLM-backed invoice-read pipeline.
+"""
+
 from __future__ import annotations
 
 from pydantic import Field

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:5db51836f8fc58ac54e2eb9e18302ba96d27018399989f6dd3962caf25070732'
+body_hash: 'sha256:ff262f67fc00caf430ac6ecb16cd3fbca91a3be4e08db49a5703854e19c0047c'
 related: []
 ---
 
@@ -889,3 +889,34 @@ declares `__all__ = ()` and exports nothing by design. That last one is a test w
 against a facade the architecture rule removed; it cannot have passed recently.
 
 Package-wide after four targets: 23 duplicated, 0 crossing the registry boundary.
+
+## Finding 42 — the canonical enum existed, under a subject-specific name
+
+`[optional, required]` was declared five times: three inline fields, one alias
+(`ManualCasillaRequirement`), and one real enum, `ProfileKeyRequirement` in
+`domain/contribuyente/keys.py`, whose members are byte-identical.
+
+The judgement this target turned on is whether those are one vocabulary or several.
+Three enums nearby share SOME of the members and were left alone, correctly:
+`IvaComponentPresence` adds `unknown` and `zero_by_law`, `RequirementStatus` and
+`ProfileFieldClassification` split applicability out. Each is a finer taxonomy, and
+collapsing any of them would lose a distinction the domain relies on.
+
+`ProfileKeyRequirement` is different. Its member set is exactly the pair, and the only
+thing separating it from the other four sites is its subject -- profile keys rather than
+casillas or findings. A two-member modality applied to five subjects is one vocabulary
+declared five times, not five vocabularies, so it was retired onto a generic
+`Requirement` in `core/requirement.py` and the name `ProfileKeyRequirement` is gone.
+
+Deliberately not a `bool`: a boolean field named `required` reads identically whether it
+was set or defaulted, and cannot carry a third member if one is ever needed. The types
+that DO need a third member remain separate types.
+
+822 contribuyente and wizard tests pass, 281 diagnostics and payload tests pass.
+Unrelated failures confirmed by cause, not by assumption: a missing translation key
+raised from `application/flows/scripted.py`, a forbidden `future_extension` field in an
+auth payload round-trip, and four more instances of the known modelo 200 authority-grade
+refusal.
+
+Package-wide after five targets: 22 duplicated, 0 crossing the registry boundary. Across
+those five, the scan reported 15 declaration sites and the raw tokens had 38.

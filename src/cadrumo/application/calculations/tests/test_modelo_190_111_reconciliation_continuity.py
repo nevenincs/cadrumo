@@ -366,7 +366,7 @@ def _compute_year_111_totals(
     All other importe casillas are zero in this scenario.
     """
     totals: dict[CasillaId, Decimal] = {
-        cid: Decimal("0") for cid in _IMPORTE_CASILLAS + [_M111_RETENCIONES_TOTAL_CASILLA]
+        cid: Decimal("0") for cid in (*_IMPORTE_CASILLAS, _M111_RETENCIONES_TOTAL_CASILLA)
     }
     for period, inputs in quarters.items():
         result = _calculate_111(filing_year=filing_year, period=period, casilla_inputs=inputs)

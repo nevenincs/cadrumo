@@ -195,11 +195,11 @@ def test_annual_base_bindings_resolve_non_zero() -> None:
     # blind-base layer and the domestic-reverse-charge (ISP interior) base --
     # this fixture carries no adquisiciones intracomunitarias or ISP interior
     # rows at all, so every tier of those families is legitimately absent here.
-    _NEW_FAMILY_MARKERS = ("-aic-", "-autorepercutido-interior-")
+    _new_family_markers = ("-aic-", "-autorepercutido-interior-")
     base_bindings = {
         key: value
         for key, value in resolved.items()
-        if key.endswith("-base") and "-tipo-" not in key and not any(marker in key for marker in _NEW_FAMILY_MARKERS)
+        if key.endswith("-base") and "-tipo-" not in key and not any(marker in key for marker in _new_family_markers)
     }
     assert base_bindings, "the annual revision declares no ledger base binding at all"
     assert all(value > 0 for value in base_bindings.values()), base_bindings

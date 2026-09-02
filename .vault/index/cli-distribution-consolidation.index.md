@@ -6,10 +6,11 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:6a57acf9ef2871583892aa4c95d3e50b702fe9914507956f1eabddf02b428817'
+body_hash: 'sha256:c7781af73fa3d2c900ff419eeabc04338f90174b5bc3e0da012550f2fb737d84'
 related:
   - '[[2026-09-02-cli-distribution-consolidation-P01-S01]]'
   - '[[2026-09-02-cli-distribution-consolidation-P01-S02]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P02-S03]]'
   - '[[2026-09-02-cli-distribution-consolidation-P02-S04]]'
   - '[[2026-09-02-cli-distribution-consolidation-P03-S05]]'
   - '[[2026-09-02-cli-distribution-consolidation-P03-S06]]'
@@ -33,11 +34,14 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-P07-S24]]'
   - '[[2026-09-02-cli-distribution-consolidation-P07-S25]]'
   - '[[2026-09-02-cli-distribution-consolidation-P07-S26]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P07-S27]]'
   - '[[2026-09-02-cli-distribution-consolidation-P08-S28]]'
   - '[[2026-09-02-cli-distribution-consolidation-P08-S29]]'
   - '[[2026-09-02-cli-distribution-consolidation-P08-S30]]'
   - '[[2026-09-02-cli-distribution-consolidation-P08-S31]]'
   - '[[2026-09-02-cli-distribution-consolidation-P08-S32]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S34]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S35]]'
   - '[[2026-09-02-cli-distribution-consolidation-adr]]'
   - '[[2026-09-02-cli-distribution-consolidation-plan]]'
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
@@ -57,6 +61,7 @@ Auto-generated index of all documents tagged with `#cli-distribution-consolidati
 
 - `2026-09-02-cli-distribution-consolidation-P01-S01` - Warm the root surface before the import-budget measurement window opens
 - `2026-09-02-cli-distribution-consolidation-P01-S02` - Re-pin the three selected-path import contracts against a real cohort run
+- `2026-09-02-cli-distribution-consolidation-P02-S03` - Publish an initial reservation for the primary distribution name
 - `2026-09-02-cli-distribution-consolidation-P02-S04` - Respecify the three Trusted Publisher bindings against the adopted workflow and environment
 - `2026-09-02-cli-distribution-consolidation-P03-S05` - Add the release-please workflow dispatching publication and documentation delivery
 - `2026-09-02-cli-distribution-consolidation-P03-S06` - Add the publish workflow building, proving and uploading the three distributions
@@ -80,11 +85,14 @@ Auto-generated index of all documents tagged with `#cli-distribution-consolidati
 - `2026-09-02-cli-distribution-consolidation-P07-S24` - Remove the tier rule, availability states and claim derivation
 - `2026-09-02-cli-distribution-consolidation-P07-S25` - Derive the required evidence rows from the whole inventory
 - `2026-09-02-cli-distribution-consolidation-P07-S26` - Rename the sealed release record's channel field to drop the claim vocabulary
+- `2026-09-02-cli-distribution-consolidation-P07-S27` - Rewrite the install page around the primary registry
 - `2026-09-02-cli-distribution-consolidation-P08-S28` - Run the suite under the newer interpreter and raise the declared floor to the account range
 - `2026-09-02-cli-distribution-consolidation-P08-S29` - Rename the runners to the product-prefixed account convention
 - `2026-09-02-cli-distribution-consolidation-P08-S30` - Delete the branch-only runner probe workflows
 - `2026-09-02-cli-distribution-consolidation-P08-S31` - Delete the control-plane document and restate its sizing rule at the call sites
 - `2026-09-02-cli-distribution-consolidation-P08-S32` - Drop the stale runner count from the load-sizing gate, leaving the invariant it actually asserts
+- `2026-09-02-cli-distribution-consolidation-P09-S34` - Build every declared distribution from one command and refuse any file over the index cap
+- `2026-09-02-cli-distribution-consolidation-P09-S35` - Prove both console scripts from the built wheel in an isolated interpreter
 
 ### plan
 

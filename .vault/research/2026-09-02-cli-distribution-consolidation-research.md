@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:2e68b3a2504f308d5c5fddfced6a972ed8f4806de3e2418ff07ad5eeb831ebf2'
+body_hash: 'sha256:73dad923c2a5a68199de5cc308a4e7fbe31023812c9a86479743219369377512'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -350,6 +350,20 @@ the command that starts a release, and its publisher section still states that n
 publisher is registered. The document therefore describes a path that cannot be
 followed, and it is the only tracked file the plan left pointing at the deleted
 machinery.
+
+### The MCP console script is served by a package initialiser
+
+`cadrumo-mcp` resolves to `cadrumo_harness.mcp:main`, and that `main` is defined in the
+package's `__init__.py` alongside an `__all__` re-exporting roughly a dozen symbols out
+of sibling private modules. Every implementation module under that package carries a
+leading underscore, so the initialiser is not a convenience over a public surface - it
+is the only public surface, which makes the facade load-bearing rather than removable in
+isolation. Relocating the entry point therefore means promoting the modules a consumer
+legitimately needs at the same time.
+
+The console script itself works: it resolves from the built wheel, reaches its argument
+parser, and the server runtime it defers importing is present in the artifact. This is a
+placement defect, not a packaging one.
 
 ### Not investigated
 

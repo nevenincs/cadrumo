@@ -80,6 +80,9 @@ from .diagnostic_models import (
     DiagnosticStatus as _DiagnosticStatus,
 )
 from .diagnostic_models import (
+    DiagnosticStatusValue as _DiagnosticStatusValue,
+)
+from .diagnostic_models import (
     RegistryIntegrityReport as _RegistryIntegrityReport,
 )
 from .diagnostic_models import (
@@ -176,17 +179,17 @@ def build_config_repair_report(registry_root: Path | None = None) -> _ConfigRepa
     checks: list[_DiagnosticCheck] = [
         _DiagnosticCheck(
             name="environment.python",
-            status="ok",
+            status=_DiagnosticStatus.OK,
             summary=sys.version.split()[0],
         ),
         _DiagnosticCheck(
             name="package.version",
-            status="ok",
+            status=_DiagnosticStatus.OK,
             summary=__version__,
         ),
         _DiagnosticCheck(
             name="logging.file",
-            status="ok" if log_parent_exists else "warn",
+            status=_DiagnosticStatus.OK if log_parent_exists else _DiagnosticStatus.WARN,
             summary=str(default_log_file_path()),
             precondition_verdict=(
                 None
@@ -204,7 +207,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> _ConfigRepa
         ),
         _DiagnosticCheck(
             name="registry.load",
-            status="ok" if registry.available else "fail",
+            status=_DiagnosticStatus.OK if registry.available else _DiagnosticStatus.FAIL,
             summary=(
                 tr(
                     "cli.diagnostics.summary.registry_counts",
@@ -246,7 +249,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> _ConfigRepa
         checks.append(
             _DiagnosticCheck(
                 name="secure_state.load",
-                status="ok",
+                status=_DiagnosticStatus.OK,
                 summary=tr("cli.diagnostics.summary.state_backend_readable"),
             ),
         )
@@ -267,7 +270,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> _ConfigRepa
         checks.append(
             _DiagnosticCheck(
                 name="secure_state.load",
-                status="warn" if missing_active_bucket_session else "fail",
+                status=_DiagnosticStatus.WARN if missing_active_bucket_session else _DiagnosticStatus.FAIL,
                 summary=tr("cli.diagnostics.summary.state_backend_unreadable"),
                 # A missing bucket session on a cold start is an
                 # expected diagnostic verdict, not a fault to report
@@ -406,7 +409,7 @@ def render_config_repair_text(report: _ConfigRepairReport) -> str:
     for check in report.checks:
         scope = (
             ""
-            if check.status == "ok" or check.audience == "operator"
+            if check.status == _DiagnosticStatus.OK or check.audience == "operator"
             else f" [{tr('cli.diagnostics.repair.audience_internal', default='internal application issue')}]"
         )
         lines.append(f"{check.status}\t{check.name}\t{check.summary}{scope}")
@@ -530,12 +533,12 @@ def _secure_objects_integrity_check(report: _SecureObjectIntegrityReport) -> _Di
         if report.readable_total == 0:
             return _DiagnosticCheck(
                 name="secure_objects.integrity",
-                status="ok",
+                status=_DiagnosticStatus.OK,
                 summary=tr("cli.diagnostics.summary.secure_objects_empty"),
             )
         return _DiagnosticCheck(
             name="secure_objects.integrity",
-            status="ok",
+            status=_DiagnosticStatus.OK,
             summary=tr(
                 "cli.diagnostics.summary.secure_objects_readable",
                 readable=report.readable_total,
@@ -549,7 +552,7 @@ def _secure_objects_integrity_check(report: _SecureObjectIntegrityReport) -> _Di
     )
     return _DiagnosticCheck(
         name="secure_objects.integrity",
-        status="warn",
+        status=_DiagnosticStatus.WARN,
         summary=tr(
             "cli.diagnostics.summary.secure_objects_unreadable",
             default="%{unreadable} unreadable row(s), %{readable} readable row(s)",
@@ -599,7 +602,7 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> _DiagnosticCh
     except RegistryValidationError as exc:
         return _DiagnosticCheck(
             name="registry.integrity",
-            status="fail",
+            status=_DiagnosticStatus.FAIL,
             summary=tr("cli.diagnostics.summary.registry_integrity_failed"),
             detail=str(exc),
             precondition_verdict=diagnostic_no_recovery_verdict(
@@ -613,7 +616,7 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> _DiagnosticCh
     except Exception as exc:  # pragma: no cover - defensive: registry not loadable
         return _DiagnosticCheck(
             name="registry.integrity",
-            status="warn",
+            status=_DiagnosticStatus.WARN,
             summary=tr("cli.diagnostics.summary.registry_integrity_skipped"),
             detail=f"{type(exc).__name__}: {exc}",
             precondition_verdict=diagnostic_no_recovery_verdict(
@@ -626,7 +629,7 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> _DiagnosticCh
         )
     return _DiagnosticCheck(
         name="registry.integrity",
-        status="ok",
+        status=_DiagnosticStatus.OK,
         summary=tr("cli.diagnostics.summary.registry_integrity_ok"),
     )
 
@@ -661,13 +664,13 @@ def _active_profile_storage_check(health: ActiveProfileHealth) -> _DiagnosticChe
     if health.status in {"none", "incomplete", "ready"}:
         return _DiagnosticCheck(
             name="profile.storage",
-            status="ok",
+            status=_DiagnosticStatus.OK,
             summary=summary,
         )
     detail = health.profile_record_error or None
     return _DiagnosticCheck(
         name="profile.storage",
-        status="warn",
+        status=_DiagnosticStatus.WARN,
         summary=summary,
         detail=detail,
         precondition_verdict=_required_profile_health_verdict(health),
@@ -684,21 +687,21 @@ def _profile_unavailable_check(health: ActiveProfileHealth) -> _DiagnosticCheck:
         # damage, "no profile configured" implies nothing was ever set up.
         return _DiagnosticCheck(
             name="profile.readiness",
-            status="warn",
+            status=_DiagnosticStatus.WARN,
             summary=tr("cli.diagnostics.summary.profile_locked"),
             precondition_verdict=_required_profile_health_verdict(health),
         )
     if health.status in {"dangling_pointer", "missing_profile_record", "profile_record_unreadable"}:
         return _DiagnosticCheck(
             name="profile.readiness",
-            status="warn",
+            status=_DiagnosticStatus.WARN,
             summary=tr("cli.diagnostics.summary.profile_unreadable", status=health.status),
             detail=health.profile_record_error or None,
             precondition_verdict=_required_profile_health_verdict(health),
         )
     return _DiagnosticCheck(
         name="profile.readiness",
-        status="warn",
+        status=_DiagnosticStatus.WARN,
         summary=tr("cli.diagnostics.summary.profile_none", default="No profile configured"),
         precondition_verdict=_required_profile_health_verdict(health),
     )
@@ -767,7 +770,7 @@ def _profile_check(
         # "no profile configured" summary that is untrue of a locked one.
         return _DiagnosticCheck(
             name="profile.readiness",
-            status="warn",
+            status=_DiagnosticStatus.WARN,
             summary=tr("cli.diagnostics.summary.profile_locked"),
             precondition_verdict=_required_profile_health_verdict(profile_health),
         )
@@ -778,7 +781,7 @@ def _profile_check(
     }:
         return _DiagnosticCheck(
             name="profile.readiness",
-            status="warn",
+            status=_DiagnosticStatus.WARN,
             summary=tr("cli.diagnostics.summary.profile_unreadable", status=profile_health.status),
             detail=profile_health.profile_record_error or None,
             precondition_verdict=_required_profile_health_verdict(profile_health),
@@ -786,7 +789,7 @@ def _profile_check(
     if report.active_profile is None:
         return _DiagnosticCheck(
             name="profile.readiness",
-            status="warn",
+            status=_DiagnosticStatus.WARN,
             summary=tr("cli.diagnostics.summary.profile_none"),
             precondition_verdict=(
                 _required_profile_health_verdict(profile_health)
@@ -806,7 +809,7 @@ def _profile_check(
         return _profile_not_ready_check(report, unset_findings=unset_findings)
     return _DiagnosticCheck(
         name="profile.readiness",
-        status="ok",
+        status=_DiagnosticStatus.OK,
         summary=tr(
             "cli.diagnostics.summary.profile_keys_set",
             default="Profile keys set: %{present}/%{total}",
@@ -832,7 +835,7 @@ def _profile_not_ready_check(
     findings = _profile_not_ready_findings(report, unset_findings)
     return _DiagnosticCheck(
         name="profile.readiness",
-        status="warn",
+        status=_DiagnosticStatus.WARN,
         summary=tr(
             "cli.diagnostics.summary.profile_missing_fields",
             default="Profile is missing %{count} required field(s): %{fields}",
@@ -915,7 +918,7 @@ def _auth_unavailable_check(health: ActiveProfileHealth) -> _DiagnosticCheck:
     """Render auth readiness when workflow state cannot expose wizard status."""
     return _DiagnosticCheck(
         name="auth.readiness",
-        status="warn",
+        status=_DiagnosticStatus.WARN,
         summary=tr("cli.diagnostics.summary.auth_state_unreadable"),
         precondition_verdict=_required_profile_health_verdict(health),
     )
@@ -941,7 +944,7 @@ def _auth_check(report: WizardStatusReport) -> _DiagnosticCheck:
     if not report.auth_provider:
         return _DiagnosticCheck(
             name="auth.readiness",
-            status="warn",
+            status=_DiagnosticStatus.WARN,
             summary=tr("cli.diagnostics.summary.auth_none"),
             precondition_verdict=diagnostic_action_verdict(
                 condition_id="diagnostics.auth.provider.configured",
@@ -958,7 +961,7 @@ def _auth_check(report: WizardStatusReport) -> _DiagnosticCheck:
     if not report.login_ready:
         return _DiagnosticCheck(
             name="auth.readiness",
-            status="warn",
+            status=_DiagnosticStatus.WARN,
             summary=tr(
                 "cli.diagnostics.summary.auth_no_session",
                 default="Authentication provider %{provider} has no ready session",
@@ -974,7 +977,7 @@ def _auth_check(report: WizardStatusReport) -> _DiagnosticCheck:
         )
     return _DiagnosticCheck(
         name="auth.readiness",
-        status="ok",
+        status=_DiagnosticStatus.OK,
         summary=tr(
             "cli.diagnostics.summary.auth_session_ready",
             default="Authentication provider %{provider} has a ready session",
@@ -1030,12 +1033,12 @@ def _compact_exception(exc: BaseException) -> str:
     return f"{type(exc).__name__}: {message}"
 
 
-def _overall_status(checks: tuple[_DiagnosticCheck, ...]) -> _DiagnosticStatus:
-    if any(check.status == "fail" for check in checks):
-        return "fail"
-    if any(check.status == "warn" for check in checks):
-        return "warn"
-    return "ok"
+def _overall_status(checks: tuple[_DiagnosticCheck, ...]) -> _DiagnosticStatusValue:
+    if any(check.status == _DiagnosticStatus.FAIL for check in checks):
+        return _DiagnosticStatus.FAIL
+    if any(check.status == _DiagnosticStatus.WARN for check in checks):
+        return _DiagnosticStatus.WARN
+    return _DiagnosticStatus.OK
 
 
 def render_cli_version_text(report: _CliVersionReport) -> str:

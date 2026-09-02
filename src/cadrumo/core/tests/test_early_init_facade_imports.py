@@ -203,7 +203,7 @@ def test_core_survives_settings_construction_while_resolving_a_facade_name() -> 
         # Absolute, string-form import by necessity: the assertion IS a fresh
         # absolute import of `cadrumo.core` from a wiped `sys.modules`, which a
         # relative form cannot reproduce.
-        core = importlib.import_module("cadrumo.core")
+        importlib.import_module("cadrumo.core")
         # Resolving a name owned by the triggering module is what now drives the
         # hook, and reading it back IS the assertion: if the settings
         # construction re-entered a half-built facade this raises.

@@ -26,6 +26,7 @@ from .record_design_pdf_rows import (
     pdf_page_name,
     pdf_record_heading_name,
     position_runs,
+    required_pdf_group,
     split_glued_ordinal_position,
     unnamed_position_candidate,
 )
@@ -52,6 +53,13 @@ _NUMERIC_TUPLE_ADAPTER: TypeAdapter[tuple[int | float, ...]] = TypeAdapter(
 
 @dataclass(slots=True)
 class PdfFieldDraft:
+    """Accumulate a field's wrapped description and content lines while its rows are read.
+
+    A field's description or enumerated content can wrap across several physical PDF
+    lines before the next row starts; this draft collects those parts so
+    :meth:`finish` can join them into a single :class:`RecordDesignField`.
+    """
+
     sheet: str
     row: int
     ordinal: str | None
@@ -62,12 +70,22 @@ class PdfFieldDraft:
     content_parts: list[str] = field(default_factory=list)
 
     def append_continuation(self, line: str) -> None:
+        """Route a wrapped line to the description while it still reads as title, else to content.
+
+        Once a line breaks the all-caps title shape, or content has already started,
+        further lines are appended to ``content_parts`` instead of the description.
+        """
         if not self.description_parts or (not self.content_parts and looks_like_title_continuation(line)):
             self.description_parts.append(line)
             return
         self.content_parts.append(line)
 
     def finish(self) -> RecordDesignField:
+        """Join the accumulated description/content parts into a validated :class:`RecordDesignField`.
+
+        Refuses a field with no description unless its naturaleza is ``"Blancos"``,
+        since AEAT's filler rows carry that naturaleza alone with no separate text.
+        """
         description = join_pdf_parts(self.description_parts)
         if not description and self.type_code == "Blancos":
             # A fill run needs no description: AEAT writes the naturaleza alone
@@ -439,9 +457,7 @@ def _pdf_declared_constant(field: RecordDesignField) -> str | None:
             continue
         match = _PDF_PAGE_CONSTANT_RE.search(str(text))
         if match is not None:
-            page = match.group("page")
-            assert isinstance(page, str)
-            return page
+            return required_pdf_group(match, "page")
     return None
 
 
@@ -477,6 +493,13 @@ class PdfParseState:
         corrections: CorrectionIndex = EMPTY_CORRECTIONS,
         repair_glued_rows: bool = False,
     ) -> None:
+        """Initialise an empty parse with no current sheet and no records read yet.
+
+        ``source_label`` names the record-design PDF for error messages,
+        ``corrections`` supplies any declared single-position or range-start fixes for
+        this source, and ``repair_glued_rows`` opts into recovering the glued
+        ordinal-position row shape via :func:`split_glued_ordinal_position`.
+        """
         self.repair_glued_rows = repair_glued_rows
         self.results: list[_PdfSheetResult] = []
         self.current: _PdfSheetDraft | None = None
@@ -559,6 +582,12 @@ class PdfParseState:
             )
 
     def feed(self, line: str, row_number: int) -> None:
+        """Dispatch one source line to the first consumer that recognises its shape.
+
+        Tries page names, record headings, table headers, title continuations, page
+        banners, then field rows in that order, falling back to staging the line as an
+        unnamed-position or headless-tail candidate when nothing else consumes it.
+        """
         if not line or is_pdf_footer(line):
             return
         if self._consume_page_name(line):
@@ -652,6 +681,7 @@ class PdfParseState:
         return self.current.fields[-1] if self.current.fields else None
 
     def close_current_body(self) -> None:
+        """Finish the sheet under construction, if any, and move it into ``results``."""
         if self.current is None:
             return
         self.results.append(
@@ -780,6 +810,7 @@ def extract_pdf_lines(
     corrections: CorrectionIndex = EMPTY_CORRECTIONS,
     repair_glued_rows: bool = False,
 ) -> RecordDesignExtraction:
+    """Feed every source line through :class:`PdfParseState` and return the finalised extraction."""
     state = PdfParseState(
         source_label=source_label,
         corrections=corrections,
@@ -791,6 +822,12 @@ def extract_pdf_lines(
 
 
 def validate_pdf_sheet(sheet: RecordDesignSheet, *, source_label: str) -> None:
+    """Refuse a parsed sheet whose fields do not tile a well-formed 1-based extent.
+
+    Checks that the first field starts at position 1, every field has a valid
+    (positive) offset and length, and, when the sheet declares a total position
+    count, that the fields' terminal position matches it exactly.
+    """
     if not sheet.fields:
         return
     first_field = sheet.fields[0]

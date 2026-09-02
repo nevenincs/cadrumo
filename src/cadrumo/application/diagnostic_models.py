@@ -8,6 +8,7 @@ version surface.
 
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field, model_validator
@@ -29,7 +30,33 @@ if TYPE_CHECKING:
     from .wizard.status import WizardStatusReport
 
 
-DiagnosticStatus = Literal["ok", "warn", "fail"]
+class DiagnosticStatus(StrEnum):
+    """How a single diagnostic check came out.
+
+    Ordered by severity in meaning though not by declaration: an overall status is the
+    worst member any check reported.
+    """
+
+    OK = "ok"
+    """The check passed and needs no attention."""
+
+    WARN = "warn"
+    """The check found something worth reporting that does not block the operation."""
+
+    FAIL = "fail"
+    """The check found a condition that blocks the operation it guards."""
+
+
+DiagnosticStatusValue = Literal[
+    DiagnosticStatus.OK,
+    DiagnosticStatus.WARN,
+    DiagnosticStatus.FAIL,
+]
+"""The same vocabulary for a strict model field or CLI payload surface.
+
+A bare enum under strict validation refuses the plain token a serialised report
+carries, so those fields take this literal over the members above.
+"""
 
 
 class RegistryVersionSummary(BaseModel):
@@ -88,7 +115,7 @@ class DiagnosticCheck(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     name: str
-    status: DiagnosticStatus
+    status: DiagnosticStatusValue
     summary: str
     detail: str | None = None
     precondition_verdict: PreconditionVerdict | None = None
@@ -97,7 +124,7 @@ class DiagnosticCheck(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_actionable_contract(self) -> DiagnosticCheck:
-        if self.status in {"fail", "warn"}:
+        if self.status in {DiagnosticStatus.FAIL, DiagnosticStatus.WARN}:
             if self.precondition_verdict is None:
                 raise DiagnosticModelError(
                     f"DiagnosticCheck(status={self.status!r}) must populate `precondition_verdict`; "
@@ -190,7 +217,7 @@ class ConfigRepairReport(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    overall: DiagnosticStatus
+    overall: DiagnosticStatusValue
     package_name: str
     package_version: str
     python_version: str

@@ -9,7 +9,18 @@ from functools import cache
 from secrets import token_bytes
 from threading import RLock
 from types import NoneType, UnionType
-from typing import Annotated, Literal, TypeAliasType, TypeGuard, Union, cast, get_args, get_origin, get_type_hints
+from typing import (
+    Annotated,
+    ForwardRef,
+    Literal,
+    TypeAliasType,
+    TypeGuard,
+    Union,
+    cast,
+    get_args,
+    get_origin,
+    get_type_hints,
+)
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic.fields import FieldInfo
@@ -598,7 +609,40 @@ def _owned_entry(
 
 @cache
 def _model_annotations(model_type: type[BaseModel]) -> dict[str, object]:
-    return cast(dict[str, object], get_type_hints(model_type, include_extras=True))
+    """Resolve model annotations through the public typing/Pydantic contract.
+
+    ``from __future__ import annotations`` deliberately stores source
+    annotations as strings.  ``get_type_hints`` is the public operation that
+    turns those strings into the objects the manifest walker can inspect, and
+    ``include_extras=True`` is required to retain ``Annotated`` metadata such
+    as discriminators.  Pydantic's public ``model_fields`` is used only to
+    close a small gap: a dynamically assembled model can expose a field that
+    is absent from the class-level hints mapping.
+
+    An unresolved forward reference is not a reason to walk the raw string --
+    doing that would silently classify a different schema on one interpreter
+    and fail later on another.  Refuse it at this boundary with the model and
+    field named, so callers cannot publish a partial manifest.
+    """
+    try:
+        resolved = cast(dict[str, object], get_type_hints(model_type, include_extras=True))
+    except (NameError, TypeError, SyntaxError) as exc:
+        resolved = {}
+        resolution_error = exc
+    else:
+        resolution_error = None
+
+    fields = model_type.model_fields
+    annotations: dict[str, object] = {}
+    for field_name, field_info in fields.items():
+        annotation = resolved.get(field_name, field_info.annotation)
+        if isinstance(annotation, (str, ForwardRef)):
+            detail = f"{model_type.__qualname__}.{field_name}"
+            if resolution_error is not None:
+                raise ValueError(f"workspace manifest cannot resolve annotation {detail}") from resolution_error
+            raise ValueError(f"workspace manifest has an unresolved annotation {detail}")
+        annotations[field_name] = annotation
+    return annotations
 
 
 def _unwrap_annotated(annotation: object) -> object:

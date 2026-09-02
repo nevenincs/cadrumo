@@ -139,7 +139,7 @@ def _emit(label: str, lines: tuple[str, ...]) -> None:
 def main(argv: list[str] | None = None) -> int:
     """Report every module and callable that exceeds the declared size budget."""
     parser = argparse.ArgumentParser(description="Audit module/callable sizes against a generated limit baseline.")
-    args = parser.parse_args(argv)
+    parser.parse_args(argv)
 
     modules = measure_module_lines()
     callables = measure_callable_lines()
