@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:7f99d8afced525eaba898e8f14982c382b914989d40c8a845491edc297f885e3'
+body_hash: 'sha256:20c02b093ddffa90dd8044de405e15d1db174cf8ee4efcab6eb07a6f86866724'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -459,6 +459,9 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S197` - Add the measurement integrity criterion that the four failed measurements make due; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S198` - Settle the crashed-worker test serially and attribute the feature health warnings to the untracked scaffold that carries them; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S199` - Attempt to size the footnote-pointer correction and establish that the first measurement read an attribute the object does not carry; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S200` - Take the footnote sizing again from the record design intermediate and bound the result to the designs actually read; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S201` - Sweep every registry-reachable record design for bare footnote pointers and put the correction's premise in question; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S202` - Take a lane measurement that reconciles its own collected count against its result and carries no lost-worker markers; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

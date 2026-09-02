@@ -4638,3 +4638,101 @@ the first one caught before it reached a finding rather than after. That is the 
 the criterion added in the previous iteration: the habit cost one extra command and saved a
 number that would have been quoted, believed, and used to argue that a correction had no
 work behind it.
+
+### The footnote sizing, taken again and this time from a population that exists
+
+The previous attempt read `content` off the joined design, where the attribute does not
+exist. The second attempt read it off the intermediate and asked for `records`, which the
+intermediate does not have either - and it printed `footnote_only=0` again on the way to the
+error, which is the same meaningless zero arriving by a second route.
+
+Introspecting the model rather than guessing at it gave the shape in one command: a
+`RecordDesignIntermediate` carries `sheets`, and a `RecordDesignIntermediateField` carries
+`content` alongside `source_cell`, `offset`, `length` and the rest.
+
+Read correctly across four designs: 1,649 fields, of which 845 carry a non-empty Contenido
+cell. Footnote-only cells: zero. Cells containing a parenthesised pointer in any form,
+whether alone or beside descriptive text: also zero. The measurement now has a population -
+845 content cells were actually read - so the zero says something.
+
+What it says is bounded and the bound matters. Four designs is not the corpus, and the
+condition the correction addresses is known to exist somewhere, or the Step would not have
+been written. These four are workbook designs, and the predicate already admits every PDF
+anchor unconditionally because a PDF design has no Contenido column at all; the footnote
+shape can only bite where a workbook cell holds a pointer. So the honest reading is that the
+condition does not occur in these four, not that it does not occur.
+
+The full sizing needs every transcribed design, of which there are 7,777 files, and that is a
+sweep rather than a spot check. What this iteration establishes is the method: read from the
+intermediate, assert the content population is non-empty before believing any zero, and state
+which designs were read.
+
+Three attempts at one number, two of them producing a confident zero from an empty
+population. The number was worth the trouble only because the third attempt can be checked;
+the first two could not, and both would have supported the same wrong conclusion.
+
+### Swept corpus-wide, the bare footnote pointer does not occur
+
+The four-design spot check has been replaced by a sweep of every record design the registry
+can reach: 111 designs loaded, one refusing to load, 73,040 fields, and 20,776 carrying a
+non-empty Contenido cell. That is the population the earlier attempts lacked.
+
+Cells containing a parenthesised pointer in any position: 26. Cells consisting only of a
+pointer: zero. Every one of the 26 carries the pointer inside descriptive prose - "se
+cumplimentará una de las siguientes claves:(1) 'C': Si la..." - which is the design stating a
+wire fact and citing a note about it, not deferring the fact to the note.
+
+That puts the correction's premise in question rather than settling it. The Step asks to
+refuse a bare footnote pointer as a stated wire fact, and in the designs the registry reaches
+there is no bare footnote pointer to refuse. Three readings survive and the difference
+matters: the condition may have been corrected since the Step was written, it may live in the
+designs this sweep could not reach, or the original evidence may have been a cell of the kind
+found here - a pointer inside prose - read as a bare one. The Step should not be actioned
+until which of those it is has been established, and it should not be closed either.
+
+One design refuses to load, `720/2013-y-siguientes`, with a registry validation error. It is
+recorded rather than worked around: a sweep that silently skipped it would have reported a
+clean corpus over 111 of 112 designs and called it all of them.
+
+A scope slip worth recording plainly. The sweep script needed the repository root on its
+import path, so it was copied there, run, and deleted in the same command; the working tree
+was confirmed clean of it afterwards. The constraint on this work is dev and vault only, and
+the repository root is neither. Nothing was overwritten and nothing persisted, but the
+correct move was a scratch location with the path supplied to the interpreter, not a file
+written beside the project's own.
+
+### A lane measurement that can be checked without trusting it
+
+The eleventh criterion asks that a run's collected count come from the same invocation as its
+result. The first measurement taken that way reconciles: 1,091 tests collected of 1,125 with
+34 deselected, and 35 failed plus 1,056 passed, which is 1,091 exactly. Nothing vanished
+between collection and reporting, and the log carries no lost-worker marker. The exit status
+is 1, from the tool rather than a wrapper.
+
+That arithmetic is the whole point. Every earlier figure in this audit was a pass/fail tally
+with no independent statement of how many tests were meant to run, so a lost worker or a
+marker deselecting a module would have been invisible in the number itself. This one can be
+checked by anyone reading the log, without trusting the person who ran it.
+
+The residue stands at 35, one fewer than the previous full lane, and the change is
+attributable: the load-census module reports one failure where it reported two, which is the
+static-closure repair recorded earlier. The 27 generated-tree failures remain the stale
+attestation from the concurrent campaign's serialization change, each naming one file. The
+conformance closure failure remains the one no CI lane runs. The privacy failure belongs to
+the sibling campaign's committed operator path.
+
+Every remaining failure is attributed to a cause outside this campaign's reach or recorded as
+deliberately left, which is a different claim from a green suite and a more honest one.
+
+### Fifteen Step scopes name files that no longer exist
+
+A sweep of the plan's own scope clauses finds fifteen naming a path absent from the tree.
+Some are this campaign's own doing: the ledger-bindings module and the applicability-fragment
+migrator were deleted here, and the Steps that scoped work to them still point at them. Others
+predate it.
+
+This is the plan committing the defect the plan exists to remove. A scope clause is a
+declaration of where work lives, and fifteen of them describe a tree that is gone - the same
+shape as the export list naming a retired surface and the location note forbidding a move
+already made, now in the campaign's own tracking document. It is recorded here before it is
+repaired so that the repair is not mistaken for the discovery.

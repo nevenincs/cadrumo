@@ -1261,3 +1261,37 @@ imports no export-layout module still has to hold on its own. 22 tests pass.
 Worth stating plainly: a promotion that replaces a string comparison with a member
 reference changes a function's global set, and any test asserting that set exactly will
 fail. This is the second class of collateral the campaign has produced, after imports.
+
+## Finding 58 — a Protocol property, five files, and narrowings that had to survive
+
+`["live", "replay"]` was the shape the annotation scan is least able to see: a Protocol
+property return type. It appeared twice in full and five times as a single-member
+narrowing -- three live drivers returning `Literal["live"]` and two replay drivers
+returning `Literal["replay"]`.
+
+Promoted to `CheckerDriverMode` in `checker_oracle_flow.py`, where the Protocol lives.
+The narrowings were rooted as `Literal[CheckerDriverMode.LIVE]` and
+`Literal[CheckerDriverMode.REPLAY]` rather than widened to the both-members alias. That
+distinction is not cosmetic: a live driver reporting itself as a replay, or the reverse,
+is exactly the confusion that would let evidence-replay results be read as live AEAT
+observations. The type keeps saying which one each driver is.
+
+## Finding 59 — a legally grounded subset, spelled four times
+
+`{"A", "B", "D"}` is the set of Modelo 190 claves whose rows carry the identification
+block. It appeared four times across two registry modules, three of them assigning the
+same local name `clave_abd`, which is a vocabulary with a name that never became a
+declaration.
+
+`RetencionClave` already existed in `core/aggregation.py`, carrying the full A-L
+catalogue and its Orden citation. The subset is now `IDENTIFICATION_BLOCK_CLAVES`, a
+frozenset of its MEMBERS, so a change to the catalogue cannot leave the subset naming a
+letter it no longer has. Member meanings were not restated; the enum cites the Orden and
+one citation is enough.
+
+283 withholding, oracle and sede tests pass.
+
+Blind-spot scope after three targets: 28 -> 24 member sets declared in more than one
+place. Annotation scope is unchanged at 1, which is the point: this work is invisible to
+the shipped gate, and the gate's number would have looked identical had none of it
+happened.

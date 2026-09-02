@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:ec2aa581e5e4930c79b8e525c8f032aa2684aa4a709fd04acf9a9380c2539cb2'
+body_hash: 'sha256:6b2e06fb5484e1b5b8849339b795ecc09498bc2a1b4ca55b817b97840927ed79'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
@@ -116,3 +116,18 @@ can be established without silently retargeting an import.
 Resolved: `formatted-string-reference` routes both evaluated ordinary strings and
 every formatted-string literal segment through the same fail-closed opaque-spelling
 check. The independent re-review found no remaining high or critical issue.
+
+### initializer-relative-import-context | high | Initializer moves escaped the first package-context guard
+
+The full-file re-review found that comparing locator parents was insufficient for a
+move whose source or target is `__init__.py`. Python resolves a package initializer's
+relative imports against the initializer module itself, so an ordinary-module to
+initializer move could still change import authority without refusal.
+
+## Final re-review status
+
+Resolved: relative-import safety now computes the effective import package from both
+the module locator and its corresponding source or target path. Package initializers
+use their module locator; ordinary modules use the locator parent. Every move that
+would change that context is refused before a proposal is returned. The final
+independent full-file review found no remaining high or critical issue.

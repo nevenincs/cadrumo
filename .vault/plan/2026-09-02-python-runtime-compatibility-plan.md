@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-python-runtime-compatibility-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:076819d82910141c2189d9da2191c6c4ad05336d90537e529a39a05aa7a84179'
+body_hash: 'sha256:b6c977e381430f1af19e31da09ea7e6e32b38c80a557d5f26091093daa42ea95'
 ---
 
 <!-- RETIRED: S33, S35, S37, S39, S41, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 -->
@@ -92,6 +92,16 @@ Make stable support claims only after their blocking evidence passes.
 - [x] `P05.S40` - Document final-runtime promotion and classifier evidence; `RELEASING.md`.
 - [x] `P05.S42` - Add an inventory-driven local compatibility command; `justfile`.
 - [x] `P05.S64` - Promote 3.14 classifier eligibility after source binary and artifact evidence; `dev/ci/python-runtime-matrix.json`.
+
+### Phase `P06` - close final compatibility review findings
+
+Make every selected runtime carry focused behavioral and MCP evidence, keep the future-directive policy in a blocking compatibility lane, and classify binary resolver failures precisely.
+
+- [ ] `P06.S65` - Run a focused behavioral test set under the selected target interpreter and bind its results to the compatibility verdict; `dev/ci/python_runtime_compatibility.py`.
+- [ ] `P06.S66` - Smoke the installed cadrumo-mcp entry point and import contract in every compatibility mode; `dev/ci/python_runtime_compatibility.py`.
+- [ ] `P06.S67` - Wire the future-directive AST policy into the blocking compatibility workflow; `.github/workflows/python-runtime-compatibility.yml`.
+- [ ] `P06.S68` - Classify binary missing-wheel failures only from resolver-specific diagnostics; `dev/ci/python_runtime_compatibility.py`.
+- [ ] `P06.S69` - Align the prerelease selector with the provisionable rolling minor; `dev/ci/python-runtime-matrix.json`.
 
 ## Parallelization
 

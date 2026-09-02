@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:e2296a1042347a83a7a354635e71b305589b4caf874306844201adc280b2ddae'
+body_hash: 'sha256:aadba544f25cb9f1fe96ea8d8cee16970bf4f463d86763c22a2bb923a6d188e1'
 related: []
 ---
 # `registry-declaration-hardening` audit: `modelo 200 publication review`
@@ -28,8 +28,18 @@ The `publish` branch of `_run` checks one prepared invocation, discards it, call
 
 The current tests prove synthetic absent-tree publication and separately prove that the untouched bundled Modelo 200 authority refuses a filing-grade snapshot. They do not publish a generated Modelo 200 tree into an isolated copy of its real revision, reload that post-publication registry through `ValidatedRegistryAuthority`, and prove that calculation-grade selection succeeds while filing-grade selection still refuses. The implementation currently leaves `authority_grade` outside the published export tree, but the named safety condition lacks an end-to-end detector with teeth across the actual bootstrap cutover.
 
+### bootstrap-transport-authority-rereview | high | source identity is pinned but the bootstrap transport value is still guessed
+
+Re-review confirms a partial fix: `GeneratedExportBootstrapTransport` now carries `source_ref` and `source_sha256`, `revision_render_inputs` compares both with the selected catalogue source, and the parsed intermediate must retain the same digest. The authority gap remains because `_prepare` still creates the transport for every absent `export` directory with an unconditional `crlf` line ending and a layout id synthesized from modelo/revision spelling. Binding a caller-created default to a real source digest proves association, not that the source or a reviewed transport declaration supplied the value. No exact-target enrolment or negative line-ending authority test limits the widening. The original HIGH remains open.
+
+### check-publish-state-binding-rereview | high | candidate reuse does not bind the live target checked before cutover
+
+Re-review confirms that `_run` now carries the same prepared candidate and `RenderedExportTree` from `_check` into `_publish`, closing the authored-input drift caused by a second `_prepare`. The checked target state is still discarded: `CheckedGeneratedExportTree` retains the published manifest, but `_check` returns only the result token and rendered candidate, and publication receives no expected target absence or target manifest/tree digest. Another writer can create or replace the target after check and before the publication lock; the publisher then treats that newer tree as the rollback target and replaces it without proving it is the tree that passed check. The original HIGH remains open under the shared-worktree concurrency contract.
+
 ## Recommendations
 
 - For `bootstrap-transport-authority`, make absent-tree transport an explicit reviewed declaration bound to the exact official `source_ref` and SHA-256, and enroll only exact owed targets. Refuse missing or mismatched transport authority. Add negative tests for changed source hash, wrong line ending, wrong layout id, and an unenrolled absent tree.
 - For `check-publish-state-binding`, publish the same immutable prepared candidate that passed check, or mint a check receipt containing every authored-input digest plus the target absence/tree digest and verify it while holding the publication lock. Add a mutation test that changes an authored input or target between check and cutover and requires refusal.
 - For `filing-refusal-regression-proof`, add an isolated real-Modelo-200 post-publication authority test that asserts the generated layout loads and exports while the revision remains calculation-grade and a filing-grade snapshot still refuses.
+- Re-review update: retain the source-ref and source-digest checks, but move `line_ending` and any non-derived layout identity into an explicit source-bound reviewed bootstrap declaration. Do not infer enrolment from directory absence.
+- Re-review update: carry the checked target absence or exact manifest/tree digest into `GeneratedExportTreePublicationContext` and compare it under the exclusive lock before candidate validation or cutover.
