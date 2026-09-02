@@ -11,6 +11,7 @@ repo-wide zero-Actions-artifact posture, and the workflow naming convention.
 
 from __future__ import annotations
 
+from copy import deepcopy
 from pathlib import Path
 from typing import Any, Final
 
@@ -29,6 +30,19 @@ _CI: Final = _WORKFLOWS_DIR / "ci.yml"
 _QUICK: Final = _WORKFLOWS_DIR / "packaging-quick.yml"
 _FULL: Final = _WORKFLOWS_DIR / "ci-full.yml"
 _DOCS: Final = _WORKFLOWS_DIR / "docs.yml"
+_COMPATIBILITY: Final = _WORKFLOWS_DIR / "python-runtime-compatibility.yml"
+
+_COMPATIBILITY_INPUTS: Final = frozenset(
+    {
+        ".github/workflows/python-runtime-compatibility.yml",
+        ".python-version",
+        "pyproject.toml",
+        "uv.lock",
+        "dev/**",
+        "src/**",
+        "packaging/**",
+    }
+)
 
 # The carve-out on the PYTHON code lanes: everything that never reaches the
 # Python code or artifact surface those lanes gate. Shared verbatim by every
@@ -82,6 +96,23 @@ def _triggers(document: dict[str, Any]) -> Any:
     return document[True] if True in document else document["on"]
 
 
+def _assert_compatibility_lane_contract(document: dict[str, Any]) -> None:
+    """Require the rolling lane to be a guarded code-change verification surface."""
+    triggers = _triggers(document)
+    assert set(triggers) == {"workflow_dispatch", "push", "pull_request"}
+    for event in ("push", "pull_request"):
+        trigger = triggers[event]
+        assert trigger["branches"] == ["main"]
+        assert set(trigger["paths"]) >= _COMPATIBILITY_INPUTS
+        assert "paths-ignore" not in trigger
+
+    jobs = document["jobs"]
+    assert jobs
+    for job_name, job in jobs.items():
+        assert job.get("if") == _SAME_REPO_GUARD, f"compatibility workflow job {job_name} lacks the fork guard"
+        assert job.get("runs-on") == ["self-hosted", "Linux", "X64"], job_name
+
+
 def test_t2_trigger_paths_pin_the_release_artifact_surface() -> None:
     """The campaign auto-dispatch fires exactly on the release-artifact paths."""
     document = _document(_TRIGGER)
@@ -106,6 +137,20 @@ def test_t2_trigger_dispatches_the_full_campaign_and_nothing_else() -> None:
     # The trigger never runs the campaign inline or mints evidence itself.
     for forbidden in ("just packaging", "campaign.py", "evidence", "gh release"):
         assert forbidden not in commands, forbidden
+
+
+def test_compatibility_workflow_is_enrolled_in_change_class_and_fork_safety() -> None:
+    """Runtime changes trigger the dedicated lane, with every fleet job guarded."""
+    document = _document(_COMPATIBILITY)
+    _assert_compatibility_lane_contract(document)
+
+
+def test_compatibility_lane_guard_has_detector_teeth() -> None:
+    """A missing fork guard is refused rather than hidden by a healthy sibling job."""
+    document = deepcopy(_document(_COMPATIBILITY))
+    document["jobs"]["compatibility-source"]["if"] = "always()"
+    with pytest.raises(AssertionError, match="lacks the fork guard"):
+        _assert_compatibility_lane_contract(document)
 
 
 def test_code_lane_carve_out_is_identical_across_every_python_lane_and_trigger() -> None:
