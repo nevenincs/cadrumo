@@ -162,8 +162,6 @@ errors:
       mielőtt AEAT-bizonyítékot adott volna vissza.
     error_application_registry: A modellnyilvántartás vezénylése meghiúsult vagy el
       lett utasítva.
-    error_borrador_artefact_not_recognised: A PDF nem egyezik egyetlen ismert Modelo
-      100 tervezet-sémával sem.
     error_cadrumo_async_resource_cleanup: Az aszinkron erőforrás-tisztítás meghiúsult;
       a folytatás előtt próbálja meg újra a tisztítást.
     error_cadrumo_core: Belső alkalmazáshiba történt.
@@ -375,7 +373,6 @@ errors:
       nem távolítható el; továbbra is a lemezen van.
     fail_access_gate_authorization_manifest: A modellengedélyezési jegyzéket nem sikerült
       betölteni, vagy érvénytelen engedélyezési bejegyzést tartalmaz.
-    fail_borrador_parse: A Modelo 100 tervezet PDF-et nem sikerült bevallássá elemezni.
     fail_browser_evasion: A böngésző-kijátszás beállítása nem alkalmazható.
     fail_browser_session_browser: A böngésző-munkamenet böngészőjét nem sikerült elindítani.
     fail_browser_validation: A böngésző-munkamenet paraméterei nem mentek át az érvényesítésen.
