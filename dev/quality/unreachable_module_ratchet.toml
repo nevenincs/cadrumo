@@ -68,9 +68,7 @@ allowed = [
   "cadrumo.application.wizard._registered_values",  # unreachable
   "cadrumo.application.wizard.legal_zone",  # unreachable
   "cadrumo.core.compatibility_lifecycle",  # unreachable
-  "cadrumo.core.corpus_manifest._bundle_signing",  # unreachable
   "cadrumo.core.observability.replay",  # unreachable
-  "cadrumo.core.telemetry._producers",  # unreachable
   "cadrumo.domain.calculations.registry.record_spec",  # unreachable
   "cadrumo.domain.calculations.registry.renta_web_open_oracle",  # unreachable
   "cadrumo.domain.fincas",  # unreachable

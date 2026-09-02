@@ -715,6 +715,85 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
         ),
         members=("cadrumo.domain.filing_evidence",),
     ),
+    # ── modules the load-census refactor left unruled ───────────────────────
+    # Each classification below is decided by measurement rather than reading:
+    # a module is `live` when `sys.modules` holds it after the bundled authority
+    # has loaded, and `conditionally_reachable` when it does not. The triggers
+    # name the module-level importers the census reports, so a rule that stops
+    # matching the tree is a rule whose importer moved.
+    ClassificationRule(
+        classification="live",
+        trigger="record-design parsing, reached from record_design on every load",
+        reason=(
+            "The record-design parse chain split into a family of modules: the PDF orchestration "
+            "and the row, state, visual and repair passes beneath it, the workbook reader and its "
+            "header handling, the shared layout markers both readers use, and the source resolution "
+            "all of them consult. Every one is imported at module level from within that chain and "
+            "every one is in sys.modules after a bundled load."
+        ),
+        members=_registry(
+            "record_design_layout_markers",
+            "record_design_pdf_orchestration",
+            "record_design_pdf_repairs",
+            "record_design_pdf_rows",
+            "record_design_pdf_state",
+            "record_design_pdf_visual",
+            "record_design_sources",
+            "record_design_workbook",
+            "record_design_workbook_headers",
+        ),
+    ),
+    ClassificationRule(
+        classification="live",
+        trigger="binding compilation: bindings and the ledger, invoice and relation binding families",
+        reason=(
+            "Binding compilation runs on every load, and these carry the parts it was split into: "
+            "the shared target resolution, the selector support the ledger binding families import, "
+            "the invoice row materialisation, the modelo 303 annual summary bindings the record "
+            "section validator also reaches, and the relation dependency resolution that handoffs "
+            "and revision members both consult."
+        ),
+        members=_registry(
+            "_invoice_row_materialization",
+            "binding_targets",
+            "ledger_binding_selector_support",
+            "m303_regimen_simplificado_annual_summary_bindings",
+            "relation_dependency",
+        ),
+    ),
+    ClassificationRule(
+        classification="live",
+        trigger="revision schema validation, imported by the validator modules on every load",
+        reason=(
+            "The revision validators import these directly: the condition mode the deadline and "
+            "verification schemas share, the deadline declarations four validators read, and the "
+            "revision member resolution applicability and handoffs also use. Validation is not "
+            "optional on a load, so none of the three is conditional."
+        ),
+        members=_registry("condition_mode", "schema_deadlines", "schema_revision_members"),
+    ),
+    ClassificationRule(
+        classification="live",
+        trigger="formula runtime dispatch for modelo 100",
+        reason=(
+            "Imported at module level by the formula runtime, which the load reaches. The modelo "
+            "split is a division of that runtime rather than a per-modelo gate, so it loads "
+            "whether or not a modelo 100 formula is evaluated."
+        ),
+        members=_registry("formula_runtime_m100"),
+    ),
+    ClassificationRule(
+        classification="conditionally_reachable",
+        trigger="function-scoped imports only: withholding row building and calculation revision identity",
+        reason=(
+            "Neither is in sys.modules after a bundled load, and neither has any module-level "
+            "importer. `_withholding_rows` is imported from inside "
+            "resolve_withholding_binding_row_values, which is the standard break for the cycle it "
+            "forms with withholding_bindings and cannot be hoisted without restoring that cycle. "
+            "Both are reached only when the function holding the import runs."
+        ),
+        members=_registry("_withholding_rows", "calculation_revision_identity"),
+    ),
 )
 
 

@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import argparse
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
+from collections.abc import Iterable, Mapping
 from dataclasses import asdict, dataclass
 from datetime import date
 from pathlib import Path
-from typing import Iterable, Mapping
 
 import rtoml
 
@@ -59,6 +59,7 @@ class M200ReconciliationRow:
     origin: str
     source_ref_state: str
     mechanical_source_refs_proposal: tuple[str, ...] | None
+    identity_review_required: bool
     export_reachability: str
     declared_export_refs: tuple[str, ...]
     export_reciprocity: str
@@ -145,7 +146,8 @@ def reconcile_bundled_m200_2024() -> M200ReconciliationCensus:
     proposed_ownership: dict[str, list[M200TargetAnchorDisposition]] = defaultdict(list)
     for anchor in anchors:
         if anchor.owner_state == "exact_planned_owner":
-            assert anchor.declared_map_owner is not None
+            if anchor.declared_map_owner is None:
+                raise RegistryValidationError("exact target owner disposition omitted its declared owner")
             exact_ownership[anchor.declared_map_owner].append(anchor)
         elif anchor.resolved_owner_proposal_non_authoritative is not None:
             proposed_ownership[anchor.resolved_owner_proposal_non_authoritative].append(anchor)
@@ -171,10 +173,11 @@ def reconcile_bundled_m200_2024() -> M200ReconciliationCensus:
             source_state, source_proposal = "candidate_non_authoritative", None
         elif not fields:
             source_state, source_proposal = "unmapped_no_rebind", None
-        elif any(field.printed_identity_state != "matches_declared_owner" for field in fields):
-            source_state, source_proposal = "identity_review_required", None
         else:
             source_state, source_proposal = _source_ref_state(payload)
+        identity_review_required = any(
+            field.printed_identity_state != "matches_declared_owner" for field in fields
+        )
         applicable, inapplicable = _legal_partition(payload.legal_refs, legal, revision.valid_from, revision.valid_to)
         declared_export_refs = tuple(current_declarations[identifier].export_refs) if not is_candidate else ()
         generated_refs = tuple(field.export_field_id for field in fields)
@@ -207,6 +210,7 @@ def reconcile_bundled_m200_2024() -> M200ReconciliationCensus:
                 origin="restoration_candidate" if is_candidate else "current_declaration",
                 source_ref_state=source_state,
                 mechanical_source_refs_proposal=source_proposal,
+                identity_review_required=identity_review_required,
                 export_reachability=(
                     "mapped_exact_owner"
                     if fields
@@ -298,7 +302,6 @@ def main(argv: list[str] | None = None) -> int:
         "mechanical_rebind",
         "mixed_design_sources",
         "missing_current_design_source",
-        "identity_review_required",
         "unmapped_no_rebind",
         "candidate_non_authoritative",
     ):
@@ -309,6 +312,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"current_rebind_withheld={sum(row.source_ref_state not in eligible_states for row in current_rows)}")
     print(f"current_exact_map_owned={sum(bool(row.fields) for row in current_rows)}")
     print(f"current_orphan={sum(not row.fields for row in current_rows)}")
+    print(f"current_identity_review_required={sum(row.identity_review_required for row in current_rows)}")
     print(
         "anchor_identity_mismatches="
         f"{sum(anchor.owner_state not in {'exact_planned_owner', 'non_casilla'} for anchor in anchors)}"
@@ -414,7 +418,11 @@ def _legal_partition(refs, legal, valid_from, valid_to):
             inapplicable.append(ref)
             continue
         start, end = governed_period_span(authority)
-        target = applicable if start <= valid_from and (valid_to is None or end is None or end >= valid_to) else inapplicable
+        target = (
+            applicable
+            if start <= valid_from and (valid_to is None or end is None or end >= valid_to)
+            else inapplicable
+        )
         target.append(ref)
     return tuple(applicable), tuple(inapplicable)
 
@@ -456,7 +464,8 @@ def _require_partition(revision, sibling) -> None:
         TARGET_VALID_TO,
     ):
         raise RegistryValidationError("Modelo 200/2024 revision partition drifted from calendar year 2024")
-    if str(sibling.id) != "2025-y-siguientes" or sibling.valid_from != SIBLING_VALID_FROM or sibling.valid_to is not None:
+    sibling_partition = (str(sibling.id), sibling.valid_from, sibling.valid_to)
+    if sibling_partition != ("2025-y-siguientes", SIBLING_VALID_FROM, None):
         raise RegistryValidationError("Modelo 200 sibling partition drifted from 2025-y-siguientes")
     if TARGET_SOURCE_REF not in tuple(map(str, revision.source_refs)):
         raise RegistryValidationError("Modelo 200/2024 revision is not bound to its exact record-design source")
@@ -483,7 +492,7 @@ def _require_entry_source_refs(entries: Iterable[object]) -> None:
 
 
 def _require_unique_identifiers(identifiers: tuple[str, ...], *, label: str) -> None:
-    duplicates = sorted({identifier for identifier in identifiers if identifiers.count(identifier) > 1})
+    duplicates = sorted(identifier for identifier, count in Counter(identifiers).items() if count > 1)
     if duplicates:
         raise RegistryValidationError(f"duplicate {label} ids: {duplicates!r}")
 
