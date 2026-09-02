@@ -47,9 +47,9 @@ def _recipe_summary() -> set[str]:
 def test_release_apply_is_absent_from_the_justfile() -> None:
     """The retired local-apply recipe is gone in full, not merely deprecated.
 
-    `dev.release.version_bump` is the sole authority for advancing a version
-    now: a deleted local path cannot be mis-invoked instead of
-    the automated bump. Read directly off the tracked file rather than
+    The release pull request is the sole authority for advancing a version now:
+    a deleted local path cannot be mis-invoked instead of the automated bump.
+    Read directly off the tracked file rather than
     `just --summary` (which lists recipe NAMES only and would not catch a
     stray reference inside another recipe's body).
     """
