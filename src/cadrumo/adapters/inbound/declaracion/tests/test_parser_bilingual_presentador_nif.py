@@ -78,7 +78,7 @@ def _sidecar(modelo: str, stem: str) -> dict[str, object]:
     )
 
 
-def _declared_tax_id(modelo: str, stem: str) -> str:
+def declared_tax_id(modelo: str, stem: str) -> str:
     """Return the tax id the sanitiser declares it wrote into this fixture.
 
     Deriving the expectation from the sidecar keeps it grounded in the
@@ -145,7 +145,7 @@ def test_parses_the_english_render_receipt() -> None:
         period_override=period,
     )
 
-    assert observation.tax_id == _declared_tax_id(modelo, stem)
+    assert observation.tax_id == declared_tax_id(modelo, stem)
     assert observation.modelo == modelo
 
 
@@ -165,7 +165,7 @@ def test_spanish_render_receipts_keep_parsing(modelo: str, stem: str, year: int,
         period_override=period,
     )
 
-    assert observation.tax_id == _declared_tax_id(modelo, stem)
+    assert observation.tax_id == declared_tax_id(modelo, stem)
     assert observation.modelo == modelo
 
 
@@ -243,7 +243,7 @@ def test_english_render_needs_no_modelo_or_year_override() -> None:
 
     assert observation.modelo == modelo
     assert observation.ejercicio == str(year)
-    assert observation.tax_id == _declared_tax_id(modelo, stem)
+    assert observation.tax_id == declared_tax_id(modelo, stem)
 
 
 @pytest.mark.parametrize(

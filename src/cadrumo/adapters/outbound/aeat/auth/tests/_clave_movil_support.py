@@ -11,10 +11,10 @@ from pydantic import SecretStr
 
 from ......core.config import Settings
 
-_EXTERNAL = Settings.external_constants()
-_DOMAINS = _EXTERNAL.aeat.domains
-_CLAVE_SURFACE = _EXTERNAL.aeat.clave_movil
-_PRE303_SURFACE = _EXTERNAL.aeat.pre303
+EXTERNAL = Settings.external_constants()
+_DOMAINS = EXTERNAL.aeat.domains
+_CLAVE_SURFACE = EXTERNAL.aeat.clave_movil
+_PRE303_SURFACE = EXTERNAL.aeat.pre303
 
 
 def _run[T](coroutine: Coroutine[Any, Any, T]) -> T:

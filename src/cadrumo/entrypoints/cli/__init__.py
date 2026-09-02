@@ -28,20 +28,9 @@ import typer
 from typer._click.core import Command as _TyCommand
 
 if TYPE_CHECKING:
-    # Type-checking-only: gives static consumers of the lazy `command_schema_refs`
-    # re-export (below, via `__getattr__`) its real signature without paying the
-    # eager registry-parse import cost at runtime -- this line never executes.
-    from ._command_schema import command_schema_refs as command_schema_refs
-    from ._command_schema import command_schema_type as command_schema_type
-    from ._command_schema import command_schema_types as command_schema_types
-    from ._modelo_rendering import calculation_revision_lines, calculation_revision_payload
-    from ._verb_input_schema import VerbInputSchema as VerbInputSchema
-    from ._verb_input_schema import cli_path_for_command_key as cli_path_for_command_key
-    from ._verb_input_schema import is_exposable_command as is_exposable_command
     from .command_spec import CommandSpec
-    from .config.google import OAuthClientPayload as OAuthClientPayload
-from ._stdio import _disable_rich_cli_rendering as _disable_rich_cli_rendering
 from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
+from ._stdio import disable_rich_cli_rendering as disable_rich_cli_rendering
 
 # Force UTF-8 on stdout / stderr before any echo, log, or Rich console
 # instantiation. Default Windows terminals expose cp1252; emoji,
@@ -52,10 +41,10 @@ _configure_stdio_for_utf8()
 
 # Disable Typer/Click's Rich-based help, error, and traceback rendering
 # for every Typer() app in the command tree (module-level, read live by
-# every render call — see :func:`._stdio._disable_rich_cli_rendering`).
+# every render call — see :func:`._stdio.disable_rich_cli_rendering`).
 # Plain text keeps option/argument tables readable regardless of the
 # invoking terminal's real width.
-_disable_rich_cli_rendering()
+disable_rich_cli_rendering()
 
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
@@ -153,55 +142,6 @@ def command_search_terms(command_key: str) -> tuple[str, ...]:
 #: The per-verb input-schema projection re-exported from this facade. The module
 #: walks the live command tree and pulls in the operator-action catalogue, so it
 #: stays off the eager import path with the other lazy re-exports below.
-_VERB_INPUT_SCHEMA_EXPORTS: frozenset[str] = frozenset(
-    {
-        "DECLARED_UNIMPLEMENTED_SURFACES",
-        "JsonType",
-        "ResolvedVerbLeaf",
-        "SchemaResolutionError",
-        "VerbInputSchema",
-        "VerbLeafKind",
-        "VerbLeafResolutionFailure",
-        "VerbParamKind",
-        "VerbParameter",
-        "assert_schema_coverage",
-        "build_verb_input_schemas",
-        "cli_argv_for",
-        "cli_path_for_command_key",
-        "is_exposable_command",
-    }
-)
-
-
-def __getattr__(name: str) -> object:
-    """Lazily resolve re-exported names without importing heavy submodules eagerly.
-
-    ``_command_schema``, ``config.google``, and ``_modelo_rendering`` are
-    kept off the eager import path precisely so constructing the Cadrumo CLI
-    app object never pulls the registry-dependent command tree; a
-    top-level ``from ._command_schema import command_schema_refs`` (and
-    siblings) would defeat that and reintroduce the startup cost
-    :mod:`._stdio` / the lazy command-tree gate guard against.
-    """
-    if name in {"command_schema_refs", "command_schema_type", "command_schema_types"}:
-        from . import _command_schema
-
-        return getattr(_command_schema, name)
-    if name in _VERB_INPUT_SCHEMA_EXPORTS:
-        from . import _verb_input_schema
-
-        return getattr(_verb_input_schema, name)
-    if name == "OAuthClientPayload":
-        from .config.google import OAuthClientPayload
-
-        return OAuthClientPayload
-    if name in ("calculation_revision_lines", "calculation_revision_payload"):
-        from . import _modelo_rendering
-
-        return getattr(_modelo_rendering, name)
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-
-
 def main() -> None:
     """Console-script entry point.
 
@@ -263,12 +203,12 @@ def _refuse_former_product_state_at_startup() -> None:
     from ...core.config import Settings
     from ...core.config_state_root import FormerProductStateError
     from ...core.errors.hierarchy import ActiveProfilePointerError
-    from .errors import CliRefusedBoundaryError, _emit_error_and_exit, project_cli_boundary_error
+    from .errors import CliRefusedBoundaryError, emit_error_and_exit, project_cli_boundary_error
 
     try:
         Settings()
     except FormerProductStateError as error:
-        _emit_error_and_exit(
+        emit_error_and_exit(
             attach_cli_policy_verdict(
                 CliRefusedBoundaryError(str(error)),
                 verdict=former_product_state_verdict(
@@ -277,7 +217,7 @@ def _refuse_former_product_state_at_startup() -> None:
             )
         )
     except ActiveProfilePointerError as error:
-        _emit_error_and_exit(project_cli_boundary_error(error, _refuse_former_product_state_at_startup))
+        emit_error_and_exit(project_cli_boundary_error(error, _refuse_former_product_state_at_startup))
 
 
 @contextmanager
@@ -335,32 +275,11 @@ def _emit_operator_progress(progress: object) -> None:
 
 
 __all__ = [
-    "DECLARED_UNIMPLEMENTED_SURFACES",
     "CommandExecutionPolicy",
-    "JsonType",
-    "OAuthClientPayload",
-    "ResolvedVerbLeaf",
-    "SchemaResolutionError",
-    "VerbInputSchema",
-    "VerbLeafKind",
-    "VerbLeafResolutionFailure",
-    "VerbParamKind",
-    "VerbParameter",
     "app",
-    "assert_schema_coverage",
-    "build_verb_input_schemas",
-    "calculation_revision_lines",
-    "calculation_revision_payload",
-    "cli_argv_for",
-    "cli_path_for_command_key",
     "command_execution_policy_for_cli_path",
     "command_graph",
-    "command_schema_refs",
-    "command_schema_type",
-    "command_schema_types",
-    "command_search_terms",
     "current_operator_surface_reconciliation",
-    "is_exposable_command",
     "main",
     "resolve_cli_precondition_action",
 ]

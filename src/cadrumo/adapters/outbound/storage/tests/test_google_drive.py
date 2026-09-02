@@ -20,7 +20,7 @@ from .....core.i18n import tr
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...google.tests.drive_media_server import drive_files_list_endpoint
 from .._google_drive import GoogleDriveProvider
-from .._google_drive_metadata import _drive_storage_content_hash
+from .._google_drive_metadata import drive_storage_content_hash
 from ..errors import OutboundStorageIntegrityError, OutboundStorageNetworkError, OutboundStorageValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -148,7 +148,7 @@ def test_google_drive_provider_refuses_the_former_product_vault_before_service_c
 
 def test_google_drive_read_metadata_requires_the_same_typed_app_properties_contract() -> None:
     with pytest.raises(OutboundStorageIntegrityError, match="appProperties"):
-        _drive_storage_content_hash({"id": "drive-file", "appProperties": {"content_hash": "sha256-x"}})
+        drive_storage_content_hash({"id": "drive-file", "appProperties": {"content_hash": "sha256-x"}})
 
 
 def test_vault_resolution_follows_page_token_to_an_owned_folder() -> None:

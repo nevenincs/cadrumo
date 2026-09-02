@@ -47,7 +47,7 @@ from ...core.period import Period, PeriodError
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.filing_record import ExternalEvidenceKind
-from ._common import _declared_tax_id, emit_envelope
+from ._common import declared_tax_id, emit_envelope
 from ._modelo_cli_support import (
     bad_parameter_from_error,
     parse_casilla_override,
@@ -196,7 +196,7 @@ def filing_record_import(
     try:
         from ...application.workflow.persistence import workflow_state_repository
 
-        expected_tax_id = _declared_tax_id(workflow_state_repository().load().active_profile_record())
+        expected_tax_id = declared_tax_id(workflow_state_repository().load().active_profile_record())
         if file is not None:
             work_unit = get_work_unit(validated_work_unit_id)
             record = import_external_filing_source(

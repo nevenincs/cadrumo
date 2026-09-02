@@ -1,6 +1,6 @@
 """Real-behavior tests for the classify-path censo business_pct stamping.
 
-Locks that :func:`cadrumo.entrypoints.cli._ledger_support._resolve_business_pct_with_censo`
+Locks that :func:`cadrumo.entrypoints.cli._ledger_support.resolve_business_pct_with_censo`
 derives the HOME_OFFICE business_pct from the operator-declared
 ``vivienda_office`` m² facts (the re-seated ``bound_raw_afectacion_ratio``
 source) when the operator omits an explicit percentage, and leaves an
@@ -18,7 +18,7 @@ from ....domain.categories.spending_category import SpendingCategory
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import TestRuntimeProfile
-from .._ledger_support import _resolve_business_pct_with_censo
+from .._ledger_support import resolve_business_pct_with_censo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -44,7 +44,7 @@ def _declare_vivienda_office() -> None:
 
 def test_classify_stamps_derived_business_pct_from_operator_declared_facts(runtime: TestRuntimeProfile) -> None:
     _declare_vivienda_office()
-    resolved = _resolve_business_pct_with_censo(
+    resolved = resolve_business_pct_with_censo(
         bucket_id=_BUCKET_ID,
         active_profile=_BUCKET_ID,
         category_id=_SUMINISTROS,
@@ -57,7 +57,7 @@ def test_classify_stamps_derived_business_pct_from_operator_declared_facts(runti
 
 def test_classify_leaves_operator_supplied_pct_untouched(runtime: TestRuntimeProfile) -> None:
     _declare_vivienda_office()
-    resolved = _resolve_business_pct_with_censo(
+    resolved = resolve_business_pct_with_censo(
         bucket_id=_BUCKET_ID,
         active_profile=_BUCKET_ID,
         category_id=_SUMINISTROS,
@@ -68,7 +68,7 @@ def test_classify_leaves_operator_supplied_pct_untouched(runtime: TestRuntimePro
 
 
 def test_classify_returns_none_when_no_vivienda_office_facts(runtime: TestRuntimeProfile) -> None:
-    resolved = _resolve_business_pct_with_censo(
+    resolved = resolve_business_pct_with_censo(
         bucket_id=_BUCKET_ID,
         active_profile=_BUCKET_ID,
         category_id=_SUMINISTROS,

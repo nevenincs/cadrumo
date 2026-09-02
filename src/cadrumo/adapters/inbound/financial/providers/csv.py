@@ -63,7 +63,7 @@ class CsvColumnMap(BaseModel):
 
     Each tuple lists the lower-cased header strings the parser will
     treat as equivalent for the corresponding logical column. The
-    :func:`_layout_score` helper scores a candidate header row by the
+    :func:`layout_score` helper scores a candidate header row by the
     number of these aliases it satisfies.
 
     Attributes:
@@ -279,8 +279,8 @@ class CsvProvider(FinancialProvider):
                 detected_dialect=describe_dialect(dialect),
             )
         warnings: list[str] = []
-        lookup = _header_lookup(rows[header_index])
-        if not _find_column(lookup, layout.columns.currency):
+        lookup = header_lookup(rows[header_index])
+        if not find_column(lookup, layout.columns.currency):
             warnings.append(
                 f"{_currency_warning_subject(layout, lookup)} has no currency column; "
                 f"falling back to {default_currency()}",
@@ -306,10 +306,10 @@ class CsvProvider(FinancialProvider):
         data_rows = rows[header_index + 1 :]
         for source_row_index, row in enumerate(data_rows, start=header_index + 2):
             raw_fields = _row_to_mapping(headers, row)
-            if _row_is_blank(raw_fields):
+            if row_is_blank(raw_fields):
                 continue
             try:
-                parsed = _parse_tabular_transaction_row(
+                parsed = parse_tabular_transaction_row(
                     layout=layout,
                     lookup=lookup,
                     raw_fields=raw_fields,
@@ -384,9 +384,9 @@ class CsvProvider(FinancialProvider):
         for index, row in enumerate(rows[:10]):
             if not any(cell.strip() for cell in row):
                 continue
-            lookup = _header_lookup(row)
+            lookup = header_lookup(row)
             for layout in CSV_LAYOUTS:
-                score = _layout_score(lookup, layout)
+                score = layout_score(lookup, layout)
                 if score > best_score:
                     best_index = index
                     best_layout = layout
@@ -398,17 +398,17 @@ class CsvProvider(FinancialProvider):
         return best_index, best_layout, best_headers, best_lookup
 
 
-def _header_lookup(headers: list[str]) -> dict[str, str]:
+def header_lookup(headers: list[str]) -> dict[str, str]:
     """Build normalized->original header lookup for alias resolution."""
     return {normalize_header(header): header for header in headers if header.strip()}
 
 
-def _layout_score(lookup: Mapping[str, str], layout: CsvBankLayout) -> int:
+def layout_score(lookup: Mapping[str, str], layout: CsvBankLayout) -> int:
     """Return a match score for one layout against one header row."""
     required = (
-        _find_column(lookup, layout.columns.booked_date),
-        _find_column(lookup, layout.columns.amount),
-        _find_column(lookup, layout.columns.description),
+        find_column(lookup, layout.columns.booked_date),
+        find_column(lookup, layout.columns.amount),
+        find_column(lookup, layout.columns.description),
     )
     if any(column is None for column in required):
         return 0
@@ -420,17 +420,17 @@ def _layout_score(lookup: Mapping[str, str], layout: CsvBankLayout) -> int:
         layout.columns.external_id,
     )
     for aliases in optional_groups:
-        if aliases and _find_column(lookup, aliases):
+        if aliases and find_column(lookup, aliases):
             score += 1
     return score
 
 
 def _has_aeat_ledger_export_header(rows: list[list[str]]) -> bool:
     """Return whether the CSV contains the canonical ledger export header."""
-    return any(set(_header_lookup(row)) >= _AEAT_LEDGER_EXPORT_HEADERS for row in rows[:10] if any(row))
+    return any(set(header_lookup(row)) >= _AEAT_LEDGER_EXPORT_HEADERS for row in rows[:10] if any(row))
 
 
-def _find_column(lookup: Mapping[str, str], aliases: tuple[str, ...]) -> str | None:
+def find_column(lookup: Mapping[str, str], aliases: tuple[str, ...]) -> str | None:
     """Resolve the first matching original header for ``aliases``."""
     for alias in aliases:
         header = lookup.get(normalize_header(alias))
@@ -476,12 +476,12 @@ def _row_to_mapping(headers: list[str], row: list[str]) -> dict[str, str]:
     return {header: padded[index] if index < len(padded) else "" for index, header in enumerate(headers)}
 
 
-def _row_is_blank(raw_fields: Mapping[str, str]) -> bool:
+def row_is_blank(raw_fields: Mapping[str, str]) -> bool:
     """Return whether a parsed source row carries no usable values."""
     return not any(value.strip() for value in raw_fields.values())
 
 
-def _parse_tabular_transaction_row(
+def parse_tabular_transaction_row(
     *,
     layout: CsvBankLayout,
     lookup: Mapping[str, str],
@@ -586,7 +586,7 @@ def _value_from_aliases(
     aliases: tuple[str, ...],
 ) -> str | None:
     """Resolve and read the first non-empty value for a logical column."""
-    header = _find_column(lookup, aliases)
+    header = find_column(lookup, aliases)
     if header is None:
         return None
     value = raw_fields.get(header, "")
@@ -608,7 +608,7 @@ def _currency_from_aliases(
     :class:`~domain.transactions.RawTransaction`; only the column-naming
     context of the refusal is built here.
     """
-    header = _find_column(lookup, aliases)
+    header = find_column(lookup, aliases)
     if header is None:
         return default_currency()
     raw = archive_cell_text(raw_fields.get(header, ""))
@@ -628,7 +628,7 @@ def _typed_value_from_aliases(
     aliases: tuple[str, ...],
 ) -> object | None:
     """Resolve and read the first non-empty typed value for a logical column."""
-    header = _find_column(lookup, aliases)
+    header = find_column(lookup, aliases)
     if header is None:
         return None
     value = raw_fields.get(header, "")
@@ -641,7 +641,7 @@ def _typed_value_and_header_from_aliases(
     aliases: tuple[str, ...],
 ) -> tuple[str, object] | None:
     """Resolve and read the first non-empty typed value with its source header."""
-    header = _find_column(lookup, aliases)
+    header = find_column(lookup, aliases)
     if header is None:
         return None
     value = raw_fields.get(header, "")
@@ -654,7 +654,7 @@ def _direction_from_aliases(
     aliases: tuple[str, ...],
 ) -> TransactionDirection | None:
     """Resolve an optional explicit transaction direction column."""
-    header = _find_column(lookup, aliases)
+    header = find_column(lookup, aliases)
     if header is None:
         return None
     raw = archive_cell_text(raw_fields.get(header, ""))

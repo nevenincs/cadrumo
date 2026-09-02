@@ -33,8 +33,14 @@ settings initialization.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from google.auth.credentials import Credentials
+    from googleapiclient._apis.drive.v3.resources import DriveResource
+
 import io
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 from typing import Any
 
 from ....application.operator_actions.preconditions import no_action_precondition_verdict
@@ -43,12 +49,13 @@ from ....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.type_guards import is_object_dict, is_object_list, is_object_mapping, is_str_keyed_dict
 from ._google_drive_metadata import (
     DriveStoragePreconditionCondition,
-    _drive_external_verdict,
-    _drive_storage_app_properties,
-    _drive_storage_content_hash,
-    _metadata_from_drive_entry,
+    drive_external_verdict,
+    drive_storage_app_properties,
+    drive_storage_content_hash,
+    metadata_from_drive_entry,
 )
 from ._integrity import require_full_sha256_content_hash, verify_content_hash, verify_payload_byte_length
 from ._key_validation import assert_admissible_object_key_hmac
@@ -144,7 +151,7 @@ def _translate_http_error(error: Exception, *, action: str) -> OutboundStorageEr
             detail,
             context=context,
             translated_message="adapters.outbound.storage.google_drive.errors.request_failed",
-            precondition_verdict=_drive_external_verdict(
+            precondition_verdict=drive_external_verdict(
                 DriveStoragePreconditionCondition.REQUEST_AUTHORIZED,
                 facts={"operation": action, "status": context["status"], "authorization_sufficient": False},
                 outcome=NoRecoveryOutcome.SAFETY,
@@ -155,7 +162,7 @@ def _translate_http_error(error: Exception, *, action: str) -> OutboundStorageEr
             detail,
             context=context,
             translated_message="adapters.outbound.storage.google_drive.errors.request_failed",
-            precondition_verdict=_drive_external_verdict(
+            precondition_verdict=drive_external_verdict(
                 DriveStoragePreconditionCondition.TARGET_PRESENT,
                 facts={"operation": action, "status": context["status"], "target_present": False},
                 outcome=NoRecoveryOutcome.OPERATOR_DECISION,
@@ -166,7 +173,7 @@ def _translate_http_error(error: Exception, *, action: str) -> OutboundStorageEr
             detail,
             context=context,
             translated_message="adapters.outbound.storage.google_drive.errors.request_failed",
-            precondition_verdict=_drive_external_verdict(
+            precondition_verdict=drive_external_verdict(
                 DriveStoragePreconditionCondition.REQUEST_CONFLICT_FREE,
                 facts={"operation": action, "status": context["status"], "conflict_detected": True},
                 outcome=NoRecoveryOutcome.OPERATOR_DECISION,
@@ -177,7 +184,7 @@ def _translate_http_error(error: Exception, *, action: str) -> OutboundStorageEr
             detail,
             context=context,
             translated_message="adapters.outbound.storage.google_drive.errors.request_failed",
-            precondition_verdict=_drive_external_verdict(
+            precondition_verdict=drive_external_verdict(
                 DriveStoragePreconditionCondition.REQUEST_WITHIN_QUOTA,
                 facts={"operation": action, "status": context["status"], "quota_available": False},
                 outcome=NoRecoveryOutcome.SAFETY,
@@ -188,7 +195,7 @@ def _translate_http_error(error: Exception, *, action: str) -> OutboundStorageEr
             detail,
             context=context,
             translated_message="adapters.outbound.storage.google_drive.errors.request_failed",
-            precondition_verdict=_drive_external_verdict(
+            precondition_verdict=drive_external_verdict(
                 DriveStoragePreconditionCondition.REQUEST_AVAILABLE,
                 facts={"operation": action, "status": context["status"], "available": False},
                 outcome=NoRecoveryOutcome.SAFETY,
@@ -198,7 +205,7 @@ def _translate_http_error(error: Exception, *, action: str) -> OutboundStorageEr
         detail,
         context=context,
         translated_message="adapters.outbound.storage.google_drive.errors.request_failed",
-        precondition_verdict=_drive_external_verdict(
+        precondition_verdict=drive_external_verdict(
             DriveStoragePreconditionCondition.REQUEST_TRANSPORT_AVAILABLE,
             facts={"operation": action, "status": context["status"], "transport_available": False},
             outcome=NoRecoveryOutcome.SAFETY,
@@ -207,9 +214,10 @@ def _translate_http_error(error: Exception, *, action: str) -> OutboundStorageEr
 
 
 # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY:
-# googleapiclient.discovery.build() returns an untyped Resource object; no stub
-# narrows the concrete type.
-def _service_factory(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY
+# `google-api-python-client-stubs` DOES narrow this: its `build` overload for
+# `("drive", "v3")` returns `DriveResource`. The former `Any` return predated the
+# stub package and erased the type of every Drive call downstream.
+def _service_factory(credentials: Credentials) -> DriveResource:
     """Real Drive v3 service factory. Lazily imports google-api-python-client."""
     try:
         from googleapiclient.discovery import build
@@ -218,13 +226,28 @@ def _service_factory(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE
             "googleapiclient is not importable",
             context={"dependency": "google-api-python-client"},
             translated_message="adapters.outbound.storage.google_drive.errors.googleapiclient_import_failed",
-            precondition_verdict=_drive_external_verdict(
+            precondition_verdict=drive_external_verdict(
                 DriveStoragePreconditionCondition.API_CLIENT_AVAILABLE,
                 facts={"component": "discovery", "client_available": False},
                 outcome=NoRecoveryOutcome.SAFETY,
             ),
         ) from exc
     return build("drive", "v3", credentials=credentials, cache_discovery=False)
+
+
+def _listed_drive_files(response: object) -> list[dict[str, object]]:
+    """Return the ``files`` rows of a Drive ``list`` response as string-keyed entries.
+
+    The discovery client hands back an untyped JSON mapping. A row that is not
+    a string-keyed object cannot carry the ``id``/``name``/``appProperties``
+    fields every caller reads, so it is not a Drive file for our purposes.
+    """
+    if not is_object_dict(response):
+        return []
+    raw_files = response.get("files")
+    if not is_object_list(raw_files):
+        return []
+    return [entry for entry in raw_files if is_str_keyed_dict(entry)]
 
 
 def _is_owned_drive_match(entry: dict[str, object], *, prefix: str, object_key_hmac: str) -> bool:
@@ -240,7 +263,7 @@ def _is_owned_drive_match(entry: dict[str, object], *, prefix: str, object_key_h
     if not (name.startswith(f"{prefix}--") and name.endswith(_FILE_EXTENSION)):
         return False
     app_properties = entry.get("appProperties")
-    if not isinstance(app_properties, Mapping):
+    if not is_object_mapping(app_properties):
         return False
     ownership = app_properties.get(_OWNERSHIP_KEY)
     stored_hmac = app_properties.get("object_key_hmac")
@@ -255,7 +278,9 @@ def _is_owned_drive_match(entry: dict[str, object], *, prefix: str, object_key_h
 class GoogleDriveProvider:
     """Bytes-in / bytes-out :class:`StorageProvider` backed by Google Drive v3."""
 
-    def __init__(self, *, credentials: object, root_folder_id: str, vault_folder_name: str | None = None) -> None:
+    def __init__(
+        self, *, credentials: Credentials, root_folder_id: str, vault_folder_name: str | None = None
+    ) -> None:
         """Initialise the provider with credentials and the root Drive folder.
 
         Args:
@@ -337,7 +362,6 @@ class GoogleDriveProvider:
     # googleapiclient.discovery.build() returns an untyped Resource object; no
     # stub narrows the concrete type.
     def _execute(self, request: Any, *, action: str) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY
-        translated_error: OutboundStorageError | None = None
         try:
             return request.execute()
         except OutboundStorageError:
@@ -351,18 +375,7 @@ class GoogleDriveProvider:
                 type(exc).__name__,
             )
             translated_error = _translate_http_error(exc, action=action)
-        if translated_error is not None:
-            raise translated_error
-        raise OutboundStorageNetworkError(
-            "drive request failed without translated error",
-            context={"action": action, "status": "unknown"},
-            translated_message="adapters.outbound.storage.google_drive.errors.request_failed",
-            precondition_verdict=_drive_external_verdict(
-                DriveStoragePreconditionCondition.REQUEST_TRANSPORT_AVAILABLE,
-                facts={"operation": action, "status": "unknown", "transport_available": False},
-                outcome=NoRecoveryOutcome.SAFETY,
-            ),
-        )
+        raise translated_error
 
     def _resolve_vault_folder(self) -> str:
         """Resolve or create the configured vault folder under ``root_folder_id``.
@@ -392,8 +405,7 @@ class GoogleDriveProvider:
             if page_token is not None:
                 kwargs["pageToken"] = page_token
             response = self._execute(service.files().list(**kwargs), action="resolve_vault_folder")
-            files = response.get("files", []) if isinstance(response, dict) else []
-            for entry in files:
+            for entry in _listed_drive_files(response):
                 if entry.get("mimeType") != _FOLDER_MIME:
                     raise OutboundStorageValidationError(
                         "configured Drive root contains a vault-name entry that is not a folder",
@@ -409,7 +421,7 @@ class GoogleDriveProvider:
                 self._vault_folder_id = str(entry["id"])
                 return self._vault_folder_id
             page_token = next_drive_page_token(
-                response.get("nextPageToken") if isinstance(response, dict) else None,
+                response.get("nextPageToken") if is_object_dict(response) else None,
                 seen_tokens=seen_tokens,
                 action="resolve_vault_folder",
             )
@@ -426,12 +438,12 @@ class GoogleDriveProvider:
             service.files().create(body=body, fields="id,appProperties"),
             action="create_vault_folder",
         )
-        if not isinstance(created, dict) or "id" not in created:
+        if not is_object_dict(created) or "id" not in created:
             raise OutboundStorageNetworkError(
                 "drive create_vault_folder returned no id",
                 context={"response": str(created)},
                 translated_message="adapters.outbound.storage.google_drive.errors.create_vault_folder_no_id",
-                precondition_verdict=_drive_external_verdict(
+                precondition_verdict=drive_external_verdict(
                     DriveStoragePreconditionCondition.RESPONSE_IDENTIFIER_PRESENT,
                     facts={
                         "operation": "create_vault_folder",
@@ -446,7 +458,7 @@ class GoogleDriveProvider:
 
     # ADAPTER-INTERNAL-ALIAS-RATIONALE-DRIVE-ENTRY: raw Google Drive API file
     # resource (untyped googleapiclient dict); narrowed via explicit key access.
-    def _verify_ownership_or_adopt(self, entry: dict[str, Any], *, kind: str) -> None:
+    def _verify_ownership_or_adopt(self, entry: dict[str, object], *, kind: str) -> None:
         """Refuse to adopt a foreign Drive folder; auto-stamp our own.
 
         - If the entry carries ``appProperties.cadrumo_vault_app=cadrumo``, treat it as ours (no-op).
@@ -461,7 +473,8 @@ class GoogleDriveProvider:
             OutboundStorageConflictError: When the entry has appProperties that
                 do not include our ownership marker.
         """
-        existing = entry.get("appProperties") or {}
+        raw_properties = entry.get("appProperties")
+        existing: dict[str, object] = raw_properties if is_str_keyed_dict(raw_properties) else {}
         existing_value = existing.get(_OWNERSHIP_KEY)
         if existing_value == _OWNERSHIP_VALUE:
             return
@@ -487,7 +500,7 @@ class GoogleDriveProvider:
                 "ownership_value": _OWNERSHIP_VALUE,
             },
             translated_message="adapters.outbound.storage.google_drive.errors.folder_not_owned",
-            precondition_verdict=_drive_external_verdict(
+            precondition_verdict=drive_external_verdict(
                 DriveStoragePreconditionCondition.OWNERSHIP_ALIGNED,
                 facts={"ownership_aligned": False},
                 outcome=NoRecoveryOutcome.OPERATOR_DECISION,
@@ -518,14 +531,13 @@ class GoogleDriveProvider:
             if page_token is not None:
                 kwargs["pageToken"] = page_token
             response = self._execute(service.files().list(**kwargs), action=action)
-            files = response.get("files", []) if isinstance(response, dict) else []
-            for entry in files:
+            for entry in _listed_drive_files(response):
                 self._verify_ownership_or_adopt(entry, kind=f"namespace:{namespace}")
                 folder_id = str(entry["id"])
                 self._namespace_folder_ids[namespace] = folder_id
                 return folder_id
             page_token = next_drive_page_token(
-                response.get("nextPageToken") if isinstance(response, dict) else None,
+                response.get("nextPageToken") if is_object_dict(response) else None,
                 seen_tokens=seen_tokens,
                 action=action,
             )
@@ -543,12 +555,12 @@ class GoogleDriveProvider:
             service.files().create(body=body, fields="id,appProperties"),
             action=f"create_namespace_{namespace}",
         )
-        if not isinstance(created, dict) or "id" not in created:
+        if not is_object_dict(created) or "id" not in created:
             raise OutboundStorageNetworkError(
                 f"drive create_namespace_{namespace} returned no id",
                 context={"response": str(created)},
                 translated_message="adapters.outbound.storage.google_drive.errors.create_namespace_no_id",
-                precondition_verdict=_drive_external_verdict(
+                precondition_verdict=drive_external_verdict(
                     DriveStoragePreconditionCondition.RESPONSE_IDENTIFIER_PRESENT,
                     facts={
                         "operation": "create_namespace",
@@ -590,12 +602,11 @@ class GoogleDriveProvider:
             if page_token is not None:
                 kwargs["pageToken"] = page_token
             response = self._execute(service.files().list(**kwargs), action="find_file")
-            files = response.get("files", []) if isinstance(response, dict) else []
-            for entry in files:
+            for entry in _listed_drive_files(response):
                 if _is_owned_drive_match(entry, prefix=prefix, object_key_hmac=object_key_hmac):
                     return entry
             page_token = next_drive_page_token(
-                response.get("nextPageToken") if isinstance(response, dict) else None,
+                response.get("nextPageToken") if is_object_dict(response) else None,
                 seen_tokens=seen_tokens,
                 action="find_file",
             )
@@ -709,19 +720,19 @@ class GoogleDriveProvider:
             )
             action = "files.update"
         response = self._execute(request, action=action)
-        if not isinstance(response, dict):
+        if not is_str_keyed_dict(response):
             raise OutboundStorageNetworkError(
                 "drive write returned non-dict response",
                 context={"action": action, "response": str(response)},
                 translated_message="adapters.outbound.storage.google_drive.errors.write_non_dict_response",
-                precondition_verdict=_drive_external_verdict(
+                precondition_verdict=drive_external_verdict(
                     DriveStoragePreconditionCondition.RESPONSE_MAPPING,
                     facts={"operation": action, "response_mapping": False},
                     outcome=NoRecoveryOutcome.OPERATOR_DECISION,
                 ),
             )
 
-        return _metadata_from_drive_entry(response, namespace=namespace_clean, object_key_hmac=hmac_clean)
+        return metadata_from_drive_entry(response, namespace=namespace_clean, object_key_hmac=hmac_clean)
 
     def get(self, namespace: str, object_key_hmac: str) -> tuple[bytes, ProviderObjectMetadata]:
         """Download the object, verify the stored hash, and return payload metadata.
@@ -764,7 +775,7 @@ class GoogleDriveProvider:
                 "namespace is not present in Drive",
                 context={"namespace": namespace_clean},
                 translated_message="adapters.outbound.storage.google_drive.errors.namespace_not_found",
-                precondition_verdict=_drive_external_verdict(
+                precondition_verdict=drive_external_verdict(
                     DriveStoragePreconditionCondition.NAMESPACE_PRESENT,
                     facts={"operation": "get", "namespace_present": False},
                     outcome=NoRecoveryOutcome.OPERATOR_DECISION,
@@ -776,7 +787,7 @@ class GoogleDriveProvider:
                 "object is not present in Drive namespace",
                 context={"namespace": namespace_clean, "object_key_hmac": hmac_clean},
                 translated_message="adapters.outbound.storage.google_drive.errors.object_not_found",
-                precondition_verdict=_drive_external_verdict(
+                precondition_verdict=drive_external_verdict(
                     DriveStoragePreconditionCondition.OBJECT_PRESENT,
                     facts={"operation": "get", "object_present": False},
                     outcome=NoRecoveryOutcome.OPERATOR_DECISION,
@@ -805,7 +816,7 @@ class GoogleDriveProvider:
                 "drive files.get_media returned non-bytes payload",
                 context={"payload_type": type(payload).__name__},
                 translated_message="adapters.outbound.storage.google_drive.errors.media_non_bytes",
-                precondition_verdict=_drive_external_verdict(
+                precondition_verdict=drive_external_verdict(
                     DriveStoragePreconditionCondition.MEDIA_PAYLOAD_BYTES,
                     facts={
                         "operation": "files.get_media",
@@ -816,14 +827,14 @@ class GoogleDriveProvider:
                 ),
             )
 
-        stored_hash = _drive_storage_content_hash(entry)
+        stored_hash = drive_storage_content_hash(entry)
         require_full_sha256_content_hash(
             stored_hash,
             message="drive object metadata does not carry a full SHA-256 content hash",
             context={"provider_object_id": str(entry.get("id", ""))},
             translated_message="adapters.outbound.storage.google_drive.errors.content_hash_mismatch",
         )
-        metadata = _metadata_from_drive_entry(
+        metadata = metadata_from_drive_entry(
             entry,
             namespace=namespace_clean,
             object_key_hmac=hmac_clean,
@@ -910,14 +921,13 @@ class GoogleDriveProvider:
             if page_token is not None:
                 kwargs["pageToken"] = page_token
             response = self._execute(service.files().list(**kwargs), action="iter_namespaces")
-            files = response.get("files", []) if isinstance(response, dict) else []
-            for entry in files:
+            for entry in _listed_drive_files(response):
                 name = str(entry.get("name", ""))
                 if name:
                     self._namespace_folder_ids[name] = str(entry["id"])
                     yield name
             page_token = next_drive_page_token(
-                response.get("nextPageToken") if isinstance(response, dict) else None,
+                response.get("nextPageToken") if is_object_dict(response) else None,
                 seen_tokens=seen_tokens,
                 action="iter_namespaces",
             )
@@ -957,7 +967,7 @@ class GoogleDriveProvider:
                 "namespace is not present in Drive",
                 context={"namespace": namespace_clean},
                 translated_message="adapters.outbound.storage.google_drive.errors.namespace_not_found",
-                precondition_verdict=_drive_external_verdict(
+                precondition_verdict=drive_external_verdict(
                     DriveStoragePreconditionCondition.NAMESPACE_PRESENT,
                     facts={"operation": "iter_objects", "namespace_present": False},
                     outcome=NoRecoveryOutcome.OPERATOR_DECISION,
@@ -975,19 +985,18 @@ class GoogleDriveProvider:
             if page_token is not None:
                 kwargs["pageToken"] = page_token
             response = self._execute(service.files().list(**kwargs), action="iter_objects")
-            files = response.get("files", []) if isinstance(response, dict) else []
-            for entry in files:
+            for entry in _listed_drive_files(response):
                 name = str(entry.get("name", ""))
                 if not name.endswith(_FILE_EXTENSION) or "--" not in name:
                     continue
-                app_properties = _drive_storage_app_properties(entry)
-                yield _metadata_from_drive_entry(
+                app_properties = drive_storage_app_properties(entry)
+                yield metadata_from_drive_entry(
                     entry,
                     namespace=namespace_clean,
                     object_key_hmac=app_properties.object_key_hmac,
                 )
             page_token = next_drive_page_token(
-                response.get("nextPageToken") if isinstance(response, dict) else None,
+                response.get("nextPageToken") if is_object_dict(response) else None,
                 seen_tokens=seen_tokens,
                 action="iter_objects",
             )
@@ -1054,7 +1063,7 @@ class GoogleDriveProvider:
                 detail=str(exc),
             )
 
-        if not isinstance(root_check, dict) or root_check.get("trashed", False):
+        if not is_object_dict(root_check) or root_check.get("trashed", False):
             return ProviderProbeReport(
                 provider_kind=ProviderKind.GOOGLE_DRIVE,
                 reachable=True,
@@ -1127,7 +1136,7 @@ def _build_media_body(payload: bytes) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRI
             "googleapiclient.http is not importable",
             context={"dependency": "google-api-python-client"},
             translated_message="adapters.outbound.storage.google_drive.errors.googleapiclient_import_failed",
-            precondition_verdict=_drive_external_verdict(
+            precondition_verdict=drive_external_verdict(
                 DriveStoragePreconditionCondition.API_CLIENT_AVAILABLE,
                 facts={"component": "media_upload", "client_available": False},
                 outcome=NoRecoveryOutcome.SAFETY,

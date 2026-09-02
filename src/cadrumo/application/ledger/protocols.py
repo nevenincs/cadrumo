@@ -21,7 +21,7 @@ class FinancialProviderProtocol(Protocol):
 
     Covers exactly the two methods called by the ledger import service:
     :meth:`ingest` and :meth:`validate_source`.  Adapter-internal helpers
-    (``_build_provenance``, ``_read_source_bytes``, etc.) remain private
+    (``build_provenance``, ``_read_source_bytes``, etc.) remain private
     to the adapter implementation.
     """
 

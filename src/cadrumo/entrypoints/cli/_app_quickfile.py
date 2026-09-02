@@ -21,7 +21,7 @@ from pathlib import Path
 
 import typer
 
-from ...application.modelo.quickfile import QuickfileCommand, run_modelo_quickfile
+from ...application.modelo.quickfile import QuickfileCommand, QuickfileResult, run_modelo_quickfile
 from ...application.workflow.persistence import workflow_state_repository
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
@@ -32,10 +32,10 @@ from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ._app_quickfile_payloads import QuickfileResultPayload
 from ._common import (
-    _filing_taxpayer_or_refuse,
-    _no_active_profile_refusal,
     activate_subcommand_output_language,
     emit_envelope,
+    filing_taxpayer_or_refuse,
+    no_active_profile_refusal,
 )
 from ._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
 from ._modelo_cli_support import unsupported_local_work_period_refusal, work_calculate_input_bundle_from_cli
@@ -48,7 +48,7 @@ def _require_active_profile() -> str:
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
-        raise _no_active_profile_refusal()
+        raise no_active_profile_refusal()
     return bucket_id
 
 
@@ -93,7 +93,7 @@ def quickfile(
     resolved_period = _resolve_period(modelo=modelo, year=year, period=period)
     resolved_year = resolved_period.filing_year
     resolved_actor = actor or "operator"
-    workflow_profile = _filing_taxpayer_or_refuse(workflow_state_repository().load())
+    workflow_profile = filing_taxpayer_or_refuse(workflow_state_repository().load())
     filing_instance_evidence = m303_filing_instance_evidence_from_cli(
         modelo=modelo,
         period=resolved_period,
@@ -149,7 +149,7 @@ def quickfile(
         raise typer.Exit(code=1)
 
 
-def _quickfile_lines(result) -> list[str]:
+def _quickfile_lines(result: QuickfileResult) -> list[str]:
     """Render the per-stage progress block for text mode."""
     lines = [
         "operation\tquickfile",
@@ -174,7 +174,7 @@ def _quickfile_lines(result) -> list[str]:
     return lines
 
 
-def _quickfile_notices(result) -> list[Notice]:
+def _quickfile_notices(result: QuickfileResult) -> list[Notice]:
     """Surface each non-OK stage as a warning notice on the shared channel.
 
     A refused verify additionally re-uses the verification report's own findings

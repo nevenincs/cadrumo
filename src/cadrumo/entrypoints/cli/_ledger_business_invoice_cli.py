@@ -39,10 +39,10 @@ from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.schema import IvaCategory
-from ._common import _bad, emit_envelope
 from ._common import (
     active_bucket_id_or_refuse as _business_invoice_bucket_id,
 )
+from ._common import bad, emit_envelope
 from ._date_parsing import _parse_iso_date
 from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
 from ._ledger_catalogue_invoice_payloads import (
@@ -54,7 +54,7 @@ from ._ledger_catalogue_invoice_payloads import (
     CatalogueInvoiceViewResult,
     CatalogueInvoiceWizardResult,
 )
-from ._ledger_support import _ledger_invoice_validation_no_recovery
+from ._ledger_support import ledger_invoice_validation_no_recovery
 
 _OPERATION_TYPE_TO_IVA_CATEGORY: dict[IntracomOperationType, IvaCategory] = {
     IntracomOperationType.E: IvaCategory.INTRA_COMMUNITY_SUPPLY,
@@ -133,7 +133,7 @@ def _wire_scalar(value: object) -> object:
     return value
 
 
-def _catalogue_invoice_shared_fields(invoice) -> dict[str, object]:
+def catalogue_invoice_shared_fields(invoice: Invoice) -> dict[str, object]:
     """Project the :class:`Invoice` identity/total fields in their string wire form.
 
     Consumed by the evidence-confirm verb, whose envelope is all-``str``. Shares
@@ -143,10 +143,10 @@ def _catalogue_invoice_shared_fields(invoice) -> dict[str, object]:
     return {name: _wire_scalar(getattr(invoice, name)) for name in _SHARED_INVOICE_FIELDS}
 
 
-def _catalogue_invoice_payload(invoice) -> dict[str, object]:
+def _catalogue_invoice_payload(invoice: Invoice) -> dict[str, object]:
     """Project the :class:`Invoice` in native typed form for the catalogue envelopes.
 
-    Same field set as :func:`_catalogue_invoice_shared_fields` plus the two
+    Same field set as :func:`catalogue_invoice_shared_fields` plus the two
     fields only the catalogue surface carries; values stay native because
     :class:`CatalogueInvoiceRecordPayload` is strict and declares real
     ``Decimal`` / ``date`` / enum types.
@@ -213,7 +213,7 @@ def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
     ]
 
 
-def _catalogue_invoice_lines(invoice) -> list[str]:
+def _catalogue_invoice_lines(invoice: Invoice) -> list[str]:
     return [
         f"invoice_id\t{invoice.invoice_id}",
         f"kind\t{invoice.kind.value}",
@@ -328,7 +328,7 @@ def invoice_add(
         )
         result = create_catalogue_invoice(invoice=invoice)
     except (InvoiceValidationError, ValidationError) as exc:
-        if (refusal := _ledger_invoice_validation_no_recovery(exc)) is not None:
+        if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:
             raise refusal from None
         raise
 
@@ -402,7 +402,7 @@ def invoice_wizard(
             retention_amount=retention_amount,
         )
     except (InvoiceValidationError, ValidationError) as exc:
-        if (refusal := _ledger_invoice_validation_no_recovery(exc)) is not None:
+        if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:
             raise refusal from None
         raise
 
@@ -456,7 +456,7 @@ def invoice_import(
     """
     bucket_id = _business_invoice_bucket_id()
     if not file.exists():
-        raise _bad(
+        raise bad(
             tr("cli.app.ledger.invoice.import_file_not_found", path=str(file)),
         )
     try:
@@ -469,7 +469,7 @@ def invoice_import(
             declared_country=country.strip().upper() if country else None,
         )
     except (InvoiceValidationError, ValidationError) as exc:
-        if (refusal := _ledger_invoice_validation_no_recovery(exc)) is not None:
+        if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:
             raise refusal from None
         raise
 
@@ -670,7 +670,7 @@ def invoice_remove(
     write rides the sanctioned :class:`InvoiceCatalogueRepository`.
     """
     if not yes:
-        raise _bad(
+        raise bad(
             tr("cli.app.ledger.invoice.yes_required"),
         )
     bucket_id = _business_invoice_bucket_id()
@@ -724,7 +724,7 @@ def invoice_update(
     try:
         result = update_catalogue_invoice(bucket_id=bucket_id, invoice_id=invoice_id, patch=patch)
     except (InvoiceValidationError, ValidationError) as exc:
-        if (refusal := _ledger_invoice_validation_no_recovery(exc)) is not None:
+        if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:
             raise refusal from None
         raise
 

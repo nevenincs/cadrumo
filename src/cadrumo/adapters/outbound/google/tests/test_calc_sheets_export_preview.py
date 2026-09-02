@@ -22,7 +22,7 @@ import pytest
 from .....application.storage.calc_sheets.engine import build_export_plan
 from .....domain.calculations.registry.authority import bundled_authority
 from .._calc_sheets_apply_values import (
-    _build_formula_data,
+    build_formula_data,
     changed_cell_addresses,
     payload_written_addresses,
     stale_addresses,
@@ -189,7 +189,7 @@ class TestPreviewComputationReusesTheRealAdaptersOwnDiffPrimitives:
 
     def test_a_preview_against_content_already_matching_the_plan_clears_nothing(self) -> None:
         plan = _m130_plan()
-        payload = _plan_value_payload(plan) + _build_formula_data(plan.formula_cells)
+        payload = _plan_value_payload(plan) + build_formula_data(plan.formula_cells)
         written = payload_written_addresses(payload)
 
         # "Occupied" == "written" is exactly the re-apply-the-same-plan case

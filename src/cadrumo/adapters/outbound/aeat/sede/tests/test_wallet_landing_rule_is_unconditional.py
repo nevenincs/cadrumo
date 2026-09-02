@@ -13,7 +13,7 @@ its sibling branches unguarded.
 That is what this gate adds, for the one function where it mattered.
 ``_submit_wallet_execute_gate_if_present`` is the funnel both wallet
 traversals reach, and its landing rule used to sit inside the
-``wallet-execute-submit-present`` arm. ``_wallet_execute_gate_status``
+``wallet-execute-submit-present`` arm. ``wallet_execute_gate_status``
 returns four values, so the other three -- ``no-wallet-form`` above all,
 what a page carrying no wallet form yields, including AEAT's
 acting-capacity gate -- returned having run no landing rule. The parser

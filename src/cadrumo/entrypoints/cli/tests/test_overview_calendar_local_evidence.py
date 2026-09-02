@@ -20,7 +20,7 @@ from ....domain.modelos.filing_repository import upsert_filing_record
 from ....tests import FIXTURES_DIR
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
-from .._overview import _local_calendar_filing_evidence
+from .._overview import local_calendar_filing_evidence
 from ._overview_calendar_support import (
     _SOURCE_URL,
     PRIMARY_PROFILE_ID,
@@ -161,9 +161,9 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
         register_minimal_profile(profile_id=_SECOND_PROFILE_ID, display_name="Second Operator")
 
     with open_test_profile_session(_SECOND_PROFILE_ID):
-        second_evidence, _second_notice = _local_calendar_filing_evidence(_SECOND_PROFILE_ID, ())
+        second_evidence, _second_notice = local_calendar_filing_evidence(_SECOND_PROFILE_ID, ())
     with open_test_profile_session(PRIMARY_PROFILE_ID):
-        operator_evidence, _operator_notice = _local_calendar_filing_evidence(
+        operator_evidence, _operator_notice = local_calendar_filing_evidence(
             PRIMARY_PROFILE_ID,
             (),
             expected_tax_id="X1234567L",
@@ -230,7 +230,7 @@ def test_local_calendar_filing_evidence_requires_parseable_matching_filed_justif
             ),
         )
 
-        evidence, _notice = _local_calendar_filing_evidence(
+        evidence, _notice = local_calendar_filing_evidence(
             PRIMARY_PROFILE_ID,
             (),
             expected_tax_id="00000000T",
@@ -261,7 +261,7 @@ def test_local_calendar_filing_evidence_resolves_persisted_justificante_metadata
         repo.save(upsert_filing_record(repo.load(), _modelo_record_with_external_justificante(csv=csv)))
         JustificanteRepository().save(_justificante_metadata(csv=csv))
 
-        evidence, _notice = _local_calendar_filing_evidence(
+        evidence, _notice = local_calendar_filing_evidence(
             PRIMARY_PROFILE_ID,
             (),
             expected_tax_id="X1234567L",

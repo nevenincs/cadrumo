@@ -32,14 +32,14 @@ from .....application.storage.calc_sheets.workbook_export import guide_stamps, s
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .._calc_sheets_apply_formatting import (
-    _build_emphasis_format_requests,
-    _build_number_format_requests,
+    build_emphasis_format_requests,
+    build_number_format_requests,
 )
 from .._calc_sheets_apply_values import (
-    _build_evidence_value_data,
-    _build_formula_data,
-    _build_guide_value_data,
-    _build_value_data,
+    build_evidence_value_data,
+    build_formula_data,
+    build_guide_value_data,
+    build_value_data,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -110,8 +110,8 @@ def test_value_and_formula_cells_render_identically_offline_and_online() -> None
     plan = _plan()
     workbook = load_workbook(BytesIO(serialize_offline_workbook(plan)), data_only=False)
 
-    online_values = {entry["range"]: entry["values"][0][0] for entry in _build_value_data(plan.value_cells)}
-    online_formulas = {entry["range"]: entry["values"][0][0] for entry in _build_formula_data(plan.formula_cells)}
+    online_values = {entry["range"]: entry["values"][0][0] for entry in build_value_data(plan.value_cells)}
+    online_formulas = {entry["range"]: entry["values"][0][0] for entry in build_formula_data(plan.formula_cells)}
 
     for cell in plan.value_cells:
         addr = cell.address.qualified()
@@ -148,12 +148,12 @@ def test_apply_adapter_emits_number_format_and_emphasis_requests() -> None:
         },
     )
     sheet_id_by_tab = {tab.value: index for index, tab in enumerate(TabName)}
-    number_requests = _build_number_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+    number_requests = build_number_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
     assert number_requests, "money casilla must yield a numberFormat request"
     fmt = number_requests[0]["repeatCell"]["cell"]["userEnteredFormat"]["numberFormat"]
     assert fmt == {"type": "NUMBER", "pattern": "#,##0.00"}
 
-    emphasis = _build_emphasis_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+    emphasis = build_emphasis_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
     assert emphasis, "section headers / anchors must yield bold requests"
     assert emphasis[0]["repeatCell"]["cell"]["userEnteredFormat"]["textFormat"]["bold"] is True
 
@@ -174,7 +174,7 @@ def test_guide_stamps_conform_offline_and_online() -> None:
     plan = _plan()
     workbook = load_workbook(BytesIO(serialize_offline_workbook(plan)), data_only=False)
     sheet = workbook[TabName.GUIDE.value]
-    online = {entry["range"]: entry["values"][0] for entry in _build_guide_value_data(plan)}
+    online = {entry["range"]: entry["values"][0] for entry in build_guide_value_data(plan)}
 
     tab = TabName.GUIDE.value
     base_row = 3 + len(plan.guide.paragraphs) + 2
@@ -207,7 +207,7 @@ def test_evidence_surface_conforms_offline_and_online() -> None:
     plan = _plan()
     workbook = load_workbook(BytesIO(serialize_offline_workbook(plan)), data_only=False)
     sheet = workbook[TabName.EVIDENCIA.value]
-    online = {entry["range"]: entry["values"][0] for entry in _build_evidence_value_data(plan)}
+    online = {entry["range"]: entry["values"][0] for entry in build_evidence_value_data(plan)}
 
     tab = TabName.EVIDENCIA.value
     # Fingerprint banner + header + the one contributor row conform cell-for-cell.

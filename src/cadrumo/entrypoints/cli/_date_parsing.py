@@ -14,7 +14,7 @@ from __future__ import annotations
 from datetime import date as _date
 
 from ...core.i18n.render import tr
-from ._common import _bad
+from ._common import bad
 
 __all__ = ["_parse_iso_date", "_parse_iso_date_str", "_parse_optional_iso_date_str"]
 
@@ -39,12 +39,12 @@ def _parse_iso_date(
     try:
         parsed = parse_iso8601_date(raw.strip())
     except ValueError as exc:
-        raise _bad(message) from exc
+        raise bad(message) from exc
     if parsed is None:
         # ``parse_iso8601_date`` treats a blank/empty string as "absent" and
         # returns ``None`` rather than raising; this gate requires a value,
         # so blank input refuses with the same message as a malformed one.
-        raise _bad(message)
+        raise bad(message)
     return parsed
 
 

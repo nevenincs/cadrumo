@@ -80,7 +80,7 @@ from ._clave_provider_common import (
 )
 from ._session_probe import run_authenticated_landing_probe
 from .authenticator import AEAT_SESSION_IDLE_TTL
-from .browser_lifecycle import _CloseIntentBarrier
+from .browser_lifecycle import CloseIntentBarrier
 from .clave_movil_metadata import ClaveMovilSessionMetadata
 from .clave_movil_support import (
     ClaveMovilApprovalTimeoutError,
@@ -143,7 +143,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         self._settings = settings
         self._browser_session_factory = browser_session_factory
         self._navigation_timeout_ms = navigation_timeout_ms
-        self._lifecycle = _CloseIntentBarrier()
+        self._lifecycle = CloseIntentBarrier()
         self._browser_session: BrowserSessionPort | None = None
         self._context: BrowserContextPort | None = None
         self.active_session: AeatSession | None = None

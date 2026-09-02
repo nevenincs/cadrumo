@@ -32,8 +32,8 @@ from .....application.storage.calc_sheets.theme import STYLED_RANGE_VERTICAL_ALI
 from .....application.storage.calc_sheets.workbook_export import serialize_offline_workbook
 from .....domain.calculations.registry.authority import bundled_authority
 from .._calc_sheets_apply_formatting import (
-    _build_protected_range_requests,
-    _build_styled_range_requests,
+    build_protected_range_requests,
+    build_styled_range_requests,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -67,7 +67,7 @@ def _require_concrete_bounds(
 def test_every_styled_range_carries_vertical_alignment_online() -> None:
     plan = _plan()
 
-    requests = _build_styled_range_requests(plan, sheet_id_by_tab=_sheet_ids(plan))
+    requests = build_styled_range_requests(plan, sheet_id_by_tab=_sheet_ids(plan))
 
     assert requests, "no styled repeatCell requests were generated"
     for request in requests:
@@ -91,7 +91,7 @@ def test_the_two_transports_protect_the_same_tabs() -> None:
     sheet_ids = _sheet_ids(plan)
     tab_by_sheet_id = {sheet_id: tab for tab, sheet_id in sheet_ids.items()}
 
-    requests = _build_protected_range_requests(plan.protected_ranges, sheet_id_by_tab=sheet_ids)
+    requests = build_protected_range_requests(plan.protected_ranges, sheet_id_by_tab=sheet_ids)
     online_tabs = {
         tab_by_sheet_id[request["addProtectedRange"]["protectedRange"]["range"]["sheetId"]] for request in requests
     }

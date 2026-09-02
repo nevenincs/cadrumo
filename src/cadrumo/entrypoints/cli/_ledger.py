@@ -37,10 +37,11 @@ from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, is_classified
 from ...domain.transactions.errors import TransactionIdPrefixError, TransactionValidationError
-from ._common import _bad, _profile_to_taxpayer, _state, _tx_repo, emit_envelope
+from ._common import bad, current_workflow_state, emit_envelope, profile_to_taxpayer, transaction_catalogue_repo
 from ._date_parsing import _parse_iso_date
 from ._ledger_classify_cli import ledger_classify_bulk_csv, require_single_ledger_classification_request
 from ._ledger_llm_cli import (
+    LedgerLlmRouteArguments,
     dispatch_autosplit,
     ledger_classify_llm,
     ledger_operator_iva_derive,
@@ -48,20 +49,20 @@ from ._ledger_llm_cli import (
 )
 from ._ledger_m210_classify_cli import M210LedgerClassifyOptions
 from ._ledger_support import (
-    _emit_update_result,
-    _invoice_link_error_bad_parameter,
-    _ledger_cli_no_recovery,
-    _ledger_transaction_validation_no_recovery,
-    _ledger_validation_bad,
-    _parse_amount_magnitude,
-    _parse_decimal,
-    _parse_required_decimal,
-    _resolve_business_pct_with_censo,
-    _resolve_id,
-    _resolve_source_jurisdiction,
-    _TransactionRepo,
-    _validate_business_pct_range,
-    _validate_category_id,
+    TransactionRepo,
+    emit_update_result,
+    invoice_link_error_bad_parameter,
+    ledger_cli_no_recovery,
+    ledger_transaction_validation_no_recovery,
+    ledger_validation_bad,
+    parse_amount_magnitude,
+    parse_decimal_option,
+    parse_required_decimal,
+    resolve_business_pct_with_censo,
+    resolve_id,
+    resolve_source_jurisdiction,
+    validate_business_pct_range,
+    validate_category_id,
 )
 from .ledger_lifecycle_cli import (
     ledger_archive,
@@ -90,12 +91,12 @@ __all__ = [
 ]
 
 
-def _resolve_read_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
+def resolve_read_id(transaction_repository: TransactionRepo, prefix: str) -> str:
     """Resolve a CLI-supplied id for the *read* verbs, following edit lineage.
 
     This is the D3 stable-lineage-handle resolution path for
     ``ledger history`` / ``view`` / ``track``. It first resolves ``prefix``
-    against live catalogue ids exactly as :func:`_resolve_id` does; when no
+    against live catalogue ids exactly as :func:`resolve_id` does; when no
     live row matches, it walks the edit-lineage chain so a superseded
     (pre-``update``) id written down by the operator still resolves to the
     current row — see
@@ -105,17 +106,17 @@ def _resolve_read_id(transaction_repository: _TransactionRepo, prefix: str) -> s
     """
     if not isinstance(transaction_repository, TransactionCatalogueRepository):
         # Read verbs always receive a real catalogue repository through
-        # _tx_repo; the structural Protocol is only used by mutation
+        # transaction_catalogue_repo; the structural Protocol is only used by mutation
         # helpers. Fall back to the live-id resolver if a non-catalogue
         # repository is ever supplied so the read path never crashes.
-        return _resolve_id(transaction_repository, prefix)
+        return resolve_id(transaction_repository, prefix)
     catalogue = transaction_repository.load()
     try:
         return resolve_lineage_transaction_id(prefix, catalogue)
     except TransactionIdPrefixError as exc:
         from ...application.cli_exception_preconditions import CliExceptionPrecondition
 
-        raise _ledger_cli_no_recovery(
+        raise ledger_cli_no_recovery(
             exc,
             condition=CliExceptionPrecondition.LEDGER_TRANSACTION_ID_RESOLVES,
             facts={"transaction_id_resolves": False},
@@ -250,21 +251,21 @@ def ledger_add(
         # produced by the classification pipeline, never assigned by hand. A new
         # row is BUSINESS, PERSONAL, MIXED, or left at the NOT_YET_PROCESSED
         # default; refuse the internal states instructively.
-        raise _bad(
+        raise bad(
             tr("cli.ledger.add.system_state_not_assignable", value=business_classification.value),
         )
-    current_state = _state()
-    transaction_repository = _tx_repo(current_state)
-    validated_category_id = _validate_category_id(category_id)
-    resolved_business_pct = _resolve_business_pct_with_censo(
+    current_state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(current_state)
+    validated_category_id = validate_category_id(category_id)
+    resolved_business_pct = resolve_business_pct_with_censo(
         bucket_id=transaction_repository.bucket_id,
         active_profile=resolve_active_bucket_id(),
         category_id=validated_category_id,
-        operator_supplied=_validate_business_pct_range(_parse_decimal(business_pct, label="business-pct")),
+        operator_supplied=validate_business_pct_range(parse_decimal_option(business_pct, label="business-pct")),
         year=_parse_iso_date(booked_date, label="date").year,
     )
-    active_taxpayer = _profile_to_taxpayer(current_state)
-    resolved_source_jurisdiction = _resolve_source_jurisdiction(
+    active_taxpayer = profile_to_taxpayer(current_state)
+    resolved_source_jurisdiction = resolve_source_jurisdiction(
         source_jurisdiction,
         fiscal_residency=active_taxpayer.fiscal_residency,
         irpf_special_regime=active_taxpayer.irpf_special_regime,
@@ -274,7 +275,7 @@ def ledger_add(
             bucket_id=transaction_repository.bucket_id,
             booked_date=_parse_iso_date(booked_date, label="date"),
             value_date=_parse_iso_date(value_date, label="value-date") if value_date is not None else None,
-            amount=_parse_amount_magnitude(amount),
+            amount=parse_amount_magnitude(amount),
             currency=currency,
             direction=direction,
             counterparty=counterparty,
@@ -282,14 +283,14 @@ def ledger_add(
             business_classification=business_classification,
             business_pct=resolved_business_pct,
             category_id=validated_category_id,
-            taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
-            iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
-            iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
+            taxable_base=parse_decimal_option(taxable_base, label="taxable-base"),
+            iva_rate=parse_decimal_option(iva_rate, label="iva-rate"),
+            iva_amount=parse_decimal_option(iva_amount, label="iva-amount"),
             iva_category=iva_category,
             deduction_fact_kind=deduction_fact_kind,
             counterparty_country=counterparty_country,
             counterparty_identification_state=counterparty_identification_state,
-            recargo_amount=_parse_decimal(recargo_amount, label="recargo-amount"),
+            recargo_amount=parse_decimal_option(recargo_amount, label="recargo-amount"),
             irpf_category=irpf_category,
             usage_ratio_id=usage_ratio_id,
             prorrata_reference=prorrata_reference,
@@ -305,9 +306,9 @@ def ledger_add(
             source_jurisdiction=resolved_source_jurisdiction,
         )
     except ValidationError as exc:
-        raise _ledger_validation_bad(exc) from exc
+        raise ledger_validation_bad(exc) from exc
     except TransactionValidationError as exc:
-        raise _ledger_transaction_validation_no_recovery(exc) from None
+        raise ledger_transaction_validation_no_recovery(exc) from None
     # The gross-invariant (`taxable_base + iva_amount == amount`) and other
     # `Transaction.model_validate` rules fire inside `create_manual_transaction`,
     # raising a pydantic `ValidationError` whose default rendering dumps the full
@@ -328,7 +329,7 @@ def ledger_add(
             currency_normalizer=CurrencyNormalizationService(rate_provider=default_ecb_rate_provider()),
         )
     except ValidationError as exc:
-        raise _ledger_validation_bad(exc) from exc
+        raise ledger_validation_bad(exc) from exc
     from ._ledger_payloads import LedgerAddResult
 
     # An empty bucket_event_ids tuple is the guarded-idempotent no-op signal
@@ -371,7 +372,7 @@ def ledger_add(
     if sector_notice is not None:
         notices.append(sector_notice)
         noop_lines.append(sector_notice.message)
-    _emit_update_result(
+    emit_update_result(
         ctx,
         result.transaction,
         result.ref.bucket_id,
@@ -402,9 +403,9 @@ def ledger_update(
     actor: str | None = None,
 ) -> None:
     """Correct editable transaction facts through the bucket-scoped backend."""
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
+    resolved_id = resolve_id(transaction_repository, transaction_id)
     # A leaked `pydantic.ValidationError` (negative amount, illegal field
     # combination) would be swallowed by the generic CLI boundary into an
     # opaque "config repair" hint. Catch it here and surface the real
@@ -416,14 +417,14 @@ def ledger_update(
             patch=_patch_from_options(
                 booked_date=_parse_iso_date(booked_date, label="date") if booked_date is not None else None,
                 value_date=_parse_iso_date(value_date, label="value-date") if value_date is not None else None,
-                amount=_parse_amount_magnitude(amount) if amount is not None else None,
+                amount=parse_amount_magnitude(amount) if amount is not None else None,
                 direction=direction,
                 currency=currency,
                 counterparty=counterparty,
                 description=description,
-                taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
-                iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
-                iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
+                taxable_base=parse_decimal_option(taxable_base, label="taxable-base"),
+                iva_rate=parse_decimal_option(iva_rate, label="iva-rate"),
+                iva_amount=parse_decimal_option(iva_amount, label="iva-amount"),
                 irpf_category=irpf_category,
                 notes=notes,
                 group_label=group,
@@ -433,10 +434,10 @@ def ledger_update(
             transaction_repository=transaction_repository,
         )
     except ValidationError as exc:
-        raise _ledger_validation_bad(exc) from exc
+        raise ledger_validation_bad(exc) from exc
     from ._ledger_payloads import LedgerUpdateResult
 
-    _emit_update_result(
+    emit_update_result(
         ctx,
         result.transaction,
         result.ref.bucket_id,
@@ -488,7 +489,7 @@ def ledger_classify(
         asset_or_right_id=m210_asset_or_right_id,
     )
     m210_options.refuse_non_direct_routes(
-        llm_requested=llm is not None,
+        llm_requested=llm,
         read_evidence=read_evidence,
         saturate=saturate,
         file=file,
@@ -509,7 +510,7 @@ def ledger_classify(
         )
         return
     if llm or read_evidence:
-        saturate_kwargs = {
+        saturate_kwargs: LedgerLlmRouteArguments = {
             "ctx": ctx,
             "transaction_id": transaction_id,
             "classification": classification,
@@ -537,8 +538,8 @@ def ledger_classify(
             actor=actor,
         )
         return
-    state = _state()
-    transaction_repository = _tx_repo(state)
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
 
     if file is not None:
         ledger_classify_bulk_csv(
@@ -556,8 +557,8 @@ def ledger_classify(
         classification=classification,
         reason=reason,
     )
-    validated_category_id = _validate_category_id(category_id)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    validated_category_id = validate_category_id(category_id)
+    resolved_id = resolve_id(transaction_repository, transaction_id)
     m210_income_classification = m210_options.to_income_classification(
         transaction_repository=transaction_repository,
         transaction_id=resolved_id,
@@ -566,12 +567,12 @@ def ledger_classify(
         # MIXED demands a proportion; surface the `--business-pct` flag
         # directly rather than letting the patch validator's generic
         # message route through the opaque boundary.
-        raise _bad(tr("cli.ledger.classify.mixed_requires_business_pct"))
+        raise bad(tr("cli.ledger.classify.mixed_requires_business_pct"))
     if classification is not BusinessClassification.MIXED and business_pct is not None:
         # `--business-pct` only carries meaning for a MIXED row; a
         # BUSINESS or PERSONAL classification is wholly business or
         # wholly private. Refuse rather than silently dropping it.
-        raise _bad(tr("cli.ledger.classify.business_pct_requires_mixed"))
+        raise bad(tr("cli.ledger.classify.business_pct_requires_mixed"))
     # A leaked `pydantic.ValidationError` (negative `--taxable-base`,
     # an illegal field combination) is otherwise wrapped by the generic
     # CLI boundary into "command input failed validation. Run config
@@ -581,11 +582,11 @@ def ledger_classify(
     try:
         patch = _patch_from_options(
             business_classification=classification,
-            business_pct=_validate_business_pct_range(_parse_decimal(business_pct, label="business-pct")),
+            business_pct=validate_business_pct_range(parse_decimal_option(business_pct, label="business-pct")),
             category_id=validated_category_id,
-            taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
-            iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
-            iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
+            taxable_base=parse_decimal_option(taxable_base, label="taxable-base"),
+            iva_rate=parse_decimal_option(iva_rate, label="iva-rate"),
+            iva_amount=parse_decimal_option(iva_amount, label="iva-amount"),
             irpf_category=irpf_category,
             m210_income_classification=m210_income_classification,
             iva_category=iva_category,
@@ -604,12 +605,12 @@ def ledger_classify(
             transaction_repository=transaction_repository,
         )
     except ValidationError as exc:
-        raise _ledger_validation_bad(exc) from exc
+        raise ledger_validation_bad(exc) from exc
     except TransactionValidationError as exc:
-        raise _ledger_transaction_validation_no_recovery(exc) from None
+        raise ledger_transaction_validation_no_recovery(exc) from None
     from ._ledger_payloads import LedgerClassifySingleResult
 
-    _emit_update_result(
+    emit_update_result(
         ctx,
         result.transaction,
         result.ref.bucket_id,
@@ -630,11 +631,11 @@ def ledger_allocate(
     actor: str | None = None,
 ) -> None:
     """Record business/private proportionality through the ledger backend."""
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    validated_category_id = _validate_category_id(category_id)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
-    parsed_business_pct = _validate_business_pct_range(_parse_required_decimal(business_pct, label="business-pct"))
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
+    validated_category_id = validate_category_id(category_id)
+    resolved_id = resolve_id(transaction_repository, transaction_id)
+    parsed_business_pct = validate_business_pct_range(parse_required_decimal(business_pct, label="business-pct"))
     assert parsed_business_pct is not None
     # The classification follows the proportion: a 100% allocation is
     # BUSINESS, a 0% allocation is PERSONAL, and anything strictly
@@ -665,10 +666,10 @@ def ledger_allocate(
             transaction_repository=transaction_repository,
         )
     except ValidationError as exc:
-        raise _ledger_validation_bad(exc) from exc
+        raise ledger_validation_bad(exc) from exc
     from ._ledger_payloads import LedgerAllocateResult
 
-    _emit_update_result(
+    emit_update_result(
         ctx,
         result.transaction,
         result.ref.bucket_id,
@@ -689,9 +690,9 @@ def ledger_link(
     from ...application.ledger.actions_manual import link_manual_transaction_invoice
     from ...domain.invoices.errors import InvoiceLinkError
 
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
+    resolved_id = resolve_id(transaction_repository, transaction_id)
     bucket_id = transaction_repository.bucket_id
     actor_label = (actor or "operator").strip() or "operator"
 
@@ -702,11 +703,11 @@ def ledger_link(
     invoice_repo = InvoiceCatalogueRepository()
     invoice_record = invoice_repo.load().invoices.get(invoice_id)
     if invoice_record is None:
-        raise _bad(
+        raise bad(
             tr("cli.ledger.link.errors.invoice_not_found"),
         )
     if invoice_record.bucket_id not in (None, bucket_id):
-        raise _bad(
+        raise bad(
             tr("cli.ledger.link.errors.cross_bucket_invoice"),
         )
     try:
@@ -720,7 +721,7 @@ def ledger_link(
             invoice_repository=invoice_repo,
         )
     except InvoiceLinkError as exc:
-        raise _invoice_link_error_bad_parameter() from exc
+        raise invoice_link_error_bad_parameter() from exc
 
     payload: dict[str, object] = {
         "operation": "ledger.link",

@@ -22,7 +22,7 @@ import pytest
 from pydantic import BaseModel, ConfigDict, SecretStr
 
 from ...errors import CliRefusedBoundaryError
-from ..secure_input import _validate_secrets_payload
+from ..secure_input import validate_secrets_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -49,7 +49,7 @@ def _refusal_for(payload: str) -> CliRefusedBoundaryError:
     channel passes, so the messages under test are the stdin channel's.
     """
     with pytest.raises(CliRefusedBoundaryError) as caught:
-        _validate_secrets_payload(
+        validate_secrets_payload(
             payload.encode("utf-8"),
             _ProbeSecrets,
             invalid_json_key="cli.config.custody.errors.secrets_stdin_invalid_json",

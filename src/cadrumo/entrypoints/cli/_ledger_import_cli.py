@@ -22,8 +22,8 @@ from ...core.external_constants import XLS_EXTENSION, XLSX_EXTENSION
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.transactions.errors import TransactionValidationError
-from ._common import _bad, _state, _tx_repo, emit_envelope
-from ._ledger_support import _ledger_transaction_validation_no_recovery
+from ._common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
+from ._ledger_support import ledger_transaction_validation_no_recovery
 from .period_parsing import _optional_canonical_period
 
 if TYPE_CHECKING:
@@ -53,7 +53,7 @@ def _validate_import_provider(provider: str) -> str:
     """
     normalised = provider.strip().lower()
     if normalised not in _known_import_providers():
-        raise _bad(
+        raise bad(
             tr(
                 "cli.ledger.errors.unknown_provider",
                 provider=provider,
@@ -88,7 +88,7 @@ def _import_bucket_context(*, dry_run: bool) -> _ImportBucketContext:
     catalogue, but it still works on a cold workspace.
     """
     if not dry_run:
-        transaction_repository = _tx_repo(_state())
+        transaction_repository = transaction_catalogue_repo(current_workflow_state())
         return _ImportBucketContext(
             bucket_id=transaction_repository.bucket_id,
             actor=resolve_active_bucket_id() or "operator",
@@ -96,7 +96,7 @@ def _import_bucket_context(*, dry_run: bool) -> _ImportBucketContext:
         )
     if resolve_active_bucket_id() is None:
         return _ImportBucketContext(bucket_id=None, actor="operator", transaction_repository=None)
-    transaction_repository = _tx_repo(_state())
+    transaction_repository = transaction_catalogue_repo(current_workflow_state())
     return _ImportBucketContext(
         bucket_id=transaction_repository.bucket_id,
         actor="operator",
@@ -129,7 +129,7 @@ def _imported_files(
                 ),
             )
         except TransactionValidationError as exc:
-            raise _ledger_transaction_validation_no_recovery(exc) from None
+            raise ledger_transaction_validation_no_recovery(exc) from None
     return file_results
 
 
@@ -243,7 +243,7 @@ def _resolve_import_paths(path: Path) -> list[Path]:
         if child.suffix.lower() in _IMPORT_DIR_EXTENSIONS
     ]
     if not files:
-        raise _bad(
+        raise bad(
             tr("cli.ledger.import.empty_directory", path=str(path)),
         )
     return files

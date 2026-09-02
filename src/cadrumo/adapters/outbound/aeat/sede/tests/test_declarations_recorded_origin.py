@@ -36,11 +36,11 @@ import pytest
 from ......core.config import Settings
 from .. import _declarations_fetch
 from ..declarations import (
-    _SEDE_BASE,
-    _cotejo_document_url,
-    _cotejo_view_url,
-    _listing_url_for,
-    _origin_of,
+    SEDE_BASE,
+    cotejo_document_url,
+    cotejo_view_url,
+    listing_url_for,
+    origin_of,
 )
 from ..errors import SedeNavigationError
 
@@ -73,7 +73,7 @@ class TestOriginOf:
         the code hardcoded it.
         """
         assert (
-            _origin_of(f"{origin}{Settings.external_constants().aeat.sede_paths.declarations_listing}?MODELO=303")
+            origin_of(f"{origin}{Settings.external_constants().aeat.sede_paths.declarations_listing}?MODELO=303")
             == origin
         )
 
@@ -97,7 +97,7 @@ class TestOriginOf:
         fabricated origin -- see the paired production check below.
         """
         with pytest.raises(SedeNavigationError) as exc_info:
-            _origin_of(landed)
+            origin_of(landed)
         assert repr(landed) in str(exc_info.value)
 
     @pytest.mark.parametrize("landed", ["", None, "not-a-url", "/relative/only", "about:blank"])
@@ -111,10 +111,10 @@ class TestOriginOf:
         """
         produced: str | None = None
         try:
-            produced = _origin_of(landed)
+            produced = origin_of(landed)
         except SedeNavigationError:
             produced = None
-        assert produced != _SEDE_BASE, (
+        assert produced != SEDE_BASE, (
             f"FABRICATED ORIGIN {produced!r} recorded for an unusable landing {landed!r}; "
             "this is a guess written into an evidence source_url"
         )
@@ -127,7 +127,7 @@ class TestRecordedUrlsUseTheLandedOrigin:
     @pytest.mark.parametrize("origin", _DISPATCH_ORIGINS)
     def test_listing_url_uses_the_given_origin(self, origin: str) -> None:
         """The listing URL recorded on an observation names the landed host."""
-        built = _listing_url_for(origin, modelo="303", ejercicio=2024)
+        built = listing_url_for(origin, modelo="303", ejercicio=2024)
         assert built.startswith(origin)
         assert "MODELO=303" in built
         assert "EJERCICIO=2024" in built
@@ -135,8 +135,8 @@ class TestRecordedUrlsUseTheLandedOrigin:
     @pytest.mark.parametrize("origin", _DISPATCH_ORIGINS)
     def test_cotejo_urls_use_the_given_origin(self, origin: str) -> None:
         """Both cotejo URLs recorded on a justificante reference name the landed host."""
-        assert _cotejo_view_url(origin, "FIXTURECSV1234X7").startswith(origin)
-        assert _cotejo_document_url(origin, "FIXTURECSV1234X7").startswith(origin)
+        assert cotejo_view_url(origin, "FIXTURECSV1234X7").startswith(origin)
+        assert cotejo_document_url(origin, "FIXTURECSV1234X7").startswith(origin)
 
     def test_the_builders_would_fail_if_they_ignored_their_origin(self) -> None:
         """Prove the assertions above discriminate rather than pass on any input.
@@ -147,13 +147,13 @@ class TestRecordedUrlsUseTheLandedOrigin:
         cases are measuring the argument and not a coincidence.
         """
         foreign = _DOMAINS.www12
-        assert foreign != _SEDE_BASE, "the discriminating origin must differ from the pinned one"
+        assert foreign != SEDE_BASE, "the discriminating origin must differ from the pinned one"
         for built in (
-            _listing_url_for(foreign, modelo="130", ejercicio=2025),
-            _cotejo_view_url(foreign, "FIXTURECSV1234X7"),
-            _cotejo_document_url(foreign, "FIXTURECSV1234X7"),
+            listing_url_for(foreign, modelo="130", ejercicio=2025),
+            cotejo_view_url(foreign, "FIXTURECSV1234X7"),
+            cotejo_document_url(foreign, "FIXTURECSV1234X7"),
         ):
-            assert not built.startswith(_SEDE_BASE)
+            assert not built.startswith(SEDE_BASE)
 
 
 class TestDeclarationsUrlPrimitiveAuthority:
@@ -174,20 +174,20 @@ class TestDeclarationsUrlPrimitiveAuthority:
         assert {
             name: assignments[name]
             for name in (
-                "_SEDE_BASE",
+                "SEDE_BASE",
                 "_SEDE_HOST",
                 "_LISTING_URL",
                 "_LISTING_PATH",
                 "_COTEJO_QUERY_PATH",
                 "_COTEJO_DOCUMENT_PATH",
-                "_COTEJO_PATH_PREFIX",
+                "COTEJO_PATH_PREFIX",
             )
         } == {
-            "_SEDE_BASE": 1,
+            "SEDE_BASE": 1,
             "_SEDE_HOST": 1,
             "_LISTING_URL": 1,
             "_LISTING_PATH": 1,
             "_COTEJO_QUERY_PATH": 1,
             "_COTEJO_DOCUMENT_PATH": 1,
-            "_COTEJO_PATH_PREFIX": 1,
+            "COTEJO_PATH_PREFIX": 1,
         }

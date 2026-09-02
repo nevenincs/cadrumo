@@ -1,4 +1,4 @@
-"""Contract tests for ``_build_grid_resize_requests``.
+"""Contract tests for ``build_grid_resize_requests``.
 
 The apply adapter calls this helper before writing any cells so the
 target Sheets grid is large enough to hold the plan. If the helper
@@ -29,7 +29,7 @@ from .....application.storage.calc_sheets.records import (
 )
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
-from .._calc_sheets_apply_formatting import _build_grid_resize_requests
+from .._calc_sheets_apply_formatting import build_grid_resize_requests
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -78,7 +78,7 @@ def test_empty_plan_still_resizes_guide_tab_only() -> None:
     """The guide tab always receives at least the default-grid request via the floor bump."""
 
     plan = _plan()
-    requests = _build_grid_resize_requests(plan, sheet_id_by_tab=_SHEET_IDS)
+    requests = build_grid_resize_requests(plan, sheet_id_by_tab=_SHEET_IDS)
 
     # At least one request — the guide tab bump always runs.
     guide_request = next(
@@ -99,7 +99,7 @@ def test_value_cell_within_default_grid_yields_default_dimensions() -> None:
             ),
         ),
     )
-    requests = _build_grid_resize_requests(plan, sheet_id_by_tab=_SHEET_IDS)
+    requests = build_grid_resize_requests(plan, sheet_id_by_tab=_SHEET_IDS)
 
     entradas_request = next(
         req for req in requests if req["updateSheetProperties"]["properties"]["sheetId"] == _SHEET_IDS["Entradas"]
@@ -121,7 +121,7 @@ def test_value_cell_beyond_default_grid_grows_row_count() -> None:
             ),
         ),
     )
-    requests = _build_grid_resize_requests(plan, sheet_id_by_tab=_SHEET_IDS)
+    requests = build_grid_resize_requests(plan, sheet_id_by_tab=_SHEET_IDS)
 
     entradas_request = next(
         req for req in requests if req["updateSheetProperties"]["properties"]["sheetId"] == _SHEET_IDS["Entradas"]
@@ -151,7 +151,7 @@ def test_row_sets_grow_detalle_grid_beyond_default() -> None:
         source_refs=_TEST_SOURCE_REFS,
     )
     plan = _plan(row_sets=(row_set,))
-    requests = _build_grid_resize_requests(plan, sheet_id_by_tab=_SHEET_IDS)
+    requests = build_grid_resize_requests(plan, sheet_id_by_tab=_SHEET_IDS)
 
     detalle_request = next(
         req for req in requests if req["updateSheetProperties"]["properties"]["sheetId"] == _SHEET_IDS["Detalle"]
@@ -177,7 +177,7 @@ def test_resize_skips_tabs_without_a_sheet_id() -> None:
     )
     # Drop the Entradas tab from the map.
     sheet_ids = {tab: sid for tab, sid in _SHEET_IDS.items() if tab != "Entradas"}
-    requests = _build_grid_resize_requests(plan, sheet_id_by_tab=sheet_ids)
+    requests = build_grid_resize_requests(plan, sheet_id_by_tab=sheet_ids)
 
     entradas_requests = [
         req for req in requests if req["updateSheetProperties"]["properties"]["sheetId"] == _SHEET_IDS["Entradas"]
@@ -198,7 +198,7 @@ def test_formula_cell_address_extends_grid_bound() -> None:
             ),
         ),
     )
-    requests = _build_grid_resize_requests(plan, sheet_id_by_tab=_SHEET_IDS)
+    requests = build_grid_resize_requests(plan, sheet_id_by_tab=_SHEET_IDS)
 
     calculos_request = next(
         req for req in requests if req["updateSheetProperties"]["properties"]["sheetId"] == _SHEET_IDS["Cálculos"]

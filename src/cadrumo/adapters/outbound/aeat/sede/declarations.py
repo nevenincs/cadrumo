@@ -46,7 +46,7 @@ from .....domain.calculations.registry.remote_state_guard import RemoteStateGuar
 # the M100 routing referential-integrity gate runs on this declarations path.
 from .....domain.calculations.registry.schema import RegistrySnapshot
 from .._html import parse_html
-from .._playwright import BrowserContext, Page, Playwright, PlaywrightError
+from .._playwright import BrowserContext, Locator, Page, Playwright, PlaywrightError
 from ..browser import Profile
 from ..browser.factory import opened_browser_page, shared_playwright_runtime
 from ._adapter_utils import assert_pdf_response as _assert_pdf_response
@@ -65,19 +65,19 @@ from ._declarations_diagnostics import (
     declarations_page_shape_context_from_page as _declarations_page_shape_context_from_page,
 )
 from ._declarations_fetch import (
-    _COTEJO_PATH_PREFIX,
-    _READ_GUARD_POLICY,
-    _SEDE_BASE,
+    COTEJO_PATH_PREFIX,
+    READ_GUARD_POLICY,
+    SEDE_BASE,
     _assert_read_browser_action,
     _assert_read_http,
-    _cotejo_document_url,
-    _cotejo_view_url,
-    _get_buscar_settle_ms,
-    _get_form_interaction_timeout_ms,
-    _get_navigation_timeout_ms,
-    _get_ver_click_timeout_ms,
-    _listing_url_for,
-    _origin_of,
+    cotejo_document_url,
+    cotejo_view_url,
+    get_buscar_settle_ms,
+    get_form_interaction_timeout_ms,
+    get_navigation_timeout_ms,
+    get_ver_click_timeout_ms,
+    listing_url_for,
+    origin_of,
 )
 from ._declarations_listbox import _has_class, _parse_listbox, _parse_presented_at
 from .declarations_observations import (
@@ -103,13 +103,13 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 
-_EXTERNAL = Settings.external_constants()
-_SEDE_HOST = urlsplit(_SEDE_BASE).netloc
-_AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
-_LISTING_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.declarations_listing}"
+EXTERNAL = Settings.external_constants()
+_SEDE_HOST = urlsplit(SEDE_BASE).netloc
+_AEAT_HOST_SUFFIX = EXTERNAL.aeat.domains.host_suffix
+_LISTING_URL = f"{SEDE_BASE}{EXTERNAL.aeat.sede_paths.declarations_listing}"
 
 
-_DECLARATIONS_LISTING_PATH_PREFIX = _EXTERNAL.aeat.sede_paths.declarations_listing.removesuffix("/index.zul")
+_DECLARATIONS_LISTING_PATH_PREFIX = EXTERNAL.aeat.sede_paths.declarations_listing.removesuffix("/index.zul")
 
 # The register application directory. Buscar is a ZK AJAX RPC, so the page is
 # expected not to move across the search -- the same prefix the pre-search
@@ -144,7 +144,7 @@ DEFAULT_VER_CLICK_TIMEOUT_MS: int = 5_000
 def assert_declarations_read_landing(
     landing_url: str,
     *,
-    policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
+    policy: RemoteStateGuardPolicy = READ_GUARD_POLICY,
 ) -> None:
     """Refuse a landing that is not the declaraciones register.
 
@@ -470,9 +470,9 @@ class DeclaracionesRegisterSession:
             self._page,
             expediente_id=declaration.expediente_id,
         )
-        from .declarations_capture import _capture_filed_declaration_observation_from_row
+        from .declarations_capture import capture_filed_declaration_observation_from_row
 
-        return await _capture_filed_declaration_observation_from_row(
+        return await capture_filed_declaration_observation_from_row(
             self.session,
             declaration,
             row_locator=row_locator,
@@ -623,7 +623,7 @@ async def _drive_search(
     *,
     modelo: str,
     ejercicio: int,
-    read_policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
+    read_policy: RemoteStateGuardPolicy = READ_GUARD_POLICY,
 ) -> bool:
     """Fill the form and click Buscar.
 
@@ -665,7 +665,7 @@ async def _drive_search(
             page.locator("button.z-button")
             .filter(has_text="Buscar")
             .click(
-                timeout=_get_form_interaction_timeout_ms(),
+                timeout=get_form_interaction_timeout_ms(),
             )
         )
     except PlaywrightError as exc:
@@ -680,7 +680,7 @@ async def _drive_search(
                 ejercicio=ejercicio,
             ),
         ) from exc
-    await page.wait_for_timeout(_get_buscar_settle_ms())
+    await page.wait_for_timeout(get_buscar_settle_ms())
     # Buscar is a real submit control. Its landing was previously LOGGED and
     # never checked, so a search that left the register was recorded and then
     # scraped: the row parser would find no rows, and an empty listing is
@@ -706,7 +706,7 @@ async def _open_register_form(
     *,
     modelo: str | None = None,
     ejercicio: int | None = None,
-    read_policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
+    read_policy: RemoteStateGuardPolicy = READ_GUARD_POLICY,
 ) -> None:
     """Navigate to the register form and refuse anything that is not it.
 
@@ -728,7 +728,7 @@ async def _open_register_form(
         await page.goto(
             _LISTING_URL,
             wait_until=_WAIT_NETWORKIDLE,
-            timeout=_get_navigation_timeout_ms(),
+            timeout=get_navigation_timeout_ms(),
         )
     except PlaywrightError as exc:
         raise SedeNavigationError(
@@ -768,12 +768,12 @@ async def _open_register_form(
     try:
         await page.get_by_text("Modelo (*)", exact=True).first.wait_for(
             state="visible",
-            timeout=_get_form_interaction_timeout_ms(),
+            timeout=get_form_interaction_timeout_ms(),
         )
     except PlaywrightError as exc:
         raise SedeNavigationError(
             "declaraciones register form did not render the 'Modelo (*)' "
-            f"label within {_get_form_interaction_timeout_ms()}ms; "
+            f"label within {get_form_interaction_timeout_ms()}ms; "
             "session likely expired or AEAT served a maintenance page",
             translated_message=tr("adapters.sede.errors.form_render_timeout"),
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
@@ -790,7 +790,7 @@ async def _open_combobox(
     page: Page,
     *,
     label_text: str,
-    read_policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
+    read_policy: RemoteStateGuardPolicy = READ_GUARD_POLICY,
 ) -> None:
     """Click open the combobox rendered after ``label_text``.
 
@@ -805,7 +805,7 @@ async def _open_combobox(
     button = label.locator('xpath=following::a[contains(@class,"z-combobox-button")][1]')
     try:
         _assert_read_browser_action(f"select-{label_text.split()[0].lower()}", policy=read_policy)
-        await button.click(timeout=_get_form_interaction_timeout_ms())
+        await button.click(timeout=get_form_interaction_timeout_ms())
     except PlaywrightError as exc:
         raise SedeNavigationError(
             f"opening combobox after label {label_text!r} failed: {exc}",
@@ -819,7 +819,7 @@ async def _select_combobox_value(
     *,
     label_text: str,
     option_match: str,
-    read_policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
+    read_policy: RemoteStateGuardPolicy = READ_GUARD_POLICY,
 ) -> bool:
     """Open the combobox after ``label_text`` and pick an option matching ``option_match``."""
     await _open_combobox(page, label_text=label_text, read_policy=read_policy)
@@ -837,7 +837,7 @@ async def _select_combobox_value(
     target = matching_options.first
     try:
         _assert_read_browser_action(f"select-option-{option_match}", policy=read_policy)
-        await target.click(timeout=_get_form_interaction_timeout_ms())
+        await target.click(timeout=get_form_interaction_timeout_ms())
     except PlaywrightError as exc:
         raise SedeNavigationError(
             f"selecting option {option_match!r} for {label_text!r} failed: {exc}",
@@ -850,7 +850,7 @@ async def _select_combobox_value(
 async def _continue_alert_modal(
     page: Page,
     *,
-    read_policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
+    read_policy: RemoteStateGuardPolicy = READ_GUARD_POLICY,
 ) -> None:
     """Dismiss AEAT's informational alert modal without opening alert actions."""
     try:
@@ -945,10 +945,10 @@ async def capture_declaration(
 
         try:
             async with context.expect_page(
-                timeout=_get_ver_click_timeout_ms(),
+                timeout=get_ver_click_timeout_ms(),
             ) as new_page_info:
                 _assert_read_browser_action("open-cotejo-pdf", policy=read_policy)
-                await ver_button.click(timeout=_get_form_interaction_timeout_ms())
+                await ver_button.click(timeout=get_form_interaction_timeout_ms())
             cotejo_page = await new_page_info.value
         except PlaywrightError as exc:
             raise SedeNavigationError(
@@ -959,7 +959,7 @@ async def capture_declaration(
         try:
             await cotejo_page.wait_for_load_state(
                 _WAIT_DOMCONTENTLOADED,
-                timeout=_get_navigation_timeout_ms(),
+                timeout=get_navigation_timeout_ms(),
             )
         except PlaywrightError as exc:
             raise SedeNavigationError(
@@ -968,7 +968,7 @@ async def capture_declaration(
             ) from exc
 
         cotejo_url = cotejo_page.url
-        if _COTEJO_PATH_PREFIX not in cotejo_url:
+        if COTEJO_PATH_PREFIX not in cotejo_url:
             raise SedeNavigationError(
                 f"Ver button for {declaration.expediente_id!r} did not land on a "
                 f"cotejo URL (final URL: {cotejo_url!r}); "
@@ -981,8 +981,8 @@ async def capture_declaration(
         ref = JustificanteRef(
             csv=csv,
             expediente_id=declaration.expediente_id,
-            cotejo_url=AnyHttpUrl(_cotejo_view_url(_origin_of(cotejo_url), csv)),
-            pdf_url=AnyHttpUrl(_cotejo_document_url(_origin_of(cotejo_url), csv)),
+            cotejo_url=AnyHttpUrl(cotejo_view_url(origin_of(cotejo_url), csv)),
+            pdf_url=AnyHttpUrl(cotejo_document_url(origin_of(cotejo_url), csv)),
         )
 
         _assert_read_http("GET", str(ref.pdf_url), policy=read_policy)
@@ -1013,8 +1013,8 @@ async def capture_declaration(
                 ejercicio=declaration.ejercicio,
                 category_path=("Declaraciones presentadas",),
                 detail_url=AnyHttpUrl(
-                    _listing_url_for(
-                        _origin_of(cotejo_url),
+                    listing_url_for(
+                        origin_of(cotejo_url),
                         modelo=declaration.modelo,
                         ejercicio=declaration.ejercicio,
                     ),
@@ -1027,7 +1027,7 @@ async def capture_declaration(
         )
 
 
-def _row_locator_for_expediente(page: Page, *, expediente_id: str):
+def _row_locator_for_expediente(page: Page, *, expediente_id: str) -> Locator:
     """Return a Playwright locator pointing at the listitem whose ``Expediente`` cell text equals ``expediente_id``.
 
     The match is anchored rather than a substring. This locator scopes every

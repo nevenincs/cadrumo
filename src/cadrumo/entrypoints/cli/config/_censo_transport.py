@@ -43,7 +43,7 @@ import typer
 
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
-from .._common import _state, emit_envelope
+from .._common import current_workflow_state, emit_envelope
 from ._censo_payloads import CensoFactPayload, CensoFileIngestResult, CensoPullDivergencePayload, CensoPullResult
 
 # The divergence helper selects one of these keys by data rather than passing a
@@ -127,7 +127,7 @@ def censo_pull(
     # navigation can trigger a Cl@ve push, and asking the operator to
     # authenticate for a reconciliation that has no profile to land on
     # would spend their second factor on nothing.
-    state = _state()
+    state = current_workflow_state()
     record = state.active_profile_record()
 
     # Read the EFFECTIVE facts, not the value projection: a path the

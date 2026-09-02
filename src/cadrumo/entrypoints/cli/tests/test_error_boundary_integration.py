@@ -3,7 +3,7 @@
 Verifies the full round-trip without mocks, patches, stubs, or fakes:
 
   shared CLI runner invocation → real CadrumoError subclass raised in callback
-  → command_error_boundary catches → _emit_error_and_exit → typer.Exit(code=N)
+  → command_error_boundary catches → emit_error_and_exit → typer.Exit(code=N)
   → runner captures exit_code → assertion against live ERROR_REGISTRY
 
 The existing :mod:`test_error_registry_contract` module verifies that

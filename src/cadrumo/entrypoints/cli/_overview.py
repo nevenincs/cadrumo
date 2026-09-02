@@ -46,24 +46,24 @@ from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.modelos.work_unit import WorkUnit
 from ._common import (
-    _bad,
-    _declared_tax_id,
-    _load_drafts,
-    _load_invoices,
-    _no_active_profile_refusal,
-    _profile_to_taxpayer,
-    _state,
-    _tx_repo,
     activate_subcommand_output_language,
+    bad,
+    current_workflow_state,
+    declared_tax_id,
     emit_envelope,
+    load_drafts,
+    load_invoices,
+    no_active_profile_refusal,
+    profile_to_taxpayer,
+    transaction_catalogue_repo,
 )
 from ._date_parsing import _parse_iso_date
 from ._overview_evidence import (
-    _live_censo_verified_profile_keys,
-    _local_calendar_filing_evidence,
-    _local_live_calendar_events,
-    _local_modelo_record_calendar_events,
-    _local_modelo_work_units,
+    live_censo_verified_profile_keys,
+    local_calendar_filing_evidence,
+    local_live_calendar_events,
+    local_modelo_record_calendar_events,
+    local_modelo_work_units,
     overview_no_aeat_history_notice,
 )
 from ._overview_payloads import (
@@ -71,7 +71,7 @@ from ._overview_payloads import (
     OverviewStatusResult,
 )
 from ._overview_rendering import (
-    _calendar_shift_reason_text as _calendar_shift_reason_text,
+    calendar_shift_reason_text as calendar_shift_reason_text,
 )
 from ._overview_rendering import (
     overview_agenda_output,
@@ -222,13 +222,13 @@ def _overview_status_period(period: str, *, year: int | None):
 
     token = period.strip()
     if not token:
-        raise _bad(tr("cli.common.errors.period_empty"))
+        raise bad(tr("cli.common.errors.period_empty"))
     if year is None:
-        raise _bad(tr("cli.common.errors.period_missing_year", token=token))
+        raise bad(tr("cli.common.errors.period_missing_year", token=token))
     try:
         return Period.from_year_and_code(year, token)
     except PeriodError as exc:
-        raise _bad(tr("cli.common.errors.period_unrecognised", raw=period)) from exc
+        raise bad(tr("cli.common.errors.period_unrecognised", raw=period)) from exc
 
 
 def _emit_period_overview_status(
@@ -240,7 +240,7 @@ def _emit_period_overview_status(
     verbose: bool,
 ) -> None:
     """Emit the typed draft projection for one canonical filing period."""
-    drafts = _load_drafts()
+    drafts = load_drafts()
     canonical = _overview_status_period(period, year=year)
     wanted = (canonical.filing_year, canonical.registry_token)
 
@@ -286,7 +286,7 @@ def _overview_status_coverage(
 
     status_today = today_madrid()
     status_cal = build_overview_calendar(
-        _profile_to_taxpayer(current),
+        profile_to_taxpayer(current),
         OverviewCalendarRange(
             from_date=_date(status_today.year, 1, 1),
             to_date=_date(status_today.year, 12, 31),
@@ -303,7 +303,7 @@ def _overview_status_coverage(
     from ...domain.calculations.registry.applicability import derive_tax_route
 
     history_notice = overview_no_aeat_history_notice(
-        tax_route=derive_tax_route(_profile_to_taxpayer(current)),
+        tax_route=derive_tax_route(profile_to_taxpayer(current)),
     )
     if history_notice is not None:
         status_notices.append(history_notice)
@@ -327,10 +327,10 @@ def overview_status(
     from ...application.user_profile.projections import record_to_values
     from ...core.bucket_pointer import resolve_active_bucket_id
 
-    current = _state() if resolve_active_bucket_id() is not None else None
+    current = current_workflow_state() if resolve_active_bucket_id() is not None else None
     if period is not None:
         if current is None:
-            raise _no_active_profile_refusal()
+            raise no_active_profile_refusal()
         _emit_period_overview_status(ctx, current=current, period=period, year=year, verbose=verbose)
         return
     profile_record = current.active_profile_record() if current is not None else None
@@ -385,13 +385,13 @@ def overview_calendar(
         )
         return
 
-    current = _state()
+    current = current_workflow_state()
     record = current.active_profile_record()
     raw_values = record_to_values(record) if record is not None else None
     bucket_id = current.active_profile_bucket_id()
     if bucket_id is None:
-        raise _no_active_profile_refusal()
-    workflow_profile = _profile_to_taxpayer(current)
+        raise no_active_profile_refusal()
+    workflow_profile = profile_to_taxpayer(current)
     # The evidence matchers compare the operator's NIF against the authenticated
     # identity on each filed artefact, and every one of them fails OPEN on an
     # empty expected value and CLOSED on a non-empty mismatching one. The
@@ -400,27 +400,27 @@ def overview_calendar(
     # inverts that design: an operator who has not yet declared a NIF would have
     # every genuinely filed obligation silently dropped and redisplayed as
     # unfiled. Read the declared identity instead, so absence stays absence.
-    expected_tax_id = _declared_tax_id(record)
+    expected_tax_id = declared_tax_id(record)
     evidence_notices: list[Notice] = []
     calendar_today = today_madrid()
-    live_events, live_notice = _local_live_calendar_events(
+    live_events, live_notice = local_live_calendar_events(
         bucket_id,
         rng,
         as_of=calendar_today,
         expected_tax_id=expected_tax_id,
     )
-    modelo_record_events, modelo_events_notice = _local_modelo_record_calendar_events(
+    modelo_record_events, modelo_events_notice = local_modelo_record_calendar_events(
         bucket_id,
         rng,
         expected_tax_id=expected_tax_id,
     )
     events = (*live_events, *modelo_record_events)
-    filing_evidence, filing_evidence_notice = _local_calendar_filing_evidence(
+    filing_evidence, filing_evidence_notice = local_calendar_filing_evidence(
         bucket_id,
         events,
         expected_tax_id=expected_tax_id,
     )
-    work_units, work_units_notice = _local_modelo_work_units(bucket_id)
+    work_units, work_units_notice = local_modelo_work_units(bucket_id)
     evidence_notices = [
         notice
         for notice in (live_notice, modelo_events_notice, filing_evidence_notice, work_units_notice)
@@ -435,13 +435,13 @@ def overview_calendar(
         events=events,
         filing_evidence=filing_evidence,
         work_units=work_units,
-        live_censo_verified_profile_keys=_live_censo_verified_profile_keys(record),
+        live_censo_verified_profile_keys=live_censo_verified_profile_keys(record),
     )
     if not cal.taxpayer_model_declared:
         # The taxpayer model is undeclared — the engine refuses
         # to guess. Surface the "declare your taxpayer type first"
         # guidance instead of an empty calendar with no explanation.
-        raise _undeclared_taxpayer_model_refusal(_profile_to_taxpayer(current))
+        raise _undeclared_taxpayer_model_refusal(profile_to_taxpayer(current))
     if cal.warnings and not allow_incomplete:
         _refuse_calendar_warnings(cal)
     typed_cal, lines, calendar_notices = overview_calendar_output(
@@ -496,27 +496,27 @@ def _profile_calendar_inputs(
     try:
         record = repository.load(bucket_id)
         taxpayer = projection_for_taxpayer(record)
-        live_events, _ = _local_live_calendar_events(
+        live_events, _ = local_live_calendar_events(
             bucket_id,
             rng,
             as_of=as_of,
             expected_tax_id=taxpayer.tax_id,
         )
-        modelo_record_events, _ = _local_modelo_record_calendar_events(
+        modelo_record_events, _ = local_modelo_record_calendar_events(
             bucket_id,
             rng,
             expected_tax_id=taxpayer.tax_id,
         )
         events = (*live_events, *modelo_record_events)
-        filing_evidence, _ = _local_calendar_filing_evidence(bucket_id, events, expected_tax_id=taxpayer.tax_id)
-        work_units, _ = _local_modelo_work_units(bucket_id)
+        filing_evidence, _ = local_calendar_filing_evidence(bucket_id, events, expected_tax_id=taxpayer.tax_id)
+        work_units, _ = local_modelo_work_units(bucket_id)
         return _ProfileCalendarInputs(
             taxpayer=taxpayer,
             raw_values=record_to_values(record),
             events=events,
             filing_evidence=filing_evidence,
             work_units=work_units,
-            live_censo_verified_profile_keys=_live_censo_verified_profile_keys(record),
+            live_censo_verified_profile_keys=live_censo_verified_profile_keys(record),
         )
     except typer.BadParameter:
         raise
@@ -666,10 +666,10 @@ def overview_agenda(
     from ...application.overview.agenda import build_overview_agenda
     from ...application.user_profile.projections import record_to_values
 
-    current = _state()
+    current = current_workflow_state()
     as_of_date = _parse_iso_date(as_of, label="--date") if as_of else today_madrid()
     if horizon_days <= 0:
-        raise _bad(
+        raise bad(
             tr(
                 "cli.overview.agenda.errors.invalid_horizon",
                 default="--horizon must be a positive integer (days).",
@@ -678,13 +678,13 @@ def overview_agenda(
     record = current.active_profile_record()
     raw_values = record_to_values(record) if record is not None else None
     agenda = build_overview_agenda(
-        _profile_to_taxpayer(current),
+        profile_to_taxpayer(current),
         as_of=as_of_date,
         horizon_days=horizon_days,
         raw_values=raw_values,
     )
     if not agenda.taxpayer_model_declared and not allow_incomplete:
-        raise _undeclared_taxpayer_model_refusal(_profile_to_taxpayer(current))
+        raise _undeclared_taxpayer_model_refusal(profile_to_taxpayer(current))
     if agenda.warnings and not allow_incomplete:
         raise _incomplete_profile_refusal(agenda.warnings)
 
@@ -707,24 +707,24 @@ def overview_backlog(
     from ...application.overview.backlog import build_overview_backlog
     from ...application.user_profile.projections import record_to_values
 
-    current = _state()
+    current = current_workflow_state()
     parsed_from = _parse_iso_date(from_date, label="--from") if from_date else None
     parsed_to = _parse_iso_date(to_date, label="--to") if to_date else None
     record = current.active_profile_record()
     raw_values = record_to_values(record) if record is not None else None
     bucket_id = current.active_profile_bucket_id()
     if bucket_id is None:
-        raise _no_active_profile_refusal()
-    work_units, work_units_notice = _local_modelo_work_units(bucket_id)
+        raise no_active_profile_refusal()
+    work_units, work_units_notice = local_modelo_work_units(bucket_id)
     backlog = build_overview_backlog(
-        _profile_to_taxpayer(current),
+        profile_to_taxpayer(current),
         from_date=parsed_from,
         to_date=parsed_to,
         raw_values=raw_values,
         work_units=work_units,
     )
     if not backlog.taxpayer_model_declared:
-        raise _undeclared_taxpayer_model_refusal(_profile_to_taxpayer(current))
+        raise _undeclared_taxpayer_model_refusal(profile_to_taxpayer(current))
     if backlog.warnings and not allow_incomplete:
         raise _incomplete_profile_refusal(backlog.warnings)
 
@@ -748,15 +748,15 @@ def overview_explain(
     from ...application.overview.errors import OverviewExplainError
     from ...application.overview.explain import build_overview_explain
 
-    current = _state()
+    current = current_workflow_state()
     try:
         result = build_overview_explain(
-            _profile_to_taxpayer(current),
+            profile_to_taxpayer(current),
             modelo=modelo,
             year=year,
         )
     except OverviewExplainError as exc:
-        raise _bad(str(exc)) from exc
+        raise bad(str(exc)) from exc
     typed_explain, lines = overview_explain_output(result)
     emit_envelope(ctx, command="overview.explain", result=typed_explain, lines=lines)
 
@@ -782,16 +782,16 @@ def overview_prepare(
     from ...application.overview.data_prep import build_data_prep_walkthrough
     from ...domain.calculations.registry.errors import RegistrySnapshotError
 
-    current = _state()
+    current = current_workflow_state()
     bucket_id = current.active_profile_bucket_id()
     if bucket_id is None:
-        raise _no_active_profile_refusal()
+        raise no_active_profile_refusal()
 
     canonical_period = _canonical_period(period, year=year)
     try:
         registry_describe_modelo_for_scope(modelo, period=canonical_period)
     except (ValueError, RegistrySnapshotError) as exc:
-        raise _bad(
+        raise bad(
             tr(
                 "cli.overview.prepare.modelo_period_error",
                 message=str(exc),
@@ -799,8 +799,8 @@ def overview_prepare(
             ),
         ) from exc
 
-    transaction_repository = _tx_repo(current)
-    invoice_catalogue = _load_invoices()
+    transaction_repository = transaction_catalogue_repo(current)
+    invoice_catalogue = load_invoices()
     evidence_records = PurchaseInvoiceEvidenceService().list_all(bucket_id=bucket_id)
     preflight_report = preflight_ledger_tax_readiness(
         bucket_id=bucket_id,
@@ -850,13 +850,13 @@ def overview_pipeline(
     from ...domain.modelos.verification_report import VerificationReport
     from ._ledger_payloads import LedgerStatusResult
 
-    current = _state()
+    current = current_workflow_state()
     bucket_id = current.active_profile_bucket_id()
     if bucket_id is None:
-        raise _no_active_profile_refusal()
+        raise no_active_profile_refusal()
 
     canonical_period = _canonical_period(period, year=year)
-    transaction_repository = _tx_repo(current)
+    transaction_repository = transaction_catalogue_repo(current)
     ledger_report = summarize_manual_transactions(
         bucket_id=bucket_id,
         period=canonical_period,

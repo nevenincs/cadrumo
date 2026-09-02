@@ -1,6 +1,6 @@
 """A malformed Drive response is refused, not smoothed into plausible metadata.
 
-``_metadata_from_drive_entry`` is the single site both ``get`` and
+``metadata_from_drive_entry`` is the single site both ``get`` and
 ``iter_objects`` build :class:`ProviderObjectMetadata` from, so exercising it
 directly is exercising both read surfaces — and it is a pure function over the
 Drive response dict, so no Drive double is needed or wanted here. The response
@@ -25,7 +25,7 @@ from typing import Any
 
 import pytest
 
-from .._google_drive_metadata import _metadata_from_drive_entry
+from .._google_drive_metadata import metadata_from_drive_entry
 from ..errors import OutboundStorageIntegrityError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -54,7 +54,7 @@ def _entry(**overrides: Any) -> dict[str, Any]:
 
 
 def _metadata(entry: dict[str, Any]):
-    return _metadata_from_drive_entry(entry, namespace=_NAMESPACE, object_key_hmac=_HMAC)
+    return metadata_from_drive_entry(entry, namespace=_NAMESPACE, object_key_hmac=_HMAC)
 
 
 def test_a_well_formed_entry_still_converts() -> None:

@@ -55,12 +55,11 @@ from ._secure_object_row_codec import (
     secure_object_record_from_row,
 )
 from ._secure_object_schema import (
-    build_revision_ancestor_ids,
     coerce_raw_bytes,
     ensure_quarantine_table,
     parse_revision_ancestor_ids,
 )
-from ._secure_object_writes import _OBJECT_KEY_SELECT_CHUNK, SecureObjectWriteOperations, _RowcountResult
+from ._secure_object_writes import OBJECT_KEY_SELECT_CHUNK, RowcountResult, SecureObjectWriteOperations
 from .engine import get_engine
 from .orm import SecureObjectRow
 from .session import session_scope
@@ -105,8 +104,6 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         local_table.create(self._engine, checkfirst=True)
 
     _coerce_raw_bytes = staticmethod(coerce_raw_bytes)
-    _parse_revision_ancestor_ids = staticmethod(parse_revision_ancestor_ids)
-    _build_revision_ancestor_ids = staticmethod(build_revision_ancestor_ids)
 
     @staticmethod
     def object_key_digest(object_key: str | bytes) -> bytes:
@@ -342,12 +339,12 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         present: set[str] = set()
         digests = tuple(digest_to_key)
         with session_scope(self._engine) as session:
-            for start in range(0, len(digests), _OBJECT_KEY_SELECT_CHUNK):
+            for start in range(0, len(digests), OBJECT_KEY_SELECT_CHUNK):
                 rows = session.execute(
                     select(SecureObjectRow.object_key).where(
                         SecureObjectRow.namespace == namespace,
                         SecureObjectRow.object_key.in_(
-                            digests[start : start + _OBJECT_KEY_SELECT_CHUNK],
+                            digests[start : start + OBJECT_KEY_SELECT_CHUNK],
                         ),
                     ),
                 ).scalars()
@@ -467,7 +464,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                     payload=payload_value,
                     revision_id=raw.revision_id,
                     previous_revision_id=raw.previous_revision_id,
-                    revision_ancestor_ids=self._parse_revision_ancestor_ids(raw.revision_ancestor_ids),
+                    revision_ancestor_ids=parse_revision_ancestor_ids(raw.revision_ancestor_ids),
                     previous_payload_hash=raw.previous_payload_hash,
                     payload_hash=raw.payload_hash,
                     ciphertext_hash=raw.ciphertext_hash,
@@ -1165,7 +1162,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
             # SQLAlchemy types ``Session.execute()`` as ``Result[Any]``; a
             # DML DELETE always yields a rowcount-bearing result.
             result = cast(
-                _RowcountResult,
+                RowcountResult,
                 session.execute(
                     delete(SecureObjectRow).where(
                         SecureObjectRow.namespace == namespace,

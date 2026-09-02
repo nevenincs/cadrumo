@@ -23,7 +23,7 @@ The tests cover three cases:
 Stream rebinding goes through the production helper's explicit
 ``stdout=`` / ``stderr=`` kwargs (no ``sys.stdout`` patching).
 
-Also covers ``_disable_rich_cli_rendering``: Typer/Click's Rich-based
+Also covers ``disable_rich_cli_rendering``: Typer/Click's Rich-based
 help, error, and traceback rendering is disabled globally so option
 tables render as plain text regardless of the invoking terminal's
 real width.
@@ -43,7 +43,7 @@ import pytest
 import typer
 import typer.core
 
-from .._stdio import _disable_rich_cli_rendering, configure_stdio_for_utf8
+from .._stdio import configure_stdio_for_utf8, disable_rich_cli_rendering
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -160,14 +160,14 @@ def test_configure_stdio_for_utf8_tolerates_non_reconfigurable_explicit_streams(
 
 
 def test_disable_rich_cli_rendering_flips_typer_has_rich() -> None:
-    """_disable_rich_cli_rendering() flips the module-level flag every Typer/Click
+    """disable_rich_cli_rendering() flips the module-level flag every Typer/Click
     render call reads live (help, parse errors, tracebacks), for every Typer()
     app in the command tree — not a per-instance setting."""
 
     original = typer.core.HAS_RICH
     try:
         typer.core.HAS_RICH = True
-        _disable_rich_cli_rendering()
+        disable_rich_cli_rendering()
         assert typer.core.HAS_RICH is False
     finally:
         typer.core.HAS_RICH = original

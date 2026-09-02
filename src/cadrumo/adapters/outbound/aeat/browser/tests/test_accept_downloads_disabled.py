@@ -32,7 +32,7 @@ Uses only synthetic local bytes; makes no AEAT contact.
 See Also:
     :meth:`~adapters.outbound.aeat.browser.BrowserSession._build_context_kwargs`
         Where ``accept_downloads=False`` is set for every context.
-    :func:`~adapters.outbound.aeat.sede.declarations_fetch._capture_submitted_file_artefact`
+    :func:`~adapters.outbound.aeat.sede.declarations_fetch.capture_submitted_file_artefact`
         The production consumer of this shape.
 """
 
@@ -134,7 +134,7 @@ async def test_production_context_refuses_to_expose_a_local_download_path() -> N
 async def test_production_shape_still_fetches_the_exact_bytes() -> None:
     """The cancel-then-refetch shape returns byte-identical content.
 
-    Mirrors ``_capture_submitted_file_artefact`` exactly: read the URL,
+    Mirrors ``capture_submitted_file_artefact`` exactly: read the URL,
     best-effort cancel, then re-fetch through ``context.request`` -- proving
     the ``accept_downloads=False`` default costs nothing functionally.
     """

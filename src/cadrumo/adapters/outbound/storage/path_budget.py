@@ -70,8 +70,8 @@ def windows_worst_case_object_path_suffix_length() -> int:
     """
     from ...persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
     from ...persistence.storage.storage_path_definitions import BUCKET_BLOBS_DIRNAME, BUCKETS_DIRNAME
-    from ._object_name import _HMAC_PREFIX_LENGTH, _LABEL_MAX_LENGTH
-    from .local import _SIDECAR_EXTENSION
+    from ._object_name import HMAC_PREFIX_LENGTH, LABEL_MAX_LENGTH
+    from .local import SIDECAR_EXTENSION
 
     longest_namespace = max(len(definition.namespace) for definition in STORAGE_NAMESPACE_REGISTRY.namespaces)
     return len(
@@ -84,8 +84,8 @@ def windows_worst_case_object_path_suffix_length() -> int:
         + _SEPARATOR
         + ("n" * longest_namespace)
         + _SEPARATOR
-        + ("a" * _HMAC_PREFIX_LENGTH)
+        + ("a" * HMAC_PREFIX_LENGTH)
         + "--"
-        + ("b" * _LABEL_MAX_LENGTH)
-        + _SIDECAR_EXTENSION,
+        + ("b" * LABEL_MAX_LENGTH)
+        + SIDECAR_EXTENSION,
     )

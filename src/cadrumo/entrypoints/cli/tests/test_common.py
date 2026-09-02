@@ -1,6 +1,6 @@
 """Tests for localized error surfaces in _common.py helpers.
 
-contract / contract: ``_draft_by_id`` raises a localized ``typer.BadParameter`` whose
+contract / contract: ``draft_by_id`` raises a localized ``typer.BadParameter`` whose
 message is drawn from the locale catalogue — never a hard-coded f-string.
 
 contract / contract: ``_active_profile_or_exit`` emits localized error and next-step
@@ -20,7 +20,7 @@ from ....core.config import override_settings
 from ....core.i18n.render import tr
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_runtime_profile, isolated_sessionless_storage_root
-from .._common import _draft_by_id
+from .._common import draft_by_id
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -40,9 +40,9 @@ def _active_profile_env(tmp_path: Path) -> Iterator[Path]:
 def test_draft_by_id_raises_bad_parameter_for_unknown_id(
     _active_profile_env: Path,
 ) -> None:
-    """_draft_by_id raises typer.BadParameter for a nonexistent draft ID."""
+    """draft_by_id raises typer.BadParameter for a nonexistent draft ID."""
     with pytest.raises(typer.BadParameter):
-        _draft_by_id("nonexistent-draft-id-xyz")
+        draft_by_id("nonexistent-draft-id-xyz")
 
 
 def test_draft_by_id_error_message_matches_locale_catalogue(
@@ -53,7 +53,7 @@ def test_draft_by_id_error_message_matches_locale_catalogue(
     expected = tr("cli.common.errors.draft_id_not_found", draft_id=draft_id)
 
     with pytest.raises(typer.BadParameter) as exc_info:
-        _draft_by_id(draft_id)
+        draft_by_id(draft_id)
 
     assert str(exc_info.value) == expected
     # Guard: the old hard-coded literal must not appear.
@@ -66,7 +66,7 @@ def test_draft_by_id_error_message_contains_draft_id_interpolation(
     """The error message includes the actual draft_id value."""
     draft_id = "abc-123"
     with pytest.raises(typer.BadParameter) as exc_info:
-        _draft_by_id(draft_id)
+        draft_by_id(draft_id)
 
     assert draft_id in str(exc_info.value)
 

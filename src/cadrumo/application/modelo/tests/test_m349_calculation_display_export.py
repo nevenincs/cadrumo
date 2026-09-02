@@ -34,7 +34,7 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.row_models import Modelo349OperadorRow
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.submission.models import ModeloDraftStatus
-from ....entrypoints.cli import (
+from ....entrypoints.cli._modelo_rendering import (
     calculation_revision_lines,
     calculation_revision_payload,
 )

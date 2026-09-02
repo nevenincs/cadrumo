@@ -19,18 +19,18 @@ import pytest
 from .....application.storage.calc_sheets.engine import build_export_plan
 from .....domain.calculations.registry.authority import bundled_authority
 from .._calc_sheets_apply_formatting import (
-    _build_auto_filter_requests,
-    _build_base_font_requests,
-    _build_column_width_requests,
-    _build_emphasis_format_requests,
-    _build_frozen_view_requests,
-    _build_number_format_requests,
-    _build_styled_range_requests,
+    build_auto_filter_requests,
+    build_base_font_requests,
+    build_column_width_requests,
+    build_emphasis_format_requests,
+    build_frozen_view_requests,
+    build_number_format_requests,
+    build_styled_range_requests,
 )
 from .._calc_sheets_apply_values import (
-    _build_evidence_value_data,
-    _build_formula_data,
-    _build_value_data,
+    build_evidence_value_data,
+    build_formula_data,
+    build_value_data,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -53,11 +53,11 @@ def test_apply_request_pipeline_is_complete_for_a_real_modelo() -> None:
         "Detalle": 6,
     }
 
-    value_data = _build_value_data(plan.value_cells)
-    formula_data = _build_formula_data(plan.formula_cells)
-    evidence_data = _build_evidence_value_data(plan)
-    number_format_requests = _build_number_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
-    emphasis_requests = _build_emphasis_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+    value_data = build_value_data(plan.value_cells)
+    formula_data = build_formula_data(plan.formula_cells)
+    evidence_data = build_evidence_value_data(plan)
+    number_format_requests = build_number_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+    emphasis_requests = build_emphasis_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
 
     # Every batch the live export depends on is present + well-formed.
     assert value_data, "value writes missing"
@@ -87,11 +87,11 @@ def test_apply_design_request_set_is_complete_for_a_real_modelo() -> None:
         "Detalle": 6,
     }
 
-    base_font = _build_base_font_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
-    styled = _build_styled_range_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
-    widths = _build_column_width_requests(plan.column_widths, sheet_id_by_tab=sheet_id_by_tab)
-    frozen = _build_frozen_view_requests(plan.frozen_views, sheet_id_by_tab=sheet_id_by_tab)
-    filters = _build_auto_filter_requests(plan.auto_filters, sheet_id_by_tab=sheet_id_by_tab)
+    base_font = build_base_font_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+    styled = build_styled_range_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+    widths = build_column_width_requests(plan.column_widths, sheet_id_by_tab=sheet_id_by_tab)
+    frozen = build_frozen_view_requests(plan.frozen_views, sheet_id_by_tab=sheet_id_by_tab)
+    filters = build_auto_filter_requests(plan.auto_filters, sheet_id_by_tab=sheet_id_by_tab)
 
     # The base font sets a monospace family on every tab's whole grid.
     assert base_font, "base font requests missing"

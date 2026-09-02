@@ -129,7 +129,7 @@ class TestReadPostCanary:
         assert function.count(".post(") == 1
         assert function.index("assert_notification_content_readable(row)") < post_index
         assert function.index('_assert_read_http("GET", url)') < post_index
-        assert function.index('assert_read_http_for(_READ_GUARD_POLICY, "POST", url)') < post_index
+        assert function.index('assert_read_http_for(READ_GUARD_POLICY, "POST", url)') < post_index
 
 
 class TestTheGuardCanActuallyFire:

@@ -48,7 +48,7 @@ from ..runtime_repository import (
 )
 from ..schema_lineage import inner_envelope_classification_is_expected
 from ..sql import SecureObjectDeletion, SecureObjectRecord, SecureObjectRepository
-from .contract import Envelope, _parameterized_envelope_type
+from .contract import Envelope, parameterized_envelope_type
 
 _log = get_logger(__name__)
 
@@ -512,7 +512,7 @@ class SecureBoundRepository[T: BaseModel]:
         Delegates to :meth:`Envelope.for_payload_type` which encapsulates the
         typed generic parameterisation for this repository's concrete ``T``.
         """
-        return _parameterized_envelope_type(self.payload_model())
+        return parameterized_envelope_type(self.payload_model())
 
 
 __all__ = ["SecureBoundRepository"]

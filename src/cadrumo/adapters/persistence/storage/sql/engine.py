@@ -185,7 +185,7 @@ def _attach_sqlite_pragmas(engine: Engine) -> None:
         return
 
     @event.listens_for(engine, "connect")
-    def _set_sqlite_pragma(dbapi_connection: DBAPIConnection, _: ConnectionPoolEntry) -> None:
+    def set_sqlite_pragma(dbapi_connection: DBAPIConnection, _: ConnectionPoolEntry) -> None:
         cursor = dbapi_connection.cursor()
         try:
             cursor.execute("PRAGMA foreign_keys=ON")

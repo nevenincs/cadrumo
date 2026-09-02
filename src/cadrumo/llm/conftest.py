@@ -1,3 +1,8 @@
 """Pytest fixture discovery boundary for the LLM package."""
 
-from ..tests.llm_secure_runtime import _secure_object_test_backend, secure_object_test_profile  # noqa: F401
+from ..tests.llm_secure_runtime import (
+    secure_object_test_backend as secure_object_test_backend,
+)
+from ..tests.llm_secure_runtime import (
+    secure_object_test_profile as secure_object_test_profile,
+)

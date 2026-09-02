@@ -42,14 +42,14 @@ from ...core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
 from ...core.output_rendering import OutputFormat
 from ...domain.iva.classification import InvoiceKind
 from ._common import (
-    _bad,
-    _format_of,
-    _state,
-    _tx_repo,
+    bad,
+    current_workflow_state,
     emit_envelope,
     emit_progress_line,
+    format_of,
     resolve_cli_precondition_action,
     resolve_notice_action,
+    transaction_catalogue_repo,
 )
 from ._ledger_evidence_batch_payloads import EvidenceBatchResult
 from .config.status_rendering import precondition_action_lines
@@ -84,11 +84,11 @@ def evidence_batch(
     if directory is not None:
         sources.insert(0, directory)
     if not sources:
-        raise _bad(tr("cli.app.ledger.evidence.batch_source_required"))
+        raise bad(tr("cli.app.ledger.evidence.batch_source_required"))
     from ...application.ledger.batch_ingest import run_evidence_batch
 
-    bucket_id = _tx_repo(_state()).bucket_id
-    text_mode = _format_of(ctx) is not OutputFormat.JSON
+    bucket_id = transaction_catalogue_repo(current_workflow_state()).bucket_id
+    text_mode = format_of(ctx) is not OutputFormat.JSON
     run = run_evidence_batch(
         bucket_id=bucket_id,
         sources=sources,

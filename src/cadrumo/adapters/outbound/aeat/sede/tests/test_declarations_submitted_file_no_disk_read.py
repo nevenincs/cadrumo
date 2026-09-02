@@ -1,6 +1,6 @@
 """Structural gate: the submitted-file capture never READS bytes from disk.
 
-``_capture_submitted_file_artefact`` (``_declarations_fetch.py``) used to pull
+``capture_submitted_file_artefact`` (``_declarations_fetch.py``) used to pull
 a click-triggered Playwright download's bytes off the filesystem
 (``Path(path).read_bytes()`` on the path ``download.path()`` exposed) --
 reading that file was a breach of
@@ -12,7 +12,7 @@ the narrower one:
 1. **This function never reads a download via a filesystem path.** It reads
    ``download.url``, best-effort cancels the browser-side transfer, and
    re-fetches the SAME URL in-memory through the authenticated
-   ``context.request`` API -- the identical shape ``_capture_row_pdf_artefact``
+   ``context.request`` API -- the identical shape ``capture_row_pdf_artefact``
    already uses for the cotejo PDF. Neither byte-for-byte output nor
    exception behaviour distinguishes "read from the canceled download's temp
    path" from "re-fetched via context.request": both mechanisms return the
@@ -38,11 +38,11 @@ Read both files to see the full closed picture; neither alone proves "no
 taxpayer bytes ever touch disk" -- together they do.
 
 See Also:
-    :func:`~adapters.outbound.aeat.sede.declarations_fetch._capture_submitted_file_artefact`
+    :func:`~adapters.outbound.aeat.sede.declarations_fetch.capture_submitted_file_artefact`
         The guarded function.
-    :func:`~adapters.outbound.aeat.sede.declarations_fetch._capture_row_pdf_artefact`
+    :func:`~adapters.outbound.aeat.sede.declarations_fetch.capture_row_pdf_artefact`
         The sibling function whose in-memory fetch shape this gate expects
-        ``_capture_submitted_file_artefact`` to mirror.
+        ``capture_submitted_file_artefact`` to mirror.
     :meth:`~adapters.outbound.aeat.browser.BrowserSession._build_context_kwargs`
         Where ``accept_downloads=False`` closes the disk-write-side property
         this module does not cover.
@@ -57,7 +57,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_TARGET_FUNCTION = "_capture_submitted_file_artefact"
+_TARGET_FUNCTION = "capture_submitted_file_artefact"
 
 
 def _module_path() -> Path:
@@ -118,7 +118,7 @@ class TestModuleImportsNoFilesystemPathType:
 
 
 class TestSubmittedFileCaptureNeverReadsTheDownloadedPath:
-    """``_capture_submitted_file_artefact`` fetches bytes in-memory, never from disk."""
+    """``capture_submitted_file_artefact`` fetches bytes in-memory, never from disk."""
 
     def test_no_download_path_call(self) -> None:
         """The function must never call ``download.path()`` (or ``.save_as()``)."""
@@ -154,7 +154,7 @@ class TestSubmittedFileCaptureNeverReadsTheDownloadedPath:
     def test_bytes_are_fetched_through_the_request_context(self) -> None:
         """Positive control: bytes come from an authenticated in-memory GET.
 
-        Mirrors the shape ``_capture_row_pdf_artefact`` already uses for the
+        Mirrors the shape ``capture_row_pdf_artefact`` already uses for the
         cotejo PDF fetch (``context.request.get(...)`` then ``.body()``).
         """
         function = _find_function(_module_tree(), _TARGET_FUNCTION)

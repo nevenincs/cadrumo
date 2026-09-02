@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 from datetime import datetime
-from typing import Any, NamedTuple, Protocol, cast
+from typing import TYPE_CHECKING, Any, NamedTuple, Protocol, cast
 
 from sqlalchemy import Table, bindparam, delete, insert, select, update
 from sqlalchemy.exc import IntegrityError
@@ -27,9 +27,15 @@ from ..crypto.encrypted_columns import (
 )
 from ..errors import RepositoryError, SecureObjectRevisionConflictError, StorageValidationError
 from ._secure_object_records import SecureObjectDeletion
+from ._secure_object_schema import build_revision_ancestor_ids, parse_revision_ancestor_ids
 from .orm import SecureObjectRow
 from .secure_object_crypto import derive_revision_id
 from .session import session_scope
+
+if TYPE_CHECKING:
+    from sqlalchemy.engine import Engine
+
+    from ..secure_object_namespaces import SecureObjectNamespaceDefinition
 
 _DEFAULT_WRITE_PROVENANCE = DEFAULT_WRITE_PROVENANCE
 _DEFAULT_CONFLICT_POLICY = "last-write-wins"
@@ -38,7 +44,7 @@ _CAS_CONFLICT_POLICY = "compare-and-swap"
 #: Digests per ``IN (...)`` slice of a batched object-key read (previous-write
 #: metadata, batch existence). Well under SQLite's bound-variable ceiling, and
 #: large enough that a 20k-row batch costs ~40 reads instead of 20k.
-_OBJECT_KEY_SELECT_CHUNK = 500
+OBJECT_KEY_SELECT_CHUNK = 500
 
 
 def _secure_objects_table() -> Table:
@@ -76,7 +82,7 @@ class _PendingSecureObjectWrite(NamedTuple):
     expected_revision_id: str | None
 
 
-class _RowcountResult(Protocol):
+class RowcountResult(Protocol):
     """Structural result shape for SQLAlchemy DML rowcount checks."""
 
     rowcount: int
@@ -90,6 +96,27 @@ class SecureObjectWriteOperations:
     every public mutation reaches, keeping encryption, lineage, and guarded
     DML together without exposing another repository surface.
     """
+
+    if TYPE_CHECKING:
+        # Supplied by the concrete repository that mixes these operations in.
+        # Declared for the checker only so the mixin never shadows the host's
+        # runtime definitions.
+        _engine: Engine
+
+        def _check_session_freshness(self, namespace: str | None = None) -> None: ...
+
+        def _registered_namespace_definition(
+            self, namespace: str
+        ) -> SecureObjectNamespaceDefinition | None: ...
+
+        def _enforce_registered_write_policy(
+            self,
+            *,
+            namespace: str,
+            classification: SensitivityClass,
+            schema_version: int,
+            object_key: str | None = None,
+        ) -> None: ...
 
     def save(
         self,
@@ -447,7 +474,7 @@ class SecureObjectWriteOperations:
                 previous_revision_id=previous_revision_id,
                 previous_payload_hash=previous_payload_hash,
             )
-            revision_ancestor_ids = self._build_revision_ancestor_ids(
+            revision_ancestor_ids = build_revision_ancestor_ids(
                 previous_revision_id,
                 prior.revision_ancestor_ids if prior is not None else (),
             )
@@ -501,7 +528,7 @@ class SecureObjectWriteOperations:
             by_namespace.setdefault(write.namespace, []).append(write.object_key_digest)
         previous: dict[tuple[str, bytes], _PreviousRowMetadata] = {}
         for namespace, digests in by_namespace.items():
-            for start in range(0, len(digests), _OBJECT_KEY_SELECT_CHUNK):
+            for start in range(0, len(digests), OBJECT_KEY_SELECT_CHUNK):
                 rows = session.execute(
                     select(
                         SecureObjectRow.id,
@@ -512,7 +539,7 @@ class SecureObjectWriteOperations:
                     ).where(
                         SecureObjectRow.namespace == namespace,
                         SecureObjectRow.object_key.in_(
-                            digests[start : start + _OBJECT_KEY_SELECT_CHUNK],
+                            digests[start : start + OBJECT_KEY_SELECT_CHUNK],
                         ),
                     ),
                 ).all()
@@ -521,7 +548,7 @@ class SecureObjectWriteOperations:
                     previous[(namespace, digest)] = _PreviousRowMetadata(
                         row_id=int(row.id),
                         revision_id=row.revision_id,
-                        revision_ancestor_ids=self._parse_revision_ancestor_ids(row.revision_ancestor_ids),
+                        revision_ancestor_ids=parse_revision_ancestor_ids(row.revision_ancestor_ids),
                         payload_hash=row.payload_hash,
                     )
         return previous
@@ -651,7 +678,7 @@ class SecureObjectWriteOperations:
             # SQLAlchemy types ``Session.execute()`` as ``Result[Any]``; a DML
             # UPDATE always yields a rowcount-bearing result, and pysqlite
             # accumulates executemany rowcounts across parameter sets.
-            result = cast(_RowcountResult, session.execute(stmt, guarded))
+            result = cast(RowcountResult, session.execute(stmt, guarded))
         except IntegrityError as exc:
             raise self._update_integrity_error(guarded, exc) from exc
         if result.rowcount != len(guarded):

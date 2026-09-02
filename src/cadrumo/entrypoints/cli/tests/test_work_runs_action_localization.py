@@ -386,7 +386,7 @@ def test_work_run_renderer_has_no_prose_or_legacy_action_authority() -> None:
             "work_run_details",
             "work_runs",
         },
-        cli_root / "_modelo_aux_payloads.py": {
+        cli_root / "modelo_aux_payloads.py": {
             "WorkflowRunPayload",
             "WorkflowRunSummaryPayload",
             "WorkRunDetailsResult",

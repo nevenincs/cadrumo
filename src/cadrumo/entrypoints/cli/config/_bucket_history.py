@@ -84,7 +84,7 @@ def _resolve_profile_history_target(profile: str | None, *, ctx: typer.Context |
     from ....application.workflow.errors import ProfileLabelAmbiguousError
     from ....application.workflow.profile_bucket_scan import resolve_profile_bucket
     from ....core.bucket_pointer import resolve_active_bucket_id
-    from .._common import _no_active_profile_refusal
+    from .._common import no_active_profile_refusal
 
     if profile is not None:
         if ctx is None:
@@ -97,7 +97,7 @@ def _resolve_profile_history_target(profile: str | None, *, ctx: typer.Context |
         return pointer.label, pointer.bucket_id
     selected = resolve_active_bucket_id()
     if selected is None:
-        raise _no_active_profile_refusal()
+        raise no_active_profile_refusal()
     token = selected.strip()
     try:
         pointer = resolve_profile_bucket(token)

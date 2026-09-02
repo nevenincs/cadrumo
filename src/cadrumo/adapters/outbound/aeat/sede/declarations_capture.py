@@ -14,18 +14,17 @@ from .....domain.calculations.registry.errors import RegistryValidationError
 from .....domain.calculations.registry.relations import relation_source_requirements, source_presence_gaps
 from .....domain.calculations.registry.schema import RegistrySnapshot
 from .....domain.calculations.registry.snapshot_coordinate import registry_snapshot_id
-from .._playwright import BrowserContext, Page, Playwright
+from .._playwright import BrowserContext, Locator, Page, Playwright
 from ._declarations_fetch import (
-    _capture_row_pdf_artefact,
-    _capture_submitted_file_artefact,
-    _listing_url_for,
-    _origin_of,
+    capture_row_pdf_artefact,
+    capture_submitted_file_artefact,
+    listing_url_for,
+    origin_of,
 )
 from .declarations_observations import (
     FiledDeclaracionArtefactSink,
     _declaration_pdf_extraction_profile_provisional,
     _observed_casillas_from_declaration_pdf,
-    _observed_header_facts_from_submitted_file,
     _read_guard_policy_from_snapshot,
     _register_row_artefact,
     _registry_snapshot_for_declaration,
@@ -33,6 +32,7 @@ from .declarations_observations import (
     _submitted_file_coverage_for_casillas,
     _with_derived_303_compensation_available_observation,
     observed_casillas_from_submitted_file,
+    observed_header_facts_from_submitted_file,
 )
 from .declarations_schema import Declaracion
 from .errors import JustificanteFetchError, SedeNavigationError, SedeParseError
@@ -91,11 +91,11 @@ def _record_submitted_file_extraction_error(
     metadata["submitted_file_extraction_error"] = str(error)
 
 
-async def _capture_filed_declaration_observation_from_row(
+async def capture_filed_declaration_observation_from_row(
     session: AeatSession,
     declaration: Declaracion,
     *,
-    row_locator,
+    row_locator: Locator,
     page: Page,
     context: BrowserContext,
     registry_snapshot: RegistrySnapshot | None,
@@ -114,8 +114,8 @@ async def _capture_filed_declaration_observation_from_row(
     from pydantic import AnyHttpUrl
 
     listing_url = AnyHttpUrl(
-        _listing_url_for(
-            _origin_of(getattr(page, "url", None)),
+        listing_url_for(
+            origin_of(getattr(page, "url", None)),
             modelo=declaration.modelo,
             ejercicio=declaration.ejercicio,
         ),
@@ -129,7 +129,7 @@ async def _capture_filed_declaration_observation_from_row(
     extraction_coverage: dict[str, float] = {}
     metadata = {"tipo_solicitud": declaration.tipo_solicitud or "", "observaciones": declaration.observaciones or ""}
 
-    justificante, justificante_body = await _capture_row_pdf_artefact(
+    justificante, justificante_body = await capture_row_pdf_artefact(
         context=context,
         row_locator=row_locator,
         declaration=declaration,
@@ -143,7 +143,7 @@ async def _capture_filed_declaration_observation_from_row(
 
     declaration_pdf_body: bytes | None = None
     if declaration.declaration_copy_link_text and declaration.declaration_copy_cell_index is not None:
-        declaration_pdf, declaration_pdf_body = await _capture_row_pdf_artefact(
+        declaration_pdf, declaration_pdf_body = await capture_row_pdf_artefact(
             context=context,
             row_locator=row_locator,
             declaration=declaration,
@@ -162,7 +162,7 @@ async def _capture_filed_declaration_observation_from_row(
 
     if declaration.archive_link_text and declaration.archive_cell_index is not None:
         try:
-            submitted_artefact, submitted_body = await _capture_submitted_file_artefact(
+            submitted_artefact, submitted_body = await capture_submitted_file_artefact(
                 context=context,
                 page=page,
                 row_locator=row_locator,
@@ -192,7 +192,7 @@ async def _capture_filed_declaration_observation_from_row(
                     body=submitted_body,
                     casillas=casillas,
                 )
-                headers = _observed_header_facts_from_submitted_file(snapshot=snapshot, body=submitted_body)
+                headers = observed_header_facts_from_submitted_file(snapshot=snapshot, body=submitted_body)
             except (RegistryValidationError, SedeParseError) as exc:
                 _record_submitted_file_extraction_error(metadata, exc)
 

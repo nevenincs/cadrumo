@@ -40,8 +40,8 @@ from ...domain.prorrata_register.register import (
     ProrrataRegisterValidationError,
     SectorDefinition,
 )
-from ._common import _bad, emit_envelope
 from ._common import active_bucket_id_or_refuse as _register_bucket_id
+from ._common import bad, emit_envelope
 from ._decimal_parsing import parse_decimal_amount
 from ._prorrata_register_payloads import (
     ProrrataDeclareSectorResult,
@@ -106,7 +106,7 @@ def _resolve_provenance(
 ]:
     if raw not in _ELECTABLE_PROVENANCES:
         accepted = ", ".join(member.value for member in _ELECTABLE_PROVENANCES)
-        raise _bad(
+        raise bad(
             tr(
                 "cli.app.ledger.prorrata.provenance_not_electable",
                 default=(
@@ -119,7 +119,7 @@ def _resolve_provenance(
         )
     referenced = raw in _REFERENCED_PROVENANCES
     if referenced and (reference is None or not reference.strip()):
-        raise _bad(
+        raise bad(
             tr(
                 "cli.app.ledger.prorrata.reference_required",
                 default="Provenance {provenance!r} (LIVA art. 105.Dos / 105.Tres) requires --reference.",
@@ -127,7 +127,7 @@ def _resolve_provenance(
             ),
         )
     if not referenced and reference is not None:
-        raise _bad(
+        raise bad(
             tr(
                 "cli.app.ledger.prorrata.reference_not_permitted",
                 default="--reference is permitted only with an aeat_autorizada or inicio_actividad provenance.",
@@ -163,14 +163,14 @@ def _elect(
             authorisation_reference=resolved_reference,
         )
     except (ProrrataRegisterValidationError, ValidationError) as exc:
-        raise _bad(str(exc)) from exc
+        raise bad(str(exc)) from exc
     service = ProrrataRegisterService()
     try:
         register = (
             service.declare_especial_transition(entry) if especial_transition is not None else service.declare(entry)
         )
     except (ProrrataRegisterValidationError, ValidationError) as exc:
-        raise _bad(str(exc)) from exc
+        raise bad(str(exc)) from exc
     payload = result_class(
         bucket_id=bucket_id,
         entry=_entry_payload(entry),
@@ -295,7 +295,7 @@ def prorrata_declare_sector(
             member_activity_codes=tuple(activity_code),
         )
     except ProrrataRegisterValidationError as exc:
-        raise _bad(str(exc)) from exc
+        raise bad(str(exc)) from exc
     register = ProrrataRegisterService().declare_sector(definition)
     payload = ProrrataDeclareSectorResult(
         bucket_id=bucket_id,

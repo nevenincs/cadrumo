@@ -34,7 +34,7 @@ def open_bucket_cli_backend(tmp_path: Path) -> Iterator[None]:
 
 
 @pytest.fixture(autouse=True)
-def _force_english_output() -> Iterator[None]:
+def force_english_output() -> Iterator[None]:
     """Pin CLI output to English so test assertions stay readable.
 
     The production default is ``es``; this fixture only affects test
@@ -69,7 +69,7 @@ def _force_english_output() -> Iterator[None]:
 
 
 @pytest.fixture(autouse=True)
-def _isolated_cadrumo_root(tmp_path: Path) -> Iterator[None]:
+def isolated_cadrumo_root(tmp_path: Path) -> Iterator[None]:
     """Point `Settings.cadrumo_local_storage_root` at the test's `tmp_path`."""
     with temporary_env(CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path)):
         yield

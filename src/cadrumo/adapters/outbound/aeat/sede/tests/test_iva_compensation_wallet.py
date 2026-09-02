@@ -30,14 +30,14 @@ from ...browser.factory import opened_browser_page, shared_playwright_runtime
 from .._adapter_utils import is_aeat_auth_gate_redirect
 from .._iva_compensation_wallet_parsing import (
     IVA_COMPENSATION_WALLET_READ_POLICY,
-    _assert_own_name_representation_form_html,
     _parse_spanish_decimal,
-    _wallet_execute_gate_status,
-    _wallet_page_shape_context,
     _wallet_row_from_cells,
+    assert_own_name_representation_form_html,
     discover_iva_compensation_wallet_entrypoint,
     is_aeat_wallet_read_url,
     parse_iva_compensation_wallet_html,
+    wallet_execute_gate_status,
+    wallet_page_shape_context,
 )
 from ..errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ..iva_compensation_wallet import (
@@ -52,8 +52,8 @@ from ..iva_compensation_wallet import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_EXTERNAL = Settings.external_constants()
-_AEAT_AUTH_GATE_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.auth_gate_4033}"
+EXTERNAL = Settings.external_constants()
+_AEAT_AUTH_GATE_URL = f"{EXTERNAL.aeat.domains.sede}{EXTERNAL.aeat.sede_paths.auth_gate_4033}"
 _SYNTHETIC_TAXPAYER_REF = "synthetic-taxpayer"
 _TARGET_PERIOD = Period.from_year_and_code(2026, "2T")
 
@@ -367,7 +367,7 @@ def test_parse_iva_compensation_wallet_html_refuses_unexecuted_empty_wallet_surf
       <head><title>Cartera de cuotas a compensar</title></head>
       <body>
         <h1>Cartera de cuotas de IVA a compensar</h1>
-        <form id="Form" method="post" action="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
+        <form id="Form" method="post" action="{EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
           <input id="ejecutar" name="ejecutar" type="submit" />
         </form>
       </body>
@@ -392,7 +392,7 @@ def test_parse_iva_compensation_wallet_html_refuses_execute_shell_as_empty_walle
       <head><title>Cartera de cuotas a compensar</title></head>
       <body>
         <h1>Cartera de cuotas de IVA a compensar</h1>
-        <form id="Form" method="post" action="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"></form>
+        <form id="Form" method="post" action="{EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"></form>
         <input id="ejecutar" name="ejecutar" type="submit" />
       </body>
     </html>
@@ -416,7 +416,7 @@ def test_parse_iva_compensation_wallet_html_refuses_executed_empty_wallet_shell_
       <head><title>Cartera de cuotas a compensar</title></head>
       <body>
         <h1>Cartera de cuotas de IVA a compensar</h1>
-        <form id="Form" method="post" action="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
+        <form id="Form" method="post" action="{EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
           <input type="hidden" name="ejercicio" value="2026" />
         </form>
       </body>
@@ -460,7 +460,7 @@ def test_parse_iva_compensation_wallet_html_refuses_authorized_empty_wallet_shel
       <head><title>Cartera de cuotas a compensar</title></head>
       <body>
         <h1>Cartera de cuotas de IVA a compensar</h1>
-        <form id="Form" method="post" action="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
+        <form id="Form" method="post" action="{EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
           <input id="ejecutar" name="ejecutar" type="submit" />
         </form>
       </body>
@@ -483,13 +483,13 @@ def test_parse_iva_compensation_wallet_html_refuses_authorized_empty_wallet_shel
 def test_wallet_execute_gate_detection_identifies_read_query_shape() -> None:
     html = f"""
     <html><body>
-      <form id="Form" method="post" action="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
+      <form id="Form" method="post" action="{EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
         <input id="ejecutar" name="ejecutar" type="submit" />
       </form>
     </body></html>
     """
 
-    status = _wallet_execute_gate_status(html, expected_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet)
+    status = wallet_execute_gate_status(html, expected_path=EXTERNAL.aeat.sede_paths.iva_compensation_wallet)
 
     assert status == "wallet-execute-submit-present"
 
@@ -498,7 +498,7 @@ def test_wallet_execute_initial_shape_waits_for_delayed_submit() -> None:
     pending_html = "<html><body><main></main></body></html>"
     wallet_html = f"""
     <html><body>
-      <form id="Form" method="post" action="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
+      <form id="Form" method="post" action="{EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
         <input id="ejecutar" name="ejecutar" type="submit" />
       </form>
     </body></html>
@@ -513,7 +513,7 @@ def test_wallet_execute_initial_shape_waits_for_delayed_submit() -> None:
     async def run() -> tuple[str, str]:
         return await _wait_for_wallet_execute_initial_shape(
             content=content,
-            expected_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
+            expected_path=EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
             timeout_ms=2_000,
         )
 
@@ -534,18 +534,18 @@ def test_iva_wallet_read_guard_rejects_unclassified_browser_action() -> None:
 
 def test_iva_wallet_read_guard_allows_reviewed_browser_read_actions() -> None:
     for action_label in (
-        _EXTERNAL.aeat.pre303.representation_own_name_action_label,
-        _EXTERNAL.aeat.pre303.wallet_execute_read_action_label,
-        _EXTERNAL.aeat.pre303.wallet_discovered_entrypoint_action_label,
+        EXTERNAL.aeat.pre303.representation_own_name_action_label,
+        EXTERNAL.aeat.pre303.wallet_execute_read_action_label,
+        EXTERNAL.aeat.pre303.wallet_discovered_entrypoint_action_label,
     ):
         _assert_read_browser_action(action_label)
 
 
 def test_own_name_representation_guard_accepts_dialogo_dispatcher_shape() -> None:
-    landing_url = f"{_EXTERNAL.aeat.domains.www6}{_EXTERNAL.aeat.clave_movil.dialogo_representacion_path}"
+    landing_url = f"{EXTERNAL.aeat.domains.www6}{EXTERNAL.aeat.clave_movil.dialogo_representacion_path}"
     html = f"""
     <html><body>
-      <form id="repForm" method="get" action="{_EXTERNAL.aeat.clave_movil.dialogo_representacion_path}">
+      <form id="repForm" method="get" action="{EXTERNAL.aeat.clave_movil.dialogo_representacion_path}">
         <input id="ref" name="ref" type="hidden" />
         <input id="tipoIden" name="tipoIden" type="hidden" />
         <input id="borrar" name="borrar" type="hidden" />
@@ -558,20 +558,20 @@ def test_own_name_representation_guard_accepts_dialogo_dispatcher_shape() -> Non
     </body></html>
     """
 
-    _assert_own_name_representation_form_html(
+    assert_own_name_representation_form_html(
         html,
         landing_url=landing_url,
-        expected_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
+        expected_path=EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
     )
 
 
 def test_own_name_representation_guard_rejects_representative_context() -> None:
-    landing_url = f"{_EXTERNAL.aeat.domains.www6}{_EXTERNAL.aeat.clave_movil.dialogo_representacion_path}"
+    landing_url = f"{EXTERNAL.aeat.domains.www6}{EXTERNAL.aeat.clave_movil.dialogo_representacion_path}"
     cases = (
         (
             f"""
             <html><body>
-              <form id="repForm" method="get" action="{_EXTERNAL.aeat.clave_movil.dialogo_representacion_path}">
+              <form id="repForm" method="get" action="{EXTERNAL.aeat.clave_movil.dialogo_representacion_path}">
                 <input id="propio" name="representacion" type="radio" />
                 <input id="representante" name="representacion" type="radio" checked="checked" />
                 <button type="submit">Continuar</button>
@@ -583,7 +583,7 @@ def test_own_name_representation_guard_rejects_representative_context() -> None:
         (
             f"""
             <html><body>
-              <form id="repForm" method="get" action="{_EXTERNAL.aeat.clave_movil.dialogo_representacion_path}">
+              <form id="repForm" method="get" action="{EXTERNAL.aeat.clave_movil.dialogo_representacion_path}">
                 <input id="propio" name="representacion" type="radio" checked="checked" />
                 <input id="representante" name="representacion" type="radio" />
                 <input id="nif" name="nif" type="text" value="represented-taxpayer-canary" />
@@ -597,10 +597,10 @@ def test_own_name_representation_guard_rejects_representative_context() -> None:
 
     for html, message in cases:
         with pytest.raises(SedeNavigationError, match=message):
-            _assert_own_name_representation_form_html(
+            assert_own_name_representation_form_html(
                 html,
                 landing_url=landing_url,
-                expected_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
+                expected_path=EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
             )
 
 
@@ -610,7 +610,7 @@ def test_discover_iva_compensation_wallet_entrypoint_preserves_query_and_drops_f
     for fragment in ("", "#fragment"):
         html = f"""
         <html><body>
-          <a href="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}?{query}{fragment}">
+          <a href="{EXTERNAL.aeat.sede_paths.iva_compensation_wallet}?{query}{fragment}">
             Consulta de la cartera de cuotas de IVA a compensar
           </a>
         </body></html>
@@ -627,7 +627,7 @@ def test_discover_iva_compensation_wallet_entrypoint_preserves_query_and_drops_f
 def test_discover_iva_compensation_wallet_entrypoint_rejects_non_aeat_host() -> None:
     html = f"""
     <html><body>
-      <a href="https://example.invalid{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
+      <a href="https://example.invalid{EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
         Consulta de la cartera de cuotas de IVA a compensar
       </a>
     </body></html>
@@ -649,13 +649,13 @@ def test_iva_wallet_auth_gate_detector_matches_aeat_4033_redirect() -> None:
 def test_wallet_shape_context_redacts_url_query_and_input_values() -> None:
     html = f"""
     <html><body>
-      <form id="Form" method="post" action="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
+      <form id="Form" method="post" action="{EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
         <input id="session" name="session" type="hidden" value="QUERY-CANARY" />
       </form>
     </body></html>
     """
 
-    context = _wallet_page_shape_context(
+    context = wallet_page_shape_context(
         html,
         landing_url=f"{IVA_COMPENSATION_WALLET_URL}?token=QUERY-CANARY#fragment",
     )
@@ -671,7 +671,7 @@ def test_wallet_shape_context_carries_page_text_so_the_leak_assertion_can_fire()
     That assertion passes for two unrelated reasons it cannot tell apart:
     because something redacted the value, or because the shape reader never
     reads that attribute at all. Its canary sits in an ``input``'s ``value``,
-    which :func:`_wallet_page_shape_context` does not carry -- so on its own it
+    which :func:`wallet_page_shape_context` does not carry -- so on its own it
     is evidence about the reader's field selection, not about redaction, and it
     would read exactly the same if page text could never reach ``str(context)``
     by any route.
@@ -688,13 +688,13 @@ def test_wallet_shape_context_carries_page_text_so_the_leak_assertion_can_fire()
     """
     html = f"""
     <html><body>
-      <form id="Form" method="post" action="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
+      <form id="Form" method="post" action="{EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
         <input id="QUERY-CANARY" name="session" type="hidden" value="not-read" />
       </form>
     </body></html>
     """
 
-    context = _wallet_page_shape_context(html, landing_url=IVA_COMPENSATION_WALLET_URL)
+    context = wallet_page_shape_context(html, landing_url=IVA_COMPENSATION_WALLET_URL)
 
     assert "QUERY-CANARY" in str(context)
     assert context["inputs"][0]["id"] == "QUERY-CANARY"
@@ -703,24 +703,24 @@ def test_wallet_shape_context_carries_page_text_so_the_leak_assertion_can_fire()
 def test_wallet_shape_context_reports_discovered_wallet_entrypoints_without_query_values() -> None:
     html = f"""
     <html><body>
-      <a href="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}?token=QUERY-CANARY">
+      <a href="{EXTERNAL.aeat.sede_paths.iva_compensation_wallet}?token=QUERY-CANARY">
         Consulta de la cartera de cuotas de IVA a compensar
       </a>
-      <form id="Form" method="post" action="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
+      <form id="Form" method="post" action="{EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
         <input id="session" name="session" type="hidden" value="QUERY-CANARY" />
       </form>
     </body></html>
     """
 
-    context = _wallet_page_shape_context(
+    context = wallet_page_shape_context(
         html,
         landing_url=f"{IVA_COMPENSATION_WALLET_URL}?token=QUERY-CANARY#fragment",
     )
 
     assert context["wallet_entrypoint_count"] == 2
     assert context["wallet_entrypoint_paths"] == (
-        _EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
-        _EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
+        EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
+        EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
     )
     assert "QUERY-CANARY" not in str(context)
 
@@ -729,7 +729,7 @@ def test_wallet_shape_context_reports_discovered_wallet_entrypoints_without_quer
 async def test_wallet_diagnostic_dump_writes_only_redacted_structural_summary(tmp_path: Path) -> None:
     html = f"""
     <html><body>
-      <form id="Form" method="post" action="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
+      <form id="Form" method="post" action="{EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
         <input id="session" name="session" type="hidden" value="QUERY-CANARY" />
       </form>
       <table>
@@ -767,10 +767,10 @@ def test_iva_wallet_live_routes_are_centralized_external_constants() -> None:
     part of it.
     """
     assert (
-        f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
+        f"{EXTERNAL.aeat.domains.sede}{EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
     ) == IVA_COMPENSATION_WALLET_URL
     assert (
-        f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.pre303.presentation_service_path}"
+        f"{EXTERNAL.aeat.domains.sede}{EXTERNAL.aeat.pre303.presentation_service_path}"
     ) == PRE303_PRESENTATION_SERVICE_URL
 
 
@@ -874,7 +874,7 @@ def test_parse_spanish_decimal_negative_amount_reaches_its_own_refusal_message()
 
 def test_wallet_read_guard_admits_sibling_load_balancer_host() -> None:
     """An authenticated wallet pull dispatched to a sibling www{n} host is allowed."""
-    drifted = f"{_EXTERNAL.aeat.domains.www12}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
+    drifted = f"{EXTERNAL.aeat.domains.www12}{EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
     result = assert_remote_operation_allowed(
         IVA_COMPENSATION_WALLET_READ_POLICY,
         RemoteOperation(kind="http", method="GET", url=AnyUrl(drifted)),
@@ -959,13 +959,13 @@ class TestWalletReadPolicy:
 
     def test_the_wallet_url_names_no_numbered_host(self) -> None:
         """The exported wallet URL must not assert a host the balancer assigns."""
-        from .._iva_compensation_wallet_parsing import _WALLET_URL
+        from .._iva_compensation_wallet_parsing import WALLET_URL
 
         external = Settings.external_constants()
         numbered = [
             name
             for name in ("www1", "www2", "www3", "www6", "www12")
-            if urlsplit(getattr(external.aeat.domains, name)).netloc in _WALLET_URL
+            if urlsplit(getattr(external.aeat.domains, name)).netloc in WALLET_URL
         ]
         assert numbered == [], f"the wallet URL pins a numbered host: {numbered}"
 

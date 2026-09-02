@@ -26,15 +26,15 @@ from .....application.storage.calc_sheets.engine import build_export_plan
 from .....application.storage.calc_sheets.records import SheetCellAddress, TabName
 from .....domain.calculations.registry.authority import bundled_authority
 from .._calc_sheets_apply_values import (
-    _build_evidence_value_data,
-    _build_formula_data,
-    _build_guide_value_data,
-    _build_row_set_header_data,
-    _build_value_data,
+    build_evidence_value_data,
+    build_formula_data,
+    build_guide_value_data,
+    build_row_set_header_data,
+    build_value_data,
     payload_written_addresses,
     stale_addresses,
 )
-from ..calc_sheets_apply import _occupied_address_ranges, _occupied_addresses_from_response
+from ..calc_sheets_apply import _occupied_address_ranges, occupied_addresses_from_response
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -47,11 +47,11 @@ def _m130_plan():
 def _payload(plan) -> list[dict[str, object]]:
     """The exact payload the adapter hands to ``values.batchUpdate``."""
     raw_payload = (
-        _build_value_data(plan.value_cells)
-        + _build_guide_value_data(plan)
-        + _build_row_set_header_data(plan.row_sets)
-        + _build_evidence_value_data(plan)
-        + _build_formula_data(plan.formula_cells)
+        build_value_data(plan.value_cells)
+        + build_guide_value_data(plan)
+        + build_row_set_header_data(plan.row_sets)
+        + build_evidence_value_data(plan)
+        + build_formula_data(plan.formula_cells)
     )
     payload: list[dict[str, object]] = []
     for item in raw_payload:
@@ -92,7 +92,7 @@ def test_occupied_response_preserves_zero_false_and_truncates_unaligned_blocks()
     )
     evidence_range = next(item for item in ranges if item.tab is TabName.EVIDENCIA)
 
-    occupied = _occupied_addresses_from_response(
+    occupied = occupied_addresses_from_response(
         ranges,
         {
             "valueRanges": [
@@ -115,7 +115,7 @@ def test_occupied_response_preserves_zero_false_and_truncates_unaligned_blocks()
         SheetCellAddress.at(evidence_range.tab, 2, 2).qualified(),
         SheetCellAddress.at(second_tab, 1, 1).qualified(),
     }
-    missing_second = _occupied_addresses_from_response(ranges, {"valueRanges": [{"values": [["first"]]}]})
+    missing_second = occupied_addresses_from_response(ranges, {"valueRanges": [{"values": [["first"]]}]})
     assert missing_second == {SheetCellAddress.at(ranges[0].tab, 1, 1).qualified()}
 
 

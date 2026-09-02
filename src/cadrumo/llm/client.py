@@ -313,7 +313,7 @@ class _OnHostInferenceArena:
             self._held -= 1
 
 
-_ON_HOST_ARENA: _OnHostInferenceArena | None = None
+_on_host_arena: _OnHostInferenceArena | None = None
 _ON_HOST_ARENA_LOCK = threading.Lock()
 
 
@@ -327,11 +327,11 @@ def _on_host_inference_arena(settings: Settings) -> _OnHostInferenceArena:
     because a rebuild would hand a fresh, empty arena to the second client and
     the bound would hold for neither.
     """
-    global _ON_HOST_ARENA
+    global _on_host_arena
     with _ON_HOST_ARENA_LOCK:
-        if _ON_HOST_ARENA is None:
-            _ON_HOST_ARENA = _OnHostInferenceArena(settings.cadrumo_llm_local_inference_concurrency)
-        return _ON_HOST_ARENA
+        if _on_host_arena is None:
+            _on_host_arena = _OnHostInferenceArena(settings.cadrumo_llm_local_inference_concurrency)
+        return _on_host_arena
 
 
 def reset_on_host_inference_arena() -> None:
@@ -347,12 +347,12 @@ def reset_on_host_inference_arena() -> None:
             a real inference is still resident, which is precisely the double
             load the bound prevents -- so this refuses rather than resetting.
     """
-    global _ON_HOST_ARENA
+    global _on_host_arena
     with _ON_HOST_ARENA_LOCK:
-        if _ON_HOST_ARENA is not None and _ON_HOST_ARENA.held:
+        if _on_host_arena is not None and _on_host_arena.held:
             msg = "cannot reset the on-host inference arena while a slot is held"
             raise RuntimeError(msg)
-        _ON_HOST_ARENA = None
+        _on_host_arena = None
 
 
 class LLMClient:

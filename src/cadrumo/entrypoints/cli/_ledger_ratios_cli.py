@@ -8,17 +8,18 @@ from __future__ import annotations
 
 import typer
 
+from ...application.ledger.ratios import RatiosCensoOverrideWarning
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.logging import get_logger
 from ...core.time.clock import now
 from ...domain.buckets.event import BucketEventType
 from ...domain.categories.spending_category import SpendingCategory
-from ._common import _bad, emit_envelope
 from ._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ._common import active_bucket_id_or_refuse as _ratios_bucket_id
+from ._common import bad, emit_envelope
 from ._decimal_parsing import parse_decimal_amount
-from ._ledger_support import _ledger_cli_no_recovery
+from ._ledger_support import ledger_cli_no_recovery
 
 _log = get_logger(__name__)
 
@@ -67,7 +68,7 @@ def _emit_ratios_event(
 def _emit_ratios_censo_override_warning(
     *,
     bucket_id: str,
-    warning,
+    warning: RatiosCensoOverrideWarning,
 ) -> None:
     """Append LEDGER_RATIOS_CENSO_OVERRIDE_WARNING to the bucket catalogue."""
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -135,7 +136,7 @@ def ratios_list(
     except CensoRatioMismatchError as exc:
         from ...application.cli_exception_preconditions import CliExceptionPrecondition
 
-        raise _ledger_cli_no_recovery(
+        raise ledger_cli_no_recovery(
             exc,
             condition=CliExceptionPrecondition.LEDGER_CENSO_RATIO_CONSISTENT,
             facts={"censo_ratio_consistent": False},
@@ -217,7 +218,7 @@ def ratios_unset(
     try:
         prior = unset_usage_ratio(bucket_id=bucket_id, category=category)
     except UsageRatioValidationError as exc:
-        raise _bad(
+        raise bad(
             tr(
                 "cli.app.ledger.ratios.no_override_error",
                 category=category.value,

@@ -17,7 +17,7 @@ from ....domain.iva.classification import InvoiceKind
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_runner import invoke_cached_cli
 from .._common import cli_policy_refusal_projection
-from .._ledger_support import _ledger_invoice_validation_no_recovery
+from .._ledger_support import ledger_invoice_validation_no_recovery
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -45,7 +45,7 @@ _EXPECTED_ACTION = {
 
 def _assert_invoice_terminal(error: InvoiceValidationError | ValidationError) -> None:
     """Assert the exact canonical fact-only terminal projection."""
-    projected = _ledger_invoice_validation_no_recovery(error)
+    projected = ledger_invoice_validation_no_recovery(error)
     assert projected is not None
     refusal = cli_policy_refusal_projection(projected)
     assert refusal is not None
@@ -138,7 +138,7 @@ def test_invoice_projection_does_not_reclassify_catalogue_load_corruption() -> N
         InvoiceCatalogue.model_validate({"bare_catalogue_payload": {}})
 
     assert raised.value.title == "InvoiceCatalogue"
-    assert _ledger_invoice_validation_no_recovery(raised.value) is None
+    assert ledger_invoice_validation_no_recovery(raised.value) is None
 
 
 def test_invoice_projection_does_not_hide_ordinary_coercion_in_a_mixed_invoice_line() -> None:
@@ -148,7 +148,7 @@ def test_invoice_projection_does_not_hide_ordinary_coercion_in_a_mixed_invoice_l
     assert error.title == "InvoiceLine"
     assert len(error.errors(include_url=False)) == 2
     assert _nested_invoice_error_count(error) == 1
-    assert _ledger_invoice_validation_no_recovery(error) is None
+    assert ledger_invoice_validation_no_recovery(error) is None
 
 
 @pytest.mark.parametrize(
@@ -165,7 +165,7 @@ def test_invoice_projection_does_not_reclassify_pure_ordinary_pydantic_coercion(
     """Ordinary Invoice and InvoiceLine coercion wrappers stay unprojected."""
     assert error.title == title
     assert _nested_invoice_error_count(error) == 0
-    assert _ledger_invoice_validation_no_recovery(error) is None
+    assert ledger_invoice_validation_no_recovery(error) is None
 
 
 def test_invoice_add_pydantic_invoice_validation_emits_the_canonical_terminal_action() -> None:

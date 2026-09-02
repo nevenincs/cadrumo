@@ -123,13 +123,13 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         if not self._validate_existing_root():
             return None
         with exclusive_file_lock(self.lock_target):
-            return self._read_observation_unlocked(operation_id, request)
+            return self.read_observation_unlocked(operation_id, request)
 
     def read_observation_root_present(self) -> bool:
         """Tell whether the journal root exists, without taking the lock."""
         return self._validate_existing_root()
 
-    def _read_observation_unlocked(
+    def read_observation_unlocked(
         self,
         operation_id: str,
         request: _OperationReplayRequest,
@@ -143,12 +143,12 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         try:
             record = super().load(operation_id)
         except RepositoryError:
-            if self._is_absent(operation_id):
+            if self.is_absent(operation_id):
                 return None
             raise
         return _observation_materialization_from_record(record, request)
 
-    def _is_absent(self, operation_id: str) -> bool:
+    def is_absent(self, operation_id: str) -> bool:
         """Tell a missing record from a present but unreadable one."""
         path = self.path_for(operation_id)
         return not os.path.lexists(self.root) or not os.path.lexists(path)
@@ -292,7 +292,7 @@ class OperationJournalRepository(OperationJournal, OperationEventStream, Operati
         try:
             record = self._repository.load(operation_id)
         except RepositoryError:
-            if self._is_absent(operation_id):
+            if self.is_absent(operation_id):
                 return OperationReplayPage(
                     status=OperationReplayStatus.UNKNOWN_OPERATION,
                     requested_cursor=request.cursor,
@@ -321,7 +321,7 @@ class OperationJournalRepository(OperationJournal, OperationEventStream, Operati
         if not self._repository.read_observation_root_present():
             raise OperationObservationUnknownOperationError(operation_id)
         async with exclusive_file_lock_async(self._repository.lock_target):
-            materialization = self._repository._read_observation_unlocked(
+            materialization = self._repository.read_observation_unlocked(
                 operation_id,
                 _OperationReplayRequest(cursor=after_cursor, limit=limit),
             )
@@ -340,9 +340,9 @@ class OperationJournalRepository(OperationJournal, OperationEventStream, Operati
         """Atomically advance an existing snapshot through the typed substrate."""
         self._repository.commit(snapshot, expected_revision=expected_revision, lease=lease)
 
-    def _is_absent(self, operation_id: str) -> bool:
+    def is_absent(self, operation_id: str) -> bool:
         """Distinguish an absent record from a present but unreadable record."""
-        return self._repository._is_absent(operation_id)
+        return self._repository.is_absent(operation_id)
 
 
 __all__ = ["OperationJournalRepository"]

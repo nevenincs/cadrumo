@@ -21,11 +21,11 @@ from ..evasion import PlaywrightStealthEvasion
 from ..factory import DefaultBrowserSession
 from ..session import BrowserSession
 
-_EXTERNAL = Settings.external_constants()
-_DOMAINS = _EXTERNAL.aeat.domains
-_CLAVE_MOVIL = _EXTERNAL.aeat.clave_movil
-_CLAVE_PERMANENTE = _EXTERNAL.aeat.clave_permanente
-_PRE303 = _EXTERNAL.aeat.pre303
+EXTERNAL = Settings.external_constants()
+_DOMAINS = EXTERNAL.aeat.domains
+_CLAVE_MOVIL = EXTERNAL.aeat.clave_movil
+_CLAVE_PERMANENTE = EXTERNAL.aeat.clave_permanente
+PRE303 = EXTERNAL.aeat.pre303
 _PROTECTED_PARENT = AEAT_CERTIFICATE_PROTECTED_PATH.rpartition("/")[0]
 _WRONG_HOST_URL: Final[str] = f"{_DOMAINS.www1}{AEAT_CERTIFICATE_PROTECTED_PATH}"
 _WRONG_PATH_URL: Final[str] = f"{_DOMAINS.www6}{_PROTECTED_PARENT}/OtroRecurso"
@@ -33,9 +33,9 @@ _REDACTION_PROBE_VALUE: Final[str] = "certificate-query-7e2b"
 _SENSITIVE_URL: Final[str] = f"{_DOMAINS.www6}{_PROTECTED_PARENT}/Interrumpido?probe={_REDACTION_PROBE_VALUE}"
 _MOVIL_QR_URL: Final[str] = f"{_DOMAINS.www12}{_CLAVE_MOVIL.obtener_clave_movil_qr_path}"
 _REPRESENTATION_URL: Final[str] = f"{_DOMAINS.www6}{_CLAVE_MOVIL.dialogo_representacion_path}"
-_PRE303_TARGET_URL: Final[str] = f"{_DOMAINS.www1}{_PRE303.presentation_service_path}"
+_PRE303_TARGET_URL: Final[str] = f"{_DOMAINS.www1}{PRE303.presentation_service_path}"
 _PERMANENTE_IDP_URL: Final[str] = f"https://se-pasarela.{urlsplit(_DOMAINS.clave).netloc}/idp/login"
-_DEFAULT_CLAVE_TARGET_URL: Final[str] = f"{_DOMAINS.www6}{_EXTERNAL.aeat.sede_paths.expedientes_resumen}"
+_DEFAULT_CLAVE_TARGET_URL: Final[str] = f"{_DOMAINS.www6}{EXTERNAL.aeat.sede_paths.expedientes_resumen}"
 
 
 class _BoundaryServer(ThreadingHTTPServer):

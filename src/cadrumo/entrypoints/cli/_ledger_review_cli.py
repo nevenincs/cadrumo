@@ -17,10 +17,10 @@ from ...application.ledger.models import LedgerReviewQuery, LedgerReviewQueryRes
 from ...application.review.errors import FilterParseError
 from ...application.review.filter import LedgerReviewFilterSpec
 from ...core.i18n.render import tr
-from ._common import _state, _tx_repo, emit_envelope
+from ._common import current_workflow_state, emit_envelope, transaction_catalogue_repo
 from ._ledger_list import ledger_review_query_for_spec
 from ._ledger_read_cli import resolve_ledger_transaction_id
-from ._ledger_support import _ledger_cli_no_recovery
+from ._ledger_support import ledger_cli_no_recovery
 
 ResolveTransactionId = Callable[[TransactionCatalogueRepository, str], str]
 
@@ -30,7 +30,7 @@ def ledger_review(
 ) -> None:
     """Render rows or a single row using the typed filter spec."""
     spec = _ledger_review_filter_spec(list(filters))
-    transaction_repository = _tx_repo(_state())
+    transaction_repository = transaction_catalogue_repo(current_workflow_state())
     result = query_ledger_review_rows(
         _ledger_review_query(
             transaction_repository, spec=spec, record_id=record_id, resolve_transaction_id=resolve_ledger_transaction_id
@@ -46,7 +46,7 @@ def _ledger_review_filter_spec(filters: list[str]) -> LedgerReviewFilterSpec:
     except FilterParseError as exc:
         from ...application.cli_exception_preconditions import CliExceptionPrecondition
 
-        raise _ledger_cli_no_recovery(
+        raise ledger_cli_no_recovery(
             exc,
             condition=CliExceptionPrecondition.LEDGER_FILTER_VALID,
             facts={"ledger_filter_valid": False, "reason": exc.reason},

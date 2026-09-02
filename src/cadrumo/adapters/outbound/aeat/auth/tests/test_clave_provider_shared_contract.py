@@ -64,9 +64,9 @@ from ._clave_permanente_support import _settings_for as _permanente_settings_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_EXTERNAL = Settings.external_constants()
-_SEDE_PATHS = _EXTERNAL.aeat.sede_paths
-_DOMAINS = _EXTERNAL.aeat.domains
+EXTERNAL = Settings.external_constants()
+_SEDE_PATHS = EXTERNAL.aeat.sede_paths
+_DOMAINS = EXTERNAL.aeat.domains
 _TARGET_PATH = _SEDE_PATHS.expedientes_resumen
 _IDENTITY = "12345678Z"
 _BUCKET_ID = "1f6b0000-0000-4000-8000-00000000d0d0"
@@ -240,7 +240,7 @@ def test_both_providers_dispatch_through_the_one_shared_clave_selector(tmp_path:
 def test_each_provider_reads_its_own_clave_surface(profile: _ProviderProfile, tmp_path: Path) -> None:
     """``_clave_surface`` is a genuine variation point, not shared behaviour."""
     provider = profile.build(tmp_path)
-    expected = getattr(_EXTERNAL.aeat, profile.surface_attribute)
+    expected = getattr(EXTERNAL.aeat, profile.surface_attribute)
 
     assert provider._clave_surface() == expected
 

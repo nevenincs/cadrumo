@@ -18,7 +18,7 @@ from ...core.identity import (
 )
 from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry.ids import BindingId
-from ._app_live_payloads_support import _canonical_borrador_period, _canonical_borrador_utc_timestamp
+from ._app_live_payloads_support import canonical_borrador_period, canonical_borrador_utc_timestamp
 
 
 class Borrador100SnapshotSummaryPayload(OutputSchema):
@@ -41,12 +41,12 @@ class Borrador100SnapshotSummaryPayload(OutputSchema):
     @field_validator("period")
     @classmethod
     def _validate_period(cls, value: str) -> str:
-        return _canonical_borrador_period(value)
+        return canonical_borrador_period(value)
 
     @field_validator("captured_at")
     @classmethod
     def _validate_captured_at(cls, value: str) -> str:
-        return _canonical_borrador_utc_timestamp(value)
+        return canonical_borrador_utc_timestamp(value)
 
 
 class Borrador100ListResult(OutputSchema):
@@ -105,12 +105,12 @@ class Borrador100LatestResult(OutputSchema):
     @field_validator("period")
     @classmethod
     def _validate_optional_period(cls, value: str | None) -> str | None:
-        return _canonical_borrador_period(value) if value is not None else None
+        return canonical_borrador_period(value) if value is not None else None
 
     @field_validator("captured_at")
     @classmethod
     def _validate_optional_captured_at(cls, value: str | None) -> str | None:
-        return _canonical_borrador_utc_timestamp(value) if value is not None else None
+        return canonical_borrador_utc_timestamp(value) if value is not None else None
 
     @model_validator(mode="after")
     def _enforce_latest_empty_or_active_shape(self) -> Borrador100LatestResult:

@@ -32,7 +32,7 @@ from ._recovery_secret_codec import decode_recovery_secret
 from .records import (
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
-    _decode_profile_password,
+    decode_profile_password,
 )
 
 _CALIBRATION_PASSWORD = b"cadrumo-profile-kdf-calibration-v1"
@@ -148,7 +148,7 @@ def _unwrap(payload: Mapping[str, object], *, recovery: bool = False) -> bytes:
     kdf = _validated_kdf(payload["kdf"])
     wrapped_dek = _validated_wrapped_dek(payload["wrapped_dek"])
     encoded = _decode_b64(payload["password_b64"])
-    secret = decode_recovery_secret(encoded) if recovery else _decode_profile_password(encoded)
+    secret = decode_recovery_secret(encoded) if recovery else decode_profile_password(encoded)
     key = _derive_key(secret=secret.encode("utf-8", errors="strict"), kdf=kdf)
     associated_data = _decode_b64(payload["associated_data_b64"])
     ciphertext = _decode_b64(wrapped_dek.ciphertext_b64) + _decode_b64(wrapped_dek.tag_b64)
@@ -165,7 +165,7 @@ def _unwrap(payload: Mapping[str, object], *, recovery: bool = False) -> bytes:
 def _wrap(payload: Mapping[str, object], *, recovery: bool = False) -> bytes:
     kdf = _validated_kdf(payload["kdf"])
     encoded = _decode_b64(payload["secret_b64"])
-    secret = decode_recovery_secret(encoded) if recovery else _decode_profile_password(encoded)
+    secret = decode_recovery_secret(encoded) if recovery else decode_profile_password(encoded)
     dek = _decode_b64(payload["dek_b64"])
     if len(dek) != KEY_SIZE:
         raise ValueError("profile custody DEK has invalid length")

@@ -39,7 +39,7 @@ from ......tests.aeat_literal_fixtures import (
     aeat_url,
 )
 from .._adapter_utils import assert_read_landing
-from ..deudas import _READ_GUARD_POLICY, assert_deudas_landing, deudas_read_path_prefixes
+from ..deudas import READ_GUARD_POLICY, assert_deudas_landing, deudas_read_path_prefixes
 from ..errors import SedeNavigationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -113,7 +113,7 @@ def test_the_host_suffix_is_what_carries_the_numbered_dispatch() -> None:
     tightens the suffix away to "lock down the host" reintroduces exactly the
     refusal this proves, in a session that is not theirs.
     """
-    numbered_only = _READ_GUARD_POLICY.model_copy(
+    numbered_only = READ_GUARD_POLICY.model_copy(
         update={
             "allowed_hosts": (urlsplit(aeat_url("www6", "/")).netloc,),
             "allowed_host_suffixes": (),
@@ -211,7 +211,7 @@ def test_the_guard_discriminates_on_the_allow_list_and_not_on_something_else() -
     assert_read_landing(
         aeat_url("www6", permitted_prefix),
         surface="deudas consulta positive control",
-        policy=_READ_GUARD_POLICY,
+        policy=READ_GUARD_POLICY,
         allowed_path_prefixes=(permitted_prefix,),
     )
 
@@ -220,16 +220,16 @@ def test_the_guard_discriminates_on_the_allow_list_and_not_on_something_else() -
             assert_read_landing(
                 refused,
                 surface="deudas consulta positive control",
-                policy=_READ_GUARD_POLICY,
+                policy=READ_GUARD_POLICY,
                 allowed_path_prefixes=(permitted_prefix,),
             )
 
 
 def test_the_policy_declares_no_drivable_browser_action() -> None:
     """No control on this surface may be driven; every payment action is one."""
-    assert _READ_GUARD_POLICY.allowed_browser_action_patterns == ()
-    assert _READ_GUARD_POLICY.requires_authentication is True
-    assert _READ_GUARD_POLICY.synthetic_data_allowed is False
+    assert READ_GUARD_POLICY.allowed_browser_action_patterns == ()
+    assert READ_GUARD_POLICY.requires_authentication is True
+    assert READ_GUARD_POLICY.synthetic_data_allowed is False
 
 
 def test_the_read_post_allowance_is_scoped_to_the_consulta_alone() -> None:
@@ -241,5 +241,5 @@ def test_the_read_post_allowance_is_scoped_to_the_consulta_alone() -> None:
     the consulta -- a second entry here would be a payment endpoint handed a
     method the rest of the guard is built to deny.
     """
-    assert _READ_GUARD_POLICY.allowed_read_post_paths == (DEUDAS_CONSULTA_OBSERVED_PATH_FIXTURE,)
-    assert DEUDAS_PAGAR_TODAS_OBSERVED_PATH_FIXTURE not in _READ_GUARD_POLICY.allowed_read_post_paths
+    assert READ_GUARD_POLICY.allowed_read_post_paths == (DEUDAS_CONSULTA_OBSERVED_PATH_FIXTURE,)
+    assert DEUDAS_PAGAR_TODAS_OBSERVED_PATH_FIXTURE not in READ_GUARD_POLICY.allowed_read_post_paths

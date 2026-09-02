@@ -88,7 +88,7 @@ class OperationLeaseStorage(JournalRepositoryBase[_OperationLeaseRecord]):
         """Materialize the canonical secure journal root before locking it."""
         self._ensure_root()
 
-    def _refuse_retired_operation_path(
+    def refuse_retired_operation_path(
         self,
         *,
         scope_ref: OperationConflictScopeReference,
@@ -185,7 +185,7 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
         """Return absent, active, or expired durable lease state at ``observed_at``."""
         self._storage.ensure_root()
         with exclusive_file_lock(self._storage.lock_target):
-            self._storage._refuse_retired_operation_path(
+            self._storage.refuse_retired_operation_path(
                 scope_ref=scope_ref,
                 operation_id=operation_id,
             )
@@ -215,7 +215,7 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
         """Acquire only an absent lease; live and expired predecessors remain unchanged."""
         self._storage.ensure_root()
         with exclusive_file_lock(self._storage.lock_target):
-            self._storage._refuse_retired_operation_path(
+            self._storage.refuse_retired_operation_path(
                 scope_ref=candidate.scope_ref,
                 operation_id=candidate.operation_id,
             )

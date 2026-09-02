@@ -66,8 +66,8 @@ class PartSpec(BaseModel):
     source_pdf_url: str
 
 
-_EXTERNAL = Settings.external_constants().aeat
-_MANUAL_BIBLIOTECA_ROOT = f"{_EXTERNAL.domains.sede}{_EXTERNAL.help_pages.manual_practicos_root}"
+EXTERNAL = Settings.external_constants().aeat
+_MANUAL_BIBLIOTECA_ROOT = f"{EXTERNAL.domains.sede}{EXTERNAL.help_pages.manual_practicos_root}"
 
 PART_SPECS: tuple[PartSpec, ...] = (
     # 2020

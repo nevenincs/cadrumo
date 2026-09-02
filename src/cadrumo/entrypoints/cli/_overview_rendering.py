@@ -375,7 +375,7 @@ def _calendar_entry_text_line(entry: OverviewCalendarEntry) -> str:
         f"\topens={entry.opens_on.isoformat()}"
         f"\tcloses={entry.closes_on.isoformat()}"
         f"\tadjusted={entry.adjusted_closes_on.isoformat()}"
-        f"\tshift={_calendar_shift_reason_text(entry.shift_reason)}"
+        f"\tshift={calendar_shift_reason_text(entry.shift_reason)}"
         f"\tcenso_enrolment={entry.censo_enrolment_state.value}"
         f"\t{_calendar_filing_evidence_text_fields(entry.filing_evidence)}"
         f"\t{_calendar_entry_work_unit_text_fields(entry)}"
@@ -973,7 +973,7 @@ def _calendar_shift_reason_part_text(part: str) -> str:
     return part
 
 
-def _calendar_shift_reason_text(shift_reason: str) -> str:
+def calendar_shift_reason_text(shift_reason: str) -> str:
     """Return the localized operator label for a calendar shift reason."""
     return " + ".join(_calendar_shift_reason_part_text(part) for part in shift_reason.split(" + "))
 

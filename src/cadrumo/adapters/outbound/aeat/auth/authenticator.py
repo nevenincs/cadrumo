@@ -72,7 +72,7 @@ from .authenticator_types import (
     CertificateHealthCheck,
     PersistedSessionInvalidError,
 )
-from .browser_lifecycle import _CloseIntentBarrier, close_owned_browser_context, close_owned_browser_session
+from .browser_lifecycle import CloseIntentBarrier, close_owned_browser_context, close_owned_browser_session
 from .certificate import (
     CertificateBundle,
     CertificateError,
@@ -264,7 +264,7 @@ class AeatAuthenticator:
         # (e.g. a pytest-asyncio fixture) and reusing it in another
         # will trip "attached to a different loop" errors. Callers
         # that need cross-loop reuse must construct a fresh instance.
-        self._lifecycle = _CloseIntentBarrier()
+        self._lifecycle = CloseIntentBarrier()
         self._lock = asyncio.Lock()
         self._browser_session: BrowserSessionPort | None = None
         self._context: BrowserContextPort | None = None

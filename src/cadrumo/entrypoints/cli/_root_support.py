@@ -16,7 +16,7 @@ from ._common import (
 from .command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 
 
-def _emit_version_report_and_exit(*, detail: bool) -> None:
+def emit_version_report_and_exit(*, detail: bool) -> None:
     """Render the ``--version`` surface and exit, skipping the registry load.
 
     Fast-path: bare ``aeat --version`` skips the registry load — registry
@@ -38,7 +38,7 @@ def _emit_version_report_and_exit(*, detail: bool) -> None:
     raise typer.Exit()
 
 
-def _emit_root_help_and_exit(ctx: typer.Context) -> None:
+def emit_root_help_and_exit(ctx: typer.Context) -> None:
     """Render the root help document and exit.
 
     The operator-surface import is deferred so the help-document builder loads
@@ -104,7 +104,7 @@ def _root_tui_help_lines() -> tuple[str, ...]:
     )
 
 
-def _normalize_root_active_profile(ctx: typer.Context) -> None:
+def normalize_root_active_profile(ctx: typer.Context) -> None:
     """Normalize the ambient active-profile label to its UUID for storage routing.
 
     No explicit ``--profile``: the active profile comes from the
@@ -137,7 +137,7 @@ def _normalize_root_active_profile(ctx: typer.Context) -> None:
             ) from exc
 
 
-def _emit_bare_invocation_and_exit(ctx: typer.Context) -> None:
+def emit_bare_invocation_and_exit(ctx: typer.Context) -> None:
     """Render the bare-invocation landing or overview surface, then exit.
 
     The landing surface needs the application operator_surface layer; deferring
@@ -190,7 +190,7 @@ def _emit_bare_invocation_and_exit(ctx: typer.Context) -> None:
     raise typer.Exit()
 
 
-def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
+def activate_profile_override(ctx: typer.Context, profile: str) -> None:
     """Resolve ``--profile`` to a bucket id and set the active-profile override.
 
     Resolves through the single application-layer name-or-UUID resolver so a
@@ -312,7 +312,7 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     ctx.with_resource(override_settings(cadrumo_active_profile=pointer.bucket_id))
 
 
-def _is_introspection_only_invocation(ctx: typer.Context) -> bool:
+def is_introspection_only_invocation(ctx: typer.Context) -> bool:
     """Return whether the invocation can only render help or a usage error.
 
     Two introspection shapes never execute a verb body and therefore must

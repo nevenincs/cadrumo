@@ -199,7 +199,7 @@ class TestTheOffHostUrlReachesTheGuardFromARealParse:
             'href="https://evil.example.test/steal?e=1">2024EXP00000001</a></li></ul>'
             "</li></ul></body></html>"
         )
-        expedientes = parse_resumen_tree(html, base_url=walker._SEDE_BASE)
+        expedientes = parse_resumen_tree(html, base_url=walker.SEDE_BASE)
 
         assert len(expedientes) == 1, "the fixture must actually parse, or the guard is never reached"
         detail_url = str(expedientes[0].detail_url)
@@ -250,7 +250,7 @@ class TestThePolicyShape:
 
     def test_the_policy_is_an_authenticated_read_surface(self) -> None:
         """SUPPORTING: passes with the navigation guard removed."""
-        policy = walker._READ_GUARD_POLICY
+        policy = walker.READ_GUARD_POLICY
         assert policy.classification == "authenticated_read_surface"
         assert policy.requires_authentication is True
         assert policy.synthetic_data_allowed is False
@@ -261,7 +261,7 @@ class TestThePolicyShape:
         An empty allow-list means a browser action added here later fails the
         guard until it is declared, rather than passing unnoticed.
         """
-        assert walker._READ_GUARD_POLICY.allowed_browser_action_patterns == ()
+        assert walker.READ_GUARD_POLICY.allowed_browser_action_patterns == ()
 
 
 class TestNoUnguardedWireCrossingRemains:

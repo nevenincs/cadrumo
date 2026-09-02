@@ -31,7 +31,7 @@ from ...core.logging import get_logger
 from ...core.period import Period, PeriodError
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
-from ._common import _no_active_profile_refusal
+from ._common import no_active_profile_refusal
 from ._modelo_cli_support import (
     bad_parameter_from_localized_context,
     parse_revision_selector,
@@ -171,7 +171,7 @@ def require_active_profile() -> None:
     already gives.
     """
     if resolve_active_bucket_id() is None:
-        raise _no_active_profile_refusal()
+        raise no_active_profile_refusal()
 
 
 def _declared_period_tokens(modelo: str | None) -> tuple[str, ...]:
@@ -296,7 +296,7 @@ def bare_period_error(modelo: str, period: str, *, fallback: str = "") -> str:
     )
 
 
-def _date_binding_profile_requirements(unit: WorkUnit | None, binding_id: str) -> str:
+def date_binding_profile_requirements(unit: WorkUnit | None, binding_id: str) -> str:
     """Name the profile facts an unsatisfied date binding consumes.
 
     The operator is being told to set something on their profile, so the

@@ -64,7 +64,7 @@ def transactions_pending(
     attention.
     """
     if catalogue is None:
-        catalogue = _load_transactions(settings, bucket_id=bucket_id)
+        catalogue = load_transactions(settings, bucket_id=bucket_id)
         if catalogue is None:
             return ()
     items: list[TransactionReviewItem] = []
@@ -101,7 +101,7 @@ def transactions_low_confidence(
     Each element in the returned tuple is a :class:`TransactionReviewItem`.
     """
     if catalogue is None:
-        catalogue = _load_transactions(settings, bucket_id=bucket_id)
+        catalogue = load_transactions(settings, bucket_id=bucket_id)
         if catalogue is None:
             return ()
     items: list[TransactionReviewItem] = []
@@ -135,7 +135,7 @@ def _classify_transaction(state: BusinessClassification) -> ReviewSeverity | Non
     return ReviewSeverity.NORMAL
 
 
-def _load_transactions(settings: Settings, *, bucket_id: str) -> TransactionCatalogue | None:
+def load_transactions(settings: Settings, *, bucket_id: str) -> TransactionCatalogue | None:
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 
     del settings
@@ -195,7 +195,7 @@ def invoices_pending(
             loaded when ``None``.
     """
     if catalogue is None:
-        catalogue = _load_invoices(settings, bucket_id=bucket_id)
+        catalogue = load_invoices(settings, bucket_id=bucket_id)
         if catalogue is None:
             return ()
     items: list[InvoiceReviewItem] = []
@@ -208,7 +208,7 @@ def invoices_pending(
     return tuple(items)
 
 
-def _load_invoices(settings: Settings, *, bucket_id: str) -> InvoiceCatalogue | None:
+def load_invoices(settings: Settings, *, bucket_id: str) -> InvoiceCatalogue | None:
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 
     del settings
@@ -277,7 +277,7 @@ def drafts_pending(
     Callers see only drafts owned by the active profile.
     """
     if drafts is None:
-        drafts = _load_drafts(settings, bucket_id=bucket_id)
+        drafts = load_drafts(settings, bucket_id=bucket_id)
     active_tax_id = _resolve_review_active_tax_id(settings)
     if active_tax_id is None:
         return ()
@@ -355,7 +355,7 @@ def _resolve_review_active_tax_id(settings: Settings) -> str | None:
     return fact_value(record, "identity.tax_id") or None
 
 
-def _load_drafts(settings: Settings, *, bucket_id: str) -> tuple[tuple[Path, ModeloDraft], ...]:
+def load_drafts(settings: Settings, *, bucket_id: str) -> tuple[tuple[Path, ModeloDraft], ...]:
     """Iterate every persisted draft via :class:`ModeloDraftRepository`.
 
     Drafts are ciphertext-at-rest only. The helper returns the secure

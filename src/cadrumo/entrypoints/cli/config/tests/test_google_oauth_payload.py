@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from ... import OAuthClientPayload
+from ...config.google import OAuthClientPayload
 from ..google import _OAuthClientWrapper
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

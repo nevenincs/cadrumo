@@ -20,8 +20,8 @@ from ...core.irnr import M210PayerMode
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.m210_income_classification import M210IncomeClassification
-from ._common import _bad
-from ._ledger_support import _ledger_transaction_validation_no_recovery, _ledger_validation_bad, _parse_decimal
+from ._common import bad
+from ._ledger_support import ledger_transaction_validation_no_recovery, ledger_validation_bad, parse_decimal_option
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,9 +63,9 @@ class M210LedgerClassifyOptions:
         if not self.requested:
             return
         if llm_requested or read_evidence or saturate or auto_split:
-            raise _bad(tr("cli.ledger.classify.m210_explicit_direct_only"))
+            raise bad(tr("cli.ledger.classify.m210_explicit_direct_only"))
         if file is not None:
-            raise _bad(tr("cli.ledger.classify.m210_explicit_direct_only"))
+            raise bad(tr("cli.ledger.classify.m210_explicit_direct_only"))
 
     def to_income_classification(
         self,
@@ -104,7 +104,7 @@ class M210LedgerClassifyOptions:
         applicable_rate = self.applicable_rate
         payer_mode = self.payer_mode
         if tipo_renta_code is None or gross_income_amount is None or applicable_rate is None or payer_mode is None:
-            raise _bad(tr("cli.ledger.classify.m210_required_options"))
+            raise bad(tr("cli.ledger.classify.m210_required_options"))
         return tipo_renta_code, gross_income_amount, applicable_rate, payer_mode
 
     @staticmethod
@@ -116,7 +116,7 @@ class M210LedgerClassifyOptions:
         """Refuse when the selected transaction is absent or not incoming."""
         transaction = transaction_repository.load().get(transaction_id)
         if transaction is None or transaction.direction is not TransactionDirection.INCOMING:
-            raise _bad(tr("cli.ledger.classify.m210_incoming_only"))
+            raise bad(tr("cli.ledger.classify.m210_incoming_only"))
 
     def _build_classification(
         self,
@@ -125,13 +125,13 @@ class M210LedgerClassifyOptions:
         """Parse the numeric options and build the typed classification."""
         tipo_renta_code, gross_income_amount, applicable_rate, payer_mode = required
         try:
-            parsed_gross_income_amount = _parse_decimal(
+            parsed_gross_income_amount = parse_decimal_option(
                 gross_income_amount,
                 label="m210-gross-income-amount",
             )
-            parsed_applicable_rate = _parse_decimal(applicable_rate, label="m210-applicable-rate")
+            parsed_applicable_rate = parse_decimal_option(applicable_rate, label="m210-applicable-rate")
             if parsed_gross_income_amount is None or parsed_applicable_rate is None:
-                raise _bad(tr("cli.ledger.classify.m210_required_options"))
+                raise bad(tr("cli.ledger.classify.m210_required_options"))
             return M210IncomeClassification(
                 official_tipo_renta_code=tipo_renta_code,
                 gross_income_amount=parsed_gross_income_amount,
@@ -141,9 +141,9 @@ class M210LedgerClassifyOptions:
                 asset_or_right_id=self.asset_or_right_id,
             )
         except ValidationError as exc:
-            raise _ledger_validation_bad(exc) from exc
+            raise ledger_validation_bad(exc) from exc
         except TransactionValidationError as exc:
-            raise _ledger_transaction_validation_no_recovery(exc) from None
+            raise ledger_transaction_validation_no_recovery(exc) from None
 
 
 __all__ = [

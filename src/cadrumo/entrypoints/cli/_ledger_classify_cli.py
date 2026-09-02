@@ -17,26 +17,26 @@ from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.transactions.enums import BusinessClassification, is_classified
-from ._common import _bad, emit_envelope
-from ._ledger_support import _TransactionRepo
+from ._common import bad, emit_envelope
+from ._ledger_support import TransactionRepo
 
 
 def ledger_classify_bulk_csv(
     ctx: typer.Context,
     *,
-    transaction_repository: _TransactionRepo,
+    transaction_repository: TransactionRepo,
     transaction_id: str | None,
     classification: BusinessClassification | None,
     file: str,
     actor: str | None,
 ) -> None:
     if transaction_id is not None or classification is not None:
-        raise _bad(
+        raise bad(
             tr("cli.ledger.classify.file_exclusive"),
         )
     csv_path = Path(file)
     if not csv_path.exists():
-        raise _bad(
+        raise bad(
             tr("cli.ledger.classify.file_not_found", path=file),
         )
     csv_text = csv_path.read_text(encoding="utf-8")
@@ -101,19 +101,19 @@ def require_single_ledger_classification_request(
 ) -> tuple[str, BusinessClassification]:
     """Validate and return the direct, operator-controlled classify target."""
     if transaction_id is None:
-        raise _bad(
+        raise bad(
             tr("cli.ledger.classify.id_required"),
         )
     if classification is None:
-        raise _bad(
+        raise bad(
             tr("cli.ledger.classify.classification_required"),
         )
     if not is_classified(classification):
-        raise _bad(
+        raise bad(
             tr("cli.ledger.classify.system_state_not_assignable", value=classification.value),
         )
     if reason is not None and not reason.strip():
-        raise _bad(
+        raise bad(
             tr("cli.ledger.classify.reason_empty"),
         )
     return transaction_id, classification

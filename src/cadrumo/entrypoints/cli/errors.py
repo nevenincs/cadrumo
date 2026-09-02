@@ -20,7 +20,7 @@ stderr-only.
 
 The :func:`command_error_boundary` decorator wraps a callback so that
 :class:`CadrumoError` instances are emitted via
-:func:`_emit_error_and_exit`.
+:func:`emit_error_and_exit`.
 :func:`decorate_typer_app` walks a
 :class:`~typer.Typer` tree and applies the error boundary to every graph-materialized command
 and group callback (with an opt-out via ``skip_paths``).
@@ -473,7 +473,7 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
     """Wrap ``callback`` so :class:`CadrumoError` emits the structured stderr form.
 
     The wrapper catches four exception families and routes them to
-    :func:`_emit_error_and_exit`:
+    :func:`emit_error_and_exit`:
 
     - :exc:`StoredProfileDriftError` is
       wrapped in
@@ -531,7 +531,7 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
                 raise
             if _UNDER_TEST.get():
                 raise
-            _emit_error_and_exit(_project_boundary_error(error, callback))
+            emit_error_and_exit(_project_boundary_error(error, callback))
         finally:
             _ACTIVE_COMMAND_ID.reset(token)
 
@@ -685,7 +685,7 @@ def render_error_payload(
     """Render ``error`` to its stderr payload, carrying typed action data.
 
     The single renderer both terminal funnels use — the command boundary's
-    :func:`_emit_error_and_exit` and the process boundary's
+    :func:`emit_error_and_exit` and the process boundary's
     :func:`_terminal_errors._emit_crash` — so the two cannot drift on which
     spine fields an error document carries. In JSON mode the sandbox
     :class:`Notice` rides the ``notices`` channel; in text mode the same notice
@@ -723,7 +723,7 @@ def render_error_payload(
     return f"{sandbox_banner_line(notice)}\n{text}"
 
 
-def _command_identifier_from_path(command_path: str) -> str | None:
+def command_identifier_from_path(command_path: str) -> str | None:
     """Map a click ``command_path`` to the dotted envelope command identifier.
 
     The click command *path* uses the root prog token plus hyphenated CLI
@@ -770,7 +770,7 @@ def _resolve_active_command_id(*values: object) -> str | None:
         (path for value in values if isinstance(path := getattr(value, "command_path", None), str)),
         None,
     )
-    return _command_identifier_from_path(command_path) if command_path is not None else None
+    return command_identifier_from_path(command_path) if command_path is not None else None
 
 
 def _boundary_no_recovery_verdict(error: CadrumoError) -> PreconditionVerdict | None:
@@ -809,7 +809,7 @@ def boundary_no_recovery_verdict(error: CadrumoError) -> PreconditionVerdict | N
     return _boundary_no_recovery_verdict(error)
 
 
-def _emit_error_and_exit(error: CadrumoError) -> Never:
+def emit_error_and_exit(error: CadrumoError) -> Never:
     """Render ``error`` to stderr and terminate with its registered exit code.
 
     Selects the JSON or text renderer based on whether the active

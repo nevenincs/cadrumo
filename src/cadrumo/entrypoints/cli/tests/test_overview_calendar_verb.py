@@ -35,7 +35,12 @@ from ....domain.user_profile.values import ProfileSetupState
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
-from .._overview import _calendar_shift_reason_text, _live_censo_verified_profile_keys, _profile_to_taxpayer, _state
+from .._overview import (
+    calendar_shift_reason_text,
+    current_workflow_state,
+    live_censo_verified_profile_keys,
+    profile_to_taxpayer,
+)
 from ._overview_calendar_support import (
     _SOURCE_URL,
     PRIMARY_PROFILE_ID,
@@ -218,8 +223,8 @@ def test_calendar_json_matches_application_coordinates_for_every_supported_year(
     """Real CLI fleet parity consumes the canonical horizon and application projection."""
     with frozen_clock(now()):
         reference_today = today_madrid()
-        current = _state()
-        profile = _profile_to_taxpayer(current)
+        current = current_workflow_state()
+        profile = profile_to_taxpayer(current)
         record = current.active_profile_record()
         raw_values = record_to_values(record) if record is not None else None
         supported_years = bundled_authority().catalogues.supported_filing_years
@@ -330,7 +335,7 @@ def test_calendar_shift_formatter_localizes_weekend_tokens() -> None:
     with override_settings(cadrumo_output_language="ca"):
         clear_output_language_cache()
         try:
-            rendered = _calendar_shift_reason_text("sabado + Todos los Santos + domingo")
+            rendered = calendar_shift_reason_text("sabado + Todos los Santos + domingo")
         finally:
             clear_output_language_cache()
 
@@ -341,7 +346,7 @@ def test_calendar_shift_formatter_localizes_weekend_tokens() -> None:
     with override_settings(cadrumo_output_language="es"):
         clear_output_language_cache()
         try:
-            accented = _calendar_shift_reason_text("sabado + business_day")
+            accented = calendar_shift_reason_text("sabado + business_day")
         finally:
             clear_output_language_cache()
 
@@ -941,7 +946,7 @@ def test_operator_manual_censo_facts_are_never_treated_as_aeat_verified() -> Non
         ),
     )
 
-    verified = _live_censo_verified_profile_keys(record)
+    verified = live_censo_verified_profile_keys(record)
     # The manual-cli fact is excluded; only a censo-stamped fact would count,
     # proving the filter is the source-tag gate and not a vacuous empty return.
     assert "activities.iae_epigraph" not in verified

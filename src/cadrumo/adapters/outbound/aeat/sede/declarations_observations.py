@@ -106,8 +106,8 @@ __all__ = [
     "resolve_relation_values_from_filed_declarations",
 ]
 
-_EXTERNAL = Settings.external_constants()
-_SEDE_BASE = _EXTERNAL.aeat.domains.www6
+EXTERNAL = Settings.external_constants()
+SEDE_BASE = EXTERNAL.aeat.domains.www6
 
 
 # This URL is never requested. Only its HOSTNAME is read, and it is a LOOKUP
@@ -121,7 +121,7 @@ _SEDE_BASE = _EXTERNAL.aeat.domains.www6
 # same two constants for its navigation; that copy is the one that is merely a
 # URL. Changing either alone silently separates where a read goes from which
 # policy adjudicates it.
-_LISTING_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.declarations_listing}"
+_LISTING_URL = f"{SEDE_BASE}{EXTERNAL.aeat.sede_paths.declarations_listing}"
 
 type FiledDeclaracionArtefactSink = Callable[
     [tuple[str, int, Period, str], FiledDeclaracionArtefact, bytes],
@@ -196,7 +196,7 @@ def _read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateG
             f"{snapshot.modelo.id} revision {snapshot.revision.id}; found {decision_ids}",
         )
     return remote_state_policy_from_cross_reference(matching_decisions[0]).model_copy(
-        update={"allowed_browser_action_patterns": _EXTERNAL.aeat.live_safety.declarations_browser_action_patterns},
+        update={"allowed_browser_action_patterns": EXTERNAL.aeat.live_safety.declarations_browser_action_patterns},
     )
 
 
@@ -251,7 +251,7 @@ def _observed_value_token(casilla: ParsedExportFieldValue) -> str:
     return str(casilla.value)
 
 
-def _observed_header_facts_from_submitted_file(
+def observed_header_facts_from_submitted_file(
     *,
     snapshot: RegistrySnapshot,
     body: bytes,

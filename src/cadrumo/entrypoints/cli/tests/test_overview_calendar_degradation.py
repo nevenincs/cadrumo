@@ -23,9 +23,9 @@ import pytest
 from ....application.overview.calendar_models import OverviewCalendarRange
 from ....core.json_contract import NoticeSeverity
 from .._overview import (
-    _local_calendar_filing_evidence,
-    _local_live_calendar_events,
-    _local_modelo_record_calendar_events,
+    local_calendar_filing_evidence,
+    local_live_calendar_events,
+    local_modelo_record_calendar_events,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -34,7 +34,7 @@ _RANGE = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12
 
 
 def test_live_events_loader_degrades_to_notice() -> None:
-    events, notice = _local_live_calendar_events("bogus-bucket", _RANGE, as_of=date(2025, 6, 1))
+    events, notice = local_live_calendar_events("bogus-bucket", _RANGE, as_of=date(2025, 6, 1))
     assert events == ()
     assert notice is not None
     assert notice.severity is NoticeSeverity.WARNING
@@ -42,7 +42,7 @@ def test_live_events_loader_degrades_to_notice() -> None:
 
 
 def test_modelo_record_events_loader_degrades_to_notice() -> None:
-    events, notice = _local_modelo_record_calendar_events("bogus-bucket", _RANGE)
+    events, notice = local_modelo_record_calendar_events("bogus-bucket", _RANGE)
     assert events == ()
     assert notice is not None
     assert notice.severity is NoticeSeverity.WARNING
@@ -50,7 +50,7 @@ def test_modelo_record_events_loader_degrades_to_notice() -> None:
 
 
 def test_filing_evidence_loader_degrades_to_notice() -> None:
-    evidence, notice = _local_calendar_filing_evidence("bogus-bucket", ())
+    evidence, notice = local_calendar_filing_evidence("bogus-bucket", ())
     assert evidence == ()
     assert notice is not None
     assert notice.severity is NoticeSeverity.WARNING

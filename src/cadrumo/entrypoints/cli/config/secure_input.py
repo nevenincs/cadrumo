@@ -174,7 +174,7 @@ def _reject_duplicate_object_keys(pairs: list[tuple[str, object]]) -> dict[str, 
     return dict(pairs)
 
 
-def _validate_secrets_payload[SecretsModelT: BaseModel](
+def validate_secrets_payload[SecretsModelT: BaseModel](
     raw: bytes | bytearray,
     model: type[SecretsModelT],
     *,
@@ -237,7 +237,7 @@ def _read_secrets_stdin[SecretsModelT: BaseModel](
             raise _CliRefusedBoundaryError(
                 translated_message=f"cli.config.custody.errors.{diagnostic_prefix}_stdin_too_large",
             )
-        return _validate_secrets_payload(
+        return validate_secrets_payload(
             raw,
             model,
             invalid_json_key=f"cli.config.custody.errors.{diagnostic_prefix}_stdin_invalid_json",
@@ -327,7 +327,7 @@ def _read_secrets_fd[SecretsModelT: BaseModel](
             raise _CliRefusedBoundaryError(
                 translated_message=f"cli.config.custody.errors.{diagnostic_prefix}_fd_too_large",
             )
-        return _validate_secrets_payload(
+        return validate_secrets_payload(
             raw,
             model,
             invalid_json_key=f"cli.config.custody.errors.{diagnostic_prefix}_fd_invalid_json",

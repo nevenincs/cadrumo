@@ -70,7 +70,7 @@ from ._modelo_rendering import advisory_notice, work_unit_lines, work_unit_list_
 
 
 @dataclass(frozen=True, slots=True)
-class _LifecycleDeps:
+class LifecycleDeps:
     activate_output_language: Callable[[typer.Context, OutputLanguage | None], None]
     require_active_profile: Callable[[], None]
     guard_foral_profile_ccaa: Callable[[], None]
@@ -128,7 +128,7 @@ def _validate_registry_target_before_profile_if_needed(
 def _emit_work_create_result(
     ctx: typer.Context,
     *,
-    unit,
+    unit: WorkUnit,
     reused: bool,
     name: str | None,
     name_applied: str | None,
@@ -173,7 +173,7 @@ def _reused_work_status_message(*, name: str | None, name_applied: str | None) -
     return (tr("cli.app.modelo.work.create_reused"), "modelo.work.reuse")
 
 
-def _modelo_100_obligation_advisory_output(unit) -> tuple[list[Notice], list[str]]:
+def _modelo_100_obligation_advisory_output(unit: WorkUnit) -> tuple[list[Notice], list[str]]:
     """Project M100 filing-obligation advisories onto notices and text lines.
 
     The advisory rides on the envelope ``notices`` channel (warning
@@ -192,7 +192,7 @@ def _modelo_100_obligation_advisory_output(unit) -> tuple[list[Notice], list[str
     if bucket is None:
         return ([], [])
     record = ProfileRecordRepository.for_current_session(bucket).load(bucket)
-    raw = record_to_values(record) if record is not None else None
+    raw = record_to_values(record)
     messages = [tr(advisory_key) for advisory_key in build_filing_obligation_advisories(raw)]
     notices = [advisory_notice("modelo.work.create.filing_obligation", message) for message in messages]
     return (notices, messages)

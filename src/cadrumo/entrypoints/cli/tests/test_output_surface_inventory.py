@@ -86,11 +86,11 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
     ("entrypoints/cli/_app_diagnostics.py", "diagnostics_root", "typer.echo"): (
         "Group help fallback: renders the click-generated help text verbatim, not operator data subject to redaction."
     ),
-    ("entrypoints/cli/_root_support.py", "_emit_version_report_and_exit", "typer.echo"): (
+    ("entrypoints/cli/_root_support.py", "emit_version_report_and_exit", "typer.echo"): (
         "Product identity and version string only. It is emitted on the "
         "--version short-circuit, before an app root or renderer context exists."
     ),
-    ("entrypoints/cli/_app_live_auth_preflight.py", "_emit_live_auth_preflight", "typer.echo"): (
+    ("entrypoints/cli/_app_live_auth_preflight.py", "emit_live_auth_preflight", "typer.echo"): (
         "Already redacted: emits redact_for_cli_output(line) to stderr. Honours "
         "the redaction boundary, though it hand-calls the policy rather than "
         "going through the renderer, so it does not consult the "

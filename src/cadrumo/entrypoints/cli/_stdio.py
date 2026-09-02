@@ -34,7 +34,7 @@ import typer
 import typer.core
 
 
-def _disable_rich_cli_rendering() -> None:
+def disable_rich_cli_rendering() -> None:
     """Force Typer/Click's plain-text formatter for help, errors, and tracebacks.
 
     Rich's boxed help panels derive their width from the ``COLUMNS``
@@ -85,9 +85,9 @@ def _set_windows_console_utf8() -> None:
     try:
         import ctypes
 
-        # TYPE-IGNORE-RATIONALE-PLATFORM-WINDOWS-CTYPES:
-        # ctypes.windll is Windows-only and absent from cross-platform stubs.
-        k32 = ctypes.windll.kernel32  # type: ignore[attr-defined]  # reason: TYPE-IGNORE-RATIONALE-PLATFORM-WINDOWS-CTYPES: ctypes.windll is Windows-only and absent from cross-platform stubs
+        # The ``sys.platform != "win32"`` guard above narrows the platform, so
+        # ``ctypes.windll`` resolves without a suppression.
+        k32 = ctypes.windll.kernel32
         k32.SetConsoleOutputCP(65001)
         k32.SetConsoleCP(65001)
     except Exception as exc:

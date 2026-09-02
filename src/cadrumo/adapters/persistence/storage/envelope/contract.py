@@ -195,10 +195,10 @@ class Envelope[PayloadT: BaseModel](BaseModel):
         # CAST-RATIONALE-GENERIC-CLASSGETITEM: __class_getitem__ on a pydantic
         # generic model returns type[Envelope[PayloadT]] at runtime; the stub
         # annotates it as type[Self], so make the runtime contract explicit.
-        return _parameterized_envelope_type(payload_cls, envelope_cls=cls)
+        return parameterized_envelope_type(payload_cls, envelope_cls=cls)
 
 
-def _parameterized_envelope_type[PayloadT: BaseModel](
+def parameterized_envelope_type[PayloadT: BaseModel](
     payload_cls: type[PayloadT],
     *,
     envelope_cls: type[Envelope[PayloadT]] = Envelope,

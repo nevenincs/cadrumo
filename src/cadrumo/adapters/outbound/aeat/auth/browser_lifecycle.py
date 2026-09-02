@@ -10,7 +10,7 @@ from contextlib import asynccontextmanager
 from .....application.auth.protocols import BrowserContextPort, BrowserSessionPort
 
 
-class _CloseIntentBarrier:
+class CloseIntentBarrier:
     """Serialize closers and bar new work while any close intent exists."""
 
     def __init__(self) -> None:

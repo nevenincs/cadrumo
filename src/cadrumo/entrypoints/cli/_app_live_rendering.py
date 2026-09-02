@@ -10,7 +10,7 @@ from ...application.live.remote_state_models import (
     FiledDataCaptureReport,
     SourceFiledDataCaptureReport,
 )
-from ._app_live_auth_preflight import _metric_line
+from ._app_live_auth_preflight import metric_line
 
 type FiledCaptureReport = FiledDataCaptureReport | BulkFiledDataCaptureReport | SourceFiledDataCaptureReport
 
@@ -27,40 +27,40 @@ def _filed_capture_lines(
     failures: Sequence[FiledDataCaptureFailureRow] = (),
 ) -> tuple[str, ...]:
     """Return text metrics for filed declaration capture reports."""
-    lines: list[str] = [_metric_line("mode", mode)]
+    lines: list[str] = [metric_line("mode", mode)]
     if modelo is not None:
-        lines.append(_metric_line("modelo", modelo))
+        lines.append(metric_line("modelo", modelo))
     if year is not None:
-        lines.append(_metric_line("year", year))
+        lines.append(metric_line("year", year))
     if modelos:
-        lines.append(_metric_line("modelo_count", len(modelos)))
+        lines.append(metric_line("modelo_count", len(modelos)))
     if year_from is not None:
-        lines.append(_metric_line("year_from", year_from))
+        lines.append(metric_line("year_from", year_from))
     if year_to is not None:
-        lines.append(_metric_line("year_to", year_to))
+        lines.append(metric_line("year_to", year_to))
     if getattr(report, "dry_run", False):
         # Text and JSON must agree on the one fact that decides whether anything
         # was written, so the metric rides both surfaces rather than JSON alone.
-        lines.append(_metric_line("dry_run", "true"))
+        lines.append(metric_line("dry_run", "true"))
     failed_count = getattr(report, "failed_count", len(failures))
     lines.extend(
         (
-            _metric_line("captured_count", report.captured_count),
-            _metric_line("failed_count", failed_count),
-            _metric_line("casilla_count", report.casilla_count),
-            _metric_line("justificante_metadata_count", report.justificante_metadata_count),
-            _metric_line("justificante_csvs", ",".join(report.justificante_csvs)),
-            _metric_line("filing_evidence_stamped_count", report.filing_evidence_stamped_count),
-            _metric_line("filing_record_ids", ",".join(report.filing_record_ids)),
-            _metric_line("filing_evidence_conflict_count", report.filing_evidence_conflict_count),
-            _metric_line(
+            metric_line("captured_count", report.captured_count),
+            metric_line("failed_count", failed_count),
+            metric_line("casilla_count", report.casilla_count),
+            metric_line("justificante_metadata_count", report.justificante_metadata_count),
+            metric_line("justificante_csvs", ",".join(report.justificante_csvs)),
+            metric_line("filing_evidence_stamped_count", report.filing_evidence_stamped_count),
+            metric_line("filing_record_ids", ",".join(report.filing_record_ids)),
+            metric_line("filing_evidence_conflict_count", report.filing_evidence_conflict_count),
+            metric_line(
                 "filing_evidence_conflict_record_ids",
                 ",".join(report.filing_evidence_conflict_record_ids),
             ),
-            _metric_line("calculation_observation_count", report.calculation_observation_count),
-            _metric_line("calculation_observation_keys", ",".join(report.calculation_observation_keys)),
-            _metric_line("observation_paths", ",".join(report.observation_paths)),
-            _metric_line("artefact_refs", ",".join(report.artefact_refs)),
+            metric_line("calculation_observation_count", report.calculation_observation_count),
+            metric_line("calculation_observation_keys", ",".join(report.calculation_observation_keys)),
+            metric_line("observation_paths", ",".join(report.observation_paths)),
+            metric_line("artefact_refs", ",".join(report.artefact_refs)),
         ),
     )
     lines.extend(_filed_capture_failure_lines(failures))
@@ -70,16 +70,16 @@ def _filed_capture_lines(
 def _source_filed_capture_lines(report: SourceFiledDataCaptureReport) -> tuple[str, ...]:
     """Return text metrics for source-observation filed capture reports."""
     return (
-        _metric_line("target_modelo", report.target_modelo),
-        _metric_line("target_year", report.target_year),
-        _metric_line("target_period", report.target_period.registry_token),
+        metric_line("target_modelo", report.target_modelo),
+        metric_line("target_year", report.target_year),
+        metric_line("target_period", report.target_period.registry_token),
         *_filed_capture_lines(report, mode="sources"),
     )
 
 
 def _filed_capture_failure_lines(failures: Sequence[FiledDataCaptureFailureRow]) -> tuple[str, ...]:
     return tuple(
-        _metric_line(
+        metric_line(
             "failure",
             "\t".join(
                 (
@@ -99,6 +99,6 @@ def _filed_capture_failure_lines(failures: Sequence[FiledDataCaptureFailureRow])
 __all__ = [
     "_filed_capture_failure_lines",
     "_filed_capture_lines",
-    "_metric_line",
     "_source_filed_capture_lines",
+    "metric_line",
 ]

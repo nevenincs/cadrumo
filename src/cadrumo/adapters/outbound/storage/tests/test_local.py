@@ -255,7 +255,7 @@ def test_local_failure_verdict_contracts_are_exact(
 
 def test_local_failure_verdict_contracts_cover_every_local_provider_failure_site() -> None:
     """Each local refusal site must retain its declared no-action verdict contract."""
-    source = (Path(__file__).resolve().parent.parent / "_local.py").read_text(encoding="utf-8")
+    source = (Path(__file__).resolve().parent.parent / "local.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
     observed: Counter[tuple[str, tuple[tuple[str, str | int | bool], ...], NoRecoveryOutcome]] = Counter()
 

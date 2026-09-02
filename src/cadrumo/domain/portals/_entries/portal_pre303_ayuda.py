@@ -14,11 +14,11 @@ from ..codes import Portal
 from ..metadata import PortalMetadata
 from .common import build_entry
 
-_PRE303 = Settings.external_constants().aeat.pre303
+PRE303 = Settings.external_constants().aeat.pre303
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_PRE303_AYUDA,
-    path=_PRE303.presentation_service_path,
+    path=PRE303.presentation_service_path,
     subdomain=PortalHost.WWW1,
     category=PortalCategory.BORRADOR,
     auth_methods=(

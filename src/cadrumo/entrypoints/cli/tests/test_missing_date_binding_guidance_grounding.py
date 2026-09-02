@@ -21,7 +21,7 @@ from ....domain.calculations.registry.profile_grounding import binding_profile_k
 from ....domain.calculations.registry.schema import DataBindingDefinition
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.loader import load_user_profile_schema
-from .._modelo_behavior_support import _date_binding_profile_requirements
+from .._modelo_behavior_support import date_binding_profile_requirements
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -94,13 +94,13 @@ def _an_addressable_profile_binding() -> tuple[WorkUnit, DataBindingDefinition]:
 
 def test_an_unresolvable_work_unit_degrades_to_the_binding_id() -> None:
     """The documented fallback: better a raw id than no guidance at all."""
-    assert _date_binding_profile_requirements(None, "some.binding.id") == "some.binding.id"
+    assert date_binding_profile_requirements(None, "some.binding.id") == "some.binding.id"
 
 
 def test_a_binding_id_matching_no_row_degrades_to_the_binding_id() -> None:
     unit = _work_unit("303", 2026, Period.from_year_and_code(2026, "1T"), "test-revision")
 
-    assert _date_binding_profile_requirements(unit, "no-such-binding") == "no-such-binding"
+    assert date_binding_profile_requirements(unit, "no-such-binding") == "no-such-binding"
 
 
 def test_a_real_profile_binding_resolves_to_its_profile_facts() -> None:
@@ -118,7 +118,7 @@ def test_a_real_profile_binding_resolves_to_its_profile_facts() -> None:
     # Binding keys are schema PATHS, so the label is resolved by path.
     labelled = [build_profile_preflight_requirement(key, schema=schema).label for key in binding_profile_keys(binding)]
 
-    rendered = _date_binding_profile_requirements(unit, str(binding.id))
+    rendered = date_binding_profile_requirements(unit, str(binding.id))
 
     assert str(binding.id) not in rendered
     assert any(label in rendered for label in labelled), rendered
@@ -140,7 +140,7 @@ def test_the_application_helper_resolves_the_same_facts_the_transport_renders() 
         period=unit.period,
         binding_id=str(binding.id),
     )
-    from_transport = _date_binding_profile_requirements(unit, str(binding.id))
+    from_transport = date_binding_profile_requirements(unit, str(binding.id))
 
     assert from_app, "the application helper resolved nothing for an addressable binding"
     assert from_transport == from_app

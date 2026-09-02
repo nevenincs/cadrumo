@@ -64,7 +64,7 @@ _LLM_NOTICE_CALLERS = {
 }
 
 _NATIVE_PARSE_VALIDATION_CARRIERS = {
-    ("_verify_expected", "tr('cli.app.live.verify.expected_values_error')"),
+    ("verify_expected", "tr('cli.app.live.verify.expected_values_error')"),
     ("_live_period_option", "f'invalid AEAT period {period!r} for year {year}'"),
     ("_required_live_period_option", "'--period is required'"),
     ("filed_pull_cmd", "tr('cli.app.live.filed.pull_dry_run_single_mode_error')"),

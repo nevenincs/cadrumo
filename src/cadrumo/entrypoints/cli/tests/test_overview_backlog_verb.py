@@ -121,11 +121,11 @@ def test_work_unit_load_failure_degrades_to_notice_not_refusal() -> None:
     # the whole surface — refusing left a behind-but-fresh taxpayer (the
     # regularizar-atrasos persona) unable to answer "what have I missed".
     from ....core.json_contract import NoticeSeverity
-    from .._overview import _local_modelo_work_units
+    from .._overview import local_modelo_work_units
 
     _persist_invalid_work_unit_catalogue_payload(_BUCKET_ID)
 
-    units, notice = _local_modelo_work_units(_BUCKET_ID)
+    units, notice = local_modelo_work_units(_BUCKET_ID)
     assert units == ()
     assert notice is not None
     assert notice.code == "overview.work_units_degraded"

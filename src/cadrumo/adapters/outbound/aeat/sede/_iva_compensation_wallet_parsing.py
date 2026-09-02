@@ -68,16 +68,16 @@ What the three must never differ on is which code points AEAT prints between
 thousand groups, which is why the class is imported and not written out.
 """
 
-_EXTERNAL = Settings.external_constants()
-_WALLET_PATH = _EXTERNAL.aeat.sede_paths.iva_compensation_wallet
+EXTERNAL = Settings.external_constants()
+WALLET_PATH = EXTERNAL.aeat.sede_paths.iva_compensation_wallet
 # Built on the UNNUMBERED origin. AEAT assigns the numbered host that
 # answers a session, so no number can be named here without asserting
 # something the load balancer decides. Navigation never targets this URL
 # directly; it enters through the access selector and is dispatched.
-_WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_WALLET_PATH}"
-_SEDE_HOST = urlsplit(_EXTERNAL.aeat.domains.sede).netloc
-_PRE303 = _EXTERNAL.aeat.pre303
-_PRE303_PRESENTATION_URL = f"{_EXTERNAL.aeat.domains.sede}{_PRE303.presentation_service_path}"
+WALLET_URL = f"{EXTERNAL.aeat.domains.sede}{WALLET_PATH}"
+_SEDE_HOST = urlsplit(EXTERNAL.aeat.domains.sede).netloc
+PRE303 = EXTERNAL.aeat.pre303
+_PRE303_PRESENTATION_URL = f"{EXTERNAL.aeat.domains.sede}{PRE303.presentation_service_path}"
 IVA_COMPENSATION_WALLET_READ_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-iva-compensation-wallet-read",
     evidence_tier="official_source_guidance",
@@ -85,9 +85,9 @@ IVA_COMPENSATION_WALLET_READ_POLICY = RemoteStateGuardPolicy(
     allowed_hosts=(_SEDE_HOST,),
     # The configured suffix admits whichever AEAT load-balancer host serves
     # the authenticated read; all operation methods remain guard-controlled.
-    allowed_host_suffixes=(_EXTERNAL.aeat.domains.host_suffix,),
-    allowed_read_post_paths=(_WALLET_PATH,),
-    allowed_browser_action_patterns=_EXTERNAL.aeat.live_safety.wallet_browser_action_patterns,
+    allowed_host_suffixes=(EXTERNAL.aeat.domains.host_suffix,),
+    allowed_read_post_paths=(WALLET_PATH,),
+    allowed_browser_action_patterns=EXTERNAL.aeat.live_safety.wallet_browser_action_patterns,
     synthetic_data_allowed=False,
     requires_authentication=True,
     requires_aeat_authorization=True,
@@ -125,7 +125,7 @@ def parse_iva_compensation_wallet_html(
     _assert_wallet_result_target_matches(soup, target_year=target_year, target_period=target_period)
 
     if summary_total is None and not matched_wallet_table:
-        if allow_empty_wallet_shell and _looks_like_executed_empty_wallet_page(soup):
+        if allow_empty_wallet_shell and looks_like_executed_empty_wallet_page(soup):
             raise SedeParseError(
                 "executed IVA wallet shell does not contain AEAT's explicit zero aggregate; "
                 "refusing to persist a synthetic zero wallet observation",
@@ -165,7 +165,7 @@ def _parse_wallet_result_rows(soup: BeautifulSoup) -> tuple[list[IvaCompensation
     matched_wallet_table = False
     for table in soup.find_all("table"):
         header = _normalised_text(table.get_text(" "))
-        if not all(token in header for token in _PRE303.iva_wallet_header_tokens):
+        if not all(token in header for token in PRE303.iva_wallet_header_tokens):
             continue
         matched_wallet_table = True
         for table_row in table.find_all("tr"):
@@ -192,7 +192,7 @@ def _parse_wallet_summary_total(soup: BeautifulSoup) -> Decimal | None:
     used, so the value is read from its own line rather than summed from the
     detail table.
     """
-    label_tokens = _PRE303.iva_wallet_total_label_tokens
+    label_tokens = PRE303.iva_wallet_total_label_tokens
     for node in soup.find_all(["li", "p", "span", "div"]):
         text = node.get_text(" ")
         if not all(token in _normalised_text(text) for token in label_tokens):
@@ -219,8 +219,8 @@ def _assert_wallet_result_target_matches(soup: BeautifulSoup, *, target_year: in
 def _parse_wallet_result_target(soup: BeautifulSoup) -> tuple[int | None, str | None]:
     rendered_year: int | None = None
     rendered_period: str | None = None
-    ejercicio_token = _PRE303.iva_wallet_header_tokens[0]
-    periodo_token = _PRE303.iva_wallet_header_tokens[1]
+    ejercicio_token = PRE303.iva_wallet_header_tokens[0]
+    periodo_token = PRE303.iva_wallet_header_tokens[1]
     for node in soup.find_all(["li", "p", "div"]):
         strong = node.find("strong")
         if strong is None:
@@ -278,18 +278,18 @@ def _own_name_representation_action_allowed(
         return False
     if method == "POST" and action_path == expected_path:
         return _wallet_read_url_allowed(action_url, method=method)
-    dialogo_path = _EXTERNAL.aeat.clave_movil.dialogo_representacion_path
+    dialogo_path = EXTERNAL.aeat.clave_movil.dialogo_representacion_path
     if method != "GET" or landing_path != dialogo_path or action_path != dialogo_path:
         return False
     # The representation dispatcher is a browser action, not a wallet HTTP
     # read. Validate its authority through the registered wallet policy on
     # the canonical wallet GET, then preserve the dispatcher's exact shape.
-    return _wallet_read_url_allowed(f"{action.scheme}://{action.netloc}{_WALLET_PATH}", method="GET")
+    return _wallet_read_url_allowed(f"{action.scheme}://{action.netloc}{WALLET_PATH}", method="GET")
 
 
-def _assert_own_name_representation_form_html(html: str, *, landing_url: str, expected_path: str) -> None:
+def assert_own_name_representation_form_html(html: str, *, landing_url: str, expected_path: str) -> None:
     soup = parse_html(html)
-    submit = soup.select_one(_PRE303.representation_submit_selector)
+    submit = soup.select_one(PRE303.representation_submit_selector)
     if submit is None:
         raise SedeNavigationError(
             "AEAT representation gate does not expose the configured own-name submit control",
@@ -321,8 +321,8 @@ def _assert_own_name_representation_form_html(html: str, *, landing_url: str, ex
                 "form_action_path": parsed_action.path,
             },
         )
-    own_name = soup.select_one(_PRE303.representation_own_name_selector)
-    representative = soup.select_one(_PRE303.representation_representative_selector)
+    own_name = soup.select_one(PRE303.representation_own_name_selector)
+    representative = soup.select_one(PRE303.representation_representative_selector)
     if own_name is None or representative is None:
         raise SedeNavigationError(
             "AEAT representation gate does not expose both own-name and representative controls",
@@ -382,36 +382,36 @@ def _input_checked(node: object) -> bool:
     return checked is not None and str(checked).casefold() not in {"", "false", "0", "none"}
 
 
-def _wallet_execute_gate_status(html: str, *, expected_path: str) -> str:
+def wallet_execute_gate_status(html: str, *, expected_path: str) -> str:
     soup = parse_html(html)
-    form = soup.select_one(_PRE303.wallet_form_selector)
+    form = soup.select_one(PRE303.wallet_form_selector)
     if form is None:
         return "no-wallet-form"
     action_path = urlsplit(str(form.get("action", ""))).path
     if action_path != expected_path:
         return "unexpected-wallet-form"
-    submit = form.select_one(_PRE303.wallet_execute_submit_selector) or soup.select_one(
-        _PRE303.wallet_execute_submit_selector,
+    submit = form.select_one(PRE303.wallet_execute_submit_selector) or soup.select_one(
+        PRE303.wallet_execute_submit_selector,
     )
     if submit is None:
         return "no-wallet-execute-submit"
     return "wallet-execute-submit-present"
 
 
-def _wallet_execute_form_method(html: str) -> str:
+def wallet_execute_form_method(html: str) -> str:
     soup = parse_html(html)
-    form = soup.select_one(_PRE303.wallet_form_selector)
+    form = soup.select_one(PRE303.wallet_form_selector)
     if form is None:
         return "GET"
     method = str(form.get("method", "GET")).strip().upper()
     return method or "GET"
 
 
-def _has_wallet_table(html: str) -> bool:
+def has_wallet_table(html: str) -> bool:
     soup = parse_html(html)
     for table in soup.find_all("table"):
         header = _normalised_text(table.get_text(" "))
-        if all(token in header for token in _PRE303.iva_wallet_header_tokens):
+        if all(token in header for token in PRE303.iva_wallet_header_tokens):
             return True
     return False
 
@@ -442,7 +442,7 @@ class _WalletPageShape(TypedDict):
     raw_sha256: str
 
 
-def _wallet_page_shape_context(html: str, *, landing_url: str) -> _WalletPageShape:
+def wallet_page_shape_context(html: str, *, landing_url: str) -> _WalletPageShape:
     soup = parse_html(html)
     wallet_entrypoints = tuple(
         entrypoint
@@ -471,7 +471,7 @@ def _wallet_page_shape_context(html: str, *, landing_url: str) -> _WalletPageSha
     )
     return _WalletPageShape(
         landing_url=redacted_url(landing_url),
-        wallet_executed_empty_shape=_looks_like_executed_empty_wallet_page(soup),
+        wallet_executed_empty_shape=looks_like_executed_empty_wallet_page(soup),
         heading_count=len(soup.find_all(["h1", "h2", "h3"])),
         table_count=len(soup.find_all("table")),
         form_count=len(soup.find_all("form")),
@@ -500,7 +500,7 @@ def _wallet_entrypoint_path(raw_url: str) -> str | None:
         path = urlsplit(raw_url).path
     except ValueError:
         return None
-    if path == _EXTERNAL.aeat.sede_paths.iva_compensation_wallet:
+    if path == EXTERNAL.aeat.sede_paths.iva_compensation_wallet:
         return path
     return None
 
@@ -508,7 +508,7 @@ def _wallet_entrypoint_path(raw_url: str) -> str | None:
 def is_aeat_wallet_read_url(url: str) -> bool:
     """Return whether ``url`` is a policy-approved authenticated wallet GET."""
     try:
-        if urlsplit(url).path != _WALLET_PATH:
+        if urlsplit(url).path != WALLET_PATH:
             return False
     except ValueError:
         return False
@@ -665,16 +665,16 @@ def _cell_value_text(cell: Tag) -> str:
     return cell.get_text(" ").strip()
 
 
-def _looks_like_executed_empty_wallet_page(soup: BeautifulSoup) -> bool:
+def looks_like_executed_empty_wallet_page(soup: BeautifulSoup) -> bool:
     title_and_heading = _normalised_text(
         f"{_normalised_title(soup)} {' '.join(node.get_text(' ') for node in soup.find_all(['h1', 'h2']))}",
     )
-    if not all(token in title_and_heading for token in _PRE303.iva_wallet_empty_page_tokens):
+    if not all(token in title_and_heading for token in PRE303.iva_wallet_empty_page_tokens):
         return False
     has_wallet_form = False
     for form in soup.find_all("form"):
         action_path = urlsplit(str(form.get("action", ""))).path
-        if action_path != _EXTERNAL.aeat.sede_paths.iva_compensation_wallet:
+        if action_path != EXTERNAL.aeat.sede_paths.iva_compensation_wallet:
             continue
         has_wallet_form = True
         if any(_is_wallet_execute_submit(input_node) for input_node in form.find_all("input")):

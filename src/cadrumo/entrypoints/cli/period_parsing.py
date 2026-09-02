@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 import typer
 
 from ...core.i18n.render import tr
-from ._common import _bad
+from ._common import bad
 
 if TYPE_CHECKING:
     from ...core.period import Period
@@ -144,7 +144,7 @@ def _canonical_period(period: str, *, year: int) -> Period:
 
     stripped = period.strip()
     if not stripped:
-        raise _bad(tr("cli.common.errors.period_empty"))
+        raise bad(tr("cli.common.errors.period_empty"))
 
     registry_period = _ledger_aeat_token(stripped)
     if registry_period is not None:
@@ -191,5 +191,5 @@ def _optional_canonical_period(period: str | None, *, year: int | None) -> Perio
     if period is None:
         return None
     if year is None:
-        raise _bad(tr("cli.common.errors.period_missing_year", token=period.strip()))
+        raise bad(tr("cli.common.errors.period_missing_year", token=period.strip()))
     return _canonical_period(period, year=year)

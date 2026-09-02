@@ -207,7 +207,7 @@ class TestEveryCapturePathRoutesThroughTheContract:
     """No capture path may re-grow its own copy of the checks."""
 
     _CAPTURE_SITES = (
-        (_declarations_fetch, "_capture_row_pdf_artefact"),
+        (_declarations_fetch, "capture_row_pdf_artefact"),
         (declarations, "capture_declaration"),
         (walker, "capture_justificante"),
     )

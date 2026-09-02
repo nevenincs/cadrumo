@@ -13,7 +13,7 @@ _BUCKET_ID = "70316d3b-62cd-4735-b831-c6712f01a418"  # was 'llm-test-runtime'
 
 
 @pytest.fixture(autouse=True)
-def _secure_object_test_backend(
+def secure_object_test_backend(
     secure_object_test_profile: TestRuntimeProfile,
 ) -> Iterator[None]:
     """Route LLM cache and usage persistence through a per-test encrypted DB."""

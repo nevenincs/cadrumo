@@ -1,6 +1,6 @@
 """Unit test for the Sheets row-set header batch builder.
 
-Guards `_build_row_set_header_data` — the helper that turns each
+Guards `build_row_set_header_data` — the helper that turns each
 row-set's column declarations into a Sheets `values.batchUpdate`
 data entry. Registry-side row-set positioning + column allocation
 are tested separately; this test asserts the apply-side handoff
@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 
 from .....application.storage.calc_sheets.records import SheetCellAddress, SheetRowSet, SheetRowSetColumn, TabName
-from ..calc_sheets_apply import _build_row_set_header_data
+from ..calc_sheets_apply import build_row_set_header_data
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -44,7 +44,7 @@ def test_build_row_set_header_data_emits_one_entry_per_column() -> None:
         source_refs=_TEST_SOURCE_REFS,
     )
 
-    data = _build_row_set_header_data((row_set,))
+    data = build_row_set_header_data((row_set,))
 
     assert len(data) == 3
     nif_entry = data[0]
@@ -79,7 +79,7 @@ def test_build_row_set_header_data_handles_multiple_row_sets() -> None:
         source_refs=_TEST_SOURCE_REFS,
     )
 
-    data = _build_row_set_header_data((operator_clave_row_set, operator_clave_period_row_set))
+    data = build_row_set_header_data((operator_clave_row_set, operator_clave_period_row_set))
 
     assert len(data) == 3
     assert data[0]["range"] == "'Detalle'!A1"
@@ -88,4 +88,4 @@ def test_build_row_set_header_data_handles_multiple_row_sets() -> None:
 
 
 def test_build_row_set_header_data_returns_empty_when_no_row_sets() -> None:
-    assert _build_row_set_header_data(()) == []
+    assert build_row_set_header_data(()) == []

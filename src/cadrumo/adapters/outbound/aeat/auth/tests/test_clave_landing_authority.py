@@ -31,9 +31,9 @@ from ._clave_permanente_support import _settings_for as _permanente_settings_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_EXTERNAL = Settings.external_constants()
-_TARGET_PATH = _EXTERNAL.aeat.sede_paths.expedientes_resumen
-_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
+EXTERNAL = Settings.external_constants()
+_TARGET_PATH = EXTERNAL.aeat.sede_paths.expedientes_resumen
+_HOST_SUFFIX = EXTERNAL.aeat.domains.host_suffix
 _HONEST_LANDING = _aeat_url(_DOMAINS.www6, _TARGET_PATH)
 _WWW6_HOST = _DOMAINS.www6.removeprefix("https://")
 

@@ -11,7 +11,7 @@ from ...application.auth.operator_results import LiveAuthPreflightReport
 from ...core.redaction.rules import redact_for_cli_output
 
 
-def _metric_line(key: str, value: object) -> str:
+def metric_line(key: str, value: object) -> str:
     return f"{key}={value}"
 
 
@@ -39,7 +39,7 @@ def resolve_active_bucket(active_bucket_id: Callable[[], str] | None, *, family:
     return active_bucket_id()
 
 
-def _emit_live_auth_preflight(provider: str | None = None) -> None:
+def emit_live_auth_preflight(provider: str | None = None) -> None:
     report = build_live_auth_preflight_report(provider)
     for line in _live_auth_preflight_lines(report):
         typer.echo(redact_for_cli_output(line), err=True)
@@ -47,27 +47,27 @@ def _emit_live_auth_preflight(provider: str | None = None) -> None:
 
 def _live_auth_preflight_lines(report: LiveAuthPreflightReport) -> tuple[str, ...]:
     return (
-        _metric_line("auth_preflight", "redacted"),
-        _metric_line("auth_provider", report.provider),
-        _metric_line("auth_configured", report.configured),
-        _metric_line("auth_available", report.available),
-        _metric_line("auth_active_profile", "<profile-id>" if report.active_profile else ""),
-        _metric_line("auth_active_profile_status", report.active_profile_status),
-        _metric_line("auth_active_profile_registered", report.active_profile_registered),
-        _metric_line("auth_active_profile_record_present", report.active_profile_record_present),
-        _metric_line("auth_profile_tax_id", "present" if report.profile_tax_id_present else "missing"),
-        _metric_line("auth_provider_identity", "present" if report.provider_identity_present else "missing"),
-        _metric_line("auth_identity_alignment", report.identity_alignment),
-        _metric_line("auth_identity_kind", report.identity_kind),
-        _metric_line("auth_mode", report.auth_mode),
-        _metric_line("auth_prefer_non_qr", report.prefer_non_qr),
-        _metric_line("auth_timeout_ms", report.timeout_ms),
-        _metric_line("auth_dni_fecha", "present" if report.dni_fecha_configured else "missing"),
-        _metric_line("auth_nie_soporte", "present" if report.nie_soporte_configured else "missing"),
-        _metric_line("auth_certificate_path", "present" if report.certificate_path_configured else "missing"),
-        _metric_line("auth_certificate_file", "present" if report.certificate_file_present else "missing"),
-        _metric_line("auth_persisted_session", "present" if report.persisted_session_present else "missing"),
-        _metric_line("auth_persisted_session_expired", report.persisted_session_expired),
-        _metric_line("auth_persisted_session_state", report.persisted_session_state),
-        _metric_line("auth_probe_result", report.probe_result),
+        metric_line("auth_preflight", "redacted"),
+        metric_line("auth_provider", report.provider),
+        metric_line("auth_configured", report.configured),
+        metric_line("auth_available", report.available),
+        metric_line("auth_active_profile", "<profile-id>" if report.active_profile else ""),
+        metric_line("auth_active_profile_status", report.active_profile_status),
+        metric_line("auth_active_profile_registered", report.active_profile_registered),
+        metric_line("auth_active_profile_record_present", report.active_profile_record_present),
+        metric_line("auth_profile_tax_id", "present" if report.profile_tax_id_present else "missing"),
+        metric_line("auth_provider_identity", "present" if report.provider_identity_present else "missing"),
+        metric_line("auth_identity_alignment", report.identity_alignment),
+        metric_line("auth_identity_kind", report.identity_kind),
+        metric_line("auth_mode", report.auth_mode),
+        metric_line("auth_prefer_non_qr", report.prefer_non_qr),
+        metric_line("auth_timeout_ms", report.timeout_ms),
+        metric_line("auth_dni_fecha", "present" if report.dni_fecha_configured else "missing"),
+        metric_line("auth_nie_soporte", "present" if report.nie_soporte_configured else "missing"),
+        metric_line("auth_certificate_path", "present" if report.certificate_path_configured else "missing"),
+        metric_line("auth_certificate_file", "present" if report.certificate_file_present else "missing"),
+        metric_line("auth_persisted_session", "present" if report.persisted_session_present else "missing"),
+        metric_line("auth_persisted_session_expired", report.persisted_session_expired),
+        metric_line("auth_persisted_session_state", report.persisted_session_state),
+        metric_line("auth_probe_result", report.probe_result),
     )

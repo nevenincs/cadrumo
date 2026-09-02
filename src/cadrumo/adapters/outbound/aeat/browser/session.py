@@ -270,7 +270,7 @@ class BrowserSession:
             # False), but Chromium never persists a byte anywhere. No
             # production flow in this adapter reads a browser-triggered
             # download from disk -- the sole consumer,
-            # `_capture_submitted_file_artefact`, already re-fetches the
+            # `capture_submitted_file_artefact`, already re-fetches the
             # captured URL in-memory via `context.request` -- so this is a
             # zero-behaviour-change default project-wide
             # (sensitive-financial-data-secure-storage-only).

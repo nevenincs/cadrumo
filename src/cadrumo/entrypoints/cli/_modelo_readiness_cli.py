@@ -14,7 +14,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...core.period import Period, PeriodError
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.user_profile.errors import ProfileNotFoundError
-from ._common import _no_active_profile_refusal, emit_envelope, resolve_cli_precondition_action
+from ._common import emit_envelope, no_active_profile_refusal, resolve_cli_precondition_action
 from ._modelo_cli_support import unsupported_local_work_period_refusal
 from ._modelo_payloads import (
     LedgerIssuePayload,
@@ -111,7 +111,7 @@ def _readiness_report(request: ModeloReadinessRequest) -> ProjectionModeloReadin
     from ...core.i18n.render import tr as _tr
 
     if resolve_active_bucket_id() is None:
-        raise _no_active_profile_refusal()
+        raise no_active_profile_refusal()
     try:
         projection = build_operator_state_projection(modelo_readiness_requests=(request,))
     except ProfileNotFoundError as exc:
