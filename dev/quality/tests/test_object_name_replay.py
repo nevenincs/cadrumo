@@ -9,11 +9,14 @@ from typing import Any
 
 import pytest
 
+from ...audit.object_names import scan, to_json
 from .. import object_name_graph as graph_module
 from .. import object_name_replay as replay_module
+from ..object_name_graph import build_manifest_components, collect_import_edges, operation_locators
+from ..object_name_manifest import ObjectNameRenameManifest
 from ..object_name_rehearsal import ObjectNameRehearsalReceipt, rehearse_object_name_component
 from ..object_name_replay import ObjectNameReplayError, replay_object_name_component
-from .test_object_name_rehearsal import _digest, _fixture, _live_bytes
+from .test_object_name_rehearsal import _digest, _fixture, _git, _live_bytes, _write
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -37,6 +40,65 @@ def _retag(receipt: ObjectNameRehearsalReceipt) -> ObjectNameRehearsalReceipt:
     return replace(identified, evidence_digest=replay_module._receipt_digest(identified, evidence=True))
 
 
+def _module_case(tmp_path: Path) -> tuple[Path, Any, Any, Any, ObjectNameRehearsalReceipt]:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    (repo / "dev").mkdir()
+    _write(repo, "src/example/__init__.py", b"")
+    _write(repo, "src/example/widgets.py", b"VALUE = 1\n")
+    _write(repo, "src/example/consumer.py", b"from example.widgets import VALUE\n")
+    _git(repo, "add", "src/example/__init__.py", "src/example/widgets.py", "src/example/consumer.py")
+    inventory = scan((repo / "src", repo / "dev"), repo)
+    declaration = next(item for item in inventory.declarations if item.path == "src/example/widgets.py")
+    finding = next(item for item in inventory.findings if item.name == "widgets")
+    target_path = "src/example/widget.py"
+    operation = {
+        "operation_id": "rename-widgets-module",
+        "finding_id": finding.id,
+        "operation_kind": "module-rename",
+        "disposition": "lexical-singular",
+        "lifecycle": "reviewed",
+        "old_locator": declaration.qualified_locator,
+        "old_path": declaration.path,
+        "new_locator": replace(declaration, name="widget", path=target_path).qualified_locator,
+        "new_path": target_path,
+        "owner": "dev-quality",
+        "rationale": "Use the singular module name.",
+        "preconditions": (
+            {
+                "path": "src/example/consumer.py",
+                "sha256": _digest((repo / "src/example/consumer.py").read_bytes()),
+            },
+            {"path": declaration.path, "sha256": declaration.source_hash},
+        ),
+        "expected_reference_classes": ("definition", "static-import"),
+        "moves": ({"source": declaration.path, "target": target_path},),
+        "changed_paths": ("src/example/consumer.py", target_path, declaration.path),
+        "generator_commands": (),
+        "focused_gates": (
+            (
+                sys.executable,
+                "-c",
+                "from pathlib import Path; assert Path('src/example/widget.py').read_bytes() == b'VALUE = 1\\n'",
+            ),
+        ),
+    }
+    manifest = ObjectNameRenameManifest.model_validate(
+        {
+            "schema_version": 1,
+            "inventory_digest": to_json(inventory)["inventory_digest"],
+            "operations": (operation,),
+        }
+    )
+    edges = collect_import_edges(operation_locators(manifest), repo_root=repo)
+    component = build_manifest_components(  # ty: ignore[invalid-argument-type]
+        manifest, inventory=inventory, hard_edges=edges
+    )[0]
+    receipt = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
+    return repo, inventory, manifest, component, receipt
+
+
 def test_successful_symbol_replay_applies_exact_receipt_and_preserves_unrelated_bytes(tmp_path: Path) -> None:
     repo, inventory, manifest, component, receipt = _case(tmp_path)
     unrelated = (repo / "dev/tracked.txt").read_bytes()
@@ -53,6 +115,70 @@ def test_successful_symbol_replay_applies_exact_receipt_and_preserves_unrelated_
     assert not (
         repo.parent / f".{repo.name}.object-name-transaction-{receipt.receipt_id.removeprefix('sha256:')}"
     ).exists()
+
+
+def test_successful_module_replay_uses_deterministic_mixed_transaction_order(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo, inventory, manifest, component, receipt = _module_case(tmp_path)
+    events: list[tuple[str, str]] = []
+    original_replace = replay_module._replace_staged
+    original_unlink = replay_module._unlink_regular
+
+    def track_replace(root: Path, relative: str, staged: Path, *, expected: bytes | None) -> None:
+        events.append(("replace", relative))
+        original_replace(root, relative, staged, expected=expected)
+
+    def track_unlink(root: Path, relative: str, *, expected: bytes) -> None:
+        events.append(("unlink", relative))
+        original_unlink(root, relative, expected=expected)
+
+    monkeypatch.setattr(replay_module, "_replace_staged", track_replace)
+    monkeypatch.setattr(replay_module, "_unlink_regular", track_unlink)
+
+    result = replay_object_name_component(
+        manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
+    )
+
+    assert events == [
+        ("replace", "src/example/consumer.py"),
+        ("replace", "src/example/widget.py"),
+        ("unlink", "src/example/widgets.py"),
+    ]
+    assert result.changed_paths == receipt.changed_paths
+    assert not (repo / "src/example/widgets.py").exists()
+    assert (repo / "src/example/widget.py").read_bytes() == b"VALUE = 1\n"
+    assert (repo / "src/example/consumer.py").read_bytes() == b"from example.widget import VALUE\n"
+
+
+@pytest.mark.parametrize(("method", "position"), [("replace", 1), ("replace", 2), ("unlink", 1)])
+def test_mixed_transaction_failure_at_each_mutation_position_rolls_back(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, method: str, position: int
+) -> None:
+    repo, inventory, manifest, component, receipt = _module_case(tmp_path)
+    before = _live_bytes(repo)
+    original = getattr(replay_module, f"_{method}_staged" if method == "replace" else "_unlink_regular")
+    calls = 0
+
+    def fail_once(*args: Any, **kwargs: Any) -> None:
+        nonlocal calls
+        calls += 1
+        if calls == position:
+            raise OSError(f"{method}-{position}")
+        original(*args, **kwargs)
+
+    monkeypatch.setattr(
+        replay_module,
+        "_replace_staged" if method == "replace" else "_unlink_regular",
+        fail_once,
+    )
+
+    with pytest.raises(ObjectNameReplayError, match="rolled back"):
+        replay_object_name_component(
+            manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
+        )
+
+    assert _live_bytes(repo) == before
 
 
 @pytest.mark.parametrize(
@@ -148,7 +274,9 @@ def test_occupied_transaction_is_refused_without_deleting_foreign_evidence(tmp_p
     sentinel = transaction / "foreign-evidence"
     sentinel.write_bytes(b"keep\n")
 
-    with pytest.raises(ObjectNameReplayError, match="unfinished replay transaction requires explicit operator inspection"):
+    with pytest.raises(
+        ObjectNameReplayError, match="unfinished replay transaction requires explicit operator inspection"
+    ):
         replay_object_name_component(
             manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
         )

@@ -28,14 +28,18 @@ remains public, while malformed, ambiguous, or low-coverage extraction raises
 
 Public API::
 
-    from cadrumo.adapters.inbound.declaracion import (
-        InboundDeclaracionObservation,
-        DeclaracionParseError,
-        ExtractionWarning,
-        TemplateNotDetectedError,
-        TemplateRevision,
+    from cadrumo.adapters.inbound.declaracion.parser import (
         parse_declaracion,
         parse_declaracion_bytes,
+    )
+    from cadrumo.adapters.inbound.declaracion.schema import (
+        ExtractionWarning,
+        InboundDeclaracionObservation,
+        TemplateRevision,
+    )
+    from cadrumo.adapters.inbound.declaracion.errors import (
+        DeclaracionParseError,
+        TemplateNotDetectedError,
     )
 
 See Also:

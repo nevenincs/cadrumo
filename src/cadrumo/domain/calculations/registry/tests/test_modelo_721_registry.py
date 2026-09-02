@@ -207,6 +207,8 @@ def test_modelo_721_threshold_continuity_has_registry_parameters_without_calcula
     }
 
     assert "calculation" not in link_ids_by_surface
+    assert "extractor" not in link_ids_by_surface
+    assert "modelo-721-extractor" not in revision.constructs[0].application_links
     assert "modelo-721-calculation" not in revision.constructs[0].application_links
     assert expected_link_ids_by_surface.items() <= link_ids_by_surface.items()
     assert {parameter.id for parameter in revision.parameters} >= {

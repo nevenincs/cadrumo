@@ -275,7 +275,7 @@ def test_modelo_308_historical_epochs_are_explicitly_below_filing() -> None:
         assert not revision.bindings
         assert not revision.deadline_windows
         assert {casilla.id for casilla in revision.casillas} == {"decl.ejercicio", "decl.periodo"}
-        assert {link.surface for link in revision.application_links} == {"portal", "filing", "extractor", "deadline"}
+        assert {link.surface for link in revision.application_links} == {"portal", "filing", "deadline"}
         assert parity.formula_coverage == "static_layout"
         assert parity.workbook_source == source_id
         assert construct.workbook_parity_refs == (parity.id,)
@@ -285,6 +285,10 @@ def test_modelo_308_historical_epochs_are_explicitly_below_filing() -> None:
     assert current.authority_grade is RegistryAuthorityGrade.FILING
     assert {source for layout in current.export_layouts for source in layout.source_refs} == {"aeat-dr-308-2019"}
     assert "export" in {link.surface for link in current.application_links}
+
+    for revision in modelo.revisions.values():
+        assert "extractor" not in {link.surface for link in revision.application_links}
+        assert all("modelo-308-extractor" not in construct.application_links for construct in revision.constructs)
 
 
 def test_modelo_308_current_layout_covers_v13_and_offset_mutation_reopens_source_slot() -> None:

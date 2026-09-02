@@ -138,6 +138,8 @@ _WithholdingRowField = Literal[
     "numero_orden",
 ]
 WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave"]
+
+
 class _WithholdingFactKind(StrEnum):
     """Which fact a withholding selector reads from a resolved row set."""
 

@@ -325,7 +325,17 @@ def replay_object_name_component(
         receipt.gate_outcomes,
     ):
         raise ObjectNameReplayError("regenerated transformation or verification differs from the receipt")
-    if tuple(sorted(receipt.changed_paths)) != tuple(sorted(component.affected_paths)):
+    reviewed_paths = tuple(
+        sorted(
+            {
+                path
+                for operation in manifest.operations
+                if operation.operation_id in component.operation_ids
+                for path in operation.changed_paths
+            }
+        )
+    )
+    if receipt.changed_paths != reviewed_paths:
         raise ObjectNameReplayError("receipt changed paths differ from the component allowlist")
 
     proposal_root = Path(exact.rehearsal_root)
