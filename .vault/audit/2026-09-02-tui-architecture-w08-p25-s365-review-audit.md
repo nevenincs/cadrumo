@@ -11,25 +11,6 @@ related:
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `tui-architecture` audit: `w08 p25 s365 review`
 
 ## Scope
@@ -125,6 +106,22 @@ chronology only, and there is still no negative test for action ranking or
 limit, next-action address completeness, isolated Messages refusal, or the
 contradictory AEAT shape above. No critical issue was found; the unresolved
 contradiction keeps one high-severity issue open.
+
+### final-disposition | low | All high and critical findings are closed after authority-consistency remediation
+
+Final re-review confirms that `HomeProjectionV1` now rejects positive per-row
+AEAT submission claims whenever `agenda_evidence_state` is locked,
+never-captured or unavailable, while stale evidence remains representable with
+its required observation time. Together with the preceding authority split,
+this closes both `agenda-authority` and `remediation-verification`: locally
+known legal and filing rows survive absent AEAT capture, but cannot fabricate an
+AEAT-observed result. The focused suite passed with 12 tests, including the
+positive local-only shape and the negative contradictory-evidence shape.
+
+The final review found no remaining high or critical issue in the S365 scope.
+The earlier findings remain above as rolling history; the implemented closed
+vocabulary, address, freshness, ordering, limit and isolated Messages checks
+materially strengthen the contract and its tests.
 
 ## Recommendations
 

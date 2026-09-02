@@ -10,12 +10,6 @@ related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
 
-<!-- Machine-owned: filename and frontmatter, scaffolded by
-     `vaultspec-core vault add exec`; never hand-edit. Add no frontmatter
-     fields. Wiki-links belong in `related:` only, never in the body.
-
-     Rolls up every Step Record (S##) of one Phase. -->
-
 # `object-name-declustering` `W02.P06` summary
 
 ## Changes

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:2a9251fe3ac6c7f47c18f5350d4f2ec94c151b77f63d42198759341c129f4a16'
+body_hash: 'sha256:80d5b29a1452035773d0a883adbdd26cd1e356f1d4884a09049b6adcb738eb13'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -445,6 +445,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S213` - Add the category membership criterion the three withdrawn and narrowed conditions make due; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S214` - Measure the plan's duplicated top-level sections against the template and establish that they predate this campaign; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S215` - Merge the plan's triplicated Description and Verification and duplicated Parallelization into one of each, proving no paragraph was lost; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S216` - Move the acceptance criteria out of Parallelization where the duplicated structure had them accumulating and retire the superseded opener; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -561,6 +562,8 @@ What remains fully available is the dev-owned surface, which is why the twelve S
 `W06.P13` all live there. A screen, its dispositions and its gate can be authored, proved
 and left green without touching a file the other campaign holds.
 
+## Verification
+
 The plan is complete when every Step is closed. Beyond that, twelve criteria decide whether the work
 achieved what it was for. Each names the evidence that settles it, because a criterion whose proof is
 a reading rather than a command is one nobody can check later.
@@ -669,32 +672,14 @@ it is that no failure in it is unexplained, so a new one is visible immediately.
 from pytest itself: a run piped through a filter reports the filter, which once made a red lane read
 as exit code zero.
 
-## Verification
-
-The plan is complete when every Step is closed. Beyond that, five criteria decide whether
-the work achieved what it was for.
-
 No gate, screen or audit reassembles the resolved export surface. Every consumer calls the accessor,
 and a test proves the accessor fails if any one of its three linkage paths is dropped.
-
-The release-eligibility predicate is evaluable from the shipped application, and a coordinate-identity
-gate runs in the repository gate lane, comparing the satisfied filing coordinate set by identity and
-naming the limb that regressed. It asserts no count, no ceiling and no floor.
 
 Each gate demonstrates detection of a representative defect from a constructed fixture or an isolated
 temporary registry tree, never by mutating the working tree, and each passes the normal path in the
 same suite. One gate is exempt and better for it: the sibling scale comparison is proven against a
 live defect in the shipped registry, and its test says so and says what must replace it once that
 defect is corrected.
-
-No monetary amount is emitted at a magnitude the registry does not determine. Every monetary field is
-rendered by a wire type that scales, carries a declared scale, or is one half of the official part
-split, and no field disagrees with the amounts beside it in its own record. The one field that fails
-this today is the plan's only known filing-correctness defect.
-
-Every revision directory name agrees with the window that revision declares, and a gate refuses a name
-that does not. Temporal selection resolves every coordinate the law can decide and refuses only those
-it genuinely cannot.
 
 The release-eligibility predicate is evaluable from the shipped application, and a
 coordinate-identity gate runs in the repository gate lane, comparing the satisfied filing

@@ -5137,3 +5137,37 @@ differently on this platform, so the verification could not read its own baselin
 real location was resolved. It is the same class as the sweep script that needed the
 repository root on its import path, and the same remedy: resolve the path rather than assume
 the two tools mean the same thing by it.
+
+### Every criterion this campaign wrote had been going into the wrong section
+
+Reading the merged Verification section found it opening "beyond that, five criteria" when the
+campaign has written twelve. The twelve-criteria text existed, and it was inside
+`## Parallelization`.
+
+The cause is the duplicated structure itself. With three Description blocks and three
+Verification blocks in one document, the block sitting immediately before a `## Verification`
+heading looks like Verification prose, and every criterion added this session was appended
+there. The merge could not correct it: it reconciles copies of a section against each other,
+and these paragraphs were in a different section entirely, so they were never compared.
+
+That is a sharper version of the defect this campaign keeps finding. A duplicated declaration
+does not only drift - it changes where a later author puts things, so the damage compounds
+in a direction nobody is watching. Ten iterations of acceptance criteria went into a section
+about ordering constraints, and every vault check passed throughout, because nothing validates
+that a paragraph is under the right heading.
+
+The block from the criteria opener to the end of Parallelization is now inside Verification,
+merged with what was there under the same no-loss construction: 28 paragraphs to 25, none
+lost. The superseded "five criteria" opener was then removed by hand, deliberately and as the
+single exception to no-loss, because its content is carried entirely by the sentence that
+replaced it and keeping both would leave the section stating its own size twice with two
+different numbers.
+
+The document now carries one Description, one Steps, one Parallelization and one Verification,
+in template order, with 213 Step rows unchanged. Seventeen vault checks pass; the remaining
+warning is the concurrent campaign's untracked scaffold.
+
+Worth noting what did not catch this. The merge verified paragraph counts and no-loss, ran
+clean, and reported success - and the section it produced said five where it should have said
+twelve. The check answered the question it was asked, which was whether anything was dropped,
+and the thing that was wrong was never in its scope. Reading the output was what found it.

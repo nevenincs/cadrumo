@@ -1559,3 +1559,63 @@ both to enums would have dressed an index up as a domain concept.
 Blind-spot scope: 11 -> 8 member sets declared in more than one place. Registry
 annotation-scope inline declarations hold at 69; package-wide annotation scope remains 1,
 the M184/IVA false positive.
+
+## Finding 73 — the blind-spot population reaches its floor
+
+Five more vocabularies landed: `CommandNodeKind` promoted from alias to enum with
+`NON_LEAF_COMMAND_KINDS` naming the pair a reconciliation module tested twice;
+`TreeRemovalErrorPolicy` for a deletion-safety choice passed as bare strings through two
+signatures; `_LOCAL_EVIDENCE_SOURCE_KINDS` for two wallet source kinds tested twice, each
+paired with a different second condition; `CLOSURE_SATISFYING_OUTCOMES`; and
+`_FALSE_PROFILE_TOKENS`.
+
+Two are worth stating for what they protect rather than what they tidy.
+
+`CLOSURE_SATISFYING_OUTCOMES` includes `NOT_APPLICABLE` deliberately: a capability
+declared out of scope is not a gap, and treating it as one refuses a filing over
+evidence nothing required. The pair was tested twice in `filing_export_coverage`, once
+directly and once as its own negation, so the two spellings could disagree about what
+counts as satisfied while both looked correct.
+
+`_FALSE_PROFILE_TOKENS` is the pair a profile row uses to mean NO. Two descendant flags
+tested it independently with different defaults. A token added to one and not the other
+would make one flag read a stored NO as a YES -- and for `convive_con_contribuyente`
+that decides whether a descendant counts toward the minimo familiar at all.
+
+BLIND-SPOT SCOPE IS NOW 2, AND BOTH ARE THE PATH-SEPARATOR SETS `["", ".", ".."]` and
+`[".", ".."]`. Those are traversal guards, not a domain vocabulary: every site is a
+containment check asking whether a path segment escapes its root, and naming them would
+create a shared constant across five unrelated modules that have no reason to import one
+another. They are classified as noise, and that classification is a judgement recorded
+here rather than a silent omission.
+
+So the blind-spot population went 28 -> 2 across this campaign, and the two that remain
+are declared not-defects rather than unfixed. That is a different claim from zero, and
+the difference is stated on purpose.
+
+Annotation scope is unchanged at 1 package-wide -- still the M184/IVA false positive --
+and 0 registry-schema-scoped, with 69 vocabularies at 69 fields. The gate still cannot
+honestly reach zero, and widening it remains an operator decision.
+
+## Finding 74 — a hand-maintained inventory, drifting, in committed code
+
+`test_active_bucket_consumer_coverage.py` keeps two hand-written maps of which modules
+resolve the active profile bucket. Both halves now fail: `profile_custody.py` resolves it
+and is in neither map, and three modules -- `recipient_replay_guard.py`,
+`custody_ports.py` and `workflow/persistence.py` -- are declared but no longer resolve it.
+
+Two of those four were edited earlier in this campaign, so the possibility that the
+campaign caused it had to be excluded rather than assumed. All four are unmodified in the
+working tree, which puts the drift in committed code rather than in any pending change,
+and the edits made to those two changed type annotations and imports only, never a
+resolver call.
+
+The finding worth recording is the shape, not the fix. This is a hand-maintained list of
+modules whose only defence against reality is that someone updates it -- the same
+mechanism this campaign exists to remove, applied to a different question. Its own error
+message states the failure mode exactly: "an entry that outlives its module claims
+coverage of code that is not there." Repairing it means deciding, per module, whether the
+refusal behaviour is exercised, which is a coverage judgement and not a de-duplication
+edit. Left for the operator.
+
+479 + 348 + 45 tests pass across this tick's targets.

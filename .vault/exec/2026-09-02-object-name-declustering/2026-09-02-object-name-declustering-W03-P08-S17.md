@@ -11,11 +11,6 @@ related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
 
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
-
 # Add the grouped fix-object-names recipe with pass-through arguments and rehearsal as its no-argument default
 
 ## Scope
