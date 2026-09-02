@@ -6,8 +6,8 @@ prove what an operator does -- the prompt they read, the answer they type, the
 answer surviving a step backwards, and the appearance toggle resolving from
 whatever surface is actually focused.
 
-WHY THIS MODULE EXISTS SEPARATELY. W06.P13.S346 moves the flow pages from
-SIBLINGS on the screen stack to DESCENDANTS the entry owns, which touches focus,
+WHY THIS MODULE EXISTS SEPARATELY. The flow pages move from SIBLINGS on the
+screen stack to DESCENDANTS the entry owns, which touches focus,
 binding resolution, DOM ancestry and screen dismissal. Every one of those is
 invisible to a stage-strip assertion, so the four tests beside this one would
 stay green through a redesign that broke the flow entirely. The row's own
@@ -207,7 +207,7 @@ async def test_an_answer_survives_a_step_backwards() -> None:
 async def test_the_appearance_toggle_resolves_from_the_active_surface() -> None:
     """F3 must flip the appearance from wherever the operator actually is.
 
-    This is W06.P13.S346's completion signal made behavioural. The binding is
+    This is that redesign's completion signal made behavioural. The binding is
     currently duplicated onto both page screens BECAUSE the entry is never the
     active surface; the redesign moves it to the entry alone. Asserting the
     EFFECT rather than the declaration means this test passes before and after,
