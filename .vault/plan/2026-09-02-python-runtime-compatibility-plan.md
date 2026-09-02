@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-python-runtime-compatibility-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:b5754462e0a5a73d95ec36dfae27c31da1194f84581a75df6896f82935ed1a8f'
+body_hash: 'sha256:3c9df84fdb78c9242ed2df7442a3216748e3427572552d48e89e84865768f2d4'
 ---
 
 <!-- RETIRED: S33, S35, S37, S39, S41, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 -->
@@ -84,7 +84,7 @@ Make stable support claims only after their blocking evidence passes.
 - [x] `P05.S30` - Add classifiers only for stable runtimes proven by the matrix; `pyproject.toml`.
 - [x] `P05.S31` - Align manuals companion classifiers with stable runtime evidence; `packaging/cadrumo_data_manuals/pyproject.toml`.
 - [x] `P05.S32` - Align official-data companion classifiers with stable runtime evidence; `packaging/cadrumo_data_official/pyproject.toml`.
-- [ ] `P05.S34` - Enforce root and companion classifier parity and prerelease exclusion; `dev/packaging/tests/test_classifier_parity.py`.
+- [x] `P05.S34` - Enforce root and companion classifier parity and prerelease exclusion; `dev/packaging/tests/test_classifier_parity.py`.
 - [ ] `P05.S36` - Test sealed release artifacts across supported stable runtimes; `.github/workflows/publish.yml`.
 - [ ] `P05.S38` - Document local runtime selection and source versus binary evidence; `CONTRIBUTING.md`.
 - [ ] `P05.S40` - Document final-runtime promotion and classifier evidence; `RELEASING.md`.
