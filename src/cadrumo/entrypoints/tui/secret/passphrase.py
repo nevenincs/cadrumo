@@ -37,7 +37,6 @@ from .credentials import (
     CredentialAttempt,
     CredentialScreen,
     assessment_copy,
-    assessment_css_class,
     run_credential_screen,
 )
 
@@ -167,23 +166,12 @@ class PassphraseScreen(CredentialScreen["ProfilePassphraseRotationOutcome"]):
         self.query_one("#label-new", Label).update(tr("flows.passphrase.new_label"))
         self.query_one("#hint-new", Static).update(tr("flows.passphrase.new_hint"))
         self.query_one("#label-confirm", Label).update(tr("flows.passphrase.confirm_label"))
-        self._render_strength(self.query_one("#field-new", Input).value)
+        self._render_strength(self.query_one("#field-new", Input).value, assess=self._assess_profile_password)
 
     def on_input_changed(self, event: Input.Changed) -> None:
         """Re-render the advisory strength line as the new password is typed."""
         if event.input.id == "field-new":
-            self._render_strength(event.value)
-
-    def _render_strength(self, candidate: str) -> None:
-        """Update the band line, or clear it while the field is empty."""
-        line = self.query_one("#strength-line", Static)
-        line.remove_class("strength-refused", "strength-weak", "strength-fair", "strength-strong")
-        if not candidate:
-            line.update("")
-            return
-        assessment = self._assess_profile_password(candidate)
-        line.add_class(assessment_css_class(assessment))
-        line.update(assessment_copy(assessment))
+            self._render_strength(event.value, assess=self._assess_profile_password)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Route a change or cancellation button intent."""

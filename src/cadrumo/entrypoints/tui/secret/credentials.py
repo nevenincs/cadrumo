@@ -28,6 +28,7 @@ from typing import TYPE_CHECKING, ClassVar, Final, Protocol, cast
 
 from textual.binding import Binding
 from textual.screen import Screen
+from textual.widgets import Static
 from textual.worker import Worker, WorkerState
 
 from ....core.credentials import PassphraseStrength, ProfilePasswordAssessment
@@ -106,6 +107,23 @@ class CredentialScreen[OutcomeT](TypedAppAccess, Screen[OutcomeT | None]):
         self.outcome: OutcomeT | None = None
         self.error: BaseException | None = None
         self._attempt: Worker[CredentialAttempt[OutcomeT]] | None = None
+
+    def _render_strength(
+        self,
+        candidate: str,
+        *,
+        assess: Callable[[str], ProfilePasswordAssessment],
+        locale: str | None = None,
+    ) -> None:
+        """Update the live strength line, or clear it while the field is empty."""
+        line = self.query_one("#strength-line", Static)
+        line.remove_class("strength-refused", "strength-weak", "strength-fair", "strength-strong")
+        if not candidate:
+            line.update("")
+            return
+        assessment = assess(candidate)
+        line.add_class(assessment_css_class(assessment))
+        line.update(assessment_copy(assessment, locale=locale))
 
     @property
     def attempt_in_flight(self) -> bool:
