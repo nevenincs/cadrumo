@@ -676,7 +676,9 @@ def test_work_calculate_modelo_180_refuses_string_perceptor_casilla_with_detail_
     assert "--retencion-observation" in envelope["error"]["message"]
 
 
-def test_work_calculate_persists_ledger_source_mesh_observations(tmp_path: Path) -> None:
+def test_work_calculate_persists_ledger_source_mesh_observations(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     from ....core.bucket_pointer import resolve_active_bucket_id
 
     _create_profile()
@@ -763,6 +765,11 @@ def test_work_calculate_persists_ledger_source_mesh_observations(tmp_path: Path)
     with open_test_profile_session(bucket_id):
         persisted = CalculationRevisionCatalogueRepository().load().revisions[revision_id]
 
+    payload_provenance = payload["source_provenance"]
+    assert payload_provenance, "calculate JSON must carry the persisted source-mesh trace"
+    assert {row["source_ref"] for row in payload_provenance} == {
+        source.source_ref for source in persisted.source_provenance
+    }
     assert persisted.source_transaction_ids == tuple(sorted((sale.transaction_id, purchase.transaction_id)))
     assert Decimal(persisted.binding_overrides["modelo-303-iva-repercutido-general-cuota"]) == sale.iva_amount
     assert Decimal(persisted.binding_overrides["modelo-303-iva-soportado-interiores-cuota"]) == purchase.iva_amount
@@ -819,6 +826,36 @@ def test_work_calculate_persists_ledger_source_mesh_observations(tmp_path: Path)
     assert "iva.repercutido.general" in text_observations.output
     assert output_observation.legal_refs[0] in text_observations.output
     assert output_observation.source_refs[0] in text_observations.output
+
+    # The wizard's success emitter receives the same persisted calculation
+    # result as calculate. Exercise its real JSON envelope with this
+    # source-mesh-backed revision, rather than a hand-built payload, so a
+    # future mapper exclusion cannot make its provenance disappear.
+    import typer
+    import typer.main
+
+    from ....application.modelo.calculate_input import ModeloWorkCalculationServiceResult
+    from .._modelo_behavior_support import resolve_work_unit_for_cli
+    from .._modelo_work_wizard_cli import _emit_wizard_result
+
+    wizard_app = typer.Typer()
+
+    @wizard_app.command()
+    def _noop() -> None: ...
+
+    wizard_context = typer.Context(typer.main.get_command(wizard_app), obj={"format": "json"})
+    with open_test_profile_session(bucket_id):
+        wizard_work_unit = resolve_work_unit_for_cli(work_unit_id=work_unit["work_unit_id"])
+        _emit_wizard_result(
+            wizard_context,
+            ModeloWorkCalculationServiceResult(revision=persisted, work_unit=wizard_work_unit),
+            (),
+        )
+    wizard_payload = _payload(capsys.readouterr().out)
+    assert wizard_payload["source_provenance"], "wizard JSON must carry the persisted source-mesh trace"
+    assert {row["source_ref"] for row in wizard_payload["source_provenance"]} == {
+        source.source_ref for source in persisted.source_provenance
+    }
 
 
 def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:

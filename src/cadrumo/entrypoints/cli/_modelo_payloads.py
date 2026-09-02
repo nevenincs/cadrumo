@@ -104,7 +104,7 @@ from ._modelo_iva_wallet_payloads import (
     IvaWalletSeedResult,
 )
 from ._modelo_revision_payload_parts import (
-    CalculationRevisionCommandProjectionFields,
+    CalculationRevisionProjectionFields,
     DetailRowPayload,
     ObservationPayload,
     ResultSummaryRowPayload,
@@ -643,13 +643,13 @@ class WorkDiscardResult(OutputSchema):
     causante_ccaa: str | None = None
 
 
-class WorkCalculateResult(CalculationRevisionCommandProjectionFields):
+class WorkCalculateResult(CalculationRevisionProjectionFields):
     """Successful ``modelo work calculate`` result payload.
 
     The calculate CLI flattens the persisted
     :class:`CalculationRevision` fields from
     :class:`CalculationRevisionPayload`
-    (carried by the compact revision-command projection base),
+    (carried by the full shared revision projection base),
     then adds the presentation-only values
     carried by
     :class:`ModeloWorkCalculationServiceResult`: Modelo

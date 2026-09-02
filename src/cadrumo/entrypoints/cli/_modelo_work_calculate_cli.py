@@ -187,10 +187,7 @@ def _run_work_calculate(
             {
                 "saved": True,
                 "saved_confirmation": saved_confirmation,
-                **calculation_revision_payload(calculation_revision).model_dump(
-                    mode="python",
-                    exclude={"source_provenance"},
-                ),
+                **calculation_revision_payload(calculation_revision).model_dump(mode="python"),
                 **modality_payload,
                 **authorization_payload,
                 "deadline": deadline_payload.model_dump(mode="python") if deadline_payload is not None else None,
