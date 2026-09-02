@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:ad5edb1fb88a6fa957ce3cbe153ac2ccbc71b1158c270e6c2e91b946ed8f4b3a'
+body_hash: 'sha256:6b5044279752545dffcd5658cae2367c7fb04072e5018d170466f5288df0e6ef'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -453,7 +453,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S191` - Gate that the derived render inputs keep supplying every revision-describing value the publication limb requires; `dev/registry/tests/test_generated_tree_publication.py`.
 - [x] `W06.P13.S192` - Apply the empty-population defence to this campaign's own gates, which two of them lacked; `dev/quality/tests/test_name_collision_dispositions.py,dev/quality/tests/test_default_lane_visibility.py`.
 - [x] `W06.P13.S193` - Establish that the empty filing export proof authority refuses rather than passing, and correct the enrolment Step to name its real blocker; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
-- [ ] `W06.P13.S194` - Establish that the closure test rewrite is blocked behind vector enrolment and record the ordering constraint; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S194` - Establish that the closure test rewrite is blocked behind vector enrolment and record the ordering constraint; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

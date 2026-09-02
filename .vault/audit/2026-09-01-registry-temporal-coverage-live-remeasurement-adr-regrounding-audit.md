@@ -4461,3 +4461,35 @@ prove. The Step has been rewritten to name official examples as the input and le
 
 Recording this as a correction rather than a discovery: the hole is real and unchanged, and
 what changed is that the plan now says what would fill it.
+
+### The failing closure test cannot be fixed by the repair its Step names
+
+The one conformance failure this audit has carried throughout fails with an
+`AttributeError`: the modelo 151 test builds `LiveFilingExportProofAuthority` and the closure
+report calls `assess_for` on it, which that class does not have. Its Step names the repair -
+rewrite the test onto the two-channel authority and delete the single-channel one - and the
+repair does not work.
+
+The single-channel class is not a peer of the two-channel one. It is the two-channel
+authority's own internal verifier, constructed inside it with an empty entry tuple, so
+"delete it" is a restructuring of the class that uses it rather than the removal of a
+displaced alternative.
+
+More decisively, the rewrite changes what the test fails on. The two-channel authority was
+built against the live registry and asked for the same coordinate, and it returns no proof:
+the conformance channel refuses with `evidence_missing`, because the canonical vector set is
+the empty tuple recorded in the previous finding, and the secure-replay channel refuses with
+`authority_unavailable`. The test asserts a satisfied filing-export limb. No arrangement of
+the two-channel authority produces one while there are no vectors.
+
+So the failing test is downstream of the missing filing evidence, and both are downstream of
+official record-design examples this campaign cannot author. That ordering is now in the
+plan's parallelization section, where the three previously discovered constraints already
+live.
+
+The workaround was available and is worth naming so that it stays refused. Stubbing the
+conformance channel, or asserting the refusal instead of the satisfaction, would turn this
+suite green today. It would also convert a real absence of filing evidence into a passing
+test, in the one suite whose subject is whether real filing outcomes can be proven. The
+failure is more useful than the green would be, and it is the second time in this campaign
+that the honest move has been to leave a test failing and say precisely why.
