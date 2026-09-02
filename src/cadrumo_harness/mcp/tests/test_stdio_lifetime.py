@@ -537,7 +537,7 @@ def _orphanable_spawn() -> tuple[str, dict[str, str]]:
     # mcp -> cadrumo_harness -> src) rather than an absolute `import
     # cadrumo`, so the relative-imports gate stays satisfied.
     src_root = _Path(__file__).resolve().parents[3]
-    application_src_root = _Path(__file__).resolve().parents[5]
+    application_src_root = _Path(__file__).resolve().parents[3]
     roots = [str(src_root), str(application_src_root), sysconfig.get_paths()["purelib"]]
     existing = os.environ.get("PYTHONPATH")
     if existing:

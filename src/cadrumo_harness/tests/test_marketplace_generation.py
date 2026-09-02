@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 _UTF_8 = "utf-8"
 
-_REPO_ROOT = Path(__file__).resolve().parents[5]
+_REPO_ROOT = Path(__file__).resolve().parents[3]
 _SCAFFOLD_MANIFEST = _REPO_ROOT / "packaging" / "marketplace" / ".claude-plugin" / "marketplace.json"
 _SCAFFOLD_SUPERSEDES = _REPO_ROOT / "packaging" / "marketplace" / ".claude-plugin" / "supersedes.json"
 

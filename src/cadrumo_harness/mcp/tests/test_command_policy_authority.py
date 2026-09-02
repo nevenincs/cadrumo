@@ -76,7 +76,7 @@ print(json.dumps(sorted(set(sys.modules) - before)))
 
 
 def test_legacy_keyed_policy_authority_is_physically_absent() -> None:
-    repository = Path(__file__).resolve().parents[6]
+    repository = Path(__file__).resolve().parents[4]
     old_module = repository / "src" / "cadrumo" / "application" / "operator_surface" / ("_risk" + "_table.py")
     assert not old_module.exists()
 

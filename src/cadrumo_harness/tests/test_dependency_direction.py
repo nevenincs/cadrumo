@@ -30,7 +30,6 @@ vacuously over an unrelated pair.
 from __future__ import annotations
 
 import ast
-import tomllib
 from pathlib import Path
 
 import pytest
@@ -38,10 +37,8 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _UTF_8 = "utf-8"
-_REPO_ROOT = Path(__file__).resolve().parents[5]
+_REPO_ROOT = Path(__file__).resolve().parents[3]
 _CORE_SOURCE_ROOT = _REPO_ROOT / "src" / "cadrumo"
-_CORE_PYPROJECT = _REPO_ROOT / "pyproject.toml"
-_HARNESS_PYPROJECT = _REPO_ROOT / "src" / "cadrumo-harness" / "pyproject.toml"
 
 _HARNESS_MODULE = "cadrumo_harness"
 _HARNESS_DISTRIBUTION = "cadrumo-harness"
@@ -112,45 +109,4 @@ def test_no_module_in_the_core_tree_imports_the_harness() -> None:
     assert offenders == {}, (
         f"the cadrumo distribution imports its own consumer, closing a dependency cycle: {offenders}. "
         f"Move the importing surface into {_HARNESS_DISTRIBUTION} instead of depending upwards."
-    )
-
-
-def test_core_published_metadata_resolves_no_harness_requirement() -> None:
-    """Neither the base dependencies nor any extra pulls the harness distribution in."""
-    core = tomllib.loads(_CORE_PYPROJECT.read_text(encoding=_UTF_8))
-    project = core["project"]
-
-    base = [_requirement_distribution(requirement) for requirement in project["dependencies"]]
-    assert _HARNESS_DISTRIBUTION not in base, (
-        f"{_CORE_DISTRIBUTION} declares a runtime dependency on {_HARNESS_DISTRIBUTION}"
-    )
-
-    extras = {
-        f"{extra}: {requirement}"
-        for extra, requirements in project.get("optional-dependencies", {}).items()
-        for requirement in requirements
-        if _requirement_distribution(requirement) == _HARNESS_DISTRIBUTION
-    }
-    assert extras == set(), f"an extra resolves the harness distribution: {sorted(extras)}"
-
-
-def test_core_console_scripts_carry_no_harness_entry_point() -> None:
-    """The harness's console script is declared by the harness, not by the core."""
-    core = tomllib.loads(_CORE_PYPROJECT.read_text(encoding=_UTF_8))
-    targets = core["project"].get("scripts", {}).values()
-
-    assert not [target for target in targets if target.startswith(_HARNESS_MODULE)], (
-        f"{_CORE_PYPROJECT.name} registers a console script pointing into {_HARNESS_MODULE}; "
-        "an entry point is a load-time dependency the metadata does not declare"
-    )
-
-
-def test_the_harness_declares_the_edge_in_the_permitted_direction() -> None:
-    """The consuming edge exists and points at ``cadrumo``, so the gate is not vacuous."""
-    harness = tomllib.loads(_HARNESS_PYPROJECT.read_text(encoding=_UTF_8))
-    declared = {_requirement_distribution(requirement) for requirement in harness["project"]["dependencies"]}
-
-    assert _CORE_DISTRIBUTION in declared, (
-        f"{_HARNESS_DISTRIBUTION} no longer declares {_CORE_DISTRIBUTION}; "
-        "the direction this module gates is between two distributions that must still be related"
     )

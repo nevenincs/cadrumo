@@ -17,6 +17,7 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from ._validate import RegistryValidator
 from ._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow, validate_orden_aplicabilidad
+from ._validate_revision_context import _records_by_id
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .export import derive_export_layouts_from_bindings
 from .ids import RevisionId
@@ -38,21 +39,9 @@ _SNAPSHOT_CACHE: dict[_SnapshotCacheKey, _SnapshotCacheValue] = {}
 _VALIDATION_CACHE: dict[_ValidationCacheKey, _ValidationCacheValue] = {}
 
 
-class _IdentifiedRecord(Protocol):
-    """Record whose canonical identifier keys a snapshot projection."""
-
-    @property
-    def id(self) -> str: ...
-
-
 class _GroundedRecord(Protocol):
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
-
-
-def _records_by_id[RecordT: _IdentifiedRecord](records: Iterable[RecordT]) -> dict[str, RecordT]:
-    """Index records by id while preserving their authored order."""
-    return {record.id: record for record in records}
 
 
 def _catalogue_slice[RecordT](catalogue: Mapping[str, RecordT], record_ids: set[str]) -> dict[str, RecordT]:
