@@ -28,7 +28,7 @@ def validate_provisional_declaracion_pdf_evidence_state(
     if profile.confidence != "review_required":
         failures.append(
             f"{scope}: provisional declaracion_pdf profile {profile.id!r} must set "
-            f"confidence='review_required', not {profile.confidence!r}",
+            f"confidence='review_required', not {str(profile.confidence)!r}",
         )
     if profile.corpus_round_trip_verified:
         failures.append(
@@ -143,7 +143,7 @@ def validate_bbox_anchor_consistency(
         ]
     if target.match_strategy != "bbox_anchored" and target.bbox_anchor is not None:
         return [
-            f"{scope}: target {target.casilla_id!r} uses match_strategy={target.match_strategy!r} "
+            f"{scope}: target {target.casilla_id!r} uses match_strategy={str(target.match_strategy)!r} "
             f"but bbox_anchor is set; bbox_anchor must be None for non-bbox_anchored strategies",
         ]
     return []
@@ -166,7 +166,7 @@ def validate_extraction_profile_artefacts(
     if accepted != expected:
         failures.append(
             f"{scope}: extraction profile {profile.id!r} accepts {sorted(accepted)!r}, "
-            f"but surface {profile.surface!r} requires {sorted(expected)!r}",
+            f"but surface {str(profile.surface)!r} requires {sorted(expected)!r}",
         )
     if profile.surface == "justificante_pdf" and profile.target_casillas:
         failures.append(f"{scope}: extraction profile {profile.id!r} cannot use justificante PDFs as casilla data")

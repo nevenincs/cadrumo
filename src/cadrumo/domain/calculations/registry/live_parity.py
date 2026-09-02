@@ -653,7 +653,7 @@ def audit_oracle_bindings(
             if (cross_reference.surface, oracle.surface_kind) not in _COMPATIBLE_SURFACE_PAIRS:
                 failures.append(
                     f"modelo {modelo.id} revision {revision.id} cross-reference "
-                    f"{cross_reference.id} surface {cross_reference.surface!r} is not "
+                    f"{cross_reference.id} surface {str(cross_reference.surface)!r} is not "
                     f"compatible with oracle {oracle_id!r} surface_kind {oracle.surface_kind!r}",
                 )
     return tuple(failures)

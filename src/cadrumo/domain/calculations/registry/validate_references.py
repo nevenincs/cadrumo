@@ -207,7 +207,7 @@ def _check_text_casilla_strategy(
         if data_type == "text" and target.match_strategy != "named_label":
             checker.failures.append(
                 f"{checker.prefix}: {ep} targets casilla {target.casilla_id!r} "
-                f"(data_type='text') but uses match_strategy={target.match_strategy!r}; "
+                f"(data_type='text') but uses match_strategy={str(target.match_strategy)!r}; "
                 f"text-typed casilla targets must use match_strategy='named_label'",
             )
 
