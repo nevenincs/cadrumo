@@ -50,7 +50,7 @@ from .....core.config import Settings
 from .....core.errors.hierarchy import SiteHealthError
 from .....core.identity_check_verdict import IdentityCheckVerdictValue
 from .....core.logging import get_logger
-from .....domain.calculations.registry.checker_oracle_flow import CheckerObservation
+from .....domain.calculations.registry.checker_oracle_flow import CheckerDriverMode, CheckerObservation
 from .....domain.calculations.registry.errors import RegistryValidationError
 from .....domain.calculations.registry.remote_state_guard import (
     RemoteOperation,
@@ -213,9 +213,9 @@ class GroiSedeDriver:
         self._settings = settings
 
     @property
-    def mode(self) -> Literal["live"]:
+    def mode(self) -> Literal[CheckerDriverMode.LIVE]:
         """Always ``"live"`` — the driver requires a real Playwright session."""
-        return "live"
+        return CheckerDriverMode.LIVE
 
     def planned_operations(
         self,

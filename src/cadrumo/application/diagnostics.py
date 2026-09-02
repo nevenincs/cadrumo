@@ -61,7 +61,7 @@ from ..core.logging import default_log_file_path, get_logger
 from ..core.modelo import Modelo
 from ..core.operator_action_enums import NoRecoveryOutcome
 from ..core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
-from ..core.requirement import RequirementValue
+from ..core.requirement import Requirement, RequirementValue
 from ..core.resources.bundled_data import bundled_path
 from ..core.time.clock import now
 from .diagnostic_models import (
@@ -739,7 +739,9 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[_Diagnosti
         raw = values.get(entry.key)
         if raw is not None and raw.strip() != "":
             continue
-        requirement: RequirementValue = "required" if entry.requirement.value == "required" else "optional"
+        requirement: RequirementValue = (
+            Requirement.REQUIRED if entry.requirement is Requirement.REQUIRED else Requirement.OPTIONAL
+        )
         label = tr(str(entry.description))
         findings.append(
             _DiagnosticFinding(

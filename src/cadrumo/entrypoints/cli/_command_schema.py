@@ -210,13 +210,13 @@ def _policy(spec: CommandSpec) -> CommandPolicyMetadata:
 def _json_type(parameter: ParameterSpec) -> JsonType:
     qualname = parameter.value.annotation.qualname
     return (
-        "integer"
+        JsonType.INTEGER
         if qualname == "int"
-        else "number"
+        else JsonType.NUMBER
         if qualname == "float"
-        else "boolean"
+        else JsonType.BOOLEAN
         if qualname == "bool"
-        else "string"
+        else JsonType.STRING
     )
 
 
@@ -309,7 +309,7 @@ def _command_registration_projection(language: str) -> CommandRegistrationProjec
                 owner,
                 None,
                 machine_secret_payload_metadata(spec),
-                profile_authentication_posture(node).value,
+                profile_authentication_posture(node),
             )
         )
     return CommandRegistrationProjection(
