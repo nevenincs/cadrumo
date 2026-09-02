@@ -41,6 +41,7 @@ from ._kdf_codec import (
 from ._kdf_codec import (
     supervision_refusal as _supervision_refusal,
 )
+from ._kdf_operations import KdfOperation
 from ._kdf_process import (
     launch_worker as _launch_worker,
 )
@@ -84,7 +85,7 @@ class _SupervisedKdfWorker:
         self._write_request(
             {
                 "kdf": parameters.model_dump(mode="json"),
-                "operation": "calibrate-v1",
+                "operation": KdfOperation.CALIBRATE,
                 "version": 1,
             },
         )
@@ -109,7 +110,7 @@ class _SupervisedKdfWorker:
             {
                 "associated_data_b64": base64.b64encode(associated_data).decode("ascii"),
                 "kdf": kdf.model_dump(mode="json"),
-                "operation": "recovery-unwrap-v1" if recovery else "password-unwrap-v1",
+                "operation": KdfOperation.RECOVERY_UNWRAP if recovery else KdfOperation.PASSWORD_UNWRAP,
                 "password_b64": base64.b64encode(password).decode("ascii"),
                 "version": 1,
                 "wrapped_dek": wrapped_dek.model_dump(mode="json"),
@@ -137,7 +138,7 @@ class _SupervisedKdfWorker:
                 "associated_data_b64": base64.b64encode(associated_data).decode("ascii"),
                 "dek_b64": base64.b64encode(dek).decode("ascii"),
                 "kdf": kdf.model_dump(mode="json"),
-                "operation": "recovery-wrap-v1" if recovery else "password-wrap-v1",
+                "operation": KdfOperation.RECOVERY_WRAP if recovery else KdfOperation.PASSWORD_WRAP,
                 "secret_b64": base64.b64encode(secret).decode("ascii"),
                 "version": 1,
             },
