@@ -10,6 +10,8 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Final, cast
 
+from pydantic import TypeAdapter, ValidationError
+
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.link_safety import is_link_like
 
@@ -24,13 +26,15 @@ from .object_name_graph import (
 )
 from .object_name_manifest import ObjectNameManifestError, load_validated_object_name_manifest
 from .object_name_rehearsal import (
-    ObjectNameFindingDelta,
-    ObjectNameGateOutcome,
     ObjectNameRehearsalError,
     ObjectNameRehearsalReceipt,
     rehearse_object_name_component,
 )
-from .object_name_replay import ObjectNameReplayError, replay_object_name_component
+from .object_name_replay import (
+    ObjectNameReplayError,
+    _validate_receipt_integrity,  # pyright: ignore[reportPrivateUsage]
+    replay_object_name_component,
+)
 
 _DEFAULT_MANIFEST: Final[str] = "dev/quality/object_name_rename_manifest.toml"
 _MODES: Final[tuple[str, ...]] = ("inventory", "plan", "rehearse", "apply", "verify")
@@ -55,19 +59,31 @@ def _repo_root(start: Path) -> Path:
 
 def _receipt(path: Path) -> ObjectNameRehearsalReceipt:
     try:
-        raw = cast("dict[str, Any]", json.loads(path.read_text(encoding="utf-8")))
-        raw["finding_delta"] = ObjectNameFindingDelta(**raw["finding_delta"])
-        raw["generator_outcomes"] = tuple(ObjectNameGateOutcome(**item) for item in raw["generator_outcomes"])
-        raw["gate_outcomes"] = tuple(ObjectNameGateOutcome(**item) for item in raw["gate_outcomes"])
-        for key in (
-            "operation_ids", "baseline_files", "input_file_digests", "proposed_file_digests",
-            "changed_paths", "tool_versions",
-        ):
-            values = cast("list[Any]", raw[key])
-            raw[key] = tuple(tuple(cast("list[Any]", item)) if isinstance(item, list) else item for item in values)
-        return ObjectNameRehearsalReceipt(**raw)
-    except (OSError, UnicodeError, json.JSONDecodeError, KeyError, TypeError) as exc:
+        payload = path.read_bytes()
+        decoded = cast("object", json.loads(payload))
+        if not isinstance(decoded, dict):
+            raise ObjectNameDeclusteringCliError("receipt schema must be an object")
+        fields = cast("dict[str, object]", decoded)
+        if set(fields) != set(ObjectNameRehearsalReceipt.__dataclass_fields__):
+            raise ObjectNameDeclusteringCliError("receipt schema fields are not exact")
+        receipt = TypeAdapter(ObjectNameRehearsalReceipt).validate_json(payload, strict=True)
+        _validate_receipt_integrity(receipt)
+        return receipt
+    except (OSError, UnicodeError, json.JSONDecodeError, ValidationError, KeyError, TypeError) as exc:
         raise ObjectNameDeclusteringCliError(f"receipt file is invalid: {path}") from exc
+
+
+def _manifest_path(root: Path, supplied: Path) -> Path:
+    if supplied.is_absolute() or any(part in {"", ".", "..", ".git"} for part in supplied.parts):
+        raise ObjectNameDeclusteringCliError("manifest path must be safe and repository-relative")
+    candidate = root
+    for part in supplied.parts:
+        candidate /= part
+        if is_link_like(candidate):
+            raise ObjectNameDeclusteringCliError(f"manifest path traverses a link-like component: {supplied}")
+    if not candidate.is_file():
+        raise ObjectNameDeclusteringCliError(f"manifest path is not a regular file: {supplied}")
+    return candidate
 
 
 def _context(root: Path, manifest_path: Path):
@@ -122,14 +138,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.mode == "inventory":
             _emit(to_json(scan((root / "src", root / "dev"), root)), as_json=args.json)
             return 0
-        manifest_path = args.manifest if args.manifest.is_absolute() else root / args.manifest
-        inventory, manifest, component = _context(root, manifest_path)
+        if args.mode == "verify":
+            inventory = scan((root / "src", root / "dev"), root)
+            _emit({"inventory": to_json(inventory), "mode": "verify"}, as_json=args.json)
+            return exit_code(inventory)
+        inventory, manifest, component = _context(root, _manifest_path(root, args.manifest))
         if args.mode == "plan":
             _emit({"component": asdict(component), "mode": "plan"}, as_json=args.json)
             return 0
-        if args.mode == "verify":
-            _emit({"inventory": to_json(inventory), "mode": "verify"}, as_json=args.json)
-            return exit_code(inventory)
         if args.mode == "apply":
             if apply_receipt is None:
                 raise ObjectNameDeclusteringCliError("apply receipt was not validated")
