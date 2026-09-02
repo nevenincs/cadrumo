@@ -179,7 +179,7 @@ def _tree_report(**updates: object) -> RegistryTreeReport:
     }
     payload.update({field: 0 for field in _TREE_INVENTORY_COUNT_FIELDS})
     payload.update(updates)
-    return RegistryTreeReport(**payload)  # type: ignore[arg-type]
+    return RegistryTreeReport.model_validate(payload)
 
 
 def test_tree_report_accepts_a_whole_tree_of_real_tallies() -> None:

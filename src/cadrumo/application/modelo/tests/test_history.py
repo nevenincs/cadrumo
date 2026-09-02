@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 from pydantic import ValidationError
@@ -16,7 +17,7 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.period import Period
-from ....domain.buckets.event import BucketEventObjectType, BucketEventType
+from ....domain.buckets.event import BucketActorLabel, BucketEventId, BucketEventObjectType, BucketEventType
 from ....domain.modelos.errors import ModeloError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
@@ -362,7 +363,19 @@ def test_history_excludes_events_from_other_work_units(repos: _Repos) -> None:
 # ── The projection admits exactly what the event it projects admits ────────
 
 
-def _projected_event_fields() -> dict[str, object]:
+class _ProjectedEventFields(TypedDict):
+    """The projected row's fields, typed as :class:`WorkUnitHistoryEvent` declares them."""
+
+    event_id: BucketEventId
+    occurred_at: datetime
+    event_type: BucketEventType
+    object_type: BucketEventObjectType
+    object_id: str
+    actor: BucketActorLabel
+    payload: dict[str, str]
+
+
+def _projected_event_fields() -> _ProjectedEventFields:
     """Return one well-formed projected row, for the refusals to vary from."""
     return {
         "event_id": "a" * 64,
