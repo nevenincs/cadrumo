@@ -94,3 +94,24 @@ Open: `end-to-end-churn-teeth` remains medium because the committed success test
 unrelated `.txt` file and reuses the pre-churn inventory object. It proves scoped byte
 tolerance, but not the S23 condition of a real unrelated Python declaration changing the
 inventory digest across manifest, receipt, and replay.
+
+## Final remediation re-review
+
+The committed replay detector now creates `dev/concurrent_helper.py` with the distinct
+singular declaration `helper_runtime`; the focused test passes and proves that the new Python
+file is preserved while the selected declaration is replayed. This improves the fixture from
+plain byte churn to a real source-census mutation.
+
+Open: `end-to-end-churn-teeth` remains medium. The test continues to call
+`replay_object_name_component` with the pre-mutation `inventory` and pre-mutation `component`
+returned by `_case`; it neither rescans after creating `concurrent_helper.py` nor asserts that
+the current inventory digest differs from the receipt or manifest digest. Therefore it would
+remain green if replay rejected a freshly supplied post-churn inventory, which is the path the
+real CLI exercises. The production behavior remains supported by the earlier independent
+fresh-inventory probe, so this is a committed regression-test gap rather than a demonstrated
+implementation defect.
+
+Focused validation passed both the Python-churn replay case and the hash-time disappearance
+case (2 tests), and Ruff lint, Ruff format, and ty all passed for the four affected
+implementation/test files. Final status remains one medium finding and no critical, high, or
+low findings.
