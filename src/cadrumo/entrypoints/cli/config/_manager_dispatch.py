@@ -37,18 +37,9 @@ from .._common import activate_subcommand_output_language
 from ..errors import command_error_boundary as _command_error_boundary
 
 if TYPE_CHECKING:
-    from typing import Literal
 
+    from .....application.wizard.persistence import WizardPersistMode
     from ....core.external_constants import OutputLanguage
-
-    WizardPersistMode = Literal["create", "edit"]
-    """Which arm of the shared wizard flow a registered leaf serves.
-
-    Type-checking only: ``from __future__ import annotations`` keeps every
-    annotation below a string at runtime, so the alias never needs to exist
-    there. This module is the canonical home — the package facade imports it
-    rather than restating the literal pair.
-    """
 
 
 def with_profile_cli_projection(wizard_command: Callable[..., None], *, mode: WizardPersistMode) -> Callable[..., None]:
