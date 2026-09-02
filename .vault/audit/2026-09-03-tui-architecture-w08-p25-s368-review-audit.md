@@ -91,6 +91,24 @@ Renaming the field to `action_candidate_id`, removing `ActionReference`, and exp
 
 The suite now covers every kind, prefix rejection, canonical Modelo shape, required revision/filing IDs, Hex64 identity, normalization, absent snapshot accessor, raw-query omission and module imports. It remains unable to detect the live high findings: the serialization case uses a harmless label and checks only the raw filing-reference term, the schema case examines field names rather than content/provenance, and the all-kind helper supplies the same contradictory source for every family. The status-negative case changes only the prefix to `nonsense`, so arbitrary suffixes and wrong source/kind pairs stay green. No test distinguishes registry `RevisionId` from `CalculationRevisionId`, rejects irrelevant/both exact address IDs, or demonstrates that token digests resist a finite sensitive-token dictionary. `gate-teeth` remains medium severity.
 
+### final-protected-boundary | low | The protected identifier, label and search-retention high is resolved
+
+The final projection admits no provider-authored label, search terms, token digests, source identifier or asserted stable result identifier. Labels are closed localization keys, every result identity is derived inside the service, plaintext queries are excluded from representation and serialization, and neither documents nor query indexes have a public snapshot accessor. Canonical `CalculationRevisionId` and `FilingRecordId` values remain explicit natural-address coordinates rather than being smuggled through an opaque display or search field. The focused sensitive-input and serialization probes now fail closed for the original NIF, IBAN, raw Hex64 and dictionary-token attacks. The original `sensitive-search-retention` and `remediation-sensitive-boundary` high findings are closed.
+
+### final-source-address-authority | low | Source semantics, exact addresses and authority boundaries are resolved
+
+Kinds, sources, statuses and label keys are closed enums joined by exact maps; the source-owned status sets reject wrong families and arbitrary valid-looking suffixes. Natural addresses are discriminated `modelo_case`, `calculation_revision` and `filing_record` variants, use canonical `ModeloCode`, `CalculationRevisionId` and `FilingRecordId`, enforce period/year agreement, and reject irrelevant exact identities. `action_candidate_id` remains explicitly non-authoritative pending S369, while unavailable admissions require a reason and cannot advertise a candidate. The module is frontend-neutral, untranslated and pure by inspection and by the expanded AST/import gate. The original `source-semantics`, `natural-address-type`, `remediation-address-identity` and `admission-action-boundary` defects are closed.
+
+### final-search-identity-cardinality | high | Derived identity cannot represent record-level search and changes with mutable state
+
+The safe-boundary remediation removed every record identity from `WorkbenchSearchDocument`, but `_derived_stable_id` hashes only kind/source/status/label, optional Modelo coordinates, destination admission and action candidate. For families without a natural address, two distinct same-state records at the same destination therefore derive the same identity and `WorkbenchSearchService` rejects the snapshot. A direct probe with two Ledger-entry projections in `ledger.entry.ready` reproduced that refusal. The same structural collision applies to Ledger evidence, reconciliation findings and notifications, so the service cannot represent the required record-level cross-domain denominator except up to the small number of status/admission combinations.
+
+The identifier also includes mutable `status`, admission state/reason and action candidate. Direct probes showed the same Ledger projection receiving different identifiers after `ready` became `classified` or its destination became locked. It is consequently not a stable semantic identity for deterministic focus restoration. This is a high-severity functional contract failure even though the earlier protected-input high is closed: a safe opaque per-record search identity must be derived by the owning source or from an approved non-sensitive canonical record coordinate, and mutable presentation state must not participate in it.
+
+### final-gate-teeth | medium | Green tests omit record cardinality and identity stability
+
+The final suite has useful negative teeth for the two original highs, exact address discrimination, `CalculationRevisionId`, admission, localization boundaries and I/O imports/calls. It proves only duplicate identical projections are refused, however; it never supplies two distinct same-state records from a required multi-record family, and it never asserts that identity survives a status, admission or action-candidate change. Those omissions leave the live high-severity identity/cardinality defect green.
+
 <!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
      severity, using the heading form
 
@@ -114,8 +132,10 @@ The suite now covers every kind, prefix rejection, canonical Modelo shape, requi
 10. Use canonical `CalculationRevisionId` for declaration calculation-history results and make revision/filing exact address variants discriminated so irrelevant or simultaneous identities fail closed.
 11. Add bite probes for a NIF/IBAN label, a raw 64-hex source ID, a dictionary-recoverable sensitive token, cross-source valid-prefix statuses, arbitrary suffixes, and wrong/both exact address IDs.
 12. The remediation suite passed with 32 tests; Ruff and Basedpyright were clean. No critical finding remains, but two high and two medium findings remain open, so S368 still should not be credited.
+13. Introduce an intrinsically safe, source-owned per-record identity (or an approved canonical natural coordinate) for every multi-record family. Derive result identity from that immutable coordinate only; exclude status, admission, reason and action candidate.
+14. Add detector tests that admit two distinct same-status Ledger entries, evidence records, reconciliation findings and notifications without collision, and prove stable identity across status and admission transitions.
+15. Final gates passed: focused Pytest reported 28 passed; Ruff and ty passed; Basedpyright reported 0 errors, warnings or notes. The two prior high findings are closed, but one new high and one supporting medium remain open. No critical finding exists. `W08.P25.S368` must not close.
 
 <!-- Actionable recommendations, each tied to a finding above. An
      architecturally significant recommendation names the decision a
      follow-on ADR must make; the decision itself is never recorded here. -->
-

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:c21b7ee1015aa2ce4ca58b6f14be84cb4c0f23f455cb91442ac290d7669294fb'
+body_hash: 'sha256:bbaf30a8497ff66a8081ca2dad28fde67ced0bc7b1f1baa4c7234b561955e542'
 related:
   - "[[2026-09-02-unreachable-capability-research]]"
 ---
@@ -30,7 +30,7 @@ the three-module einvoice reader finding from that backlog.
 Each entry answers five questions: what the capability is in tax terms, how
 complete it is, why it is not connected, what it adds to the filing product,
 and the smallest wiring that would reach it. The third answer uses a fixed
-vocabulary Ã¢â‚¬â€� bug, oversight, explicit decision, unfinished, sequenced Ã¢â‚¬â€� and an
+vocabulary â€” bug, oversight, explicit decision, unfinished, sequenced â€” and an
 explicit decision requires a citation, because an absence of callers is
 evidence of nothing.
 
@@ -93,7 +93,7 @@ defects that do not exist.
 computation an operator needs to declare what a let property earned. Gross
 rent per contract, deductible expenses under LIRPF article 23.1 with the
 carry-forward the article requires, the article 23.1.f amortisation, the
-article 23.2 reducciÃƒÂ³n tier resolution for residential letting, and the
+article 23.2 reducciÃ³n tier resolution for residential letting, and the
 article 85 imputation for property that was not let.
 
 **How complete.** Eleven domain modules and a five-repository persistence
@@ -122,9 +122,9 @@ never replaced. It is now blocked forward as well. The
 source-connectivity census row `fincas.annual-aggregates` is
 `grounding_blocked`, and the plan that owns it hard-sequences fincas behind
 amortization, whose own promotion step is still open. The row's stated blocker
-and the code's stated blocker disagree Ã¢â‚¬â€� `domain/fincas/source_readiness.py`
+and the code's stated blocker disagree â€” `domain/fincas/source_readiness.py`
 reports a persistence gap, which is the closed meaning of a different
-disposition Ã¢â‚¬â€� and that disagreement is unresolved.
+disposition â€” and that disagreement is unresolved.
 
 The genuine gap is narrower than either: the `Finca` record carries no
 ownership or usufruct share, so it assumes full title, while the manual
@@ -151,8 +151,8 @@ the repositories that already exist.
 
 ### `entrypoints/tui/modelo/action/` with `modelo/actions.py`
 
-**What it is.** The six lifecycle mutations on a modelo work unit Ã¢â‚¬â€� rename,
-discard, verify, file, export, amend Ã¢â‚¬â€� each submitted as a registered,
+**What it is.** The six lifecycle mutations on a modelo work unit â€” rename,
+discard, verify, file, export, amend â€” each submitted as a registered,
 journalled, leased operation rather than a direct write, plus the inert table
 binding each to its operation-definition id, the capability that gates it, and
 where a settled run lands the operator.
@@ -227,7 +227,7 @@ lease and detach model lets them reattach and see. Honest caveat: it renders
 event codes into a plain static widget, so it is a competent progress view, not
 a diagnostics console.
 
-**Wiring needed.** Nothing of its own Ã¢â‚¬â€� it is already a facade with a
+**Wiring needed.** Nothing of its own â€” it is already a facade with a
 one-function door, and becomes reachable the moment the action bar or the sync
 review is mounted. Separately, enrol a renderer for the input and choice
 interaction kinds before the editor's apply is dispatched through it.
@@ -266,8 +266,8 @@ editor from the workspace screen.
 
 ### `entrypoints/tui/profile/app.py` with `journey_status.py`
 
-**What it is.** A guided five-stage shell Ã¢â‚¬â€� overview, get data, required,
-review, ready Ã¢â‚¬â€� walking a taxpayer through completing the profile every modelo
+**What it is.** A guided five-stage shell â€” overview, get data, required,
+review, ready â€” walking a taxpayer through completing the profile every modelo
 calculation depends on.
 
 **How complete.** 298 production lines against 159 test lines, and only three
@@ -283,7 +283,7 @@ journey.
 
 **What it adds.** Moderate, and partly duplicated. The classification already
 reaches an operator through the profile config verbs. What the journey adds is
-ordering: a first-time operator does not know that rÃƒÂ©gimen, epÃƒÂ­grafe IAE and
+ordering: a first-time operator does not know that rÃ©gimen, epÃ­grafe IAE and
 territorial applicability must be settled before a Modelo 303 will calculate.
 But with two stages empty it cannot presently take anyone from nothing to
 ready.
@@ -294,8 +294,8 @@ was found for the stage bodies.
 ### `entrypoints/tui/profile/sync_review.py`
 
 **What it is.** Per-field review of an AEAT censal observation against the
-local profile Ã¢â‚¬â€� observed value, suggested adopt-or-preserve intent, operator
-selection, one field at a time Ã¢â‚¬â€� plus a progress summary over the filed-history
+local profile â€” observed value, suggested adopt-or-preserve intent, operator
+selection, one field at a time â€” plus a progress summary over the filed-history
 pull.
 
 **How complete.** 317 production lines against 568 test lines. It never
@@ -307,10 +307,10 @@ already moved past.
 
 **What it adds.** Real and specific. The CLI equivalent echoes every field and
 asks a single confirmation: all or nothing. Census data drives which modelos
-are due and which rÃƒÂ©gimen applies, so all-or-nothing means an operator who
+are due and which rÃ©gimen applies, so all-or-nothing means an operator who
 disagrees with one AEAT-observed field must reject the whole sync and hand-edit.
 Per-field selection is the difference between adopting AEAT's corrected
-domicilio while preserving a locally correct epÃƒÂ­grafe, and adopting neither.
+domicilio while preserving a locally correct epÃ­grafe, and adopting neither.
 
 **Wiring needed.** It is already a modal screen; it needs a caller. Smallest
 change is the profile manager pushing it after a censal observation lands.
@@ -383,8 +383,8 @@ decision on whether an operator or only the golden gate should reach it.
 
 ### `core/telemetry/_producers.py`
 
-**What it is.** Three producers projecting local signals Ã¢â‚¬â€� command invocation,
-error frequency by closed label, LLM run Ã¢â‚¬â€� into the allowlisted payload and
+**What it is.** Three producers projecting local signals â€” command invocation,
+error frequency by closed label, LLM run â€” into the allowlisted payload and
 handing them to the consent-gated dispatcher.
 
 **How complete.** 174 lines against 173 test lines, green. Pure projections, no
@@ -394,7 +394,7 @@ network call, no transaction content or profile identity read.
 ADR says the package is deliberately empty of producers until a follow-up wires
 real emit call sites, and that the CLI verbs and transport remain open. The
 producers have since been written; the call sites and transport have not. Note
-this is not a decision that they stay unwired Ã¢â‚¬â€� the record says the opposite.
+this is not a decision that they stay unwired â€” the record says the opposite.
 
 **What it adds.** Little, for the taxpayer. Nothing here discharges an
 obligation or removes a filing risk, and it is default-off with an absolute bar
@@ -407,6 +407,7 @@ This capability was retired after this inventory was written and is no longer
 shipped. It is removed from the live unreachable-capability inventory; the
 historical ADR, plan, execution, and audit records retain their original
 references unchanged.
+
 ## Gates that are absent at runtime
 
 Three entries below are not merely unreachable. A check the product intends to
@@ -416,10 +417,10 @@ consequence rather than missing convenience.
 
 ### `application/storage/calc_sheets/evidence.py`
 
-**What it is.** The projection turning a ledger-derived filing's evidence Ã¢â‚¬â€�
+**What it is.** The projection turning a ledger-derived filing's evidence â€”
 contributing transactions with amount, currency, FX rate, taxable base, IVA
 rate and amount, counterparty, attachment ids, legal and source refs, plus
-manual entries Ã¢â‚¬â€� into the per-casilla facet the exported workbook renders as
+manual entries â€” into the per-casilla facet the exported workbook renders as
 its Evidencia tab and its machine-readable evidence sidecar. It refuses rather
 than guesses: a contributor with no casilla attribution raises instead of being
 dropped.
@@ -436,7 +437,7 @@ emits it. The sole production constructor of the export plan never passes
 **What it adds.** This is the sharpest operator-visible gap found. Every
 calc-sheets workbook the product exports today ships an empty Evidencia tab and
 an empty evidence sidecar. That workbook is the artefact an operator, their
-asesor, or AEAT in a comprobaciÃƒÂ³n opens to see why a casilla holds the number
+asesor, or AEAT in a comprobaciÃ³n opens to see why a casilla holds the number
 it holds. The value and tariff tabs are populated; the tab that would show the
 contributing invoices, their IVA rates, counterparties and legal references is
 blank. The export rule requires every exported field to carry the provenance
@@ -546,8 +547,8 @@ treatment. The seed derives the percentage from the taxpayer's own prior
 filing, records which observation it came from, and blocks when the carried
 figure contradicts that observation or its revision stamp has diverged. A wrong
 provisional prorrata mis-states deductible input IVA in all four quarters and
-propagates into the year-end regularizaciÃƒÂ³n. For the sectorized taxpayer the
-year-end per-sector regularizaciÃƒÂ³n has no automated producer at all.
+propagates into the year-end regularizaciÃ³n. For the sectorized taxpayer the
+year-end per-sector regularizaciÃ³n has no automated producer at all.
 
 **Wiring needed.** One sub-verb on the existing prorrata command family calling
 the evaluate-and-seed pair, surfacing findings through the notice channel with
@@ -636,7 +637,7 @@ The capability row telling a frontend whether the calculate mutation is
 available for an edit target. SEQUENCED with a citation: its docstring states
 every row is unmeasured in this version because no financial-operand dependency
 receipt is green, and the governing decision record names the blocking
-artefact. It adds nothing today and that is correct Ã¢â‚¬â€� a facade that can only
+artefact. It adds nothing today and that is correct â€” a facade that can only
 answer unmeasured tells an operator nothing actionable, and wiring it now would
 put a permanently negative row in front of them. What it needs is the upstream
 receipt, not wiring.
@@ -697,7 +698,7 @@ walking the live tree, with a defect-injection proof.
 
 ### `adapters/inbound/borrador/`
 
-### `adapters/inbound/borrador/` Ã¢â‚¬â€� deleted, downstream left standing
+### `adapters/inbound/borrador/` â€” deleted, downstream left standing
 
 **Status as of 2026-09-03.** The parser was removed in `625954a109`, 1,952
 lines across 38 files, taking the year-keyed extractors, the artefact-kind
@@ -708,8 +709,8 @@ reports reachability, not value, and the fact that its downstream was live and
 starved lived only in this document.
 
 **What it was.** The Modelo 100 PDF reader for all three artefacts a taxpayer
-meets: the AEAT pre-filing borrador, a Renta Web predeclaraciÃƒÂ³n or simulaciÃƒÂ³n,
-and the post-filing declaraciÃƒÂ³n with its CSV stamp. It extracted printed
+meets: the AEAT pre-filing borrador, a Renta Web predeclaraciÃ³n or simulaciÃ³n,
+and the post-filing declaraciÃ³n with its CSV stamp. It extracted printed
 casilla and value rows into a typed observation. An operator still cannot load
 their AEAT draft into the product at all.
 
@@ -719,8 +720,8 @@ unbuilt. `Borrador100SnapshotService.capture()` in
 `application/live/borrador_100.py` has zero production callers. The encrypted
 borrador namespace is still reserved. The borrador prefill tier is still
 declared in the calculation schema and still enrolled in the source mesh, and
-can never fire. At least three reachable CLI commands Ã¢â‚¬â€�
-`app.live.borrador.100.list`, `.view` and `.latest` Ã¢â‚¬â€� read a store that no
+can never fire. At least three reachable CLI commands â€”
+`app.live.borrador.100.list`, `.view` and `.latest` â€” read a store that no
 code path can fill.
 
 **Why this is worse than before.** Prior to the deletion the capability was one
@@ -731,7 +732,7 @@ a promise the product cannot keep.
 
 **The two coherent resolutions.** Either recover the parser from
 `625954a109^`, promote it to public defining modules, and add the import verb
-that calls the repository that already exists Ã¢â‚¬â€� which turns three inert
+that calls the repository that already exists â€” which turns three inert
 commands and a dead prefill tier into working capability. Or accept the
 deletion and finish it, retiring the commands, `capture()`, the prefill tier
 and the namespace together. Leaving the halves as they are is the only option
@@ -826,7 +827,7 @@ surface at all.
 stamping the result onto the persisted snapshot. The increment is already
 scoped in the accepted record.
 
-### The former einvoice trio Ã¢â‚¬â€� retired
+### The former einvoice trio â€” retired
 
 **What it is.** A reader for the taxpayer's own SII and VERI\*FACTU submissions
 as a batch of declared records, the schema derivation behind it, and a
