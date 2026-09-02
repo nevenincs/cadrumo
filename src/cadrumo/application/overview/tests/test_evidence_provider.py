@@ -260,7 +260,7 @@ def test_aeat_event_identity_match_mismatch_and_absence(
     assert bool(projection.evidence) is is_retained
 
 
-def test_provider_refuses_a_runtime_source_bundle_on_the_wrong_axis() -> None:
+def test_provider_refuses_an_aeat_source_bundle_on_the_local_axis() -> None:
     wrong_local = cast(
         Any,
         CalendarEvidenceReadOutcome(
@@ -271,6 +271,19 @@ def test_provider_refuses_a_runtime_source_bundle_on_the_wrong_axis() -> None:
 
     with pytest.raises(TypeError, match="local evidence outcome"):
         build_calendar_evidence_projection(local=wrong_local, aeat=_aeat())
+
+
+def test_provider_refuses_a_local_source_bundle_on_the_aeat_axis() -> None:
+    wrong_aeat = cast(
+        Any,
+        CalendarEvidenceReadOutcome(
+            state=_state(HomeAvailability.AVAILABLE),
+            value=LocalCalendarEvidenceSources(),
+        ),
+    )
+
+    with pytest.raises(TypeError, match="AEAT evidence outcome"):
+        build_calendar_evidence_projection(local=_local(), aeat=wrong_aeat)
 
 
 def test_provider_performs_no_implicit_file_or_network_io(monkeypatch: pytest.MonkeyPatch) -> None:

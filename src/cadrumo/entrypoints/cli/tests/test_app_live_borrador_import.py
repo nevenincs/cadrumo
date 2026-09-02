@@ -64,14 +64,16 @@ def test_import_persists_a_snapshot_the_read_verbs_retrieve(tmp_path: Path) -> N
     """A committed borrador PDF imports, persists, and is readable through list and view."""
     with isolated_cli_surface_backend(tmp_path):
         create_cli_surface_profile()
-        bucket_id = _active_bucket_id()
+        assert _active_bucket_id()
 
         imported = _import(_FIXTURE_PDF)
         assert imported.exit_code == 0, imported.output
         payload = _json(imported)
 
         snapshot_id = payload["snapshot_id"]
-        assert payload["bucket_id"] == bucket_id
+        # The envelope redacts the bucket id before transport; assert the
+        # redaction contract rather than the raw identifier.
+        assert payload["bucket_id"] == "<bucket-id>"
         assert payload["filing_year"] == _FIXTURE_YEAR
         assert payload["extraction_profile_id"] == "modelo-100-2023-borrador-pdf"
         assert Decimal(str(payload["extraction_coverage"])) == Decimal("1")

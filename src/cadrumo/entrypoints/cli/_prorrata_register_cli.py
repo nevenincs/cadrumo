@@ -75,10 +75,10 @@ from ._prorrata_register_payloads import (
 _SEED_LOCAL_AUTHORITY_NOTICE_CODE = "ledger.prorrata.seed.local_authority"
 _SEED_ADVISORY_NOTICE_CODE = "ledger.prorrata.seed.advisory"
 
-#: Stable authority token emitted on the seed source payload. The carried
+#: Stable authority identifier emitted on the seed source payload. The carried
 #: percentage is the taxpayer's own locally stored prior observation, never a
 #: value AEAT issued for the seeded ejercicio.
-_SEED_AUTHORITY_TOKEN = "local_prior_observation"
+_SEED_AUTHORITY = "local_prior_observation"
 
 #: The art. 105 provenances an operator may declare at election time. The
 #: art. 105.Cinco interrupted-activity percentage is computed by the seed walk
@@ -384,7 +384,7 @@ def _seed_source_payload(seed: ProrrataPriorDefinitivaSeed) -> ProrrataSeedSourc
         period=seed.source_period,
         casilla_id=str(seed.source_casilla_id),
         stamped_revision_id=seed.stamped_revision_id,
-        authority=_SEED_AUTHORITY_TOKEN,
+        authority=_SEED_AUTHORITY,
     )
 
 
@@ -411,7 +411,7 @@ def _seed_notices(
             "source_filing_year": str(seed.source_filing_year),
             "source_period": seed.source_period,
             "stamped_revision_id": seed.stamped_revision_id,
-            "authority": _SEED_AUTHORITY_TOKEN,
+            "authority": _SEED_AUTHORITY,
         },
     )
     advisory_notices = tuple(
@@ -510,7 +510,7 @@ def prorrata_seed(
             f"source\t{seed.source_modelo}:{seed.source_filing_year}:{seed.source_period}",
             f"source_casilla_id\t{seed.source_casilla_id}",
             f"stamped_revision_id\t{seed.stamped_revision_id}",
-            f"authority\t{_SEED_AUTHORITY_TOKEN}",
+            f"authority\t{_SEED_AUTHORITY}",
             f"findings\t{len(findings)}",
             *(f"notice\t{notice.code}\t{notice.message}" for notice in notices),
             f"count\t{len(register.entries)}",

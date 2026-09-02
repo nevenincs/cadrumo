@@ -98,9 +98,7 @@ def _store_prior_settlement_observation(percentage: Decimal = _PRIOR_DEFINITIVE)
 
 
 def _seed(*extra: str):
-    return _invoke(
-        ["--format", "json", "app", "ledger", "prorrata", "seed", "--ejercicio", str(_CURRENT_YEAR), *extra]
-    )
+    return _invoke(["--format", "json", "app", "ledger", "prorrata", "seed", "--ejercicio", str(_CURRENT_YEAR), *extra])
 
 
 def _register_entries() -> list[dict[str, object]]:
@@ -130,9 +128,7 @@ def test_seed_persists_the_carried_prior_definitiva_entry() -> None:
 
     assert payload["entry"]["ejercicio"] == _CURRENT_YEAR
     assert payload["entry"]["provisional_percentage"] == str(_PRIOR_DEFINITIVE)
-    assert payload["entry"]["provisional_provenance"] == (
-        ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA.value
-    )
+    assert payload["entry"]["provisional_provenance"] == (ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA.value)
     assert payload["entry"]["source_observation_ref"] == f"303:{_PRIOR_YEAR}:{_SETTLEMENT_PERIOD}"
     assert payload["findings"] == []
     assert payload["source"] == {
