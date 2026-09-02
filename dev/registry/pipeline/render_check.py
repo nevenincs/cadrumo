@@ -246,7 +246,7 @@ def revision_render_inputs(
         selected_source_ref = design_refs[0]
     epoch = sources[selected_source_ref].record_design_epoch
     if epoch is None:  # pragma: no cover - filtered above, restated for the type checker
-        raise ValueError(f"source {source_ref} declares no design epoch")
+        raise ValueError(f"source {selected_source_ref} declares no design epoch")
 
     semantic_root = _AUTHORED_ROOT / "mappings" / f"modelo_{modelo}" / epoch
     profile_root = _AUTHORED_ROOT / "render_profiles" / f"modelo_{modelo}" / epoch
