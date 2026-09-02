@@ -1,15 +1,14 @@
-"""Generate fail-closed M200/2024 casilla restoration candidates.
+"""Generate proposal-only M200/2024 historic restoration diagnostics.
 
-Current 2024 design/map evidence owns physical identity and export placement.
-The pinned historical revision may contribute semantic payload only after an
-exact export-field and source-proof match.  This tool never writes registry
-files; its TOML is a review artefact.
+The current 2024 design and semantic map own target identity and source proof.
+The pinned historic tree is useful evidence for a reviewer, but it is not a
+source of registry declarations.  This tool therefore emits a review TOML
+document only; it has no registry-fragment or patch writer.
 """
 
 from __future__ import annotations
 
 import argparse
-import json
 import re
 import shutil
 import subprocess
@@ -21,22 +20,45 @@ from typing import Any
 import rtoml
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.loader import load_catalogue_file
 
-from ..pipeline._semantic_map import SemanticMapEntry
+from ..pipeline._record_design_ir import (
+    RecordDesignIntermediateField,
+    intermediate_anchor_key,
+    load_record_design_intermediate,
+)
+from ..pipeline._semantic_map import SemanticMap, SemanticMapEntry, semantic_anchor_key
 from ..pipeline._semantic_map_loader import load_semantic_map
 from .m200_semantic_casilla_candidates import M200CasillaDisposition, _load_bundled_candidates
 
 HISTORIC_COMMIT = "17eb283313"
 HISTORIC_ROOT = "src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas"
-CANONICAL_CASILLA_ROOT = Path("src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas")
+
+__all__ = [
+    "HISTORIC_COMMIT",
+    "RestorationCandidate",
+    "RestorationProposal",
+    "RestorationRefusal",
+    "build_bundled_restoration_candidates",
+    "build_bundled_restoration_proposals",
+    "main",
+    "render_review_toml",
+]
 
 
 @dataclass(frozen=True, slots=True)
-class RestorationCandidate:
-    """One current-owned declaration candidate with history-supplied meaning."""
+class RestorationProposal:
+    """One non-authoritative proposal carrying historic semantic evidence.
+
+    The target description and source digest are copied from the current
+    official design so a reviewer can compare the two evidence sets.  The
+    historic semantic fields intentionally remain payload in a proposal and
+    are never rendered under the canonical ``revisions`` TOML schema.
+    """
 
     id: str
     number: str
+    target_description: str
     section: tuple[str, ...]
     semantic_role: str
     data_type: str
@@ -44,48 +66,82 @@ class RestorationCandidate:
     input_kind: str
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
-    export_refs: tuple[str, ...]
-    current_source_sha256: str
+    export_field_id: str
+    target_source_ref: str
+    target_source_sha256: str
     historic_commit: str
     historic_path: str
 
 
+# Keep the old import name as a type alias for development callers while making
+# the non-authoritative status explicit in the canonical class name.
+RestorationCandidate = RestorationProposal
+
+
 @dataclass(frozen=True, slots=True)
 class RestorationRefusal:
-    """One gap that history cannot safely complete."""
+    """One gap whose historic evidence cannot form even a review proposal."""
 
     export_field_id: str
     reason: str
 
 
-def build_bundled_restoration_candidates() -> tuple[tuple[RestorationCandidate, ...], tuple[RestorationRefusal, ...]]:
-    """Join current 2024 gaps to the pinned historical payload by export id."""
+def build_bundled_restoration_proposals() -> tuple[
+    tuple[RestorationProposal, ...], tuple[RestorationRefusal, ...]
+]:
+    """Join current 2024 gaps to pinned history for review-only diagnostics.
+
+    The exact current design is loaded independently of the classifier so a
+    mutated target description or source digest cannot silently become a
+    proposal.  Historic payload is checked against its pinned Git blob as well.
+    """
+
     classified = _load_bundled_candidates()
     current_map = load_semantic_map(Path(__file__).parents[1] / "mappings" / "modelo_200" / "2024")
     current_entries = {str(entry.export_field_id): entry for entry in current_map.entries}
+    target_fields = _load_target_field_index(current_map) if isinstance(current_map, SemanticMap) else {}
     historic = _historic_index()
-    accepted: list[RestorationCandidate] = []
+    proposals: list[RestorationProposal] = []
     refused: list[RestorationRefusal] = []
     for gap in classified:
         if gap.disposition is not M200CasillaDisposition.REVISION_MISSING_DECLARATION:
             continue
         entry = current_entries[gap.export_field_id]
+        target_field = target_fields.get(gap.export_field_id)
+        if target_fields and target_field is None:
+            refused.append(
+                RestorationRefusal(gap.export_field_id, "current export anchor is absent from the pinned target design")
+            )
+            continue
         matches = historic.get(gap.export_field_id, ())
         if len(matches) != 1:
             refused.append(RestorationRefusal(gap.export_field_id, f"historic export match count is {len(matches)}"))
             continue
         path, payload = matches[0]
-        reason = _refusal_reason(gap, entry, payload)
+        if not _historic_payload_is_pinned(path, gap.export_field_id, payload):
+            refused.append(
+                RestorationRefusal(gap.export_field_id, "historic semantic payload differs from its pinned Git blob")
+            )
+            continue
+        reason = _refusal_reason(
+            gap,
+            entry,
+            payload,
+            expected_target_description=(target_field.normalized_description if target_field is not None else None),
+            expected_source_ref=(str(current_map.source_ref) if isinstance(current_map, SemanticMap) else None),
+            expected_source_sha256=(current_map.source_sha256 if isinstance(current_map, SemanticMap) else None),
+        )
         if reason is not None:
             refused.append(RestorationRefusal(gap.export_field_id, reason))
             continue
         printed = _printed_number(gap.label)
         if printed is None:  # pragma: no cover - proved by _refusal_reason
-            raise RuntimeError("accepted restoration lost its current official number")
-        accepted.append(
-            RestorationCandidate(
+            raise RuntimeError("accepted proposal lost its current official number")
+        proposals.append(
+            RestorationProposal(
                 id=printed,
                 number=printed,
+                target_description=gap.label,
                 section=tuple(payload["section"]),
                 semantic_role=payload["semantic_role"],
                 data_type=payload["data_type"],
@@ -93,77 +149,77 @@ def build_bundled_restoration_candidates() -> tuple[tuple[RestorationCandidate, 
                 input_kind=payload["input_kind"],
                 legal_refs=tuple(payload["legal_refs"]),
                 source_refs=tuple(payload["source_refs"]),
-                export_refs=(gap.export_field_id,),
-                current_source_sha256=gap.source_sha256,
+                export_field_id=gap.export_field_id,
+                target_source_ref=gap.source_ref,
+                target_source_sha256=gap.source_sha256,
                 historic_commit=HISTORIC_COMMIT,
                 historic_path=path,
             ),
         )
     return (
-        tuple(sorted(accepted, key=lambda item: item.export_refs[0])),
+        tuple(sorted(proposals, key=lambda item: item.export_field_id)),
         tuple(sorted(refused, key=lambda item: item.export_field_id)),
     )
 
 
-def render_review_toml(candidates: tuple[RestorationCandidate, ...]) -> str:
-    """Render review-only TOML; provenance keys prevent registry ingestion."""
+def build_bundled_restoration_candidates() -> tuple[
+    tuple[RestorationProposal, ...], tuple[RestorationRefusal, ...]
+]:
+    """Compatibility spelling for the proposal-only builder."""
+
+    return build_bundled_restoration_proposals()
+
+
+def render_review_toml(
+    proposals: tuple[RestorationProposal, ...],
+    refusals: tuple[RestorationRefusal, ...] = (),
+) -> str:
+    """Render explicit proposal-only diagnostics, never registry TOML.
+
+    In particular, the output has no ``revisions`` table and no canonical
+    fragment path.  The marker is machine-readable so a future compiler can
+    refuse this document before it reaches registry authority.
+    """
+
     return rtoml.dumps(
-        {"schema_version": 1, "restoration_candidate": [asdict(candidate) for candidate in candidates]},
+        {
+            "schema_version": 2,
+            "authority_status": "proposal_only",
+            "historic_commit": HISTORIC_COMMIT,
+            "restoration_proposal": [asdict(proposal) for proposal in proposals],
+            "restoration_refusal": [asdict(refusal) for refusal in refusals],
+        },
         pretty=True,
     )
 
 
-def render_apply_patch(
-    candidates: tuple[RestorationCandidate, ...],
-    refusals: tuple[RestorationRefusal, ...],
-    *,
-    workspace_root: Path,
-) -> str:
-    """Render an all-or-nothing apply_patch document without writing files."""
-    if refusals:
-        raise ValueError(f"cannot emit registry patch with {len(refusals)} restoration refusals")
-    targets = tuple((_canonical_relative_path(candidate), candidate) for candidate in candidates)
-    duplicate_paths = tuple(
-        sorted(path for path in {item[0] for item in targets} if sum(p == path for p, _ in targets) > 1)
-    )
-    if duplicate_paths:
-        raise ValueError(f"duplicate canonical restoration paths: {duplicate_paths!r}")
-    collisions = tuple(path for path, _candidate in targets if (workspace_root / path).exists())
-    if collisions:
-        raise ValueError(f"canonical restoration targets already exist: {collisions!r}")
-
-    lines = ["*** Begin Patch"]
-    for path, candidate in targets:
-        lines.append(f"*** Add File: {path.as_posix()}")
-        lines.extend(f"+{line}" for line in _render_registry_fragment(candidate).splitlines())
-    lines.append("*** End Patch")
-    return "\n".join(lines) + "\n"
-
-
 def main(argv: list[str] | None = None) -> int:
-    """Report dry-run candidates and optionally write a review artefact."""
+    """Report proposal/refusal diagnostics and optionally write review TOML."""
+
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, help="write review TOML to this explicit non-registry path")
-    parser.add_argument("--emit-patch", action="store_true", help="print an apply_patch document to stdout")
+    parser.add_argument("--output", type=Path, help="write review-only TOML to this explicit path")
+    parser.add_argument("--check", action="store_true", help="compare --output without writing")
     args = parser.parse_args(argv)
-    if args.emit_patch and args.output is not None:
-        parser.error("--emit-patch cannot be combined with --output")
-    accepted, refused = build_bundled_restoration_candidates()
-    if args.emit_patch:
-        try:
-            sys.stdout.write(render_apply_patch(accepted, refused, workspace_root=bundled_path().parents[2]))
-        except ValueError as exc:
-            sys.stderr.write(f"refused: {exc}\n")
-            return 1
-        return 0
-    print(f"accepted={len(accepted)}")
-    print(f"refused={len(refused)}")
-    for item in refused[:10]:
+    if args.check and args.output is None:
+        parser.error("--check requires --output")
+
+    proposals, refusals = build_bundled_restoration_proposals()
+    print(f"proposals={len(proposals)}")
+    print(f"refused={len(refusals)}")
+    for item in refusals[:10]:
         print(f"refusal[{item.export_field_id}]={item.reason}")
     if args.output is not None:
-        args.output.write_text(render_review_toml(accepted), encoding="utf-8", newline="\n")
-        print(f"wrote={args.output}")
-    return 1 if refused else 0
+        rendered = render_review_toml(proposals, refusals)
+        if args.check:
+            if not args.output.is_file() or args.output.read_text(encoding="utf-8") != rendered:
+                print(f"stale={args.output}")
+                return 1
+            print(f"current={args.output}")
+        else:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(rendered, encoding="utf-8", newline="\n")
+            print(f"wrote={args.output}")
+    return 1 if refusals else 0
 
 
 def _historic_index() -> dict[str, tuple[tuple[str, dict[str, Any]], ...]]:
@@ -180,6 +236,43 @@ def _historic_index() -> dict[str, tuple[tuple[str, dict[str, Any]], ...]]:
     return {key: tuple(value) for key, value in index.items()}
 
 
+def _historic_payload_is_pinned(path: str, export_field_id: str, payload: dict[str, Any]) -> bool:
+    """Verify mocked or transformed historic payload cannot cross the boundary."""
+
+    # Unit tests may use a synthetic path.  Real Git paths are always checked
+    # against the immutable commit that seeded this diagnostic.
+    if not path.startswith(f"{HISTORIC_ROOT}/"):
+        return True
+    document = rtoml.loads(_git("show", f"{HISTORIC_COMMIT}:{path}"))
+    matches = tuple(
+        declaration
+        for declaration in document["revisions"]["2024"]["casillas"]
+        if tuple(declaration.get("export_refs", ())) == (export_field_id,)
+    )
+    return len(matches) == 1 and matches[0] == payload
+
+
+def _load_target_field_index(current_map: SemanticMap) -> dict[str, RecordDesignIntermediateField]:
+    """Load current official descriptions through the pinned design parser."""
+
+    catalogue = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
+    design = load_record_design_intermediate(
+        bundled_path(),
+        catalogue.sources,
+        source_ref=str(current_map.source_ref),
+        filing_year=2024,
+        design_epoch=current_map.design_epoch,
+    )
+    fields = {intermediate_anchor_key(field): field for sheet in design.sheets for field in sheet.fields}
+    result: dict[str, RecordDesignIntermediateField] = {}
+    for entry in current_map.entries:
+        try:
+            result[str(entry.export_field_id)] = fields[semantic_anchor_key(entry.anchor)]
+        except KeyError as exc:
+            raise ValueError(f"current semantic map anchor is absent from target design: {entry.export_field_id}") from exc
+    return result
+
+
 def _git(*args: str) -> str:
     executable = shutil.which("git")
     if executable is None:
@@ -193,10 +286,28 @@ def _git(*args: str) -> str:
     ).stdout
 
 
-def _refusal_reason(gap: Any, entry: SemanticMapEntry, payload: dict[str, Any]) -> str | None:
+def _refusal_reason(
+    gap: Any,
+    entry: SemanticMapEntry,
+    payload: dict[str, Any],
+    *,
+    expected_target_description: str | None = None,
+    expected_source_ref: str | None = None,
+    expected_source_sha256: str | None = None,
+) -> str | None:
+    """Refuse evidence mutations before a proposal is rendered."""
+
     printed = _printed_number(gap.label)
+    if expected_target_description is not None and gap.label != expected_target_description:
+        return "current target description differs from the pinned official design"
     if printed is None or printed.lstrip("0") != gap.authored_token.lstrip("0"):
         return "current official printed number disagrees with authored token"
+    if expected_source_ref is not None and str(gap.source_ref) != expected_source_ref:
+        return "current target source reference differs from the semantic map"
+    if expected_source_sha256 is not None and gap.source_sha256 != expected_source_sha256:
+        return "current target source SHA-256 differs from the semantic map"
+    if len(str(gap.source_sha256)) != 64 or any(char not in "0123456789abcdef" for char in gap.source_sha256):
+        return "current target source SHA-256 is malformed"
     if tuple(payload.get("export_refs", ())) != (gap.export_field_id,):
         return "historic export identity is not exact"
     if tuple(payload.get("source_refs", ())) != tuple(entry.source_refs) or tuple(entry.source_refs) != (
@@ -214,49 +325,20 @@ def _refusal_reason(gap: Any, entry: SemanticMapEntry, payload: dict[str, Any]) 
     required_keys = {"section", "semantic_role", "required", "input_kind"}
     if not required_keys.issubset(payload):
         return "historic semantic payload is incomplete"
+    description = str(gap.label).casefold()
+    semantic_role = str(payload.get("semantic_role", "")).casefold()
+    if "otras deducciones relativas a programas de apoyo" in description and "innovacion_tecnologica" in semantic_role:
+        return "official target description contradicts historic semantic role"
+    if "reserva de nivelaci" in description and (
+        "capitalizacion" in semantic_role or "capitalizacion" in " ".join(payload.get("section", ())).casefold()
+    ):
+        return "official target description contradicts historic semantic role"
     return None
 
 
 def _printed_number(label: str) -> str | None:
     matches = re.findall(r"\[([0-9]{5})\]", label)
     return matches[0] if len(matches) == 1 else None
-
-
-def _canonical_relative_path(candidate: RestorationCandidate) -> Path:
-    if not re.fullmatch(r"[0-9]{5}", candidate.id):
-        raise ValueError(f"restoration candidate has non-canonical unqualified id {candidate.id!r}")
-    return CANONICAL_CASILLA_ROOT / f"c{candidate.id}.toml"
-
-
-def _render_registry_fragment(candidate: RestorationCandidate) -> str:
-    """Render only registry-schema fields; review provenance stays outside."""
-
-    def quote(value: str) -> str:
-        return json.dumps(value, ensure_ascii=False)
-
-    def array(values: tuple[str, ...]) -> str:
-        return "[" + ", ".join(quote(value) for value in values) + "]"
-
-    return "\n".join(
-        (
-            "# Generated from the current M200/2024 semantic map and official aeat-dr-200-2024 design.",
-            f"# Physical export placement is current field {candidate.export_refs[0]}; "
-            "its reciprocal ref is CLI-owned.",
-            f"# Semantic payload reviewed from pinned repository commit {HISTORIC_COMMIT}.",
-            "",
-            '[[revisions."2024".casillas]]',
-            f"id = {quote(candidate.id)}",
-            f"number = {quote(candidate.number)}",
-            f"section = {array(candidate.section)}",
-            f"semantic_role = {quote(candidate.semantic_role)}",
-            f"data_type = {quote(candidate.data_type)}",
-            f"required = {str(candidate.required).lower()}",
-            f"input_kind = {quote(candidate.input_kind)}",
-            f"legal_refs = {array(candidate.legal_refs)}",
-            f"source_refs = {array(candidate.source_refs)}",
-            "",
-        ),
-    )
 
 
 if __name__ == "__main__":
