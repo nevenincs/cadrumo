@@ -233,6 +233,40 @@ _validate_nif_string = _validate_nif_string_impl
 _validate_period_code = _validate_period_code_impl
 
 
+class ContinuidadValidationMode(StrEnum):
+    """How strictly casilla continuity is validated for a revision."""
+
+    ADVISORY = "advisory"
+    STRICT = "strict"
+
+
+ContinuidadValidationModeField = Annotated[
+    ContinuidadValidationMode, BeforeValidator(coerce_enum_member(ContinuidadValidationMode))
+]
+"""Registry token hydrated into a ContinuidadValidationMode member."""
+
+
+class ModeloCadence(StrEnum):
+    """How often a modelo is filed.
+
+    ``PROFILE_BASED`` is not a period: it says the cadence is decided by the taxpayer's
+    own circumstances, which is why it cannot be compared against the others as a
+    frequency.
+    """
+
+    MONTHLY = "monthly"
+    QUARTERLY = "quarterly"
+    ANNUAL = "annual"
+    AD_HOC = "ad_hoc"
+    PROFILE_BASED = "profile_based"
+
+
+ModeloCadenceField = Annotated[
+    ModeloCadence, BeforeValidator(coerce_enum_member(ModeloCadence))
+]
+"""Registry token hydrated into a ModeloCadence member."""
+
+
 class DataBindingDefinition(RegistryModel):
     """Declare one typed source-to-casilla binding in a registry revision."""
 
@@ -778,7 +812,7 @@ class ModeloRevision(RegistryModel):
     applicability: Annotated[tuple[_ApplicabilityRuleDefinition, ...], SCHEMA_FAMILY] = ()
     completeness_manifest: CalculationCompletenessManifest | None = None
     verification_predicates: Annotated[tuple[VerificationPredicateDefinition, ...], SCHEMA_FAMILY] = ()
-    continuidad_validation: Literal["advisory", "strict"] = "advisory"
+    continuidad_validation: ContinuidadValidationModeField = ContinuidadValidationMode.ADVISORY
     casilla_continuidad_evolutions: Annotated[tuple[CasillaContinuidadEvolutionDefinition, ...], SCHEMA_FAMILY] = ()
     authority_grade: Annotated[RegistryAuthorityGradeField | None, MANIFEST_ONLY] = None
     family_dispositions: Annotated[Mapping[str, SchemaFamilyDispositionDeclaration], MANIFEST_ONLY] = Field(
@@ -1004,7 +1038,7 @@ class ModeloDefinition(RegistryModel):
     title_localization_key: str = Field(min_length=1, exclude=True, repr=False)
     official_name_localization_key: str = Field(min_length=1, exclude=True, repr=False)
     tax_domain: Annotated[TaxDomain, BeforeValidator(lambda v: TaxDomain(v) if isinstance(v, str) else v)]
-    cadence: Literal["monthly", "quarterly", "annual", "ad_hoc", "profile_based"]
+    cadence: ModeloCadenceField
     jurisdiction: Literal["ES-AEAT"]
     calculation_class: CalculationClassField = CalculationClass.FILING
     output_sensitivity: SensitivityClassField = SensitivityClass.FINANCIAL

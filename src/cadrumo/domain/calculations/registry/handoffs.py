@@ -61,6 +61,7 @@ __all__ = [
     "relation_is_consumed",
 ]
 
+
 class RelationConsumptionChannelKind(StrEnum):
     """How a relation's value reaches the target that consumes it."""
 
@@ -190,13 +191,13 @@ def relation_consumption_channels(
     """Return every declared channel that consumes ``relation`` in stable order."""
     channels: list[RelationConsumptionChannel] = []
     if relation.target_binding in index.primary_bindings:
-        channels.append("primary_binding")
+        channels.append(RelationConsumptionChannelKind.PRIMARY_BINDING)
     if relation.target_binding in index.alternate_bindings:
-        channels.append("alternate_binding")
+        channels.append(RelationConsumptionChannelKind.ALTERNATE_BINDING)
     if relation.id in index.formula_relations:
-        channels.append("formula_relation")
+        channels.append(RelationConsumptionChannelKind.FORMULA_RELATION)
     if relation.target_binding in index.formula_bindings:
-        channels.append("formula_binding")
+        channels.append(RelationConsumptionChannelKind.FORMULA_BINDING)
     return tuple(channels)
 
 
@@ -306,17 +307,17 @@ class RegistryRelationHandoffApplicabilityAudit(BaseModel):
     @property
     def active_count(self) -> int:
         """Return relation-period rows that produce a source requirement."""
-        return sum(record.applicability == "active" for record in self.records)
+        return sum(record.applicability is RelationHandoffApplicability.ACTIVE for record in self.records)
 
     @property
     def not_applicable_count(self) -> int:
         """Return relation-period rows excluded by the relation period selector."""
-        return sum(record.applicability == "not_applicable" for record in self.records)
+        return sum(record.applicability is RelationHandoffApplicability.NOT_APPLICABLE for record in self.records)
 
     @property
     def unresolved_count(self) -> int:
         """Return rows whose declared applicability produced no requirement."""
-        return sum(record.applicability == "unresolved" for record in self.records)
+        return sum(record.applicability is RelationHandoffApplicability.UNRESOLVED for record in self.records)
 
     @property
     def by_revision(
@@ -415,7 +416,7 @@ def _representative_filing_year(
 
 def _clean_state_mode(
     classification: DependencyClassificationDefinition,
-) -> Literal["required", "conditional", "advisory"]:
+) -> RelationCleanStateMode:
     """Map a dependency classification onto its clean-state contract.
 
     A source the taxpayer does not file (a suffered retencion) can only ever
@@ -423,10 +424,10 @@ def _clean_state_mode(
     remainder are required.
     """
     if not classification.taxpayer_files_source:
-        return "advisory"
+        return RelationCleanStateMode.ADVISORY
     if classification.conditional_on_economic_activity:
-        return "conditional"
-    return "required"
+        return RelationCleanStateMode.CONDITIONAL
+    return RelationCleanStateMode.REQUIRED
 
 
 def _relation_applicability(
@@ -434,7 +435,7 @@ def _relation_applicability(
     relation: RelationDefinition,
     period: str,
     matching: tuple[RegistryFoldRequirement, ...],
-) -> Literal["active", "not_applicable", "unresolved"]:
+) -> RelationHandoffApplicability:
     """Classify one relation against the period being expanded.
 
     A relation naming target periods that exclude this one is not applicable
@@ -442,8 +443,8 @@ def _relation_applicability(
     row for it, and unresolved when it did not.
     """
     if relation.target_periods and period not in relation.target_periods:
-        return "not_applicable"
-    return "active" if matching else "unresolved"
+        return RelationHandoffApplicability.NOT_APPLICABLE
+    return RelationHandoffApplicability.ACTIVE if matching else RelationHandoffApplicability.UNRESOLVED
 
 
 def _sole_matching_requirement(
@@ -739,16 +740,14 @@ def audit_registry_handoff_paths(authority: ValidatedRegistryAuthority) -> Regis
             target_binding=str(inventory_record.target_binding),
         )
         if wallet_owned:
-            classification: Literal["canonical_relation_prefill", "iva_wallet_exception", "non_canonical"] = (
-                "iva_wallet_exception"
-            )
-            resolver_owner: Literal["relation_mesh", "iva_wallet", "unresolved"] = "iva_wallet"
+            classification: RelationHandoffClassification = RelationHandoffClassification.IVA_WALLET_EXCEPTION
+            resolver_owner: RelationResolverOwner = RelationResolverOwner.IVA_WALLET
         elif inventory_record.target_binding_source is BindingSourceKind.RELATION_PREFILL:
-            classification = "canonical_relation_prefill"
-            resolver_owner = "relation_mesh"
+            classification = RelationHandoffClassification.CANONICAL_RELATION_PREFILL
+            resolver_owner = RelationResolverOwner.RELATION_MESH
         else:
-            classification = "non_canonical"
-            resolver_owner = "unresolved"
+            classification = RelationHandoffClassification.NON_CANONICAL
+            resolver_owner = RelationResolverOwner.UNRESOLVED
         records.append(
             RelationHandoffPathRecord(
                 target_modelo=inventory_record.target_modelo,

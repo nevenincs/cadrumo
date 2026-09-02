@@ -90,6 +90,46 @@ than re-declaring the six literals.
 """
 
 
+class ExportLineEnding(StrEnum):
+    """The line terminator a fixed-width export record is written with."""
+
+    CRLF = "crlf"
+    LF = "lf"
+    NONE = "none"
+
+
+ExportLineEndingField = Annotated[
+    ExportLineEnding, BeforeValidator(coerce_enum_member(ExportLineEnding))
+]
+"""Registry token hydrated into a ExportLineEnding member."""
+
+
+class ExportRecordRepeat(StrEnum):
+    """What a repeating export record iterates over."""
+
+    BINDING_ROWS = "binding_rows"
+    PROJECTION_ROWS = "projection_rows"
+
+
+ExportRecordRepeatField = Annotated[
+    ExportRecordRepeat, BeforeValidator(coerce_enum_member(ExportRecordRepeat))
+]
+"""Registry token hydrated into a ExportRecordRepeat member."""
+
+
+class RecordDiscriminatorRequirement(StrEnum):
+    """Whether a discriminator field must be blank or filled."""
+
+    BLANK = "blank"
+    NON_BLANK = "non_blank"
+
+
+RecordDiscriminatorRequirementField = Annotated[
+    RecordDiscriminatorRequirement, BeforeValidator(coerce_enum_member(RecordDiscriminatorRequirement))
+]
+"""Registry token hydrated into a RecordDiscriminatorRequirement member."""
+
+
 class FilingEnvelopePrefixRole(StrEnum):
     """Closed roles an AEAT variable-envelope prefix declares, in source order.
 
@@ -646,7 +686,7 @@ class RecordDiscriminator(RegistryModel):
 
     offset: OneBasedExportOffset
     length: int = Field(gt=0)
-    requires: Literal["blank", "non_blank"]
+    requires: RecordDiscriminatorRequirementField
 
 
 class ExportRecordDefinition(RegistryModel):
@@ -656,9 +696,9 @@ class ExportRecordDefinition(RegistryModel):
     record_type: str
     order: NonNegativeInt
     encoding: ExportEncodingValue
-    line_ending: Literal["crlf", "lf", "none"]
+    line_ending: ExportLineEndingField
     required: bool = True
-    repeat: Literal["binding_rows", "projection_rows"] | None = None
+    repeat: ExportRecordRepeatField | None = None
     binding_record: str | None = None
     row_field_casilla_ids: Mapping[str, CasillaId] = Field(default_factory=dict)
     discriminator: RecordDiscriminator | None = None
