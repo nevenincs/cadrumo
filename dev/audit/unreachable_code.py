@@ -67,11 +67,11 @@ import re
 import sys
 import tomllib
 from collections import deque
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
-from typing import Final, cast
+from typing import Final
 
 from .._paths import REPO_ROOT, UTF_8
 from ..quality.import_hygiene_scan import (
@@ -312,7 +312,7 @@ class ShippedTreeSpec:
         src_root = repo_root / "src"
         package = "cadrumo"
         excludes = wheel_exclude_globs(pyproject)
-        companions = _workspace_companions(repo_root, dict(data), audited_package=package)
+        companions = _sibling_console_packages(src_root, scripts, audited_package=package)
         entry_points = tuple(
             EntryPoint.parse(spec) for spec in scripts.values() if spec.partition(":")[0].split(".")[0] == package
         ) + tuple(EntryPoint.parse(spec) for spec in extra_roots)
@@ -342,60 +342,27 @@ class ShippedTreeSpec:
         )
 
 
-def _toml_table(value: object, key: str) -> dict[str, object]:
-    """Read one nested table, returning an empty table when it is absent or malformed.
-
-    Parsed TOML arrives as nested ``Any``, so every descent is narrowed here
-    rather than trusted; a malformed packaging file yields an empty table and
-    no companion, never a crash mid-audit.
-    """
-    if not isinstance(value, Mapping):
-        return {}
-    table = cast("Mapping[object, object]", value)
-    nested = table.get(key)
-    if not isinstance(nested, Mapping):
-        return {}
-    return {str(name): item for name, item in cast("Mapping[object, object]", nested).items()}
-
-
-def _toml_string_list(value: object) -> list[str]:
-    """Read a TOML array of strings, dropping anything that is not one."""
-    if not isinstance(value, list):
-        return []
-    return [item for item in cast("list[object]", value) if isinstance(item, str)]
-
-
-def _workspace_companions(
-    repo_root: Path, root_data: dict[str, object], *, audited_package: str
+def _sibling_console_packages(
+    src_root: Path, scripts: dict[str, str], *, audited_package: str
 ) -> tuple[CompanionPackage, ...]:
-    """Read the uv workspace members that ship their own console scripts.
+    """Group the console scripts that start in a package other than the audited one.
 
-    A member whose scripts all point back into the audited package is not a
-    companion, it is the same distribution seen twice; only a member with its
-    own top-level package contributes new roots.
+    Read from the declared scripts rather than from workspace membership, so a
+    sibling distribution folded into this one keeps contributing its roots. A
+    script whose package is not present under ``src/`` is skipped: it cannot be
+    walked, and guessing would silently shrink the reachable set.
     """
-    workspace = _toml_table(_toml_table(root_data, "tool"), "uv")
-    members = _toml_string_list(_toml_table(workspace, "workspace").get("members"))
-
-    companions: list[CompanionPackage] = []
-    for member in members:
-        member_pyproject = repo_root / member / "pyproject.toml"
-        if not member_pyproject.is_file():
+    grouped: dict[str, list[EntryPoint]] = {}
+    for spec in scripts.values():
+        entry = EntryPoint.parse(spec)
+        package = entry.module.split(".")[0]
+        if package == audited_package or not (src_root / package).is_dir():
             continue
-        member_data: dict[str, object] = dict(tomllib.loads(member_pyproject.read_text(encoding=_UTF_8)))
-        scripts = _toml_table(_toml_table(member_data, "project"), "scripts")
-        specs = [spec for spec in scripts.values() if isinstance(spec, str)]
-        entry_points = tuple(
-            EntryPoint.parse(spec) for spec in specs if spec.partition(":")[0].split(".")[0] != audited_package
-        )
-        if not entry_points:
-            continue
-        package = entry_points[0].module.split(".")[0]
-        member_src = repo_root / member / "src"
-        if not (member_src / package).is_dir():
-            continue
-        companions.append(CompanionPackage(package=package, src_root=member_src, entry_points=entry_points))
-    return tuple(companions)
+        grouped.setdefault(package, []).append(entry)
+    return tuple(
+        CompanionPackage(package=package, src_root=src_root, entry_points=tuple(entries))
+        for package, entries in sorted(grouped.items())
+    )
 
 
 @dataclass(frozen=True)

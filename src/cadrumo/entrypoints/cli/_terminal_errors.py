@@ -35,11 +35,13 @@ import re
 import sys
 from collections.abc import Callable, Sequence
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, NoReturn
+from typing import TYPE_CHECKING, NoReturn, cast
 
 import click
 
 if TYPE_CHECKING:
+    from typer._click.exceptions import ClickException
+
     from .errors import CliRefusedBoundaryError
 
 from ...core.click_context import argv_requests_json, context_chain_requests_json
@@ -285,7 +287,11 @@ def _render_click_exception_text(exc: BaseException) -> None:
 
             # The vendored fork's ClickException satisfies the structural
             # contract rich_format_error reads (message, ctx, format_message).
-            rich_utils.rich_format_error(exc)  # ty: ignore[invalid-argument-type]  # reason: structural typing across the two Click runtimes (the vendored fork's ClickException is not an upstream click.ClickException instance)
+            # CAST-RATIONALE-thirdparty: ``rich_format_error`` is annotated
+            # against Click's ``ClickException`` but reads only the structural
+            # contract (message, ctx, format_message) the vendored fork also
+            # satisfies. The two Click runtimes share no nominal base.
+            rich_utils.rich_format_error(cast("ClickException", exc))
             return
         except Exception as rich_error:  # pragma: no cover - rich unavailable or incompatible
             from ...core.logging import get_logger

@@ -184,7 +184,6 @@ def _attach_sqlite_pragmas(engine: Engine) -> None:
     if not engine.dialect.name.startswith("sqlite"):
         return
 
-    @event.listens_for(engine, "connect")
     def set_sqlite_pragma(dbapi_connection: DBAPIConnection, _: ConnectionPoolEntry) -> None:
         cursor = dbapi_connection.cursor()
         try:
@@ -194,6 +193,10 @@ def _attach_sqlite_pragmas(engine: Engine) -> None:
             cursor.execute("PRAGMA synchronous=NORMAL")
         finally:
             cursor.close()
+
+    # Registered explicitly rather than by decorator: the decorator form leaves
+    # the listener looking unreferenced to static analysis.
+    event.listen(engine, "connect", set_sqlite_pragma)
 
 
 def create_engine_from_settings(settings: Settings) -> Engine:
