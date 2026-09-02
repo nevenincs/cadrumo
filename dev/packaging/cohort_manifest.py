@@ -150,8 +150,6 @@ REQUIRED_ARTIFACT_KINDS: Final[dict[str, ArtifactKind]] = {
     "cadrumo-data-official-wheel": ArtifactKind.PYTHON_WHEEL,
     "cadrumo-sdist": ArtifactKind.PYTHON_SDIST,
     "cadrumo-wheel": ArtifactKind.PYTHON_WHEEL,
-    "cadrumo-harness-sdist": ArtifactKind.PYTHON_SDIST,
-    "cadrumo-harness-wheel": ArtifactKind.PYTHON_WHEEL,
     "cadrumo-source-archive": ArtifactKind.PYTHON_SOURCE_ARCHIVE,
     "cadrumo-runtime-wheelhouse": ArtifactKind.PYTHON_WHEELHOUSE,
     "homebrew-formula": ArtifactKind.HOMEBREW_FORMULA,

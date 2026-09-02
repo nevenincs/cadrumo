@@ -1,8 +1,8 @@
 # Standing eval gate for the operator agent-harness.
 #
-# The harness is its own distribution, `cadrumo-harness` under
-# `src/cadrumo_harness/`: the operator rules, personas and skills, the workspace
-# materialiser, and the `cadrumo-mcp` server that serves them. This workflow runs
+# The harness is the `cadrumo_harness` package under `src/cadrumo_harness/`,
+# shipped in the product wheel: the operator rules, personas and skills, the
+# workspace materialiser, and the `cadrumo-mcp` server that serves them. This workflow runs
 # its whole assurance surface on every change to that tree — the
 # operator-rule/persona/skill drift gate, the golden-task eval (modelo 130 and
 # 303), the determinism replay, the MCP tool/HITL/faithfulness tests, and the
@@ -52,10 +52,8 @@ jobs:
           enable-cache: true
 
       - name: Sync frozen development environment
-        # No separate harness install step: `cadrumo-harness` is a member of the
-        # default `dev` dependency group with a `[tool.uv.sources]` path override
-        # onto `src/cadrumo_harness`, so a plain frozen sync builds and installs
-        # it from the checkout alongside `cadrumo`.
+        # No separate harness install step: the package ships inside `cadrumo`,
+        # so a plain frozen sync installs it from the checkout.
         run: uv sync --frozen
 
       - name: Cadrumo agent-harness eval surface

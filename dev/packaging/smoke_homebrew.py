@@ -192,7 +192,7 @@ def _assert_oracle_evidence(*, tax_document: dict[str, object]) -> None:
     """Refuse a Homebrew keg whose installed CLI does not reproduce the oracle.
 
     The CLI is the only executable this formula installs. ``cadrumo-mcp`` ships
-    in the sibling ``cadrumo-harness`` distribution, which Homebrew does not
+    shipped by the same wheel, though this lane exercises the command surface
     carry — one distribution per formula — so there is no MCP leg to exercise
     here; the harness is reached through pipx, the MCPB bundle, or the Claude
     plugin, each of which runs the MCP oracle on its own acquisition path.
@@ -383,7 +383,7 @@ def run_homebrew_smoke(
         installed_prefix = Path(prefix_text).resolve(strict=True)
         # The formula installs the `cadrumo` distribution alone, so `aeat` is the
         # only executable it lands. `cadrumo-mcp` belongs to the sibling
-        # `cadrumo-harness` distribution, which Homebrew does not carry.
+        # wheel; this lane proves the command surface only.
         aeat = (installed_prefix / "bin" / "aeat").resolve(strict=True)
         if not aeat.is_file() or not os.access(aeat, os.X_OK):
             raise SystemExit(f"installed Homebrew command is not executable: {aeat}")
