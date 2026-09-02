@@ -236,7 +236,7 @@ class AssetsLedgerDocument(BaseModel):
     later lookup and amortisation consumers without a canonical asset. The
     uniqueness invariant lives here, on the document, because the repository
     had two competing versions of it -- incremental ``add`` refused a repeated
-    identifier while bulk ``save``/``save_assets`` accepted any document and
+    identifier while bulk ``save`` accepted any document and
     wrote it straight through, so the same ledger enforced the rule on one
     write path and not the other.
 
