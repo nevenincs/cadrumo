@@ -998,8 +998,6 @@ errors:
       notificació.
     refused_live_notifications_snapshot_not_found: No existeix cap instantània de
       notificacions amb l'identificador indicat.
-    refused_live_portal_not_found: No existeix cap portal de l'AEAT amb l'identificador
-      indicat.
     refused_live_verify_observation_not_found: No existeix cap observació de verificació
       amb l'identificador indicat.
     refused_llm_busy: Aquest equip ja executa el màxim configurat de peticions al

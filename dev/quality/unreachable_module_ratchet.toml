@@ -74,7 +74,6 @@ allowed = [
   "cadrumo.application.operator_surface.calculation_workflows",  # unreachable
   "cadrumo.application.operator_surface.crud_contract",  # unreachable
   "cadrumo.application.operator_surface.crud_registry",  # unreachable
-  "cadrumo.application.portals",  # unreachable
   "cadrumo.application.prorrata_register.sector_lifecycle",  # unreachable
   "cadrumo.application.prorrata_register.seed",  # unreachable
   "cadrumo.application.review._edit",  # unreachable

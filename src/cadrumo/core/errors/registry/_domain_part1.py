@@ -248,16 +248,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.portals.service.PortalNotFoundError",
-        ErrorCode(
-            code="REFUSED_LIVE_PORTAL_NOT_FOUND",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_live_portal_not_found",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.domain.justificante.errors.PdfModeloImportError",
         ErrorCode(
             code="ERROR_PDF_IMPORT_PDF_MODELO_IMPORT",

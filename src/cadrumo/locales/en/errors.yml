@@ -917,7 +917,6 @@ errors:
       notification.
     refused_live_notifications_snapshot_not_found: No notifications snapshot exists
       with the identifier provided.
-    refused_live_portal_not_found: No AEAT portal exists with the identifier provided.
     refused_live_verify_observation_not_found: No verification observation exists
       with the identifier provided.
     refused_llm_busy: This machine is already running its configured maximum of on-host

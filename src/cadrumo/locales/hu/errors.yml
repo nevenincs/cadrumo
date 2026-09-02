@@ -935,7 +935,6 @@ errors:
       meg ennek az értesítésnek.
     refused_live_notifications_snapshot_not_found: Nem létezik értesítési pillanatkép
       a megadott azonosítóval.
-    refused_live_portal_not_found: Nem létezik AEAT portál a megadott azonosítóval.
     refused_live_verify_observation_not_found: Nem létezik ellenőrzési megfigyelés
       a megadott azonosítóval.
     refused_llm_busy: Ez a gép már a beállított maximális számú helyi nyelvi modell
