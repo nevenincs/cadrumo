@@ -11,8 +11,8 @@ import ast
 import hashlib
 import re
 from dataclasses import dataclass
-from pathlib import Path
 from importlib.util import resolve_name
+from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 from cadrumo.domain.calculations.registry.authority import bundled_authority
@@ -582,8 +582,7 @@ def _factory_write_route(factory: ast.FunctionDef, call: ast.Call) -> ast.AST | 
     constructors = [
         child
         for child in ast.walk(factory)
-        if isinstance(child, ast.Call)
-        and _dotted_name(child.func).rsplit(".", maxsplit=1)[-1] == "ExecutionPolicySpec"
+        if isinstance(child, ast.Call) and _dotted_name(child.func).rsplit(".", maxsplit=1)[-1] == "ExecutionPolicySpec"
     ]
     if len(constructors) != 1:
         return None
@@ -598,9 +597,7 @@ def _factory_write_route(factory: ast.FunctionDef, call: ast.Call) -> ast.AST | 
     return route
 
 
-def _policy_route_resolution(
-    value: ast.AST, *, factories: dict[str, ast.FunctionDef]
-) -> PolicyResolution:
+def _policy_route_resolution(value: ast.AST, *, factories: dict[str, ast.FunctionDef]) -> PolicyResolution:
     """Classify one literal policy declaration from its canonical write route."""
     if not isinstance(value, ast.Call):
         return "unresolved"
@@ -636,9 +633,7 @@ def _imported_policy_bindings(tree: ast.Module, *, module_name: str) -> dict[str
     for node in tree.body:
         if not isinstance(node, ast.ImportFrom) or node.module is None:
             continue
-        imported_module = (
-            resolve_name("." * node.level + node.module, package) if node.level else node.module
-        )
+        imported_module = resolve_name("." * node.level + node.module, package) if node.level else node.module
         for alias in node.names:
             bindings[alias.asname or alias.name] = (imported_module, alias.name)
     return bindings
@@ -656,10 +651,7 @@ def _policy_resolutions(cli_root: Path) -> dict[str, dict[str, PolicyResolution]
         for path in _production_python_files(cli_root)
     }
     declarations = {module: _module_level_bindings(tree) for module, tree in trees.items()}
-    imports = {
-        module: _imported_policy_bindings(tree, module_name=module)
-        for module, tree in trees.items()
-    }
+    imports = {module: _imported_policy_bindings(tree, module_name=module) for module, tree in trees.items()}
     factories = {module: _policy_factories(tree) for module, tree in trees.items()}
     resolved: dict[tuple[str, str], PolicyResolution] = {}
     resolving: set[tuple[str, str]] = set()
@@ -692,8 +684,7 @@ def _policy_resolutions(cli_root: Path) -> dict[str, dict[str, PolicyResolution]
         for name in bindings:
             resolve(module, name)
     return {
-        module: {name: resolve(module, name) for name in (*declarations[module], *imports[module])}
-        for module in trees
+        module: {name: resolve(module, name) for name in (*declarations[module], *imports[module])} for module in trees
     }
 
 
@@ -769,8 +760,7 @@ def _command_spec_ingress(repo_root: Path, cli_root: Path) -> tuple[IngressCapab
             {
                 id(child)
                 for child in ast.walk(leaf_wrapper)
-                if isinstance(child, ast.Call)
-                and _dotted_name(child.func).rsplit(".", maxsplit=1)[-1] == "CommandSpec"
+                if isinstance(child, ast.Call) and _dotted_name(child.func).rsplit(".", maxsplit=1)[-1] == "CommandSpec"
             }
             if leaf_wrapper is not None
             else set()
