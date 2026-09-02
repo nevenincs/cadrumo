@@ -373,3 +373,223 @@ def test_every_kind_a_screen_emits_is_named_in_its_own_docstring(
 
     assert observed, "no enrolled screen emitted a kind, so this gate checked nothing"
     assert not undocumented, "\n".join(sorted(set(undocumented)))
+
+
+def test_every_package_initialiser_in_the_development_registry_tree_is_inert() -> None:
+    """A package initialiser here declares a namespace and nothing else.
+
+    The architecture rule is that initialisers carry no exports, no forwarding
+    and no import side effects. Three separate facades had grown here anyway -
+    one of them fifty-one lines re-exporting twenty names, and one enforced by a
+    test asserting its ``__all__`` verbatim, so the breach had a gate holding it
+    in place. All were removable without touching a caller, because every
+    consumer already imported the defining module; the facades were carrying
+    nothing but the ability to grow.
+
+    That is the argument for a standing gate rather than three fixes: nothing
+    made the first facade fail, so nothing would have made the fourth.
+    """
+    import ast
+    import pathlib
+
+    root = pathlib.Path(__file__).resolve().parent.parent
+    offenders: dict[str, list[str]] = {}
+    checked = 0
+    for path in sorted(root.rglob("__init__.py")):
+        checked += 1
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        offending = [
+            type(node).__name__
+            for node in tree.body
+            if not (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant))
+        ]
+        if offending:
+            offenders[str(path.relative_to(root))] = offending
+
+    assert checked > 1, "no package initialisers were found, so this gate checked nothing"
+    assert not offenders, f"package initialisers carrying more than a docstring: {offenders}"
+
+
+def test_the_inert_initialiser_gate_detects_a_re_export() -> None:
+    """The gate above is shown to catch the defect it exists to prevent.
+
+    Constructed as source text rather than by writing into the tree, because a
+    gate over the contributor's own working tree must not modify it to prove
+    itself.
+    """
+    import ast
+
+    facade = '"""A package."""\n\nfrom .thing import Thing\n\n__all__ = ["Thing"]\n'
+    tree = ast.parse(facade)
+    offending = [
+        type(node).__name__
+        for node in tree.body
+        if not (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant))
+    ]
+    assert offending == ["ImportFrom", "Assign"], offending
+
+    inert = ast.parse('"""A package."""\n')
+    assert not [
+        node for node in inert.body if not (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant))
+    ]
+
+
+_VAULT_CITATION_PATTERNS: tuple[tuple[str, str], ...] = (
+    (r"\bW\d{2}\.P\d{2}\.S\d+\b", "wave-phase-step identifier"),
+    (r"(?<![.\w])P\d{2}\.S\d{2}\b", "phase-step identifier"),
+    (
+        r"\b\d{4}-\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*-(?:adr|plan|audit|research|reference|exec)\b",
+        "vault document stem",
+    ),
+    (r"\.vault/", "vault path"),
+)
+
+
+def _vault_citations(text: str) -> list[str]:
+    """Return the vault citations a body of text carries, by kind."""
+    import re
+
+    return [
+        f"{label}: {match.group(0)}"
+        for pattern, label in _VAULT_CITATION_PATTERNS
+        for match in re.finditer(pattern, text)
+    ]
+
+
+def test_no_registry_source_or_declaration_cites_a_vault_record() -> None:
+    """Registry code and shipped declarations never name the project's own development records.
+
+    The code-stands-alone mandate makes the reference direction one-way: a vault
+    document cites code by locator, and code cites nothing back. The shipped
+    check for this exists and is run, but it matches document STEMS, so a plan
+    step identifier passes it silently. Two filing-grade modelo 200 revision
+    declarations carried one for weeks while that check reported the registry
+    clean, which is why this gate matches step identifiers and vault paths too
+    rather than trusting the stem search alone.
+
+    A declaration is the worst place for such a citation: it ships in the wheel,
+    it is read as tax-domain evidence, and the record it names is development
+    scaffolding the product is meant to be removable from.
+    """
+    import pathlib
+
+    from cadrumo.core.resources.bundled_data import bundled_path
+
+    roots = (
+        pathlib.Path(__file__).resolve().parent.parent,
+        bundled_path("registry", "aeat"),
+    )
+    offenders: dict[str, list[str]] = {}
+    scanned = 0
+    for root in roots:
+        for path in sorted(root.rglob("*")):
+            if path.suffix not in {".py", ".toml", ".md"} or not path.is_file():
+                continue
+            if "__pycache__" in path.parts:
+                continue
+            if path.name == pathlib.Path(__file__).name:
+                # This module necessarily contains example citations: the paired
+                # detector below constructs one of each kind to prove the
+                # patterns match. Scanning it would make the gate report itself,
+                # and removing the examples would leave the patterns unproven.
+                continue
+            scanned += 1
+            citations = _vault_citations(path.read_text(encoding="utf-8", errors="ignore"))
+            if citations:
+                offenders[str(path)] = sorted(set(citations))
+
+    assert scanned > 100, f"only {scanned} files scanned, so this gate proves little"
+    assert not offenders, f"registry files citing vault records: {offenders}"
+
+
+def test_the_vault_citation_gate_catches_each_kind_it_claims_to() -> None:
+    """Every pattern the gate carries is shown to match, and ordinary prose is shown not to.
+
+    Constructed in memory rather than written into the tree. The negative half
+    matters as much as the positive: a detector that fires on a revision
+    directory name like ``2025-y-siguientes`` or on a casilla identifier would
+    be unusable, and nobody would find out from a clean corpus.
+    """
+    assert _vault_citations("published under downstream step W04.P08.S22.") == [
+        "wave-phase-step identifier: W04.P08.S22"
+    ]
+    assert _vault_citations("see P07.S23 for the rollout") == ["phase-step identifier: P07.S23"]
+    assert _vault_citations("grounded in 2026-08-07-rate-box-evidence-assertion-adr today") == [
+        "vault document stem: 2026-08-07-rate-box-evidence-assertion-adr"
+    ]
+    assert _vault_citations("recorded in .vault/audit/x.md") == ["vault path: .vault/"]
+
+    for innocent in (
+        "revision 2025-y-siguientes narrows the window",
+        "casilla DP200014:01033 carries the base",
+        "orden HAC/1155/2024 art. 3 governs this",
+        "the 2024-2025 span covers both ejercicios",
+    ):
+        assert _vault_citations(innocent) == [], innocent
+
+
+_NUMBER_WORDS: dict[str, int] = {
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+}
+
+
+def test_a_screen_that_counts_its_conditions_states_the_right_number(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> None:
+    """A docstring claiming "N conditions are reported" must agree with what the screen emits.
+
+    The sibling gate above requires every emitted kind to be NAMED in the
+    docstring, and that is not enough. Two screens named all their kinds while
+    still opening with a count from an earlier version of themselves, and one of
+    those was introduced by the very edit that added the missing name: a bullet
+    was appended and the sentence above it was left saying three.
+
+    A wrong count is worse than a missing one. It tells a reader the list they
+    are looking at is complete, so the condition they never find is the one they
+    conclude does not exist.
+    """
+    import importlib
+    import re
+
+    from dev.registry.analysis.screens import SCREENS
+
+    wrong: list[str] = []
+    checked = 0
+    for entry in SCREENS:
+        module = importlib.import_module(f"dev.registry.analysis.{entry.name}")
+        doc = module.__doc__ or ""
+        claim = re.search(r"\b([A-Za-z]+) conditions are reported\b", doc)
+        if claim is None:
+            continue
+        stated = _NUMBER_WORDS.get(claim.group(1).lower())
+        if stated is None:
+            wrong.append(f"{entry.name} states an unrecognised count {claim.group(1)!r}")
+            continue
+        checked += 1
+        emitted = len({finding.kind for finding in entry.run(authority, modelo_ids) if hasattr(finding, "kind")})
+        # Count only the bullets belonging to this claim. Several screens also
+        # bullet the FACTS they read, in the same backtick form, before naming
+        # their conditions; counting those made this gate fail on a docstring
+        # whose stated number was right.
+        named = 0
+        for line in doc[claim.end() :].splitlines():
+            if line.startswith("- ``"):
+                named += 1
+            elif line.strip() and not line.startswith(" ") and named:
+                break
+        if stated != named:
+            wrong.append(f"{entry.name} says {stated} conditions and documents {named}")
+        if emitted > stated:
+            wrong.append(f"{entry.name} says {stated} conditions and emits {emitted} distinct kinds live")
+
+    assert checked, "no screen stated a condition count, so this gate checked nothing"
+    assert not wrong, "\n".join(wrong)

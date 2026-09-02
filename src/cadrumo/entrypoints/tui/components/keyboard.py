@@ -23,7 +23,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import replace
 
-from textual.binding import Binding
+from textual.binding import Binding, BindingsMap
 from textual.dom import DOMNode
 
 __all__ = ["localize_key_descriptions"]
@@ -44,8 +44,10 @@ def localize_key_descriptions(node: DOMNode, descriptions: Mapping[str, str]) ->
     than silently translating nothing.
     """
     # Textual exposes no public re-description path: ``bind`` and ``BindingsMap.merge``
-    # both APPEND, so either would offer a key once more on every call.
-    table = node._bindings.key_to_bindings
+    # both APPEND, so either would offer a key once more on every call. The
+    # dynamic reach is annotated so the map keeps its real type.
+    bindings: BindingsMap = getattr(node, "_bindings")  # noqa: B009
+    table = bindings.key_to_bindings
     described: set[str] = set()
     for key, bound in list(table.items()):
         if not any(binding.action in descriptions for binding in bound):

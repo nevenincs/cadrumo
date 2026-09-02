@@ -143,7 +143,7 @@ from ...core.payment_election import PaymentElection
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
-from ._common import _filing_taxpayer_or_refuse, emit_envelope
+from ._common import emit_envelope, filing_taxpayer_or_refuse
 from ._modelo_behavior_support import resolve_revision_for_cli
 from ._modelo_cli_support import (
     parse_revision_selector,
@@ -188,7 +188,7 @@ def review_package_build(
     from ._modelo_cli_support import bad_parameter_from_error, selector_bad_parameter
 
     workflow_state = workflow_state_repository().load()
-    workflow_profile = _filing_taxpayer_or_refuse(workflow_state)
+    workflow_profile = filing_taxpayer_or_refuse(workflow_state)
     if output is None or not str(output).strip() or str(output).strip() == ".":
         raise typer.BadParameter(
             tr(

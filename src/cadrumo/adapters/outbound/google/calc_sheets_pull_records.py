@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Any, Literal
+from typing import Literal, TypedDict
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
@@ -24,9 +24,18 @@ from ....domain.calculations.registry.ids import (
     SourceRefId,
 )
 
-# A single batch-get value-range entry from the Sheets API.
-# Shape: {"range": str, "values": list[list[object]]}
-ValueRange = dict[str, Any]
+
+class ValueRange(TypedDict, total=False):
+    """A single batch-get value-range entry from the Sheets API.
+
+    Cell values are ``object``: the API returns whichever JSON scalar the cell
+    holds, and callers must narrow before use. Every key is optional because
+    Sheets omits an empty range's ``values`` rather than sending an empty list.
+    """
+
+    range: str
+    majorDimension: str
+    values: list[list[object]]
 
 
 class OperatorEdit(BaseModel):

@@ -117,7 +117,9 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1]):
         self._controller = controller
         self._view_model: OperationModalViewModelV1 | None = None
         self._log_view: OperationModalLogViewV1 = build_initial_log_view(controller.operation_id)
-        self._interaction: OperationModalInteractionStateV1 | None = None
+        # The modal renders whatever REVIEW projection an operation publishes,
+        # so its interaction state is parameterised by the projection base.
+        self._interaction: OperationModalInteractionStateV1[BaseModel] | None = None
         # NOT `_closing`: that name is Textual's own on ``MessagePump``, and
         # setting it here made the framework's `_close_messages` return early
         # without posting its stop sentinel, so the screen could never be

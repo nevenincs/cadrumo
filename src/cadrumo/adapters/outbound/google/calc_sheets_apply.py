@@ -38,6 +38,21 @@ into the local store, the registry, or an AEAT submission.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, NoReturn
+
+if TYPE_CHECKING:
+    from google.auth.credentials import Credentials
+    from googleapiclient._apis.drive.v3.resources import DriveResource
+    from googleapiclient._apis.drive.v3.schemas import File
+    from googleapiclient._apis.sheets.v4.resources import SheetsResource
+    from googleapiclient._apis.sheets.v4.schemas import (
+        BatchUpdateSpreadsheetRequest,
+        BatchUpdateValuesRequest,
+        Request,
+        Spreadsheet,
+        ValueRange,
+    )
+
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
@@ -46,34 +61,35 @@ from typing import Any, Final
 from pydantic import BaseModel, Field, NonNegativeInt
 
 from ....application.storage.calc_sheets.records import SheetCellAddress, SheetExportPlan, SheetValueCell, TabName
+from ....core.json_shapes import str_keyed_mapping, str_keyed_rows
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..storage.errors import OutboundStorageError, OutboundStorageNetworkError, OutboundStorageValidationError
 from ._calc_sheets_apply_formatting import (
-    _build_auto_filter_requests,
-    _build_base_font_requests,
-    _build_cell_constraint_requests,
-    _build_column_width_requests,
-    _build_emphasis_format_requests,
-    _build_frozen_view_requests,
-    _build_grid_resize_requests,
-    _build_number_format_requests,
-    _build_protected_range_requests,
-    _build_styled_range_requests,
+    build_auto_filter_requests,
+    build_base_font_requests,
+    build_cell_constraint_requests,
+    build_column_width_requests,
+    build_emphasis_format_requests,
+    build_frozen_view_requests,
+    build_grid_resize_requests,
+    build_number_format_requests,
+    build_protected_range_requests,
+    build_styled_range_requests,
 )
 from ._calc_sheets_apply_values import (
-    _build_evidence_value_data,
-    _build_formula_data,
-    _build_guide_value_data,
-    _build_row_set_header_data,
-    _build_value_data,
+    build_evidence_value_data,
+    build_formula_data,
+    build_guide_value_data,
+    build_row_set_header_data,
+    build_value_data,
     changed_cell_addresses,
     payload_written_addresses,
     stale_addresses,
     written_cell_values,
 )
 from ._calc_sheets_apply_values import (
-    _coerce_cell_value as _coerce_cell_value,
+    coerce_cell_value as coerce_cell_value,
 )
 from ._drive_entries import (
     OWNERSHIP_KEY as _OWNERSHIP_KEY,
@@ -215,55 +231,51 @@ class CalcSheetsExportPreview(BaseModel):
     formula_cells_to_write: NonNegativeInt
 
 
-def _google_service(credentials: object, service_name: str, version: str) -> Any:
+def _refuse_missing_googleapiclient(exc: ImportError, service_name: str, version: str) -> NoReturn:
+    """Refuse, naming the service, when the optional discovery client is absent."""
+    error = OutboundStorageNetworkError(
+        f"googleapiclient not importable: {exc}",
+        translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
+    )
+    raise _calc_sheets_apply_terminal_refusal(
+        error,
+        CalcSheetsApplyPreconditionCondition.API_CLIENT_AVAILABLE,
+        facts={
+            "client_available": False,
+            "dependency": "google_api_python_client",
+            "service_name": service_name,
+            "service_version": version,
+        },
+        outcome=NoRecoveryOutcome.SAFETY,
+    ) from exc
+
+
+# `google-api-python-client-stubs` types `build` per (service, version) LITERAL.
+# The former shared factory forwarded both as variables, so no literal overload
+# matched and every downstream call went untyped. Each service now spells its own
+# literals, and the import/refusal preamble stays shared.
+def _drive_service(credentials: Credentials) -> DriveResource:
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
-        error = OutboundStorageNetworkError(
-            f"googleapiclient not importable: {exc}",
-            translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
-        )
-        raise _calc_sheets_apply_terminal_refusal(
-            error,
-            CalcSheetsApplyPreconditionCondition.API_CLIENT_AVAILABLE,
-            facts={
-                "client_available": False,
-                "dependency": "google_api_python_client",
-                "service_name": service_name,
-                "service_version": version,
-            },
-            outcome=NoRecoveryOutcome.SAFETY,
-        ) from exc
-    return build(service_name, version, credentials=credentials, cache_discovery=False)
+        _refuse_missing_googleapiclient(exc, "drive", "v3")
+    return build("drive", "v3", credentials=credentials, cache_discovery=False)
 
 
-# ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY:
-# googleapiclient.discovery.build() returns an untyped Resource object; no stub
-# narrows the concrete type.
-def _drive_service(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY
-    return _google_service(credentials, "drive", "v3")
+def _sheets_service(credentials: Credentials) -> SheetsResource:
+    try:
+        from googleapiclient.discovery import build
+    except ImportError as exc:
+        _refuse_missing_googleapiclient(exc, "sheets", "v4")
+    return build("sheets", "v4", credentials=credentials, cache_discovery=False)
 
 
-def _sheets_service(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY
-    return _google_service(credentials, "sheets", "v4")
-
-
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE:
-# googleapiclient Resource object; no stub type is available in
-# google-api-python-client.
 def _find_folder(
-    drive: Any,
+    drive: DriveResource,
     *,
     parent_id: str,
     name: str,
-) -> dict[str, Any] | None:
-    # ``dict[str, Any]`` is the irreducible Google Drive API boundary
-    # shape: every response from drive.files().list() / .get() returns
-    # heterogeneous typed metadata (id, name, mimeType, appProperties,
-    # etc.) that the google-api-python-client stubs surface as ``Any``.
-    # Narrowing breaks downstream lookups by string key. Same rationale
-    # as the body-side ``Any`` documented on google_drive.py and on
-    # browser/session.py.
+) -> File | None:
     #
     # Ownership acceptance, marker backfill, foreign-content refusal,
     # query-name escaping, and entry-id validation are the shared policy in
@@ -283,18 +295,13 @@ def _find_folder(
     )
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE:
-# googleapiclient Resource object; no stub type is available in
-# google-api-python-client.
 def _create_folder(
-    drive: Any,
+    drive: DriveResource,
     *,
     parent_id: str,
     name: str,
-) -> dict[str, Any]:
-    # ``dict[str, Any]`` is the irreducible Google Drive API shape;
-    # see the rationale on ``_find_folder`` above.
-    body = {
+) -> File:
+    body: File = {
         "name": name,
         "mimeType": _FOLDER_MIME,
         "parents": [parent_id],
@@ -306,11 +313,8 @@ def _create_folder(
     )
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE:
-# googleapiclient Resource object; no stub type is available in
-# google-api-python-client.
 def _ensure_folder(
-    drive: Any,
+    drive: DriveResource,
     *,
     parent_id: str,
     name: str,
@@ -322,17 +326,12 @@ def _ensure_folder(
     return require_drive_entry_id(created, name=name, parent_id=parent_id)
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE:
-# googleapiclient Resource object; no stub type is available in
-# google-api-python-client.
 def _find_spreadsheet(
-    drive: Any,
+    drive: DriveResource,
     *,
     parent_id: str,
     name: str,
-) -> dict[str, Any] | None:
-    # ``dict[str, Any]`` is the irreducible Google Drive API shape;
-    # see the rationale on ``_find_folder`` above.
+) -> File | None:
     # Same shared ownership/backfill/refusal policy as ``_find_folder``; only
     # the MIME type and the action/error text are spreadsheet-specific.
     return find_owned_drive_entry(
@@ -349,20 +348,15 @@ def _find_spreadsheet(
     )
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE:
-# googleapiclient Resource object; no stub type is available in
-# google-api-python-client.
 def _create_spreadsheet(
-    drive: Any,
-    sheets: Any,
+    drive: DriveResource,
+    sheets: SheetsResource,
     *,
     parent_id: str,
     title: str,
     tab_names: Iterable[str],
-) -> dict[str, Any]:
-    # ``dict[str, Any]`` is the irreducible Google Sheets API shape;
-    # see the rationale on ``_find_folder`` above.
-    body = {
+) -> Spreadsheet:
+    body: Spreadsheet = {
         # Locale `en_US` keeps the formula argument separator as ",".
         # Spanish-style display formatting (1.234,56) is applied at the
         # cell numberFormat level, which is independent of the
@@ -376,7 +370,12 @@ def _create_spreadsheet(
         sheets.spreadsheets().create(body=body, fields="spreadsheetId,spreadsheetUrl,sheets.properties"),
         action="sheets.spreadsheets.create",
     )
-    spreadsheet_id = spreadsheet["spreadsheetId"]
+    spreadsheet_id = spreadsheet.get("spreadsheetId")
+    if not spreadsheet_id:
+        raise OutboundStorageValidationError(
+            "Sheets create returned no spreadsheetId",
+            context={"parent_id": parent_id, "title": title},
+        )
     # Move the freshly created spreadsheet into the target folder and
     # stamp the ownership marker. `files.update` with `addParents` +
     # `removeParents=root` is the canonical move pattern.
@@ -435,7 +434,7 @@ def _developer_metadata_pairs(plan: SheetExportPlan) -> list[tuple[str, str]]:
 
 def _build_developer_metadata_requests(
     plan: SheetExportPlan,
-) -> list[dict[str, Any]]:
+) -> list[Request]:
     return [
         {
             "createDeveloperMetadata": {
@@ -462,7 +461,7 @@ def _managed_developer_metadata_key(key: object) -> bool:
 # discovery client ships no typed model for the response.
 def _build_developer_metadata_cleanup_requests(
     spreadsheet: Mapping[str, Any],
-) -> list[dict[str, Any]]:
+) -> list[Request]:
     """Delete previously emitted AEAT developer metadata before recreating it.
 
     Google Sheets developer metadata keys are not unique. Re-applying a
@@ -471,11 +470,9 @@ def _build_developer_metadata_cleanup_requests(
     Delete only entries with metadata IDs the API returned and only for keys
     this adapter owns.
     """
-    requests: list[dict[str, Any]] = []
+    requests: list[Request] = []
     seen_ids: set[int] = set()
-    for entry in spreadsheet.get("developerMetadata", []) or []:
-        if not isinstance(entry, Mapping):
-            continue
+    for entry in str_keyed_rows(spreadsheet, "developerMetadata"):
         if not _managed_developer_metadata_key(entry.get("metadataKey")):
             continue
         metadata_id = entry.get("metadataId")
@@ -501,19 +498,15 @@ def _build_developer_metadata_cleanup_requests(
 def _build_protected_range_cleanup_requests(
     spreadsheet: Mapping[str, Any],
     plan: SheetExportPlan,
-) -> list[dict[str, Any]]:
+) -> list[Request]:
     """Delete app-managed protected ranges before recreating current ranges."""
     managed_descriptions = {region.description for region in plan.protected_ranges}
     if not managed_descriptions:
         return []
-    requests: list[dict[str, Any]] = []
+    requests: list[Request] = []
     seen_ids: set[int] = set()
-    for sheet in spreadsheet.get("sheets", []) or []:
-        if not isinstance(sheet, Mapping):
-            continue
-        for protected in sheet.get("protectedRanges", []) or []:
-            if not isinstance(protected, Mapping):
-                continue
+    for sheet in str_keyed_rows(spreadsheet, "sheets"):
+        for protected in str_keyed_rows(sheet, "protectedRanges"):
             if protected.get("description") not in managed_descriptions:
                 continue
             protected_range_id = protected.get("protectedRangeId")
@@ -529,7 +522,7 @@ def _build_protected_range_cleanup_requests(
 def _build_structural_cleanup_requests(
     spreadsheet: Mapping[str, Any],
     plan: SheetExportPlan,
-) -> list[dict[str, Any]]:
+) -> list[Request]:
     return _build_developer_metadata_cleanup_requests(spreadsheet) + _build_protected_range_cleanup_requests(
         spreadsheet,
         plan,
@@ -540,9 +533,9 @@ def _build_cell_note_requests(
     value_cells: Iterable[SheetValueCell],
     *,
     sheet_id_by_tab: Mapping[str, int],
-) -> list[dict[str, Any]]:
+) -> list[Request]:
     """Emit `updateCells` requests with cell notes for any value cell that has one."""
-    requests: list[dict[str, Any]] = []
+    requests: list[Request] = []
     for cell in value_cells:
         if cell.note is None:
             continue
@@ -580,12 +573,12 @@ def _subfolder_name(plan: SheetExportPlan) -> str:
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api drive/sheets Resource (dynamic discovery build).
 def _open_or_create_plan_spreadsheet(
     *,
-    drive: Any,
-    sheets: Any,
+    drive: DriveResource,
+    sheets: SheetsResource,
     plan: SheetExportPlan,
     root_folder_id: str,
     tab_titles: tuple[str, ...],
-) -> tuple[dict[str, Any], str]:
+) -> tuple[Spreadsheet, str]:
     vault_folder_id = _ensure_folder(drive, parent_id=root_folder_id, name=_vault_folder_name())
     calc_folder_id = _ensure_folder(drive, parent_id=vault_folder_id, name=_CALC_SHEETS_FOLDER_NAME)
     period_folder_id = _ensure_folder(drive, parent_id=calc_folder_id, name=_subfolder_name(plan))
@@ -643,32 +636,33 @@ def _force_spreadsheet_locale(*, sheets: Any, spreadsheet_id: str) -> None:
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _ensure_plan_tabs_and_grid(
     *,
-    sheets: Any,
+    sheets: SheetsResource,
     spreadsheet: Mapping[str, Any],
     spreadsheet_id: str,
     plan: SheetExportPlan,
     tab_titles: tuple[str, ...],
 ) -> dict[str, int]:
     sheet_id_by_tab: dict[str, int] = {}
-    for sheet in spreadsheet.get("sheets", []):
-        props = sheet.get("properties") or {}
-        sheet_id_by_tab[str(props.get("title", ""))] = int(props.get("sheetId", 0))
+    for sheet in str_keyed_rows(spreadsheet, "sheets"):
+        props = str_keyed_mapping(sheet.get("properties"))
+        sheet_id_by_tab[str(props.get("title", ""))] = _as_int(props.get("sheetId"))
 
     # Make sure every tab the engine expects actually exists. If the
     # spreadsheet predates a new tab, add it.
     missing_tabs = [tab for tab in tab_titles if tab not in sheet_id_by_tab]
     if missing_tabs:
-        add_sheet_requests = [{"addSheet": {"properties": {"title": tab}}} for tab in missing_tabs]
+        add_sheet_requests: list[Request] = [{"addSheet": {"properties": {"title": tab}}} for tab in missing_tabs]
+        add_sheet_body: BatchUpdateSpreadsheetRequest = {"requests": add_sheet_requests}
         result = execute_request(
             sheets.spreadsheets().batchUpdate(
                 spreadsheetId=spreadsheet_id,
-                body={"requests": add_sheet_requests},
+                body=add_sheet_body,
             ),
             action="sheets.spreadsheets.batchUpdate.add_missing_tabs",
         )
-        for reply in result.get("replies", []):
-            added = reply.get("addSheet", {}).get("properties") or {}
-            sheet_id_by_tab[str(added.get("title", ""))] = int(added.get("sheetId", 0))
+        for reply in str_keyed_rows(result, "replies"):
+            added = str_keyed_mapping(str_keyed_mapping(reply.get("addSheet")).get("properties"))
+            sheet_id_by_tab[str(added.get("title", ""))] = _as_int(added.get("sheetId"))
 
     # Resize each tab so the plan fits inside the grid. Sheets'
     # default grid is 1000 rows x 26 columns; large modelos (e.g.
@@ -676,12 +670,13 @@ def _ensure_plan_tabs_and_grid(
     # the first cell write. We compute the maximum row + column
     # each tab will receive in the upcoming batchUpdate and grow
     # the grid in one structural request before any value write.
-    resize_requests = _build_grid_resize_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+    resize_requests = build_grid_resize_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
     if resize_requests:
+        resize_body: BatchUpdateSpreadsheetRequest = {"requests": resize_requests}
         execute_request(
             sheets.spreadsheets().batchUpdate(
                 spreadsheetId=spreadsheet_id,
-                body={"requests": resize_requests},
+                body=resize_body,
             ),
             action="sheets.spreadsheets.batchUpdate.resize_grid",
         )
@@ -703,23 +698,32 @@ class _OccupiedAddressRange:
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets JSON response body.
+def _as_int(value: object) -> int:
+    """Return ``value`` as an ``int``, treating an absent or non-numeric value as 0.
+
+    Sheets omits a count field rather than sending zero, and the two are the
+    same thing for a grid dimension: nothing has been allocated yet.
+    """
+    return value if isinstance(value, int) else 0
+
+
 def _grid_by_tab(spreadsheet: Mapping[str, Any]) -> dict[str, tuple[int, int]]:
     """Map each existing tab title to its ``(rowCount, columnCount)`` grid."""
     grid: dict[str, tuple[int, int]] = {}
-    for sheet in spreadsheet.get("sheets", []):
-        props = sheet.get("properties") or {}
+    for sheet in str_keyed_rows(spreadsheet, "sheets"):
+        props = str_keyed_mapping(sheet.get("properties"))
         title = str(props.get("title", ""))
         if title not in _TAB_TITLES:
             continue
-        grid_props = props.get("gridProperties") or {}
-        grid[title] = (int(grid_props.get("rowCount", 0)), int(grid_props.get("columnCount", 0)))
+        grid_props = str_keyed_mapping(props.get("gridProperties"))
+        grid[title] = (_as_int(grid_props.get("rowCount")), _as_int(grid_props.get("columnCount")))
     return grid
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _occupied_addresses(
     *,
-    sheets: Any,
+    sheets: SheetsResource,
     spreadsheet_id: str,
     grid_by_tab: Mapping[str, tuple[int, int]],
 ) -> frozenset[str]:
@@ -739,7 +743,7 @@ def _occupied_addresses(
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _current_cell_values(
     *,
-    sheets: Any,
+    sheets: SheetsResource,
     spreadsheet_id: str,
     grid_by_tab: Mapping[str, tuple[int, int]],
 ) -> dict[str, Any]:
@@ -781,7 +785,7 @@ def _occupied_address_ranges(
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
-def _occupied_addresses_from_response(
+def occupied_addresses_from_response(
     ranges: tuple[_OccupiedAddressRange, ...],
     response: Mapping[str, Any],
 ) -> frozenset[str]:
@@ -796,7 +800,7 @@ def _current_cell_values_from_response(
 ) -> dict[str, Any]:
     """Combine aligned response blocks into one address-to-value mapping.
 
-    Companion to :func:`_occupied_addresses_from_response`, which is now a
+    Companion to :func:`occupied_addresses_from_response`, which is now a
     thin ``frozenset`` view of these same keys. An export preview needs the
     VALUES, not merely which addresses are occupied, to answer whether a
     write would actually change anything.
@@ -808,7 +812,7 @@ def _current_cell_values_from_response(
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
-def _occupied_addresses_in_range(tab: TabName, value_range: Mapping[str, Any]) -> frozenset[str]:
+def occupied_addresses_in_range(tab: TabName, value_range: Mapping[str, Any]) -> frozenset[str]:
     """Return non-empty cells from one A1-anchored managed-tab response block."""
     return frozenset(_current_cell_values_in_range(tab, value_range))
 
@@ -817,7 +821,7 @@ def _occupied_addresses_in_range(tab: TabName, value_range: Mapping[str, Any]) -
 def _current_cell_values_in_range(tab: TabName, value_range: Mapping[str, Any]) -> dict[str, Any]:
     """Return one A1-anchored managed-tab response block's non-blank cells, keyed by address.
 
-    Shares its read-range derivation with :func:`_occupied_addresses_in_range`,
+    Shares its read-range derivation with :func:`occupied_addresses_in_range`,
     which is now a thin ``frozenset`` projection of this function's keys: the
     two walk the same response shape and must never drift on what counts as
     occupied.
@@ -832,7 +836,7 @@ def _current_cell_values_in_range(tab: TabName, value_range: Mapping[str, Any]) 
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
-def _plan_value_payload(plan: SheetExportPlan) -> list[dict[str, Any]]:
+def _plan_value_payload(plan: SheetExportPlan) -> list[ValueRange]:
     """Assemble every non-formula value entry the plan would write.
 
     Shared by :func:`_write_plan_values` (the real write) and
@@ -840,17 +844,17 @@ def _plan_value_payload(plan: SheetExportPlan) -> list[dict[str, Any]]:
     disagree about what counts as a plan's literal value content.
     """
     return (
-        _build_value_data(plan.value_cells)
-        + _build_guide_value_data(plan)
-        + _build_row_set_header_data(plan.row_sets)
-        + _build_evidence_value_data(plan)
+        build_value_data(plan.value_cells)
+        + build_guide_value_data(plan)
+        + build_row_set_header_data(plan.row_sets)
+        + build_evidence_value_data(plan)
     )
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _write_plan_values(
     *,
-    sheets: Any,
+    sheets: SheetsResource,
     spreadsheet_id: str,
     plan: SheetExportPlan,
 ) -> frozenset[str]:
@@ -862,16 +866,14 @@ def _write_plan_values(
     """
     # Write values and formulas as USER_ENTERED so Sheets parses
     # formula strings starting with "=".
-    data = _plan_value_payload(plan) + _build_formula_data(plan.formula_cells)
+    data = _plan_value_payload(plan) + build_formula_data(plan.formula_cells)
+    values_body: BatchUpdateValuesRequest = {"valueInputOption": "USER_ENTERED", "data": data}
     execute_request(
         sheets.spreadsheets()
         .values()
         .batchUpdate(
             spreadsheetId=spreadsheet_id,
-            body={
-                "valueInputOption": "USER_ENTERED",
-                "data": data,
-            },
+            body=values_body,
         ),
         action="sheets.spreadsheets.values.batchUpdate",
     )
@@ -881,7 +883,7 @@ def _write_plan_values(
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _clear_stale_addresses(
     *,
-    sheets: Any,
+    sheets: SheetsResource,
     spreadsheet_id: str,
     occupied: frozenset[str],
     written: frozenset[str],
@@ -904,7 +906,7 @@ def _clear_stale_addresses(
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _apply_plan_structural_requests(
     *,
-    sheets: Any,
+    sheets: SheetsResource,
     spreadsheet_id: str,
     spreadsheet: Mapping[str, Any],
     plan: SheetExportPlan,
@@ -918,24 +920,25 @@ def _apply_plan_structural_requests(
     structural_requests = (
         cleanup_requests
         + _build_developer_metadata_requests(plan)
-        + _build_protected_range_requests(plan.protected_ranges, sheet_id_by_tab=sheet_id_by_tab)
-        + _build_cell_constraint_requests(plan.cell_constraints, sheet_id_by_tab=sheet_id_by_tab)
+        + build_protected_range_requests(plan.protected_ranges, sheet_id_by_tab=sheet_id_by_tab)
+        + build_cell_constraint_requests(plan.cell_constraints, sheet_id_by_tab=sheet_id_by_tab)
         + _build_cell_note_requests(plan.value_cells, sheet_id_by_tab=sheet_id_by_tab)
         # Base font first, then role styling (fills/bold/colour) wins on overlap,
         # then number formats, emphasis, widths, freezes, filters.
-        + _build_base_font_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
-        + _build_styled_range_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
-        + _build_number_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
-        + _build_emphasis_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
-        + _build_column_width_requests(plan.column_widths, sheet_id_by_tab=sheet_id_by_tab)
-        + _build_frozen_view_requests(plan.frozen_views, sheet_id_by_tab=sheet_id_by_tab)
-        + _build_auto_filter_requests(plan.auto_filters, sheet_id_by_tab=sheet_id_by_tab)
+        + build_base_font_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+        + build_styled_range_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+        + build_number_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+        + build_emphasis_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
+        + build_column_width_requests(plan.column_widths, sheet_id_by_tab=sheet_id_by_tab)
+        + build_frozen_view_requests(plan.frozen_views, sheet_id_by_tab=sheet_id_by_tab)
+        + build_auto_filter_requests(plan.auto_filters, sheet_id_by_tab=sheet_id_by_tab)
     )
     if structural_requests:
+        structural_body: BatchUpdateSpreadsheetRequest = {"requests": structural_requests}
         execute_request(
             sheets.spreadsheets().batchUpdate(
                 spreadsheetId=spreadsheet_id,
-                body={"requests": structural_requests},
+                body=structural_body,
             ),
             action="sheets.spreadsheets.batchUpdate.structural",
         )
@@ -944,7 +947,7 @@ def _apply_plan_structural_requests(
 def apply_export_plan(
     plan: SheetExportPlan,
     *,
-    credentials: object,
+    credentials: Credentials,
     root_folder_id: str,
 ) -> CalcSheetsApplyResult:
     """Materialise a :class:`~application.storage.calc_sheets.SheetExportPlan` as a Google Sheets workbook.
@@ -992,8 +995,16 @@ def apply_export_plan(
         tab_titles=tab_titles,
     )
 
-    spreadsheet_id = spreadsheet["spreadsheetId"]
-    spreadsheet_url = spreadsheet["spreadsheetUrl"]
+    spreadsheet_id = spreadsheet.get("spreadsheetId")
+    spreadsheet_url = spreadsheet.get("spreadsheetUrl")
+    if not spreadsheet_id or not spreadsheet_url:
+        raise OutboundStorageValidationError(
+            "Sheets get returned no spreadsheet identity",
+            context={
+                "spreadsheet_id_present": str(bool(spreadsheet_id)),
+                "spreadsheet_url_present": str(bool(spreadsheet_url)),
+            },
+        )
     _force_spreadsheet_locale(sheets=sheets, spreadsheet_id=spreadsheet_id)
     sheet_id_by_tab = _ensure_plan_tabs_and_grid(
         sheets=sheets,
@@ -1060,7 +1071,7 @@ def _new_target_export_preview(plan: SheetExportPlan) -> CalcSheetsExportPreview
 def preview_export_plan(
     plan: SheetExportPlan,
     *,
-    credentials: object,
+    credentials: Credentials,
     root_folder_id: str,
 ) -> CalcSheetsExportPreview:
     """Preview what :func:`apply_export_plan` would clear and (re)write, writing nothing.
@@ -1140,7 +1151,7 @@ def preview_export_plan(
     occupied = frozenset(current_values)
 
     value_payload = _plan_value_payload(plan)
-    formula_payload = _build_formula_data(plan.formula_cells)
+    formula_payload = build_formula_data(plan.formula_cells)
     written = payload_written_addresses(value_payload + formula_payload)
     ranges_to_clear = stale_addresses(occupied=occupied, written=written)
 

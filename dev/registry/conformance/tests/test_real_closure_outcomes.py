@@ -29,7 +29,6 @@ from cadrumo.application.filing.producer_snapshot import (
 from cadrumo.application.registry.filing_export_coverage import compose_filing_export_coverage
 from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
 from cadrumo.application.registry.source_connectivity_coverage import compose_source_connectivity_coverage
-from cadrumo.application.registry.temporal_coverage import compose_temporal_coverage
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.payment_election import PaymentElection
 from cadrumo.core.period import Period
@@ -51,6 +50,7 @@ from ...filing_export_proof import (
     FilingExportOfficialOffsetProbe,
     LiveFilingExportProofAuthority,
 )
+from ...temporal_coverage import compose_temporal_coverage
 from ..closure import build_registry_closure_report, load_registry_closure_report
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -176,7 +176,7 @@ def test_real_grade_scope_row_guards_bite_both_participation_mutations() -> None
     assert below_grade.filing_export is not None
     assert filing_grade.filing_export is not None
 
-    below_grade_payload = below_grade.model_dump(mode="python", exclude={"refusals", "predicate_outcome"})
+    below_grade_payload = _declared_row_fields(below_grade)
     below_grade_payload["filing_export"] = filing_grade.filing_export.model_dump(mode="python")
     below_grade_payload["filing_export"].update(
         modelo=below_grade.modelo,
@@ -185,7 +185,7 @@ def test_real_grade_scope_row_guards_bite_both_participation_mutations() -> None
     with pytest.raises(ValidationError, match="below-filing temporal coverage requires"):
         below_grade.__class__.model_validate(below_grade_payload)
 
-    filing_grade_payload = filing_grade.model_dump(mode="python", exclude={"refusals", "predicate_outcome"})
+    filing_grade_payload = _declared_row_fields(filing_grade)
     filing_grade_payload["filing_export"] = below_grade.filing_export.model_dump(mode="python")
     filing_grade_payload["filing_export"].update(
         modelo=filing_grade.modelo,
@@ -256,6 +256,19 @@ def test_real_loader_reports_cross_limb_disagreement_from_divergent_authority_ca
         "cross_limb_disagreement",
     )
     assert row.predicate_outcome == "refused"
+
+
+def _declared_row_fields(row) -> dict[str, object]:
+    """Project a real closure row through its declared fields only.
+
+    Every closure projection - the row's own refusals and predicate outcome and
+    the temporal summary's status, failure code, failure detail, and refused
+    coordinates - is a computed output of the strict row contract, never an
+    input to it.  Re-validating a dumped row would therefore re-present those
+    projections as extra fields; reading the declared fields keeps the mutation
+    honest and leaves the row guard itself as the only rejecting authority.
+    """
+    return {name: getattr(row, name) for name in type(row).model_fields}
 
 
 def _compose_report(*, authority, census):

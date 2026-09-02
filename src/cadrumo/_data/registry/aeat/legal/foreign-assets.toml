@@ -190,7 +190,7 @@ applies_from = 2013-02-01
 # one year; state the latter explicitly so consumers need not infer it.
 period_selector = { year_from = 2012, periods = ["0A"] }
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/modelo_720.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-720-procedure"]
 evidence_tier = "official_source_guidance"
@@ -202,7 +202,7 @@ bytes = 40144
 retrieved_at = 2026-05-06
 applies_from = 2013-02-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI34.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-720-2013-form"]
 evidence_tier = "layout_authority"
@@ -215,4 +215,4 @@ retrieved_at = 2026-05-06
 published_at = 2013-01-30
 applies_from = 2013-02-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-954"
-review_status = "reviewed"
+review_status = "pending_review"

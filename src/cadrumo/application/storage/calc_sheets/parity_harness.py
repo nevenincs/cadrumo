@@ -46,6 +46,7 @@ if TYPE_CHECKING:
     # (pyrefly) only follow the project-local `search_path` and never see
     # site-packages stubs, so the typed forms below collapse to `Any` for
     # those tools while still giving pyrefly / ty / mypy the real shapes.
+    from google.auth.credentials import Credentials
     SheetsResource = Any
     BatchUpdateValuesRequest = Any
     ValueRange = Any
@@ -90,7 +91,7 @@ class _SheetsDiscoveryBuilder(Protocol):
         service_name: Literal["sheets"],
         version: Literal["v4"],
         *,
-        credentials: object,
+        credentials: Credentials,
         cache_discovery: bool,
     ) -> SheetsResource: ...
 
@@ -385,7 +386,7 @@ def verify_modelo_parity(
     snapshot: RegistrySnapshot,
     scenario: OperatorInputScenario,
     *,
-    credentials: object,
+    credentials: Credentials,
     root_folder_id: str,
 ) -> ParityReport:
     """Run the full three-way parity verification for one modelo+period.

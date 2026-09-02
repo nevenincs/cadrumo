@@ -27,8 +27,9 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
-from typing import NoReturn
+from typing import NoReturn, Protocol, cast
 
 from ....core.config import SecretStoreBackend, load_settings
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
@@ -404,6 +405,23 @@ def _raise_local_server_error(exc: Exception) -> NoReturn:
     ) from exc
 
 
+class _IdTokenVerifier(Protocol):
+    """The `google.oauth2.id_token` surface this adapter calls.
+
+    The module ships `py.typed` but leaves `verify_oauth2_token` unannotated,
+    so calling it through the module object yields an unknown payload. The
+    verified claim set is a JSON object; callers narrow each claim they read.
+    """
+
+    def verify_oauth2_token(
+        self,
+        id_token: str | bytes,
+        request: object,
+        audience: str | None = ...,
+        clock_skew_in_seconds: int = ...,
+    ) -> Mapping[str, object]: ...
+
+
 def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
     """Verify the ID token and return the ``email`` claim.
 
@@ -459,7 +477,9 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
             ),
         ) from exc
     try:
-        payload = id_token_module.verify_oauth2_token(id_token_jwt, auth_requests.Request(), audience)
+        # CAST-RATIONALE-thirdparty: `verify_oauth2_token` is unannotated upstream.
+        verifier = cast(_IdTokenVerifier, id_token_module)
+        payload = verifier.verify_oauth2_token(id_token_jwt, auth_requests.Request(), audience)
     except ValueError as exc:
         raise GoogleAuthNetworkError(
             f"id_token verification failed: {exc}",

@@ -59,6 +59,7 @@ from pydantic import BeforeValidator, Field, field_validator, model_validator
 from ....core.casilla_id import CasillaId
 from ....core.remote_authority import first_aeat_host
 from ....core.unit_proportion import UNIT_PROPORTION_MAX, UNIT_PROPORTION_MIN
+from .condition_mode import ConditionMode, ConditionModeField
 from .errors import RegistryValidationError
 from .ids import (
     CrossReferenceId,
@@ -187,7 +188,7 @@ class LiveCrossReferenceDecision(RegistryModel):
     # the cross-reference is unconditionally applicable. Used to gate
     # optional surfaces (GROI / IXVI for ROI-enrolled subjects, OSS
     # bindings for OSS-enrolled subjects, etc.).
-    applicability_condition_mode: Literal["all", "any"] = "all"
+    applicability_condition_mode: ConditionModeField = ConditionMode.ALL
     applicability_predicates: tuple[ProfilePredicateDefinition, ...] = ()
 
     @field_validator("oracle_id")
@@ -217,7 +218,7 @@ class LiveCrossReferenceDecision(RegistryModel):
         self._validate_synthetic_data_constraints()
         for method in self.allowed_methods:
             self._validate_allowed_method(method)
-        if self.applicability_condition_mode == "any" and not self.applicability_predicates:
+        if self.applicability_condition_mode is ConditionMode.ANY and not self.applicability_predicates:
             raise RegistryValidationError(f"cross-reference {self.id!r} any-mode requires applicability predicates")
         return self
 

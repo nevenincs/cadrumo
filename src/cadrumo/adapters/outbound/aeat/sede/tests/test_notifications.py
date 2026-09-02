@@ -25,7 +25,7 @@ from ......tests.aeat_literal_fixtures import (
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
 from ..errors import SedeNavigationError
 from ..notifications import (
-    _READ_GUARD_POLICY,
+    READ_GUARD_POLICY,
     _navigate_and_parse,
     _notifications_landing_url,
     _recorded_landing_url,
@@ -275,9 +275,9 @@ class TestNotificationsExactReadPaths:
         query = urlsplit(_AEAT.sede_paths.notifications_query).path
         detail = urlsplit(_AEAT.sede_paths.notifications_detail).path
 
-        assert _READ_GUARD_POLICY.allowed_read_paths == (summary, query, detail)
-        assert _READ_GUARD_POLICY.allowed_read_post_paths == (detail,)
-        assert set(_READ_GUARD_POLICY.allowed_read_post_paths).issubset(_READ_GUARD_POLICY.allowed_read_paths)
+        assert READ_GUARD_POLICY.allowed_read_paths == (summary, query, detail)
+        assert READ_GUARD_POLICY.allowed_read_post_paths == (detail,)
+        assert set(READ_GUARD_POLICY.allowed_read_post_paths).issubset(READ_GUARD_POLICY.allowed_read_paths)
 
     @pytest.mark.parametrize("method", ("GET", "HEAD", "OPTIONS", "POST"))
     def test_unknown_same_host_path_is_refused_for_every_http_method(self, method: str) -> None:
@@ -285,7 +285,7 @@ class TestNotificationsExactReadPaths:
 
         with pytest.raises(RegistryValidationError):
             assert_remote_operation_allowed(
-                _READ_GUARD_POLICY,
+                READ_GUARD_POLICY,
                 RemoteOperation(kind="http", method=method, url=AnyUrl(unknown)),
             )
 
@@ -583,13 +583,13 @@ class TestNotificationContentIsGatedOnAlreadyRead:
     def test_the_post_allowance_is_scoped_to_the_detail_endpoint_alone(self) -> None:
         """The transport allowance must not widen beyond the one endpoint."""
         from ......core.config import Settings
-        from ..notifications import _READ_GUARD_POLICY
+        from ..notifications import READ_GUARD_POLICY
 
         detail = Settings.external_constants().aeat.sede_paths.notifications_detail
 
-        assert _READ_GUARD_POLICY.allowed_read_paths == (
+        assert READ_GUARD_POLICY.allowed_read_paths == (
             urlsplit(Settings.external_constants().aeat.sede_paths.notifications_summary).path,
             urlsplit(Settings.external_constants().aeat.sede_paths.notifications_query).path,
             urlsplit(detail).path,
         )
-        assert _READ_GUARD_POLICY.allowed_read_post_paths == (urlsplit(detail).path,)
+        assert READ_GUARD_POLICY.allowed_read_post_paths == (urlsplit(detail).path,)

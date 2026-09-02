@@ -7,7 +7,7 @@ source_refs = ["aeat-dr-322-2026"]
 id = "modelo-322-envelope-header"
 record_type = "envelope_header"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 

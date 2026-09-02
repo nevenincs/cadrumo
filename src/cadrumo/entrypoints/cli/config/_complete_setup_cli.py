@@ -62,11 +62,11 @@ def profile_complete_setup(ctx: typer.Context) -> None:
     from ....application.user_profile.profile_record_repository import ProfileRecordRepository
     from ....domain.user_profile.errors import ProfileSchemaValidationError
     from ....domain.user_profile.values import ProfileSetupState
-    from .._common import _no_active_profile_refusal
+    from .._common import no_active_profile_refusal
 
     profile_id = resolve_active_bucket_id()
     if profile_id is None:
-        raise _no_active_profile_refusal()
+        raise no_active_profile_refusal()
 
     profiles = ProfileRecordRepository.for_current_session(profile_id)
     current = profiles.load(profile_id)

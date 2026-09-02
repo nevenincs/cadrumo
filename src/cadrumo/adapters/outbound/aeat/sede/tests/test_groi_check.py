@@ -30,8 +30,8 @@ from ......tests.aeat_literal_fixtures import (
 )
 from ..errors import SedeNavigationError
 from ..groi_check import (
-    _READ_GUARD_POLICY,
     DEFAULT_GROI_TIMEOUT_MS,
+    READ_GUARD_POLICY,
     GroiNifVerdict,
     GroiResult,
     GroiSedeDriver,
@@ -227,7 +227,7 @@ def test_groi_read_guard_admits_sibling_load_balancer_host() -> None:
     aeat = Settings.external_constants().aeat
     drifted = f"{aeat.domains.www12}{urlsplit(aeat.oracles.groi_check).path}"
     result = assert_remote_operation_allowed(
-        _READ_GUARD_POLICY,
+        READ_GUARD_POLICY,
         RemoteOperation(kind="http", method="GET", url=AnyUrl(drifted)),
     )
     assert result.decision == "allowed"
@@ -237,7 +237,7 @@ def test_groi_read_guard_refuses_non_aeat_host() -> None:
     """Widening to the AEAT apex suffix must not admit an off-AEAT host."""
     with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
         assert_remote_operation_allowed(
-            _READ_GUARD_POLICY,
+            READ_GUARD_POLICY,
             RemoteOperation(kind="http", method="GET", url=AnyUrl("https://attacker.example/read/path")),
         )
 

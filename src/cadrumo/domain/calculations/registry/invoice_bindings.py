@@ -5,9 +5,10 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from decimal import Decimal
-from typing import Literal
+from enum import StrEnum
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregationOp, BindingSourceKind
 from ....core.country_code import CountryCodeAlpha2
@@ -38,8 +39,32 @@ from .errors import RegistryValidationError
 from .ids import BindingId
 from .quantity_screen_enrolment import independent_quantity_facts
 from .schema import DataBindingDefinition, ModeloRevision
+from .schema_base import coerce_enum_member
 
-_RectificationScope = Literal["only_rectifications", "exclude_rectifications", "any"]
+
+class RectificationScope(StrEnum):
+    """Which rectification rows an invoice or counterpart selector admits."""
+
+    ONLY_RECTIFICATIONS = "only_rectifications"
+    """Rectification rows alone."""
+
+    EXCLUDE_RECTIFICATIONS = "exclude_rectifications"
+    """Every row except rectifications."""
+
+    ANY = "any"
+    """No rectification filter; the default when a selector is silent."""
+
+
+RectificationScopeField = Annotated[
+    RectificationScope, BeforeValidator(coerce_enum_member(RectificationScope))
+]
+"""Registry ``rectification_scope`` token hydrated into a member.
+
+Registry schema models validate under ``strict=True``, which refuses a bare TOML
+string for an enum-typed field, so the token is coerced at the boundary.
+"""
+
+
 _InvoiceGrouping = Literal["operator_clave", "operator_clave_period", "contraparte_clave"]
 _InvoiceRowField = Literal[
     "party_tax_id",
@@ -167,7 +192,7 @@ class InvoiceObservationRequirement(BaseModel):
 
     binding_ids: tuple[BindingId, ...] = Field(min_length=1)
     claves: tuple[str, ...] = ()
-    rectification_scope: _RectificationScope = "any"
+    rectification_scope: RectificationScopeField = RectificationScope.ANY
     iva_regime: str | None = None
 
     _values_unique = field_validator("binding_ids", "claves")(unique_tuple("invoice requirement tuple"))
@@ -180,7 +205,7 @@ class _InvoiceSelector(BaseModel):
 
     fact: _InvoiceFact
     claves: tuple[str, ...] = ()
-    rectification_scope: _RectificationScope = "any"
+    rectification_scope: RectificationScopeField = RectificationScope.ANY
     iva_regime: str | None = Field(default=None, max_length=64)
     row_field: _InvoiceRowField | None = None
     grouping: _InvoiceGrouping | None = None
@@ -302,7 +327,7 @@ def invoice_binding_requirements(
         each distinct invoice-fact slice the revision requires.
     """
     grouped: dict[
-        tuple[tuple[str, ...], _RectificationScope, str | None],
+        tuple[tuple[str, ...], RectificationScope, str | None],
         set[BindingId],
     ] = {}
     for binding in revision.bindings:
@@ -590,7 +615,7 @@ def resolve_invoice_family_row_values(
     """
     resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     cohorts: dict[
-        tuple[object, _InvoiceGrouping, _RectificationScope, tuple[str, ...], str | None],
+        tuple[object, _InvoiceGrouping, RectificationScope, tuple[str, ...], str | None],
         list[tuple[DataBindingDefinition, _InvoiceSelector]],
     ] = {}
     for binding in revision.bindings:
@@ -887,7 +912,6 @@ def _aggregate_invoice_binding(
 
 
 InvoiceSelector = _InvoiceSelector
-RectificationScope = _RectificationScope
 invoice_selector = _invoice_selector
 
 

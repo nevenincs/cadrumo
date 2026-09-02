@@ -5,7 +5,7 @@ id = "modelo-390-2025-fichero-boe"
 id = "modelo-390-page-02b"
 record_type = "page_02b"
 order = 3
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 [[revisions."2025".export_layouts.records.fields]]
@@ -256,7 +256,7 @@ source_refs = ["aeat-dr-390-2025"]
 id = "modelo-390-page-03"
 record_type = "page_03"
 order = 4
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 [[revisions."2025".export_layouts.records.fields]]
@@ -369,7 +369,7 @@ source_refs = ["aeat-dr-390-2025"]
 id = "modelo-390-page-04"
 record_type = "page_04"
 order = 5
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 [[revisions."2025".export_layouts.records.fields]]

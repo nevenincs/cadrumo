@@ -30,14 +30,14 @@ from .....core.time.clock import now
 # of a Modelo 100 revision fails loudly if that check is unregistered, so
 # the M100 routing referential-integrity gate runs on this declarations path.
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
-from .._playwright import BrowserContext, Page, PlaywrightError
+from .._playwright import BrowserContext, Locator, Page, PlaywrightError
 from ._adapter_utils import assert_pdf_response as _assert_pdf_response
 from ._adapter_utils import assert_read_landing
 from ._adapter_utils import landed_origin as _landed_origin
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
 )
-from ._browser_constants import navigation_timeout_ms as _get_navigation_timeout_ms
+from ._browser_constants import navigation_timeout_ms as get_navigation_timeout_ms
 from .declarations_remote import assert_read_browser_action as _remote_assert_read_browser_action
 from .declarations_remote import assert_read_http as _remote_assert_read_http
 from .declarations_remote import extract_csv_from_url as _extract_csv_from_url
@@ -57,7 +57,7 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 
-_EXTERNAL = Settings.external_constants()
+EXTERNAL = Settings.external_constants()
 # The one numbered host still named in a live reader, and it is measured
 # rather than assumed. AEAT assigns the answering host per session, so a
 # named number is normally wrong -- the censal and IVA-wallet readers name
@@ -89,17 +89,17 @@ _EXTERNAL = Settings.external_constants()
 #
 # Recorded URLs do NOT use this constant. They name the host that actually
 # answered, because a recorded URL is a claim about where a read happened.
-_SEDE_BASE = _EXTERNAL.aeat.domains.www6
-_SEDE_HOST = urlsplit(_SEDE_BASE).netloc
-_AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
-_LISTING_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.declarations_listing}"
-_LISTING_PATH = _EXTERNAL.aeat.sede_paths.declarations_listing
-_COTEJO_QUERY_PATH = _EXTERNAL.aeat.sede_paths.cotejo_query
-_COTEJO_DOCUMENT_PATH = _EXTERNAL.aeat.sede_paths.cotejo_document
-_COTEJO_PATH_PREFIX = _EXTERNAL.aeat.sede_paths.cotejo_query
+SEDE_BASE = EXTERNAL.aeat.domains.www6
+_SEDE_HOST = urlsplit(SEDE_BASE).netloc
+_AEAT_HOST_SUFFIX = EXTERNAL.aeat.domains.host_suffix
+_LISTING_URL = f"{SEDE_BASE}{EXTERNAL.aeat.sede_paths.declarations_listing}"
+_LISTING_PATH = EXTERNAL.aeat.sede_paths.declarations_listing
+_COTEJO_QUERY_PATH = EXTERNAL.aeat.sede_paths.cotejo_query
+_COTEJO_DOCUMENT_PATH = EXTERNAL.aeat.sede_paths.cotejo_document
+COTEJO_PATH_PREFIX = EXTERNAL.aeat.sede_paths.cotejo_query
 
 
-def _origin_of(landed_url: str | None) -> str:
+def origin_of(landed_url: str | None) -> str:
     """Return the scheme and host a read actually landed on.
 
     AEAT load-balances an authenticated session across its numbered sede
@@ -139,30 +139,30 @@ def _origin_of(landed_url: str | None) -> str:
     return origin
 
 
-def _listing_url_for(origin: str, *, modelo: str, ejercicio: int) -> str:
+def listing_url_for(origin: str, *, modelo: str, ejercicio: int) -> str:
     """Return the declarations-listing URL for one query against ``origin``."""
     return f"{origin}{_LISTING_PATH}?MODELO={modelo}&EJERCICIO={ejercicio}"
 
 
-def _cotejo_view_url(origin: str, csv: str) -> str:
+def cotejo_view_url(origin: str, csv: str) -> str:
     """Return the cotejo view URL for ``csv`` against ``origin``."""
     return f"{origin}{_COTEJO_QUERY_PATH}?CSV={csv}"
 
 
-def _cotejo_document_url(origin: str, csv: str) -> str:
+def cotejo_document_url(origin: str, csv: str) -> str:
     """Return the cotejo document URL for ``csv`` against ``origin``."""
     return f"{origin}{_COTEJO_DOCUMENT_PATH}?CSV={csv}"
 
 
-def _get_form_interaction_timeout_ms() -> int:
+def get_form_interaction_timeout_ms() -> int:
     return load_settings().cadrumo_browser_form_interaction_timeout_ms
 
 
-def _get_buscar_settle_ms() -> int:
+def get_buscar_settle_ms() -> int:
     return load_settings().cadrumo_browser_buscar_settle_ms
 
 
-def _get_ver_click_timeout_ms() -> int:
+def get_ver_click_timeout_ms() -> int:
     return load_settings().cadrumo_browser_ver_click_timeout_ms
 
 
@@ -172,13 +172,13 @@ def _get_ver_click_timeout_ms() -> int:
 # from a sibling subdomain — a legitimate host-mapping drift, not a write.
 # The guard therefore admits any subdomain under the AEAT apex suffix while
 # success detection stays on the declarations listing/cotejo PATH prefix.
-_READ_GUARD_POLICY = RemoteStateGuardPolicy(
+READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-declarations-read",
     evidence_tier="official_source_guidance",
     classification="authenticated_read_surface",
     allowed_hosts=(_SEDE_HOST,),
     allowed_host_suffixes=(_AEAT_HOST_SUFFIX,),
-    allowed_browser_action_patterns=_EXTERNAL.aeat.live_safety.declarations_browser_action_patterns,
+    allowed_browser_action_patterns=EXTERNAL.aeat.live_safety.declarations_browser_action_patterns,
     synthetic_data_allowed=False,
     requires_authentication=True,
     requires_aeat_authorization=True,
@@ -189,13 +189,13 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
 # path of the configured cotejo query endpoint, which is the URL this module
 # builds its own document fetch from, so the allow-list and the fetch agree
 # by construction.
-_COTEJO_READ_PATH_PREFIXES: tuple[str, ...] = (urlsplit(_COTEJO_PATH_PREFIX).path,)
+_COTEJO_READ_PATH_PREFIXES: tuple[str, ...] = (urlsplit(COTEJO_PATH_PREFIX).path,)
 
 
 def assert_cotejo_read_landing(
     landing_url: str,
     *,
-    policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
+    policy: RemoteStateGuardPolicy = READ_GUARD_POLICY,
 ) -> None:
     """Refuse a justificante popup that did not land on the cotejo view.
 
@@ -221,10 +221,10 @@ def assert_cotejo_read_landing(
     )
 
 
-async def _capture_row_pdf_artefact(
+async def capture_row_pdf_artefact(
     *,
     context: BrowserContext,
-    row_locator,
+    row_locator: Locator,
     declaration: Declaracion,
     cell_index: int,
     kind: Literal["justificante_pdf", "declaration_pdf"],
@@ -232,9 +232,9 @@ async def _capture_row_pdf_artefact(
 ) -> tuple[FiledDeclaracionArtefact, bytes]:
     button = row_locator.locator(".z-listcell").nth(cell_index).locator(".z-button").first
     try:
-        async with context.expect_page(timeout=_get_ver_click_timeout_ms()) as new_page_info:
+        async with context.expect_page(timeout=get_ver_click_timeout_ms()) as new_page_info:
             _assert_read_browser_action("open-cotejo-pdf", policy=read_policy)
-            await button.click(timeout=_get_form_interaction_timeout_ms())
+            await button.click(timeout=get_form_interaction_timeout_ms())
         cotejo_page = await new_page_info.value
     except PlaywrightError as exc:
         raise SedeNavigationError(
@@ -242,7 +242,7 @@ async def _capture_row_pdf_artefact(
         ) from exc
 
     try:
-        await cotejo_page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=_get_navigation_timeout_ms())
+        await cotejo_page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=get_navigation_timeout_ms())
     except PlaywrightError as exc:
         raise SedeNavigationError(
             f"PDF artefact page did not settle for {declaration.expediente_id!r}: {exc}",
@@ -258,7 +258,7 @@ async def _capture_row_pdf_artefact(
     assert_cotejo_read_landing(cotejo_url, policy=read_policy)
 
     csv = _extract_csv_from_url(cotejo_url)
-    pdf_url = AnyHttpUrl(_cotejo_document_url(_origin_of(cotejo_url), csv))
+    pdf_url = AnyHttpUrl(cotejo_document_url(origin_of(cotejo_url), csv))
     _assert_read_http("GET", str(pdf_url), policy=read_policy)
     response = await context.request.get(str(pdf_url))
     content_type = response.headers.get("content-type", "")
@@ -282,11 +282,11 @@ async def _capture_row_pdf_artefact(
     )
 
 
-async def _capture_submitted_file_artefact(
+async def capture_submitted_file_artefact(
     *,
     context: BrowserContext,
     page: Page,
-    row_locator,
+    row_locator: Locator,
     declaration: Declaracion,
     cell_index: int,
     read_policy: RemoteStateGuardPolicy,
@@ -309,13 +309,13 @@ async def _capture_submitted_file_artefact(
     #     re-fetch): `download.url` is read, the transfer is best-effort
     #     cancelled, and the SAME URL is fetched again in-memory through the
     #     authenticated request context -- the identical shape
-    #     `_capture_row_pdf_artefact` uses for the cotejo PDF.
+    #     `capture_row_pdf_artefact` uses for the cotejo PDF.
     # (sensitive-financial-data-secure-storage-only)
     button = row_locator.locator(".z-listcell").nth(cell_index).locator(".z-button").first
     try:
-        async with page.expect_download(timeout=_get_ver_click_timeout_ms()) as download_info:
+        async with page.expect_download(timeout=get_ver_click_timeout_ms()) as download_info:
             _assert_read_browser_action("download-filed-data-file", policy=read_policy)
-            await button.click(timeout=_get_form_interaction_timeout_ms())
+            await button.click(timeout=get_form_interaction_timeout_ms())
         download = await download_info.value
     except PlaywrightError as exc:
         raise SedeNavigationError(
@@ -365,7 +365,7 @@ def _assert_read_http(
     method: str,
     url: str,
     *,
-    policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
+    policy: RemoteStateGuardPolicy = READ_GUARD_POLICY,
 ) -> None:
     _remote_assert_read_http(method, url, policy=policy)
 
@@ -373,6 +373,6 @@ def _assert_read_http(
 def _assert_read_browser_action(
     action: str,
     *,
-    policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
+    policy: RemoteStateGuardPolicy = READ_GUARD_POLICY,
 ) -> None:
     _remote_assert_read_browser_action(action, policy=policy)

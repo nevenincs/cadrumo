@@ -24,7 +24,7 @@ id = "modelo-390-2022-fichero-boe"
 id = "modelo-390-page-01"
 record_type = "page_01"
 order = 1
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 # 1. Sujeto pasivo - Registro de devolución mensual.

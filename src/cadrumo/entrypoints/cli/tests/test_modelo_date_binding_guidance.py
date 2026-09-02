@@ -6,7 +6,7 @@ import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.runtime_graph import revision_date_binding_ids
-from .._modelo_behavior_support import _date_binding_profile_requirements
+from .._modelo_behavior_support import date_binding_profile_requirements
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -18,7 +18,7 @@ def test_missing_date_binding_fallback_is_a_fact_not_a_cli_recovery() -> None:
     binding_id = "renta-2025-profile-taxpayer-birth-date"
     assert binding_id in revision_date_binding_ids(snapshot.revision)
 
-    fact = _date_binding_profile_requirements(None, binding_id)
+    fact = date_binding_profile_requirements(None, binding_id)
 
     assert fact == binding_id
     assert "aeat" not in fact.casefold()

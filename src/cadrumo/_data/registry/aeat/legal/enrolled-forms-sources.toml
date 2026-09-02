@@ -14,7 +14,7 @@ bytes = 45779
 retrieved_at = 2026-07-01
 applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI13.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-194-form-layout"]
 evidence_tier = "layout_authority"
@@ -27,7 +27,7 @@ retrieved_at = 2026-08-19
 published_at = 1999-11-19
 applies_from = 1999-11-20
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1999-22309"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-194-2019"]
 evidence_tier = "layout_authority"
@@ -58,7 +58,7 @@ retrieved_at = 2026-08-15
 applies_from = 2019-01-01
 applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR194_2016.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-194-2023"]
 evidence_tier = "layout_authority"
@@ -78,7 +78,7 @@ applies_from = 2023-01-01
 # classification and the close date is derived from the successor, not chosen.
 applies_to = 2023-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR_Mod_194-2023.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-194-2024"]
 evidence_tier = "layout_authority"
@@ -101,7 +101,7 @@ applies_from = 2024-01-01
 # the year is not baked into the record -- exactly as for "aeat-dr-188-2023", whose
 # header reads "Ejercicio 2023" and which is correctly left open here.
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_194_2024.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Modelo 188 sources — resumen anual retenciones capitalización/seguros de vida (Orden EHA/3377/2011).
 [sources."aeat-modelo-188-procedure"]
@@ -114,7 +114,7 @@ bytes = 47505
 retrieved_at = 2026-07-01
 applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI08.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-188-form-layout"]
 evidence_tier = "layout_authority"
@@ -127,7 +127,7 @@ retrieved_at = 2026-08-19
 published_at = 1999-11-20
 applies_from = 1999-11-21
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1999-22372"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-188-2023"]
 evidence_tier = "layout_authority"
@@ -140,7 +140,7 @@ bytes = 106418
 retrieved_at = 2026-07-21
 applies_from = 2023-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/DR_Mod_188_2023.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Modelo 187 sources — acciones/participaciones IIC + resumen anual retenciones (Orden EHA/3377/2011).
 [sources."aeat-modelo-187-procedure"]
@@ -153,7 +153,7 @@ bytes = 49522
 retrieved_at = 2026-07-01
 applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI07.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-187-form-layout"]
 evidence_tier = "layout_authority"
@@ -166,7 +166,7 @@ retrieved_at = 2026-08-19
 published_at = 2014-09-10
 applies_from = 2014-09-11
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-9225"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-187-2022"]
 evidence_tier = "layout_authority"
@@ -179,4 +179,4 @@ bytes = 345403
 retrieved_at = 2026-07-21
 applies_from = 2022-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_187_2022.pdf"
-review_status = "reviewed"
+review_status = "pending_review"

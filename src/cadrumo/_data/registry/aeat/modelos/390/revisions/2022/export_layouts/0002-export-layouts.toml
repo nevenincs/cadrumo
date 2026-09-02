@@ -13,7 +13,7 @@ source_refs = ["aeat-dr-390-2022"]
 id = "modelo-390-page-02"
 record_type = "page_02"
 order = 2
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 [[revisions."2022".export_layouts.records.fields]]
@@ -608,7 +608,7 @@ source_refs = ["aeat-dr-390-2022"]
 id = "modelo-390-page-03"
 record_type = "page_03"
 order = 3
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 [[revisions."2022".export_layouts.records.fields]]
@@ -713,7 +713,7 @@ source_refs = ["aeat-dr-390-2022"]
 id = "modelo-390-page-04"
 record_type = "page_04"
 order = 4
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 [[revisions."2022".export_layouts.records.fields]]
@@ -856,7 +856,7 @@ id = "modelo-390-page-05"
 record_type = "page_05"
 binding_record = "page_5"
 order = 5
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 [[revisions."2022".export_layouts.records.fields]]
@@ -947,7 +947,7 @@ source_refs = ["aeat-dr-390-2022"]
 id = "modelo-390-page-06"
 record_type = "page_06"
 order = 6
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 [[revisions."2022".export_layouts.records.fields]]

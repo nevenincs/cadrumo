@@ -12,7 +12,7 @@ retrieved_at = 2026-07-01
 published_at = 2026-06-09
 applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GH03.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-117-2019"]
 evidence_tier = "layout_authority"
@@ -25,7 +25,7 @@ bytes = 192512
 retrieved_at = 2026-07-21
 applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_17/DR117e17v14.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-117-form-text"]
 evidence_tier = "official_source_guidance"
@@ -38,7 +38,7 @@ retrieved_at = 2026-07-01
 published_at = 2018-12-29
 applies_from = 2019-01-01
 source_url = "https://www.boe.es/datos/imagenes/disp/2018/314/17997_6094.png"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-117-form-layout"]
 evidence_tier = "layout_authority"
@@ -51,7 +51,7 @@ retrieved_at = 2026-07-01
 published_at = 2007-11-29
 applies_from = 2008-04-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-126-procedure"]
 evidence_tier = "official_source_guidance"
@@ -64,7 +64,7 @@ retrieved_at = 2026-07-01
 published_at = 2026-02-13
 applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GH06.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-126-2020"]
 evidence_tier = "layout_authority"
@@ -77,7 +77,7 @@ bytes = 113671
 retrieved_at = 2026-07-21
 applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_20/126v01e2020_v1.07.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-126-2015-2019"]
 evidence_tier = "layout_authority"
@@ -91,7 +91,7 @@ retrieved_at = 2026-08-25
 applies_from = 2015-01-01
 applies_to = 2019-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR-126e16_v1.05.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-296-form-text"]
 evidence_tier = "official_source_guidance"
@@ -104,7 +104,7 @@ retrieved_at = 2026-08-19
 published_at = 2008-11-17
 applies_from = 2009-01-01
 source_url = "https://www.boe.es/datos/imagenes/disp/2008/277/18497_11330375_image3.png"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-194-form-text"]
 evidence_tier = "official_source_guidance"
@@ -117,7 +117,7 @@ retrieved_at = 2026-08-19
 published_at = 1999-11-19
 applies_from = 1999-11-20
 source_url = "https://www.boe.es/datos/imagenes/disp/1999/277/22309_7966157_image71.png"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-188-form-text"]
 evidence_tier = "official_source_guidance"
@@ -130,7 +130,7 @@ retrieved_at = 2026-08-19
 published_at = 1999-11-20
 applies_from = 1999-11-21
 source_url = "https://www.boe.es/datos/imagenes/disp/1999/278/22372_7962537_image24.png"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-187-form-text"]
 evidence_tier = "official_source_guidance"
@@ -143,7 +143,7 @@ retrieved_at = 2026-08-19
 published_at = 2014-09-10
 applies_from = 2014-09-11
 source_url = "https://www.boe.es/datos/imagenes/disp/2014/220/09225_4930.png"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-126-form-text"]
 evidence_tier = "official_source_guidance"
@@ -156,7 +156,7 @@ retrieved_at = 2026-07-01
 published_at = 2007-11-29
 applies_from = 2008-04-01
 source_url = "https://www.boe.es/datos/imagenes/disp/2007/286/20485_14167491_image7.png"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-126-form-layout"]
 evidence_tier = "layout_authority"
@@ -169,7 +169,7 @@ retrieved_at = 2026-07-01
 published_at = 2007-11-29
 applies_from = 2008-04-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-128-procedure"]
 evidence_tier = "official_source_guidance"
@@ -182,7 +182,7 @@ retrieved_at = 2026-07-01
 published_at = 2026-06-09
 applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GH07.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-128-2020"]
 evidence_tier = "layout_authority"
@@ -195,7 +195,7 @@ bytes = 112732
 retrieved_at = 2026-07-21
 applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_20/128v01e2020_v1.07.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-128-2015-2019"]
 evidence_tier = "layout_authority"
@@ -209,7 +209,7 @@ retrieved_at = 2026-08-25
 applies_from = 2015-01-01
 applies_to = 2019-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR-128e16_v1.05.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-128-form-text"]
 evidence_tier = "official_source_guidance"
@@ -222,7 +222,7 @@ retrieved_at = 2026-07-01
 published_at = 2007-11-29
 applies_from = 2008-04-01
 source_url = "https://www.boe.es/datos/imagenes/disp/2007/286/20485_14167491_image9.png"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-128-form-layout"]
 evidence_tier = "layout_authority"
@@ -235,7 +235,7 @@ retrieved_at = 2026-07-01
 published_at = 2007-11-29
 applies_from = 2008-04-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-231-procedure"]
 evidence_tier = "official_source_guidance"
@@ -247,7 +247,7 @@ bytes = 43557
 retrieved_at = 2026-07-01
 applies_from = 2016-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI41.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-231-base-order"]
 evidence_tier = "official_source_guidance"
@@ -260,7 +260,7 @@ retrieved_at = 2026-07-01
 published_at = 2016-12-30
 applies_from = 2016-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2016-12484"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-231-current-annex"]
 evidence_tier = "layout_authority"
@@ -273,7 +273,7 @@ retrieved_at = 2026-07-01
 published_at = 2020-12-31
 applies_from = 2021-01-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2020-17342"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-361-procedure"]
 evidence_tier = "official_source_guidance"
@@ -285,7 +285,7 @@ bytes = 24672
 retrieved_at = 2026-07-01
 applies_from = 2010-04-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GZ09.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-361-devolucion-solicitada"]
 evidence_tier = "official_source_guidance"
@@ -297,7 +297,7 @@ bytes = 8686
 retrieved_at = 2026-07-01
 applies_from = 2010-04-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/modelo-360-361/instrucciones-cumplimentar-modelo-361/3-devolucion-solicitada.html"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-361-lista-operaciones"]
 evidence_tier = "official_source_guidance"
@@ -309,7 +309,7 @@ bytes = 10812
 retrieved_at = 2026-07-01
 applies_from = 2010-04-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/modelo-360-361/instrucciones-cumplimentar-modelo-361/7-lista-operaciones.html"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-361-form"]
 evidence_tier = "official_source_guidance"
@@ -322,4 +322,4 @@ retrieved_at = 2026-05-05
 published_at = 2010-03-30
 applies_from = 2010-04-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210"
-review_status = "reviewed"
+review_status = "pending_review"

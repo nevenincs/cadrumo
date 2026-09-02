@@ -74,8 +74,8 @@ from .errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNav
 _SPANISH_AMOUNT_RE = compile(r"[-+]?\d{1,3}(?:\.\d{3})*,\d{2}|[-+]?\d+(?:[.,]\d+)?")
 logger = get_logger(__name__)
 
-_EXTERNAL = Settings.external_constants()
-_RENTA_WEB_OPEN_APP_HOST = urlsplit(_EXTERNAL.aeat.oracles.renta_web_open_app_template).netloc
+EXTERNAL = Settings.external_constants()
+_RENTA_WEB_OPEN_APP_HOST = urlsplit(EXTERNAL.aeat.oracles.renta_web_open_app_template).netloc
 
 # The OPEN simulator's own application directory, taken as the parent of the
 # configured app template path. Everything the driver reads is a page inside
@@ -87,22 +87,22 @@ _RENTA_WEB_OPEN_APP_HOST = urlsplit(_EXTERNAL.aeat.oracles.renta_web_open_app_te
 # ZK app -- would refuse the very page this driver exists to read. Per-surface
 # evidence is why the allow-list is a directory here and a servlet path there.
 _RENTA_WEB_OPEN_READ_PATH_PREFIXES: tuple[str, ...] = (
-    urlsplit(_EXTERNAL.aeat.oracles.renta_web_open_app_template).path.rsplit("/", 1)[0] + "/",
+    urlsplit(EXTERNAL.aeat.oracles.renta_web_open_app_template).path.rsplit("/", 1)[0] + "/",
 )
 
 # Local policy, declared the same way the GROI and NIF-IVA drivers declare
 # theirs. The oracle's own policy is supplied by its registry cross-reference
 # and is not reachable from this module; this one authorises nothing new, it
 # only gives the landing rule an authority to check the landed host against.
-_READ_GUARD_POLICY = RemoteStateGuardPolicy(
+READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-renta-web-open-direct-driver-read",
     evidence_tier="executable_parity_evidence",
     classification="open_simulator",
     allowed_hosts=(_RENTA_WEB_OPEN_APP_HOST,),
     # Widen to any subdomain under the AEAT apex so a www{n} load-balancer
     # dispatch is tolerated, not refused; the path allow-list is unchanged.
-    allowed_host_suffixes=(_EXTERNAL.aeat.domains.host_suffix,),
-    allowed_browser_action_patterns=_EXTERNAL.aeat.live_safety.renta_web_open_browser_action_patterns,
+    allowed_host_suffixes=(EXTERNAL.aeat.domains.host_suffix,),
+    allowed_browser_action_patterns=EXTERNAL.aeat.live_safety.renta_web_open_browser_action_patterns,
     synthetic_data_allowed=False,
     requires_authentication=False,
     requires_aeat_authorization=False,
@@ -137,7 +137,7 @@ def assert_renta_web_open_read_landing(landing_url: str) -> None:
     assert_read_landing(
         landing_url,
         surface="Renta WEB Open",
-        policy=_READ_GUARD_POLICY,
+        policy=READ_GUARD_POLICY,
         allowed_path_prefixes=_RENTA_WEB_OPEN_READ_PATH_PREFIXES,
     )
 
@@ -169,7 +169,7 @@ def assert_renta_web_open_app_url(app_url: str) -> None:
     """
     try:
         assert_remote_operation_allowed(
-            _READ_GUARD_POLICY,
+            READ_GUARD_POLICY,
             RemoteOperation(kind="http", method="GET", url=AnyUrl(app_url)),
         )
     except (RegistryValidationError, PydanticValidationError) as exc:
@@ -177,7 +177,7 @@ def assert_renta_web_open_app_url(app_url: str) -> None:
             f"Renta WEB Open payload app_url was refused before navigation: {exc}",
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             translated_message=tr("adapters.sede.errors.landing_off_policy"),
-            context={"app_url": app_url, "policy_id": _READ_GUARD_POLICY.id},
+            context={"app_url": app_url, "policy_id": READ_GUARD_POLICY.id},
         ) from exc
 
 

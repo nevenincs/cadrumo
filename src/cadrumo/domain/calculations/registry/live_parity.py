@@ -35,6 +35,7 @@ from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_valid
 from ....core.casilla_id import CasillaId
 from ....core.logging import get_logger
 from ....core.models import STRICT_FROZEN_CONFIG
+from .condition_mode import ConditionMode, ConditionModeField
 from .errors import RegistryValidationError
 from .external_grounding import BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH
 from .ids import CrossReferenceId, OracleId, RevisionId
@@ -518,7 +519,7 @@ def evaluate_cross_reference_applicability(
             matched.append(predicate.explanation)
         else:
             unmet.append(predicate.field)
-    applicable = not unmet if decision.applicability_condition_mode == "all" else bool(matched)
+    applicable = not unmet if decision.applicability_condition_mode is ConditionMode.ALL else bool(matched)
     return CrossReferenceApplicability(
         cross_reference_id=decision.id,
         applicable=applicable,
@@ -640,7 +641,7 @@ class CrossReferenceApplicabilityDeclaracion(_ParityModel):
     modelo_id: str = Field(min_length=1, max_length=128)
     revision_id: RevisionId
     cross_reference_id: CrossReferenceId
-    applicability_condition_mode: Literal["all", "any"]
+    applicability_condition_mode: ConditionModeField
     predicate_fields: tuple[str, ...]
 
 

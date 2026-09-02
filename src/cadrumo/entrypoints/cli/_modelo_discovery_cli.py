@@ -43,9 +43,15 @@ from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument
 from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from ...core.period import Period
 from ...core.tax_domain import TaxDomain
+from ...core.type_guards import is_object_collection
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from ...domain.calculations.registry.query_reports import ModeloListRow
+from ...domain.calculations.registry.query_reports import (
+    ModeloBindingQueryRow,
+    ModeloBindingsReport,
+    ModeloFormulasReport,
+    ModeloListRow,
+)
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.support_matrix import ModeloEntry
 from ...domain.user_profile.errors import ProfileNotFoundError
@@ -123,7 +129,11 @@ def guard_ceded_autonomic_modelo(modelo: str) -> None:
     raise CliRefusedBoundaryError(translated_message=locale_key, context={"modelo": modelo_code})
 
 
-def _run_query(call, *, bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]):
+def _run_query[QueryResultT](
+    call: Callable[[], QueryResultT],
+    *,
+    bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
+) -> QueryResultT:
     try:
         return call()
     except (ValueError, RegistrySnapshotError) as exc:
@@ -252,7 +262,7 @@ def _unresolved_profile_requirements(checklist: DataInventoryChecklist) -> str:
     )
 
 
-def _relation_input_guidance_lines(rows) -> tuple[str, ...]:
+def _relation_input_guidance_lines(rows: tuple[ModeloBindingQueryRow, ...]) -> tuple[str, ...]:
     """Registry-derived ``--relation`` guidance for relation-fed bindings.
 
     Every binding whose value is materialised by one or more registry
@@ -287,7 +297,7 @@ def _relation_input_guidance_lines(rows) -> tuple[str, ...]:
     return tuple(lines)
 
 
-def _profile_resolved_binding_ids(report, *, as_of: date | None) -> frozenset[str]:
+def _profile_resolved_binding_ids(report: ModeloBindingsReport, *, as_of: date | None) -> frozenset[str]:
     filing_year = report.filing_year
     if filing_year is None:
         return frozenset[str]()
@@ -311,7 +321,7 @@ def _profile_resolved_binding_ids(report, *, as_of: date | None) -> frozenset[st
 
 def _text_frozenset(value: object) -> frozenset[str]:
     """Validate the application binding-id collection at the CLI boundary."""
-    if not isinstance(value, (set, frozenset, tuple, list)):
+    if not is_object_collection(value):
         raise TypeError("binding-id projection must be a collection")
     values: set[str] = set()
     for item in value:
@@ -342,7 +352,7 @@ def _bindings_report_for_target(
 
 
 def _binding_list_rows_for_report(
-    report, *, missing: bool, as_of: date | None
+    report: ModeloBindingsReport, *, missing: bool, as_of: date | None
 ) -> tuple[list[BindingListRowPayload], list[str]]:
     rows = report.rows
     if missing:
@@ -469,7 +479,7 @@ def _require_binding_scope(*, modelo: str | None, year: int | None, period: str 
         raise typer.BadParameter(tr("cli.app.modelo.bindings.missing_required_options", options=", ".join(missing)))
 
 
-def _formula_lines(report, *, explain: bool) -> list[str]:
+def _formula_lines(report: ModeloFormulasReport, *, explain: bool) -> list[str]:
     if explain:
         return [
             "formula_id\ttarget_casilla_id\tinputs\tlegal_refs\tsource_refs",
@@ -830,7 +840,7 @@ def bindings_list(
             f"modelo {modelo!r} is not in the calculation registry. Accepted: {', '.join(known_codes)}."
         )
     targets = known_codes if modelo is None else (modelo,)
-    per_modelo_reports = []
+    per_modelo_reports: list[ModeloBindingsReport] = []
     for target in targets:
         try:
             report = _bindings_report_for_target(target, year=year, period=period, as_of=resolved_as_of, deps=deps)

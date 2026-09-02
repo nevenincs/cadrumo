@@ -103,7 +103,6 @@ if TYPE_CHECKING:
     from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from ...application.auth.catalogue import AuthProviderListing
     from ...application.modelo.work_lifecycle import ModeloWorkLifecycleContinuation
     from ...application.operator_actions.catalogue import ActionArgumentBindingSpecification
     from ...application.operator_actions.models import ActionArgumentBinding, ActionReference, PreconditionVerdict
@@ -885,7 +884,7 @@ def _no_active_profile_refusal() -> Exception:
 no_active_profile_refusal = _no_active_profile_refusal
 
 
-def _state() -> WorkflowState:
+def current_workflow_state() -> WorkflowState:
     from ...application.workflow.persistence import workflow_state_repository
     from ...core.bucket_pointer import resolve_active_bucket_id
 
@@ -897,17 +896,6 @@ def _state() -> WorkflowState:
     if resolve_active_bucket_id() is None:
         raise _no_active_profile_refusal()
     return workflow_state_repository().load()
-
-
-def _label_for(listing: AuthProviderListing) -> str:
-    return _translate(listing.label)
-
-
-def _translate(translatable: str) -> str:
-    """Render a str in the operator's preferred locale (Spanish first)."""
-    from ...core.i18n.render import tr
-
-    return tr(translatable)
 
 
 def resolve_optional_root(value: Path | None, default: Callable[[], Path]) -> Path:
@@ -942,7 +930,7 @@ def resolve_pull_year_range(
     return year_from, year_to
 
 
-def _profile_to_taxpayer(state: WorkflowState) -> TaxpayerProfile:
+def profile_to_taxpayer(state: WorkflowState) -> TaxpayerProfile:
     from ...application.user_profile.projections import projection_for_taxpayer
 
     record = state.active_profile_record()
@@ -951,12 +939,12 @@ def _profile_to_taxpayer(state: WorkflowState) -> TaxpayerProfile:
     return projection_for_taxpayer(record)
 
 
-def _declared_tax_id(record: UserProfileRecord | None) -> str:
+def declared_tax_id(record: UserProfileRecord | None) -> str:
     """Return the ``identity.tax_id`` fact declared on a :class:`UserProfileRecord`.
 
     Returns ``""`` when the record is absent or carries no such fact.
 
-    Deliberately NOT routed through :func:`_profile_to_taxpayer`. That projection
+    Deliberately NOT routed through :func:`profile_to_taxpayer`. That projection
     substitutes a synthetic placeholder NIF for an absent identity, which reads
     downstream as a declared value and cannot be told apart from one. A caller
     that compares the operator's identity against stored AEAT evidence needs the
@@ -971,10 +959,10 @@ def _declared_tax_id(record: UserProfileRecord | None) -> str:
 _TAX_ID_SELECTOR = "tax.id"
 
 
-def _filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
+def filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
     """Return the taxpayer projection for a FILING-grade command, or refuse.
 
-    :func:`_profile_to_taxpayer` substitutes a synthetic placeholder NIF when the
+    :func:`profile_to_taxpayer` substitutes a synthetic placeholder NIF when the
     operator has declared none, and that placeholder is checksum-valid, so it is
     indistinguishable downstream from a real declared identity. On a read-only
     surface that substitution is deliberate and load-bearing - the calendar must
@@ -984,7 +972,7 @@ def _filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
     their NIF would receive a file identifying them as somebody else.
 
     This is the filing boundary the two populations were missing. Read-only
-    callers keep using :func:`_profile_to_taxpayer` directly; every command that
+    callers keep using :func:`profile_to_taxpayer` directly; every command that
     writes or packages a declaration routes through here, so absence refuses
     once rather than at each call site.
     """
@@ -1002,7 +990,7 @@ def _filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
     from ...domain.calculations.registry.authority import bundled_authority as _bundled_authority
 
     verdict = inspect_filing_taxpayer_identity_precondition(
-        declared_tax_id=_declared_tax_id(record),
+        declared_tax_id=declared_tax_id(record),
         profile_name=record.profile_id if record is not None else None,
     )
     if verdict is not None:
@@ -1021,7 +1009,7 @@ def _filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
             ),
             verdict=verdict,
         )
-    return _profile_to_taxpayer(state)
+    return profile_to_taxpayer(state)
 
 
 # ---------------------------------------------------------------------
@@ -1033,7 +1021,7 @@ def active_bucket_id_or_refuse() -> str:
     """Return the active profile bucket id or raise the canonical no-active-profile refusal.
 
     Stateless single source for the cold-start bucket-id guard shared across
-    bucket-bound CLI command families. :func:`_active_bucket_id_or_bad`
+    bucket-bound CLI command families. :func:`active_bucket_id_or_bad`
     delegates here.
     """
     from ...core.bucket_pointer import require_active_bucket_id
@@ -1045,12 +1033,12 @@ def active_bucket_id_or_refuse() -> str:
         raise _no_active_profile_refusal() from exc
 
 
-def _active_bucket_id_or_bad(state: WorkflowState) -> str:
+def active_bucket_id_or_bad(state: WorkflowState) -> str:
     """Return the active profile bucket id or raise the CLI 'bad' error."""
     return active_bucket_id_or_refuse()
 
 
-def _tx_repo(state: WorkflowState) -> TransactionCatalogueRepository:
+def transaction_catalogue_repo(state: WorkflowState) -> TransactionCatalogueRepository:
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...application.workflow.active_profile import active_transaction_catalogue_repository
     from ...domain.transactions.errors import LedgerNoActiveBucketError
@@ -1075,21 +1063,21 @@ def _draft_repo(*, bucket_id: str | None = None) -> ModeloDraftRepository:
     return ModeloDraftRepository(bucket_id=bucket_id)
 
 
-def _load_transactions(state: WorkflowState) -> TransactionCatalogue:
-    return _tx_repo(state).load()
+def load_transactions(state: WorkflowState) -> TransactionCatalogue:
+    return transaction_catalogue_repo(state).load()
 
 
-def _load_invoices() -> InvoiceCatalogue:
+def load_invoices() -> InvoiceCatalogue:
     return _invoice_repo().load()
 
 
-def _load_drafts() -> tuple[ModeloDraft, ...]:
+def load_drafts() -> tuple[ModeloDraft, ...]:
     repo = _draft_repo()
     return tuple(repo.iter_drafts())
 
 
-def _draft_by_id(draft_id: str) -> ModeloDraft:
-    for draft in _load_drafts():
+def draft_by_id(draft_id: str) -> ModeloDraft:
+    for draft in load_drafts():
         if draft.draft_id == draft_id:
             return draft
     raise _bad(tr("cli.common.errors.draft_id_not_found", draft_id=draft_id))

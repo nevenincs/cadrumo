@@ -16,6 +16,7 @@ from ..application.operations.frontend_contracts import (
     OperationResponseRejectRequestV1,
     OperationReviewAvailableInteractionV1,
     OperationReviewProjectionRequestV1,
+    OperationReviewProjectionResultV1,
     OperationReviewProjectionSuccessV1,
 )
 from ..application.operations.models import OperationRequest
@@ -49,7 +50,9 @@ class CensalReviewedFrontendResult:
     projection: CensalReviewProjectionV1
 
 
-async def _observe(services, operation_id: str) -> OperationObservationSuccessV1:
+async def _observe(
+    services: OperationComposedServices, operation_id: str
+) -> OperationObservationSuccessV1:
     observed = await services.observation.observe(
         OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=_OBSERVATION_LIMIT)
     )
@@ -84,7 +87,9 @@ async def _run(
         pending = waiting.projection.pending_interaction
         if not isinstance(pending, OperationReviewAvailableInteractionV1):
             raise RuntimeError("censal operation did not publish its reviewed proposal")
-        projected = await composed.review.resolve(
+        # ``resolve`` is generic only in its return type, so the projection the
+        # caller expects cannot be inferred and is stated here.
+        projected: OperationReviewProjectionResultV1[CensalReviewProjectionV1] = await composed.review.resolve(
             OperationReviewProjectionRequestV1(reference=pending.review_reference)
         )
         if not isinstance(projected, OperationReviewProjectionSuccessV1) or not isinstance(

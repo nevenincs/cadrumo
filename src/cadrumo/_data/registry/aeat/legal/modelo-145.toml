@@ -67,7 +67,7 @@ bytes = 10123
 retrieved_at = 2026-05-14
 applies_from = 2025-02-19
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientos/G603.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-145-obligaciones-retenedor"]
 evidence_tier = "official_source_guidance"
@@ -79,7 +79,7 @@ bytes = 13069
 retrieved_at = 2026-05-14
 applies_from = 2026-03-16
 source_url = "https://sede.agenciatributaria.gob.es/Sede/irpf/retenciones-ingresos-cuenta-pagos-fraccionados/retenciones-ingresos-cuenta/obligaciones-retenedor/modelo-145.html"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-145-form"]
 evidence_tier = "official_source_guidance"
@@ -90,7 +90,7 @@ sha256 = "2061c0035b2ce7a4bd25dd7727798ed3754c6902306eac783112aa2824af5667"
 bytes = 123230
 retrieved_at = 2026-05-14
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/G603/mod145_es_es.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-145-v20"]
 evidence_tier = "layout_authority"
@@ -103,7 +103,7 @@ bytes = 32295
 retrieved_at = 2026-05-14
 applies_from = 2012-01-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/dr145v20.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-145-2011-approval"]
 evidence_tier = "layout_authority"
@@ -116,7 +116,7 @@ retrieved_at = 2026-05-14
 published_at = 2011-01-05
 applies_from = 2011-01-05
 source_url = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2011-208"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-145-2013-amendment"]
 evidence_tier = "layout_authority"
@@ -129,7 +129,7 @@ retrieved_at = 2026-05-14
 published_at = 2014-01-03
 applies_from = 2014-01-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-59"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-145-2014-amendment"]
 evidence_tier = "layout_authority"
@@ -142,4 +142,4 @@ retrieved_at = 2026-05-14
 published_at = 2014-12-31
 applies_from = 2015-01-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-13679"
-review_status = "reviewed"
+review_status = "pending_review"

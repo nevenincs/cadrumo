@@ -69,14 +69,14 @@ from ._browser_stage import build_playwright_stage_runner
 from .errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError
 
 logger = get_logger(__name__)
-_EXTERNAL = Settings.external_constants()
-_AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
-_GROI_AUTH_UNLOCK_DESCRIPTOR = _EXTERNAL.aeat.oracles.groi_auth_unlock_descriptor
-_NIF_IVA_AUTH_LOCKED_DESCRIPTOR = _EXTERNAL.aeat.oracles.nif_iva_auth_locked_descriptor
-_NIF_IVA_ENTRY_HOST = urlsplit(f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.help_pages.nif_iva_landing}").netloc
-_NIF_IVA_VERIFICATION_HOST = urlsplit(_EXTERNAL.aeat.oracles.nif_iva_verification).netloc
+EXTERNAL = Settings.external_constants()
+_AEAT_HOST_SUFFIX = EXTERNAL.aeat.domains.host_suffix
+_GROI_AUTH_UNLOCK_DESCRIPTOR = EXTERNAL.aeat.oracles.groi_auth_unlock_descriptor
+_NIF_IVA_AUTH_LOCKED_DESCRIPTOR = EXTERNAL.aeat.oracles.nif_iva_auth_locked_descriptor
+_NIF_IVA_ENTRY_HOST = urlsplit(f"{EXTERNAL.aeat.domains.sede}{EXTERNAL.aeat.help_pages.nif_iva_landing}").netloc
+_NIF_IVA_VERIFICATION_HOST = urlsplit(EXTERNAL.aeat.oracles.nif_iva_verification).netloc
 
-_READ_GUARD_POLICY = RemoteStateGuardPolicy(
+READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-nif-iva-direct-driver-read",
     evidence_tier="executable_parity_evidence",
     classification="open_simulator",
@@ -84,7 +84,7 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     # Widen to any subdomain under the AEAT apex so a ``www{n}`` load-balancer
     # dispatch is tolerated, not refused; success detection is unchanged.
     allowed_host_suffixes=(_AEAT_HOST_SUFFIX,),
-    allowed_browser_action_patterns=_EXTERNAL.aeat.live_safety.consult_oracle_browser_action_patterns,
+    allowed_browser_action_patterns=EXTERNAL.aeat.live_safety.consult_oracle_browser_action_patterns,
     synthetic_data_allowed=False,
     requires_authentication=False,
     requires_aeat_authorization=False,
@@ -96,8 +96,8 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
 # itself. The form posts back to its own servlet, so the response page is
 # the same path as the form page and nothing else is a NIF-IVA read.
 _NIF_IVA_READ_PATH_PREFIXES: tuple[str, ...] = (
-    _EXTERNAL.aeat.help_pages.nif_iva_landing,
-    urlsplit(_EXTERNAL.aeat.oracles.nif_iva_verification).path,
+    EXTERNAL.aeat.help_pages.nif_iva_landing,
+    urlsplit(EXTERNAL.aeat.oracles.nif_iva_verification).path,
 )
 
 
@@ -123,7 +123,7 @@ def assert_nif_iva_read_landing(landing_url: str) -> None:
     assert_read_landing(
         landing_url,
         surface="NIF-IVA",
-        policy=_READ_GUARD_POLICY,
+        policy=READ_GUARD_POLICY,
         allowed_path_prefixes=_NIF_IVA_READ_PATH_PREFIXES,
     )
 
@@ -134,7 +134,7 @@ def _assert_read_landing(page: Page) -> None:
 
 
 def _assert_query_browser_action(action: str) -> None:
-    assert_query_browser_action_for(_READ_GUARD_POLICY, action)
+    assert_query_browser_action_for(READ_GUARD_POLICY, action)
 
 
 _playwright_stage = build_playwright_stage_runner(
@@ -409,7 +409,7 @@ async def collect_nif_iva_check_observations(
         # Sede entry: acquire the session cookies the form servlet requires.
         await browser_session.navigate(
             page,
-            f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.help_pages.nif_iva_landing}",
+            f"{EXTERNAL.aeat.domains.sede}{EXTERNAL.aeat.help_pages.nif_iva_landing}",
         )
         await _playwright_stage(
             page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=timeout_ms),
@@ -420,7 +420,7 @@ async def collect_nif_iva_check_observations(
         _assert_read_landing(page)
 
         # Form servlet: now reachable with sede cookies set.
-        await browser_session.navigate(page, _EXTERNAL.aeat.oracles.nif_iva_verification)
+        await browser_session.navigate(page, EXTERNAL.aeat.oracles.nif_iva_verification)
         await _playwright_stage(
             page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=timeout_ms),
             stage="wait-form-networkidle",
@@ -439,7 +439,7 @@ async def collect_nif_iva_check_observations(
                 context={
                     "stage": "post-form-navigation",
                     "landing_url": page.url,
-                    "expected_url": _EXTERNAL.aeat.oracles.nif_iva_verification,
+                    "expected_url": EXTERNAL.aeat.oracles.nif_iva_verification,
                     "auth_tested": "clave_movil",
                     "auth_tested_unlocks": _GROI_AUTH_UNLOCK_DESCRIPTOR,
                     "auth_tested_does_not_unlock": _NIF_IVA_AUTH_LOCKED_DESCRIPTOR,

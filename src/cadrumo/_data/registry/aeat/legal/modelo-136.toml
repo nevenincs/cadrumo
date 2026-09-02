@@ -194,7 +194,7 @@ retrieved_at = 2026-07-01
 published_at = 2026-06-09
 applies_from = 2026-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GH09.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-136-procedure-record"]
 evidence_tier = "official_source_guidance"
@@ -207,7 +207,7 @@ retrieved_at = 2026-07-01
 published_at = 2026-06-09
 applies_from = 2026-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientos/GH09.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-lirpf-lottery-prize-special-levy"]
 evidence_tier = "official_source_guidance"
@@ -220,7 +220,7 @@ retrieved_at = 2026-05-06
 published_at = 2006-11-29
 applies_from = 2020-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#datrigesimatercera"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-136-base-order"]
 evidence_tier = "layout_authority"
@@ -233,7 +233,7 @@ retrieved_at = 2026-07-01
 published_at = 2013-01-31
 applies_from = 2013-02-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2013-952"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-136-2018-amendment-hac-763"]
 evidence_tier = "layout_authority"
@@ -246,7 +246,7 @@ retrieved_at = 2026-07-01
 published_at = 2018-07-18
 applies_from = 2018-07-19
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-10064"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-136-current-form-text"]
 evidence_tier = "official_source_guidance"
@@ -259,7 +259,7 @@ retrieved_at = 2026-07-01
 published_at = 2018-07-18
 applies_from = 2018-07-19
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-10064"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-136-current-form"]
 evidence_tier = "layout_authority"
@@ -272,4 +272,4 @@ retrieved_at = 2026-07-01
 published_at = 2018-07-18
 applies_from = 2018-07-19
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-10064"
-review_status = "reviewed"
+review_status = "pending_review"

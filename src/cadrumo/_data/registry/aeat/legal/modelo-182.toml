@@ -64,7 +64,7 @@ retrieved_at = 2026-07-03
 published_at = 2007-10-11
 applies_from = 2007-10-12
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-18192"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Retiered 2026-08-15: this 1155-byte orden excerpt carries no annex section
 # and no record-layout vocabulary, so it was never layout authority -- the
@@ -83,7 +83,7 @@ retrieved_at = 2026-07-03
 published_at = 2007-10-11
 applies_from = 2007-10-12
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-18192"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-182-2024"]
 evidence_tier = "layout_authority"
@@ -103,7 +103,7 @@ applies_from = 2024-01-01
 # classification and the close date is derived from the successor, not chosen.
 applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_182_2024.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-182-2025"]
 evidence_tier = "layout_authority"
@@ -116,4 +116,4 @@ bytes = 276709
 retrieved_at = 2026-07-21
 applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_182_2025.pdf"
-review_status = "reviewed"
+review_status = "pending_review"

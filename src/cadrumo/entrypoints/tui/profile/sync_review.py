@@ -12,7 +12,7 @@ public requests those doors declare.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import ClassVar, override
+from typing import ClassVar, cast, override
 
 from pydantic import BaseModel
 from textual.app import ComposeResult
@@ -217,7 +217,10 @@ class CensalFieldReviewScreen(ModalScreen[CensalOperationRequest | None]):
         if event.button.id == "btn-censal-reject":
             self.dismiss(None)
             return
-        choices = self.query_one("#censal-field-review-choices", SelectionList)
+        # CAST-RATIONALE-thirdparty: Textual's ``query_one`` isinstance-checks the
+        # type it is handed, so a subscripted generic cannot be passed; the widget's
+        # cell/option type is fixed where it is constructed and asserted here.
+        choices = cast("SelectionList[str]", self.query_one("#censal-field-review-choices", SelectionList))
         if event.button.id == "btn-censal-apply-all":
             # SelectionList.select/deselect key on the option's VALUE (each
             # row's own path), never its list position -- passing the loop

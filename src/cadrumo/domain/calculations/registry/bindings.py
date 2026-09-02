@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from decimal import Decimal, InvalidOperation
-from typing import Literal, TypeGuard
+from typing import Literal
 
 from pydantic import (
     BaseModel,
@@ -38,6 +38,7 @@ from ....core.filing_year import FilingYear
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period, RegistryPeriodCode
 from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
+from ....core.type_guards import is_object_mapping
 from ...iva_compensation.filed_derivation import (
     M303_COMPENSATION_APLICADA_CASILLA,
     M303_COMPENSATION_AVAILABLE_CASILLA,
@@ -170,11 +171,6 @@ __all__ = [
 _BindingFamilyValidator = Callable[[DataBindingDefinition], list[str]]
 
 
-def _is_object_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
-    """Narrow an unparameterized runtime mapping to untrusted object entries."""
-    return isinstance(value, Mapping)
-
-
 def _tuple_from_json_array(value: object) -> object:
     if isinstance(value, list):
         return OBJECT_TUPLE_ADAPTER.validate_python(value)
@@ -305,7 +301,7 @@ class RegistryModeloObservation(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _hydrate_filing_period(cls, data: object) -> object:
-        if not _is_object_mapping(data) or "filing_period" in data:
+        if not is_object_mapping(data) or "filing_period" in data:
             return data
         payload: dict[str, object] = {}
         for key, value in data.items():

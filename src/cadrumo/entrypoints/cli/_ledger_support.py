@@ -33,18 +33,18 @@ from ...domain.deadlines.models import IrpfSpecialRegime
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.transactions.errors import TransactionIdPrefixError, TransactionValidationError
 from ...domain.transactions.models import Transaction
-from ._common import _bad, attach_cli_policy_verdict, emit_envelope
+from ._common import attach_cli_policy_verdict, bad, emit_envelope
 from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
 
 
-class _TransactionRepo(Protocol):
-    """Structural interface consumed by :func:`_bucket_transaction_ids` and :func:`_resolve_id`."""
+class TransactionRepo(Protocol):
+    """Structural interface consumed by :func:`_bucket_transaction_ids` and :func:`resolve_id`."""
 
     @property
     def bucket_id(self) -> str: ...
 
 
-def _emit_update_result(
+def emit_update_result(
     ctx: typer.Context,
     result_transaction: Transaction,
     bucket_id: str,
@@ -100,7 +100,7 @@ def _emit_update_result(
     )
 
 
-def _bucket_transaction_ids(transaction_repository: _TransactionRepo) -> tuple[str, ...]:
+def _bucket_transaction_ids(transaction_repository: TransactionRepo) -> tuple[str, ...]:
     """Return the full transaction ids known to the active bucket."""
     bucket_id = transaction_repository.bucket_id
     results = list_manual_transactions(
@@ -112,7 +112,7 @@ def _bucket_transaction_ids(transaction_repository: _TransactionRepo) -> tuple[s
     return tuple(result.transaction.transaction_id for result in results)
 
 
-def _ledger_cli_no_recovery[ErrorT: CadrumoError](
+def ledger_cli_no_recovery[ErrorT: CadrumoError](
     error: ErrorT,
     *,
     condition: CliExceptionPrecondition,
@@ -125,7 +125,7 @@ def _ledger_cli_no_recovery[ErrorT: CadrumoError](
     )
 
 
-def _resolve_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
+def resolve_id(transaction_repository: TransactionRepo, prefix: str) -> str:
     """Resolve a CLI-supplied id or unambiguous prefix to a live transaction id.
 
     The single shared CLI-boundary wrapper over the canonical
@@ -133,31 +133,31 @@ def _resolve_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
     verbs (update, classify, allocate, link, attach, doclink, archive, stash,
     restore, remove, split, merge). It matches only ids of rows still in the
     catalogue, because a mutation always targets a live row. Read verbs use the
-    lineage-following ``_resolve_read_id`` in :mod:`_ledger` instead.
+    lineage-following ``resolve_read_id`` in :mod:`_ledger` instead.
     """
     try:
         return resolve_transaction_id(prefix, _bucket_transaction_ids(transaction_repository))
     except TransactionIdPrefixError as exc:
-        raise _ledger_cli_no_recovery(
+        raise ledger_cli_no_recovery(
             exc,
             condition=CliExceptionPrecondition.LEDGER_TRANSACTION_ID_RESOLVES,
             facts={"transaction_id_resolves": False},
         ) from None
 
 
-def _invoice_link_error_bad_parameter() -> typer.BadParameter:
-    return _bad(tr("errors.error.error_financial_invoices_invoice_link"))
+def invoice_link_error_bad_parameter() -> typer.BadParameter:
+    return bad(tr("errors.error.error_financial_invoices_invoice_link"))
 
 
-def _parse_decimal(raw: str | None, *, label: str) -> Decimal | None:
+def parse_decimal_option(raw: str | None, *, label: str) -> Decimal | None:
     return parse_optional_decimal_amount(raw, label=label)
 
 
-def _parse_required_decimal(raw: str, *, label: str) -> Decimal:
+def parse_required_decimal(raw: str, *, label: str) -> Decimal:
     return parse_decimal_amount(raw, label=label)
 
 
-def _parse_amount_magnitude(raw: str) -> Decimal:
+def parse_amount_magnitude(raw: str) -> Decimal:
     """Parse ``--amount`` as a non-negative magnitude.
 
     Flow is carried by ``--direction``, not by the sign of the amount. A
@@ -166,9 +166,9 @@ def _parse_amount_magnitude(raw: str) -> Decimal:
     ``--direction``) rather than a bare invalid, per the
     ``aeat-architecture-boundaries`` instructive-refusal rule.
     """
-    parsed = _parse_required_decimal(raw, label="amount")
+    parsed = parse_required_decimal(raw, label="amount")
     if parsed < Decimal("0"):
-        raise _bad(tr("cli.ledger.errors.negative_amount", raw=raw))
+        raise bad(tr("cli.ledger.errors.negative_amount", raw=raw))
     return parsed
 
 
@@ -187,7 +187,7 @@ def _format_percent(value: Decimal) -> str:
     return f"{format_decimal(value * Decimal(100), normalize=True)}%"
 
 
-def _validate_business_pct_range(value: Decimal | None) -> Decimal | None:
+def validate_business_pct_range(value: Decimal | None) -> Decimal | None:
     """Refuse a business proportion outside the inclusive 0..1 range.
 
     The domain validator rejects an out-of-range proportion but its
@@ -201,7 +201,7 @@ def _validate_business_pct_range(value: Decimal | None) -> Decimal | None:
     if value is None:
         return None
     if not is_unit_proportion(value):
-        raise _bad(
+        raise bad(
             tr(
                 "cli.ledger.errors.business_pct_out_of_range",
                 value=format_decimal(value, normalize=True),
@@ -211,7 +211,7 @@ def _validate_business_pct_range(value: Decimal | None) -> Decimal | None:
     return value
 
 
-def _validate_category_id(category_id: str | None) -> str | None:
+def validate_category_id(category_id: str | None) -> str | None:
     """Reject a `--category-id` value outside the closed spending taxonomy.
 
     The canonical category set is :class:`SpendingCategory` — the
@@ -236,7 +236,7 @@ def _validate_category_id(category_id: str | None) -> str | None:
         # `office_material_oficina`); only the bare enum value is
         # accepted, so the refusal must demonstrate the exact shape.
         example = next(iter(SpendingCategory)).value
-        raise _bad(
+        raise bad(
             tr(
                 "cli.ledger.errors.unknown_category",
                 category=category_id,
@@ -245,7 +245,7 @@ def _validate_category_id(category_id: str | None) -> str | None:
         ) from exc
 
 
-def _resolve_source_jurisdiction(
+def resolve_source_jurisdiction(
     operator_value: str | None,
     *,
     fiscal_residency: FiscalResidency | None,
@@ -269,15 +269,15 @@ def _resolve_source_jurisdiction(
     if operator_value is not None:
         return operator_value
     if fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR:
-        raise _bad(tr("cli.ledger.add.source_jurisdiction_required_irnr"))
+        raise bad(tr("cli.ledger.add.source_jurisdiction_required_irnr"))
     if irpf_special_regime is IrpfSpecialRegime.IMPATRIADO:
-        raise _bad(tr("cli.ledger.add.source_jurisdiction_required_beckham"))
+        raise bad(tr("cli.ledger.add.source_jurisdiction_required_beckham"))
     if fiscal_residency is None:
         return None
     return "ES"
 
 
-def _resolve_business_pct_with_censo(
+def resolve_business_pct_with_censo(
     *,
     bucket_id: str,
     active_profile: str | None,
@@ -309,7 +309,7 @@ def _resolve_business_pct_with_censo(
     return censo_business_pct_for(category_enum, raw_afectacion, year=year)
 
 
-def _ledger_validation_bad(error: ValidationError) -> typer.BadParameter:
+def ledger_validation_bad(error: ValidationError) -> typer.BadParameter:
     """Convert a leaked pydantic `ValidationError` into a specific refusal.
 
     The generic CLI error boundary wraps every leaked
@@ -322,7 +322,7 @@ def _ledger_validation_bad(error: ValidationError) -> typer.BadParameter:
     a misleading repair hint.
     """
     details = "; ".join(_format_validation_error(item) for item in error.errors())
-    return _bad(
+    return bad(
         tr(
             "cli.ledger.errors.command_input_invalid",
             details=details or tr("cli.ledger.errors.command_input_invalid_fallback"),
@@ -330,16 +330,16 @@ def _ledger_validation_bad(error: ValidationError) -> typer.BadParameter:
     )
 
 
-def _ledger_transaction_validation_no_recovery(error: TransactionValidationError) -> TransactionValidationError:
+def ledger_transaction_validation_no_recovery(error: TransactionValidationError) -> TransactionValidationError:
     """Preserve a typed transaction failure with a fact-only terminal verdict."""
-    return _ledger_cli_no_recovery(
+    return ledger_cli_no_recovery(
         error,
         condition=CliExceptionPrecondition.LEDGER_TRANSACTION_VALID,
         facts={"error_type": type(error).__name__},
     )
 
 
-def _ledger_invoice_validation_no_recovery(
+def ledger_invoice_validation_no_recovery(
     error: InvoiceValidationError | ValidationError,
 ) -> CadrumoError | None:
     """Project an operator invoice refusal without flattening other validation owners.
@@ -359,7 +359,7 @@ def _ledger_invoice_validation_no_recovery(
         terminal_error = CliValidationBoundaryError(error)
     else:
         return None
-    return _ledger_cli_no_recovery(
+    return ledger_cli_no_recovery(
         terminal_error,
         condition=CliExceptionPrecondition.LEDGER_INVOICE_VALID,
         facts={"invoice_valid": False},

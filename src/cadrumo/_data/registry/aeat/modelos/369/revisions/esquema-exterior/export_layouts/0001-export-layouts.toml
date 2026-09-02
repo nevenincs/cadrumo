@@ -21,7 +21,7 @@ source_refs = ["aeat-dr-369-2021"]
 id = "modelo-369-exterior-envelope"
 record_type = "t3690-estruc-gral"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 binding_record = "modelo-369-exterior-envelope"
 [[revisions."esquema-exterior".export_layouts.records.fields]]
@@ -132,7 +132,7 @@ source_refs = ["aeat-dr-369-2021"]
 id = "modelo-369-exterior-info-adicional"
 record_type = "t36900-info-adicional"
 order = 1
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 [[revisions."esquema-exterior".export_layouts.records.fields]]
 id = "modelo-369-exterior-info-adicional-1-inicio-del-identificador-de-modelo-y-pag"
@@ -217,7 +217,7 @@ source_refs = ["aeat-dr-369-2021"]
 id = "modelo-369-exterior-t36901"
 record_type = "t36901-ext"
 order = 2
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 binding_record = "modelo-369-exterior-t36901"
 [[revisions."esquema-exterior".export_layouts.records.fields]]
@@ -342,7 +342,7 @@ source_refs = ["aeat-dr-369-2021"]
 id = "modelo-369-exterior-t36902"
 record_type = "t36902-ext"
 order = 3
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 required = false
 binding_record = "modelo-369-exterior-t36902"
@@ -442,7 +442,7 @@ source_refs = ["aeat-dr-369-2021"]
 id = "modelo-369-exterior-t36903"
 record_type = "t36903-ext"
 order = 4
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 [[revisions."esquema-exterior".export_layouts.records.fields]]
 id = "modelo-369-exterior-t36903-1-inicio-del-identificador-de-modelo-y-pag"

@@ -11,7 +11,7 @@ id = "modelo-390-2023-fichero-boe"
 id = "modelo-390-page-02"
 record_type = "page_02"
 order = 2
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 # 5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 0,5% - Base imponible [35]

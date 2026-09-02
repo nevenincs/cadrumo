@@ -31,7 +31,7 @@ source_refs = ["aeat-dr-490-2023"]
 id = "modelo-490-490-01"
 record_type = "490-01"
 order = 1
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 required = true
 

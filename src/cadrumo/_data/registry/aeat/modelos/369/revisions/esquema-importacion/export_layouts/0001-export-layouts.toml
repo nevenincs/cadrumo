@@ -21,7 +21,7 @@ source_refs = ["aeat-dr-369-2021"]
 id = "modelo-369-importacion-envelope"
 record_type = "t3690-estruc-gral"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 binding_record = "modelo-369-importacion-envelope"
 [[revisions."esquema-importacion".export_layouts.records.fields]]
@@ -132,7 +132,7 @@ source_refs = ["aeat-dr-369-2021"]
 id = "modelo-369-importacion-info-adicional"
 record_type = "t36900-info-adicional"
 order = 1
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 [[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-info-adicional-1-inicio-del-identificador-de-modelo-y-pag"
@@ -217,7 +217,7 @@ source_refs = ["aeat-dr-369-2021"]
 id = "modelo-369-importacion-t36910"
 record_type = "t36910-imp"
 order = 2
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 binding_record = "modelo-369-importacion-t36910"
 [[revisions."esquema-importacion".export_layouts.records.fields]]
@@ -342,7 +342,7 @@ source_refs = ["aeat-dr-369-2021"]
 id = "modelo-369-importacion-t36911"
 record_type = "t36911-imp"
 order = 3
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 binding_record = "modelo-369-importacion-t36911"
 [[revisions."esquema-importacion".export_layouts.records.fields]]
@@ -441,7 +441,7 @@ source_refs = ["aeat-dr-369-2021"]
 id = "modelo-369-importacion-t36912"
 record_type = "t36912-imp"
 order = 4
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 [[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36912-1-inicio-del-identificador-de-modelo-y-pag"

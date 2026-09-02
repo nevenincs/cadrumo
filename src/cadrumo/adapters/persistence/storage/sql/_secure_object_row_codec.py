@@ -30,7 +30,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Protocol, cast
@@ -40,6 +40,7 @@ from .....core.errors.error_codes import resolve_error_message
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.time.utc import coerce_utc_aware
+from .....core.type_guards import is_str_keyed_dict
 from ..crypto.encrypted_columns import decrypt_secure_object_payload, secure_object_payload_aad
 from ..errors import ClassificationError, DecryptionError, EnvelopeVersionError, SecureObjectUnreadableError
 from ..schema_lineage import (
@@ -240,7 +241,8 @@ def _classification_reason(exc: ClassificationError) -> str:
     unreadable-row record, not operator-facing prose, and callers match on its
     shape.
     """
-    context = getattr(exc, "context", None) or {}
+    raw_context = getattr(exc, "context", None)
+    context: Mapping[str, object] = raw_context if is_str_keyed_dict(raw_context) else {}
     classification = str(context.get("classification", ""))
     expected = context.get("expected")
     if expected is None:

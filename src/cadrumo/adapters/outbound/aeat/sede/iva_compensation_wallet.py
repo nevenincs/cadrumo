@@ -50,20 +50,20 @@ from ._browser_constants import (
     PLAYWRIGHT_WAIT_NETWORKIDLE as _WAIT_NETWORKIDLE,
 )
 from ._iva_compensation_wallet_parsing import (
-    _EXTERNAL,
-    _PRE303,
-    _WALLET_PATH,
-    _WALLET_URL,
+    EXTERNAL,
     IVA_COMPENSATION_WALLET_READ_POLICY,
-    _assert_own_name_representation_form_html,
-    _has_wallet_table,
-    _looks_like_executed_empty_wallet_page,
-    _wallet_execute_form_method,
-    _wallet_execute_gate_status,
-    _wallet_page_shape_context,
+    PRE303,
+    WALLET_PATH,
+    WALLET_URL,
+    assert_own_name_representation_form_html,
     discover_iva_compensation_wallet_entrypoint,
+    has_wallet_table,
     is_aeat_wallet_read_url,
+    looks_like_executed_empty_wallet_page,
     parse_iva_compensation_wallet_html,
+    wallet_execute_form_method,
+    wallet_execute_gate_status,
+    wallet_page_shape_context,
 )
 from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from .schema import IvaCompensationWalletObservation
@@ -75,17 +75,17 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-_PRE303_PRESENTATION_URL = f"{_EXTERNAL.aeat.domains.sede}{_PRE303.presentation_service_path}"
-_PRE303_SELECTOR_URL = _EXTERNAL.aeat.clave_movil.selector_access_url_template.format(
-    target=quote(_PRE303.presentation_service_path, safe=""),
+_PRE303_PRESENTATION_URL = f"{EXTERNAL.aeat.domains.sede}{PRE303.presentation_service_path}"
+_PRE303_SELECTOR_URL = EXTERNAL.aeat.clave_movil.selector_access_url_template.format(
+    target=quote(PRE303.presentation_service_path, safe=""),
 )
-_WALLET_SELECTOR_URL = _EXTERNAL.aeat.clave_movil.selector_access_url_template.format(
-    target=quote(_EXTERNAL.aeat.sede_paths.iva_compensation_wallet, safe=""),
+_WALLET_SELECTOR_URL = EXTERNAL.aeat.clave_movil.selector_access_url_template.format(
+    target=quote(EXTERNAL.aeat.sede_paths.iva_compensation_wallet, safe=""),
 )
-_OWN_NAME_REPRESENTATION_ACTION = _PRE303.representation_own_name_action_label
-_WALLET_DISCOVERED_ENTRYPOINT_ACTION = _PRE303.wallet_discovered_entrypoint_action_label
-_WALLET_EXECUTE_READ_ACTION = _PRE303.wallet_execute_read_action_label
-IVA_COMPENSATION_WALLET_URL = _WALLET_URL
+_OWN_NAME_REPRESENTATION_ACTION = PRE303.representation_own_name_action_label
+_WALLET_DISCOVERED_ENTRYPOINT_ACTION = PRE303.wallet_discovered_entrypoint_action_label
+_WALLET_EXECUTE_READ_ACTION = PRE303.wallet_execute_read_action_label
+IVA_COMPENSATION_WALLET_URL = WALLET_URL
 PRE303_PRESENTATION_SERVICE_URL = _PRE303_PRESENTATION_URL
 
 # The pages a wallet READ legitimately rests on: the Pre303 presentation
@@ -125,8 +125,8 @@ PRE303_PRESENTATION_SERVICE_URL = _PRE303_PRESENTATION_URL
 # narrowing the canonical token set -- it exists to catch real presentation
 # surfaces; give the gate its own predicate if a rule for it is ever needed.
 _WALLET_READ_PATH_PREFIXES: tuple[str, ...] = (
-    urlsplit(_PRE303.presentation_service_path).path,
-    urlsplit(_WALLET_PATH).path,
+    urlsplit(PRE303.presentation_service_path).path,
+    urlsplit(WALLET_PATH).path,
 )
 
 
@@ -151,7 +151,7 @@ async def fetch_iva_compensation_wallet(
             context={"target_year": target_year, "target_period_year": target_period.filing_year},
         )
     _assert_read_http("GET", _PRE303_PRESENTATION_URL)
-    _assert_read_http("GET", _WALLET_URL)
+    _assert_read_http("GET", WALLET_URL)
     settings = settings or Settings()
     storage_state = storage_state_for_session(session)
     browser_session = await default_browser_session_factory(settings)
@@ -165,7 +165,7 @@ async def fetch_iva_compensation_wallet(
                 browser_session=browser_session,
                 settings=settings,
                 selector_url=_PRE303_SELECTOR_URL,
-                target_path=_PRE303.presentation_service_path,
+                target_path=PRE303.presentation_service_path,
                 expected_url=_PRE303_PRESENTATION_URL,
                 surface="pre303_presentation_service",
                 target_year=target_period.filing_year,
@@ -201,15 +201,15 @@ async def fetch_iva_compensation_wallet(
                     browser_session=browser_session,
                     settings=settings,
                     selector_url=_WALLET_SELECTOR_URL,
-                    target_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
-                    expected_url=_WALLET_URL,
+                    target_path=EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
+                    expected_url=WALLET_URL,
                     surface="iva_compensation_wallet",
                     target_year=target_period.filing_year,
                     target_period=target_period,
                 )
         except PlaywrightError as exc:
             raise SedeNavigationError(
-                f"Pre303/wallet navigation failed for {_PRE303_PRESENTATION_URL!r} -> {_WALLET_URL!r}: {exc}",
+                f"Pre303/wallet navigation failed for {_PRE303_PRESENTATION_URL!r} -> {WALLET_URL!r}: {exc}",
             ) from exc
         if is_aeat_auth_gate_redirect(page.url):
             raise SedeNavigationError(
@@ -217,7 +217,7 @@ async def fetch_iva_compensation_wallet(
                 failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
                 context={
                     "landing_url": redacted_url(page.url),
-                    "expected_url": redacted_url(_WALLET_URL),
+                    "expected_url": redacted_url(WALLET_URL),
                     "surface": "iva_compensation_wallet",
                 },
             )
@@ -254,7 +254,7 @@ async def fetch_iva_compensation_wallet(
             raise SedeParseError(
                 str(exc),
                 failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
-                context=_wallet_page_shape_context(html, landing_url=page.url),
+                context=wallet_page_shape_context(html, landing_url=page.url),
             ) from exc
     finally:
         await close_async_resources(
@@ -281,10 +281,10 @@ async def _open_authenticated_surface(
     await browser_session.navigate(page, selector_url)
     await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED)
     current_url = getattr(page, "url", "") or ""
-    selector_marker = _EXTERNAL.aeat.clave_movil.selector_access_path_marker
+    selector_marker = EXTERNAL.aeat.clave_movil.selector_access_path_marker
     if selector_marker in current_url:
         _assert_read_browser_action("clave-movil-authorize")
-        await page.click(_EXTERNAL.aeat.clave_movil.authorize_button_selector)
+        await page.click(EXTERNAL.aeat.clave_movil.authorize_button_selector)
         try:
             await page.wait_for_url(
                 lambda url: target_path in url or is_aeat_auth_gate_redirect(url) or _is_representation_gate_url(url),
@@ -335,7 +335,7 @@ def _is_representation_gate_url(current_url: str) -> bool:
         path = urlsplit(current_url).path
     except ValueError:
         return False
-    return _EXTERNAL.aeat.clave_movil.dialogo_representacion_path_marker in path
+    return EXTERNAL.aeat.clave_movil.dialogo_representacion_path_marker in path
 
 
 async def _open_discovered_wallet_entrypoint(
@@ -356,8 +356,8 @@ async def _open_discovered_wallet_entrypoint(
         await _continue_own_name_representation(
             page,
             settings=settings,
-            expected_url=_WALLET_URL,
-            target_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
+            expected_url=WALLET_URL,
+            target_path=EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
             surface="iva_compensation_wallet",
         )
     try:
@@ -371,7 +371,7 @@ async def _open_discovered_wallet_entrypoint(
     return await _submit_wallet_execute_gate_if_present(
         page,
         settings=settings,
-        expected_url=_WALLET_URL,
+        expected_url=WALLET_URL,
         target_year=target_period.filing_year,
         target_period=target_period,
     )
@@ -393,7 +393,7 @@ async def _continue_own_name_representation(
         await _assert_own_name_representation_form(page, expected_path=target_path)
         await page.click(selected_own_name)
         await _assert_own_name_representation_form(page, expected_path=target_path)
-        await page.click(_PRE303.representation_submit_selector)
+        await page.click(PRE303.representation_submit_selector)
         await page.wait_for_url(
             lambda url: target_path in url or is_aeat_auth_gate_redirect(url),
             timeout=settings.cadrumo_browser_navigation_timeout_ms,
@@ -423,8 +423,8 @@ async def _wait_for_own_name_representation_selector(page: Page, *, settings: Se
 
     return await wait_for_own_name_representation_selector(
         page,
-        own_name_label_selector=_PRE303.representation_own_name_label_selector,
-        own_name_selector=_PRE303.representation_own_name_selector,
+        own_name_label_selector=PRE303.representation_own_name_label_selector,
+        own_name_selector=PRE303.representation_own_name_selector,
         probe_timeout_ms=settings.cadrumo_browser_selector_probe_timeout_ms,
         raise_configuration_error=_raise_configuration_error,
     )
@@ -432,7 +432,7 @@ async def _wait_for_own_name_representation_selector(page: Page, *, settings: Se
 
 async def _assert_own_name_representation_form(page: Page, *, expected_path: str) -> None:
     html = await page.content()
-    _assert_own_name_representation_form_html(
+    assert_own_name_representation_form_html(
         html,
         landing_url=getattr(page, "url", "") or "",
         expected_path=expected_path,
@@ -459,13 +459,13 @@ async def _dismiss_pre303_alert_modal_if_present(page: Page) -> None:
         log.warning(
             "pre303 alert modal present but not shown; declining to dismiss it "
             "(selector=%r) -- if the read stalls or times out next, this is why",
-            _PRE303.alert_modal_selector,
+            PRE303.alert_modal_selector,
         )
 
     await dismiss_pre303_alert_modal_if_present(
         page,
-        alert_modal_selector=_PRE303.alert_modal_selector,
-        alert_continue_button_text=_PRE303.alert_continue_button_text,
+        alert_modal_selector=PRE303.alert_modal_selector,
+        alert_continue_button_text=PRE303.alert_continue_button_text,
         on_declined_hidden_modal=_log_declined_hidden_modal,
     )
 
@@ -481,7 +481,7 @@ async def _select_own_name_actuacion_if_present(page: Page, *, settings: Setting
     tipo-actuación selector (so the caller proceeds to the execute gate unchanged).
     """
     try:
-        link = await page.query_selector(_PRE303.tipo_actuacion_own_name_link_selector)
+        link = await page.query_selector(PRE303.tipo_actuacion_own_name_link_selector)
     except PlaywrightError:
         link = None
     if link is None:
@@ -489,7 +489,7 @@ async def _select_own_name_actuacion_if_present(page: Page, *, settings: Setting
     href = await link.get_attribute("href")
     if not href:
         return False
-    target = urljoin(getattr(page, "url", "") or _WALLET_URL, href)
+    target = urljoin(getattr(page, "url", "") or WALLET_URL, href)
     if not is_aeat_wallet_read_url(target):
         raise SedeNavigationError(
             "AEAT cartera own-name option did not resolve to the expected wallet surface",
@@ -534,8 +534,8 @@ async def _fill_wallet_query_form(page: Page, *, target_year: int, target_period
     when the execute gate is present; a future server-rendered shape change must
     fail closed instead of allowing a wrong/default-period read to persist.
     """
-    ejercicio_selector = _PRE303.wallet_ejercicio_input_selector
-    periodo_selector = _PRE303.wallet_periodo_input_selector
+    ejercicio_selector = PRE303.wallet_ejercicio_input_selector
+    periodo_selector = PRE303.wallet_periodo_input_selector
     try:
         ejercicio_field = await page.query_selector(ejercicio_selector)
         periodo_field = await page.query_selector(periodo_selector)
@@ -566,7 +566,7 @@ async def _submit_wallet_execute_gate_if_present(
     await _select_own_name_actuacion_if_present(page, settings=settings)
     try:
         await page.wait_for_selector(
-            _PRE303.wallet_execute_submit_selector,
+            PRE303.wallet_execute_submit_selector,
             timeout=settings.cadrumo_browser_selector_probe_timeout_ms,
         )
     except PlaywrightError:
@@ -609,7 +609,7 @@ async def _submit_wallet_execute_gate_if_present(
         raise SedeNavigationError(
             "AEAT IVA wallet form action did not match the expected wallet surface",
             failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
-            context=_wallet_page_shape_context(html, landing_url=getattr(page, "url", "") or ""),
+            context=wallet_page_shape_context(html, landing_url=getattr(page, "url", "") or ""),
         )
     if result != "wallet-execute-submit-present":
         return False
@@ -649,7 +649,7 @@ async def _run_wallet_execute_query(
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
         )
     submission_url = f"{current_origin}{expected_path}"
-    method = _wallet_execute_form_method(html)
+    method = wallet_execute_form_method(html)
     _assert_read_http(method, submission_url)
     _assert_read_browser_action(_WALLET_EXECUTE_READ_ACTION)
     await _fill_wallet_query_form(
@@ -661,7 +661,7 @@ async def _run_wallet_execute_query(
     if diagnostic_dir is not None:
         await _dump_wallet_diagnostic(page, label="pre-execute", dump_dir=diagnostic_dir)
     try:
-        await page.click(_PRE303.wallet_execute_submit_selector)
+        await page.click(PRE303.wallet_execute_submit_selector)
         nav_timeout_ms = settings.cadrumo_browser_navigation_timeout_ms
         await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=nav_timeout_ms)
         try:
@@ -691,7 +691,7 @@ async def _run_wallet_execute_query(
             "AEAT IVA wallet read query could not be completed",
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             context={
-                **_wallet_page_shape_context(html, landing_url=current_url),
+                **wallet_page_shape_context(html, landing_url=current_url),
                 "expected_url": redacted_url(expected_url),
                 "blocked_operation": "wallet_execute_read_query",
             },
@@ -704,13 +704,13 @@ def _raise_if_wallet_terminal_shape_invalid(
     expected_path: str,
     landing_url: str,
 ) -> None:
-    if _wallet_execute_gate_status(
+    if wallet_execute_gate_status(
         html, expected_path=expected_path
-    ) == "wallet-execute-submit-present" and not _has_wallet_table(html):
+    ) == "wallet-execute-submit-present" and not has_wallet_table(html):
         raise SedeNavigationError(
             "AEAT IVA wallet read query left the executable wallet shell without a wallet table",
             failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
-            context=_wallet_page_shape_context(html, landing_url=landing_url),
+            context=wallet_page_shape_context(html, landing_url=landing_url),
         )
 
 
@@ -722,10 +722,10 @@ async def _wait_for_wallet_execute_initial_shape(
 ) -> tuple[str, str]:
     deadline = now().timestamp() + timeout_ms / 1000
     last_html = await _read_wallet_html(content)
-    last_status = _wallet_execute_gate_status(last_html, expected_path=expected_path)
+    last_status = wallet_execute_gate_status(last_html, expected_path=expected_path)
     while now().timestamp() < deadline:
         html = await _read_wallet_html(content)
-        status = _wallet_execute_gate_status(html, expected_path=expected_path)
+        status = wallet_execute_gate_status(html, expected_path=expected_path)
         last_html = html
         last_status = status
         if status in {
@@ -734,7 +734,7 @@ async def _wait_for_wallet_execute_initial_shape(
             "no-wallet-execute-submit",
         }:
             return html, status
-        if _has_wallet_table(html) or _looks_like_executed_empty_wallet_page(parse_html(html)):
+        if has_wallet_table(html) or looks_like_executed_empty_wallet_page(parse_html(html)):
             return html, status
         await asyncio.sleep(0.5)
     return last_html, last_status
@@ -752,9 +752,9 @@ async def _wait_for_wallet_execute_terminal_shape(
     while now().timestamp() < deadline:
         html = await _read_wallet_html(content)
         last_html = html
-        if _has_wallet_table(html) or _looks_like_executed_empty_wallet_page(parse_html(html)):
+        if has_wallet_table(html) or looks_like_executed_empty_wallet_page(parse_html(html)):
             return html
-        if _wallet_execute_gate_status(html, expected_path=expected_path) != "wallet-execute-submit-present":
+        if wallet_execute_gate_status(html, expected_path=expected_path) != "wallet-execute-submit-present":
             return html
         await asyncio.sleep(0.5)
     return last_html
@@ -792,7 +792,7 @@ async def _dump_wallet_diagnostic(page: Page, *, label: str, dump_dir: Path) -> 
         try:
             url = getattr(candidate, "url", "") or ""
             html = await candidate.content()
-            shape = _wallet_page_shape_context(html, landing_url=url)
+            shape = wallet_page_shape_context(html, landing_url=url)
             summary.append(
                 f"page[{page_index}] url={shape['landing_url']} tables={shape['table_count']} "
                 f"forms={shape['form_count']} wallet_entrypoints={shape['wallet_entrypoint_count']} "
@@ -809,7 +809,7 @@ async def _dump_wallet_diagnostic(page: Page, *, label: str, dump_dir: Path) -> 
             try:
                 frame_url = getattr(frame, "url", "") or ""
                 frame_html = await frame.content()
-                frame_shape = _wallet_page_shape_context(frame_html, landing_url=frame_url)
+                frame_shape = wallet_page_shape_context(frame_html, landing_url=frame_url)
                 summary.append(
                     f"page[{page_index}].frame[{frame_index}] url={frame_shape['landing_url']} "
                     f"tables={frame_shape['table_count']} forms={frame_shape['form_count']} "
@@ -910,7 +910,7 @@ def _landed_wallet_url(page: object) -> str:
             "the host that answered cannot be established, so no source URL "
             "can be recorded for this observation",
         )
-    return f"{origin}{_WALLET_PATH}"
+    return f"{origin}{WALLET_PATH}"
 
 
 def assert_wallet_read_landing(landing_url: str) -> None:

@@ -78,7 +78,7 @@ def _ensure_modelo_work_profile() -> str:
     # Both branches log in, not just the resuming one. Reading or promoting a
     # committed profile capsule needs an authenticated session, and a freshly
     # registered profile does not carry one that satisfies that door.
-    login_profile(name=bucket_id, passphrase_callback=lambda *_args, **_kwargs: passphrase())
+    login_profile(name=bucket_id, passphrase_callback=passphrase)
 
     # Registration mints a profile SETUP_INCOMPLETE by design, and every
     # filing-grade modelo gate refuses one. Without this promotion the wizard

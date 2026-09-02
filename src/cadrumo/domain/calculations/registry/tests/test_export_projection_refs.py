@@ -123,7 +123,7 @@ def _revision(
                         id="projection-record",
                         record_type="projection",
                         order=1,
-                        encoding=ExportEncoding.LATIN_1,
+                        encoding=ExportEncoding.ISO_8859_1,
                         line_ending="none",
                         repeat=repeat,
                         binding_record=binding_record,

@@ -19,9 +19,9 @@ from ..secure_input import (
     MachineSecretChannel,
     MachineSecretPayload,
     MachineSecretSelection,
-    _validate_secrets_payload,
     read_machine_secret_payload,
     select_machine_secret_channel,
+    validate_secrets_payload,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -80,7 +80,7 @@ def _stdin_from(payload: bytes) -> Generator[None]:
 
 def _validation_refusal(raw: bytes) -> CliRefusedBoundaryError:
     with pytest.raises(CliRefusedBoundaryError) as caught:
-        _validate_secrets_payload(
+        validate_secrets_payload(
             raw,
             _ProbeSecrets,
             invalid_json_key="cli.config.custody.errors.secrets_stdin_invalid_json",

@@ -17,7 +17,7 @@ from ...core.errors.error_codes import resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.unit_proportion import is_unit_proportion
-from ._common import _bad, activate_subcommand_output_language, emit_envelope
+from ._common import activate_subcommand_output_language, bad, emit_envelope
 from ._review_payloads import ReviewQueueResult, ReviewQueueRowPayload, ReviewViewResult
 
 
@@ -63,7 +63,7 @@ def _resolve_confidence_threshold(value: float | None) -> Decimal | None:
         return None
     threshold = coerce_decimal_strict(value)
     if not is_unit_proportion(threshold):
-        raise _bad(
+        raise bad(
             tr(
                 "cli.review.errors.invalid_confidence",
                 value=str(value),
@@ -105,7 +105,7 @@ def review_queue(
             confidence_below=threshold,
         )
     except ReviewError as exc:
-        raise _bad(resolve_error_message(exc)) from exc
+        raise bad(resolve_error_message(exc)) from exc
     typed_result = ReviewQueueResult(
         rows=tuple(_row_to_payload(row) for row in report.rows),
     )
@@ -128,7 +128,7 @@ def review_view(
     try:
         row = project_review_item(item_id)
     except ReviewError as exc:
-        raise _bad(resolve_error_message(exc)) from exc
+        raise bad(resolve_error_message(exc)) from exc
     typed_result = ReviewViewResult(row=_row_to_payload(row))
     lines = [
         f"{tr('cli.review.labels.id')}\t{row.item_id}",

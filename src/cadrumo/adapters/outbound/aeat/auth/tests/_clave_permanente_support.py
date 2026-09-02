@@ -11,9 +11,9 @@ from pydantic import SecretStr
 
 from ......core.config import Settings
 
-_EXTERNAL = Settings.external_constants()
-_DOMAINS = _EXTERNAL.aeat.domains
-_CLAVE_SURFACE = _EXTERNAL.aeat.clave_permanente
+EXTERNAL = Settings.external_constants()
+_DOMAINS = EXTERNAL.aeat.domains
+_CLAVE_SURFACE = EXTERNAL.aeat.clave_permanente
 
 
 def _run[T](coroutine: Coroutine[Any, Any, T]) -> T:

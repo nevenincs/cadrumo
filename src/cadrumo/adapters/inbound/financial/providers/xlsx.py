@@ -40,12 +40,12 @@ from .base import (
 from .csv import (
     CSV_LAYOUTS,
     CsvBankLayout,
-    _find_column,
-    _header_lookup,
-    _layout_score,
-    _parse_tabular_transaction_row,
-    _row_is_blank,
     build_provider_row,
+    find_column,
+    header_lookup,
+    layout_score,
+    parse_tabular_transaction_row,
+    row_is_blank,
 )
 
 _logger = get_logger(__name__)
@@ -124,7 +124,7 @@ class XlsxProvider(FinancialProvider):
                 is_valid=False,
                 warnings=(f"{layout.bank_name} worksheet has no data rows after the header",),
             )
-        if not _find_column(_header_lookup(header_row), layout.columns.currency):
+        if not find_column(header_lookup(header_row), layout.columns.currency):
             warnings.append(
                 f"{layout.bank_name} worksheet has no currency column; falling back to {default_currency()}",
             )
@@ -148,10 +148,10 @@ class XlsxProvider(FinancialProvider):
             for source_row_index, row in enumerate(rows[header_index + 1 :], start=header_index + 2):
                 raw_fields = _row_to_mapping(headers, row)
                 cell_lookup = _row_to_cells(headers, row)
-                if _row_is_blank(raw_fields):
+                if row_is_blank(raw_fields):
                     continue
                 try:
-                    parsed = _parse_tabular_transaction_row(
+                    parsed = parse_tabular_transaction_row(
                         layout=layout,
                         lookup=lookup,
                         raw_fields=raw_fields,
@@ -337,9 +337,9 @@ def _best_layout_match_for_worksheet(
     for index, row in enumerate(sample_rows):
         if not any(cell.strip() for cell in row):
             continue
-        lookup = _header_lookup(row)
+        lookup = header_lookup(row)
         for layout in CSV_LAYOUTS:
-            score = _layout_score(lookup, layout)
+            score = layout_score(lookup, layout)
             if best is None or score > best[0]:
                 best = (score, index, row, lookup, layout)
     return best

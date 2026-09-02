@@ -109,7 +109,7 @@ retrieved_at = 2026-07-01
 published_at = 2023-12-30
 applies_from = 2024-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI51.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-379-form"]
 evidence_tier = "layout_authority"
@@ -122,4 +122,4 @@ retrieved_at = 2026-07-01
 published_at = 2023-12-30
 applies_from = 2024-01-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-26739"
-review_status = "reviewed"
+review_status = "pending_review"

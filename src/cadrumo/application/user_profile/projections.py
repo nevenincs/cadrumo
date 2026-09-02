@@ -311,10 +311,36 @@ def _merged_taxpayer_values(
     return mapping
 
 
+def profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
+    """Wizard-free canonical projection of a bucket's profile, or ``None`` when absent.
+
+    Reads the operator profile through :func:`record_to_path_values` WITHOUT
+    building the full taxpayer profile, which requires the wizard setup-flow
+    catalogue. That decouples callers from the catalogue so the projection
+    resolves identically in a non-CLI calculation context, where the catalogue
+    may be unregistered, instead of silently failing closed.
+
+    Returns ``None`` only when there is genuinely no profile for the bucket.
+
+    It lives here, beside the projection it delegates to, because two callers
+    each carried a copy that described itself as reading through "the SINGLE
+    projection" while being one of two.
+    """
+    from ...domain.user_profile.errors import ProfileNotFoundError
+    from .profile_record_repository import ProfileRecordRepository
+
+    try:
+        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+    except ProfileNotFoundError:
+        return None
+    return record_to_path_values(record)
+
+
 __all__ = [
     "fact_value",
     "facts_to_values",
     "profile_fact_index",
+    "profile_path_values_for_bucket",
     "projection_for_taxpayer",
     "record_to_path_values",
     "record_to_values",

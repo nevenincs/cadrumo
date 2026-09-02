@@ -5,7 +5,7 @@ id = 'generated-modelo-303-2025-fichero'
 id = 'm303-declaration'
 record_type = 'declaracion'
 order = 0
-encoding = 'latin-1'
+encoding = "iso-8859-1"
 line_ending = 'crlf'
 required = true
 

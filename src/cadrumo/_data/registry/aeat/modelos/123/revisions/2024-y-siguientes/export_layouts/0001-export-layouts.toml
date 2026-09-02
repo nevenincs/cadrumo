@@ -22,7 +22,7 @@ source_refs = ["aeat-dr-123-2024-v20"]
 id = "modelo-123-2024-envelope-header"
 record_type = "envelope_header"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-envelope-open"
@@ -170,7 +170,7 @@ source_refs = ["aeat-dr-123-2024-v20"]
 id = "modelo-123-2024-page-01"
 record_type = "page_1"
 order = 1
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-page-01-open"

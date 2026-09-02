@@ -35,7 +35,7 @@ from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.iva.establishment import StatedCountryCodeStatus
-from ._common import _bad, _state, _tx_repo, emit_envelope, resolve_notice_action
+from ._common import bad, current_workflow_state, emit_envelope, resolve_notice_action, transaction_catalogue_repo
 from .ledger_business_payloads import (
     EvidenceReviewBlockerPayload,
     EvidenceReviewFieldPayload,
@@ -417,7 +417,7 @@ def review_list(
     blocking_only: bool = False,
 ) -> None:
     """List the review queue, optionally narrowed to one blocking reason, check or advisory."""
-    bucket_id = _tx_repo(_state()).bucket_id
+    bucket_id = transaction_catalogue_repo(current_workflow_state()).bucket_id
     document = load_extraction_drafts(bucket_id, load_settings())
     filters: list[str] = []
     if reason is not None:
@@ -454,7 +454,7 @@ def _stored_draft_for_reference(document: ExtractionDraftDocument, reference: st
         if row.evidence_reference == reference:
             return row
     known = ", ".join(sorted(row.evidence_reference for row in document.drafts)) or "none"
-    raise _bad(
+    raise bad(
         tr("cli.app.ledger.evidence.review.unknown_reference") + f" ({known})",
     )
 
@@ -482,7 +482,7 @@ def _review_view_advisories(draft: InvoiceDraft) -> tuple[list[Notice], list[str
 
 def review_view(ctx: typer.Context, reference: str) -> None:
     """Show every reviewable field of one pending draft, with its blocking findings."""
-    bucket_id = _tx_repo(_state()).bucket_id
+    bucket_id = transaction_catalogue_repo(current_workflow_state()).bucket_id
     document = load_extraction_drafts(bucket_id, load_settings())
     stored = _stored_draft_for_reference(document, reference)
     draft = stored.draft
@@ -567,14 +567,14 @@ def parse_finding_resolution(raw: str) -> FindingResolution:
     """
     blocker_id, separator, remainder = raw.partition("=")
     if not separator:
-        raise _bad(
+        raise bad(
             tr("cli.app.ledger.evidence.review.resolve_shape"),
         )
     action_token, _, payload = remainder.partition(":")
     action = _RESOLUTION_ACTION_TOKENS.get(action_token.strip().casefold())
     if action is None:
         accepted = ", ".join(sorted(_RESOLUTION_ACTION_TOKENS))
-        raise _bad(
+        raise bad(
             tr("cli.app.ledger.evidence.review.resolve_action") + f" ({accepted})",
         )
     if action is FindingResolutionAction.ATTEST:

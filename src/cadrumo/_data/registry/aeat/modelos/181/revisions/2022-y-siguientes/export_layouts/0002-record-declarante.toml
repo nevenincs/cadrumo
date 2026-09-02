@@ -8,7 +8,7 @@ id = "modelo-181-fichero-2022"
 id = "modelo-181-declarante"
 record_type = "declarante"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 # Posicion 1. TIPO DE REGISTRO. Constante '1'.

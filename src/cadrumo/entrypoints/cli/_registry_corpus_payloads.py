@@ -19,6 +19,10 @@ that enters :class:`SchemaEnvelope` through :func:`emit_envelope`.
 
 from __future__ import annotations
 
+from typing import ClassVar
+
+from pydantic import ConfigDict
+
 from ...application.registry.corpus import (
     RegistryCitationArticleProjection,
     RegistryCitationReferenceProjection,
@@ -103,7 +107,7 @@ class ManualListResult(OutputSchema):
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]  # reason: TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is...
+    model_config: ClassVar[ConfigDict] = {"extra": "allow"}
 
 
 class ManualShowResult(OutputSchema):
@@ -130,7 +134,7 @@ class ManualShowResult(OutputSchema):
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]  # reason: TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is...
+    model_config: ClassVar[ConfigDict] = {"extra": "allow"}
 
 
 class ManualRulesListResult(OutputSchema):
@@ -156,7 +160,7 @@ class ManualRulesListResult(OutputSchema):
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]  # reason: TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is...
+    model_config: ClassVar[ConfigDict] = {"extra": "allow"}
 
 
 class ManualVerifyResult(OutputSchema):
@@ -182,4 +186,4 @@ class ManualVerifyResult(OutputSchema):
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]  # reason: TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is...
+    model_config: ClassVar[ConfigDict] = {"extra": "allow"}

@@ -768,7 +768,7 @@ def _raise_extraction_failed(
     coverage: Decimal,
 ) -> None:
     """Raise the degraded-extraction error with a human-readable detail summary."""
-    details = []
+    details: list[str] = []
     if missing:
         details.append(f"missing={','.join(missing)}")
     if malformed:

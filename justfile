@@ -826,6 +826,29 @@ audit-complexity:
 audit-dead-code:
     @uv run --no-sync python -m dev.audit.dead_code
 
+# Audit shipped code no console-script entrypoint can reach. Unlike
+# `audit-dead-code` (vulture's name heuristics), this walks the import graph
+# from `[project.scripts]` and counts only `src/cadrumo` non-test modules as
+# use: a module or symbol that only tests or `dev/` touch is reported, with
+# that outside use shown as a label so "kept alive by its tests" reads
+# differently from "orphaned". A test whose every shipped subject is itself a
+# finding is reported too, so dead code and the tests propping it up retire
+# together.
+#
+# Every finding carries the tier it was derived at. `exact` is resolved
+# through the import graph (unreachable modules, and top-level symbols whose
+# every way in was checked); `name-match` and `name-match-data` are members
+# reached by attribute access the scan cannot bind to a type. Start a cleanup
+# from `--confidence exact`.
+#
+# Exits 3 on findings. `--full` uncaps the list, `--json` emits machine
+# output with a stable id per finding, and `--root MODULE:ATTR` admits a
+# surface the packaging does not declare (a `python -m` entry, say).
+[doc('Audit shipped code unreachable from the console-script entrypoints; test-only and dev-only use is labelled, not credited.')]
+[group('audits')]
+audit-unreachable-code *ARGS:
+    @uv run --no-sync python -m dev.audit.unreachable_code {{ARGS}}
+
 # Scan for copy-paste code duplication. Aggregate line + capped clone list.
 # The runner owns the jscpd invocation AND its parsing, so this recipe and the
 # health report's duplication dimension cannot drift apart or disagree.

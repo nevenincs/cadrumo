@@ -23,7 +23,6 @@ from ....core.directory_scan import (
 from ....core.filing_producer_key import FilingProducerKey
 from ....core.filing_projection_ref import compile_filing_projection_ref
 from ....core.toml import freeze_toml, read_toml
-from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ._toml_helpers import as_toml_table as _as_toml_table
 from .errors import (
     RegistryFailureClassification,
@@ -52,6 +51,7 @@ from .loader_fingerprints import (
     refresh_toml_fingerprint_after_load_error as _refresh_toml_fingerprint_after_load_error,
 )
 from .modelo_localization import (
+    _as_toml_array,
     enroll_revision_localization,
     modelo_locale_key,
 )
@@ -145,13 +145,6 @@ def _toml_table_id(value: object) -> str | None:
         return None
     table_id = table.get("id")
     return table_id if isinstance(table_id, str) else None
-
-
-def _as_toml_array(value: object) -> tuple[object, ...] | None:
-    """Narrow a frozen TOML array to object entries, or return ``None``."""
-    if not isinstance(value, tuple):
-        return None
-    return OBJECT_TUPLE_ADAPTER.validate_python(value)
 
 
 def _reject_local_catalogues(path: Path, data: Mapping[str, object]) -> None:

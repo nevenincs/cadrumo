@@ -26,7 +26,7 @@ source_refs = ["aeat-dr-490-2022-2t"]
 id = "modelo-490-490-02"
 record_type = "490-02"
 order = 2
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 required = true
 

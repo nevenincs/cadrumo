@@ -45,9 +45,9 @@ def test_recovery_paths_have_no_profile_password_policy_dependency() -> None:
     worker = (custody_root / "_kdf_worker.py").read_text(encoding="utf-8")
 
     assert "assess_profile_password" not in recovery_sources + recovery_supervision + worker
-    assert "_encode_profile_password" not in recovery_sources + recovery_supervision
-    assert "_decode_profile_password" not in recovery_sources + recovery_supervision
-    assert worker.count("decode_recovery_secret(encoded) if recovery else _decode_profile_password(encoded)") == 2
+    assert "encode_profile_password" not in recovery_sources + recovery_supervision
+    assert "decode_profile_password" not in recovery_sources + recovery_supervision
+    assert worker.count("decode_recovery_secret(encoded) if recovery else decode_profile_password(encoded)") == 2
 
 
 def test_obsolete_conflated_material_entry_points_are_absent() -> None:

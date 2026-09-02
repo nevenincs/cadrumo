@@ -7,10 +7,11 @@ from dataclasses import replace
 import pytest
 from pydantic import ValidationError
 
-from ....core.authority_grade import RegistryAuthorityGrade
-from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.calculations.registry.errors import RegistryValidationError
-from ....domain.calculations.registry.temporal import coverage_assessment_horizon, revision_selection_coordinates
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.temporal import coverage_assessment_horizon, revision_selection_coordinates
+
 from ..temporal_coverage import (
     TemporalCoverageReport,
     TemporalRevisionCoverage,

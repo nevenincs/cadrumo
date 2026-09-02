@@ -34,8 +34,8 @@ from ..records import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
-    _decode_profile_password,
-    _encode_profile_password,
+    decode_profile_password,
+    encode_profile_password,
     parse_profile_custody_envelope,
 )
 from ..records import __all__ as record_exports
@@ -149,11 +149,11 @@ def test_password_contract_preserves_exact_unicode_at_every_accepted_boundary() 
         composed,
         decomposed,
     ):
-        assert _decode_profile_password(_encode_profile_password(candidate)) == candidate
+        assert decode_profile_password(encode_profile_password(candidate)) == candidate
 
     assert len(byte_boundary_password.encode("utf-8")) == PROFILE_PASSWORD_MAX_UTF8_BYTES
     assert composed != decomposed
-    assert _decode_profile_password(_encode_profile_password(composed)) != decomposed
+    assert decode_profile_password(encode_profile_password(composed)) != decomposed
 
 
 @pytest.mark.parametrize(
@@ -177,7 +177,7 @@ def test_password_contract_maps_every_canonical_reason_to_a_safe_custody_error(
 ) -> None:
     assessment = assess_profile_password(candidate)
     with pytest.raises(ProfileCustodyPasswordError) as captured:
-        _encode_profile_password(candidate)
+        encode_profile_password(candidate)
 
     message = str(captured.value)
     assert message == f"profile password refused by canonical policy: {reason.value}"
@@ -192,7 +192,7 @@ def test_password_contract_maps_every_canonical_reason_to_a_safe_custody_error(
 
 def test_password_transport_refuses_non_utf8_bytes() -> None:
     with pytest.raises(ProfileCustodyPasswordError):
-        _decode_profile_password(b"\xff" * PROFILE_PASSWORD_MIN_SCALARS)
+        decode_profile_password(b"\xff" * PROFILE_PASSWORD_MIN_SCALARS)
 
 
 def test_obsolete_custody_password_policy_symbols_are_absent_from_every_facade() -> None:

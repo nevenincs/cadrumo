@@ -45,7 +45,7 @@ retrieved_at = 2026-08-13
 published_at = 2024-11-06
 applies_from = 2024-11-07
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-22928"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-rdl-7-2024-dana-authority"]
 evidence_tier = "official_source_guidance"
@@ -58,7 +58,7 @@ retrieved_at = 2026-08-13
 published_at = 2024-11-12
 applies_from = 2024-11-13
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-23422"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-correccion-errores-rdl-6-2024"]
 evidence_tier = "official_source_guidance"
@@ -71,7 +71,7 @@ retrieved_at = 2026-08-13
 published_at = 2024-11-20
 applies_from = 2024-11-07
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24097"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [legal."real-decreto-ley-6-2024:art-1"]
 evidence_tier = "legal_authority"
@@ -249,7 +249,7 @@ legal_refs = [
     "real-decreto-ley-7-2024:df-14",
     "real-decreto-ley-6-2024:anexo",
 ]
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-13
 reviewed_by = "agent-prepared-pending-operator"
 notes = """\

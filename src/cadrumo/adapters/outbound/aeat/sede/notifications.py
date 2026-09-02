@@ -61,18 +61,18 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-_EXTERNAL = Settings.external_constants()
-_SEDE_BASE = _EXTERNAL.aeat.domains.www6
-_SEDE_HOST = urlsplit(_SEDE_BASE).netloc
-_AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
-_NOTIF_SUMMARY_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.notifications_summary}"
-_NOTIF_QUERY_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.notifications_query}"
+EXTERNAL = Settings.external_constants()
+SEDE_BASE = EXTERNAL.aeat.domains.www6
+_SEDE_HOST = urlsplit(SEDE_BASE).netloc
+_AEAT_HOST_SUFFIX = EXTERNAL.aeat.domains.host_suffix
+_NOTIF_SUMMARY_URL = f"{SEDE_BASE}{EXTERNAL.aeat.sede_paths.notifications_summary}"
+_NOTIF_QUERY_URL = f"{SEDE_BASE}{EXTERNAL.aeat.sede_paths.notifications_query}"
 _NOTIFICATIONS_READ_PATHS: tuple[str, ...] = tuple(
     urlsplit(path).path
     for path in (
-        _EXTERNAL.aeat.sede_paths.notifications_summary,
-        _EXTERNAL.aeat.sede_paths.notifications_query,
-        _EXTERNAL.aeat.sede_paths.notifications_detail,
+        EXTERNAL.aeat.sede_paths.notifications_summary,
+        EXTERNAL.aeat.sede_paths.notifications_query,
+        EXTERNAL.aeat.sede_paths.notifications_detail,
     )
 )
 
@@ -80,7 +80,7 @@ _NOTIFICATIONS_READ_PATHS: tuple[str, ...] = tuple(
 # the read guard admits any subdomain under the AEAT apex (host-suffix widened)
 # so a sibling-host landing is tolerated, while success detection keys on the
 # notifications PATH plus a positive page marker (below).
-_READ_GUARD_POLICY = RemoteStateGuardPolicy(
+READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-notifications-read",
     evidence_tier="official_source_guidance",
     classification="authenticated_read_surface",
@@ -558,7 +558,7 @@ class NotificationDocument(BaseModel):
 
 def notification_detail_url(certificado_id: str) -> str:
     """Return the detail-page URL for one notification."""
-    return f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.notifications_detail}?{urlencode({'ncc': certificado_id})}"
+    return f"{SEDE_BASE}{EXTERNAL.aeat.sede_paths.notifications_detail}?{urlencode({'ncc': certificado_id})}"
 
 
 def assert_notification_content_readable(row: RemoteNotification) -> None:
@@ -637,7 +637,7 @@ async def fetch_notification_document(
     settings = settings or Settings()
     url = notification_detail_url(str(row.certificado_id))
     _assert_read_http("GET", url)
-    assert_read_http_for(_READ_GUARD_POLICY, "POST", url)
+    assert_read_http_for(READ_GUARD_POLICY, "POST", url)
 
     storage_state = storage_state_for_session(session)
     browser_session = await default_browser_session_factory(settings)
@@ -651,7 +651,7 @@ async def fetch_notification_document(
         response = await context.request.post(
             url,
             form={
-                "accion": _EXTERNAL.aeat.notifications_query.detail_view_action,
+                "accion": EXTERNAL.aeat.notifications_query.detail_view_action,
                 "ncc": str(row.certificado_id),
             },
         )
@@ -825,7 +825,7 @@ async def _navigate_and_parse(
 
 def _assert_read_http(method: str, url: str) -> None:
     """Fail-closed guard: refuse any non-read-only or off-AEAT notifications navigation."""
-    assert_read_http_for(_READ_GUARD_POLICY, method, url)
+    assert_read_http_for(READ_GUARD_POLICY, method, url)
 
 
 def assert_notifications_read_landing(landing_url: str | None) -> None:
@@ -833,8 +833,8 @@ def assert_notifications_read_landing(landing_url: str | None) -> None:
     assert_read_landing(
         landing_url,
         surface="DEHu notifications",
-        policy=_READ_GUARD_POLICY,
-        allowed_path_prefixes=_READ_GUARD_POLICY.allowed_read_paths,
+        policy=READ_GUARD_POLICY,
+        allowed_path_prefixes=READ_GUARD_POLICY.allowed_read_paths,
     )
 
 

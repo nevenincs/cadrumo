@@ -5,7 +5,7 @@ id = 'generated-modelo-353-2026-desde-02-fichero'
 id = 'm353-declaracion'
 record_type = 'declaracion'
 order = 0
-encoding = 'latin-1'
+encoding = "iso-8859-1"
 line_ending = 'crlf'
 required = true
 

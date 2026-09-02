@@ -131,7 +131,7 @@ def test_real_m200_variable_envelope_is_composed_rather_than_truncated(tmp_path:
             source_sha256=parsed.source.source_sha256,
             layout_id="m200-envelope-gate",
             format="fixed_width",
-            encoding=ExportEncoding.LATIN_1,
+            encoding=ExportEncoding.ISO_8859_1,
             line_ending="crlf",
             serializer_convention="rtoml-pretty-v1",
         ),

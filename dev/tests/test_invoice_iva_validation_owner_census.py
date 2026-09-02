@@ -328,7 +328,7 @@ def test_bulk_rows_remain_structured_and_catalogue_loads_remain_outside_ledger_p
     invoice_projection = next(
         node
         for node in support_tree.body
-        if isinstance(node, ast.FunctionDef) and node.name == "_ledger_invoice_validation_no_recovery"
+        if isinstance(node, ast.FunctionDef) and node.name == "ledger_invoice_validation_no_recovery"
     )
     assert any(
         isinstance(node, ast.Call)
@@ -366,8 +366,8 @@ def test_exactly_five_ledger_boundaries_delegate_to_one_invoice_projection() -> 
                     continue
                 owners.append(function.name)
                 rendered = ast.unparse(handler)
-                assert "_ledger_invoice_validation_no_recovery" in rendered
-                assert "_ledger_cli_no_recovery" not in rendered
+                assert "ledger_invoice_validation_no_recovery" in rendered
+                assert "ledger_cli_no_recovery" not in rendered
                 assert "BadParameter" not in rendered
         observed[path] = set(owners)
     assert observed == expected

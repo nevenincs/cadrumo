@@ -35,7 +35,7 @@ from ...domain.calculations.registry.profile_grounding import build_profile_grou
 from ...domain.user_profile.errors import UserProfileError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.schema import ProfileSchemaDefinition
-from ..flows.definition import FlowDefinition, FlowPage, FlowRepeatingGroup
+from ..flows.definition import FlowDefinition, iter_flow_pages
 
 
 class PageLegalZone(BaseModel):
@@ -54,18 +54,6 @@ class PageLegalZone(BaseModel):
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
     modelos: tuple[Modelo, ...]
-
-
-def _iter_pages(definition: FlowDefinition) -> tuple[FlowPage, ...]:
-    """Flatten a definition into every page, repeating-group instances included."""
-    pages: list[FlowPage] = []
-    for section in definition.sections:
-        for item in section.items:
-            if isinstance(item, FlowRepeatingGroup):
-                pages.extend(item.pages)
-            else:
-                pages.append(item)
-    return tuple(pages)
 
 
 def _schema_legal_refs(schema: ProfileSchemaDefinition, profile_key: str) -> tuple[str, ...]:
@@ -97,7 +85,7 @@ def build_flow_legal_zones(
     grounding_index = build_profile_grounding_index(authority)
 
     zones: dict[str, PageLegalZone] = {}
-    for page in _iter_pages(definition):
+    for page in iter_flow_pages(definition):
         profile_key = page.domain_key
         if profile_key is None:
             continue

@@ -13,6 +13,11 @@ from typing import Annotated, Literal
 from pydantic import Field, field_validator, model_validator
 
 from ....core.casilla_id import CasillaId
+from .relation_dependency import (
+    RelationDependencyRoleField,
+    RelationDependencyTreatmentField,
+    RelationKindField,
+)
 from .errors import RegistryValidationError
 from .ids import (
     ApplicabilityRuleId,
@@ -149,7 +154,7 @@ class DependencyClassificationDefinition(RegistryModel):
 
     id: DependencyClassificationId
     source_modelo: ModeloId
-    treatment: Literal["direct_annual_settlement", "factual_evidence", "non_dependency"]
+    treatment: RelationDependencyTreatmentField
     taxpayer_files_source: bool = True
     conditional_on_economic_activity: bool = False
     target_constructs: tuple[ConstructId, ...] = ()

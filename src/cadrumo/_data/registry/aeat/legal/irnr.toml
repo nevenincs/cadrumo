@@ -677,7 +677,7 @@ retrieved_at = 2026-06-29
 published_at = 2010-12-23
 applies_from = 2011-01-03
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-19707"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-210-procedure"]
 evidence_tier = "official_source_guidance"
@@ -689,7 +689,7 @@ bytes = 116695
 retrieved_at = 2026-07-01
 applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/impuesto-sobre-renta-no-residentes/modelo-210-irnr______a-no-residentes-permanente_/instrucciones.html"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-irnr-renta-imputada-inmueble-urbano"]
 evidence_tier = "official_source_guidance"
@@ -700,7 +700,7 @@ sha256 = "a954f18028c83634641e2197b7ca67fc540686f0117bcae69fc96c51bc15ed83"
 bytes = 17458
 retrieved_at = 2026-06-28
 source_url = "https://sede.agenciatributaria.gob.es/Sede/no-residentes/irnr-sin-establecimiento-permanente/cuestiones-especificas-sobre-tributacion-inmuebles/renta-imputada-inmueble-urbano-uso-propio.html"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-210-2024-form-layout"]
 evidence_tier = "layout_authority"
@@ -714,7 +714,7 @@ published_at = 2024-01-31
 applies_from = 2024-02-01
 applies_to = 2026-12-31
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-1772"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-210-2026-deadline-update"]
 evidence_tier = "official_source_guidance"
@@ -727,7 +727,7 @@ retrieved_at = 2026-06-28
 published_at = 2026-06-23
 applies_from = 2026-01-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-13573"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-210-2026-form-layout"]
 evidence_tier = "layout_authority"
@@ -740,7 +740,7 @@ retrieved_at = 2026-06-28
 published_at = 2026-06-23
 applies_from = 2027-01-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-13573"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Modelo 210 diseño de registro (record layout authority). The official AEAT
 # Sede "Diseño de registro - Modelo 210" specimen (record identifier T21001),
@@ -770,7 +770,7 @@ applies_from = 2011-01-01
 # 2018-01-01..2022-05-31, which is the honest state until those two are bundled.
 applies_to = 2017-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos/dr210_2011.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Modelo 210 diseño de registro for accruals (devengos) between 01/06/2022 and
 # 01/01/2026, backing the orden-hac-56-2024 layout amendment. Acquired,
@@ -798,7 +798,7 @@ applies_from = 2022-06-01
 applies_to = 2025-12-31
 period_selector = { year_from = 2022, year_to = 2025, periods = ["EVENT-N", "0A"] }
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_22/dr210e22.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Modelo 210 diseño de registro for accruals (devengos) from 01/01/2026
 # onward, backing the orden-hac-623-2026 layout amendment. Same acquisition
@@ -814,7 +814,7 @@ bytes = 121815
 retrieved_at = 2026-07-21
 applies_from = 2026-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_26/dr210_2026.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Modelo 216 sources — the governing Orden HAC/56/2024 (BOE-A-2024-1772) is the
 # same bundled corpus the Modelo 210 sources cite; it approves and governs the
@@ -830,7 +830,7 @@ bytes = 20731
 retrieved_at = 2026-07-01
 applies_from = 2024-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/impuesto-sobre-renta-no-residentes/modelo-216-irnr______sos-cuenta-declaracion-ingreso_/instrucciones-modelo-216-presentacion-ejercicio-siguientes.html"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-216-form-layout"]
 evidence_tier = "layout_authority"
@@ -843,7 +843,7 @@ retrieved_at = 2026-08-19
 published_at = 2008-11-17
 applies_from = 2009-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-18497"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-216-2024"]
 evidence_tier = "layout_authority"
@@ -856,7 +856,7 @@ bytes = 114063
 retrieved_at = 2026-07-21
 applies_from = 2024-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_24/216e2024.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Historical Modelo 216 design, pre-2024, outside the current declared span.
 # Already acquired and manifested (2026-07-21) but previously unregistered --
@@ -875,7 +875,7 @@ retrieved_at = 2026-07-21
 applies_from = 2020-01-01
 applies_to = 2023-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_20/216v01e2020_v1.07.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Modelo 296 sources - annual resumen (informativa) companion to Modelo 216,
 # governed by the same bundled Orden HAC/56/2024 (BOE-A-2024-1772).
@@ -889,7 +889,7 @@ bytes = 54093
 retrieved_at = 2026-07-01
 applies_from = 2024-02-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI22.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-296-form-layout"]
 evidence_tier = "layout_authority"
@@ -902,7 +902,7 @@ retrieved_at = 2026-08-19
 published_at = 2008-11-17
 applies_from = 2009-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-18497"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-296-2024"]
 evidence_tier = "layout_authority"
@@ -915,7 +915,7 @@ bytes = 304691
 retrieved_at = 2026-07-21
 applies_from = 2024-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_24/DR_296_2024.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Historical Modelo 296 design, pre-2024, outside the current declared span.
 # Already acquired and manifested (2026-07-21) but previously unregistered --
@@ -934,4 +934,4 @@ retrieved_at = 2026-07-21
 applies_from = 2023-01-01
 applies_to = 2023-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/DR_296_2023.pdf"
-review_status = "reviewed"
+review_status = "pending_review"

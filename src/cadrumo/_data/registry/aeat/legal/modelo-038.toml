@@ -86,7 +86,7 @@ retrieved_at = 2026-07-04
 published_at = 2002-01-15
 applies_from = 2002-01-16
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-1041"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # AEAT's current dr038_2024.pdf records the design introduced by
 # BOE-A-2024-13049. Its final provision makes article 1 applicable first to
@@ -105,7 +105,7 @@ sha256 = "f2f713cd60b26548ab9fb57b457f28c5a7841423592f95debdf83a78d9e2f0fe"
 bytes = 94268
 retrieved_at = 2026-07-21
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/dr038_2024.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # The historical AEAT artefact is a hash-pinned inspection receipt. Its index
 # title establishes its 2012 design era, but neither that title nor the PDF
@@ -122,4 +122,4 @@ sha256 = "e9008d9c0c407c76143d6997f3a5fb52a2a482c40571f395da7dcf8a8fee3d9d"
 bytes = 79486
 retrieved_at = 2026-08-25
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/dr038_2005.pdf"
-review_status = "reviewed"
+review_status = "pending_review"

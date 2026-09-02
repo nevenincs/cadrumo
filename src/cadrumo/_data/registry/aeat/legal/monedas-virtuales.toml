@@ -209,7 +209,7 @@ published_at = 2023-07-29
 applies_from = 2023-01-01
 applies_to = 2023-12-31
 source_url = "https://www.boe.es/boe/dias/2023/07/29/pdfs/BOE-A-2023-17429.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-721-2024-layout"]
 evidence_tier = "layout_authority"
@@ -229,7 +229,7 @@ applies_from = 2024-01-01
 # 2026-08-30) lists this substitution as the ONLY subsequent amendment, with nothing in
 # 2025 or 2026, so no successor has withdrawn it.
 source_url = "https://www.boe.es/boe/dias/2024/12/31/pdfs/BOE-A-2024-27528.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-721-procedure"]
 evidence_tier = "official_source_guidance"
@@ -241,4 +241,4 @@ bytes = 37997
 retrieved_at = 2026-08-18
 applies_from = 2023-08-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI55.shtml"
-review_status = "reviewed"
+review_status = "pending_review"

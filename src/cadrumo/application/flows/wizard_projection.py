@@ -21,9 +21,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
+from ...core.flows import CheckpointAvailability, FlowMode, FlowWidgetKind
 from .definition import (
-    CopyRef,
     FlowChoice,
     FlowCondition,
     FlowDefinition,
@@ -31,6 +30,7 @@ from .definition import (
     FlowSection,
     FlowVisibility,
 )
+from .definition import locale_copy_ref as _locale_ref
 
 if TYPE_CHECKING:
     from ..wizard.models import (
@@ -121,10 +121,6 @@ def _condition(condition: WizardCondition) -> FlowCondition:
         equals=condition.equals,
         contains=condition.contains,
     )
-
-
-def _locale_ref(key: str) -> CopyRef:
-    return CopyRef(kind=CopyRefKind.LOCALE_KEY, ref=key)
 
 
 __all__ = ["flow_definition_from_wizard_flow"]

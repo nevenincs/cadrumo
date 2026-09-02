@@ -53,13 +53,20 @@ from ...domain.categories.spending_category import CATEGORY_FAMILY_MEMBERS, Spen
 from ...domain.invoices.service import LinkInconsistency
 from ...domain.transactions.irpf_categories import ledger_irpf_category_catalogue
 from ...domain.transactions.models import Transaction, TransactionCatalogue
-from ._common import _bad, _state, _tx_repo, active_profile_label, emit_envelope, resolve_notice_action
+from ._common import (
+    active_profile_label,
+    bad,
+    current_workflow_state,
+    emit_envelope,
+    resolve_notice_action,
+    transaction_catalogue_repo,
+)
 from ._decimal_parsing import optional_decimal_text
 from ._ledger_list import (
     LLM_DECISION_EVENT_TYPES,
     project_ledger_list,
 )
-from ._ledger_support import _ledger_cli_no_recovery
+from ._ledger_support import ledger_cli_no_recovery
 from .period_parsing import _canonical_period, _optional_canonical_period
 
 if TYPE_CHECKING:
@@ -88,7 +95,7 @@ def resolve_ledger_transaction_id(
     try:
         return resolve_lineage_transaction_id(prefix, catalogue)
     except TransactionIdPrefixError as exc:
-        raise _ledger_cli_no_recovery(
+        raise ledger_cli_no_recovery(
             exc,
             condition=CliExceptionPrecondition.LEDGER_TRANSACTION_ID_RESOLVES,
             facts={"transaction_id_resolves": False},
@@ -120,7 +127,7 @@ _LEDGER_EVIDENCE_HISTORY_EVENT_TYPES: tuple[BucketEventType, ...] = (
 )
 
 
-def _ledger_list_pairing_error_year(filters: list[str], option_year: int | None) -> int | None:
+def ledger_list_pairing_error_year(filters: list[str], option_year: int | None) -> int | None:
     """Return a safe year to include in period/year pairing guidance."""
     if option_year is not None:
         return option_year
@@ -143,7 +150,7 @@ def ledger_llm_diagnostics(
     until_date = _parse_iso_date(until, "--until")
     threshold = coerce_decimal_strict(low_confidence_below)
     if not is_unit_proportion(threshold):
-        raise _bad(tr("cli.ledger.llm_diagnostics.threshold_range"))
+        raise bad(tr("cli.ledger.llm_diagnostics.threshold_range"))
     report = build_llm_diagnostics_report(since=since_date, until=until_date, low_confidence_threshold=threshold)
     result = _llm_diagnostics_result(report, since=since_date, until=until_date)
     lines, notices = _llm_diagnostics_lines_and_notices(report)
@@ -382,7 +389,7 @@ def ledger_check(
     if bucket_id_option is not None:
         transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id_option)
     else:
-        transaction_repository = _tx_repo(_state())
+        transaction_repository = transaction_catalogue_repo(current_workflow_state())
     bucket_id = transaction_repository.bucket_id
     catalogue = transaction_repository.load()
     link_inconsistencies = verify_invoice_repository_links(bucket_id=bucket_id)
@@ -582,7 +589,7 @@ def ledger_preflight(ctx: typer.Context, period: str, year: int) -> None:
     """Surface modelo-readiness gaps for the active bucket without mutating ledger state."""
     from ...application.ledger.preflight import preflight_ledger_tax_readiness
 
-    transaction_repository = _tx_repo(_state())
+    transaction_repository = transaction_catalogue_repo(current_workflow_state())
     canonical = _canonical_period(period, year=year)
     report = preflight_ledger_tax_readiness(
         bucket_id=transaction_repository.bucket_id, period=canonical, transaction_repository=transaction_repository
@@ -622,7 +629,7 @@ def ledger_preflight(ctx: typer.Context, period: str, year: int) -> None:
 
 def ledger_history(ctx: typer.Context, transaction_id: str, include_split_siblings: bool = False) -> None:
     """Emit the chronological event chain for one ledger transaction id."""
-    transaction_repository = _tx_repo(_state())
+    transaction_repository = transaction_catalogue_repo(current_workflow_state())
     resolved_id = resolve_ledger_transaction_id(transaction_repository, transaction_id)
     object_ids = _history_object_ids(
         transaction_repository, resolved_id=resolved_id, include_split_siblings=include_split_siblings
@@ -661,7 +668,7 @@ def ledger_export(
     actor: str | None = None,
 ) -> None:
     """Export canonical bucket-scoped ledger rows through the backend."""
-    transaction_repository = _tx_repo(_state())
+    transaction_repository = transaction_catalogue_repo(current_workflow_state())
     result = export_ledger_transactions(
         LedgerExportCommand(
             bucket_id=transaction_repository.bucket_id,
@@ -704,7 +711,7 @@ def ledger_list(
     hide_llm_rejected: bool = False,
 ) -> None:
     """List bucket-scoped ledger rows through :func:`~cadrumo.entrypoints.cli._ledger_list.project_ledger_list`."""
-    transaction_repository = _tx_repo(_state())
+    transaction_repository = transaction_catalogue_repo(current_workflow_state())
     resolved_filters = list(filters)
     if period is not None:
         resolved_filters.append(f"period={period}")
@@ -715,7 +722,7 @@ def ledger_list(
     except FilterParseError as exc:
         from ...application.cli_exception_preconditions import CliExceptionPrecondition
 
-        raise _ledger_cli_no_recovery(
+        raise ledger_cli_no_recovery(
             exc,
             condition=CliExceptionPrecondition.LEDGER_FILTER_VALID,
             facts={"ledger_filter_valid": False, "reason": exc.reason},
@@ -756,7 +763,7 @@ def ledger_view(ctx: typer.Context, transaction_id: str) -> None:
 
     Emits a :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerViewResult`.
     """
-    transaction_repository = _tx_repo(_state())
+    transaction_repository = transaction_catalogue_repo(current_workflow_state())
     resolved_id = resolve_ledger_transaction_id(transaction_repository, transaction_id)
     result = get_manual_transaction(
         bucket_id=transaction_repository.bucket_id,
@@ -820,7 +827,7 @@ def ledger_view(ctx: typer.Context, transaction_id: str) -> None:
 
 def ledger_status(ctx: typer.Context, period: str | None = None, year: int | None = None) -> None:
     """Summarize active-bucket ledger state through the backend status service."""
-    transaction_repository = _tx_repo(_state())
+    transaction_repository = transaction_catalogue_repo(current_workflow_state())
     report = summarize_manual_transactions(
         bucket_id=transaction_repository.bucket_id,
         period=_optional_canonical_period(period, year=year),
@@ -896,7 +903,7 @@ def ledger_track(ctx: typer.Context, transaction_id: str) -> None:
 
     Emits a :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerTrackResult`.
     """
-    transaction_repository = _tx_repo(_state())
+    transaction_repository = transaction_catalogue_repo(current_workflow_state())
     resolved_id = resolve_ledger_transaction_id(transaction_repository, transaction_id)
     result = get_manual_transaction(
         bucket_id=transaction_repository.bucket_id,

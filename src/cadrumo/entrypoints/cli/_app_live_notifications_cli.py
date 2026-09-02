@@ -52,7 +52,7 @@ from ...application.live.notifications import (
 from ...core.config import Settings, load_settings
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ._app_live_auth_preflight import _emit_live_auth_preflight
+from ._app_live_auth_preflight import emit_live_auth_preflight
 from ._app_live_notifications_payloads import (
     NotificationDocumentHistoryEntry,
     NotificationDocumentHistoryResult,
@@ -116,7 +116,7 @@ def notifications_pull(ctx: typer.Context) -> None:
     :class:`NotificationsCaptureResult`.
     """
     bucket_id = _bucket_id()
-    _emit_live_auth_preflight()
+    emit_live_auth_preflight()
     persisted = asyncio.run(capture_notifications(bucket_id=bucket_id))
     result = NotificationsCaptureResult(
         bucket_id=bucket_id,
@@ -423,7 +423,7 @@ def notifications_document_pull(
     refused before any request crosses the wire.
     """
     bucket_id = _bucket_id()
-    _emit_live_auth_preflight()
+    emit_live_auth_preflight()
     service = _notification_document_service(load_settings())
     custody = asyncio.run(
         pull_notification_document(

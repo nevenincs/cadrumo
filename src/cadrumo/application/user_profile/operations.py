@@ -20,6 +20,7 @@ from ...core.operations import (
     OperationEffect,
     OperationInteractionKind,
 )
+from ...core.operations import profile_operation_subject as _profile_subject
 from ...core.time.clock import now
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -177,10 +178,6 @@ def build_profile_logout_operation_request(
         subject_ref=_profile_subject(profile_id),
         payload=ProfileLogoutOperationRequest(profile_id=profile_id),
     )
-
-
-def _profile_subject(profile_id: UUID) -> str:
-    return f"profile:{profile_id}"
 
 
 def _require_active_profile_subject[PayloadT: BaseModel](request: OperationRequest[PayloadT], profile_id: UUID) -> None:

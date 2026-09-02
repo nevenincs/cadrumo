@@ -17,6 +17,7 @@ flags the invoice as multi-component
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import TypedDict
 
 import typer
 from pydantic import BaseModel, ValidationError
@@ -51,12 +52,12 @@ from ...llm.suggestions import (
     LLMSplitSuggestion,
     LLMSuggestionRejectionResult,
 )
-from ._common import _bad, _state, _tx_repo, emit_envelope
+from ._common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
 from ._ledger_support import (
-    _ledger_transaction_validation_no_recovery,
-    _ledger_validation_bad,
-    _parse_decimal,
-    _resolve_id,
+    ledger_transaction_validation_no_recovery,
+    ledger_validation_bad,
+    parse_decimal_option,
+    resolve_id,
 )
 
 __all__ = [
@@ -229,26 +230,26 @@ def dispatch_autosplit(
     from ._ledger_payloads import LedgerClassifySingleResult
 
     if not read_evidence:
-        raise _bad(
+        raise bad(
             tr("cli.ledger.classify.auto_split_needs_evidence"),
         )
     if classification is not None or file is not None:
-        raise _bad(
+        raise bad(
             tr("cli.ledger.classify.llm_exclusive"),
         )
     if reject and apply:
-        raise _bad(
+        raise bad(
             tr("cli.ledger.classify.reject_apply_exclusive"),
         )
     if transaction_id is None:
-        raise _bad(
+        raise bad(
             tr("cli.ledger.classify.id_required"),
         )
 
-    state = _state()
-    transaction_repository = _tx_repo(state)
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
     bucket_id = transaction_repository.bucket_id
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    resolved_id = resolve_id(transaction_repository, transaction_id)
     suggestion = suggest_evidence_split(
         bucket_id=bucket_id,
         transaction_id=resolved_id,
@@ -323,9 +324,9 @@ def _emit_split(
             actor=actor or resolve_active_bucket_id() or "operator",
         )
     except TransactionValidationError as exc:
-        raise _ledger_transaction_validation_no_recovery(exc) from None
+        raise ledger_transaction_validation_no_recovery(exc) from None
     except ValidationError as exc:
-        raise _ledger_validation_bad(exc) from exc
+        raise ledger_validation_bad(exc) from exc
     assert isinstance(applied, LLMSplitApplyResult)
     result = LedgerSplitResult.model_validate(
         {
@@ -390,9 +391,9 @@ def _emit_single(
             source_command="aeat app ledger classify --read-evidence --auto-split --apply",
         )
     except TransactionValidationError as exc:
-        raise _ledger_transaction_validation_no_recovery(exc) from None
+        raise ledger_transaction_validation_no_recovery(exc) from None
     except ValidationError as exc:
-        raise _ledger_validation_bad(exc) from exc
+        raise ledger_validation_bad(exc) from exc
     transaction_payload = ledger_transaction_payload(result.transaction)
     review_status = ledger_transaction_review_status(result.transaction)
     classify_result = single_model.model_validate(
@@ -466,15 +467,15 @@ def _validate_classify_llm_options(
     read with no provider is refused instructively downstream by the application.
     """
     if classification is not None or file is not None:
-        raise _bad(
+        raise bad(
             tr("cli.ledger.classify.llm_exclusive"),
         )
     if reject and apply:
-        raise _bad(
+        raise bad(
             tr("cli.ledger.classify.reject_apply_exclusive"),
         )
     if transaction_id is None:
-        raise _bad(
+        raise bad(
             tr("cli.ledger.classify.id_required"),
         )
     return transaction_id
@@ -609,9 +610,9 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
         transaction_id=transaction_id,
     )
 
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, validated_transaction_id)
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
+    resolved_id = resolve_id(transaction_repository, validated_transaction_id)
     suggestion = suggest_fn(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_id,
@@ -632,6 +633,28 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
         )
         return None
     return suggestion, transaction_repository
+
+
+class LedgerLlmRouteArguments(TypedDict):
+    """The argument set both LLM ledger routes accept.
+
+    ``ledger_classify_llm`` and ``ledger_saturate_llm`` take the same
+    parameters, and the root ``ledger`` verb chooses between them after
+    building one argument set. Naming that shape keeps the choice a single
+    branch instead of two duplicated call sites.
+    """
+
+    ctx: typer.Context
+    transaction_id: str | None
+    classification: BusinessClassification | None
+    file: str | None
+    business_pct: str | None
+    apply: bool
+    actor: str | None
+    read_evidence: bool
+    vision_model: str | None
+    reject: bool
+    reason: str
 
 
 def ledger_classify_llm(
@@ -686,12 +709,12 @@ def ledger_classify_llm(
             origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
             decision=LlmReviewDecision.APPLY,
             bucket_id=transaction_repository.bucket_id,
-            business_pct=_parse_decimal(business_pct, label="business-pct"),
+            business_pct=parse_decimal_option(business_pct, label="business-pct"),
             actor=actor or resolve_active_bucket_id() or "operator",
             transaction_repository=transaction_repository,
         )
     except ValidationError as exc:
-        raise _ledger_validation_bad(exc) from exc
+        raise ledger_validation_bad(exc) from exc
     assert isinstance(result, ManualLedgerTransactionResult)
     # D1: the --llm --apply path is a single-transaction mutation; it emits the
     # canonical mutation quintet with the llm provenance in the text lines.
@@ -754,14 +777,14 @@ def ledger_saturate_llm(
             origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_SATURATE_APPLY,
             decision=LlmReviewDecision.APPLY,
             bucket_id=transaction_repository.bucket_id,
-            business_pct=_parse_decimal(business_pct, label="business-pct"),
+            business_pct=parse_decimal_option(business_pct, label="business-pct"),
             actor=actor or resolve_active_bucket_id() or "operator",
             transaction_repository=transaction_repository,
         )
     except TransactionValidationError as exc:
-        raise _ledger_transaction_validation_no_recovery(exc) from None
+        raise ledger_transaction_validation_no_recovery(exc) from None
     except ValidationError as exc:
-        raise _ledger_validation_bad(exc) from exc
+        raise ledger_validation_bad(exc) from exc
     assert isinstance(result, ManualLedgerTransactionResult)
     # D1: the --llm --saturate --apply path is a single-transaction mutation; it
     # emits the canonical mutation quintet with the derived IVA category in the lines.
@@ -795,23 +818,23 @@ def ledger_operator_iva_derive(
     from ._ledger_payloads import LedgerClassifySingleResult
 
     if file is not None or classification is not None:
-        raise _bad(
+        raise bad(
             "--saturate without --llm derives the IVA substrate from --iva-category alone; "
             "it cannot be combined with --classification or --file. Classify the row "
             "first, then run 'classify <id> --iva-category <category> --saturate'.",
         )
     if transaction_id is None:
-        raise _bad(
+        raise bad(
             tr("cli.ledger.classify.id_required"),
         )
     if iva_category is None:
-        raise _bad(
+        raise bad(
             tr("cli.ledger.classify.saturate_requires_llm"),
         )
 
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
+    resolved_id = resolve_id(transaction_repository, transaction_id)
     try:
         derivation = derive_operator_iva_substrate(
             bucket_id=transaction_repository.bucket_id,
@@ -822,12 +845,12 @@ def ledger_operator_iva_derive(
             transaction_repository=transaction_repository,
         )
     except TransactionValidationError as exc:
-        raise _ledger_transaction_validation_no_recovery(exc) from None
+        raise ledger_transaction_validation_no_recovery(exc) from None
     except ValidationError as exc:
-        raise _ledger_validation_bad(exc) from exc
+        raise ledger_validation_bad(exc) from exc
 
     if not derivation.derivable:
-        raise _bad(
+        raise bad(
             f"{iva_category.value} has no simple Spanish rate to derive: {derivation.note} "
             "Supply --taxable-base, --iva-rate, and --iva-amount by hand for this category.",
         )
@@ -837,7 +860,7 @@ def ledger_operator_iva_derive(
     iva_rate = derivation.iva_rate
     iva_amount = derivation.iva_amount
     if result is None or taxable_base is None or iva_rate is None or iva_amount is None:
-        raise _bad(
+        raise bad(
             f"{iva_category.value} was reported derivable but produced no IVA substrate; "
             "supply --taxable-base, --iva-rate, and --iva-amount by hand for this category.",
         )

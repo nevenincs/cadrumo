@@ -33,13 +33,13 @@ from ...domain.attachments.enums import AttachmentSource, DocumentLinkSource
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ...domain.transactions.errors import TransactionValidationError
 from ...llm.suggestions import LLMSplitApplyResult
-from ._common import _bad, _state, _tx_repo, emit_envelope
+from ._common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
 from ._decimal_parsing import parse_decimal_amount
 from ._ledger_support import (
-    _emit_update_result,
-    _ledger_transaction_validation_no_recovery,
-    _ledger_validation_bad,
-    _resolve_id,
+    emit_update_result,
+    ledger_transaction_validation_no_recovery,
+    ledger_validation_bad,
+    resolve_id,
 )
 
 if TYPE_CHECKING:
@@ -57,9 +57,9 @@ def ledger_detach(
     """Detach supplementary attachments from one ledger transaction."""
     from ...application.ledger.actions_manual import detach_manual_transaction_attachments
 
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
+    resolved_id = resolve_id(transaction_repository, transaction_id)
     result = detach_manual_transaction_attachments(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_id,
@@ -70,7 +70,7 @@ def ledger_detach(
     )
     from ._ledger_payloads import LedgerDetachResult
 
-    _emit_update_result(
+    emit_update_result(
         ctx,
         result.transaction,
         result.ref.bucket_id,
@@ -91,9 +91,9 @@ def ledger_attach(
     """Attach existing secure evidence objects to one ledger transaction."""
     from ...application.ledger.actions_manual import attach_manual_transaction_evidence
 
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
+    resolved_id = resolve_id(transaction_repository, transaction_id)
     result = attach_manual_transaction_evidence(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_id,
@@ -105,7 +105,7 @@ def ledger_attach(
     )
     from ._ledger_payloads import LedgerAttachResult
 
-    _emit_update_result(
+    emit_update_result(
         ctx,
         result.transaction,
         result.ref.bucket_id,
@@ -215,9 +215,9 @@ def ledger_evidence_pull(
     from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 
     attachment_source = source.to_attachment_source()
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
+    resolved_id = resolve_id(transaction_repository, transaction_id)
 
     profile = resolve_active_profile()
     credentials = build_google_credentials(profile=profile)
@@ -254,7 +254,7 @@ def ledger_evidence_pull(
     )
     from ._ledger_payloads import LedgerAttachResult
 
-    _emit_update_result(
+    emit_update_result(
         ctx,
         result.transaction,
         result.ref.bucket_id,
@@ -277,7 +277,7 @@ def _parse_drive_folder_reference(reference: str) -> str:
 
     folder_id = parse_drive_file_id(reference)
     if folder_id is None:
-        raise _bad(
+        raise bad(
             tr("cli.app.ledger.evidence.pull_all_errors.folder_id_unrecognised", reference=reference),
         )
     return folder_id
@@ -320,8 +320,8 @@ def ledger_evidence_pull_all(
     from ._ledger_payloads import LedgerEvidencePullAllFilePayload, LedgerEvidencePullAllResult
 
     folder_id = _parse_drive_folder_reference(folder)
-    state = _state()
-    transaction_repository = _tx_repo(state)
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
     bucket_id = transaction_repository.bucket_id
 
     profile = resolve_active_profile()
@@ -423,10 +423,10 @@ def ledger_archive(
 ) -> None:
     """Archive one ledger transaction through the bucket-scoped backend."""
     if not yes:
-        raise _bad(tr("cli.ledger.errors.confirm_required"))
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
+        raise bad(tr("cli.ledger.errors.confirm_required"))
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
+    resolved_id = resolve_id(transaction_repository, transaction_id)
     result = archive_manual_transaction(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_id,
@@ -437,7 +437,7 @@ def ledger_archive(
     )
     from ._ledger_payloads import LedgerArchiveResult
 
-    _emit_update_result(
+    emit_update_result(
         ctx,
         result.transaction,
         result.ref.bucket_id,
@@ -456,10 +456,10 @@ def ledger_stash(
 ) -> None:
     """Stash one ledger transaction through the bucket-scoped backend."""
     if not yes:
-        raise _bad(tr("cli.ledger.errors.confirm_required"))
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
+        raise bad(tr("cli.ledger.errors.confirm_required"))
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
+    resolved_id = resolve_id(transaction_repository, transaction_id)
     result = stash_manual_transaction(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_id,
@@ -470,7 +470,7 @@ def ledger_stash(
     )
     from ._ledger_payloads import LedgerStashResult
 
-    _emit_update_result(
+    emit_update_result(
         ctx,
         result.transaction,
         result.ref.bucket_id,
@@ -489,10 +489,10 @@ def ledger_exclude(
 ) -> None:
     """Mark one active ledger transaction as reviewed and excluded from filing."""
     if not yes:
-        raise _bad(tr("cli.ledger.errors.confirm_required"))
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
+        raise bad(tr("cli.ledger.errors.confirm_required"))
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
+    resolved_id = resolve_id(transaction_repository, transaction_id)
     result = mark_transaction_reviewed_excluded(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_id,
@@ -503,7 +503,7 @@ def ledger_exclude(
     )
     from ._ledger_payloads import LedgerExcludeResult
 
-    _emit_update_result(
+    emit_update_result(
         ctx,
         result.transaction,
         result.ref.bucket_id,
@@ -522,10 +522,10 @@ def ledger_restore(
 ) -> None:
     """Restore one stashed or archived ledger transaction to active."""
     if not yes:
-        raise _bad(tr("cli.ledger.errors.confirm_required"))
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
+        raise bad(tr("cli.ledger.errors.confirm_required"))
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
+    resolved_id = resolve_id(transaction_repository, transaction_id)
     result = restore_manual_transaction(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_id,
@@ -536,7 +536,7 @@ def ledger_restore(
     )
     from ._ledger_payloads import LedgerRestoreResult
 
-    _emit_update_result(
+    emit_update_result(
         ctx,
         result.transaction,
         result.ref.bucket_id,
@@ -556,10 +556,10 @@ def ledger_remove(
 ) -> None:
     """Remove one ledger transaction through the bucket-scoped backend."""
     if not dry_run and not yes:
-        raise _bad(tr("cli.ledger.errors.confirm_required"))
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
+        raise bad(tr("cli.ledger.errors.confirm_required"))
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
+    resolved_id = resolve_id(transaction_repository, transaction_id)
     report = remove_manual_transaction(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_id,
@@ -593,9 +593,9 @@ def ledger_reset(
 ) -> None:
     """Reset the active bucket ledger catalogue through the backend."""
     if not dry_run and not yes:
-        raise _bad(tr("cli.ledger.errors.confirm_required"))
-    state = _state()
-    transaction_repository = _tx_repo(state)
+        raise bad(tr("cli.ledger.errors.confirm_required"))
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
     report = reset_ledger_catalogue(
         bucket_id=transaction_repository.bucket_id,
         actor=actor or resolve_active_bucket_id() or "operator",
@@ -648,14 +648,14 @@ def ledger_split(
         )
         return
     if not yes:
-        raise _bad(tr("cli.ledger.errors.confirm_required"))
+        raise bad(tr("cli.ledger.errors.confirm_required"))
     if len(child_amount) != len(child_description):
-        raise _bad(tr("cli.ledger.split.errors.child_args_mismatch"))
+        raise bad(tr("cli.ledger.split.errors.child_args_mismatch"))
     if len(child_amount) < 2:
-        raise _bad(tr("cli.ledger.split.errors.min_two_children"))
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
+        raise bad(tr("cli.ledger.split.errors.min_two_children"))
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
+    resolved_id = resolve_id(transaction_repository, transaction_id)
     try:
         children = tuple(
             SplitChildCommand(
@@ -674,7 +674,7 @@ def ledger_split(
             transaction_repository=transaction_repository,
         )
     except ValidationError as exc:
-        raise _ledger_validation_bad(exc) from exc
+        raise ledger_validation_bad(exc) from exc
     from ._ledger_payloads import LedgerSplitResult
 
     child_id_rows = _split_child_id_rows(result.child_transaction_ids)
@@ -761,11 +761,11 @@ def _validate_split_llm_options(
 ) -> None:
     """Reject manual-override flag combinations and an unconfirmed apply for ``ledger split --llm``."""
     if child_amount or child_description:
-        raise _bad(
+        raise bad(
             tr("cli.ledger.split.llm_exclusive"),
         )
     if apply and not yes:
-        raise _bad(tr("cli.ledger.errors.confirm_required"))
+        raise bad(tr("cli.ledger.errors.confirm_required"))
 
 
 def _build_split_child_proposals(suggestion: LLMSplitSuggestion) -> list[LedgerSplitChildProposalPayload]:
@@ -901,10 +901,10 @@ def _ledger_split_llm(
         yes=yes,
     )
 
-    state = _state()
-    transaction_repository = _tx_repo(state)
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
     bucket_id = transaction_repository.bucket_id
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    resolved_id = resolve_id(transaction_repository, transaction_id)
     suggestion = suggest_evidence_split(
         bucket_id=bucket_id,
         transaction_id=resolved_id,
@@ -934,9 +934,9 @@ def _ledger_split_llm(
             transaction_repository=transaction_repository,
         )
     except TransactionValidationError as exc:
-        raise _ledger_transaction_validation_no_recovery(exc) from None
+        raise ledger_transaction_validation_no_recovery(exc) from None
     except ValidationError as exc:
-        raise _ledger_validation_bad(exc) from exc
+        raise ledger_validation_bad(exc) from exc
     assert isinstance(applied, LLMSplitApplyResult)
 
     _render_split_llm_applied(
@@ -956,12 +956,12 @@ def ledger_merge(
 ) -> None:
     """Re-merge a complete cohort of split children into a fresh transaction."""
     if not yes:
-        raise _bad(tr("cli.ledger.errors.confirm_required"))
+        raise bad(tr("cli.ledger.errors.confirm_required"))
     if len(child_id) < 2:
-        raise _bad(tr("cli.ledger.merge.errors.min_two_children"))
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_ids = tuple(_resolve_id(transaction_repository, raw) for raw in child_id)
+        raise bad(tr("cli.ledger.merge.errors.min_two_children"))
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
+    resolved_ids = tuple(resolve_id(transaction_repository, raw) for raw in child_id)
     result = merge_transactions(
         bucket_id=transaction_repository.bucket_id,
         child_transaction_ids=resolved_ids,

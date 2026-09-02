@@ -49,7 +49,6 @@ See Also:
 from __future__ import annotations
 
 import asyncio
-import json
 from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, Field
@@ -63,6 +62,7 @@ from ..domain.iva.supply_nature import SupplyNature
 from .client import LLMClient
 from .errors import LLMConfigError
 from .models import LLMProvider, LLMRequest
+from .response_json import first_json_object as _first_json_object
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -207,26 +207,6 @@ def build_supply_nature_prompt(descriptions: Sequence[str]) -> str:
         "Reply with this JSON object and nothing else:\n"
         '{"supply_nature": "<token>", "reason": "<a few words>"}'
     )
-
-
-def _first_json_object(text: str) -> str | None:
-    """Return the first complete JSON object in ``text`` as its source substring.
-
-    The SUBSTRING rather than the decoded object, so validation runs in
-    pydantic's JSON mode. A small model routinely wraps its answer in a fence or
-    a sentence, so the object is located rather than assumed to be the whole
-    reply; the stdlib decoder knows where an object ends.
-    """
-    decoder = json.JSONDecoder()
-    index = text.find("{")
-    while index >= 0:
-        try:
-            _, end = decoder.raw_decode(text, index)
-        except ValueError:
-            index = text.find("{", index + 1)
-            continue
-        return text[index:end]
-    return None
 
 
 def parse_supply_nature_response(text: str) -> SupplyNatureProposal:

@@ -13,7 +13,7 @@ import asyncio
 import time
 from collections.abc import Awaitable, Callable
 from contextlib import ExitStack
-from typing import Any, Protocol, cast
+from typing import Protocol, cast
 
 from textual.app import App
 from textual.pilot import Pilot
@@ -79,7 +79,13 @@ def _activate_locale(locale: str | None) -> None:
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-TEXTUAL-APP: Pilot[ReturnType] is an
 # invariant generic; this harness drives any concrete app regardless of the
 # type it returns from run(), which only Any satisfies for every instantiation.
-async def _apply(pilot: Pilot[Any], session: Session) -> None:
+class _WorkerCompletion(Protocol):
+    """The worker-manager call this replay makes while settling a frame."""
+
+    async def wait_for_complete(self) -> None: ...
+
+
+async def _apply(pilot: Pilot[object], session: Session) -> None:
     """Deliver every recorded gesture, in order, through the real pipeline."""
     for gesture in session.gestures:
         match gesture:
@@ -109,15 +115,19 @@ async def _apply(pilot: Pilot[Any], session: Session) -> None:
     # replay before the form could be captured or answered. Once the modal is
     # gone, wait for all work so storage and repaint land before the frame is
     # read.
-    if len(pilot.app.screen_stack) == 1:
-        await pilot.app.workers.wait_for_complete()
+    app = pilot.app
+    if len(app.screen_stack) == 1:
+        # Textual annotates ``wait_for_complete(workers: Iterable[Worker])``
+        # against the bare generic, so the member type carries an Unknown. This
+        # states the no-argument call this replay actually makes.
+        await cast("_WorkerCompletion", app.workers).wait_for_complete()
         await pilot.pause()
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-TEXTUAL-APP: App[ReturnType] is an
 # invariant generic; read accepts any concrete app regardless of the type it
 # returns from run(), which only Any satisfies for every instantiation.
-def _run[T](session: Session, read: Callable[[App[Any], float], Awaitable[T] | T]) -> T:
+def _run[T](session: Session, read: Callable[[App[object], float], Awaitable[T] | T]) -> T:
     """Build, drive and hand the settled app to ``read``.
 
     The one place a surface is constructed and walked. Both the frame
@@ -142,11 +152,12 @@ def _run[T](session: Session, read: Callable[[App[Any], float], Awaitable[T] | T
             await pilot.pause()
             await _apply(pilot, session)
             elapsed_ms = (time.perf_counter() - started) * 1000
-            result = read(app, elapsed_ms)
-            if isinstance(result, Awaitable):
-                result = await result
+            produced = read(app, elapsed_ms)
+            # ``read`` may be sync or async; a bare ``isinstance`` narrow loses
+            # the element type, so the awaited branch names it.
+            settled: T = await cast("Awaitable[T]", produced) if isinstance(produced, Awaitable) else produced
             app.exit(None)
-        return cast(T, result)
+        return settled
 
     with ExitStack() as stack:
         if surface.provision is not None:

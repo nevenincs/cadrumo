@@ -7,7 +7,7 @@ source_refs = ["aeat-dr-322-2026"]
 id = "modelo-322-page-04"
 record_type = "page_04"
 order = 4
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 

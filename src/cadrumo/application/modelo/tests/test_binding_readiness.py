@@ -42,7 +42,7 @@ sha256 = "44f8354494a5ba03ba1792a8d3e9c534c47a9181980fde7a3f44b06ef2ae7c7f"
 bytes = 1000
 retrieved_at = 2025-01-01
 source_url = "https://example.com/test-source"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."test-source-002"]
 evidence_tier = "official_source_guidance"
@@ -53,7 +53,7 @@ sha256 = "44f8354494a5ba03ba1792a8d3e9c534c47a9181980fde7a3f44b06ef2ae7c7f"
 bytes = 1000
 retrieved_at = 2025-01-01
 source_url = "https://example.com/test-source-002"
-review_status = "reviewed"
+review_status = "pending_review"
 """
 
 _MINIMAL_MANIFEST_TOML = """\

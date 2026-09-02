@@ -66,7 +66,7 @@ retrieved_at = 2026-07-04
 published_at = 2021-05-27
 applies_from = 2021-05-28
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-8878"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Retiered 2026-08-15: this 1009-byte orden excerpt carries no annex section
 # and no record-layout vocabulary, so it was never layout authority -- the
@@ -85,7 +85,7 @@ retrieved_at = 2026-07-04
 published_at = 2021-05-27
 applies_from = 2021-05-28
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-8878"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-604-2021"]
 evidence_tier = "layout_authority"
@@ -99,7 +99,7 @@ retrieved_at = 2026-07-21
 applies_from = 2021-01-01
 applies_to = 2023-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR604_2021.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-604-2024"]
 evidence_tier = "layout_authority"
@@ -112,7 +112,7 @@ bytes = 168495
 retrieved_at = 2026-07-21
 applies_from = 2024-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR604_2024.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # The two AEAT ATF appendices are Spanish/English translations. Their content
 # confirms that they are logical filing designs, but does not state a separate
@@ -126,7 +126,7 @@ sha256 = "99247eb28da6a1c68867fdf231f1ead2b66d0fcba8b57ff16f1db54abecf0df4"
 bytes = 217511
 retrieved_at = 2026-07-21
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR_ATF.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-604-atf-english"]
 evidence_tier = "layout_authority"
@@ -137,4 +137,4 @@ sha256 = "97b7fae21fba5c5e6eb7c19fe854758484bbc834698124cc81e825e925dd89af"
 bytes = 208439
 retrieved_at = 2026-07-21
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR_ATF_Ingles.pdf"
-review_status = "reviewed"
+review_status = "pending_review"

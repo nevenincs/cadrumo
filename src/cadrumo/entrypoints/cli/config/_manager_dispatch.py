@@ -51,7 +51,9 @@ if TYPE_CHECKING:
     """
 
 
-def with_profile_cli_projection(wizard_command, *, mode: WizardPersistMode):
+def with_profile_cli_projection(
+    wizard_command: Callable[..., None], *, mode: WizardPersistMode
+) -> Callable[..., None]:
     """Route profile verbs through their canonical CLI projections.
 
     Creation has a dedicated CLI credential door because the setup wizard does
@@ -62,7 +64,7 @@ def with_profile_cli_projection(wizard_command, *, mode: WizardPersistMode):
     import functools
 
     @functools.wraps(wizard_command)
-    def _dispatch(*args: object, **kwargs: object):
+    def _dispatch(*args: object, **kwargs: object) -> None:
         from ._manager_frontend import has_explicit_profile_fields
 
         context = kwargs.get("ctx")
@@ -103,13 +105,10 @@ def profile_wizard_behavior(mode: WizardPersistMode) -> Callable[..., None]:
     """Build the behavior-only wizard callable for one profile verb."""
     from ....application.wizard.commands import build_wizard_command
 
-    return cast(
-        "Callable[..., None]",
-        _command_error_boundary(
-            with_profile_cli_projection(
-                build_wizard_command(_get_setup_flow(), mode=mode),
-                mode=mode,
-            ),
+    return _command_error_boundary(
+        with_profile_cli_projection(
+            build_wizard_command(_get_setup_flow(), mode=mode),
+            mode=mode,
         ),
     )
 

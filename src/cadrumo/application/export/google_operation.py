@@ -29,6 +29,7 @@ from ...core.operations import (
     OperationEffect,
     OperationInteractionKind,
 )
+from ...core.operations import profile_operation_subject as _profile_subject
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_authority
@@ -175,10 +176,6 @@ class GoogleSheetsExportOperationResult(BaseModel):
     value_cells_changed: int | None = Field(default=None, ge=0)
     value_cells_unchanged: int | None = Field(default=None, ge=0)
     formula_cells_to_write: int | None = Field(default=None, ge=0)
-
-
-def _profile_subject(profile_id: UUID) -> str:
-    return f"profile:{profile_id}"
 
 
 def _require_active_profile(profile_id: UUID) -> str:

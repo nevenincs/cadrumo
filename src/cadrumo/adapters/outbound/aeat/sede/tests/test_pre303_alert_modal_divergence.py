@@ -83,12 +83,12 @@ from ..iva_compensation_wallet import _dismiss_pre303_alert_modal_if_present as 
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_PRE303 = Settings.external_constants().aeat.pre303
+PRE303 = Settings.external_constants().aeat.pre303
 # "#alertsModal" and "continuar" as of this writing; read live rather than
 # hardcoded so this module tracks a config change instead of silently testing
 # a stale selector.
-_MODAL_SELECTOR = _PRE303.alert_modal_selector
-_BUTTON_TEXT = _PRE303.alert_continue_button_text
+_MODAL_SELECTOR = PRE303.alert_modal_selector
+_BUTTON_TEXT = PRE303.alert_continue_button_text
 
 # SYNTHETIC — hand-built, not captured from AEAT. See module docstring.
 _HTML_SHOWN = f"""

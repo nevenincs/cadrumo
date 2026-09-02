@@ -15,9 +15,9 @@ from ....core.external_constants import (
 )
 from ....core.filing_year import FilingYear
 from ....core.identity import ContentDigest
-from ....core.legal_review import REVIEWED_LEGAL_STATUSES, LegalReviewStatus
 from ....core.period import RegistryPeriodCode, RegistrySelectorPeriodCode
 from ....core.record_design_epoch import RECORD_DESIGN_EPOCH_RE
+from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from .errors import RegistryValidationError
 from .ids import LegalRefId, ModeloId, ParameterId, RevisionId, SourceRefId
 from .schema_base import (
@@ -25,9 +25,8 @@ from .schema_base import (
     DesignAuthority,
     EvidenceTier,
     LegalRefs,
-    LegalReviewStatusField,
     RegistryModel,
-    ReviewStatus,
+    RevisionReviewStatusField,
 )
 
 __all__ = [
@@ -81,16 +80,16 @@ def _validate_legal_corpus_ref(reference_id: LegalRefId, corpus_ref: str) -> Non
 
 
 def _validate_legal_review_metadata(
-    review_status: LegalReviewStatus,
+    review_status: RevisionReviewStatus,
     reviewed_by: str | None,
     reviewed_at: date | None,
 ) -> None:
     has_reviewer = reviewed_by is not None
     has_review_date = reviewed_at is not None
-    if review_status is LegalReviewStatus.PENDING_REVIEW:
+    if review_status is RevisionReviewStatus.PENDING_REVIEW:
         if has_reviewer or has_review_date:
             raise RegistryValidationError("pending legal reference must not declare reviewed_by or reviewed_at")
-    elif review_status in REVIEWED_LEGAL_STATUSES and not (has_reviewer and has_review_date):
+    elif review_status in REVIEWED_REVISION_REVIEW_STATUSES and not (has_reviewer and has_review_date):
         raise RegistryValidationError(f"{review_status.value} legal reference requires reviewed_by and reviewed_at")
 
 
@@ -222,7 +221,7 @@ class LegalReference(RegistryModel):
     effective_from: date
     effective_to: date | None = None
     consolidated_as_of: date | None = None
-    review_status: LegalReviewStatusField
+    review_status: RevisionReviewStatusField
     reviewed_at: date | None = None
     reviewed_by: str | None = Field(default=None, min_length=1)
     notes: str | None = None
@@ -355,7 +354,7 @@ class SourceReference(RegistryModel):
     record_design_epoch: str | None = Field(default=None, min_length=1, max_length=128)
     design_authority: DesignAuthority = "authoritative"
     source_url: RegistryExternalLink
-    review_status: ReviewStatus
+    review_status: RevisionReviewStatusField
     period_selector: PeriodSelector | None = None
     """Disambiguates two designs that share one ``applies_from``/``applies_to`` window.
 
@@ -492,7 +491,7 @@ class LegalParameter(RegistryModel):
     unit: str
     applies_to: str
     legal_refs: LegalRefs
-    review_status: ReviewStatus
+    review_status: RevisionReviewStatusField
     reviewed_at: date | None = None
     reviewed_by: str | None = None
     notes: str | None = None

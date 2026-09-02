@@ -5,7 +5,7 @@ id = 'generated-modelo-303-2024-hasta-08-y-2t-fichero'
 id = 'm303-domiciliacion'
 record_type = 'domiciliacion'
 order = 5
-encoding = 'latin-1'
+encoding = "iso-8859-1"
 line_ending = 'crlf'
 required = true
 

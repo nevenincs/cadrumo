@@ -16,6 +16,7 @@ from pydantic import TypeAdapter, ValidationError
 from ...application.inventory.service import InventoryMovementCommand, InventoryService
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n.render import tr
+from ...core.type_guards import is_object_list, is_str_keyed_dict
 from ...domain.contribuyente.inventory.records import (
     InventoryAcquisitionCost,
     InventoryClosingAuthorityRecord,
@@ -59,11 +60,11 @@ def _safe_inventory_ledger_payload(ledger: InventoryLedger) -> dict[str, object]
             "prior_closing_link": record.prior_closing_link.fingerprint,
         }
     movements = payload["period_movements"]
-    assert isinstance(movements, list)
+    assert is_object_list(movements)
     for movement in movements:
-        assert isinstance(movement, dict)
+        assert is_str_keyed_dict(movement)
         acquisition = movement.get("acquisition_cost")
-        if not isinstance(acquisition, dict):
+        if not is_str_keyed_dict(acquisition):
             continue
         evidence = acquisition.get("evidence")
         components = acquisition.get("attributable_cost_components")
@@ -73,8 +74,8 @@ def _safe_inventory_ledger_payload(ledger: InventoryLedger) -> dict[str, object]
             "nonrecoverable_iva_included": acquisition["nonrecoverable_iva_included"],
             "recoverable_iva_excluded": acquisition["recoverable_iva_excluded"],
             "total_acquisition_cost": acquisition["total_acquisition_cost"],
-            "component_count": len(components) if isinstance(components, list) else 0,
-            "evidence_count": len(evidence) if isinstance(evidence, list) else 0,
+            "component_count": len(components) if is_object_list(components) else 0,
+            "evidence_count": len(evidence) if is_object_list(evidence) else 0,
             "complete": True,
         }
     return payload

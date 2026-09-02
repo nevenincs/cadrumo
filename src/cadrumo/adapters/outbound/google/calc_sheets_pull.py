@@ -55,7 +55,9 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Any, Final, Literal
 
 if TYPE_CHECKING:
-    from googleapiclient.discovery import Resource as _GoogleResource
+    from google.auth.credentials import Credentials
+    from googleapiclient._apis.drive.v3.resources import DriveResource
+    from googleapiclient._apis.sheets.v4.resources import SheetsResource
 
 from pydantic import TypeAdapter, ValidationError
 
@@ -66,6 +68,7 @@ from ....core.casilla_id import CasillaId
 from ....core.decimal.coercion import coerce_decimal, coerce_finite_european_decimal
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.period import Period
+from ....core.type_guards import is_object_list, is_str_keyed_dict
 from ....domain.calculations.registry.casilla_membership import (
     casillas_by_id,
     undeclared_casilla_ids,
@@ -173,7 +176,7 @@ def _calc_sheets_pull_terminal_refusal(
     )
 
 
-def _drive_service(credentials: object) -> _GoogleResource:
+def _drive_service(credentials: Credentials) -> DriveResource:
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
@@ -195,7 +198,7 @@ def _drive_service(credentials: object) -> _GoogleResource:
     return build("drive", "v3", credentials=credentials, cache_discovery=False)
 
 
-def _sheets_service(credentials: object) -> _GoogleResource:
+def _sheets_service(credentials: Credentials) -> SheetsResource:
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
@@ -217,12 +220,7 @@ def _sheets_service(credentials: object) -> _GoogleResource:
     return build("sheets", "v4", credentials=credentials, cache_discovery=False)
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource exposes
-# .files() / .spreadsheets() only via runtime Discovery JSON dispatch; the published
-# typing surface carries .close() alone, so service helpers accept Any for the dynamic
-# attribute access.
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: runtime discovery Resource.
-def _verify_ownership(drive_service: Any, spreadsheet_id: str) -> None:
+def _verify_ownership(drive_service: DriveResource, spreadsheet_id: str) -> None:
     """Refuse to read from a spreadsheet that lacks the ownership marker."""
     file_meta = execute_request(
         drive_service.files().get(
@@ -232,7 +230,7 @@ def _verify_ownership(drive_service: Any, spreadsheet_id: str) -> None:
         action="drive.files.get.appProperties",
     )
     raw_app_properties = file_meta.get("appProperties")
-    if raw_app_properties is not None and not isinstance(raw_app_properties, Mapping):
+    if raw_app_properties is not None and not is_str_keyed_dict(raw_app_properties):
         error = OutboundStorageValidationError(
             "spreadsheet appProperties must be a mapping when present",
             context={"spreadsheet_id": spreadsheet_id, "app_properties_type": type(raw_app_properties).__name__},
@@ -244,7 +242,7 @@ def _verify_ownership(drive_service: Any, spreadsheet_id: str) -> None:
             facts={"spreadsheet_id": spreadsheet_id, "ownership_metadata_mapping": False},
             outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         )
-    app_properties = raw_app_properties or {}
+    app_properties: Mapping[str, object] = raw_app_properties if is_str_keyed_dict(raw_app_properties) else {}
     if app_properties.get(_OWNERSHIP_KEY) != _OWNERSHIP_VALUE:
         error = OutboundStorageConflictError(
             f"spreadsheet {spreadsheet_id!r} is not marked as app-owned; refusing "
@@ -266,7 +264,7 @@ def _verify_ownership(drive_service: Any, spreadsheet_id: str) -> None:
 # attribute access.
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: runtime discovery Resource.
 def _read_developer_metadata(
-    sheets_service: Any,
+    sheets_service: SheetsResource,
     spreadsheet_id: str,
 ) -> dict[str, str]:
     """Recover the engine-stamped developer metadata pairs."""
@@ -280,7 +278,7 @@ def _read_developer_metadata(
     raw_entries = spreadsheet.get("developerMetadata")
     if raw_entries is None:
         return _merge_developer_metadata_entries(())
-    if not isinstance(raw_entries, list):
+    if not is_object_list(raw_entries):
         error = OutboundStorageValidationError(
             "spreadsheet developerMetadata must be a list when present",
             context={"spreadsheet_id": spreadsheet_id, "developer_metadata_type": type(raw_entries).__name__},
@@ -292,7 +290,7 @@ def _read_developer_metadata(
             facts={"spreadsheet_id": spreadsheet_id, "developer_metadata_list_valid": False},
             outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         )
-    return _merge_developer_metadata_entries(raw_entries)
+    return _merge_developer_metadata_entries(entry for entry in raw_entries if is_str_keyed_dict(entry))
 
 
 def _duplicate_metadata_must_match(key: str) -> bool:
@@ -486,7 +484,7 @@ def pull_operator_edits(
     snapshot: RegistrySnapshot,
     *,
     spreadsheet_id: str,
-    credentials: object,
+    credentials: Credentials,
 ) -> _PullResult:
     """Read operator-edited cells back from a workbook into typed records.
 
@@ -651,8 +649,8 @@ def _batch_get_values(
 
 def _raw_cell_value(value_ranges: list[_ValueRange], cursor: int) -> object:
     """Return the single-cell raw value at ``cursor`` in a batchGet response, or None."""
-    vr = value_ranges[cursor] if cursor < len(value_ranges) else {}
-    rows = vr.get("values", []) or []
+    vr: _ValueRange = value_ranges[cursor] if cursor < len(value_ranges) else {}
+    rows = vr.get("values") or []
     return rows[0][0] if rows and rows[0] else None
 
 
@@ -894,8 +892,8 @@ def _read_row_set_edits(
     edits: list[_RowSetEdit] = []
     cells_read = 0
     for row_set_index, row_set in enumerate(row_sets):
-        vr = value_ranges[row_set_index] if row_set_index < len(value_ranges) else {}
-        rows = vr.get("values", []) or []
+        vr: _ValueRange = value_ranges[row_set_index] if row_set_index < len(value_ranges) else {}
+        rows = vr.get("values") or []
         cells, cells_in_block = _decode_row_set_block(rows, row_set)
         cells_read += cells_in_block
         edits.append(_RowSetEdit(grouping=row_set.grouping, cells=cells))

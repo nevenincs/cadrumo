@@ -5,7 +5,7 @@ id = 'generated-modelo-232-2016-2017-fichero'
 id = 'm232-operaciones-vinculadas'
 record_type = 'operaciones-vinculadas'
 order = 0
-encoding = 'latin-1'
+encoding = "iso-8859-1"
 line_ending = 'crlf'
 required = true
 

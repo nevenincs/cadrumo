@@ -49,7 +49,7 @@ from .records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 _logger = get_logger(__name__)
 
 _FILE_EXTENSION = ".bin"
-_SIDECAR_EXTENSION = ".meta.json"
+SIDECAR_EXTENSION = ".meta.json"
 _PROBE_NAMESPACE = "_probe"
 
 
@@ -100,7 +100,7 @@ def _validate_hmac(object_key_hmac: str) -> str:
 
 
 def _sidecar_filename(object_key_hmac: str, label: str) -> str:
-    return build_provider_object_name(object_key_hmac, label, extension=_SIDECAR_EXTENSION)
+    return build_provider_object_name(object_key_hmac, label, extension=SIDECAR_EXTENSION)
 
 
 def _parse_sidecar_byte_length(value: object) -> int:
@@ -253,7 +253,7 @@ class LocalFileSystemProvider:
         for entry in scan_directory(namespace_dir):
             if not (entry.is_file() and entry.name.startswith(f"{prefix}--") and entry.suffix == _FILE_EXTENSION):
                 continue
-            sidecar_path = entry.with_name(entry.stem + _SIDECAR_EXTENSION)
+            sidecar_path = entry.with_name(entry.stem + SIDECAR_EXTENSION)
             if not sidecar_path.is_file():
                 # Preserve the public get/delete behavior for an orphaned
                 # payload: get reports its missing sidecar and delete can
@@ -376,7 +376,7 @@ class LocalFileSystemProvider:
             # the old object nor the new one on disk.
             stale_pair = (
                 existing_path,
-                existing_path.with_name(existing_path.stem + _SIDECAR_EXTENSION),
+                existing_path.with_name(existing_path.stem + SIDECAR_EXTENSION),
             )
 
         target_path = namespace_dir / build_provider_object_name(
@@ -511,7 +511,7 @@ class LocalFileSystemProvider:
                     outcome=NoRecoveryOutcome.OPERATOR_DECISION,
                 ),
             )
-        sidecar_path = target_path.with_name(target_path.stem + _SIDECAR_EXTENSION)
+        sidecar_path = target_path.with_name(target_path.stem + SIDECAR_EXTENSION)
         if not sidecar_path.is_file():
             raise OutboundStorageIntegrityError(
                 f"object {target_path.name} has no sidecar; storage corrupt",
@@ -635,7 +635,7 @@ class LocalFileSystemProvider:
         target_path = self._resolve_object_path(namespace_clean, hmac_clean)
         if target_path is None:
             return False
-        sidecar_path = target_path.with_name(target_path.stem + _SIDECAR_EXTENSION)
+        sidecar_path = target_path.with_name(target_path.stem + SIDECAR_EXTENSION)
 
         sidecar_backup: str | None = None
         if sidecar_path.is_file():
@@ -750,7 +750,7 @@ class LocalFileSystemProvider:
         for entry in scan_directory(namespace_dir):
             if not entry.is_file() or entry.suffix != _FILE_EXTENSION:
                 continue
-            sidecar_path = entry.with_name(entry.stem + _SIDECAR_EXTENSION)
+            sidecar_path = entry.with_name(entry.stem + SIDECAR_EXTENSION)
             if not sidecar_path.is_file():
                 # Skip orphan-without-sidecar; the coordinator's diff
                 # classifier surfaces it as an integrity issue elsewhere.

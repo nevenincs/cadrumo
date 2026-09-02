@@ -51,10 +51,11 @@ from .errors import (
     SedeNavigationError,
     SedeParseError,
 )
+from .....core.type_guards import is_str_keyed_dict
 
 _log = get_logger(__name__)
 _WHITESPACE_RE = compile(r"\s+")
-_EXTERNAL = Settings.external_constants()
+EXTERNAL = Settings.external_constants()
 
 
 def is_aeat_auth_gate_redirect(current_url: str) -> bool:
@@ -76,10 +77,10 @@ def is_aeat_auth_gate_redirect(current_url: str) -> bool:
     host = parsed.hostname
     if host is None:
         return False
-    host_suffix = _EXTERNAL.aeat.domains.host_suffix.casefold()
+    host_suffix = EXTERNAL.aeat.domains.host_suffix.casefold()
     if host.casefold() != host_suffix and not host.casefold().endswith(f".{host_suffix}"):
         return False
-    return _EXTERNAL.aeat.sede_paths.auth_gate_4033.casefold() in parsed.path.casefold()
+    return EXTERNAL.aeat.sede_paths.auth_gate_4033.casefold() in parsed.path.casefold()
 
 
 class _LocateHelper(Protocol):
@@ -560,7 +561,7 @@ def registry_failure_message(exc: BaseException) -> str:
     Returns ``str(exc)`` unchanged when no ``failure_mode`` is derivable.
     """
     context = getattr(exc, "context", None)
-    if not isinstance(context, Mapping) or not context:
+    if not is_str_keyed_dict(context) or not context:
         return str(exc)
     failure_mode = context.get("failure_mode")
     if failure_mode is None and "state" in context:

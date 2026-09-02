@@ -99,7 +99,7 @@ def test_layout_accepts_latin_1_iso_8859_1_mix_via_alias_map() -> None:
         source_refs=("aeat-src-1",),
         legal_refs=("ley-37-1992:art-1",),
         records=(
-            _record(record_id="rec.a", encoding="latin-1"),
+            _record(record_id="rec.a", encoding="iso-8859-1"),
             _record(record_id="rec.b", encoding="iso-8859-1"),
         ),
     )

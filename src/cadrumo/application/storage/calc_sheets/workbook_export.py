@@ -392,7 +392,7 @@ def serialize_offline_export(plan: SheetExportPlan) -> OfflineWorkbookExportResu
 def _write_value_cells(workbook: Workbook, cells: Iterable[SheetValueCell]) -> None:
     for cell in cells:
         worksheet = workbook[cell.address.tab.value]
-        target = worksheet.cell(row=cell.address.row, column=cell.address.column, value=_coerce_cell_value(cell.value))
+        target = worksheet.cell(row=cell.address.row, column=cell.address.column, value=coerce_cell_value(cell.value))
         if cell.note is not None:
             assert isinstance(target, Cell)
             target.comment = Comment(cell.note, "AEAT")
@@ -490,7 +490,7 @@ def _manual_values(row: SheetEvidenceManualEntry) -> tuple[str, ...]:
     )
 
 
-def _coerce_cell_value(value: Decimal | str | bool | None) -> str | bool:
+def coerce_cell_value(value: Decimal | str | bool | None) -> str | bool:
     if value is None:
         return ""
     if isinstance(value, Decimal):

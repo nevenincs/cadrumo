@@ -27,6 +27,13 @@ from ....core.aggregation import RelationAggregationOp
 from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period, RegistrySelectorPeriodCode
+from .relation_dependency import (
+    RelationDependencyRole,
+    RelationDependencyRoleField,
+    RelationDependencyTreatment,
+    RelationDependencyTreatmentField,
+    RelationKindField,
+)
 from ._relation_aggregation import relation_aggregation_op
 from .binding_selector_utils import unique_tuple
 from .errors import RegistryValidationError
@@ -108,15 +115,10 @@ class RegistryFoldRequirement(BaseModel):
     # aggregation to report, hence the optional shape rather than a magic
     # empty-string sentinel.
     dependency_role: (
-        Literal[
-            "periodic_to_annual_summary",
-            "instalment_to_final_settlement",
-            "direct_calculation",
-            "factual_evidence",
-        ]
+        RelationDependencyRoleField
         | None
     ) = None
-    dependency_treatment: Literal["direct_annual_settlement", "factual_evidence", "non_dependency"] | None = None
+    dependency_treatment: RelationDependencyTreatmentField | None = None
     aggregation_op: RelationAggregationOp | None = None
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
@@ -174,20 +176,13 @@ class _RelationRequirementBucket:
 #: (:attr:`RelationDefinition.dependency_role`,
 #: :attr:`~cadrumo.domain.calculations.registry.DependencyClassificationDefinition.treatment`),
 #: so it is typed to match rather than widened to a bare ``str``.
-type _RelationRequirementDependencyRole = Literal[
-    "periodic_to_annual_summary",
-    "instalment_to_final_settlement",
-    "direct_calculation",
-    "factual_evidence",
-]
-type _RelationRequirementDependencyTreatment = Literal["direct_annual_settlement", "factual_evidence", "non_dependency"]
 type _RelationRequirementKey = tuple[
     str,
     int,
     tuple[str, ...],
     CasillaId,
-    _RelationRequirementDependencyRole,
-    _RelationRequirementDependencyTreatment,
+    RelationDependencyRole,
+    RelationDependencyTreatment,
     str,
 ]
 

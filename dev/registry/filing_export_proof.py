@@ -50,11 +50,6 @@ from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.product_identity import AeatProductSoftwareIdentity
 from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.diagnostic_classification import (
-    RegistryDiagnosticFilingRevision,
-    UnvalidatedRegistryClassification,
-    derive_filing_revision_classifications,
-)
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
 from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId
@@ -66,6 +61,11 @@ from cadrumo.domain.calculations.registry.static_inspection import (
 from cadrumo.domain.filing.errors import FilingExportError
 from cadrumo.domain.filing.schema import ModeloDraft
 
+from .diagnostic_classification import (
+    RegistryDiagnosticFilingRevision,
+    UnvalidatedRegistryClassification,
+    derive_filing_revision_classifications,
+)
 from .pipeline._provenance_manifest import (
     ExportFragmentProvenanceManifest,
     ExportFragmentTarget,

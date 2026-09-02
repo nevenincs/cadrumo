@@ -13,18 +13,8 @@ from typing import Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...core.calculation_route import ModeloCalculationRouteId
-from ...core.source_connectivity import (
-    SourceConnectivityConnectionIdentity,
-    SourceConnectivityEncryptedRevisionProof,
-    SourceConnectivityExecutableEvidence,
-    SourceConnectivityGroundingLocatorKind,
-    SourceConnectivityOperatorReachabilityProof,
-)
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
-from ..aggregation import BindingSourceDisposition
-from ..modelo.calculation_route import (
+from cadrumo.application.aggregation import BindingSourceDisposition
+from cadrumo.application.modelo.calculation_route import (
     CALCULATION_ROUTE_ID,
     CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
@@ -33,7 +23,17 @@ from ..modelo.calculation_route import (
     CalculationRouteDesignConstantOwnership,
     CalculationRouteManualOwnership,
 )
-from ..operator_surface.calculation_workflows import SupportedModeloCalculationWorkflowCatalogue
+from cadrumo.application.operator_surface.calculation_workflows import SupportedModeloCalculationWorkflowCatalogue
+from cadrumo.core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from cadrumo.core.calculation_route import ModeloCalculationRouteId
+from cadrumo.core.source_connectivity import (
+    SourceConnectivityConnectionIdentity,
+    SourceConnectivityEncryptedRevisionProof,
+    SourceConnectivityExecutableEvidence,
+    SourceConnectivityGroundingLocatorKind,
+    SourceConnectivityOperatorReachabilityProof,
+)
+from cadrumo.domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 

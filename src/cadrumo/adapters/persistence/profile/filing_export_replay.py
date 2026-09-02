@@ -18,6 +18,8 @@ from ....core.hashing import sha256_hex
 from ....core.time.clock import now
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
 from ..storage.secure_object_namespaces import FILING_EXPORT_REPLAY_PROOFS_NAMESPACE
+from ..storage.sql.secure_objects import SecureObjectRepository
+from ....core.config import Settings
 
 
 class FilingExportReplayCustodyRepository(SecureBoundRepository[FilingExportSecureCustodyRecord]):
@@ -28,12 +30,19 @@ class FilingExportReplayCustodyRepository(SecureBoundRepository[FilingExportSecu
     schema_version: ClassVar[int] = FILING_EXPORT_REPLAY_PROOFS_NAMESPACE.schema_version
     authority_id: ClassVar[str] = "cadrumo.persistence.filing-export-replay-custody"
 
-    def __init__(self, *, valid_for: timedelta, **kwargs) -> None:
+    def __init__(
+        self,
+        *,
+        valid_for: timedelta,
+        bucket_id: str | None = None,
+        objects: SecureObjectRepository | None = None,
+        settings: Settings | None = None,
+    ) -> None:
         """Bind encrypted storage and an explicit operator receipt lifetime."""
         if valid_for <= timedelta(0):
             raise ValueError("secure replay receipt lifetime must be positive")
         self._valid_for = valid_for
-        super().__init__(**kwargs)
+        super().__init__(bucket_id=bucket_id, objects=objects, settings=settings)
 
     @override
     @classmethod

@@ -20,7 +20,7 @@ from ._registry_payloads import (
 )
 
 
-def _metric_line(key: str, value: object) -> str:
+def metric_line(key: str, value: object) -> str:
     line = f"{tr('cli.registry.metrics.' + key)}={value}"
     return line
 
@@ -36,19 +36,19 @@ def _registry_tree_metric_lines(report: RegistryTreeReport) -> tuple[str, ...]:
     identical across both commands, so it is one shared projection.
     """
     return (
-        _metric_line("modelo_count", report.modelo_count),
-        _metric_line("revision_count", report.revision_count),
-        _metric_line("legal_reference_count", report.legal_reference_count),
-        _metric_line("source_reference_count", report.source_reference_count),
-        _metric_line("casilla_count", report.casilla_count),
-        _metric_line("formula_count", report.formula_count),
-        _metric_line("extraction_profile_count", report.extraction_profile_count),
-        _metric_line("cross_reference_count", report.cross_reference_count),
-        _metric_line("workbook_parity_ref_count", report.workbook_parity_ref_count),
-        _metric_line("verification_expectation_count", report.verification_expectation_count),
-        _metric_line("application_link_count", report.application_link_count),
-        _metric_line("application_link_surfaces", _join(list(report.application_link_surfaces))),
-        _metric_line("modelos", _join(list(report.modelos))),
+        metric_line("modelo_count", report.modelo_count),
+        metric_line("revision_count", report.revision_count),
+        metric_line("legal_reference_count", report.legal_reference_count),
+        metric_line("source_reference_count", report.source_reference_count),
+        metric_line("casilla_count", report.casilla_count),
+        metric_line("formula_count", report.formula_count),
+        metric_line("extraction_profile_count", report.extraction_profile_count),
+        metric_line("cross_reference_count", report.cross_reference_count),
+        metric_line("workbook_parity_ref_count", report.workbook_parity_ref_count),
+        metric_line("verification_expectation_count", report.verification_expectation_count),
+        metric_line("application_link_count", report.application_link_count),
+        metric_line("application_link_surfaces", _join(list(report.application_link_surfaces))),
+        metric_line("modelos", _join(list(report.modelos))),
     )
 
 
@@ -81,9 +81,9 @@ def verify_registry_cmd(
         command="registry.verify",
         result=strict_round_trip(RegistryInspectResult, report),
         lines=(
-            _metric_line("verified", report.verified),
-            _metric_line("verified_invariant_families", _join(list(report.verified_invariant_families))),
-            _metric_line("unverified_invariant_families", _join(list(report.unverified_invariant_families))),
+            metric_line("verified", report.verified),
+            metric_line("verified_invariant_families", _join(list(report.verified_invariant_families))),
+            metric_line("unverified_invariant_families", _join(list(report.unverified_invariant_families))),
             *_registry_tree_metric_lines(report),
         ),
     )
@@ -107,17 +107,17 @@ def verify_filed_state_cmd(
     )
     comparison = report.comparison
     lines = [
-        _metric_line("status", comparison.status),
-        _metric_line("modelo", comparison.modelo),
-        _metric_line("revision", comparison.revision),
-        _metric_line("compared_casilla_ids", ",".join(comparison.compared_casilla_ids)),
-        _metric_line("missing_local_casilla_ids", ",".join(comparison.missing_local_casilla_ids)),
-        _metric_line("missing_filed_casilla_ids", ",".join(comparison.missing_filed_casilla_ids)),
-        _metric_line("drift_count", len(comparison.drifts)),
+        metric_line("status", comparison.status),
+        metric_line("modelo", comparison.modelo),
+        metric_line("revision", comparison.revision),
+        metric_line("compared_casilla_ids", ",".join(comparison.compared_casilla_ids)),
+        metric_line("missing_local_casilla_ids", ",".join(comparison.missing_local_casilla_ids)),
+        metric_line("missing_filed_casilla_ids", ",".join(comparison.missing_filed_casilla_ids)),
+        metric_line("drift_count", len(comparison.drifts)),
     ]
     for drift in comparison.drifts:
         lines.append(
-            _metric_line(
+            metric_line(
                 "drift",
                 f"{drift.casilla_id}\tlocal={drift.local_value}\tfiled={drift.filed_value}\tdelta={drift.delta}",
             ),
@@ -168,24 +168,24 @@ def diff_revisions_cmd(
 
 def _diff_revisions_lines(report: RegistryRevisionDiffReport) -> list[str]:
     lines = [
-        _metric_line("modelo", report.modelo),
-        _metric_line("from_revision_id", report.from_revision_id),
-        _metric_line("to_revision_id", report.to_revision_id),
-        _metric_line("same_revision", report.same_revision),
-        _metric_line("added_casilla_count", len(report.added_casillas)),
-        _metric_line("removed_casilla_count", len(report.removed_casillas)),
-        _metric_line("renumbered_casilla_count", len(report.renumbered_casillas)),
-        _metric_line("changed_casilla_legal_ref_count", len(report.changed_casilla_legal_refs)),
-        _metric_line("added_formula_count", len(report.added_formulas)),
-        _metric_line("removed_formula_count", len(report.removed_formulas)),
-        _metric_line("changed_formula_count", len(report.changed_formulas)),
-        _metric_line("added_parameter_count", len(report.added_parameters)),
-        _metric_line("removed_parameter_count", len(report.removed_parameters)),
-        _metric_line("changed_parameter_count", len(report.changed_parameters)),
-        _metric_line("added_binding_count", len(report.added_bindings)),
-        _metric_line("removed_binding_count", len(report.removed_bindings)),
-        _metric_line("revision_legal_refs_added", ",".join(report.revision_legal_refs_added)),
-        _metric_line("revision_legal_refs_removed", ",".join(report.revision_legal_refs_removed)),
+        metric_line("modelo", report.modelo),
+        metric_line("from_revision_id", report.from_revision_id),
+        metric_line("to_revision_id", report.to_revision_id),
+        metric_line("same_revision", report.same_revision),
+        metric_line("added_casilla_count", len(report.added_casillas)),
+        metric_line("removed_casilla_count", len(report.removed_casillas)),
+        metric_line("renumbered_casilla_count", len(report.renumbered_casillas)),
+        metric_line("changed_casilla_legal_ref_count", len(report.changed_casilla_legal_refs)),
+        metric_line("added_formula_count", len(report.added_formulas)),
+        metric_line("removed_formula_count", len(report.removed_formulas)),
+        metric_line("changed_formula_count", len(report.changed_formulas)),
+        metric_line("added_parameter_count", len(report.added_parameters)),
+        metric_line("removed_parameter_count", len(report.removed_parameters)),
+        metric_line("changed_parameter_count", len(report.changed_parameters)),
+        metric_line("added_binding_count", len(report.added_bindings)),
+        metric_line("removed_binding_count", len(report.removed_bindings)),
+        metric_line("revision_legal_refs_added", ",".join(report.revision_legal_refs_added)),
+        metric_line("revision_legal_refs_removed", ",".join(report.revision_legal_refs_removed)),
     ]
     for casilla in report.added_casillas:
         lines.append("\t".join(("added_casilla", casilla.id, casilla.number, casilla.label)))

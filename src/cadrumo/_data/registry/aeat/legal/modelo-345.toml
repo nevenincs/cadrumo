@@ -230,7 +230,7 @@ bytes = 54886
 retrieved_at = 2026-07-01
 applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI25.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-345-deadlines"]
 evidence_tier = "official_source_guidance"
@@ -242,7 +242,7 @@ bytes = 6187
 retrieved_at = 2026-07-01
 applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/declaraciones-informativas/modelo-345-decla_____ncia-declaracion-anual-aportaciones_/plazos-presentacion.html"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-345-2025"]
 evidence_tier = "layout_authority"
@@ -256,7 +256,7 @@ retrieved_at = 2026-07-01
 published_at = 2025-12-12
 applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_345_2025.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-345-base-order"]
 evidence_tier = "layout_authority"
@@ -269,7 +269,7 @@ retrieved_at = 2026-07-01
 published_at = 2022-08-30
 applies_from = 2023-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-14168"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-345-2023-amendment-hfp-528"]
 evidence_tier = "layout_authority"
@@ -282,7 +282,7 @@ retrieved_at = 2026-07-01
 published_at = 2023-05-30
 applies_from = 2023-05-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12666"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-345-2023-amendment-hfp-1397"]
 evidence_tier = "layout_authority"
@@ -295,7 +295,7 @@ retrieved_at = 2026-07-01
 published_at = 2023-12-29
 applies_from = 2024-01-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-26632"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-345-2024-amendment-hac-1504"]
 evidence_tier = "layout_authority"
@@ -308,7 +308,7 @@ retrieved_at = 2026-07-01
 published_at = 2024-12-31
 applies_from = 2025-01-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-27528"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-345-2025-amendment-hac-1430"]
 evidence_tier = "layout_authority"
@@ -321,7 +321,7 @@ retrieved_at = 2026-07-01
 published_at = 2025-12-16
 applies_from = 2025-12-17
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-25389"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-345-2023"]
 evidence_tier = "layout_authority"
@@ -335,7 +335,7 @@ retrieved_at = 2026-07-21
 applies_from = 2023-01-01
 applies_to = 2023-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr345.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-345-2023-archive"]
 evidence_tier = "layout_authority"
@@ -346,7 +346,7 @@ sha256 = "09ad1c5066e51535d367fc2a7c9f8863140141b9f2b3e836b4778085587d2da4"
 bytes = 184620
 retrieved_at = 2026-07-21
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_23/DR_345_2023.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-345-2024"]
 evidence_tier = "layout_authority"
@@ -360,4 +360,4 @@ retrieved_at = 2026-07-21
 applies_from = 2024-01-01
 applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/DR_Modelo_345_2024.pdf"
-review_status = "reviewed"
+review_status = "pending_review"

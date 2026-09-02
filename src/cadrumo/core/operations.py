@@ -160,6 +160,16 @@ class OperationInteractionKind(StrEnum):
     REJECT = "reject"
 
 
+def profile_operation_subject(profile_id: str) -> str:
+    """Return the operation subject naming one profile.
+
+    The ``profile:`` prefix is the wire form other subjects are distinguished
+    from, so it is spelled once. Three modules each formatted it inline, which
+    meant three places had to agree on a string that nothing validated.
+    """
+    return f"profile:{profile_id}"
+
+
 __all__ = [
     "OperationCancellation",
     "OperationClosePolicy",
@@ -170,4 +180,5 @@ __all__ = [
     "OperationInteractionKind",
     "OperationLifecycle",
     "OperationTerminalCondition",
+    "profile_operation_subject",
 ]

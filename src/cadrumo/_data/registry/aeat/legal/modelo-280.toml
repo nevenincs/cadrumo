@@ -152,7 +152,7 @@ bytes = 42028
 retrieved_at = 2026-07-01
 applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI39.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-280-2022"]
 evidence_tier = "layout_authority"
@@ -166,7 +166,7 @@ retrieved_at = 2026-07-01
 published_at = 2022-12-03
 applies_from = 2022-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_22/DR_280_2022.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-280-base-order"]
 evidence_tier = "layout_authority"
@@ -179,7 +179,7 @@ retrieved_at = 2026-07-01
 published_at = 2015-10-15
 applies_from = 2016-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11074"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-280-2016-amendment-hfp-1822"]
 evidence_tier = "layout_authority"
@@ -192,7 +192,7 @@ retrieved_at = 2026-07-01
 published_at = 2016-11-29
 applies_from = 2016-11-30
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2016-11251"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-280-2019-amendment-hac-1276"]
 evidence_tier = "layout_authority"
@@ -205,7 +205,7 @@ retrieved_at = 2026-07-01
 published_at = 2019-12-31
 applies_from = 2019-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2019-18752"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-280-2022-amendment-hfp-1192"]
 evidence_tier = "layout_authority"
@@ -218,4 +218,4 @@ retrieved_at = 2026-07-01
 published_at = 2022-12-03
 applies_from = 2022-12-04
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20274"
-review_status = "reviewed"
+review_status = "pending_review"

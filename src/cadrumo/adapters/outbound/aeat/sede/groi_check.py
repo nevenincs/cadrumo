@@ -79,15 +79,15 @@ from ._browser_stage import build_playwright_stage_runner
 from .errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError, SedeParseError
 
 logger = get_logger(__name__)
-_EXTERNAL = Settings.external_constants()
-_GROI_HOST = urlsplit(_EXTERNAL.aeat.oracles.groi_check).netloc
+EXTERNAL = Settings.external_constants()
+_GROI_HOST = urlsplit(EXTERNAL.aeat.oracles.groi_check).netloc
 
 # The one page this driver is allowed to be sitting on. The GROI form posts
 # back to its own servlet -- the form's ``action`` is a RELATIVE path whose
 # final segment ``_assert_form_action_is_consult_endpoint`` pins to this
 # path's own last segment before any click runs -- so the servlet path is
 # both the form page and the response page, and nothing else is a GROI read.
-_GROI_READ_PATH_PREFIXES: tuple[str, ...] = (urlsplit(_EXTERNAL.aeat.oracles.groi_check).path,)
+_GROI_READ_PATH_PREFIXES: tuple[str, ...] = (urlsplit(EXTERNAL.aeat.oracles.groi_check).path,)
 
 
 DEFAULT_GROI_TIMEOUT_MS: int = 30000
@@ -105,15 +105,15 @@ _SUBMIT_SELECTORS: tuple[str, ...] = (
     'input[type="submit"][value="Enviar"]',
 )
 
-_READ_GUARD_POLICY = RemoteStateGuardPolicy(
+READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-groi-direct-driver-read",
     evidence_tier="executable_parity_evidence",
     classification="integration_test_service",
     allowed_hosts=(_GROI_HOST,),
     # Widen to any subdomain under the AEAT apex so a ``www{n}`` load-balancer
     # dispatch is tolerated, not refused; success detection is unchanged.
-    allowed_host_suffixes=(_EXTERNAL.aeat.domains.host_suffix,),
-    allowed_browser_action_patterns=_EXTERNAL.aeat.live_safety.consult_oracle_browser_action_patterns,
+    allowed_host_suffixes=(EXTERNAL.aeat.domains.host_suffix,),
+    allowed_browser_action_patterns=EXTERNAL.aeat.live_safety.consult_oracle_browser_action_patterns,
     synthetic_data_allowed=False,
     requires_authentication=True,
     requires_aeat_authorization=False,
@@ -143,7 +143,7 @@ def assert_groi_read_landing(landing_url: str) -> None:
     assert_read_landing(
         landing_url,
         surface="GROI",
-        policy=_READ_GUARD_POLICY,
+        policy=READ_GUARD_POLICY,
         allowed_path_prefixes=_GROI_READ_PATH_PREFIXES,
     )
 
@@ -157,9 +157,9 @@ def _assert_query_browser_action(action: str) -> None:
     """Assert that ``action`` is permitted under the GROI read-only guard policy.
 
     Thin delegator to :func:`~._adapter_utils.assert_query_browser_action_for`
-    with the GROI module-level ``_READ_GUARD_POLICY`` pre-bound.
+    with the GROI module-level ``READ_GUARD_POLICY`` pre-bound.
     """
-    assert_query_browser_action_for(_READ_GUARD_POLICY, action)
+    assert_query_browser_action_for(READ_GUARD_POLICY, action)
 
 
 _playwright_stage = build_playwright_stage_runner(

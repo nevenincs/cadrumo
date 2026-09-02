@@ -7,7 +7,6 @@ from datetime import date
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.legal_review import LegalReviewStatus
 from .....core.resources.bundled_data import bundled_path
 from .....core.revision_review import RevisionReviewStatus
 from .....tests.registry_tree import bundled_registry_tree
@@ -62,10 +61,10 @@ def test_authority_refuses_real_m182_through_the_public_accessor() -> None:
     assert {
         ref
         for ref, review_status in legal_review_statuses.items()
-        if review_status is LegalReviewStatus.OPERATOR_REVIEWED
+        if review_status is RevisionReviewStatus.OPERATOR_REVIEWED
     } == _M182_LEGACY_OPERATOR_REVIEWED_REFS
     assert {
-        ref for ref, review_status in legal_review_statuses.items() if review_status is LegalReviewStatus.AGENT_REVIEWED
+        ref for ref, review_status in legal_review_statuses.items() if review_status is RevisionReviewStatus.AGENT_REVIEWED
     } == _M182_AMENDMENT_AGENT_REVIEWED_REFS
 
     # Through the PUBLIC accessor the revision is untouched, so it still declares

@@ -11,10 +11,10 @@ from ......core.casilla_value_kind import CasillaValueKind
 from ......core.period import Period
 from ......domain.calculations.registry.bindings_previous_filing import previous_filing_source_reference
 from ..declarations_observations import (
-    _observed_header_facts_from_submitted_file,
     _submitted_file_coverage_for_casillas,
     non_numeric_observed_casillas,
     observed_casillas_from_submitted_file,
+    observed_header_facts_from_submitted_file,
     resolve_previous_filing_bindings_from_filed_declarations,
 )
 from ._declarations_support import (
@@ -250,7 +250,7 @@ class TestSubmittedFileObservation:
         assert observed_by_casilla["perc.inmueble-codigo-municipio"] == "01001"
         assert observed_by_casilla["perc.inmueble-codigo-postal"] == "01001"
 
-        header_facts = _observed_header_facts_from_submitted_file(snapshot=snapshot, body=body)
+        header_facts = observed_header_facts_from_submitted_file(snapshot=snapshot, body=body)
         presenter_tax_id_values = {fact.value for fact in header_facts if fact.header_key == "presenter.tax_id"}
         assert presenter_tax_id_values == {"00011111Z"}
 

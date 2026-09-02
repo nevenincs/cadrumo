@@ -393,7 +393,7 @@ value = "0.21"
 unit = "fraction"
 applies_to = "test-case"
 legal_refs = ["ley-test:art-1"]
-review_status = "reviewed"
+review_status = "pending_review"
 reviewed_at = 2026-06-28
 reviewed_by = "registry-test"
 """.lstrip(),
@@ -433,7 +433,7 @@ value = "0.21"
 unit = "fraction"
 applies_to = "test-case"
 legal_refs = ["ley-test:art-1"]
-review_status = "reviewed"
+review_status = "pending_review"
 reviewed_at = 2026-06-28
 reviewed_by = "registry-test"
 """.lstrip()
@@ -468,7 +468,7 @@ value = "0.21"
 unit = "fraction"
 applies_to = "test-case"
 legal_refs = ["ley-test:art-1"]
-review_status = "reviewed"
+review_status = "pending_review"
 reviewed_at = 2026-06-28
 reviewed_by = "registry-test"
 """.lstrip(),
@@ -509,7 +509,7 @@ value = "0.21"
 unit = "fraction"
 applies_to = "test-case"
 legal_refs = ["ley-test:art-1"]
-review_status = "reviewed"
+review_status = "pending_review"
 reviewed_at = 2026-06-28
 reviewed_by = "registry-test"
 """.lstrip(),
@@ -536,7 +536,7 @@ value = "0.21"
 unit = "fraction"
 applies_to = "test-case"
 legal_refs = ["ley-test:art-1"]
-review_status = "reviewed"
+review_status = "pending_review"
 reviewed_at = 2026-06-28
 reviewed_by = "registry-test"
 """.lstrip(),

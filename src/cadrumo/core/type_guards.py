@@ -89,6 +89,18 @@ def is_object_set_or_frozenset(value: object) -> TypeGuard[set[object] | frozens
     return isinstance(value, set | frozenset)
 
 
+def is_str_keyed_mapping(value: object) -> TypeGuard[Mapping[str, object]]:
+    """Narrow a runtime dict to a string-keyed mapping WITHOUT checking the keys.
+
+    Unlike :func:`is_str_keyed_dict` below, this asserts nothing about the keys
+    at runtime. It is sound only where the provenance already guarantees them -
+    a table parsed by ``tomllib`` always has string keys - and it is unsound
+    anywhere else. Prefer :func:`is_str_keyed_dict` unless the caller can point
+    at that guarantee.
+    """
+    return isinstance(value, dict)
+
+
 def is_str_keyed_dict(value: object) -> TypeGuard[dict[str, object]]:
     """Narrow to a dict whose keys are all strings, checking the keys.
 

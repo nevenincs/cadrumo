@@ -55,7 +55,7 @@ __all__ = [
     "deudas_read_path_prefixes",
 ]
 
-_EXTERNAL = Settings.external_constants()
+EXTERNAL = Settings.external_constants()
 # Built on the UNNUMBERED origin, matching the IVA compensation wallet reader.
 # ``www{n}`` is a per-SESSION variable: AEAT load-balances the authenticated
 # surface across its numbered pool and assigns whichever host answers a given
@@ -65,14 +65,14 @@ _EXTERNAL = Settings.external_constants()
 #
 # Numbered dispatch is admitted by ``allowed_host_suffixes`` below, which is the
 # field that actually carries the load-balancer case.
-_SEDE_HOST: Final = urlsplit(_EXTERNAL.aeat.domains.sede).netloc
-_AEAT_HOST_SUFFIX: Final = _EXTERNAL.aeat.domains.host_suffix
+_SEDE_HOST: Final = urlsplit(EXTERNAL.aeat.domains.sede).netloc
+_AEAT_HOST_SUFFIX: Final = EXTERNAL.aeat.domains.host_suffix
 
 DEUDAS_READ_SURFACE: Final = "deudas consulta"
 """Surface label a deudas landing refusal names, so a refusal says who refused."""
 
-_DEUDAS_CONSULTA_PATH: Final = _EXTERNAL.aeat.sede_paths.deudas_consulta
-_DEUDAS_PAGAR_TODAS_PATH: Final = _EXTERNAL.aeat.sede_paths.deudas_pagar_todas
+_DEUDAS_CONSULTA_PATH: Final = EXTERNAL.aeat.sede_paths.deudas_consulta
+_DEUDAS_PAGAR_TODAS_PATH: Final = EXTERNAL.aeat.sede_paths.deudas_pagar_todas
 
 
 class Deuda(BaseModel):
@@ -150,7 +150,7 @@ class Deuda(BaseModel):
 # and it is the same shape the IVA compensation wallet reader already declares.
 # The guard admits a POST only for an ``authenticated_read_surface`` at a path
 # named here, so this stays one endpoint rather than a method-wide relaxation.
-_READ_GUARD_POLICY: Final = RemoteStateGuardPolicy(
+READ_GUARD_POLICY: Final = RemoteStateGuardPolicy(
     id="aeat-sede-deudas-consulta-read",
     evidence_tier="official_source_guidance",
     classification="authenticated_read_surface",
@@ -220,6 +220,6 @@ def assert_deudas_landing(landing_url: str | None) -> None:
     assert_read_landing(
         landing_url,
         surface=DEUDAS_READ_SURFACE,
-        policy=_READ_GUARD_POLICY,
+        policy=READ_GUARD_POLICY,
         allowed_path_prefixes=_DEUDAS_READ_PATH_PREFIXES,
     )

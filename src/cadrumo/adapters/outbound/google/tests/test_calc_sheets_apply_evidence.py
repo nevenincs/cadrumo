@@ -30,7 +30,7 @@ from .....application.storage.calc_sheets.records import (
 from .....application.storage.calc_sheets.workbook_export import serialize_offline_workbook
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
-from ..calc_sheets_apply import _build_evidence_value_data
+from ..calc_sheets_apply import build_evidence_value_data
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _BASE_CASILLA: CasillaId = validated_casilla_id("base", surface="_BASE_CASILLA")
@@ -96,7 +96,7 @@ def _evidence_plan() -> SheetExportPlan:
 def _online_cell_grid(plan: SheetExportPlan) -> dict[str, list[object]]:
     """Map A1 cell anchor -> row values from the apply adapter's evidence writes."""
     grid: dict[str, list[object]] = {}
-    for entry in _build_evidence_value_data(plan):
+    for entry in build_evidence_value_data(plan):
         grid[entry["range"]] = entry["values"][0]
     return grid
 

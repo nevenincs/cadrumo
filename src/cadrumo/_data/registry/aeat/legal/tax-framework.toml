@@ -337,7 +337,7 @@ retrieved_at = 2026-08-24
 applies_from = 2022-01-01
 applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Calendario_Contribuyente/Anyos_anteriores/Calendario_del_contribuyente_2022_es_es.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-calendario-contribuyente-2023"]
 evidence_tier = "official_source_guidance"
@@ -350,7 +350,7 @@ retrieved_at = 2026-07-21
 applies_from = 2023-01-01
 applies_to = 2023-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Calendario_Contribuyente/Anyos_anteriores/Calendario_del_contribuyente_2023_es_es.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-calendario-contribuyente-2024"]
 evidence_tier = "official_source_guidance"
@@ -363,7 +363,7 @@ retrieved_at = 2026-07-21
 applies_from = 2024-01-01
 applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Calendario_Contribuyente/Anyos_anteriores/Calendario_del_contribuyente_2024_es_es.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-calendario-contribuyente-2025"]
 evidence_tier = "official_source_guidance"
@@ -376,7 +376,7 @@ retrieved_at = 2026-07-01
 applies_from = 2025-01-01
 applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Calendario_Contribuyente/Anyos_anteriores/Calendario_del_contribuyente_2025_es_es.pdf"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-calendario-contribuyente-2026"]
 evidence_tier = "official_source_guidance"
@@ -389,7 +389,7 @@ retrieved_at = 2026-07-21
 applies_from = 2026-01-01
 applies_to = 2026-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/calendario-contribuyente/calendario-contribuyente-2026.html"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-calendario-contribuyente-2026-hasta-2-febrero"]
 evidence_tier = "official_source_guidance"
@@ -402,7 +402,7 @@ retrieved_at = 2026-08-20
 applies_from = 2026-01-01
 applies_to = 2026-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/calendario-contribuyente/calendario-contribuyente-2026/calendario-anual/febrero/hasta-2-febrero.html"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-calendario-contribuyente-2026-hasta-2-marzo"]
 evidence_tier = "official_source_guidance"
@@ -415,7 +415,7 @@ retrieved_at = 2026-06-29
 applies_from = 2026-01-01
 applies_to = 2026-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/calendario-contribuyente/calendario-contribuyente-2026/calendario-anual/marzo/hasta-2-marzo.html"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-calendario-contribuyente-2026-hasta-1-febrero-2027"]
 evidence_tier = "official_source_guidance"
@@ -428,7 +428,7 @@ retrieved_at = 2026-08-25
 applies_from = 2026-01-01
 applies_to = 2027-02-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/contenidos-lectura-facil/calendario-contribuyente-2026-simplificado-personas-fisicas/calendario-anual/febrero-2027/hasta-1-febrero-2027.html"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-349-plazos-presentacion"]
 evidence_tier = "official_source_guidance"
@@ -440,7 +440,7 @@ bytes = 6470
 retrieved_at = 2026-08-25
 applies_from = 2020-03-19
 source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/declaraciones-informativas/modelo-349-decla_____n-recapitulativa-operaciones-intracomunitarias_/plazos-presentacion.html"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-calendario-contribuyente-2026-domiciliacion"]
 evidence_tier = "official_source_guidance"
@@ -453,4 +453,4 @@ retrieved_at = 2026-06-29
 applies_from = 2026-01-01
 applies_to = 2026-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/calendario-contribuyente/calendario-contribuyente-2026/plazos-presentacion-autoliquidaciones-domiciliacion-bancaria.html"
-review_status = "reviewed"
+review_status = "pending_review"

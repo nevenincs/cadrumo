@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from enum import StrEnum
+
 from collections.abc import Mapping
 from datetime import date
 from typing import Annotated, Literal
@@ -12,8 +14,10 @@ from ....core.filing_year import FilingYear
 from ....core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
 from ....core.period import Period, PeriodKind, RegistrySelectorPeriodCode, registry_period_kind
 from ....core.result_disposition import ResultDisposition
+from .condition_mode import ConditionMode, ConditionModeField
 from .errors import RegistryValidationError
 from .ids import DeadlineWindowId
+from .schema_base import coerce_enum_member
 from .schema_base import LegalRefs, RegistryModel, SourceRefs
 from .schema_verification import ProfilePredicateDefinition
 
@@ -42,17 +46,47 @@ def _parse_deadline_window_period(value: object) -> Period:
         raise ValueError(f"invalid deadline window period {value!r}: {exc}") from exc
 
 
+class FilingCadence(StrEnum):
+    """The filing cadence a deadline window or modelo schedule declares.
+
+    Distinct from the period kind in the core package, which shares three member
+    values but names a different axis: that vocabulary describes a period's shape,
+    including instalment and extended periods, and has no ad-hoc member. Both are
+    referenced from this module, so the names must not collide.
+    """
+
+    MONTHLY = "monthly"
+    """One filing period per calendar month."""
+
+    QUARTERLY = "quarterly"
+    """One filing period per calendar quarter."""
+
+    ANNUAL = "annual"
+    """One filing period covering the ejercicio."""
+
+    AD_HOC = "ad_hoc"
+    """No fixed cadence; the period is opened by an event rather than a calendar."""
+
+
+FilingCadenceField = Annotated[FilingCadence, BeforeValidator(coerce_enum_member(FilingCadence))]
+"""Registry ``period_kind`` token hydrated into a cadence member.
+
+Registry schema models validate strictly, which refuses a bare TOML string for an
+enum-typed field, so the token is coerced at the boundary.
+"""
+
+
 class DeadlineWindowDefinition(RegistryModel):
     """Declare the applicable opening, closing, and payment dates for a filing."""
 
     id: DeadlineWindowId
     filing_year: FilingYear
     period: Annotated[Period, BeforeValidator(_parse_deadline_window_period)]
-    period_kind: Literal["monthly", "quarterly", "annual", "ad_hoc"]
+    period_kind: FilingCadenceField
     opens_on: date
     closes_on: date
     payment_cutoff_on: date | None = None
-    applicability_condition_mode: Literal["all", "any"] = "all"
+    applicability_condition_mode: ConditionModeField = ConditionMode.ALL
     applicability_conditions: tuple[ProfilePredicateDefinition, ...] = ()
     resultado_scope: (
         Annotated[
@@ -95,7 +129,7 @@ class DeadlineWindowDefinition(RegistryModel):
             raise RegistryValidationError(f"deadline window {self.id!r} opens_on must not be after closes_on")
         if self.payment_cutoff_on is not None and self.payment_cutoff_on > self.closes_on:
             raise RegistryValidationError(f"deadline window {self.id!r} payment_cutoff_on must not be after closes_on")
-        if self.applicability_condition_mode == "any" and not self.applicability_conditions:
+        if self.applicability_condition_mode is ConditionMode.ANY and not self.applicability_conditions:
             raise RegistryValidationError(f"deadline window {self.id!r} any-mode requires applicability conditions")
         return self
 
@@ -130,9 +164,9 @@ class ModeloScheduleDefinition(RegistryModel):
     """Declare the filing periods and profile conditions for a modelo schedule."""
 
     id: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_.-]+$")
-    period_kind: Literal["monthly", "quarterly", "annual", "ad_hoc"]
+    period_kind: FilingCadenceField
     periods: tuple[RegistrySelectorPeriodCode, ...] = Field(min_length=1)
-    profile_condition_mode: Literal["all", "any"] = "all"
+    profile_condition_mode: ConditionModeField = ConditionMode.ALL
     profile_conditions: tuple[ProfilePredicateDefinition, ...] = ()
     legal_refs: LegalRefs
     source_refs: SourceRefs
@@ -151,7 +185,7 @@ class ModeloScheduleDefinition(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_schedule(self) -> ModeloScheduleDefinition:
-        if self.profile_condition_mode == "any" and not self.profile_conditions:
+        if self.profile_condition_mode is ConditionMode.ANY and not self.profile_conditions:
             raise RegistryValidationError(f"filing schedule {self.id!r} any-mode requires profile conditions")
         mismatches = filing_schedule_period_kind_mismatches(self.period_kind, self.periods)
         if mismatches:

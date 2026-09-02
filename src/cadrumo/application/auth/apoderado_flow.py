@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
+from ..flows.definition import locale_copy_ref as _locale_ref
 from .apoderado_service import ApoderadoConfiguration, ApoderadoService
 
 if TYPE_CHECKING:
@@ -33,14 +34,13 @@ if TYPE_CHECKING:
 
 from ...core.flows import (
     CheckpointAvailability,
-    CopyRefKind,
     FlowMode,
     FlowWidgetKind,
 )
 from ...core.identity import IdentityError, validate_identity
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.auth.apoderamientos.catalogue import ApoderamientosCatalogue
-from ..flows.definition import CopyRef, FlowChoice, FlowDefinition, FlowPage, FlowSection
+from ..flows.definition import FlowChoice, FlowDefinition, FlowPage, FlowSection
 from ..flows.engine import FlowState
 from ..flows.validators import ValidationVerdict, register_answer_validator
 
@@ -92,10 +92,6 @@ class ApoderadoFlowAnswers(BaseModel):
 
     represented_nif: str = Field(min_length=1)
     scopes: str = Field(default="")
-
-
-def _locale_ref(key: str) -> CopyRef:
-    return CopyRef(kind=CopyRefKind.LOCALE_KEY, ref=key)
 
 
 def _validate_represented_nif(page: FlowPage, canonical: str) -> ValidationVerdict:

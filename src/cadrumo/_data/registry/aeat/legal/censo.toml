@@ -177,7 +177,7 @@ retrieved_at = 2026-05-03
 applies_from = 2023-01-01
 applies_to = 2025-02-02
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/DR036v41.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-036-2025"]
 evidence_tier = "layout_authority"
@@ -190,7 +190,7 @@ bytes = 126664
 retrieved_at = 2026-05-03
 applies_from = 2025-02-03
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/DR036v43.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # These exact AEAT artefacts are retained as hash-pinned historical corpus
 # evidence. Their titles establish publication/version dates, but not a
@@ -205,7 +205,7 @@ sha256 = "2638409df538acdd6f1532accb8f111d4f702600026a71b577926756b4ed0fa6"
 bytes = 108655
 retrieved_at = 2026-05-03
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/DR036v40.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-036-v35"]
 evidence_tier = "layout_authority"
@@ -216,7 +216,7 @@ sha256 = "fd9b1379b78f6bdcefd4d3392f224bbd9bbeb4c22a41d70ac391385366ff8d30"
 bytes = 104353
 retrieved_at = 2026-05-03
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/DR036v35.xlsx"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-modelo-036-procedure"]
 evidence_tier = "official_source_guidance"
@@ -228,7 +228,7 @@ bytes = 36079
 retrieved_at = 2026-05-08
 applies_from = 2025-02-03
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G322.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-037-historical-suppression"]
 evidence_tier = "official_source_guidance"
@@ -241,7 +241,7 @@ retrieved_at = 2026-05-14
 published_at = 2025-01-09
 applies_from = 2025-02-03
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-410#articulo-primero"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [legal."rd-1065-2007:art-25"]
 evidence_tier = "legal_authority"

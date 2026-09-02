@@ -35,17 +35,18 @@ from cadrumo.application.registry.source_connectivity_coverage import (
     SourceConnectivityCoverageReport,
     compose_source_connectivity_coverage,
 )
-from cadrumo.application.registry.temporal_coverage import (
-    TemporalCoverageReport,
-    TemporalRevisionCoverageSummary,
-    compose_temporal_coverage,
-)
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.source_connectivity import SourceConnectivityProofAuthority
 from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_authority,
+)
+
+from ..temporal_coverage import (
+    TemporalCoverageReport,
+    TemporalRevisionCoverageSummary,
+    compose_temporal_coverage,
 )
 
 __all__ = [

@@ -1,7 +1,7 @@
 """Real-CLI tests: ledger verb validation-error paths (contract).
 
 Each verb that wraps command construction in a try/except ValidationError
-must surface the pydantic field message through ``_ledger_validation_bad``
+must surface the pydantic field message through ``ledger_validation_bad``
 rather than letting the generic boundary swallow it as an opaque
 "config repair" hint.  One test per verb; each drives a combination of
 flags that trips a model_validator rule and asserts the field name or
@@ -52,7 +52,7 @@ def test_ledger_add_rejects_business_pct_on_non_mixed_classification(tmp_path: P
 
     The ``ManualLedgerTransactionCommand._validate_business_percentage``
     validator raises "business_pct must be None unless classification is
-    MIXED".  ``_ledger_validation_bad`` must route this through the CLI
+    MIXED".  ``ledger_validation_bad`` must route this through the CLI
     refusal rather than letting it bubble to the generic boundary."""
 
     result = _invoke(
@@ -121,7 +121,7 @@ def test_ledger_add_gross_mismatch_surfaces_clean_refusal_not_pydantic_repr(
     ``ManualLedgerTransactionCommand`` construction. Before the fix the leaked
     ``pydantic.ValidationError`` reached the generic CLI boundary, dumping the
     whole ``RawTransaction(...)`` repr (~30 lines). The CLI handler must catch it
-    and route the human-readable validator message through ``_ledger_validation_bad``.
+    and route the human-readable validator message through ``ledger_validation_bad``.
     """
     result = _invoke(
         [
@@ -625,7 +625,7 @@ def test_ledger_split_rejects_blank_child_description(tmp_path: Path) -> None:
     ``SplitChildCommand`` field validator message.
 
     The ``SplitChildCommand._trim_description`` validator raises
-    "description must not be blank".  ``_ledger_validation_bad`` wraps it
+    "description must not be blank".  ``ledger_validation_bad`` wraps it
     via the pydantic ``ValidationError`` caught in the split handler."""
 
     txn_id = import_validation_transaction(tmp_path)

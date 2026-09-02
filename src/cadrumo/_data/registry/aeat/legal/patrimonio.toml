@@ -112,7 +112,7 @@ bytes = 11688
 retrieved_at = 2026-08-18
 applies_from = 2021-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G611.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-manual-patrimonio-2021"]
 evidence_tier = "official_source_guidance"
@@ -124,7 +124,7 @@ bytes = 86623
 retrieved_at = 2026-08-18
 applies_from = 2021-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/Ayuda/21Manual/714.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-manual-patrimonio-2022"]
 evidence_tier = "official_source_guidance"
@@ -136,7 +136,7 @@ bytes = 86177
 retrieved_at = 2026-08-18
 applies_from = 2022-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/Ayuda/22Manual/714.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-manual-patrimonio-2023"]
 evidence_tier = "official_source_guidance"
@@ -148,7 +148,7 @@ bytes = 86537
 retrieved_at = 2026-08-18
 applies_from = 2023-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/Ayuda/23Manual/714.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-manual-patrimonio-2024"]
 evidence_tier = "official_source_guidance"
@@ -160,7 +160,7 @@ bytes = 87110
 retrieved_at = 2026-08-18
 applies_from = 2024-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/Ayuda/24Manual/714.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-manual-patrimonio-2025"]
 evidence_tier = "official_source_guidance"
@@ -172,7 +172,7 @@ bytes = 88532
 retrieved_at = 2026-08-18
 applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/Ayuda/25Manual/714.shtml"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."boe-modelo-714-layout"]
 evidence_tier = "layout_authority"
@@ -185,7 +185,7 @@ retrieved_at = 2026-08-15
 published_at = 2022-03-18
 applies_from = 2021-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-4296"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Acquired 2026-08-15 from the AEAT "ejercicios anteriores - resto modelos"
 # index, which lists it as "714 - Ejercicio 2021. Actualizacion 29/04/2022";
@@ -210,7 +210,7 @@ applies_from = 2021-01-01
 # had no single answer.
 applies_to = 2021-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR714_2021.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-714-2022"]
 evidence_tier = "layout_authority"
@@ -230,7 +230,7 @@ applies_from = 2022-01-01
 # had no single answer.
 applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR714_2022.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-714-2023"]
 evidence_tier = "layout_authority"
@@ -250,7 +250,7 @@ applies_from = 2023-01-01
 # had no single answer.
 applies_to = 2023-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR714_2023.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-714-2024"]
 evidence_tier = "layout_authority"
@@ -270,7 +270,7 @@ applies_from = 2024-01-01
 # had no single answer.
 applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/DR714_2024.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-714-2025"]
 evidence_tier = "layout_authority"
@@ -283,7 +283,7 @@ bytes = 839168
 retrieved_at = 2026-06-02
 applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/DR714_2025.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 
 [legal."orden-hfp-207-2022:art-2"]

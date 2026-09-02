@@ -241,14 +241,13 @@ import_budgets = {
     "selected_path_deltas": [],
 }
 selected_contracts = {
-    "aeat config profile list": ("local-io", {"cadrumo.entrypoints.cli._terminal_errors"}),
-    "aeat app registry inspect": ("compute", {"cadrumo.entrypoints.cli._terminal_errors"}),
+    "aeat config profile list": ("local-io", set()),
+    "aeat app registry inspect": ("compute", set()),
     "aeat app modelo work calculate": (
         "compute",
         {
             "cadrumo.core.irnr",
             "cadrumo.core.rescate_type",
-            "cadrumo.entrypoints.cli._terminal_errors",
         },
     ),
 }
@@ -260,11 +259,20 @@ if probe_mode == "projection":
 elif probe_mode in selected_contracts:
     path = tuple(probe_mode.split())
     expected_performance, expected_delta = selected_contracts[probe_mode]
+    # Realise the root surface before opening the measurement window. Invoking
+    # any command runs the root callback first, which lazily imports the root
+    # modules; measuring from before that point charges them to whichever
+    # command was selected. The budget below is what SELECTING a command costs
+    # beyond the root, which is the property worth policing.
+    runner = CliRunner()
+    warm = runner.invoke(get_command(cli.app), ["--help"])
+    if warm.exit_code != 0:
+        raise AssertionError(f"installed root help failed: {warm.output}")
     before = set(sys.modules)
     selected = command_spec_for_path(path)
     if selected.policy.performance != expected_performance:
         raise AssertionError(f"selected path performance class drifted: {path}")
-    result = CliRunner().invoke(get_command(cli.app), [*path[1:], "--help"])
+    result = runner.invoke(get_command(cli.app), [*path[1:], "--help"])
     if result.exit_code != 0:
         raise AssertionError(f"selected installed help failed: {path}: {result.output}")
     delta = sorted(

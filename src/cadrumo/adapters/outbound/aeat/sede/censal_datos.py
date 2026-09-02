@@ -77,7 +77,7 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-_EXTERNAL = Settings.external_constants()
+EXTERNAL = Settings.external_constants()
 # NO NUMBERED HOST IS PINNED. AEAT dispatches the authenticated sede across a
 # ``www{n}`` load-balancer pool and assigns the number per session: some
 # numbered hosts do not serve this route at all and others reject a session
@@ -86,12 +86,12 @@ _EXTERNAL = Settings.external_constants()
 # is rooted at the unnumbered ``sede.`` origin) and reads the host AEAT
 # actually assigns off the landed page. The guard admits any subdomain under
 # the AEAT apex so whichever number is dispatched is tolerated.
-_SEDE_ORIGIN = _EXTERNAL.aeat.domains.sede
+_SEDE_ORIGIN = EXTERNAL.aeat.domains.sede
 _SEDE_HOST = urlsplit(_SEDE_ORIGIN).netloc
-_AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
-_CENSAL_PATH = _EXTERNAL.aeat.sede_paths.censal_datos
-_SELECTOR_MARKER = _EXTERNAL.aeat.clave_movil.selector_access_path_marker
-_CENSAL_SELECTOR_URL = _EXTERNAL.aeat.clave_movil.selector_access_url_template.format(
+_AEAT_HOST_SUFFIX = EXTERNAL.aeat.domains.host_suffix
+_CENSAL_PATH = EXTERNAL.aeat.sede_paths.censal_datos
+_SELECTOR_MARKER = EXTERNAL.aeat.clave_movil.selector_access_path_marker
+_CENSAL_SELECTOR_URL = EXTERNAL.aeat.clave_movil.selector_access_url_template.format(
     target=quote(_CENSAL_PATH, safe=""),
 )
 # The sole control this reader drives, and only on the selector page.
@@ -101,9 +101,9 @@ _SELECTOR_AUTHORIZE_ACTION: Final = "clave-movil-authorize"
 # because none of them contains the token an earlier draft forbade
 # (``MOD036``): the filing tool is ``BU36-ASIS/M036/index.zul`` and the write
 # sibling is ``BUGC-JDIT/ModifDomiDual``.
-_FORBIDDEN_LANDING_MARKERS: Final[tuple[str, ...]] = _EXTERNAL.aeat.live_safety.censal_forbidden_landing_markers
+_FORBIDDEN_LANDING_MARKERS: Final[tuple[str, ...]] = EXTERNAL.aeat.live_safety.censal_forbidden_landing_markers
 
-_READ_GUARD_POLICY = RemoteStateGuardPolicy(
+READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-censal-datos-read",
     evidence_tier="official_source_guidance",
     classification="authenticated_read_surface",
@@ -136,7 +136,7 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     # -- ``_FORBIDDEN_LANDING_MARKERS`` is -- so the widening does not loosen
     # the write refusal.
     allowed_host_suffixes=(_AEAT_HOST_SUFFIX,),
-    allowed_browser_action_patterns=_EXTERNAL.aeat.live_safety.censal_browser_action_patterns,
+    allowed_browser_action_patterns=EXTERNAL.aeat.live_safety.censal_browser_action_patterns,
     synthetic_data_allowed=False,
     requires_authentication=True,
     requires_aeat_authorization=True,
@@ -582,7 +582,7 @@ async def _resolve_dispatched_origin(
 
     if _SELECTOR_MARKER in (getattr(page, "url", "") or ""):
         _assert_read_browser_action(_SELECTOR_AUTHORIZE_ACTION)
-        await page.click(_EXTERNAL.aeat.clave_movil.authorize_button_selector)
+        await page.click(EXTERNAL.aeat.clave_movil.authorize_button_selector)
         try:
             await page.wait_for_url(
                 landed_on_censal_path,
@@ -632,14 +632,14 @@ async def _resolve_dispatched_origin(
 def _assert_read_browser_action(action: str) -> None:
     """Fail-closed guard: refuse any browser action the censal policy does not declare."""
     assert_remote_operation_allowed(
-        _READ_GUARD_POLICY,
+        READ_GUARD_POLICY,
         RemoteOperation(kind="browser_action", action=action),
     )
 
 
 def _assert_read_http(method: str, url: str) -> None:
     """Fail-closed guard: refuse any non-read-only or off-AEAT censal navigation."""
-    assert_read_http_for(_READ_GUARD_POLICY, method, url)
+    assert_read_http_for(READ_GUARD_POLICY, method, url)
 
 
 def forbidden_censal_landing_marker(landing_url: str) -> str | None:

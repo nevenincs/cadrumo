@@ -28,11 +28,11 @@ from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.supply_nature import SupplyNature
 from ...llm.consent import EvidenceConsentToken, mint_evidence_consent_token
 from ...llm.models import LLMProvider
-from ._common import _bad, _state, _tx_repo, emit_envelope
+from ._common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
 from ._date_parsing import _parse_iso_date, _parse_optional_iso_date_str
 from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
 from ._evidence_field_notices import field_degradation_notices
-from ._ledger_business_invoice_cli import _catalogue_invoice_shared_fields
+from ._ledger_business_invoice_cli import catalogue_invoice_shared_fields
 from ._ledger_evidence_confirm_notices import confirm_resolution_lines, confirm_resolution_notices
 from ._ledger_evidence_review_cli import parse_finding_resolution
 from ._ledger_payloads import (
@@ -46,7 +46,7 @@ from ._ledger_payloads import (
     EvidenceUpdateResult,
     EvidenceViewResult,
 )
-from ._ledger_support import _ledger_invoice_validation_no_recovery
+from ._ledger_support import ledger_invoice_validation_no_recovery
 
 
 class _InvoiceClassKwarg(TypedDict, total=False):
@@ -87,7 +87,7 @@ def _attachment_review_lines(payload: dict[str, object]) -> list[str]:
 
 def attachment_queue(ctx: typer.Context) -> None:
     """List Drive attachments that still require invoice review."""
-    bucket_id = _tx_repo(_state()).bucket_id
+    bucket_id = transaction_catalogue_repo(current_workflow_state()).bucket_id
     rows = list_attachment_review_queue(_attachment_store(bucket_id))
     payloads = [_attachment_review_payload(row) for row in rows]
     emit_envelope(
@@ -102,7 +102,7 @@ def attachment_queue(ctx: typer.Context) -> None:
 
 def attachment_view(ctx: typer.Context, attachment_id: str) -> None:
     """Inspect non-secret metadata and provenance for one attachment."""
-    bucket_id = _tx_repo(_state()).bucket_id
+    bucket_id = transaction_catalogue_repo(current_workflow_state()).bucket_id
     item = get_attachment_review_item(_attachment_store(bucket_id), attachment_id)
     payload = {"bucket_id": bucket_id, **_attachment_review_payload(item)}
     emit_envelope(
@@ -125,7 +125,7 @@ def evidence_add(
     notes: str = "",
 ) -> None:
     """Register a purchase invoice evidence record and return its id."""
-    transaction_repository = _tx_repo(_state())
+    transaction_repository = transaction_catalogue_repo(current_workflow_state())
     result = _evidence_service().add(
         bucket_id=transaction_repository.bucket_id,
         source_path=source_path,
@@ -146,7 +146,7 @@ def evidence_add(
 
 def evidence_view(ctx: typer.Context, evidence_id: str) -> None:
     """Show one purchase invoice evidence record by id."""
-    transaction_repository = _tx_repo(_state())
+    transaction_repository = transaction_catalogue_repo(current_workflow_state())
     record = _evidence_service().view(bucket_id=transaction_repository.bucket_id, evidence_id=evidence_id)
     emit_envelope(
         ctx,
@@ -158,7 +158,7 @@ def evidence_view(ctx: typer.Context, evidence_id: str) -> None:
 
 def evidence_list(ctx: typer.Context) -> None:
     """List every purchase invoice evidence record in the active bucket."""
-    transaction_repository = _tx_repo(_state())
+    transaction_repository = transaction_catalogue_repo(current_workflow_state())
     records = _evidence_service().list_all(bucket_id=transaction_repository.bucket_id)
     payload = {
         "bucket_id": transaction_repository.bucket_id,
@@ -189,7 +189,7 @@ def evidence_update(
     notes: str | None = None,
 ) -> None:
     """Update mutable fields on one purchase invoice evidence record."""
-    transaction_repository = _tx_repo(_state())
+    transaction_repository = transaction_catalogue_repo(current_workflow_state())
     patch = PurchaseInvoiceEvidencePatch(
         supplier=supplier,
         invoice_number=invoice_number,
@@ -214,8 +214,8 @@ def evidence_update(
 def evidence_remove(ctx: typer.Context, evidence_id: str, yes: bool = False) -> None:
     """Delete one purchase invoice evidence record."""
     if not yes:
-        raise _bad(tr("cli.app.ledger.evidence.yes_required"))
-    transaction_repository = _tx_repo(_state())
+        raise bad(tr("cli.app.ledger.evidence.yes_required"))
+    transaction_repository = transaction_catalogue_repo(current_workflow_state())
     result = _evidence_service().remove(bucket_id=transaction_repository.bucket_id, evidence_id=evidence_id)
     payload = _evidence_payload(result.record)
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
@@ -270,15 +270,15 @@ def _mint_extract_consent(
     if off_host_provider is None and not acknowledged:
         return None
     if off_host_provider is None:
-        raise _bad(
+        raise bad(
             tr("cli.app.ledger.evidence.extract_acknowledge_without_provider"),
         )
     if off_host_provider is LLMProvider.LOCAL:
-        raise _bad(
+        raise bad(
             tr("cli.app.ledger.evidence.extract_off_host_provider_is_local"),
         )
     if not acknowledged:
-        raise _bad(
+        raise bad(
             tr("cli.app.ledger.evidence.extract_provider_without_acknowledge"),
         )
 
@@ -288,13 +288,13 @@ def _mint_extract_consent(
     # the other would let a later withdrawal believe it had proved a match it
     # never checked.
     if evidence_id is None:
-        raise _bad(
+        raise bad(
             tr("cli.app.ledger.evidence.extract_off_host_needs_evidence_id"),
         )
     record = PurchaseInvoiceEvidenceService().view(bucket_id=bucket_id, evidence_id=evidence_id)
     content_address = record.source_sha256
     if not content_address:
-        raise _bad(
+        raise bad(
             tr("cli.app.ledger.evidence.extract_off_host_needs_content_address"),
         )
 
@@ -328,8 +328,8 @@ def evidence_extract(
     invoice; confirmation is a separate operator action.
     """
     if (evidence_id is None) == (attachment_id is None):
-        raise _bad(tr("cli.app.ledger.evidence.extract_reference_required"))
-    transaction_repository = _tx_repo(_state())
+        raise bad(tr("cli.app.ledger.evidence.extract_reference_required"))
+    transaction_repository = transaction_catalogue_repo(current_workflow_state())
     consent_token = _mint_extract_consent(
         bucket_id=transaction_repository.bucket_id,
         evidence_id=evidence_id,
@@ -472,10 +472,10 @@ def _run_evidence_confirm(
     resolve: list[str],
 ) -> None:
     if (evidence_id is None) == (attachment_id is None):
-        raise _bad(
+        raise bad(
             tr("cli.app.ledger.evidence.extract_reference_required"),
         )
-    transaction_repository = _tx_repo(_state())
+    transaction_repository = transaction_catalogue_repo(current_workflow_state())
     bucket_id = transaction_repository.bucket_id
     resolutions: list[FindingResolution] = [parse_finding_resolution(raw) for raw in resolve]
     try:
@@ -504,7 +504,7 @@ def _run_evidence_confirm(
             resolutions=resolutions,
         )
     except (InvoiceValidationError, ValidationError) as exc:
-        if (refusal := _ledger_invoice_validation_no_recovery(exc)) is not None:
+        if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:
             raise refusal from None
         raise
 
@@ -514,7 +514,7 @@ def _run_evidence_confirm(
         "evidence_id": evidence_id,
         "attachment_id": attachment_id,
         "created": result.created,
-        **_catalogue_invoice_shared_fields(invoice),
+        **catalogue_invoice_shared_fields(invoice),
         # Read off the draft the confirmation was based on, so the how-was-this-
         # obtained record reaches the operator on the confirm surface too and not
         # only on extract. `result.draft` is the pre-override extraction, which is

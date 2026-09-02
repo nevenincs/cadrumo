@@ -3,7 +3,7 @@
 Three load-bearing helpers turn the engine's typed records into
 Sheets API request bodies:
 
-  * ``_coerce_cell_value`` — Decimal | str | bool | None → the JSON
+  * ``coerce_cell_value`` — Decimal | str | bool | None → the JSON
     cell value Sheets accepts. Errors here render wrong values on
     the operator's screen.
   * ``_condition_for_constraint`` — SheetCellConstraint → Sheets
@@ -38,7 +38,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.ids import LegalRefId
 from .._calc_sheets_apply_formatting import _condition_for_constraint, _input_message_for_constraint
-from .._calc_sheets_apply_values import _coerce_cell_value
+from .._calc_sheets_apply_values import coerce_cell_value
 from ..calc_sheets_apply import (
     _build_structural_cleanup_requests,
     _developer_metadata_pairs,
@@ -77,32 +77,32 @@ def _make_constraint(
 
 
 # ---------------------------------------------------------------------------
-# _coerce_cell_value
+# coerce_cell_value
 # ---------------------------------------------------------------------------
 
 
 def test_coerce_cell_value_none_becomes_empty_string() -> None:
-    assert _coerce_cell_value(None) == ""
+    assert coerce_cell_value(None) == ""
 
 
 def test_coerce_cell_value_preserves_bool() -> None:
-    assert _coerce_cell_value(True) is True
-    assert _coerce_cell_value(False) is False
+    assert coerce_cell_value(True) is True
+    assert coerce_cell_value(False) is False
 
 
 def test_coerce_cell_value_decimal_renders_as_fixed_string() -> None:
     """Very large / very small Decimals must not round through float."""
-    assert _coerce_cell_value(Decimal("1500.55")) == "1500.55"
-    assert _coerce_cell_value(Decimal("0.00000001")) == "0.00000001"
-    assert _coerce_cell_value(Decimal("1234567890.99")) == "1234567890.99"
+    assert coerce_cell_value(Decimal("1500.55")) == "1500.55"
+    assert coerce_cell_value(Decimal("0.00000001")) == "0.00000001"
+    assert coerce_cell_value(Decimal("1234567890.99")) == "1234567890.99"
 
 
 def test_coerce_cell_value_negative_decimal_preserved() -> None:
-    assert _coerce_cell_value(Decimal("-500")) == "-500"
+    assert coerce_cell_value(Decimal("-500")) == "-500"
 
 
 def test_coerce_cell_value_passes_string_through() -> None:
-    assert _coerce_cell_value("Concepto") == "Concepto"
+    assert coerce_cell_value("Concepto") == "Concepto"
 
 
 # ---------------------------------------------------------------------------

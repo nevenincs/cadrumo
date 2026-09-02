@@ -47,7 +47,7 @@ retrieved_at = 2026-07-04
 published_at = 2000-12-15
 applies_from = 2000-12-16
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2000-22794"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # Retiered 2026-08-15: this 1203-byte orden excerpt carries no annex section
 # and no record-layout vocabulary, so it was never layout authority -- the
@@ -65,7 +65,7 @@ retrieved_at = 2026-07-04
 published_at = 2000-12-15
 applies_from = 2000-12-16
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2000-22794"
-review_status = "reviewed"
+review_status = "pending_review"
 
 [sources."aeat-dr-341-2016"]
 evidence_tier = "layout_authority"
@@ -78,7 +78,7 @@ bytes = 175616
 retrieved_at = 2026-07-21
 applies_from = 2016-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/dr341_2016.xls"
-review_status = "reviewed"
+review_status = "pending_review"
 
 # The historical AEAT index publishes this parser-readable design as the 2004
 # Orden's layout for exercises through 2015. BOE-A-2004-17306's final provision
@@ -98,4 +98,4 @@ retrieved_at = 2026-08-26
 applies_from = 2005-02-01
 applies_to = 2015-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr341_2005.pdf"
-review_status = "reviewed"
+review_status = "pending_review"

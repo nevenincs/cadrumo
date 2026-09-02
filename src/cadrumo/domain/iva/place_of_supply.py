@@ -49,13 +49,13 @@ from datetime import date
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
-from typing import TypeGuard
 
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.resources.bundled_data import bundled_path
 from ...core.toml import read_toml
+from ...core.type_guards import is_object_list, is_str_keyed_mapping
 from ...core.validity_window import ValidityWindow, years_covered_by_every_group
 from ._grounding import verify_table_legal_refs
 from .errors import IvaCatalogueError
@@ -211,20 +211,6 @@ def place_of_supply_years(path: Path | None = None) -> frozenset[int]:
     """
     windows = [rule.window for rule in load_place_of_supply_table(path).values() if rule.window is not None]
     return years_covered_by_every_group([window] for window in windows)
-
-
-def is_object_list(value: object) -> TypeGuard[list[object]]:
-    """Narrow an unparameterized runtime list to untrusted object entries."""
-    return isinstance(value, list)
-
-
-def is_str_keyed_mapping(value: object) -> TypeGuard[Mapping[str, object]]:
-    """Narrow an unparameterized runtime dict to a string-keyed mapping.
-
-    True by construction for a table parsed from TOML: ``tomllib`` always
-    produces string keys.
-    """
-    return isinstance(value, dict)
 
 
 def _hydrated_rule(raw_rule: object, *, path: Path, index: int) -> IvaPlaceOfSupplyRule:

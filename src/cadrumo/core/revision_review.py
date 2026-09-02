@@ -1,4 +1,4 @@
-"""Closed review-provenance vocabulary for modelo registry revisions.
+"""Closed review-provenance vocabulary for shipped registry records.
 
 Every :class:`~domain.calculations.registry.ModeloRevision` carries a declared
 governance stamp naming who engineered the revision and how far its review has
@@ -12,14 +12,19 @@ them. Absence of the stamp block means :attr:`RevisionReviewStatus.PENDING_REVIE
 - the fail-closed reading, so an unreviewed revision is a visible backlog entry
 rather than a silent pass.
 
+The legal catalogue shares this vocabulary rather than declaring its own. Its rows
+ask the same question about the same kind of subject -- how far review of a shipped
+registry artefact has progressed -- and a second enum with identical members was a
+duplicate definition, not a distinct one. The distinction drawn below still holds
+against the runtime review vocabularies, which describe a taxpayer's own rows.
+
 This enum is deliberately distinct from the three same-shaped vocabularies the
 codebase already ships, none of which can carry this subject:
 
-- ``ReviewStatus`` in the registry schema base is the degenerate
-  ``Literal["reviewed"]`` scoped to the *legal catalogue* rows (legal
-  references, source references, legal parameters). It asserts operator signoff
-  of a citation and has no unreviewed member at all, so it cannot express the
-  pending state this vocabulary exists to make visible.
+- The registry schema base once carried a degenerate ``Literal["reviewed"]``
+  for the *legal catalogue* rows, with no unreviewed member at all. It has been
+  retired onto this vocabulary, which is what lets those rows express the
+  pending state.
 - ``LedgerReviewStatus``, ``InvoiceReviewStatus``, and
   ``DeclaracionReviewStatus`` in the application review surface are CLI
   filter-value catalogues over a taxpayer's own bucket rows. They describe

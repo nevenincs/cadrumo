@@ -5,7 +5,7 @@ declared none, and that placeholder passes the Spanish control-letter check, so
 downstream it is indistinguishable from a declared identity. On the export path
 the value is written into the fichero as the declarant: an operator who never
 entered their NIF would receive a structurally valid declaration identifying
-somebody else. ``_filing_taxpayer_or_refuse`` is the boundary that stops it.
+somebody else. ``filing_taxpayer_or_refuse`` is the boundary that stops it.
 
 **On the fixture.** The absent-identity profile is built by CONSTRUCTION, never
 by removal: the persisted facts tuple is rebuilt without ``identity.tax_id``, so
@@ -27,7 +27,7 @@ from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from ....tests.user_profile import register_cli_profile
-from .._common import _declared_tax_id, cli_policy_refusal_projection
+from .._common import cli_policy_refusal_projection, declared_tax_id
 from ..errors import CliRefusedBoundaryError, error_boundary_under_test
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -131,7 +131,7 @@ def test_the_fixture_really_declares_no_tax_id() -> None:
     _create_profile()
     _persist_facts(include_tax_id=False)
 
-    assert _declared_tax_id(_active_record()) == "", (
+    assert declared_tax_id(_active_record()) == "", (
         "the fixture profile must declare no tax id at all; a stored empty string would make the refusal test vacuous"
     )
 

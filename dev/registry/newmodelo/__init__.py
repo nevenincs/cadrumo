@@ -18,18 +18,3 @@ Major declarations:
 * :data:`~dev.registry.newmodelo.checklist.CHECKLIST` — the
   contributor checklist.
 """
-
-from __future__ import annotations
-
-from .checklist import CHECKLIST, ChecklistItem, render_checklist
-from .manager import NewModeloError, NewModeloScaffoldManager, ScaffoldPlanEntry, ScaffoldResult
-
-__all__ = [
-    "CHECKLIST",
-    "ChecklistItem",
-    "NewModeloError",
-    "NewModeloScaffoldManager",
-    "ScaffoldPlanEntry",
-    "ScaffoldResult",
-    "render_checklist",
-]

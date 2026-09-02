@@ -66,7 +66,7 @@ from .records import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
-    _encode_profile_password,
+    encode_profile_password,
 )
 from .sentinel_contract import ProfileCustodySentinelRecord, verify_profile_custody_sentinel
 
@@ -329,7 +329,7 @@ def unlock_profile_custody_password_material(
     """
     if timeout_seconds <= 0:
         raise ValueError("profile KDF timeout must be positive")
-    password_bytes = _encode_profile_password(secret)
+    password_bytes = encode_profile_password(secret)
     deadline = time.monotonic() + timeout_seconds
     try:
         with (
@@ -369,7 +369,7 @@ def wrap_profile_custody_password_material(
         raise ValueError("profile KDF timeout must be positive")
     if len(dek) != KEY_SIZE:
         raise ProfileCustodyRecordError("profile custody DEK must contain exactly 32 bytes")
-    secret_bytes = _encode_profile_password(secret)
+    secret_bytes = encode_profile_password(secret)
     deadline = time.monotonic() + timeout_seconds
     try:
         with (

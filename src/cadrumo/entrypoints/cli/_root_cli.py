@@ -17,12 +17,12 @@ from ...core.output_rendering import OutputFormat
 from ._common import preserve_requested_cli_leaf
 from ._log_levels import resolve_log_level
 from ._root_support import (
-    _activate_profile_override,
-    _emit_bare_invocation_and_exit,
-    _emit_root_help_and_exit,
-    _emit_version_report_and_exit,
-    _is_introspection_only_invocation,
-    _normalize_root_active_profile,
+    activate_profile_override,
+    emit_bare_invocation_and_exit,
+    emit_root_help_and_exit,
+    emit_version_report_and_exit,
+    is_introspection_only_invocation,
+    normalize_root_active_profile,
 )
 
 
@@ -51,10 +51,10 @@ def root_command(
     state["tui_requested"] = tui
     state["log_level"] = resolve_log_level(quiet=quiet, verbose=verbose, debug=debug)
     if version:
-        _emit_version_report_and_exit(detail=detail)
+        emit_version_report_and_exit(detail=detail)
     if help_:
-        _emit_root_help_and_exit(ctx)
-    if ctx.invoked_subcommand is not None and _is_introspection_only_invocation(ctx):
+        emit_root_help_and_exit(ctx)
+    if ctx.invoked_subcommand is not None and is_introspection_only_invocation(ctx):
         return
     from ..adapter_composition import profile_adapter_composition
 
@@ -65,12 +65,18 @@ def root_command(
         from ._tui_policy import enforce_tui_request
         from .command_specs import COMMAND_GRAPH
 
-        enforce_tui_request(ctx, spec=COMMAND_GRAPH.by_key()["root"])
+        if enforce_tui_request(ctx, spec=COMMAND_GRAPH.by_key()["root"]):
+            # A bare `aeat --tui` asks for the full-screen session itself, not a
+            # routed command, so the request ends here in a child interpreter
+            # rather than falling through to the scripted landing surface.
+            from ._tui_session import run_tui_session
+
+            raise typer.Exit(run_tui_session())
         if profile is not None:
-            _activate_profile_override(ctx, profile)
+            activate_profile_override(ctx, profile)
         else:
-            _normalize_root_active_profile(ctx)
-        _emit_bare_invocation_and_exit(ctx)
+            normalize_root_active_profile(ctx)
+        emit_bare_invocation_and_exit(ctx)
     from ._profile_authentication_contract import ProfileSecretSourceOptions
 
     state["profile_secret_source"] = ProfileSecretSourceOptions(

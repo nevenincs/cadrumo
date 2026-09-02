@@ -456,7 +456,7 @@ def test_m303_2026_publication_is_twice_reproducible_and_check_mode_is_non_mutat
             checked.candidate.layout
         )
         assert checked.candidate.layout.format == "fixed_width"
-        assert transport.encoding is ExportEncoding.LATIN_1
+        assert transport.encoding is ExportEncoding.ISO_8859_1
 
 
 def test_m303_dp30305_composes_its_two_declared_projection_families_once(tmp_path: Path) -> None:

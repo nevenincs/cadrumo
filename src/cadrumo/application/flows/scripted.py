@@ -21,7 +21,7 @@ from collections.abc import Iterable, Mapping
 
 from ...core.flows import FlowMode
 from .definition import FlowDefinition
-from .engine import FlowState, answer, jump_to, next_page, start_flow, visible_sequence
+from .engine import FlowState, answer, first_unanswered_key, jump_to, next_page, start_flow, visible_sequence
 from .errors import FlowAnswerError
 from .review import ReviewProjection, assert_submit_eligible
 
@@ -57,7 +57,7 @@ def run_scripted_flow(
     consumed = 0
 
     while True:
-        target = _first_unanswered(definition, state)
+        target = first_unanswered_key(definition, state)
         if target is None:
             break
         if queue:
@@ -119,13 +119,6 @@ def _refuse_rejected_answer(state: FlowState, page_key: str) -> None:
             "message_keys": tuple(verdict.message_key for verdict in state.verdicts[page_key] if verdict.message_key),
         },
     )
-
-
-def _first_unanswered(definition: FlowDefinition, state: FlowState) -> str | None:
-    for entry in visible_sequence(definition, state):
-        if entry.key not in state.answers:
-            return entry.key
-    return None
 
 
 def _page_required(definition: FlowDefinition, state: FlowState, page_key: str) -> bool:

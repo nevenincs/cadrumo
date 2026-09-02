@@ -27,13 +27,14 @@ import re
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any, Final, Protocol, cast
+from typing import TYPE_CHECKING, Any, Final, Protocol, cast
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from ....core.external_constants import PDF_MIME_TYPE
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.type_guards import is_object_list
 from ....domain.attachments.enums import AttachmentSource
 from ..storage.drive_pagination import next_drive_page_token
 from ..storage.errors import (
@@ -44,6 +45,9 @@ from ..storage.errors import (
 )
 from ._preconditions import google_terminal_refusal
 from .api import execute_request
+
+if TYPE_CHECKING:
+    from google.auth.credentials import Credentials
 
 # .../d/<ID>/... (file, spreadsheets, document) | ...?id=<ID> | bare <ID>.
 # The bare form requires >=25 chars so a hyphenated English token (e.g.
@@ -185,7 +189,7 @@ def parse_drive_file_id(reference: str) -> str | None:
     return None
 
 
-def _drive_service(credentials: object) -> _DriveService:
+def _drive_service(credentials: Credentials) -> _DriveService:
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
@@ -209,7 +213,7 @@ def resolve_document_link(
     *,
     source: AttachmentSource,
     reference: str,
-    credentials: object,
+    credentials: Credentials,
     service: _DriveService | None = None,
 ) -> bytes:
     """Resolve a recorded :class:`~domain.attachments.AttachmentSource` link to bytes.
@@ -339,7 +343,7 @@ def _download_drive_file_from_service(file_id: str, service: _DriveService) -> b
 def list_drive_folder_documents(
     *,
     folder_id: str,
-    credentials: object,
+    credentials: Credentials,
     service: _DriveService | None = None,
 ) -> DriveFolderListing:
     """List the PDF/image children of a ``drive.file``-reachable Drive folder.
@@ -431,8 +435,8 @@ def _iter_drive_folder_files(drive_service: _DriveService, *, folder_id: str) ->
                 outcome=NoRecoveryOutcome.SAFETY,
             ) from exc
         # CAST-RATIONALE-thirdparty: Google Drive files-list is an untyped JSON API response
-        raw_files = response.get("files", [])
-        if not isinstance(raw_files, list):
+        raw_files: object = response.get("files", [])
+        if not is_object_list(raw_files):
             raise _document_link_terminal_refusal(
                 OutboundStorageValidationError(
                     "Drive files.list returned a non-list files field",

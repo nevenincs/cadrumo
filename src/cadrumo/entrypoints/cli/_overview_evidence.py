@@ -34,6 +34,11 @@ from ...domain.modelos.work_unit import WorkUnit
 from ._common import resolve_notice_action
 
 if TYPE_CHECKING:
+    from ...adapters.outbound.aeat.sede.observation_store import (
+        FiledDeclaracionObservation,
+        FiledDeclaracionObservationStore,
+    )
+    from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact
     from ...domain.calculations.registry.applicability_routes import TaxRoute
     from ...domain.user_profile.values import UserProfileRecord
 
@@ -53,7 +58,7 @@ def _calendar_evidence_notice(code: str, message_key: str) -> Notice:
     return Notice(severity=NoticeSeverity.WARNING, code=code, message=tr(message_key), context={})
 
 
-def _local_live_calendar_events(
+def local_live_calendar_events(
     bucket_id: str,
     rng: OverviewCalendarRange,
     *,
@@ -107,7 +112,7 @@ def _local_live_calendar_events(
     return events, None
 
 
-def _local_modelo_record_calendar_events(
+def local_modelo_record_calendar_events(
     bucket_id: str,
     rng: OverviewCalendarRange,
     *,
@@ -146,7 +151,7 @@ def _local_modelo_record_calendar_events(
     return events, None
 
 
-def _local_modelo_work_units(bucket_id: str) -> tuple[tuple[WorkUnit, ...], Notice | None]:
+def local_modelo_work_units(bucket_id: str) -> tuple[tuple[WorkUnit, ...], Notice | None]:
     """Return ``(active work units, degradation notice-or-None)``.
 
     Work units are an OPTIONAL enrichment of the overview surfaces: they annotate
@@ -239,7 +244,7 @@ def overview_no_aeat_history_notice(*, tax_route: TaxRoute | None) -> Notice | N
     )
 
 
-def _live_censo_verified_profile_keys(record: UserProfileRecord | None) -> tuple[str, ...]:
+def live_censo_verified_profile_keys(record: UserProfileRecord | None) -> tuple[str, ...]:
     """Return profile paths whose current value was stamped from live censo sync."""
     if record is None:
         return ()
@@ -253,7 +258,7 @@ def _live_censo_verified_profile_keys(record: UserProfileRecord | None) -> tuple
     )
 
 
-def _local_calendar_filing_evidence(
+def local_calendar_filing_evidence(
     bucket_id: str,
     events: tuple[OverviewCalendarEvent, ...],
     *,
@@ -316,15 +321,15 @@ def _local_calendar_filing_evidence(
 
 
 def _calendar_verified_filed_declaration_observations(
-    store,
+    store: FiledDeclaracionObservationStore,
     *,
     expected_tax_id: str | None = None,
-):
+) -> tuple[tuple[FiledDeclaracionObservation, ...], dict[str, str]]:
     """Return filed observations with justificante PDF refs proven parseable and matching."""
-    verified_observations = []
+    verified_observations: list[FiledDeclaracionObservation] = []
     verified_artefact_csvs: dict[str, str] = {}
     for observation in store.list_observations():
-        verified_artefacts = []
+        verified_artefacts: list[FiledDeclaracionArtefact] = []
         for artefact in observation.artefacts:
             if artefact.kind != "justificante_pdf":
                 verified_artefacts.append(artefact)
@@ -346,9 +351,9 @@ def _calendar_verified_filed_declaration_observations(
 
 
 def _stored_filed_artefact_matching_observation_csv(
-    store,
-    artefact,
-    observation,
+    store: FiledDeclaracionObservationStore,
+    artefact: FiledDeclaracionArtefact,
+    observation: FiledDeclaracionObservation,
     *,
     expected_tax_id: str | None,
 ) -> str | None:
@@ -376,7 +381,7 @@ def _stored_filed_artefact_matching_observation_csv(
 
 def _stored_filed_justificante_matching_observation_csv(
     body: bytes,
-    observation,
+    observation: FiledDeclaracionObservation,
     *,
     storage_ref: str,
     expected_tax_id: str | None,

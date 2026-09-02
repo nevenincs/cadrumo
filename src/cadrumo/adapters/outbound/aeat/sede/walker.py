@@ -54,11 +54,11 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-_EXTERNAL = Settings.external_constants()
-_SEDE_BASE = _EXTERNAL.aeat.domains.www6
-_SEDE_HOST = urlsplit(_SEDE_BASE).netloc
-_AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
-_RESUMEN_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.expedientes_resumen}"
+EXTERNAL = Settings.external_constants()
+SEDE_BASE = EXTERNAL.aeat.domains.www6
+_SEDE_HOST = urlsplit(SEDE_BASE).netloc
+_AEAT_HOST_SUFFIX = EXTERNAL.aeat.domains.host_suffix
+_RESUMEN_URL = f"{SEDE_BASE}{EXTERNAL.aeat.sede_paths.expedientes_resumen}"
 
 DEFAULT_EXPAND_TIMEOUT_MS: int = 10_000
 
@@ -90,7 +90,7 @@ class _HtmlSnapshotPage(Protocol):
 # no controls: it only navigates and fetches. An empty tuple means any future
 # browser action added here fails the guard until it is declared, which is the
 # refusal we want rather than a gap.
-_READ_GUARD_POLICY = RemoteStateGuardPolicy(
+READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-expedientes-walker-read",
     evidence_tier="official_source_guidance",
     classification="authenticated_read_surface",
@@ -104,7 +104,7 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
 
 def _assert_read_http(method: str, url: str) -> None:
     """Refuse a wire-crossing read the walker policy does not admit."""
-    assert_read_http_for(_READ_GUARD_POLICY, method, url)
+    assert_read_http_for(READ_GUARD_POLICY, method, url)
 
 
 # The one page whose CONTENT this walker interprets. Expediente detail URLs
@@ -113,7 +113,7 @@ def _assert_read_http(method: str, url: str) -> None:
 # invented rather than grounded. Those navigations keep the policy check
 # alone -- host plus write-token scan -- which is the honest strength for a
 # page-supplied target.
-_RESUMEN_READ_PATH_PREFIXES: tuple[str, ...] = (urlsplit(_EXTERNAL.aeat.sede_paths.expedientes_resumen).path,)
+_RESUMEN_READ_PATH_PREFIXES: tuple[str, ...] = (urlsplit(EXTERNAL.aeat.sede_paths.expedientes_resumen).path,)
 
 
 def assert_resumen_landing(landing_url: str) -> None:
@@ -137,7 +137,7 @@ def assert_resumen_landing(landing_url: str) -> None:
     assert_read_landing(
         landing_url,
         surface="expedientes walker",
-        policy=_READ_GUARD_POLICY,
+        policy=READ_GUARD_POLICY,
         allowed_path_prefixes=_RESUMEN_READ_PATH_PREFIXES,
     )
 
@@ -272,7 +272,7 @@ async def walk_expedientes_tree(
         await _expand_matching_branches(page, modelo=modelo)
         assert_resumen_landing(getattr(page, "url", "") or "")
         html = await _snapshot_html(page)
-        expedientes = parse_resumen_tree(html, base_url=_SEDE_BASE)
+        expedientes = parse_resumen_tree(html, base_url=SEDE_BASE)
         if modelo is not None:
             expedientes = tuple(e for e in expedientes if e.modelo == modelo)
         log.info(
@@ -326,7 +326,7 @@ async def resolve_justificante_ref(
         ref = parse_expediente_detail(
             html,
             expediente_id=expediente.expediente_id,
-            base_url=_SEDE_BASE,
+            base_url=SEDE_BASE,
         )
         log.info(
             "resolve_justificante_ref: resolved CSV=%s expediente=%s",
@@ -378,7 +378,7 @@ async def capture_justificante(
         ref = parse_expediente_detail(
             detail_html,
             expediente_id=expediente.expediente_id,
-            base_url=_SEDE_BASE,
+            base_url=SEDE_BASE,
         )
 
         # ``JustificanteRef`` carries an absolute ``AnyHttpUrl``; guard it for

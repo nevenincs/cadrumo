@@ -27,7 +27,7 @@ from ...core.i18n.render import tr
 class _TyperExceptionsState(Protocol):
     """Local marker for Cadrumo's idempotent Typer localisation state."""
 
-    _cadrumo_parse_errors_localised: bool
+    cadrumo_parse_errors_localised: bool
 
 
 def localise_help_section_headers() -> None:
@@ -132,7 +132,7 @@ def localise_typer_parse_error_messages() -> None:
 
     Also rebinds ``ClickException.show`` / ``UsageError.show`` — the plain-text
     error renderer every parse/usage failure falls back to now that Rich
-    rendering is disabled (see :func:`._stdio._disable_rich_cli_rendering`).
+    rendering is disabled (see :func:`._stdio.disable_rich_cli_rendering`).
     Both hardcode ``"Error: ..."`` and ``"Try '{cmd} {opt}' for help."``
     verbatim with no gettext hook at all, so this is a from-scratch
     reimplementation of each method's body rather than a wrapped delegate.
@@ -140,20 +140,22 @@ def localise_typer_parse_error_messages() -> None:
     from typer._click import exceptions as _typer_exceptions
     from typer._click import formatting as _typer_formatting
 
-    if getattr(_typer_exceptions, "_cadrumo_parse_errors_localised", False):
+    if getattr(_typer_exceptions, "cadrumo_parse_errors_localised", False):
         return
 
     missing_parameter_format_message = _typer_exceptions.MissingParameter.format_message
     bad_parameter_format_message = _typer_exceptions.BadParameter.format_message
     write_usage = _typer_formatting.HelpFormatter.write_usage
 
-    def localised_missing_parameter_format_message(self) -> str:
+    def localised_missing_parameter_format_message(self: _typer_exceptions.MissingParameter) -> str:
         return _localised_missing_prefix(missing_parameter_format_message(self))
 
-    def localised_bad_parameter_format_message(self) -> str:
+    def localised_bad_parameter_format_message(self: _typer_exceptions.BadParameter) -> str:
         return _localised_invalid_value(bad_parameter_format_message(self))
 
-    def localised_write_usage(self, prog: str, args: str = "", prefix: str | None = None) -> None:
+    def localised_write_usage(
+        self: _typer_formatting.HelpFormatter, prog: str, args: str = "", prefix: str | None = None
+    ) -> None:
         return write_usage(
             self,
             prog,
@@ -228,4 +230,4 @@ def localise_typer_parse_error_messages() -> None:
     typer_exceptions_state = cast(  # CAST-RATIONALE-TYPER-EXCEPTIONS-STATE: module attribute is Cadrumo-owned.
         "_TyperExceptionsState", _typer_exceptions
     )
-    typer_exceptions_state._cadrumo_parse_errors_localised = True
+    typer_exceptions_state.cadrumo_parse_errors_localised = True

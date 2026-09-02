@@ -16,9 +16,9 @@ from .. import _google_drive_metadata as drive_metadata_module
 from .._google_drive import GoogleDriveProvider
 from .._google_drive_metadata import (
     DriveStoragePreconditionCondition,
-    _drive_storage_content_hash,
     _parse_drive_modified_time,
     _parse_drive_size,
+    drive_storage_content_hash,
 )
 from ..errors import (
     OutboundStorageConflictError,
@@ -97,13 +97,6 @@ _FAILURE_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
         NoRecoveryOutcome.SAFETY,
         "component",
         "client_available",
-    ),
-    "_execute:OutboundStorageNetworkError:drive request failed without translated error": _contract(
-        DriveStoragePreconditionCondition.REQUEST_TRANSPORT_AVAILABLE,
-        NoRecoveryOutcome.SAFETY,
-        "operation",
-        "status",
-        "transport_available",
     ),
     "_resolve_vault_folder:OutboundStorageNetworkError:drive create_vault_folder returned no id": _contract(
         DriveStoragePreconditionCondition.RESPONSE_IDENTIFIER_PRESENT,
@@ -197,7 +190,7 @@ _FAILURE_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
         "field",
         "valid",
     ),
-    "_drive_storage_app_properties:OutboundStorageIntegrityError:drive object appProperties do not match the storage metadata contract": _contract(
+    "drive_storage_app_properties:OutboundStorageIntegrityError:drive object appProperties do not match the storage metadata contract": _contract(
         DriveStoragePreconditionCondition.METADATA_APP_PROPERTIES_VALID,
         NoRecoveryOutcome.SAFETY,
         "field",
@@ -244,11 +237,6 @@ _FAILURE_CARRIER_FACT_EXPRESSIONS: dict[str, tuple[tuple[str, str], ...]] = {
     "_service_factory:OutboundStorageNetworkError:googleapiclient is not importable": (
         ("component", _literal("discovery")),
         ("client_available", _literal(False)),
-    ),
-    "_execute:OutboundStorageNetworkError:drive request failed without translated error": (
-        ("operation", "action"),
-        ("status", _literal("unknown")),
-        ("transport_available", _literal(False)),
     ),
     "_resolve_vault_folder:OutboundStorageNetworkError:drive create_vault_folder returned no id": (
         ("operation", _literal("create_vault_folder")),
@@ -312,7 +300,7 @@ _FAILURE_CARRIER_FACT_EXPRESSIONS: dict[str, tuple[tuple[str, str], ...]] = {
         ("field", _literal("modifiedTime")),
         ("valid", _literal(False)),
     ),
-    "_drive_storage_app_properties:OutboundStorageIntegrityError:drive object appProperties do not match the storage metadata contract": (
+    "drive_storage_app_properties:OutboundStorageIntegrityError:drive object appProperties do not match the storage metadata contract": (
         ("field", _literal("appProperties")),
         ("valid", _literal(False)),
     ),
@@ -357,7 +345,7 @@ def _carrier_message(call: ast.Call) -> str:
 
 def _external_precondition(call: ast.Call) -> ast.Call:
     value = next((keyword.value for keyword in call.keywords if keyword.arg == "precondition_verdict"), None)
-    assert isinstance(value, ast.Call) and _call_name(value.func) == "_drive_external_verdict"
+    assert isinstance(value, ast.Call) and _call_name(value.func) == "drive_external_verdict"
     return value
 
 
@@ -652,6 +640,6 @@ def test_malformed_drive_metadata_has_exact_safety_contracts(
         elif case == "modified-time":
             _parse_drive_modified_time("not-a-time", provider_object_id="drive-file")
         else:
-            _drive_storage_content_hash({"id": "drive-file", "appProperties": {"content_hash": "sha256-x"}})
+            drive_storage_content_hash({"id": "drive-file", "appProperties": {"content_hash": "sha256-x"}})
 
     _assert_terminal_contract(raised.value, condition, NoRecoveryOutcome.SAFETY, facts)

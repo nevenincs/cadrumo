@@ -40,7 +40,7 @@ source_refs = ["aeat-dr-341-2016"]
 id = "modelo-341-envelope-header"
 record_type = "envelope_header"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 [[revisions."2016-y-siguientes".export_layouts.records.fields]]
@@ -220,7 +220,7 @@ source_refs = ["aeat-dr-341-2016"]
 id = "modelo-341-page-01"
 record_type = "page_01"
 order = 1
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 [[revisions."2016-y-siguientes".export_layouts.records.fields]]

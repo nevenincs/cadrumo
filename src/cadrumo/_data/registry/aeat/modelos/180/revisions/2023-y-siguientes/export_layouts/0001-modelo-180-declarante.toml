@@ -5,7 +5,7 @@ id = "modelo-180-fichero-boe-2023"
 id = "modelo-180-declarante"
 record_type = "declarante"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 [[revisions.2023-y-siguientes.export_layouts.records.fields]]

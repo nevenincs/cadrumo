@@ -36,6 +36,7 @@ from .sealed_archive_writer import (
     PAYLOAD_MEMBER_NAME,
     SEALED_ARCHIVE_MEMBER_NAMES,
 )
+from .....core.type_guards import is_str_keyed_dict
 
 
 @dataclass(frozen=True)
@@ -157,7 +158,7 @@ def _read_archive_header(archive: tarfile.TarFile) -> ExportArchiveHeader:
         raw_header = json.loads(header_bytes)
     except (TypeError, ValueError):
         raw_header = None
-    if not isinstance(raw_header, dict) or raw_header.get("product") != PRODUCT_IDENTITY.python_package:
+    if not is_str_keyed_dict(raw_header) or raw_header.get("product") != PRODUCT_IDENTITY.python_package:
         raise SealedArchiveHeaderError(
             "sealed-archive read refused: header does not identify the canonical Cadrumo bundle format; "
             "payload members were not read and the archive was not migrated, copied, renamed, unpacked, "

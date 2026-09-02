@@ -122,7 +122,7 @@ class TestAllThreeReadersAgreeOnRefusal:
         the agreement is asserted.
         """
         with pytest.raises(SedeNavigationError):
-            _declarations_fetch._origin_of(landed)
+            _declarations_fetch.origin_of(landed)
         with pytest.raises(SedeNavigationError):
             iva_compensation_wallet._landed_wallet_url(_LandedPage(landed or ""))
 

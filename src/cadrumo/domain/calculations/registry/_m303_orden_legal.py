@@ -7,7 +7,6 @@ from datetime import date
 from typing import Literal
 from urllib.parse import parse_qs, urlsplit
 
-from ....core.legal_review import LegalReviewStatus
 from ....core.orden_anual_html import (
     OrdenAnualIvaAgriculturalIndex,
     OrdenAnualIvaAgriculturalIngresoACuenta,
@@ -18,6 +17,7 @@ from ....core.orden_anual_html import (
     OrdenAnualIvaSeasonalIndex,
     orden_anual_iva_authority_units,
 )
+from ....core.revision_review import RevisionReviewStatus
 from ._m303_orden_constants import EXTRACTOR_VERSION
 from ._m303_orden_keys import (
     activity_legal_key,
@@ -360,7 +360,7 @@ def _add_annual_orden_legal_reference(
         published_at=source.published_at,
         effective_from=effective_from,
         effective_to=effective_to,
-        review_status=LegalReviewStatus.AGENT_REVIEWED,
+        review_status=RevisionReviewStatus.AGENT_REVIEWED,
         reviewed_at=source.retrieved_at,
         reviewed_by=f"compiler:{EXTRACTOR_VERSION}",
         required_text=required_text,

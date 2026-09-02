@@ -68,7 +68,7 @@ def _canonical_json_bytes(value: object) -> bytes:
     )
 
 
-def _encode_profile_password(password: str) -> bytes:
+def encode_profile_password(password: str) -> bytes:
     """Encode an exact password after canonical defense-in-depth assessment."""
     assessment = assess_profile_password(password)
     if assessment.reason is not None:
@@ -78,13 +78,13 @@ def _encode_profile_password(password: str) -> bytes:
     return password.encode(_UTF_8_ENCODING, errors="strict")
 
 
-def _decode_profile_password(value: bytes) -> str:
+def decode_profile_password(value: bytes) -> str:
     """Strictly decode and assess a password received through byte transport."""
     try:
         password = value.decode(_UTF_8_ENCODING, errors="strict")
     except UnicodeDecodeError as exc:
         raise ProfileCustodyPasswordError("profile password transport is not strict UTF-8") from exc
-    _encode_profile_password(password)
+    encode_profile_password(password)
     return password
 
 

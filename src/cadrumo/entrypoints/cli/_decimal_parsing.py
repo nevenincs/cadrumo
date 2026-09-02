@@ -26,7 +26,7 @@ from decimal import Decimal
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.i18n.render import tr
-from ._common import _bad
+from ._common import bad
 
 __all__ = ["optional_decimal_text", "parse_decimal_amount", "parse_optional_decimal_amount"]
 
@@ -67,7 +67,7 @@ def parse_decimal_amount(raw: str, *, label: str, signed: bool = True) -> Decima
     """
     parsed = try_parse_canonical_decimal(raw, signed=signed, max_fraction_digits=2)
     if parsed is None:
-        raise _bad(tr("cli.ledger.errors.invalid_decimal", label=label, raw=raw))
+        raise bad(tr("cli.ledger.errors.invalid_decimal", label=label, raw=raw))
     return parsed
 
 

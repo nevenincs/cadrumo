@@ -8,14 +8,14 @@ using this module; these helpers only render a safe, bounded name.
 
 from __future__ import annotations
 
-_HMAC_PREFIX_LENGTH = 8
+HMAC_PREFIX_LENGTH = 8
 _DEFAULT_LABEL = "object"
-_LABEL_MAX_LENGTH = 64
+LABEL_MAX_LENGTH = 64
 
 
 def provider_object_hmac_prefix(object_key_hmac: str) -> str:
     """Return the fixed-width HMAC prefix used in an operator-visible object name."""
-    return object_key_hmac[:_HMAC_PREFIX_LENGTH]
+    return object_key_hmac[:HMAC_PREFIX_LENGTH]
 
 
 def sanitize_provider_object_label(label: str) -> str:
@@ -24,7 +24,7 @@ def sanitize_provider_object_label(label: str) -> str:
     if not cleaned:
         return _DEFAULT_LABEL
     safe = "".join(character if character.isalnum() or character in "-_." else "-" for character in cleaned)
-    return safe[:_LABEL_MAX_LENGTH] or _DEFAULT_LABEL
+    return safe[:LABEL_MAX_LENGTH] or _DEFAULT_LABEL
 
 
 def build_provider_object_name(object_key_hmac: str, label: str, *, extension: str) -> str:

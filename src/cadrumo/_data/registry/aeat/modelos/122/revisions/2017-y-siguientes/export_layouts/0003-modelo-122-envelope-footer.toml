@@ -21,7 +21,7 @@ source_refs = ["aeat-dr-122-2016"]
 id = "modelo-122-envelope-footer"
 record_type = "envelope_footer"
 order = 2
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 [[revisions."2017-y-siguientes".export_layouts.records.fields]]

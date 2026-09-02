@@ -7,7 +7,7 @@ source_refs = ["aeat-dr-145-v20"]
 id = "modelo-145-dr-v20-record"
 record_type = "communication"
 order = 0
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 [[revisions."2012-01-31-y-siguientes".export_layouts.records.fields]]

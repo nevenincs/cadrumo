@@ -33,7 +33,7 @@ from ...domain.calculations.registry.withholding_bindings import (
     WithholdingClaveBreakdown,
     aggregate_withholding_by_clave,
 )
-from ._common import _load_invoices, emit_envelope
+from ._common import emit_envelope, load_invoices
 from ._modelo_behavior_support import resolve_year_period
 from ._modelo_payloads import ModeloAggregateResult
 
@@ -48,7 +48,7 @@ def _route_invoice_retenciones_into_command(
         return (command, ())
     if command.modelo not in RETENCIONES_MODELOS:
         raise typer.BadParameter(tr("cli.app.modelo.aggregate.invoice_retencion_wrong_modelo", modelo=command.modelo))
-    catalogue = _load_invoices()
+    catalogue = load_invoices()
     entries = tuple((resolve_catalogue_invoice(catalogue, request.invoice_id), request.scheme) for request in requests)
     routing = route_invoice_retenciones(entries)
     merged = command.model_copy(

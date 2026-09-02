@@ -14,7 +14,6 @@ from pathlib import Path
 from typing import Protocol
 
 from ....core.authority_grade import RegistryAuthorityGrade
-from ....core.legal_review import LegalReviewStatus
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from ._validate import RegistryValidator
 from ._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow, validate_orden_aplicabilidad
@@ -442,7 +441,7 @@ def check_snapshot_filing_review_tier(
     if revision.review_status is RevisionReviewStatus.AGENT_REVIEWED:
         return RevisionReviewStatus.AGENT_REVIEWED
     if any(
-        catalogues.legal[legal_id].review_status is LegalReviewStatus.AGENT_REVIEWED
+        catalogues.legal[legal_id].review_status is RevisionReviewStatus.AGENT_REVIEWED
         for legal_id in legal_ids
         if legal_id in catalogues.legal
     ):

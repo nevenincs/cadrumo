@@ -13,20 +13,20 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, computed_field, model_validator
 
-from ...core.authority_grade import RegistryAuthorityGrade
-from ...core.filing_year import FilingYear
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import RegistrySelectorPeriodCode
-from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
-from ...domain.calculations.registry.errors import (
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.filing_year import FilingYear
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.core.period import RegistrySelectorPeriodCode
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.errors import (
     RegistrySnapshotError,
     RegistryValidationError,
 )
-from ...domain.calculations.registry.ids import (
+from cadrumo.domain.calculations.registry.ids import (
     ModeloId,
     RevisionId,
 )
-from ...domain.calculations.registry.temporal import (
+from cadrumo.domain.calculations.registry.temporal import (
     coverage_assessment_horizon,
     revision_selection_coordinates,
 )
@@ -286,7 +286,7 @@ def _compose_revision_temporal_coverage(
             failure_detail="the law-selected revision declares no authority grade",
         )
     try:
-        snapshot = authority.snapshot(
+        snapshot_revision = authority.admitted_revision_id(
             modelo_id,
             filing_year=filing_year,
             period=period,
@@ -304,7 +304,6 @@ def _compose_revision_temporal_coverage(
             failure_code="declared_grade_snapshot_refused",
             failure_detail=_failure_detail(exc),
         )
-    snapshot_revision = str(snapshot.revision.id)
     if snapshot_revision != revision_id:
         return TemporalRevisionCoverage(
             modelo=modelo_id,

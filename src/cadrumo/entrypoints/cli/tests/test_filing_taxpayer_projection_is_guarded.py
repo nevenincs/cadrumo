@@ -1,6 +1,6 @@
 """Filing-grade CLI modules must not reach the placeholder-substituting projection.
 
-``_profile_to_taxpayer`` substitutes a checksum-valid synthetic NIF when the
+``profile_to_taxpayer`` substitutes a checksum-valid synthetic NIF when the
 operator has declared none. On a read-only surface that is deliberate: the
 calendar must not drop a taxpayer's filed evidence merely because their identity
 is undeclared. On a filing surface it is the opposite of what is wanted, because
@@ -10,7 +10,7 @@ somebody else, and nothing downstream can tell that apart from a real identity.
 
 The defect this guards was not the absence of a check. It was that the two
 populations shared one constructor, so the filing commands and the read-only
-commands were indistinguishable at the call site. ``_filing_taxpayer_or_refuse``
+commands were indistinguishable at the call site. ``filing_taxpayer_or_refuse``
 is the filing boundary they were missing.
 
 This is a source-level gate rather than a behavioural one on purpose. The
@@ -43,8 +43,8 @@ _FILING_MODULES: frozenset[str] = frozenset(
     },
 )
 
-_PLACEHOLDER_PROJECTION = "_profile_to_taxpayer"
-_GUARDED_PROJECTION = "_filing_taxpayer_or_refuse"
+_PLACEHOLDER_PROJECTION = "profile_to_taxpayer"
+_GUARDED_PROJECTION = "filing_taxpayer_or_refuse"
 
 
 def _called_names(module_path: Path) -> set[str]:

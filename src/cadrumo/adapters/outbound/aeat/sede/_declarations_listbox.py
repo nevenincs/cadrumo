@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
+from bs4 import BeautifulSoup, Tag
 from pydantic import BaseModel, Field
 
 from .....core.i18n import tr
@@ -26,7 +27,7 @@ __all__ = [
 
 log = get_logger(__name__)
 
-_NO_RESULTS_TEXT = "No se han encontrado resultados para la consulta realizada."
+NO_RESULTS_TEXT = "No se han encontrado resultados para la consulta realizada."
 _PRESENTED_AT_RE = re.compile(
     r"^(?P<day>\d{2})/(?P<month>\d{2})/(?P<year>\d{4})\s+"
     r"(?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2})$",
@@ -126,7 +127,7 @@ def _parse_listbox(
         cells = item.find_all(class_=_has_class("z-listcell"))
         cell_texts = [cell.get_text(" ", strip=True) for cell in cells]
 
-        if len(cell_texts) == 1 and cell_texts[0] == _NO_RESULTS_TEXT:
+        if len(cell_texts) == 1 and cell_texts[0] == NO_RESULTS_TEXT:
             return DeclaracionesRegisterPage(rows=(), declared_total=declared_total)
 
         if len(cell_texts) < 7:
@@ -159,7 +160,7 @@ def _parse_listbox(
     return DeclaracionesRegisterPage(rows=tuple(rows), declared_total=declared_total)
 
 
-def _parse_declared_total(soup) -> int | None:
+def _parse_declared_total(soup: BeautifulSoup) -> int | None:
     """Return the record total the grid's pager label states, or ``None`` when absent.
 
     A grid with no pager markup renders every record it has, so an absent label
@@ -184,7 +185,7 @@ class _ListboxActionIndexes:
     declaration_pdf: int | None = None
 
 
-def _listbox_action_indexes(listbox) -> _ListboxActionIndexes | None:
+def _listbox_action_indexes(listbox: Tag) -> _ListboxActionIndexes | None:
     headers = listbox.find_all(class_=_has_class("z-listheader"))
     if not headers:
         return None

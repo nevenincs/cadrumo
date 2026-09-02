@@ -30,6 +30,7 @@ from .....core.errors.hierarchy import AeatLoginAssertionError
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.time.clock import now
+from .....core.type_guards import is_str_keyed_dict
 from .....domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....persistence.storage.secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
@@ -63,6 +64,8 @@ from .clave_movil_support import (
 from .clave_movil_support import (
     url_diagnostic as _url_diagnostic,
 )
+from collections.abc import Awaitable, Callable
+from typing import Protocol, cast
 
 if TYPE_CHECKING:
     from playwright.async_api import Dialog
@@ -71,6 +74,21 @@ if TYPE_CHECKING:
     from .....core.external_constants import AeatClaveMovilSurface
 
 log = get_logger(__name__)
+
+
+class _ResponseAttributes(Protocol):
+    """The response members the cancellation predicate reads."""
+
+    url: str
+    status: int
+
+
+class _ResponseWaiter(Protocol):
+    """The Playwright page call that waits for a matching response."""
+
+    def __call__(
+        self, predicate: Callable[[_ResponseAttributes], bool], *, timeout: float | None = ...
+    ) -> Awaitable[object]: ...
 
 
 class _ClaveMovilPageFlowMixin(abc.ABC):
@@ -345,13 +363,17 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             log.warning("ClaveMovilAuthProvider: pending Cl@ve cancellation failed: %s", exc)
 
     async def _wait_for_cancel_confirmation(self, page: BrowserPagePort) -> bool:
-        wait_for_response = getattr(page, "wait_for_response", None)
+        # The port declares no ``wait_for_response``; only the Playwright-backed
+        # page carries it. State the call this cleanup makes.
+        wait_for_response = cast(
+            "_ResponseWaiter | None", getattr(page, "wait_for_response", None)
+        )
         if wait_for_response is not None:
             surface = self._clave_surface()
             try:
                 response = await asyncio.wait_for(
                     wait_for_response(
-                        lambda candidate: (
+                        lambda candidate: bool(
                             surface.cancelar_clave_movil_path_marker in str(getattr(candidate, "url", ""))
                             and int(getattr(candidate, "status", 599)) < 400
                         ),
@@ -496,7 +518,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
     def _exception_already_has_diagnostic(exc: Exception) -> bool:
         """Return whether an auth exception already carries a diagnostic id."""
         context = getattr(exc, "context", None)
-        if not isinstance(context, dict):
+        if not is_str_keyed_dict(context):
             return False
         return bool(context.get("diagnostic_id"))
 

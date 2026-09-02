@@ -51,8 +51,8 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...core.time.clock import now
 from ...domain.iva.classification import IvaTerritorialScope
 from ...domain.iva.schema import EUMemberState
-from ._common import _bad, emit_envelope
 from ._common import active_bucket_id_or_refuse as _counterparty_bucket_id
+from ._common import bad, emit_envelope
 from ._ledger_counterparty_payloads import (
     CounterpartyConfirmResult,
     CounterpartyEstablishmentPayload,
@@ -119,7 +119,7 @@ def counterparty_confirm(
     from ...application.ledger.counterparty_establishment import record_confirmed_counterparty_facts
 
     if scope is None and identification_state is None:
-        raise _bad(
+        raise bad(
             tr("cli.ledger.counterparty.errors.nothing_asserted", identifier=tax_identifier),
         )
     bucket_id = _counterparty_bucket_id()
@@ -197,7 +197,7 @@ def counterparty_withdraw(
 
     bucket_id = _counterparty_bucket_id()
     if confirmed_counterparty_facts_key(tax_identifier, country_code=country_code) is None:
-        raise _bad(
+        raise bad(
             tr("cli.ledger.counterparty.errors.unverifiable_identifier", identifier=tax_identifier),
         )
     withdrawn = forget_confirmed_counterparty_facts(

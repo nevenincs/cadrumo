@@ -16,7 +16,7 @@ from typing import Protocol, TypedDict
 import typer
 
 from ...application.live.expedientes import capture_expedientes_bulk
-from ._app_live_auth_preflight import _emit_live_auth_preflight, _metric_line
+from ._app_live_auth_preflight import emit_live_auth_preflight, metric_line
 from ._common import active_bucket_id_or_refuse, emit_envelope, resolve_pull_year_range
 
 
@@ -67,7 +67,7 @@ def expedientes_pull(
     from ._app_live_expedientes_payloads import ExpedientesCaptureFailurePayload, ExpedientesCaptureResult
 
     bucket_id = _bucket_id()
-    _emit_live_auth_preflight()
+    emit_live_auth_preflight()
     selected_modelos = tuple(modelos or ())
     if len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None:
         persisted = asyncio.run(capture_expedientes(bucket_id=bucket_id, modelo=selected_modelos[0], year=year))
@@ -100,16 +100,16 @@ def expedientes_pull(
     )
     lines = [
         f"bucket\t{bucket_id}",
-        _metric_line("modelo_count", len(report.modelos)),
-        _metric_line("year_from", report.year_from),
-        _metric_line("year_to", report.year_to),
-        _metric_line("captured_snapshot_count", report.captured_snapshot_count),
-        _metric_line("declaration_count", report.declaration_count),
-        _metric_line("failed_count", len(report.failures)),
-        _metric_line("snapshot_ids", ",".join(report.snapshot_ids)),
+        metric_line("modelo_count", len(report.modelos)),
+        metric_line("year_from", report.year_from),
+        metric_line("year_to", report.year_to),
+        metric_line("captured_snapshot_count", report.captured_snapshot_count),
+        metric_line("declaration_count", report.declaration_count),
+        metric_line("failed_count", len(report.failures)),
+        metric_line("snapshot_ids", ",".join(report.snapshot_ids)),
     ]
     lines.extend(
-        _metric_line(
+        metric_line(
             "failure",
             "\t".join((failure.modelo, str(failure.year), failure.error_type, failure.message)),
         )

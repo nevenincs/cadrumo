@@ -197,7 +197,7 @@ class FinancialProvider(ABC):
     :attr:`supported_extensions`, :attr:`source_format`,
     :attr:`verification_source`, and :attr:`provisional_pending_specimen`
     and implement :meth:`ingest` plus :meth:`validate_source`. The shared
-    :meth:`_build_provenance` helper centralises
+    :meth:`build_provenance` helper centralises
     :class:`~domain.transactions.RawProvenance` construction so every
     emitted :class:`~domain.transactions.RawTransaction` carries
     consistent provenance metadata.
@@ -260,7 +260,9 @@ class FinancialProvider(ABC):
             raise FinancialProviderConfigError(
                 f"{cls.__qualname__} must declare a 'verification_source' class variable",
             )
-        vs = cls.verification_source  # type: ignore[attr-defined]  # CAST-RATIONALE-DYNAMIC-CLASSVAR-PROBE: provider subclasses declare verification_source ClassVar; base reads it via dynamic access during registration.
+        # Provider subclasses declare ``verification_source`` as a ClassVar;
+        # the base reads it dynamically during registration.
+        vs = cls.verification_source
         if vs not in _VALID_SOURCES:
             raise FinancialProviderConfigError(
                 f"{cls.__qualname__}.verification_source={vs!r} is not one of {sorted(_VALID_SOURCES)}",
@@ -269,7 +271,8 @@ class FinancialProvider(ABC):
             raise FinancialProviderConfigError(
                 f"{cls.__qualname__} must declare a 'provisional_pending_specimen' class variable",
             )
-        pps = cls.provisional_pending_specimen  # type: ignore[attr-defined]  # CAST-RATIONALE-DYNAMIC-CLASSVAR-PROBE: provider subclasses declare provisional_pending_specimen ClassVar; base reads it via dynamic access during registration.
+        # Same dynamic ClassVar probe as ``verification_source`` above.
+        pps = cls.provisional_pending_specimen
         if not isinstance(pps, bool):
             raise FinancialProviderConfigError(
                 f"{cls.__qualname__}.provisional_pending_specimen must be bool, got {type(pps)}",
@@ -301,7 +304,7 @@ class FinancialProvider(ABC):
         :class:`domain.transactions.RawTransaction` plus the
         :class:`domain.transactions.TransactionDirection` derived from the
         source sign at the parse boundary, with provenance built via
-        :meth:`_build_provenance`.
+        :meth:`build_provenance`.
 
         Args:
             path: Source document to ingest.
@@ -361,7 +364,7 @@ class FinancialProvider(ABC):
         """Return the lowercase SHA-256 digest of the source bytes."""
         return _sha256_hex(source_bytes)
 
-    def _build_provenance(
+    def build_provenance(
         self,
         *,
         path: Path,
@@ -756,7 +759,7 @@ def build_raw_transaction(
         currency=currency,
         counterparty=counterparty,
         description=description,
-        provenance=provider._build_provenance(
+        provenance=provider.build_provenance(
             path=path,
             source_sha256=source_sha256,
             source_row_index=source_row_index,

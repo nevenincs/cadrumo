@@ -51,7 +51,7 @@ from ...domain.calculations.registry.applicability import derive_taxpayer_files_
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.modelos.calculation_revision import CalculationRevisionState
-from ._common import _filing_taxpayer_or_refuse, activate_subcommand_output_language, emit_envelope
+from ._common import activate_subcommand_output_language, emit_envelope, filing_taxpayer_or_refuse
 from ._modelo_behavior_support import require_active_profile, resolve_revision_for_cli
 from ._modelo_cli_support import bad_parameter_from_error, resolve_default_actor
 from ._modelo_payloads import (
@@ -75,7 +75,7 @@ from ._modelo_rendering import (
 
 
 @dataclass(frozen=True, slots=True)
-class _VerificationDeps:
+class VerificationDeps:
     """Typed behavior dependencies shared by verification and filing."""
 
     activate_output_language: Callable[[typer.Context, OutputLanguage | None], None]
@@ -238,7 +238,7 @@ def work_verify(
         default_for="verify",
     )
     require_profile_ready_for_work_unit(get_work_unit(selected_revision.work_unit_id))
-    workflow_profile = _filing_taxpayer_or_refuse(workflow_state_repository().load())
+    workflow_profile = filing_taxpayer_or_refuse(workflow_state_repository().load())
     already_verified = selected_revision.state is not CalculationRevisionState.BORRADOR
     verification = verify_modelo_revision_with_preconditions(
         selected_revision.calculation_revision_id,
@@ -298,7 +298,7 @@ def work_dependencies(
         raise typer.BadParameter(tr("cli.app.modelo.work.dependencies_period_requires_modelo"))
     try:
         state = workflow_state_repository().load()
-        workflow_profile = _filing_taxpayer_or_refuse(state)
+        workflow_profile = filing_taxpayer_or_refuse(state)
         inventory = cross_period_dependency_inventory(
             bundled_authority(), filing_year=year, modelos=(modelo,) if modelo is not None else None
         )
@@ -366,7 +366,7 @@ def work_file(
         default_for="file",
     )
     require_profile_ready_for_work_unit(get_work_unit(selected_revision.work_unit_id))
-    workflow_profile = _filing_taxpayer_or_refuse(workflow_state_repository().load())
+    workflow_profile = filing_taxpayer_or_refuse(workflow_state_repository().load())
     already_filed = selected_revision.state is CalculationRevisionState.PRESENTADO
     record = file_modelo_revision(
         selected_revision.calculation_revision_id,

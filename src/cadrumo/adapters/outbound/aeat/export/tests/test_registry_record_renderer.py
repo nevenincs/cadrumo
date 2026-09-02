@@ -84,7 +84,7 @@ def _record(*fields: ExportFieldDefinition) -> ExportRecordDefinition:
         id="m145-record",
         record_type="1",
         order=1,
-        encoding="latin-1",
+        encoding="iso-8859-1",
         line_ending="crlf",
         fields=fields,
     )

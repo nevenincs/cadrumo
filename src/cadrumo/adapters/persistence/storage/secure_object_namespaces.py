@@ -14,7 +14,7 @@ from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.storage_taxonomy import StorageCustodyProfile
 from .errors import NamespaceRegistryError
 from .namespace_taxonomy import (
-    _CUSTODY_PROFILE_DISPOSITIONS,
+    CUSTODY_PROFILE_DISPOSITIONS,
     StorageCustodyDisposition,
     StorageNamespaceScope,
     StorageRemoteMirrorPolicy,
@@ -248,7 +248,7 @@ class StorageHierarchyRegistry(BaseModel):
         profile: StorageCustodyProfile,
     ) -> tuple[SecureObjectNamespaceDefinition, ...]:
         """Return carried :class:`SecureObjectNamespaceDefinition` rows for a custody profile."""
-        dispositions = _CUSTODY_PROFILE_DISPOSITIONS[profile]
+        dispositions = CUSTODY_PROFILE_DISPOSITIONS[profile]
         return tuple(namespace for namespace in self.namespaces if namespace.custody_disposition in dispositions)
 
 

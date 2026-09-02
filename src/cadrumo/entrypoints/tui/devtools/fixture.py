@@ -18,10 +18,16 @@ import os
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from ....application.user_profile.login_session import logout_active_profile
 from ....core.config import load_settings
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from ....application.user_profile.recovery_custody import ProfileRecoveryEnrollment
 
 WORKSPACE_ENV_VAR = "CADRUMO_TUI_WORKSPACE"
 
@@ -110,7 +116,7 @@ def registration_attempt(
     label: str,
     candidate_passphrase: str,
     output_language: str,
-    recovery_handover,
+    recovery_handover: Callable[[ProfileRecoveryEnrollment], str],
 ):
     """Adapt public profile registration into the TUI screen's result contract."""
     from ....application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
@@ -158,7 +164,7 @@ def ensure_session() -> str:
     from ....application.user_profile.login_session import login_profile
 
     bucket_id = ensure_profile()
-    login_profile(name=bucket_id, passphrase_callback=lambda *_args, **_kwargs: passphrase())
+    login_profile(name=bucket_id, passphrase_callback=passphrase)
     return bucket_id
 
 

@@ -14,8 +14,8 @@ from ...core.i18n.render import tr
 from ...domain.transactions.classification_rule import LedgerClassificationRule
 from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from ...domain.transactions.models import Transaction
-from ._common import _bad, emit_envelope
 from ._common import active_bucket_id_or_refuse as _rule_bucket_id
+from ._common import bad, emit_envelope
 
 
 def _short_display_id(value: str) -> str:
@@ -23,7 +23,7 @@ def _short_display_id(value: str) -> str:
     return f"{value[:16]}..."
 
 
-def _validate_category_id(category_id: str | None) -> str | None:
+def validate_category_id(category_id: str | None) -> str | None:
     if category_id is None:
         return None
     from ...domain.categories.spending_category import SpendingCategory
@@ -33,7 +33,7 @@ def _validate_category_id(category_id: str | None) -> str | None:
         return None
     if value not in {category.value for category in SpendingCategory}:
         known = ", ".join(category.value for category in SpendingCategory)
-        raise _bad(
+        raise bad(
             tr("cli.ledger.errors.invalid_category", category=value, known=known),
         )
     return value
@@ -57,10 +57,10 @@ def rule_add(
         # ValidationError (not a ValueError, so the except below misses it) and a
         # whitespace-only pattern matches nothing useful. Refuse both at the
         # boundary with an instructive message instead of leaking the pydantic repr.
-        raise _bad(
+        raise bad(
             tr("cli.app.ledger.rule.empty_pattern"),
         )
-    validated_category_id = _validate_category_id(category_id)
+    validated_category_id = validate_category_id(category_id)
     rule = add_classification_rule(
         bucket_id=bucket_id,
         description_pattern=description_pattern,

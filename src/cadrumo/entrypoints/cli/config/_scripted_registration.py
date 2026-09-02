@@ -151,7 +151,7 @@ def _write_recovery_handoff(descriptor: int, mnemonic: str) -> None:
 
 def _read_recovery_verification(descriptor: int) -> ProfileRecoveryVerification:
     """Read one newline-framed strict object without depending on pipe EOF."""
-    from .secure_input import MACHINE_SECRET_MAX_BYTES, _validate_secrets_payload
+    from .secure_input import MACHINE_SECRET_MAX_BYTES, validate_secrets_payload
 
     raw = bytearray()
     try:
@@ -171,7 +171,7 @@ def _read_recovery_verification(descriptor: int) -> ProfileRecoveryVerification:
                 break
         if len(raw) > MACHINE_SECRET_MAX_BYTES:
             raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.secrets_fd_too_large")
-        return _validate_secrets_payload(
+        return validate_secrets_payload(
             raw,
             ProfileRecoveryVerification,
             invalid_json_key="cli.config.custody.errors.secrets_fd_invalid_json",

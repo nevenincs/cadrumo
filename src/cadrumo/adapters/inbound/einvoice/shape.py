@@ -20,10 +20,23 @@ from ....core.document_shape import DocumentShape
 from ....core.errors.hierarchy import CoreValidationError
 from ....core.image_media_type import detect_image_media_type
 from .xml import EInvoiceXmlParseError, parse_hardened_xml
+from typing import Protocol, cast
 
 __all__ = ["EMBEDDED_XML_SUFFIXES", "iter_pdf_embedded_files", "probe_document_shape"]
 
 _PDF_MAGIC = b"%PDF-"
+
+
+class _AttachmentFile(Protocol):
+    """The embedded-attachment handle pypdfium2 hands back."""
+
+    def read_bytes(self) -> bytes: ...
+
+
+class _AttachmentFileReader(Protocol):
+    """The accessor that opens one embedded attachment."""
+
+    def __call__(self) -> _AttachmentFile: ...
 
 
 def _is_image(data: bytes) -> bool:
@@ -183,8 +196,10 @@ def iter_pdf_embedded_files(pdf_bytes: bytes) -> tuple[tuple[str, bytes], ...]:
             found: list[tuple[str, bytes]] = []
             for name in pdf.attachments:
                 attachment = pdf.attachments[name]
-                stream = getattr(attachment, "get_file", None)
-                data = stream().read_bytes() if callable(stream) else None
+                # The attachment object is untyped; state the reader contract
+                # this loop relies on rather than letting it decay to Unknown.
+                stream = cast("_AttachmentFileReader | None", getattr(attachment, "get_file", None))
+                data = stream().read_bytes() if stream is not None else None
                 if data:
                     found.append((str(name), bytes(data)))
             return tuple(found)

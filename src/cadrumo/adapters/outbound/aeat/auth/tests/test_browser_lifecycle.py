@@ -19,7 +19,7 @@ from ...browser import Profile
 from ...browser.factory import create_browser_session
 from ...tests.process_support import wait_for_process_exit
 from ..browser_lifecycle import (
-    _CloseIntentBarrier,
+    CloseIntentBarrier,
     close_owned_browser_context,
     close_owned_browser_session,
 )
@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 async def _exercise_close_intent_serialization() -> None:
     """Two close intents keep ordinary work barred until both have exited."""
-    barrier = _CloseIntentBarrier()
+    barrier = CloseIntentBarrier()
     first_entered = asyncio.Event()
     release_first = asyncio.Event()
     second_entered = asyncio.Event()
@@ -83,7 +83,7 @@ async def test_close_intent_barrier_serializes_closers_and_bars_work() -> None:
 
 
 async def _exercise_cancelled_close_intent() -> None:
-    barrier = _CloseIntentBarrier()
+    barrier = CloseIntentBarrier()
     first_entered = asyncio.Event()
     release_first = asyncio.Event()
 

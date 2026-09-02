@@ -15,7 +15,7 @@ envelope. Network I/O is async; all SDK exceptions are mapped to
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, NotRequired, TypedDict, override
 
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ..errors import LLMConfigError, LLMProviderError, LLMTransientTransportError
@@ -39,6 +39,8 @@ if TYPE_CHECKING:
     from anthropic.types import (
         ImageBlockParam,
         Message,
+        MessageParam,
+        MetadataParam,
         TextBlock,
         TextBlockParam,
     )
@@ -125,7 +127,26 @@ def build_user_content(request: ProviderRequest) -> str | list[ImageBlockParam |
     return blocks
 
 
-def build_message_kwargs(request: ProviderRequest) -> dict[str, Any]:
+class _MessageCreateKwargs(TypedDict):
+    """The exact keyword payload sent to ``messages.create``.
+
+    ``system`` and ``temperature`` are ``NotRequired`` because absence here is a
+    real wire distinction, not a default: the SDK forwards an explicit ``None``
+    as a JSON ``null``, which newer models reject. ``NotRequired`` is precisely
+    that claim at the type level, so the payload stays a plain dict the tests can
+    assert against while the overload on ``messages.create`` still resolves.
+    """
+
+    model: str
+    max_tokens: int
+    messages: tuple[MessageParam, ...]
+    metadata: MetadataParam
+    timeout: float
+    system: NotRequired[str]
+    temperature: NotRequired[float]
+
+
+def build_message_kwargs(request: ProviderRequest) -> _MessageCreateKwargs:
     """Build the exact keyword arguments sent to ``messages.create``.
 
     Extracted for the same reason :func:`build_user_content` was: the wire shape
@@ -143,7 +164,7 @@ def build_message_kwargs(request: ProviderRequest) -> dict[str, Any]:
     That duplication is why ``temperature`` appeared twice, and why changing it
     once would have left the other path sending it.
     """
-    kwargs: dict[str, Any] = {
+    kwargs: _MessageCreateKwargs = {
         "model": request.model,
         "max_tokens": request.max_tokens,
         "messages": ({"role": "user", "content": build_user_content(request)},),
@@ -234,7 +255,9 @@ class AnthropicAdapter(ProviderAdapter):
         try:
             response = await self._client.messages.create(**build_message_kwargs(request))
         except sdk.RateLimitError as exc:
-            headers = exc.response.headers if exc.response is not None else None
+            # `APIStatusError.__init__` requires `response` and dereferences
+            # `response.request` immediately, so it can never be None here.
+            headers = exc.response.headers
             raise_rate_limit(
                 provider_name=self.provider.value,
                 model=request.model,

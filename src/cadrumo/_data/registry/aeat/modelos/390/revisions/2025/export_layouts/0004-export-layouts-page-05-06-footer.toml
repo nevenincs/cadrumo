@@ -21,7 +21,7 @@ id = "modelo-390-page-05"
 record_type = "page_05"
 binding_record = "page_5"
 order = 6
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 [[revisions."2025".export_layouts.records.fields]]
@@ -116,7 +116,7 @@ source_refs = ["aeat-dr-390-2025"]
 id = "modelo-390-page-06"
 record_type = "page_06"
 order = 7
-encoding = "latin-1"
+encoding = "iso-8859-1"
 line_ending = "none"
 
 [[revisions."2025".export_layouts.records.fields]]

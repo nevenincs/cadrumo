@@ -45,20 +45,22 @@ consumed BY that validation. Housing both here inverted the dependency.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from enum import StrEnum
 from datetime import date
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import Field, PrivateAttr, computed_field, model_validator
+from pydantic import BeforeValidator, Field, PrivateAttr, computed_field, model_validator
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.filing_year import FilingYear
 from ....core.period import RegistrySelectorPeriodCode
 from ....core.revision_review import RevisionReviewStatus
+from .schema_base import coerce_enum_member
 from ._schema_family_coverage import (
     CoverageModel,
 )
 from ._snapshot_internals import check_snapshot_filing_review_tier
-from .authority import ValidatedRegistryAuthority
+from .authority import RegistryCoverageFacts, ValidatedRegistryAuthority
 from .errors import AmbiguousRevisionSelectionError, RegistryValidationError
 from .ids import BindingId, CrossReferenceId, LegalRefId, SourceRefId, WorkbookParityRefId
 from .schema import (
@@ -77,7 +79,27 @@ from .static_inspection import RegistryRevisionInspection
 from .temporal import coverage_assessment_horizon, revision_selection_coordinates
 
 CoverageGateStatus = Literal["satisfied", "gap"]
-CoverageAuthorityScope = Literal["filing", "inspection_only", "mixed"]
+class CoverageAuthorityScope(StrEnum):
+    """What authority a coverage ledger was built from."""
+
+    FILING = "filing"
+    """Built from filing-grade authority; its gaps are filing-grade failures."""
+
+    INSPECTION_ONLY = "inspection_only"
+    """Built from a non-filing projection; gaps are discovery, not failures."""
+
+    MIXED = "mixed"
+    """Spans both, so a gap must be read against the row that produced it."""
+
+
+CoverageAuthorityScopeField = Annotated[
+    CoverageAuthorityScope, BeforeValidator(coerce_enum_member(CoverageAuthorityScope))
+]
+"""Registry ``authority_scope`` token hydrated into a member.
+
+Registry schema models validate strictly, which refuses a bare TOML string for an
+enum-typed field, so the token is coerced at the boundary.
+"""
 RequiredCoverageTier = Literal["legal_authority", "official_source_guidance", "layout_authority"]
 
 REQUIRED_COVERAGE_TIERS: tuple[RequiredCoverageTier, ...] = (
@@ -125,7 +147,7 @@ class ModelLawCoverageLedger(CoverageModel):
     filing_year: FilingYear
     period: RegistrySelectorPeriodCode
     gates: tuple[EvidenceTierCoverageGate, ...]
-    authority_scope: CoverageAuthorityScope = "filing"
+    authority_scope: CoverageAuthorityScopeField = CoverageAuthorityScope.FILING
     authority_fallback_reason: str | None = Field(default=None, min_length=1, max_length=512)
     """Why a REVIEW-eligible revision was still measured through inspection.
 
@@ -148,7 +170,7 @@ class ModelLawCoverageLedger(CoverageModel):
     @property
     def filing_eligible(self) -> bool:
         """Whether this ledger was built from filing-grade snapshot authority."""
-        return self.authority_scope == "filing"
+        return self.authority_scope is CoverageAuthorityScope.FILING
 
     @property
     def gaps(self) -> tuple[EvidenceTierCoverageGate, ...]:
@@ -306,13 +328,13 @@ class ConstructEvidenceLedger(CoverageModel):
     modelo: str
     revision: str
     rows: tuple[ConstructEvidenceRow, ...]
-    authority_scope: CoverageAuthorityScope = "filing"
+    authority_scope: CoverageAuthorityScopeField = CoverageAuthorityScope.FILING
     authority_fallback_reason: str | None = Field(default=None, min_length=1, max_length=512)
 
     @property
     def filing_eligible(self) -> bool:
         """Whether this ledger was built from filing-grade snapshot authority."""
-        return self.authority_scope == "filing"
+        return self.authority_scope is CoverageAuthorityScope.FILING
 
     @property
     def reviewed_but_not_filing_capable(self) -> bool:
@@ -474,7 +496,7 @@ def _model_law_coverage_for_coordinate(
     proof = _snapshot_filing_review_proof(modelo, revision, authority, inspection)
     if proof is not None and revision.effective_authority_grade is RegistryAuthorityGrade.FILING:
         try:
-            snapshot = authority.snapshot(
+            snapshot = authority.coverage_facts(
                 modelo.id,
                 filing_year=filing_year,
                 period=period,
@@ -552,6 +574,19 @@ def audit_registry_construct_evidence(
             proof = _snapshot_filing_review_proof(modelo, revision, authority, inspection)
             if proof is not None and revision.effective_authority_grade is RegistryAuthorityGrade.FILING:
                 try:
+                    # Every coordinate is still admitted through the snapshot
+                    # boundary, because a refusal at any of them is the condition
+                    # this branch exists to catch. Only the first is materialised:
+                    # the ledger below reads one snapshot, and the isolating deep
+                    # copy that makes a snapshot expensive was being paid once per
+                    # coordinate to build objects nothing read.
+                    for filing_year, period in coordinates:
+                        authority.admitted_revision_id(
+                            modelo.id,
+                            filing_year=filing_year,
+                            period=period,
+                            grade=revision.effective_authority_grade,
+                        )
                     snapshots = tuple(
                         authority.snapshot(
                             modelo.id,
@@ -559,7 +594,7 @@ def audit_registry_construct_evidence(
                             period=period,
                             grade=revision.effective_authority_grade,
                         )
-                        for filing_year, period in coordinates
+                        for filing_year, period in coordinates[:1]
                     )
                 except RegistryValidationError as capability_refusal:
                     # Reviewed, but not filing-CAPABLE -- exactly the condition the
@@ -592,7 +627,7 @@ def audit_registry_construct_evidence(
 
 
 def build_model_law_coverage_ledger(
-    authority: RegistrySnapshot | RegistryRevisionInspection,
+    authority: RegistrySnapshot | RegistryCoverageFacts | RegistryRevisionInspection,
     *,
     filing_year: int | None = None,
     period: RegistrySelectorPeriodCode | None = None,
@@ -616,7 +651,27 @@ def build_model_law_coverage_ledger(
     Returns:
         A :class:`ModelLawCoverageLedger` summarising coverage across all evidence tiers.
     """
-    if isinstance(authority, RegistrySnapshot):
+    if isinstance(authority, RegistryCoverageFacts):
+        # The facts projection carries the same coordinate and the same four
+        # evidence collections a snapshot would, isolated the same way. It exists
+        # because obtaining them through a snapshot deep-copies the casillas,
+        # formulas and bindings this ledger never reads.
+        modelo_id = authority.modelo
+        revision_id = authority.revision
+        if filing_year is not None and filing_year != authority.filing_year:
+            raise RegistryValidationError("coverage ledger filing_year must match its snapshot")
+        if period is not None and period != authority.period:
+            raise RegistryValidationError("coverage ledger period must match its snapshot")
+        resolved_filing_year = authority.filing_year
+        resolved_period = authority.period
+        legal_refs = authority.legal
+        sources = authority.sources
+        workbook_parity_refs = authority.workbook_parity_refs
+        live_cross_references = authority.live_cross_references
+        proven = _authority_proof if _authority_proof in _AUTHORITY_CHECK_PROOFS else None
+        authority_scope = "filing" if proven is not None else "inspection_only"
+        review_tier = proven.review_tier if proven is not None else None
+    elif isinstance(authority, RegistrySnapshot):
         modelo_id = authority.modelo.id
         revision_id = authority.revision.id
         if filing_year is not None and filing_year != authority.filing_year:
@@ -630,7 +685,7 @@ def build_model_law_coverage_ledger(
         workbook_parity_refs: Iterable[WorkbookParityReference] = authority.workbook_parity_refs.values()
         live_cross_references: Iterable[LiveCrossReferenceDecision] = authority.live_cross_references.values()
         proven = _authority_proof if _authority_proof in _AUTHORITY_CHECK_PROOFS else None
-        authority_scope: CoverageAuthorityScope = "filing" if proven is not None else "inspection_only"
+        authority_scope: CoverageAuthorityScopeField = CoverageAuthorityScope.FILING if proven is not None else "inspection_only"
         review_tier = proven.review_tier if proven is not None else None
     else:
         modelo_id = authority.modelo_id

@@ -88,11 +88,11 @@ def test_record_encoding_is_the_public_closed_axis_and_refuses_unknown_codecs() 
         id="encoding-proof",
         record_type="1",
         order=0,
-        encoding="latin-1",
+        encoding="iso-8859-1",
         line_ending="none",
         fields=(_field(),),
     )
-    assert record.encoding is ExportEncoding.LATIN_1
+    assert record.encoding is ExportEncoding.ISO_8859_1
 
     with pytest.raises(ValidationError, match="encoding"):
         ExportRecordDefinition(

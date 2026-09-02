@@ -63,8 +63,8 @@ from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.period import Period, PeriodError
 from ...domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
-from ._app_live_auth_preflight import _emit_live_auth_preflight
-from ._app_live_rendering import _filed_capture_lines, _metric_line, _source_filed_capture_lines
+from ._app_live_auth_preflight import emit_live_auth_preflight
+from ._app_live_rendering import _filed_capture_lines, _source_filed_capture_lines, metric_line
 from ._common import (
     emit_envelope,
     notice_lines,
@@ -78,7 +78,7 @@ if TYPE_CHECKING:
     from ...domain.deadlines.models import TaxpayerProfile
 
 
-def _verify_expected(value: str | None) -> VerifyVerdict | None:
+def verify_expected(value: str | None) -> VerifyVerdict | None:
     if value is None:
         return None
     if value == "valid":
@@ -145,9 +145,9 @@ def _live_iva_outcome_label(value: object) -> str:
 
 
 _IVA_WALLET_LIVE_SAFETY_LINES = (
-    _metric_line("safety_policy", "read_only_fail_closed"),
-    _metric_line("representation_gate_policy", "own_name_only_no_represented_taxpayer_choice"),
-    _metric_line(
+    metric_line("safety_policy", "read_only_fail_closed"),
+    metric_line("representation_gate_policy", "own_name_only_no_represented_taxpayer_choice"),
+    metric_line(
         "aeat_form_submission_policy",
         "wallet_execute_read_query_only_no_filing_or_represented_taxpayer_data",
     ),
@@ -170,7 +170,7 @@ def iva_wallet_pull_cmd(
     """
     from ...application.live.iva_remote_state import capture_iva_compensation_wallet
 
-    _emit_live_auth_preflight()
+    emit_live_auth_preflight()
     report = asyncio.run(
         capture_iva_compensation_wallet(
             target_year=year,
@@ -202,18 +202,18 @@ def _iva_wallet_pull_lines(report: IvaWalletCaptureReport) -> tuple[str, ...]:
     return (
         *_IVA_WALLET_LIVE_SAFETY_LINES,
         *(
-            _metric_line("taxpayer_ref", report.taxpayer_ref),
-            _metric_line("target_year", report.target_year),
-            _metric_line("target_period", report.target_period),
-            _metric_line("row_count", report.row_count),
-            _metric_line("total_pending", report.total_pending),
-            _metric_line("selected_authority", report.selected_authority),
-            _metric_line("selected_amount", report.selected_amount),
-            _metric_line("local_recurrence_amount", report.local_recurrence_amount),
-            _metric_line("divergence", report.divergence),
-            _metric_line("blocked", report.blocked),
-            _metric_line("captured_at", report.captured_at.isoformat()),
-            _metric_line("observation_path", report.observation_path),
+            metric_line("taxpayer_ref", report.taxpayer_ref),
+            metric_line("target_year", report.target_year),
+            metric_line("target_period", report.target_period),
+            metric_line("row_count", report.row_count),
+            metric_line("total_pending", report.total_pending),
+            metric_line("selected_authority", report.selected_authority),
+            metric_line("selected_amount", report.selected_amount),
+            metric_line("local_recurrence_amount", report.local_recurrence_amount),
+            metric_line("divergence", report.divergence),
+            metric_line("blocked", report.blocked),
+            metric_line("captured_at", report.captured_at.isoformat()),
+            metric_line("observation_path", report.observation_path),
         ),
     )
 
@@ -308,15 +308,15 @@ def _iva_wallet_history_result(report: IvaCompensationHistoryReport) -> Any:
 
 def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str, ...]:
     lines = [
-        _metric_line("row_count", report.row_count),
-        _metric_line("as_of_year", report.as_of_year),
-        _metric_line("carry_forward_lot_count", report.carry_forward_lot_count),
-        _metric_line("unallocated_applied_amount", report.unallocated_applied_amount),
-        _metric_line("authority_decision_count", report.authority_decision_count),
+        metric_line("row_count", report.row_count),
+        metric_line("as_of_year", report.as_of_year),
+        metric_line("carry_forward_lot_count", report.carry_forward_lot_count),
+        metric_line("unallocated_applied_amount", report.unallocated_applied_amount),
+        metric_line("authority_decision_count", report.authority_decision_count),
     ]
     for row in report.rows:
         lines.append(
-            _metric_line(
+            metric_line(
                 "row",
                 "\t".join(
                     (
@@ -337,7 +337,7 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
         )
     for lot in report.carry_forward_lots:
         lines.append(
-            _metric_line(
+            metric_line(
                 "carry_forward_lot",
                 "\t".join(
                     (
@@ -357,7 +357,7 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
     for decision in report.authority_decisions:
         wallet_captured_at = decision.wallet_captured_at.isoformat() if decision.wallet_captured_at else None
         lines.append(
-            _metric_line(
+            metric_line(
                 "authority_decision",
                 "\t".join(
                     (
@@ -383,7 +383,7 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
         )
         for source in decision.authority_sources:
             lines.append(
-                _metric_line(
+                metric_line(
                     "authority_source",
                     f"{decision.target_year}\t{decision.target_period.registry_token}\t{source}",
                 ),
@@ -459,7 +459,7 @@ def iva_wallet_pull_history_cmd(
     from ...application.live.iva_remote_state import capture_iva_compensation_history
     from ...core.config import load_settings
 
-    _emit_live_auth_preflight()
+    emit_live_auth_preflight()
     report = asyncio.run(
         capture_iva_compensation_history(
             year_from=year_from,
@@ -472,13 +472,13 @@ def iva_wallet_pull_history_cmd(
     )
     lines = (
         *_IVA_WALLET_LIVE_SAFETY_LINES,
-        _metric_line("year_from", report.year_from),
-        _metric_line("year_to", report.year_to),
-        _metric_line("captured_count", report.captured_count),
-        _metric_line("calculation_observation_count", report.calculation_observation_count),
-        _metric_line("reloaded_history_count", report.reloaded_history_count),
-        _metric_line("failed_declaration_count", report.failed_declaration_count),
-        _metric_line("output_root", report.output_root),
+        metric_line("year_from", report.year_from),
+        metric_line("year_to", report.year_to),
+        metric_line("captured_count", report.captured_count),
+        metric_line("calculation_observation_count", report.calculation_observation_count),
+        metric_line("reloaded_history_count", report.reloaded_history_count),
+        metric_line("failed_declaration_count", report.failed_declaration_count),
+        metric_line("output_root", report.output_root),
     )
     from ._app_live_iva_wallet_payloads import IvaWalletCaptureHistoryResult
 
@@ -522,7 +522,7 @@ def iva_wallet_pull_evidence_cmd(
     from ...core.config import load_settings
 
     resolved_target_period = _required_live_period_option(target_period, year=target_year)
-    _emit_live_auth_preflight()
+    emit_live_auth_preflight()
     report = asyncio.run(
         _run_live_iva_evidence_pull_command(
             capture_iva_remote_state(
@@ -586,29 +586,29 @@ def iva_wallet_pull_evidence_cmd(
 def _iva_remote_state_capture_lines(report: IvaRemoteStateAcquisitionReport) -> tuple[str, ...]:
     lines = [
         *_IVA_WALLET_LIVE_SAFETY_LINES,
-        _metric_line("year_from", report.year_from),
-        _metric_line("year_to", report.year_to),
-        _metric_line("target_year", report.target_year),
-        _metric_line("target_period", report.target_period),
-        _metric_line("acquisition_manifest_id", report.acquisition_manifest_id or ""),
-        _metric_line("auth_status", report.auth.status.value),
-        _metric_line("auth_outcome", report.auth.outcome_mode.value),
-        _metric_line("auth_outcome_label", _live_iva_outcome_label(report.auth.outcome_mode)),
-        _metric_line("auth_failure_mode", report.auth.failure_mode.value if report.auth.failure_mode else ""),
-        _metric_line("auth_failure_type", report.auth.failure_type or ""),
-        _metric_line("auth_provider_kind", report.auth.provider_kind or ""),
-        _metric_line("auth_reused_persisted_session", report.auth.reused_persisted_session),
-        _metric_line("auth_fresh", report.auth.fresh),
-        _metric_line("filed_history_succeeded", report.filed_history_succeeded),
-        _metric_line("wallet_succeeded", report.wallet_succeeded),
-        _metric_line("output_root", report.output_root),
+        metric_line("year_from", report.year_from),
+        metric_line("year_to", report.year_to),
+        metric_line("target_year", report.target_year),
+        metric_line("target_period", report.target_period),
+        metric_line("acquisition_manifest_id", report.acquisition_manifest_id or ""),
+        metric_line("auth_status", report.auth.status.value),
+        metric_line("auth_outcome", report.auth.outcome_mode.value),
+        metric_line("auth_outcome_label", _live_iva_outcome_label(report.auth.outcome_mode)),
+        metric_line("auth_failure_mode", report.auth.failure_mode.value if report.auth.failure_mode else ""),
+        metric_line("auth_failure_type", report.auth.failure_type or ""),
+        metric_line("auth_provider_kind", report.auth.provider_kind or ""),
+        metric_line("auth_reused_persisted_session", report.auth.reused_persisted_session),
+        metric_line("auth_fresh", report.auth.fresh),
+        metric_line("filed_history_succeeded", report.filed_history_succeeded),
+        metric_line("wallet_succeeded", report.wallet_succeeded),
+        metric_line("output_root", report.output_root),
     ]
     for outcome in report.outcomes:
         calculation_count = (
             outcome.calculation_observation_count if outcome.calculation_observation_count is not None else ""
         )
         lines.append(
-            _metric_line(
+            metric_line(
                 "surface_outcome",
                 "\t".join(
                     (
@@ -877,7 +877,7 @@ def filed_list_cmd(
 
     resolved_from = year_from if year_from is not None else today_madrid().year
     resolved_to = year_to if year_to is not None else today_madrid().year
-    _emit_live_auth_preflight()
+    emit_live_auth_preflight()
     if modelo is None:
         bulk_report = asyncio.run(
             list_filed_data_bulk(
@@ -921,10 +921,10 @@ def _filed_list_result_and_lines(
 ) -> tuple[Any, tuple[str, ...]]:
     from ._app_live_filed_payloads import FiledCaptureFailurePayload, FiledListingRowPayload, FiledListResult
 
-    lines = [_metric_line("row_count", row_count), _metric_line("failed_count", len(failures))]
+    lines = [metric_line("row_count", row_count), metric_line("failed_count", len(failures))]
     for row in rows:
         lines.append(
-            _metric_line(
+            metric_line(
                 "row",
                 "\t".join(
                     (
@@ -942,7 +942,7 @@ def _filed_list_result_and_lines(
             ),
         )
     lines.extend(
-        _metric_line(
+        metric_line(
             "failure",
             "\t".join(
                 (
@@ -1039,12 +1039,12 @@ def _filed_discover_result_and_lines(report: FiledHistoryDiscoveryReport) -> tup
     from ._app_live_filed_payloads import FiledDiscoverResult, FiledHistoryDiscoveryPairPayload
 
     lines = [
-        _metric_line("pair_count", len(report.pairs)),
-        _metric_line("profile_expected_count", len(report.profile_expected_pairs)),
-        _metric_line("register_options_only_count", len(report.register_options_only_pairs)),
+        metric_line("pair_count", len(report.pairs)),
+        metric_line("profile_expected_count", len(report.profile_expected_pairs)),
+        metric_line("register_options_only_count", len(report.register_options_only_pairs)),
     ]
     lines.extend(
-        _metric_line(
+        metric_line(
             "pair",
             "\t".join(
                 (
@@ -1134,7 +1134,7 @@ def filed_pull_all_cmd(
 
     profile = _active_taxpayer_profile_or_none()
     resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
-    _emit_live_auth_preflight()
+    emit_live_auth_preflight()
     run = asyncio.run(
         pull_filed_history(
             output_root=resolved_root,
@@ -1160,17 +1160,17 @@ def _filed_pull_all_result_and_lines(run: FiledHistoryOnboardingRun) -> tuple[An
     refused = run.refused_pairs
     empty = run.genuinely_empty_pairs
     lines = [
-        _metric_line("pair_count", len(run.pairs)),
-        _metric_line("captured_count", run.captured_count),
-        _metric_line("reached_count", run.reached_count),
-        _metric_line("refused_count", len(refused)),
-        _metric_line("empty_count", len(empty)),
-        _metric_line("iva_wallet_status", run.iva_wallet_status),
-        _metric_line("notificaciones_status", run.notificaciones_status),
-        _metric_line("denominator", run.denominator_note),
+        metric_line("pair_count", len(run.pairs)),
+        metric_line("captured_count", run.captured_count),
+        metric_line("reached_count", run.reached_count),
+        metric_line("refused_count", len(refused)),
+        metric_line("empty_count", len(empty)),
+        metric_line("iva_wallet_status", run.iva_wallet_status),
+        metric_line("notificaciones_status", run.notificaciones_status),
+        metric_line("denominator", run.denominator_note),
     ]
     lines.extend(
-        _metric_line(
+        metric_line(
             "pair",
             "\t".join(
                 (
@@ -1184,7 +1184,7 @@ def _filed_pull_all_result_and_lines(run: FiledHistoryOnboardingRun) -> tuple[An
         )
         for pair in run.pairs
     )
-    lines.extend(_metric_line("stage_failure", failure) for failure in run.stage_failures)
+    lines.extend(metric_line("stage_failure", failure) for failure in run.stage_failures)
     result = FiledHistoryOnboardingResult(
         pairs=[
             FiledHistoryPairOutcomePayload(
@@ -1488,7 +1488,7 @@ def filed_pull_cmd(
     :class:`ModeloRecord` evidence when an existing current filing record
     matches.
     """
-    _emit_live_auth_preflight()
+    emit_live_auth_preflight()
     selected_modelos = tuple(modelos or ())
     if len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None:
         if dry_run:
@@ -1586,7 +1586,7 @@ def filed_pull_sources_cmd(
     from ...core.config import load_settings
     from ._app_live_filed_payloads import FiledCaptureSourcesResult
 
-    _emit_live_auth_preflight()
+    emit_live_auth_preflight()
     report = asyncio.run(
         capture_source_filed_data(
             modelo=modelo,

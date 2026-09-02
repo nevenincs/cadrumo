@@ -34,7 +34,7 @@ from ...application.ledger.invoice_draft_records import InvoiceDraft
 from ...core.config import load_settings
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ._common import _state, _tx_repo, emit_envelope
+from ._common import current_workflow_state, emit_envelope, transaction_catalogue_repo
 from .ledger_business_payloads import EvidenceConsentListResult, EvidenceConsentRederiveResult
 
 _UNRECALLABLE_LOCALE_KEY = "cli.app.ledger.evidence.consent.bytes_unrecallable"
@@ -82,7 +82,7 @@ def _no_history_notice() -> Notice:
 
 def consent_list(ctx: typer.Context) -> None:
     """List off-host dispatches and the artefacts derived from them."""
-    bucket_id = _tx_repo(_state()).bucket_id
+    bucket_id = transaction_catalogue_repo(current_workflow_state()).bucket_id
     survey = survey_cloud_consent(
         bucket_id=bucket_id, settings=load_settings(), consent_entries=_recorded_dispatches(bucket_id)
     )
@@ -169,7 +169,7 @@ def _dispatch_payload(dispatch: ConsentedDispatch) -> dict[str, str]:
 
 def consent_rederive(ctx: typer.Context, evidence_reference: str, content_address: str, transcriber: str) -> None:
     """Re-derive one artefact on this host from its cached transcription."""
-    bucket_id = _tx_repo(_state()).bucket_id
+    bucket_id = transaction_catalogue_repo(current_workflow_state()).bucket_id
     outcome = rederive_artefact_on_host(
         bucket_id=bucket_id,
         evidence_reference=evidence_reference,

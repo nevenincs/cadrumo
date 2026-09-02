@@ -26,15 +26,13 @@ from .errors import RegistryValidationError
 from .ids import BindingId
 from .invoice_bindings import (
     InvoiceObservation,
+    RectificationScope,
     resolve_invoice_family_row_values,
     resolve_invoice_family_scalar_values,
     validate_invoice_family_fact_and_aggregation,
 )
 from .invoice_bindings import (
     InvoiceSelector as _InvoiceSelector,
-)
-from .invoice_bindings import (
-    RectificationScope as _RectificationScope,
 )
 from .invoice_bindings import (
     invoice_selector as _invoice_selector,
@@ -104,7 +102,7 @@ class CounterpartObservationRequirement(BaseModel):
     binding_ids: tuple[BindingId, ...] = Field(min_length=1)
     source_kinds: tuple[str, ...] = Field(min_length=1)
     claves: tuple[str, ...] = ()
-    rectification_scope: _RectificationScope = "any"
+    rectification_scope: RectificationScope = RectificationScope.ANY
 
     _values_unique = field_validator("binding_ids", "claves", "source_kinds")(
         unique_tuple("counterpart requirement tuple")
@@ -192,7 +190,7 @@ def counterpart_binding_requirements(
     Args:
         revision: The :class:`ModeloRevision` whose counterpart bindings to inspect.
     """
-    grouped: dict[tuple[tuple[str, ...], tuple[str, ...], _RectificationScope], set[BindingId]] = {}
+    grouped: dict[tuple[tuple[str, ...], tuple[str, ...], RectificationScope], set[BindingId]] = {}
     for binding in revision.bindings:
         if binding.source not in COUNTERPART_BINDING_SOURCE_KINDS:
             continue

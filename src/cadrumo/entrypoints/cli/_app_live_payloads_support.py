@@ -33,12 +33,12 @@ JustificantePeriodToken = Annotated[str, AfterValidator(_is_a_registry_period_to
 # ---------------------------------------------------------------------------
 
 
-def _canonical_borrador_period(value: str) -> str:
+def canonical_borrador_period(value: str) -> str:
     """Validate and normalise the canonical string transport for a filing period."""
     return str(Period.from_string(value))
 
 
-def _canonical_borrador_utc_timestamp(value: str) -> str:
+def canonical_borrador_utc_timestamp(value: str) -> str:
     """Require an ISO-8601 UTC timestamp while retaining its JSON string form."""
     try:
         timestamp = datetime.fromisoformat(value)

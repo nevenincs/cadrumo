@@ -43,7 +43,7 @@ class StorageCustodyDisposition(StrEnum):
     PROCESS_LOCAL = "process_local"
 
 
-_CUSTODY_PROFILE_DISPOSITIONS: dict[StorageCustodyProfile, frozenset[StorageCustodyDisposition]] = {
+CUSTODY_PROFILE_DISPOSITIONS: dict[StorageCustodyProfile, frozenset[StorageCustodyDisposition]] = {
     StorageCustodyProfile.FULL: frozenset(
         {
             StorageCustodyDisposition.STRUCTURED_CUSTODY,
