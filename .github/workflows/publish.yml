@@ -46,7 +46,16 @@ jobs:
         run: |
           set -euo pipefail
           matrix="$(uv run --no-sync python -c 'import json; from dev.ci.python_runtime_matrix import load_runtime_inventory; inventory=load_runtime_inventory(); print(json.dumps({"include":[{"os":os,"runtime-id":row.identifier,"python-version":row.selector,"python-minor":row.minor,"phase":row.phase.value,"blocking":row.blocking} for row in inventory.stable for os in ("ubuntu-latest","macos-latest","windows-latest")]}, separators=(",",":")))')"
-          test -n "$matrix"
+          # `-n` passes on `{"include":[]}`, which expands to zero smoke jobs.
+          # A matrix job with no combinations does not fail, so publication
+          # would proceed having proved nothing on any platform. Count the
+          # entries rather than measuring the string.
+          entries="$(printf '%s' "$matrix" | uv run --no-sync python -c 'import json,sys; print(len(json.load(sys.stdin)["include"]))')"
+          if [ "$entries" -eq 0 ]; then
+            echo "::error::the stable runtime inventory yielded no smoke targets; refusing to publish unproven"
+            exit 1
+          fi
+          echo "stable runtime smoke targets: $entries"
           {
             echo 'matrix<<STABLE_RUNTIME_MATRIX'
             echo "$matrix"
