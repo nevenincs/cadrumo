@@ -9,7 +9,8 @@ the common fail-closed contract that they must satisfy.
 
 from __future__ import annotations
 
-from typing import Annotated, Literal
+from enum import StrEnum
+from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, StringConstraints, model_validator
 
@@ -42,8 +43,35 @@ _Reference = Annotated[
 type RegistryClosureLimbName = Literal["temporal_coverage", "source_connectivity", "filing_export"]
 """One independently-derived conjunct of the registry release predicate."""
 
-type RegistryClosureLimbOutcome = Literal["satisfied", "not_applicable", "refused", "unmeasured"]
-"""The result of one closure limb, including an explicitly out-of-scope capability."""
+class RegistryClosureLimbOutcomeKind(StrEnum):
+    """The result of one closure limb, including an explicitly out-of-scope capability."""
+
+    SATISFIED = "satisfied"
+    NOT_APPLICABLE = "not_applicable"
+    REFUSED = "refused"
+    UNMEASURED = "unmeasured"
+
+
+RegistryClosureLimbOutcome = Literal[
+    RegistryClosureLimbOutcomeKind.SATISFIED,
+    RegistryClosureLimbOutcomeKind.NOT_APPLICABLE,
+    RegistryClosureLimbOutcomeKind.REFUSED,
+    RegistryClosureLimbOutcomeKind.UNMEASURED,
+]
+"""Every outcome, for the strict limb field."""
+
+CLOSURE_SATISFYING_OUTCOMES: Final[frozenset[RegistryClosureLimbOutcomeKind]] = frozenset(
+    {
+        RegistryClosureLimbOutcomeKind.SATISFIED,
+        RegistryClosureLimbOutcomeKind.NOT_APPLICABLE,
+    },
+)
+"""The outcomes that do not withhold closure.
+
+``NOT_APPLICABLE`` is included deliberately: a capability declared out of scope is not a
+gap, and treating it as one would refuse a filing over evidence nothing required. The
+pair was tested twice in `filing_export_coverage`, once directly and once as its own
+negation, so the two could disagree about what counts as satisfied."""
 
 type RegistryClosureRefusalReason = Literal[
     "conflicting_evidence",
