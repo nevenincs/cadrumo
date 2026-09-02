@@ -612,6 +612,88 @@ def _rollback_sibling(
     return backup
 
 
+def _staging_sibling(target_export_root: Path) -> Path:
+    """Return one opaque, same-volume candidate sibling for the final swap."""
+    staging = target_export_root.with_name(
+        f".{target_export_root.name}.generated-stage-{secrets.token_hex(16)}",
+    )
+    if staging.exists() or is_link_like(staging):
+        raise RegistryValidationError(f"generated export staging sibling unexpectedly exists: {staging}")
+    return staging
+
+
+def _stage_verified_candidate_package(
+    *,
+    candidate_export_root: Path,
+    target_export_root: Path,
+    expected_manifest_sha256: str,
+    expected_manifest: ExportFragmentProvenanceManifest,
+) -> Path:
+    """Copy exactly one verified package to the target revision's filesystem.
+
+    The caller-owned candidate can live on a different filesystem (as it does
+    when a system temporary directory is on ``C:`` and the registry is on
+    ``Y:``).  Only this fresh, opaque sibling is ever the source of the final
+    ``os.replace`` into ``export/``.
+    """
+    staging = _staging_sibling(target_export_root)
+    try:
+        staging.mkdir()
+        for source in scan_directory(candidate_export_root, recursive=True, select=DirectoryEntryKind.FILES):
+            if is_link_like(source) or not source.is_file():
+                raise RegistryValidationError(f"generated candidate package changed while staging: {source}")
+            relative = source.relative_to(candidate_export_root)
+            destination = staging / relative
+            destination_parent = destination.parent
+            destination_parent.mkdir(parents=True, exist_ok=True)
+            _copy_and_fsync_regular_file(source, destination)
+            fsync_parent_dir(destination)
+        fsync_parent_dir(staging / ".staging-complete")
+        fsync_parent_dir(staging)
+        staged_manifest = _verify_generated_export_package(staging)
+        if (
+            _sha256(staging / EXPORT_FRAGMENT_PROVENANCE_FILENAME) != expected_manifest_sha256
+            or staged_manifest != expected_manifest
+        ):
+            raise RegistryValidationError("same-volume staged export does not match the validated candidate")
+    except OSError as exc:
+        _delete_verified_staged_candidate_if_present(staging)
+        raise RegistryValidationError(f"cannot stage generated export package beside target: {exc}") from exc
+    except RegistryValidationError:
+        _delete_verified_staged_candidate_if_present(staging)
+        raise
+    return staging
+
+
+def _copy_and_fsync_regular_file(source: Path, destination: Path) -> None:
+    """Copy one already enumerated regular member without metadata inheritance."""
+    with source.open("rb") as input_stream, destination.open("xb") as output_stream:
+        shutil.copyfileobj(input_stream, output_stream)
+        output_stream.flush()
+        os.fsync(output_stream.fileno())
+
+
+def _journal_staged_candidate_path(journal: _PublicationJournal, target_export_root: Path) -> Path:
+    candidate = Path(journal.candidate_export)
+    prefix = f".{target_export_root.name}.generated-stage-"
+    if candidate.parent != target_export_root.parent or not candidate.name.startswith(prefix):
+        raise RegistryValidationError("generated publication journal candidate is not a target-revision staging sibling")
+    if is_link_like(candidate):
+        raise RegistryValidationError("generated publication journal candidate must not be a symbolic link or junction")
+    return candidate
+
+
+def _delete_verified_staged_candidate_if_present(staging: Path) -> None:
+    if staging.exists():
+        _require_complete_regular_tree(staging, subject="generated export staging directory")
+        try:
+            shutil.rmtree(staging)
+        except OSError as exc:
+            raise RegistryValidationError(f"cannot delete generated export staging directory {staging}: {exc}") from exc
+        if staging.exists():
+            raise RegistryValidationError(f"generated export staging residue remains: {staging}")
+
+
 def _journal_path(context: GeneratedExportTreePublicationContext) -> Path:
     return context.target_root.resolve() / f"{_transaction_stem(context)}.json"
 
