@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:df4ff6202e07bb99ca5a0f01b57a7a7f3b8d9fd3410e0202bfeaa0d6b9d5f16e'
+body_hash: 'sha256:006ffae1864d4bce36d8e5dc16711417e67a420239b2180bb7703b60a8acf1bb'
 related: []
 ---
 # `registry-declaration-hardening` audit: `modelo 200 publication review`
@@ -71,3 +71,8 @@ The typed receipt now carries the manifest digest plus every regular generated o
 
 - `check-publish-state-binding`: resolved. `_check` observes the complete target receipt before validation/comparison, returns that exact receipt, and `_publish` carries it unchanged to the under-lock full-tree assertion.
 - Scoped closure verdict: no HIGH or CRITICAL finding remains.
+## Same-volume staging closure status
+
+- Candidate packages are copied, file-fsynced, and package-verified in an opaque sibling of the target before the journal records them. Final cutover and recovery use same-parent `os.replace` operations, avoiding Windows cross-volume rename failure.
+- Recovery verifies a staged or live candidate against current semantic-map, render-profile, provenance, loader, and output-digest authorities before completing cutover; backup restoration remains same-volume.
+- Scoped verdict: no HIGH or CRITICAL finding remains. The two selected recovery tests were stopped after exceeding the fast-check window without producing a failure; closure rests on live code inspection and existing focused detector coverage.

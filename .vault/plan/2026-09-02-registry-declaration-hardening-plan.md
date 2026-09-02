@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:30a7685435e702c7bf9740504b259d367c7c311aef17efbbeab865f41d824747'
+body_hash: 'sha256:1ce1bbf5e6f7bf0d097a74ee13fd49161dce54fc8d45c644facc3200849da98a'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -465,6 +465,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S203` - Withdraw the stale-scope finding after splitting the fifteen by Step state and reading what each scope names; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S204` - Ground the temporal axis migration in the modelo 720 revision whose opening year makes its own record design unloadable; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S205` - Read the four misstated revision openings against the windows and selectors they declare and separate the naming errors from the under-declaration; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S206` - Split the misstated opening condition by direction and withdraw the selector condition that reported thirty five correct declarations; `dev/registry/analysis/revision_name_window.py,dev/registry/tests/test_revision_name_window.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

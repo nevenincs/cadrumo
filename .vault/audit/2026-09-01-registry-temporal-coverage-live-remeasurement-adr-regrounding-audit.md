@@ -4832,3 +4832,35 @@ where the accessor takes a period code string, and three of the four modelos ret
 `AttributeError` that could have been read as a registry refusal. The two genuine
 `NoRevisionForPeriodError` results that arrived before it were real, but they were sitting
 beside an artefact of the call. Reading the signature took one command and separated them.
+
+### A condition built, measured, and withdrawn inside one iteration
+
+The previous finding argued that one screen condition covered four defects wanting three
+remedies, so the condition was split. Two of the three splits survive; the third was built,
+run, and removed on the evidence it produced.
+
+The surviving split is by direction. `name_opens_after_window` is a name later than the window
+it declares, so the revision serves years its name does not claim - modelo 151 serves filing
+years 2023 and 2024 under a name saying 2025, confirmed against the live authority.
+`name_opens_before_window` is the reverse, a name claiming years the revision does not serve,
+which is modelo 185 and modelo 322. Two members each, and the correction differs: one name is
+late, the other early. The tests now pin both directions and assert the other is absent.
+
+The withdrawn split was `selector_declares_no_window`, added because modelo 322 states its
+fourteen-year span nowhere but its name. Run against the corpus it reported 36 revisions and
+took the screen from 14 findings to 50. Checking the members before believing the count: modelo
+100's 2023 and 2024, modelo 714's 2023 and modelo 390's 2024 each admit themselves through the
+live authority. A single-year revision declares no selector bounds because its id names the year
+and selection resolves through `valid_from`. Thirty-five of the thirty-six were correct.
+
+Narrowing it to names claiming a span left two, and the second one broke the condition rather
+than saving it: modelo 232's `2016-2017` resolves correctly for both 2016 and 2017. So what
+distinguishes 322 is not its missing selector at all - it is that its `valid_from` disagrees
+with its name, which the direction split already reports. The condition detected nothing the
+screen did not already say.
+
+It is gone. This is the third time in this campaign that something built here was removed on
+its own evidence, and the first where the evidence arrived within the same iteration as the
+build. The cost of checking the members was two commands; the cost of shipping it would have
+been a category of 36 whose 35 correct members hide the one that is wrong - which is the exact
+failure this audit documented in `record_drift` and has argued against four times since.
