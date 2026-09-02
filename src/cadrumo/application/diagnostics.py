@@ -768,6 +768,8 @@ def _profile_check(
     profile keys from :class:`~application.workflow.WorkflowState` into
     per-key :class:`DiagnosticFinding` rows.
     """
+    from .workflow.profile_health import UNREADABLE_PROFILE_STATUSES
+
     if profile_health is not None and profile_health.status == "profile_locked":
         # Same distinction as `_profile_unavailable_check`: a locked profile
         # is benign, so it gets its own sentence rather than falling through
@@ -779,11 +781,7 @@ def _profile_check(
             summary=tr("cli.diagnostics.summary.profile_locked"),
             precondition_verdict=_required_profile_health_verdict(profile_health),
         )
-    if profile_health is not None and profile_health.status in {
-        "dangling_pointer",
-        "missing_profile_record",
-        "profile_record_unreadable",
-    }:
+    if profile_health is not None and profile_health.status in UNREADABLE_PROFILE_STATUSES:
         return _DiagnosticCheck(
             name="profile.readiness",
             status=_DiagnosticStatus.WARN,

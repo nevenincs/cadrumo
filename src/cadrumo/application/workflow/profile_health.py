@@ -26,7 +26,8 @@ See Also:
 
 from __future__ import annotations
 
-from typing import Literal
+from enum import StrEnum
+from typing import Final, Literal
 
 from pydantic import BaseModel, PrivateAttr, ValidationError
 
@@ -55,24 +56,60 @@ from .persistence import workflow_state_repository
 from .profile_bucket_scan import list_profile_buckets, resolve_profile_bucket
 from .state_models import WorkflowState
 
-type ProfileHealthStatus = Literal[
-    "none",
-    "dangling_pointer",
-    "profile_locked",
-    "missing_profile_record",
-    "profile_record_unreadable",
-    "capsule_unreadable",
-    "incomplete",
-    "ready",
-]
-"""Closed set of active-profile health verdicts.
 
-``profile_locked`` is the ordinary benign member: the capsule is committed and
-its record is intact, and nobody has logged in, so the record is simply not
-knowable yet. It is deliberately distinct from ``missing_profile_record`` and
-``profile_record_unreadable``, which both assert something is WRONG with the
-record. Collapsing the three told an operator whose profile was merely locked
-that their financial records were gone.
+class ProfileHealthStatus(StrEnum):
+    """Closed set of active-profile health verdicts.
+
+    ``PROFILE_LOCKED`` is the ordinary benign member: the capsule is committed and its
+    record is intact, and nobody has logged in, so the record is simply not knowable
+    yet. It is deliberately distinct from ``MISSING_PROFILE_RECORD`` and
+    ``PROFILE_RECORD_UNREADABLE``, which both assert something is WRONG with the
+    record. Collapsing the three told an operator whose profile was merely locked that
+    their financial records were gone.
+    """
+
+    NONE = "none"
+    DANGLING_POINTER = "dangling_pointer"
+    PROFILE_LOCKED = "profile_locked"
+    MISSING_PROFILE_RECORD = "missing_profile_record"
+    PROFILE_RECORD_UNREADABLE = "profile_record_unreadable"
+    CAPSULE_UNREADABLE = "capsule_unreadable"
+    INCOMPLETE = "incomplete"
+    READY = "ready"
+
+
+ProfileHealthStatusValue = Literal[
+    ProfileHealthStatus.NONE,
+    ProfileHealthStatus.DANGLING_POINTER,
+    ProfileHealthStatus.PROFILE_LOCKED,
+    ProfileHealthStatus.MISSING_PROFILE_RECORD,
+    ProfileHealthStatus.PROFILE_RECORD_UNREADABLE,
+    ProfileHealthStatus.CAPSULE_UNREADABLE,
+    ProfileHealthStatus.INCOMPLETE,
+    ProfileHealthStatus.READY,
+]
+"""The same verdicts for a strict CLI payload field."""
+
+RECORD_FAULT_STATUSES: Final[frozenset[ProfileHealthStatus]] = frozenset(
+    {
+        ProfileHealthStatus.MISSING_PROFILE_RECORD,
+        ProfileHealthStatus.PROFILE_RECORD_UNREADABLE,
+    },
+)
+"""The verdicts asserting the active profile's record is WRONG.
+
+Exactly the two the docstring above warns must never absorb ``PROFILE_LOCKED``. Written
+out at three sites before this existed, so that warning was carried by prose at one site
+and by three separate hand-written pairs everywhere else.
+"""
+
+UNREADABLE_PROFILE_STATUSES: Final[frozenset[ProfileHealthStatus]] = (
+    RECORD_FAULT_STATUSES | {ProfileHealthStatus.DANGLING_POINTER}
+)
+"""Record faults plus a pointer that resolves to nothing.
+
+Derived from :data:`RECORD_FAULT_STATUSES` rather than restated, so the two sets cannot
+disagree about which record faults exist.
 """
 
 type ProfileSource = Literal["none", "env_override", "pointer"]
@@ -153,16 +190,16 @@ def _with_active_profile_label(health: ActiveProfileHealth, label: str | None) -
 
 _HEALTH_CONDITIONS: dict[ProfileHealthStatus, str] = {
     "dangling_pointer": "profile.active.pointer_registered",
-    "missing_profile_record": "profile.active.record_present",
-    "profile_record_unreadable": "profile.active.record_readable",
+    ProfileHealthStatus.MISSING_PROFILE_RECORD: "profile.active.record_present",
+    ProfileHealthStatus.PROFILE_RECORD_UNREADABLE: "profile.active.record_readable",
     "capsule_unreadable": "profile.active.capsule_readable",
     "incomplete": "profile.configuration.complete",
 }
 
 _HEALTH_EVIDENCE_IDS: dict[ProfileHealthStatus, str] = {
     "dangling_pointer": "profile.active.pointer.health",
-    "missing_profile_record": "profile.active.record.presence",
-    "profile_record_unreadable": "profile.active.record.readability",
+    ProfileHealthStatus.MISSING_PROFILE_RECORD: "profile.active.record.presence",
+    ProfileHealthStatus.PROFILE_RECORD_UNREADABLE: "profile.active.record.readability",
     "capsule_unreadable": "profile.active.capsule.readability",
     "incomplete": "profile.configuration.completeness",
 }
@@ -171,15 +208,18 @@ _HEALTH_EVIDENCE_IDS: dict[ProfileHealthStatus, str] = {
 #: Only a selector with no committed capsule is an ABSENT record; a locked
 #: profile is benign and a mis-addressed session is a readability failure.
 _UNAVAILABILITY_STATUSES: dict[ProfileRecordUnavailability, ProfileHealthStatus] = {
-    ProfileRecordUnavailability.NO_LIVE_CAPSULE: "missing_profile_record",
+    ProfileRecordUnavailability.NO_LIVE_CAPSULE: ProfileHealthStatus.MISSING_PROFILE_RECORD,
     ProfileRecordUnavailability.SESSION_REQUIRED: "profile_locked",
-    ProfileRecordUnavailability.SESSION_IDENTITY_MISMATCH: "profile_record_unreadable",
+    ProfileRecordUnavailability.SESSION_IDENTITY_MISMATCH: ProfileHealthStatus.PROFILE_RECORD_UNREADABLE,
 }
 
 
 def unavailable_profile_record_verdict(
     *,
-    status: Literal["missing_profile_record", "profile_record_unreadable"],
+    status: Literal[
+        ProfileHealthStatus.MISSING_PROFILE_RECORD,
+        ProfileHealthStatus.PROFILE_RECORD_UNREADABLE,
+    ],
     source: ProfileSource,
     repairable_by_clearing_pointer: bool,
 ) -> PreconditionVerdict:
