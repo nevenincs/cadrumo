@@ -5,7 +5,6 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.ledger.models import LedgerStatusReport
 from cadrumo.application.operator_actions.models import ActionReference, DeclaredNextAction
 from cadrumo.application.overview.calendar_models import (
     CalendarCompleteness,
@@ -24,6 +23,9 @@ from ..home import HomeProjectionInput, compose_home_projection
 from ..home_projection import (
     HomeAccountSession,
     HomeAvailability,
+    HomeDeclarationResume,
+    HomeDeclarationState,
+    HomeLedgerReadiness,
     HomeNextAction,
     HomeSessionPosture,
     HomeZoneState,
@@ -85,16 +87,11 @@ def _input(**updates: object) -> HomeProjectionInput:
         "actions_state": _AVAILABLE,
         "declarations_state": _AVAILABLE,
         "ledger_state": _AVAILABLE,
-        "ledger_status": LedgerStatusReport(
-            bucket_id="a" * 64,
-            total_count=5,
-            active_count=4,
-            archived_count=1,
-            stashed_count=0,
-            pending_review_count=2,
-            reviewed_count=2,
-            skipped_count=0,
-            readiness_issue_count=1,
+        "ledger_readiness": HomeLedgerReadiness(
+            entries=4,
+            requiring_review=2,
+            unclassified=1,
+            missing_evidence=1,
         ),
         "agenda_state": _AVAILABLE,
         "agenda_evidence_state": _AVAILABLE,
@@ -111,21 +108,38 @@ def _input(**updates: object) -> HomeProjectionInput:
     return HomeProjectionInput.model_validate(values)
 
 
-def test_composes_work_units_and_ledger_without_adapter_resolution() -> None:
+def test_work_units_make_only_states_the_work_unit_itself_proves() -> None:
     older = _work_unit("older", updated_hour=8)
     newer = _work_unit("newer", updated_hour=9, calculated=True)
 
     projection = compose_home_projection(_input(work_units=(older, newer)))
 
-    assert [item.name for item in projection.declarations] == ["newer", "older"]
-    assert [item.state.value for item in projection.declarations] == ["needs_review", "draft"]
+    assert [item.name for item in projection.declarations] == ["newer"]
+    assert projection.declarations[0].state is HomeDeclarationState.DRAFT
     assert projection.ledger is not None
     assert projection.ledger.model_dump() == {
         "entries": 4,
         "requiring_review": 2,
-        "unclassified": 2,
+        "unclassified": 1,
         "missing_evidence": 1,
     }
+
+
+def test_exact_declaration_reader_output_carries_richer_state_without_inference() -> None:
+    unit = _work_unit("return", updated_hour=9, calculated=True)
+    exact = HomeDeclarationResume(
+        work_unit_id=unit.work_unit_id,
+        modelo="303",
+        filing_year=2026,
+        period=unit.period,
+        name=unit.name,
+        state=HomeDeclarationState.NEEDS_REVIEW,
+        revision_id=unit.revision_id,
+    )
+
+    projection = compose_home_projection(_input(work_units=(unit,), declarations=(exact,)))
+
+    assert projection.declarations == (exact,)
 
 
 def test_actions_are_deterministically_sorted_trimmed_and_reranked() -> None:
@@ -184,3 +198,19 @@ def test_non_available_reader_result_is_refused_instead_of_becoming_a_false_empt
 
     with pytest.raises(ValidationError, match="non-available Ledger zone"):
         compose_home_projection(_input(ledger_state=locked))
+
+
+def test_locked_declaration_zone_refuses_an_already_local_reader_result() -> None:
+    locked = HomeZoneState(availability=HomeAvailability.LOCKED, reason_code="profile.locked")
+
+    with pytest.raises(ValidationError, match="non-available declarations zone"):
+        compose_home_projection(_input(declarations_state=locked, work_units=(_work_unit("draft", updated_hour=9),)))
+
+
+def test_composer_contract_contains_results_not_repository_or_network_callables() -> None:
+    fields = HomeProjectionInput.model_fields
+
+    assert "work_units" in fields
+    assert "overview_agenda" in fields
+    assert "ledger_readiness" in fields
+    assert all("repository" not in name and "client" not in name and "reader" not in name for name in fields)

@@ -14,7 +14,6 @@ from pydantic import BaseModel
 
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
-from ..ledger.models import LedgerStatusReport
 from .agenda import OverviewAgenda
 from .calendar_models import OverviewAeatSubmissionState, OverviewCalendarEntry
 from .home_projection import (
@@ -40,9 +39,10 @@ class HomeProjectionInput(BaseModel):
     actions_state: HomeZoneState
     actions: tuple[HomeNextAction, ...] = ()
     declarations_state: HomeZoneState
+    declarations: tuple[HomeDeclarationResume, ...] = ()
     work_units: tuple[WorkUnit, ...] = ()
     ledger_state: HomeZoneState
-    ledger_status: LedgerStatusReport | None = None
+    ledger_readiness: HomeLedgerReadiness | None = None
     agenda_state: HomeZoneState
     agenda_evidence_state: HomeZoneState
     overview_agenda: OverviewAgenda | None = None
@@ -58,9 +58,9 @@ def compose_home_projection(source: HomeProjectionInput) -> HomeProjectionV1:
         actions_state=source.actions_state,
         actions=_rank_actions(source.actions),
         declarations_state=source.declarations_state,
-        declarations=_project_declarations(source.work_units),
+        declarations=_project_declarations(source.declarations, source.work_units),
         ledger_state=source.ledger_state,
-        ledger=_project_ledger(source.ledger_status),
+        ledger=source.ledger_readiness,
         agenda_state=source.agenda_state,
         agenda_evidence_state=source.agenda_evidence_state,
         agenda=_project_agenda(source.overview_agenda, evidence_state=source.agenda_evidence_state),
@@ -84,54 +84,39 @@ def _rank_actions(actions: tuple[HomeNextAction, ...]) -> tuple[HomeNextAction, 
     return tuple(item.model_copy(update={"rank": rank}) for rank, item in enumerate(ordered))
 
 
-def _project_declarations(work_units: tuple[WorkUnit, ...]) -> tuple[HomeDeclarationResume, ...]:
-    ordered = sorted(
-        work_units,
-        key=lambda unit: (
-            unit.state is WorkUnitState.DESCARTADO,
-            -unit.updated_at.timestamp(),
-            str(unit.modelo),
-            unit.filing_year,
-            unit.period.registry_token,
-            unit.work_unit_id,
-        ),
-    )
-    return tuple(
+def _project_declarations(
+    declarations: tuple[HomeDeclarationResume, ...],
+    work_units: tuple[WorkUnit, ...],
+) -> tuple[HomeDeclarationResume, ...]:
+    projected_work_units = tuple(
         HomeDeclarationResume(
             work_unit_id=unit.work_unit_id,
             modelo=str(unit.modelo),
             filing_year=unit.filing_year,
             period=unit.period,
             name=unit.name,
-            state=_declaration_state(unit),
+            state=(
+                HomeDeclarationState.DISCARDED if unit.state is WorkUnitState.DESCARTADO else HomeDeclarationState.DRAFT
+            ),
             revision_id=unit.revision_id,
         )
-        for unit in ordered
+        for unit in work_units
     )
-
-
-def _declaration_state(unit: WorkUnit) -> HomeDeclarationState:
-    if unit.state is WorkUnitState.DESCARTADO:
-        return HomeDeclarationState.DISCARDED
-    if unit.current_filing_record_id is not None:
-        return HomeDeclarationState.FILED
-    if unit.current_calculation_revision_id is not None:
-        return HomeDeclarationState.NEEDS_REVIEW
-    return HomeDeclarationState.DRAFT
-
-
-def _project_ledger(status: LedgerStatusReport | None) -> HomeLedgerReadiness | None:
-    if status is None:
-        return None
-    # PENDING is the canonical review projection for an unclassified active
-    # transaction.  Readiness issues are missing or anomalous filing evidence;
-    # they may overlap pending rows, hence these are deliberately not summed.
-    return HomeLedgerReadiness(
-        entries=status.active_count,
-        requiring_review=max(status.pending_review_count, status.readiness_issue_count),
-        unclassified=status.pending_review_count,
-        missing_evidence=status.readiness_issue_count,
+    # A WorkUnit proves only draft/discarded lifecycle.  Richer READY,
+    # NEEDS_REVIEW, and FILED claims arrive as exact declaration-reader output.
+    by_id = {item.work_unit_id: item for item in projected_work_units}
+    by_id.update({item.work_unit_id: item for item in declarations})
+    ordered = sorted(
+        by_id.values(),
+        key=lambda unit: (
+            unit.state is HomeDeclarationState.DISCARDED,
+            str(unit.modelo),
+            unit.filing_year,
+            unit.period.registry_token,
+            unit.work_unit_id,
+        ),
     )
+    return tuple(ordered)
 
 
 def _project_agenda(
