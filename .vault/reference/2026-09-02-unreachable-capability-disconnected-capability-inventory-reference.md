@@ -38,6 +38,50 @@ the Modelo 100 revision 2025 cross-reference row for the Renta WEB Open portal
 surface. That is the only case where registry data declares a consumer that
 does not consume.
 
+## The registry axis
+
+A binding declaration and the code that resolves it are two halves that can
+drift apart independently, so the registry was checked from both directions.
+
+**Declared consumers that cannot run.** Every `consumer` string across the
+shipped registry tree was resolved against the reachable module set. Exactly
+one names a module no entrypoint can reach: the Modelo 100 revision 2025
+cross-reference row naming the Renta WEB Open portal surface. Registry data
+therefore asserts a consumer relationship that cannot execute, and it is the
+only such row.
+
+**Resolvers with nothing to resolve.** The canonical `BindingSourceKind`
+vocabulary carries 33 members. Thirty-two source families appear across the
+9,020 binding declarations in shipped data. Comparing the two sets leaves five
+enum members that no registry row anywhere declares:
+
+- `borrador`
+- `iva_wallet_decision`
+- `ledger_transaction`
+- `purchase_invoice_evidence`
+- `withholding296`
+
+None is a reserved placeholder. Each is referenced by real resolver and
+validator code outside tests, between six and nineteen sites apiece, across
+`application/aggregation`, `application/calculations`, `application/review` and
+`application/ledger`. So the mechanism can resolve five source families that no
+declaration ever asks for.
+
+The `borrador` entry is the sharpest, because its adapter is independently on
+the unreachable list: `adapters/inbound/borrador/` parses the Modelo 100 draft
+and no entrypoint reaches it, while the binding family that would carry its
+values into casillas is declared by no revision. Both halves of that feature
+are disconnected, in different ways, which is why neither shows up as a broken
+reference anywhere.
+
+A caution for anyone repeating this measurement. A first pass over `source =`
+strings also reported `ley_irpf`, `manual_renta`, `reglamento_irpf` and
+`aeat_help` as undeclared families. They are not binding sources at all: they
+are legal-citation sources on the category proportionality declarations, with
+their own enum in `domain/categories/proportionality.py`. Two unrelated
+declaration kinds share the `source` key, and conflating them invents four
+defects that do not exist.
+
 ## Entries
 
 ### `domain/fincas/` with `adapters/persistence/profile/fincas.py`
