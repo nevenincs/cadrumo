@@ -733,7 +733,7 @@ class ExportRecordDefinition(RegistryModel):
 
 def _repeat_field_family_failure(
     *,
-    repeat: Literal["binding_rows", "projection_rows"] | None,
+    repeat: ExportRecordRepeat | None,
     binding_record_declared: bool,
     has_binding: bool,
     has_projection: bool,
@@ -742,9 +742,9 @@ def _repeat_field_family_failure(
     claims_binding = has_binding or binding_record_declared
     if claims_binding and has_projection:
         return "export record cannot mix binding and projection fields"
-    if repeat == "projection_rows":
+    if repeat is ExportRecordRepeat.PROJECTION_ROWS:
         return _projection_repeat_failure(claims_binding, has_projection)
-    if repeat == "binding_rows":
+    if repeat is ExportRecordRepeat.BINDING_ROWS:
         return _binding_repeat_failure(
             has_binding, has_projection, binding_record_declared, allow_unresolved_binding_record
         )
