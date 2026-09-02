@@ -43,10 +43,12 @@ from ....domain.calculations.registry.schema import (
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_rounding import RegistryRoundingCode
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ....domain.modelos.ledger_filing_snapshot import LedgerFilingEvidence
 from ....domain.period import calculation_filing_date
 from ._styling import compute_styling
 from ._translator import is_translatable, translate_formula
 from .errors import CalcSheetsEngineError
+from .evidence import sheet_evidence_from_ledger_filing
 from .layout import SheetLayout, plan_layout
 from .records import (
     OperatorInputs,
@@ -55,6 +57,7 @@ from .records import (
     SheetAnchor,
     SheetCellAddress,
     SheetCellConstraint,
+    SheetEvidenceFacet,
     SheetExportMetadata,
     SheetExportPlan,
     SheetFormulaCell,
@@ -964,6 +967,8 @@ def build_export_plan(
     operator_inputs: OperatorInputs | None = None,
     relation_values: RelationValues | None = None,
     relation_resolver: RelationResolver | None = None,
+    ledger_filing_evidence: LedgerFilingEvidence | None = None,
+    casilla_ids_by_contributor_id: Mapping[str, Iterable[CasillaId]] | None = None,
 ) -> SheetExportPlan:
     """Walk a registry snapshot and produce a complete `SheetExportPlan`.
 
@@ -994,6 +999,20 @@ def build_export_plan(
             provenance onto the workbook so the pull adapter can
             detect stale prefills. Explicit `relation_values` take
             precedence over the resolver.
+        ledger_filing_evidence: Optional bundled fact basis captured for
+            the ledger-derived calculation revision this workbook
+            explains. When supplied, it is projected into the plan's
+            evidence facet, which the workbook materializer renders into
+            the `Evidencia` tab and the machine-readable evidence
+            sidecar. When absent the facet stays empty and the tab
+            carries only its headers.
+        casilla_ids_by_contributor_id: The attribution map from each
+            contributing transaction id to the canonical casilla ids it
+            supports. Required alongside `ledger_filing_evidence`
+            whenever the evidence carries contributor rows: the
+            projection refuses to infer modelo-specific tax attribution
+            from row contents and raises for an unattributed
+            contributor.
 
     Returns:
         A complete :class:`SheetExportPlan` ready for the Google apply adapter
@@ -1041,6 +1060,17 @@ def build_export_plan(
     cell_constraints = _collect_cell_constraints(revision, layout)
     row_sets = collect_row_sets(revision)
 
+    evidence = (
+        sheet_evidence_from_ledger_filing(
+            ledger_filing_evidence,
+            casilla_ids_by_contributor_id=(
+                casilla_ids_by_contributor_id if casilla_ids_by_contributor_id is not None else {}
+            ),
+        )
+        if ledger_filing_evidence is not None
+        else SheetEvidenceFacet()
+    )
+
     metadata = _stamp_registry_metadata(snapshot)
     guide_paragraphs = _guide_paragraphs(snapshot)
     guide = SheetGuideContent(
@@ -1077,6 +1107,7 @@ def build_export_plan(
         anchors=anchors,
         cell_constraints=cell_constraints,
         relation_provenance=relations,
+        evidence=evidence,
         row_sets=row_sets,
         styled_ranges=styled_ranges,
         column_widths=column_widths,
