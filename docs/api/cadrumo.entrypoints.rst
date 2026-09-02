@@ -24,4 +24,5 @@ Submodules
    cadrumo.entrypoints._cli_main
    cadrumo.entrypoints.adapter_composition
    cadrumo.entrypoints.censal_review
+   cadrumo.entrypoints.full_screen_session_protocol
    cadrumo.entrypoints.operation_composition
