@@ -797,7 +797,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
         )
         build_runtime_wheelhouse(
             build_root,
-            output / "cadrumo-runtime-wheelhouse-py313.zip",
+            output / "cadrumo-runtime-wheelhouse.zip",
         )
         shutil.move(archive, retained_source_archive)
         _run(
@@ -830,7 +830,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
     root_sdist = _single(output, "cadrumo-*.tar.gz", label="cadrumo sdist")
     runtime_wheelhouse = _single(
         output,
-        "cadrumo-runtime-wheelhouse-*.zip",
+        "cadrumo-runtime-wheelhouse*.zip",
         label="runtime dependency wheelhouse",
     )
     manuals_wheel = _single(
