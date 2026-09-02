@@ -19,11 +19,11 @@ accused of tampering it had not suffered. The check below would have refuted tha
 in seconds -- which is why it now runs -- but a green result answers "unchanged
 since fetch", never "faithful to AEAT".
 
-The same distinction is already reasoned through in
-:func:`~core.corpus_manifest.verify_corpus_bundle`'s signing counterpart, which
-re-hashes archived members rather than trusting a digest taken over recorded
-hashes. This gate applies that discipline to the shipped record-design tree,
-which that bundle verifier does not cover.
+The same distinction is enforced by
+:func:`~core.corpus_manifest.verify_corpus_bundle`, which re-hashes archived
+members rather than trusting a digest taken over recorded hashes. This gate
+applies that discipline to the shipped record-design tree, which that bundle
+verifier does not cover.
 """
 
 from __future__ import annotations

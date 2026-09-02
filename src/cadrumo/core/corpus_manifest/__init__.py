@@ -22,10 +22,7 @@ This module also builds and verifies distributable corpus *bundles*: a
 single ``.zip`` archive carrying every corpus file plus an embedded
 :class:`CorpusManifest` (see :func:`build_corpus_bundle` and
 :func:`verify_corpus_bundle`), for offline installation of the bundled
-corpus checksummed against its own manifest. The SHA-256 manifest alone is
-an integrity gate, not an authenticity gate; :mod:`._bundle_signing`
-(re-exported here) adds the Ed25519 authenticity layer on top -- see
-:func:`sign_corpus_bundle` and :func:`verify_corpus_bundle_signature`.
+corpus checksummed against its own manifest.
 """
 
 from __future__ import annotations

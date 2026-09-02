@@ -24,9 +24,6 @@ See Also:
     :mod:`~application.modelo._review_package_counter_sign`
         Accountant receipt layer that signs over this module's original
         signature bytes.
-    :mod:`~core.corpus_manifest._bundle_signing`
-        Corpus-bundle signing analogue that reuses the same manifest-digest
-        signing pattern.
 """
 
 from __future__ import annotations

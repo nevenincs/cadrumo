@@ -2,12 +2,10 @@
 
 One canonical home for the two hex shapes the signing and encryption
 boundaries validate at, consumed by
-:class:`core.corpus_manifest.SignedCorpusBundle`,
-:class:`application.modelo.SignedReviewPackage`, and
+:class:`application.modelo.SignedReviewPackage` and
 :class:`application.modelo.CounterSignedReceipt`. Keeping the patterns in
-``core`` lets the corpus-bundle signer and the review-package signer share one
-declaration without either importing the other (``core`` may not import
-``application``).
+``core`` lets the review-package signing and receipt-encryption boundaries
+share one declaration without either importing the other.
 
 The patterns are the structural gate only: they fix the encoding (lowercase
 hex) and the exact decoded length. They say nothing about whether the decoded
