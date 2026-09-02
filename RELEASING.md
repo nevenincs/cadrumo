@@ -8,8 +8,8 @@ conventional commits merged since the last release, and does the whole release w
 pull request merges: it computes the version, writes the version surfaces and the
 changelog, tags `vX.Y.Z`, creates the GitHub release, and dispatches the publish
 workflow. The publish workflow builds the three distributions from that tag, refuses any
-file the index would reject, proves the built wheel on all three supported platforms,
-and uploads to PyPI with Trusted Publishing.
+file the index would reject, proves the sealed files on every stable runtime across Linux,
+macOS and Windows, and uploads to PyPI with Trusted Publishing.
 
 PyPI is the primary target. Homebrew and Scoop are downstream of what it serves.
 
@@ -20,7 +20,7 @@ PyPI is the primary target. Homebrew and Scoop are downstream of what it serves.
 | Propose | `release-please.yml` | Keeps a release pull request current from conventional commits on `main` |
 | Release | `release-please.yml` | On merge: writes version surfaces and changelog, tags `vX.Y.Z`, creates the GitHub release |
 | Build | `publish.yml` | Builds the three distributions from the tag and refuses any file at or over the index cap |
-| Prove | `publish.yml` | Installs the built wheel on Linux, macOS and Windows and runs the distribution smoke check |
+| Prove | `publish.yml` | Installs the sealed distributions on every stable inventory runtime across Linux, macOS and Windows |
 | Publish | `publish.yml` | Uploads every distribution to PyPI over OIDC, without rebuilding |
 
 The workflow runs and their logs are the authoritative operational record.
@@ -104,6 +104,40 @@ just packaging-distributions
 
 That runs the same two operations the publish workflow performs, in the same order, and
 writes to `var/distributions`.
+
+## Python runtime evidence and promotion
+
+The checked-in runtime inventory is the authority for the release matrix. The
+publish workflow validates its stable rows, builds the three distributions once
+with the exact [`.python-version`](.python-version) builder identity, seals the
+result with a checksum manifest, and runs the same downloaded files on every
+stable runtime in the Linux/macOS/Windows matrix. A runtime can therefore be
+tested before its metadata classifier is promoted.
+
+Keep source-vs-binary evidence separate. Source evidence builds from a clean
+source snapshot and proves that the package can be produced for a runtime.
+Binary evidence installs wheels from the one sealed cohort and proves that
+native dependencies have compatible wheels. A source pass does not substitute
+for a binary pass, and a failed or missing wheel must not be reported as a
+skipped check. Artifact evidence is the final identity check: each runtime must
+smoke-test the exact checksum-verified files that will be uploaded, without a
+per-runtime rebuild.
+
+When a new CPython minor reaches its final release, promote it in this order:
+
+1. Move the `next` row into `stable`, set `current_stable_minor`, and add the
+   following prerelease row in `dev/ci/python-runtime-matrix.json`. Keep the
+   promoted stable row blocking but `classifier_eligible: false` initially.
+2. Run `just python-compatibility` locally from a clean checkout and run the
+   dedicated compatibility workflow. Require source, binary, and sealed-artifact
+   evidence for the new stable row on every supported platform.
+3. Add the exact `Programming Language :: Python :: 3.N` classifier to the root
+   project and both data companions only after the inventory marks that row
+   eligible and the parity gate passes.
+
+Never add a stable classifier for a prerelease row, and never change
+`.python-version` as part of runtime promotion; the builder identity is an
+independent reproducibility coordinate.
 
 ## Release
 

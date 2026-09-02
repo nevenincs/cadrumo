@@ -75,9 +75,8 @@ def _assert_setup_uv_consumers_follow_pin(
                     continue
 
                 matrix = (job.get("strategy") or {}).get("matrix") or {}
-                if (
-                    path != _COMPATIBILITY_WORKFLOW
-                    or not _is_compatibility_matrix_override(selection=selection, matrix=matrix, pin=pin)
+                if path != _COMPATIBILITY_WORKFLOW or not _is_compatibility_matrix_override(
+                    selection=selection, matrix=matrix, pin=pin
                 ):
                     violations.append(f"{path.name}:{job_name}: {selection!r}")
 

@@ -14,7 +14,7 @@ these gates hold.
 
 from __future__ import annotations
 
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import pytest
 
@@ -23,9 +23,9 @@ from ..smoke_absent_llm import (
     _EXTRA,
     _INFERENCE_SURFACES,
     _assert_the_driver_reaches_every_guarded_surface,
-    _exported_names,
     _guard_symbol_for_the_extra,
     _guarded_surfaces_from_production_guards,
+    _is_public_module,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -48,14 +48,19 @@ def test_the_derived_set_is_a_subset_of_what_the_lane_drives() -> None:
     symbol = _guard_symbol_for_the_extra(REPO_ROOT)
     reachable, internal = _guarded_surfaces_from_production_guards(REPO_ROOT, symbol)
     _assert_the_driver_reaches_every_guarded_surface(reachable, internal)
-    assert reachable <= {name for name, _call in _INFERENCE_SURFACES}
+    assert reachable <= {name for _module, name, _call in _INFERENCE_SURFACES}
 
 
-def _synthetic_package(root: Path, *modules: tuple[str, str], exports: tuple[str, ...]) -> Path:
-    """Materialise a minimal ``src/cadrumo/llm`` tree for the derivation to walk."""
+def _synthetic_package(root: Path, *modules: tuple[str, str]) -> Path:
+    """Materialise a minimal ``src/cadrumo/llm`` tree for the derivation to walk.
+
+    The initialiser is written inert, matching the real package: reachability is
+    a property of the module a surface is defined in, so these fixtures place a
+    surface in a public or a private module to say which they mean.
+    """
     package = root / "src" / "cadrumo" / "llm"
     package.mkdir(parents=True)
-    (package / "__init__.py").write_text(f"__all__ = {list(exports)!r}\n", encoding="utf-8")
+    (package / "__init__.py").write_text("__all__: tuple[str, ...] = ()\n", encoding="utf-8")
     for name, body in modules:
         path = package / name
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -68,7 +73,7 @@ def test_a_guard_nested_inside_a_branch_is_still_attributed_to_its_public_callab
     _synthetic_package(
         tmp_path,
         (
-            "_impl.py",
+            "surfaces.py",
             "def public_surface(flag):\n"
             "    if flag:\n"
             "        for _ in range(1):\n"
@@ -78,7 +83,6 @@ def test_a_guard_nested_inside_a_branch_is_still_attributed_to_its_public_callab
             "                raise\n"
             "    return 1\n",
         ),
-        exports=("public_surface",),
     )
     reachable, internal = _guarded_surfaces_from_production_guards(tmp_path, "LLM_EXTRA")
     assert reachable == {"public_surface"}
@@ -90,13 +94,12 @@ def test_a_guard_in_a_nested_helper_attributes_to_the_outermost_public_definitio
     _synthetic_package(
         tmp_path,
         (
-            "_impl.py",
+            "surfaces.py",
             "def public_surface():\n"
             "    def _inner():\n"
             "        require_optional_extra(LLM_EXTRA)\n"
             "    return _inner()\n",
         ),
-        exports=("public_surface",),
     )
     reachable, internal = _guarded_surfaces_from_production_guards(tmp_path, "LLM_EXTRA")
     assert reachable == {"public_surface"}
@@ -112,11 +115,10 @@ def test_a_guard_naming_a_different_extra_is_not_enrolled(tmp_path: Path) -> Non
     _synthetic_package(
         tmp_path,
         (
-            "_impl.py",
+            "surfaces.py",
             "def ours():\n    require_optional_extra(LLM_EXTRA)\n\n"
             "def theirs():\n    require_optional_extra(ANTHROPIC_EXTRA)\n",
         ),
-        exports=("ours", "theirs"),
     )
     reachable, _internal = _guarded_surfaces_from_production_guards(tmp_path, "LLM_EXTRA")
     assert reachable == {"ours"}
@@ -127,14 +129,13 @@ def test_prose_mentioning_the_guard_does_not_enrol_a_surface(tmp_path: Path) -> 
     _synthetic_package(
         tmp_path,
         (
-            "_impl.py",
+            "surfaces.py",
             "def guarded():\n    require_optional_extra(LLM_EXTRA)\n\n"
             "def documented():\n"
             '    """Callers reach this after require_optional_extra(LLM_EXTRA) has run."""\n'
             "    marker = 'require_optional_extra(LLM_EXTRA)'\n"
             "    return marker\n",
         ),
-        exports=("guarded", "documented"),
     )
     reachable, _internal = _guarded_surfaces_from_production_guards(tmp_path, "LLM_EXTRA")
     assert reachable == {"guarded"}, "a mention in prose or a string literal is not a production guard"
@@ -145,7 +146,6 @@ def test_a_guarded_definition_the_package_does_not_export_is_reported_not_droppe
     _synthetic_package(
         tmp_path,
         ("_impl.py", "def _internal():\n    require_optional_extra(LLM_EXTRA)\n"),
-        exports=("something_else",),
     )
     reachable, internal = _guarded_surfaces_from_production_guards(tmp_path, "LLM_EXTRA")
     assert reachable == frozenset()
@@ -154,7 +154,7 @@ def test_a_guarded_definition_the_package_does_not_export_is_reported_not_droppe
 
 def test_a_tree_with_no_production_guard_refuses_rather_than_claiming_completeness(tmp_path: Path) -> None:
     """An empty set makes every downstream assertion vacuously true, so it must fail loudly."""
-    _synthetic_package(tmp_path, ("_impl.py", "def plain():\n    return 1\n"), exports=("plain",))
+    _synthetic_package(tmp_path, ("surfaces.py", "def plain():\n    return 1\n"))
     with pytest.raises(SystemExit, match="empty"):
         _guarded_surfaces_from_production_guards(tmp_path, "LLM_EXTRA")
 
@@ -165,10 +165,21 @@ def test_a_guarded_surface_the_driver_never_reaches_fails_the_coverage_check() -
         _assert_the_driver_reaches_every_guarded_surface(frozenset({"a_surface_no_driver_names"}), frozenset())
 
 
-def test_the_guarded_set_is_read_from_a_literal_all(tmp_path: Path) -> None:
-    """The export set is structural too; a package without a literal ``__all__`` refuses."""
-    package = tmp_path / "src" / "cadrumo" / "llm"
-    package.mkdir(parents=True)
-    (package / "__init__.py").write_text("__all__ = sorted(dir())\n", encoding="utf-8")
-    with pytest.raises(SystemExit, match="no literal __all__"):
-        _exported_names(package / "__init__.py")
+@pytest.mark.parametrize(
+    ("relative", "public"),
+    [
+        ("client.py", True),
+        ("providers/local.py", True),
+        ("_internal.py", False),
+        ("providers/_internal.py", False),
+        ("_private/local.py", False),
+    ],
+)
+def test_reachability_follows_the_module_a_surface_is_defined_in(relative: str, public: bool) -> None:
+    """A surface is reachable when a consumer may import the module defining it.
+
+    This replaced a read of the package's ``__all__``. That namespace is inert
+    by policy, so the old rule classified every guarded surface as internal and
+    the completeness claim it feeds became empty with nothing reporting so.
+    """
+    assert _is_public_module(PurePath(relative)) is public

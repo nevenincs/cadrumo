@@ -16,8 +16,46 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  runtime-inventory:
+    name: Validate stable runtime inventory
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.emit-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.tag }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install Python
+        run: uv python install
+
+      - name: Sync the checked-in lock
+        run: uv sync --frozen
+
+      # The stable rows are the complete support matrix, including runtimes
+      # whose classifier promotion is still waiting on binary/artifact proof.
+      # The separate `next` row is deliberately excluded from this publish
+      # smoke gate while it remains prerelease.
+      - name: Emit stable runtime smoke matrix
+        id: emit-matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          matrix="$(uv run --no-sync python -c 'import json; from dev.ci.python_runtime_matrix import load_runtime_inventory; inventory=load_runtime_inventory(); print(json.dumps({"include":[{"os":os,"runtime-id":row.identifier,"python-version":row.selector,"python-minor":row.minor,"phase":row.phase.value,"blocking":row.blocking} for row in inventory.stable for os in ("ubuntu-latest","macos-latest","windows-latest")]}, separators=(",",":")))')"
+          test -n "$matrix"
+          {
+            echo 'matrix<<STABLE_RUNTIME_MATRIX'
+            echo "$matrix"
+            echo 'STABLE_RUNTIME_MATRIX'
+          } >> "$GITHUB_OUTPUT"
+
   build:
     name: Build
+    needs: runtime-inventory
     # Hosted. The three distributions are py3-none-any, so the build host
     # cannot affect the artifact, and this repository is public. A release
     # must not depend on a self-hosted runner being free or a laptop being
@@ -52,6 +90,14 @@ jobs:
       - name: Refuse a distribution over the index file cap
         run: python -m dev.packaging.distribution_cap --directory dist
 
+      # The checksum manifest is part of the uploaded directory. Every smoke
+      # leg verifies these exact bytes before installing, so no runtime can
+      # silently rebuild or substitute a release file.
+      - name: Seal and verify distribution bytes
+        run: |
+          sha256sum dist/*.whl dist/*.tar.gz | sort > dist/manifest.sha256
+          sha256sum --check dist/manifest.sha256
+
       - name: Upload dist artifacts
         uses: actions/upload-artifact@v7
         with:
@@ -62,11 +108,10 @@ jobs:
 
   smoke-test:
     name: Smoke Test
-    needs: build
+    needs: [build, runtime-inventory]
     strategy:
       fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+      matrix: ${{ fromJSON(needs.runtime-inventory.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -78,13 +123,17 @@ jobs:
         uses: astral-sh/setup-uv@v7
 
       - name: Install Python
-        run: uv python install
+        run: uv python install "${{ matrix.python-version }}"
 
       - name: Download dist artifacts
         uses: actions/download-artifact@v8
         with:
           name: dist
           path: dist/
+
+      - name: Verify sealed distribution bytes
+        shell: bash
+        run: sha256sum --check dist/manifest.sha256
 
       # `--find-links dist` resolves cadrumo and both corpora from the built
       # files while everything else comes from the index, so the exact `==`
@@ -95,7 +144,7 @@ jobs:
         shell: bash
         run: |
           VERSION="${TAG#v}"
-          uv run --isolated --no-project --find-links dist \
+          uv run --isolated --no-project --python "${{ matrix.python-version }}" --find-links dist \
             --with "cadrumo==${VERSION}" \
             dev/smoke/smoke_check.py
         env:

@@ -65,6 +65,36 @@ just provision
 
 Run `just doctor` again after each change to confirm the gap is closed.
 
+## Check Python runtime compatibility
+
+Cadrumo supports CPython 3.13 and every newer released minor listed in
+[`dev/ci/python-runtime-matrix.json`](dev/ci/python-runtime-matrix.json). The
+inventory is the source of truth for local and CI runtime selection. Its
+separate `next` row is a prerelease watch only; it is not a stable support or
+classifier claim until it has been promoted with evidence.
+
+The repository's [`.python-version`](.python-version) is the exact Python
+identity used to build release artifacts. It is deliberately narrower than the
+support floor and must not be changed just to add a runtime to the matrix. To
+install selectors for local checks, run for example:
+
+```console
+uv python install 3.13 3.14
+```
+
+Then run the inventory-driven compatibility command from a clean checkout:
+
+```console
+just python-compatibility
+```
+
+The command writes evidence below `var/python-runtime-compatibility/`. Source
+evidence builds distributions from the source snapshot. Binary evidence installs
+the one sealed release cohort with wheels only. A source pass therefore does not
+prove that native dependencies have compatible wheels; a missing binary wheel is
+a distinct compatibility result and must remain visible rather than being
+silently skipped.
+
 ## Work on the modelo registry
 
 The registry conformance tool reports how much of the modelo registry is

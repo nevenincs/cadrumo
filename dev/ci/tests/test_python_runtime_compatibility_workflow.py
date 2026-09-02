@@ -81,8 +81,7 @@ def _probe_step(job: dict[str, Any], mode: str) -> dict[str, Any]:
     matches = [
         step
         for step in _steps_with_run(job)
-        if "dev.ci.python_runtime_compatibility" in str(step["run"])
-        and f"--mode {mode}" in str(step["run"])
+        if "dev.ci.python_runtime_compatibility" in str(step["run"]) and f"--mode {mode}" in str(step["run"])
     ]
     assert len(matches) == 1, f"expected one {mode} compatibility probe"
     return matches[0]
@@ -101,9 +100,9 @@ def _assert_probe_contract(job: dict[str, Any], *, mode: str) -> None:
     assert "probe_status=$?" in surface
     assert "::error::" in surface
     assert "::warning::" in surface
-    assert "if [ \"${{ matrix.blocking }}\" = \"true\" ]" in surface
+    assert 'if [ "${{ matrix.blocking }}" = "true" ]' in surface
     if mode == "binary":
-        assert '--cohort-dir var/python-runtime-cohort' in surface
+        assert "--cohort-dir var/python-runtime-cohort" in surface
     else:
         assert "--cohort-dir" not in surface
 
@@ -126,7 +125,7 @@ def _assert_evidence_upload_contract(job: dict[str, Any], *, mode: str) -> None:
     assert f"Hash {mode} compatibility evidence" in "\n".join(
         str(step.get("name", "")) for step in job["steps"] if isinstance(step, dict)
     )
-    assert "sha256sum \"$evidence\"" in surface
+    assert 'sha256sum "$evidence"' in surface
 
 
 def test_workflow_has_dedicated_triggers_and_product_identity() -> None:
@@ -245,9 +244,7 @@ def test_binary_rows_download_and_verify_one_cohort() -> None:
     assert "python-runtime-cohort.tar.gz.sha256" in build_surface
     assert "python -m dev.packaging.release_cohort verify" in build_surface
     assert "cadrumo-python-runtime-cohort" in "\n".join(
-        str(step.get("with", {}).get("name", ""))
-        for step in build["steps"]
-        if isinstance(step, dict)
+        str(step.get("with", {}).get("name", "")) for step in build["steps"] if isinstance(step, dict)
     )
 
     binary = document["jobs"]["compatibility-binary"]

@@ -57,7 +57,6 @@ def _assert_quick_single_runtime(document: dict[str, Any]) -> None:
         assert "just packaging-quick" in commands, job_name
 
 
-
 def test_quick_workflow_is_exactly_three_probe_jobs() -> None:
     """One probe job per OS, no matrix, each running the quick recipe with a hard ceiling."""
     document = _quick_document()

@@ -347,6 +347,98 @@ packaging-distributions:
     @uv build --out-dir var/distributions packaging/cadrumo_data_official
     @uv run --no-sync python -m dev.packaging.distribution_cap --directory var/distributions
 
+# Run source and binary compatibility probes for every row in the checked-in
+# runtime inventory. The release cohort is built once; binary rows consume its
+# sealed bytes and never rebuild per runtime. Stable failures are blocking,
+# while the inventory's prerelease canary remains visible as advisory evidence.
+[doc('Run inventory-driven source and binary compatibility probes for every declared Python runtime.')]
+[group('packaging')]
+[unix]
+python-compatibility:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    run_id="$(date -u +%Y%m%dT%H%M%SZ)-$$"
+    run_root="var/python-runtime-compatibility/runs/$run_id"
+    cohort="$run_root/cohort"
+    mkdir -p "$run_root"
+    commit="$(git rev-parse HEAD)"
+    uv run --no-sync python -m dev.packaging.release_cohort build \
+      --output "$cohort" \
+      --expected-commit "$commit"
+    failed=0
+    rows="$(uv run --no-sync python -c 'from dev.ci.python_runtime_matrix import load_runtime_inventory; inventory=load_runtime_inventory(); print("\n".join("\t".join((row.identifier, row.selector, row.phase.value, str(row.blocking).lower())) for row in inventory.rows))')"
+    test -n "$rows"
+    while IFS=$'\t' read -r runtime_id selector stability blocking; do
+      for mode in source binary; do
+        evidence_dir="$run_root/$runtime_id/$mode"
+        evidence="$evidence_dir/compatibility-evidence.json"
+        mkdir -p "$evidence_dir"
+        args=(
+          --mode "$mode"
+          --python "$selector"
+          --runtime-id "$runtime_id"
+          --stability "$stability"
+          --repo-root "$(pwd)"
+          --work-dir "$evidence_dir"
+          --evidence "$evidence"
+        )
+        if [[ "$mode" == binary ]]; then
+          args+=(--cohort-dir "$cohort")
+        fi
+        set +e
+        uv run --no-sync python -m dev.ci.python_runtime_compatibility "${args[@]}"
+        probe_status=$?
+        set -e
+        if [[ "$probe_status" -ne 0 ]]; then
+          if [[ "$blocking" == true ]]; then
+            echo "::error::blocking $mode compatibility probe failed for $runtime_id" >&2
+            failed=1
+          else
+            echo "::warning::advisory $mode compatibility probe failed for $runtime_id" >&2
+          fi
+        fi
+      done
+    done <<< "$rows"
+    exit "$failed"
+
+[doc('Run inventory-driven source and binary compatibility probes for every declared Python runtime.')]
+[group('packaging')]
+[windows]
+python-compatibility:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    $runId = (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssfffZ') + "-$PID"
+    $runRoot = Join-Path (Join-Path (Get-Location) 'var/python-runtime-compatibility/runs') $runId
+    $cohort = Join-Path $runRoot 'cohort'
+    New-Item -ItemType Directory -Force -Path $runRoot | Out-Null
+    $commit = (git rev-parse HEAD).Trim()
+    uv run --no-sync python -m dev.packaging.release_cohort build --output $cohort --expected-commit $commit
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    $rows = @(uv run --no-sync python -c "import json; from dev.ci.python_runtime_matrix import load_runtime_inventory; inventory=load_runtime_inventory(); print(json.dumps([{'runtime_id':row.identifier,'selector':row.selector,'stability':row.phase.value,'blocking':row.blocking} for row in inventory.rows]))" | ConvertFrom-Json)
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    if ($rows.Count -eq 0) { throw 'runtime inventory produced no rows' }
+    $failed = $false
+    foreach ($row in $rows) {
+        foreach ($mode in @('source', 'binary')) {
+            $evidenceDir = Join-Path (Join-Path $runRoot $row.runtime_id) $mode
+            $evidence = Join-Path $evidenceDir 'compatibility-evidence.json'
+            New-Item -ItemType Directory -Force -Path $evidenceDir | Out-Null
+            $args = @('-m', 'dev.ci.python_runtime_compatibility', '--mode', $mode, '--python', $row.selector, '--runtime-id', $row.runtime_id, '--stability', $row.stability, '--repo-root', (Get-Location).Path, '--work-dir', $evidenceDir, '--evidence', $evidence)
+            if ($mode -eq 'binary') { $args += @('--cohort-dir', $cohort) }
+            uv run --no-sync python @args
+            $probeStatus = $LASTEXITCODE
+            if ($probeStatus -ne 0) {
+                if ($row.blocking) {
+                    Write-Host "::error::blocking $mode compatibility probe failed for $($row.runtime_id)"
+                    $failed = $true
+                } else {
+                    Write-Warning "advisory $mode compatibility probe failed for $($row.runtime_id)"
+                }
+            }
+        }
+    }
+    if ($failed) { exit 1 }
+
 # Construct the temporary Python wheel cohort once for the current smoke campaign.
 # The immutable release-cohort builder replaces this transitional constructor.
 [doc('Construct the temporary Python wheel cohort once for the current smoke campaign.')]

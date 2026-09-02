@@ -476,7 +476,18 @@ def _attest_installed_command_specs(
         shutil.rmtree(install_root)
     install_root.mkdir()
     try:
-        _run([uv, "pip", "install", "--target", str(install_root), "--no-deps", str(root_wheel)], cwd=work_root)
+        _run(
+            [
+                uv,
+                "pip",
+                "install",
+                "--target",
+                str(install_root),
+                "--no-deps",
+                digest_install_target("cadrumo", root_wheel),
+            ],
+            cwd=work_root,
+        )
         dependency_site = next(path for path in map(Path, sys.path) if path.name == "site-packages" and path.is_dir())
         environment = os.environ.copy()
         environment["PYTHONPATH"] = ""
