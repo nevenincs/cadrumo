@@ -1,4 +1,4 @@
-"""Focused unit tests for the wizard._translations pure helpers.
+"""Focused unit tests for the wizard translation-audit helpers.
 
 The audit-wizard-translations / audit-cli-translations surface
 exercises the helpers indirectly through three high-level tests in
@@ -15,8 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core.i18n import Translatable as tr
-from .._translations import (
+from cadrumo.core.i18n import Translatable as tr
+from dev.locales.wizard_translation_audit import (
     _FIXED_RUNTIME_KEYS,
     _resolves_in,
     _walk_keys,
@@ -210,7 +210,7 @@ def test_cli_keys_referenced_in_source_omits_f_string_interpolated_keys() -> Non
 def test_cli_keys_referenced_in_source_root_resolves_under_entrypoints_cli() -> None:
     """Sanity-check that the helper's root path resolution lands on the
     real entrypoints/cli directory (the regex walks every .py under it)."""
-    from .._translations import _cli_entrypoints_root
+    from dev.locales.wizard_translation_audit import _cli_entrypoints_root
 
     root = _cli_entrypoints_root()
     assert root.is_dir()

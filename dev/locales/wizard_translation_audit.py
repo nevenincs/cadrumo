@@ -20,10 +20,12 @@ import re
 from collections.abc import Iterable
 from pathlib import Path
 
-from ...core.directory_scan import scan_directory
-from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
-from .catalogue import WIZARD_FLOWS
-from .models import WizardFlow, WizardQuestion
+from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
+from cadrumo.application.wizard.models import WizardFlow, WizardQuestion
+from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
+
+from ._paths import SRC_DIR
 
 _FIXED_RUNTIME_KEYS: tuple[str, ...] = ("wizard.setup.errors.missing_required_flags",)
 
@@ -98,7 +100,7 @@ _CLI_KEY_PATTERN = re.compile(r"['\"](cli\.\w+(?:\.\w+)+)['\"]", re.UNICODE)
 
 
 def _cli_entrypoints_root() -> Path:
-    return Path(__file__).resolve().parent.parent.parent / "entrypoints" / "cli"
+    return SRC_DIR / "entrypoints" / "cli"
 
 
 def cli_keys_referenced_in_source() -> tuple[str, ...]:
