@@ -51,9 +51,7 @@ if TYPE_CHECKING:
     """
 
 
-def with_profile_cli_projection(
-    wizard_command: Callable[..., None], *, mode: WizardPersistMode
-) -> Callable[..., None]:
+def with_profile_cli_projection(wizard_command: Callable[..., None], *, mode: WizardPersistMode) -> Callable[..., None]:
     """Route profile verbs through their canonical CLI projections.
 
     Creation has a dedicated CLI credential door because the setup wizard does

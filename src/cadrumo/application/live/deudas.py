@@ -86,6 +86,7 @@ class PersistedDeudasSnapshot(BaseModel):
     persisted_at: datetime
 
 
+
 def deudas_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
     """Execute this public contract operation."""
     trimmed_bucket = bucket_id.strip()

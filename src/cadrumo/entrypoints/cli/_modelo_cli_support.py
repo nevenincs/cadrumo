@@ -86,6 +86,7 @@ MISSING_INPUT_TRANSLATED_MESSAGES: frozenset[str] = frozenset(
     },
 )
 
+
 def _declared_max_length(alias: object) -> int:
     """Read the max_length a constrained string alias declares.
 
