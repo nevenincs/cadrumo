@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:0355581130e200258e6951d0a9fb11a945c22d0f17e213745c765b098a1ae775'
+body_hash: 'sha256:06b19ed5a92be9cdec8e0ec93b0570ca4f34271725c72e168437b36ca5ec6248'
 step_id: 'S10'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
@@ -42,3 +42,8 @@ consumer imports were normalized to absolute imports, and all repeated bindings
 were refused before reference ambiguity was established. The minimal engine
 correction preserves relative syntax and permits an isolated selected binding
 while continuing to refuse references spanning ambiguous rebindings.
+
+Shared-tree commits `33e9cba96d` and `8642691ae6` absorbed the substantive S10
+engine and test changes before this Step close. Commit `33e9cba96d` also contains
+an unrelated disposition-manifest change; this record claims only the engine
+and test hunks listed above and does not rewrite shared history.
