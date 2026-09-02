@@ -16,7 +16,7 @@ shapes carry a temporal claim:
 - the ``y-siguientes`` suffix claims the window is open-ended;
 - otherwise a single leading year claims that year alone.
 
-Six conditions are reported, and every row names one of them:
+Eight conditions are reported, and every row names one of them:
 
 - ``open_ended_window_not_selectable`` - the revision declares no ``valid_to``,
   which reads as an open-ended window, while its period selector declares

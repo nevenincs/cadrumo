@@ -159,7 +159,7 @@ def test_a_listed_intentional_module_passes_but_remains_visible(planted: Shipped
         rationale="Synthetic design-time vocabulary authority.",
     )
     baseline = UnreachableBaseline(
-        allowed=frozenset({"pkg.deferred", "pkg.deferred.screen"}),
+        allowed=frozenset({"pkg.deferred"}),
         frozen_prefixes=(),
         intentional=(disposition,),
     )
@@ -194,7 +194,7 @@ def test_a_paid_down_intentional_disposition_is_reported_as_stale(planted: Shipp
         rationale="Synthetic authority that has been retired.",
     )
     baseline = UnreachableBaseline(
-        allowed=frozenset({"pkg.stranded", "pkg.deferred", "pkg.deferred.screen"}),
+        allowed=frozenset({"pkg.stranded", "pkg.deferred"}),
         frozen_prefixes=(),
         intentional=(disposition,),
     )
