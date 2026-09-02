@@ -174,7 +174,7 @@ def _stage_bytes(target: Path, payload: bytes, *, label: str) -> Path:
         if f"{_DIGEST_PREFIX}{sha256_file(staged)}" != _digest(payload):
             raise ObjectNameReplayError(f"staged replay bytes failed verification for {target}")
         return staged
-    except Exception:
+    except BaseException:
         if descriptor >= 0:
             os.close(descriptor)
         if staged.exists() and not is_link_like(staged):
@@ -231,10 +231,24 @@ def _restore(
     *,
     root: Path,
     baseline_payloads: dict[str, bytes | None],
+    mutation_intents: dict[str, bytes | None],
     created_directories: tuple[Path, ...],
 ) -> None:
     failures: list[str] = []
-    for relative, payload in sorted(baseline_payloads.items()):
+    restorable: dict[str, bytes | None] = {}
+    for relative, applied_payload in sorted(mutation_intents.items()):
+        baseline_payload = baseline_payloads[relative]
+        try:
+            current_payload = _current_payload(root, relative)
+            if current_payload == baseline_payload:
+                continue
+            if current_payload != applied_payload:
+                failures.append(f"rollback preserves unexpected concurrent bytes: {relative}")
+                continue
+            restorable[relative] = baseline_payload
+        except Exception as exc:
+            failures.append(f"cannot inspect rollback member {relative}: {exc}")
+    for relative, payload in sorted(restorable.items()):
         if payload is not None:
             continue
         try:
@@ -246,7 +260,7 @@ def _restore(
                 fsync_parent_dir(target)
         except Exception as exc:  # rollback must attempt every member
             failures.append(f"{relative}: {exc}")
-    for relative, payload in sorted(baseline_payloads.items()):
+    for relative, payload in sorted(restorable.items()):
         if payload is None:
             continue
         try:
@@ -261,7 +275,7 @@ def _restore(
             directory.rmdir()
         except OSError as exc:
             failures.append(f"cannot remove created directory {directory}: {exc}")
-    for relative, payload in baseline_payloads.items():
+    for relative, payload in restorable.items():
         try:
             target = _safe_path(root, relative, allow_missing_leaf=True)
             actual = None if not target.exists() else target.read_bytes()
@@ -359,6 +373,7 @@ def replay_object_name_component(
     if _snapshot(root, snapshot_paths) != baseline_files:
         raise ObjectNameReplayError("live tree drifted before replay staging")
     stages: dict[str, Path] = {}
+    mutation_intents: dict[str, bytes | None] = {}
     created_directories: list[Path] = []
     transaction_may_be_removed = False
     transaction_root_created_by_this_call = False
@@ -403,8 +418,10 @@ def replay_object_name_component(
                 expected = baseline_payloads[relative]
                 if expected is None:
                     raise ObjectNameReplayError(f"receipt cannot delete an absent path: {relative}")
+                mutation_intents[relative] = None
                 _unlink_regular(root, relative, expected=expected)
             else:
+                mutation_intents[relative] = payload
                 _replace_staged(
                     root,
                     relative,
@@ -421,6 +438,7 @@ def replay_object_name_component(
                 expected = baseline_payloads[relative]
                 if expected is None:
                     raise ObjectNameReplayError(f"receipt cannot delete an absent path: {relative}")
+                mutation_intents[relative] = None
                 _unlink_regular(root, relative, expected=expected)
             else:
                 missing = []
@@ -431,6 +449,7 @@ def replay_object_name_component(
                 target.parent.mkdir(parents=True, exist_ok=True)
                 created_directories.extend(reversed(missing))
                 stages[relative] = _stage_bytes(target, payload, label="generated")
+                mutation_intents[relative] = payload
                 _replace_staged(root, relative, stages[relative], expected=baseline_payloads[relative])
                 stages.pop(relative)
 
@@ -466,6 +485,7 @@ def replay_object_name_component(
             _restore(
                 root=root,
                 baseline_payloads=baseline_payloads,
+                mutation_intents=mutation_intents,
                 created_directories=tuple(created_directories),
             )
         except BaseException as rollback_error:

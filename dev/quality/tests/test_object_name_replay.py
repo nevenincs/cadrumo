@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 from dataclasses import replace
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -186,6 +186,90 @@ def test_mixed_transaction_failure_at_each_mutation_position_rolls_back(
     assert _live_bytes(repo) == before
 
 
+@pytest.mark.parametrize("position", [1, 2])
+def test_staging_failure_at_each_module_output_position_leaves_live_tree_unchanged(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, position: int
+) -> None:
+    repo, inventory, manifest, component, receipt = _module_case(tmp_path)
+    before = _live_bytes(repo)
+    original = replay_module._stage_bytes
+    calls = 0
+
+    def fail_position(*args: Any, **kwargs: Any) -> Path:
+        nonlocal calls
+        calls += 1
+        if calls == position:
+            raise OSError(f"stage-{position}")
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(replay_module, "_stage_bytes", fail_position)
+
+    with pytest.raises(ObjectNameReplayError, match="rolled back"):
+        replay_object_name_component(
+            manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
+        )
+
+    assert _live_bytes(repo) == before
+
+
+@pytest.mark.parametrize(("method", "position"), [("replace", 1), ("replace", 2), ("unlink", 1)])
+def test_failure_after_each_mutation_side_effect_is_still_rolled_back(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, method: str, position: int
+) -> None:
+    repo, inventory, manifest, component, receipt = _module_case(tmp_path)
+    before = _live_bytes(repo)
+    attribute = "_replace_staged" if method == "replace" else "_unlink_regular"
+    original = getattr(replay_module, attribute)
+    calls = 0
+
+    def apply_then_fail(*args: Any, **kwargs: Any) -> None:
+        nonlocal calls
+        calls += 1
+        original(*args, **kwargs)
+        if calls == position:
+            raise OSError(f"after-{method}-{position}")
+
+    monkeypatch.setattr(replay_module, attribute, apply_then_fail)
+
+    with pytest.raises(ObjectNameReplayError, match="rolled back"):
+        replay_object_name_component(
+            manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
+        )
+
+    assert _live_bytes(repo) == before
+
+
+def test_real_rollback_attempts_every_member_and_aggregates_failures(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = tmp_path / "repo"
+    root.mkdir()
+    first = root / "first.py"
+    second = root / "second.py"
+    first.write_bytes(b"applied-one")
+    second.write_bytes(b"applied-two")
+    attempted: list[str] = []
+    original_unlink = Path.unlink
+
+    def refuse_unlink(path: Path, *args: Any, **kwargs: Any) -> None:
+        attempted.append(path.name)
+        raise OSError(f"cannot unlink {path.name}")
+
+    monkeypatch.setattr(Path, "unlink", refuse_unlink)
+    with pytest.raises(ObjectNameReplayError, match=r"rollback was incomplete.*first.py.*second.py"):
+        replay_module._restore(
+            root=root,
+            baseline_payloads={"first.py": None, "second.py": None},
+            mutation_intents={"first.py": b"applied-one", "second.py": b"applied-two"},
+            created_directories=(),
+        )
+    monkeypatch.setattr(Path, "unlink", original_unlink)
+
+    assert attempted == ["first.py", "second.py"]
+    assert first.read_bytes() == b"applied-one"
+    assert second.read_bytes() == b"applied-two"
+
+
 @pytest.mark.parametrize(
     "field",
     [
@@ -292,6 +376,153 @@ def test_occupied_transaction_is_refused_without_deleting_foreign_evidence(tmp_p
         )
 
     assert sentinel.read_bytes() == b"keep\n"
+
+
+@pytest.mark.parametrize("case", ["existing", "absent-target"])
+def test_late_concurrent_bytes_are_preserved_and_rollback_failure_is_visible(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, case: str
+) -> None:
+    if case == "existing":
+        repo, inventory, manifest, component, receipt = _case(tmp_path)
+        contested = "src/example/contracts.py"
+    else:
+        repo, inventory, manifest, component, receipt = _module_case(tmp_path)
+        contested = "src/example/widget.py"
+    original = replay_module._replace_staged
+
+    def race(root: Path, relative: str, staged: Path, *, expected: bytes | None) -> None:
+        if relative == contested:
+            (root / relative).write_bytes(b"concurrent bytes\n")
+        original(root, relative, staged, expected=expected)
+
+    monkeypatch.setattr(replay_module, "_replace_staged", race)
+
+    with pytest.raises(
+        ObjectNameReplayError,
+        match=r"live replay failed and rollback failed.*rollback preserves unexpected concurrent bytes",
+    ):
+        replay_object_name_component(
+            manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
+        )
+
+    assert (repo / contested).read_bytes() == b"concurrent bytes\n"
+
+
+def test_base_exception_during_local_staging_closes_descriptor_and_removes_sibling(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    target = tmp_path / "target.py"
+    original_fdopen = replay_module.os.fdopen
+    monkeypatch.setattr(
+        replay_module.os,
+        "fdopen",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(KeyboardInterrupt()),
+    )
+
+    with pytest.raises(KeyboardInterrupt):
+        replay_module._stage_bytes(target, b"payload", label="stage")
+
+    monkeypatch.setattr(replay_module.os, "fdopen", original_fdopen)
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize("phase", ["mkstemp", "write", "flush", "fsync", "digest", "link"])
+def test_staging_failure_phases_remove_local_sibling(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, phase: str
+) -> None:
+    target = tmp_path / "target.py"
+    original_fdopen = replay_module.os.fdopen
+    original_fsync = replay_module.os.fsync
+    original_link_check = replay_module.is_link_like
+
+    class FailingStream:
+        def __init__(self, stream: Any) -> None:
+            self.stream = stream
+
+        def __enter__(self) -> FailingStream:
+            self.stream.__enter__()
+            return self
+
+        def __exit__(self, *args: Any) -> Any:
+            return self.stream.__exit__(*args)
+
+        def write(self, payload: bytes) -> int:
+            if phase == "write":
+                raise OSError("write")
+            return cast("int", self.stream.write(payload))
+
+        def flush(self) -> None:
+            if phase == "flush":
+                raise OSError("flush")
+            self.stream.flush()
+
+        def fileno(self) -> int:
+            return cast("int", self.stream.fileno())
+
+    if phase == "mkstemp":
+        monkeypatch.setattr(
+            replay_module.tempfile, "mkstemp", lambda **_kwargs: (_ for _ in ()).throw(OSError("mkstemp"))
+        )
+    else:
+        monkeypatch.setattr(
+            replay_module.os,
+            "fdopen",
+            lambda descriptor, mode: FailingStream(original_fdopen(descriptor, mode)),
+        )
+    if phase == "fsync":
+        monkeypatch.setattr(replay_module.os, "fsync", lambda _descriptor: (_ for _ in ()).throw(OSError("fsync")))
+    if phase == "digest":
+        monkeypatch.setattr(replay_module, "sha256_file", lambda _path: "0" * 64)
+    if phase == "link":
+        monkeypatch.setattr(
+            replay_module,
+            "is_link_like",
+            lambda path: ".object-name-stage-" in Path(path).name or original_link_check(path),
+        )
+
+    with pytest.raises((OSError, ObjectNameReplayError)):
+        replay_module._stage_bytes(target, b"payload", label="stage")
+
+    monkeypatch.setattr(replay_module.os, "fsync", original_fsync)
+    remaining = list(tmp_path.iterdir())
+    if phase == "link":
+        assert len(remaining) == 1
+    else:
+        assert remaining == []
+
+
+@pytest.mark.parametrize(
+    "changed_paths",
+    [(), ("src/example/contracts.py", "dev/surplus.py"), ("src/example/contracts.py",) * 2],
+)
+def test_receipt_allowlist_shape_drift_refuses_before_live_write(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, changed_paths: tuple[str, ...]
+) -> None:
+    repo, inventory, manifest, component, receipt = _case(tmp_path)
+    candidate = _retag(replace(receipt, changed_paths=changed_paths, changed_path_digest=_digest(b"temporary")))
+    candidate = _retag(
+        replace(
+            candidate,
+            changed_path_digest=replay_module._digest(replay_module.canonical_json_bytes(list(changed_paths))),
+        )
+    )
+    writes: list[str] = []
+    monkeypatch.setattr(replay_module, "_replace_staged", lambda *_args, **_kwargs: writes.append("replace"))
+    monkeypatch.setattr(replay_module, "_unlink_regular", lambda *_args, **_kwargs: writes.append("unlink"))
+
+    with pytest.raises(ObjectNameReplayError):
+        replay_object_name_component(
+            manifest, inventory=inventory, component=component, receipt=candidate, repo_root=repo
+        )
+
+    assert writes == []
+
+
+@pytest.mark.parametrize("relative", ["../outside.py", "/absolute.py", ".git/config", "dev\\bad.py"])
+def test_unsafe_replay_path_forms_are_refused(tmp_path: Path, relative: str) -> None:
+    root = tmp_path.resolve()
+    with pytest.raises(ObjectNameReplayError, match="unsafe replay path"):
+        replay_module._safe_path(root, relative, allow_missing_leaf=True)
 
 
 @pytest.mark.parametrize("failure", ["stage", "replace", "post-gate", "finding", "changed-path", "content"])
