@@ -509,6 +509,8 @@ def rehearse_object_name_component(
             raise ObjectNameRehearsalError("verified temporary snapshot differs from the current tree")
         copied_inventory = scan((temporary_root / "src", temporary_root / "dev"), temporary_root)
         copied_inventory_digest = to_json(copied_inventory)["inventory_digest"]
+        if not isinstance(copied_inventory_digest, str):
+            raise ObjectNameRehearsalError("copied inventory did not emit a string digest")
         try:
             result = plan_object_name_transformation(component_manifest, repo_root=temporary_root)
         except ObjectNameTransformError as exc:
@@ -613,10 +615,7 @@ def rehearse_object_name_component(
         raise ObjectNameRehearsalError(f"rehearsal failed; retained rehearsal root: {temporary_root}") from exc
     finally:
         try:
-            current_paths = _git_snapshot_paths(root)
-            final_source_unchanged = (
-                current_paths == snapshot_paths and _snapshot(root, current_paths) == baseline_files
-            )
+            final_source_unchanged = _snapshot(root, guarded_paths) == receipt_baseline_files
         except Exception as exc:
             raise ObjectNameRehearsalError(
                 f"cannot verify source immutability; retained rehearsal root: {temporary_root}"

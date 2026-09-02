@@ -518,7 +518,7 @@ def test_post_gate_filesystem_side_effect_must_equal_allowlist(tmp_path: Path) -
 def test_live_tree_mutation_during_gate_is_refused_and_retains_root(tmp_path: Path, return_code: int) -> None:
     repo = tmp_path / "repo"
     inventory, manifest, component = _fixture(repo)
-    live_path = repo / "dev/tracked.txt"
+    live_path = repo / "src/example/contracts.py"
     original = live_path.read_bytes()
     gate = (
         sys.executable,
@@ -537,6 +537,31 @@ def test_live_tree_mutation_during_gate_is_refused_and_retains_root(tmp_path: Pa
                 repo_root=repo,
             )
         assert Path(str(raised.value).rsplit("retained rehearsal root: ", 1)[1]).is_dir()
+    finally:
+        live_path.write_bytes(original)
+
+
+def test_unrelated_live_tree_mutation_does_not_stale_selected_component(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    inventory, manifest, component = _fixture(repo)
+    live_path = repo / "dev/tracked.txt"
+    original = live_path.read_bytes()
+    gate = (
+        sys.executable,
+        "-c",
+        f"from pathlib import Path; Path({str(live_path)!r}).write_bytes(b'unrelated peer edit')",
+    )
+    operation = manifest.operations[0].model_copy(update={"focused_gates": (gate,)})
+    mutated_manifest = manifest.model_copy(update={"operations": (operation,)})
+
+    try:
+        receipt = rehearse_object_name_component(
+            mutated_manifest,
+            inventory=inventory,
+            component=component,
+            repo_root=repo,
+        )
+        assert receipt.source_tree_unchanged
     finally:
         live_path.write_bytes(original)
 
