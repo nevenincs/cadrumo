@@ -27,9 +27,7 @@ _LOCK_SHA256 = "a" * 64
 def _runtime_entry(runtime: str, filename: str, payload: bytes) -> dict[str, object]:
     """Build one strict ready entry whose bytes are supplied by the archive."""
     return {
-        "platforms": {
-            target.name: {"native-dependency": filename} for target in SUPPORTED_TARGETS
-        },
+        "platforms": {target.name: {"native-dependency": filename} for target in SUPPORTED_TARGETS},
         "python": runtime,
         "status": "ready",
         "wheels": {
