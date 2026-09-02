@@ -569,10 +569,6 @@ errors:
       kompatibilis az adattárával.
     integrity_storage_corpus_bundle: A corpuscsomagot nem sikerült feldolgozni vagy
       ellenőrizni.
-    integrity_storage_corpus_bundle_signature: A korpuszcsomag hitelességi aláírása
-      nem volt ellenőrizhető.
-    integrity_storage_corpus_bundle_signing_key_not_found: A kért útvonalon nem található
-      korpuszcsomag-aláíró kulcspár.
     integrity_storage_corpus_bundle_verification: A corpuscsomag nem teljesítette
       az ellenőrzőösszeg-ellenőrzést a beágyazott jegyzékkel szemben.
     integrity_storage_corpus_manifest: A corpus manifesztet nem sikerült elemezni

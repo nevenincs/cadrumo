@@ -607,10 +607,6 @@ errors:
     integrity_storage_classification: La clase de sensibilidad declarada de un registro
       es incompatible con su repositorio.
     integrity_storage_corpus_bundle: El paquete del corpus no pudo analizarse ni verificarse.
-    integrity_storage_corpus_bundle_signature: No se pudo verificar la firma de autenticidad
-      del paquete de corpus.
-    integrity_storage_corpus_bundle_signing_key_not_found: No se encontró ningún par
-      de claves de firma del paquete de corpus en la ruta solicitada.
     integrity_storage_corpus_bundle_verification: El paquete del corpus no superó
       la verificación de sumas de comprobación frente a su manifiesto incorporado.
     integrity_storage_corpus_manifest: El manifiesto del corpus no se pudo leer o

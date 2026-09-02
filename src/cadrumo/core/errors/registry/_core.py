@@ -318,26 +318,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.corpus_manifest._bundle_signing.CorpusBundleSigningError",
-        ErrorCode(
-            code="INTEGRITY_STORAGE_CORPUS_BUNDLE_SIGNATURE",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.integrity_storage_corpus_bundle_signature",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.core.corpus_manifest._bundle_signing.CorpusBundleSigningKeyNotFoundError",
-        ErrorCode(
-            code="INTEGRITY_STORAGE_CORPUS_BUNDLE_SIGNING_KEY_NOT_FOUND",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.integrity_storage_corpus_bundle_signing_key_not_found",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.core.access_gate.errors.AccessGateSubmissionError",
         ErrorCode(
             code="ERROR_ACCESS_GATE_SUBMISSION",

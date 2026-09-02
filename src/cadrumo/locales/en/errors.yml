@@ -555,10 +555,6 @@ errors:
     integrity_storage_classification: A record's declared sensitivity class is incompatible
       with its repository.
     integrity_storage_corpus_bundle: The corpus bundle could not be parsed or verified.
-    integrity_storage_corpus_bundle_signature: The corpus bundle's authenticity signature
-      could not be verified.
-    integrity_storage_corpus_bundle_signing_key_not_found: No corpus-bundle signing
-      keypair was found at the requested path.
     integrity_storage_corpus_bundle_verification: The corpus bundle failed checksum
       verification against its embedded manifest.
     integrity_storage_corpus_manifest: The corpus manifest could not be parsed or

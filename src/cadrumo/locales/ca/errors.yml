@@ -615,10 +615,6 @@ errors:
       és incompatible amb el seu repositori.
     integrity_storage_corpus_bundle: El paquet del corpus no s'ha pogut analitzar
       ni verificar.
-    integrity_storage_corpus_bundle_signature: No s'ha pogut verificar la signatura
-      d'autenticitat del paquet de corpus.
-    integrity_storage_corpus_bundle_signing_key_not_found: No s'ha trobat cap parell
-      de claus de signatura del paquet de corpus al camí sol·licitat.
     integrity_storage_corpus_bundle_verification: El paquet del corpus no ha superat
       la verificació de sumes de comprovació respecte al seu manifest incorporat.
     integrity_storage_corpus_manifest: El manifest del corpus no s'ha pogut llegir
