@@ -15,6 +15,16 @@ from ...domain.iva.classification import (
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.iva.supply_nature import SupplyNature
 
+__all__ = [
+    "NATURE_INDIFFERENT_KIND",
+    "NATURE_TO_KIND",
+    "axis_forks_the_law",
+    "counterparty_identification_field",
+    "domestic_rate_tier_is_reachable",
+    "facts_consumed",
+    "state_for_field",
+]
+
 #: What a printed supply nature contributes to the table's kind axis.
 #:
 #: Only the general services member is reachable from printed evidence. The
