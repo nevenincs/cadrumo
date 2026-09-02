@@ -3755,3 +3755,93 @@ tree outside it - which is every constructed fixture. The remedy was in the modu
 than the test: the path is now anchored to the repository when it sits inside one and to
 the scanned root otherwise. A screen that can only be run over the repository cannot be
 shown to detect anything the repository does not already contain.
+
+### The nine same-layer collisions are adjudicated, and four of them are defects
+
+Reporting nine shared names was the easy half. Each was read, and they do not divide the
+way a count would suggest: three are fine, four want a rename or a merge, one is a defect
+in the code rather than the name, and the single pair with byte-identical bodies is the
+least interesting of the nine.
+
+`resolve_bucket_event_repository` is the sharpest and is classed on its own as a contract
+conflict. Two definitions in `application/ledger` share a signature and disagree about
+what they accept: one returns the protocol and takes any implementation, the other
+returns the concrete class and asserts the argument is that class. A caller passing a
+valid protocol implementation that is not the concrete type fails - and the guard is an
+`assert`, so under `python -O` it disappears entirely and the return annotation goes on
+promising something the function no longer checks. This cannot be settled by renaming;
+someone has to decide which contract is right.
+
+`extract_pages_text_from_bytes` is the most confusing shape rather than the most severe.
+The `adapters/inbound/pdf` definition is the shared primitive - it takes an explicit
+`error_class` and `pdf_label`, which is what makes it reusable - and the declaracion
+backend's function is one of its callers, adding a pypdfium2 fast path with
+declaration-specific canaries. A primitive and its own caller sharing a name reads as two
+competing implementations, which is the one thing it is not.
+
+Two are plain duplication: `extract_verdict_from_response_text`, byte-identical in one
+package and already dependent on that package's shared marker table, and
+`validate_category_id`, where the support module carries the reasoned version naming the
+closed taxonomy and the rules CLI re-derives the same refusal.
+
+Three are legitimate and were nearly miscounted as defects. `extract_pages_text` names
+the same role in two inbound families and is reached by module path; the parallel naming
+is what makes the two backends recognisable as the same thing. `review_view` is two Typer
+commands over different subjects, distinguished at every call site by arity. And
+`active_profile_label` has two definitions with different cost contracts on purpose: one
+resolves the pointer and reads the manifest, the other picks from rows already joined
+specifically to avoid re-reading it. Collapsing that pair would make the list command
+repeat work it has already done.
+
+The reasoning is now a dispositions file with a gate that refuses in both directions, the
+same shape the generated trees use. An unadjudicated collision fails; a row whose
+collision has been resolved fails too, so an explanation cannot outlive its cause. It
+stores no count: a tenth collision fails whatever the nine say.
+
+Cross-layer collisions deliberately carry no rows. A layer restating a concept in its own
+vocabulary is what the boundary is for, and demanding a written reason for each of the
+twelve would bury these nine - which is the same mistake, in a different costume, as the
+141 false drift verdicts recorded earlier in this audit.
+
+### The dangerous form of constant duplication never crosses a public boundary
+
+Earlier passes counted constants sharing a name and a value. That is the harmless form.
+The dangerous one is a name carrying two *different* values, because a reader who greps
+it gets two truths and nothing in the name says which one the code in front of them
+reached.
+
+Measured across the shipped package: 28 names repeat with one agreed value, and 16 names
+carry conflicting values. Not one of the 16 is public. Every conflict sits behind a
+leading underscore, and that is what makes them safe rather than lucky - a private
+constant cannot be imported, so two modules holding different values under one private
+name are two local facts that never meet. `_MODULE` naming its own module, `_PAYLOADS`
+naming its own payload module, `_SUBMIT_SELECTORS` carrying one page's selectors,
+`_MAX_REPLY_TOKENS` tuned per prompt at 1024 and 200: each is correct where it sits and
+would be wrong anywhere else.
+
+This is the architecture rule earning its keep rather than a coincidence worth
+celebrating, so the invariant is now gated on visibility instead of on disagreement. A
+gate refusing every disagreement would demand the collapse of sixteen correct
+declarations; a gate refusing a public disagreement protects the case where a consumer
+choosing an import has no signal that the choice changes the value. The corpus satisfies
+it at zero, and a planted public conflict is caught in the same suite, so zero means
+clean rather than blind.
+
+Two deliberate refusals in the screen. A constant built by a call or comprehension is
+skipped rather than approximated, because a guessed value would report agreement or
+conflict the source does not support. And a boolean is not a shared value: `True` under
+one name in two modules is evidence of nothing.
+
+### The size baseline caught a growth that was mine
+
+The evidence-tier repair grew `_workbook_parity.py` from 1399 to 1403 lines and tripped a
+reviewed-size baseline. The failure was correctly attributed to this campaign rather than
+to the enum conversion, which is the only reason it did not join the inherited residue.
+
+The baseline was not raised. Raising another contributor's reviewed ceiling to
+accommodate one's own growth is precisely what a size gate exists to prevent, and this
+audit has argued twice already that a gate diluted by accommodation stops naming
+anything. The four lines came from wrapping one over-long return; binding the four tier
+members to locals once at the top of the function removed the wrap and brought the module
+to 1396, three lines below where it started. The gate passes, the 24 marker-held parity
+tests still pass, and the function reads better than either previous version.
