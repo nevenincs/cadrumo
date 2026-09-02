@@ -59,16 +59,16 @@ review_condition = "Encrypted schema-v3 persistence, the canonical inventory res
 expires_on = 2026-12-31
 capability_locators = [
   "src/cadrumo/adapters/persistence/profile/inventory.py:121",
-  "src/cadrumo/application/inventory/_source_readiness.py:32",
+  "src/cadrumo/application/aggregation/_inventory.py:63",
+  "src/cadrumo/application/modelo/calculation_actions.py:838",
   "src/cadrumo/domain/contribuyente/inventory/__init__.py:1161",
   "src/cadrumo/domain/contribuyente/inventory/__init__.py:1367",
-  "src/cadrumo/application/inventory/_service.py:413",
+  "src/cadrumo/application/inventory/service.py:413",
   "src/cadrumo/entrypoints/cli/_app_ledger_inventory_command_specs.py:28",
   "src/cadrumo/entrypoints/cli/_app_ledger_inventory_analysis_command_specs.py:26",
 ]
 capability_ids = [
   "secure_repository:src/cadrumo/adapters/persistence/profile/inventory.py:InventoryLedgerRepository",
-  "source_readiness:src/cadrumo/application/inventory/_source_readiness.py:inventory_source_readiness",
   "calculation_helper:src/cadrumo/domain/contribuyente/inventory/__init__.py:resolve_inventory_authoritative_closing",
   "calculation_helper:src/cadrumo/domain/contribuyente/inventory/__init__.py:compute_inventory_anexo_d_projection",
   "ingress:src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:inventory_create",
@@ -92,8 +92,13 @@ summary = "Encrypted FINANCIAL schema-v3 inventory ledger repository persists ac
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/application/inventory/_source_readiness.py:32"
-summary = "Executable readiness acknowledges the connected resolver, source mesh, registry row bindings, orchestration, source identity, and caller-override refusal while remaining false for missing repeated-row materialization, filing rendering, and end-to-end verification."
+reference = "src/cadrumo/application/aggregation/_inventory.py:63"
+summary = "The live InventorySourceResolver owns the inventory source-mesh handoff, selects exact activity/year ledgers, and refuses incomplete or conflicting row-template and storage states."
+
+[[entries.grounding]]
+locator_kind = "repository"
+reference = "src/cadrumo/application/modelo/calculation_actions.py:838"
+summary = "The production calculation action enrolls InventorySourceResolver in the Modelo 100 source mesh when inventory bindings are declared, preserving resolver identity and diagnostics."
 
 [[entries.grounding]]
 locator_kind = "repository"
@@ -102,7 +107,7 @@ summary = "The strict 2025 source-owned projection emits complete acquisition co
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/application/inventory/_service.py:413"
+reference = "src/cadrumo/application/inventory/service.py:413"
 summary = "The application persists the reviewed closing-authority record through the encrypted inventory repository with replay and divergent-replacement refusal."
 
 [entries.bounded_follow_up]

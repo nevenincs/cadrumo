@@ -56,8 +56,6 @@ allowed = [
   "cadrumo.adapters.outbound.aeat.verify",  # unreachable
   "cadrumo.adapters.persistence.profile.filing_export_replay",  # unreachable
   "cadrumo.adapters.persistence.profile.fincas",  # unreachable
-  "cadrumo.application.inventory._source_readiness",  # unreachable
-  "cadrumo.application.invoices._reconciliation",  # unreachable
   "cadrumo.application.modelo._edit_facade",  # unreachable
   "cadrumo.application.modelo.edit_session",  # unreachable
   "cadrumo.application.operator_surface.calculation_workflows",  # unreachable
