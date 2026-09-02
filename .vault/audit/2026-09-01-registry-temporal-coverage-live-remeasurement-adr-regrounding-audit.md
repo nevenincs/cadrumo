@@ -5424,3 +5424,36 @@ That distinction - repair what the rename makes unambiguous, leave what it does 
 same one this campaign applied to the export trees and to the twenty-one classifications. A
 gap that stays visible costs a failing check. A guess that looks like a repair costs the next
 reader their assumption that the file means what it says.
+
+### The twenty-one modules are ruled, and the ruling came from the loader rather than from reading
+
+Five classification rules now cover every module the refactor left unruled, and the census
+reports zero unclassified where it reported twenty-one. The Step asked for grounded rulings
+rather than key repair, and what grounds them is a measurement rather than an opinion about
+what each module is for: a module is `live` when `sys.modules` holds it after the bundled
+authority has loaded, and `conditionally_reachable` when it does not.
+
+Nineteen are live. They group by the importers the census reports, which is what the triggers
+name: the record-design parse chain, nine modules that the PDF orchestration, workbook reader
+and shared layout markers were split into; the binding families, five carrying parts of the
+compilation that runs on every load; three the revision validators import directly; and the
+modelo 100 formula runtime split.
+
+Two are not, and they are the interesting pair. Neither `_withholding_rows` nor
+`calculation_revision_identity` appears in `sys.modules` after a load, and neither has a single
+module-level importer. The first is imported from inside the function that uses it, which is
+the break for the cycle it forms with `withholding_bindings` and cannot be hoisted without
+restoring the cycle - the same finding that repaired the closure test earlier in this campaign,
+now doing a second job.
+
+The rule table caught an error in the rules written for it, which is the behaviour worth
+recording. `calculation_revision_identity` was written with the registry prefix every other
+member carries, and it lives under `domain.modelos`. The census reported one module still
+unclassified and one new stale member simultaneously - the same mistake seen from both ends -
+and the rule refuses in both directions precisely so that a member pointing at nothing cannot
+sit quietly beside a module nobody ruled.
+
+The Step is closed on its stated subject. The census is not yet clean: thirteen stale entries
+remain, twelve naming core modules outside the census universe and one naming the `snapshot`
+module whose successor is ambiguous. Both were separated from this work in the previous finding
+and neither is what this Step asked for.

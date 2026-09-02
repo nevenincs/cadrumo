@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:d91a4c735818abd2e742a74fcf6b3e29bfdc5559f376e726ae5cfdbefcd33fc4'
+body_hash: 'sha256:5fcfbe98a19e30f0590078fa68200e3f0f69f45911ed7c71a507bb8df7595e29'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -193,7 +193,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S117` - Cut the seventeen hundred isolated snapshots the closure composers take for one hundred and twenty-eight rows, without memoising above the authority; `src/cadrumo/application/registry/temporal_coverage.py`.
 - [x] `W02.P02.S118` - Add an authority accessor returning the admitted revision identifier without the isolating deep copy, and move the temporal coverage composer onto it; `src/cadrumo/domain/calculations/registry/authority.py`.
 - [x] `W02.P02.S119` - Re-point the forty-four stale branch adjudication keys the private-to-public module rename invalidated; `dev/registry/analysis/modelo_branch_classification.toml`.
-- [ ] `W02.P02.S120` - Adjudicate the seven split-out modules and twenty-one newly reachable modules the refactor created, which needs grounded rulings rather than key repair; `dev/registry/analysis`.
+- [x] `W02.P02.S120` - Adjudicate the seven split-out modules and twenty-one newly reachable modules the refactor created, which needs grounded rulings rather than key repair; `dev/registry/analysis`.
 - [x] `W02.P02.S121` - Decide whether the static load closure should exclude function-scoped import edges, or hoist the deferred import that makes it disagree with a real load; `dev/registry/analysis/load_census.py`.
 - [x] `W02.P02.S125` - Probe every construct-evidence coordinate through the identifier accessor and materialise only the snapshot the ledger reads; `src/cadrumo/domain/calculations/registry/coverage.py`.
 - [x] `W02.P02.S126` - Remove the plan step identifiers embedded in the modelo 200 revision declarations; `src/cadrumo/_data/registry/aeat/modelos/200/revisions`.
