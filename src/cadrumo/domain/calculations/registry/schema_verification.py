@@ -125,6 +125,19 @@ importantly, so a method removed from read-only cannot silently survive here.
 """
 
 
+class ProfilePredicateOp(StrEnum):
+    """The comparison a profile predicate performs."""
+
+    EQUALS = "equals"
+    NOT_EQUALS = "not_equals"
+
+
+ProfilePredicateOpField = Annotated[
+    ProfilePredicateOp, BeforeValidator(coerce_enum_member(ProfilePredicateOp))
+]
+"""Registry token hydrated into a ProfilePredicateOp member."""
+
+
 class LiveVerificationSurface(StrEnum):
     """The kind of AEAT surface a live cross-reference verifies against.
 
@@ -227,7 +240,7 @@ class ProfilePredicateDefinition(RegistryModel):
     """Declare one profile condition that controls verification applicability."""
 
     field: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z_][A-Za-z0-9_.-]*$")
-    op: Literal["equals", "not_equals"]
+    op: ProfilePredicateOpField
     value: ProfileFactValue
     explanation: str = Field(min_length=1)
     legal_refs: LegalRefs
