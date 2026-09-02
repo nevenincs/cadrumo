@@ -18,6 +18,7 @@ classifiers = [
   "Intended Audience :: Developers",
   "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Office/Business :: Financial",
 ]
 
@@ -27,8 +28,8 @@ dependencies = [
   # per-file cap; they are exact-version runtime dependencies because the CLI
   # cannot perform grounded tax work without both corpus slices.
   "anyio>=4.5,<5",
-  "cadrumo-data-manuals==0.2.2",
-  "cadrumo-data-official==0.2.2",
+  "cadrumo-data-manuals==0.2.2", # x-release-please-version
+  "cadrumo-data-official==0.2.2", # x-release-please-version
   "mcp>=2,<3",
   # Capability-gated integrations live in [project.optional-dependencies].
   # `anthropic` (Anthropic-API LLM provider), the `google-*` stack
@@ -370,6 +371,9 @@ dev = [
   # Contract definition lives in `.importlinter` at repo root; activated by
   # the architecture boundary checks.
   "import-linter>=2.0",
+  # Formatting-preserving syntax engine for the repository-owned, manifest-
+  # bounded object-name rename transforms. Development tooling only.
+  "libcst>=1.9.0",
   # The capability-gated optional integrations (now in
   # [project.optional-dependencies]) are pulled into the dev/test/CI
   # environment here so the full test suite — which imports every adapter —
