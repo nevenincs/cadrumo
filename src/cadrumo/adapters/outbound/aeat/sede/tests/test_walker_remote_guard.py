@@ -152,7 +152,7 @@ class TestOffHostNavigationIsRefusedBeforeItHappens:
         with pytest.raises(RegistryValidationError) as walker_exc:
             walker._assert_read_http("GET", url)
         with pytest.raises(RegistryValidationError) as declarations_exc:
-            _declarations_fetch._assert_read_http("GET", url)
+            _declarations_fetch.assert_declarations_read_http("GET", url)
 
         # Absolute, per reader.
         assert _host_of(url) in str(walker_exc.value)

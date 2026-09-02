@@ -38,8 +38,6 @@ from ._declarations_support import (
     Path,
     RegistryValidationError,
     SedeParseError,
-    _assert_read_browser_action,
-    _assert_read_http,
     _declaration_pdf_payload,
     _filed_observation,
     _isolate_secure_object_backend,  # noqa: F401
@@ -48,6 +46,8 @@ from ._declarations_support import (
     _observed_casillas_from_declaration_pdf,
     _read_guard_policy_from_snapshot,
     _submitted_file_payload,
+    assert_declarations_read_browser_action,
+    assert_declarations_read_http,
     calculate_registry_snapshot,
     date,
     datetime,
@@ -634,13 +634,13 @@ class TestReadOperationGuard:
         assert policy.classification == "authenticated_read_surface"
         assert policy.requires_authentication is True
         assert policy.requires_aeat_authorization is True
-        _assert_read_http(
+        assert_declarations_read_http(
             "GET",
             _DECLARATIONS_LISTING_URL,
             policy=policy,
         )
         with pytest.raises(RegistryValidationError, match="remote write method"):
-            _assert_read_http(
+            assert_declarations_read_http(
                 "POST",
                 _DECLARATIONS_LISTING_URL,
                 policy=policy,
@@ -654,33 +654,33 @@ class TestReadOperationGuard:
         ),
     )
     def test_allowed_get_read_surfaces(self, url: str) -> None:
-        _assert_read_http("GET", url)
+        assert_declarations_read_http("GET", url)
 
     @pytest.mark.parametrize("action", ("open-cotejo-pdf", "download-filed-data-file"))
     def test_allowed_browser_actions(self, action: str) -> None:
-        _assert_read_browser_action(action)
+        assert_declarations_read_browser_action(action)
 
     def test_unclassified_browser_action_rejected(self) -> None:
         with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
-            _assert_read_browser_action("new-unreviewed-declarations-click")
+            assert_declarations_read_browser_action("new-unreviewed-declarations-click")
 
     def test_register_download_external_host_rejected(self) -> None:
         with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
-            _assert_read_http(
+            assert_declarations_read_http(
                 "GET",
                 f"https://example.test{_DECLARATIONS_LISTING_BASE_PATH}/zkau?dtid=z_test&cmd_0=download",
             )
 
     def test_non_read_method_rejected(self) -> None:
         with pytest.raises(RegistryValidationError, match="remote write method"):
-            _assert_read_http(
+            assert_declarations_read_http(
                 "POST",
                 f"{_COTEJO_DOCUMENT_URL}?CSV=S3RASL6U73H49Y83",
             )
 
     def test_mutating_action_rejected(self) -> None:
         with pytest.raises(RegistryValidationError, match="browser action token"):
-            _assert_read_browser_action("Presentar declaracion")
+            assert_declarations_read_browser_action("Presentar declaracion")
 
 
 class TestFiledObservationBindings:
