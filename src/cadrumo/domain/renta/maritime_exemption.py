@@ -45,7 +45,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Literal
+from enum import StrEnum
+from typing import Final, Literal
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.external_constants import ART_7P_EXEMPTION_CAP_EUR, REBECA_MARITIME_EXEMPTION_FRACTION
@@ -107,6 +108,36 @@ class ProfileCompletenessError(RentaError):
 # ---------------------------------------------------------------------------
 
 
+class VesselRegistry(StrEnum):
+    """Which register a vessel is entered in, for the maritime exemption gate.
+
+    Legal authority: Ley 19/1994 Arts. 73.2, 73.3, 75.1, 75.3 (BOE-A-1994-15794), which
+    is cited beside the selector that reads this. The member meanings live with that
+    authority; the tokens are reproduced here exactly as declared, including the
+    upper-case ``REBECA``, because they are stored values and not display text.
+    """
+
+    REBECA = "REBECA"
+    REBECA_EU_EEA = "rebeca_eu_eea"
+    SCHEDULED_CANARY_ROUTE = "scheduled_canary_route"
+
+
+VesselRegistryValue = Literal[
+    VesselRegistry.REBECA,
+    VesselRegistry.REBECA_EU_EEA,
+    VesselRegistry.SCHEDULED_CANARY_ROUTE,
+]
+"""The same registers for a fact field or a boundary parser's return."""
+
+ELIGIBLE_VESSEL_REGISTRIES: Final[frozenset[VesselRegistry]] = frozenset(VesselRegistry)
+"""Every register that satisfies the selector.
+
+Built from the enum itself rather than relisted, so a register added to the vocabulary
+cannot be left out of the eligibility test -- which is exactly what a hand-written copy
+of the three tokens invited.
+"""
+
+
 @dataclass(frozen=True, slots=True)
 class MaritimeWorkerFacts:
     """Resolved profile facts that gate maritime exemption pathway selection.
@@ -134,7 +165,7 @@ class MaritimeWorkerFacts:
     worker_class: str | None = None
     vessel_flag: Literal["ES", "foreign"] | None = None
     waters_type: Literal["national", "international"] | None = None
-    vessel_registry: Literal["REBECA", "rebeca_eu_eea", "scheduled_canary_route"] | None = None
+    vessel_registry: VesselRegistryValue | None = None
     tuna_fleet: bool = False
     pending_eu_clearance: bool = False
     retmar_registered: bool = False
@@ -179,7 +210,7 @@ def rebeca_eligible(facts: MaritimeWorkerFacts) -> bool:
     """
     if facts.worker_class != "trabajador_del_mar":
         return False
-    return facts.vessel_registry in {"REBECA", "rebeca_eu_eea", "scheduled_canary_route"}
+    return facts.vessel_registry in ELIGIBLE_VESSEL_REGISTRIES
 
 
 def da41_eligible(facts: MaritimeWorkerFacts) -> bool:
