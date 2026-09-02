@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:ef5e4250a57a41008eb406de7031e398d81acfba5dbdf32211a77756705cc6cd'
+body_hash: 'sha256:96f4e892f7cf03c8efd45bd4fe8f3b068842170ab05fef863523f1f6ee2b19ae'
 ---
 
 <!-- RETIRED: S73 -->
@@ -409,6 +409,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S170` - Carry the workbook evidence tier as the typed enum its own signature already declared; `dev/registry/parity/_workbook_parity.py`.
 - [x] `W06.P13.S171` - Separate the twice-reproducible determinism claim from the shipped-tree equality claim in the envelope proof; `dev/registry/tests/test_m303_generated_envelope_proof.py`.
 - [x] `W06.P13.S172` - Report every test module the default lane cannot select, separating a module in another lane from one no lane selects at all; `dev/quality/default_lane_visibility.py,dev/quality/tests/test_default_lane_visibility.py`.
+- [ ] `W06.P13.S173` - Adjudicate every same-layer name collision and gate that each stays explained and each explanation stays live; `dev/quality/name_collision_dispositions.toml,dev/quality/tests/test_name_collision_dispositions.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
