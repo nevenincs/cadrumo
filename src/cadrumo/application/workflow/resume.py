@@ -559,7 +559,8 @@ def resolve_modelo_workflow_run_for_resume(
     from ..modelo.work_addressing import ModeloExactWorkUnitTarget, ModeloWorkAddress, resolve_modelo_work_target
 
     resolution = resolve_modelo_work_target(target, catalogue=catalogue, bucket_id=bucket_id)
-    assert resolution.work_unit is not None
+    if resolution.work_unit is None:
+        raise WorkflowError("a resolved modelo work target must carry the work unit the resume reads")
     exact_target = isinstance(target, ModeloExactWorkUnitTarget) or (
         isinstance(target, ModeloWorkAddress) and target.work_unit_id is not None
     )
@@ -708,7 +709,8 @@ def _workflow_resume_run_candidate(
     work_unit_id: str | None = None,
     short_work_unit_id: str | None = None,
 ) -> WorkflowResumeRunCandidate:
-    assert run.obligation is not None
+    if run.obligation is None:
+        raise WorkflowError("a resumable workflow run must carry the obligation it filed against")
     return WorkflowResumeRunCandidate(
         run_id=run.run_id,
         modelo=run.obligation.modelo,

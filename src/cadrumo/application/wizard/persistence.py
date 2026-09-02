@@ -370,7 +370,8 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
 
     meses = row.get("meses-madre-trabajo") or ""
     birth_date = parse_iso8601_date(row["birth-date"])
-    assert birth_date is not None
+    if birth_date is None:
+        raise WorkflowInputMismatchError("a stored descendant row must carry a readable birth date")
     rentas = row.get("rentas-anuales", "").strip()
     prorrata = row.get("prorrata-minimo", "").strip()
     dependencia_raw = row.get("dependencia-economica", "").strip()

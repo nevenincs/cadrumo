@@ -62,7 +62,8 @@ def attach_revision_row_source_identities(
         if identity is None:
             enriched.append(value)
             continue
-        assert key is not None
+        if key is None:
+            raise ModeloValidationError("row source identity replay requires the casilla key it attaches to")
         if value.row_source_identity is not None and value.row_source_identity != identity:
             raise ModeloValidationError("row source identity replay refuses a substituted attached identity")
         payload = value.model_dump()

@@ -215,7 +215,10 @@ def extract_invoice_draft_from_evidence(
             raise refuse_reference_without_document_bytes(evidence_id)
         evidence_input = resolve_purchase_invoice_evidence_input(reference.record, store=store)
     else:
-        assert attachment_id is not None  # narrowed by the exactly-one guard above
+        if attachment_id is None:
+            raise PurchaseInvoiceEvidenceInputError(
+                translated_message="errors.refused.refused_ledger_evidence_input",
+            )
         evidence_input = resolve_attachment_evidence_input(attachment_id, store=store)
 
     # Routing order, and the order is itself a control rather than an

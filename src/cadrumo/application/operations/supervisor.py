@@ -1075,16 +1075,14 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                 outcome=OperationReconciliationOutcome.RECOVERED,
                 lease_evidence_ref=taken_over.evidence_ref,
             )
-        if may_resume_checkpoint:
-            assert checkpoint is not None
+        if may_resume_checkpoint and checkpoint is not None:
             resumed = await self._record_reconciliation(
                 snapshot,
                 outcome=OperationReconciliationOutcome.RESUMED,
                 lease_evidence_ref=taken_over.evidence_ref,
             )
             return await self._resume_from_checkpoint(resumed, definition, checkpoint)
-        if may_resume_continuation:
-            assert continuation is not None
+        if may_resume_continuation and continuation is not None:
             resumed = await self._record_reconciliation(
                 snapshot,
                 outcome=OperationReconciliationOutcome.RESUMED,

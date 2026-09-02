@@ -885,7 +885,6 @@ def _resolve_selected_target(pointer: BucketPointer) -> ProfileBucketPointer:
         raise ProfileNotFoundError(
             translated_message="application.user_profile.errors.no_active_profile_selected",
         )
-    assert pointer.bucket_id is not None
     resolved = resolve_profile_bucket(pointer.bucket_id)
     if resolved is None:
         raise ProfileNotFoundError(

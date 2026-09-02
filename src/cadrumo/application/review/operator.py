@@ -83,9 +83,13 @@ _ACCEPTED_KIND_TO_INTERNAL: Mapping[str, frozenset[ReviewItemKind]] = MappingPro
         "sync_divergence": frozenset[ReviewItemKind](),
     },
 )
-assert frozenset(key for key in _ACCEPTED_KIND_TO_INTERNAL if isinstance(key, BindingSourceKind)) == (
-    COUNTERPART_SOURCE_KINDS
-), "review queue's BindingSourceKind keys must match the canonical counterpart source-kind set"
+if (
+    frozenset(key for key in _ACCEPTED_KIND_TO_INTERNAL if isinstance(key, BindingSourceKind))
+    != COUNTERPART_SOURCE_KINDS
+):  # pragma: no cover - source-kind cohort invariant
+    raise ValueError(
+        "review queue's BindingSourceKind keys must match the canonical counterpart source-kind set",
+    )
 
 # The operator-facing ``--kind`` vocabulary: only the source kinds that map to an
 # emitted review item, in the order documented in

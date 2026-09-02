@@ -165,7 +165,8 @@ def build_offline_workbook(plan: SheetExportPlan) -> Workbook:
     """Materialise a :class:`~application.storage.calc_sheets.SheetExportPlan` as an offline openpyxl workbook."""
     workbook = Workbook()
     default = workbook.active
-    assert default is not None
+    if default is None:
+        raise ValueError("a fresh workbook carries no active worksheet to name as the first tab")
     default.title = TabName.ENTRADAS.value
     for tab in TabName:
         if tab.value not in workbook.sheetnames:
@@ -394,7 +395,8 @@ def _write_value_cells(workbook: Workbook, cells: Iterable[SheetValueCell]) -> N
         worksheet = workbook[cell.address.tab.value]
         target = worksheet.cell(row=cell.address.row, column=cell.address.column, value=coerce_cell_value(cell.value))
         if cell.note is not None:
-            assert isinstance(target, Cell)
+            if not isinstance(target, Cell):
+                raise ValueError(f"cell {cell.address!r} carries a note but is not a writable cell")
             target.comment = Comment(cell.note, "AEAT")
 
 

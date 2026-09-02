@@ -366,16 +366,20 @@ class ModeloWorkspaceRegistryProjectionV1(_WorkspaceProducerModel):
         """Return the one law-selected revision id, whichever admission shape carries it."""
         if self.inspection is not None:
             return self.inspection.revision_id
-        assert self.snapshot is not None
-        return self.snapshot.revision.id
+        snapshot = self.snapshot
+        if snapshot is None:
+            raise ValueError("a workspace admission must carry either an inspection or a graded snapshot")
+        return snapshot.revision.id
 
     @property
     def review_status(self) -> RevisionReviewStatus:
         """Return the revision's own governance stamp, whichever admission shape carries it."""
         if self.inspection is not None:
             return self.inspection.review_status
-        assert self.snapshot is not None
-        return self.snapshot.revision.review_status
+        snapshot = self.snapshot
+        if snapshot is None:
+            raise ValueError("a workspace admission must carry either an inspection or a graded snapshot")
+        return snapshot.revision.review_status
 
 
 class ModeloWorkspaceReadinessProjectionV1(_WorkspaceProducerModel):

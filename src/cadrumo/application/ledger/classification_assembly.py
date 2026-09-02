@@ -800,9 +800,11 @@ def assemble_classification_criteria(
         # printed number that settles it anyway.
         return ClassificationAssembly(missing=tuple(missing))
 
-    assert issuer_scope is not None  # narrowed: a gap would have been recorded
-    assert customer_scope is not None
-    assert transaction_date is not None
+    if issuer_scope is None or customer_scope is None or transaction_date is None:
+        raise ValueError(
+            "classification assembly recorded no missing input yet resolved no issuer scope, "
+            "customer scope or transaction date",
+        )
 
     def _criteria_for(
         status_candidate: CustomerTaxStatus,

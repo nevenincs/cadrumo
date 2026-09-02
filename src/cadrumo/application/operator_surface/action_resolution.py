@@ -60,7 +60,8 @@ def resolve_notice_action(
     )
     declaration = resolved_catalogue_action.declaration
     input_schema = resolved_catalogue_action.target_leaf.input_schema
-    assert input_schema is not None
+    if input_schema is None:
+        raise ValueError("a resolvable catalogue action must declare the input schema its arguments bind to")
 
     argument_names = _validated_notice_bindings(argument_bindings)
     _validate_notice_binding_provenance(argument_bindings, declaration.argument_specifications)

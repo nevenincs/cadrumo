@@ -315,7 +315,8 @@ def _regulated_override_difference_finding(
     selected_revision_id: RevisionId,
 ) -> ProrrataSeedFinding:
     provenance = entry.provisional_provenance
-    assert provenance is not None
+    if provenance is None:
+        raise ValueError("a regulated-override seed finding requires the entry's provisional provenance")
     return ProrrataSeedFinding(
         code=_REGULATED_OVERRIDE_DIFFERENCE,
         blocking=False,
