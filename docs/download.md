@@ -80,28 +80,38 @@ command once that channel is live.
   - How you get the current beta
 * - Any platform with Python 3.13+
   - Python package
-  - Release page artifact; PyPI listing at public launch
-* - Windows (x86-64)
-  - Scoop package
-  - Release page artifact; Scoop bucket at public launch
+  - PyPI listing
 * - macOS (Apple silicon), Linux (x86-64 and arm64)
   - Homebrew formula
-  - Release page artifact; Homebrew tap at public launch
+  - Homebrew tap
+* - Windows (x86-64)
+  - Scoop package
+  - Scoop bucket
 ```
 
 Per-channel install paths:
 
 **Python package**: Any platform with Python 3.13+
 
-The PyPI listing opens at public launch; until then, install the release-page artifact attached to the latest release.
-
-**Scoop package**: Windows (x86-64)
-
-The Scoop bucket opens at public launch; until then, install the release-page artifact attached to the latest release.
+```bash
+pip install cadrumo
+uv tool install cadrumo
+uvx --from cadrumo aeat
+```
 
 **Homebrew formula**: macOS (Apple silicon), Linux (x86-64 and arm64)
 
-The Homebrew tap opens at public launch; until then, install the release-page artifact attached to the latest release.
+```bash
+brew tap nevenincs/tap
+brew install nevenincs/tap/cadrumo
+```
+
+**Scoop package**: Windows (x86-64)
+
+```bash
+scoop bucket add nevenincs https://github.com/nevenincs/homebrew-tap
+scoop install nevenincs/cadrumo
+```
 
 <div data-cadrumo-downloads hidden></div>
 <!-- vaultspec:generated:end download-matrix -->
