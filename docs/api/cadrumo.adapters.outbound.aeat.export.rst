@@ -7,14 +7,6 @@ cadrumo.adapters.outbound.aeat.export package
    :ignore-module-all:
 
 
-Subpackages
------------
-
-.. toctree::
-   :maxdepth: 4
-
-   cadrumo.adapters.outbound.aeat.export._submitters
-
 Submodules
 ----------
 

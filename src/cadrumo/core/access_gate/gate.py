@@ -28,9 +28,6 @@ See Also:
     :mod:`application.live`
         Read-only application-live facade that calls the read gate before
         opening AEAT remote surfaces.
-    :mod:`adapters.outbound.aeat.export._submitters`
-        Empty outbound namespace documenting the deliberately absent remote
-        submitter transport.
 """
 
 from __future__ import annotations

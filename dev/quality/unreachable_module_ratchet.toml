@@ -54,7 +54,6 @@ allowed = [
   "cadrumo.adapters.inbound.borrador",  # unreachable
   "cadrumo.adapters.inbound.einvoice._aeat_record_schema",  # unreachable
   "cadrumo.adapters.inbound.einvoice.record_batch",  # unreachable
-  "cadrumo.adapters.outbound.aeat.export._submitters",  # unreachable
   "cadrumo.adapters.outbound.aeat.sede._renta_web_open_safety",  # unreachable
   "cadrumo.adapters.outbound.aeat.sede.renta_web_open",  # unreachable
   "cadrumo.adapters.outbound.aeat.verify",  # unreachable
