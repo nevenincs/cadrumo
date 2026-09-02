@@ -477,7 +477,7 @@ def _render_text(field: _ExportField, value: object) -> str:
     if isinstance(value, str):
         return value
     raise RegistryValidationError(
-        f"export field {field.id!r} {field.data_type!r} value must be text or absent",
+        f"export field {field.id!r} {str(field.data_type)!r} value must be text or absent",
     )
 
 

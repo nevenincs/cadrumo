@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from enum import StrEnum
 from typing import Annotated, Final, Literal
 
 from pydantic import AfterValidator, AnyHttpUrl, BeforeValidator, Field, TypeAdapter, field_validator, model_validator
@@ -111,6 +112,44 @@ def _validate_legal_reference_text(
         )
 
 
+class LegalReferenceKind(StrEnum):
+    """The kind of instrument a legal reference cites.
+
+    Spanish instrument names are kept as AEAT and the BOE use them; the meanings belong
+    to those sources and are not paraphrased here.
+    """
+
+    LEY = "ley"
+    REAL_DECRETO = "real_decreto"
+    REAL_DECRETO_LEGISLATIVO = "real_decreto_legislativo"
+    REAL_DECRETO_LEY = "real_decreto_ley"
+    ORDEN = "orden"
+    REGLAMENTO = "reglamento"
+    ACUERDO_INTERNACIONAL = "acuerdo_internacional"
+    DIRECTIVA = "directiva"
+    MANUAL = "manual"
+    INSTRUCTION = "instruction"
+
+
+LegalReferenceKindField = Annotated[
+    LegalReferenceKind, BeforeValidator(coerce_enum_member(LegalReferenceKind))
+]
+"""Registry token hydrated into a LegalReferenceKind member."""
+
+
+class DictionaryCasillaIdGrammar(StrEnum):
+    """The casilla-id grammar a dictionary source publishes."""
+
+    NUMERIC = "numeric"
+    NUMERIC_OR_SINGLE_UPPERCASE_LETTER = "numeric_or_single_uppercase_letter"
+
+
+DictionaryCasillaIdGrammarField = Annotated[
+    DictionaryCasillaIdGrammar, BeforeValidator(coerce_enum_member(DictionaryCasillaIdGrammar))
+]
+"""Registry token hydrated into a DictionaryCasillaIdGrammar member."""
+
+
 class RegistrySnapshotRef(RegistryModel):
     """Typed coordinates that identify a registry snapshot."""
 
@@ -206,18 +245,7 @@ class LegalReference(RegistryModel):
     id: LegalRefId
     evidence_tier: Annotated[Literal[EvidenceTier.LEGAL_AUTHORITY], BeforeValidator(coerce_enum_member(EvidenceTier))]
     authority: PublishingAuthorityField
-    kind: Literal[
-        "ley",
-        "real_decreto",
-        "real_decreto_legislativo",
-        "real_decreto_ley",
-        "orden",
-        "reglamento",
-        "acuerdo_internacional",
-        "directiva",
-        "manual",
-        "instruction",
-    ]
+    kind: LegalReferenceKindField
     corpus_ref: str
     document_id: str
     article: str | None = None
@@ -339,7 +367,7 @@ class SourceReference(RegistryModel):
     published_at: date | None = None
     applies_from: date | None = None
     applies_to: date | None = None
-    dictionary_casilla_id_grammar: Literal["numeric", "numeric_or_single_uppercase_letter"] = "numeric"
+    dictionary_casilla_id_grammar: DictionaryCasillaIdGrammarField = DictionaryCasillaIdGrammar.NUMERIC
     """Exact casilla-id grammar published by a dictionary source.
 
     The default accepts the numbered ids used by every ordinary AEAT dictionary.

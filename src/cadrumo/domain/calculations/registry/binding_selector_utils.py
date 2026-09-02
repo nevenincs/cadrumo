@@ -85,7 +85,7 @@ class BindingFixedExportSelector(BaseModel):
         if self.data_type != "decimal" and self.decimals is not None:
             raise RegistryValidationError(
                 f"binding export projection into record {self.record!r} declares decimals "
-                f"but its data_type is {self.data_type!r}",
+                f"but its data_type is {str(self.data_type)!r}",
             )
         if self.signed:
             # Mirrors _fixed_width_codec._validate_signed_shape: the sign marker
@@ -94,7 +94,7 @@ class BindingFixedExportSelector(BaseModel):
             if self.data_type != "money":
                 raise RegistryValidationError(
                     f"binding export projection into record {self.record!r} can declare signed "
-                    f"only for money data, not {self.data_type!r}",
+                    f"only for money data, not {str(self.data_type)!r}",
                 )
             if self.length < 2:
                 raise RegistryValidationError(
@@ -184,7 +184,7 @@ class _BindingExportProjection(BaseModel):
             if self.decimals is not None and self.data_type != "decimal":
                 raise RegistryValidationError(
                     f"binding {binding_id!r} row export projection declares decimals "
-                    f"but its data_type is {self.data_type!r}",
+                    f"but its data_type is {str(self.data_type)!r}",
                 )
             if self.signed is not None:
                 raise RegistryValidationError(

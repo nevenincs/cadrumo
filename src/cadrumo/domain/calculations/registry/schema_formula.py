@@ -5,16 +5,25 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
+from enum import StrEnum
 from itertools import pairwise
-from typing import Literal
+from typing import Annotated
 
-from pydantic import ConfigDict, Field, TypeAdapter, ValidationError, model_validator
+from pydantic import BeforeValidator, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
 from ....core.casilla_id import CasillaId
 from ._formula_operator_contracts import require_formula_operator_arity
 from .errors import RegistryValidationError
 from .ids import BindingId, ParameterId, RelationId
-from .schema_base import DateAxisField, FormulaOperator, LegalRefs, RegistryModel, SourceCitation, SourceRefs
+from .schema_base import (
+    DateAxisField,
+    FormulaOperator,
+    LegalRefs,
+    RegistryModel,
+    SourceCitation,
+    SourceRefs,
+    coerce_enum_member,
+)
 from .schema_scalars import DecimalValue
 
 __all__ = [
@@ -89,6 +98,31 @@ def _string_keyed_mapping(value: object, *, surface: str) -> dict[str, object]:
         if not isinstance(value, Mapping):
             raise RegistryValidationError(f"{surface} must be a table") from exc
         raise RegistryValidationError(f"{surface} keys must be strings") from exc
+
+
+class LegalParameterDataType(StrEnum):
+    """The shape a legal parameter's declared value takes.
+
+    Overlaps :class:`CasillaDataType` on six tokens but is NOT a narrowing of it: a
+    parameter can be a bracket table, and a casilla never can. The two answer different
+    questions -- what a stored value IS, and what a parameter DECLARES -- so they are
+    kept apart despite the shared spellings.
+    """
+
+    DECIMAL = "decimal"
+    MONEY = "money"
+    INTEGER = "integer"
+    RATIO = "ratio"
+    TEXT = "text"
+    BOOLEAN = "boolean"
+    BRACKET_TABLE = "bracket_table"
+    KEYED_BRACKET_TABLE = "keyed_bracket_table"
+
+
+LegalParameterDataTypeField = Annotated[
+    LegalParameterDataType, BeforeValidator(coerce_enum_member(LegalParameterDataType))
+]
+"""Registry token hydrated into a LegalParameterDataType member."""
 
 
 class FormulaExpression(RegistryModel):
@@ -279,16 +313,7 @@ class ParameterDefinition(RegistryModel):
     """
 
     id: ParameterId
-    data_type: Literal[
-        "decimal",
-        "money",
-        "integer",
-        "ratio",
-        "text",
-        "boolean",
-        "bracket_table",
-        "keyed_bracket_table",
-    ]
+    data_type: LegalParameterDataTypeField
     unit: str
     values: tuple[DatedValue, ...] = Field(default_factory=tuple)
     brackets: tuple[BracketEntry, ...] = Field(default_factory=tuple)

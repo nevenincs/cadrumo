@@ -490,7 +490,7 @@ def _parse_xml_boolean(data_type: str, raw: str) -> bool | None:
     normalized = data_type.upper()
     tokens = _XML_BOOLEAN_TOKENS.get(normalized)
     if tokens is None:
-        raise RegistryValidationError(f"unsupported XML dictionary boolean data type {data_type!r}")
+        raise RegistryValidationError(f"unsupported XML dictionary boolean data type {str(data_type)!r}")
     token = raw.strip().lower()
     try:
         return tokens[token]

@@ -52,7 +52,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Annotated, Final, Literal
+from typing import Annotated, Final
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
@@ -136,6 +136,39 @@ ProfilePredicateOpField = Annotated[
     ProfilePredicateOp, BeforeValidator(coerce_enum_member(ProfilePredicateOp))
 ]
 """Registry token hydrated into a ProfilePredicateOp member."""
+
+
+class WorkbookFormulaCoverage(StrEnum):
+    """How much of a parity workbook's behaviour the reference actually covers."""
+
+    FORMULA_FORM = "formula_form"
+    STATIC_LAYOUT = "static_layout"
+    RECORD_DESIGN_LAYOUT = "record_design_layout"
+    UNSUPPORTED_BINARY_XLS = "unsupported_binary_xls"
+
+
+WorkbookFormulaCoverageField = Annotated[
+    WorkbookFormulaCoverage, BeforeValidator(coerce_enum_member(WorkbookFormulaCoverage))
+]
+"""Registry token hydrated into a WorkbookFormulaCoverage member."""
+
+
+class VerificationFindingKind(StrEnum):
+    """Whether a failed verification predicate blocks or merely advises.
+
+    Upper-case because these are the tokens the registry declares, and a finding kind
+    that renders differently from its declaration is a finding an operator cannot grep
+    for in the source that produced it.
+    """
+
+    BLOCKING_RULE = "BLOCKING_RULE"
+    ADVISORY = "ADVISORY"
+
+
+VerificationFindingKindField = Annotated[
+    VerificationFindingKind, BeforeValidator(coerce_enum_member(VerificationFindingKind))
+]
+"""Registry token hydrated into a VerificationFindingKind member."""
 
 
 class LiveVerificationSurface(StrEnum):
@@ -415,7 +448,7 @@ class WorkbookParityReference(RegistryModel):
     id: WorkbookParityRefId
     workbook_source: SourceRefId
     fixture_id: WorkbookFixtureId
-    formula_coverage: Literal["formula_form", "static_layout", "record_design_layout", "unsupported_binary_xls"]
+    formula_coverage: WorkbookFormulaCoverageField
     runner_required: bool
     output_cells: Mapping[WorkbookOutputId, WorkbookCellRefStr] = Field(default_factory=dict)
     tolerance: DecimalValue = Decimal("0.00")
@@ -1299,4 +1332,4 @@ class VerificationPredicateDefinition(RegistryModel):
     predicate_id: str = Field(min_length=1, max_length=128)
     legal_refs: LegalRefs
     expression: str = Field(min_length=1, max_length=512)
-    finding_kind: Literal["BLOCKING_RULE", "ADVISORY"] = "BLOCKING_RULE"
+    finding_kind: VerificationFindingKindField = VerificationFindingKind.BLOCKING_RULE
