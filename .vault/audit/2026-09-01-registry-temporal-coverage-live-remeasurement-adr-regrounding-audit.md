@@ -4864,3 +4864,63 @@ its own evidence, and the first where the evidence arrived within the same itera
 build. The cost of checking the members was two commands; the cost of shipping it would have
 been a category of 36 whose 35 correct members hide the one that is wrong - which is the exact
 failure this audit documented in `record_drift` and has argued against four times since.
+
+### The withdrawn condition was right to go, and a narrower one it was hiding is real
+
+Scrutinising the single-year category the way the previous iteration scrutinised the last one
+produced a better result than expected, and corrected the reasoning that removed a condition
+even while confirming the removal.
+
+The category splits. Modelo 194's 2024 and modelo 721's 2024 declare no `valid_to` and a
+selector `year_from`, and they genuinely serve later years: filing year 2026 admits the
+revision named 2024. Their names understate their reach and the finding is real. Modelo 131's
+2026, modelo 189's 2025 and three others admit their own year and refuse the next, so their
+names describe what they do.
+
+Chasing that difference found the discriminator, and it is the field the withdrawn condition
+was keyed on - looked at correctly this time. Fifty-four revisions declare an open-ended
+`valid_to`. Five of them pair it with a selector carrying neither bound, and all five admit
+their own year and refuse the following one. The other forty-nine carry a selector
+`year_from`, and those are the ones that actually extend.
+
+So the previous iteration's withdrawal was correct, and the reason given for it was not the
+strongest one available. It was withdrawn because thirty-five of thirty-six members resolved
+correctly - and the probe used asked each revision about its own year, which is the question
+they were always going to answer. The better reason, established now, is that those
+thirty-five carry an explicit `valid_to`: their window is stated in the dates, so an empty
+selector beside it declares nothing that is missing.
+
+The narrower condition is shipped because its membership was checked before it was written,
+not after. Five instances, all five verified against the live authority to admit their named
+year and refuse the next, and the shape that genuinely runs open-ended is verified not to be
+swept in. Three tests pin all three cases: the condition, the open-ended revision that must
+not be reported, and the closed window whose empty selector is harmless.
+
+The lesson is narrower than "check the members", which this audit already says. It is that a
+probe has to ask the question the condition claims to be about. Asking a revision whether it
+serves its own year cannot distinguish a window that ends there from one that should not have.
+
+### Two conditions were contradicting each other on the same five revisions
+
+Adding the unselectable-window condition exposed an error in the one beside it. Both fired on
+modelo 131's 2026 and on four others, and they say opposite things. One row states the window
+does not extend beyond the named year. The other states the name omits years the revision
+serves. Both cannot be true of one revision, and the second is the false one: selection admits
+2026 and refuses 2027, so the name `2026` describes exactly what the revision does.
+
+The single-year condition now excludes a revision whose open-endedness is unselectable, and
+its membership falls from seven to two - modelo 194's 2024 and modelo 721's 2024, the pair
+verified to admit filing year 2026 under a name saying 2024. Every remaining member of that
+category genuinely understates its reach.
+
+The exclusion is keyed on selectability rather than on the name, and two tests hold that
+distinction from both sides: modelo 131 must carry the unselectable finding and not the
+single-year one, and modelo 721 must carry the single-year one and not the unselectable one.
+Without the second test the exclusion could have silenced the condition entirely and still
+looked correct.
+
+The screen's total is unchanged at fourteen findings, which is the point worth drawing out.
+Five rows moved from a category where they were wrong to one where they are right, and two
+categories that previously mixed accurate and inaccurate members now each contain only
+members wanting the same thing done. A count that did not move records none of that, which is
+why this campaign stopped treating finding totals as the measure some findings ago.

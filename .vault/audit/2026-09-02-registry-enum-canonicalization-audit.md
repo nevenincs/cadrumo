@@ -1367,3 +1367,42 @@ the `ActiveProfileHealth` class of error gone entirely. The 39 that remain are t
 `_OperationRequestResolutionHeader` failure -- plus the inert-package cluster.
 
 Blind-spot scope: 23 -> 21 member sets declared in more than one place.
+
+## Finding 63 — a narrowing that keeps a legal distinction
+
+`["notificacion", "comunicacion", "pendiente", "unknown"]` and its two-member subset
+were spelled six times in one sede module: the full set on the strict observation field
+and a parser return, the subset on three parameters and the summary-table extractor.
+
+`SedeNotificationTipo` now holds all four and `SummaryTableTipo` names the subset.
+The subset is a real narrowing rather than a second vocabulary: a summary table names
+one of the two kinds or says nothing at all, so `PENDIENTE` and `UNKNOWN` are
+unreachable there. Keeping it narrow stops a pending row being passed where a resolved
+kind is required -- and the distinction it protects is legal, since a notificacion opens
+a response window and a comunicacion does not.
+
+The observation model validates strictly, so the field takes the literal over the
+members. That was checked BEFORE the edit this time, which is the direct consequence of
+the previous finding.
+
+43 notifications tests pass.
+
+## Finding 64 — two custody effects that must not be confused
+
+`["process-secret-revocation", "local-session-acceleration"]` appeared at four
+annotations and four call sites across five modules. They are not two points on one
+axis: one destroys a process secret, the other caches a local session, and a receipt
+attributed to the wrong one claims a secret was revoked when it was not.
+
+Now `CustodyReceiptOwner`, with the receipt field taking the literal-over-members form
+because `ProfileCustodyOwnerReceipt` is strict-frozen -- again checked first.
+
+Ruff reported `S105 possible hardcoded password` on the member whose name contains
+`SECRET`. That is a false positive on a receipt kind, suppressed narrowly with the
+reason inline rather than by widening any lint configuration.
+
+34 custody tests pass.
+
+Blind-spot scope: 21 -> 19 member sets declared in more than one place. Annotation scope
+unchanged at 1, still the M184/IVA false positive, and the gate still cannot honestly
+reach zero.
