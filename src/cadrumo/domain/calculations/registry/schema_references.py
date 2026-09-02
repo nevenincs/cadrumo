@@ -22,12 +22,12 @@ from .errors import RegistryValidationError
 from .ids import LegalRefId, ModeloId, ParameterId, RevisionId, SourceRefId
 from .schema_base import (
     CorpusTierField,
-    PublishingAuthorityField,
     DateAxis,
     DesignAuthority,
     EvidenceTier,
     EvidenceTierField,
     LegalRefs,
+    PublishingAuthorityField,
     RegistryModel,
     RevisionReviewStatusField,
     coerce_enum_member,

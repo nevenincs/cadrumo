@@ -15,7 +15,6 @@ from ._m303_orden_legal import compile_annual_orden_legal_references
 from ._m303_orden_projection_compiler import compile_m303_annual_orden_projection
 from ._m303_orden_raw_models import M303AnnualOrdenSourceCensus
 from ._m303_orden_source import extract_m303_annual_orden_source
-from .schema_base import PublishingAuthority
 from .errors import RegistryLoadError, RegistryValidationError
 from .ids import LegalRefId, SourceRefId
 from .loader_cache import toml_file_fingerprint
@@ -31,6 +30,7 @@ from .m303_orden_projection_models import (
     M303AnnualOrdenGeneratedSource,
     M303AnnualOrdenProjection,
 )
+from .schema_base import PublishingAuthority
 from .schema_references import LegalReference, SourceReference
 
 if TYPE_CHECKING:
