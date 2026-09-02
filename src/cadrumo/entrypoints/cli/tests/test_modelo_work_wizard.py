@@ -287,6 +287,10 @@ def test_registered_wizard_cli_interactive_flow_emits_ledger_source_provenance(
     document = json.loads(result.output)
     assert document["command"] == "modelo.work.wizard"
     payload = _payload(result.output)
+    assert {row["key"] for row in payload["prompted_casillas"]} == {
+        *_MANUAL_CASILLAS,
+        _PREV_YEAR_BINDING_KEY,
+    }
     provenance = payload["source_provenance"]
     assert provenance, "the wizard CLI JSON must retain the calculated ledger source trace"
     assert {row["source_ref"] for row in provenance} == {

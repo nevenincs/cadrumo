@@ -6,6 +6,7 @@ import ast
 import inspect
 from pathlib import Path
 from shutil import rmtree
+from typing import Literal, TypedDict
 
 import pytest
 
@@ -14,8 +15,10 @@ from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.hashing import hash_file
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding, ExportJustification, ExportPadding
+from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 from cadrumo.domain.calculations.registry.schema_exports import (
+    ExportFieldDataType,
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
@@ -323,7 +326,22 @@ def test_check_module_has_no_migration_reader_or_publisher_surface() -> None:
     assert "legacy" not in inspect.getsource(_tree_check).casefold()
 
 
-def _layout_with_repeat(repeat: str | None) -> ExportLayoutDefinition:
+class _SharedExportFieldFields(TypedDict):
+    """The export-field fields both repeat variants share, minus the kind pairing."""
+
+    id: str
+    offset: int
+    length: int
+    data_type: ExportFieldDataType
+    required: bool
+    padding: ExportPadding
+    justification: ExportJustification
+    signed: bool
+    legal_refs: tuple[str, ...]
+    source_refs: tuple[str, ...]
+
+
+def _layout_with_repeat(repeat: Literal["binding_rows", "projection_rows"] | None) -> ExportLayoutDefinition:
     """One real layout carrying ``repeat``, with the field shape that repeat admits.
 
     The record model enforces the pairing both ways -- a binding-rows record must
@@ -333,14 +351,14 @@ def _layout_with_repeat(repeat: str | None) -> ExportLayoutDefinition:
     renders a single-valued casilla where the published tree renders a row
     sequence, which is why the candidate here carries no repeat at all.
     """
-    common = {
+    common: _SharedExportFieldFields = {
         "id": "declarado.importe",
         "offset": 1,
         "length": 10,
-        "data_type": "money",
+        "data_type": CasillaDataType.MONEY,
         "required": False,
-        "padding": "left_zero",
-        "justification": "right",
+        "padding": ExportPadding.LEFT_ZERO,
+        "justification": ExportJustification.RIGHT,
         "signed": False,
         "legal_refs": ("ley-35-2006:art-test",),
         "source_refs": ("aeat-test-source-001",),

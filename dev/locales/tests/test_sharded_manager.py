@@ -7,9 +7,26 @@ from pathlib import Path
 
 import pytest
 
-from ..manager import LocaleManager
+from ..manager import LocaleManager, LocaleNode
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def _leaf(catalogue: LocaleNode, *path: str) -> str:
+    """Walk a loaded catalogue to one leaf, proving each level on the way.
+
+    ``LocaleNode`` is recursive, so every step down a shard path may land on a
+    mapping, a leaf, or nothing. Asserting the shape here keeps a wrong-shaped
+    catalogue a test failure that names the offending key rather than a
+    ``TypeError`` from an index into a string.
+    """
+    node = catalogue
+    for key in path:
+        assert isinstance(node, dict), f"expected a mapping above {key!r}, found {node!r}"
+        assert key in node, f"missing catalogue key {key!r}"
+        node = node[key]
+    assert isinstance(node, str), f"expected a leaf at {'.'.join(path)!r}, found {node!r}"
+    return node
 
 
 def test_sharded_load_locale_merges_all_shards() -> None:
@@ -33,8 +50,8 @@ def test_sharded_load_locale_merges_all_shards() -> None:
 
         assert "cli" in loaded
         assert "modelo" in loaded
-        assert loaded["cli"]["root"]["help"] == "Ayuda CLI"
-        assert loaded["modelo"]["schema"]["303"]["casilla"]["01"]["label"] == "IVA"
+        assert _leaf(loaded, "cli", "root", "help") == "Ayuda CLI"
+        assert _leaf(loaded, "modelo", "schema", "303", "casilla", "01", "label") == "IVA"
 
 
 def test_sharded_set_and_remove_locale_value() -> None:
@@ -59,8 +76,8 @@ def test_sharded_set_and_remove_locale_value() -> None:
 
         # Check loaded data
         loaded = manager.load_locale(es_dir)
-        assert loaded["cli"]["menu"]["exit"] == "Salir"
-        assert loaded["modelo"]["schema"]["303"]["casilla"]["05"]["label"] == "Cuota"
+        assert _leaf(loaded, "cli", "menu", "exit") == "Salir"
+        assert _leaf(loaded, "modelo", "schema", "303", "casilla", "05", "label") == "Cuota"
 
         # Remove the CLI key
         removed_target = manager.remove_locale_value("es", "cli.menu.exit")
@@ -104,6 +121,6 @@ def test_sharded_scaffold_partitions_keys() -> None:
         assert (es_dir / "common.yml").is_file()
 
         loaded = manager.load_locale(es_dir)
-        assert loaded["cli"]["cmd"]["start"] == "Iniciar"
-        assert loaded["modelo"]["schema"]["303"]["casilla"]["01"]["label"] == "Base"
-        assert loaded["other"]["unclassified"]["key"] == "Otro"
+        assert _leaf(loaded, "cli", "cmd", "start") == "Iniciar"
+        assert _leaf(loaded, "modelo", "schema", "303", "casilla", "01", "label") == "Base"
+        assert _leaf(loaded, "other", "unclassified", "key") == "Otro"

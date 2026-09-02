@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+import re
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -176,11 +177,13 @@ class _RenameTransformer(cst.CSTTransformer):
     def __init__(
         self,
         *,
+        path: str,
         module_name: str,
         package_module: bool,
         operations: Sequence[ObjectNameRenameOperation],
         definition_lines: Mapping[str, frozenset[int]],
     ) -> None:
+        self.path = path
         self.module_name = module_name
         self.package_module = package_module
         self.operations = operations
@@ -211,6 +214,33 @@ class _RenameTransformer(cst.CSTTransformer):
     def visit_FunctionDef(self, node: cst.FunctionDef) -> bool | None:
         self._declaration_name_nodes.add(id(node.name))
         return True
+
+    @override
+    def visit_SimpleString(self, node: cst.SimpleString) -> bool | None:
+        try:
+            value = node.evaluated_value
+        except Exception as exc:
+            raise ObjectNameTransformError(f"cannot evaluate a string literal in {self.module_name}") from exc
+        if not isinstance(value, str):
+            return True
+        self._refuse_opaque_spelling(value)
+        return True
+
+    @override
+    def visit_FormattedStringText(self, node: cst.FormattedStringText) -> bool | None:
+        self._refuse_opaque_spelling(node.value)
+        return True
+
+    def _refuse_opaque_spelling(self, value: str) -> None:
+        for operation in self.operations:
+            old_module, old_name, _new_module, _new_name = self._operation_names(operation)
+            spellings = (old_module,) if operation.operation_kind == "module-rename" else (old_name,)
+            if any(
+                re.search(rf"(?<![A-Za-z0-9_]){re.escape(spelling)}(?![A-Za-z0-9_])", value) for spelling in spellings
+            ):
+                raise ObjectNameTransformError(
+                    f"operation {operation.operation_id!r} has an unsupported string reference in {self.module_name}"
+                )
 
     @override
     def leave_ClassDef(self, original_node: cst.ClassDef, updated_node: cst.ClassDef) -> cst.ClassDef:
@@ -253,6 +283,15 @@ class _RenameTransformer(cst.CSTTransformer):
 
     @override
     def leave_ImportFrom(self, original_node: cst.ImportFrom, updated_node: cst.ImportFrom) -> cst.ImportFrom:
+        if original_node.relative:
+            for operation in self.operations:
+                if operation.operation_kind != "module-rename" or operation.old_path != self.path:
+                    continue
+                old_module, _old_name, new_module, _new_name = self._operation_names(operation)
+                if old_module.rpartition(".")[0] != new_module.rpartition(".")[0]:
+                    raise ObjectNameTransformError(
+                        f"operation {operation.operation_id!r} moves relative-import source across packages"
+                    )
         absolute = _absolute_import_from(original_node, self.module_name, package_module=self.package_module)
         if absolute is None or isinstance(original_node.names, cst.ImportStar):
             if isinstance(original_node.names, cst.ImportStar):
@@ -361,7 +400,6 @@ class _RenameTransformer(cst.CSTTransformer):
 
 
 def _definition_lines(operation: ObjectNameRenameOperation, source: bytes) -> frozenset[int]:
-    kind, _qualified, occurrence = _locator_parts(operation.old_locator)
     if operation.operation_kind == "module-rename":
         return frozenset[int]()
     try:
@@ -371,7 +409,7 @@ def _definition_lines(operation: ObjectNameRenameOperation, source: bytes) -> fr
     declarations = declarations_in_source(text, operation.old_path)
     line_values: set[int] = set()
     for declaration in declarations:
-        if declaration.kind.value == kind and declaration.binding_occurrence == occurrence:
+        if declaration.qualified_locator == operation.old_locator:
             line_values.add(declaration.line)
     lines = frozenset(line_values)
     if not lines:
@@ -391,6 +429,7 @@ def _transform_python(
     except (UnicodeDecodeError, cst.ParserSyntaxError) as exc:
         raise ObjectNameTransformError(f"cannot parse affected Python source {relative}: {exc}") from exc
     transformer = _RenameTransformer(
+        path=relative,
         module_name=_module_for_path(relative),
         package_module=PurePosixPath(relative).name == "__init__.py",
         operations=operations,
