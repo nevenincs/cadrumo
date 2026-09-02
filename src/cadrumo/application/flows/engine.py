@@ -498,12 +498,26 @@ def _group_by_id(definition: FlowDefinition, group_id: str) -> FlowRepeatingGrou
     return None
 
 
+def first_unanswered_key(definition: FlowDefinition, state: FlowState) -> str | None:
+    """Return the key of the first visible entry the state has not answered.
+
+    Lives beside the visibility walk it depends on, because the answer changes
+    with visibility: an entry hidden by a prior answer is not unanswered, it is
+    not asked. Two callers each carried a copy of this loop.
+    """
+    for entry in visible_sequence(definition, state):
+        if entry.key not in state.answers:
+            return entry.key
+    return None
+
+
 __all__ = [
     "SECTION_VERDICT_PREFIX",
     "FlowState",
     "VisiblePage",
     "answer",
     "back_page",
+    "first_unanswered_key",
     "jump_to",
     "next_page",
     "page_status",

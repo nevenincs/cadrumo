@@ -11,6 +11,7 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING, Protocol
 
 from ....core.casilla_id import CasillaId
+from ._validate_revision_context import _export_field_ids
 from .ids import LegalRefId, SourceRefId
 from .schema import ModeloRevision
 
@@ -28,10 +29,6 @@ def _record_ids[RecordT: _IdentifiedRecord](records: Iterable[RecordT]) -> set[s
 
 def _casilla_data_types(revision: ModeloRevision) -> dict[CasillaId, str]:
     return {casilla.id: casilla.data_type for casilla in revision.casillas}
-
-
-def _export_field_ids(revision: ModeloRevision) -> set[str]:
-    return {field.id for layout in revision.export_layouts for record in layout.records for field in record.fields}
 
 
 class IdReferenceChecker:

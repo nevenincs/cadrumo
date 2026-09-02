@@ -72,6 +72,7 @@ from ..calculations.iva_compensation_casillas import (
 from ..calculations.m303_carry_ingress import M303CarryIngressError, validate_normalized_m303_carry_observation_envelope
 from ..calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 from ..calculations.revision_carry_gate import revision_carry_outcome
+from ..user_profile.projections import profile_path_values_for_bucket as _profile_path_values_for_bucket
 from .action_errors import ModeloPreconditionErrorMixin
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure
 
@@ -662,19 +663,6 @@ def _supplied_prior_compensation_amounts(
         dict(backend_casilla_inputs or {}).get(casilla_id),
     )
     return tuple(Decimal(value) for value in values if value is not None)
-
-
-def _profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
-    """Return canonical user-profile path values for ``bucket_id``."""
-    from ...domain.user_profile.errors import ProfileNotFoundError
-    from ..user_profile.profile_record_repository import ProfileRecordRepository
-    from ..user_profile.projections import record_to_path_values
-
-    try:
-        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
-    except ProfileNotFoundError:
-        return None
-    return record_to_path_values(record)
 
 
 def _activity_start_date_for_modelo_profile(bucket_id: str) -> date | None:

@@ -20,7 +20,7 @@ from collections.abc import Mapping
 
 from ...core.flows import FlowMode
 from .definition import FlowDefinition, FlowRepeatingGroup
-from .engine import FlowState, VisiblePage, start_flow, visible_sequence
+from .engine import FlowState, VisiblePage, first_unanswered_key, start_flow, visible_sequence
 from .validators import run_answer_validation
 
 
@@ -61,7 +61,7 @@ def resume_flow(
     if orphaned:
         state = state.model_copy(update={"stale": frozenset(state.stale | orphaned)})
 
-    cursor = _first_unanswered(definition, state)
+    cursor = first_unanswered_key(definition, state)
     return state.model_copy(update={"cursor": cursor, "visited": (cursor,) if cursor else ()})
 
 
@@ -102,13 +102,6 @@ def _seed_counts(
                 except ValueError:
                     declared = 0
                 counts[item.id] = max(0, min(declared, item.max_instances))
-
-
-def _first_unanswered(definition: FlowDefinition, state: FlowState) -> str | None:
-    for entry in visible_sequence(definition, state):
-        if entry.key not in state.answers:
-            return entry.key
-    return None
 
 
 __all__ = ["resume_flow"]

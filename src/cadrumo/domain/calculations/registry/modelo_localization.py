@@ -7,10 +7,10 @@ import re
 from collections.abc import Mapping
 from typing import Final, Literal, cast
 
+from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n import MissingTranslationError, lookup_translation
 from ....core.modelo import Modelo
-from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ._toml_helpers import as_toml_table as _as_toml_table
 from .ids import RevisionId
 
@@ -106,13 +106,6 @@ def casilla_alias_locale_key(
     )
 
 
-def _as_toml_array(value: object) -> tuple[object, ...] | None:
-    """Narrow a frozen TOML array to object entries for locale enrolment."""
-    if not isinstance(value, tuple):
-        return None
-    return OBJECT_TUPLE_ADAPTER.validate_python(value)
-
-
 def _passthrough_localization_row(raw: object) -> dict[str, object]:
     """Carry malformed locale-owned rows through to the schema validator."""
     if isinstance(raw, Mapping):
@@ -187,6 +180,13 @@ def _localised_construct(raw_construct: object, *, modelo_id: str, revision_id: 
         **construct,
         "localization_key": construct_locale_key(modelo_id, revision_id, construct_id),
     }
+
+
+def _as_toml_array(value: object) -> tuple[object, ...] | None:
+    """Narrow a frozen TOML array to object entries, or return ``None``."""
+    if not isinstance(value, tuple):
+        return None
+    return OBJECT_TUPLE_ADAPTER.validate_python(value)
 
 
 def enroll_revision_localization(

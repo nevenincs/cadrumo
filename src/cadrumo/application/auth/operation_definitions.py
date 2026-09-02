@@ -22,6 +22,7 @@ from ...core.operations import (
     OperationEffect,
     OperationInteractionKind,
 )
+from ...core.operations import profile_operation_subject as _profile_subject
 from ...core.time.clock import now
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -98,10 +99,6 @@ class _PassphraseRotationSecret(BaseModel):
     current_passphrase: SecretStr
     new_passphrase: SecretStr
     new_passphrase_confirmation: SecretStr
-
-
-def _profile_subject(profile_id: UUID) -> str:
-    return f"profile:{profile_id}"
 
 
 def _require_profile_subject[PayloadT: BaseModel](request: OperationRequest[PayloadT], profile_id: UUID) -> None:

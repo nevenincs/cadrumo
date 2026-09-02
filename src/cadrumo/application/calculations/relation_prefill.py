@@ -102,6 +102,7 @@ from ..aggregation import (
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
 from ..storage.calc_sheets.records import RelationValue, RelationValues
+from ..user_profile.projections import profile_path_values_for_bucket as _profile_path_values_for_bucket
 from .m111_no_retenciones import (
     is_m111_no_retenciones_period,
     m111_no_retenciones_periods_for_bucket,
@@ -230,30 +231,6 @@ def _relation_source_filing_year(relation: RelationDefinition, *, filing_year: i
     if selector.year is not None:
         return selector.year
     return filing_year + (selector.filing_year_delta or 0)
-
-
-def _profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
-    """Wizard-free canonical projection of the bucket's profile, or ``None`` when absent.
-
-    Reads the operator profile through the SINGLE projection
-    (:func:`record_to_path_values`) WITHOUT building the full
-    :class:`TaxpayerProfile` (which calls ``get_setup_flow()`` and so requires
-    the wizard ``SETUP_FLOW`` catalogue). This decouples the engine's first-year
-    / activity-start derivation from the wizard catalogue, so it resolves
-    identically in a non-CLI calc context (where the catalogue may be
-    unregistered) instead of silently failing closed — matching the verify
-    gate's threaded-in ``workflow_profile.activity_start_date`` semantics.
-    Returns ``None`` only when there is genuinely no profile for the bucket.
-    """
-    from ...domain.user_profile.errors import ProfileNotFoundError
-    from ..user_profile.profile_record_repository import ProfileRecordRepository
-    from ..user_profile.projections import record_to_path_values
-
-    try:
-        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
-    except ProfileNotFoundError:
-        return None
-    return record_to_path_values(record)
 
 
 def _contains_profile_token(raw: str | None, token: str) -> bool | None:

@@ -35,14 +35,13 @@ from typing import TYPE_CHECKING
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.errors.hierarchy import ProfileAnswerTypeError
-from ...core.flows import REPEATING_INSTANCE_SEPARATOR, CopyRefKind, FlowWidgetKind
+from ...core.flows import REPEATING_INSTANCE_SEPARATOR, FlowWidgetKind
 from ...core.identity import IdentityError, validate_identity
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.text_bounds import CALENDAR_MONTH_MAX, CALENDAR_MONTH_MIN, is_calendar_month
 from ...core.time.clock import today_madrid
 from ...domain.deadlines.models import EntityType
 from ..flows.definition import (
-    CopyRef,
     FlowChoice,
     FlowCondition,
     FlowDefinition,
@@ -51,6 +50,7 @@ from ..flows.definition import (
     FlowSection,
     FlowVisibility,
 )
+from ..flows.definition import locale_copy_ref as _locale_ref
 from ..flows.validators import ValidationVerdict, register_answer_validator, register_cross_field_validator
 
 if TYPE_CHECKING:
@@ -313,10 +313,6 @@ DESCENDANT_LOCALE_KEYS: tuple[str, ...] = (
     _ENTRY_IN_FUTURE_LOCALE_KEY,
     _ENTRY_RELACION_MISMATCH_LOCALE_KEY,
 )
-
-
-def _locale_ref(key: str) -> CopyRef:
-    return CopyRef(kind=CopyRefKind.LOCALE_KEY, ref=key)
 
 
 def _validate_descendant_nif(page: FlowPage, canonical: str) -> ValidationVerdict:

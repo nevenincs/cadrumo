@@ -374,6 +374,33 @@ def _iter_page_ids(definition: FlowDefinition) -> tuple[str, ...]:
     return tuple(ids)
 
 
+def iter_flow_pages(definition: FlowDefinition) -> tuple[FlowPage, ...]:
+    """Return every page in a definition, flattening repeating groups in order.
+
+    Lives with the types it walks. Two wizard modules each carried this loop,
+    which meant two places had to agree that a repeating group contributes its
+    pages rather than itself.
+    """
+    pages: list[FlowPage] = []
+    for section in definition.sections:
+        for item in section.items:
+            if isinstance(item, FlowRepeatingGroup):
+                pages.extend(item.pages)
+            else:
+                pages.append(item)
+    return tuple(pages)
+
+
+def locale_copy_ref(key: str) -> CopyRef:
+    """Return the copy reference for a locale key.
+
+    Lives with :class:`CopyRef` because four modules each built this same
+    two-field construction, which meant four places encoded that a locale key is
+    carried by the LOCALE_KEY kind.
+    """
+    return CopyRef(kind=CopyRefKind.LOCALE_KEY, ref=key)
+
+
 __all__ = [
     "CopyRef",
     "FlowChoice",
@@ -386,4 +413,6 @@ __all__ = [
     "FlowSection",
     "FlowVisibility",
     "iter_flow_conditions",
+    "iter_flow_pages",
+    "locale_copy_ref",
 ]

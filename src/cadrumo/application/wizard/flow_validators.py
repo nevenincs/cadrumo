@@ -24,7 +24,7 @@ from pydantic import ValidationError
 
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
-from ..flows.definition import FlowDefinition, FlowPage, FlowRepeatingGroup
+from ..flows.definition import FlowDefinition, iter_flow_pages
 from ..flows.validators import CrossFieldValidator, ValidationVerdict, register_cross_field_validator
 from ..user_profile.projections import projection_for_taxpayer
 
@@ -62,17 +62,6 @@ _CHECK_FIELDS: dict[str, tuple[str, ...]] = {
         "representante_fiscal_nombre",
     ),
 }
-
-
-def _iter_pages(definition: FlowDefinition) -> tuple[FlowPage, ...]:
-    pages: list[FlowPage] = []
-    for section in definition.sections:
-        for item in section.items:
-            if isinstance(item, FlowRepeatingGroup):
-                pages.extend(item.pages)
-            else:
-                pages.append(item)
-    return tuple(pages)
 
 
 def _classify_error(entry: Mapping[str, object]) -> tuple[str, tuple[str, ...]]:
@@ -146,7 +135,7 @@ def register_taxpayer_projection_validator(definition: FlowDefinition) -> None:
     registers the closure under :data:`TAXPAYER_PROJECTION_VALIDATOR_ID`;
     the definition then names that id in its ``flow_validator_ids``.
     """
-    page_domain_keys = {page.id: page.domain_key for page in _iter_pages(definition)}
+    page_domain_keys = {page.id: page.domain_key for page in iter_flow_pages(definition)}
     register_cross_field_validator(
         TAXPAYER_PROJECTION_VALIDATOR_ID,
         build_taxpayer_projection_validator(page_domain_keys),

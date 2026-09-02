@@ -22,7 +22,7 @@ declarable-amount false-fire guard.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from decimal import Decimal
 from typing import Literal, Protocol
 
@@ -38,6 +38,7 @@ from .binding_selector_utils import invariant_diagnostics, selector_against_mode
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
+from .ledger_binding_selector_support import mapping_lacks_fact
 from .schema import DataBindingDefinition, ModeloRevision
 
 # Ledger-aggregation binding source kinds. Re-exported from
@@ -74,16 +75,6 @@ from .ledger_binding_selector_support import casilla_id_set
 # registry family only needs the ES-scoped observation totals; the source-scope
 # gate is owned by the classifier, so the resolver here simply sums the matched
 # observations per the one-aggregation-path discipline.
-
-
-def mapping_lacks_fact(value: object) -> bool:
-    """Whether *value* is a mapping with no ``fact`` key.
-
-    Extracted so the ``isinstance`` narrowing stays local. Inline, it widened
-    the enclosing validator's inferred return to include an unparameterised
-    mapping, which said less than the declared type it replaced.
-    """
-    return isinstance(value, Mapping) and "fact" not in value
 
 
 class _ImpatriadoLedgerIncomeSelector(BaseModel):

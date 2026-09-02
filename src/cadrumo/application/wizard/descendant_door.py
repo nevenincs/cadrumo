@@ -45,9 +45,10 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode
+from ...core.flows import CheckpointAvailability, FlowMode
 from ...core.models import STRICT_FROZEN_CONFIG
-from ..flows.definition import CopyRef, FlowDefinition, FlowSection
+from ..flows.definition import FlowDefinition, FlowSection
+from ..flows.definition import locale_copy_ref as _locale_ref
 from ..flows.engine import FlowState
 from ..flows.resume import resume_flow
 from ._checkpoint_store import descendant_clearing_facts
@@ -96,10 +97,6 @@ class DescendantDoorAnswers(BaseModel):
     """
 
     model_config = STRICT_FROZEN_CONFIG
-
-
-def _locale_ref(key: str) -> CopyRef:
-    return CopyRef(kind=CopyRefKind.LOCALE_KEY, ref=key)
 
 
 def build_descendant_door_definition() -> FlowDefinition:
