@@ -166,7 +166,12 @@ def _snapshot(repo_root: Path, paths: Sequence[str]) -> tuple[tuple[str, str | N
     files: list[tuple[str, str | None]] = []
     for relative in paths:
         path = _regular_file(repo_root, relative)
-        digest = None if path is None else f"{_DIGEST_PREFIX}{sha256_file(path)}"
+        try:
+            digest = None if path is None else f"{_DIGEST_PREFIX}{sha256_file(path)}"
+        except FileNotFoundError:
+            # A concurrent tracked deletion between the existence check and
+            # hashing is the same observable snapshot state as an absent file.
+            digest = None
         files.append((relative, digest))
     return tuple(files)
 

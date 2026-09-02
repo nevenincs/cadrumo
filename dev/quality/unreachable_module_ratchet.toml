@@ -68,8 +68,6 @@ allowed = [
   "cadrumo.application.user_profile.presentation",  # module-exec-only
   "cadrumo.application.user_profile.status_projection",  # module-exec-only
   "cadrumo.application.wizard._registered_values",  # unreachable
-  "cadrumo.application.wizard._translations",  # unreachable
-  "cadrumo.application.wizard.copy_sources",  # unreachable
   "cadrumo.application.wizard.legal_zone",  # unreachable
   "cadrumo.core.compatibility_lifecycle",  # unreachable
   "cadrumo.core.corpus_manifest._bundle_signing",  # unreachable
