@@ -7,6 +7,7 @@ import inspect
 import os
 from pathlib import Path
 from shutil import rmtree
+from types import SimpleNamespace
 
 import pytest
 
@@ -22,6 +23,7 @@ from ..pipeline._provenance_manifest import (
 )
 from ..pipeline._tree_publication import (
     GeneratedExportTreePublicationContext,
+    GeneratedExportTreeTargetStateReceipt,
     publish_validated_generated_export_tree,
 )
 from ..pipeline._tree_validation import validate_generated_export_tree
@@ -155,6 +157,117 @@ def _stage_interrupted_verified_candidate(
         journal,
     )
     return backup_export_root
+
+
+def _legacy_orphan_context(tmp_path: Path) -> GeneratedExportTreePublicationContext:
+    target_root = tmp_path / "publication-root" / "registry" / "aeat"
+    target_export_root = target_root / "modelos" / "200" / "revisions" / "2025" / "export"
+    target_export_root.parent.mkdir(parents=True)
+    return GeneratedExportTreePublicationContext(
+        validation=SimpleNamespace(target=SimpleNamespace(modelo="200", revision_id="2025")),  # type: ignore[arg-type]
+        temporary_root=tmp_path / "temporary-root",
+        target_root=target_root,
+        target_export_root=target_export_root,
+        expected_target_state=GeneratedExportTreeTargetStateReceipt(manifest_sha256=None, output_files=()),
+    )
+
+
+def _legacy_orphan_journal(
+    context: GeneratedExportTreePublicationContext,
+    *,
+    candidate_export: Path,
+    backup_export: Path,
+    state: str = "intent",
+) -> Path:
+    journal = _tree_publication._PublicationJournal(
+        schema_version=1,
+        state=state,
+        modelo="200",
+        revision_id="2025",
+        candidate_export=str(candidate_export),
+        backup_export=str(backup_export),
+        candidate_manifest_sha256="a" * 64,
+    )
+    path = _tree_publication._journal_path(context)
+    _tree_publication._write_journal(path, journal)
+    return path
+
+
+def test_recovery_retires_only_a_provably_completed_legacy_cross_volume_orphan(tmp_path) -> None:
+    context = _legacy_orphan_context(tmp_path)
+    candidate_export = tmp_path / "former-system-temporary" / "export"
+    backup_export = _tree_publication._rollback_sibling(
+        target_root=context.target_root,
+        modelo="200",
+        revision_id="2025",
+    )
+    journal_path = _legacy_orphan_journal(
+        context,
+        candidate_export=candidate_export,
+        backup_export=backup_export,
+    )
+
+    assert not _tree_publication._recover_interrupted_publication(
+        context=context,
+        target_export_root=context.target_export_root,
+        journal_path=journal_path,
+        joined=None,  # type: ignore[arg-type]
+        semantic_map=None,  # type: ignore[arg-type]
+        rendered=None,  # type: ignore[arg-type]
+        render_profile=None,  # type: ignore[arg-type]
+        render_profile_source_evidence=None,  # type: ignore[arg-type]
+    )
+    assert not journal_path.exists()
+    assert not context.target_export_root.exists()
+
+
+@pytest.mark.parametrize(
+    ("case", "state"),
+    (
+        ("candidate-survives", "intent"),
+        ("backup-survives", "intent"),
+        ("target-survives", "intent"),
+        ("outside-backup", "intent"),
+        ("non-intent", "backup_staged"),
+    ),
+)
+def test_recovery_refuses_unsafe_legacy_orphan_shapes(tmp_path, case: str, state: str) -> None:
+    context = _legacy_orphan_context(tmp_path)
+    candidate_export = tmp_path / "former-system-temporary" / "export"
+    backup_export = _tree_publication._rollback_sibling(
+        target_root=context.target_root,
+        modelo="200",
+        revision_id="2025",
+    )
+    if case == "candidate-survives":
+        candidate_export.mkdir(parents=True)
+    elif case == "backup-survives":
+        backup_export.mkdir()
+    elif case == "target-survives":
+        context.target_export_root.mkdir()
+    elif case == "outside-backup":
+        backup_export = tmp_path / ".generated-export-backup-200-2025-outside"
+    elif case != "non-intent":
+        raise AssertionError(f"unexpected legacy orphan case: {case}")
+    journal_path = _legacy_orphan_journal(
+        context,
+        candidate_export=candidate_export,
+        backup_export=backup_export,
+        state=state,
+    )
+
+    with pytest.raises(RegistryValidationError):
+        _tree_publication._recover_interrupted_publication(
+            context=context,
+            target_export_root=context.target_export_root,
+            journal_path=journal_path,
+            joined=None,  # type: ignore[arg-type]
+            semantic_map=None,  # type: ignore[arg-type]
+            rendered=None,  # type: ignore[arg-type]
+            render_profile=None,  # type: ignore[arg-type]
+            render_profile_source_evidence=None,  # type: ignore[arg-type]
+        )
+    assert journal_path.exists()
 
 
 def test_publication_replaces_only_export_and_removes_opaque_backup(m130_inspection_snapshot, tmp_path) -> None:

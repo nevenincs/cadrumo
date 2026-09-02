@@ -309,15 +309,29 @@ name = The TUI must not depend on a sibling entrypoint
 # depend on the TUI -- and says nothing about the TUI reaching sideways.  Two
 # entrypoints are peers: neither is a library for the other, and a TUI that
 # imports the CLI would take that package's initialiser, and with it Typer, into
-# a process that has no command line.  The reach is currently zero, which is why
-# this contract can be a hard prohibition with no exceptions rather than a
+# a process that has no command line.  The PRODUCTION reach is zero, which is why
+# this contract stays a hard prohibition over production modules rather than a
 # baseline; it exists so the zero is guarded rather than merely true.
+#
+# One test edge is allowed, and only one.  The installed-entrypoint proof asserts
+# that the command the CLI builds to start a session is the module-execution
+# surface -- that is, it exists to prove this very boundary is kept, and it reads
+# the session bridge's two constants to do it.  It imports no TUI-facing CLI
+# behaviour and constructs no Typer application, so it cannot drag a command line
+# into a process that has none, which is the harm the prohibition names.  This
+# mirrors the launcher-only wiring contract below, which already separates
+# production wiring from test construction on the same reasoning.
+#
+# The OPPOSITE direction is not softened anywhere: the backend prohibition above
+# keeps no allowance, and the CLI's in-process reach into the TUI stays reported.
 type = forbidden
 source_modules =
     cadrumo.entrypoints.tui
     cadrumo.entrypoints.tui.*
 forbidden_modules =
     cadrumo.entrypoints.cli
+ignore_imports =
+    cadrumo.entrypoints.tui.tests.test_installed_entrypoint -> cadrumo.entrypoints.cli._tui_session
 
 [importlinter:contract:tui-launcher-only-adapter-wiring]
 name = Only the TUI launcher may wire concrete adapters
