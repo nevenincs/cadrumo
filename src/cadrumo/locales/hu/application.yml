@@ -461,10 +461,6 @@ application:
           meg, ezért a rekordsorrend nem egyértelmű.
         required_casillas_omitted: Az export kihagyna olyan kötelező casillákat, amelyeket
           a hivatalos rekord tartalmaz.
-    import:
-      errors:
-        period_token_undeclared: Az időszakkódot az aktív registry-revízió nem deklarálja.
-        period_token_unrepresentable: Az időszakkód nem képezhető le bevallási időszakra.
     m303_exonerado_390:
       errors:
         record_design_snapshot_mismatch: Az exonerado-390 rekordterv nem egyezik a

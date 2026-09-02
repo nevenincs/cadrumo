@@ -437,12 +437,6 @@ application:
           sequence is ambiguous.
         required_casillas_omitted: The export would omit required casillas the official
           record files.
-    import:
-      errors:
-        period_token_undeclared: The period token is not declared by the active registry
-          revision.
-        period_token_unrepresentable: The period token cannot be represented as a
-          filing period.
     m303_exonerado_390:
       errors:
         record_design_snapshot_mismatch: The exonerado-390 record design does not

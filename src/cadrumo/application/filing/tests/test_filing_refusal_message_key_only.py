@@ -357,21 +357,6 @@ def test_boolean_input_refusal_renders_as_its_key() -> None:
     _assert_terminal_application_refusal(excinfo.value)
 
 
-def test_import_period_token_refusal_renders_as_its_key() -> None:
-    from .._import import _require_supported_period_token
-
-    with pytest.raises(ModeloApplicationError) as excinfo:
-        _require_supported_period_token(
-            modelo="303",
-            filing_year=2024,
-            period_code="ANUAL",
-            supported_periods={"1T", "2T", "3T", "4T"},
-        )
-
-    assert str(excinfo.value) == "application.filing.import.errors.period_token_undeclared"
-    _assert_terminal_application_refusal(excinfo.value)
-
-
 def test_export_layout_not_renderable_refusal_renders_as_its_key() -> None:
     from ..export import _export_layout_not_renderable_error
 
