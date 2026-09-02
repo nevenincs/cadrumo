@@ -179,8 +179,21 @@ def test_successful_symbol_replay_tolerates_unrelated_post_receipt_bytes(tmp_pat
     repo, inventory, manifest, component, receipt = _case(tmp_path)
     unrelated = repo / "dev/concurrent_helper.py"
     unrelated.write_bytes(b"def helper_runtime() -> None:\n    pass\n")
+    current_inventory = scan((repo / "src", repo / "dev"), repo)
+    assert to_json(current_inventory)["inventory_digest"] != to_json(inventory)["inventory_digest"]
+    current_component = build_manifest_components(
+        manifest,
+        inventory=cast("Any", current_inventory),
+        hard_edges=component.hard_edges,
+    )[0]
 
-    replay_object_name_component(manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo)
+    replay_object_name_component(
+        manifest,
+        inventory=current_inventory,
+        component=current_component,
+        receipt=receipt,
+        repo_root=repo,
+    )
 
     assert unrelated.read_bytes() == b"def helper_runtime() -> None:\n    pass\n"
     assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"

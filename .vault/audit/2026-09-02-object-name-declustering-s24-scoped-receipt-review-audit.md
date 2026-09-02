@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:7bf6a0f84406032947d968fd6af429786bb6da5d76910592f010f5e085d46d15'
+body_hash: 'sha256:932a5e13a5c0ef0d012c433eea878732b915696a2bcd9600238ba81f829acd58'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
@@ -97,3 +97,15 @@ behavior; the remaining defect is detector coverage.
 Focused validation passed the amended replay and disappearance cases (2 tests). Ruff lint,
 Ruff format, and ty passed. Final S24 status is one medium finding and no critical, high, or
 low findings.
+
+## Final closure
+
+Resolved: `inventory-churn-integration-teeth` is closed. The replay integration test now
+rescans the repository after creating `dev/concurrent_helper.py`, asserts the current
+inventory digest changed, rebuilds the current component, and invokes replay with the fresh
+inventory and component while retaining the earlier receipt. The successful replay and exact
+preservation assertion now cover genuine unrelated inventory churn through the production
+boundary rather than only filesystem byte churn.
+
+The focused detector passed (1 test in 3.59 seconds); Ruff lint, Ruff format, and ty passed for
+the amended replay test. Final S24 status is no findings at any severity.

@@ -10,7 +10,7 @@ related:
   - '[[2026-09-02-object-name-declustering-reference]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:f9668171dfd746895c0418a9c65c86b213ace69a2981e7668f37fa26d40326a5'
+body_hash: 'sha256:f7a552dd6685d35330e6cca7c8e4bf739389f973b6593cf68089a0a69dc528ab'
 ---
 
 <!-- RETIRED: S21, S22 -->
@@ -100,7 +100,7 @@ Expose the declustering command as a discoverable mutation recipe whose default 
 Demonstrate the workflow on one reviewed leaf component and record evidence before any live rename.
 
 - [x] `W03.P09.S23` - Bind manifest staleness to selected identities and declared bytes so unrelated concurrent inventory churn cannot invalidate a leaf operation; `dev/quality/object_name_manifest.py, dev/quality/tests/test_object_name_manifest.py`.
-- [ ] `W03.P09.S24` - Bind rehearsal receipts and replay drift checks to the reviewed component while preserving unrelated concurrent bytes; `dev/quality/object_name_rehearsal.py, dev/quality/object_name_replay.py, dev/quality/tests/test_object_name_rehearsal.py, dev/quality/tests/test_object_name_replay.py`.
+- [x] `W03.P09.S24` - Bind rehearsal receipts and replay drift checks to the reviewed component while preserving unrelated concurrent bytes; `dev/quality/object_name_rehearsal.py, dev/quality/object_name_replay.py, dev/quality/tests/test_object_name_rehearsal.py, dev/quality/tests/test_object_name_replay.py`.
 - [x] `W03.P09.S19` - Author one reviewed low-risk leaf-component manifest with exact finding and byte preconditions; `dev/quality/object_name_rename_manifest.toml`.
 - [ ] `W03.P09.S20` - Run the Justfile rehearsal and record scope, receipt, gate results, residual findings, and unchanged-live-tree proof; `.vault/audit/2026-09-02-object-name-declustering-pilot-rehearsal-audit.md`.
 

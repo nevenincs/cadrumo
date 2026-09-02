@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:52f9bdb6132be846dc793d423b3b0db5f6397f38d678725edde247f6f1d8969e'
+body_hash: 'sha256:2115db528115ef4d51bcc6571df2060bf3adda2d0e05191844df23b529d0faa3'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
@@ -115,3 +115,16 @@ Focused validation passed both the Python-churn replay case and the hash-time di
 case (2 tests), and Ruff lint, Ruff format, and ty all passed for the four affected
 implementation/test files. Final status remains one medium finding and no critical, high, or
 low findings.
+
+## Final closure
+
+Resolved: `end-to-end-churn-teeth` is closed. After adding the distinct singular Python
+declaration, the integration test now rescans `src` and `dev`, asserts that the fresh
+inventory digest differs from the pre-receipt digest, rebuilds the component from that fresh
+inventory, and supplies both fresh values to replay. Replay succeeds, applies only the
+reviewed rename, and preserves the unrelated file. This exercises the same post-receipt
+inventory path used by CLI orchestration and would fail if historical global-digest equality
+were restored.
+
+The focused detector passed (1 test in 3.59 seconds); Ruff lint, Ruff format, and ty passed for
+the amended replay test. Final S23 status is no findings at any severity.
