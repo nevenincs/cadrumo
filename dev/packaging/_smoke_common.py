@@ -157,6 +157,9 @@ _CORE_ABSENT_NAMES = {
 _CORE_PRESENT_TRANSITIVE_NAMES = {
     "numpy",
     "anyio",
+    # mcp requires pywin32 on win32, so the harness dependency carries it into the
+    # core export on Windows without the project declaring it.
+    "pywin32",
     "pillow",
     "lxml",
 }
@@ -336,6 +339,13 @@ def run_checked(
         sys.stderr.write(completed.stderr)
         raise SystemExit(completed.returncode or 1)
     return completed
+
+
+#: SGR colour sequences `uv export` emits when it judges the stream a terminal.
+#: They precede the payload, so a comment line reads as `[32m# ...` and never
+#: matches a bare `#` prefix test. The export parser strips them rather than
+#: depending on the producer's colour decision.
+_ANSI_SGR = re.compile(r"\[[0-9;]*m")
 
 
 def requirement_name(requirement: str) -> str:
@@ -711,7 +721,7 @@ def _export_names(output: str, *, repo_root: Path | None = None) -> set[str]:
     missing a package that was in fact present and editable.
     """
     names: set[str] = set()
-    for line in output.splitlines():
+    for line in _ANSI_SGR.sub("", output).splitlines():
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
             continue
