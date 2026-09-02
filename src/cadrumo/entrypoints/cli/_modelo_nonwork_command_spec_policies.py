@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from .command_spec import ExecutionPolicySpec
 
-_METADATA = ExecutionPolicySpec(frozenset(("state-free",)), frozenset(("none",)), "metadata", "none")
+_METADATA = ExecutionPolicySpec(frozenset(("state-free",)), frozenset(("none",)), "metadata", CommandWriteRoute.NONE)
 
 _BROWSER_MODEL_WRITE = ExecutionPolicySpec(
     frozenset(("browser", "registry", "encrypted-facts")),

@@ -20,7 +20,7 @@ _CALCULATION_READ = ExecutionPolicySpec(
     capabilities=frozenset({"calculation", "encrypted-facts"}),
     side_effects=frozenset({"none"}),
     performance="compute",
-    write_route="none",
+    write_route=CommandWriteRoute.NONE,
 )
 _STR = ValueContract(DeferredTarget("builtins", "str"))
 _INT = ValueContract(DeferredTarget("builtins", "int"))

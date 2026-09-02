@@ -58,7 +58,7 @@ def _classification(
 def test_policy_is_immutable_and_preserves_explicit_safe_judgments() -> None:
     policy = CommandExecutionPolicy(
         classification=_classification(capabilities=frozenset({"state-free"}), side_effects=frozenset({"none"})),
-        write_route="none",
+        write_route=CommandWriteRoute.NONE,
     )
 
     assert not policy.destructive

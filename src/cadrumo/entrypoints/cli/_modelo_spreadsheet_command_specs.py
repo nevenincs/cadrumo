@@ -32,7 +32,7 @@ from .command_spec import (
     ValueContract,
 )
 
-_METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", "none")
+_METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)
 _GOOGLE_CALCULATION_READ = ExecutionPolicySpec(
     frozenset({"calculation", "encrypted-facts", "google"}), frozenset({"google"}), "external-io", "none"
 )

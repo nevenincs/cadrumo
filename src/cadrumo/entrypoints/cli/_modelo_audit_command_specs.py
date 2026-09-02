@@ -22,20 +22,20 @@ _MODEL_READ = ExecutionPolicySpec(
     capabilities=frozenset({"encrypted-facts"}),
     side_effects=frozenset({"none"}),
     performance="local-io",
-    write_route="none",
+    write_route=CommandWriteRoute.NONE,
 )
 _MODEL_HANDOFF = ExecutionPolicySpec(
     capabilities=frozenset({"encrypted-facts", "filing"}),
     side_effects=frozenset({"local-state"}),
     performance="compute",
-    write_route="profile-bound",
+    write_route=CommandWriteRoute.PROFILE_BOUND,
     handoff=True,
 )
 _METADATA = ExecutionPolicySpec(
     capabilities=frozenset({"state-free"}),
     side_effects=frozenset({"none"}),
     performance="metadata",
-    write_route="none",
+    write_route=CommandWriteRoute.NONE,
 )
 _STR = ValueContract(DeferredTarget("builtins", "str"))
 _BOOL = ValueContract(DeferredTarget("builtins", "bool"))

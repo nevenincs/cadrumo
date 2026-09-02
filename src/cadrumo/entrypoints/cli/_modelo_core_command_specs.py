@@ -17,11 +17,11 @@ from .command_spec import (
 )
 from .command_spec import translation_key as _key
 
-_METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", "none")
+_METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)
 _CALCULATION_READ = ExecutionPolicySpec(
     frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute", "none"
 )
-_MODEL_READ = ExecutionPolicySpec(frozenset({"encrypted-facts"}), frozenset({"none"}), "local-io", "none")
+_MODEL_READ = ExecutionPolicySpec(frozenset({"encrypted-facts"}), frozenset({"none"}), "local-io", CommandWriteRoute.NONE)
 _CALCULATION_WRITE = ExecutionPolicySpec(
     frozenset({"calculation", "encrypted-facts"}),
     frozenset({"local-state"}),

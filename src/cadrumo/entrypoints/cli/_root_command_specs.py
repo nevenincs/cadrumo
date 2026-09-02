@@ -29,13 +29,13 @@ _STATE_FREE = ExecutionPolicySpec(
     capabilities=frozenset({"state-free"}),
     side_effects=frozenset({"none"}),
     performance="metadata",
-    write_route="none",
+    write_route=CommandWriteRoute.NONE,
 )
 _ROOT_STATUS = ExecutionPolicySpec(
     capabilities=frozenset({"calculation", "encrypted-facts"}),
     side_effects=frozenset({"none"}),
     performance="compute",
-    write_route="none",
+    write_route=CommandWriteRoute.NONE,
 )
 
 

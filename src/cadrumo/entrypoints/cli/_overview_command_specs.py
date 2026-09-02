@@ -17,8 +17,8 @@ from .command_spec import (
 )
 from .command_spec import translation_key as _key
 
-_METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", "none")
-_READ = ExecutionPolicySpec(frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute", "none")
+_METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)
+_READ = ExecutionPolicySpec(frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute", CommandWriteRoute.NONE)
 _STR = ValueContract(DeferredTarget("builtins", "str"))
 _INT = ValueContract(DeferredTarget("builtins", "int"))
 _BOOL = ValueContract(DeferredTarget("builtins", "bool"))

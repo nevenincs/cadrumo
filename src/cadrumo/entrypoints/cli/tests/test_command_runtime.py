@@ -34,7 +34,7 @@ _POLICY = ExecutionPolicySpec(
     capabilities=frozenset({"state-free"}),
     side_effects=frozenset({"none"}),
     performance="metadata",
-    write_route="none",
+    write_route=CommandWriteRoute.NONE,
 )
 _NO_SCHEMA = ResultSchemaSpec(SchemaState.NOT_SUPPORTED)
 

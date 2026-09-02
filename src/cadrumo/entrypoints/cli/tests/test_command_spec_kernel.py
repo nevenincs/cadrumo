@@ -29,7 +29,7 @@ _STATE_FREE = ExecutionPolicySpec(
     capabilities=frozenset({"state-free"}),
     side_effects=frozenset({"none"}),
     performance="metadata",
-    write_route="none",
+    write_route=CommandWriteRoute.NONE,
 )
 _STRING = ValueContract(DeferredTarget("builtins", "str"))
 _NO_SCHEMA = ResultSchemaSpec(SchemaState.NOT_SUPPORTED)
@@ -219,7 +219,7 @@ def test_execution_policy_is_self_contained_and_expands_implied_authority() -> N
         capabilities=frozenset({"google"}),
         side_effects=frozenset({"google"}),
         performance="external-io",
-        write_route="none",
+        write_route=CommandWriteRoute.NONE,
     )
     assert policy.expanded_capabilities == frozenset({"google", "network"})
 
@@ -228,7 +228,7 @@ def test_execution_policy_is_self_contained_and_expands_implied_authority() -> N
             capabilities=frozenset({"local-storage"}),
             side_effects=frozenset({"network"}),
             performance="external-io",
-            write_route="none",
+            write_route=CommandWriteRoute.NONE,
         )
 
 
