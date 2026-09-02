@@ -41,16 +41,16 @@ def test_it_returns_the_revision_the_snapshot_boundary_admits(authority, modelo,
 def test_it_refuses_exactly_where_the_snapshot_boundary_refuses(authority) -> None:
     """A grade the revision cannot satisfy is refused identically by both accessors.
 
-    Modelo 200 declares calculation grade at this coordinate, so demanding filing
+    Modelo 200's 2024 revision declares calculation grade, so demanding filing
     grade from it is a refusal the shipped registry really makes rather than a
     contrived one. Refusing identically is the whole safety argument: an accessor
     that skipped the copy but also skipped a refusal would hand back an
     identifier the boundary never admitted.
     """
     with pytest.raises(RegistryValidationError) as snapshot_refusal:
-        authority.snapshot("200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.FILING)
+        authority.snapshot("200", filing_year=2024, period="0A", grade=RegistryAuthorityGrade.FILING)
     with pytest.raises(RegistryValidationError) as identifier_refusal:
-        authority.admitted_revision_id("200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.FILING)
+        authority.admitted_revision_id("200", filing_year=2024, period="0A", grade=RegistryAuthorityGrade.FILING)
 
     assert str(identifier_refusal.value) == str(snapshot_refusal.value)
 

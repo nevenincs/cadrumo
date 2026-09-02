@@ -22,14 +22,16 @@ from typing import Final
 from cadrumo.core.hashing import canonical_json_bytes, prefixed_digest, sha256_file
 from cadrumo.core.link_safety import is_link_like
 
-from ..audit.object_names import ObjectNameAuditResult, ObjectNameFinding, scan
+from ..audit.object_names import ObjectNameAuditResult, ObjectNameFinding, scan, to_json
 from .object_name_graph import OperationComponent
 from .object_name_manifest import (
+    ObjectNameManifestError,
     ObjectNameRenameManifest,
     object_name_manifest_digest,
     select_object_name_execution,
+    validate_object_name_manifest,
 )
-from .object_name_transform import ObjectNameTransformResult, plan_object_name_transformation
+from .object_name_transform import ObjectNameTransformError, ObjectNameTransformResult, plan_object_name_transformation
 
 __all__ = [
     "ObjectNameFindingDelta",
@@ -41,6 +43,7 @@ __all__ = [
 
 _RECEIPT_SCHEMA_VERSION: Final[int] = 1
 _DIGEST_PREFIX: Final[str] = "sha256:"
+_COMMAND_TIMEOUT_SECONDS: Final[int] = 1_800
 _EXCLUDED_DIRECTORY_NAMES: Final[frozenset[str]] = frozenset(
     {".git", ".mypy_cache", ".pytest_cache", ".ruff_cache", ".tox", ".venv", "__pycache__", "node_modules"}
 )
@@ -84,7 +87,7 @@ class ObjectNameRehearsalReceipt:
     component_id: str
     operation_ids: tuple[str, ...]
     baseline_tree_digest: str
-    baseline_files: tuple[tuple[str, str], ...]
+    baseline_files: tuple[tuple[str, str | None], ...]
     input_file_digests: tuple[tuple[str, str], ...]
     proposed_file_digests: tuple[tuple[str, str | None], ...]
     changed_paths: tuple[str, ...]
@@ -95,6 +98,7 @@ class ObjectNameRehearsalReceipt:
     gate_outcomes: tuple[ObjectNameGateOutcome, ...]
     source_tree_unchanged: bool
     receipt_id: str
+    evidence_digest: str
 
 
 def _digest_bytes(payload: bytes) -> str:
@@ -128,7 +132,12 @@ def _eligible_snapshot_path(relative: str) -> bool:
 
 def _regular_file(repo_root: Path, relative: str) -> Path | None:
     candidate = PurePosixPath(relative)
-    if candidate.is_absolute() or any(part in {"", ".", "..", ".git"} for part in candidate.parts):
+    if (
+        "\\" in relative
+        or ":" in relative
+        or candidate.is_absolute()
+        or any(part in {"", ".", "..", ".git"} for part in candidate.parts)
+    ):
         raise ObjectNameRehearsalError(f"unsafe repository snapshot path: {relative!r}")
     path = repo_root
     for part in candidate.parts:
@@ -142,12 +151,12 @@ def _regular_file(repo_root: Path, relative: str) -> Path | None:
     return path
 
 
-def _snapshot(repo_root: Path, paths: Sequence[str]) -> tuple[tuple[str, str], ...]:
-    files: list[tuple[str, str]] = []
+def _snapshot(repo_root: Path, paths: Sequence[str]) -> tuple[tuple[str, str | None], ...]:
+    files: list[tuple[str, str | None]] = []
     for relative in paths:
         path = _regular_file(repo_root, relative)
-        if path is not None:
-            files.append((relative, f"{_DIGEST_PREFIX}{sha256_file(path)}"))
+        digest = None if path is None else f"{_DIGEST_PREFIX}{sha256_file(path)}"
+        files.append((relative, digest))
     return tuple(files)
 
 
@@ -176,16 +185,20 @@ def _temporary_paths(repo_root: Path) -> tuple[str, ...]:
     return tuple(sorted(paths))
 
 
-def _tree_digest(files: Sequence[tuple[str, str]]) -> str:
+def _tree_digest(files: Sequence[tuple[str, str | None]]) -> str:
     return _digest_bytes(canonical_json_bytes({"schema_version": 1, "files": list(files)}))
 
 
 def _copy_snapshot(
     source_root: Path,
     target_root: Path,
-    files: Sequence[tuple[str, str]],
+    files: Sequence[tuple[str, str | None]],
 ) -> None:
+    for source_root_name in ("src", "dev"):
+        (target_root / source_root_name).mkdir(parents=True, exist_ok=True)
     for relative, expected_digest in files:
+        if expected_digest is None:
+            continue
         source = _regular_file(source_root, relative)
         if source is None:
             raise ObjectNameRehearsalError(f"snapshot source disappeared during copy: {relative}")
@@ -215,10 +228,17 @@ def _materialise(target_root: Path, result: ObjectNameTransformResult) -> None:
         os.replace(temporary, target)
 
 
-def _run_command(argv: tuple[str, ...], *, cwd: Path) -> ObjectNameGateOutcome:
+def _run_command(argv: tuple[str, ...], *, cwd: Path, environment: Mapping[str, str]) -> ObjectNameGateOutcome:
     try:
-        completed = subprocess.run(argv, cwd=cwd, capture_output=True, check=False)  # noqa: S603
-    except OSError as exc:
+        completed = subprocess.run(  # noqa: S603
+            argv,
+            cwd=cwd,
+            env=environment,
+            capture_output=True,
+            check=False,
+            timeout=_COMMAND_TIMEOUT_SECONDS,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
         raise ObjectNameRehearsalError(f"cannot execute declared command {argv!r}") from exc
     return ObjectNameGateOutcome(
         argv=argv,
@@ -228,6 +248,31 @@ def _run_command(argv: tuple[str, ...], *, cwd: Path) -> ObjectNameGateOutcome:
         stderr_sha256=_digest_bytes(completed.stderr),
         stderr_bytes=len(completed.stderr),
     )
+
+
+def _failed_command_message(outcome: ObjectNameGateOutcome) -> str:
+    return (
+        f"declared rehearsal command failed: argv={outcome.argv!r}, return_code={outcome.return_code}, "
+        f"stdout_sha256={outcome.stdout_sha256}, stdout_bytes={outcome.stdout_bytes}, "
+        f"stderr_sha256={outcome.stderr_sha256}, stderr_bytes={outcome.stderr_bytes}"
+    )
+
+
+def _tool_version(argv: tuple[str, ...], *, cwd: Path) -> str:
+    try:
+        completed = subprocess.run(  # noqa: S603
+            argv,
+            cwd=cwd,
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=_COMMAND_TIMEOUT_SECONDS,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise ObjectNameRehearsalError(f"cannot determine tool version with {argv!r}") from exc
+    if completed.returncode != 0:
+        raise ObjectNameRehearsalError(f"tool version command failed: {argv!r}")
+    return completed.stdout.strip()
 
 
 def _finding_signature(finding: ObjectNameFinding) -> str:
@@ -257,8 +302,12 @@ def _finding_delta(before: ObjectNameAuditResult, after: ObjectNameAuditResult) 
     )
 
 
-def _receipt_payload(receipt: ObjectNameRehearsalReceipt) -> Mapping[str, object]:
-    return {
+def _receipt_payload(
+    receipt: ObjectNameRehearsalReceipt,
+    *,
+    include_output_evidence: bool,
+) -> Mapping[str, object]:
+    payload: dict[str, object] = {
         "schema_version": receipt.schema_version,
         "manifest_digest": receipt.manifest_digest,
         "inventory_digest": receipt.inventory_digest,
@@ -278,10 +327,17 @@ def _receipt_payload(receipt: ObjectNameRehearsalReceipt) -> Mapping[str, object
             "introduced_signatures": receipt.finding_delta.introduced_signatures,
         },
         "tool_versions": receipt.tool_versions,
-        "generator_outcomes": [asdict(outcome) for outcome in receipt.generator_outcomes],
-        "gate_outcomes": [asdict(outcome) for outcome in receipt.gate_outcomes],
+        "generator_outcomes": [
+            asdict(outcome) if include_output_evidence else {"argv": outcome.argv, "return_code": outcome.return_code}
+            for outcome in receipt.generator_outcomes
+        ],
+        "gate_outcomes": [
+            asdict(outcome) if include_output_evidence else {"argv": outcome.argv, "return_code": outcome.return_code}
+            for outcome in receipt.gate_outcomes
+        ],
         "source_tree_unchanged": receipt.source_tree_unchanged,
     }
+    return payload
 
 
 def rehearse_object_name_component(
@@ -295,10 +351,17 @@ def rehearse_object_name_component(
     root = repo_root.resolve()
     if not (root / ".git").exists() or not (root / "src").is_dir() or not (root / "dev").is_dir():
         raise ObjectNameRehearsalError(f"rehearsal root is not a repository worktree: {root}")
-    selected = tuple(sorted(select_object_name_execution(manifest), key=lambda item: item.operation_id))
-    selected_ids = tuple(operation.operation_id for operation in selected)
-    if selected_ids != component.operation_ids:
-        raise ObjectNameRehearsalError("manifest execution must equal exactly one reviewed graph component")
+    executable = {operation.operation_id: operation for operation in select_object_name_execution(manifest)}
+    try:
+        selected = tuple(executable[operation_id] for operation_id in component.operation_ids)
+    except KeyError as exc:
+        raise ObjectNameRehearsalError(f"reviewed component names a non-executable operation: {exc.args[0]}") from exc
+    component_manifest = manifest.model_copy(update={"operations": selected})
+    allowed_paths = tuple(sorted({path for operation in selected for path in operation.changed_paths}))
+    try:
+        validate_object_name_manifest(manifest, inventory=inventory, repo_root=root)
+    except ObjectNameManifestError as exc:
+        raise ObjectNameRehearsalError(f"reviewed manifest is not current: {exc}") from exc
 
     snapshot_paths = _git_snapshot_paths(root)
     baseline_files = _snapshot(root, snapshot_paths)
@@ -306,39 +369,71 @@ def rehearse_object_name_component(
     input_paths = tuple(sorted({item.path for operation in selected for item in operation.preconditions}))
     baseline_by_path = dict(baseline_files)
     try:
-        input_file_digests = tuple((path, baseline_by_path[path]) for path in input_paths)
+        input_file_digests = tuple(
+            (path, digest) for path in input_paths if (digest := baseline_by_path[path]) is not None
+        )
     except KeyError as exc:
         raise ObjectNameRehearsalError(f"manifest input is absent from the current snapshot: {exc.args[0]}") from exc
+    if len(input_file_digests) != len(input_paths):
+        raise ObjectNameRehearsalError("manifest input is a tracked deletion in the current snapshot")
 
     system_temporary_root = Path(tempfile.gettempdir()).resolve()
-    if not system_temporary_root.is_dir() or is_link_like(system_temporary_root):
+    if (
+        not system_temporary_root.is_dir()
+        or is_link_like(system_temporary_root)
+        or system_temporary_root.is_relative_to(root)
+    ):
         raise ObjectNameRehearsalError(f"system temporary root is unsafe: {system_temporary_root}")
-    temporary_parent = Path(tempfile.mkdtemp(prefix="cadrumo-object-name-", dir=system_temporary_root)).resolve()
-    if temporary_parent.parent != system_temporary_root or is_link_like(temporary_parent):
-        raise ObjectNameRehearsalError(f"allocated rehearsal parent is unsafe: {temporary_parent}")
+    try:
+        temporary_parent = Path(tempfile.mkdtemp(prefix="cadrumo-object-name-", dir=system_temporary_root)).resolve()
+    except OSError as exc:
+        raise ObjectNameRehearsalError("cannot allocate the system-temporary rehearsal root") from exc
     temporary_root = temporary_parent / "repository"
-    temporary_root.mkdir()
     source_unchanged = False
     try:
+        if temporary_parent.parent != system_temporary_root or is_link_like(temporary_parent):
+            raise ObjectNameRehearsalError(f"allocated rehearsal parent is unsafe: {temporary_parent}")
+        temporary_root.mkdir()
         _copy_snapshot(root, temporary_root, baseline_files)
         if _snapshot(temporary_root, tuple(path for path, _digest in baseline_files)) != baseline_files:
             raise ObjectNameRehearsalError("verified temporary snapshot differs from the current tree")
+        copied_inventory = scan((temporary_root / "src", temporary_root / "dev"), temporary_root)
+        copied_inventory_digest = to_json(copied_inventory)["inventory_digest"]
+        supplied_inventory_digest = to_json(inventory)["inventory_digest"]
+        if copied_inventory_digest != supplied_inventory_digest or copied_inventory_digest != manifest.inventory_digest:
+            raise ObjectNameRehearsalError("verified snapshot inventory differs from reviewed manifest authority")
 
-        result = plan_object_name_transformation(manifest, repo_root=temporary_root)
-        if result.changed_paths != tuple(sorted(component.affected_paths)):
-            raise ObjectNameRehearsalError("transformation paths differ from the reviewed component")
+        try:
+            result = plan_object_name_transformation(component_manifest, repo_root=temporary_root)
+        except ObjectNameTransformError as exc:
+            raise ObjectNameRehearsalError(f"bounded transformation refused: {exc}") from exc
+        if result.changed_paths != allowed_paths:
+            raise ObjectNameRehearsalError("transformation paths differ from the reviewed allowlist")
         _materialise(temporary_root, result)
 
         generator_argv = tuple(command for operation in selected for command in operation.generator_commands)
         gate_argv = tuple(command for operation in selected for command in operation.focused_gates)
-        generator_outcomes = tuple(_run_command(argv, cwd=temporary_root) for argv in generator_argv)
-        gate_outcomes = tuple(_run_command(argv, cwd=temporary_root) for argv in gate_argv)
-        failed = tuple(outcome.argv for outcome in (*generator_outcomes, *gate_outcomes) if outcome.return_code != 0)
-        if failed:
-            raise ObjectNameRehearsalError(f"declared rehearsal commands failed: {failed!r}")
+        command_environment = os.environ.copy()
+        command_environment["VIRTUAL_ENV"] = sys.prefix
+        command_environment["UV_PROJECT_ENVIRONMENT"] = sys.prefix
+        command_environment["PYTHONPATH"] = os.pathsep.join((str(temporary_root / "src"), str(temporary_root)))
+        generator_results: list[ObjectNameGateOutcome] = []
+        gate_results: list[ObjectNameGateOutcome] = []
+        for argv in generator_argv:
+            outcome = _run_command(argv, cwd=temporary_root, environment=command_environment)
+            generator_results.append(outcome)
+            if outcome.return_code != 0:
+                raise ObjectNameRehearsalError(_failed_command_message(outcome))
+        for argv in gate_argv:
+            outcome = _run_command(argv, cwd=temporary_root, environment=command_environment)
+            gate_results.append(outcome)
+            if outcome.return_code != 0:
+                raise ObjectNameRehearsalError(_failed_command_message(outcome))
+        generator_outcomes = tuple(generator_results)
+        gate_outcomes = tuple(gate_results)
 
         after_inventory = scan((temporary_root / "src", temporary_root / "dev"), temporary_root)
-        finding_delta = _finding_delta(inventory, after_inventory)
+        finding_delta = _finding_delta(copied_inventory, after_inventory)
         if finding_delta.after_count > finding_delta.before_count or finding_delta.introduced_signatures:
             raise ObjectNameRehearsalError("rehearsal introduces an enforced object-name finding")
 
@@ -351,14 +446,24 @@ def rehearse_object_name_component(
                 if dict(baseline_files).get(path) != dict(after_files).get(path)
             )
         )
-        if changed != tuple(sorted(component.affected_paths)):
-            raise ObjectNameRehearsalError("materialised changed paths differ from the reviewed component")
+        if changed != allowed_paths:
+            raise ObjectNameRehearsalError("materialised changed paths differ from the reviewed allowlist")
         proposed_digests = tuple((path, dict(after_files).get(path)) for path in changed)
         changed_path_digest = _digest_bytes(canonical_json_bytes(list(changed)))
-        tool_versions = (
-            ("libcst", importlib.metadata.version("libcst")),
-            ("python", sys.version.split()[0]),
-            ("rehearsal", str(_RECEIPT_SCHEMA_VERSION)),
+        tool_versions = tuple(
+            sorted(
+                (
+                    ("git", _tool_version(("git", "--version"), cwd=temporary_root)),
+                    ("libcst", importlib.metadata.version("libcst")),
+                    ("python", sys.version.split()[0]),
+                    ("rehearsal", str(_RECEIPT_SCHEMA_VERSION)),
+                    (
+                        "runtime-environment",
+                        _digest_bytes(canonical_json_bytes({"executable": sys.executable, "prefix": sys.prefix})),
+                    ),
+                    ("uv", _tool_version(("uv", "--version"), cwd=temporary_root)),
+                )
+            )
         )
         source_paths_after = _git_snapshot_paths(root)
         source_unchanged = (
@@ -385,14 +490,35 @@ def rehearse_object_name_component(
             gate_outcomes=gate_outcomes,
             source_tree_unchanged=True,
             receipt_id="",
+            evidence_digest="",
+        )
+        stable_receipt = replace(
+            provisional,
+            receipt_id=_digest_bytes(
+                canonical_json_bytes(_receipt_payload(provisional, include_output_evidence=False))
+            ),
         )
         return replace(
-            provisional,
-            receipt_id=_digest_bytes(canonical_json_bytes(_receipt_payload(provisional))),
+            stable_receipt,
+            evidence_digest=_digest_bytes(
+                canonical_json_bytes(_receipt_payload(stable_receipt, include_output_evidence=True))
+            ),
         )
+    except ObjectNameRehearsalError as exc:
+        raise ObjectNameRehearsalError(f"{exc}; retained rehearsal root: {temporary_root}") from exc
+    except Exception as exc:
+        raise ObjectNameRehearsalError(f"rehearsal failed; retained rehearsal root: {temporary_root}") from exc
     finally:
-        current_paths = _git_snapshot_paths(root)
-        if not source_unchanged and (
-            current_paths != snapshot_paths or _snapshot(root, current_paths) != baseline_files
-        ):
-            raise ObjectNameRehearsalError("source tree changed during failed rehearsal cleanup")
+        try:
+            current_paths = _git_snapshot_paths(root)
+            final_source_unchanged = (
+                current_paths == snapshot_paths and _snapshot(root, current_paths) == baseline_files
+            )
+        except Exception as exc:
+            raise ObjectNameRehearsalError(
+                f"cannot verify source immutability; retained rehearsal root: {temporary_root}"
+            ) from exc
+        if not final_source_unchanged:
+            raise ObjectNameRehearsalError(
+                f"source tree changed during rehearsal; retained rehearsal root: {temporary_root}"
+            )

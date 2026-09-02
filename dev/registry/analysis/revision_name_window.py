@@ -18,6 +18,13 @@ shapes carry a temporal claim:
 
 Six conditions are reported, and every row names one of them:
 
+- ``open_ended_window_not_selectable`` - the revision declares no ``valid_to``,
+  which reads as an open-ended window, while its period selector declares
+  neither an opening nor a closing year. Selection does not in fact extend
+  beyond the named year in this shape: all five instances admit their own year
+  and refuse the next. A revision that genuinely runs open-ended carries a
+  selector ``year_from``, which is how modelo 194 and modelo 721 serve years
+  after the one their name states.
 - ``name_opens_after_window`` - the name's leading year is later than the year
   the window opens, so the revision serves years its name does not claim. A
   reader selecting by name understates the revision's reach.
@@ -25,7 +32,10 @@ Six conditions are reported, and every row names one of them:
   year the window opens, so the name claims years the revision does not serve.
 - ``name_misstates_closing`` - the name closes at a year the window does not.
 - ``name_claims_single_year`` - the name gives one year while the window runs
-  open-ended. This understates reach rather than overstating it, which is why
+  open-ended AND selection honours that, so the revision really does serve years
+  its name omits. A revision whose open-endedness is not selectable is excluded:
+  its single-year name describes what it does, and reporting it here would call
+  an accurate name misleading. This understates reach rather than overstating it, which is why
   it attracts no attention and is the most common of these.
 - ``name_claims_open_ended`` - the name carries the open-ended suffix while the
   window closes.
@@ -101,6 +111,24 @@ def name_window_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[R
             )
         )
 
+    selector = revision.period_selector
+    # An open-ended `valid_to` beside a selector carrying neither bound does not
+    # select beyond the named year, so such a revision's single-year name is
+    # ACCURATE and must not also be reported as understating its reach.
+    window_unselectable = revision.valid_to is None and selector.year_from is None and selector.year_to is None
+    if window_unselectable:
+        findings.append(
+            RevisionNameFinding(
+                modelo=modelo_id,
+                revision=name,
+                kind="open_ended_window_not_selectable",
+                detail=(
+                    "valid_to is unset, which reads as open-ended, while the period selector "
+                    "declares neither year_from nor year_to"
+                ),
+            )
+        )
+
     years = [int(match) for match in _YEAR.findall(name)]
     if not years:
         findings.append(
@@ -135,7 +163,7 @@ def name_window_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[R
                 detail=f"name claims open-ended; declared window closes {closing}",
             )
         )
-    elif not open_ended and claimed_close is None and closing is None and len(years) == 1:
+    elif not open_ended and claimed_close is None and closing is None and len(years) == 1 and not window_unselectable:
         findings.append(
             RevisionNameFinding(
                 modelo=modelo_id,

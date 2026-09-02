@@ -161,7 +161,7 @@ def _runtime_rows(repo_root: Path, python_versions: Sequence[str] | None) -> tup
                 inventory = load_runtime_inventory(inventory_path)
             except RuntimeMatrixError as exc:
                 raise SystemExit(f"runtime inventory cannot drive wheelhouse construction: {exc}") from exc
-            rows = tuple((row.minor, True) for row in inventory.stable) + ((inventory.next.minor, False),)
+            rows = (*((row.minor, True) for row in inventory.stable), (inventory.next.minor, False))
     if not rows:
         raise SystemExit("runtime wheelhouse runtime set is empty")
     if len({minor for minor, _blocking in rows}) != len(rows):
@@ -191,10 +191,10 @@ def _marker_environment(target: TargetPlatform, python_version: str) -> dict[str
 
 def _interpreter_rank(tag: Tag, python_version: str) -> int | None:
     target_minor = int(_canonical_python_minor(python_version).split(".", maxsplit=1)[1])
-    target_interpreter = f"cp{target_minor}"
+    target_interpreter = f"cp3{target_minor}"
     interpreter = tag.interpreter
     abi = tag.abi
-    if interpreter in {"py3", f"py{target_minor}"} and abi == "none":
+    if interpreter in {"py3", f"py3{target_minor}"} and abi == "none":
         return 0
     if interpreter == target_interpreter and abi == target_interpreter:
         return 1
@@ -384,9 +384,7 @@ def _plan_runtime_wheelhouse(repo_root: Path, python_version: str) -> RuntimeWhe
 
 
 def _missing_wheel_message(plan: RuntimeWheelhousePlan) -> str:
-    missing = "; ".join(
-        f"{item['distribution']} ({item['platform']}, {item['requirement']})" for item in plan.missing
-    )
+    missing = "; ".join(f"{item['distribution']} ({item['platform']}, {item['requirement']})" for item in plan.missing)
     return f"runtime lock has no complete {plan.python_version} wheelhouse: {missing}"
 
 
@@ -572,15 +570,18 @@ def load_runtime_wheelhouse(
                 if not isinstance(missing, list) or not missing:
                     raise SystemExit(f"runtime wheelhouse missing-wheel record is empty: {python_version!r}")
                 for item in missing:
-                    if not isinstance(item, dict) or set(item) != {
-                        "distribution",
-                        "platform",
-                        "reason",
-                        "requirement",
-                    } or any(not isinstance(item[key], str) or not item[key] for key in item):
-                        raise SystemExit(
-                            f"runtime wheelhouse missing-wheel attribution is invalid: {python_version!r}"
-                        )
+                    if (
+                        not isinstance(item, dict)
+                        or set(item)
+                        != {
+                            "distribution",
+                            "platform",
+                            "reason",
+                            "requirement",
+                        }
+                        or any(not isinstance(item[key], str) or not item[key] for key in item)
+                    ):
+                        raise SystemExit(f"runtime wheelhouse missing-wheel attribution is invalid: {python_version!r}")
                 continue
             if status != "ready" or set(runtime) != {"platforms", "python", "status", "wheels"}:
                 raise SystemExit(f"runtime wheelhouse runtime status is invalid: {python_version!r}")

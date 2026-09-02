@@ -80,7 +80,7 @@ def _make_python_cohort(tmp_path: Path) -> tuple[PythonCohort, Path]:
         root_wheel=download / wheel_payloads["cadrumo"][0],
         root_sdist=tmp_path / f"cadrumo-{_VERSION}.tar.gz",
         source_archive=tmp_path / "cadrumo-source.zip",
-        runtime_wheelhouse=tmp_path / "cadrumo-runtime-wheelhouse-py313.zip",
+        runtime_wheelhouse=tmp_path / "cadrumo-runtime-wheelhouse.zip",
         runtime_wheelhouse_manifest={},
         manuals_wheel=download / wheel_payloads["cadrumo-data-manuals"][0],
         manuals_sdist=tmp_path / f"cadrumo_data_manuals-{_VERSION}.tar.gz",

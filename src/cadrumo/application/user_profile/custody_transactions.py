@@ -435,6 +435,28 @@ class ProfileCustodyTransactionReceipt(ProfileCustodyDigestModel):
         return cls._create_with_self_digest(values, "cannot construct custody receipt")
 
 
+class CustodyReceiptOwner(StrEnum):
+    """Which custody effect a local receipt attests.
+
+    The two are not alternatives on one axis: a revocation destroys a process secret and
+    an acceleration caches a local session. A receipt attributed to the wrong one would
+    claim a secret was revoked when it was not.
+    """
+
+    PROCESS_SECRET_REVOCATION = "process-secret-revocation"  # noqa: S105 - a receipt kind, not a credential
+    """The process secret was revoked."""
+
+    LOCAL_SESSION_ACCELERATION = "local-session-acceleration"
+    """A local session was accelerated."""
+
+
+CustodyReceiptOwnerValue = Literal[
+    CustodyReceiptOwner.PROCESS_SECRET_REVOCATION,
+    CustodyReceiptOwner.LOCAL_SESSION_ACCELERATION,
+]
+"""The same owner for a strict receipt field or a boundary parameter."""
+
+
 class ProfileCustodyOwnerReceipt(ProfileCustodyDigestModel):
     """One durable idempotence receipt for an ordered local deletion owner."""
 
@@ -444,7 +466,7 @@ class ProfileCustodyOwnerReceipt(ProfileCustodyDigestModel):
     schema_version: Literal[1]
     transaction_id: UUID
     profile_id: UUID
-    owner: Literal["process-secret-revocation", "local-session-acceleration"]
+    owner: CustodyReceiptOwnerValue
     effect: Literal["revoked", "removed", "verified_absent"]
     completed_at: datetime
     self_digest: PrefixedContentDigest

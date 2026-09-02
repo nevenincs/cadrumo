@@ -30,6 +30,7 @@ from __future__ import annotations
 import re
 from collections.abc import Awaitable, Callable, Mapping
 from datetime import date, datetime
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any, Final, Literal
 from urllib.parse import urlencode, urlsplit, urlunsplit
 
@@ -123,6 +124,46 @@ _CERT_RE: Final[re.Pattern[str]] = re.compile(r"^\d{10,16}$")
 # _DATE_RE removed — date parsing delegated to core.parsing._dates._parse_ddmmyyyy_date
 
 
+class SedeNotificationTipo(StrEnum):
+    """What kind of item a sede notifications row represents."""
+
+    NOTIFICACION = "notificacion"
+    """A notificacion, which starts a legal response window."""
+
+    COMUNICACION = "comunicacion"
+    """A comunicacion, which does not."""
+
+    PENDIENTE = "pendiente"
+    """Listed as pending, with its kind not yet resolved."""
+
+    UNKNOWN = "unknown"
+    """The row did not say, and nothing may be inferred from that."""
+
+
+SedeNotificationTipoValue = Literal[
+    SedeNotificationTipo.NOTIFICACION,
+    SedeNotificationTipo.COMUNICACION,
+    SedeNotificationTipo.PENDIENTE,
+    SedeNotificationTipo.UNKNOWN,
+]
+"""Every kind, for the strict observation field that records what a row was.
+
+The model validates strictly and is built from scraped text, so it takes the literal
+over the members rather than the bare enum, which would refuse the plain token.
+"""
+
+SummaryTableTipo = Literal[
+    SedeNotificationTipo.NOTIFICACION,
+    SedeNotificationTipo.COMUNICACION,
+]
+"""The two kinds a summary table can actually distinguish.
+
+A genuine narrowing, not a second vocabulary: the summary table names one of these or
+says nothing at all, so ``PENDIENTE`` and ``UNKNOWN`` are unreachable there. Kept narrow
+so a reader cannot pass a pending row where a resolved kind is required.
+"""
+
+
 class RemoteNotification(BaseModel):
     """One row of AEAT's notifications/communications surface.
 
@@ -158,7 +199,7 @@ class RemoteNotification(BaseModel):
     model_config = _STRICT_FROZEN
 
     certificado_id: AeatCertificadoId
-    tipo: Literal["notificacion", "comunicacion", "pendiente", "unknown"]
+    tipo: SedeNotificationTipoValue
     concepto: str = Field(default="", max_length=256)
     titular_nif: str = Field(min_length=4, max_length=32)
     titular_nombre: str = Field(max_length=256)
@@ -288,7 +329,7 @@ def _rows_from_table_body(
     header_index: dict[str, int],
     source_url: str,
     is_summary: bool,
-    summary_table_tipo: Literal["notificacion", "comunicacion"] | None,
+    summary_table_tipo: SummaryTableTipo | None,
 ) -> list[RemoteNotification]:
     """Project every populated body row of one certificate-bearing table."""
     rows: list[RemoteNotification] = []
@@ -351,7 +392,7 @@ def _row_from_cells(
     header_index: dict[str, int],
     source_url: str,
     is_summary: bool,
-    summary_table_tipo: Literal["notificacion", "comunicacion"] | None,
+    summary_table_tipo: SummaryTableTipo | None,
 ) -> RemoteNotification | None:
     """Build a :class:`RemoteNotification` from one table row, or ``None`` if it cannot be classified."""
     cert_idx = header_index.get("certificado")
@@ -422,16 +463,16 @@ def _split_nif_name(raw: str) -> tuple[str, str]:
     return parts[0], parts[1].strip()
 
 
-def _summary_table_tipo(table: Tag) -> Literal["notificacion", "comunicacion"] | None:
+def _summary_table_tipo(table: Tag) -> SummaryTableTipo | None:
     """Return the summary category declared by the table's preceding section heading."""
     heading = table.find_previous(["h2", "h3"])
     if heading is None:
         return None
     label = heading.get_text(" ", strip=True).lower()
     if "comunic" in label:
-        return "comunicacion"
+        return SedeNotificationTipo.COMUNICACION
     if "notific" in label:
-        return "notificacion"
+        return SedeNotificationTipo.NOTIFICACION
     return None
 
 
@@ -440,23 +481,23 @@ def _classify_tipo(
     concepto_raw: str,
     *,
     is_summary: bool,
-    summary_table_tipo: Literal["notificacion", "comunicacion"] | None,
-) -> Literal["notificacion", "comunicacion", "pendiente", "unknown"]:
+    summary_table_tipo: SummaryTableTipo | None,
+) -> SedeNotificationTipoValue:
     """Classify a row into ``notificacion`` / ``comunicacion`` / ``pendiente`` / ``unknown``."""
     lower = tipo_raw.lower()
     if "pendiente" in concepto_raw.lower() or "pendiente" in lower:
-        return "pendiente"
+        return SedeNotificationTipo.PENDIENTE
     if "notific" in lower:
-        return "notificacion"
+        return SedeNotificationTipo.NOTIFICACION
     if "comunic" in lower or "comunic" in concepto_raw.lower():
-        return "comunicacion"
+        return SedeNotificationTipo.COMUNICACION
     if summary_table_tipo is not None:
         return summary_table_tipo
     if is_summary:
         # A malformed summary lacking its section heading retains the historic
         # conservative default instead of silently becoming an unknown row.
-        return "notificacion"
-    return "unknown"
+        return SedeNotificationTipo.NOTIFICACION
+    return SedeNotificationTipo.UNKNOWN
 
 
 def _parse_leida(raw: str | None) -> bool | None:
