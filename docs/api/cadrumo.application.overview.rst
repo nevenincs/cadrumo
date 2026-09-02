@@ -22,6 +22,7 @@ Submodules
    cadrumo.application.overview.coverage
    cadrumo.application.overview.data_prep
    cadrumo.application.overview.errors
+   cadrumo.application.overview.evidence
    cadrumo.application.overview.explain
    cadrumo.application.overview.home
    cadrumo.application.overview.next_actions

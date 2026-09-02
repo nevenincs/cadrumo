@@ -13,6 +13,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.adapters.inbound.borrador
    cadrumo.adapters.inbound.censo
    cadrumo.adapters.inbound.declaracion
    cadrumo.adapters.inbound.einvoice

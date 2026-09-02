@@ -13,7 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.core.telemetry._producers
    cadrumo.core.telemetry.consent
    cadrumo.core.telemetry.emit
    cadrumo.core.telemetry.errors

@@ -13,7 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.application.ledger._classification_assembly_rules
    cadrumo.application.ledger.actions_classification
    cadrumo.application.ledger.actions_common
    cadrumo.application.ledger.actions_export
@@ -24,6 +23,7 @@ Submodules
    cadrumo.application.ledger.attachment_review
    cadrumo.application.ledger.batch_ingest
    cadrumo.application.ledger.classification_assembly
+   cadrumo.application.ledger.classification_assembly_rules
    cadrumo.application.ledger.classifier_inputs
    cadrumo.application.ledger.closure_findings
    cadrumo.application.ledger.confirm_establishment
