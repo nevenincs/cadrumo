@@ -355,6 +355,8 @@ cli:
       prorrata:
         activity_code_help: CNAE / IAE activity code grouped into this sector (repeatable,
           at least one).
+        con_derecho_volume_help: The sector's annual volume of operations with a right
+          to deduct (LIVA art. 104, art. 104.Tres exclusions already applied).
         declare_sector_help: 'Declare one differentiated sector (LIVA arts. 9.1.c
           / 101): the operator''s art. 9.1.c partition, never inferred from the ledger.'
         ejercicio_help: Filing year the election covers.
@@ -393,6 +395,37 @@ cli:
         sector_help: Differentiated-sector id this entry covers; omit for the whole-entity
           entry.
         sector_id_help: Stable sector id the register entries and ledger rows reference.
+        seed_blocked: 'The carried prior-definitive prorrata seed is blocked and nothing
+          was written. Blocking findings: {detail}'
+        seed_ejercicio_help: Filing year whose provisional percentage is being seeded
+          or settled.
+        seed_help: Seed the ejercicio's provisional prorrata from the prior year's
+          definitive percentage (LIVA art. 105.Uno), read from the stamped prior Modelo
+          303 settlement observation.
+        seed_local_authority: The provisional percentage was carried locally from
+          your stored {modelo} {filing_year} {period} settlement observation (LIVA
+          art. 105.Uno). It is not a percentage AEAT issued for this ejercicio.
+        seed_regulated_override_standing: Ejercicio {ejercicio} already carries a
+          {provenance} provisional prorrata, which outranks the art. 105.Uno carry.
+          Nothing was written; replace that declaration explicitly before seeding.
+        seed_sector_help: Seed one differentiated sector's provisional prorrata from
+          that sector's own prior-year definitive held in the register (LIVA arts.
+          101.Uno / 105.Uno).
+        seed_sector_prior_definitive_absent: 'Sector {sector_id} holds no settled
+          definitive percentage for {prior_ejercicio}, so ejercicio {ejercicio} cannot
+          be seeded. The prior definitive is missing, not zero: settle {prior_ejercicio}
+          for this sector first.'
+        seed_source_absent: 'No stamped Modelo 303 settlement observation for {prior_ejercicio}
+          carries a definitive prorrata percentage, so ejercicio {ejercicio} cannot
+          be seeded. The prior definitive is missing, not zero: capture the prior
+          settlement first.'
+        settle_sector_entry_absent: No register entry exists for ejercicio {ejercicio}
+          sector {sector_id}, so there is nothing to settle. Elect the sector's regime
+          for that ejercicio first.
+        settle_sector_help: Settle one differentiated sector's year-end definitive
+          prorrata from that sector's own annual operation volumes (LIVA art. 105.Cuatro).
+        sin_derecho_volume_help: The sector's annual volume of operations with no
+          right to deduct (LIVA art. 104, art. 104.Tres exclusions already applied).
       ratios:
         category_help: Spending category id (e.g. vehiculo_combustible)
         eligible_help: List categories that accept a specific ratio
@@ -3604,7 +3637,8 @@ cli:
     language_help: Language for output and help text (en, es, ca, hu).
     profile_help: Name of the active profile.
     quiet_help: Show errors only.
-    self_test_help: Start the full-screen interface without a terminal and exit, to prove it runs.
+    self_test_help: Start the full-screen interface without a terminal and exit, to
+      prove it runs.
     tui_help: Request the full-screen interface for the selected command.
     verbose_help: Enable detailed output.
     version_help: Show the version number and exit.

@@ -385,6 +385,8 @@ cli:
       prorrata:
         activity_code_help: Código de actividad CNAE / IAE agrupado en este sector
           (repetible, al menos uno).
+        con_derecho_volume_help: Volumen anual de operaciones con derecho a deducción
+          del sector (LIVA art. 104, con las exclusiones del art. 104.Tres ya aplicadas).
         declare_sector_help: 'Declara un sector diferenciado (LIVA arts. 9.1.c / 101):
           la partición del art. 9.1.c que declara el operador, nunca inferida del
           libro.'
@@ -426,6 +428,40 @@ cli:
           omitir para la entrada de toda la actividad.
         sector_id_help: Identificador estable del sector al que hacen referencia las
           entradas del registro y los apuntes del libro.
+        seed_blocked: 'El arrastre de la prorrata definitiva anterior está bloqueado
+          y no se ha escrito nada. Hallazgos bloqueantes: {detail}'
+        seed_ejercicio_help: Ejercicio (año) cuyo porcentaje provisional se arrastra
+          o se liquida.
+        seed_help: Arrastra al ejercicio la prorrata provisional a partir del porcentaje
+          definitivo del año anterior (LIVA art. 105.Uno), leído de la observación
+          sellada de la liquidación del Modelo 303 anterior.
+        seed_local_authority: El porcentaje provisional se ha arrastrado localmente
+          desde tu observación almacenada de la liquidación {modelo} {filing_year}
+          {period} (LIVA art. 105.Uno). No es un porcentaje emitido por la AEAT para
+          este ejercicio.
+        seed_regulated_override_standing: El ejercicio {ejercicio} ya tiene una prorrata
+          provisional {provenance}, que prevalece sobre el arrastre del art. 105.Uno.
+          No se ha escrito nada; sustituye esa declaración de forma expresa antes
+          de arrastrar.
+        seed_sector_help: Arrastra la prorrata provisional de un sector diferenciado
+          a partir del definitivo del año anterior de ese mismo sector registrado
+          en el registro (LIVA arts. 101.Uno / 105.Uno).
+        seed_sector_prior_definitive_absent: 'El sector {sector_id} no tiene un porcentaje
+          definitivo liquidado para {prior_ejercicio}, por lo que no se puede arrastrar
+          al ejercicio {ejercicio}. El definitivo anterior falta, no es cero: liquida
+          antes {prior_ejercicio} para este sector.'
+        seed_source_absent: 'Ninguna observación sellada de la liquidación del Modelo
+          303 de {prior_ejercicio} contiene un porcentaje de prorrata definitivo,
+          por lo que no se puede arrastrar al ejercicio {ejercicio}. El definitivo
+          anterior falta, no es cero: captura antes la liquidación anterior.'
+        settle_sector_entry_absent: No existe ninguna anotación del registro para
+          el ejercicio {ejercicio} y el sector {sector_id}, así que no hay nada que
+          liquidar. Elige antes el régimen del sector para ese ejercicio.
+        settle_sector_help: Liquida la prorrata definitiva de fin de ejercicio de
+          un sector diferenciado a partir de los volúmenes anuales de operaciones
+          de ese sector (LIVA art. 105.Cuatro).
+        sin_derecho_volume_help: Volumen anual de operaciones sin derecho a deducción
+          del sector (LIVA art. 104, con las exclusiones del art. 104.Tres ya aplicadas).
       ratios:
         category_help: Id de categoría de gasto (p. ej. vehiculo_combustible)
         eligible_help: Lista las categorías que admiten proporción específica
@@ -3879,7 +3915,8 @@ cli:
     language_help: Idioma de la salida y del texto de ayuda (en, es, ca, hu).
     profile_help: Nombre del perfil activo.
     quiet_help: Mostrar solo los errores.
-    self_test_help: Inicia la interfaz de pantalla completa sin terminal y sale, para comprobar que arranca.
+    self_test_help: Inicia la interfaz de pantalla completa sin terminal y sale, para
+      comprobar que arranca.
     tui_help: Solicita la interfaz de pantalla completa para el comando seleccionado.
     verbose_help: Habilitar salida detallada.
     version_help: Mostrar el número de versión y salir.

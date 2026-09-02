@@ -385,6 +385,8 @@ cli:
       prorrata:
         activity_code_help: Codi d'activitat CNAE / IAE agrupat en aquest sector (repetible,
           com a mínim un).
+        con_derecho_volume_help: Volum anual d'operacions amb dret a deducció del
+          sector (LIVA art. 104, amb les exclusions de l'art. 104.Tres ja aplicades).
         declare_sector_help: 'Declara un sector diferenciat (LIVA arts. 9.1.c / 101):
           la partició de l''art. 9.1.c que declara l''operador, mai inferida del llibre.'
         ejercicio_help: Exercici (any) que cobreix l'elecció.
@@ -425,6 +427,40 @@ cli:
           ometre per a l'entrada de tota l'activitat.
         sector_id_help: Identificador estable del sector al qual fan referència les
           entrades del registre i els apunts del llibre.
+        seed_blocked: 'L''arrossegament de la prorrata definitiva anterior està bloquejat
+          i no s''ha escrit res. Troballes bloquejants: {detail}'
+        seed_ejercicio_help: Exercici (any) el percentatge provisional del qual s'arrossega
+          o es liquida.
+        seed_help: Arrossega a l'exercici la prorrata provisional a partir del percentatge
+          definitiu de l'any anterior (LIVA art. 105.Uno), llegit de l'observació
+          segellada de la liquidació del Model 303 anterior.
+        seed_local_authority: El percentatge provisional s'ha arrossegat localment
+          des de la teva observació desada de la liquidació {modelo} {filing_year}
+          {period} (LIVA art. 105.Uno). No és un percentatge emès per l'AEAT per a
+          aquest exercici.
+        seed_regulated_override_standing: L'exercici {ejercicio} ja té una prorrata
+          provisional {provenance}, que preval sobre l'arrossegament de l'art. 105.Uno.
+          No s'ha escrit res; substitueix aquesta declaració de manera expressa abans
+          d'arrossegar.
+        seed_sector_help: Arrossega la prorrata provisional d'un sector diferenciat
+          a partir del definitiu de l'any anterior d'aquest mateix sector inscrit
+          al registre (LIVA arts. 101.Uno / 105.Uno).
+        seed_sector_prior_definitive_absent: 'El sector {sector_id} no té cap percentatge
+          definitiu liquidat per a {prior_ejercicio}, de manera que no es pot arrossegar
+          a l''exercici {ejercicio}. El definitiu anterior falta, no és zero: liquida
+          abans {prior_ejercicio} per a aquest sector.'
+        seed_source_absent: 'Cap observació segellada de la liquidació del Model 303
+          de {prior_ejercicio} conté un percentatge de prorrata definitiu, de manera
+          que no es pot arrossegar a l''exercici {ejercicio}. El definitiu anterior
+          falta, no és zero: captura abans la liquidació anterior.'
+        settle_sector_entry_absent: No hi ha cap anotació del registre per a l'exercici
+          {ejercicio} i el sector {sector_id}, així que no hi ha res a liquidar. Tria
+          abans el règim del sector per a aquest exercici.
+        settle_sector_help: Liquida la prorrata definitiva de final d'exercici d'un
+          sector diferenciat a partir dels volums anuals d'operacions d'aquest sector
+          (LIVA art. 105.Cuatro).
+        sin_derecho_volume_help: Volum anual d'operacions sense dret a deducció del
+          sector (LIVA art. 104, amb les exclusions de l'art. 104.Tres ja aplicades).
       ratios:
         category_help: Id de categoria de despesa (p. ex. vehiculo_combustible)
         eligible_help: Llista les categories que admeten proporció específica
@@ -3841,7 +3877,8 @@ cli:
     language_help: Idioma de la sortida i del text d'ajuda (en, es, ca, hu).
     profile_help: Nom del perfil actiu.
     quiet_help: Mostra només els errors.
-    self_test_help: Inicia la interfície de pantalla completa sense terminal i surt, per comprovar que arrenca.
+    self_test_help: Inicia la interfície de pantalla completa sense terminal i surt,
+      per comprovar que arrenca.
     tui_help: Sol·licita la interfície de pantalla completa per a l'ordre seleccionada.
     verbose_help: Habilita la sortida detallada.
     version_help: Mostra el número de versió i surt.

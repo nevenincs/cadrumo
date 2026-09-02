@@ -379,6 +379,8 @@ cli:
       prorrata:
         activity_code_help: Ebbe a szektorba sorolt CNAE / IAE tevékenységi kód (ismételhető,
           legalább egy).
+        con_derecho_volume_help: Az ágazat éves ügyletvolumene, amelynél levonási
+          jog áll fenn (LIVA 104. cikk, a 104.Tres kizárásokkal már csökkentve).
         declare_sector_help: 'Adj meg egy megkülönböztetett szektort (LIVA 9.1.c /
           101. cikk): az üzemeltető art. 9.1.c szerinti felosztása, sosem a könyvből
           kikövetkeztetve.'
@@ -421,6 +423,39 @@ cli:
           hagyd el a teljes tevékenységre vonatkozó bejegyzéshez.
         sector_id_help: Stabil szektorazonosító, amelyre a nyilvántartási bejegyzések
           és a könyvsorok hivatkoznak.
+        seed_blocked: 'Az előző évi végleges arányosítás átvezetése blokkolva van,
+          semmi sem került rögzítésre. Blokkoló megállapítások: {detail}'
+        seed_ejercicio_help: Az az adóév, amelynek ideiglenes százalékát átvezetjük
+          vagy elszámoljuk.
+        seed_help: Az adóév ideiglenes arányosítási százalékának átvezetése az előző
+          év végleges százalékából (LIVA 105.Uno cikk), a lepecsételt előző 303-as
+          modell elszámolási megfigyeléséből olvasva.
+        seed_local_authority: Az ideiglenes százalék helyben, a tárolt {modelo} {filing_year}
+          {period} elszámolási megfigyelésedből lett átvezetve (LIVA 105.Uno cikk).
+          Ez nem az AEAT által erre az adóévre kiadott százalék.
+        seed_regulated_override_standing: A(z) {ejercicio} adóév már {provenance}
+          eredetű ideiglenes arányosítási százalékot tartalmaz, amely megelőzi a 105.Uno
+          cikk szerinti átvezetést. Semmi sem került rögzítésre; az átvezetés előtt
+          kifejezetten cseréld le azt a nyilatkozatot.
+        seed_sector_help: Egy elkülönített ágazat ideiglenes arányosítási százalékának
+          átvezetése az adott ágazat nyilvántartásban tárolt, előző évi végleges százalékából
+          (LIVA 101.Uno / 105.Uno cikk).
+        seed_sector_prior_definitive_absent: 'A(z) {sector_id} ágazatnak nincs elszámolt
+          végleges százaléka a(z) {prior_ejercicio} évre, ezért a(z) {ejercicio} adóév
+          nem vezethető át. Az előző végleges érték hiányzik, nem nulla: előbb számold
+          el a(z) {prior_ejercicio} évet erre az ágazatra.'
+        seed_source_absent: 'A(z) {prior_ejercicio} évre egyetlen lepecsételt 303-as
+          modell elszámolási megfigyelés sem tartalmaz végleges arányosítási százalékot,
+          ezért a(z) {ejercicio} adóév nem vezethető át. Az előző végleges érték hiányzik,
+          nem nulla: előbb rögzítsd az előző elszámolást.'
+        settle_sector_entry_absent: Nincs nyilvántartási bejegyzés a(z) {ejercicio}
+          adóévre és a(z) {sector_id} ágazatra, így nincs mit elszámolni. Előbb válaszd
+          meg az ágazat adózási rendjét arra az adóévre.
+        settle_sector_help: Egy elkülönített ágazat év végi végleges arányosítási
+          százalékának elszámolása az ágazat saját éves ügyletvolumeneiből (LIVA 105.Cuatro
+          cikk).
+        sin_derecho_volume_help: Az ágazat éves ügyletvolumene, amelynél nem áll fenn
+          levonási jog (LIVA 104. cikk, a 104.Tres kizárásokkal már csökkentve).
       ratios:
         category_help: Kiadási kategóriaazonosító (pl. vehiculo_combustible).
         eligible_help: Egy adott arányhoz alkalmas kategóriák listázása.
@@ -3829,7 +3864,8 @@ cli:
     language_help: A kimenet és a súgószöveg nyelve (en, es, ca, hu).
     profile_help: Az aktív profil neve.
     quiet_help: Csak a hibák megjelenítése.
-    self_test_help: Elindítja a teljes képernyős felületet terminál nélkül, majd kilép, hogy igazolja az indulást.
+    self_test_help: Elindítja a teljes képernyős felületet terminál nélkül, majd kilép,
+      hogy igazolja az indulást.
     tui_help: A teljes képernyős felület kérése a kiválasztott parancshoz.
     verbose_help: Részletes kimenet engedélyezése.
     version_help: A verziószám megjelenítése és kilépés.
