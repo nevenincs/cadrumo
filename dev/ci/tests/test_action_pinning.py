@@ -125,3 +125,43 @@ def test_a_local_action_needs_no_pin(tmp_path: Path) -> None:
     )
 
     assert _unpinned(workflow) == []
+
+
+def _upload_arguments(run: str) -> list[str]:
+    """The file arguments an `uv publish` command line hands to the index."""
+    return [token for token in run.split() if token.startswith("dist")]
+
+
+def _publish_command(path: Path) -> str:
+    """The `uv publish` command line in a workflow, or a refusal if it has none."""
+    document = yaml.safe_load(path.read_text(encoding="utf-8"))
+    for job in document["jobs"].values():
+        for step in job.get("steps") or []:
+            run = str(step.get("run", ""))
+            if "uv publish" in run:
+                return run
+    raise AssertionError(f"{path.name} no longer runs `uv publish`")
+
+
+def test_the_publish_step_uploads_distributions_only() -> None:
+    """A bare directory glob offers the index files it will refuse.
+
+    The build job seals a checksum manifest into the same directory it uploads,
+    and `uv build` leaves its own marker there. Neither is an uploadable file,
+    and the upload is not atomic, so offering them fails the step part-way
+    through rather than before it starts.
+    """
+    arguments = _upload_arguments(_publish_command(_WORKFLOWS_DIR / "publish.yml"))
+
+    assert arguments, "the publish step names no files to upload"
+    assert all(argument.endswith((".whl", ".tar.gz")) for argument in arguments), (
+        f"the publish step offers the index files that are not distributions: {arguments}"
+    )
+
+
+def test_the_gate_refuses_a_bare_directory_glob() -> None:
+    """Teeth: the shape this replaced is reported, not tolerated."""
+    arguments = _upload_arguments("uv publish --trusted-publishing always dist/*")
+
+    assert arguments == ["dist/*"]
+    assert not all(argument.endswith((".whl", ".tar.gz")) for argument in arguments)

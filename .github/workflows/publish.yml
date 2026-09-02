@@ -176,7 +176,12 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
 
-      # `--check-url` lets a retry converge after a partial upload: six files
-      # go up and the operation is not atomic.
+      # Distributions only, by explicit suffix. The directory also carries the
+      # checksum manifest sealed above and the marker `uv build` leaves behind,
+      # and neither is an uploadable file: a bare `dist/*` offers them to the
+      # index and fails the step part-way through an upload that is not atomic.
+      #
+      # `--check-url` lets a retry converge after such a partial upload: six
+      # files go up and the operation is not atomic.
       - name: Publish to PyPI
-        run: uv publish --trusted-publishing always --check-url https://pypi.org/simple/ dist/*
+        run: uv publish --trusted-publishing always --check-url https://pypi.org/simple/ dist/*.whl dist/*.tar.gz
