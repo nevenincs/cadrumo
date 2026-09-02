@@ -496,7 +496,7 @@ class OperationReviewProjector(Protocol):
     def __call__(
         self,
         reviewed_operand: BaseModel,
-        interaction_facts: OperationInteractionRequest,
+        _interaction_facts: OperationInteractionRequest,
         /,
     ) -> BaseModel:
         """Project one resolved operand and its current interaction facts."""

@@ -79,7 +79,7 @@ _BASELINE_COMMENT = (
     "above its subject than the declared slack tolerance, so a pin cannot silently outlive the "
     "size it was taken from. 'notes' is the one hand-maintained section: prose only, never "
     "numbers, carried forward verbatim across regeneration and dropped when its key disappears. "
-    "Keys are repo-relative POSIX paths, and 'path::function' for callables."
+    "Keys are repo-relative POSIX paths, and 'path::function' for callables.",
 )
 
 
@@ -139,14 +139,13 @@ def _emit(label: str, lines: tuple[str, ...]) -> None:
 def main(argv: list[str] | None = None) -> int:
     """Report every module and callable that exceeds the declared size budget."""
     parser = argparse.ArgumentParser(description="Audit module/callable sizes against a generated limit baseline.")
-    args = parser.parse_args(argv)
+    parser.parse_args(argv)
 
     modules = measure_module_lines()
     callables = measure_callable_lines()
     assert_real_corpus(modules, callables)
 
     print(f"size budget: scanned {len(modules)} modules, {len(callables)} production callables.")
-
 
     baseline = load_size_budget_baseline()
     module_verdict = evaluate_budget(modules, baseline.modules, MODULE_POLICY)

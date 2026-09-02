@@ -67,8 +67,7 @@ async def test_confirming_a_row_returns_that_work_unit_id() -> None:
         await pilot.pause()
 
     assert app.return_value == units[1].work_unit_id, (
-        "the picker must return the id of the row the operator confirmed, "
-        f"not {app.return_value!r}"
+        f"the picker must return the id of the row the operator confirmed, not {app.return_value!r}"
     )
 
 

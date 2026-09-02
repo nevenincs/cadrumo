@@ -73,11 +73,7 @@ def _orphaned_step_records() -> tuple[str, ...]:
     items = payload["data"]["diagnostics"]["items"]
     return tuple(
         sorted(
-            {
-                str(item["path"]).replace("\\", "/")
-                for item in items
-                if _ORPHANED_STEP_PHRASE in str(item["message"])
-            }
+            {str(item["path"]).replace("\\", "/") for item in items if _ORPHANED_STEP_PHRASE in str(item["message"])}
         )
     )
 

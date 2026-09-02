@@ -3,8 +3,8 @@ revision = 3
 requires-python = ">=3.13"
 resolution-markers = [
     "(python_full_version >= '3.14' and sys_platform == 'linux') or (python_full_version >= '3.14' and sys_platform == 'win32')",
-    "(python_full_version < '3.14' and sys_platform == 'linux') or (python_full_version < '3.14' and sys_platform == 'win32')",
     "python_full_version >= '3.14' and sys_platform != 'linux' and sys_platform != 'win32'",
+    "(python_full_version < '3.14' and sys_platform == 'linux') or (python_full_version < '3.14' and sys_platform == 'win32')",
     "python_full_version < '3.14' and sys_platform != 'linux' and sys_platform != 'win32'",
 ]
 
@@ -305,7 +305,6 @@ dev = [
     { name = "sphinx-notfound-page" },
     { name = "sphinxcontrib-mermaid" },
     { name = "sphinxext-opengraph" },
-    { name = "tomlkit" },
     { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
     { name = "torch", version = "2.14.0+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "ty" },
@@ -322,7 +321,6 @@ dev = [
 ]
 registry = [
     { name = "grimp" },
-    { name = "tomlkit" },
 ]
 
 [package.metadata]
@@ -424,7 +422,6 @@ dev = [
     { name = "sphinx-notfound-page", specifier = ">=1.1" },
     { name = "sphinxcontrib-mermaid", specifier = ">=1.0" },
     { name = "sphinxext-opengraph", specifier = ">=0.9" },
-    { name = "tomlkit", specifier = ">=0.15,<1" },
     { name = "torch", marker = "sys_platform != 'linux' and sys_platform != 'win32'", specifier = ">=2.4" },
     { name = "torch", marker = "sys_platform == 'linux' or sys_platform == 'win32'", specifier = ">=2.4", index = "https://download.pytorch.org/whl/cu130" },
     { name = "ty", specifier = ">=0.0.1a1" },
@@ -439,10 +436,7 @@ dev = [
     { name = "vaultspec-rag", extras = ["mcp"], specifier = ">=0.3.8" },
     { name = "vulture", specifier = ">=2.16" },
 ]
-registry = [
-    { name = "grimp", specifier = ">=3.15,<4" },
-    { name = "tomlkit", specifier = ">=0.15,<1" },
-]
+registry = [{ name = "grimp", specifier = ">=3.15,<4" }]
 
 [[package]]
 name = "cadrumo-data-manuals"

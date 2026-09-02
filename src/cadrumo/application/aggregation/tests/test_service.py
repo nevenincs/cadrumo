@@ -380,28 +380,28 @@ def test_accepted_source_kinds_covers_all_four_members() -> None:
 
 def test_counterpart_canonical_source_kinds_are_enum_members() -> None:
     """The canonical counterpart source-kind set must contain BindingSourceKind members."""
-    from ....core.aggregation import COUNTERPART_SOURCE_KINDS as counterpart_kinds
+    from ....core.aggregation import COUNTERPART_SOURCE_KINDS
 
-    assert len(counterpart_kinds) == 4
-    for kind in counterpart_kinds:
+    assert len(COUNTERPART_SOURCE_KINDS) == 4
+    for kind in COUNTERPART_SOURCE_KINDS:
         assert isinstance(kind, BindingSourceKind), f"COUNTERPART_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
 
 
 def test_retenciones_canonical_source_kinds_are_enum_members() -> None:
     """The canonical counterpart source-kind set must contain BindingSourceKind members."""
-    from ....core.aggregation import COUNTERPART_SOURCE_KINDS as retenciones_kinds
+    from ....core.aggregation import COUNTERPART_SOURCE_KINDS
 
-    assert len(retenciones_kinds) == 4
-    for kind in retenciones_kinds:
+    assert len(COUNTERPART_SOURCE_KINDS) == 4
+    for kind in COUNTERPART_SOURCE_KINDS:
         assert isinstance(kind, BindingSourceKind), f"COUNTERPART_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
 
 
 def test_foreign_assets_canonical_source_kinds_are_enum_members() -> None:
     """_foreign_assets._CANONICAL_SOURCE_KINDS must contain BindingSourceKind members."""
-    from .._foreign_assets import _CANONICAL_SOURCE_KINDS as foreign_kinds
+    from .._foreign_assets import _CANONICAL_SOURCE_KINDS
 
-    assert len(foreign_kinds) == 4
-    for kind in foreign_kinds:
+    assert len(_CANONICAL_SOURCE_KINDS) == 4
+    for kind in _CANONICAL_SOURCE_KINDS:
         assert isinstance(kind, BindingSourceKind), (
             f"_foreign_assets._CANONICAL_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
         )

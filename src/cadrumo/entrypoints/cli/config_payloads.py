@@ -34,6 +34,11 @@ from ...application.config_reset import (
     ConfigResetPauseReason,
     ConfigResetTargetPhase,
 )
+from ...application.diagnostic_models import (
+    DiagnosticAudienceValue,
+    DiagnosticStatus,
+    DiagnosticStatusValue,
+)
 from ...application.user_profile.aggregate import ProfileRestoreAuthority
 from ...application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportTransport
 from ...application.workflow.events import WorkflowReasonClass
@@ -43,6 +48,7 @@ from ...core.hex import Hex64Str
 from ...core.identity import BucketId, ProfileId, ProfileLabel
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.requirement import RequirementValue
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.time.utc import validate_utc_aware
 from ...domain.auth.apoderamientos.catalogue import ApoderadoScopeCode, ApoderadoScopeName
@@ -159,18 +165,18 @@ class ConfigRepairFindingPayload(OutputSchema):
 
     summary: str
     detail: str | None = None
-    requirement: Literal["required", "optional"] | None = None
+    requirement: RequirementValue | None = None
 
 
 class ConfigRepairCheckPayload(OutputSchema):
     """JSON-safe projection of one actionable config-repair check."""
 
     name: str
-    status: Literal["ok", "warn", "fail"]
+    status: DiagnosticStatusValue
     summary: str
     detail: str | None = None
     precondition_action: ResolvedPreconditionAction | None = None
-    audience: Literal["operator", "internal"]
+    audience: DiagnosticAudienceValue
     findings: list[ConfigRepairFindingPayload]
 
 
@@ -182,7 +188,7 @@ class ConfigRepairResult(OutputSchema):
     top-level contract while preserving those already validated nested DTOs.
     """
 
-    overall: Literal["ok", "warn", "fail"]
+    overall: DiagnosticStatusValue
     package_name: str
     package_version: str
     python_version: str
@@ -550,21 +556,23 @@ class ConfigResetOperationPayload(OutputSchema):
         return self
 
     def _validate_completion_reconciliation(self) -> None:
-        assert self.summary is not None
+        summary = self.summary
+        if summary is None:
+            raise ValueError("complete reset operation requires exactly one summary")
         if any(target.phase is not ConfigResetTargetPhase.DELETED for target in self.targets):
             raise ValueError("complete reset operation requires every target to be deleted")
         expected_deleted_count = sum(target.exists_at_snapshot for target in self.targets)
         expected_already_absent_count = len(self.targets) - expected_deleted_count
         expected_override_count = sum(bool(target.retention_override_approved) for target in self.targets)
-        if self.summary.target_count != len(self.targets):
+        if summary.target_count != len(self.targets):
             raise ValueError("complete reset summary target count does not match targets")
-        if self.summary.deleted_count != expected_deleted_count:
+        if summary.deleted_count != expected_deleted_count:
             raise ValueError("complete reset summary deleted count does not match targets")
-        if self.summary.already_absent_count != expected_already_absent_count:
+        if summary.already_absent_count != expected_already_absent_count:
             raise ValueError("complete reset summary absent count does not match targets")
-        if self.summary.retention_override_count != expected_override_count:
+        if summary.retention_override_count != expected_override_count:
             raise ValueError("complete reset summary retention override count does not match targets")
-        if self.summary.completed_at != self.updated_at:
+        if summary.completed_at != self.updated_at:
             raise ValueError("complete reset summary timestamp must match operation update timestamp")
 
     @classmethod
@@ -1000,7 +1008,7 @@ class RepairIntegrityCheckPayload(OutputSchema):
     unreadable-row verdict and its summary.
     """
 
-    status: Literal["ok", "fail"]
+    status: Literal[DiagnosticStatus.OK, DiagnosticStatus.FAIL]
     summary: str
 
 

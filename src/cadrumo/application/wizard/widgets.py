@@ -33,6 +33,7 @@ _TAX_ID_QUESTION_IDS: frozenset[str] = frozenset({"tax-id", "spouse-tax-id"})
 _POSTCODE_QUESTION_IDS: frozenset[str] = frozenset({"address-postcode"})
 """Question ids whose answer must be a Spanish 5-digit postcode."""
 
+
 def _fail(question: WizardQuestion, reason: str, **context: object) -> WizardValidationError:
     """Build a translated :class:`WizardValidationError` for ``question``.
 

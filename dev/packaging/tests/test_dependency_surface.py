@@ -46,4 +46,4 @@ def test_dependency_surface_expands_included_registry_group() -> None:
     """The default dev install includes the direct registry tooling group."""
     surfaces = pyproject_surfaces(find_repo_root())
 
-    assert {"grimp", "tomlkit"} <= surfaces.dev_only_names
+    assert {"grimp"} <= surfaces.dev_only_names

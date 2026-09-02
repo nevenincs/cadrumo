@@ -345,8 +345,48 @@ class Modelo232VinculadaRow(BaseModel):
 # scoped to Modelo 349's own transition-period need.
 _M349_GB_NIF_PATTERN: re.Pattern[str] = re.compile(r"^GB(\d{9}|\d{12}|GD\d{3}|HA\d{3})$")
 
-# Valid clave de operación codes per Orden HAC/174/2020 Anexo II.
-_M349_CLAVE_OPERACION = Literal["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"]
+class Modelo349ClaveOperacion(StrEnum):
+    """Clave de operación declarable on a Modelo 349 row.
+
+    The closed code set is fixed by Orden HAC/174/2020 Anexo II, which also defines
+    what each letter means; the meanings are not restated here, because a paraphrase
+    of the Orden in a docstring is a second authority that can drift from the first.
+
+    Distinct from :class:`Modelo347ClaveOperacion` despite the shared field name and
+    five shared letters: the two forms draw from different Órdenes, and a letter
+    valid on one is not thereby valid on the other. They must never be merged.
+    """
+
+    E = "E"
+    M = "M"
+    H = "H"
+    A = "A"
+    T = "T"
+    S = "S"
+    I = "I"  # noqa: E741
+    R = "R"
+    D = "D"
+    C = "C"
+
+
+Modelo349ClaveOperacionValue = Literal[
+    Modelo349ClaveOperacion.E,
+    Modelo349ClaveOperacion.M,
+    Modelo349ClaveOperacion.H,
+    Modelo349ClaveOperacion.A,
+    Modelo349ClaveOperacion.T,
+    Modelo349ClaveOperacion.S,
+    Modelo349ClaveOperacion.I,
+    Modelo349ClaveOperacion.R,
+    Modelo349ClaveOperacion.D,
+    Modelo349ClaveOperacion.C,
+]
+"""The same code set for a wire or operation payload field.
+
+An operation model graph must not customise its Pydantic core schema, and a bare enum
+under strict validation refuses the plain letter a serialised row carries, so those
+fields take this literal over the members above rather than respelling the set.
+"""
 _M349_RECTIFICACION_PERIODO = Literal[
     "01",
     "02",
@@ -439,7 +479,7 @@ class Modelo349OperadorRow(BaseModel):
     codigo_pais: _IsoCountryCode
     nif_comunitario: _NifStr
     razon_social: _RequiredNameStr
-    clave_operacion: _M349_CLAVE_OPERACION
+    clave_operacion: Modelo349ClaveOperacionValue
     importe: Decimal = Field(description="Base imponible o importe de la operacion en EUR")
 
     @field_validator("codigo_pais")
@@ -483,7 +523,7 @@ class Modelo349RectificacionRow(BaseModel):
     codigo_pais: _IsoCountryCode
     nif_comunitario: _NifStr
     razon_social: _RequiredNameStr
-    clave_operacion: _M349_CLAVE_OPERACION
+    clave_operacion: Modelo349ClaveOperacionValue
     ejercicio: Annotated[str, StringConstraints(strip_whitespace=True, min_length=4, max_length=4)]
     periodo: _M349_RECTIFICACION_PERIODO | str
     base_rectificada: Decimal = Field(description="Base imponible o importe rectificado en EUR")
@@ -685,8 +725,33 @@ def m349_nif_number_for_export(nif: str, pais: str) -> str:
 # validator level, not here, so that partial row accumulation works.
 # ---------------------------------------------------------------------------
 
-# Valid clave de operacion codes per M347 form / Orden EHA/3012/2008.
-_M347_CLAVE_OPERACION = Literal["A", "B", "C", "D", "E", "F", "G"]
+class Modelo347ClaveOperacion(StrEnum):
+    """Clave de operación declarable on a Modelo 347 counterparty row.
+
+    The closed code set is fixed by the M347 form under Orden EHA/3012/2008, which
+    defines each letter. Distinct from :class:`Modelo349ClaveOperacion`; see that
+    class for why the overlap does not make them one vocabulary.
+    """
+
+    A = "A"
+    B = "B"
+    C = "C"
+    D = "D"
+    E = "E"
+    F = "F"
+    G = "G"
+
+
+Modelo347ClaveOperacionValue = Literal[
+    Modelo347ClaveOperacion.A,
+    Modelo347ClaveOperacion.B,
+    Modelo347ClaveOperacion.C,
+    Modelo347ClaveOperacion.D,
+    Modelo347ClaveOperacion.E,
+    Modelo347ClaveOperacion.F,
+    Modelo347ClaveOperacion.G,
+]
+"""The same code set for a wire or operation payload field."""
 
 
 class Modelo347ContraparteRow(BaseModel):
@@ -715,7 +780,7 @@ class Modelo347ContraparteRow(BaseModel):
     importe_Q2: Decimal = Field(default=Decimal("0"))
     importe_Q3: Decimal = Field(default=Decimal("0"))
     importe_Q4: Decimal = Field(default=Decimal("0"))
-    clave_operacion: _M347_CLAVE_OPERACION = "A"
+    clave_operacion: Modelo347ClaveOperacionValue = Modelo347ClaveOperacion.A
     pais_codigo: _IsoCountryCode | None = None
 
     @field_validator("nif")

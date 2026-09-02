@@ -73,9 +73,13 @@ def _absolute_self_imports(tree: ast.AST) -> list[tuple[int, str]]:
             for alias in node.names:
                 if _is_absolute_self_module(alias.name):
                     hits.append((node.lineno, f"import {alias.name}"))
-        elif isinstance(node, ast.ImportFrom):
-            if node.level == 0 and node.module and _is_absolute_self_module(node.module):
-                hits.append((node.lineno, f"from {node.module} import ..."))
+        elif (
+            isinstance(node, ast.ImportFrom)
+            and node.level == 0
+            and node.module
+            and _is_absolute_self_module(node.module)
+        ):
+            hits.append((node.lineno, f"from {node.module} import ..."))
     return hits
 
 

@@ -40,17 +40,13 @@ _WRONG_DIGEST = "b" * 64
 
 
 def _identity(fingerprint: str = _DIGEST) -> OperationSchemaIdentityV1:
-    return OperationSchemaIdentityV1(
-        schema_id="modelo.edit.contract", schema_version=1, schema_fingerprint=fingerprint
-    )
+    return OperationSchemaIdentityV1(schema_id="modelo.edit.contract", schema_version=1, schema_fingerprint=fingerprint)
 
 
 def _work_unit() -> WorkUnit:
     period = Period.from_year_and_code(_FILING_YEAR, "1T")
     modelo = ModeloCode(_MODELO)
-    revision_id = select_revision(
-        bundled_authority().validate_modelo(modelo), filing_year=_FILING_YEAR, period="1T"
-    ).id
+    revision_id = select_revision(bundled_authority().validate_modelo(modelo), filing_year=_FILING_YEAR, period="1T").id
     now = datetime(2026, 1, 10, tzinfo=UTC)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(

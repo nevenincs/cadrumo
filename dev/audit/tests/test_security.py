@@ -10,9 +10,11 @@ that actually runs semgrep over the tree lives in ``test_security_scan``.
 from __future__ import annotations
 
 import json
+import tomllib
 
 import pytest
 
+from ..._paths import REPO_ROOT
 from ..security import (
     _PYTHON_LEGACY_COMPATIBILITY_RULE_IDS,
     SecurityOutcome,
@@ -84,7 +86,7 @@ def test_command_uses_json_not_the_text_report() -> None:
 def test_command_excludes_the_python36_python37_compatibility_rules() -> None:
     """The rules flag `Popen`/`importlib.resources` version gates this project never hits.
 
-    `pyproject.toml` requires Python >=3.13, so a rule warning that an API
+    `pyproject.toml` requires Python >=3.13 with no upper bound, so a rule warning that an API
     needs 3.6+ or 3.7+ can never describe a real regression; every occurrence
     is excluded by rule id rather than judged finding by finding.
     """
@@ -92,6 +94,17 @@ def test_command_excludes_the_python36_python37_compatibility_rules() -> None:
 
     excluded = {command[i + 1] for i, arg in enumerate(command) if arg == "--exclude-rule"}
     assert excluded == set(_PYTHON_LEGACY_COMPATIBILITY_RULE_IDS)
+
+
+def test_legacy_rule_exclusions_are_anchored_to_the_open_project_floor() -> None:
+    """The compatibility-rule filter must not drift back to a Python ceiling."""
+    with (REPO_ROOT / "pyproject.toml").open("rb") as handle:
+        project = tomllib.load(handle)["project"]
+
+    requires_python = project["requires-python"]
+    assert requires_python == ">=3.13"
+    assert "<" not in requires_python
+    assert _PYTHON_LEGACY_COMPATIBILITY_RULE_IDS
 
 
 def test_classify_reads_real_captured_findings() -> None:

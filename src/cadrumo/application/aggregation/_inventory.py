@@ -93,7 +93,10 @@ class InventorySourceResolver:
                     ),
                 ),
             )
-        if any(not isinstance(binding.selector, InventorySelector) for binding in bindings):
+        typed_bindings = [
+            (binding, binding.selector) for binding in bindings if isinstance(binding.selector, InventorySelector)
+        ]
+        if len(typed_bindings) != len(bindings):
             return CalculationSourceResolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
@@ -107,9 +110,8 @@ class InventorySourceResolver:
                 ),
             )
         bindings_by_operation: dict[str, DataBindingDefinition] = {}
-        for binding in bindings:
-            assert isinstance(binding.selector, InventorySelector)
-            operation = binding.selector.row_field
+        for binding, selector in typed_bindings:
+            operation = selector.row_field
             if operation in bindings_by_operation:
                 return self._template_refusal(binding_ids, "duplicate inventory operation row template")
             bindings_by_operation[operation] = binding

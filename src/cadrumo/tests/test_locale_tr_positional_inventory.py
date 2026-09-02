@@ -82,9 +82,7 @@ def _is_tr_call(node: ast.expr) -> bool:
     func = node.func
     if isinstance(func, ast.Name) and func.id in ("tr", "Translatable"):
         return True
-    if isinstance(func, ast.Attribute) and func.attr in ("tr", "Translatable"):
-        return True
-    return False
+    return isinstance(func, ast.Attribute) and func.attr in ("tr", "Translatable")
 
 
 def _raise_positional_tr_violations(tree: ast.AST) -> Iterator[tuple[int, str]]:

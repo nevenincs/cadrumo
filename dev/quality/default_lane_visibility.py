@@ -32,6 +32,19 @@ from the syntax tree, which is how every module in this tree declares markers,
 and no test is imported or executed to produce this report. That keeps the
 screen fast and free of the collection side effects it is meant to describe.
 
+This screen does not decide whether a test is reachable at all. That question is
+owned by the lane-reachability gate, which asks it per TEST rather than per
+module and checks both halves - whether a lane's path scope names the file and
+whether that lane's marker expression selects the test. It is the stronger
+instrument and the authority: a module carrying no execution marker fails there
+first, because every lane's expression requires one.
+
+What is left here is the narrower, developer-facing question that gate has no
+reason to answer - given a module that IS reachable, why did the default lane
+not select it. That is the question behind a run reporting three passing tests
+over a file holding twenty-four, and a green reachability gate does not answer
+it.
+
 The screen exits 0 whatever it finds. It reports; it does not gate.
 """
 

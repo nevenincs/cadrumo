@@ -410,4 +410,3 @@ async def test_declining_the_restart_leaves_the_answer_intact() -> None:
         await pilot.pause()
 
         assert _answer_input(host).value == "typed"
-

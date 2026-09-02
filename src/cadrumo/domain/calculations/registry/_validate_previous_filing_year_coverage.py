@@ -155,8 +155,12 @@ def _revision_year_interval(revision: ModeloRevision) -> tuple[int, int | None]:
         return min(selector.years), max(selector.years)
     # `PeriodSelector`'s own validator guarantees `year_from` is set when
     # `years` is empty.
-    assert selector.year_from is not None
-    return selector.year_from, selector.year_to
+    year_from = selector.year_from
+    if year_from is None:
+        raise RegistryValidationError(
+            f"revision {revision.id!r} period selector declares neither explicit years nor a year_from bound",
+        )
+    return year_from, selector.year_to
 
 
 def _upper_year_bound(revisions: tuple[ModeloRevision, ...]) -> int | None:
@@ -238,7 +242,10 @@ def _missing_years(
     """
     if end is None:
         open_start = _open_ended_source_start(period_matching_revisions)
-        assert open_start is not None
+        if open_start is None:
+            raise RegistryValidationError(
+                "open-ended previous-filing coverage was requested without an open-ended source revision",
+            )
         walk_end = open_start - 1
     else:
         walk_end = end

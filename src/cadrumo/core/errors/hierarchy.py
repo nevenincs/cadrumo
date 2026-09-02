@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 
 VerdictT = TypeVar("VerdictT")
 
+
 class SiteHealthState(StrEnum):
     """Closed catalogue of layer-neutral AEAT site-health classifications."""
 

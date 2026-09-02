@@ -49,13 +49,13 @@ def test_modelo_100_2025_autonomic_deduction_sections_use_art77_only() -> None:
         # framework default: the latter is a computed regulatory value whose
         # per-child cuantía and income limits MUST cite their binding provision
         # (Madrid DL 1/2010 arts. 4 y 18.1) per aeat-calculation-grounding.
-        _ART77_ONLY_EXEMPT_ROLES = frozenset(
+        _art77_only_exempt_roles = frozenset(
             {
                 "irpf_deduccion_nueva_empresa_entidad_nif",
                 "irpf_deduccion_madrid_nacimiento_adopcion",
             }
         )
-        art77_only_casillas = [casilla for casilla in checked if casilla.semantic_role not in _ART77_ONLY_EXEMPT_ROLES]
+        art77_only_casillas = [casilla for casilla in checked if casilla.semantic_role not in _art77_only_exempt_roles]
 
         assert len(checked) == expected_count
         offenders = {
@@ -245,7 +245,7 @@ def test_modelo_100_2025_objective_estimation_sections_use_activity_refs_only() 
     # (the specific reducción provision, not the generic chapter span);
     # casilla 1554 itself keeps the full generic set since art-32 is
     # already one of its members.
-    _EO_AGRARIA_FASE_4A_EXEMPT_CASILLA_IDS = frozenset(
+    _eo_agraria_fase_4a_exempt_casilla_ids = frozenset(
         {"1549", "1551", "1555", "AJ", "eo-agraria-reduccion-irregularidad-base"}
     )
     for section, expected_count in _OBJECTIVE_ESTIMATION_2025_SECTION_COUNTS.items():
@@ -253,7 +253,7 @@ def test_modelo_100_2025_objective_estimation_sections_use_activity_refs_only() 
 
         assert len(checked) == expected_count
         activity_refs_casillas = [
-            casilla for casilla in checked if casilla.id not in _EO_AGRARIA_FASE_4A_EXEMPT_CASILLA_IDS
+            casilla for casilla in checked if casilla.id not in _eo_agraria_fase_4a_exempt_casilla_ids
         ]
         offenders = {
             casilla.id: casilla.legal_refs

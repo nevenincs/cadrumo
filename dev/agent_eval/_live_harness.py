@@ -53,9 +53,7 @@ if TYPE_CHECKING:  # pragma: no cover - typing-only imports
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
-_MCP_INSTALL_HINT = (
-    "the live harness requires the MCP client SDK; install the product: pip install cadrumo"
-)
+_MCP_INSTALL_HINT = "the live harness requires the MCP client SDK; install the product: pip install cadrumo"
 _ANTHROPIC_INSTALL_HINT = (
     "the Anthropic persona driver requires the anthropic SDK; install the extra: pip install 'cadrumo[anthropic]'"
 )

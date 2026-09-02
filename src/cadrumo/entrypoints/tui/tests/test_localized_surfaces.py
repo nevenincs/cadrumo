@@ -41,12 +41,15 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _LANGUAGES = tuple(OutputLanguage)
 _DESTINATIONS = [
-    pytest.param(destination_id, id=destination_id.rsplit(".", 1)[-1]) for destination_id in MODELO_WORKSPACE_DESTINATIONS
+    pytest.param(destination_id, id=destination_id.rsplit(".", 1)[-1])
+    for destination_id in MODELO_WORKSPACE_DESTINATIONS
 ]
 
 
 @pytest.fixture(scope="module")
-def sessions_by_language(tmp_path_factory: pytest.TempPathFactory) -> Iterator[dict[OutputLanguage, ModeloWorkspaceReadSession]]:
+def sessions_by_language(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Iterator[dict[OutputLanguage, ModeloWorkspaceReadSession]]:
     """One admitted session per shipped language, over ONE seeded address."""
     root = tmp_path_factory.mktemp("localized")
     with real_workspace_inspection_result(root) as seeded:
@@ -69,9 +72,8 @@ def test_every_shipped_language_opens_the_same_workspace(
     """
     identities = {language: semantic_identity(session.projection) for language, session in sessions_by_language.items()}
     distinct = set(identities.values())
-    assert len(distinct) == 1, (
-        "a language switch changed which workspace this is: "
-        + "; ".join(f"{language.value}={identity}" for language, identity in identities.items())
+    assert len(distinct) == 1, "a language switch changed which workspace this is: " + "; ".join(
+        f"{language.value}={identity}" for language, identity in identities.items()
     )
 
 
@@ -86,7 +88,9 @@ def test_the_locale_axis_actually_moves_across_the_shipped_catalogues(
     the REQUESTED language is carried faithfully, not that every request
     resolves to itself.
     """
-    requested = {language: session.projection.locale.requested_language for language, session in sessions_by_language.items()}
+    requested = {
+        language: session.projection.locale.requested_language for language, session in sessions_by_language.items()
+    }
     assert set(requested.values()) == set(_LANGUAGES), (
         f"the requested language was not carried through for every catalogue: {requested}"
     )
@@ -113,9 +117,7 @@ async def test_a_destination_mounts_the_same_controls_in_every_language(
         async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
             await pilot.pause()
             chains[language] = tuple(widget.id for widget in app.screen.focus_chain)
-            mounted[language] = tuple(
-                sorted(widget.id for widget in app.screen.query(Widget) if widget.id is not None)
-            )
+            mounted[language] = tuple(sorted(widget.id for widget in app.screen.query(Widget) if widget.id is not None))
             app.exit(None)
 
     assert len(set(chains.values())) == 1, (

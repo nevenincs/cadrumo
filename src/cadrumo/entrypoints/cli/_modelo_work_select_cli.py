@@ -20,6 +20,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnit
 from ._common import (
     activate_subcommand_output_language,
@@ -76,7 +77,8 @@ def _run_workspace_destination_for_selected_unit(*, work_unit_id: str, bucket_id
     )
     session, refusal = admit_workspace_session(result)
     if session is None:
-        assert refusal is not None
+        if refusal is None:
+            raise ModeloError("workspace admission returned neither a read session nor a refusal to display")
         return refusal.reconsideration_condition
     # Hosted through the shared ``ScreenHostApp`` rather than a workspace-owned
     # host: resolving WHICH screen to show is this seam's job, and RUNNING one

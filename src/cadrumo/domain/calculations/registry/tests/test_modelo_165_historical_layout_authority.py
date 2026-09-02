@@ -172,12 +172,16 @@ def test_modelo_165_corrected_2013_design_stays_applicability_only_without_layou
         date(2015, 12, 31),
     )
     assert modelo.revisions["2013-2015"].export_layouts == ()
-    type_two = next(sheet for sheet in design.require_complete() if sheet.name == "Tipo 2 - Registro De Socios O Partícipes")
+    type_two = next(
+        sheet for sheet in design.require_complete() if sheet.name == "Tipo 2 - Registro De Socios O Partícipes"
+    )
     assert [(field.offset, field.length) for field in type_two.fields if field.offset >= 97] == [
         (97, 5),
         (102, 399),
     ]
-    assert [(correction.kind, correction.declared_start, correction.corrected_start) for correction in type_two.corrections] == [
+    assert [
+        (correction.kind, correction.declared_start, correction.corrected_start) for correction in type_two.corrections
+    ] == [
         ("range_start", 104, 102),
     ]
 

@@ -23,6 +23,7 @@ from ...core.filing_year import FilingYear
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
+from ...core.requirement import RequirementValue
 from ...core.resources.bundled_data import bundled_path
 from ...core.source_connectivity import (
     SourceConnectivityCensusRow,
@@ -69,7 +70,6 @@ from ..aggregation import BindingSourceDisposition
 from ..modelo.calculation_route import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
 
 __all__ = [
-    "ManualCasillaRequirement",
     "RegistryBindingRecord",
     "RegistryDestinationCandidate",
     "RegistryDestinationRecord",
@@ -87,7 +87,6 @@ __all__ = [
     "validate_census_destination_candidates",
 ]
 
-type ManualCasillaRequirement = Literal["required", "optional"]
 type CapabilityCoverageSelector = Literal[
     "remaining_calculation_helpers",
     "remaining_ingress_surfaces",
@@ -410,7 +409,7 @@ class RegistryDestinationRecord:
     segmento: str | None
     input_kind: InputKindValue
     required: bool
-    manual_requirement: ManualCasillaRequirement | None
+    manual_requirement: RequirementValue | None
     legal_refs: tuple[LegalRefId, ...]
     source_refs: tuple[SourceRefId, ...]
 

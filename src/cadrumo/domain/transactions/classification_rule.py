@@ -39,7 +39,6 @@ RuleActor = Annotated[str, StringConstraints(min_length=1)]
 """Who authored the rule, as recorded on it."""
 
 
-
 def _compute_rule_id(
     description_pattern: str,
     classification: BusinessClassification,

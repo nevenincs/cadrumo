@@ -16,11 +16,6 @@ LABEL_HEAD_MAX_BYTES = 4 * 1024
 """Bounded durable head and pending-advance records share one strict budget."""
 
 
-
-
-
-
-
 class ProfileLabelHead(CustodyDigestModel):
     """Trusted current label witness, separate from the immutable commit marker."""
 

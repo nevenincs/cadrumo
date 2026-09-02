@@ -288,7 +288,7 @@ check-unreachable-ratchet:
 # Verify dependency declarations for drift or unused packages. Silent on success.
 [group('static-checks')]
 check-dependencies:
-    @uv run --no-sync python -m dev.quality.quiet deptry src/cadrumo dev/registry --known-first-party cadrumo --known-first-party dev --non-dev-dependency-groups registry --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
+    @uv run --no-sync python -m dev.quality.quiet deptry src/cadrumo src/cadrumo_harness dev/registry --known-first-party cadrumo --known-first-party cadrumo_harness --known-first-party dev --non-dev-dependency-groups registry --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
 
 # Cheap dependency-surface preflight: verify pyproject, optional-extra registry,
 # and frozen core/all-extras/all-groups exports before any artifact work.
@@ -335,6 +335,17 @@ regenerate-corpus-text:
 [group('static-checks')]
 check-corpus-text:
     @uv run --no-sync python -m dev.corpus.extract_manual_corpus_text --check
+
+# Build every distribution the release publishes, then refuse any file the index
+# would reject on size. Same two operations the publish workflow performs, in the
+# same order, so the local run and the hosted one can disagree only about the host.
+[doc('Build every published distribution and refuse any file over the index cap.')]
+[group('packaging')]
+packaging-distributions:
+    @uv build --out-dir var/distributions .
+    @uv build --out-dir var/distributions packaging/cadrumo_data_manuals
+    @uv build --out-dir var/distributions packaging/cadrumo_data_official
+    @uv run --no-sync python -m dev.packaging.distribution_cap --directory var/distributions
 
 # Construct the temporary Python wheel cohort once for the current smoke campaign.
 # The immutable release-cohort builder replaces this transitional constructor.

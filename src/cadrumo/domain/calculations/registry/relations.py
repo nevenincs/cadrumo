@@ -113,10 +113,7 @@ class RegistryFoldRequirement(BaseModel):
     # same-modelo previous_filing producer legitimately has no relation or
     # aggregation to report, hence the optional shape rather than a magic
     # empty-string sentinel.
-    dependency_role: (
-        RelationDependencyRoleField
-        | None
-    ) = None
+    dependency_role: RelationDependencyRoleField | None = None
     dependency_treatment: RelationDependencyTreatmentField | None = None
     aggregation_op: RelationAggregationOp | None = None
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)

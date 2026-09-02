@@ -92,7 +92,6 @@ __all__ = [
 ]
 
 
-
 class _RunTimingMetrics(TypedDict):
     """Canonical aggregate facts shared by every run-timing projection."""
 

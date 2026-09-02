@@ -247,8 +247,6 @@ def modelo_export_readiness_refusal(
     return _modelo_export_layout_readiness_refusal(modelo=modelo, layout=layout)
 
 
-
-
 class ModeloIvaWalletDecisionProvenance(BaseModel):
     """Redacted audit join for the Modelo 303 IVA wallet authority decision.
 

@@ -274,7 +274,9 @@ def modelo_publishes_a_record_design(
     refs = set(modelo.source_refs)
     for revision in modelo.revisions.values():
         refs |= set(revision.source_refs)
-    return any((source := source_refs.get(ref)) is not None and source.kind is RegistrySourceKind.RECORD_DESIGN for ref in refs)
+    return any(
+        (source := source_refs.get(ref)) is not None and source.kind is RegistrySourceKind.RECORD_DESIGN for ref in refs
+    )
 
 
 def validate_export_exemption_declarations(

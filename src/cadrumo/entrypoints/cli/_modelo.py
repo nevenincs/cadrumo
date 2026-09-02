@@ -329,16 +329,13 @@ def _required_amendment_inputs(
         missing.append("--reason")
     if not set_overrides:
         missing.append("--set")
-    if missing:
+    if missing or from_filing_record_id is None or kind is None or reason is None:
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.amend_missing_options",
                 missing=", ".join(missing),
             ),
         )
-    assert from_filing_record_id is not None
-    assert kind is not None
-    assert reason is not None
     return from_filing_record_id, kind, reason, tuple(set_overrides or ())
 
 

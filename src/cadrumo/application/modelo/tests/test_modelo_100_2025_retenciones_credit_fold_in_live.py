@@ -294,7 +294,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     # resolver is enrolled: this set once named six ledger and invoice kinds and
     # silently omitted `inventory`, so every inventory binding was offered to the
     # engine as a caller value and the lock rejected the whole calculate.
-    _AUTO_RESOLVED = frozenset(
+    _auto_resolved = frozenset(
         {
             # Mesh-resolved rather than locked, and excluded for this scenario:
             # `profile` comes from the seeded record, and `relation_prefill` is
@@ -307,7 +307,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
         if binding.id not in _OPTIONAL_PAYEE_RETENCIONES_BINDINGS
-        if binding.source not in _AUTO_RESOLVED
+        if binding.source not in _auto_resolved
     }
 
 

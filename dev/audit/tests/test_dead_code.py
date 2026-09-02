@@ -51,7 +51,7 @@ def test_parse_vulture_output_reads_real_captured_lines() -> None:
 
     assert len(findings) == 2
     first = findings[0]
-    assert first.path == "src/cadrumo/application/review/operator.py"
+    assert first.path == "src/cadrumo/application/review/_operator.py"
     assert first.line == 256
     assert first.message == "unreachable code after 'if'"
     assert first.confidence == 100

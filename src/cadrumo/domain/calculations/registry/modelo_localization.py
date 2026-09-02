@@ -220,7 +220,6 @@ def resolve_modelo_localization(
     keys: tuple[str, ...],
     *,
     locale: str,
-    required: bool,
     year: int | None = None,
 ) -> str | None:
     """Resolve exact/variant keys, then continuity, with Spanish fallback.
@@ -257,9 +256,27 @@ def resolve_modelo_localization(
             value = lookup_translation(key, locale=candidate_locale)
             if value is not None:
                 return value.format(year=year) if year is not None and "{year}" in value else value
-    if required:
-        raise MissingTranslationError(key=keys[0], locale=_SOURCE_LOCALE)
     return None
+
+
+def require_modelo_localization(
+    keys: tuple[str, ...],
+    *,
+    locale: str,
+    year: int | None = None,
+) -> str:
+    """Resolve a label that must exist, refusing an untranslated identity chain.
+
+    The same resolution order as :func:`resolve_modelo_localization`; the
+    difference is the contract on absence. A construct title, official modelo
+    name, or revision member label has no honest empty rendering, so an
+    unresolved chain is a :class:`MissingTranslationError` rather than ``None``
+    for the caller to interpret.
+    """
+    resolved = resolve_modelo_localization(keys, locale=locale, year=year)
+    if resolved is None:
+        raise MissingTranslationError(key=keys[0], locale=_SOURCE_LOCALE)
+    return resolved
 
 
 __all__ = [
@@ -270,6 +287,7 @@ __all__ = [
     "construct_locale_key",
     "encode_modelo_locale_segment",
     "modelo_locale_key",
+    "require_modelo_localization",
     "resolve_modelo_localization",
     "revision_locale_key",
 ]

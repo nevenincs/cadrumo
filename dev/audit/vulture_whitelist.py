@@ -25,7 +25,6 @@ consumed in the body:
   contract on the ``_SheetsDiscoveryBuilder`` Protocol stub
   (:mod:`cadrumo.application.storage.calc_sheets.parity_harness`). The name is
   the google API client's keyword and is part of the structural type.
-
 Vulture marks a name "used" when it appears in a whitelist file. Referencing
 each name once here clears the false positive while leaving every other
 occurrence of an unused name still subject to detection — this file lists

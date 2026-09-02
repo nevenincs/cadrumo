@@ -188,9 +188,7 @@ def test_a_dispatchable_command_graph_action_missing_from_the_table_is_refused()
     subject = sorted(both)[0]
     trimmed = {key: row for key, row in denominator.classifications.items() if key != subject}
 
-    errors = validate_modelo_workspace_action_denominator(
-        denominator.model_copy(update={"classifications": trimmed})
-    )
+    errors = validate_modelo_workspace_action_denominator(denominator.model_copy(update={"classifications": trimmed}))
 
     assert any("dispatchable from a surface" in error and subject in error for error in errors), (
         f"removing {subject!r} from the table did not raise the dispatch violation: {errors}"

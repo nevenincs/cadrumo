@@ -352,8 +352,6 @@ managed-torch-direct-dependency = true
 registry = [
   # Registry load-census tooling imports grimp directly for the executed import graph.
   "grimp>=3.15,<4",
-  # Registry authoring preserves TOML comments and formatting through tomlkit directly.
-  "tomlkit>=0.15,<1",
 ]
 dev = [
   { include-group = "registry" },

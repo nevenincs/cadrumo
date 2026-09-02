@@ -15,7 +15,7 @@ models.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Literal, assert_never
 
 from pydantic import BaseModel
 
@@ -100,12 +100,18 @@ async def resolve_modal_interaction_state[ReviewProjectionT: BaseModel](
     REJECT controls off while the operation is still waiting for exactly that
     answer. A caller that polls therefore MUST pass what it holds.
     """
-    pending = projection.pending_interaction
-    if isinstance(pending, OperationNoPendingInteractionV1):
-        return OperationModalNoInteractionV1()
-    if isinstance(pending, OperationUnsupportedInteractionV1):
-        return OperationModalUnsupportedInteractionV1(interaction=pending)
-    assert isinstance(pending, OperationReviewAvailableInteractionV1)
+    # Dispatch over the closed pending-interaction union rather than re-testing
+    # the member the two arms above already excluded: `assert_never` makes a new
+    # member break the build instead of reaching a narrowing that cannot hold.
+    match projection.pending_interaction:
+        case OperationNoPendingInteractionV1():
+            return OperationModalNoInteractionV1()
+        case OperationUnsupportedInteractionV1() as unsupported:
+            return OperationModalUnsupportedInteractionV1(interaction=unsupported)
+        case OperationReviewAvailableInteractionV1() as pending:
+            pass
+        case _:
+            assert_never(projection.pending_interaction)
     if (
         isinstance(current, OperationModalReviewInteractionV1)
         and current.interaction.interaction_id == pending.interaction_id

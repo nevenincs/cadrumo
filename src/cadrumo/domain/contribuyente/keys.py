@@ -19,25 +19,18 @@ editor surface.
 
 from __future__ import annotations
 
-from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.i18n import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.requirement import Requirement
 from .errors import ProfileKeysRegistrationError, ProfileValidationError
 from .normalise import normalise_key
 
 if TYPE_CHECKING:
     PROFILE_KEYS: tuple[ProfileKey, ...]
-
-
-class ProfileKeyRequirement(StrEnum):
-    """Whether a profile key is mandatory before declaration export."""
-
-    REQUIRED = "required"
-    OPTIONAL = "optional"
 
 
 class ProfileKey(BaseModel):
@@ -46,7 +39,7 @@ class ProfileKey(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     key: str = Field(min_length=1, max_length=128)
-    requirement: ProfileKeyRequirement
+    requirement: Requirement
     description: tr
     required_when_key: str | None = None
     required_when_value: str | None = None
@@ -190,18 +183,17 @@ def required_profile_keys() -> tuple[ProfileKey, ...]:
     Returns:
         Tuple of :class:`ProfileKey` entries that are required.
     """
-    return tuple(entry for entry in _profile_keys() if entry.requirement is ProfileKeyRequirement.REQUIRED)
+    return tuple(entry for entry in _profile_keys() if entry.requirement is Requirement.REQUIRED)
 
 
 def optional_profile_keys() -> tuple[ProfileKey, ...]:
     """Return only the :class:`ProfileKey` entries whose ``requirement`` is ``OPTIONAL``."""
-    return tuple(entry for entry in _profile_keys() if entry.requirement is ProfileKeyRequirement.OPTIONAL)
+    return tuple(entry for entry in _profile_keys() if entry.requirement is Requirement.OPTIONAL)
 
 
 __all__ = [
     "PROFILE_KEYS",
     "ProfileKey",
-    "ProfileKeyRequirement",
     "get_profile_key",
     "optional_profile_keys",
     "profile_keys",

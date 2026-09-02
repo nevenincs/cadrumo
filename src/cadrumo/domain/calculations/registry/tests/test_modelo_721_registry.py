@@ -159,9 +159,7 @@ def test_modelo_721_refuses_a_mutated_2023_selector_past_its_boe_package_window(
     )
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, "2023": expanded}})
 
-    selected = select_revision(
-        mutated_modelo, filing_year=2024, period="0A", on=date(2024, 12, 31), revision_id="2023"
-    )
+    selected = select_revision(mutated_modelo, filing_year=2024, period="0A", on=date(2024, 12, 31), revision_id="2023")
     assert selected.id == "2023"
     (source_ref,) = (ref for ref in selected.source_refs if ref.startswith("boe-modelo-721-"))
     source = catalogues.sources[source_ref]

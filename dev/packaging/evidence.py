@@ -6,7 +6,9 @@ import argparse
 import hashlib
 import json
 import platform
+import re
 import shutil
+import sys
 from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
@@ -30,7 +32,24 @@ from .cohort_manifest import (
 _MANIFEST_NAME: Final[str] = "packaging-smoke-manifest.json"
 _EVIDENCE_SCHEMA: Final[Literal["cadrumo.distribution-evidence.v1"]] = "cadrumo.distribution-evidence.v1"
 _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
+_SHA256_RE: Final[re.Pattern[str]] = re.compile(_SHA256_PATTERN)
 _UTF_8: Final[str] = UTF_8
+
+
+def _is_sha256(value: str) -> bool:
+    """Return whether a value is a canonical lowercase SHA-256 digest."""
+    return _SHA256_RE.fullmatch(value) is not None
+
+
+def _artifact_digest(artifacts: Mapping[str, str]) -> str:
+    """Hash an artifact-name/digest map using the compatibility-runner format."""
+    canonical = json.dumps(
+        dict(sorted(artifacts.items())),
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode(_UTF_8)
+    return hashlib.sha256(canonical).hexdigest()
 
 
 class EvidenceStatus(StrEnum):
@@ -69,6 +88,43 @@ class RuntimeIdentity(BaseModel):
     architecture: str = Field(min_length=1)
     python: str = Field(min_length=1)
     python_implementation: str = Field(min_length=1)
+    stability: Literal["stable", "prerelease"] = "stable"
+
+
+class InstallationOutcome(BaseModel):
+    """Attributable dependency outcome for one source or binary install.
+
+    The compatibility runner records source and binary installs independently.
+    Keeping that distinction in the distribution evidence prevents a successful
+    source build from being mistaken for native-wheel availability.  Every
+    outcome carries the lock and artifact digests used for the attempt; a
+    missing wheel is a recorded binary failure, never a skipped row.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    mode: Literal["source", "binary"]
+    status: Literal["resolved", "missing-wheel", "failed"]
+    lock_sha256: str = Field(pattern=_SHA256_PATTERN)
+    artifact_sha256: str = Field(pattern=_SHA256_PATTERN)
+    artifact_digests: dict[str, str] = Field(min_length=1)
+    cohort_manifest_sha256: str | None = Field(default=None, pattern=_SHA256_PATTERN)
+
+    @model_validator(mode="after")
+    def _complete_and_canonical(self) -> Self:
+        """Reject hidden skips and ensure the aggregate names exact artifacts."""
+        if self.status == "missing-wheel" and self.mode != "binary":
+            raise ValueError("a missing wheel is only an attributable binary installation outcome")
+        if any(not name for name in self.artifact_digests):
+            raise ValueError("installation artifact names cannot be empty")
+        if any(not _is_sha256(digest) for digest in self.artifact_digests.values()):
+            raise ValueError("installation artifact digests must be lowercase SHA-256 values")
+        expected = _artifact_digest(self.artifact_digests)
+        if self.artifact_sha256 != expected:
+            raise ValueError(
+                "installation artifact_sha256 must bind the canonical artifact digest map",
+            )
+        return self
 
 
 class ClientIdentity(BaseModel):
@@ -221,6 +277,7 @@ class EvidenceIdentityPayload(BaseModel):
     result: ResultIdentity
     observed_at: datetime
     destination: DestinationIdentity
+    installation: InstallationOutcome | None = None
 
     @model_validator(mode="after")
     def _passing_commands_and_time_are_valid(self) -> Self:
@@ -234,6 +291,16 @@ class EvidenceIdentityPayload(BaseModel):
             raise ValueError("passing evidence requires checkout and ambient executable isolation")
         if self.result.status is EvidenceStatus.PASSED and self.destination.version != self.cohort.version:
             raise ValueError("passing evidence destination version must match the cohort")
+        if self.installation is not None:
+            if self.result.status is EvidenceStatus.PASSED and self.installation.status != "resolved":
+                raise ValueError("passing evidence requires a resolved installation outcome")
+            if (
+                self.installation.cohort_manifest_sha256 is not None
+                and self.installation.cohort_manifest_sha256 != self.cohort.manifest_sha256
+            ):
+                raise ValueError("installation evidence does not bind the supplied release cohort")
+            if self.installation.mode == "binary" and self.installation.cohort_manifest_sha256 is None:
+                raise ValueError("binary installation evidence must bind a release-cohort manifest")
         if self.observed_at < self.cohort.created_at:
             raise ValueError("evidence cannot predate cohort construction")
         return self
@@ -290,6 +357,7 @@ def current_runtime_identity() -> RuntimeIdentity:
         architecture=platform.machine(),
         python=platform.python_version(),
         python_implementation=platform.python_implementation(),
+        stability="stable" if sys.version_info.releaselevel == "final" else "prerelease",
     )
 
 
@@ -305,6 +373,7 @@ def create_distribution_evidence(
     result: ResultIdentity,
     observed_at: datetime,
     destination: DestinationIdentity,
+    installation: InstallationOutcome | None = None,
 ) -> DistributionEvidence:
     """Create a validated record bound to real, already-verified cohort bytes."""
     payload = EvidenceIdentityPayload(
@@ -319,6 +388,7 @@ def create_distribution_evidence(
         result=result,
         observed_at=observed_at,
         destination=destination,
+        installation=installation,
     )
     return DistributionEvidence(
         **payload.model_dump(),

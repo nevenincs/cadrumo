@@ -51,7 +51,6 @@ _UNRESOLVED: Final = "<matrix runs-on resolved to zero targets>"
 HOSTED_WORKFLOWS: Final[frozenset[str]] = frozenset({"release-please.yml", "publish.yml"})
 
 
-
 def _runner_targets(job: dict[str, Any]) -> list[object]:
     """Resolve a job's concrete runner targets, expanding matrix indirection.
 

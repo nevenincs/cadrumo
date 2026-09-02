@@ -51,6 +51,22 @@ from .login_session import (
 from .profile_pointer import active_profile_pointer_transaction
 
 
+def _staged[FieldT](value: FieldT | None, *, field: str) -> FieldT:
+    """Return a journal field the current transaction step requires.
+
+    ``ProfileCustodyTransactionJournal`` declares these optional because each is
+    populated at a different step of the custody transaction. Reaching a step
+    without its field is a broken transaction, so it is refused rather than
+    asserted: an ``assert`` is stripped under ``python -O``, which would let a
+    half-populated journal drive a custody write.
+    """
+    if value is None:
+        raise ProfileCustodyTransactionRefusalError(
+            f"custody transaction reached this step without its {field}",
+        )
+    return value
+
+
 class ProfileCustodyDisplacedSessionRetirementError(ProfileCustodyTransactionConflictError):
     """The create transaction could not void the session of the profile it displaces.
 
@@ -272,22 +288,22 @@ class _ProfileCustodyTransactionCapability:
         self,
         journal: ProfileCustodyTransactionJournal,
     ) -> None:
-        assert journal.label is not None
+        label_value = _staged(journal.label, field="label")
         self._refuse_duplicate_label_under_root_lock(
             profile_id=journal.profile_id,
-            label=journal.label,
+            label=label_value,
             transaction_id=journal.transaction_id,
         )
 
     def _verify_staged_create_label(self, journal: ProfileCustodyTransactionJournal) -> None:
         """Bind journal intent to the exact label covered by the stage inventory."""
-        assert journal.label is not None
+        label_value = _staged(journal.label, field="label")
         staged_label = self._adapters.load_staged_capsule_label(
             journal.profile_id,
             journal.transaction_id,
             root=self._root,
         )
-        if staged_label.label != journal.label:
+        if staged_label.label != label_value:
             raise ProfileCustodyTransactionConflictError("verified create stage label differs from its journal")
 
     def recover_create(
@@ -407,7 +423,7 @@ class _ProfileCustodyTransactionCapability:
         the operator one passphrase, but it can never leave the pointer moved and
         the receipt live, which costs a passphrase-free bucket key.
         """
-        assert journal.proposed_custody_digest is not None
+        proposed_custody_digest_value = _staged(journal.proposed_custody_digest, field="proposed_custody_digest")
         self._refuse_duplicate_label_publication_under_root_lock(journal)
         stage = self._create_stage_path(journal)
         final = self._adapters.committed_capsule_path(journal.profile_id, root=self._root)
@@ -417,7 +433,7 @@ class _ProfileCustodyTransactionCapability:
                     profile_id=journal.profile_id, transaction_id=journal.transaction_id, root=self._root
                 )
             )
-            if inventory.digest != journal.proposed_custody_digest:
+            if inventory.digest != proposed_custody_digest_value:
                 raise ProfileCustodyTransactionConflictError("verified create stage differs from its journal")
             self._verify_staged_create_label(journal)
             self._adapters.publish_staged(
@@ -551,12 +567,12 @@ class _ProfileCustodyTransactionCapability:
         """Return the exact target-bound confirmation object an operator must echo."""
         if journal.operation is not ProfileCustodyTransactionOperation.DELETE or journal.inventory is None:
             raise ProfileCustodyTransactionRefusalError("only a prepared delete journal can be confirmed")
-        assert journal.confirmation_challenge is not None
+        confirmation_challenge_value = _staged(journal.confirmation_challenge, field="confirmation_challenge")
         return ProfileCustodyDeleteConfirmation(
             transaction_id=journal.transaction_id,
             profile_id=journal.profile_id,
             inventory_digest=journal.inventory.digest,
-            challenge=journal.confirmation_challenge,
+            challenge=confirmation_challenge_value,
         )
 
     def execute_delete(
@@ -604,8 +620,8 @@ class _ProfileCustodyTransactionCapability:
             requires_inactive_target=journal.requires_inactive_target,
         )
         self._validate_current_delete_hold(journal, instant)
-        assert journal.inventory is not None
-        inventory_digest = journal.inventory.digest
+        inventory_value = _staged(journal.inventory, field="inventory")
+        inventory_digest = inventory_value.digest
         journal = self._mark_delete_prepared(journal, instant)
         journal = self._advance_delete_state(
             journal,
@@ -712,16 +728,16 @@ class _ProfileCustodyTransactionCapability:
         """
         if journal.state is not ProfileCustodyTransactionState.DELETE_PREPARED:
             return journal
-        assert journal.inventory is not None
+        inventory_value = _staged(journal.inventory, field="inventory")
         inventory = ProfileCustodyInventoryWitness.from_inventory(
             self._adapters.inventory_committed(journal.profile_id, root=self._root)
         )
-        if inventory != journal.inventory:
+        if inventory != inventory_value:
             raise ProfileCustodyTransactionConflictError("profile capsule inventory changed after delete preflight")
         self._adapters.write_deletion_marker(
             profile_id=journal.profile_id,
             transaction_id=journal.transaction_id,
-            inventory_digest=journal.inventory.digest,
+            inventory_digest=inventory_value.digest,
             root=self._root,
         )
         marked = journal.with_update(state=ProfileCustodyTransactionState.DELETE_MARKED, updated_at=instant)
@@ -858,12 +874,12 @@ class _ProfileCustodyTransactionCapability:
         """Write the final receipt and mark the local deletion complete."""
         if journal.state is not ProfileCustodyTransactionState.LOCAL_REMOVED:
             raise ProfileCustodyTransactionConflictError("delete journal has an unexplained recovery state")
-        assert journal.inventory is not None
+        inventory_value = _staged(journal.inventory, field="inventory")
         receipt = ProfileCustodyTransactionReceipt.create(
             transaction_id=journal.transaction_id,
             profile_id=journal.profile_id,
             completed_at=instant,
-            inventory=journal.inventory,
+            inventory=inventory_value,
             pointer_cleared=self._pointer_replacement(journal.pointer_before, journal.profile_id) is None,
         )
         receipt = self._repository.write_receipt(receipt)
@@ -904,18 +920,18 @@ class _ProfileCustodyTransactionCapability:
             raise ProfileCustodyTransactionConflictError(
                 "final capsule password generation differs from create journal"
             )
-        assert journal.label is not None
-        if self._adapters.load_committed_capsule_label(journal.profile_id, root=self._root).label != journal.label:
+        label_value = _staged(journal.label, field="label")
+        if self._adapters.load_committed_capsule_label(journal.profile_id, root=self._root).label != label_value:
             raise ProfileCustodyTransactionConflictError("published create label differs from its journal")
 
     def _create_stage_path(self, journal: ProfileCustodyTransactionJournal) -> Path:
-        assert journal.staged_relative_path is not None
+        staged_relative_path_value = _staged(journal.staged_relative_path, field="staged_relative_path")
         expected = self._adapters.staging_path(
             profile_id=journal.profile_id,
             transaction_id=journal.transaction_id,
             root=self._root,
         )
-        if journal.staged_relative_path != expected.name:
+        if staged_relative_path_value != expected.name:
             raise ProfileCustodyTransactionConflictError(
                 "create journal stage is not the transaction-owned custody stage"
             )
@@ -923,12 +939,12 @@ class _ProfileCustodyTransactionCapability:
 
     def _verify_source_delete_marker(self, journal: ProfileCustodyTransactionJournal) -> None:
         """Authenticate the prepared deletion marker before each destructive step."""
-        assert journal.inventory is not None
+        inventory_value = _staged(journal.inventory, field="inventory")
         try:
             self._adapters.verify_deletion_marker(
                 profile_id=journal.profile_id,
                 transaction_id=journal.transaction_id,
-                inventory_digest=journal.inventory.digest,
+                inventory_digest=inventory_value.digest,
                 root=self._root,
             )
         except Exception as exc:

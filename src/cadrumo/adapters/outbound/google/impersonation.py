@@ -249,9 +249,8 @@ class _AdcResolver(Protocol):
 
     def __call__(
         self,
-        scopes: Sequence[str] | None = ...,
-        request: object | None = ...,
-        quota_project_id: str | None = ...,
+        *,
+        scopes: Sequence[str],
     ) -> tuple[Credentials, str | None]: ...
 
 

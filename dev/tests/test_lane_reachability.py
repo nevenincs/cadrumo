@@ -18,16 +18,20 @@ No stored baseline and no allowlist. The worklist is recomputed from the tree on
 every run, so coverage can only ratchet up: a new test outside every lane fails
 immediately rather than being absorbed into an accepted set that nobody revisits.
 
-THIS MODULE'S LOCATION IS LOAD-BEARING. It lives under ``src/cadrumo/tests`` and
-is marked ``unit`` deliberately: a guard against unreachable tests must itself
-sit inside the selection every lane already runs, or it is unreachable by
-exactly the defect it exists to catch. Measured, not assumed -- from here it is
-run by NINE lanes (four justfile recipes plus five workflow invocations across
-``ci.yml``, ``ci-full.yml``, ``aeat-drift-detector.yml``, and
-``agent-harness-eval.yml``). Its predecessor lived under ``dev/ci/tests``, which
-only ``ci.yml`` reached, so the strongest reachability model in the tree was
-itself among the weakest-reached files in it. Do not move this back under
-``dev/``.
+THIS MODULE'S LOCATION IS LOAD-BEARING, and the requirement is reach rather than
+a particular directory: a guard against unreachable tests must itself sit inside
+a selection the lanes actually run, or it is unreachable by exactly the defect it
+exists to catch. Its earliest home, ``dev/ci/tests``, was reached only by
+``ci.yml``, which put the strongest reachability model in the tree among the
+weakest-reached files in it.
+
+It now lives under ``dev/tests``, moved here with its lane and justfile consumers
+by the full-corpus collectability relocation. Measured from this location rather
+than assumed: ``dev/tests`` is named by five justfile recipes and by four
+invocations across ``ci.yml`` and ``ci-full.yml``. Before moving this module
+again, count the lanes that name the destination and confirm the number does not
+fall; an earlier version of this note recorded the reach of a previous home and
+instructed the reader not to perform the move that had already happened.
 
 It replaces two gates that asked overlapping questions, and it deliberately
 kept the weaker one's only advantage. The retired ``dev/``-only gate was

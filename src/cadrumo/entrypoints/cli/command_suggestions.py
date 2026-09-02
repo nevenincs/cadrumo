@@ -103,6 +103,7 @@ class LazyImportTarget:
     optional_dependencies: LazyOptionalDependencies = frozenset()
 
     def __post_init__(self) -> None:
+        """Validate the module, attribute, package, and optional-dependency names, or raise."""
         if not self.module:
             raise ValueError("a lazy import target requires a module")
         if not self.attribute or "." in self.attribute:
@@ -216,6 +217,7 @@ class LazySubcommand:
         hidden: bool = False,
         short_help: str | None = None,
     ) -> None:
+        """Initialize the lazy subcommand from its target and deferred loading behavior."""
         if not name:
             raise ValueError("a lazy command requires an operator-facing name")
         self.name = name

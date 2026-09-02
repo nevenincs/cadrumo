@@ -145,7 +145,6 @@ def _coerce_profile_fact_value(value: object) -> object:
     return value
 
 
-
 PayloadSchemaVersion = Annotated[int, Field(ge=1)]
 """Which version of a persisted payload schema a record was written against."""
 

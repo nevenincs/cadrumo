@@ -93,9 +93,7 @@ def test_no_tui_module_imports_a_work_unit_creation_writer() -> None:
                 names = [f"{node.module}.{alias.name}" for alias in node.names]
             elif isinstance(node, ast.Import):
                 names = [alias.name for alias in node.names]
-            offenders.extend(
-                f"{path.relative_to(_TUI_ROOT)}: {name}" for name in names if "create_work_unit" in name
-            )
+            offenders.extend(f"{path.relative_to(_TUI_ROOT)}: {name}" for name in names if "create_work_unit" in name)
 
     assert not offenders, f"TUI modules importing a work-unit creation writer: {offenders}"
 

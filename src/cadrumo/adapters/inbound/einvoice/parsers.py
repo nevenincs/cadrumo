@@ -87,6 +87,7 @@ class ParsedEInvoiceLine:
         iva_rate: Decimal | None = None,
         iva_amount: Decimal | None = None,
     ) -> None:
+        """Initialize the parsed line item with its optional syntax-independent fields."""
         self.description = description
         self.quantity = quantity
         self.unit_price = unit_price
@@ -128,6 +129,7 @@ class ParsedEInvoice:
     )
 
     def __init__(self, *, shape: DocumentShape) -> None:
+        """Initialize the parsed invoice for ``shape``, with every field unset."""
         self.shape = shape
         self.supplier_tax_id: str | None = None
         self.customer_tax_id: str | None = None

@@ -156,9 +156,9 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1]):
                 await asyncio.sleep(_POLL_INTERVAL.total_seconds())
                 continue
             self._log_view = fold_event_page(self._log_view, observed.event_page)
-            if self._log_view.resynchronized:
-                assert self._log_view.restart_cursor is not None
-                cursor = self._log_view.restart_cursor
+            restart_cursor = self._log_view.restart_cursor
+            if self._log_view.resynchronized and restart_cursor is not None:
+                cursor = restart_cursor
             else:
                 cursor = self._log_view.next_cursor
             self._view_model = build_operation_modal_view_model(observed.projection)

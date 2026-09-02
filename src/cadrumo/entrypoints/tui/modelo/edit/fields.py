@@ -184,6 +184,7 @@ class ScalarFieldSet:
         """
         return bool(self.unresolved())
 
+
 def unresolved_message_keys(fields: Iterable[UnresolvedLexeme]) -> tuple[str, ...]:
     """Return the localisation keys a surface must render to explain a block."""
     return tuple(item.message_key for item in fields)

@@ -32,7 +32,9 @@ from __future__ import annotations
 
 import ast
 import os
+import sys
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -51,6 +53,11 @@ These are the trees whose syntax every other repository-wide check depends on:
 a scanner that walks source cannot walk a file that does not parse, and a suite
 cannot import one.
 """
+
+# Keep the source grammar pinned to the installation floor.  Running this gate
+# on Python 3.14 or 3.15 must not silently bless syntax that Python 3.13 users
+# cannot parse yet.
+_OLDEST_SUPPORTED_PYTHON: Final[tuple[int, int]] = (3, 13)
 
 
 _PRUNE_DIRECTORY_NAMES: frozenset[str] = frozenset({"__pycache__", ".git", ".venv", ".pytest_cache"})
@@ -90,6 +97,16 @@ def _display(path: Path) -> str:
         return str(path)
 
 
+def _parse_source(source: str, *, filename: str) -> ast.Module:
+    """Parse one module using the oldest grammar the package promises."""
+    return ast.parse(
+        source,
+        filename=filename,
+        mode="exec",
+        feature_version=_OLDEST_SUPPORTED_PYTHON,
+    )
+
+
 def _syntax_failures() -> tuple[str, ...]:
     """Return one line per source file the interpreter refuses to parse."""
     failures: list[str] = []
@@ -103,7 +120,7 @@ def _syntax_failures() -> tuple[str, ...]:
                 failures.append(f"{_display(path)}: unreadable: {error}")
                 continue
             try:
-                ast.parse(source, filename=str(path))
+                _parse_source(source, filename=str(path))
             except SyntaxError as error:
                 where = f"{_display(path)}:{error.lineno}"
                 failures.append(f"{where}: {type(error).__name__}: {error.msg}")
@@ -126,3 +143,13 @@ def test_every_source_file_parses() -> None:
         "imports source is unreliable until these are fixed, and each will surface as an "
         "unrelated suite's failure attributed to that suite's subject:\n  " + "\n  ".join(failures)
     )
+
+
+@pytest.mark.skipif(
+    sys.version_info < (3, 14),
+    reason="Python 3.14 template-string grammar is unavailable on the 3.13 floor",
+)
+def test_parser_rejects_syntax_newer_than_the_supported_floor() -> None:
+    """A newer interpreter must not make newer-only syntax look supported."""
+    with pytest.raises(SyntaxError):
+        _parse_source('value = t"template {name}"', filename="newer_syntax.py")

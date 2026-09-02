@@ -54,9 +54,7 @@ def _session() -> ModeloEditSession:
 
     period = Period.from_year_and_code(_FILING_YEAR, "1T")
     modelo = ModeloCode(_MODELO)
-    revision_id = select_revision(
-        bundled_authority().validate_modelo(modelo), filing_year=_FILING_YEAR, period="1T"
-    ).id
+    revision_id = select_revision(bundled_authority().validate_modelo(modelo), filing_year=_FILING_YEAR, period="1T").id
     now = datetime(2026, 1, 10, tzinfo=UTC)
     work_unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
@@ -189,8 +187,9 @@ def test_reopening_a_draft_correlation_does_not_create_a_second_row() -> None:
 def test_review_refuses_an_empty_edit_rather_than_offering_a_no_op() -> None:
     """Reviewing nothing invites confirming a submission with no intents."""
     session = _session()
-    gate = ReviewGate.over(session, ScalarFieldSet.for_session(session, locale=OutputLanguage.ES),
-                           RepeatedRowSet.for_session(session))
+    gate = ReviewGate.over(
+        session, ScalarFieldSet.for_session(session, locale=OutputLanguage.ES), RepeatedRowSet.for_session(session)
+    )
 
     result = gate.review(work_catalogue=WorkUnitCatalogue(), calculation_catalogue=CalculationRevisionCatalogue())
 

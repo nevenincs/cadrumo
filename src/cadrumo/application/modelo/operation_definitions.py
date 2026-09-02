@@ -66,7 +66,10 @@ from ...domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo210AgrupacionRentaRow,
     Modelo232VinculadaRow,
+    Modelo347ClaveOperacion,
+    Modelo347ClaveOperacionValue,
     Modelo347ContraparteRow,
+    Modelo349ClaveOperacionValue,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
 )
@@ -1448,7 +1451,7 @@ class ModeloEditApply349OperadorRowV1(_WireDetailRowMirror):
     codigo_pais: CountryCodeAlpha2
     nif_comunitario: Annotated[str, Field(min_length=1, max_length=20)]
     razon_social: Annotated[str, Field(min_length=1, max_length=200)]
-    clave_operacion: Literal["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"]
+    clave_operacion: Modelo349ClaveOperacionValue
     importe: _WireAmount
 
     def to_row(self) -> Modelo349OperadorRow:
@@ -1471,7 +1474,7 @@ class ModeloEditApply349RectificacionRowV1(_WireDetailRowMirror):
     codigo_pais: CountryCodeAlpha2
     nif_comunitario: Annotated[str, Field(min_length=1, max_length=20)]
     razon_social: Annotated[str, Field(min_length=1, max_length=200)]
-    clave_operacion: Literal["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"]
+    clave_operacion: Modelo349ClaveOperacionValue
     ejercicio: Annotated[str, Field(min_length=4, max_length=4)]
     periodo: Annotated[str, Field(min_length=1, max_length=2)]
     base_rectificada: _WireAmount
@@ -1503,7 +1506,7 @@ class ModeloEditApply347ContraparteRowV1(_WireDetailRowMirror):
     importe_Q2: _WireAmount = "0"
     importe_Q3: _WireAmount = "0"
     importe_Q4: _WireAmount = "0"
-    clave_operacion: Literal["A", "B", "C", "D", "E", "F", "G"] = "A"
+    clave_operacion: Modelo347ClaveOperacionValue = Modelo347ClaveOperacion.A
     pais_codigo: CountryCodeAlpha2 | None = None
 
     def to_row(self) -> Modelo347ContraparteRow:

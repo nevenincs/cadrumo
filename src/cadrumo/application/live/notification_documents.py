@@ -93,7 +93,6 @@ _BYTE_DERIVED_FIELDS: Final[frozenset[str]] = frozenset({"attachment_id", "sanci
 _NON_IDENTITY_FIELDS: Final[frozenset[str]] = frozenset({"fetched_at", "mode"})
 
 
-
 NotificationParseRefusal = Annotated[str, StringConstraints(min_length=1, max_length=512)]
 """Why a sede notification document could not be parsed."""
 

@@ -6,11 +6,11 @@ import pytest
 
 from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
 from ....core.i18n import Translatable as tr
+from ....core.requirement import Requirement
 from ..errors import ProfileKeysRegistrationError
 from ..keys import (
     PROFILE_KEYS,
     ProfileKey,
-    ProfileKeyRequirement,
     get_profile_key,
     optional_profile_keys,
     register_profile_keys,
@@ -30,15 +30,15 @@ def test_required_and_optional_partition_covers_registry() -> None:
     required = required_profile_keys()
     optional = optional_profile_keys()
     assert {entry.key for entry in required + optional} == {entry.key for entry in PROFILE_KEYS}
-    assert all(entry.requirement is ProfileKeyRequirement.REQUIRED for entry in required)
-    assert all(entry.requirement is ProfileKeyRequirement.OPTIONAL for entry in optional)
+    assert all(entry.requirement is Requirement.REQUIRED for entry in required)
+    assert all(entry.requirement is Requirement.OPTIONAL for entry in optional)
 
 
 def test_get_profile_key_returns_canonical_record() -> None:
     entry = get_profile_key("identity.tax_id")
     assert isinstance(entry, ProfileKey)
     assert entry.key == "identity.tax_id"
-    assert entry.requirement is ProfileKeyRequirement.REQUIRED
+    assert entry.requirement is Requirement.REQUIRED
     assert entry.description
     assert entry.description
 
@@ -59,7 +59,7 @@ def test_profile_key_rejects_blank_keys() -> None:
     with pytest.raises(ValueError, match=r"at least 1 character"):
         ProfileKey(
             key="",
-            requirement=ProfileKeyRequirement.OPTIONAL,
+            requirement=Requirement.OPTIONAL,
             description=tr("profile.keys.description"),
         )
 
@@ -68,7 +68,7 @@ def test_profile_key_rejects_padded_keys() -> None:
     with pytest.raises(ValueError, match=r"key must not be padded with whitespace"):
         ProfileKey(
             key=" tax.id ",
-            requirement=ProfileKeyRequirement.OPTIONAL,
+            requirement=Requirement.OPTIONAL,
             description=tr("profile.keys.description"),
         )
 
@@ -77,7 +77,7 @@ def test_profile_key_rejects_descriptions_without_authoritative_spanish() -> Non
     with pytest.raises(ValueError, match=r"description must use a profile translation key"):
         ProfileKey(
             key="x",
-            requirement=ProfileKeyRequirement.OPTIONAL,
+            requirement=Requirement.OPTIONAL,
             description=tr("translation"),
         )
 
@@ -86,7 +86,7 @@ def test_profile_key_conditional_requirement_fields_must_be_paired() -> None:
     with pytest.raises(ValueError, match=r"required_when_key and required_when_value must be set together"):
         ProfileKey(
             key="spouse.tax.id",
-            requirement=ProfileKeyRequirement.OPTIONAL,
+            requirement=Requirement.OPTIONAL,
             description=tr("profile.keys.description"),
             required_when_key="declaration.type",
         )
@@ -102,7 +102,7 @@ def test_spouse_tax_id_is_conditionally_required_for_joint_taxation() -> None:
     key to required only while a joint declaration is declared."""
 
     entry = get_profile_key("renta_spouse.tax_id")
-    assert entry.requirement is ProfileKeyRequirement.OPTIONAL
+    assert entry.requirement is Requirement.OPTIONAL
     assert entry.required_when_key == "renta_filing.declaration_type"
     assert entry.required_when_value == "2"
 
@@ -123,7 +123,7 @@ def test_optional_spouse_keys_carry_no_conditional_requirement() -> None:
         "renta_spouse.sex",
     ):
         entry = get_profile_key(key)
-        assert entry.requirement is ProfileKeyRequirement.OPTIONAL
+        assert entry.requirement is Requirement.OPTIONAL
         assert entry.required_when_key is None
         assert entry.required_when_value is None
 

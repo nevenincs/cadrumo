@@ -37,7 +37,12 @@ def _project_portal_refusal(error: PortalRegistryError) -> PortalRegistryError:
     from ._common import attach_cli_policy_verdict
 
     failure = error.portal_failure
-    assert failure is not None, "portal registry refusals must carry a closed domain classification"
+    if failure is None:
+        # A refusal carrying no closed classification cannot be projected into an
+        # operator action. Surface it as raised: replacing the operator's portal
+        # refusal with an internal error about the projection would lose the
+        # refusal they need to read.
+        return error
     verdict = no_action_precondition_verdict(
         condition_id=failure.condition.value,
         facts=failure.facts,

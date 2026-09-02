@@ -359,8 +359,6 @@ def _as_plugin_cohort(cohort: PythonCohort) -> Any:
     return cast("Any", cohort)
 
 
-
-
 def test_owned_server_launch_capture_is_a_clean_real_subprocess(installed_cohort: InstalledCohort) -> None:
     """The A-client launch capture spawns the real server and it exits 0 on stdin EOF.
 

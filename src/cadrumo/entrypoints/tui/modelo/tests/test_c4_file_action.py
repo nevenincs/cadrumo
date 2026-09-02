@@ -133,7 +133,9 @@ def test_an_explicit_election_overrides_the_declared_default() -> None:
     """Passing through only when chosen must still let a choice reach the payload."""
     from .....core.refund_election import RefundElection
 
-    chosen = next(member for member in RefundElection if member != ModeloWorkFileRequest.model_fields["refund_election"].default)
+    chosen = next(
+        member for member in RefundElection if member != ModeloWorkFileRequest.model_fields["refund_election"].default
+    )
     payload = _request(refund_election=chosen).payload
 
     assert payload.refund_election == chosen

@@ -53,6 +53,7 @@ this event carried the same bound spelled out again, and a classification the
 transport refuses is one the operator never learns the reason for.
 """
 
+
 class WorkflowStateResetFingerprint(BaseModel):
     """Row-level fingerprint of a discarded workflow-state envelope.
 

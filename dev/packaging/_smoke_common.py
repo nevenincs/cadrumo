@@ -74,6 +74,7 @@ __all__ = [
     "head_extract",
     "install_targets_with_pip",
     "install_wheel",
+    "installed_product_env",
     "isolated_product_env",
     "optional_extra_registry",
     "pyproject_surfaces",
@@ -157,6 +158,9 @@ _CORE_ABSENT_NAMES = {
 _CORE_PRESENT_TRANSITIVE_NAMES = {
     "numpy",
     "anyio",
+    # mcp requires pywin32 on win32, so the harness dependency carries it into the
+    # core export on Windows without the project declaring it.
+    "pywin32",
     "pillow",
     "lxml",
 }
@@ -338,6 +342,13 @@ def run_checked(
     return completed
 
 
+#: SGR colour sequences `uv export` emits when it judges the stream a terminal.
+#: They precede the payload, so a comment line reads as `[32m# ...` and never
+#: matches a bare `#` prefix test. The export parser strips them rather than
+#: depending on the producer's colour decision.
+_ANSI_SGR = re.compile(r"\[[0-9;]*m")
+
+
 def requirement_name(requirement: str) -> str:
     """Extract the distribution name from a dependency requirement string."""
     match = re.match(r"\s*([A-Za-z0-9_.-]+)", requirement)
@@ -444,7 +455,7 @@ def pyproject_surfaces(repo_root: Path) -> DependencySurfaces:
 
 def optional_extra_registry(repo_root: Path) -> tuple[dict[str, str], set[str]]:
     """Return capability-gated optional extras declared by the core registry."""
-    source = repo_root / "src" / "cadrumo" / "core" / "_optional_extras.py"
+    source = repo_root / "src" / "cadrumo" / "core" / "optional_extras.py"
     module = ast.parse(source.read_text(encoding=_UTF_8), filename=str(source))
     records_by_symbol: dict[str, tuple[str, str]] = {}
     tuple_symbols: set[str] = set()
@@ -711,7 +722,7 @@ def _export_names(output: str, *, repo_root: Path | None = None) -> set[str]:
     missing a package that was in fact present and editable.
     """
     names: set[str] = set()
-    for line in output.splitlines():
+    for line in _ANSI_SGR.sub("", output).splitlines():
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
             continue
@@ -990,8 +1001,19 @@ def _json_payload(output: str) -> dict[str, Any]:
 
 
 def clean_product_env() -> dict[str, str]:
-    """Return the process environment without host Cadrumo configuration."""
-    return {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
+    """Return an environment without host product or Python path configuration."""
+    environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
+    for name in (
+        "PYTHONPATH",
+        "PYTHONHOME",
+        "PYTHONUSERBASE",
+        "VIRTUAL_ENV",
+        "CONDA_PREFIX",
+        "CONDA_DEFAULT_ENV",
+        "UV_PROJECT_ENVIRONMENT",
+    ):
+        environment.pop(name, None)
+    return environment
 
 
 def isolated_product_env(storage_root: Path) -> dict[str, str]:
@@ -1001,6 +1023,24 @@ def isolated_product_env(storage_root: Path) -> dict[str, str]:
         "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
         "CADRUMO_DATABASE_URL": f"sqlite:///{(storage_root / 'cadrumo.db').as_posix()}",
     }
+
+
+def installed_product_env(storage_root: Path, venv_path: Path) -> dict[str, str]:
+    """Return isolated product state and make the selected venv the only command path.
+
+    Installed-wheel acceptance always receives an absolute target interpreter or
+    console script.  Restricting ``PATH`` as well closes the remaining route to a
+    checkout-installed command or an unrelated ambient ``aeat`` executable.
+    """
+    environment = isolated_product_env(storage_root)
+    environment.update(
+        {
+            "PATH": str(venv_bin_dir(venv_path.resolve())),
+            "PYTHONNOUSERSITE": "1",
+            "PYTHONDONTWRITEBYTECODE": "1",
+        },
+    )
+    return environment
 
 
 def assert_installed_data(work_dir: Path, venv_path: Path) -> None:
@@ -1019,7 +1059,7 @@ if missing:
 print(root)
 """
     runtime_root = work_dir / "installed-data-state"
-    env = isolated_product_env(runtime_root)
+    env = installed_product_env(runtime_root, venv_path)
     run_checked([str(venv_python_path(venv_path)), "-c", code], cwd=work_dir, env=env)
     record_proof("installed bundled data resources")
 
@@ -1112,11 +1152,7 @@ else:
 
 print("attachment-and-llm-surfaces-ok")
 """
-    env = {
-        **clean_product_env(),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(runtime_root / "import-state"),
-        "CADRUMO_DATABASE_URL": f"sqlite:///{(runtime_root / 'import-state.db').as_posix()}",
-    }
+    env = installed_product_env(runtime_root / "import-state", venv_path)
     run_checked([str(venv_python_path(venv_path)), "-c", code], cwd=work_dir, env=env)
     record_proof("attachment storage round-trip")
     record_proof("core LLM missing-extra boundary")
@@ -1128,12 +1164,12 @@ def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
     version = run_checked(
         [cadrumo, "--version"],
         cwd=work_dir,
-        env=isolated_product_env(work_dir / "version-state"),
+        env=installed_product_env(work_dir / "version-state", venv_path),
     )
     assert_cadrumo_version_output(version, context="in core venv")
 
     default_root = work_dir / "default-check-state"
-    default_env = isolated_product_env(default_root)
+    default_env = installed_product_env(default_root, venv_path)
     default_check = run_checked(
         [cadrumo, "--format", "json", "config", "check"],
         cwd=work_dir,
@@ -1149,8 +1185,7 @@ def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
     storage_root = work_dir / "profile-root"
     storage_root.mkdir(parents=True, exist_ok=True)
     env = {
-        **clean_product_env(),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+        **installed_product_env(storage_root, venv_path),
         "CADRUMO_OUTPUT_LANGUAGE": "en",
         "CADRUMO_SECRET_PASSPHRASE": secrets.token_urlsafe(24),
         # Headless custody: the AUTO backend writes to the OS keychain, which

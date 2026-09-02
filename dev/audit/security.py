@@ -51,7 +51,7 @@ _SEMGREP_SPEC: Final[str] = "semgrep==1.168.0"
 _SEMGREP_TIMEOUT_SECONDS: Final[float] = 600.0
 _PRODUCT_SOURCE_ROOT: Final[Path] = Path("src/cadrumo")
 
-#: `pyproject.toml` pins `requires-python = ">=3.13,<3.14"`, so semgrep's
+#: `pyproject.toml` requires Python `>=3.13` with no upper bound, so semgrep's
 #: stock Python 3.6/3.7 forward-compatibility rules (flagging
 #: `importlib.resources`, and the `errors`/`encoding` kwargs on `Popen`) can
 #: never fire on a real regression here -- every one of them is a false

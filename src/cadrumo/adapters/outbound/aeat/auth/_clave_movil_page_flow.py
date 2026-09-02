@@ -364,9 +364,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
     async def _wait_for_cancel_confirmation(self, page: BrowserPagePort) -> bool:
         # The port declares no ``wait_for_response``; only the Playwright-backed
         # page carries it. State the call this cleanup makes.
-        wait_for_response = cast(
-            "_ResponseWaiter | None", getattr(page, "wait_for_response", None)
-        )
+        wait_for_response = cast("_ResponseWaiter | None", getattr(page, "wait_for_response", None))
         if wait_for_response is not None:
             surface = self._clave_surface()
             try:

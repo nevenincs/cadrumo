@@ -44,20 +44,13 @@ jobs:
           uv build --out-dir dist packaging/cadrumo_data_official
           ls -l dist
 
-      # PyPI rejects any file over 100 MB (decimal). The corpus split exists
-      # to stay under it; check here rather than discovering it at upload,
-      # after the reversible destinations have already been written.
+      # PyPI rejects any file at or over its per-file cap. The corpus split
+      # exists to stay under it; check here rather than discovering it at
+      # upload, after the reversible destinations have already been written.
+      # The limit itself is declared once, in `dev/packaging/_distribution_limits`,
+      # so this step names no number of its own.
       - name: Refuse a distribution over the index file cap
-        run: |
-          fail=0
-          for f in dist/*; do
-            size=$(stat -c%s "$f")
-            if [ "$size" -gt 100000000 ]; then
-              echo "::error::$f is ${size} bytes, over the 100000000 byte index cap"
-              fail=1
-            fi
-          done
-          exit $fail
+        run: python -m dev.packaging.distribution_cap --directory dist
 
       - name: Upload dist artifacts
         uses: actions/upload-artifact@v7

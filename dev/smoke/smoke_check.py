@@ -1,7 +1,8 @@
 """Smoke checks for a built Cadrumo distribution.
 
 Run against an installed wheel to verify the package is importable, reports the
-expected version, and exposes a working command-line surface.
+expected version, and exposes both of its working command-line surfaces: the
+application and the MCP server that fronts it.
 
 Usage from CI (``.github/workflows/publish.yml``)::
 
@@ -27,6 +28,7 @@ import sys
 from typing import NoReturn
 
 CLI_SCRIPT = "aeat"
+MCP_SCRIPT = "cadrumo-mcp"
 COMPANIONS = ("cadrumo-data-manuals", "cadrumo-data-official")
 
 _TIMEOUT = 120
@@ -100,12 +102,41 @@ def check_cli_help() -> None:
     _ok(f"{CLI_SCRIPT} --help lists both root command families")
 
 
+def check_mcp_script() -> None:
+    """The second console script resolves and its server runtime shipped.
+
+    ``--help`` proves the entry point is installed and reaches argparse, but it
+    returns before the server is imported: ``main`` defers that import so an
+    incomplete runtime refuses with an install hint instead of a traceback.
+    Proving the artifact is actually serviceable therefore needs the deferred
+    import attempted as well, which is why this reaches past the public surface.
+    Starting the server itself is not an option here - it is a stdio transport
+    and would block until its peer closed the stream.
+    """
+    result = _run(MCP_SCRIPT, ["--help"])
+    if result.returncode != 0:
+        _fail(f"{MCP_SCRIPT} --help exited {result.returncode}: {result.stderr.strip()[:400]}")
+    if "--profile-secrets-file" not in result.stdout:
+        _fail(f"{MCP_SCRIPT} --help does not offer --profile-secrets-file: {result.stdout.strip()[:200]}")
+    imported = subprocess.run(
+        [sys.executable, "-c", "from cadrumo_harness.mcp._server import serve; assert callable(serve)"],
+        capture_output=True,
+        text=True,
+        timeout=_TIMEOUT,
+        check=False,
+    )
+    if imported.returncode != 0:
+        _fail(f"{MCP_SCRIPT} server runtime did not import: {imported.stderr.strip()[:400]}")
+    _ok(f"{MCP_SCRIPT} resolves and its server runtime imports")
+
+
 def main() -> int:
     """Run every check in order, failing the process on the first refusal."""
     version = check_metadata()
     check_import()
     check_cli(version)
     check_cli_help()
+    check_mcp_script()
     print("\nAll smoke checks passed.")
     return 0
 

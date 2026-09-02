@@ -89,12 +89,10 @@ def _split_modelo_prefix(role: str) -> tuple[str | None, str | None]:
     match = _MODELO_PREFIXED_ROLE_RE.match(role)
     if match is None:
         return None, None
-    modelo = match.group(1)
-    assert isinstance(modelo, str)
+    modelo: str = match.group(1)
     if modelo not in _MODELO_VALUES:
         return None, None
-    stem = match.group(2)
-    assert isinstance(stem, str)
+    stem: str = match.group(2)
     return modelo, stem
 
 

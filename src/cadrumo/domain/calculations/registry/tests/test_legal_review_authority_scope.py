@@ -64,7 +64,9 @@ def test_authority_refuses_real_m182_through_the_public_accessor() -> None:
         if review_status is RevisionReviewStatus.OPERATOR_REVIEWED
     } == _M182_LEGACY_OPERATOR_REVIEWED_REFS
     assert {
-        ref for ref, review_status in legal_review_statuses.items() if review_status is RevisionReviewStatus.AGENT_REVIEWED
+        ref
+        for ref, review_status in legal_review_statuses.items()
+        if review_status is RevisionReviewStatus.AGENT_REVIEWED
     } == _M182_AMENDMENT_AGENT_REVIEWED_REFS
 
     # Through the PUBLIC accessor the revision is untouched, so it still declares

@@ -382,9 +382,7 @@ class CalculationClass(StrEnum):
     """A summary rolling up period filings without settling on its own."""
 
 
-CalculationClassField = Annotated[
-    CalculationClass, BeforeValidator(coerce_enum_member(CalculationClass))
-]
+CalculationClassField = Annotated[CalculationClass, BeforeValidator(coerce_enum_member(CalculationClass))]
 """Registry ``calculation_class`` token hydrated into a member.
 
 Registry schema models validate strictly, which refuses a bare TOML string for an
@@ -418,6 +416,7 @@ broken", and neither can the absence of a record_design_epoch, which also covers
 designs whose selection window is merely not assigned yet.
 """
 
+
 class DateAxis(StrEnum):
     """Which date a registry value or bracket table is keyed to."""
 
@@ -443,6 +442,8 @@ DateAxisField = Annotated[DateAxis, BeforeValidator(coerce_enum_member(DateAxis)
 Registry schema models validate strictly, which refuses a bare TOML string for an
 enum-typed field, so the token is coerced at the boundary.
 """
+
+
 class EvidenceTier(StrEnum):
     """What kind of authority grounds a registry entity."""
 
@@ -517,6 +518,7 @@ REGISTRY_SOURCE_GROUNDING_TIERS: tuple[EvidenceTier, ...] = (
     EvidenceTier.LAYOUT_AUTHORITY,
 )
 
+
 class CorpusTier(StrEnum):
     """How much of a legal instrument the bundled corpus artefact carries."""
 
@@ -533,6 +535,7 @@ CorpusTierField = Annotated[CorpusTier, BeforeValidator(coerce_enum_member(Corpu
 Registry schema models validate strictly, which refuses a bare TOML string for an
 enum-typed field, so the token is coerced at the boundary.
 """
+
 
 class PublishingAuthority(StrEnum):
     """Who published the instrument or artefact a registry row cites."""
@@ -553,14 +556,13 @@ class PublishingAuthority(StrEnum):
     """A publisher outside the four named above, recorded rather than assumed."""
 
 
-PublishingAuthorityField = Annotated[
-    PublishingAuthority, BeforeValidator(coerce_enum_member(PublishingAuthority))
-]
+PublishingAuthorityField = Annotated[PublishingAuthority, BeforeValidator(coerce_enum_member(PublishingAuthority))]
 """Registry ``authority`` token hydrated into a member.
 
 Registry schema models validate strictly, which refuses a bare TOML string for an
 enum-typed field, so the token is coerced at the boundary.
 """
+
 
 class SettlementDirection(StrEnum):
     """Which way a declaration's result settles between taxpayer and AEAT."""
@@ -572,15 +574,14 @@ class SettlementDirection(StrEnum):
     """The AEAT owes: the result is refunded."""
 
 
-SettlementDirectionField = Annotated[
-    SettlementDirection, BeforeValidator(coerce_enum_member(SettlementDirection))
-]
+SettlementDirectionField = Annotated[SettlementDirection, BeforeValidator(coerce_enum_member(SettlementDirection))]
 """Registry settlement-direction token hydrated into a member.
 
 Used as a mapping KEY as well as a field. Registry schema models validate strictly,
 which refuses a bare TOML string, and a coercion hop on the key type hydrates each
 key the same way it hydrates a scalar field.
 """
+
 
 class RegistrySourceKind(StrEnum):
     """What kind of official artefact a source reference cites."""
@@ -607,14 +608,13 @@ class RegistrySourceKind(StrEnum):
     """A notice withdrawing or superseding a previously published artefact."""
 
 
-RegistrySourceKindField = Annotated[
-    RegistrySourceKind, BeforeValidator(coerce_enum_member(RegistrySourceKind))
-]
+RegistrySourceKindField = Annotated[RegistrySourceKind, BeforeValidator(coerce_enum_member(RegistrySourceKind))]
 """Registry source ``kind`` token hydrated into a member.
 
 Registry schema models validate strictly, which refuses a bare TOML string for an
 enum-typed field, so the token is coerced at the boundary.
 """
+
 
 class CasillaDataType(StrEnum):
     """The scalar kind a casilla declares, and the root of every narrowing of it."""
@@ -677,9 +677,7 @@ class CasillaDataType(StrEnum):
     """A calendar date."""
 
 
-CasillaDataTypeField = Annotated[
-    CasillaDataType, BeforeValidator(coerce_enum_member(CasillaDataType))
-]
+CasillaDataTypeField = Annotated[CasillaDataType, BeforeValidator(coerce_enum_member(CasillaDataType))]
 """Registry casilla ``data_type`` token hydrated into a member.
 
 Registry schema models validate strictly, which refuses a bare TOML string for an

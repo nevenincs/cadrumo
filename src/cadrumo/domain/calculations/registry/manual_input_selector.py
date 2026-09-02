@@ -29,7 +29,13 @@ __all__ = [
 ]
 
 ManualInputDataType = Annotated[
-    Literal[CasillaDataType.BOOLEAN, CasillaDataType.INTEGER, CasillaDataType.TEXT, CasillaDataType.DECIMAL, CasillaDataType.MONEY],
+    Literal[
+        CasillaDataType.BOOLEAN,
+        CasillaDataType.INTEGER,
+        CasillaDataType.TEXT,
+        CasillaDataType.DECIMAL,
+        CasillaDataType.MONEY,
+    ],
     BeforeValidator(coerce_enum_member(CasillaDataType)),
 ]
 """The scalar kinds a manual input may declare.

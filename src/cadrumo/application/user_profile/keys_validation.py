@@ -24,7 +24,8 @@ from collections.abc import Mapping
 from pydantic import BaseModel
 
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...domain.contribuyente.keys import ProfileKey, ProfileKeyRequirement, optional_profile_keys
+from ...core.requirement import Requirement
+from ...domain.contribuyente.keys import ProfileKey, optional_profile_keys
 from ...domain.contribuyente.keys import profile_keys as _get_profile_keys
 from .completeness import (
     IVA_REGIME_PATH,
@@ -71,7 +72,7 @@ def validate_profile_values(values: Mapping[str, str]) -> ProfileValidationResul
     static_required_keys = tuple(
         entry.key
         for entry in entries
-        if (entry.requirement is ProfileKeyRequirement.REQUIRED or _conditional_requirement_applies(values, entry))
+        if (entry.requirement is Requirement.REQUIRED or _conditional_requirement_applies(values, entry))
         and (entry.key != IVA_REGIME_PATH or iva_regime_required(values))
     )
     required_keys = tuple(dict.fromkeys((*static_required_keys, *conditional_profile_required_paths(values))))

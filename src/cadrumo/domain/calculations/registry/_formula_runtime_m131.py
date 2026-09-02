@@ -485,6 +485,18 @@ class _M131ResolveModulosIndicesGeneralesArgs:
     indice_exceso_parameter: ParameterId
 
 
+def _m131_required_casilla_leaf(arg: FormulaExpression, *, op: str, position: int) -> CasillaId:
+    """Return the casilla id an M131 dispatch argument must carry, refusing any other leaf kind."""
+    casilla_id = arg.casilla_id
+    if casilla_id is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[{position}] to be a casilla leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": f"args[{position}]", "expected_kind": "casilla"},
+        )
+    return casilla_id
+
+
 def _m131_resolve_modulos_indices_generales_args(
     expression: FormulaExpression,
 ) -> _M131ResolveModulosIndicesGeneralesArgs:
@@ -504,20 +516,11 @@ def _m131_resolve_modulos_indices_generales_args(
         cuantia_arg,
         indice_arg,
     ) = expression.args
-    casilla_positions = {
-        0: epigrafe_arg,
-        1: minorado_arg,
-        2: pequena_dimension_arg,
-        3: temporada_arg,
-        4: inicio_actividad_arg,
-    }
-    for position, arg in casilla_positions.items():
-        if arg.casilla_id is None:
-            raise RegistryValidationError(
-                f"formula op {op!r} requires args[{position}] to be a casilla leaf",
-                translated_message="errors.calc.lookup_dispatch_arg_kind",
-                context={"op": op, "position": f"args[{position}]", "expected_kind": "casilla"},
-            )
+    epigrafe_casilla_id = _m131_required_casilla_leaf(epigrafe_arg, op=op, position=0)
+    minorado_casilla_id = _m131_required_casilla_leaf(minorado_arg, op=op, position=1)
+    pequena_dimension_casilla_id = _m131_required_casilla_leaf(pequena_dimension_arg, op=op, position=2)
+    temporada_casilla_id = _m131_required_casilla_leaf(temporada_arg, op=op, position=3)
+    inicio_actividad_casilla_id = _m131_required_casilla_leaf(inicio_actividad_arg, op=op, position=4)
     if cuantia_arg.parameter is None:
         raise RegistryValidationError(
             f"formula op {op!r} requires args[5] to be a parameter leaf",
@@ -530,17 +533,12 @@ def _m131_resolve_modulos_indices_generales_args(
             translated_message="errors.calc.lookup_dispatch_arg_kind",
             context={"op": op, "position": "args[6]", "expected_kind": "parameter"},
         )
-    assert epigrafe_arg.casilla_id is not None
-    assert minorado_arg.casilla_id is not None
-    assert pequena_dimension_arg.casilla_id is not None
-    assert temporada_arg.casilla_id is not None
-    assert inicio_actividad_arg.casilla_id is not None
     return _M131ResolveModulosIndicesGeneralesArgs(
-        epigrafe_casilla_id=epigrafe_arg.casilla_id,
-        minorado_casilla_id=minorado_arg.casilla_id,
-        pequena_dimension_casilla_id=pequena_dimension_arg.casilla_id,
-        temporada_casilla_id=temporada_arg.casilla_id,
-        inicio_actividad_casilla_id=inicio_actividad_arg.casilla_id,
+        epigrafe_casilla_id=epigrafe_casilla_id,
+        minorado_casilla_id=minorado_casilla_id,
+        pequena_dimension_casilla_id=pequena_dimension_casilla_id,
+        temporada_casilla_id=temporada_casilla_id,
+        inicio_actividad_casilla_id=inicio_actividad_casilla_id,
         cuantia_parameter=cuantia_arg.parameter,
         indice_exceso_parameter=indice_arg.parameter,
     )

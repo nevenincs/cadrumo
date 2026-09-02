@@ -38,7 +38,11 @@ from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import Static
 
-from .....application.modelo.workspace_models import ModeloWorkspaceFacetName
+from .....application.modelo.workspace_models import (
+    ModeloWorkspaceBoundedFacetV1,
+    ModeloWorkspaceFacetName,
+    ModeloWorkspaceProvenanceRecordV1,
+)
 from .....core.i18n.render import tr
 from ...components.app_access import TypedAppAccess
 from ...components.theme import toggle_appearance
@@ -75,12 +79,13 @@ class ModeloWorkspaceProvenanceScreen(TypedAppAccess, Screen[None]):
         self.query_one("#workspace-provenance-header", Static).update(
             tr("flows.modelo_workspace_provenance.title", modelo=self._session.projection.target.modelo)
         )
-        if self._session.projection.provenance_facet is None:
+        facet = self._session.projection.provenance_facet
+        if facet is None:
             self._refuse_not_applicable()
             return
         self.query_one("#workspace-provenance-not-applicable", Static).remove()
         self._mount_boundedness()
-        self._mount_rows()
+        self._mount_rows(facet)
 
     def _refuse_not_applicable(self) -> None:
         """State that this admission carries no provenance facet at all."""
@@ -108,10 +113,8 @@ class ModeloWorkspaceProvenanceScreen(TypedAppAccess, Screen[None]):
             return
         notice.remove()
 
-    def _mount_rows(self) -> None:
+    def _mount_rows(self, facet: ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceProvenanceRecordV1]) -> None:
         """Mount one row per attribution record, unattributed ones included."""
-        facet = self._session.projection.provenance_facet
-        assert facet is not None
         body = self.query_one("#workspace-provenance-body", ContentScroll)
         table = ContentDataTable[str](id="workspace-provenance-table", cursor_type="row", zebra_stripes=True)
         body.mount(table)

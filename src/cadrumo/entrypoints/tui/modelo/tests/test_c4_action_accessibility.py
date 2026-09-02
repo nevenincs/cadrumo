@@ -98,9 +98,7 @@ def test_only_the_editor_apply_declares_a_mid_flight_interaction() -> None:
     built = _built_definitions()
 
     interactive = {
-        action_id
-        for action_id in MODELO_ACTION_DISPATCH
-        if getattr(built[action_id], "interaction_kinds", frozenset())
+        action_id for action_id in MODELO_ACTION_DISPATCH if getattr(built[action_id], "interaction_kinds", frozenset())
     }
     assert interactive == {MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID}, (
         f"the set of actions declaring an interaction changed: {sorted(interactive)}"
@@ -109,7 +107,7 @@ def test_only_the_editor_apply_declares_a_mid_flight_interaction() -> None:
 
 
 def test_every_action_maps_to_a_terminal_destination() -> None:
-    """"Where did this leave me" is asked after every mutation, so every row answers."""
+    """ "Where did this leave me" is asked after every mutation, so every row answers."""
     for action_id, row in MODELO_ACTION_DISPATCH.items():
         assert row.result_destination, f"{action_id} names no destination for a settled run"
         assert row.result_destination.startswith("modelo."), (
@@ -142,9 +140,7 @@ def test_no_action_is_available_before_its_own_proof_exists() -> None:
     suite. An action reachable from a surface with nothing asserting how it
     behaves is available on the strength of nobody having checked it.
     """
-    enrolled = sorted(
-        path.stem for path in _ACTION_ROOT.glob("*.py") if not path.stem.startswith("_")
-    )
+    enrolled = sorted(path.stem for path in _ACTION_ROOT.glob("*.py") if not path.stem.startswith("_"))
     assert enrolled, "no enrolment modules found; this proof would be vacuous"
 
     here = pathlib.Path(__file__).parent

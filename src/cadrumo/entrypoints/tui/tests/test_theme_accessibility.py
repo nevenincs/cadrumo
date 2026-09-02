@@ -57,7 +57,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _THEMES = (CADRUMO_LIGHT_THEME_NAME, CADRUMO_DARK_THEME_NAME)
 _DESTINATIONS = [
-    pytest.param(destination_id, id=destination_id.rsplit(".", 1)[-1]) for destination_id in MODELO_WORKSPACE_DESTINATIONS
+    pytest.param(destination_id, id=destination_id.rsplit(".", 1)[-1])
+    for destination_id in MODELO_WORKSPACE_DESTINATIONS
 ]
 
 
@@ -75,7 +76,9 @@ def workspace_session(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Mode
 _TEXT_NODE = re.compile(r">([^<>]*)</text>")
 
 
-async def _observe(destination_id: ModeloWorkspaceDestinationIdV1, session: ModeloWorkspaceReadSession, theme: str) -> tuple[tuple[str, ...], tuple[str | None, ...]]:
+async def _observe(
+    destination_id: ModeloWorkspaceDestinationIdV1, session: ModeloWorkspaceReadSession, theme: str
+) -> tuple[tuple[str, ...], tuple[str | None, ...]]:
     """Return one destination's readable glyphs and keyboard order under a theme.
 
     Read from the exported frame's TEXT NODES rather than from each widget's
@@ -101,9 +104,7 @@ async def _observe(destination_id: ModeloWorkspaceDestinationIdV1, session: Mode
         await pilot.pause()
         await app.push_screen(MODELO_WORKSPACE_DESTINATIONS[destination_id](session))
         await pilot.pause()
-        glyphs: tuple[str, ...] = tuple(
-            str(match.group(1)) for match in _TEXT_NODE.finditer(app.export_screenshot())
-        )
+        glyphs: tuple[str, ...] = tuple(str(match.group(1)) for match in _TEXT_NODE.finditer(app.export_screenshot()))
         order: tuple[str | None, ...] = tuple(widget.id for widget in app.screen.focus_chain)
         app.exit(None)
     return glyphs, order

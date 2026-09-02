@@ -45,8 +45,6 @@ __all__ = [
 ]
 
 
-
-
 class GeneratedArtifactSource(Protocol):
     """The byte-authority fields a generated-artifact verifier consumes."""
 

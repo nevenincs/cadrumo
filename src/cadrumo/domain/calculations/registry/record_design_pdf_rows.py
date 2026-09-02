@@ -199,12 +199,36 @@ _PDF_RECORD_MODELO_PAGE_TAG_RE = re.compile(r"^(?P<tag>\d{3}-\d{2})$")
 
 @dataclass(frozen=True, slots=True)
 class PdfRow:
+    """One field-position row read from a record-design PDF's fixed-width table.
+
+    ``ordinal`` is the field's declared sequence number, or ``None`` when the row
+    carries no ordinal (a narrative position row). ``offset`` and ``length`` are the
+    field's 1-based start position and byte width, ``type_code`` its naturaleza, and
+    ``description`` the row's free text.
+    """
+
     source_row: int
     ordinal: str | None
     offset: int
     length: int
     type_code: str
     description: str
+
+
+def required_pdf_group(match: re.Match[str], name: str) -> str:
+    """Return a mandatory named group's text, refusing an absent one.
+
+    ``re.Match.group`` is typed as possibly ``None`` because a pattern may make
+    a group optional. These record-design patterns declare the group mandatory,
+    so ``None`` means the pattern and its reader disagree -- refused here rather
+    than asserted, because an ``assert`` vanishes under ``python -O``.
+    """
+    value = match.group(name)
+    if value is None:
+        raise RegistryValidationError(
+            f"record-design PDF pattern matched without its required {name!r} group",
+        )
+    return value
 
 
 def position_runs(positions: list[int]) -> str:
@@ -232,6 +256,13 @@ _FILLER_DESCRIPTION_RE = re.compile(r"(?i)^(?:blancos?|ceros?)\b")
 
 
 def parse_pdf_row(line: str, source_row: int) -> PdfRow | None:
+    """Parse one record-design PDF line into a :class:`PdfRow`, or ``None`` if it is not one.
+
+    Tries the compact ordinal-led row shapes first, then the narrative
+    ``start-end naturaleza description`` shape guarded by :func:`naturaleza_or_none` so
+    that prose sentences opening with a field's own position range are rejected rather
+    than read as a row.
+    """
     compact = _COMPACT_PDF_ROW_RE.match(line)
     if compact is not None:
         return PdfRow(
@@ -482,6 +513,7 @@ def naturaleza_or_none(value: str) -> str | None:
 
 
 def pdf_page_name(line: str) -> str | None:
+    """Return the page-break label a line announces (``"Pág. N"`` or ``"Anexo"``), or ``None``."""
     match = _PDF_PAGE_RECORD_RE.match(line)
     if match is not None:
         return f"Pág. {match.group('page')}"
@@ -491,6 +523,11 @@ def pdf_page_name(line: str) -> str | None:
 
 
 def pdf_record_heading_name(line: str) -> str | None:
+    """Return the ``"Tipo N - Title"`` name a record heading line declares, or ``None``.
+
+    Matches both the type-first and title-first heading word orders AEAT uses across
+    the corpus.
+    """
     match = _PDF_RECORD_HEADING_RE.match(line) or _PDF_RECORD_HEADING_REVERSED_RE.match(line)
     if match is None:
         return None
@@ -507,17 +544,13 @@ def pdf_candidate_record_name(line: str) -> str | None:
     """
     tag = _PDF_RECORD_MODELO_PAGE_TAG_RE.match(line.strip())
     if tag is not None:
-        tag_value = tag.group("tag")
-        assert isinstance(tag_value, str)
-        return tag_value
+        return required_pdf_group(tag, "tag")
     anexo = _PDF_RECORD_ANEXO_HEADING_RE.match(line.strip())
     if anexo is not None:
         return "Anexo - " + normalise_pdf_sheet_name(anexo.group("title"))
     bare_anexo = _PDF_RECORD_BARE_ANEXO_RE.match(line.strip())
     if bare_anexo is not None:
-        bare_anexo_tag = bare_anexo.group("tag")
-        assert isinstance(bare_anexo_tag, str)
-        return "Anexo " + bare_anexo_tag.upper()
+        return "Anexo " + required_pdf_group(bare_anexo, "tag").upper()
     match = _PDF_RECORD_HEADING_TYPE_LAST_RE.match(line)
     if match is None:
         return None
@@ -537,6 +570,12 @@ _PDF_HEADER_VARIANTS: Final[tuple[tuple[tuple[str, ...], ...], ...]] = (
 
 
 def is_pdf_header(line: str) -> bool:
+    """Return whether ``line`` is a column-header row (POSICIONES/NATURALEZA/DESCRIPCIÓN etc.).
+
+    Checked against every known column-header spelling variant in
+    :data:`_PDF_HEADER_VARIANTS`, so the different phrasings AEAT uses across designs
+    are all recognised as the same non-data row.
+    """
     normalised = line.upper()
     return any(
         all(any(token in normalised for token in column) for column in variant) for variant in _PDF_HEADER_VARIANTS
@@ -544,6 +583,7 @@ def is_pdf_header(line: str) -> bool:
 
 
 def is_pdf_footer(line: str) -> bool:
+    """Return whether ``line`` is a page-footer artifact (page number, ejercicio, or bare number)."""
     return bool(
         re.match(r"^P[áa]gina\s+\d+\s+de\s+\d+$", line, re.IGNORECASE)
         or re.match(r"^Ejercicio\s+\d{4}(?:\s+\d+)?$", line, re.IGNORECASE)
@@ -552,6 +592,7 @@ def is_pdf_footer(line: str) -> bool:
 
 
 def is_pdf_page_heading(line: str) -> bool:
+    """Return whether ``line`` is a page banner (modelo title, agency name, or section title)."""
     return bool(
         line.startswith("Modelo ")
         or line.startswith("Agencia Tributaria")
@@ -567,6 +608,12 @@ def is_pdf_page_heading(line: str) -> bool:
 
 
 def looks_like_title_continuation(line: str) -> bool:
+    """Return whether ``line`` is all-caps prose, the shape of a wrapped record title.
+
+    A record heading that wraps onto a second physical line keeps the same all-caps
+    style as the first, so a line with letters but no lowercase is read as a
+    continuation of the preceding title rather than a new row.
+    """
     letters = [char for char in line if char.isalpha()]
     if not letters:
         return False
@@ -574,14 +621,17 @@ def looks_like_title_continuation(line: str) -> bool:
 
 
 def clean_pdf_line(line: str) -> str:
+    """Collapse a PDF-extracted line's internal whitespace runs to single spaces."""
     return " ".join(line.strip().split())
 
 
 def join_pdf_parts(parts: list[str]) -> str:
+    """Join wrapped title/description fragments into one space-separated string, dropping blanks."""
     return " ".join(part.strip() for part in parts if part.strip())
 
 
 def normalise_pdf_sheet_name(value: str) -> str:
+    """Normalise a record or sheet title: drop dot leaders, collapse whitespace, and title-case it."""
     return join_pdf_parts([value.replace(".", " ").strip()]).strip(". ").title()
 
 

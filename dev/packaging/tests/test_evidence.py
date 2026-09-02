@@ -18,7 +18,16 @@ from .._command import run_command
 from .._hashing import sha256_path
 from .._proof_ledger import record_proof, reset_proof_ledger
 from .._smoke_common import write_smoke_manifest
-from ..cohort_manifest import load_release_cohort
+from ..cohort_manifest import (
+    REQUIRED_ARTIFACT_KINDS,
+    ArtifactRecord,
+    BuildIdentity,
+    CohortManifest,
+    LoadedReleaseCohort,
+    SourceIdentity,
+    cohort_identifier,
+    load_release_cohort,
+)
 from ..evidence import (
     AcquisitionIdentity,
     ClientIdentity,
@@ -27,6 +36,7 @@ from ..evidence import (
     DistributionEvidence,
     EvidenceStatus,
     ExecutionIsolation,
+    InstallationOutcome,
     InstalledExecutableIdentity,
     ResultIdentity,
     RuntimeIdentity,
@@ -66,8 +76,7 @@ def test_command_transcript_projects_canonical_result_with_independent_stream_or
     assert transcript.stderr_sha256 == hashlib.sha256(result.stderr.encode("utf-8")).hexdigest()
 
 
-def _passing_evidence(tmp_path: Path) -> DistributionEvidence:
-    cohort = release_cohort(tmp_path / "cohort")
+def _passing_evidence_for_cohort(tmp_path: Path, cohort: LoadedReleaseCohort) -> DistributionEvidence:
     observed_at = datetime.now(UTC)
     return create_distribution_evidence(
         row_id="windows-x86-64-python",
@@ -112,6 +121,152 @@ def _passing_evidence(tmp_path: Path) -> DistributionEvidence:
             version=cohort.manifest.version,
         ),
     )
+
+
+def _passing_evidence(tmp_path: Path) -> DistributionEvidence:
+    return _passing_evidence_for_cohort(tmp_path, release_cohort(tmp_path / "cohort"))
+
+
+def _synthetic_cohort(tmp_path: Path) -> LoadedReleaseCohort:
+    """Create a valid in-memory cohort binding without rebuilding distributions."""
+    root = tmp_path / "synthetic-cohort"
+    root.mkdir()
+    source = SourceIdentity(commit="c" * 40, tag="v0.2.1")
+    artifacts = tuple(
+        ArtifactRecord(
+            name=name,
+            kind=kind,
+            path=f"{name}.bin",
+            sha256=hashlib.sha256(name.encode("utf-8")).hexdigest(),
+            size=len(name),
+        )
+        for name, kind in sorted(REQUIRED_ARTIFACT_KINDS.items())
+    )
+    manifest = CohortManifest(
+        schema_name="cadrumo.release-cohort.v1",
+        cohort_id=cohort_identifier(version="0.2.1", source=source, artifacts=artifacts),
+        version="0.2.1",
+        source=source,
+        created_at=datetime(2026, 1, 1, tzinfo=UTC),
+        builder=BuildIdentity(
+            implementation="dev.packaging.release_cohort",
+            format_version=1,
+            python="3.13.11",
+            uv="0.11.29",
+            platform=platform.system(),
+            architecture=platform.machine(),
+            build_constraints_sha256="d" * 64,
+        ),
+        artifacts=artifacts,
+    )
+    manifest_path = root / "release-cohort.json"
+    manifest_path.write_text("synthetic cohort binding\n", encoding="utf-8")
+    return LoadedReleaseCohort(directory=root, manifest_path=manifest_path, manifest=manifest)
+
+
+def _installation_outcome(
+    evidence: DistributionEvidence,
+    *,
+    mode: str = "source",
+    status: str = "resolved",
+    cohort_manifest_sha256: str | None = None,
+) -> InstallationOutcome:
+    """Build a digest-bound installation result for evidence contract tests."""
+    artifact_digests = {
+        "cadrumo": "a" * 64,
+        "cadrumo-data-manuals": "b" * 64,
+        "cadrumo-data-official": "c" * 64,
+    }
+    canonical = json.dumps(
+        artifact_digests,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    return InstallationOutcome(
+        mode=mode,
+        status=status,
+        lock_sha256="d" * 64,
+        artifact_sha256=hashlib.sha256(canonical).hexdigest(),
+        artifact_digests=artifact_digests,
+        cohort_manifest_sha256=cohort_manifest_sha256
+        if cohort_manifest_sha256 is not None
+        else (evidence.cohort.manifest_sha256 if mode == "binary" else None),
+    )
+
+
+def _evidence_with_installation(
+    evidence: DistributionEvidence,
+    installation: InstallationOutcome,
+    cohort: LoadedReleaseCohort,
+) -> DistributionEvidence:
+    """Re-mint one row while retaining its exact executed proof."""
+    return create_distribution_evidence(
+        row_id=evidence.row_id,
+        cohort=cohort,
+        runtime=evidence.runtime,
+        client=evidence.client,
+        isolation=evidence.isolation,
+        acquisition=evidence.acquisition,
+        commands=evidence.commands,
+        result=evidence.result,
+        observed_at=evidence.observed_at,
+        destination=evidence.destination,
+        installation=installation,
+    )
+
+
+def test_distribution_evidence_keeps_source_and_binary_outcomes_separate(tmp_path: Path) -> None:
+    """A source success cannot stand in for the independently proven wheel mode."""
+    cohort = _synthetic_cohort(tmp_path)
+    evidence = _passing_evidence_for_cohort(tmp_path, cohort)
+    source = _evidence_with_installation(
+        evidence,
+        _installation_outcome(evidence, mode="source"),
+        cohort,
+    )
+    binary = _evidence_with_installation(
+        evidence,
+        _installation_outcome(evidence, mode="binary"),
+        cohort,
+    )
+
+    assert source.installation is not None
+    assert source.installation.mode == "source"
+    assert binary.installation is not None
+    assert binary.installation.mode == "binary"
+    assert source.evidence_id != binary.evidence_id
+
+
+def test_distribution_evidence_refuses_missing_wheel_as_passing(tmp_path: Path) -> None:
+    """A missing binary wheel remains a failed installation outcome, not a skip."""
+    cohort = _synthetic_cohort(tmp_path)
+    evidence = _passing_evidence_for_cohort(tmp_path, cohort)
+    missing_wheel = _installation_outcome(evidence, mode="binary", status="missing-wheel")
+
+    with pytest.raises(ValidationError, match="resolved installation outcome"):
+        _evidence_with_installation(evidence, missing_wheel, cohort)
+
+    with pytest.raises(ValidationError):
+        InstallationOutcome.model_validate(
+            {
+                "mode": "binary",
+                "status": "skipped",
+                "lock_sha256": "d" * 64,
+                "artifact_sha256": "e" * 64,
+                "artifact_digests": {"cadrumo": "a" * 64},
+            },
+        )
+
+
+def test_distribution_evidence_refuses_installation_from_a_foreign_cohort(tmp_path: Path) -> None:
+    """A binary result naming another cohort cannot be attached to this row."""
+    cohort = _synthetic_cohort(tmp_path)
+    evidence = _passing_evidence_for_cohort(tmp_path, cohort)
+    foreign = _installation_outcome(evidence, mode="binary", cohort_manifest_sha256="e" * 64)
+
+    with pytest.raises(ValidationError, match="does not bind the supplied release cohort"):
+        _evidence_with_installation(evidence, foreign, cohort)
 
 
 def test_distribution_evidence_roundtrips_against_exact_real_cohort(tmp_path: Path) -> None:

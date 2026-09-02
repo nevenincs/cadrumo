@@ -152,7 +152,7 @@ __all__ = [
 
 from ....core.filing_year import FilingYear
 from .convenio import ConvenioAuthority
-from .modelo_localization import resolve_modelo_localization
+from .modelo_localization import require_modelo_localization, resolve_modelo_localization
 from .schema_base import (
     GOVERNANCE_STAMP,
     MANIFEST_ONLY,
@@ -444,9 +444,7 @@ class CasillaProducerKind(StrEnum):
     """It exists only in a projection, with no producer of its own."""
 
 
-CasillaProducerKindField = Annotated[
-    CasillaProducerKind, BeforeValidator(coerce_enum_member(CasillaProducerKind))
-]
+CasillaProducerKindField = Annotated[CasillaProducerKind, BeforeValidator(coerce_enum_member(CasillaProducerKind))]
 """Registry ``producer_kind`` token hydrated into a member."""
 
 
@@ -821,7 +819,7 @@ class ModeloRevision(RegistryModel):
 
     def get_label(self, locale: str) -> str | None:
         """Resolve the optional revision label from the shared catalogue."""
-        return resolve_modelo_localization((self.localization_key,), locale=locale, required=False)
+        return resolve_modelo_localization((self.localization_key,), locale=locale)
 
     @property
     def label(self) -> str | None:
@@ -1005,15 +1003,11 @@ class ModeloDefinition(RegistryModel):
 
     def get_title(self, locale: str) -> str:
         """Resolve the Modelo title from the shared catalogue."""
-        resolved = resolve_modelo_localization((self.title_localization_key,), locale=locale, required=True)
-        assert resolved is not None
-        return resolved
+        return require_modelo_localization((self.title_localization_key,), locale=locale)
 
     def get_official_name(self, locale: str) -> str:
         """Resolve the official Modelo name from the shared catalogue."""
-        resolved = resolve_modelo_localization((self.official_name_localization_key,), locale=locale, required=True)
-        assert resolved is not None
-        return resolved
+        return require_modelo_localization((self.official_name_localization_key,), locale=locale)
 
     @property
     def title(self) -> str:

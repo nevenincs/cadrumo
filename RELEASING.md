@@ -27,23 +27,33 @@ The workflow run and its logs are the authoritative operational record. A
 
 ## One-time setup
 
-Before a first real publication, issue
-[#612](https://github.com/nevenincs/cadrumo/issues/612) must record the three exact
-PyPI Trusted Publisher bindings. Each binding uses owner `nevenincs`, repository
-`cadrumo`, workflow `publish.yml`, and environment `pypi`, for:
+Publication authenticates with PyPI Trusted Publishing over OIDC. No token is stored
+anywhere, so the one-time setup is three publisher registrations rather than a secret.
+All three carry the same four values:
 
-- `cadrumo`
-- `cadrumo-data-manuals`
-- `cadrumo-data-official`
+| Field | Value |
+| --- | --- |
+| Owner | `nevenincs` |
+| Repository | `cadrumo` |
+| Workflow | `publish.yml` |
+| Environment | `pypi` |
 
-No publisher is registered yet, so the bindings are specified against the publishing
-workflow and the environment name the account's other products use, rather than
-against a workflow this repository no longer runs. Remove any obsolete registration
-naming `pypi-upload.yml` or `publish-release.yml`. The `pypi` environment is the OIDC
-trust anchor; the workflow does not require environment reviewers.
+Which registration form to use is decided by the index, not by preference. A name the
+index does not carry takes the **pending publisher** form at
+<https://pypi.org/manage/account/publishing/>, which also reserves the name. A name the
+index already carries takes the ordinary **project-level** form at
+`https://pypi.org/manage/project/<name>/settings/publishing/`.
 
-`cadrumo` itself is unregistered on the index while both corpus distributions hold a
-reservation, so the primary name is the one still to claim.
+- `cadrumo` — held by a pending publisher. The index reports no project for it, which is
+  correct: a pending publisher reserves a name without creating one.
+- `cadrumo-data-manuals` — published at `0.0.0`; owes a project-level publisher.
+- `cadrumo-data-official` — published at `0.0.0`; owes a project-level publisher.
+
+An upload is per-file, so until every distribution is bound the publish step succeeds on
+the bound ones and is refused on the rest. Remove any obsolete registration naming
+`pypi-upload.yml` or `publish-release.yml`. The `pypi` environment is the OIDC trust
+anchor and must exist on the repository; the workflow does not require environment
+reviewers.
 
 Confirm the repository configuration used by the destinations that are enabled:
 

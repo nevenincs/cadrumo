@@ -251,7 +251,9 @@ def test_error_registry_logger_is_module_level() -> None:
     assert isinstance(_registry_logger, logging.Logger), (
         f"Expected a logging.Logger instance; got {type(_registry_logger)!r}"
     )
-    assert _registry_logger.name == "cadrumo.core.errors.error_codes", f"Logger name mismatch: {_registry_logger.name!r}"
+    assert _registry_logger.name == "cadrumo.core.errors.error_codes", (
+        f"Logger name mismatch: {_registry_logger.name!r}"
+    )
 
 
 def test_error_registry_debug_log_scrubs_sensitive_context(

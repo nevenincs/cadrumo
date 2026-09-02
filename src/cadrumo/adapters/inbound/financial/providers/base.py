@@ -254,7 +254,7 @@ class FinancialProvider(ABC):
         # providers).
         if getattr(cls, "__abstractmethods__", None):
             return
-        _VALID_SOURCES: frozenset[str] = frozenset(
+        _valid_sources: frozenset[str] = frozenset(
             {"real_bank_corpus_pdf", "synthetic_from_bank_published_text", "no_corpus"},
         )
         if not hasattr(cls, "verification_source"):
@@ -264,9 +264,9 @@ class FinancialProvider(ABC):
         # Provider subclasses declare ``verification_source`` as a ClassVar;
         # the base reads it dynamically during registration.
         vs = cls.verification_source
-        if vs not in _VALID_SOURCES:
+        if vs not in _valid_sources:
             raise FinancialProviderConfigError(
-                f"{cls.__qualname__}.verification_source={vs!r} is not one of {sorted(_VALID_SOURCES)}",
+                f"{cls.__qualname__}.verification_source={vs!r} is not one of {sorted(_valid_sources)}",
             )
         if not hasattr(cls, "provisional_pending_specimen"):
             raise FinancialProviderConfigError(

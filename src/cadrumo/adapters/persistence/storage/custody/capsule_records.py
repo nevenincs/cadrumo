@@ -242,10 +242,6 @@ class ProfileCustodyCommit(_ProfileCustodyCommitPayload, CustodyDigestModel):
     def _validate_self_digest(cls, value: str) -> str:
         return validate_prefixed_digest(value, field_name="profile capsule self_digest")
 
-
-
-
-
     @classmethod
     def create(
         cls,
@@ -303,9 +299,6 @@ class ProfileCustodyDeletionMarker(CustodyDigestModel):
     transaction_id: UUID
     inventory_digest: str
     self_digest: str
-
-
-
 
     @classmethod
     def create(cls, *, profile_id: UUID, transaction_id: UUID, inventory_digest: str) -> ProfileCustodyDeletionMarker:

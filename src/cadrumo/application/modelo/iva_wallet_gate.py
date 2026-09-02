@@ -114,6 +114,12 @@ class ModeloIvaWalletReconciliationBlockedError(ModeloPreconditionErrorMixin, Mo
         precondition_failure: ModeloPreconditionFailure,
         context: Mapping[str, object] | None = None,
     ) -> None:
+        """Carry the reconciliation failure that blocked the modelo 303 calculation.
+
+        ``translated_message`` is the user-facing refusal text, ``precondition_failure``
+        identifies the specific IVA wallet mismatch that triggered the block, and
+        ``context`` carries any additional diagnostic fields for the caller.
+        """
         super().__init__(
             context=context,
             translated_message=translated_message,
@@ -125,7 +131,10 @@ class ModeloIvaWalletReconciliationBlockedError(ModeloPreconditionErrorMixin, Mo
     def precondition_failure(self) -> ModeloPreconditionFailure:
         """Return the required application-owned IVA-wallet refusal verdict."""
         failure = super().precondition_failure
-        assert failure is not None
+        if failure is None:
+            raise ModeloError(
+                "IVA-wallet reconciliation refusal was raised without its precondition verdict",
+            )
         return failure
 
 

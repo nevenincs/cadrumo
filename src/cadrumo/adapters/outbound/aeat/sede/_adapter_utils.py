@@ -511,8 +511,6 @@ are casefolded, unaccented, and whitespace-collapsed.
 """
 
 
-
-
 def extract_marker_verdict(
     body_text: str,
     *,

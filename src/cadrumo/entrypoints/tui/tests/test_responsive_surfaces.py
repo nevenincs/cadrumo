@@ -43,8 +43,14 @@ from ..modelo.view.models import ModeloWorkspaceDestinationIdV1
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_SIZES = [pytest.param(size, id=size_id) for size, size_id in zip(SUPPORTED_TERMINAL_SIZES, SUPPORTED_TERMINAL_SIZE_IDS, strict=True)]
-_DESTINATIONS = [pytest.param(destination_id, id=destination_id.rsplit(".", 1)[-1]) for destination_id in MODELO_WORKSPACE_DESTINATIONS]
+_SIZES = [
+    pytest.param(size, id=size_id)
+    for size, size_id in zip(SUPPORTED_TERMINAL_SIZES, SUPPORTED_TERMINAL_SIZE_IDS, strict=True)
+]
+_DESTINATIONS = [
+    pytest.param(destination_id, id=destination_id.rsplit(".", 1)[-1])
+    for destination_id in MODELO_WORKSPACE_DESTINATIONS
+]
 
 
 _ADDRESSES = [
@@ -100,11 +106,7 @@ async def test_a_destination_never_forces_the_terminal_to_scroll_sideways(
     app = ScreenHostApp(screen)
     async with app.run_test(size=size) as pilot:
         await pilot.pause()
-        overflowing = [
-            widget
-            for widget in app.screen.query(Widget)
-            if widget.display and widget.region.right > width
-        ]
+        overflowing = [widget for widget in app.screen.query(Widget) if widget.display and widget.region.right > width]
         assert not overflowing, (
             f"{destination_id} at {width} columns pushes "
             + ", ".join(f"{type(w).__name__}(id={w.id!r}) to x={w.region.right}" for w in overflowing[:5])
@@ -195,6 +197,4 @@ def test_every_declared_binding_names_an_action_that_exists(
         method = f"action_{action.split('(', 1)[0].strip()}"
         if not hasattr(screen, method):
             unresolved.append(f"{binding.key!r} -> {method}()")
-    assert not unresolved, (
-        f"{destination_id} declares bindings whose actions do not exist: {', '.join(unresolved)}"
-    )
+    assert not unresolved, f"{destination_id} declares bindings whose actions do not exist: {', '.join(unresolved)}"

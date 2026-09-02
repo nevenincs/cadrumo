@@ -208,8 +208,7 @@ def test_identity_api_exposes_no_former_product_aliases() -> None:
     leaked = [
         name
         for name in dir(core_package)
-        if name.casefold().startswith("aeat")
-        and not isinstance(getattr(core_package, name), types.ModuleType)
+        if name.casefold().startswith("aeat") and not isinstance(getattr(core_package, name), types.ModuleType)
     ]
     assert not leaked, leaked
     assert "__getattr__" not in vars(identity_module)

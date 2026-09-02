@@ -17,9 +17,11 @@ from ...application.modelo.iva_wallet_seed import (
     seed_iva_compensation_period_for_bucket,
 )
 from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.errors.error_codes import resolve_error_message
 from ...core.i18n.render import tr
 from ...core.period import Period
 from ...domain.iva_compensation.errors import IvaCompensationSeedConflictError
+from ...domain.modelos.errors import ModeloError
 from ._common import active_bucket_id_or_refuse, emit_envelope
 from ._modelo_payloads import IvaWalletBalanceResult, IvaWalletOverrideResult, IvaWalletSeedResult
 from ._modelo_payloads_m036 import IvaWalletCorrectResult
@@ -102,8 +104,7 @@ def iva_wallet_seed_cmd(ctx: typer.Context, filing_year: int, period: str, amoun
             bucket_id=active_bucket_id_or_refuse(), period=filing_period, amount=seed_amount
         )
     except ModeloIvaWalletSeedNegativeAmountError as exc:
-        assert exc.translated_message is not None
-        raise typer.BadParameter(tr(exc.translated_message, default="Amount must be non-negative.")) from exc
+        raise typer.BadParameter(resolve_error_message(exc)) from exc
     except IvaCompensationSeedConflictError as exc:
         raise typer.BadParameter(
             tr(
@@ -113,7 +114,10 @@ def iva_wallet_seed_cmd(ctx: typer.Context, filing_year: int, period: str, amoun
                 default=f"A compensation state for {filing_year}/{period} already exists. Seeding is refused to prevent overwriting.",
             )
         ) from exc
-    assert state.taxpayer_nif is not None, "seeded IVA wallet state must retain its taxpayer NIF"
+    if state.taxpayer_nif is None:
+        raise ModeloError(
+            f"seeded IVA wallet state for {state.filing_year}/{state.period} retains no taxpayer NIF",
+        )
     seed_result = IvaWalletSeedResult(
         filing_year=state.filing_year,
         period=state.period,
@@ -161,32 +165,15 @@ def iva_wallet_correct_cmd(
             bucket_id=active_bucket_id_or_refuse(), period=filing_period, amount=correct_amount, reason=clean_reason
         )
     except ModeloIvaWalletSeedNegativeAmountError as exc:
-        assert exc.translated_message is not None
-        raise typer.BadParameter(tr(exc.translated_message, default="Amount must be non-negative.")) from exc
+        raise typer.BadParameter(resolve_error_message(exc)) from exc
     except ModeloIvaWalletCorrectionNoRecordError as exc:
-        assert exc.translated_message is not None
-        raise typer.BadParameter(
-            tr(
-                exc.translated_message,
-                filing_year=filing_year,
-                period=period,
-                default=f"No seeded compensation record exists for {filing_year}/{period}; correction overwrites an existing seed.",
-            )
-        ) from exc
+        raise typer.BadParameter(resolve_error_message(exc)) from exc
     except ModeloIvaWalletCorrectionSealedError as exc:
-        assert exc.translated_message is not None
-        context = exc.context or {}
-        raise typer.BadParameter(
-            tr(
-                exc.translated_message,
-                filing_year=filing_year,
-                period=period,
-                blocking_period=context.get("blocking_period", ""),
-                blocking_filing_year=context.get("blocking_filing_year", ""),
-                default=f"Correction refused: an already-filed Modelo 303 ({context.get('blocking_filing_year', '?')}/{context.get('blocking_period', '?')}) has consumed this seeded compensation basis. Changing it would alter a filed return.",
-            )
-        ) from exc
-    assert state.taxpayer_nif is not None, "corrected IVA wallet state must retain its taxpayer NIF"
+        raise typer.BadParameter(resolve_error_message(exc)) from exc
+    if state.taxpayer_nif is None:
+        raise ModeloError(
+            f"corrected IVA wallet state for {state.filing_year}/{state.period} retains no taxpayer NIF",
+        )
     correct_result = IvaWalletCorrectResult(
         filing_year=state.filing_year,
         period=state.period,
@@ -255,8 +242,7 @@ def iva_wallet_override_cmd(
             evidence_locator=clean_locator,
         )
     except ModeloIvaWalletSeedNegativeAmountError as exc:
-        assert exc.translated_message is not None
-        raise typer.BadParameter(tr(exc.translated_message, default="Amount must be non-negative.")) from exc
+        raise typer.BadParameter(resolve_error_message(exc)) from exc
     selected_amount = decision.selected_amount
     override_result = IvaWalletOverrideResult(
         filing_year=filing_year,

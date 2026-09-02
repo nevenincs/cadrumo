@@ -966,7 +966,11 @@ def _unwrap_cadrumo_error(error: BaseException) -> CadrumoError | None:
 # ``click.ClickException``. Derive the vendored base from ``typer.BadParameter``'s
 # MRO so both hierarchies are recognised without a brittle private-module import.
 _typer_click_exc_raw = next(base for base in typer.BadParameter.__mro__ if base.__name__ == "ClickException")
-assert issubclass(_typer_click_exc_raw, BaseException)
+if not issubclass(_typer_click_exc_raw, BaseException):  # pragma: no cover - vendored-base invariant
+    raise TypeError(
+        "typer.BadParameter's vendored ClickException base is not an exception type; "
+        "the CLI control-flow family can no longer be derived from it",
+    )
 _TYPER_CLICK_EXCEPTION: type[BaseException] = _typer_click_exc_raw
 _CONTROL_FLOW_EXCEPTIONS: tuple[type[BaseException], ...] = (
     click.ClickException,
@@ -991,10 +995,13 @@ def _is_click_control_flow(error: Exception) -> bool:
     return isinstance(error, _CONTROL_FLOW_EXCEPTIONS)
 
 
-_BoundaryProjection = Callable[[Exception, Callable[..., object]], CadrumoError]
+#: One exception family's projection. The parameter type is the family its
+#: :data:`_ERROR_PROJECTIONS` row pairs it with, so the alias stays open in its
+#: first argument: the table's ``isinstance`` walk is what proves the pairing.
+_BoundaryProjection = Callable[..., CadrumoError]
 
 
-def _project_stored_data_drift(error: Exception, callback: Callable[..., object]) -> CadrumoError:
+def _project_stored_data_drift(error: StoredProfileDriftError, callback: Callable[..., object]) -> CadrumoError:
     """Discriminate stored-data drift from input-time validation failures.
 
     A schema mismatch on a persisted profile record and an invalid CLI argument
@@ -1002,7 +1009,6 @@ def _project_stored_data_drift(error: Exception, callback: Callable[..., object]
     messages and recovery paths differ, so the drift is wrapped in the typed CLI
     boundary rather than emitted as the raw domain error code.
     """
-    assert isinstance(error, StoredProfileDriftError)
     return CliStoredDataValidationBoundaryError(error.original_exception)
 
 
@@ -1017,9 +1023,8 @@ def _project_former_product_state(error: Exception, callback: Callable[..., obje
     )
 
 
-def _project_cadrumo_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:
+def _project_cadrumo_error(error: CadrumoError, callback: Callable[..., object]) -> CadrumoError:
     """Forward a typed error, attaching boundary-owned terminal policy when proven."""
-    assert isinstance(error, CadrumoError)
     from ...application.cli_exception_preconditions import (
         cli_exception_envelope_view,
         nested_terminal_precondition_verdict,
@@ -1041,7 +1046,6 @@ def _project_cadrumo_error(error: Exception, callback: Callable[..., object]) ->
         return attach_cli_policy_verdict(error, verdict=storage_verdict)
     verdict = nested_terminal_precondition_verdict(error)
     view = cli_exception_envelope_view(error)
-    assert isinstance(view, CadrumoError)
     return view if verdict is None else attach_cli_policy_verdict(view, verdict=verdict)
 
 
@@ -1127,7 +1131,7 @@ def _storage_session_failure_verdict(error: CadrumoError) -> PreconditionVerdict
     )
 
 
-def _project_validation_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:
+def _project_validation_error(error: ValidationError, callback: Callable[..., object]) -> CadrumoError:
     """Log the pydantic detail, then wrap the input-time validation failure.
 
     The wrapped :class:`CliValidationBoundaryError` keeps the refusal SENTENCE
@@ -1137,7 +1141,6 @@ def _project_validation_error(error: Exception, callback: Callable[..., object])
     including the input values the envelope deliberately withholds, which is
     what an engineer triaging a failing surface or fixture needs.
     """
-    assert isinstance(error, ValidationError)
     _log.error(
         "command_error_boundary: pydantic ValidationError in %s: %s",
         getattr(callback, "__name__", repr(callback)),

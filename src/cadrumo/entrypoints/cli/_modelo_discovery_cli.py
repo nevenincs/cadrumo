@@ -140,19 +140,22 @@ def _run_query[QueryResultT](
         raise bad_parameter_from_error(exc) from exc
 
 
-def _require_period_with_year(*, year: int | None, period: str | None) -> None:
-    if year is not None and (period is None or not period.strip()):
+def _required_period_with_year(*, year: int | None, period: str | None) -> str | None:
+    """Return the period a ``--year`` scope requires, or ``None`` when no year was given."""
+    if year is None:
+        return None
+    if period is None or not period.strip():
         raise typer.BadParameter("--year requires --period")
+    return period
 
 
 def _resolve_discovery_year_period(
     *, modelo: str, year: int | None, period: str | None, deps: _DiscoveryDeps
 ) -> _RegistryDiscoveryScope | None:
-    _require_period_with_year(year=year, period=period)
-    if year is None:
+    required_period = _required_period_with_year(year=year, period=period)
+    if year is None or required_period is None:
         return None
-    assert period is not None
-    resolved = deps.resolve_year_period(year, period, modelo=modelo)
+    resolved = deps.resolve_year_period(year, required_period, modelo=modelo)
     return _RegistryDiscoveryScope(filing_year=resolved.filing_year, period=resolved.registry_token)
 
 
@@ -469,14 +472,16 @@ def _notice_text_lines(notices: tuple[Notice, ...]) -> list[str]:
     return lines
 
 
-def _require_binding_scope(*, modelo: str | None, year: int | None, period: str | None) -> None:
+def _required_binding_scope(*, modelo: str | None, year: int | None, period: str | None) -> tuple[str, int, str]:
+    """Return the complete binding scope, refusing an incomplete option set."""
     missing = [
         option
         for option, value in (("--modelo", modelo), ("--year", year), ("--period", period))
         if value is None or (isinstance(value, str) and (not value.strip()))
     ]
-    if missing:
+    if missing or modelo is None or year is None or period is None:
         raise typer.BadParameter(tr("cli.app.modelo.bindings.missing_required_options", options=", ".join(missing)))
+    return modelo, year, period
 
 
 def _formula_lines(report: ModeloFormulasReport, *, explain: bool) -> list[str]:
@@ -887,10 +892,7 @@ def bindings_resolve(
     as_of: str | None = None,
 ) -> None:
     """Resolve temporary ``--binding`` overrides without mutating state."""
-    _require_binding_scope(modelo=modelo, year=year, period=period)
-    assert modelo is not None
-    assert year is not None
-    assert period is not None
+    modelo, year, period = _required_binding_scope(modelo=modelo, year=year, period=period)
     overrides = dict(deps.parse_binding_override(spec) for spec in binding or ())
     typed_period = deps.resolve_year_period(year, period, modelo=modelo)
     report = _run_query(

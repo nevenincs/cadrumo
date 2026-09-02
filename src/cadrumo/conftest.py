@@ -54,9 +54,8 @@ os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(_COLLECTION_STORAGE_ROOT)
 # these modules' own import surfaces might trigger a premature
 # configure_logging() against is already set by the pure-stdlib lines above.
 from .core.external_constants import UTF_8_ENCODING  # noqa: E402
-from .tests.collection_storage_root import register_collection_storage_root_cleanup
+from .tests.collection_storage_root import register_collection_storage_root_cleanup  # noqa: E402
 from .tests.env_scope import release_settings_storage_directories  # noqa: E402
-from .tests.inventory import package_python_files, prime_ast_cache
 
 # The other half of what apply_collection_storage_root(overwrite=True) used
 # to do in one call: register the atexit cleanup and stale-sibling sweep for
@@ -93,6 +92,11 @@ def source_tree_ast() -> Mapping[Path, ast.AST]:
     ``ast_for_path`` and re-parses independently) still reuses this parse
     instead of re-reading and re-parsing the file from disk.
     """
+    # Imported here, not at module scope: this module's imports must stay below the
+    # storage-root env assignment above, and a function-local import keeps that
+    # ordering constraint off the module surface entirely.
+    from .tests.inventory import package_python_files, prime_ast_cache
+
     cache: dict[Path, ast.AST] = {}
     for path in package_python_files():
         try:

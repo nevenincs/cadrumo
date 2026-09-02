@@ -87,13 +87,15 @@ def declared_cross_revision_continuity_semantic_linkage_failures(
             if missing_roles:
                 continue
 
-            semantic_roles = {casilla.semantic_role for _revision, casilla in occurrences}
+            # Only non-None roles enter the set: the loop above already
+            # `continue`d past any chain carrying a missing one, so the filter
+            # narrows the type without changing which chains are considered.
+            semantic_roles = {
+                casilla.semantic_role for _revision, casilla in occurrences if casilla.semantic_role is not None
+            }
             if len(semantic_roles) != 1:
                 continue
             semantic_role = semantic_roles.pop()
-            # Every occurrence's semantic_role is non-None here: the loop above
-            # already `continue`d past any chain carrying a missing one.
-            assert semantic_role is not None
             if any(
                 sum(casilla.semantic_role == semantic_role for casilla in revision.casillas) != 1
                 for revision_id in chain_revisions

@@ -1166,22 +1166,15 @@ def _is_record_design_path(lowered_relative_path: str) -> bool:
 
 
 def _evidence_for_workbook_kind(kind: WorkbookKind) -> tuple[EvidenceTier | None, tuple[EvidenceTier, ...]]:
+    legal, guidance = EvidenceTier.LEGAL_AUTHORITY, EvidenceTier.OFFICIAL_SOURCE_GUIDANCE
+    parity, layout = EvidenceTier.EXECUTABLE_PARITY_EVIDENCE, EvidenceTier.LAYOUT_AUTHORITY
     if kind == WorkbookKind.FORMULA_FORM:
-        return EvidenceTier.EXECUTABLE_PARITY_EVIDENCE, (EvidenceTier.LEGAL_AUTHORITY, EvidenceTier.LAYOUT_AUTHORITY)
+        return parity, (legal, layout)
     if kind in {WorkbookKind.RECORD_DESIGN_LAYOUT, WorkbookKind.UNSUPPORTED_BINARY_XLS, WorkbookKind.STATIC_LAYOUT}:
-        return EvidenceTier.LAYOUT_AUTHORITY, (EvidenceTier.LEGAL_AUTHORITY, EvidenceTier.EXECUTABLE_PARITY_EVIDENCE)
+        return layout, (legal, parity)
     if kind == WorkbookKind.VALIDATION_HINTS:
-        return EvidenceTier.OFFICIAL_SOURCE_GUIDANCE, (
-            EvidenceTier.LEGAL_AUTHORITY,
-            EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
-            EvidenceTier.LAYOUT_AUTHORITY,
-        )
-    return None, (
-        EvidenceTier.LEGAL_AUTHORITY,
-        EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
-        EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
-        EvidenceTier.LAYOUT_AUTHORITY,
-    )
+        return guidance, (legal, parity, layout)
+    return None, (legal, guidance, parity, layout)
 
 
 def _formula_references(sheet: str, formula: str, remaining: int) -> tuple[WorkbookCellRef, ...]:

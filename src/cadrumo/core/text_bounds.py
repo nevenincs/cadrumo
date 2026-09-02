@@ -98,6 +98,7 @@ def is_canonical_month_set(months: tuple[int, ...]) -> bool:
         and list(months) == sorted(months)
     )
 
+
 type NonEmptyList[T] = Annotated[list[T], Field(min_length=1)]
 """A list that carries at least one element.
 

@@ -1015,8 +1015,7 @@ def _missing_report(
         # is emitted by the envelope contract and is never an authored record, so
         # its coverage question has one correct answer regardless of the join.
         joined = None if is_envelope_sheet else _join_record(sheet, records, constants_by_binding)
-        if is_envelope_sheet:
-            assert envelope is not None
+        if is_envelope_sheet and envelope is not None:
             consulted = ()
             written = _envelope_written_bytes(envelope)
             emitted = written

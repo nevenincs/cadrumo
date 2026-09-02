@@ -278,9 +278,7 @@ def _is_owned_drive_match(entry: dict[str, object], *, prefix: str, object_key_h
 class GoogleDriveProvider:
     """Bytes-in / bytes-out :class:`StorageProvider` backed by Google Drive v3."""
 
-    def __init__(
-        self, *, credentials: Credentials, root_folder_id: str, vault_folder_name: str | None = None
-    ) -> None:
+    def __init__(self, *, credentials: Credentials, root_folder_id: str, vault_folder_name: str | None = None) -> None:
         """Initialise the provider with credentials and the root Drive folder.
 
         Args:

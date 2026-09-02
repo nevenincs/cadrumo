@@ -31,7 +31,7 @@ from .ids import (
     VerificationExpectationId,
     WorkbookParityRefId,
 )
-from .modelo_localization import resolve_modelo_localization
+from .modelo_localization import require_modelo_localization
 from .relation_dependency import (
     RelationDependencyTreatmentField,
 )
@@ -93,9 +93,7 @@ class ConstructDefinition(RegistryModel):
 
     def get_title(self, locale: str) -> str:
         """Resolve the construct title from the shared catalogue."""
-        resolved = resolve_modelo_localization((self.localization_key,), locale=locale, required=True)
-        assert resolved is not None
-        return resolved
+        return require_modelo_localization((self.localization_key,), locale=locale)
 
     @property
     def title(self) -> str:

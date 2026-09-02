@@ -2,7 +2,7 @@
 
 Two mechanisms answer that question and neither derives from the other. The
 profile schema (``schema.toml``) declares ``required`` per field. ``PROFILE_KEYS``
-is compiled from ``WIZARD_FLOWS`` and carries its own ``ProfileKeyRequirement``.
+is compiled from ``WIZARD_FLOWS`` and carries its own ``Requirement``.
 They disagree today, and reconciling them is deliberately out of scope here:
 doing so requires a conditional-requirement grammar the schema does not yet
 have, without which the wizard would have to demand row-scoped facts
@@ -113,10 +113,11 @@ def _key_facts() -> tuple[set[str], set[str]]:
     rather than at module scope — after the registration call, never before.
     """
     ensure_profile_keys_registered()
-    from ....domain.contribuyente.keys import PROFILE_KEYS, ProfileKeyRequirement
+    from ....core.requirement import Requirement
+    from ....domain.contribuyente.keys import PROFILE_KEYS
 
     paths = {entry.key for entry in PROFILE_KEYS}
-    required = {entry.key for entry in PROFILE_KEYS if entry.requirement is ProfileKeyRequirement.REQUIRED}
+    required = {entry.key for entry in PROFILE_KEYS if entry.requirement is Requirement.REQUIRED}
     return paths, required
 
 

@@ -153,6 +153,7 @@ def _load_topic_catalogue_cached(
         )
     return TopicCatalogue(topics=tuple(topics))
 
+
 __all__ = [
     "Topic",
     "TopicCatalogue",

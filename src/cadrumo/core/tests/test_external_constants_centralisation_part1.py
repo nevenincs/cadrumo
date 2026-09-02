@@ -266,7 +266,7 @@ def test_no_local_classified_by_manual_shadow_in_application_or_domain(source_tr
     """
 
     # Names that signal a classified_by sentinel re-definition.
-    _SENTINEL_NAME_FRAGMENTS = ("classified_by", "manual_classified")
+    _sentinel_name_fragments = ("classified_by", "manual_classified")
 
     offenders: list[str] = []
     for py_file, tree in package_ast_items(source_tree_ast):
@@ -285,7 +285,7 @@ def test_no_local_classified_by_manual_shadow_in_application_or_domain(source_tr
                 if not isinstance(target, ast.Name):
                     continue
                 name_lower = target.id.lower()
-                if any(frag in name_lower for frag in _SENTINEL_NAME_FRAGMENTS):
+                if any(frag in name_lower for frag in _sentinel_name_fragments):
                     offenders.append(
                         f"{relative_path}:{node.lineno}: "
                         f"local classified_by sentinel '{target.id} = \"manual\"'; "
