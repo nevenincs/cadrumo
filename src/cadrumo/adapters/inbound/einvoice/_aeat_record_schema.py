@@ -41,6 +41,7 @@ from functools import lru_cache
 from xml.etree.ElementTree import Element
 
 from ....core.resources.bundled_data import bundled_path
+from .xml import local_tag_name as _local
 from .xml import parse_hardened_xml
 
 __all__ = [
@@ -57,10 +58,6 @@ _XSD_NS = "{http://www.w3.org/2001/XMLSchema}"
 AEAT_RECORD_SCHEMA_FAMILIES: tuple[str, ...] = ("sii", "verifactu")
 
 _SCHEMA_ROOT = ("corpus", "aeat_official", "einvoice_record_schemas")
-
-
-def _local(tag: str) -> str:
-    return tag.rsplit("}", 1)[-1] if "}" in tag else tag
 
 
 @lru_cache(maxsize=8)

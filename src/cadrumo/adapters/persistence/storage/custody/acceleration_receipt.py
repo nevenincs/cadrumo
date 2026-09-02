@@ -82,13 +82,13 @@ from .....core.time.utc import validate_utc_aware
 from ..crypto.aead import KEY_SIZE
 from ..errors import (
     DecryptionError,
-    EncryptionError,
     KeyringUnavailableError,
     StorageError,
     StorageValidationError,
 )
 from ..storage_path_definitions import PROFILE_SESSION_FILENAME, PROFILE_SESSION_RETIREMENT_FILENAME
 from . import acceleration_receipt_crypto as _crypto
+from .acceleration_receipt_crypto import _encryption_error
 from .errors import ProfileCustodyRecordError
 from .filesystem import (
     compare_and_clear_profile_custody_local_record,
@@ -120,10 +120,6 @@ _PROFILE_SESSION_RETIREMENT_MAX_BYTES: Final[int] = 24 * 1024
 _PROFILE_SESSION_RETIREMENT_SCHEMA_VERSION: Final[int] = 1
 
 _STORAGE_ENCRYPTION_MESSAGE_KEY: Final[str] = "errors.integrity.integrity_storage_encryption"
-
-
-def _encryption_error(message: str) -> EncryptionError:
-    return EncryptionError(message, translated_message=_STORAGE_ENCRYPTION_MESSAGE_KEY)
 
 
 class _AccelerationReceiptDocument(BaseModel):
