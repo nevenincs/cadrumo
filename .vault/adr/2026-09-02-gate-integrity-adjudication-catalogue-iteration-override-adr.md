@@ -5,13 +5,11 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:6d35ab8a7072b1539497bc00c6d9f341844fb4823eaf4fdec70ba59e62789a17'
+body_hash: 'sha256:e6db979da26bf3c78bd74d18e6cc3d0ee2befc6d91fc348d9938d0491059def7'
 related:
   - "[[2026-09-02-gate-integrity-adjudication-research]]"
   - "[[2026-09-02-gate-integrity-adjudication-negative-test-typing-adr]]"
 ---
-
-
 
 # `gate-integrity-adjudication` adr: `catalogue iteration overrides` | (**status:** `proposed`)
 

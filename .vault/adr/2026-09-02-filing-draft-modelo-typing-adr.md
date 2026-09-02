@@ -5,10 +5,11 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:b887202ab831527a709e32d15c2b864fd6472168b5f2a356b8a811ce766f3b0f'
+body_hash: 'sha256:818b6823e2219f51d34347f403d4f6395d7bb87aef9d86f9fbe16e6de630c2da'
 related:
   - "[[2026-08-07-canonical-identifiers-adr]]"
   - "[[2026-06-10-modelo-enum-hardening-adr]]"
+  - '[[2026-09-02-filing-draft-modelo-typing-reference]]'
 ---
 
 # `filing-draft-modelo-typing` adr: `Persisted draft modelo identifier is typed ModeloCode` | (**status:** `proposed`)
@@ -139,8 +140,8 @@ for identifier literals in code and is not re-decided here.
   an identified unreadable object; it is never skipped by enumeration, coerced, or
   counted as absent.
 - This record is a decision only. It authorises no schema edit and no migration
-  code. It has no companion research or reference document, so its evidence is
-  carried inline by locator rather than cited by stem.
+  code. Its code grounding is `2026-09-02-filing-draft-modelo-typing-reference`;
+  the locators repeated here are the few the decision turns on.
 
 ## Implementation
 

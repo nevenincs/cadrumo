@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-09-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:d1e39e9fde58ba5f7cf1afa2a14a0df296a6cdb82064cbcf76cb1bb980324f03'
+body_hash: 'sha256:b8521d50281927709bbf96e5f54bc023e8ff46d13f1a043781c52968b65c643a'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
 ---

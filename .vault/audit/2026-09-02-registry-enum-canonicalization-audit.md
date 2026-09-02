@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:b912dee1fadd44b335808f326fade12315d386baa2022490d5bef73837202e57'
+body_hash: 'sha256:8114c7dc50ac348b1f7abf94f79ccc8f0c08cbd8a5866a30439a6f2347c52ac9'
 related: []
 ---
 
@@ -1406,3 +1406,31 @@ reason inline rather than by widening any lint configuration.
 Blind-spot scope: 21 -> 19 member sets declared in more than one place. Annotation scope
 unchanged at 1, still the M184/IVA false positive, and the gate still cannot honestly
 reach zero.
+
+## Finding 65 — the same name, declared twice, in two places at once
+
+Two vocabularies were not merely duplicated by member set: the SAME NAME was declared
+twice.
+
+`_InvoiceGrouping` appeared byte-identically in `_invoice_row_materialization.py` and
+`invoice_bindings.py`, two modules of the same registry package where the second already
+imports the first. The name was underscore-private, which is what stopped the importing
+module using it, so it wrote the three tokens out again. It is now `InvoiceGrouping`,
+public, defined once. This is the sixth instance of the campaign's dominant cause: a
+definition that cannot be reached is a definition that gets rewritten.
+
+`WizardPersistMode` appeared in `application/wizard/persistence.py` and again inside a
+`TYPE_CHECKING` block in `entrypoints/cli/config/_manager_dispatch.py`. The CLI copy
+carried a docstring asserting "This module is the canonical home -- the package facade
+imports it rather than restating the literal pair." That claim was false at the moment it
+was written: the application module already held the same declaration. The CLI now
+imports it, and the claim is true of exactly one place.
+
+Worth recording as a general point: a comment asserting canonicality is not canonicality.
+Both of this campaign's instrument scans measure structure precisely because prose about
+where a definition lives cannot be trusted to match where it actually lives.
+
+28 invoice and 310 wizard tests pass. Five wizard failures are the known i18n migration
+plus one xdist worker crash on a test that never references the changed symbol.
+
+Blind-spot scope: 19 -> 17 member sets declared in more than one place.
