@@ -14,10 +14,6 @@ Major entry points:
   :func:`refresh_review_status` manage local review state and approval basis.
 * :func:`export_draft` writes a local fichero-BOE artefact, and
   :func:`verify_export` re-reads that file through the registry export parser.
-* :func:`build_complementaria`, :func:`list_amendments`, and
-  :func:`load_amendment` build and read governed
-  :class:`ModeloComplementaria` and
-  :class:`ModeloSustitutiva` amendment records.
 * :class:`ModeloHistoryRepository` persists encrypted lightweight
   :class:`ModeloHistory` summaries for local
   filing-history views.

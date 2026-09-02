@@ -241,7 +241,6 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
         return ModeloDraftRepository()
 
     resolvers["cadrumo.domain.filing.drafts"] = _bound_resolver(_draft_repo)
-    resolvers["cadrumo.domain.filing.amendments"] = _json_field_resolver("amendment_id")
     resolvers["cadrumo.domain.usage_ratios"] = _bucket_template_resolver("profile:{bucket_id}")
     resolvers["cadrumo.auth.apoderado"] = _bucket_template_resolver("{bucket_id}")
 

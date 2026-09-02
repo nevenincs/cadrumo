@@ -23,9 +23,6 @@ kernels are consumed from their defining child modules directly:
 * :mod:`adapters.persistence.profile.filing_drafts` for the FINANCIAL
   secure-object :class:`domain.filing.ModeloDraft` repository behind the
   :class:`domain.filing.ModeloDraftRepositoryProtocol` port.
-* :mod:`adapters.persistence.profile.filing_amendments` for the AUDIT
-  secure-object complementaria/sustitutiva amendment repository behind the
-  :class:`domain.filing.ModeloAmendmentRepositoryProtocol` port.
 """
 
 from __future__ import annotations

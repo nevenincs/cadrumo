@@ -37,6 +37,7 @@ _FORMAT_DATE_LOCALE_KEY = "wizard.setup.format.date-iso"
 _FORMAT_AMOUNT_LOCALE_KEY = "wizard.setup.format.amount-eur"
 _FORMAT_POSTCODE_LOCALE_KEY = "wizard.setup.format.postcode"
 _FORMAT_UNITS_LOCALE_KEY = "wizard.setup.format.units-count"
+_NIF_INVALID_LOCALE_KEY = "wizard.errors.invalid_tax_id"
 
 FORMAT_HINT_LOCALE_KEYS: tuple[str, ...] = (
     _FORMAT_TAX_ID_LOCALE_KEY,

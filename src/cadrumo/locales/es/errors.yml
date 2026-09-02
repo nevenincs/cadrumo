@@ -205,7 +205,6 @@ errors:
     error_domain_submission_preflight: El borrador no superó la comprobación previa
       de envío local.
     error_domain_validation: Un identificador o modelo de dominio no es válido.
-    error_filing_amendment: Se produjo un error relacionado con la declaración complementaria.
     error_filing_application: Se produjo un error en la capa de aplicación de declaraciones.
     error_filing_builder: Falló la selección o ejecución del generador de la declaración.
     error_filing_computation: El generador no pudo evaluar una casilla con fórmula.
@@ -570,8 +569,6 @@ errors:
       mal configurado.
     integrity_corpus_anchor_resolution: Un ancla del corpus incluido no se resuelve
       exactamente en una unidad extraída.
-    integrity_filing_amendment_validation: La declaración complementaria infringe
-      una invariante legal o de estructura.
     integrity_filing_validation: La validación de la declaración detectó un problema
       que impide continuar.
     integrity_financial_attachments_attachment_validation: El justificante adjunto

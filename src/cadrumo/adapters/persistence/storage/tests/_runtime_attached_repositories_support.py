@@ -14,7 +14,6 @@ import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from .....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
 from .....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from .....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from .....adapters.persistence.profile.justificante import JustificanteRepository
@@ -69,7 +68,6 @@ from .....domain.calculations.registry.schema_references import RegistrySnapshot
 from .....domain.categories.spending_category import SpendingCategory
 from .....domain.contribuyente.assets.records import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
 from .....domain.contribuyente.inventory.records import InventoryLedger, ValuationMethod
-from .....domain.filing.amendment import AmendmentKind, CasillaChange, ModeloComplementaria, make_amendment_id
 from .....domain.filing.schema import (
     ModeloDraft,
     ModeloValue,
@@ -180,7 +178,6 @@ __all__ = [
     "LLMCache",
     "LLMProvider",
     "LLMRunTelemetryRecorder",
-    "ModeloAmendmentRepository",
     "ModeloDraftRepository",
     "ModeloHistoryRepository",
     "ModeloRecordCatalogueRepository",
@@ -448,33 +445,6 @@ def _modelo_draft(label: str) -> ModeloDraft:
         created_at=now,
         updated_at=now,
         schema_version=registry_schema_version(modelo="303", revision_id="2026-y-siguientes"),
-    )
-
-
-def _modelo_amendment(label: str) -> ModeloComplementaria:
-    draft = _modelo_draft(label)
-    delta = (
-        CasillaChange(
-            casilla_id=validated_casilla_id("iva.devengado"),
-            old_value=Decimal("100.00"),
-            new_value=Decimal("121.00"),
-            reason=f"runtime attached amendment {label}",
-        ),
-    )
-    submission_id = f"S-{label}"
-    return ModeloComplementaria(
-        amendment_id=make_amendment_id(
-            submission_id=submission_id,
-            amendment_kind=AmendmentKind.COMPLEMENTARIA,
-            delta=delta,
-        ),
-        submission_id=submission_id,
-        original_csv="ABCD12345678EFGH",
-        original_model="303",
-        original_period=draft.period,
-        delta=delta,
-        amended_draft=draft,
-        created_at=datetime.now(UTC).replace(microsecond=0),
     )
 
 

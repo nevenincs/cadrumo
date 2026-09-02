@@ -19,7 +19,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Annotated, Protocol, Self, cast
+from typing import Annotated, Literal, Protocol, Self, cast
 
 from pydantic import BaseModel, BeforeValidator, Field, NonNegativeInt, PlainSerializer, model_validator
 
@@ -123,6 +123,21 @@ _USER_STATE_FOR_OBLIGATION_STATUS: MappingProxyType[_ObligationStatus, OverviewP
         _ObligationStatus.NOT_APPLICABLE: OverviewPeriodState.UNKNOWN,
     },
 )
+
+OverviewAeatSubmissionStateValue = Literal[
+    OverviewAeatSubmissionState.NOT_OBSERVED,
+    OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
+    OverviewAeatSubmissionState.ACCEPTED,
+    OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
+]
+"""The same vocabulary in the form a payload boundary can accept.
+
+A bare enum under strict validation refuses the plain token a serialised payload
+carries, and a coercing annotation cannot be used on a surface that forbids a
+customised core schema. A literal over the enum's own members accepts the token and
+adds no hook. Rooted in the vocabulary above, so a member added there reaches this
+form too.
+"""
 
 
 def user_state_for(obligation_status: _ObligationStatus) -> OverviewPeriodState:

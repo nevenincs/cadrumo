@@ -205,7 +205,6 @@ errors:
     error_domain_submission_preflight: L'esborrany no ha superat la comprovació prèvia
       d'enviament local.
     error_domain_validation: Un identificador o model de domini no és vàlid.
-    error_filing_amendment: S'ha produït un error relacionat amb la declaració complementària.
     error_filing_application: S'ha produït un error en la capa d'aplicació de declaracions.
     error_filing_builder: Ha fallat la selecció o execució del generador de la declaració.
     error_filing_computation: El generador no ha pogut avaluar una casella amb fórmula.
@@ -577,8 +576,6 @@ errors:
       mal configurat.
     integrity_corpus_anchor_resolution: Una àncora del corpus inclòs no es resol exactament
       en una unitat extreta.
-    integrity_filing_amendment_validation: La declaració complementària infringeix
-      una invariant legal o d'estructura.
     integrity_filing_validation: La validació de la declaració ha detectat un problema
       que impedeix continuar.
     integrity_financial_attachments_attachment_validation: El justificant adjunt no

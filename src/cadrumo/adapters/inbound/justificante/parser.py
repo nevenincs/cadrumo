@@ -25,11 +25,11 @@ from ....domain.justificante import (
     JustificanteParseError,
     JustificanteParserBackend,
 )
+from ..pdf.redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
 from ._extract import extract_justificante, extract_justificante_from_digest
 from ._parsers.text_extraction import extract_text, extract_text_from_bytes
 
 _logger = get_logger(__name__)
-_INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
 
 
 def parse_justificante(

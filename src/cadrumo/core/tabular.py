@@ -51,7 +51,11 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from .config import load_settings
-from .decimal.grammar import european_thousands_reading_is_ambiguous
+from .decimal.grammar import (
+    DecimalSeparator,
+    DecimalSeparatorValue,
+    european_thousands_reading_is_ambiguous,
+)
 from .errors.hierarchy import CoreValidationError
 from .external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from .logging import get_logger
@@ -164,7 +168,7 @@ class TabularDialect(BaseModel):
     delimiter: str = Field(min_length=1, max_length=1)
     quotechar: str = Field(min_length=1, max_length=1)
     encoding: str = Field(min_length=1)
-    decimal_separator: Literal[",", "."]
+    decimal_separator: DecimalSeparatorValue
     header_line_number: int = Field(ge=1)
     column_count: PositiveCount
 
@@ -483,7 +487,7 @@ def _is_summary_row(cells: list[str]) -> bool:
     )
 
 
-def _decimal_evidence(cell: str) -> Literal[",", "."] | None:
+def _decimal_evidence(cell: str) -> DecimalSeparatorValue | None:
     """Return which separator a cell proves is decimal, or ``None`` when it proves nothing.
 
     Only a cell that reads as a printed amount votes. A description such as
@@ -496,28 +500,28 @@ def _decimal_evidence(cell: str) -> Literal[",", "."] | None:
     has_comma = "," in condensed
     has_dot = "." in condensed
     if has_comma and has_dot:
-        return "," if condensed.rfind(",") > condensed.rfind(".") else "."
+        return DecimalSeparator.COMMA if condensed.rfind(",") > condensed.rfind(".") else DecimalSeparator.PERIOD
     if has_comma:
-        return ","
+        return DecimalSeparator.COMMA
     if has_dot:
         # ``1.234`` reads both ways with nothing in it to choose by, so it is
         # not evidence of anything. Everything else with a dot is a decimal.
-        return None if european_thousands_reading_is_ambiguous(condensed) else "."
+        return None if european_thousands_reading_is_ambiguous(condensed) else DecimalSeparator.PERIOD
     return None
 
 
 def _detect_decimal_separator(
     rows: list[tuple[int, list[str]]],
-) -> tuple[Literal[",", "."], TabularNotice | None]:
+) -> tuple[DecimalSeparatorValue, TabularNotice | None]:
     """Infer the file's decimal convention from every numeric cell that carries evidence."""
-    votes: Counter[Literal[",", "."]] = Counter()
+    votes: Counter[DecimalSeparatorValue] = Counter()
     for _, cells in rows:
         for cell in cells:
             evidence = _decimal_evidence(cell)
             if evidence is not None:
                 votes[evidence] += 1
     if not votes:
-        return ".", TabularNotice(
+        return DecimalSeparator.PERIOD, TabularNotice(
             code="decimal_convention_defaulted",
             detail="no numeric cell carried separator evidence; reading amounts as dot-decimal",
         )

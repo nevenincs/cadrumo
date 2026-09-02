@@ -190,7 +190,6 @@ errors:
     error_domain_submission_preflight: The draft could not pass the local submission
       preflight.
     error_domain_validation: A domain identifier or model is not valid.
-    error_filing_amendment: An amendment-related filing error occurred.
     error_filing_application: An error occurred in the filing application layer.
     error_filing_builder: Filing builder selection or execution failed.
     error_filing_computation: The builder could not evaluate a formula casilla.
@@ -521,8 +520,6 @@ errors:
     integrity_cli_output_schema: The CLI output-schema registry is misconfigured.
     integrity_corpus_anchor_resolution: A bundled corpus anchor does not resolve to
       exactly one extracted unit.
-    integrity_filing_amendment_validation: The amendment violates a legal or structural
-      invariant.
     integrity_filing_validation: Filing validation surfaced a blocking finding.
     integrity_financial_attachments_attachment_validation: The attachment failed validation.
       Check the file and attach it again.

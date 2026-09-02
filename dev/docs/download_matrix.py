@@ -213,7 +213,7 @@ def render_zone(descriptor: DownloadDescriptor) -> str:
     lines.append("")
     lines.append("* - Platform")
     lines.append("  - Channel")
-    lines.append("  - How you get the current beta")
+    lines.append("  - Where it comes from")
     for channel in descriptor.channel:
         lines.append(f"* - {channel.platform}")
         lines.append(f"  - {channel.title}")

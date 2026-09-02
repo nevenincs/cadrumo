@@ -31,11 +31,11 @@ from ...pdf.page_text_extraction import (
 from ...pdf.page_text_extraction import (
     extract_pages_text_with_fast_path as _extract_pages_text_with_fast_path_impl,
 )
+from ...pdf.redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
 from ...pdf.source_provenance import sha256_file
 from ..errors import DeclaracionParseError
 
 _logger = get_logger(__name__)
-_INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
 _TAX_ID_CANARY_RE = re.compile(
     r"\bNIF\s*[:\-]?\s*[A-Z0-9][A-Z0-9 .\-]{3,31}?(?=\s+(?:CSV|Fecha)\b|\s*$)",
     re.IGNORECASE,

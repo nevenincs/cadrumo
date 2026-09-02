@@ -22,7 +22,6 @@ Submodules
    cadrumo.adapters.persistence.profile.confirmation_records
    cadrumo.adapters.persistence.profile.extracted_document_cache
    cadrumo.adapters.persistence.profile.extraction_drafts
-   cadrumo.adapters.persistence.profile.filing_amendments
    cadrumo.adapters.persistence.profile.filing_drafts
    cadrumo.adapters.persistence.profile.filing_export_replay
    cadrumo.adapters.persistence.profile.fincas

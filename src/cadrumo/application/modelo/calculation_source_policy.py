@@ -37,7 +37,6 @@ from ..aggregation import CallerOverrideDisposition as _CallerOverrideDispositio
 from ..aggregation import precedence_ladder_sources as _precedence_ladder_sources
 from .calculation_route import (
     CALCULATION_ROUTE_ENROLLED_SOURCES,
-    CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
 )
 
 # Boundary gate: source kinds handled by the live calculate path, either
@@ -62,8 +61,6 @@ CALLER_OVERRIDABLE_CARRY_SOURCES: frozenset[BindingSourceKind] = _precedence_lad
 
 ACCEPTED_BUCKET_AGGREGATION_SOURCE_KINDS = BUCKET_AGGREGATION_OWNED_SOURCES | DEFERRED_SOURCE_KINDS
 
-BINDING_SOURCE_DISPOSITIONS = CALCULATION_ROUTE_SOURCE_DISPOSITIONS
-ENROLLED_SOURCE_KINDS = CALCULATION_ROUTE_ENROLLED_SOURCES
 
 __all__ = [
     "ACCEPTED_BUCKET_AGGREGATION_SOURCE_KINDS",

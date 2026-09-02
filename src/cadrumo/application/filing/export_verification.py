@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
 from ...core.casilla_id import CasillaId
 from ...core.export_layout_format import ExportLayoutFormat
+from ...core.hashing import SHA256_HEX_LENGTH as _SHA256_HEX_LENGTH
 from ...core.hashing import hash_file, sha256_file, sha256_hex
 from ...core.identity import ContentDigest
 from ...core.logging import get_logger
@@ -29,7 +30,6 @@ from ._export_xml_dictionary import expected_xml_dictionary_root_identity, read_
 from .runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
 
 _logger = get_logger(__name__)
-_SHA256_HEX_LENGTH = 64
 
 
 class DeclaracionExportFormat(StrEnum):

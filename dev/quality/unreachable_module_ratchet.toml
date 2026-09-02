@@ -59,11 +59,9 @@ allowed = [
   "cadrumo.adapters.outbound.aeat.sede.renta_web_open",  # unreachable
   "cadrumo.adapters.outbound.aeat.verify",  # unreachable
   "cadrumo.adapters.outbound.google.calc_sheets_pull_coverage",  # unreachable
-  "cadrumo.adapters.persistence.profile.filing_amendments",  # unreachable
   "cadrumo.adapters.persistence.profile.filing_export_replay",  # unreachable
   "cadrumo.adapters.persistence.profile.fincas",  # unreachable
   "cadrumo.application.filing._calculate",  # unreachable
-  "cadrumo.application.filing._complementaria",  # unreachable
   "cadrumo.application.inventory._source_readiness",  # unreachable
   "cadrumo.application.invoices._projection",  # unreachable
   "cadrumo.application.invoices._reconciliation",  # unreachable
@@ -96,7 +94,6 @@ allowed = [
   "cadrumo.core.telemetry._producers",  # unreachable
   "cadrumo.domain.calculations.registry.record_spec",  # unreachable
   "cadrumo.domain.calculations.registry.renta_web_open_oracle",  # unreachable
-  "cadrumo.domain.filing.amendment",  # unreachable
   "cadrumo.domain.fincas",  # unreachable
   "cadrumo.domain.iva.place_of_supply",  # unreachable
   "cadrumo.domain.iva.verify",  # unreachable

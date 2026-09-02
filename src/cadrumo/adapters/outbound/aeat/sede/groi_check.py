@@ -48,6 +48,7 @@ from pydantic import AnyUrl, Field
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.errors.hierarchy import SiteHealthError
+from .....core.identity_check_verdict import IdentityCheckVerdictValue
 from .....core.logging import get_logger
 from .....domain.calculations.registry.checker_oracle_flow import CheckerObservation
 from .....domain.calculations.registry.errors import RegistryValidationError
@@ -182,7 +183,7 @@ class GroiNifVerdict(_SedeCheckerModel):
     """
 
     nif: str = Field(min_length=1, max_length=32)
-    verdict: Literal["valid", "invalid", "unknown"]
+    verdict: IdentityCheckVerdictValue
     raw_evidence_locator: str | None = Field(default=None, max_length=512)
 
 
@@ -427,7 +428,7 @@ async def _check_single_nif(
     *,
     nif: str,
     timeout_ms: int,
-) -> Literal["valid", "invalid", "unknown"]:
+) -> IdentityCheckVerdictValue:
     """Fill the form with one NIF, submit, scrape the rendered verdict."""
     _assert_query_browser_action(f"check-nif-{nif}")
     nif_input = await _locate(
@@ -485,7 +486,7 @@ _POSITIVE_MARKERS: tuple[str, ...] = (
 )
 
 
-def extract_verdict_from_response_text(body_text: str) -> Literal["valid", "invalid", "unknown"]:
+def extract_verdict_from_response_text(body_text: str) -> IdentityCheckVerdictValue:
     """Parse the AEAT GROI verdict from the response body text.
 
     Positive markers are GROI's own ROI-registration phrases, verified

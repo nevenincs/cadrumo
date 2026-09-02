@@ -16,10 +16,10 @@ import typer
 from ...application.live.verify import (
     VerifyObservation,
     VerifySurface,
-    VerifyVerdict,
 )
 from ...core.i18n.render import tr
 from ...core.identity import tax_id_identity_token
+from ...core.identity_check_verdict import IdentityCheckVerdict, IdentityCheckVerdictValue
 from ...core.time.clock import now
 from ._common import active_bucket_id_or_refuse, emit_envelope
 
@@ -34,9 +34,15 @@ class _VerifyRow(TypedDict):
     checked_at: str
 
 
-def _expected(value: str | None) -> VerifyVerdict | None:
-    if value in (None, "valid", "invalid", "unknown"):
-        return value
+def _expected(value: str | None) -> IdentityCheckVerdictValue | None:
+    if value is None:
+        return None
+    if value == IdentityCheckVerdict.VALID:
+        return IdentityCheckVerdict.VALID
+    if value == IdentityCheckVerdict.INVALID:
+        return IdentityCheckVerdict.INVALID
+    if value == IdentityCheckVerdict.UNKNOWN:
+        return IdentityCheckVerdict.UNKNOWN
     raise typer.BadParameter(tr("cli.app.live.verify.expected_values_error"))
 
 

@@ -8,6 +8,8 @@ file reads or environment lookups during construction.
 
 from __future__ import annotations
 
+from typing import Final
+
 from ...core.aggregation import ThirdPartyDeclarationRole
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import Translatable as tr
@@ -1201,4 +1203,8 @@ WIZARD_FLOWS: tuple[WizardFlow, ...] = (SETUP_FLOW,)
 register_wizard_catalogue(SETUP_FLOW, WIZARD_FLOWS)
 
 
-__all__ = ["SETUP_FLOW", "WIZARD_FLOWS"]
+FAMILIA_SECTION_ID: Final = "familia"
+"""The setup flow section carrying the family unit and its descendants."""
+
+
+__all__ = ["FAMILIA_SECTION_ID", "SETUP_FLOW", "WIZARD_FLOWS"]

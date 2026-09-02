@@ -298,26 +298,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.filing.errors.ModeloAmendmentError",
-        ErrorCode(
-            code="ERROR_FILING_AMENDMENT",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_filing_amendment",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.filing.errors.ModeloAmendmentValidationError",
-        ErrorCode(
-            code="INTEGRITY_FILING_AMENDMENT_VALIDATION",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.integrity_filing_amendment_validation",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.domain.filing.errors.ModeloBuilderError",
         ErrorCode(
             code="ERROR_FILING_BUILDER",

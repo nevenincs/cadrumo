@@ -36,6 +36,7 @@ from .....core.tabular import (
     decode_tabular_bytes,
     detect_tabular_delimiter,
 )
+from .....core.decimal.grammar import DecimalSeparator, DecimalSeparatorValue
 from .....domain.transactions.enums import TransactionDirection
 from .....domain.transactions.raw_transaction import SourceFormat
 from ._constants import CSV_EXTENSIONS
@@ -106,7 +107,7 @@ class CsvBankLayout(BaseModel):
     bank_name: str = Field(min_length=1)
     columns: CsvColumnMap
     day_first_dates: bool = True
-    decimal_separator: Literal[",", "."] = ","
+    decimal_separator: DecimalSeparatorValue = DecimalSeparator.COMMA
 
 
 BBVA_LAYOUT = CsvBankLayout(
@@ -157,7 +158,7 @@ REVOLUT_LAYOUT = CsvBankLayout(
         external_id=("id", "reference"),
     ),
     day_first_dates=False,
-    decimal_separator=".",
+    decimal_separator=DecimalSeparator.PERIOD,
 )
 N26_LAYOUT = CsvBankLayout(
     bank_name="N26",
@@ -171,7 +172,7 @@ N26_LAYOUT = CsvBankLayout(
         external_id=("id", "transaction id", "reference id"),
     ),
     day_first_dates=False,
-    decimal_separator=".",
+    decimal_separator=DecimalSeparator.PERIOD,
 )
 CSV_LAYOUTS: tuple[CsvBankLayout, ...] = (
     N26_LAYOUT,

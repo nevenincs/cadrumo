@@ -62,6 +62,7 @@ from .edit_models import (
     ModeloEditUnsupportedIntentReason,
     ModeloEditUnsupportedIntentRefusalV1,
 )
+from .edit_services import RESPONSIBLE_OWNER as _RESPONSIBLE_OWNER
 from .edit_services import (
     detail_row_natural_key,
     reconfirm_modelo_edit_baseline,
@@ -72,7 +73,6 @@ from .edit_services import (
 if TYPE_CHECKING:
     from ...adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
 
-_RESPONSIBLE_OWNER = "modelo.edit"
 _UNSUPPORTED_RECONSIDERATION = "resubmit without this intent once its follow-on Step lands, or split the submission"
 
 _ROW_UNSUPPORTED_REASON: dict[ModeloEditRowIntentKind, ModeloEditUnsupportedIntentReason] = {

@@ -31,7 +31,10 @@ from typing import ClassVar, Literal, Self
 from pydantic import ConfigDict, NonNegativeInt, model_validator
 
 from ...application.operator_actions.models import ActionReference
-from ...application.overview.calendar_models import OverviewAeatSubmissionState
+from ...application.overview.calendar_models import (
+    OverviewAeatSubmissionState,
+    OverviewAeatSubmissionStateValue,
+)
 from ...application.overview.data_prep import DataPrepStepId, DataPrepStepState
 from ...application.overview.pipeline_health import ModeloReadinessState
 from ...core.identity import AeatCsv, CalculationRevisionId, FilingRecordId, ProfileId, SnapshotId, WorkUnitId
@@ -75,7 +78,7 @@ class OverviewCalendarFilingEvidencePayload(OutputSchema):
     local_filing_record_id: FilingRecordId | None = None
     local_calculation_revision_id: CalculationRevisionId | None = None
     local_filed_at: str | None = None
-    aeat_submission_state: OverviewAeatSubmissionState
+    aeat_submission_state: OverviewAeatSubmissionStateValue
     aeat_submitted_at: str | None = None
     aeat_reference_id: str | None = None
     aeat_snapshot_id: SnapshotId | None = None
@@ -124,7 +127,7 @@ class OverviewCalendarEventPayload(OutputSchema):
     period: str | None = None
     status: str | None = None
     source_url: str | None = None
-    aeat_submission_state: OverviewAeatSubmissionState | None = (
+    aeat_submission_state: OverviewAeatSubmissionStateValue | None = (
         None
     )
     aeat_submitted_at: str | None = None
@@ -158,7 +161,7 @@ class OverviewCalendarEntrySummaryPayload(OutputSchema):
     user_state: Literal["due", "late", "filed", "unknown"]
     censo_enrolment_state: Literal["not_checked", "not_required", "unverified", "verified"]
     local_filing_state: Literal["not_ready_to_file", "ready_to_file", "external_baseline_imported"]
-    aeat_submission_state: OverviewAeatSubmissionState
+    aeat_submission_state: OverviewAeatSubmissionStateValue
     justificante_verified: bool
     detail_action: ResolvedNoticeAction
 
@@ -177,7 +180,7 @@ class OverviewCalendarEventSummaryPayload(OutputSchema):
     summary: str
     reference_id: str
     status: str | None = None
-    aeat_submission_state: OverviewAeatSubmissionState | None = (
+    aeat_submission_state: OverviewAeatSubmissionStateValue | None = (
         None
     )
     aeat_submitted_at: str | None = None

@@ -15,6 +15,7 @@ from cadrumo.core.filing_projection_ref import (
 )
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
 
@@ -190,7 +191,7 @@ def _loaded_layout(*, records_reversed: bool = False, first_offset: int = 1) -> 
             "id": "registro-tipo-1",
             "record_type": "1",
             "order": 1,
-            "encoding": "latin-1",
+            "encoding": ExportEncoding.ISO_8859_1,
             "line_ending": "crlf",
             "fields": (
                 {
@@ -213,7 +214,7 @@ def _loaded_layout(*, records_reversed: bool = False, first_offset: int = 1) -> 
             "id": "registro-tipo-2",
             "record_type": "2",
             "order": 2,
-            "encoding": "latin-1",
+            "encoding": ExportEncoding.ISO_8859_1,
             "line_ending": "crlf",
             "fields": (
                 {
@@ -327,7 +328,7 @@ def _one_field_layout() -> ExportLayoutDefinition:
                     "id": "registro-tipo-1",
                     "record_type": "1",
                     "order": 1,
-                    "encoding": "latin-1",
+                    "encoding": ExportEncoding.ISO_8859_1,
                     "line_ending": "crlf",
                     "fields": (_field_derivation().field,),
                 },

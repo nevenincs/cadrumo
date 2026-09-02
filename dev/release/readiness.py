@@ -174,12 +174,10 @@ ALL_DISTRIBUTION_ROWS: Final[tuple[str, ...]] = tuple(
     sorted({row for channel in load_descriptor().channel for row in channel.evidence_rows}),
 )
 
-#: The rows THIS release must prove: the union over the channels it actually
-#: claims, floored at the language-native registry. Evidence is proportional to
-#: claims — an unclaimed channel no longer blocks a claimed one — but no gate is
-#: weakened and no row is removed: a channel still cannot be claimed without its
-#: passing row, and flipping a channel to `available` in the descriptor
-#: immediately re-arms every row it owns.
+#: The rows this release must prove: every row the inventory declares. A channel
+#: is listed because the product publishes to it, so each one owes its rows; a
+#: channel that cannot be proven is removed from the inventory rather than left
+#: declared and unproven.
 REQUIRED_DISTRIBUTION_ROWS: Final[tuple[str, ...]] = required_evidence_rows(load_descriptor())
 
 

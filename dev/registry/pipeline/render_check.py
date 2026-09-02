@@ -41,11 +41,14 @@ inputs produce, not a gap in this comparison, and the caveat was excusing it.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+
+import rtoml
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
@@ -83,11 +86,25 @@ class RenderComparison:
     differing: tuple[str, ...]
     only_committed: tuple[str, ...]
     only_rendered: tuple[str, ...]
+    serialization_only: tuple[str, ...] = ()
+
+    @property
+    def byte_differing(self) -> tuple[str, ...]:
+        """Every file whose bytes differ, whatever the difference means."""
+        return self.differing
 
     @property
     def record_differing(self) -> tuple[str, ...]:
-        """Differing files that are records rather than the provenance attestation."""
-        return tuple(name for name in self.differing if name != _PROVENANCE_MANIFEST)
+        """Records whose parsed meaning differs, not merely their spelling.
+
+        A file whose bytes changed but whose parsed content did not is excluded.
+        The serializer decides quoting, key order and whitespace, and none of
+        those reach the emitted filing bytes; treating them as drift fills the
+        class that exists to stop an unsafe republication with members that are
+        perfectly safe, which is how a real one stops being noticed.
+        """
+        excluded = {_PROVENANCE_MANIFEST, *self.serialization_only}
+        return tuple(name for name in self.differing if name not in excluded)
 
     @property
     def provenance_only(self) -> bool:
@@ -101,6 +118,16 @@ class RenderComparison:
         return bool(self.differing) and not self.record_differing and not (self.only_committed or self.only_rendered)
 
     @property
+    def semantically_reproduced(self) -> bool:
+        """Whether every shipped record still means what its inputs produce.
+
+        Weaker than ``reproduced`` and deliberately so: it tolerates a
+        serializer change, which cannot reach the emitted filing bytes, while
+        still refusing a changed value.
+        """
+        return not (self.record_differing or self.only_committed or self.only_rendered)
+
+    @property
     def reproduced(self) -> bool:
         """Whether the shipped tree is exactly what this derivation re-renders.
 
@@ -109,6 +136,23 @@ class RenderComparison:
         so it means unreproduced rather than drifted.
         """
         return not (self.differing or self.only_committed or self.only_rendered)
+
+
+def _parsed(name: str, raw: bytes) -> object | None:
+    """Return the parsed content of a tree file, or ``None`` when it does not parse.
+
+    Returning ``None`` matters: an unparseable file must never compare equal to
+    another, or a corrupted record would be excused as a spelling change.
+    """
+    try:
+        text = raw.decode("utf-8")
+        if name.endswith(".toml"):
+            return rtoml.loads(text)
+        if name.endswith(".json"):
+            return json.loads(text)
+    except (UnicodeDecodeError, ValueError):
+        return None
+    return None
 
 
 def _tree_bytes(root: Path) -> dict[str, bytes]:
@@ -210,12 +254,21 @@ def compare_revision_against_committed(
         rendered = _tree_bytes(target)
 
     shared = sorted(set(committed) & set(rendered))
+    differing = tuple(name for name in shared if committed[name] != rendered[name])
+    serialization_only = tuple(
+        name
+        for name in differing
+        if name != _PROVENANCE_MANIFEST
+        and (parsed := _parsed(name, committed[name])) is not None
+        and parsed == _parsed(name, rendered[name])
+    )
     return RenderComparison(
         modelo=modelo,
         revision=revision,
         layout_id=str(layout.id),
         files_compared=len(shared),
-        differing=tuple(name for name in shared if committed[name] != rendered[name]),
+        differing=differing,
+        serialization_only=serialization_only,
         only_committed=tuple(sorted(set(committed) - set(rendered))),
         only_rendered=tuple(sorted(set(rendered) - set(committed))),
     )

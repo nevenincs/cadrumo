@@ -45,7 +45,7 @@ _EXTERNAL_STATE_RETAINED: tuple[str, ...] = (
     "recovery artifacts retained",
     "external certificate and token state retained",
 )
-_ModelT = TypeVar("_ModelT", bound="CustodyDigestModel")
+_ModelT = TypeVar("_ModelT", bound="ProfileCustodyDigestModel")
 _PROFILE_LABEL_ADAPTER: TypeAdapter[str] = TypeAdapter(ProfileLabel)
 
 
@@ -162,8 +162,14 @@ def read_profile_custody_record(path: Path, *, maximum_bytes: int, subject: str)
         raise ProfileCustodyTransactionCorruptError(f"{subject} cannot be opened") from exc
 
 
-class CustodyDigestModel(BaseModel):
-    """Shared canonical digest and JSON behavior for custody records."""
+class ProfileCustodyDigestModel(BaseModel):
+    """Shared digest and JSON behaviour for the profile custody records below.
+
+    Named for its layer: the persistence custody package declares a different
+    class for its own records, and the two cannot be merged because application
+    code must not depend on an adapter. Sharing one name across that boundary
+    made a reader guess which contract they were reading.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
     _digest_maximum_bytes: ClassVar[int]
@@ -245,7 +251,7 @@ class ProfileCustodyDeleteConfirmation(BaseModel):
     challenge: Hex64Str
 
 
-class ProfileCustodyTransactionJournal(CustodyDigestModel):
+class ProfileCustodyTransactionJournal(ProfileCustodyDigestModel):
     """One bounded canonical, credential-free local custody transaction record."""
 
     _digest_maximum_bytes = CUSTODY_TRANSACTION_MAX_BYTES
@@ -390,7 +396,7 @@ class ProfileCustodyTransactionJournal(CustodyDigestModel):
         return self.create(**payload)
 
 
-class ProfileCustodyTransactionReceipt(CustodyDigestModel):
+class ProfileCustodyTransactionReceipt(ProfileCustodyDigestModel):
     """One idempotent durable receipt for the application local-delete owner."""
 
     _digest_maximum_bytes = CUSTODY_RECEIPT_MAX_BYTES
@@ -429,7 +435,7 @@ class ProfileCustodyTransactionReceipt(CustodyDigestModel):
         return cls._create_with_self_digest(values, "cannot construct custody receipt")
 
 
-class ProfileCustodyOwnerReceipt(CustodyDigestModel):
+class ProfileCustodyOwnerReceipt(ProfileCustodyDigestModel):
     """One durable idempotence receipt for an ordered local deletion owner."""
 
     _digest_maximum_bytes = CUSTODY_RECEIPT_MAX_BYTES
@@ -461,8 +467,8 @@ __all__ = [
     "CUSTODY_RECEIPT_SCHEMA_VERSION",
     "CUSTODY_TRANSACTION_MAX_BYTES",
     "CUSTODY_TRANSACTION_SCHEMA_VERSION",
-    "CustodyDigestModel",
     "ProfileCustodyDeleteConfirmation",
+    "ProfileCustodyDigestModel",
     "ProfileCustodyInventoryWitness",
     "ProfileCustodyTransactionConflictError",
     "ProfileCustodyTransactionCorruptError",

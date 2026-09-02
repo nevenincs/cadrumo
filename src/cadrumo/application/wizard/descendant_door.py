@@ -52,6 +52,7 @@ from ..flows.definition import locale_copy_ref as _locale_ref
 from ..flows.engine import FlowState
 from ..flows.resume import resume_flow
 from ._checkpoint_store import descendant_clearing_facts
+from .catalogue import FAMILIA_SECTION_ID as _FAMILIA_SECTION_ID
 from .descendant_group import (
     DESCENDANT_ENTRY_EVENT_VALIDATOR_ID,
     DESCENDANT_GROUP,
@@ -68,7 +69,6 @@ if TYPE_CHECKING:
 
 #: The door's flow and familia section ids.
 DESCENDANT_DOOR_FLOW_ID = "descendiente-door"
-_FAMILIA_SECTION_ID = "familia"
 
 # Copy references — both keys already ship in the four locale catalogues, so the
 # door adds no new locale key. Declared as module constants so the static locale

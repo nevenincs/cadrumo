@@ -175,6 +175,32 @@ def claim_labels_in_line(line: str) -> tuple[str, ...]:
     return tuple(labels)
 
 
+_GENERATED_BEGIN = "vaultspec:generated:begin"
+_GENERATED_END = "vaultspec:generated:end"
+
+
+def _hand_authored_lines(text: str) -> list[str]:
+    """Return the lines a person wrote, skipping generated marker zones.
+
+    A generated zone is derived from the channel inventory, and every channel
+    in that inventory owes its evidence rows before a release publishes - the
+    readiness gate holds that. This gate holds the other half: prose that
+    advertises a channel by hand must be backed by evidence already on disk.
+    """
+    kept: list[str] = []
+    inside = False
+    for line in text.splitlines():
+        if _GENERATED_BEGIN in line:
+            inside = True
+            continue
+        if _GENERATED_END in line:
+            inside = False
+            continue
+        if not inside:
+            kept.append(line)
+    return kept
+
+
 def _scan_claims() -> list[tuple[Path, str]]:
     """Return ``(doc_path, claim_label)`` pairs for every acquisition claim found.
 
@@ -189,7 +215,7 @@ def _scan_claims() -> list[tuple[Path, str]]:
         except OSError:
             continue
         seen: set[str] = set()
-        for line in text.splitlines():
+        for line in _hand_authored_lines(text):
             for label in claim_labels_in_line(line):
                 if label not in seen:
                     seen.add(label)

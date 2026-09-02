@@ -1,12 +1,12 @@
 """Structural gate: CI lanes are sized for the shared machines, never `-n auto`.
 
-The fleet is six runners on TWO physical machines (three per box, see
-`.github/ci-control-plane.md`), so a lane that sizes itself as if it owns the machine
-(`pytest -n auto` grabbing every logical CPU) over-subscribes whatever runs
-beside it. Every CI pytest invocation must carry an explicit worker count, the
-packaging campaign legs must pass their per-machine sizing env, and the
-Homebrew matrix — two of whose three legs live on the one MacBook — must be
-parallelism-bounded.
+Runners share physical machines with other repositories' runners, so a lane
+that sizes itself as if it owns the box over-subscribes whatever runs beside
+it. `pytest -n auto` grabs every logical CPU, so every CI pytest
+invocation carries an explicit worker count, the packaging campaign legs pass
+their per-machine sizing env, and the Homebrew matrix is parallelism-bounded.
+
+The invariant holds at any runner count, so this gate names none.
 """
 
 from __future__ import annotations

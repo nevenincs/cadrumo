@@ -29,7 +29,15 @@ from .relation_dependency import (
     RelationDependencyRoleField,
     RelationKindField,
 )
-from .schema_base import CasillaDataType, CasillaDataTypeField, LegalRefs, RegistryModel, SourceRefs
+from .schema_base import (
+    CasillaDataType,
+    CasillaDataTypeField,
+    CasillaSignConstraint,
+    CasillaSignConstraintField,
+    LegalRefs,
+    RegistryModel,
+    SourceRefs,
+)
 from .schema_input_kind import InputKind, InputKindValue
 from .schema_scalars import DecimalValue
 
@@ -118,7 +126,7 @@ class CasillaConstraints(RegistryModel):
     directly in the workbook UI.
     """
 
-    sign: Literal["any", "non_negative", "non_positive"] = "any"
+    sign: CasillaSignConstraintField = CasillaSignConstraint.ANY
     min_value: DecimalValue | None = None
     max_value: DecimalValue | None = None
     pattern: str | None = None

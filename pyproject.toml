@@ -3,7 +3,7 @@ name = "cadrumo"
 version = "0.2.2"
 description = "Cadrumo is a deterministic Spanish tax calculation CLI that turns local financial records into checked, exportable modelo filing artifacts. Independent software; not affiliated with AEAT."
 readme = "README.md"
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.13,<3.15"
 license = "Apache-2.0"
 # Explicit so the wheel/sdist always carry the Apache §4(d) attribution chain
 # (dist-info/licenses/{LICENSE,NOTICE}), independent of hatchling's default
@@ -18,6 +18,7 @@ classifiers = [
   "Intended Audience :: Developers",
   "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Office/Business :: Financial",
 ]
 
@@ -903,7 +904,6 @@ convention = "google"
 # build, so the length is harmless.
 "src/cadrumo/application/modelo/tests/test_bienes_inversion_advisory.py" = ["S106", "E501"]
 "src/cadrumo/application/modelo/tests/test_prorrata_regularizacion_advisory.py" = ["S106"]
-"src/cadrumo/application/filing/tests/test_complementaria_repository.py" = ["E501"]
 # Long import-linter diagnostic f-string and the codemod tool's usage example.
 "src/cadrumo/tests/test_importlinter_ledger.py" = ["E501"]
 "dev/quality/import_centralization_codemod.py" = ["E501"]

@@ -394,37 +394,9 @@ application:
         unsupported_filing_year: 'A(z) {filing_year} adóév nincs támogatottként deklarálva.
           A registry a következőket deklarálja: {supported_filing_years}. Vegye fel
           az évet ide: {declaration}, miután megalapozta az előfeltételeit.'
-    complementaria:
-      errors:
-        justificante_csv_absent: A complementaria a benyújtott eredeti bevallás justificante
-          CSV-jét igényli.
-        no_changed_casilla: A complementaria legalább egy módosított casillát igényel.
-        original_draft_addressing_mismatch: Az eredeti bevallás és a tárolt piszkozat
-          eltérő modelót vagy időszakot ad meg.
-        original_draft_snapshot_stale: Az eredeti piszkozat nem az aktív registry-pillanatképből
-          készült.
-        original_submission_csv_blank: Az eredeti bevallásnak hivatalos justificante
-          CSV-t kell tartalmaznia.
-        original_submission_fields_missing: Az eredeti bevallásból kötelező mezők
-          hiányoznak.
-        original_submission_shape_invalid: Az eredeti bevallás nem felel meg az elvárt
-          rekordszerkezetnek.
     errors:
-      amendment_not_persisted: nincs mentett módosítás %{amendment_id} azonosítóval
-      complementaria_taxpayer_identity_absent: 'a kiegészítő bevallás (complementaria)
-        bejelentett adóazonosítót igényel: a benyújtott bevallás profile_tax_id értéke
-        %{submitted_tax_id}, míg az eredeti vázlat %{draft_tax_id} értéket ad meg'
-      complementaria_taxpayer_identity_malformed: 'a kiegészítő bevallás (complementaria)
-        nem tudja megerősíteni, hogy egyetlen adózóról van szó: a benyújtott bevallás
-        %{submitted_tax_id} profile_tax_id értéke nem érvényes NIF, NIE vagy CIF,
-        az eredeti vázlat pedig %{draft_tax_id} értéket ad meg'
-      complementaria_taxpayer_identity_mismatch: 'a kiegészítő bevallás (complementaria)
-        adóazonosítója eltér: a benyújtott bevallás %{submitted_tax_id} profile_tax_id
-        értéket ad meg, az eredeti vázlat pedig %{draft_tax_id} értéket; mindkettőnek
-        ugyanazt az adózót kell megneveznie'
       import_failed: 'a(z) %{modelo} modell nem importálható: %{detail}'
       modelo_not_in_registry: a(z) %{modelo} modell nincs jelen a számítási nyilvántartásban
-      original_draft_not_persisted: a(z) %{draft_id} eredeti vázlat nincs mentve
       period_ejercicio_mismatch: '%{modelo} modell: a(z) %{period} időszak nem kanonizálható
         a(z) %{ejercicio} évhez'
       unexpected_ejercicio: '%{modelo} modell: váratlan %{ejercicio} időszak; négyjegyű

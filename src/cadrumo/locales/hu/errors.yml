@@ -202,7 +202,6 @@ errors:
     error_domain_submission_preflight: A tervezet nem ment át a helyi benyújtás előzetes
       ellenőrzésén.
     error_domain_validation: Egy domain azonosító vagy modell érvénytelen.
-    error_filing_amendment: Módosítással kapcsolatos benyújtási hiba történt.
     error_filing_application: Hiba történt a benyújtási alkalmazási rétegben.
     error_filing_builder: A benyújtási építő kiválasztása vagy végrehajtása meghiúsult.
     error_filing_computation: Az építő nem tudta kiértékelni egy képlet-mezőt.
@@ -534,8 +533,6 @@ errors:
       konfigurálva.
     integrity_corpus_anchor_resolution: Egy csomagolt korpuszhorgony nem pontosan
       egy kinyert egységre oldódik fel.
-    integrity_filing_amendment_validation: A módosítás sérti a jogi vagy strukturális
-      invariánst.
     integrity_filing_validation: A benyújtás-érvényesítés blokkoló eredményt talált.
     integrity_financial_attachments_attachment_validation: A csatolmány nem ment át
       az érvényesítésen. Ellenőrizze a fájlt, és csatolja újra.

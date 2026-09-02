@@ -14,6 +14,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from ..pdf.redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
 from ._parsers.pdfplumber_backend import extract_pages_text
 from ._schema import ArtefactKind
 from .errors import ArtefactNotRecognisedError
@@ -21,7 +22,6 @@ from .errors import ArtefactNotRecognisedError
 _VISTA_PREVIA_RE = re.compile(r"\bVISTA\s+PREVIA\b", re.IGNORECASE)
 _BORRADOR_RE = re.compile(r"\bBORRADOR\b", re.IGNORECASE)
 _CSV_RE = re.compile(r"C[óo]digo\s+Seguro\s+de\s+Verificaci[óo]n", re.IGNORECASE)
-_INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
 
 
 def detect_artefact_kind(pdf_path: Path) -> ArtefactKind:

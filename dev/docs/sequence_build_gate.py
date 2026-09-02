@@ -157,8 +157,8 @@ def check_sequence_goldens(app: Sphinx, *, pages: list[str] | None = None) -> No
         # BOUNDED pool of child interpreters (each sequence keeps its own fresh
         # hermetic sandbox, so execution is unchanged — only the scheduling
         # is). Width 4 is the same bounded-not-auto footprint the gate builds
-        # use for Sphinx ``-j`` (see ``.github/ci-control-plane.md`` on sizing
-        # for co-residency, never for the whole machine).
+        # use for Sphinx ``-j``: sized for co-residency on a shared machine,
+        # never for the whole box.
         problems.extend(
             check_sequences_in_subprocess(
                 docs_root=docs_root,

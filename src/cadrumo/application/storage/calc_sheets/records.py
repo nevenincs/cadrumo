@@ -56,6 +56,10 @@ from ....domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ....domain.calculations.registry.schema import DecimalValue as _RegistryDecimalValue
+from ....domain.calculations.registry.schema_base import (
+    CasillaSignConstraint,
+    CasillaSignConstraintValue,
+)
 from .errors import CalcSheetsRecordError
 from .theme import WORKBOOK_FONT_FAMILY, StyleRole
 
@@ -251,7 +255,7 @@ class SheetCellConstraint(BaseModel):
     model_config = _STRICT_FROZEN
 
     address: SheetCellAddress
-    sign: Literal["any", "non_negative", "non_positive"] = "any"
+    sign: CasillaSignConstraintValue = CasillaSignConstraint.ANY
     min_value: Decimal | None = None
     max_value: Decimal | None = None
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)

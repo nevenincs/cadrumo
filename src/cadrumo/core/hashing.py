@@ -242,8 +242,13 @@ def sha256_file(path: Path) -> str:
     return hex_digest
 
 
+SHA256_HEX_LENGTH: Final = 64
+"""Characters in a lowercase hex SHA-256 digest; a property of the algorithm."""
+
+
 __all__ = [
     "CONTENT_DIGEST_PREFIX",
+    "SHA256_HEX_LENGTH",
     "bounded_canonical_json_bytes",
     "canonical_json_bytes",
     "canonical_json_digest",

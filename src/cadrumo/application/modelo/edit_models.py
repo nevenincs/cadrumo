@@ -35,7 +35,7 @@ from ...core.identity import (
 from ...core.period import Period
 from ...core.time.utc import validate_utc_aware
 from ...domain.calculations.registry.ids import BindingId, RevisionId
-from ...domain.calculations.registry.schema_base import CasillaDataTypeField
+from ...domain.calculations.registry.schema_base import CasillaDataTypeValue
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.filing.schema import ModeloScalar
 from ...domain.modelos.codes import ModeloCode
@@ -277,7 +277,7 @@ class ModeloEditWritableScalarSurfaceEntryV1(EditModel):
 
     kind: Literal["writable_scalar"] = "writable_scalar"
     casilla_id: CasillaId
-    data_type: CasillaDataTypeField
+    data_type: CasillaDataTypeValue
     allowed_intents: Annotated[tuple[ModeloEditScalarIntentKind, ...], Field(min_length=1, max_length=3)]
 
     @field_validator("allowed_intents")

@@ -46,7 +46,6 @@ _DEFAULT_SQL_BACKED_CONSTRUCTORS: frozenset[str] = frozenset(
         "IvaCompensationHistoryRepository",
         "IvaWalletDecisionRepository",
         "JustificanteRepository",
-        "ModeloAmendmentRepository",
         "ModeloDraftRepository",
         "ModeloHistoryRepository",
         "ModeloRecordCatalogueRepository",

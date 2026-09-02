@@ -39,7 +39,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _WORKFLOWS_DIR: Final = REPO_ROOT / ".github" / "workflows"
 _WATCHDOG_JOB_ID: Final = "runner-queue-watchdog"
-_WATCHDOG_MODULE: Final = "dev/ci/runner_queue_watchdog.py"
+#: The watchdog is invoked as a module rather than a script path, so the lane
+#: runs the same code whether the checkout is a source tree or an install.
+_WATCHDOG_MODULE: Final = "dev.ci.runner_queue_watchdog"
 
 # The label set the watchdog itself runs on. A lane on this set needs no
 # watchdog to notice it is unschedulable: if nothing can serve it, the watchdog
@@ -88,7 +90,7 @@ def _payload() -> dict[str, Any]:
                 "labels": ["self-hosted", "Linux", "X64"],
                 "created_at": "2026-08-05T12:50:25Z",
                 "started_at": "2026-08-05T12:50:27Z",
-                "runner_name": "cadrumo-linux-x64-1",
+                "runner_name": "cadrumo-linux-x64",
             },
             {
                 "name": "Cadrumo probe / queue watchdog",

@@ -39,7 +39,7 @@ from pathlib import Path
 
 import pdfplumber
 
-_INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
+from .redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
 
 
 def _pdfplumber_failure_label(exc: Exception) -> str:

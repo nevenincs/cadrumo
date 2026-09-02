@@ -366,7 +366,7 @@ class TestCommittedGoldensCleanGate:
         executes in its own fresh hermetic sandbox, so the verdict is identical
         to the serial run — only the scheduling changes. Width 8 is the
         machine-aware CI lane size (24 cores / 3 co-resident lanes, the same
-        bound the pytest lanes use; ``.github/ci-control-plane.md``).
+        bound the pytest lanes use).
 
         Carries its own timeout because it legitimately outruns the repository
         ceiling: measured at 344s on an idle box, against a 300s default. That

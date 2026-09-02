@@ -61,6 +61,7 @@ from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.parsing import normalise_iso_4217_currency
 from .....core.tabular import coerce_cell_text
+from .....core.decimal.grammar import DecimalSeparatorValue
 from .....core.text_fold import fold_diacritics
 from .....core.time.clock import now
 from .....domain.transactions.enums import TransactionDirection
@@ -493,7 +494,7 @@ _THOUSANDS_GROUP_WIDTH: Final[int] = 3
 def parse_amount_value(
     value: object,
     *,
-    decimal_separator: Literal[",", "."] | None = None,
+    decimal_separator: DecimalSeparatorValue | None = None,
 ) -> Decimal:
     """Parse bank-export numeric text into ``Decimal`` without float coercion.
 
@@ -602,7 +603,7 @@ def _sanitise_amount_text(raw: str) -> tuple[str, bool]:
 def _resolve_decimal_separator(
     sanitized: str,
     *,
-    override: Literal[",", "."] | None,
+    override: DecimalSeparatorValue | None,
 ) -> str:
     """Resolve the decimal separator: explicit override, then inference from the sanitised text.
 

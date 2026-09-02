@@ -36,6 +36,7 @@ from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.errors.hierarchy import SiteHealthError
 from .....core.identity import normalise_nif_iva
+from .....core.identity_check_verdict import IdentityCheckVerdictValue
 from .....core.logging import get_logger
 from .....domain.calculations.registry.checker_oracle_flow import CheckerObservation
 from .....domain.calculations.registry.errors import RegistryValidationError
@@ -188,7 +189,7 @@ class SedeNifIvaCheckObservation(_SedeCheckerModel):
     """
 
     nif: str = Field(min_length=1, max_length=32)
-    verdict: Literal["valid", "invalid", "unknown"]
+    verdict: IdentityCheckVerdictValue
     raw_evidence_locator: str | None = Field(default=None, max_length=512)
 
 
@@ -500,7 +501,7 @@ async def _check_single_nif(
     *,
     nif: str,
     timeout_ms: int,
-) -> Literal["valid", "invalid", "unknown"]:
+) -> IdentityCheckVerdictValue:
     """Submit one NIF query and scrape the rendered verdict."""
     _assert_query_browser_action(f"check-nif-{nif}")
     country_code, iva_number = _split_vies_nif(nif)
@@ -538,7 +539,7 @@ _POSITIVE_MARKERS: tuple[str, ...] = (
 )
 
 
-def extract_verdict_from_response_text(body_text: str) -> Literal["valid", "invalid", "unknown"]:
+def extract_verdict_from_response_text(body_text: str) -> IdentityCheckVerdictValue:
     """Parse the AEAT-rendered VIES verdict from response body text.
 
     AEAT renders the VIES response in Spanish and phrases a rejection by

@@ -109,6 +109,7 @@ Submodules
    cadrumo.core.hex
    cadrumo.core.iban
    cadrumo.core.identifier_grammar
+   cadrumo.core.identity_check_verdict
    cadrumo.core.image_media_type
    cadrumo.core.invoice_link
    cadrumo.core.irnr

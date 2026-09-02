@@ -908,6 +908,14 @@ audit-health-report:
 audit-health-report-json:
     @uv run --no-sync python -m dev.audit.report --json
 
+# Audit module, class, enum, and function names across src/ and dev/.
+# Public production declarations must be singular and globally unique; private
+# and test collisions remain visible as advisory findings.
+[doc('Audit module, class, enum, and function names across src/ and dev/ for singularity and uniqueness.')]
+[group('audits')]
+audit-object-names *ARGS:
+    @uv run --no-sync python -m dev.audit.object_names {{ARGS}}
+
 # Show conformance status across all modelo revisions and compare against the
 # committed baseline. ``report`` exits 0 always (a screen); ``audit`` exits 0
 # here too (screen posture without ``--check``). To gate on the baseline use
@@ -1278,4 +1286,3 @@ release-collect-evidence *run_ids:
         ForEach-Object { Copy-Item $_.FullName -Destination $dest -Force; $n++ }
     Remove-Item -Recurse -Force $tmp
     Write-Host "collected $n record(s) into $dest (client-row records from emit_real_client_evidence are already local there)"
-

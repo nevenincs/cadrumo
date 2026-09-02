@@ -52,11 +52,18 @@ from ..flows.definition import (
 )
 from ..flows.definition import locale_copy_ref as _locale_ref
 from ..flows.validators import ValidationVerdict, register_answer_validator, register_cross_field_validator
+from ._format_hints import (
+    _FORMAT_AMOUNT_LOCALE_KEY,
+    _FORMAT_DATE_LOCALE_KEY,
+    _FORMAT_TAX_ID_LOCALE_KEY,
+    _FORMAT_UNITS_LOCALE_KEY,
+    _NIF_INVALID_LOCALE_KEY,
+)
+from .catalogue import FAMILIA_SECTION_ID as _FAMILIA_SECTION_ID
 
 if TYPE_CHECKING:
     from datetime import date
 
-_FAMILIA_SECTION_ID = "familia"
 
 #: Repeating-group id; instance answers key as ``descendientes#<index>.<page>``.
 DESCENDANTS_GROUP_ID = "descendientes"
@@ -241,11 +248,6 @@ _ENTRY_RELACION_MISMATCH_LOCALE_KEY = "wizard.setup.descendientes.entry-event.re
 # Format hints reuse the shared wizard.setup.format.* keys already shipped
 # by the format-hint decorator; the NIF failure verdict reuses the existing
 # tax-id error key, so neither mints a new locale key.
-_FORMAT_DATE_LOCALE_KEY = "wizard.setup.format.date-iso"
-_FORMAT_AMOUNT_LOCALE_KEY = "wizard.setup.format.amount-eur"
-_FORMAT_UNITS_LOCALE_KEY = "wizard.setup.format.units-count"
-_FORMAT_TAX_ID_LOCALE_KEY = "wizard.setup.format.tax-id"
-_NIF_INVALID_LOCALE_KEY = "wizard.errors.invalid_tax_id"
 
 # The rentas grammar refusal reuses the exact key the persistence-projection
 # path (`_persistence._descendant_from_row`) already raises for the same

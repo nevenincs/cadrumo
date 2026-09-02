@@ -31,6 +31,9 @@ __all__ = [
     "SCHEMA_FAMILY",
     "CalculationClass",
     "CalculationClassField",
+    "CasillaSignConstraint",
+    "CasillaSignConstraintField",
+    "CasillaSignConstraintValue",
     "DateAxis",
     "DateAxisField",
     "EvidenceTier",
@@ -463,6 +466,47 @@ Registry schema models validate strictly, which refuses a bare TOML string for a
 enum-typed field, so the token is coerced at the boundary.
 """
 
+
+class CasillaSignConstraint(StrEnum):
+    """Which side of zero a casilla's computed value may fall on.
+
+    Declared by the registry and consumed unchanged by the spreadsheet surface that
+    renders the same restriction as a cell validation rule. The two stated it
+    separately before, so a member added here would have left the workbook accepting
+    a value the engine rejects.
+    """
+
+    ANY = "any"
+    """Unrestricted; the casilla admits either sign."""
+
+    NON_NEGATIVE = "non_negative"
+    """Zero or positive. A negative computed value is a constraint violation."""
+
+    NON_POSITIVE = "non_positive"
+    """Zero or negative, as for a casilla that only ever records a deduction."""
+
+
+CasillaSignConstraintField = Annotated[
+    CasillaSignConstraint, BeforeValidator(coerce_enum_member(CasillaSignConstraint))
+]
+"""Registry ``sign`` token hydrated into a member.
+
+Registry schema models validate strictly, which refuses a bare TOML string for an
+enum-typed field, so the token is coerced at the boundary.
+"""
+
+CasillaSignConstraintValue = Literal[
+    CasillaSignConstraint.ANY,
+    CasillaSignConstraint.NON_NEGATIVE,
+    CasillaSignConstraint.NON_POSITIVE,
+]
+"""The same vocabulary where a coercing annotation may not be used.
+
+A strict payload or operation surface refuses a bare enum for a raw token and forbids
+a customised core schema, so those fields take this literal over the members above
+rather than restating the tokens.
+"""
+
 #: The tiers that ground a registry entity on AEAT-published MATERIAL, as distinct
 #: from the law itself and from executable parity artefacts. Three section validators
 #: require exactly this pair through ``require_any_source_tier``. Derived from the
@@ -642,6 +686,36 @@ Registry schema models validate strictly, which refuses a bare TOML string for a
 enum-typed field, so the token is coerced at the boundary.
 """
 
+
+CasillaDataTypeValue = Literal[
+    CasillaDataType.DECIMAL,
+    CasillaDataType.MONEY,
+    CasillaDataType.INTEGER,
+    CasillaDataType.RATIO,
+    CasillaDataType.TEXT,
+    CasillaDataType.BOOLEAN,
+    CasillaDataType.NIF,
+    CasillaDataType.YEAR,
+    CasillaDataType.PERIOD_CODE,
+    CasillaDataType.COUNTRY_CODE,
+    CasillaDataType.IBAN,
+    CasillaDataType.NAME,
+    CasillaDataType.NIF_IVA,
+    CasillaDataType.CCAA_CODE,
+    CasillaDataType.PROVINCE_CODE,
+    CasillaDataType.POSTAL_CODE,
+    CasillaDataType.MUNICIPALITY_CODE,
+    CasillaDataType.BIC,
+    CasillaDataType.DATE,
+]
+"""The same vocabulary in the one form an operation public schema admits.
+
+An operation model graph must not customise its Pydantic core schema, which the
+coercing field alias does, and a bare enum under strict validation refuses the plain
+token every caller sends. A literal over the enum's own members satisfies both: it
+carries no core-schema hook and it still accepts the token. Rooted in the vocabulary
+above rather than restated, so a member added there reaches this form too.
+"""
 
 LegalRefs = Annotated[tuple[LegalRefId, ...], Field(min_length=1)]
 SourceRefs = Annotated[tuple[SourceRefId, ...], Field(min_length=1)]

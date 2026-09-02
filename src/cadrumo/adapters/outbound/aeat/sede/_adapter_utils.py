@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine, Mapping
 from re import compile
-from typing import TYPE_CHECKING, Any, Literal, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 from urllib.parse import urlsplit
 
 from .....core.config import Settings
@@ -36,6 +36,7 @@ if TYPE_CHECKING:
 from pydantic import AnyUrl, BaseModel
 from pydantic import ValidationError as PydanticValidationError
 
+from .....core.identity_check_verdict import IdentityCheckVerdict, IdentityCheckVerdictValue
 from .....core.logging import get_logger
 from .....core.type_guards import is_str_keyed_dict
 from .....domain.calculations.registry.errors import RegistryValidationError
@@ -510,8 +511,6 @@ are casefolded, unaccented, and whitespace-collapsed.
 """
 
 
-type SedeVerdict = Literal["valid", "invalid", "unknown"]
-"""Closed verdict vocabulary every sede identity checker reports."""
 
 
 def extract_marker_verdict(
@@ -519,7 +518,7 @@ def extract_marker_verdict(
     *,
     positive_markers: tuple[str, ...],
     negative_markers: tuple[str, ...] = SPANISH_NEGATIVE_VERDICT_MARKERS,
-) -> SedeVerdict:
+) -> IdentityCheckVerdictValue:
     """Classify an AEAT response body as ``valid``, ``invalid``, or ``unknown``.
 
     Negative markers are tested first and win outright. AEAT phrases a
@@ -542,12 +541,12 @@ def extract_marker_verdict(
     """
     normalized = normalize_response_text(body_text)
     if not normalized:
-        return "unknown"
+        return IdentityCheckVerdict.UNKNOWN
     if any(marker in normalized for marker in negative_markers):
-        return "invalid"
+        return IdentityCheckVerdict.INVALID
     if any(marker in normalized for marker in positive_markers):
-        return "valid"
-    return "unknown"
+        return IdentityCheckVerdict.VALID
+    return IdentityCheckVerdict.UNKNOWN
 
 
 def registry_failure_message(exc: BaseException) -> str:
@@ -652,7 +651,6 @@ def nif_check_operation_tail(expected: Mapping[str, object]) -> tuple[RemoteOper
 
 __all__ = [
     "SPANISH_NEGATIVE_VERDICT_MARKERS",
-    "SedeVerdict",
     "_LocateHelper",
     "_SedeCheckerModel",
     "assert_pdf_response",

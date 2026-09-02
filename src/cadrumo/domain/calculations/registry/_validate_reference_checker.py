@@ -8,19 +8,15 @@ used by the per-section reference walkers.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING
 
 from ....core.casilla_id import CasillaId
-from ._validate_revision_context import collect_export_field_ids
+from ._validate_revision_context import _IdentifiedRecord, collect_export_field_ids
 from .ids import LegalRefId, SourceRefId
 from .schema import ModeloRevision
 
 if TYPE_CHECKING:
     from .schema import RegistrySnapshot
-
-
-class _IdentifiedRecord(Protocol):
-    id: str
 
 
 def _record_ids[RecordT: _IdentifiedRecord](records: Iterable[RecordT]) -> set[str]:
