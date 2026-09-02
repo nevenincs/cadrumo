@@ -783,6 +783,19 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
         members=_registry("formula_runtime_m100"),
     ),
     ClassificationRule(
+        classification="live",
+        trigger="ancestor packages the interpreter loads when a load imports their children",
+        reason=(
+            "Importing a module loads every package above it, and the import graph records no edge "
+            "for that: nothing writes an import of `cadrumo.domain` when it imports "
+            "`cadrumo.domain.modelos.calculation_revision_identity`. These three are in "
+            "sys.modules after a bundled load for that reason alone. They are inert namespace "
+            "markers carrying no load behaviour of their own, and they are classified live "
+            "because a load does hold them, not because they do anything."
+        ),
+        members=("cadrumo.domain", "cadrumo.domain.manuals", "cadrumo.domain.modelos"),
+    ),
+    ClassificationRule(
         classification="conditionally_reachable",
         trigger="function-scoped imports only: withholding row building and calculation revision identity",
         reason=(
