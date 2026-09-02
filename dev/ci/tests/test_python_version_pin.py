@@ -14,6 +14,7 @@ from ..._paths import REPO_ROOT
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _WORKFLOWS_DIR: Final = REPO_ROOT / ".github" / "workflows"
+_COMPATIBILITY_WORKFLOW: Final = _WORKFLOWS_DIR / "python-runtime-compatibility.yml"
 _PYTHON_VERSION_FILE: Final = REPO_ROOT / ".python-version"
 _EXACT_PATCH: Final = re.compile(r"\d+\.\d+\.\d+")
 _MATRIX_EXPRESSION: Final = re.compile(r"\$\{\{\s*matrix\.([A-Za-z][\w-]*)\s*\}\}")
@@ -74,7 +75,10 @@ def _assert_setup_uv_consumers_follow_pin(
                     continue
 
                 matrix = (job.get("strategy") or {}).get("matrix") or {}
-                if not _is_compatibility_matrix_override(selection=selection, matrix=matrix, pin=pin):
+                if (
+                    path != _COMPATIBILITY_WORKFLOW
+                    or not _is_compatibility_matrix_override(selection=selection, matrix=matrix, pin=pin)
+                ):
                     violations.append(f"{path.name}:{job_name}: {selection!r}")
 
     assert consumer_found, "no setup-uv consumer was found; the CI Python pin contract has no live surface"
@@ -130,3 +134,31 @@ def test_release_cohort_enforces_the_repository_python_pin() -> None:
     from ...packaging.release_cohort import _REQUIRED_PYTHON_VERSION
 
     assert _python_pin() == _REQUIRED_PYTHON_VERSION
+
+
+def test_matrix_override_is_rejected_outside_the_compatibility_workflow() -> None:
+    """A second matrix lane cannot quietly replace the release-builder pin."""
+    pin = _python_pin()
+    foreign = Path("ci.yml")
+    documents = [
+        (
+            foreign,
+            {
+                "jobs": {
+                    "foreign-matrix": {
+                        "steps": [
+                            {"uses": "actions/checkout@v4"},
+                            {
+                                "uses": "astral-sh/setup-uv@v5",
+                                "with": {"python-version": "${{ matrix.python-version }}"},
+                            },
+                        ],
+                        "strategy": {"matrix": {"python-version": [pin, "3.15"]}},
+                    },
+                },
+            },
+        ),
+    ]
+
+    with pytest.raises(AssertionError, match="bypass"):
+        _assert_setup_uv_consumers_follow_pin(documents, pin=pin)
