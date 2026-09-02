@@ -161,13 +161,13 @@ def test_chain_id_keeps_its_continuity_locale_key_readable() -> None:
     is keyed with hyphens. This is the gate on that decision.
     """
     kebab = chain_id_for("centenario-del-hockey-1923-2023")
-    key = casilla_continuity_locale_key("100", kebab, "label")
+    key = casilla_continuity_locale_key("100", kebab, ModeloLocalizationFieldKind.LABEL)
     assert kebab in key, "the chain id must appear verbatim in its locale key"
     assert ".x-" not in key, f"chain id was base32-encoded into an opaque key: {key}"
 
     # The refutation: the dotted form this scheme rejects really does mangle.
     dotted = "irpf.aeip.centenario-del-hockey-1923-2023.aplicado"
-    assert ".x-" in casilla_continuity_locale_key("100", dotted, "label")
+    assert ".x-" in casilla_continuity_locale_key("100", dotted, ModeloLocalizationFieldKind.LABEL)
 
 
 def test_every_planned_chain_id_survives_locale_key_encoding(inventory) -> None:
@@ -175,7 +175,7 @@ def test_every_planned_chain_id_survives_locale_key_encoding(inventory) -> None:
     plan = plan_chains(inventory)
     assert plan.entries
     for entry in plan.entries:
-        key = casilla_continuity_locale_key("100", entry.chain_id, "label")
+        key = casilla_continuity_locale_key("100", entry.chain_id, ModeloLocalizationFieldKind.LABEL)
         assert ".x-" not in key, f"{entry.chain_id} encodes to {key}"
 
 
@@ -193,7 +193,10 @@ def test_grounding_collapses_per_revision_keys_onto_one_concept(adjudicated) -> 
         for entry in plan.entries
         for occ in entry.occurrences
     }
-    continuity_keys = {casilla_continuity_locale_key("100", entry.chain_id, "label") for entry in plan.entries}
+    continuity_keys = {
+        casilla_continuity_locale_key("100", entry.chain_id, ModeloLocalizationFieldKind.LABEL)
+        for entry in plan.entries
+    }
     assert len(continuity_keys) == len(plan.entries)
     assert len(occurrence_keys) > len(continuity_keys), (
         "grounding must reduce the translatable key count, or the chain earns nothing"

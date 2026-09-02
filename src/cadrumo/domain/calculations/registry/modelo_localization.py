@@ -186,7 +186,7 @@ def _localised_casilla(raw_casilla: object, *, modelo_id: str, revision_id: Revi
     keys = [casilla_occurrence_locale_key(modelo_id, revision_id, casilla_id, ModeloLocalizationFieldKind.LABEL)]
     continuidad_id = casilla.get("continuidad_id")
     if isinstance(continuidad_id, str):
-        keys.append(casilla_continuity_locale_key(modelo_id, continuidad_id, "label"))
+        keys.append(casilla_continuity_locale_key(modelo_id, continuidad_id, ModeloLocalizationFieldKind.LABEL))
     payload: dict[str, object] = {**casilla, "localization_keys": tuple(keys)}
     aliases = _localised_casilla_aliases(
         casilla.get("aliases"),
