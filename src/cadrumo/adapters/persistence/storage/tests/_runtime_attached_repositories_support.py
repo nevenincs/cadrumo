@@ -66,7 +66,13 @@ from .....domain.buckets.event import (
 from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.categories.spending_category import SpendingCategory
-from .....domain.contribuyente.assets.records import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
+from .....domain.contribuyente.assets.records import (
+    AmortizacionEntry,
+    AmortizacionLedger,
+    AssetClass,
+    AssetRecord,
+    AssetsLedgerDocument,
+)
 from .....domain.contribuyente.inventory.records import InventoryLedger, ValuationMethod
 from .....domain.filing.schema import (
     ModeloDraft,
@@ -134,7 +140,7 @@ from ....outbound.llm.cache import LLMCache
 from ....outbound.llm.consent_ledger import EvidenceConsentLedger
 from ....outbound.llm.run_telemetry import LLMRunTelemetryRecorder
 from ....outbound.llm.usage import UsageRecorder
-from ...profile.assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
+from ...profile.assets import AmortizacionLedgerRepository, AssetsLedgerRepository
 from ...profile.inventory import load_inventory, save_inventory
 from ...profile.recipient_replay_guard import RecipientReplayGuardRepository
 from ...profile.submission import SubmissionRepository
@@ -158,9 +164,12 @@ __all__ = [
     "_BUCKET_B_ID",
     "_WALLET_SUBJECT_ID",
     "AmortizacionLedger",
+    "AmortizacionLedgerRepository",
     "ApoderadoService",
     "AttachmentNotFoundError",
     "AttachmentStore",
+    "AssetsLedgerDocument",
+    "AssetsLedgerRepository",
     "Borrador100SnapshotRepository",
     "BucketEventHistoryCatalogue",
     "BucketEventHistoryRepository",
@@ -202,13 +211,9 @@ __all__ = [
     "activate_session",
     "google_session_store",
     "list_auth_diagnostics",
-    "load_amortizacion_ledger",
-    "load_assets",
     "load_inventory",
     "load_usage_ratios",
     "preview_quarantine_unreadable_secure_objects",
-    "save_amortizacion_ledger",
-    "save_assets",
     "save_inventory",
     "save_usage_ratios",
     "secure_object_unreadable_total",

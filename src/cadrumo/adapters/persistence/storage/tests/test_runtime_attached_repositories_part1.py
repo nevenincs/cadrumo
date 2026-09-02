@@ -17,9 +17,12 @@ from ._runtime_attached_repositories_support import (
     _WALLET_SUBJECT_ID,
     LLM_USAGE_NAMESPACE,
     AmortizacionLedger,
+    AmortizacionLedgerRepository,
     ApoderadoService,
     AttachmentNotFoundError,
     AttachmentStore,
+    AssetsLedgerDocument,
+    AssetsLedgerRepository,
     Borrador100SnapshotRepository,
     BucketEventHistoryCatalogue,
     BucketEventHistoryRepository,
@@ -93,14 +96,10 @@ from ._runtime_attached_repositories_support import (
     activate_session,
     google_session_store,
     list_auth_diagnostics,
-    load_amortizacion_ledger,
-    load_assets,
     load_inventory,
     load_usage_ratios,
     override_settings,
     preview_quarantine_unreadable_secure_objects,
-    save_amortizacion_ledger,
-    save_assets,
     save_inventory,
     save_usage_ratios,
     secure_object_unreadable_total,
@@ -165,9 +164,9 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     ("usage_ratios", lambda: load_usage_ratios(bucket_id=_BUCKET_A_ID)),
     ("borrador_100_snapshot", lambda: Borrador100SnapshotRepository(bucket_id=_BUCKET_A_ID).list_snapshots()),
     ("repair_decisions", lambda: RepairRemediationDecisionRepository().list_decisions()),
-    ("profile_assets", load_assets),
+    ("profile_assets", lambda: AssetsLedgerRepository().load()),
     ("profile_inventory", load_inventory),
-    ("profile_amortizacion", load_amortizacion_ledger),
+    ("profile_amortizacion", lambda: AmortizacionLedgerRepository().load()),
 )
 
 
@@ -336,14 +335,14 @@ def test_attachment_store_default_isolates_active_profile_writes(tmp_path: Path)
 
 def test_profile_asset_defaults_isolate_active_profile_writes(tmp_path: Path) -> None:
     with _active_runtime(tmp_path, _BUCKET_A_ID):
-        save_assets((_asset("asset-a"),))
+        AssetsLedgerRepository().save(AssetsLedgerDocument(assets=(_asset("asset-a"),)))
 
     with _active_runtime(tmp_path, _BUCKET_B_ID):
-        assert load_assets() == ()
-        save_assets((_asset("asset-b"),))
+        assert AssetsLedgerRepository().load().assets == ()
+        AssetsLedgerRepository().save(AssetsLedgerDocument(assets=(_asset("asset-b"),)))
 
     with _active_runtime(tmp_path, _BUCKET_A_ID):
-        loaded = load_assets()
+        loaded = AssetsLedgerRepository().load().assets
 
     assert tuple(asset.identifier for asset in loaded) == ("asset-a",)
 
@@ -573,7 +572,7 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
         cache.write(request, _llm_response(_BUCKET_A_ID))
         usage.record(_usage_record(_BUCKET_A_ID))
         save_inventory((_inventory_ledger(_BUCKET_A_ID),))
-        save_amortizacion_ledger(_amortizacion_ledger(_BUCKET_A_ID))
+        AmortizacionLedgerRepository().save(_amortizacion_ledger(_BUCKET_A_ID))
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
         stored_a = store.persist_artefact(
             ("303", 2026, Period.from_year_and_code(2026, "1T"), "202610013522456T"), artefact_a, body_a
@@ -584,7 +583,7 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
         assert cache.read(request, LLMProvider.OPENAI, "gpt-test") is None
         assert usage.load_records() == ()
         assert load_inventory() == ()
-        assert load_amortizacion_ledger() == AmortizacionLedger()
+        assert AmortizacionLedgerRepository().load() == AmortizacionLedger()
         with pytest.raises(ExpedienteNotFoundError):
             FiledDeclaracionObservationStore(tmp_path / "sede-cache").load_artefact(stored_a.storage_ref or "")
         google_session_store.save_client(profile, google_b[0])
@@ -594,7 +593,7 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
         cache.write(request, _llm_response(_BUCKET_B_ID))
         usage.record(_usage_record(_BUCKET_B_ID))
         save_inventory((_inventory_ledger(_BUCKET_B_ID),))
-        save_amortizacion_ledger(_amortizacion_ledger(_BUCKET_B_ID))
+        AmortizacionLedgerRepository().save(_amortizacion_ledger(_BUCKET_B_ID))
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
         store.persist_artefact(
             ("303", 2026, Period.from_year_and_code(2026, "2T"), "202610013522457T"), artefact_b, body_b
@@ -604,7 +603,7 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
         cached = cache.read(request, LLMProvider.OPENAI, "gpt-test")
         usage_records = usage.load_records()
         inventory = load_inventory()
-        amortizacion = load_amortizacion_ledger()
+        amortizacion = AmortizacionLedgerRepository().load()
         loaded_body = FiledDeclaracionObservationStore(tmp_path / "sede-cache").load_artefact(
             stored_a.storage_ref or "",
         )
