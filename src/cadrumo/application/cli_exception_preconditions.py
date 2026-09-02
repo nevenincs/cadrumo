@@ -10,11 +10,15 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
 from ..core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from .operator_actions.models import PreconditionVerdict
+
+if TYPE_CHECKING:
+    from ..core.errors.hierarchy import CadrumoError
 
 
 def _registered_terminal_precondition_verdict(current: BaseException) -> PreconditionVerdict | None:
@@ -99,10 +103,10 @@ def nested_terminal_precondition_verdict(error: BaseException) -> PreconditionVe
     return next(iter(candidates.values()))
 
 
-def cli_exception_envelope_view(error: BaseException) -> BaseException:
+def cli_exception_envelope_view(error: CadrumoError) -> CadrumoError:
     """Return the narrow envelope-safe view for the exception producer families."""
     from ..core.errors.error_codes import get_registered_error_code
-    from ..core.errors.hierarchy import CadrumoError, CoreValidationError
+    from ..core.errors.hierarchy import CoreValidationError
     from ..core.optional_extras import MissingOptionalExtraError
 
     if isinstance(error, MissingOptionalExtraError):
@@ -127,7 +131,6 @@ def cli_exception_envelope_view(error: BaseException) -> BaseException:
 
     code = get_registered_error_code(error)
     view = BaseException.__new__(type(error))
-    assert isinstance(view, CadrumoError)
     view.__dict__.update(error.__dict__)
     for attribute in ("extra", "name", "path"):
         view.__dict__.pop(attribute, None)

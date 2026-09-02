@@ -962,17 +962,15 @@ def _natural_target_absent_precondition_error(
     subject_leaf_key = _natural_target_subject_leaf_key(default_for)
     if subject_leaf_key is None or not _natural_target_is_addressed(address):
         return error
-    assert address.modelo is not None
-    assert address.filing_year is not None
-    assert address.period is not None
+    addressed_modelo, addressed_filing_year, addressed_period = _addressed_obligation(address)
     failure = build_modelo_precondition_failure_for_scenario(
         subject_leaf_key=subject_leaf_key,
         scenario_id=f"{subject_leaf_key}.work_address.natural_target_absent",
         evidence_id=f"{subject_leaf_key}.work_address.addressing",
         evidence_values={
-            "modelo": address.modelo,
-            "filing_year": address.filing_year,
-            "period": address.period.registry_token,
+            "modelo": addressed_modelo,
+            "filing_year": addressed_filing_year,
+            "period": addressed_period.registry_token,
             "registry_revision_id": address.registry_revision_id or "",
             "bucket_id": address.bucket_id or "",
         },
@@ -982,9 +980,9 @@ def _natural_target_absent_precondition_error(
         str(error),
         translated_message="errors.error.modelo_work_address_not_found",
         context={
-            "modelo": address.modelo,
-            "filing_year": address.filing_year,
-            "period": address.period.registry_token,
+            "modelo": addressed_modelo,
+            "filing_year": addressed_filing_year,
+            "period": addressed_period.registry_token,
             "registry_revision_id": address.registry_revision_id or "",
             "bucket_id": address.bucket_id or "",
         },
@@ -998,6 +996,36 @@ def _natural_target_subject_leaf_key(default_for: ModeloCalculationRevisionDefau
     if default_for == "file":
         return "modelo.work.file"
     return None
+
+
+def _addressed_obligation(address: ModeloWorkAddress) -> tuple[ModeloCode, FilingYear, Period]:
+    """Return the obligation a natural address names, refusing a partial one.
+
+    ``ModeloWorkAddress`` leaves the three coordinates optional because a
+    work-unit-id address carries none of them. Callers here have already passed
+    :func:`_natural_target_is_addressed`, so absence is a contradiction -- and
+    it is refused rather than asserted, because an ``assert`` is stripped under
+    ``python -O`` and would let a partial address reach the precondition build.
+    """
+    if address.modelo is None or address.filing_year is None or address.period is None:
+        raise ModeloWorkSelectorContradictionError(
+            "natural work address passed the addressed screen without a complete "
+            "modelo/ejercicio/period coordinate set",
+        )
+    return ModeloCode(address.modelo), address.filing_year, address.period
+
+
+def _selected_work_unit(resolution: ModeloWorkResolution) -> WorkUnit:
+    """Return the work unit a resolved selection carries, refusing an unresolved one.
+
+    Refused rather than asserted for the same reason: under ``python -O`` the
+    assert disappears and an unresolved selection reaches the caller as ``None``.
+    """
+    if resolution.work_unit is None:
+        raise ModeloWorkSelectorContradictionError(
+            "work selection resolved without naming a work unit",
+        )
+    return resolution.work_unit
 
 
 def _natural_target_is_addressed(address: ModeloWorkAddress) -> bool:
@@ -1073,8 +1101,7 @@ def resolve_modelo_work_unit_id(
 ) -> WorkUnitId:
     """Resolve a visible or exact modelo target to the authoritative work-unit id."""
     resolution = resolve_modelo_work_target(target, catalogue=catalogue, bucket_id=bucket_id)
-    assert resolution.work_unit is not None
-    return resolution.work_unit.work_unit_id
+    return _selected_work_unit(resolution).work_unit_id
 
 
 def project_modelo_work_unit(work_unit: WorkUnit) -> ModeloResolvedWorkProjection:
@@ -1090,8 +1117,7 @@ def project_modelo_work_target(
 ) -> ModeloResolvedWorkProjection:
     """Resolve a target and project it back to a :class:`ModeloResolvedWorkProjection`."""
     resolution = resolve_modelo_work_target(target, catalogue=catalogue, bucket_id=bucket_id)
-    assert resolution.work_unit is not None
-    return project_modelo_work_unit(resolution.work_unit)
+    return project_modelo_work_unit(_selected_work_unit(resolution))
 
 
 def diverging_work_target_revision_axes(
@@ -1336,7 +1362,10 @@ def _work_capture_observation(
             continue
         observation: tuple[str, ...]
         if implicit:
-            assert limb_before is not None
+            if limb_before is None:
+                raise ModeloWorkSelectorContradictionError(
+                    "implicit pointer observation requires the limb the pointer held before",
+                )
             observation = (limb_before, revision_id)
         else:
             observation = (revision_id,)
@@ -1507,8 +1536,7 @@ def resolve_modelo_work_address_unit(
 ) -> WorkUnit:
     """Resolve an operator-facing modelo work address to one :class:`~WorkUnit`."""
     resolution = resolve_modelo_work_address(address, catalogue=catalogue, bucket_id=bucket_id)
-    assert resolution.work_unit is not None
-    return resolution.work_unit
+    return _selected_work_unit(resolution)
 
 
 def resolve_modelo_calculation_revision_address(
