@@ -5,12 +5,11 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:c0a8aaba95fe5a79f0191b879e61c28aad893f212e1fc36565e6bff41ff99974'
+body_hash: 'sha256:d473cb2a44db69f4c9840b9aa84d7901c064efaaa955da277c21eee6e4d761e9'
 step_id: 'S12'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
-
 
 # Test dirty and untracked input capture, isolated execution, receipt determinism, and source-tree immutability
 
