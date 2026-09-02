@@ -49,17 +49,17 @@ _SII_SUBMISSION = f"""<?xml version="1.0" encoding="UTF-8"?>
       <sii:Ejercicio>2026</sii:Ejercicio>
       <sii:Periodo>01</sii:Periodo>
     </sii:PeriodoLiquidacion>
-    <sii:IDFactura>
+    <siiLR:IDFactura>
       <sii:IDEmisorFactura><sii:NIF>B12345674</sii:NIF></sii:IDEmisorFactura>
       <sii:NumSerieFacturaEmisor>F-1</sii:NumSerieFacturaEmisor>
       <sii:FechaExpedicionFacturaEmisor>31-01-2026</sii:FechaExpedicionFacturaEmisor>
-    </sii:IDFactura>
-    <sii:FacturaExpedida>
+    </siiLR:IDFactura>
+    <siiLR:FacturaExpedida>
       <sii:TipoFactura>F1</sii:TipoFactura>
       <sii:ClaveRegimenEspecialOTrascendencia>01</sii:ClaveRegimenEspecialOTrascendencia>
       <sii:DescripcionOperacion>Consulting service</sii:DescripcionOperacion>
       <sii:TipoDesglose><sii:DesgloseFactura/></sii:TipoDesglose>
-    </sii:FacturaExpedida>
+    </siiLR:FacturaExpedida>
   </siiLR:RegistroLRFacturasEmitidas>
 </siiLR:SuministroLRFacturasEmitidas>
 """.encode()
@@ -68,12 +68,12 @@ _VERIFACTU_SUBMISSION = f"""<?xml version="1.0" encoding="UTF-8"?>
 <sfLR:RegFactuSistemaFacturacion
     xmlns:sfLR="{_VERIFACTU_LR_NAMESPACE}"
     xmlns:sf="{_VERIFACTU_INFORMATION_NAMESPACE}">
-  <sf:Cabecera>
+  <sfLR:Cabecera>
     <sf:ObligadoEmision>
       <sf:NombreRazon>Example Taxpayer</sf:NombreRazon>
       <sf:NIF>B12345674</sf:NIF>
     </sf:ObligadoEmision>
-  </sf:Cabecera>
+  </sfLR:Cabecera>
   <sfLR:RegistroFactura>
     <sf:RegistroAnulacion>
       <sf:IDVersion>1.0</sf:IDVersion>
