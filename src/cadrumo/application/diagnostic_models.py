@@ -107,7 +107,7 @@ class DiagnosticCheck(BaseModel):
         return self
 
 
-def _diagnostic_action_verdict(
+def diagnostic_action_verdict(
     *,
     condition_id: str,
     evidence_id: str,
@@ -136,7 +136,7 @@ def _diagnostic_action_verdict(
     )
 
 
-def _diagnostic_no_recovery_verdict(
+def diagnostic_no_recovery_verdict(
     *,
     condition_id: str,
     evidence_id: str,
@@ -155,7 +155,7 @@ def _diagnostic_no_recovery_verdict(
     )
 
 
-def _resolved_verdict_binding(argument_name: str, value: str | bool) -> ActionArgumentBinding:
+def resolved_verdict_binding(argument_name: str, value: str | bool) -> ActionArgumentBinding:
     """Bind a concrete diagnostics fact to one catalogue argument."""
     return ActionArgumentBinding(
         argument_name=argument_name,
@@ -166,7 +166,7 @@ def _resolved_verdict_binding(argument_name: str, value: str | bool) -> ActionAr
     )
 
 
-def _missing_verdict_binding(argument_name: str) -> ActionArgumentBinding:
+def missing_verdict_binding(argument_name: str) -> ActionArgumentBinding:
     """Declare one catalogue argument diagnostics cannot honestly supply."""
     return ActionArgumentBinding(
         argument_name=argument_name,

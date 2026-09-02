@@ -1,9 +1,9 @@
-"""The 12-item contributor checklist for taking a scaffolded modelo revision calc-grade.
+"""The contributor checklist for taking a scaffolded modelo revision calc-grade.
 
 Scaffolding an empty directory tree (:mod:`dev.registry.newmodelo.manager`) only
 creates the skeleton a new modelo revision needs; it does not — and cannot —
 author the regulated content itself. This module is the single source of the
-checklist a contributor works through after scaffolding, so the same 12 items
+checklist a contributor works through after scaffolding, so the same items
 render identically from ``python -m dev.registry.newmodelo checklist`` and from
 the summary the ``scaffold`` command prints after writing the tree.
 """
@@ -106,6 +106,33 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         ),
     ),
     ChecklistItem(
+        title="Declare the scale of every monetary export field",
+        detail=(
+            "revisions/<revision-id>/export_layouts/*.toml and the owning render profile: a "
+            "fixed-width record carries no decimal point, so a monetary amount is emitted as "
+            "digits and how many of them are cents must be decided somewhere. The money wire "
+            "type scales inside the codec and the decimal wire type refuses without a declared "
+            "count; any other wire type applies no scale at all, and an amount rendered through "
+            "one is emitted at a magnitude this registry does not determine "
+            "(no-silent-under-declaration). Read the scale off the official record design, not "
+            "off a sibling revision. An amount split across an integer-part and a decimal-part "
+            "field is scaled by the split and needs no count."
+        ),
+    ),
+    ChecklistItem(
+        title="Check each amount against the amounts beside it in its own record",
+        detail=(
+            "Run `python -m dev.registry.analysis.monetary_scale` and read the "
+            "sibling_scale_disagrees rows. Official designs declare runs of amount fields of one "
+            "width, distinguished only by meaning; a field that scales differently from the run "
+            "around it has no reason in the design and one of them is wrong. This is the one "
+            "defect class no per-field rule can catch, because every field involved is "
+            "individually valid: the corpus's only known filing-correctness defect is a field "
+            "emitting euros where five siblings emit cents, and it entered when the casilla was "
+            "first authored."
+        ),
+    ),
+    ChecklistItem(
         title="Register an extraction profile (if the modelo has a PDF/justificante source)",
         detail=(
             "revisions/<revision-id>/extraction_profiles/*.toml: the field-extraction "
@@ -145,7 +172,7 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
 
 
 def render_checklist() -> str:
-    """Render the 12-item checklist as a numbered, human-readable report."""
+    """Render the contributor checklist as a numbered, human-readable report."""
     lines: list[str] = [f"Contributor checklist for a new modelo revision ({len(CHECKLIST)} items):"]
     for index, item in enumerate(CHECKLIST, start=1):
         lines.append(f"  {index:>2}. {item.title}")

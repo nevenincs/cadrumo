@@ -81,11 +81,7 @@ from .closure import (
 from .manager import (
     ConformanceReport,
     build_coverage_report,
-    check_conformance_ratchet,
-    load_baseline,
     load_conformance_report,
-    record_baseline,
-    render_audit,
     render_coverage,
     render_report,
     vacuity_warning,
@@ -220,109 +216,6 @@ def emit_registry_closure_command(
         typer.echo(report.model_dump_json(indent=2))
     else:
         typer.echo(render_registry_closure_report(report))
-    if check and not result.passed:
-        raise typer.Exit(code=1)
-
-
-@app.command("audit")
-def audit(
-    check: Annotated[
-        bool,
-        typer.Option(
-            "--check",
-            help=(
-                "Gate: exit 1 when a defect counter grew past its ceiling, a measurement population "
-                "fell below its floor, or recorded provenance fell below its progress floor."
-            ),
-        ),
-    ] = False,
-    record: Annotated[
-        bool,
-        typer.Option("--record", help="Capture the current counters as the committed baseline. Requires --note."),
-    ] = False,
-    note: Annotated[
-        str | None,
-        typer.Option("--note", help="Why this baseline capture happened and under what tree conditions."),
-    ] = None,
-    baseline: Annotated[
-        Path | None,
-        typer.Option("--baseline", help="Read or write this baseline file instead of the committed one."),
-    ] = None,
-    accept_weakening: Annotated[
-        bool,
-        typer.Option(
-            "--accept-weakening",
-            help=(
-                "Take a capture that raises a ceiling or lowers a floor. Refused without this, "
-                "because a lowered floor lets a half-read tree pass the anti-vacuity check forever."
-            ),
-        ),
-    ] = False,
-    no_validate: _NoValidate = False,
-) -> None:
-    """Compare the current conformance counters against the committed baseline.
-
-    Three directions are checked and reported separately, because they fail for
-    different reasons and want different responses.
-
-    A CEILING violation means a DEFECT count grew: a grounding finding, a
-    classification incoherence, an unattributed oracle payload. A VACUITY FLOOR
-    violation means a measurement population FELL — fewer revisions, casillas,
-    oracle payloads, or locale leaves than the baseline proves the run must
-    reach — so every clean counter beside it is vacuous and cannot be trusted,
-    which is why it is reported first. A PROGRESS FLOOR violation means declared
-    provenance or translation was LOST: a signoff erased, an authorship claim
-    dropped, a translated leaf deleted. For the review axis that work is
-    underivable by construction, so nothing in the tree can reconstruct it.
-
-    Population growth is deliberately NOT gated. The review and translation
-    counters used to be shrink-only ceilings pinned at the full population, so
-    the ninety-first revision reddened all three at once and the only sanctioned
-    way past the refusal was the flag that says a capture is deliberately
-    suspicious. Counting the work DONE instead of the work OUTSTANDING separates
-    the two terms: a new revision moves the population and leaves progress alone.
-
-    Without ``--check`` this is a screen and exits 0 whatever it finds.
-
-    ``--record`` is compared against the baseline already on disk in the same
-    three directions and refuses a capture that weakens any of them unless
-    ``--accept-weakening`` says so. The floor directions are why the guard
-    exists: a raised ceiling shows up on the census and the next honest capture
-    pulls it back, while a floor lowered by a capture taken over a half-landed
-    tree is silent forever.
-    """
-    if check and record:
-        raise SystemExit(
-            "--check and --record are opposite operations: one refuses a moved counter, the other "
-            "accepts it as the new ceiling. Run them separately so the acceptance is a visible act",
-        )
-    if no_validate and (check or record):
-        raise SystemExit(
-            "--no-validate cannot back a gate or a baseline capture: under the degraded read the "
-            "evidence-tier coverage, support-probe, and authorization axes are never measured, so "
-            "their counters would read clean while nothing checked them",
-        )
-
-    composed = load_conformance_report(validate=not no_validate)
-    if record:
-        if not note or not note.strip():
-            raise SystemExit(
-                "--record requires --note stating why the baseline moved and under what tree "
-                "conditions it was captured; an unexplained re-record is indistinguishable from "
-                "silencing a real regression",
-            )
-        written = record_baseline(
-            composed,
-            note=note.strip(),
-            recorded_at=datetime.now(tz=UTC).date().isoformat(),
-            path=baseline,
-            accept_weakening=accept_weakening,
-        )
-        typer.echo(f"recorded baseline recorded_at={written.recorded_at} rows={composed.revision_count}")
-        return
-
-    result = check_conformance_ratchet(composed, load_baseline(baseline))
-    typer.echo(render_audit(result))
     if check and not result.passed:
         raise typer.Exit(code=1)
 

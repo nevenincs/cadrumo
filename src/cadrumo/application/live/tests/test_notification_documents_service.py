@@ -54,7 +54,7 @@ from ..notification_documents import (
     _NON_IDENTITY_FIELDS,
     NotificationDocumentRecord,
 )
-from ._notification_document_support import (
+from .notification_document_support import (
     BUCKET_ID,
     CERT_READ,
     DETAIL_URL,

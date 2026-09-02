@@ -57,7 +57,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sized
+from collections.abc import Generator, Sized
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
@@ -111,7 +111,7 @@ class WriteUnitRecorder:
         self.events.append(_COMMIT_MARKER)
 
     @contextmanager
-    def recording(self) -> Iterator[None]:
+    def recording(self) -> Generator[None]:
         """Listen on the engine for the duration of the block."""
         event.listen(self._engine, "before_cursor_execute", self._on_statement)
         event.listen(self._engine, "commit", self._on_commit)

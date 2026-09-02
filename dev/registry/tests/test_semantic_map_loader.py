@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import ast
 import inspect
-from importlib import import_module
 from pathlib import Path
 
 import pytest
@@ -17,11 +16,9 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
 from cadrumo.domain.calculations.registry.schema_exports import RecordDiscriminator
 
-from .. import SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION, load_semantic_map
+from ..pipeline._semantic_map_loader import SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION, load_semantic_map
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-registry_facade = import_module("..", __package__)
 
 
 _RECORD = """
@@ -541,29 +538,6 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
         target.endswith(("load_modelo_directory", "load_record_design_intermediate", "load_render_profile"))
         for target in called_targets
     )
-    assert registry_facade.__all__ == [
-        "CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS",
-        "SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION",
-        "CanonicalTwoChannelFilingExportProofAuthority",
-        "EnvelopePrefixField",
-        "EnvelopeTotalAnchor",
-        "FilingEnvelopePrefixRole",
-        "FilingExportConformanceVector",
-        "FilingExportConformanceVectorBuilder",
-        "FilingExportLiveProofEntry",
-        "FilingExportOfficialOffsetProbe",
-        "LiveFilingExportProofAuthority",
-        "SemanticMap",
-        "SemanticMapAnchor",
-        "SemanticMapEntry",
-        "SemanticMapFragment",
-        "SemanticMapRecord",
-        "VariableEnvelopeSemantic",
-        "canonical_two_channel_filing_export_proof_authority",
-        "load_semantic_map",
-        "verify_filing_export_payload_acceptance",
-    ]
-    assert registry_facade.load_semantic_map is load_semantic_map
     assert called_targets & {"cadrumo.core.filing_projection_ref.compile_filing_projection_ref"} == {
         "cadrumo.core.filing_projection_ref.compile_filing_projection_ref",
     }

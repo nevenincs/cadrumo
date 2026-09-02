@@ -174,7 +174,7 @@ def _init_fixture_repo(root: Path) -> str:
     """Create a throwaway repo holding one sound facade, and return its commit."""
     pkg = root / "src" / "cadrumo" / "zzz_probe"
     pkg.mkdir(parents=True)
-    (pkg / "_models.py").write_text("class Present:\n    pass\n", encoding="utf-8")
+    (pkg / "models.py").write_text("class Present:\n    pass\n", encoding="utf-8")
     (pkg / "__init__.py").write_text(
         'from .models import Present\n\n__all__ = ["Present"]\n',
         encoding="utf-8",

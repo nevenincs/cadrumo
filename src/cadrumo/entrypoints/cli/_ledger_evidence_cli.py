@@ -647,14 +647,11 @@ def _evidence_service() -> PurchaseInvoiceEvidenceService:
 
 
 def _evidence_payload(record: PurchaseInvoiceEvidence) -> dict[str, object]:
-    dumped = record.model_dump(mode="json")
-    if not isinstance(dumped, dict):
-        raise TypeError("evidence payload dump must be a mapping")
-    payload: dict[str, object] = {}
-    for key, value in dumped.items():
-        if not isinstance(key, str):
-            raise TypeError("evidence payload keys must be text")
-        payload[key] = value
+    # `model_dump` on a plain (non-root) BaseModel is annotated and guaranteed
+    # to return a str-keyed dict, so neither a mapping check nor a key check
+    # could fire here. (A `RootModel` would differ -- see _root_payloads.py,
+    # where the parameter is `type[BaseModel]` and the guard IS live.)
+    payload: dict[str, object] = dict(record.model_dump(mode="json"))
     return payload
 
 

@@ -16,7 +16,6 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.errors.hierarchy import CadrumoError, CoreError
-from .._protocol import StorageProvider
 from ..errors import (
     OutboundStorageConflictError,
     OutboundStorageError,
@@ -29,6 +28,7 @@ from ..errors import (
     OutboundStorageValidationError,
     StorageCorruptionError,
 )
+from ..protocol import StorageProvider
 from ..records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport, RemoteMirrorObjectManifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -175,11 +175,11 @@ def test_storage_contracts_resolve_at_their_defining_modules_and_backends_stay_p
     that still bites.
     """
     contracts = {
-        "_protocol": ("StorageProvider",),
-        "_records": ("ProviderKind",),
+        "protocol": ("StorageProvider",),
+        "records": ("ProviderKind",),
         "errors": ("OutboundStorageError",),
-        "_factory": ("get_storage_provider",),
-        "_mirror_manifest": (
+        "factory": ("get_storage_provider",),
+        "mirror_manifest": (
             "REMOTE_MIRROR_MANIFEST_NAMESPACE",
             "REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION",
             "build_remote_mirror_namespace_manifest",
@@ -197,7 +197,7 @@ def test_storage_contracts_resolve_at_their_defining_modules_and_backends_stay_p
 
     for backend in ("GoogleDriveProvider", "LocalFileSystemProvider", "InMemoryDriveProvider"):
         assert not hasattr(root, backend), backend
-        for module_name in ("_protocol", "_records", "_factory", "_mirror_manifest"):
+        for module_name in ("protocol", "records", "factory", "mirror_manifest"):
             module = importlib.import_module(f"cadrumo.adapters.outbound.storage.{module_name}")
             assert not hasattr(module, backend), f"{module_name}.{backend}"
 
@@ -262,7 +262,7 @@ def test_real_local_filesystem_provider_satisfies_protocol(tmp_path: object) -> 
 
     from pathlib import Path
 
-    from .._local import LocalFileSystemProvider
+    from ..local import LocalFileSystemProvider
 
     provider = LocalFileSystemProvider(Path(str(tmp_path)) / "vault")
     assert isinstance(provider, StorageProvider)

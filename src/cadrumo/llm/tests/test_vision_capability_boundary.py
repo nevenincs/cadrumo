@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
-from collections.abc import Iterator, Mapping
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from http import HTTPStatus
 from io import BytesIO
@@ -98,7 +98,7 @@ def _client(settings: EnvFileFreeSettings) -> LLMClient:
 
 
 @contextmanager
-def _serve_openai() -> Iterator[tuple[str, Queue[dict[str, object]]]]:
+def _serve_openai() -> Generator[tuple[str, Queue[dict[str, object]]]]:
     """Run a loopback endpoint speaking the OpenAI Chat Completions shape."""
     events: Queue[dict[str, object]] = Queue()
 

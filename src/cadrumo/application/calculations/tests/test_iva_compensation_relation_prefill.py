@@ -21,7 +21,7 @@ from ....domain.calculations.registry.relations import materialize_relation_bind
 from ....tests.registry_observations import registry_grounded_modelo_observation, registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
-from .._iva_compensation_annual_partition import (
+from ..iva_compensation_annual_partition import (
     IvaCompensationAnnualPartitionSourceResolver,
     resolve_iva_compensation_annual_partition_binding_values,
 )

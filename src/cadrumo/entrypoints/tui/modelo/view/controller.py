@@ -32,7 +32,7 @@ fallback stays visible.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, assert_never
 
 from .....application.modelo.workspace_models import (
     ModeloWorkspaceCursorV1,
@@ -206,11 +206,17 @@ def admit_workspace_session(
     refusal typed and carrying its owner and reconsideration condition, and
     raising would discard facts a destination is required to display.
     """
-    if isinstance(result, ModeloWorkspaceRefusedResultV1):
-        return None, refusal_view(result.refusal)
-    if not isinstance(result, ModeloWorkspaceStaticInspectionResultV1 | ModeloWorkspaceGradedSnapshotResultV1):
-        raise ModeloWorkspaceSessionAdmissionError("workspace result carried no projection and no typed refusal")
-    projection = result.projection
+    # Dispatch over a closed union rather than re-testing a type the first arm
+    # already excluded. The catch-all is `assert_never`, not a runtime refusal:
+    # the union is exhausted here, so a new member should break the BUILD rather
+    # than reach an admission error nobody sees until production.
+    match result:
+        case ModeloWorkspaceRefusedResultV1():
+            return None, refusal_view(result.refusal)
+        case ModeloWorkspaceStaticInspectionResultV1() | ModeloWorkspaceGradedSnapshotResultV1():
+            projection = result.projection
+        case _:
+            assert_never(result)
     if projection.contract_version != SUPPORTED_WORKSPACE_CONTRACT_VERSION:
         raise ModeloWorkspaceSessionAdmissionError(
             f"workspace projection declares contract version {projection.contract_version}, "

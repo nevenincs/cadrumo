@@ -20,14 +20,12 @@ from .record_design_schema import (
     RecordDesignSinglePositionCorrection,
 )
 
-type _TypeCorrectionIndex = Mapping[tuple[str, int], RecordDesignFieldTypeCorrection]
-type _HeaderCorrectionIndex = Mapping[tuple[str, int, str], RecordDesignHeaderCellCorrection]
-type _SinglePositionCorrectionIndex = Mapping[tuple[str, int], RecordDesignSinglePositionCorrection]
+type TypeCorrectionIndex = Mapping[tuple[str, int], RecordDesignFieldTypeCorrection]
+type HeaderCorrectionIndex = Mapping[tuple[str, int, str], RecordDesignHeaderCellCorrection]
+type SinglePositionCorrectionIndex = Mapping[tuple[str, int], RecordDesignSinglePositionCorrection]
 type _RangeStartCorrectionIndex = Mapping[tuple[str, int], RecordDesignRangeStartCorrection]
 
-_EMPTY_HEADER_CORRECTIONS: Final[_HeaderCorrectionIndex] = dict[
-    tuple[str, int, str], RecordDesignHeaderCellCorrection
-]()
+EMPTY_HEADER_CORRECTIONS: Final[HeaderCorrectionIndex] = dict[tuple[str, int, str], RecordDesignHeaderCellCorrection]()
 
 _CORRECTION_SUFFIX: Final[str] = ".record-design-correction.json"
 _CORRECTION_ADAPTER: Final[TypeAdapter[RecordDesignCorrection]] = TypeAdapter(RecordDesignCorrection)
@@ -42,7 +40,7 @@ _JSON_ARRAY_ADAPTER: Final[TypeAdapter[list[object]]] = TypeAdapter(list[object]
 
 
 @dataclass(frozen=True)
-class _CorrectionIndex:
+class CorrectionIndex:
     """One binary's declared corrections, split by the row they address.
 
     ``type_corrections`` keys on ``(sheet, source_row)`` -- one data row.
@@ -53,9 +51,9 @@ class _CorrectionIndex:
     that was never read, so it has no source row to be keyed by.
     """
 
-    type_corrections: _TypeCorrectionIndex
-    header_corrections: _HeaderCorrectionIndex
-    single_position_corrections: _SinglePositionCorrectionIndex = field(
+    type_corrections: TypeCorrectionIndex
+    header_corrections: HeaderCorrectionIndex
+    single_position_corrections: SinglePositionCorrectionIndex = field(
         default_factory=dict[tuple[str, int], RecordDesignSinglePositionCorrection],
     )
     #: Keys on ``(sheet, declared_start)`` -- the start AEAT printed, which is
@@ -65,7 +63,7 @@ class _CorrectionIndex:
     )
 
 
-_EMPTY_CORRECTIONS: Final[_CorrectionIndex] = _CorrectionIndex(
+EMPTY_CORRECTIONS: Final[CorrectionIndex] = CorrectionIndex(
     type_corrections={},
     header_corrections={},
     single_position_corrections={},
@@ -73,7 +71,7 @@ _EMPTY_CORRECTIONS: Final[_CorrectionIndex] = _CorrectionIndex(
 )
 
 
-def _load_corrections(source_path: Path) -> _CorrectionIndex:
+def load_corrections(source_path: Path) -> CorrectionIndex:
     """Load a hand-authored, per-binary sidecar declaring record-design corrections.
 
     Colocated with the exact source binary it corrects, named
@@ -89,7 +87,7 @@ def _load_corrections(source_path: Path) -> _CorrectionIndex:
     """
     sidecar_path = source_path.with_name(source_path.name + _CORRECTION_SUFFIX)
     if not sidecar_path.is_file():
-        return _EMPTY_CORRECTIONS
+        return EMPTY_CORRECTIONS
     try:
         payload = _JSON_OBJECT_ADAPTER.validate_python(json.loads(sidecar_path.read_text(encoding=UTF_8_ENCODING)))
     except ValidationError as exc:
@@ -144,7 +142,7 @@ def _load_corrections(source_path: Path) -> _CorrectionIndex:
                     f"row {correction.header_row} role {correction.column_role!r}",
                 )
             header_corrections[header_key] = correction
-    return _CorrectionIndex(
+    return CorrectionIndex(
         type_corrections=type_corrections,
         header_corrections=header_corrections,
         single_position_corrections=single_position_corrections,
@@ -156,7 +154,7 @@ _DECLARED_NON_RECORD_SHEETS_FILENAME: Final[str] = "declared-non-record-sheets.j
 _EMPTY_DECLARED_NON_RECORD_SHEET_REASONS: Final[Mapping[str, str]] = dict[str, str]()
 
 
-def _load_declared_non_record_sheet_reasons(source_path: Path) -> Mapping[str, str]:
+def load_declared_non_record_sheet_reasons(source_path: Path) -> Mapping[str, str]:
     """Load one modelo's declared, sourced reasons for sheets that are never records.
 
     Lives once per MODELO directory (sibling to that modelo's own

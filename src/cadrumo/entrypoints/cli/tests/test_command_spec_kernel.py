@@ -94,11 +94,11 @@ def _leaf() -> CommandSpec:
         ),
         policy=_STATE_FREE,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._config._profile_list_cli", "profile_list")
+            DeferredTarget("cadrumo.entrypoints.cli.config._profile_list_cli", "profile_list")
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._config_payloads", "ProfileListPayload"),
+            target=DeferredTarget("cadrumo.entrypoints.cli.config_payloads", "ProfileListPayload"),
             identity="config.profile.list",
         ),
     )

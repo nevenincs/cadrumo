@@ -64,9 +64,9 @@ class _RequestOptions:
 def log_file(tmp_path: Path) -> Iterator[Path]:
     """Configure the real logging stack against a temp log directory."""
     log_dir = tmp_path / "containment-logs"
-    original_configured = _logging_mod._CONFIGURED
+    original_configured = _logging_mod._configured
     try:
-        _logging_mod._CONFIGURED = False
+        _logging_mod._configured = False
         with override_settings(
             cadrumo_log_dir=log_dir,
             cadrumo_log_root_level="DEBUG",
@@ -75,9 +75,9 @@ def log_file(tmp_path: Path) -> Iterator[Path]:
             configure_logging()
             yield log_dir / "cadrumo.log"
     finally:
-        _logging_mod._CONFIGURED = False
+        _logging_mod._configured = False
         configure_logging()
-        _logging_mod._CONFIGURED = original_configured or True
+        _logging_mod._configured = original_configured or True
 
 
 def _written_log_text(log_file: Path) -> str:

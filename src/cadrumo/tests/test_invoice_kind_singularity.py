@@ -7,7 +7,7 @@ No other production module may decide it.
 
 The hazard is concrete and was found by a semantic sweep rather than by any
 gate. Three byte-identical private copies of the mapping had accreted, in
-``application/aggregation/_iva_ledger.py``,
+``application/aggregation/iva_ledger.py``,
 ``application/aggregation/_evidence_advisory.py`` and
 ``application/modelo/_ledger_evidence_gate.py``, each maintained independently.
 Nothing structural prevented a fourth.

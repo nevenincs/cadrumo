@@ -32,7 +32,6 @@ import pytest
 
 from cadrumo.application.operator_surface.contract import get_operator_surface_contract
 from cadrumo.application.operator_surface.manifest import CommandSchemaRef
-from cadrumo.core.operator_action_enums import ActionArgumentStatus, ActionConditionality, NoRecoveryOutcome
 from cadrumo.core.errors.error_codes import ErrorEnvelope
 from cadrumo.core.json_contract import (
     ENVELOPE_SCHEMA_VERSION,
@@ -41,6 +40,7 @@ from cadrumo.core.json_contract import (
     ResolvedPreconditionAction,
     SchemaEnvelope,
 )
+from cadrumo.core.operator_action_enums import ActionArgumentStatus, ActionConditionality, NoRecoveryOutcome
 
 from .. import iter_operator_rules, iter_personas, iter_skill_documents
 from ..mcp._capability_manifest import build_operator_surface_manifest

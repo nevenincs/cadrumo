@@ -27,7 +27,7 @@ from datetime import date
 
 from ...core.errors.severity import BaseSeverity
 from ...core.modelo import Modelo
-from ...core.parsing import parse_iso8601_date
+from ...core.parsing.dates import parse_iso8601_date
 from ...core.period import Period
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,

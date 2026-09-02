@@ -311,7 +311,7 @@ def _date_binding_profile_requirements(unit: WorkUnit | None, binding_id: str) -
     if unit is None:
         return binding_id
 
-    from ...application.modelo._data_inventory import profile_requirements_for_binding
+    from ...application.modelo.data_inventory import profile_requirements_for_binding
 
     return (
         profile_requirements_for_binding(

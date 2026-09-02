@@ -15,7 +15,7 @@ from __future__ import annotations
 import os
 import stat
 import sys
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -39,7 +39,7 @@ def _node_name() -> str:
 
 
 @contextmanager
-def _real_path(*directories: Path) -> Iterator[None]:
+def _real_path(*directories: Path) -> Generator[None]:
     """Point the process PATH at exactly these directories, then restore it."""
     original = os.environ.get("PATH", "")
     os.environ["PATH"] = os.pathsep.join(str(directory) for directory in directories)

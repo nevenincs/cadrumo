@@ -28,7 +28,7 @@ actually faces -- session keys reaped, engine disposed.
 from __future__ import annotations
 
 import shutil
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Generator, Iterator, Mapping
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
 
@@ -81,7 +81,7 @@ def seeded_isolated_backend_fixture(
     """
 
     @contextmanager
-    def _open_world(root: Path) -> Iterator[None]:
+    def _open_world(root: Path) -> Generator[None]:
         dispose_engine()
         overrides = override_settings(**settings_overrides) if settings_overrides else nullcontext()
         with (

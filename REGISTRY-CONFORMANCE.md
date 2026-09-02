@@ -2,8 +2,8 @@
 
 This runbook covers the registry conformance tool for Cadrumo contributors:
 what it measures, how to read each of its four commands, how to record a
-revision's governance provenance, and how to move its committed baseline. AEAT
-is the Spanish tax authority that owns the official modelo structure.
+revision's governance provenance, and how the release closure gate decides.
+AEAT is the Spanish tax authority that owns the official modelo structure.
 
 The tool is contributor tooling under `dev/`. It ships with the repository, not
 with the application, which is why this runbook sits beside
@@ -47,17 +47,17 @@ The tool has four commands. Three of them read; one writes.
 | --- | --- | --- |
 | `report` | One row per modelo revision, every axis. | Always 0. |
 | `coverage` | Each axis's measured count against its real population. | Always 0. |
-| `audit` | Current counters against the committed baseline. | 0, or 1 with `--check`. |
+| `closure` | The derived cross-authority release report; a gate with `--check`. | 0, or 1 with `--check` when the release predicate is not satisfied. |
 | `stamp` | Write one revision's declared governance provenance. | 0, or non-zero on refusal. |
 
 `report` and `coverage` are screens. They print findings and exit 0 whatever
 they find, so they never block a lane.
 
-`audit` is a screen by default and a gate with `--check`. Use the bare form to
-read the current state; use `--check` when you want a non-zero exit on a
-regression.
+`closure` is a screen by default and a gate with `--check`. Use the bare form
+to read the current state; use `--check` when you want a non-zero exit while
+any law-selectable revision fails the release predicate.
 
-Both read commands accept `--json` for the strict payload instead of the
+`report` and `coverage` accept `--json` for the strict payload instead of the
 greppable `key=value` rows, and `--no-validate` for a degraded read that
 survives a registry another contributor is mid-edit. A degraded run stamps
 every row `registry_validated=false`, and the axes that need the validating
@@ -94,30 +94,57 @@ Read the closing `note` before you read any number. `n/a` means not measured or
 no claim made — never zero — and `-` means a real empty list. A reader who
 takes `n/a` for zero draws the opposite conclusion from the one the row states.
 
-### Compare against the baseline
+### Read the release closure
 
 ```bash
-uv run --no-sync python -m dev.registry.conformance audit
-uv run --no-sync python -m dev.registry.conformance audit --check
+uv run --no-sync python -m dev.registry.conformance closure
+uv run --no-sync python -m dev.registry.conformance closure --check
+uv run --no-sync python -m dev.registry.conformance closure --offline
 ```
 
-`audit` checks three directions and reports them separately, because they fail
-for different reasons and want different responses:
+`closure` joins three application-owned authorities for every registered
+revision and reports them as three limbs on one row:
 
-- A **ceiling** violation means a defect count grew — a grounding finding, a
-  classification incoherence, an unattributed oracle payload.
-- A **vacuity floor** violation means a measurement population fell. Fewer
-  revisions, casillas, oracle payloads, or locale leaves were reached than the
-  baseline proves the run must reach. Every clean counter beside it is then
-  vacuous, which is why this direction is reported first.
-- A **progress floor** violation means declared provenance or translation was
-  lost — a signoff erased, an authorship claim dropped, a translated leaf
-  deleted.
+- **temporal_coverage** — every filing year and period the revision's selector
+  reaches, through the supported-filing-years horizon, is law-selectable and
+  admits a validated snapshot at the revision's declared authority grade.
+- **source_connectivity** — the revision's casillas are connected to their
+  source domains through evidence that has not expired at the `--as-of` date
+  (defaults to today).
+- **filing_export** — for a filing-grade revision, each materialised layout
+  retains byte-matching official authority and both public conformance and
+  encrypted source-owned replay attest the canonical writer. A revision below
+  filing grade reports this limb `not_applicable`.
 
-Population growth is not gated. A new revision moves the population and leaves
-the progress counters alone, so adding one does not force you past a refusal.
+The output is greppable rows: one `closure` summary carrying
+`release_eligible`, `satisfied_revisions`, `refused_revisions`,
+`join_disagreements` and `blocking_reasons`; one `closure_row` per revision
+with each limb's outcome; and one `closure_refusal` per refused limb naming
+the reason, the owning disposition and the reconsideration condition.
 
-Run `just audit-registry-conformance` to print `report` and `audit` together.
+A limb outcome is one of `satisfied`, `not_applicable`, `refused` or
+`unmeasured`. `unmeasured` is a refusal, never a pass: it means no authority
+was supplied for that limb, and the release predicate treats it as blocking.
+
+`--offline` evaluates without the live source-connectivity and filing-export
+proof authorities. Use it for a cheap read when the live authorities are
+unavailable. Because it marks those limbs `unmeasured`, an offline run can
+detect a regression but can never approve a release; `closure --offline
+--check` exits 1 for every filing-grade revision until the live proof is
+supplied.
+
+`--json` prints the strict report payload instead of the rows.
+
+### Decide whether a refusal is yours
+
+Every `closure_refusal` row names an owner disposition. Read the owner before
+you act: a `missing_evidence` refusal on `filing_export` belongs to the
+export-generation authority and asks for a public conformance vector and a
+current replay receipt; a `law_selection_refused` refusal on
+`temporal_coverage` belongs to the revision's own manifest and means two
+revisions of one modelo claim the same filing year and period token. Do not
+resolve a refusal by editing the report's inputs; resolve it at the surface the
+disposition names, then re-run.
 
 ## Stamp a revision's governance provenance
 
@@ -213,59 +240,11 @@ you asked for. Passing `--reviewed-by` alone against a revision that already
 declares `operator_reviewed` is refused, because re-attributing an existing
 signoff destroys a name and date nothing in the tree can reconstruct.
 
-## Re-record the baseline
-
-The committed baseline is what `audit --check` compares against. Move it when
-the tree has genuinely changed — after landing grounding work, after adding
-revisions, after a translation pass.
-
-```bash
-uv run --no-sync python -m dev.registry.conformance audit --record \
-    --note "grounded the M303 prorrata casillas; full tree, all suites green"
-```
-
-`--note` is required. Without it the command refuses:
-
-```
---record requires --note stating why the baseline moved and under what tree
-conditions it was captured; an unexplained re-record is indistinguishable from
-silencing a real regression
-```
-
-Pass `--baseline PATH` to read or write a different file, which is how you take
-a capture without touching the committed one.
-
-### Decide whether `--accept-weakening` applies
-
-A capture is compared against the baseline already on disk, in the same three
-directions. A capture that raises a ceiling or lowers a floor is refused unless
-you pass `--accept-weakening`.
-
-Pass it when the weakening is real and understood:
-
-- A modelo revision was removed, so a measurement population legitimately fell.
-- A defect ceiling must rise because the tree genuinely carries more findings
-  and you are recording that fact rather than hiding it.
-
-Do not pass it to get a capture through:
-
-- The run was taken over a half-landed tree, or while another contributor was
-  mid-edit. Wait for the tree to settle and capture again.
-- A suite is failing and the capture is the quickest way past it. Fix the
-  failure.
-- You do not know why the counter moved. Find out first.
-
-A lowered floor is the dangerous case, which is why the guard exists. A raised
-ceiling shows up on the census and the next honest capture pulls it back. A
-floor lowered by a capture taken over a half-read tree is silent forever: every
-later run passes the anti-vacuity check against a population it never had to
-reach.
-
-Review the recorded diff before you commit it, the same as any other baseline.
-
 ## Where the tool lives
 
 The implementation is under `dev/registry/conformance/`. It composes fact
-libraries that ship inside the application under `src/cadrumo/`, and the
-boundary is one-way: the tool reads the application's public surfaces, and the
-application never reads anything under `dev/`.
+libraries that ship inside the application under `src/cadrumo/` — the temporal
+coverage, source-connectivity and filing-export coverage reports under
+`application/registry/` — and the boundary is one-way: the tool reads the
+application's public surfaces, and the application never reads anything under
+`dev/`.

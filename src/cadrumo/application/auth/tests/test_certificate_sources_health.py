@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from ....adapters.persistence.storage.blob_store._materialisation import get_secret_store
+from ....adapters.persistence.storage.blob_store.materialisation import get_secret_store
 from ....adapters.persistence.storage.secret_store.store import SecretStore
 from ....tests.certificates import CERTIFICATE_BUNDLE_PASSPHRASE, build_pkcs12_bundle
 from ....tests.profile_capsule import open_test_profile_session

@@ -31,10 +31,29 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 # ---------------------------------------------------------------------------
 
 
-def test_aeat_core_time_module_deleted() -> None:
-    """cadrumo.core.time must not be importable — the module has been deleted."""
+def test_retired_core_time_shim_stays_deleted() -> None:
+    """The retired ``cadrumo.core._time`` shim must not be importable.
+
+    It named the shim's live successor by mistake and asserted THAT absent, so
+    it went red the moment `relocation:core.time` promoted `_clock`, `_utc` and
+    `_date_range` into the `cadrumo.core.time` package this file's own
+    docstring calls canonical. The subject is the retired shim; the successor
+    package is proven inert by :func:`test_the_core_time_namespace_is_inert`
+    instead, which is the contract that actually needs defending now.
+    """
     with pytest.raises(ModuleNotFoundError):
-        importlib.import_module("cadrumo.core.time")
+        importlib.import_module("cadrumo.core._time")
+
+
+def test_the_core_time_namespace_is_inert() -> None:
+    """``cadrumo.core.time`` exists but re-exports nothing.
+
+    Its contracts are reached at their defining modules (``.clock``, ``.utc``,
+    ``.date_range``); the package itself must stay a namespace, never a facade.
+    """
+    package = importlib.import_module("cadrumo.core.time")
+
+    assert package.__all__ == (), f"the core.time namespace re-exports {package.__all__}"
 
 
 def _imports_deleted_core_time(tree: ast.AST) -> bool:

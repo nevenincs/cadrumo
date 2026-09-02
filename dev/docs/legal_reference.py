@@ -441,7 +441,7 @@ def _optional_date(body: dict[str, object], key: str, *, path: Path, legal_id: s
     return value
 
 
-def _required_text(body: dict[str, object], *, path: Path, legal_id: str) -> tuple[str, ...]:
+def required_text(body: dict[str, object], *, path: Path, legal_id: str) -> tuple[str, ...]:
     value = body.get("required_text")
     if value is None:
         return ()
@@ -486,7 +486,7 @@ def _record_from_table(path: Path, legal_id: str, body: object) -> LegalProvisio
         reviewed_at=_optional_date(table, "reviewed_at", path=path, legal_id=legal_id),
         reviewed_by=_optional_string(table, "reviewed_by", path=path, legal_id=legal_id),
         notes=_optional_string(table, "notes", path=path, legal_id=legal_id),
-        required_text=_required_text(table, path=path, legal_id=legal_id),
+        required_text=required_text(table, path=path, legal_id=legal_id),
     )
 
 
@@ -556,10 +556,10 @@ def _validate_records(records: tuple[object, ...]) -> None:
                     f"legal entry {record.legal_id!r} field {field!r} must be a string",
                 )
             _validate_authored_text(value, path=Path("<rendered records>"), legal_id=record.legal_id, field=field)
-        required_text = cast(object, record.required_text)
-        if not isinstance(required_text, tuple):
+        required_value = cast(object, record.required_text)
+        if not isinstance(required_value, tuple):
             raise LegalReferenceError(f"legal entry {record.legal_id!r} field 'required_text' must be a string tuple")
-        required_items = cast(tuple[object, ...], required_text)
+        required_items = cast(tuple[object, ...], required_value)
         if not all(isinstance(item, str) for item in required_items):
             raise LegalReferenceError(f"legal entry {record.legal_id!r} field 'required_text' must be a string tuple")
         for item in (item for item in required_items if isinstance(item, str)):

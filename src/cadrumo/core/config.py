@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import contextvars
 import logging
-from collections.abc import Iterator, Mapping
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from functools import lru_cache
 from pathlib import Path
@@ -36,27 +36,41 @@ from . import _config_runtime, _config_validation
 from . import config_live_tests as _live_test_config
 from .auth_provider import AuthProviderKind as _AuthProviderKind
 from .config_integration_fields import (
-    FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME,  # noqa: F401 - public re-export for storage adapters
+    # public re-export for storage adapters
+    FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME as FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME,
 )
 from .config_llm_fields import CadrumoLlmSettings
 from .config_state_root import (
-    FORMER_PRODUCT_DATABASE_FILENAME,  # noqa: F401 - public re-export for storage adapters
+    FORMER_PRODUCT_DATABASE_FILENAME as FORMER_PRODUCT_DATABASE_FILENAME,  # public re-export for storage adapters
+)
+from .config_state_root import (
     default_storage_root,
 )
 from .config_storage_route import classify_storage_route_for_settings, settings_for_bucket_route
 from .config_support import (
-    AEAT_CERTIFICATE_PROTECTED_ORIGIN,  # noqa: F401 - public certificate route authority
-    AEAT_CERTIFICATE_PROTECTED_PATH,  # noqa: F401 - public certificate route authority
-    AEAT_CERTIFICATE_PROTECTED_URL,  # noqa: F401 - public certificate route authority
+    AEAT_CERTIFICATE_PROTECTED_ORIGIN as AEAT_CERTIFICATE_PROTECTED_ORIGIN,  # public certificate route authority
+)
+from .config_support import (
+    AEAT_CERTIFICATE_PROTECTED_PATH as AEAT_CERTIFICATE_PROTECTED_PATH,  # public certificate route authority
+)
+from .config_support import (
+    AEAT_CERTIFICATE_PROTECTED_URL as AEAT_CERTIFICATE_PROTECTED_URL,  # public certificate route authority
+)
+from .config_support import (
     JustificanteParserBackendSetting,
-    LLMProvider,  # noqa: F401 - public re-export from cadrumo.core.config
     SecretStoreBackend,
     StorageRouteClassification,
-    StorageRouteKind,  # noqa: F401 - public re-export from cadrumo.core.config
     TuiAppearance,
-    assert_canonical_protected_resource,  # noqa: F401 - public certificate route authority
     coerce_output_language_setting,
-    unwrap_optional_secret,  # noqa: F401 - public re-export from cadrumo.core.config
+)
+from .config_support import (
+    LLMProvider as LLMProvider,  # public re-export from cadrumo.core.config
+)
+from .config_support import (
+    StorageRouteKind as StorageRouteKind,  # public re-export from cadrumo.core.config
+)
+from .config_support import (
+    assert_canonical_protected_resource as assert_canonical_protected_resource,  # public certificate route authority
 )
 from .config_support import default_aeat_sede_origin as _default_aeat_sede_origin
 from .config_support import default_aeat_sede_origin_with_slash as _default_aeat_sede_origin_with_slash
@@ -67,6 +81,9 @@ from .config_support import default_clave_sede_access_url_template as _default_c
 from .config_support import default_sede_expedientes_path as _default_sede_expedientes_path
 from .config_support import default_status_detail_url_template as _default_status_detail_url_template
 from .config_support import default_status_notificaciones_path as _default_status_notificaciones_path
+from .config_support import (
+    unwrap_optional_secret as unwrap_optional_secret,  # public re-export from cadrumo.core.config
+)
 from .external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .paths import normalize_project_relative_path
 from .resources.bundled_data import bundled_path
@@ -1072,8 +1089,8 @@ class Settings(CadrumoLlmSettings):
         return _config_validation.normalize_repo_relative_paths(value, normalizer=normalize_project_relative_path)
 
 
-_settings_override: contextvars.ContextVar[Settings | None] = contextvars.ContextVar(
-    "_settings_override",
+settings_override: contextvars.ContextVar[Settings | None] = contextvars.ContextVar(
+    "settings_override",
     default=None,
 )
 _settings_pointer_observation: contextvars.ContextVar[tuple[Path, BucketPointer] | None] = contextvars.ContextVar(
@@ -1175,7 +1192,7 @@ def load_settings() -> Settings:
     their block; otherwise this returns the process-wide settings built once by
     :func:`_constructed_settings`.
     """
-    override = _settings_override.get()
+    override = settings_override.get()
     if override is not None:
         return override
     root, pointer = _active_profile_pointer_observation()
@@ -1188,7 +1205,7 @@ def load_settings() -> Settings:
 
 
 @contextmanager
-def override_settings(**overrides: object) -> Iterator[Settings]:
+def override_settings(**overrides: object) -> Generator[Settings]:
     """Override one or more :class:`Settings` fields for the with-block.
 
     Overrides are validated through normal model construction so derived route,
@@ -1241,10 +1258,10 @@ def override_settings(**overrides: object) -> Iterator[Settings]:
     # ``i18n._render`` imports this module.
     from .i18n.render import clear_output_language_cache_for_settings_override
 
-    token = _settings_override.set(new_settings)
+    token = settings_override.set(new_settings)
     clear_output_language_cache_for_settings_override()
     try:
         yield new_settings
     finally:
-        _settings_override.reset(token)
+        settings_override.reset(token)
         clear_output_language_cache_for_settings_override()

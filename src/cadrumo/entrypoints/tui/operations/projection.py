@@ -11,7 +11,7 @@ reclassified downstream of what the projection already declares.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal
+from typing import Literal, assert_never
 
 from pydantic import BaseModel, model_validator
 
@@ -167,13 +167,17 @@ def _terminal_receipt(
 
 def _interaction_affordance(projection: OperationPublicProjectionV1) -> OperationModalInteractionAffordanceV1:
     pending = projection.pending_interaction
-    if isinstance(pending, OperationReviewAvailableInteractionV1):
-        return "review_available"
-    if isinstance(pending, OperationUnsupportedInteractionV1):
-        return "unsupported"
-    if isinstance(pending, OperationNoPendingInteractionV1):
-        return "none"
-    raise TypeError("unknown public pending-interaction variant")
+    match pending:
+        case OperationReviewAvailableInteractionV1():
+            return "review_available"
+        case OperationUnsupportedInteractionV1():
+            return "unsupported"
+        case OperationNoPendingInteractionV1():
+            return "none"
+    # Static exhaustiveness: this call type-checks only while `pending` is
+    # `Never` here. Adding a variant to the union breaks the build instead of
+    # reaching a runtime raise nobody exercises.
+    assert_never(pending)
 
 
 def _terminal_copy_key(projection: OperationPublicProjectionV1) -> OperationModalTerminalCopyKeyV1:

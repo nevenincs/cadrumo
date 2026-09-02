@@ -37,7 +37,6 @@ TRANSIENT_TREE_SEGMENTS: Final[tuple[str, ...]] = (".baseline-source-snapshot",)
 #: Keyed by path so a file that stops needing the exemption fails this gate
 #: rather than keeping a silent licence.
 DECLARED_NAMING_SITES: Final[dict[str, str]] = {
-    "dev/benchmarks/cli/capture_baseline.py": "creates the snapshot and removes it on a successful run",
     "dev/quality/fixture_census.py": "prunes the snapshot from its walk, with a stated reason",
     "dev/quality/tests/test_no_dunder_init_module_imports.py": "excludes the snapshot from its import scan",
     "src/cadrumo/application/modelo/tests/test_workspace_producers.py": (

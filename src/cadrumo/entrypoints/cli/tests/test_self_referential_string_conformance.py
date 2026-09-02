@@ -55,7 +55,7 @@ from typing import Protocol, TypeGuard
 import pytest
 
 from ....application.modelo.selectors import ModeloCalculationRevisionSelector
-from ....core.i18n.render import _locale_map
+from ....core.i18n.render import locale_map
 from ....domain.attachments.enums import AttachmentSource
 from ....tests.cli_runner import cadrumo_click_command
 from .test_documented_command_conformance import (
@@ -110,7 +110,7 @@ _LITERAL_HINT_STRINGS: tuple[str, ...] = (
 
 def _locale_command_strings() -> Iterator[tuple[str, str]]:
     """Yield ``(dotted_key, value)`` for ``cli.*`` strings embedding ``aeat ...``."""
-    catalogue = _locale_map("en")
+    catalogue = locale_map("en")
     seen: set[tuple[str, str]] = set()
     for key, value in catalogue.items():
         if not key.startswith("cli."):

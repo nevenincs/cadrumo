@@ -13,12 +13,12 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.adapters.inbound.financial.providers._base
    cadrumo.adapters.inbound.financial.providers._constants
-   cadrumo.adapters.inbound.financial.providers._csv
-   cadrumo.adapters.inbound.financial.providers._detection
    cadrumo.adapters.inbound.financial.providers._mapped_tabular
-   cadrumo.adapters.inbound.financial.providers._ofx
-   cadrumo.adapters.inbound.financial.providers._pdf_n26
    cadrumo.adapters.inbound.financial.providers._tabular_projection
-   cadrumo.adapters.inbound.financial.providers._xlsx
+   cadrumo.adapters.inbound.financial.providers.base
+   cadrumo.adapters.inbound.financial.providers.csv
+   cadrumo.adapters.inbound.financial.providers.detection
+   cadrumo.adapters.inbound.financial.providers.ofx
+   cadrumo.adapters.inbound.financial.providers.pdf_n26
+   cadrumo.adapters.inbound.financial.providers.xlsx

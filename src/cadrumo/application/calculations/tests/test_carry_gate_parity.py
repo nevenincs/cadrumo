@@ -25,7 +25,6 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from .._revision_carry_gate import revision_carry_outcome
 from ..binding_prefill import resolve_bindings_from_local_store
 from ..cross_period_clean_state import (
     CrossPeriodCleanStateBlocker,
@@ -34,6 +33,7 @@ from ..cross_period_clean_state import (
     evaluate_cross_period_clean_state,
 )
 from ..observations_repository import CalculationObservationRepository
+from ..revision_carry_gate import revision_carry_outcome
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

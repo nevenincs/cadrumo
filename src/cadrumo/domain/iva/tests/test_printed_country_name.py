@@ -199,12 +199,12 @@ class TestThePrintedVariantsARealDocumentCarries:
         the fold reddened nothing here until the twins came out. Refusing the
         redundancy is what stops it coming back.
         """
-        from ..country_vocabulary import _normalise_printed_country_name
+        from ..country_vocabulary import normalise_printed_country_name
 
         for code, names in _vocabulary():
             seen: dict[str, str] = {}
             for name in names:
-                folded = _normalise_printed_country_name(name)
+                folded = normalise_printed_country_name(name)
                 twin = seen.get(folded)
                 assert twin is None, f"{code}: {name!r} is the fold of {twin!r}"
                 seen[folded] = name

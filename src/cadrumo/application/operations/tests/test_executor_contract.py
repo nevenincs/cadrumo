@@ -54,7 +54,7 @@ from ..registry import (
     OperationSchemaBindingV1,
 )
 from ..supervisor import OperationSupervisor
-from ..supervisor_context import _SupervisorExecutorContext
+from ..supervisor_context import SupervisorExecutorContext
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -93,7 +93,7 @@ class UndeclaredPhaseExecutor:
         context: OperationExecutorContext,
     ) -> None:
         del request
-        assert isinstance(context, _SupervisorExecutorContext)
+        assert isinstance(context, SupervisorExecutorContext)
         self.snapshot_before_attempt = context.snapshot
         await context.events.phase("operation.phase.undeclared")
 
@@ -110,7 +110,7 @@ class UndeclaredEffectExecutor:
         context: OperationExecutorContext,
     ) -> None:
         del request
-        assert isinstance(context, _SupervisorExecutorContext)
+        assert isinstance(context, SupervisorExecutorContext)
         self.snapshot_before_attempt = context.snapshot
         await context.events.effect(OperationEffect.UPDATED)
 
@@ -138,7 +138,7 @@ class UndeclaredResourceExecutor:
         context: OperationExecutorContext,
     ) -> None:
         del request
-        assert isinstance(context, _SupervisorExecutorContext)
+        assert isinstance(context, SupervisorExecutorContext)
         self.snapshot_before_attempt = context.snapshot
         self.resource = CloseProbe()
         context.cleanup.own(self.resource, family=OperationOwnedResource.ASYNC_TASK)

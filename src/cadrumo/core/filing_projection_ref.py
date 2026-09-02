@@ -1101,7 +1101,7 @@ _FILING_PROJECTION_REF_ADAPTER: TypeAdapter[FilingProjectionRef] = TypeAdapter(F
 #: annotated union rather than restated, so a new member cannot be forgotten
 #: here: ``get_args`` on the Annotated alias yields the union first, whose own
 #: args are the member classes.
-_TYPED_FILING_PROJECTION_REFS: Final[tuple[type, ...]] = _projection_ref_support._validated_type_members(
+_TYPED_FILING_PROJECTION_REFS: Final[tuple[type, ...]] = _projection_ref_support.validated_type_members(
     get_args(get_args(FilingProjectionRef)[0]),
 )
 
@@ -1132,7 +1132,7 @@ def compile_filing_projection_ref(value: object) -> FilingProjectionRef:
         # above exists: refusing a value the target model accepts is a defect,
         # not strictness.
         payload[raw_key] = raw_value.value if isinstance(raw_value, StrEnum) else raw_value
-    for field_name in _projection_ref_support._STRING_WIRE_FIELDS.intersection(payload):
+    for field_name in _projection_ref_support.STRING_WIRE_FIELDS.intersection(payload):
         if type(payload[field_name]) is not str:
             raise ValueError(f"filing projection reference {field_name!r} must be an exact string")
         string_value = cast(str, payload[field_name])

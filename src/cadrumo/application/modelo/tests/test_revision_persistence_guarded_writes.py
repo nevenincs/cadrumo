@@ -27,8 +27,8 @@ from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
-from .._revision_persistence import persist_calculation_revision
 from ..edit_models import ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
+from ..revision_persistence import persist_calculation_revision
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

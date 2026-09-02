@@ -232,7 +232,7 @@ def work_history(
     report, filing record). Emits no bucket event.
     """
     activate_subcommand_output_language(ctx, output_language)
-    from ...application.modelo._history import assemble_work_unit_history
+    from ...application.modelo.history import assemble_work_unit_history
 
     _require_active_profile()
     unit = _resolve_work_unit_for_cli(

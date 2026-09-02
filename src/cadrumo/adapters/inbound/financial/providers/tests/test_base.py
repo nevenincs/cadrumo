@@ -17,10 +17,6 @@ import pytest
 from ......core.tabular import coerce_cell_text
 from ......domain.transactions.raw_transaction import RawTransaction, SourceFormat
 from ......tests import FIXTURES_DIR
-from .._detection import detect_provider
-from .._ofx import OfxProvider
-from .._pdf_n26 import PdfN26Provider
-from .._xlsx import XlsxProvider
 from ..base import (
     BankStatementParseError,
     FinancialValidationError,
@@ -29,6 +25,10 @@ from ..base import (
     parse_amount_value,
 )
 from ..csv import CsvProvider
+from ..detection import detect_provider
+from ..ofx import OfxProvider
+from ..pdf_n26 import PdfN26Provider
+from ..xlsx import XlsxProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

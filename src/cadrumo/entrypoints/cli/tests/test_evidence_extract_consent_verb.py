@@ -25,7 +25,7 @@ No model runs. The endpoint is loopback and nothing leaves the machine.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
 from pathlib import Path
@@ -104,7 +104,7 @@ def _settings(tmp_path: Path, *, cloud_upload_permitted: bool, gestor_mode: bool
 
 
 @contextmanager
-def _serve_openai() -> Iterator[tuple[str, Queue[str]]]:
+def _serve_openai() -> Generator[tuple[str, Queue[str]]]:
     """Serve an OpenAI-shaped endpoint on loopback, recording every body that arrives.
 
     The queue is what makes "the document was transmitted" an observation rather

@@ -29,7 +29,7 @@ from ..schema import EUMemberState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_SPANISH_SCOPES = frozenset(
+SPANISH_SCOPES = frozenset(
     {
         IvaTerritorialScope.ES_MAINLAND,
         IvaTerritorialScope.ES_CANARIAS,
@@ -71,7 +71,7 @@ class TestTheResolverNeverInventsASpanishScope:
 
         resolved = {territorial_scope_for_country(probe) for probe in probes}
 
-        assert resolved & _SPANISH_SCOPES == set()
+        assert resolved & SPANISH_SCOPES == set()
 
     def test_the_spanish_code_is_the_one_the_member_catalogue_carries(self) -> None:
         """Fixture anchor: the refusal is keyed to a real catalogue member.

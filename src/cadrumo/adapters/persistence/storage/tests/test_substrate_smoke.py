@@ -135,7 +135,7 @@ import sys
 import time
 from pathlib import Path
 
-from cadrumo.core import exclusive_file_lock
+from cadrumo.core.locks import exclusive_file_lock
 
 target = Path(sys.argv[1])
 hold_seconds = float(sys.argv[2])

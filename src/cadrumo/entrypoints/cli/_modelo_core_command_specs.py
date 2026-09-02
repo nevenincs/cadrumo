@@ -163,7 +163,7 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         _MODEL_READ,
-        "cadrumo.entrypoints.cli._modelo_aux_payloads",
+        "cadrumo.entrypoints.cli.modelo_aux_payloads",
         "WorkHistoryResult",
         "modelo.work.history",
     ),

@@ -31,7 +31,7 @@ from ._invoice_devengo import (
     invoice_devengo_in_period,
     resolve_invoice_devengo,
 )
-from ._modelo_bindings_support import _STORAGE_DEGRADATION_ERRORS
+from ._modelo_bindings_support import STORAGE_DEGRADATION_ERRORS
 from ._source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -40,7 +40,7 @@ from ._source_mesh import (
 from .errors import AggregationValidationError, t
 from .source_resolution_operations import source_diagnostics_for as _diagnostics_for
 
-_INVOICE_LEDGER_SCREEN_BINDINGS: dict[str, tuple[BindingId, ...]] = {
+INVOICE_LEDGER_SCREEN_BINDINGS: dict[str, tuple[BindingId, ...]] = {
     # ONE screen, a binding set per modelo -- deliberately not a second
     # screen per modelo. M390 declares the same seven concepts M303 does,
     # differing only in the id prefix, so a parallel function would be two
@@ -69,10 +69,10 @@ _INVOICE_LEDGER_SCREEN_BINDINGS: dict[str, tuple[BindingId, ...]] = {
         "modelo-390-iva-recargo-equivalencia-super-reducido-cuota",
     ),
 }
-_M303_INVOICE_EVIDENCE_SAMPLE_LIMIT = 5
+M303_INVOICE_EVIDENCE_SAMPLE_LIMIT = 5
 
 
-def _line_contributes_to_the_iva_screen(base_amount: Decimal, iva_amount: Decimal) -> bool:
+def line_contributes_to_the_iva_screen(base_amount: Decimal, iva_amount: Decimal) -> bool:
     """Return whether one invoice line has anything the IVA screen can declare.
 
     A line contributes when it carries a base OR a cuota. Screening on the cuota
@@ -593,7 +593,7 @@ def _claims_a_base_only_category(invoice: Invoice) -> bool:
     return invoice.kind is InvoiceKind.ISSUED and invoice.iva_category in _BASE_ONLY_ROUTED_CATEGORIES
 
 
-def _category_counterparty_mismatch_diagnostics(
+def category_counterparty_mismatch_diagnostics(
     invoices: Sequence[Invoice],
     *,
     resolver_id: str,
@@ -629,7 +629,7 @@ def _category_counterparty_mismatch_diagnostics(
     )
 
 
-def _reverse_charge_underivable_diagnostics(
+def reverse_charge_underivable_diagnostics(
     invoices: Sequence[Invoice],
     *,
     resolver_id: str,
@@ -662,7 +662,7 @@ def _reverse_charge_underivable_diagnostics(
     )
 
 
-def _missing_invoice_deduction_authority_diagnostics(
+def missing_invoice_deduction_authority_diagnostics(
     invoices: Sequence[Invoice],
     *,
     resolver_id: str,
@@ -764,7 +764,7 @@ def _recargo_rate_divergence(invoice: Invoice, *, devengo_date: date) -> _Recarg
     )
 
 
-def _recargo_rate_mismatch_diagnostics(
+def recargo_rate_mismatch_diagnostics(
     divergences: Sequence[_RecargoRateDivergence],
     *,
     resolver_id: str,
@@ -808,7 +808,7 @@ def _recargo_rate_mismatch_diagnostics(
 
 
 @dataclass(frozen=True, slots=True)
-class _ScreenedInvoiceIva:
+class ScreenedInvoiceIva:
     """What the invoice IVA screen found, named rather than positional.
 
     Several fields are ``tuple[Invoice, ...]`` and one more is a tuple of ids,
@@ -853,10 +853,10 @@ class _ScreenedInvoiceIva:
 
 
 @dataclass(frozen=True, slots=True)
-class _InvoiceIvaSilenceReport:
+class InvoiceIvaSilenceReport:
     """The advisory surfaces the silence screen hands back to the resolver.
 
-    Same reasoning as :class:`_ScreenedInvoiceIva`: all three fields are
+    Same reasoning as :class:`ScreenedInvoiceIva`: all three fields are
     ``tuple[Invoice, ...]``, so positionally they were interchangeable. The
     annotation on the previous tuple form had already drifted to two slots while
     the code returned three, which is what an unchecked positional widening
@@ -893,17 +893,17 @@ class _ScreenedInvoiceIvaResult:
     category_counterparty_mismatch: bool
 
 
-def _screened_invoice_iva_observations(
+def screened_invoice_iva_observations(
     *,
     context: CalculationSourceContext,
     period: Period,
     ledger_observations: Sequence[IvaLedgerObservation] = (),
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
-) -> _ScreenedInvoiceIva:
+) -> ScreenedInvoiceIva:
     try:
         repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=context.bucket_id)
         catalogue = repository.load()
-    except _STORAGE_DEGRADATION_ERRORS:
+    except STORAGE_DEGRADATION_ERRORS:
         # Degrading is right: a bucket whose invoice catalogue is temporarily
         # unreadable should not hard-fail every calculation, and the five
         # sibling catches in this module degrade too. What they also do, and
@@ -911,7 +911,7 @@ def _screened_invoice_iva_observations(
         # resolution carrying a storage_degraded diagnostic. Returning an empty
         # result here made an unreadable catalogue indistinguishable from an
         # empty one, which switched the silence guard off without a signal.
-        return _ScreenedInvoiceIva(storage_degraded=True)
+        return ScreenedInvoiceIva(storage_degraded=True)
     observations: list[IvaLedgerObservation] = []
     invoice_ids: set[str] = set()
     compared_invoices: list[Invoice] = []
@@ -939,7 +939,7 @@ def _screened_invoice_iva_observations(
             compared_invoices.append(invoice)
         elif screened.category_counterparty_mismatch:
             category_counterparty_mismatches.append(invoice)
-    return _ScreenedInvoiceIva(
+    return ScreenedInvoiceIva(
         observations=tuple(observations),
         invoice_ids=tuple(invoice_ids),
         compared=tuple(compared_invoices),
@@ -1003,7 +1003,7 @@ def _screened_invoice_line_observations(
     recargo_line_index = _sole_recargo_bearing_line_index(invoice)
     observations: list[IvaLedgerObservation] = []
     for line_index, line in enumerate(invoice.lines):
-        if not _line_contributes_to_the_iva_screen(line.subtotal, line.iva_amount):
+        if not line_contributes_to_the_iva_screen(line.subtotal, line.iva_amount):
             continue
         if invoice.kind is InvoiceKind.RECEIVED and line.iva_amount == Decimal("0"):
             continue
@@ -1157,7 +1157,7 @@ def _screened_invoice_in_period(
     )
 
 
-def _out_of_window_summary_diagnostics(
+def out_of_window_summary_diagnostics(
     summary: OutOfWindowTransactionSummary | None,
     *,
     source_kind: str,

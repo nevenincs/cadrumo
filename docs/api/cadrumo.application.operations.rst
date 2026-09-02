@@ -41,3 +41,4 @@ Submodules
    cadrumo.application.operations.registry
    cadrumo.application.operations.secret_submission
    cadrumo.application.operations.supervisor
+   cadrumo.application.operations.supervisor_context

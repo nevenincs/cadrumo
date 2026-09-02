@@ -79,7 +79,7 @@ _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
     BindingSourceKind.PAYABLE_INVOICE,
     BindingSourceKind.M347_THIRD_PARTY_OPERATION,
 )
-_STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
+STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 _M349_PAYABLE_SUMMARY_BINDING_MIRRORS: dict[str, str] = {
     "iva-349-declarante-numero-operadores-adquisicion": "iva-349-declarante-numero-operadores",
     "iva-349-declarante-importe-operaciones-adquisicion": "iva-349-declarante-importe-operaciones",
@@ -219,7 +219,7 @@ class InvoiceCatalogueSourceResolver:
         repository = self._invoice_repository or InvoiceCatalogueRepository(bucket_id=context.bucket_id)
         try:
             catalogue = repository.load()
-        except _STORAGE_DEGRADATION_ERRORS as exc:
+        except STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

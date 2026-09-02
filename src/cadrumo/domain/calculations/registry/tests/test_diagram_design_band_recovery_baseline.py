@@ -91,11 +91,11 @@ def test_modelo_180_recovered_reserved_band_still_carries_its_caption_in_the_doc
     source that drops it must make this proof fail rather than preserve a remembered
     label.
     """
-    from ..record_design_pdf_visual import _extract_pdf_text_lines
+    from ..record_design_pdf_visual import extract_pdf_text_lines
 
     folder, name = _MODELO_180_DIAGRAM
     path = bundled_path("corpus", "aeat_official", "disenos_registro", folder, "files", name)
-    lines = [line.strip() for line in _extract_pdf_text_lines(path.read_bytes(), source_label=name)]
+    lines = [line.strip() for line in extract_pdf_text_lines(path.read_bytes(), source_label=name)]
 
     assert any("SELLO ELECTR" in line for line in lines), (
         "the caption naming the recovered 196-260 band is gone from the document"

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -67,7 +67,7 @@ _CALENDAR_GATING_FACT_OVERRIDES: dict[str, str] = {
 
 
 @contextmanager
-def isolated_calendar_backend(tmp_path: Path) -> Iterator[None]:
+def isolated_calendar_backend(tmp_path: Path) -> Generator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(PRIMARY_PROFILE_ID),
@@ -87,7 +87,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 @contextmanager
-def calendar_backend_omitting_gating_facts(tmp_path: Path, *omitted: str) -> Iterator[None]:
+def calendar_backend_omitting_gating_facts(tmp_path: Path, *omitted: str) -> Generator[None]:
     """Isolated calendar backend whose profile leaves the named gating facts unanswered.
 
     The default backend answers every completeness gating fact, deliberately,

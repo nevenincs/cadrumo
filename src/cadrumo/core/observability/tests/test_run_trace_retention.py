@@ -39,14 +39,14 @@ def _make_run_dir(
     anchor: datetime,
     events_bytes: int = 0,
 ) -> Path:
-    run_dir = runs_dir / run_id
-    run_dir.mkdir(parents=True)
-    (run_dir / TRACE_FILENAME).write_text("{}", encoding="utf-8")
+    trace_dir = runs_dir / run_id
+    trace_dir.mkdir(parents=True)
+    (trace_dir / TRACE_FILENAME).write_text("{}", encoding="utf-8")
     if events_bytes:
-        (run_dir / EVENTS_FILENAME).write_bytes(b"x" * events_bytes)
+        (trace_dir / EVENTS_FILENAME).write_bytes(b"x" * events_bytes)
     stamp = (anchor - timedelta(days=age_days)).timestamp()
-    os.utime(run_dir, (stamp, stamp))
-    return run_dir
+    os.utime(trace_dir, (stamp, stamp))
+    return trace_dir
 
 
 def test_prune_removes_run_dirs_older_than_retention_window(tmp_path: Path) -> None:

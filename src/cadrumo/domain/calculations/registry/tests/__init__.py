@@ -8,7 +8,7 @@ submodule -- or, for ``build_snapshot``, into a same-package sibling symbol
 the production package deliberately excludes from its own ``__all__``.
 
 It carries the bundled manual worked-example oracle reader from
-:mod:`domain.calculations.registry.tests._manual_oracle_support`, read by the
+:mod:`domain.calculations.registry.tests.manual_oracle_support`, read by the
 ``application.modelo.tests`` and ``application.calculations.tests`` oracle
 suites against the same bundled corpus, and ``build_snapshot`` -- the
 compile-only, non-filing-grade snapshot builder demoted from the production

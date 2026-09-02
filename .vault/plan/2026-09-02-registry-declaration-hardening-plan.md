@@ -1,0 +1,538 @@
+---
+tags:
+  - '#plan'
+  - '#registry-declaration-hardening'
+date: '2026-09-02'
+tier: L3
+related:
+  - '[[2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit]]'
+  - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
+  - '[[2026-06-10-period-revision-resolution-adr]]'
+  - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
+modified: '2026-09-02'
+body_schema: body-v2
+body_hash: 'sha256:dfaca064a834492c299851c4ad2671edddcec9bd588d79638410773c053831c0'
+---
+
+<!-- RETIRED: S73 -->
+
+# `registry-declaration-hardening` plan
+
+## Description
+
+The registry declares the same fact in many places and reconciles the copies afterwards with
+agreement validators. The governing audit measured the breadth: a revision's temporal validity is
+expressed at eight sites, one citation can be restated at eleven, applicability at seven, capability
+grade in five encodings, and a rendered amount's semantics at six, against 51 validator modules whose
+job is to notice when the copies disagree. Detection after the fact is the wrong shape. This plan
+moves the registry toward declaring a fact once and deriving its projections, and builds the tooling
+that can prove it.
+
+It is sequenced so that measurement comes first, because four figures published during the audit were
+wrong, each because a consumer reassembled the resolved export surface by hand and dropped one of its
+three linkage paths. Wave one removed that class of error by providing the surface whole. Wave two
+returns the project to having a standing regression gate. Wave three makes the filing-export proof
+real. Wave four adds the missing edge gates. Wave five corrects the data defects that need no
+decision. Wave six applies the general contract.
+
+Measurement has since changed what the later Waves are for, and the Steps record it. Nine screens
+measure the declaration conditions from one entry point over a single loaded registry, and eleven
+gates stand behind them. Conditions clean corpus-wide are gated as invariants carrying no tolerance
+rather than as counts; conditions still carrying findings are deliberately not gated, because gating
+them would need a tolerance and a tolerance is the ratchet this project retired. Several conditions
+turned out larger or differently shaped than the audit first recorded, and several claims were
+withdrawn outright when measured, including two of this plan's own.
+
+Two defects touching filing data were located during execution and neither is repairable from here.
+One monetary field in a revision currently in force emits an unscaled magnitude beside five identical
+siblings; its cause is a footnote reference read as a statement of representation, and correcting the
+predicate makes 183 fields newly eligible, each needing a reviewed rule in the same change. One
+informativa ships a declarado record whose repeating structure the current inputs no longer produce;
+the shipped bytes are correct, regenerating that tree would collapse every counterparty into one
+record, and only the record-design parser can supply the second field the map would need.
+
+A third class emerged late and is worth carrying separately: gates in this area fail by not running
+rather than by going red. A modelo inspection gate asserted a revision identifier that never existed
+and had therefore never passed, and is now repaired. Eleven tests cover a filing-proof surface the
+codebase removed and refuses. One screen built by this plan was enrolled and gated for days with
+nothing proving it could detect what it guarded. Each was invisible because the suite already carried
+failures read as background, and the remedy in every case was a gate over the tooling rather than
+over the registry.
+
+Three blockers are load-bearing and none is a design question. Files another contributor holds block
+the predicate correction, the parser descent, the release-predicate relocation and the ratchet
+removal. The filing-export proof cannot proceed by engineering at all, because the corpus holds no
+official emitted-byte reference and a vector whose expected bytes came from this project's own writer
+would prove only self-consistency. Wave six waits on four decisions that are written and proposed but
+not accepted.
+
+## Description
+
+The registry declares the same fact in many places and reconciles the copies afterwards with
+agreement validators. The governing audit measured the breadth: a revision's temporal validity
+is expressed at eight sites, one citation can be restated at eleven, applicability at seven,
+capability grade in five encodings, and a rendered amount's semantics at six, against 51
+validator modules whose job is to notice when the copies disagree. Detection after the fact is
+the wrong shape. This plan moves the registry toward declaring a fact once and deriving its
+projections, and builds the tooling that can prove it.
+
+It is sequenced so that measurement comes first. Four figures published during the audit were
+wrong, each because a consumer reassembled the resolved export surface by hand and dropped one
+of its three linkage paths. Wave one removes that whole class of error by providing the surface
+whole; every later gate reads it through that accessor rather than rebuilding it. Wave two
+returns the project to having a standing regression gate at all, which means moving the
+release-eligibility predicate out of contributor tooling into the shipped application, since a
+predicate that only exists development-side cannot gate anything. Wave three makes the
+filing-export proof real. Wave four adds the missing edge gates. Wave five corrects the data
+defects that need no decision. Wave six applies the general contract.
+
+Measurement has since changed what the later Waves are for, and the Steps record it. Eight
+screens now measure the declaration conditions, run from one entry point over a single loaded
+registry, and each proves its own detection against a constructed defect. Several conditions
+turned out to be clean corpus-wide and are gated as invariants carrying no tolerance rather
+than as counts; several others turned out larger or differently shaped than the audit first
+recorded, and two claims the audit made were withdrawn outright when measured. The screens are
+the evidence the Wave six decisions are written from, which is why they precede those decisions
+rather than waiting on them.
+
+Two blockers are load-bearing and neither is a design question. Wave two and part of Wave three
+cannot proceed while another contributor holds the files their Steps must move, because the
+architecture rule requires a relocation to move a definition and every consumer in one change.
+Wave three's proof enrolment cannot proceed at all by engineering: the corpus contains no
+official emitted-byte reference for any modelo, and a vector whose expected bytes came from this
+project's own writer would prove only that the writer agrees with itself. That Wave's first Step
+is therefore evidence acquisition, and it is the critical path to the product's central claim.
+
+Wave six remains different in kind: none of the four decisions it depends on has been written,
+and the feature's proposed coverage decision is itself resting on a problem statement the
+refactor has overtaken. Every Step in Wave six is authoring or migration that cannot begin until
+those records exist and are accepted, and the Phase that holds the four decisions gates the
+Phase that applies them.
+
+## Description
+
+The registry declares the same fact at many sites and reconciles the copies afterwards
+with agreement validators. The governing audit measured the breadth: a revision's temporal
+validity is expressed at eight sites, one citation can be restated at eleven, applicability
+at seven, capability grade in five encodings, and a rendered amount's semantics at six,
+against 51 validator modules whose job is to notice when the copies disagree. Detection
+after the fact is the wrong shape. This plan moves the registry toward declaring a fact
+once and deriving its projections, and builds the tooling that can prove it.
+
+It is sequenced so that measurement comes first. Four figures published during the audit
+were wrong, each because a consumer reassembled the resolved export surface by hand and
+dropped one of its three linkage paths. Wave one removes that whole class of error by
+providing the surface whole; every later gate reads it through that accessor rather than
+rebuilding it. Wave two returns the project to having a standing regression gate at all,
+which means moving the release-eligibility predicate out of contributor tooling into the
+shipped application, since a predicate that only exists development-side cannot gate
+anything. Wave three makes the filing-export proof real: the mechanism is built and
+carries zero enrolled coordinates, so no exported byte has ever been checked against an
+official record design. Wave four adds the missing edge gates. Wave five corrects the data
+defects that need no decision. Wave six applies the general contract.
+
+The first five Waves need no architectural decision and are grounded in the audit alone.
+Wave six is different in kind: none of the four decisions it depends on has been written,
+and the feature's proposed coverage decision is itself resting on a problem statement the
+refactor has overtaken. Every Step in Wave six is therefore authoring or migration that
+cannot begin until those records exist and are accepted, and the Phase that holds the four
+decisions is the gate on the Phase that applies them.
+
+## Steps
+
+## Wave `W01` - measurement integrity
+
+Establish one accessor that returns a revision's resolved export casilla surface whole, and move every screen onto it. Four defective figures in the governing audit came from three different partial reassemblies of that surface, so no later Wave can be trusted to measure itself until this lands. Downstream Waves W03 and W04 depend on it.
+
+### Phase `W01.P01` - resolved surface accessor
+
+Deliver one accessor returning a revision's complete resolved export casilla surface, and move every consumer onto it.
+
+- [x] `W01.P01.S01` - Add a resolved-surface accessor returning the union of binding-derived fields, projection endpoints and record row mappings; `dev/registry/analysis/resolved_export_surface.py`.
+- [x] `W01.P01.S02` - Prove the accessor with a detector test that fails if any one of the three linkage paths is dropped; `dev/registry/tests/test_resolved_export_surface.py`.
+- [x] `W01.P01.S03` - Refactor the export-reference screen onto the accessor and delete its private walk; `dev/registry/analysis/export_ref_symmetry.py`.
+- [x] `W01.P01.S04` - Promote the accessor to its canonical home beside the export derivation it wraps; `src/cadrumo/domain/calculations/registry/export.py`.
+- [x] `W01.P01.S05` - Repoint the development accessor at the canonical one and delete the duplicate walk; `dev/registry/analysis/resolved_export_surface.py`.
+- [x] `W01.P01.S83` - Document the three linkage paths and require every export coverage figure to come from the resolved accessor; `dev/registry/mappings/README.md`.
+- [x] `W01.P01.S103` - Gate that no screen module reaches for the binding derivation instead of the resolved-surface accessor; `dev/registry/tests/test_declaration_invariant_gates.py`.
+
+## Wave `W02` - gate restoration and residue removal
+
+Return the registry to having a standing regression gate that continuous integration can reach, by moving the release-eligibility predicate into the shipped application beside the models it already owns and wiring a coordinate-identity gate. Removes the retired ratchet residue and repoints the documents and recipes that still name the deleted audit command. Depends on nothing; blocked in part on files another contributor holds.
+
+### Phase `W02.P02` - ratchet residue removal
+
+Delete the retired baseline and ratchet remnants and repoint every document and recipe that still names the deleted audit command.
+
+- [ ] `W02.P02.S06` - Delete the dead baseline and ratchet models left by the retired audit command; `dev/registry/conformance/manager.py`.
+- [ ] `W02.P02.S07` - Repoint the registry conformance recipe at the closure command; `justfile`.
+- [ ] `W02.P02.S08` - Declare the development-to-application boundary contract for the registry tooling; `.importlinter`.
+- [ ] `W02.P02.S09` - Move the tomlkit dependency declaration so the last authoring migrator can be retired; `pyproject.toml`.
+- [x] `W02.P02.S10` - Delete the applicability fragment authoring migrator now its output has landed; `dev/registry/authoring_migrate_applicability_fragments.py`.
+- [x] `W02.P02.S95` - Restore the modelo 038 inspection gate whose four stale assertions predate the modelo's re-grounding onto the 2024 orden; `dev/registry/tests/test_static_inspection.py`.
+- [x] `W02.P02.S96` - Retire the eight tests driving the disabled single-channel proof authority, and re-site the three payload-acceptance tests whose modelo 200 fixture lost both its export layouts and its filing grade; `dev/registry/tests/test_filing_export_live_proof.py`.
+- [x] `W02.P02.S97` - Sweep the registry suites for gates that cannot pass and record each as owned, dispositioned or retired; `dev/registry/tests`.
+- [x] `W02.P02.S107` - Retire the developer registry package re-export facade and its enforcing inventory assertion, repointing the one symbol consumer at the defining module; `dev/registry/__init__.py`.
+- [ ] `W02.P02.S108` - Decide whether the pipeline defining modules are public or private, then either name them publicly or stop importing them from sibling packages; `dev/registry/pipeline`.
+- [ ] `W02.P02.S109` - Delete the disabled single-channel filing proof authority and its remaining references now no test drives it; `dev/registry/filing_export_proof.py`.
+- [ ] `W02.P02.S110` - Resolve the twenty-four filing tests demanding filing grade from modelos 200, 038 and 036, which now declare calculation or applicability grade; `src/cadrumo/application/filing/tests`.
+- [x] `W02.P02.S111` - Retire the generation pipeline package re-export facade so the initialiser is an inert namespace marker; `dev/registry/pipeline/__init__.py`.
+
+### Phase `W02.P03` - release predicate relocation
+
+Move the release-eligibility predicate into the shipped application beside the models it already owns.
+
+- [ ] `W02.P03.S11` - Move the release-eligibility predicate beside its models in the application registry package; `src/cadrumo/application/registry/closure.py`.
+- [ ] `W02.P03.S12` - Reduce the development closure module to a thin caller carrying no predicate; `dev/registry/conformance/closure.py`.
+- [ ] `W02.P03.S13` - Prove the relocated predicate through the real authority with one refusal case per reason; `src/cadrumo/application/registry/tests/test_closure_predicate.py`.
+
+### Phase `W02.P04` - coordinate identity gate
+
+Wire a standing regression gate comparing the satisfied filing-coordinate set by identity rather than by count.
+
+- [ ] `W02.P04.S14` - Record the satisfied filing-coordinate set as registry data rather than development state; `src/cadrumo/_data/registry/aeat/closure/coordinates.toml`.
+- [ ] `W02.P04.S15` - Compare the live coordinate set against the recorded one by identity and name the regressed limb; `src/cadrumo/application/registry/closure_capture.py`.
+- [ ] `W02.P04.S16` - Prove the gate detects a removed coordinate using an isolated temporary registry tree; `src/cadrumo/application/registry/tests/test_closure_capture_gate.py`.
+- [ ] `W02.P04.S17` - Wire the coordinate gate into the repository gate lane; `justfile`.
+- [x] `W02.P04.S62` - Gate the declaration conditions that hold corpus-wide as invariants carrying no tolerance; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W02.P04.S63` - Run every declaration screen from one entry point over a single loaded authority; `dev/registry/analysis/screens.py`.
+- [x] `W02.P04.S64` - Gate that every screen module is enrolled in the runner so none can drop out silently; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W02.P04.S67` - Document the declaration screen suite and its two honesty rules for contributors; `dev/registry/README.md`.
+- [x] `W02.P04.S68` - Gate that the contributor README documents exactly the screens that run; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W02.P04.S84` - Gate that every symbol the contributor READMEs name still resolves to a module or attribute; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W02.P04.S98` - Gate that every screen searches a non-empty population so silence cannot mean an absent subject; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W02.P04.S100` - Gate that every screen module carries a test module so no gate rests on unproven detection; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W02.P04.S101` - Gate that every enrolled screen completes over the whole corpus and describes what it counted; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W02.P04.S104` - Gate that running every screen leaves the shipped registry byte-for-byte untouched; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W02.P04.S105` - Correct the five screen labels that described one kind while counting several, including one that inverted its sense; `dev/registry/analysis/screens.py`.
+- [x] `W02.P04.S106` - Gate that every kind a screen emits live is named in its own docstring; `dev/registry/tests/test_declaration_invariant_gates.py`.
+
+## Wave `W03` - filing-export proof made measurable
+
+Turn the two-channel filing-export proof from a built-but-empty mechanism into one carrying real enrolled coordinates, so that a generated tree without a vector refuses as missing evidence rather than reading as unmeasured. Repairs the generated-source verifier that currently raises. Depends on W01 for its measurement surface and on W02 for the gate that would hold it.
+
+### Phase `W03.P05` - generated source verifier repair
+
+Repair the verifier that raises when probing a generated artefact source, which blocks the generated provenance path.
+
+- [x] `W03.P05.S18` - Define the applicability probe the generated artefact source is missing so the verifier stops raising; `src/cadrumo/domain/calculations/registry/static_inspection.py`.
+- [ ] `W03.P05.S19` - Prove the generated provenance path verifies one generated tree end to end; `src/cadrumo/application/registry/tests/test_generated_provenance_verifier.py`.
+- [x] `W03.P05.S55` - Extract the source applicability overlap rule to one definition both the live source and its diagnostic copy delegate to; `src/cadrumo/domain/calculations/registry/schema_references.py`.
+- [x] `W03.P05.S56` - Prove the diagnostic copy answers applicability identically to its source across the whole catalogue; `src/cadrumo/domain/calculations/registry/tests/test_static_generated_source_applicability.py`.
+- [x] `W03.P05.S85` - Declare the generated-artefact inspection sources read-only so a richer source carrier satisfies the protocol; `src/cadrumo/domain/calculations/registry/static_inspection.py`.
+- [x] `W03.P05.S86` - Re-render one revision from its authored inputs and byte-compare it against the shipped tree without publishing; `dev/registry/pipeline/render_check.py`.
+- [ ] `W03.P05.S94` - Descend the record-design intermediate into printed subdivisions that carry distinct facts so each has a parser field to anchor; `src/cadrumo/domain/calculations/registry/record_design_pdf_state.py`.
+- [ ] `W03.P05.S87` - Author the declarado repeat, its nine per-row casilla identities and the nine binding attributions once the parser gives each subdivision a field to anchor; `dev/registry/mappings/modelo_347`.
+- [ ] `W03.P05.S88` - Republish only the four trees whose record bytes already match, never the two carrying record drift; `src/cadrumo/_data/registry/aeat/modelos`.
+- [x] `W03.P05.S89` - Separate record drift from a stale provenance attestation in the re-render comparison so a caller can tell which trees are safe to republish; `dev/registry/pipeline/render_check.py`.
+- [x] `W03.P05.S90` - Pin both comparison outcomes against the revisions in the corpus that exhibit each; `dev/registry/tests/test_render_check.py`.
+- [x] `W03.P05.S91` - Sweep every published generated tree and record which reproduce, which carry a stale attestation and which carry record drift; `dev/registry/pipeline/render_check.py`.
+- [x] `W03.P05.S92` - Record why each non-reproducing generated tree does not reproduce and whether it is safe to republish; `dev/registry/pipeline/generated_tree_dispositions.toml`.
+- [x] `W03.P05.S93` - Gate that every non-reproducing tree carries a live disposition and every disposition names a tree that still fails; `dev/registry/tests/test_render_check.py`.
+
+### Phase `W03.P06` - proof vector enrolment
+
+Author filing-export conformance vectors as registry data for the generated trees and make an absent vector refuse rather than read as unmeasured.
+
+- [x] `W03.P06.S102` - Point the three emitted-byte acceptance tests at the two-channel authority the coverage composer now requires, starting with the guard that an empty proof cannot become evidence; `dev/registry/tests/test_filing_emitted_byte_acceptance.py`.
+- [ ] `W03.P06.S57` - Acquire one official emitted-byte reference for a single modelo revision, or an independently reviewed equivalent, as the evidence every later Step in this Phase consumes; `src/cadrumo/_data/corpus/aeat_official`.
+- [ ] `W03.P06.S20` - Declare the filing-export conformance vector schema as registry data beside the generation provenance; `src/cadrumo/domain/calculations/registry/schema_exports.py`.
+- [ ] `W03.P06.S21` - Author the conformance vector for the modelo 303 twenty twenty five generated tree as the reference case; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/_conformance.vector.toml`.
+- [ ] `W03.P06.S22` - Load enrolled vectors from registry data instead of the empty canonical tuples; `dev/registry/filing_export_proof.py`.
+- [ ] `W03.P06.S23` - Gate that a generated tree carrying no conformance vector keeps refusing as missing evidence rather than reading as unmeasured; `src/cadrumo/application/filing/export_proof.py`.
+- [ ] `W03.P06.S24` - Author the conformance vectors for the remaining generated trees; `src/cadrumo/_data/registry/aeat/modelos`.
+
+## Wave `W04` - edge gates
+
+Add the missing semantic gates on the edges between declaration axes: wire-type compatibility, grade earned from its prerequisites, and parent-consistent provenance, plus a regression guard on export-reference symmetry. Each reads the resolved surface through the W01 accessor and proves detector teeth against a constructed defect. Depends on W01.
+
+### Phase `W04.P07` - wire type compatibility gate
+
+Screen and then gate the mapping between a casilla's declared type and the type its rendered export field carries.
+
+- [x] `W04.P07.S25` - Screen the declared casilla type against the type its resolved export field carries; `dev/registry/analysis/wire_type_compatibility.py`.
+- [x] `W04.P07.S26` - Prove the wire-type screen against a constructed incompatible declaration; `dev/registry/tests/test_wire_type_compatibility.py`.
+- [ ] `W04.P07.S27` - Declare the permitted casilla-to-wire type transitions as validated registry data; `src/cadrumo/domain/calculations/registry/export_value_policy.py`.
+- [x] `W04.P07.S69` - Screen every monetary field for a wire type that applies no scale to the emitted digits; `dev/registry/analysis/monetary_scale.py`.
+- [x] `W04.P07.S70` - Prove the monetary scale screen exempts the self-scaling wire types and reports the unscaled ones; `dev/registry/tests/test_monetary_scale.py`.
+- [ ] `W04.P07.S75` - Give the existing publication authority an invocable entry point, since publish_validated_generated_export_tree has no caller, then publish the two enrolled trees that render but were never committed; `dev/registry/pipeline/_tree_publication.py`.
+- [ ] `W04.P07.S71` - Declare the scale the official design specifies for each monetary field rendered by an unscaled wire type; `src/cadrumo/_data/registry/aeat/modelos`.
+- [ ] `W04.P07.S72` - Gate that every monetary field declares a scale or is rendered by a self-scaling wire type; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W04.P07.S74` - Screen sibling amount fields of one record for disagreeing scale representations; `dev/registry/analysis/monetary_scale.py`.
+- [x] `W04.P07.S78` - Measure whether the thirty-two footnoted corporate-tax amounts are also rendered unscaled; `dev/registry/analysis/monetary_scale.py`.
+- [ ] `W04.P07.S76` - Refuse a bare footnote reference as a stated wire fact so a footnoted amount stays under render-profile authority; `dev/registry/pipeline/_render_profile.py`.
+- [ ] `W04.P07.S77` - Prove the eligibility predicate treats a footnote-only content cell as stating no wire fact; `dev/registry/tests/test_render_profile.py`.
+- [ ] `W04.P07.S79` - Author reviewed representation rules for the one hundred and eighty three fields the corrected eligibility predicate admits; `dev/registry/render_profiles`.
+- [x] `W04.P07.S80` - Require a declared scale for every monetary export field in the new-modelo authoring checklist; `dev/registry/newmodelo/checklist.py`.
+- [x] `W04.P07.S81` - Require a sibling-amount comparison in the authoring checklist and stop pinning the checklist item count in its tests; `dev/registry/newmodelo/tests`.
+- [x] `W04.P07.S82` - Document which fields a render profile may govern and why a footnote reference removes one from its reach; `dev/registry/render_profiles/README.md`.
+
+### Phase `W04.P08` - grade earned gate
+
+Screen and then gate whether a declared authority grade is supported by its derived prerequisites or carries a reasoned disposition.
+
+- [x] `W04.P08.S28` - Screen whether a declared authority grade is supported by its derived prerequisites; `dev/registry/analysis/grade_earned.py`.
+- [x] `W04.P08.S29` - Prove the grade screen against a constructed unearned grade declaration; `dev/registry/tests/test_grade_earned.py`.
+
+### Phase `W04.P09` - provenance parent consistency gate
+
+Screen and then gate child citations against the source manifest of their owning revision.
+
+- [x] `W04.P09.S30` - Screen child citations against the source manifest of their owning revision; `dev/registry/analysis/provenance_parent_consistency.py`.
+- [x] `W04.P09.S31` - Prove the provenance screen against a constructed out-of-manifest citation; `dev/registry/tests/test_provenance_parent_consistency.py`.
+
+### Phase `W04.P10` - export reference symmetry guard
+
+Keep the casilla-to-export-field edge symmetric with a regression guard proven against a constructed defect.
+
+- [x] `W04.P10.S32` - Restate the export-reference guard as a regression guard proven by constructed fixture; `dev/registry/tests/test_export_ref_symmetry.py`.
+
+## Wave `W05` - temporal and identity data corrections
+
+Correct the registry data defects the audit recorded that need no architectural decision: the ambiguous selection coordinate, the revision directory names that misstate their own windows, and the forward-dated authorisation years. Each rename is an identifier change and moves code, tests, generated output and stamps atomically. Requires operator approval before any rename lands.
+
+### Phase `W05.P11` - selection ambiguity correction
+
+Resolve the ambiguous filing coordinate so temporal selection refuses nothing that law can decide.
+
+- [ ] `W05.P11.S33` - Consult declared validity bounds during temporal selection so an ad-hoc coordinate resolves without an operation date; `src/cadrumo/domain/calculations/registry/temporal.py`.
+- [ ] `W05.P11.S34` - Prove the modelo 308 twenty eleven coordinate resolves and that a genuinely ambiguous one still refuses; `src/cadrumo/domain/calculations/registry/tests/test_temporal_selection.py`.
+- [x] `W05.P11.S60` - Screen each revision's window, period selector and deadline windows against one another; `dev/registry/analysis/temporal_site_agreement.py`.
+- [x] `W05.P11.S61` - Prove the temporal site screen detects a deadline year moved outside its declared window; `dev/registry/tests/test_temporal_site_agreement.py`.
+
+### Phase `W05.P12` - revision identifier corrections
+
+Rename the revision directories whose names misstate the window they declare, atomically across every referencing surface.
+
+- [ ] `W05.P12.S35` - Rename the modelo 151 revision whose name claims 2025 while its window opens in 2023; `src/cadrumo/_data/registry/aeat/modelos/151/revisions`.
+- [ ] `W05.P12.S36` - Rename the modelo 185 revision whose name claims 2025 while its window opens in 2026; `src/cadrumo/_data/registry/aeat/modelos/185/revisions`.
+- [ ] `W05.P12.S37` - Rename the modelo 720 revision whose name claims 2013 while its window opens in 2012; `src/cadrumo/_data/registry/aeat/modelos/720/revisions`.
+- [ ] `W05.P12.S38` - Rename the modelo 322 revision whose name claims a 2008 to 2022 span while it declares 2022 only; `src/cadrumo/_data/registry/aeat/modelos/322/revisions`.
+- [ ] `W05.P12.S39` - Close or rename the modelo 194 revision named for a single year while declared open-ended; `src/cadrumo/_data/registry/aeat/modelos/194/revisions`.
+- [ ] `W05.P12.S40` - Close or rename the modelo 721 revision named for a single year while declared open-ended; `src/cadrumo/_data/registry/aeat/modelos/721/revisions`.
+- [ ] `W05.P12.S41` - Correct the forward-dated enrolled years on the modelo 202 authorisation entry; `src/cadrumo/_data/registry/aeat/authorization.d/202.toml`.
+- [ ] `W05.P12.S42` - Gate a revision directory name against the window the revision declares; `src/cadrumo/domain/calculations/registry/validate_revision_identity.py`.
+- [x] `W05.P12.S53` - Screen every revision directory name against the temporal window the revision declares; `dev/registry/analysis/revision_name_window.py`.
+- [x] `W05.P12.S54` - Prove the name-window screen against a declared window moved away from its name; `dev/registry/tests/test_revision_name_window.py`.
+
+## Wave `W06` - declaration contract
+
+Decide and then apply the general declaration contract that makes restatement unconstructable rather than merely detected: every field owned, derived, or attesting to an owned fact. Governs the temporal, identity, provenance and value-semantics axes together. Entirely gated on four architectural decisions that do not yet exist, so every Step here is authoring or migration that cannot begin until those records are accepted.
+
+### Phase `W06.P13` - declaration contract decisions
+
+Author the four architectural decision records the contract requires before any migration can begin.
+
+- [x] `W06.P13.S43` - Decide the declaration-kind contract of owned, derived and attesting fields; `.vault/adr`.
+- [x] `W06.P13.S44` - Decide the temporal identity contract, its coverage evidence record and the non-temporal axis slot; `.vault/adr`.
+- [x] `W06.P13.S58` - Screen every casilla identifier into a named grammar and report which modelos mix grammars; `dev/registry/analysis/casilla_id_grammar.py`.
+- [x] `W06.P13.S59` - Prove the grammar screen refuses to absorb an unclassifiable page-qualified tail; `dev/registry/tests/test_casilla_id_grammar.py`.
+- [x] `W06.P13.S45` - Decide the casilla identifier grammar contract and its per-modelo declaration; `.vault/adr`.
+- [x] `W06.P13.S46` - Decide the casilla-to-wire type derivation contract and its attested overrides; `.vault/adr`.
+- [x] `W06.P13.S65` - Screen cross-revision continuity chains for grammar crossing, singletons and orphan evolutions; `dev/registry/analysis/continuity_integrity.py`.
+- [x] `W06.P13.S66` - Gate that no continuity chain crosses an identifier grammar and no evolution names a chain that does not exist; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W06.P13.S99` - Prove the continuity screen detects a chain crossing a grammar and an evolution naming a chain no casilla carries; `dev/registry/tests/test_continuity_integrity.py`.
+
+### Phase `W06.P14` - declaration contract migration
+
+Apply the accepted contract across the registry so restatement becomes unconstructable rather than detected.
+
+- [ ] `W06.P14.S47` - Refuse an authored value on any field the accepted contract marks derived; `src/cadrumo/domain/calculations/registry/loader_cache.py`.
+- [ ] `W06.P14.S48` - Migrate the temporal axis onto the single owned declaration and derive its projections; `src/cadrumo/_data/registry/aeat/modelos`.
+- [ ] `W06.P14.S49` - Migrate the identifier grammar onto one declared form per modelo; `src/cadrumo/_data/registry/aeat/modelos`.
+- [ ] `W06.P14.S50` - Retire the restated casilla number field and the unused alias field; `src/cadrumo/domain/calculations/registry/schema.py`.
+- [ ] `W06.P14.S51` - Migrate provenance onto attesting references and drop the verbatim restatements; `src/cadrumo/_data/registry/aeat/modelos`.
+- [ ] `W06.P14.S52` - Move the non-temporal scheme axis of modelo 369 out of the revision slot; `src/cadrumo/_data/registry/aeat/modelos/369/revisions`.
+
+## Parallelization
+
+Waves are sequenced. Wave one must land before Waves three and four, because both measure the
+resolved surface and the accessor is what makes that measurement trustworthy. Wave two is
+independent of Wave one and may run beside it. Wave three depends on Wave two for the gate that
+holds its result. Wave five is independent of every other Wave except that its revision renames must
+not land while another contributor holds the same directories.
+
+Within Waves, the four Phases of Wave four are mutually independent once the accessor exists and may
+proceed in parallel; each screen owns its own module and test. The three Phases of Wave two are
+independent of one another. In Wave six the decision Phase gates the migration Phase absolutely, and
+within the migration Phase the temporal, identifier and provenance migrations touch overlapping
+manifests and must be serialised behind one writer.
+
+Three ordering constraints were discovered by measurement rather than planned, and each overrides
+the Wave order above.
+
+The eligibility-predicate correction must land before any further export tree is published. Correcting
+it makes one hundred and eighty three numeric fields newly eligible for render-profile authority, and
+the coverage gate demands exact coverage of the eligible set in both directions, so each needs a
+reviewed representation rule authored in the same change. Eighty-seven of those fields sit in designs
+whose trees are not yet published, sixty of them in the corporate-tax design. Publishing such a tree
+first does not avoid the work; it converts it from authoring into a correction of shipped filing data.
+
+The generator verb must exist before any generated-tree defect can be corrected. A defect whose root
+cause is proven, whose corrected value is stated in the official design, and whose authored input is
+uncontended is still unfixable while the pipeline exposes no supported way to regenerate one revision
+from its inputs. That verb therefore gates every correction Step touching a generated modelo, whatever
+Wave the Step sits in.
+
+A Step whose scope names a file another contributor has modified waits, whatever its Wave or
+dependencies. This is not a soft preference: the architecture rule requires a relocation to move a
+definition and every consumer in one change, and a partial move leaves the tree broken. At the time of
+writing this blocks the whole of Wave two's residue and predicate Phases, and it blocked one screen
+from being written at all, because the predicates it needed are private to a held module and restating
+them would reproduce the very fault this plan removes.
+
+## Parallelization
+
+Waves are sequenced. Wave one must land before Waves three and four, because both measure
+the resolved surface and the accessor is what makes that measurement trustworthy. Wave two
+is independent of Wave one and may run beside it. Wave three depends on Wave two for the
+gate that holds its result. Wave five is independent of every other Wave except that its
+revision renames must not land while another contributor holds the same directories.
+
+Within Waves, the four Phases of Wave four are mutually independent once the accessor
+exists and may proceed in parallel; each screen owns its own module and test. The three
+Phases of Wave two are independent of one another. In Wave six the decision Phase gates the
+migration Phase absolutely, and within the migration Phase the temporal, identifier and
+provenance migrations touch overlapping manifests and must be serialised behind one writer.
+
+A hard external constraint overrides all of the above while it lasts: an import refactor is
+in flight and holds a large pending diff. Any Step whose scope names a file that refactor
+has modified waits, whatever its Wave. At authoring time this blocked the recipe repoint,
+the boundary contract, the ratchet residue deletion and the dependency move.
+
+## Verification
+
+The plan is complete when every Step is closed. Beyond that, seven criteria decide whether the work
+achieved what it was for. Each names the evidence that settles it, because a criterion whose proof is
+a reading rather than a command is one nobody can check later.
+
+No gate, screen or audit reassembles the resolved export surface. Proven by two gates in the
+declaration invariant module: one asserts the accessor fails if any of its three linkage paths is
+dropped, the other asserts no analysis module reaches for the binding derivation at all. The second
+checks the import rather than the result, because a partial walk produces a plausible number and only
+the method of reaching it differs.
+
+The release-eligibility predicate is evaluable from the shipped application, and a coordinate-identity
+gate runs in the repository gate lane, comparing the satisfied filing coordinate set by identity and
+naming the limb that regressed. It asserts no count, no ceiling and no floor. Neither half holds yet:
+the predicate still lives in contributor tooling behind a held file.
+
+At least one generated export tree carries an enrolled conformance vector proving its emitted bytes
+against the official record design, and a tree carrying no vector refuses as missing evidence rather
+than reading as unmeasured. The second half holds and is now guarded again: the emitted-byte
+acceptance suite asserts the structured refusal, naming which channel is empty, rather than the prose
+that rephrasing once broke. The first half cannot be satisfied by engineering until the official
+reference exists.
+
+Every screen is reachable, exercised and honest about what it measured. Six gates cover this: a screen
+is enrolled in the runner, documented in the contributor README, carries a test module, searches a
+non-empty population, completes over the whole corpus, and leaves the shipped registry byte-for-byte
+untouched. Each was added after finding the hole it closes, and two caught the author within one
+iteration of being written.
+
+Each declaration gate demonstrates detection of a representative defect from a constructed fixture or
+an isolated temporary registry tree, never by mutating the working tree. Two gates are exempt and
+better for it: the sibling scale comparison and the tree reproduction comparison are each proven
+against a live defect in the shipped registry, and each test says so and says what must replace it
+once that defect is corrected.
+
+No monetary amount is emitted at a magnitude the registry does not determine. Every monetary field is
+rendered by a wire type that scales, carries a declared scale, or is one half of the official part
+split, and no field disagrees with the amounts beside it in its own record. Twenty-four fields fail
+the first test and one fails the second; that one is the plan's only known filing-correctness defect.
+
+Every revision directory name agrees with the window that revision declares, and a gate refuses a name
+that does not. Temporal selection resolves every coordinate the law can decide and refuses only those
+it genuinely cannot. Fourteen names fail the first today and two coordinates fail the second.
+
+## Verification
+
+The plan is complete when every Step is closed. Beyond that, six criteria decide whether the work
+achieved what it was for.
+
+No gate, screen or audit reassembles the resolved export surface. Every consumer calls the accessor,
+and a test proves the accessor fails if any one of its three linkage paths is dropped.
+
+The release-eligibility predicate is evaluable from the shipped application, and a coordinate-identity
+gate runs in the repository gate lane, comparing the satisfied filing coordinate set by identity and
+naming the limb that regressed. It asserts no count, no ceiling and no floor.
+
+At least one generated export tree carries an enrolled conformance vector that proves its emitted
+bytes against the official record design, and a generated tree carrying no vector refuses as missing
+evidence rather than reading as unmeasured. The second half already holds and must not regress: the
+refusal is the designed behaviour of an unenrolled channel, not a defect. The first half cannot be
+satisfied by engineering until the official reference this plan's evidence Step acquires exists,
+because a vector whose expected bytes came from this project's own writer would prove only that the
+writer agrees with itself.
+
+Each gate demonstrates detection of a representative defect from a constructed fixture or an isolated
+temporary registry tree, never by mutating the working tree, and each passes the normal path in the
+same suite. One gate is exempt and better for it: the sibling scale comparison is proven against a
+live defect in the shipped registry, and its test says so and says what must replace it once that
+defect is corrected.
+
+No monetary amount is emitted at a magnitude the registry does not determine. Every monetary field is
+rendered by a wire type that scales, carries a declared scale, or is one half of the official part
+split, and no field disagrees with the amounts beside it in its own record. The one field that fails
+this today is the plan's only known filing-correctness defect.
+
+Every revision directory name agrees with the window that revision declares, and a gate refuses a name
+that does not. Temporal selection resolves every coordinate the law can decide and refuses only those
+it genuinely cannot.
+
+## Verification
+
+The plan is complete when every Step is closed. Beyond that, five criteria decide whether
+the work achieved what it was for.
+
+No gate, screen or audit reassembles the resolved export surface. Every consumer calls the
+accessor, and a test proves the accessor fails if any one of its three linkage paths is
+dropped.
+
+The release-eligibility predicate is evaluable from the shipped application, and a
+coordinate-identity gate runs in the repository gate lane, comparing the satisfied filing
+coordinate set by identity and naming the limb that regressed. It asserts no count, no
+ceiling and no floor.
+
+At least one generated export tree carries an enrolled conformance vector that proves its
+emitted bytes against the official record design, and a generated tree carrying no vector
+refuses as missing evidence rather than reading as unmeasured. The second half of that
+criterion already holds and must not regress: the refusal is the designed behaviour of an
+unenrolled channel, not a defect. The first half cannot be satisfied by engineering at all
+until the official reference this Wave's first Step acquires exists, because a vector whose
+expected bytes came from this project's own writer would prove only that the writer agrees
+with itself.
+
+Each of the four edge gates demonstrates detection of a representative defect from a
+constructed fixture or an isolated temporary registry tree, never by mutating the working
+tree, and each passes the normal path in the same suite.
+
+Every revision directory name agrees with the window that revision declares, and a gate
+refuses a name that does not. Temporal selection resolves every coordinate the law can
+decide and refuses only those it genuinely cannot.
+
+## Verification
+
+The plan is complete when every Step is closed. Beyond that, five criteria decide whether
+the work achieved what it was for.
+
+No gate, screen or audit reassembles the resolved export surface. Every consumer calls the
+accessor, and a test proves the accessor fails if any one of its three linkage paths is
+dropped.
+
+The release-eligibility predicate is evaluable from the shipped application, and a
+coordinate-identity gate runs in the repository gate lane, comparing the satisfied filing
+coordinate set by identity and naming the limb that regressed. It asserts no count, no
+ceiling and no floor.
+
+At least one generated export tree carries an enrolled conformance vector that proves its
+emitted bytes against the official record design, and a generated tree carrying no vector
+refuses as missing evidence rather than reading as unmeasured.
+
+Each of the four edge gates demonstrates detection of a representative defect from a
+constructed fixture or an isolated temporary registry tree, never by mutating the working
+tree, and each passes the normal path in the same suite.
+
+Every revision directory name agrees with the window that revision declares, and a gate
+refuses a name that does not. Temporal selection resolves every coordinate the law can
+decide and refuses only those it genuinely cannot.

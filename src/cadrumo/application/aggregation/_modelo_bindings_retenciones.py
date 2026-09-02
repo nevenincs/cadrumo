@@ -9,9 +9,9 @@ from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
 from ._modelo_bindings_support import (
-    _STORAGE_DEGRADATION_ERRORS,
-    _empty_source_resolution,
-    _revision_has_binding_source,
+    STORAGE_DEGRADATION_ERRORS,
+    empty_source_resolution,
+    revision_has_binding_source,
 )
 from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from ._retencion_observations_repository import RetencionObservationRepository
@@ -88,16 +88,16 @@ class RetencionesAggregationSourceResolver:
         return _RETENCIONES_AGGREGATORS[modelo](tuple(observations), period=period)
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
-        if not _revision_has_binding_source(context.revision, "retenciones_aggregation"):
-            return _empty_source_resolution(self.resolver_id, self.owned_sources)
+        if not revision_has_binding_source(context.revision, "retenciones_aggregation"):
+            return empty_source_resolution(self.resolver_id, self.owned_sources)
         if str(context.modelo) not in _RETENCIONES_AGGREGATORS:
             # Defensive: a revision declares the source for a modelo with no
             # retenciones aggregator. Resolve empty rather than guess values.
-            return _empty_source_resolution(self.resolver_id, self.owned_sources)
+            return empty_source_resolution(self.resolver_id, self.owned_sources)
         repository = self._retencion_repository or RetencionObservationRepository()
         try:
             observations = repository.load_observations(str(context.modelo), context.period)
-        except _STORAGE_DEGRADATION_ERRORS as exc:
+        except STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

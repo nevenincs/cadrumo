@@ -14,7 +14,7 @@ identity audit:
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -60,7 +60,7 @@ def _is_secure_object_select(statement: str) -> bool:
 
 
 @contextmanager
-def _secure_object_select_log(engine: Engine) -> Iterator[list[str]]:
+def _secure_object_select_log(engine: Engine) -> Generator[list[str]]:
     """Observe live encrypted-SQL singleton reads without replacing a repository."""
     selects: list[str] = []
 

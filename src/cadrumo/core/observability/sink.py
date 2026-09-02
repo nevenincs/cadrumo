@@ -35,7 +35,7 @@ from typing import TextIO, override
 from ..logging import get_logger
 from .models import RunEvent
 from .redaction_rules import diagnostic_rules
-from .store import _EVENTS_APPEND_LOCK
+from .store import EVENTS_APPEND_LOCK
 
 logger = get_logger(__name__)
 
@@ -115,7 +115,7 @@ class JsonlRunSink(logging.Handler):
 
             redacted = redact_structured(event.model_dump(mode="json"), rules=diagnostic_rules())
             line = json.dumps(redacted, sort_keys=True, separators=(",", ":")) + "\n"
-            with _EVENTS_APPEND_LOCK, self._lock:
+            with EVENTS_APPEND_LOCK, self._lock:
                 handle = self._open()
                 handle.write(line)
                 handle.flush()
@@ -147,7 +147,7 @@ class JsonlRunSink(logging.Handler):
         flush or fsync raises.
         """
         try:
-            with _EVENTS_APPEND_LOCK, self._lock:
+            with EVENTS_APPEND_LOCK, self._lock:
                 handle = self._handle
                 if handle is not None:
                     try:

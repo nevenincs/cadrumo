@@ -19,7 +19,8 @@ from datetime import timedelta
 from ...core.decimal.coercion import normalize_decimal_separators
 from ...core.decimal.grammar import european_thousands_reading_is_ambiguous, try_parse_canonical_decimal
 from ...core.hashing import content_hash_hex
-from ...core.parsing import parse_bool, parse_iso8601_date
+from ...core.parsing import parse_bool
+from ...core.parsing.dates import parse_iso8601_date
 from ...core.time.clock import now as clock_now
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.runtime_graph import revision_date_binding_ids

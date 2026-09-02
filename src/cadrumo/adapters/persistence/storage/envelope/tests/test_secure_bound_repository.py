@@ -11,7 +11,7 @@ A throwaway ``_RoundtripPayload`` Pydantic model and throwaway concrete
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -68,7 +68,7 @@ class _RoundtripV2Repository(_RoundtripRepository):
 
 
 @contextmanager
-def _bound_repo_with_engine(tmp_path: Path) -> Iterator[tuple[_RoundtripRepository, Engine]]:
+def _bound_repo_with_engine(tmp_path: Path) -> Generator[tuple[_RoundtripRepository, Engine]]:
     """Build an isolated SQLite engine + repository against ``tmp_path``.
 
     A context manager so engine disposal is guaranteed on every exit path,

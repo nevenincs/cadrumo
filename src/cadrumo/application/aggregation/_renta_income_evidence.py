@@ -58,7 +58,7 @@ class _SalesInvoiceEvidencePayload(BaseModel):
 
     Empty when the row links no invoice, which is the ordinary case and not a
     defect. A populated payload has passed every guard in
-    :func:`_sales_invoice_evidence_payload`, so its figures may take precedence
+    :func:`sales_invoice_evidence_payload`, so its figures may take precedence
     over the transaction's own tax substrate.
     """
 
@@ -69,7 +69,7 @@ class _SalesInvoiceEvidencePayload(BaseModel):
     retencion_amount: Decimal | None = None
 
 
-def _sales_invoice_evidence_payload(
+def sales_invoice_evidence_payload(
     *,
     invoices: InvoiceCatalogue,
     bucket_id: str,
@@ -155,7 +155,7 @@ def _determinable_cuota(transaction: Transaction) -> Decimal | None:
     return None
 
 
-def _income_withheld_amount(
+def income_withheld_amount(
     transaction: Transaction,
     *,
     evidence: _SalesInvoiceEvidencePayload | None = None,

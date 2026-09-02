@@ -90,12 +90,12 @@ from ..user_profile.custody_ports import default_profile_bucket_event_history_re
 from ..workflow.active_profile import require_active_profile_bucket_id
 from ._calculation_helpers import external_filing_observations as _external_filing_observations
 from ._registry_helpers import reject_unknown_import_casillas as _reject_unknown_import_casillas
-from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
-from ._revision_persistence import supersede_prior_current_filing as _supersede_prior_current_filing
 from .action_errors import ExternalModeloImportError
 from .calculation_repository import calculation_revision_catalogue_repository
 from .filing_repository import modelo_record_catalogue_repository
 from .justificante_repository import justificante_repository as resolve_justificante_repository
+from .revision_persistence import build_modelo_bucket_event as _build_bucket_event
+from .revision_persistence import supersede_prior_current_filing as _supersede_prior_current_filing
 from .work_addressing import (
     ModeloWorkResolution,
     ModeloWorkRevisionConflictError,

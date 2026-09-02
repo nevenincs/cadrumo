@@ -21,7 +21,7 @@ Only ACTIVE, EUR-denominated, OUTGOING transactions whose explicit
 ``business_classification`` is BUSINESS or MIXED are eligible. The deductible
 amount is the IVA-exclusive base imponible (``taxable_base``), plus the
 non-recoverable share of ``iva_amount`` when the activity's IVA-deduction ratio
-(:func:`~._renta_ledger._resolve_iva_deduction_ratio` -- the SAME resolver the
+(:func:`~._renta_ledger.resolve_iva_deduction_ratio` -- the SAME resolver the
 M100 annual first slice uses, for the SAME ejercicio, so the two filings cannot
 diverge) is less than full: IVA soportado a taxpayer cannot recover through
 Modelo 303 is PGC NRV 12.ª acquisition cost, same as the M100 side (LIRPF arts.
@@ -36,7 +36,7 @@ pipeline (:mod:`~._renta_ledger`): that path layers invoice-evidence
 reconciliation, category-profile deductibility evaluation, and an annual window
 that are constraint-shape-divergent from the M130 quarterly cumulative gasto sum.
 It DOES share that module's single IVA-deduction-ratio resolver
-(:func:`~._renta_ledger._resolve_iva_deduction_ratio`), the one taxpayer-fact
+(:func:`~._renta_ledger.resolve_iva_deduction_ratio`), the one taxpayer-fact
 lookup the two constraint-shapes have no reason to diverge on.
 """
 
@@ -74,7 +74,7 @@ from ._renta_business_eligibility import renta_expense_business_proportion
 
 # Intra-package reuse of the sibling ledger's ratio resolver, permitted by the
 # architecture rule; the cross-package boundary is enforced elsewhere.
-from ._renta_ledger import _resolve_iva_deduction_ratio  # pyright: ignore[reportPrivateUsage]
+from ._renta_ledger import resolve_iva_deduction_ratio
 from .errors import AggregationValidationError, t
 
 # The only casilla M130 deductible-expense aggregation feeds: official box 02
@@ -170,7 +170,7 @@ def aggregate_renta_gasto_ledger_from_repositories(
     """Load the transaction catalogue and aggregate cumulative M130 gastos.
 
     Derives the activity's IVA-deduction ratio through
-    :func:`~._renta_ledger._resolve_iva_deduction_ratio` -- the SAME resolver the
+    :func:`~._renta_ledger.resolve_iva_deduction_ratio` -- the SAME resolver the
     M100 annual first slice uses, for the SAME ejercicio (``period.filing_year``),
     so the two filings cannot diverge on it. ``profile_record`` (a
     :class:`UserProfileRecord`) and ``prorrata_register_repository`` supply the
@@ -189,7 +189,7 @@ def aggregate_renta_gasto_ledger_from_repositories(
     # reported uniformly as ``OUTSIDE_PERIOD``.
     window = cumulative_year_to_date_window(period)
     partition = repository.partition_by_date_range(window.start, window.end)
-    iva_deduction_ratio = _resolve_iva_deduction_ratio(
+    iva_deduction_ratio = resolve_iva_deduction_ratio(
         bucket_id=bucket_id,
         ejercicio=period.filing_year,
         profile_record=profile_record,

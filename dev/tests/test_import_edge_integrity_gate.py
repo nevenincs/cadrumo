@@ -54,7 +54,7 @@ from ..quality.import_hygiene_scan import (
     first_party_census_files,
     walk_module_imports,
 )
-from .test_import_hygiene_gate import _package_import_sites, _package_py_files, _plant_module
+from ._import_scan_support import _package_import_sites, _package_py_files, _plant_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

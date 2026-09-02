@@ -17,7 +17,7 @@ from the same catalogue the surface reads would be tautological.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator, Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import timedelta
 from pathlib import Path
@@ -110,7 +110,7 @@ def _assert_horizontally_contained(app: App[object], size: tuple[int, int], surf
 
 
 @contextmanager
-def _registered_profile(tmp_path: Path) -> Iterator[Path]:
+def _registered_profile(tmp_path: Path) -> Generator[Path]:
     """One real profile created through the real registration door."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         register_profile_with_credentials(

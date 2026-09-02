@@ -37,9 +37,9 @@ import pytest
 from .....core.resources.bundled_data import bundled_path
 from ..record_design import extract_record_design
 from ..record_design_pdf_orchestration import _better_page_record_lines
-from ..record_design_pdf_repairs import _collapse_stuttered_row_prefix, _join_wrapped_row_descriptions
-from ..record_design_pdf_visual import _extract_pdf_text_lines, _extract_pdfplumber_text_lines, _uses_page_record_layout
-from ..record_design_sources import _EMPTY_CORRECTIONS
+from ..record_design_pdf_repairs import collapse_stuttered_row_prefix, join_wrapped_row_descriptions
+from ..record_design_pdf_visual import extract_pdf_text_lines, extract_pdfplumber_text_lines, uses_page_record_layout
+from ..record_design_sources import EMPTY_CORRECTIONS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -174,15 +174,15 @@ def test_a_page_record_design_that_reads_whole_keeps_its_own_extractor() -> None
     """
     raw = Path(_CLEAN_PAGE_RECORD_DESIGN).read_bytes()
     label = _CLEAN_PAGE_RECORD_DESIGN.name
-    base_lines = _extract_pdf_text_lines(raw, source_label=label)
-    assert _uses_page_record_layout(base_lines), "this design must use the page-record layout to be a witness"
+    base_lines = extract_pdf_text_lines(raw, source_label=label)
+    assert uses_page_record_layout(base_lines), "this design must use the page-record layout to be a witness"
 
-    plain = _collapse_stuttered_row_prefix(_join_wrapped_row_descriptions(base_lines))
-    page = _collapse_stuttered_row_prefix(
-        _join_wrapped_row_descriptions(_extract_pdfplumber_text_lines(raw, source_label=label)),
+    plain = collapse_stuttered_row_prefix(join_wrapped_row_descriptions(base_lines))
+    page = collapse_stuttered_row_prefix(
+        join_wrapped_row_descriptions(extract_pdfplumber_text_lines(raw, source_label=label)),
     )
     assert plain != page, "the two extractions are identical here, so the choice is untested"
 
-    chosen = _better_page_record_lines(page, plain, source_label=label, corrections=_EMPTY_CORRECTIONS)
+    chosen = _better_page_record_lines(page, plain, source_label=label, corrections=EMPTY_CORRECTIONS)
 
     assert chosen is page

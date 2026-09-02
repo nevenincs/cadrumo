@@ -1,8 +1,8 @@
 """Anti-dormant proof: the operator ingress makes especial + sectores fire.
 
 The especial and sectores apportionment engines
-(:func:`~application.aggregation._iva_ledger._apply_especial_apportionment`,
-:func:`~application.aggregation._iva_ledger._apply_sector_apportionment`) were
+(:func:`~application.aggregation.iva_ledger._apply_especial_apportionment`,
+:func:`~application.aggregation.iva_ledger._apply_sector_apportionment`) were
 verified end-to-end — but those verifications seed
 the register through the RAW adapter (``ProrrataRegisterRepository(...).save``),
 not through any operator surface: the engines therefore fired
@@ -56,7 +56,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....tests.secure_sql import isolated_runtime_profile
 from ...prorrata_register.service import ProrrataRegisterService
 from .. import aggregate_iva_ledger_observations_from_repositories
-from .._iva_ledger import resolve_iva_ledger_binding_values
+from ..iva_ledger import resolve_iva_ledger_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

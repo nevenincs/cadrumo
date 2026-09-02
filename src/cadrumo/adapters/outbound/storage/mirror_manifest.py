@@ -21,8 +21,8 @@ from ....application.operator_actions.preconditions import no_action_preconditio
 from ....core.hashing import sha256_hex
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...persistence.storage.sql.secure_objects import SecureObjectRawRow
-from ._protocol import StorageProvider
 from .errors import OutboundStorageIntegrityError, OutboundStorageNotFoundError, OutboundStorageValidationError
+from .protocol import StorageProvider
 from .records import (
     ProviderObjectMetadata,
     RemoteMirrorInspection,

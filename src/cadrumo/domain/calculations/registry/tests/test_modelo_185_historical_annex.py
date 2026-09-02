@@ -9,7 +9,7 @@ import pytest
 from .....core.hashing import hash_file
 from .....core.resources.bundled_data import bundled_path
 from ..record_design import extract_record_design
-from ..record_design_pdf_visual import _extract_pdf_text_lines
+from ..record_design_pdf_visual import extract_pdf_text_lines
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -42,7 +42,7 @@ def test_modelo_185_historical_annex_is_hash_pinned_and_exposes_both_record_type
     assert source.source_url == "https://www.boe.es/boe/dias/2003/01/30/pdfs/A03911-03920.pdf"
     assert hash_file(path) == (source.sha256, source.bytes)
 
-    lines = _extract_pdf_text_lines(path.read_bytes(), source_label=source.id)
+    lines = extract_pdf_text_lines(path.read_bytes(), source_label=source.id)
     type_1 = "Tipo 1: Registro del declarante: Datos identificativos."
     type_2 = "Tipo 2: Registro del declarado."
     type_1_index = next(index for index, line in enumerate(lines) if type_1 in line)

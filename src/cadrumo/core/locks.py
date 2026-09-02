@@ -37,7 +37,7 @@ import asyncio
 import os
 import sys
 import time
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
 from typing import Final, override
@@ -194,7 +194,7 @@ def exclusive_file_lock(
     *,
     timeout: float | _DefaultLockTimeout = DEFAULT_LOCK_TIMEOUT,
     retry_backoff: float | _DefaultLockTimeout = _DEFAULT_RETRY_BACKOFF,
-) -> Iterator[Path]:
+) -> Generator[Path]:
     """Acquire an OS-level exclusive lock on a sidecar lock file.
 
     The sidecar lock file is created alongside ``target`` with the suffix
@@ -262,7 +262,7 @@ async def exclusive_file_lock_async(
     *,
     timeout: float | _DefaultLockTimeout = DEFAULT_LOCK_TIMEOUT,
     retry_backoff: float | _DefaultLockTimeout = _DEFAULT_RETRY_BACKOFF,
-) -> AsyncIterator[Path]:
+) -> AsyncGenerator[Path]:
     """Acquire the same OS-level exclusive lock without blocking the event loop.
 
     This is the awaitable twin of :func:`exclusive_file_lock`, not a

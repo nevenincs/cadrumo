@@ -18,7 +18,6 @@ from ....core.legal_review import LegalReviewStatus
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from ._validate import RegistryValidator
 from ._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow, validate_orden_aplicabilidad
-from ._validate_references import check_all_id_references
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .export import derive_export_layouts_from_bindings
 from .ids import RevisionId
@@ -29,6 +28,7 @@ from .schema_references import LegalReference, governed_period_span
 from .schema_surfaces import CasillaDefinition
 from .temporal import select_revision
 from .validate_cross_domain_snapshot import REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES
+from .validate_references import check_all_id_references
 from .validate_revision_identity import revision_reference_identity_failures
 
 _SnapshotCacheKey = tuple[int, int, str, int, str, date | None, str | None, RegistryAuthorityGrade]

@@ -23,7 +23,7 @@ from ....domain.calculations.registry.schema_exports import (
     ExportRecordDefinition,
 )
 from ....domain.filing.errors import FilingExportValidationError
-from .._export import _preflight_projection_plan
+from ..export import _preflight_projection_plan
 from ..producer_snapshot import build_filing_producer_snapshot
 from ..projection import (
     FilingProjectionPlan,

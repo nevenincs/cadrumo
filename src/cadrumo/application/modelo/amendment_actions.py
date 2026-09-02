@@ -97,7 +97,6 @@ from ._m303_filing_evidence import validate_m303_filing_instance_evidence_for_re
 from ._profile_export_binding import resolve_export_identity
 from ._registry_helpers import reject_incomplete_amendment_casillas as _reject_incomplete_amendment_casillas
 from ._registry_helpers import reject_unknown_override_casillas as _reject_unknown_override_casillas
-from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from .action_errors import (
     AmendmentEvidenceMissingError,
     AmendmentM303RectificativaMotiveError,
@@ -107,6 +106,7 @@ from .action_errors import (
     ModeloRecordNotFoundError,
     WorkUnitNotFoundError,
 )
+from .revision_persistence import build_modelo_bucket_event as _build_bucket_event
 
 
 def _load_amendment_baseline[CasillaKey](

@@ -22,7 +22,7 @@ from __future__ import annotations
 import pytest
 
 from ...config import Settings
-from .._consent import telemetry_emit_permitted
+from ..consent import telemetry_emit_permitted
 from ..tier import TelemetryTier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

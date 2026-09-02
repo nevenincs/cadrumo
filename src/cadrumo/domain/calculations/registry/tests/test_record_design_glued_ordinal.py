@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..record_design_pdf_rows import _split_glued_ordinal_position
+from ..record_design_pdf_rows import split_glued_ordinal_position
 from ..record_design_schema import RecordDesignField
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -48,7 +48,7 @@ def _previous(ordinal: str, offset: int, length: int) -> RecordDesignField:
 
 
 def test_a_glued_row_is_split_when_both_constraints_agree() -> None:
-    row = _split_glued_ordinal_position(
+    row = split_glued_ordinal_position(
         '23 3 Num Modelo. OBLIGATORIO Constante "200"', 10, previous=_previous("1", 1, 2)
     )
 
@@ -58,18 +58,18 @@ def test_a_glued_row_is_split_when_both_constraints_agree() -> None:
 
 def test_the_split_is_refused_when_the_ordinal_does_not_continue() -> None:
     """Position would fit, but the ordinal does not follow -- so nothing is claimed."""
-    assert _split_glued_ordinal_position("23 3 Num Modelo", 10, previous=_previous("7", 1, 2)) is None
+    assert split_glued_ordinal_position("23 3 Num Modelo", 10, previous=_previous("7", 1, 2)) is None
 
 
 def test_the_split_is_refused_when_the_position_does_not_resume() -> None:
     """Ordinal would follow, but the position leaves a gap -- so nothing is claimed."""
-    assert _split_glued_ordinal_position("23 3 Num Modelo", 10, previous=_previous("1", 1, 5)) is None
+    assert split_glued_ordinal_position("23 3 Num Modelo", 10, previous=_previous("1", 1, 5)) is None
 
 
 def test_a_row_that_already_parses_is_never_resplit() -> None:
-    assert _split_glued_ordinal_position("2 3 3 Num Modelo", 10, previous=_previous("1", 1, 2)) is None
+    assert split_glued_ordinal_position("2 3 3 Num Modelo", 10, previous=_previous("1", 1, 2)) is None
 
 
 def test_the_first_row_of_a_record_is_never_split() -> None:
     """With no previous row there is nothing to close the constraint."""
-    assert _split_glued_ordinal_position("23 3 Num Modelo", 10, previous=None) is None
+    assert split_glued_ordinal_position("23 3 Num Modelo", 10, previous=None) is None

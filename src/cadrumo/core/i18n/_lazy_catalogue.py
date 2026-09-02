@@ -15,6 +15,7 @@ from typing import IO, override
 import yaml
 
 from ..external_constants import UTF_8_ENCODING
+from ..type_guards import is_object_mapping
 from .routing import route_key_to_shard
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +30,7 @@ def _load_yaml_handle(handle: IO[str]) -> object:
 
 def _flatten_dict(value: object, prefix: str = "") -> dict[str, str | None]:
     """Recursively flatten nested mappings to dot-separated keys."""
-    if isinstance(value, Mapping):
+    if is_object_mapping(value):
         flattened: dict[str, str | None] = {}
         for key, child in value.items():
             child_prefix = f"{prefix}.{key}" if prefix else str(key)

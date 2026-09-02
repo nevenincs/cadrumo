@@ -90,24 +90,6 @@ from ...domain.modelos.verification_report import (
     VerificationCompletenessStatus,
 )
 from ._decimal_wire import DecimalWireText
-from ._modelo_aux_payloads import (
-    EvidenceBundleCheckFindingPayload,
-    EvidenceRecordRefPayload,
-    ModeloAuditCheckResult,
-    ModeloAuditExportResult,
-    ModeloAuditViewResult,
-    ModeloDescribeResult,
-    ModeloListResult,
-    ModeloRowPayload,
-    WithholdingClaveBreakdownPayload,
-    WorkflowRunPayload,
-    WorkflowRunSummaryPayload,
-    WorkHistoryResult,
-    WorkRunDetailsResult,
-    WorkRunResult,
-    WorkRunsResult,
-    WorkUnitHistoryEventPayload,
-)
 from ._modelo_bindings_payloads import (
     BindingEncodedOptionPayload,
     BindingListRowPayload,
@@ -139,6 +121,24 @@ from ._payloads_modelo_reconcile import (
     ModeloReconcileResult,
     ModeloReconciliationDiffPayload,
     WorkCompareTaxationResult,
+)
+from .modelo_aux_payloads import (
+    EvidenceBundleCheckFindingPayload,
+    EvidenceRecordRefPayload,
+    ModeloAuditCheckResult,
+    ModeloAuditExportResult,
+    ModeloAuditViewResult,
+    ModeloDescribeResult,
+    ModeloListResult,
+    ModeloRowPayload,
+    WithholdingClaveBreakdownPayload,
+    WorkflowRunPayload,
+    WorkflowRunSummaryPayload,
+    WorkHistoryResult,
+    WorkRunDetailsResult,
+    WorkRunResult,
+    WorkRunsResult,
+    WorkUnitHistoryEventPayload,
 )
 
 if TYPE_CHECKING:
@@ -268,6 +268,7 @@ FINDING_MESSAGE_CAP = 500
 
 FindingMessage = elided_prose(FINDING_MESSAGE_CAP)
 """A rendered finding message, elided at the cap rather than refused."""
+
 
 class FindingPayload(OutputSchema):
     """One localized verification finding with its resolved recovery verdict.

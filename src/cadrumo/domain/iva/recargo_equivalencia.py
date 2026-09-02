@@ -260,12 +260,12 @@ def _hydrate_row(row: Mapping[str, object]) -> dict[str, object]:
             # human typist, so there is no European/American thousands ambiguity here.
             hydrated[field] = coerce_decimal_strict(raw)
     raw_refs = hydrated.get("legal_refs")
-    if _is_object_list(raw_refs):
+    if is_object_list(raw_refs):
         hydrated["legal_refs"] = _coerce_legal_refs(raw_refs)
     return hydrated
 
 
-def _is_object_list(value: object) -> TypeGuard[list[object]]:
+def is_object_list(value: object) -> TypeGuard[list[object]]:
     """Narrow an unparameterized runtime list to untrusted object entries."""
     return isinstance(value, list)
 

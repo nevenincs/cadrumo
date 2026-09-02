@@ -126,7 +126,7 @@ LEDGER_BIENES_INVERSION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="kind",
                 declarations=("--kind",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.bienes_inversion", "BienInversionKind")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.bienes_inversion.register", "BienInversionKind")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.ledger.bienes_inversion.kind_help"),
                 metavar=None,

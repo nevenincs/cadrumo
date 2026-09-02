@@ -44,7 +44,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -111,7 +111,7 @@ _ADVISORY_LOCALE_KEY = "application.modelo.findings.foreign_asset_redeclaration"
 
 
 @contextmanager
-def _secure_backend(tmp_path: Path) -> Iterator[None]:
+def _secure_backend(tmp_path: Path) -> Generator[None]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         seed_test_profile_record(
             UserProfileRecord(

@@ -19,7 +19,7 @@ import ast
 import asyncio
 import inspect
 import textwrap
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from http import HTTPStatus
 from pathlib import Path
@@ -119,7 +119,7 @@ def _client(settings: EnvFileFreeSettings) -> LLMClient:
 
 
 @contextmanager
-def _serve_openai() -> Iterator[tuple[str, Queue[str]]]:
+def _serve_openai() -> Generator[tuple[str, Queue[str]]]:
     """Serve an OpenAI-shaped chat-completions endpoint on loopback.
 
     Real HTTP, real adapter, real transport, and nothing leaves the machine.

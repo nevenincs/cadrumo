@@ -79,7 +79,7 @@ def test_a_structured_confirm_grounds_through_the_decomposition_contract(
 ) -> None:
     """The step's red condition: the renta path must not refuse this as ungrounded.
 
-    ``_sales_invoice_evidence_payload`` returns
+    ``sales_invoice_evidence_payload`` returns
     ``SalesInvoiceEvidenceRefusal.UNGROUNDED_DECOMPOSITION`` when and only when
     ``decompose_invoice(invoice).is_grounded`` is false, so grounding the
     decomposition IS the absence of that verdict. Asserting the contract

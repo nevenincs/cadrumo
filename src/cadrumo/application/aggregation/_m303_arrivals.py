@@ -21,8 +21,8 @@ from ...core.prorrata_register import ProrrataEspecialTransitionKind, ProrrataRe
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...domain.iva.schema import IvaCashAccountingTreatment
 from ...domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
-from ._iva_ledger import IvaLedgerAggregation
 from .errors import AggregationValidationError, t
+from .iva_ledger import IvaLedgerAggregation
 
 # Modelo 303's 2026 record design, DP30301 Note 6: the option and revocation
 # fields are blank before the annual final liquidation and carry SI/NO only in

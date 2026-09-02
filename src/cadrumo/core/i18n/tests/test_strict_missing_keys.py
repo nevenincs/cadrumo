@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..render import _I18N_STRICT_MISSING_KEYS, MissingTranslationError, tr
+from ..render import I18N_STRICT_MISSING_KEYS, MissingTranslationError, tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -48,8 +48,8 @@ def test_translated_key_does_not_raise_under_strict_mode() -> None:
 
 def test_production_humanises_the_missing_key() -> None:
     """With strict mode off, a missing key still renders — never aborts a filing."""
-    token = _I18N_STRICT_MISSING_KEYS.set(False)
+    token = I18N_STRICT_MISSING_KEYS.set(False)
     try:
         assert tr(_ABSENT_KEY, locale="en") == "Foo bar"
     finally:
-        _I18N_STRICT_MISSING_KEYS.reset(token)
+        I18N_STRICT_MISSING_KEYS.reset(token)

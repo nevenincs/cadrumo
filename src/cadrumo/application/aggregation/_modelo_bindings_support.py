@@ -15,7 +15,7 @@ from ...domain.transactions.errors import TransactionPersistenceError
 from ...domain.usage_ratios.errors import UsageRatioPersistenceError
 from ._source_mesh import CalculationSourceResolution
 
-_STORAGE_DEGRADATION_ERRORS = (
+STORAGE_DEGRADATION_ERRORS = (
     ClassificationError,
     DecryptionError,
     EnvelopeVersionError,
@@ -26,11 +26,11 @@ _STORAGE_DEGRADATION_ERRORS = (
 )
 
 
-def _revision_has_binding_source(revision: ModeloRevision, source: str) -> bool:
+def revision_has_binding_source(revision: ModeloRevision, source: str) -> bool:
     return any(binding.source == source for binding in revision.bindings)
 
 
-def _empty_source_resolution(
+def empty_source_resolution(
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
 ) -> CalculationSourceResolution:

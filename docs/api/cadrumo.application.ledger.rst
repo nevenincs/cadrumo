@@ -13,6 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.application.ledger._classification_assembly_rules
    cadrumo.application.ledger.actions_classification
    cadrumo.application.ledger.actions_common
    cadrumo.application.ledger.actions_export

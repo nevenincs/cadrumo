@@ -71,7 +71,6 @@ Submodules
    cadrumo.domain.calculations.registry._validate_record_sections
    cadrumo.domain.calculations.registry._validate_reference_checker
    cadrumo.domain.calculations.registry._validate_reference_sections
-   cadrumo.domain.calculations.registry._validate_references
    cadrumo.domain.calculations.registry._validate_relation_periods
    cadrumo.domain.calculations.registry._validate_relation_sources
    cadrumo.domain.calculations.registry._validate_revision_closure
@@ -89,6 +88,7 @@ Submodules
    cadrumo.domain.calculations.registry._validate_verification_predicates
    cadrumo.domain.calculations.registry._validation_memoization
    cadrumo.domain.calculations.registry._verdict_cache
+   cadrumo.domain.calculations.registry._withholding_rows
    cadrumo.domain.calculations.registry.aeat_nif_iva_oracle
    cadrumo.domain.calculations.registry.applicability
    cadrumo.domain.calculations.registry.applicability_modelo202
@@ -136,6 +136,7 @@ Submodules
    cadrumo.domain.calculations.registry.irnr_ledger_bindings
    cadrumo.domain.calculations.registry.iva_wallet_relation_targets
    cadrumo.domain.calculations.registry.ledger_binding_selector_support
+   cadrumo.domain.calculations.registry.ledger_bindings
    cadrumo.domain.calculations.registry.ledger_impatriado_bindings
    cadrumo.domain.calculations.registry.ledger_iva_bindings
    cadrumo.domain.calculations.registry.ledger_oss_bindings
@@ -187,11 +188,13 @@ Submodules
    cadrumo.domain.calculations.registry.schedules
    cadrumo.domain.calculations.registry.schema
    cadrumo.domain.calculations.registry.schema_base
+   cadrumo.domain.calculations.registry.schema_deadlines
    cadrumo.domain.calculations.registry.schema_exports
    cadrumo.domain.calculations.registry.schema_extraction
    cadrumo.domain.calculations.registry.schema_formula
    cadrumo.domain.calculations.registry.schema_input_kind
    cadrumo.domain.calculations.registry.schema_references
+   cadrumo.domain.calculations.registry.schema_revision_members
    cadrumo.domain.calculations.registry.schema_rounding
    cadrumo.domain.calculations.registry.schema_scalars
    cadrumo.domain.calculations.registry.schema_surfaces
@@ -202,6 +205,7 @@ Submodules
    cadrumo.domain.calculations.registry.support_matrix
    cadrumo.domain.calculations.registry.temporal
    cadrumo.domain.calculations.registry.validate_cross_domain_snapshot
+   cadrumo.domain.calculations.registry.validate_references
    cadrumo.domain.calculations.registry.validate_registry_scope
    cadrumo.domain.calculations.registry.validate_revision_identity
    cadrumo.domain.calculations.registry.validate_temporal_coherence

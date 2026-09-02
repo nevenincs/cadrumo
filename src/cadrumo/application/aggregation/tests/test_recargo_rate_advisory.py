@@ -39,7 +39,7 @@ from ....domain.iva.recargo_equivalencia import recargo_rate_for_applied_rate
 from ....domain.iva.schema import IvaCategory
 from .._modelo_bindings_invoice_iva import (
     _recargo_rate_divergence,
-    _recargo_rate_mismatch_diagnostics,
+    recargo_rate_mismatch_diagnostics,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -179,7 +179,7 @@ def test_the_advisory_names_the_provision_and_disclaims_the_correction() -> None
     divergence = _recargo_rate_divergence(_recargo_invoice(recargo="25.00"), devengo_date=_ORDINARY_DAY)
     assert divergence is not None
 
-    diagnostics = _recargo_rate_mismatch_diagnostics((divergence,), resolver_id="test-resolver")
+    diagnostics = recargo_rate_mismatch_diagnostics((divergence,), resolver_id="test-resolver")
 
     assert len(diagnostics) == 1
     message = diagnostics[0].message
@@ -204,7 +204,7 @@ def test_the_advisory_is_not_a_refusal() -> None:
     divergence = _recargo_rate_divergence(_recargo_invoice(recargo="25.00"), devengo_date=_ORDINARY_DAY)
     assert divergence is not None
 
-    diagnostics = _recargo_rate_mismatch_diagnostics((divergence,), resolver_id="test-resolver")
+    diagnostics = recargo_rate_mismatch_diagnostics((divergence,), resolver_id="test-resolver")
 
     # The declared figure is untouched by the comparison.
     assert divergence.invoice.recargo_amount == Decimal("25.00")

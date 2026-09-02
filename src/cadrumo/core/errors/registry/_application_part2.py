@@ -5,9 +5,9 @@ Rows map application-layer exception qualnames to stable
 """
 
 from ..error_codes import ErrorCategory, ErrorCode
-from ._application_profile_bundle import _PROFILE_BUNDLE_ERROR_CODES
+from ._application_profile_bundle import PROFILE_BUNDLE_ERROR_CODES
 
-_DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
+DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "cadrumo.application.state_projection.ProjectionModeloReadinessCaptureError",
         ErrorCode(
@@ -1135,7 +1135,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._review_package_feedback.ReviewPackageFeedbackError",
+        "cadrumo.application.modelo.review_package_feedback.ReviewPackageFeedbackError",
         ErrorCode(
             code="ERROR_MODELO_REVIEW_PACKAGE_FEEDBACK",
             category=ErrorCategory.ERROR,
@@ -1145,7 +1145,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._review_package_feedback.FeedbackCounterSignatureInvalidError",
+        "cadrumo.application.modelo.review_package_feedback.FeedbackCounterSignatureInvalidError",
         ErrorCode(
             code="REFUSED_MODELO_REVIEW_PACKAGE_FEEDBACK_COUNTERSIGN_INVALID",
             category=ErrorCategory.REFUSED,
@@ -1154,7 +1154,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
-    *_PROFILE_BUNDLE_ERROR_CODES,
+    *PROFILE_BUNDLE_ERROR_CODES,
     (
         "cadrumo.application.storage_management.errors.StorageManagementError",
         ErrorCode(

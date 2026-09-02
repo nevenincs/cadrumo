@@ -37,9 +37,9 @@ from ...core.prorrata_register import ProrrataProvisionalProvenance, ProrrataReg
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.iva.m303_settlement import m303_annual_settlement_order_key
 from ...domain.prorrata_register.register import ProrrataRegisterEntry
-from ..calculations._revision_carry_gate import revision_carry_outcome
 from ..calculations.cross_period_clean_state import CrossPeriodCleanStateBlocker
 from ..calculations.observations_repository import CalculationObservationRepository
+from ..calculations.revision_carry_gate import revision_carry_outcome
 
 _PRORRATA_PORCENTAJE_CASILLA: Final[CasillaId] = validated_casilla_id(
     "iva.prorrata-porcentaje",

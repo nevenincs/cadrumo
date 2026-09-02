@@ -261,7 +261,10 @@ def _provider_enter(
         idle_minutes=idle_minutes,
         absolute_minutes=absolute_minutes,
         opened_at=now(),
-        unsecured_backend=isinstance(provider, UnsecuredMasterKeyProvider),
+        # Constant by construction: the guard above raises for every secured
+        # provider, so only the unsecured one reaches here. Re-testing read as
+        # though the flag could vary.
+        unsecured_backend=True,
         storage_root=settings.cadrumo_local_storage_root,
     )
     activation = activate_session(session)

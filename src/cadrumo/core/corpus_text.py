@@ -12,6 +12,7 @@ from typing import Final, NamedTuple
 from .errors.hierarchy import CoreError
 from .external_constants import UTF_8_ENCODING
 from .text_fold import fold_diacritics
+from .type_guards import is_object_dict, is_object_list
 
 __all__ = [
     "CorpusAnchorResolutionError",
@@ -270,14 +271,14 @@ def _readable_units(sidecar_path: Path) -> list[tuple[str, str, str]]:
     except (OSError, json.JSONDecodeError) as exc:
         raise CorpusAnchorResolutionError(f"cannot read extracted sidecar {sidecar_path}") from exc
     raw_units = payload.get("units")
-    if not isinstance(raw_units, list):
+    if not is_object_list(raw_units):
         raise CorpusAnchorResolutionError(f"extracted sidecar {sidecar_path} has no units list")
     units = [_unit_fields(raw_unit) for raw_unit in raw_units]
     return [(unit_anchor, title, text) for unit_anchor, title, text in units if text]
 
 
 def _unit_fields(raw_unit: object) -> tuple[str, str, str]:
-    if not isinstance(raw_unit, dict):
+    if not is_object_dict(raw_unit):
         return "", "", ""
     return (
         _unit_text(raw_unit.get("anchor")),

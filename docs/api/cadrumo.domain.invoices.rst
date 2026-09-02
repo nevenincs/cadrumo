@@ -18,6 +18,7 @@ Submodules
    cadrumo.domain.invoices.enums
    cadrumo.domain.invoices.errors
    cadrumo.domain.invoices.models
+   cadrumo.domain.invoices.normalization
    cadrumo.domain.invoices.protocols
    cadrumo.domain.invoices.service
    cadrumo.domain.invoices.validators

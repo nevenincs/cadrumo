@@ -13,11 +13,11 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.core.telemetry._consent
-   cadrumo.core.telemetry._emit
-   cadrumo.core.telemetry._http_sink
    cadrumo.core.telemetry._producers
-   cadrumo.core.telemetry._schema
-   cadrumo.core.telemetry._tier
-   cadrumo.core.telemetry._workspace
+   cadrumo.core.telemetry.consent
+   cadrumo.core.telemetry.emit
    cadrumo.core.telemetry.errors
+   cadrumo.core.telemetry.http_sink
+   cadrumo.core.telemetry.schema
+   cadrumo.core.telemetry.tier
+   cadrumo.core.telemetry.workspace

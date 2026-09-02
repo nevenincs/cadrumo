@@ -27,7 +27,7 @@ pipeline. Bank-transaction-derived IVA observations (payment splits,
 expense-report lines, OSS / IOSS observations, recargo de equivalencia
 entries resolved from already-classified ledger rows) are built directly
 as :class:`~cadrumo.domain.calculations.registry.IvaLedgerObservation` in
-:mod:`cadrumo.application.aggregation._iva_ledger`, whose category, rate,
+:mod:`cadrumo.application.aggregation.iva_ledger`, whose category, rate,
 and flow axes are resolved upstream (manual or LLM classification) rather
 than re-derived from an :class:`IvaRate` + direction pair — that pipeline
 never constructs an :class:`IvaInvoiceClassification`.

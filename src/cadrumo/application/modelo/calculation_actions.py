@@ -31,7 +31,7 @@ See Also:
         registry engine.
     :func:`~application.modelo._calculation_helpers.build_typed_observations`:
         Projects engine output into provenance-bearing casilla observations.
-    :func:`~application.modelo._revision_persistence.persist_calculation_revision`:
+    :func:`~application.modelo.revision_persistence.persist_calculation_revision`:
         Stores the content-addressed ``BORRADOR`` revision and emits the bucket
         event.
     :func:`~application.modelo._verification_actions.verify_modelo_revision`:
@@ -148,13 +148,11 @@ from ._calculation_source_staging import (
 )
 from ._m210_agrupacion_renta import validate_m210_agrupacion_renta_rows_for_calculation
 from ._m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
-from ._m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
 from ._m349_ledger_guard import (
     raise_if_m349_intracom_ledger_rows_need_operator_rows as _raise_if_m349_intracom_ledger_rows_need_operator_rows,
 )
 from ._operator_override_advisory import collect_operator_override_divergence_diagnostics
 from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
-from ._revision_persistence import persist_calculation_revision, require_filing_instance_evidence_for_work_unit
 from ._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
 from .action_errors import (
     CalculationRevisionNotFoundError,
@@ -171,7 +169,9 @@ from .calculation_source_policy import (
     BUCKET_AGGREGATION_LOCK_SOURCES,
     CALLER_OVERRIDABLE_CARRY_SOURCES,
 )
+from .m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
 from .preconditions import build_modelo_precondition_failure
+from .revision_persistence import persist_calculation_revision, require_filing_instance_evidence_for_work_unit
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -461,7 +461,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         :func:`~application.modelo._calculation_helpers.build_typed_observations`:
             Carries registry legal/source provenance onto the persisted
             revision.
-        :func:`~application.modelo._revision_persistence.persist_calculation_revision`:
+        :func:`~application.modelo.revision_persistence.persist_calculation_revision`:
             Owns duplicate detection, work-unit pointer advancement, and event
             emission.
     """
@@ -784,11 +784,11 @@ def _resolve_bucket_source_mesh(
         RetencionesAggregationSourceResolver,
         WithholdingSourceResolver,
     )
-    from ..aggregation._modelo_bindings_renta_expenses import (
+    from ..aggregation.modelo_bindings_renta_expenses import (
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
     )
     from ..aggregation.source_resolution_operations import merge_source_resolutions
-    from ..calculations._iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
+    from ..calculations.iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
     from ..calculations.m303_regimen_simplificado_annual_summary import (
         M303RegimenSimplificadoAnnualSummarySourceResolver,
     )
@@ -988,7 +988,7 @@ def _source_provenance_refs(
     Maps each :class:`~application.aggregation.CalculationSourceProvenance`
     row (the resolver→source-object→fingerprint trace) into the domain-side
     :class:`~CalculationSourceRef` that
-    :func:`~application.modelo._revision_persistence.persist_calculation_revision`
+    :func:`~application.modelo.revision_persistence.persist_calculation_revision`
     persists on the :class:`~CalculationRevision`. This is the
     application→domain boundary map: the domain never imports the application
     provenance model, and the compact ref deliberately drops the per-casilla

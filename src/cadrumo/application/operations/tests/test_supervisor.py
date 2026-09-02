@@ -92,7 +92,7 @@ from ..registry import (
     OperationSchemaBindingV1,
 )
 from ..supervisor import OperationSupervisor
-from ..supervisor_context import _SupervisorExecutorContext
+from ..supervisor_context import SupervisorExecutorContext
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -283,7 +283,7 @@ class UndeclaredInteractionExecutor:
         context: OperationExecutorContext,
     ) -> str | None:
         del request
-        assert isinstance(context, _SupervisorExecutorContext)
+        assert isinstance(context, SupervisorExecutorContext)
         await context.interactions.request(_pending_interaction(context.identity))
         return None
 
@@ -297,7 +297,7 @@ class ReviewExecutor:
         context: OperationExecutorContext,
     ) -> str | None:
         del request
-        assert isinstance(context, _SupervisorExecutorContext)
+        assert isinstance(context, SupervisorExecutorContext)
         await context.interactions.request(_pending_interaction(context.identity))
         return None
 
@@ -315,7 +315,7 @@ class ResumableReviewExecutor:
         context: OperationExecutorContext,
     ) -> str | None:
         del request
-        assert isinstance(context, _SupervisorExecutorContext)
+        assert isinstance(context, SupervisorExecutorContext)
         await context.interactions.request(_pending_interaction(context.identity))
         return None
 

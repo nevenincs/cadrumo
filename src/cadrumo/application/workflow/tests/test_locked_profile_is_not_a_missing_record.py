@@ -30,6 +30,7 @@ from textwrap import dedent
 import pytest
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from ....adapters.persistence.storage.master_key.bucket_session import BucketSession
 from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import override_settings
 from ....tests.subprocess_cli import run_subprocess_cli_harness
@@ -96,7 +97,7 @@ def _bind_real_custody_session(root: Path) -> None:
     """Authenticate this process against the published capsule for real."""
     instant = datetime.now(UTC)
     profile_bind_bucket_session(
-        master_key.BucketSession.open_resumed(
+        BucketSession.open_resumed(
             bucket_id=PROFILE_ID,
             dek=DEK,
             idle_minutes=15,

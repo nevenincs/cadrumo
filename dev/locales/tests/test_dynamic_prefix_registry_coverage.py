@@ -105,7 +105,7 @@ OPEN_ENDED_NAMESPACES: dict[str, str] = {
     ),
     "cli.config.auth.apoderado.scope": (
         "cli.config.auth.apoderado.scope.{code} — keyed by apoderado scope "
-        "catalogue codes (entrypoints/cli/_config/_apoderado.py). The scope "
+        "catalogue codes (entrypoints/cli/config/_apoderado.py). The scope "
         "vocabulary is loaded from data, not a bounded import-time enum."
     ),
     "sheets.detalle.headers": (
@@ -363,7 +363,7 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         # settings scope - safe by construction):
         ("entrypoints/cli/_root_cli.py", "root_command"),
         ("entrypoints/cli/_common.py", "activate_subcommand_output_language"),
-        ("entrypoints/cli/_config/_custody.py", "_pin_render_language_to_target_bucket"),
+        ("entrypoints/cli/config/custody.py", "_pin_render_language_to_target_bucket"),
     },
 )
 
@@ -378,7 +378,7 @@ _CTX_SCOPED_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
     {
         ("entrypoints/cli/_root_cli.py", "root_command"),
         ("entrypoints/cli/_common.py", "activate_subcommand_output_language"),
-        ("entrypoints/cli/_config/_custody.py", "_pin_render_language_to_target_bucket"),
+        ("entrypoints/cli/config/custody.py", "_pin_render_language_to_target_bucket"),
     },
 )
 

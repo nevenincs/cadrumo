@@ -13,7 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.adapters.outbound.llm._cache
-   cadrumo.adapters.outbound.llm._consent_ledger
-   cadrumo.adapters.outbound.llm._run_telemetry
-   cadrumo.adapters.outbound.llm._usage
+   cadrumo.adapters.outbound.llm.cache
+   cadrumo.adapters.outbound.llm.consent_ledger
+   cadrumo.adapters.outbound.llm.run_telemetry
+   cadrumo.adapters.outbound.llm.usage

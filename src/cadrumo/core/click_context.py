@@ -20,6 +20,8 @@ from typing import Protocol, cast
 
 import click
 
+from .type_guards import is_str_keyed_dict
+
 _JSON_PARAM_NAMES = frozenset({"json", "as_json", "json_out", "json_output"})
 
 
@@ -126,10 +128,10 @@ def context_chain_requests_json(ctx: object) -> bool:
     current = ctx
     while current is not None:
         params = getattr(current, "params", None)
-        if isinstance(params, dict) and _params_request_json(params):
+        if is_str_keyed_dict(params) and _params_request_json(params):
             return True
         obj = getattr(current, "obj", None)
-        if isinstance(obj, dict) and _params_request_json(obj):
+        if is_str_keyed_dict(obj) and _params_request_json(obj):
             return True
         current = getattr(current, "parent", None)
     return False

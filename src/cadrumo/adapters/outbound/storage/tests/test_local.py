@@ -29,8 +29,6 @@ from .....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from .....core.i18n import tr
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.path_obstruction import obstructed_path
-from .._local import LocalFileSystemProvider, _local_failure_verdict
-from .._protocol import StorageProvider
 from ..errors import (
     OutboundStorageIntegrityError,
     OutboundStorageNotFoundError,
@@ -39,6 +37,8 @@ from ..errors import (
     OutboundStorageValidationError,
     StorageCorruptionError,
 )
+from ..local import LocalFileSystemProvider, _local_failure_verdict
+from ..protocol import StorageProvider
 from ..records import ProviderKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

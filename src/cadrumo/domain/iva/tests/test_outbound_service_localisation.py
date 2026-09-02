@@ -40,7 +40,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 #: The three territories art. 3 places outside the Comunidad, which is the reach
 #: the goods export row needs and the B2B services row shares.
-_OUTSIDE_THE_COMUNIDAD = (
+OUTSIDE_THE_COMUNIDAD = (
     IvaTerritorialScope.THIRD_COUNTRY,
     IvaTerritorialScope.ES_CANARIAS,
     IvaTerritorialScope.ES_CEUTA_MELILLA,
@@ -88,7 +88,7 @@ def _establishment_only_would_have_matched(criteria: IvaInvoiceClassificationCri
     """
     return (
         criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
-        and criteria.customer_residency in _OUTSIDE_THE_COMUNIDAD
+        and criteria.customer_residency in OUTSIDE_THE_COMUNIDAD
         and criteria.kind is TransactionKind.SERVICES_GENERAL
         and criteria.direction is InvoiceKind.ISSUED
     )
@@ -99,7 +99,7 @@ def _establishment_only_would_have_matched(criteria: IvaInvoiceClassificationCri
 # --------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("customer_residency", _OUTSIDE_THE_COMUNIDAD, ids=lambda scope: scope.value)
+@pytest.mark.parametrize("customer_residency", OUTSIDE_THE_COMUNIDAD, ids=lambda scope: scope.value)
 def test_a_b2c_service_outside_the_comunidad_stays_taxed_here(
     customer_residency: IvaTerritorialScope,
 ) -> None:
@@ -119,7 +119,7 @@ def test_a_b2c_service_outside_the_comunidad_stays_taxed_here(
     assert result.matched_rule_id == "R24_services_outbound_b2c_at_rate_tier"
 
 
-@pytest.mark.parametrize("customer_residency", _OUTSIDE_THE_COMUNIDAD, ids=lambda scope: scope.value)
+@pytest.mark.parametrize("customer_residency", OUTSIDE_THE_COMUNIDAD, ids=lambda scope: scope.value)
 def test_the_pre_change_row_would_have_booked_each_of_them_not_subject(
     customer_residency: IvaTerritorialScope,
 ) -> None:
@@ -273,7 +273,7 @@ def test_the_excepted_branch_is_not_asked_for_a_tier_it_never_uses() -> None:
     assert result.category is IvaCategory.OPERACION_NO_SUJETA
 
 
-@pytest.mark.parametrize("customer_residency", _OUTSIDE_THE_COMUNIDAD, ids=lambda scope: scope.value)
+@pytest.mark.parametrize("customer_residency", OUTSIDE_THE_COMUNIDAD, ids=lambda scope: scope.value)
 def test_a_stated_item_moves_nothing_on_the_b2b_limb(
     customer_residency: IvaTerritorialScope,
 ) -> None:
@@ -306,7 +306,7 @@ def test_a_stated_item_moves_nothing_on_the_b2b_limb(
 # --------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("customer_residency", _OUTSIDE_THE_COMUNIDAD, ids=lambda scope: scope.value)
+@pytest.mark.parametrize("customer_residency", OUTSIDE_THE_COMUNIDAD, ids=lambda scope: scope.value)
 @pytest.mark.parametrize(
     "customer_tax_status",
     [CustomerTaxStatus.B2B_IVA_REGISTERED, CustomerTaxStatus.B2B_NOT_REGISTERED],

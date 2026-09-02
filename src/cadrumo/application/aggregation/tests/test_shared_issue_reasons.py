@@ -11,8 +11,8 @@ from __future__ import annotations
 import pytest
 
 from .. import _shared_issue_reasons
-from .._iva_ledger import IvaLedgerAggregationIssueReason
 from .._renta_ledger import RentaLedgerAggregationIssueReason
+from ..iva_ledger import IvaLedgerAggregationIssueReason
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

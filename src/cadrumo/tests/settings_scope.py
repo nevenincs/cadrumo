@@ -31,10 +31,10 @@ when a synchronous test body wants nested or local overrides.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 
-from ..core.config import Settings, _settings_override, load_settings
+from ..core.config import Settings, load_settings, settings_override
 
 __all__ = [
     "SettingsFactory",
@@ -51,7 +51,7 @@ SettingsFactory = Callable[..., Settings]
 
 
 @contextmanager
-def settings_factory() -> Iterator[SettingsFactory]:
+def settings_factory() -> Generator[SettingsFactory]:
     """Yield a Settings factory bound to an async-context-safe ContextVar scope.
 
     Usage from a pytest fixture::
@@ -78,7 +78,7 @@ def settings_factory() -> Iterator[SettingsFactory]:
     value, while tests that want to interrogate the merged Settings
     can bind the return.
     """
-    saved_prior = _settings_override.get()
+    saved_prior = settings_override.get()
     applied = False
 
     def factory(**overrides: object) -> Settings:
@@ -89,7 +89,7 @@ def settings_factory() -> Iterator[SettingsFactory]:
         new_settings = Settings.model_validate(merged)
         explicit_fields = current.model_fields_set | set(overrides.keys())
         object.__setattr__(new_settings, "__pydantic_fields_set__", explicit_fields)
-        _settings_override.set(new_settings)
+        settings_override.set(new_settings)
         applied = True
         return new_settings
 
@@ -97,4 +97,4 @@ def settings_factory() -> Iterator[SettingsFactory]:
         yield factory
     finally:
         if applied:
-            _settings_override.set(saved_prior)
+            settings_override.set(saved_prior)

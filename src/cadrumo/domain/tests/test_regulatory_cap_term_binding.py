@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ._regulatory_cap_witnesses import REGULATORY_CAP_WITNESSES
+from .regulatory_cap_witnesses import REGULATORY_CAP_WITNESSES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

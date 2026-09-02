@@ -66,7 +66,7 @@ from ...core.casilla_id import CasillaId
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
-from ...core.parsing import parse_iso8601_date
+from ...core.parsing.dates import parse_iso8601_date
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_authority
@@ -102,7 +102,6 @@ from ..aggregation import (
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
 from ..storage.calc_sheets.records import RelationValue, RelationValues
-from ._revision_carry_gate import revision_carry_outcome
 from .m111_no_retenciones import (
     is_m111_no_retenciones_period,
     m111_no_retenciones_periods_for_bucket,
@@ -111,12 +110,13 @@ from .observations_repository import CalculationObservationRepository
 from .relation_prefill_m202 import (
     modelo_202_first_period_previous_payment_defaults as _modelo_202_first_period_previous_payment_defaults,
 )
+from .revision_carry_gate import revision_carry_outcome
 
 if TYPE_CHECKING:
     from ...domain.deadlines.models import EntityType
 
 _LOCAL_FILING_PROVENANCE: Final = "local_filing"
-_STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
+STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 _ECONOMIC_ACTIVITY_CATEGORY: Final = "actividad_economica"
 _DIRECT_ESTIMATION_REGIMES: Final = frozenset({"directa_normal", "directa_simplificada"})
 _log = get_logger(__name__)
@@ -1135,7 +1135,7 @@ class RelationPrefillSourceResolver:
                 m111_no_retenciones_periods=m111_no_retenciones_periods,
                 not_applicable_source_modelos=not_applicable_source_modelos,
             )
-        except _STORAGE_DEGRADATION_ERRORS as exc:
+        except STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

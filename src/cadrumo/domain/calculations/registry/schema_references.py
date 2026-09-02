@@ -38,6 +38,7 @@ __all__ = [
     "RegistrySnapshotRef",
     "SourceReference",
     "TemporalApplicability",
+    "source_window_applies_across",
 ]
 
 
@@ -299,6 +300,26 @@ class LegalReference(RegistryModel):
 _RECORD_DESIGN_EPOCH: Final = RECORD_DESIGN_EPOCH_RE
 
 
+def source_window_applies_across(
+    *,
+    applies_from: date | None,
+    applies_to: date | None,
+    span_from: date,
+    span_to: date | None,
+) -> bool:
+    """Report whether a source applicability window overlaps one date span.
+
+    The ONE definition of the overlap rule, shared by every carrier of an
+    applicability window so that a diagnostic copy of a source cannot answer
+    the question differently from the source itself. An open bound means the
+    window is open in that direction, never that it is unknown; deciding
+    whether an absent bound is admissible belongs to the caller, before it asks.
+    """
+    if applies_to is not None and applies_to < span_from:
+        return False
+    return not (applies_from is not None and span_to is not None and applies_from > span_to)
+
+
 class SourceReference(RegistryModel):
     """Official-source evidence row with bundled-corpus integrity metadata."""
 
@@ -379,15 +400,18 @@ class SourceReference(RegistryModel):
     def applies_across(self, span_from: date, span_to: date | None) -> bool:
         """Report whether this source's applicability window overlaps one date span.
 
-        The ONE definition of the overlap rule. Callers keep their own policy on
-        whether a missing bound is admissible -- a record-design binary must
-        declare ``applies_from``, an evidence-backed source cell must declare
-        both -- and apply it before asking this question. An open bound here
-        means the window is open in that direction, never that it is unknown.
+        Delegates to :func:`source_window_applies_across`, which is the one
+        definition of the overlap rule. Callers keep their own policy on whether
+        a missing bound is admissible -- a record-design binary must declare
+        ``applies_from``, an evidence-backed source cell must declare both --
+        and apply it before asking this question.
         """
-        if self.applies_to is not None and self.applies_to < span_from:
-            return False
-        return not (self.applies_from is not None and span_to is not None and self.applies_from > span_to)
+        return source_window_applies_across(
+            applies_from=self.applies_from,
+            applies_to=self.applies_to,
+            span_from=span_from,
+            span_to=span_to,
+        )
 
     @model_validator(mode="after")
     def _validate_source_reference(self) -> SourceReference:

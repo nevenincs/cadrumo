@@ -28,12 +28,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ._emit import emit_telemetry_event
+from .emit import emit_telemetry_event
 from .schema import build_telemetry_payload
 
 if TYPE_CHECKING:
     from ..config import Settings
-    from ._emit import TelemetrySink
+    from .emit import TelemetrySink
 
 __all__ = ["emit_command_invocation_telemetry", "emit_error_frequency_telemetry", "emit_llm_run_telemetry"]
 

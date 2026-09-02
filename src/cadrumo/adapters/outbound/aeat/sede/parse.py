@@ -197,7 +197,7 @@ def _collect_category_path(anchor: Tag) -> tuple[str, ...]:
     labels: list[str] = []
     current = anchor.parent
     while current is not None:
-        if isinstance(current, Tag) and current.name == "li":
+        if current.name == "li":
             label = _li_header_label(current, leaf=anchor)
             if label is not None:
                 labels.append(label)

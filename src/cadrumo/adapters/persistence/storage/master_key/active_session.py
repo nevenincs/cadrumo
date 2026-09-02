@@ -32,7 +32,7 @@ session explicitly via :func:`contextvars.copy_context`.
 from __future__ import annotations
 
 import atexit as _atexit
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import TypeGuard
@@ -70,7 +70,7 @@ class NoActiveBucketSessionError(SecretStoreError):
 
 
 @contextmanager
-def activate_session(session: BucketSession) -> Iterator[None]:
+def activate_session(session: BucketSession) -> Generator[None]:
     """Bind ``session`` as the active :class:`BucketSession` for the block.
 
     The previous value of the :class:`ContextVar` is restored on exit
@@ -268,7 +268,7 @@ def close_active_bucket_session() -> None:
 
 
 @contextmanager
-def suspend_active_session() -> Iterator[None]:
+def suspend_active_session() -> Generator[None]:
     """Temporarily clear the active :class:`BucketSession` for the current context."""
     token = active_session.set(None)
     try:

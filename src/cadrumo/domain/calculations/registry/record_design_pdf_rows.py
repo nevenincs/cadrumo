@@ -8,11 +8,11 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 from .errors import RegistryValidationError
-from .record_design_layout_markers import _RECORD_TERMINATOR_PHRASE
-from .record_design_sources import _SinglePositionCorrectionIndex
+from .record_design_layout_markers import RECORD_TERMINATOR_PHRASE
+from .record_design_sources import SinglePositionCorrectionIndex
 
 if TYPE_CHECKING:
-    from .record_design_pdf_state import _PdfFieldDraft
+    from .record_design_pdf_state import PdfFieldDraft
     from .record_design_schema import RecordDesignField
 
 #: The space between LENGTH and TYPE is optional because the PDF text layer
@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 #: A trailing period after the type is abbreviation punctuation, not a
 #: different token: modelo 131 writes ``52 464 13 An. Complementaria (7) -
 #: Numero de Justificante anterior``. The narrative path has always accepted
-#: it -- ``_naturaleza_or_none`` strips ' .' before matching -- so this only
+#: it -- ``naturaleza_or_none`` strips ' .' before matching -- so this only
 #: brings the compact path into line with the recogniser beside it.
 #:
 #: Three lines in three designs, and they are the whole of modelo 131's
@@ -56,13 +56,13 @@ _COMPACT_PDF_ROW_RE = re.compile(
 #: the workbook path refused every design that declared one.
 _COMPACT_PDF_CRLF_ROW_RE = re.compile(
     r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<type>An|Num|N|A)\s+"
-    rf"(?P<text>(?:{_RECORD_TERMINATOR_PHRASE}).*)$",
+    rf"(?P<text>(?:{RECORD_TERMINATOR_PHRASE}).*)$",
     re.IGNORECASE,
 )
 #: One narrative-PDF position row: ``<start>[-<end>] <naturaleza> <description>``.
 #:
 #: The naturaleza is captured LOOSELY here and validated afterwards by
-#: :func:`_naturaleza_or_none`, rather than spelled out as a closed alternation.
+#: :func:`naturaleza_or_none`, rather than spelled out as a closed alternation.
 #: AEAT's own spelling varies across the bundled corpus -- gender ("Numérica"
 #: beside "Numérico"), accent placement ("Alfanúmerico" for "Alfanumérico") and
 #: outright typos ("Afabético") all ship -- and a closed alternation turns every
@@ -148,7 +148,7 @@ _PDF_RECORD_HEADING_REVERSED_RE = re.compile(
 #: manufacture records that do not exist -- the opposite defect, and a worse one,
 #: because an invented record inflates every coverage denominator derived from
 #: the design. A match here only STAGES a name; whether a record actually starts
-#: is decided by geometry, in :meth:`_PdfParseState._begins_a_new_record_body`.
+#: is decided by geometry, in :meth:`PdfParseState._begins_a_new_record_body`.
 _PDF_RECORD_HEADING_TYPE_LAST_RE = re.compile(
     r"^(?:[A-Z]\.?\s*-?\s*)?REGISTRO DE TIPO\s+(?P<record>\d+)\s*[:.]\s*(?P<title>\S.*)$",
     re.IGNORECASE,
@@ -198,7 +198,7 @@ _PDF_RECORD_MODELO_PAGE_TAG_RE = re.compile(r"^(?P<tag>\d{3}-\d{2})$")
 
 
 @dataclass(frozen=True, slots=True)
-class _PdfRow:
+class PdfRow:
     source_row: int
     ordinal: str | None
     offset: int
@@ -207,7 +207,7 @@ class _PdfRow:
     description: str
 
 
-def _position_runs(positions: list[int]) -> str:
+def position_runs(positions: list[int]) -> str:
     """Render a sorted position list as compact ``a-b`` runs."""
     runs: list[str] = []
     start = previous = positions[0]
@@ -231,10 +231,10 @@ _DASH_NATURALEZA_RE = re.compile(r"[-–_]+")
 _FILLER_DESCRIPTION_RE = re.compile(r"(?i)^(?:blancos?|ceros?)\b")
 
 
-def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
+def parse_pdf_row(line: str, source_row: int) -> PdfRow | None:
     compact = _COMPACT_PDF_ROW_RE.match(line)
     if compact is not None:
-        return _PdfRow(
+        return PdfRow(
             source_row=source_row,
             ordinal=compact.group("ordinal"),
             offset=int(compact.group("offset")),
@@ -245,7 +245,7 @@ def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
 
     crlf = _COMPACT_PDF_CRLF_ROW_RE.match(line)
     if crlf is not None:
-        return _PdfRow(
+        return PdfRow(
             source_row=source_row,
             ordinal=crlf.group("ordinal"),
             offset=int(crlf.group("offset")),
@@ -258,7 +258,7 @@ def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
     if narrative is None:
         return None
 
-    naturaleza = _naturaleza_or_none(narrative.group("type"))
+    naturaleza = naturaleza_or_none(narrative.group("type"))
     if (
         naturaleza is not None
         and _DASH_NATURALEZA_RE.fullmatch(narrative.group("type") or "")
@@ -300,7 +300,7 @@ def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
     end = int(end_group) if end_group is not None else start
     if end < start:
         raise RegistryValidationError(f"PDF row {source_row} has inverted position range {start}-{end}")
-    return _PdfRow(
+    return PdfRow(
         source_row=source_row,
         ordinal=None,
         offset=start,
@@ -319,12 +319,12 @@ _GLUED_ORDINAL_POSITION_ROW_RE = re.compile(
 )
 
 
-def _split_glued_ordinal_position(
+def split_glued_ordinal_position(
     line: str,
     row_number: int,
     *,
-    previous: _PdfFieldDraft | RecordDesignField | None,
-) -> _PdfRow | None:
+    previous: PdfFieldDraft | RecordDesignField | None,
+) -> PdfRow | None:
     """Recover a row whose ordinal and position were run together.
 
     Modelo 200's older editions lose the space after the ordinal for the three
@@ -349,15 +349,15 @@ def _split_glued_ordinal_position(
     if previous is None:
         return None
     match = _GLUED_ORDINAL_POSITION_ROW_RE.match(line)
-    if match is None or _parse_pdf_row(line, row_number) is not None:
+    if match is None or parse_pdf_row(line, row_number) is not None:
         return None
     glued = match.group("glued")
     expected_ordinal = None if previous.ordinal is None or not previous.ordinal.isdigit() else int(previous.ordinal) + 1
     expected_offset = previous.offset + previous.length
     if expected_ordinal is None or glued != f"{expected_ordinal}{expected_offset}":
         return None
-    naturaleza = _naturaleza_or_none(match.group("type")) or match.group("type")
-    return _PdfRow(
+    naturaleza = naturaleza_or_none(match.group("type")) or match.group("type")
+    return PdfRow(
         source_row=row_number,
         ordinal=str(expected_ordinal),
         offset=expected_offset,
@@ -370,16 +370,16 @@ def _split_glued_ordinal_position(
     )
 
 
-def _unnamed_position_candidate(
+def unnamed_position_candidate(
     line: str,
     source_row: int,
     *,
     sheet: str = "",
-    single_position_corrections: _SinglePositionCorrectionIndex | None = None,
-) -> _PdfRow | None:
+    single_position_corrections: SinglePositionCorrectionIndex | None = None,
+) -> PdfRow | None:
     """Return a position row whose naturaleza AEAT omitted, else ``None``.
 
-    Deliberately NOT consulted by :func:`_parse_pdf_row`, which must keep
+    Deliberately NOT consulted by :func:`parse_pdf_row`, which must keep
     refusing these outright: the same shape is overwhelmingly prose, because AEAT
     routinely opens a field's description with that field's own range, and 41
     bundled designs do. A candidate returned here is admitted only by
@@ -389,7 +389,7 @@ def _unnamed_position_candidate(
 
     """
     narrative = _NARRATIVE_PDF_ROW_RE.match(line)
-    if narrative is None or _naturaleza_or_none(narrative.group("type")) is not None:
+    if narrative is None or naturaleza_or_none(narrative.group("type")) is not None:
         return None
     start = int(narrative.group("start"))
     end_group = narrative.group("end")
@@ -402,7 +402,7 @@ def _unnamed_position_candidate(
         declared = (single_position_corrections or {}).get((sheet, start))
         if declared is None:
             return None
-        return _PdfRow(
+        return PdfRow(
             source_row=source_row,
             ordinal=None,
             offset=start,
@@ -414,7 +414,7 @@ def _unnamed_position_candidate(
     if end < start:
         return None
     text = (narrative.group("type") + " " + narrative.group("text")).strip()
-    return _PdfRow(
+    return PdfRow(
         source_row=source_row,
         ordinal=None,
         offset=start,
@@ -424,7 +424,7 @@ def _unnamed_position_candidate(
     )
 
 
-def _naturaleza_or_none(value: str) -> str | None:
+def naturaleza_or_none(value: str) -> str | None:
     """Return the canonical naturaleza ``value`` names, or ``None`` if it names none.
 
     Matched on an ACCENT-STRIPPED stem rather than an exact spelling, because
@@ -481,7 +481,7 @@ def _naturaleza_or_none(value: str) -> str | None:
     return None
 
 
-def _pdf_page_name(line: str) -> str | None:
+def pdf_page_name(line: str) -> str | None:
     match = _PDF_PAGE_RECORD_RE.match(line)
     if match is not None:
         return f"Pág. {match.group('page')}"
@@ -490,18 +490,18 @@ def _pdf_page_name(line: str) -> str | None:
     return None
 
 
-def _pdf_record_heading_name(line: str) -> str | None:
+def pdf_record_heading_name(line: str) -> str | None:
     match = _PDF_RECORD_HEADING_RE.match(line) or _PDF_RECORD_HEADING_REVERSED_RE.match(line)
     if match is None:
         return None
-    title = _normalise_pdf_sheet_name(match.group("title"))
+    title = normalise_pdf_sheet_name(match.group("title"))
     return f"Tipo {match.group('record')} - {title}"
 
 
-def _pdf_candidate_record_name(line: str) -> str | None:
+def pdf_candidate_record_name(line: str) -> str | None:
     """Return the record name a line MIGHT be heading, for geometry to confirm.
 
-    Separate from :func:`_pdf_record_heading_name` precisely because it is not
+    Separate from :func:`pdf_record_heading_name` precisely because it is not
     trusted on its own: see :data:`_PDF_RECORD_HEADING_TYPE_LAST_RE` for why
     this word order cannot split a record on the text alone.
     """
@@ -512,7 +512,7 @@ def _pdf_candidate_record_name(line: str) -> str | None:
         return tag_value
     anexo = _PDF_RECORD_ANEXO_HEADING_RE.match(line.strip())
     if anexo is not None:
-        return "Anexo - " + _normalise_pdf_sheet_name(anexo.group("title"))
+        return "Anexo - " + normalise_pdf_sheet_name(anexo.group("title"))
     bare_anexo = _PDF_RECORD_BARE_ANEXO_RE.match(line.strip())
     if bare_anexo is not None:
         bare_anexo_tag = bare_anexo.group("tag")
@@ -521,7 +521,7 @@ def _pdf_candidate_record_name(line: str) -> str | None:
     match = _PDF_RECORD_HEADING_TYPE_LAST_RE.match(line)
     if match is None:
         return None
-    title = _normalise_pdf_sheet_name(match.group("title"))
+    title = normalise_pdf_sheet_name(match.group("title"))
     return f"Tipo {match.group('record')} - {title}"
 
 
@@ -536,14 +536,14 @@ _PDF_HEADER_VARIANTS: Final[tuple[tuple[tuple[str, ...], ...], ...]] = (
 )
 
 
-def _is_pdf_header(line: str) -> bool:
+def is_pdf_header(line: str) -> bool:
     normalised = line.upper()
     return any(
         all(any(token in normalised for token in column) for column in variant) for variant in _PDF_HEADER_VARIANTS
     )
 
 
-def _is_pdf_footer(line: str) -> bool:
+def is_pdf_footer(line: str) -> bool:
     return bool(
         re.match(r"^P[áa]gina\s+\d+\s+de\s+\d+$", line, re.IGNORECASE)
         or re.match(r"^Ejercicio\s+\d{4}(?:\s+\d+)?$", line, re.IGNORECASE)
@@ -551,7 +551,7 @@ def _is_pdf_footer(line: str) -> bool:
     )
 
 
-def _is_pdf_page_heading(line: str) -> bool:
+def is_pdf_page_heading(line: str) -> bool:
     return bool(
         line.startswith("Modelo ")
         or line.startswith("Agencia Tributaria")
@@ -566,26 +566,26 @@ def _is_pdf_page_heading(line: str) -> bool:
     )
 
 
-def _looks_like_title_continuation(line: str) -> bool:
+def looks_like_title_continuation(line: str) -> bool:
     letters = [char for char in line if char.isalpha()]
     if not letters:
         return False
     return not any(char.islower() for char in letters)
 
 
-def _clean_pdf_line(line: str) -> str:
+def clean_pdf_line(line: str) -> str:
     return " ".join(line.strip().split())
 
 
-def _join_pdf_parts(parts: list[str]) -> str:
+def join_pdf_parts(parts: list[str]) -> str:
     return " ".join(part.strip() for part in parts if part.strip())
 
 
-def _normalise_pdf_sheet_name(value: str) -> str:
-    return _join_pdf_parts([value.replace(".", " ").strip()]).strip(". ").title()
+def normalise_pdf_sheet_name(value: str) -> str:
+    return join_pdf_parts([value.replace(".", " ").strip()]).strip(". ").title()
 
 
-#: :data:`_VISUAL_CHART_TYPE_CODE`, which marks a design that has no type column
+#: :data:`VISUAL_CHART_TYPE_CODE`, which marks a design that has no type column
 #: at all: here the column exists and this one row is blank in it. Never a
 #: guess -- an inferred "Alfanumerico" would be indistinguishable from one AEAT
 #: actually printed.

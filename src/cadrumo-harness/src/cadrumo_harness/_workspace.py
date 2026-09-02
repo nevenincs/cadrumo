@@ -35,8 +35,8 @@ from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
 
 from . import harness_root, iter_operator_rules, iter_personas
 

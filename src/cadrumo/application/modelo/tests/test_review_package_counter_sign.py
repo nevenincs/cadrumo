@@ -25,7 +25,7 @@ See Also:
         Operator Ed25519 signing layer that the accountant receipt signs over.
     :mod:`~application.modelo.review_package`
         Checksum-manifest package builder re-verified before signature checks.
-    :mod:`~application.modelo._review_package_feedback`
+    :mod:`~application.modelo.review_package_feedback`
         Follow-on encrypted feedback-package round trip that can carry a
         counter-signed receipt back to the originator.
     :mod:`~application.modelo.tests.test_review_package_signing`

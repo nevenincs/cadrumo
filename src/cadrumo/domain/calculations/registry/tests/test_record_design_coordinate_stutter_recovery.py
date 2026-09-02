@@ -29,7 +29,7 @@ import pytest
 
 from .....core.resources.bundled_data import bundled_path
 from ..record_design import extract_record_design
-from ..record_design_pdf_repairs import _recover_coordinate_stutter_rows
+from ..record_design_pdf_repairs import recover_coordinate_stutter_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -113,7 +113,7 @@ def test_a_stutter_with_no_donor_half_is_declined() -> None:
         "14 534 17 N The next row [102] ",
     )
 
-    assert _recover_coordinate_stutter_rows(lines) == lines
+    assert recover_coordinate_stutter_rows(lines) == lines
 
 
 def test_a_stutter_whose_coordinates_do_not_resume_is_declined() -> None:
@@ -130,7 +130,7 @@ def test_a_stutter_whose_coordinates_do_not_resume_is_declined() -> None:
         "13 999 a tail fragment [101] ",
     )
 
-    assert _recover_coordinate_stutter_rows(lines) == lines
+    assert recover_coordinate_stutter_rows(lines) == lines
 
 
 def test_the_same_shape_is_recovered_when_the_position_does_resume() -> None:
@@ -145,7 +145,7 @@ def test_the_same_shape_is_recovered_when_the_position_does_resume() -> None:
         "13 517 a tail fragment [101] ",
     )
 
-    recovered = _recover_coordinate_stutter_rows(lines)
+    recovered = recover_coordinate_stutter_rows(lines)
 
     assert recovered == (
         "12 500 17 N Something AEAT prints [100] ",

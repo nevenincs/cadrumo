@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#registry-temporal-coverage'
 date: '2026-08-26'
-modified: '2026-08-27'
+modified: '2026-09-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:404f127d383f07f343e1f2b584317e9a12381d7747719dac31296b3be7c2b29d'
+body_hash: 'sha256:d534e4685bb8c474cf02889d644f647d5ef0001da0fcd78fda2a2a5e500eeef4'
 related:
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-audit]]'
@@ -47,6 +47,9 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-coverage-residue-state-audit]]'
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
   - '[[2026-08-27-registry-temporal-coverage-successor-bounding-outcomes-audit]]'
+  - '[[2026-08-31-registry-temporal-coverage-modelo-165-2023-layout-composite-research]]'
+  - '[[2026-08-31-registry-temporal-coverage-reference]]'
+  - '[[2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit]]'
 ---
 
 # `registry-temporal-coverage` feature index
@@ -93,6 +96,7 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-26-registry-temporal-coverage-modelo-200-split-coherence-audit` - `registry-temporal-coverage` audit: `Modelo 200 2024/2025 split coherence`
 - `2026-08-27-registry-temporal-coverage-coverage-residue-state-audit` - `registry-temporal-coverage` audit: `coverage residue state`
 - `2026-08-27-registry-temporal-coverage-successor-bounding-outcomes-audit` - `registry-temporal-coverage` audit: `Successor-bounding outcomes across five design gaps`
+- `2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit` - `registry-temporal-coverage` audit: `Live remeasurement of the registry coverage surface and the re-grounding the proposed coverage ADR now needs`
 
 ### exec
 
@@ -106,8 +110,10 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 
 - `2026-08-14-registry-temporal-coverage-load-topology-reference` - `registry-temporal-coverage` reference: `registry load topology and authority-surface inventory`
 - `2026-08-15-registry-temporal-coverage-authority-grade-proposal-reference` - `registry-temporal-coverage` reference: `authority grade proposal for 77 ungraded-by-default revisions`
+- `2026-08-31-registry-temporal-coverage-reference` - `registry-temporal-coverage` reference: `Modelo 165 composite-layout implementation boundary`
 
 ### research
 
 - `2026-08-14-registry-temporal-coverage-research` - `registry-temporal-coverage` research: explicit support horizons and schema-family coverage
 - `2026-08-15-registry-temporal-coverage-acquisition-worklist-research` - `registry-temporal-coverage` research: `design corpus acquisition worklist`
+- `2026-08-31-registry-temporal-coverage-modelo-165-2023-layout-composite-research` - `registry-temporal-coverage` research: `Modelo 165 2023 layout composite`

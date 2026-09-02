@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -45,7 +45,7 @@ def _json_output(result: Result) -> str:
 
 
 @contextmanager
-def _isolated_user_cli(tmp_path: Path) -> Iterator[Path]:
+def _isolated_user_cli(tmp_path: Path) -> Generator[Path]:
     """Isolate CLI-runtime storage and neutralize ambient auth configuration.
 
     Storage and secrets isolation delegates to

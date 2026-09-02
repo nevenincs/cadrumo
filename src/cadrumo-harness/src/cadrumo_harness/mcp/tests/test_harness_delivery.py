@@ -14,7 +14,7 @@ graceful-degradation contract ``test_sdk_adaptation`` follows, never a skip.
 from __future__ import annotations
 
 import importlib.util
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -24,11 +24,12 @@ from uuid import UUID
 import anyio
 import pytest
 
-from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.custody.capsule import (
     load_committed_profile_password_material,
 )
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
+from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
 from cadrumo.application.user_profile.login_session_port import profile_bind_bucket_session
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.tests.profile_persistence import composed_profile_persistence_ports
@@ -63,7 +64,7 @@ _SDK_PRESENT = importlib.util.find_spec("mcp") is not None
 
 
 @contextmanager
-def _authenticated_current_profile(*, profile_id: str, passphrase: str, storage_root: Path) -> Iterator[None]:
+def _authenticated_current_profile(*, profile_id: str, passphrase: str, storage_root: Path) -> Generator[None]:
     """Bind one real current custody session after authenticating its envelope."""
     material = load_committed_profile_password_material(UUID(profile_id), root=storage_root)
     unlocked = unlock_profile_custody(material.envelope, passphrase, sentinel=material.sentinel)
@@ -71,7 +72,7 @@ def _authenticated_current_profile(*, profile_id: str, passphrase: str, storage_
     # `profile_bucket_session_open_resumed` was removed with the session-resume
     # forwards; the product repointed its own callers to this class method in the
     # same commit, so the harness follows the same door rather than a shim.
-    session = master_key.BucketSession.open_resumed(
+    session = BucketSession.open_resumed(
         bucket_id=profile_id,
         dek=unlocked.dek,
         idle_minutes=15,

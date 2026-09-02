@@ -10,24 +10,24 @@ from typing import Final
 from pydantic import ConfigDict, TypeAdapter
 
 from .errors import RegistryValidationError
-from .record_design_pdf_repairs import _REVERSED_ROW_TAIL_RE
+from .record_design_pdf_repairs import REVERSED_ROW_TAIL_RE
 from .record_design_pdf_rows import (
-    _clean_pdf_line,
-    _is_pdf_footer,
-    _is_pdf_header,
-    _is_pdf_page_heading,
-    _join_pdf_parts,
-    _looks_like_title_continuation,
-    _naturaleza_or_none,
-    _normalise_pdf_sheet_name,
-    _parse_pdf_row,
-    _pdf_candidate_record_name,
-    _pdf_page_name,
-    _pdf_record_heading_name,
-    _PdfRow,
-    _position_runs,
-    _split_glued_ordinal_position,
-    _unnamed_position_candidate,
+    PdfRow,
+    clean_pdf_line,
+    is_pdf_footer,
+    is_pdf_header,
+    is_pdf_page_heading,
+    join_pdf_parts,
+    looks_like_title_continuation,
+    naturaleza_or_none,
+    normalise_pdf_sheet_name,
+    parse_pdf_row,
+    pdf_candidate_record_name,
+    pdf_page_name,
+    pdf_record_heading_name,
+    position_runs,
+    split_glued_ordinal_position,
+    unnamed_position_candidate,
 )
 from .record_design_schema import (
     RecordDesignExtraction,
@@ -37,12 +37,12 @@ from .record_design_schema import (
     RecordDesignSinglePositionCorrection,
     RecordDesignSkippedSheet,
 )
-from .record_design_sources import _EMPTY_CORRECTIONS, _CorrectionIndex
+from .record_design_sources import EMPTY_CORRECTIONS, CorrectionIndex
 from .record_design_workbook import (
-    _declared_subdivision_count,
-    _fold_untagged_desglose_components,
-    _solve_declared_desglose_holes,
-    _tiles_exactly,
+    declared_subdivision_count,
+    fold_untagged_desglose_components,
+    solve_declared_desglose_holes,
+    tiles_exactly,
 )
 
 _NUMERIC_TUPLE_ADAPTER: TypeAdapter[tuple[int | float, ...]] = TypeAdapter(
@@ -51,7 +51,7 @@ _NUMERIC_TUPLE_ADAPTER: TypeAdapter[tuple[int | float, ...]] = TypeAdapter(
 
 
 @dataclass(slots=True)
-class _PdfFieldDraft:
+class PdfFieldDraft:
     sheet: str
     row: int
     ordinal: str | None
@@ -62,13 +62,13 @@ class _PdfFieldDraft:
     content_parts: list[str] = field(default_factory=list)
 
     def append_continuation(self, line: str) -> None:
-        if not self.description_parts or (not self.content_parts and _looks_like_title_continuation(line)):
+        if not self.description_parts or (not self.content_parts and looks_like_title_continuation(line)):
             self.description_parts.append(line)
             return
         self.content_parts.append(line)
 
     def finish(self) -> RecordDesignField:
-        description = _join_pdf_parts(self.description_parts)
+        description = join_pdf_parts(self.description_parts)
         if not description and self.type_code == "Blancos":
             # A fill run needs no description: AEAT writes the naturaleza alone
             # ("58 BLANCO", "187-390 BLANCOS") because there is no datum to name.
@@ -87,7 +87,7 @@ class _PdfFieldDraft:
             complementary=None,
             description=description,
             validation=None,
-            content=_join_pdf_parts(self.content_parts) or None,
+            content=join_pdf_parts(self.content_parts) or None,
         )
 
 
@@ -95,7 +95,7 @@ class _PdfFieldDraft:
 class _PdfSheetDraft:
     name: str
     fields: list[RecordDesignField] = field(default_factory=list)
-    current: _PdfFieldDraft | None = None
+    current: PdfFieldDraft | None = None
     #: Whether the source NAMED this record body. ``False`` marks a body the
     #: geometry proved exists -- its positions restart at 1 -- whose heading the
     #: parser did not recognise, so its identity is unknown. Such a body is
@@ -107,8 +107,8 @@ class _PdfSheetDraft:
     opened_at_row: int | None = None
     #: Rows carrying a position RANGE and a description but no naturaleza, held
     #: for :meth:`fill_unread_gaps`. Staged rather than admitted on sight because
-    #: the shape is dominated by prose; see :func:`_unnamed_position_candidate`.
-    unnamed_candidates: list[_PdfRow] = field(default_factory=list)
+    #: the shape is dominated by prose; see :func:`unnamed_position_candidate`.
+    unnamed_candidates: list[PdfRow] = field(default_factory=list)
     #: Declared corrections that authorised a staged candidate, recorded so a
     #: design read only BECAUSE of a declaration is never reported as one AEAT
     #: published cleanly.
@@ -116,15 +116,15 @@ class _PdfSheetDraft:
     #: Rows carrying a length, a naturaleza and a description but NO position,
     #: paired with the position the row before them implies. The mirror image of
     #: ``unnamed_candidates``, and admitted by the same containment test.
-    headless_candidates: list[_PdfRow] = field(default_factory=list)
+    headless_candidates: list[PdfRow] = field(default_factory=list)
 
     def has_started(self) -> bool:
         """Whether any field of this record body has been seen yet."""
         return bool(self.fields) or self.current is not None
 
-    def start_field(self, row: _PdfRow) -> None:
+    def start_field(self, row: PdfRow) -> None:
         self.finish_current()
-        self.current = _PdfFieldDraft(
+        self.current = PdfFieldDraft(
             sheet=self.name,
             row=row.source_row,
             ordinal=row.ordinal if row.ordinal is not None else str(len(self.fields) + 1),
@@ -226,7 +226,7 @@ class _PdfSheetDraft:
         # 184 stages BOTH "151-155 PORCENTAJE..." and the "151- 153 ENTERO" it
         # subdivides into, so keying one candidate per offset silently picks
         # whichever was read last and loses the one that actually fits.
-        by_offset: dict[int, list[_PdfRow]] = {}
+        by_offset: dict[int, list[PdfRow]] = {}
         for candidate in self.unnamed_candidates:
             by_offset.setdefault(candidate.offset, []).append(candidate)
         admitted: list[RecordDesignField] = []
@@ -247,19 +247,19 @@ class _PdfSheetDraft:
                 else:
                     break
             index = cursor if run else index + 1
-            declared = _declared_subdivision_count(parent)
+            declared = declared_subdivision_count(parent)
             # ``run`` may be EMPTY. Modelo 190's 81-107 and 108-147 each say
             # "Este campo se subdivide en tres/cuatro" and NONE of their
             # sub-rows was read, so requiring an already-read child would
             # skip exactly the designs where the whole desglose went unread.
             # The declared count still carries the proof: the candidates must
             # tile the parent end to end AND number exactly what it declares.
-            if declared is None or _tiles_exactly(parent, run) or len(run) >= declared:
+            if declared is None or tiles_exactly(parent, run) or len(run) >= declared:
                 continue
             covered: set[int] = set()
             for child in run:
                 covered.update(range(child.offset, child.offset + child.length))
-            chosen = _solve_declared_desglose_holes(
+            chosen = solve_declared_desglose_holes(
                 parent=parent,
                 covered=covered,
                 by_offset=by_offset,
@@ -279,7 +279,7 @@ class _PdfSheetDraft:
                 )
                 for candidate in chosen
             ]
-            if not _tiles_exactly(parent, sorted([*run, *fillers], key=lambda read: read.offset)):
+            if not tiles_exactly(parent, sorted([*run, *fillers], key=lambda read: read.offset)):
                 continue
             admitted.extend(fillers)
         if admitted:
@@ -289,7 +289,7 @@ class _PdfSheetDraft:
         self.finish_current()
         self.fill_unread_gaps()
         self.fill_declared_desglose_gaps()
-        self.fields = _fold_untagged_desglose_components(self.fields)
+        self.fields = fold_untagged_desglose_components(self.fields)
         total_positions = max((field.offset + field.length - 1 for field in self.fields), default=None)
         sheet = RecordDesignSheet(
             name=self.name,
@@ -297,7 +297,7 @@ class _PdfSheetDraft:
             total_positions=total_positions,
             corrections=tuple(self.applied_corrections),
         )
-        _validate_pdf_sheet(sheet, source_label=source_label)
+        validate_pdf_sheet(sheet, source_label=source_label)
         return sheet
 
 
@@ -450,7 +450,7 @@ def _unidentified_record_body_name(row_number: int) -> str:
     return f"<unidentified record body beginning at source row {row_number}>"
 
 
-class _PdfParseState:
+class PdfParseState:
     """Mutable state for the PDF record-design line parser.
 
     Encapsulates the locals (``current`` draft sheet, ``in_table`` flag,
@@ -474,7 +474,7 @@ class _PdfParseState:
         self,
         *,
         source_label: str,
-        corrections: _CorrectionIndex = _EMPTY_CORRECTIONS,
+        corrections: CorrectionIndex = EMPTY_CORRECTIONS,
         repair_glued_rows: bool = False,
     ) -> None:
         self.repair_glued_rows = repair_glued_rows
@@ -559,7 +559,7 @@ class _PdfParseState:
             )
 
     def feed(self, line: str, row_number: int) -> None:
-        if not line or _is_pdf_footer(line):
+        if not line or is_pdf_footer(line):
             return
         if self._consume_page_name(line):
             return
@@ -570,7 +570,7 @@ class _PdfParseState:
             return
         if self._consume_title_continuation(line):
             return
-        if _is_pdf_page_heading(line):
+        if is_pdf_page_heading(line):
             return
         if self._consume_field_row(line, row_number):
             return
@@ -592,7 +592,7 @@ class _PdfParseState:
         """
         if self.current is None:
             return
-        candidate = _unnamed_position_candidate(
+        candidate = unnamed_position_candidate(
             line,
             row_number,
             sheet=self.current.name,
@@ -623,17 +623,17 @@ class _PdfParseState:
         """
         if self.current is None or not self.repair_glued_rows:
             return
-        match = _REVERSED_ROW_TAIL_RE.match(line)
-        if match is None or _parse_pdf_row(line, row_number) is not None:
+        match = REVERSED_ROW_TAIL_RE.match(line)
+        if match is None or parse_pdf_row(line, row_number) is not None:
             return
         previous = self._last_seen_field()
         if previous is None:
             return
-        naturaleza = _naturaleza_or_none(match.group("type"))
+        naturaleza = naturaleza_or_none(match.group("type"))
         if naturaleza is None and match.group("type") not in {"An", "Num", "N", "A", "Tit"}:
             return
         self.current.headless_candidates.append(
-            _PdfRow(
+            PdfRow(
                 source_row=row_number,
                 ordinal=None,
                 offset=previous.offset + previous.length,
@@ -643,7 +643,7 @@ class _PdfParseState:
             ),
         )
 
-    def _last_seen_field(self) -> _PdfFieldDraft | RecordDesignField | None:
+    def _last_seen_field(self) -> PdfFieldDraft | RecordDesignField | None:
         """The most recent field of the body under construction, finished or not."""
         if self.current is None:
             return None
@@ -669,7 +669,7 @@ class _PdfParseState:
         self.pending_record_name = None
 
     def _consume_page_name(self, line: str) -> bool:
-        page_name = _pdf_page_name(line)
+        page_name = pdf_page_name(line)
         if page_name is None:
             return False
         self.pending_name = page_name
@@ -678,7 +678,7 @@ class _PdfParseState:
         return True
 
     def _consume_record_heading(self, line: str) -> bool:
-        heading_name = _pdf_record_heading_name(line)
+        heading_name = pdf_record_heading_name(line)
         if heading_name is None:
             return False
         self._open_body(heading_name)
@@ -686,7 +686,7 @@ class _PdfParseState:
         return True
 
     def _consume_table_header(self, line: str) -> bool:
-        if not _is_pdf_header(line):
+        if not is_pdf_header(line):
             return False
         if self.current is None:
             self.current = _PdfSheetDraft(self.pending_name or "PDF record design")
@@ -696,9 +696,9 @@ class _PdfParseState:
     def _consume_title_continuation(self, line: str) -> bool:
         if self.in_table or self.current is None or self.current.fields:
             return False
-        if not _looks_like_title_continuation(line):
+        if not looks_like_title_continuation(line):
             return False
-        self.current.name = _normalise_pdf_sheet_name(_join_pdf_parts([self.current.name, line]))
+        self.current.name = normalise_pdf_sheet_name(join_pdf_parts([self.current.name, line]))
         return True
 
     def _stage_candidate_record_name(self, line: str) -> None:
@@ -712,11 +712,11 @@ class _PdfParseState:
         is used if one was staged since the last field row, and discarded
         otherwise. A candidate matched inside field prose is therefore inert.
         """
-        candidate = _pdf_candidate_record_name(line)
+        candidate = pdf_candidate_record_name(line)
         if candidate is not None:
             self.pending_record_name = candidate
 
-    def _begins_a_new_record_body(self, row: _PdfRow) -> bool:
+    def _begins_a_new_record_body(self, row: PdfRow) -> bool:
         """Whether ``row`` starts a record body distinct from the one being read.
 
         POSITION 1 OCCURS EXACTLY ONCE PER RECORD. A fixed-width record is
@@ -736,9 +736,9 @@ class _PdfParseState:
         return self.current is not None and row.offset == 1 and self.current.has_started()
 
     def _consume_field_row(self, line: str, row_number: int) -> bool:
-        row = _parse_pdf_row(line, row_number)
+        row = parse_pdf_row(line, row_number)
         if row is None and self.repair_glued_rows:
-            row = _split_glued_ordinal_position(line, row_number, previous=self._last_seen_field())
+            row = split_glued_ordinal_position(line, row_number, previous=self._last_seen_field())
         if row is None:
             return False
         if self.current is None:
@@ -773,24 +773,24 @@ def _skipped_record_reason(result: _PdfSheetResult) -> str:
     )
 
 
-def _extract_pdf_lines(
+def extract_pdf_lines(
     lines: tuple[str, ...],
     *,
     source_label: str,
-    corrections: _CorrectionIndex = _EMPTY_CORRECTIONS,
+    corrections: CorrectionIndex = EMPTY_CORRECTIONS,
     repair_glued_rows: bool = False,
 ) -> RecordDesignExtraction:
-    state = _PdfParseState(
+    state = PdfParseState(
         source_label=source_label,
         corrections=corrections,
         repair_glued_rows=repair_glued_rows,
     )
     for row_number, raw_line in enumerate(lines, start=1):
-        state.feed(_clean_pdf_line(raw_line), row_number)
+        state.feed(clean_pdf_line(raw_line), row_number)
     return state.finalise()
 
 
-def _validate_pdf_sheet(sheet: RecordDesignSheet, *, source_label: str) -> None:
+def validate_pdf_sheet(sheet: RecordDesignSheet, *, source_label: str) -> None:
     if not sheet.fields:
         return
     first_field = sheet.fields[0]
@@ -1029,7 +1029,7 @@ def contiguity_failure(sheet: RecordDesignSheet) -> str | None:
     declared = set(range(1, sheet.total_positions + 1))
     if holes := sorted(declared - covered):
         return (
-            f"declares {sheet.total_positions} total positions but {_position_runs(holes)} were not "
+            f"declares {sheet.total_positions} total positions but {position_runs(holes)} were not "
             f"read at all, so rows were dropped; a record read with holes understates every coverage "
             f"figure derived from it"
         )

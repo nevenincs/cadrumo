@@ -57,11 +57,12 @@ try:
 except WizardCatalogueNotRegisteredError:
     print("CATALOGUE:UNREGISTERED")
 
-from cadrumo.application.calculations._relation_prefill import (
+from cadrumo.application.calculations.relation_prefill import (
     activity_start_date_for_bucket,
     _first_year_modalidad_cuota_no_m202,
 )
-from cadrumo.core import Period, RegistryAuthorityGrade
+from cadrumo.core.period import Period
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.core.resources import resources
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -79,10 +80,8 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 # an explicit composition root that a `python -c` child does not inherit.
 from contextlib import ExitStack
 
-from cadrumo.adapters.persistence.storage import (
-    build_profile_custody_port,
-    build_profile_login_session_port,
-)
+from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
+from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
 from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
 from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
 

@@ -89,27 +89,27 @@ _SWEPT_MODULES: tuple[str, ...] = (
 #: NOT migrated.  The value records the downstream export boundary that catches
 #: or projects the invariant, keeping every structural exclusion auditable.
 _UNSWEPT_MODULE_RATIONALES: dict[str, str] = {
-    "_export.py": (
+    "export.py": (
         "The public export/verify boundary owns field and digest declaration "
         "failures and projects them at the filed-artifact boundary."
     ),
     "_export_producer.py": (
-        "Producer-snapshot completeness is consumed by _export.py, whose "
+        "Producer-snapshot completeness is consumed by export.py, whose "
         "public export boundary owns the resulting validation/catch path."
     ),
     "_export_xml_dictionary.py": (
-        "XML-dictionary layout invariants are consumed by _export.py, whose "
+        "XML-dictionary layout invariants are consumed by export.py, whose "
         "export/verification boundary owns their projection."
     ),
     "_projection.py": (
-        "Projection-plan and value-address invariants are consumed by _export.py's render-request boundary."
+        "Projection-plan and value-address invariants are consumed by export.py's render-request boundary."
     ),
     "_record_field_renderer.py": (
         "Field offset, length, and role invariants are consumed by "
-        "_record_renderer.py/_export.py at the artifact boundary."
+        "_record_renderer.py/export.py at the artifact boundary."
     ),
     "_record_renderer.py": (
-        "Record ordering and occurrence invariants are consumed by _export.py at the artifact boundary."
+        "Record ordering and occurrence invariants are consumed by export.py at the artifact boundary."
     ),
 }
 
@@ -373,7 +373,7 @@ def test_import_period_token_refusal_renders_as_its_key() -> None:
 
 
 def test_export_layout_not_renderable_refusal_renders_as_its_key() -> None:
-    from .._export import _export_layout_not_renderable_error
+    from ..export import _export_layout_not_renderable_error
 
     error = _export_layout_not_renderable_error("303", None)
 

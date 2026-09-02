@@ -838,7 +838,7 @@ def test_ledger_drives_m303_quarters_and_folds_into_m390_annual(
         # Transport invariant #1: the computed cuota totals equal the IVA amounts
         # STORED on the persisted invoices (the aggregator sums the stored
         # iva_amount field — it does not re-derive base×rate, confirmed in
-        # application/aggregation/_iva_ledger.py). Asserting against the stored
+        # application/aggregation/iva_ledger.py). Asserting against the stored
         # field, not a fresh base*rate, keeps the seed and the expectation from
         # sharing a literal.
         assert Decimal(revision.casilla_values[_DEVENGADA_TOTAL]) == stored[period]["devengada"], (

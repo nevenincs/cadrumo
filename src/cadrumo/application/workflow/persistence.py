@@ -507,7 +507,7 @@ class WorkflowRunRepository:
 
     def save(self, result: WorkflowResult, *, runs_dir: Path | None = None) -> Path:
         """Persist one workflow result in the secure object backend."""
-        run_id = _validate_run_id(result.run_id)
+        run_id = validate_run_id(result.run_id)
         marker_dir = runs_dir or Settings().cadrumo_workflow_runs_dir
         self._persistence.save_run(self._objects, result)
         return marker_dir / run_id
@@ -527,7 +527,7 @@ class WorkflowRunRepository:
             WorkflowError: When no run is stored under ``run_id``, or when the
                 stored payload names a different run than the key it sits under.
         """
-        safe_run_id = _validate_run_id(run_id)
+        safe_run_id = validate_run_id(run_id)
         return self._persistence.load_run(self._objects, safe_run_id)
 
     def list(self, *, since: date | None = None) -> tuple[WorkflowResult, ...]:
@@ -591,7 +591,7 @@ def fingerprint_workflow_state(*, reason_class: str | None = None) -> WorkflowSt
     return workflow_state_repository().fingerprint_state(reason_class=reason_class)
 
 
-def _validate_run_id(run_id: str) -> str:
+def validate_run_id(run_id: str) -> str:
     if "/" in run_id or "\\" in run_id:
         raise WorkflowError(
             translated_message="application.workflow.errors.run_id_invalid_separators",

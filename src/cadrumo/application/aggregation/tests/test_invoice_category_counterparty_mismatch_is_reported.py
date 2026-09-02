@@ -47,10 +47,10 @@ from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ...invoices.catalogue_creation import build_catalogue_invoice
 from .._modelo_bindings_invoice_iva import (
-    _category_counterparty_mismatch_diagnostics,
+    ScreenedInvoiceIva,
     _claims_a_base_only_category,
-    _screened_invoice_iva_observations,
-    _ScreenedInvoiceIva,
+    category_counterparty_mismatch_diagnostics,
+    screened_invoice_iva_observations,
 )
 from .._source_mesh import CalculationSourceContext
 
@@ -91,7 +91,7 @@ def _persist_contradicted_supply(secure_objects: SecureObjectRepository) -> str:
     return invoice.invoice_id
 
 
-def _screen(secure_objects: SecureObjectRepository) -> _ScreenedInvoiceIva:
+def _screen(secure_objects: SecureObjectRepository) -> ScreenedInvoiceIva:
     """Run the real screen, returning its channels as the types they are."""
     snapshot = bundled_authority().snapshot("303", filing_year=_YEAR, period=_PERIOD)
     context = CalculationSourceContext(
@@ -101,7 +101,7 @@ def _screen(secure_objects: SecureObjectRepository) -> _ScreenedInvoiceIva:
         period=Period.from_year_and_code(_YEAR, _PERIOD),
         revision=snapshot.revision,
     )
-    return _screened_invoice_iva_observations(
+    return screened_invoice_iva_observations(
         context=context,
         period=Period.from_year_and_code(_YEAR, _PERIOD),
         invoice_repository=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
@@ -142,7 +142,7 @@ def test_the_advisory_names_the_invoice_and_both_candidate_fields(
     _persist_contradicted_supply(secure_objects)
     mismatches = _screen(secure_objects).category_counterparty_mismatches
 
-    diagnostics = _category_counterparty_mismatch_diagnostics(mismatches, resolver_id="probe")
+    diagnostics = category_counterparty_mismatch_diagnostics(mismatches, resolver_id="probe")
 
     assert len(diagnostics) == 1
     diagnostic = diagnostics[0]

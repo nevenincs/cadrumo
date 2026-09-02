@@ -26,7 +26,7 @@ from ...iva.classification import InvoiceKind
 from ..enums import IvaRate, PaymentStatus
 from ..errors import InvoiceValidationError
 from ..models import Invoice, InvoiceLine
-from ..normalization import _normalise_invoice_counterparty
+from ..normalization import normalise_invoice_counterparty
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -83,7 +83,7 @@ def test_the_normaliser_forwards_an_unvalidated_tax_id_when_no_country_is_stated
     allowed to be absent on the persisted record, because the tax id would then
     reach storage having been checked against nothing.
     """
-    normalised = _normalise_invoice_counterparty(
+    normalised = normalise_invoice_counterparty(
         {"counterparty_country": None, "counterparty_tax_id": " notavalidnif "},
     )
 
@@ -91,7 +91,7 @@ def test_the_normaliser_forwards_an_unvalidated_tax_id_when_no_country_is_stated
 
     # And with a country stated, the same input is held to that country's rules.
     with pytest.raises(IdentityError):  # identity errors vary by country, but all derive from IdentityError
-        _normalise_invoice_counterparty(
+        normalise_invoice_counterparty(
             {"counterparty_country": "ES", "counterparty_tax_id": " notavalidnif "},
         )
 
@@ -110,16 +110,16 @@ def test_a_refused_country_names_the_field_it_judged() -> None:
     field it is judging.
     """
     with pytest.raises(InvoiceValidationError, match="counterparty_country"):
-        _normalise_invoice_counterparty({"counterparty_country": "ZZ9"})
+        normalise_invoice_counterparty({"counterparty_country": "ZZ9"})
 
 
 def test_a_refused_tax_id_names_the_field_it_judged() -> None:
     """Both identity arms, because they raise from two different hierarchies."""
     with pytest.raises(IdentityError, match="counterparty_tax_id"):
-        _normalise_invoice_counterparty({"counterparty_country": "ES", "counterparty_tax_id": "BADID"})
+        normalise_invoice_counterparty({"counterparty_country": "ES", "counterparty_tax_id": "BADID"})
 
     with pytest.raises(InvoiceValidationError, match="counterparty_tax_id"):
-        _normalise_invoice_counterparty({"counterparty_country": "FR", "counterparty_tax_id": "XX"})
+        normalise_invoice_counterparty({"counterparty_country": "FR", "counterparty_tax_id": "XX"})
 
 
 def test_naming_the_field_keeps_everything_else_the_error_carried() -> None:
@@ -134,7 +134,7 @@ def test_naming_the_field_keeps_everything_else_the_error_carried() -> None:
     two packages away.
     """
     with pytest.raises(IdentityError) as caught:
-        _normalise_invoice_counterparty({"counterparty_country": "ES", "counterparty_tax_id": "BADID"})
+        normalise_invoice_counterparty({"counterparty_country": "ES", "counterparty_tax_id": "BADID"})
 
     assert "must be exactly 9 characters" in str(caught.value), "the value-level reasoning was lost"
     assert caught.value.translated_message == "errors.identity.tax_id_invalid_length", (
@@ -145,7 +145,7 @@ def test_naming_the_field_keeps_everything_else_the_error_carried() -> None:
 
 def test_a_valid_counterparty_passes_through_unwrapped() -> None:
     """Precision: the wrapper must not touch the path that does not refuse."""
-    normalised = _normalise_invoice_counterparty(
+    normalised = normalise_invoice_counterparty(
         {"counterparty_country": "es", "counterparty_tax_id": "b12345674"},
     )
 

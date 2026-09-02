@@ -16,7 +16,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.user_profile.values import ProfileSetupState
-from .._config_payloads import ConfigProfileViewResult
+from ..config_payloads import ConfigProfileViewResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

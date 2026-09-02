@@ -14,7 +14,7 @@ from ....application.provisioning import ProvisioningPreconditionCondition
 from ....core.config import override_settings
 from ....core.i18n.render import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.operator_action_enums import NoRecoveryOutcome
-from .._config.provision_cli import _emit_provision_pull, _emit_provision_verify
+from ..config.provision_cli import _emit_provision_pull, _emit_provision_verify
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

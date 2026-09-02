@@ -270,7 +270,7 @@ def _zero_cuota_non_resident_payer(
 _ISSUED: Final = InvoiceKind.ISSUED
 _RECEIVED: Final = InvoiceKind.RECEIVED
 
-_COMPONENT_ROWS: Final[tuple[_RowEntry, ...]] = (
+COMPONENT_ROWS: Final[tuple[_RowEntry, ...]] = (
     # Domestic categories occur on both sides: the taxpayer both issues and
     # receives them. Components are symmetric, the retención role is not.
     _domestic_rated(IvaCategory.DOMESTIC_GENERAL, _LIVA_TIPO_GENERAL, _ISSUED),

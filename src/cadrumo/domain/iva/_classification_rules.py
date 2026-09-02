@@ -24,7 +24,7 @@ def _is_es(residency: IvaTerritorialScope) -> bool:
     return residency is IvaTerritorialScope.ES_MAINLAND
 
 
-def _r01_construction_rc(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r01_construction_rc(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match ES-to-ES construction reverse-charge under Art. 84.Uno.2º.f."""
     return (
         _is_es(criteria.issuer_residency)
@@ -39,7 +39,7 @@ def _r01_construction_rc(criteria: IvaInvoiceClassificationCriteria) -> bool:
     )
 
 
-def _r02_waste_rc(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r02_waste_rc(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match ES-to-ES waste / recovery reverse-charge under Art. 84.Uno.2º.c."""
     return (
         _is_es(criteria.issuer_residency)
@@ -54,7 +54,7 @@ def _r02_waste_rc(criteria: IvaInvoiceClassificationCriteria) -> bool:
     )
 
 
-def _r03_electronics_rc(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r03_electronics_rc(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match ES-to-ES B2B consumer-electronics reverse-charge under Art. 84.Uno.2º.g."""
     return (
         _is_es(criteria.issuer_residency)
@@ -64,7 +64,7 @@ def _r03_electronics_rc(criteria: IvaInvoiceClassificationCriteria) -> bool:
     )
 
 
-def _r04_immovable_b2c_exempt(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r04_immovable_b2c_exempt(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match ES-to-ES second-and-later immovable supplies (Art. 20.Uno.22º exempt)."""
     return (
         _is_es(criteria.issuer_residency)
@@ -74,7 +74,7 @@ def _r04_immovable_b2c_exempt(criteria: IvaInvoiceClassificationCriteria) -> boo
     )
 
 
-def _r05_domestic_at_rate(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r05_domestic_at_rate(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match the ES-to-ES default; downstream picks a domestic category from ``rate_tier``."""
     return (
         _is_es(criteria.issuer_residency)
@@ -105,7 +105,7 @@ def _identified_in_another_member_state(state: EUMemberState | None) -> bool:
     return state is not None and state is not EUMemberState.ES
 
 
-def _r10_ic_supply_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r10_ic_supply_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an intra-community B2B goods supply out of the peninsula (Art. 25 exempt).
 
     **The acquirer's condition is its REGISTRATION, not its place.** Art. 25.Uno
@@ -123,7 +123,7 @@ def _r10_ic_supply_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """
     return (
         criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
-        and criteria.customer_residency not in _SPANISH_SCOPES
+        and criteria.customer_residency not in SPANISH_SCOPES
         and _identified_in_another_member_state(criteria.customer_identification_state)
         and criteria.customer_tax_status is CustomerTaxStatus.B2B_IVA_REGISTERED
         and criteria.kind is TransactionKind.GOODS
@@ -131,10 +131,10 @@ def _r10_ic_supply_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
     )
 
 
-def _r11_ic_acquisition_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r11_ic_acquisition_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an intra-community B2B goods acquisition into the peninsula (Art. 13 + reverse charge).
 
-    The mirror of :func:`_r10_ic_supply_goods`, and keyed the same way for the
+    The mirror of :func:`r10_ic_supply_goods`, and keyed the same way for the
     same reason: what makes the operation an adquisición intracomunitaria is the
     transmitting party supplying under another Member State's identification, not
     where it keeps its sede. Its establishment is read only to exclude the
@@ -142,7 +142,7 @@ def _r11_ic_acquisition_goods(criteria: IvaInvoiceClassificationCriteria) -> boo
     rather than through art. 13.
     """
     return (
-        criteria.issuer_residency not in _SPANISH_SCOPES
+        criteria.issuer_residency not in SPANISH_SCOPES
         and _identified_in_another_member_state(criteria.issuer_identification_state)
         and criteria.customer_residency is IvaTerritorialScope.ES_MAINLAND
         and criteria.customer_tax_status is CustomerTaxStatus.B2B_IVA_REGISTERED
@@ -151,7 +151,7 @@ def _r11_ic_acquisition_goods(criteria: IvaInvoiceClassificationCriteria) -> boo
     )
 
 
-def _r12_services_b2b_eu_outbound(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r12_services_b2b_eu_outbound(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an ES to EU_MEMBER B2B services supply (Art. 69, place of supply at destination).
 
     **The services pair keeps the establishment and ADDS the identification**,
@@ -174,11 +174,11 @@ def _r12_services_b2b_eu_outbound(criteria: IvaInvoiceClassificationCriteria) ->
     )
 
 
-def _r13_services_b2b_eu_inbound(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r13_services_b2b_eu_inbound(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an EU_MEMBER to ES B2B services supply (Art. 84.Uno.2º.a reverse charge at ES).
 
     Establishment and identification on the same split as
-    :func:`_r12_services_b2b_eu_outbound`: art. 84.Uno.2.o.a turns the recipient
+    :func:`r12_services_b2b_eu_outbound`: art. 84.Uno.2.o.a turns the recipient
     into the sujeto pasivo because the supplier is not established in the TAI,
     and the supplier's identifying State is what files the resulting operation
     under the Modelo 349 services clave.
@@ -193,7 +193,7 @@ def _r13_services_b2b_eu_inbound(criteria: IvaInvoiceClassificationCriteria) -> 
     )
 
 
-def _r15_distance_sales_b2c_outbound(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r15_distance_sales_b2c_outbound(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an ES to EU_MEMBER B2C distance-sales supply (caller enforces threshold)."""
     return (
         criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
@@ -204,7 +204,7 @@ def _r15_distance_sales_b2c_outbound(criteria: IvaInvoiceClassificationCriteria)
     )
 
 
-def _r16_external_scheme_services(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r16_external_scheme_services(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match a THIRD_COUNTRY to EU_MEMBER B2C service routed through Esquema Exterior (LIVA art. 163 octiesdecies)."""
     return (
         criteria.issuer_residency is IvaTerritorialScope.THIRD_COUNTRY
@@ -215,7 +215,7 @@ def _r16_external_scheme_services(criteria: IvaInvoiceClassificationCriteria) ->
     )
 
 
-def _r17_oss_union_goods_distance_sale(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r17_oss_union_goods_distance_sale(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an ES to EU_MEMBER B2C OSS-Unión goods distance sale (LIVA art. 163 unvicies)."""
     return (
         criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
@@ -226,7 +226,7 @@ def _r17_oss_union_goods_distance_sale(criteria: IvaInvoiceClassificationCriteri
     )
 
 
-def _r18_oss_union_goods_interface_facilitated(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r18_oss_union_goods_interface_facilitated(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match ES to EU_MEMBER B2C OSS-Unión interface-facilitated goods."""
     return (
         criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
@@ -237,7 +237,7 @@ def _r18_oss_union_goods_interface_facilitated(criteria: IvaInvoiceClassificatio
     )
 
 
-def _r19_oss_union_services(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r19_oss_union_services(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an ES to EU_MEMBER B2C OSS-Unión services supply (LIVA art. 163 unvicies)."""
     return (
         criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
@@ -267,7 +267,7 @@ def _r19_oss_union_services(criteria: IvaInvoiceClassificationCriteria) -> bool:
 #:
 #: Without this a mainland business invoicing a Canarian customer -- an ordinary
 #: operation, not an edge -- matched no row at all and resolved UNRESOLVED.
-_OUTSIDE_THE_COMUNIDAD: Final[frozenset[IvaTerritorialScope]] = frozenset(
+OUTSIDE_THE_COMUNIDAD: Final[frozenset[IvaTerritorialScope]] = frozenset(
     {
         IvaTerritorialScope.THIRD_COUNTRY,
         IvaTerritorialScope.ES_CANARIAS,
@@ -276,22 +276,22 @@ _OUTSIDE_THE_COMUNIDAD: Final[frozenset[IvaTerritorialScope]] = frozenset(
 )
 
 
-def _r20_export_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r20_export_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an ES goods export outside the Comunidad (Art. 21, exención plena).
 
     Reaches the non-peninsular Spanish territories as well as third countries,
     because art. 3 places all three outside the Comunidad; see
-    :data:`_OUTSIDE_THE_COMUNIDAD` for the definitional chain.
+    :data:`OUTSIDE_THE_COMUNIDAD` for the definitional chain.
     """
     return (
         criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
-        and criteria.customer_residency in _OUTSIDE_THE_COMUNIDAD
+        and criteria.customer_residency in OUTSIDE_THE_COMUNIDAD
         and criteria.kind is TransactionKind.GOODS
         and criteria.direction is InvoiceKind.ISSUED
     )
 
 
-def _r21_import_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r21_import_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match a THIRD_COUNTRY to ES goods import (Art. 18)."""
     return (
         criteria.issuer_residency is IvaTerritorialScope.THIRD_COUNTRY
@@ -318,7 +318,7 @@ _EMPRESARIO_O_PROFESIONAL: Final[frozenset[CustomerTaxStatus]] = frozenset(
 )
 
 
-def _r22_services_outbound_b2b(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r22_services_outbound_b2b(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match a B2B services supply localised outside the TAI (Art. 69.Uno.1.º).
 
     Goods and services FORK here, which is why this stays a separate row rather
@@ -337,7 +337,7 @@ def _r22_services_outbound_b2b(criteria: IvaInvoiceClassificationCriteria) -> bo
     """
     return (
         criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
-        and criteria.customer_residency in _OUTSIDE_THE_COMUNIDAD
+        and criteria.customer_residency in OUTSIDE_THE_COMUNIDAD
         and criteria.customer_tax_status in _EMPRESARIO_O_PROFESIONAL
         and criteria.kind is TransactionKind.SERVICES_GENERAL
         and criteria.direction is InvoiceKind.ISSUED
@@ -348,14 +348,14 @@ def _is_outbound_b2c_service(criteria: IvaInvoiceClassificationCriteria) -> bool
     """The shape both art. 69 B2C rows share, before the exception splits them."""
     return (
         criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
-        and criteria.customer_residency in _OUTSIDE_THE_COMUNIDAD
+        and criteria.customer_residency in OUTSIDE_THE_COMUNIDAD
         and criteria.customer_tax_status is CustomerTaxStatus.B2C_CONSUMER
         and criteria.kind is TransactionKind.SERVICES_GENERAL
         and criteria.direction is InvoiceKind.ISSUED
     )
 
 
-def _r24_services_outbound_b2c(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r24_services_outbound_b2c(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match a B2C services supply the TAI keeps (Art. 69.Uno.2.º).
 
     The other limb of the same article, and it lands in the opposite place: a
@@ -375,7 +375,7 @@ def _r24_services_outbound_b2c(criteria: IvaInvoiceClassificationCriteria) -> bo
     )
 
 
-def _r25_services_outbound_b2c_art_69_dos(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r25_services_outbound_b2c_art_69_dos(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match the B2C services art. 69.Dos lifts back out of the TAI.
 
     Twelve lettered items -- derechos de autor, publicidad, asesoramiento,
@@ -394,7 +394,7 @@ def _r25_services_outbound_b2c_art_69_dos(criteria: IvaInvoiceClassificationCrit
     )
 
 
-def _r23_ioss_distance_sale_low_value(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r23_ioss_distance_sale_low_value(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match a low-value imported-goods distance sale routed through IOSS (LIVA art. 163 quinvicies)."""
     return (
         criteria.customer_residency is IvaTerritorialScope.EU_MEMBER
@@ -404,7 +404,7 @@ def _r23_ioss_distance_sale_low_value(criteria: IvaInvoiceClassificationCriteria
     )
 
 
-def _r30_canarias_ceuta_melilla(criteria: IvaInvoiceClassificationCriteria) -> bool:
+def r30_canarias_ceuta_melilla(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match issuers based in Canarias / Ceuta / Melilla (out of TAI)."""
     return criteria.issuer_residency in {
         IvaTerritorialScope.ES_CANARIAS,
@@ -412,7 +412,7 @@ def _r30_canarias_ceuta_melilla(criteria: IvaInvoiceClassificationCriteria) -> b
     }
 
 
-_SPANISH_SCOPES: Final[frozenset[IvaTerritorialScope]] = frozenset(
+SPANISH_SCOPES: Final[frozenset[IvaTerritorialScope]] = frozenset(
     {
         IvaTerritorialScope.ES_MAINLAND,
         IvaTerritorialScope.ES_CANARIAS,

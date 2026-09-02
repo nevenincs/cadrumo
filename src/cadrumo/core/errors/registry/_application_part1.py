@@ -6,7 +6,7 @@ Rows map application-layer exception qualnames to stable
 
 from ..error_codes import ErrorCategory, ErrorCode
 
-_DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
+DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "cadrumo.application.operator_surface.errors.OperatorSurfaceContractError",
         ErrorCode(

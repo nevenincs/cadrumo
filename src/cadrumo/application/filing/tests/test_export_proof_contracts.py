@@ -13,7 +13,7 @@ from ....core.hashing import sha256_hex
 from ....core.period import Period
 from ....core.time.clock import now
 from ....domain.filing.errors import FilingExportValidationError
-from .._export import export_draft
+from ..export import export_draft
 from ..export_proof import (
     FilingExportConformanceRequest,
     FilingExportConformanceVectorEvidence,

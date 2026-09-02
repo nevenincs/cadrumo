@@ -6,10 +6,10 @@ The commands delegate register persistence to
 the LIVA art. 106 prorrata-especial apportionment and the arts. 9.1.c / 101
 per-sector apportionment on the live M303 aggregation path: ``elect-especial``
 writes an ``ESPECIAL`` :class:`~domain.prorrata_register.ProrrataRegisterEntry`
-so :func:`~application.aggregation._iva_ledger._apply_especial_apportionment` fires, and
+so :func:`~application.aggregation.iva_ledger._apply_especial_apportionment` fires, and
 ``declare-sector`` writes a :class:`~domain.prorrata_register.SectorDefinition`
 so the register becomes sectorized and
-:func:`~application.aggregation._iva_ledger._apply_sector_apportionment` fires. Fail-closed:
+:func:`~application.aggregation.iva_ledger._apply_sector_apportionment` fires. Fail-closed:
 a taxpayer who elects nothing keeps the whole-entity general apportionment the
 settlement auto-seed already produces.
 

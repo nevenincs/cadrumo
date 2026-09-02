@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from queue import Empty, Queue
 from typing import cast
@@ -11,8 +11,8 @@ import pytest
 
 from ....tests.loopback_recording_server import run_loopback_server, stop_loopback_server
 from ...config import Settings
-from .._http_sink import HttpTelemetrySink
 from .._producers import emit_command_invocation_telemetry, emit_error_frequency_telemetry, emit_llm_run_telemetry
+from ..http_sink import HttpTelemetrySink
 from ..tier import TelemetryTier
 from ._telemetry_endpoint_support import RecordingTelemetryEndpoint
 
@@ -23,7 +23,7 @@ _CAPTURED_AT = "2026-07-04T00:00:00+00:00"
 
 
 @contextmanager
-def _opened_http_sink() -> Iterator[tuple[HttpTelemetrySink, Queue[dict[str, object]]]]:
+def _opened_http_sink() -> Generator[tuple[HttpTelemetrySink, Queue[dict[str, object]]]]:
     server, thread, events = run_loopback_server(RecordingTelemetryEndpoint)
     try:
         yield HttpTelemetrySink(endpoint=f"http://127.0.0.1:{server.server_port}/collect"), events

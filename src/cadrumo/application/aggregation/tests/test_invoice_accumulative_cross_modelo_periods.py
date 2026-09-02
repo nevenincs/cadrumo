@@ -76,9 +76,9 @@ from ....tests.registry_observations import registry_grounded_observations
 from ...calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 from ...invoices.catalogue_creation import build_catalogue_invoice
 from ...invoices.transaction_linking import link_invoice_transaction_catalogues
-from ...modelo._m303_regimen_simplificado_scope import active_taxpayer_profile
 from ...modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation
 from ...modelo.filed_revision_observation import persist_filed_revision_observation
+from ...modelo.m303_regimen_simplificado_scope import active_taxpayer_profile
 from ...modelo.result_disposition_resolution import resolve_modelo_result_disposition
 from ...modelo.work_lifecycle import create_work_unit
 

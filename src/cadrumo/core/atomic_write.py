@@ -89,7 +89,7 @@ from __future__ import annotations
 import os
 import secrets
 import tempfile
-from collections.abc import Iterable, Iterator
+from collections.abc import Generator, Iterable
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -364,7 +364,7 @@ class DurableWriteBatch:
 
 
 @contextmanager
-def durable_write_batch() -> Iterator[DurableWriteBatch]:
+def durable_write_batch() -> Generator[DurableWriteBatch]:
     """Yield a :class:`DurableWriteBatch` and commit it on exit.
 
     Commits from a ``finally``, so an exception mid-batch still syncs whatever
@@ -628,7 +628,7 @@ def hardened_staged_publication(
     target_path: Path,
     *,
     mode: int = _HARDENED_DEFAULT_MODE,
-) -> Iterator[StagedPublication]:
+) -> Generator[StagedPublication]:
     """Reserve a hardened staging sibling of ``target_path`` for a caller-driven write.
 
     The deferred-publish tier. Reserves an unguessable

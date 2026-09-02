@@ -12,7 +12,7 @@ manifest are eligible. Adding support for a new modelo requires only a
 TOML edit — no code change.
 
 See Also:
-    :func:`cadrumo.application.modelo._binding_resolution.resolve_borrador_source_tier`
+    :func:`cadrumo.application.modelo.binding_resolution.resolve_borrador_source_tier`
         Binding-resolution tier that inserts this resolver before backend mesh
         and caller-value overlay.
     :class:`cadrumo.application.aggregation._source_mesh.CalculationSourceResolution`
@@ -62,7 +62,7 @@ from .preconditions import build_modelo_precondition_failure
 if TYPE_CHECKING:
     from ..live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
 
-_STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
+STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
 
 class Modelo100BorradorBindingError(ModeloPreconditionErrorMixin, ModeloError):
@@ -294,7 +294,7 @@ class Modelo100BorradorSourceResolver:
                 registry_snapshot=snapshot,
                 snapshot_repository=self._snapshot_repository,
             )
-        except _STORAGE_DEGRADATION_ERRORS as exc:
+        except STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

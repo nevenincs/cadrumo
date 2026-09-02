@@ -15,9 +15,9 @@ from ....core.filing_year import FilingYear
 from ....core.identity import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
 from ._invoice_row_materialization import (
-    _build_invoice_rows,
-    _m349_public_row_union,
-    _normalise_m349_nif_export_rows,
+    build_invoice_rows,
+    m349_public_row_union,
+    normalise_m349_nif_export_rows,
 )
 from ._m347_threshold import m347_clave_c_declarable_party_ids, m347_declarable_party_ids
 from .binding_aggregation import binding_aggregation_op
@@ -616,7 +616,7 @@ def resolve_invoice_family_row_values(
         scope_filtered = tuple(
             _filter_invoice_observations(observations_for_binding(sample_binding), sample_selector),
         )
-        rows = _build_invoice_rows(
+        rows = build_invoice_rows(
             grouping,
             scope_filtered,
             m347_threshold_filter=_m347_row_family_threshold_filter,
@@ -685,7 +685,7 @@ def resolve_invoice_binding_row_values(
         observations_for_binding=lambda binding: _observations_for_binding_source(available, binding),
         cohort_by_source=True,
     )
-    return _m349_public_row_union(_normalise_m349_nif_export_rows(rows))
+    return m349_public_row_union(normalise_m349_nif_export_rows(rows))
 
 
 def _observations_for_binding_source(

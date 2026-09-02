@@ -22,7 +22,7 @@ from ...domain.iva.supply_nature import SupplyNature
 #: sub-kinds — each carry legal consequences a bare goods/services reading does
 #: not establish, so none of them is inferred here. A document that needs one
 #: gets it from an operator assertion, never from this map.
-_NATURE_TO_KIND: dict[SupplyNature, TransactionKind] = {
+NATURE_TO_KIND: dict[SupplyNature, TransactionKind] = {
     SupplyNature.GOODS: TransactionKind.GOODS,
     SupplyNature.SERVICES: TransactionKind.SERVICES_GENERAL,
 }
@@ -37,10 +37,10 @@ _NATURE_TO_KIND: dict[SupplyNature, TransactionKind] = {
 #: produce is in that set. So both reachable kinds yield the identical category,
 #: which is then picked from the rate tier. A test proves that indifference by
 #: classifying the same operation under both, rather than trusting this note.
-_NATURE_INDIFFERENT_KIND: TransactionKind = TransactionKind.GOODS
+NATURE_INDIFFERENT_KIND: TransactionKind = TransactionKind.GOODS
 
 
-def _counterparty_identification_field(direction: InvoiceKind) -> str:
+def counterparty_identification_field(direction: InvoiceKind) -> str:
     """Return whose identification a reporting branch actually needs settling.
 
     **The counterparty's, and never the filer's.** The declaración recapitulativa
@@ -57,7 +57,7 @@ def _counterparty_identification_field(direction: InvoiceKind) -> str:
     return "customer_identification_state" if direction is InvoiceKind.ISSUED else "issuer_identification_state"
 
 
-def _state_for_field(
+def state_for_field(
     field: str,
     *,
     issuer: EUMemberState | None,
@@ -67,7 +67,7 @@ def _state_for_field(
     return issuer if field == "issuer_identification_state" else customer
 
 
-def _axis_forks_the_law(
+def axis_forks_the_law(
     probe: Callable[[CustomerTaxStatus, TransactionKind], IvaCategory],
     *,
     slices: list[tuple[tuple[CustomerTaxStatus, ...], tuple[TransactionKind, ...]]],
@@ -120,7 +120,7 @@ def _axis_forks_the_law(
     return False
 
 
-def _facts_consumed(
+def facts_consumed(
     probe: Callable[[CustomerTaxStatus, TransactionKind], frozenset[PartyFact]],
     *,
     status_candidates: tuple[CustomerTaxStatus, ...],
@@ -128,7 +128,7 @@ def _facts_consumed(
 ) -> frozenset[PartyFact]:
     """Which party facts any branch this operation could reach actually turns on.
 
-    The same extension of the same idea as :func:`_axis_forks_the_law`, and
+    The same extension of the same idea as :func:`axis_forks_the_law`, and
     deliberately routed through the same authority rather than beside it: which
     branches need a party's IVA identification is a fact about the law, so it is
     ASKED of the rule table instead of restated here as a branch on the
@@ -176,7 +176,7 @@ def _facts_consumed(
     return frozenset(consumed)
 
 
-def _domestic_rate_tier_is_reachable(
+def domestic_rate_tier_is_reachable(
     issuer_scope: IvaTerritorialScope | None,
     customer_scope: IvaTerritorialScope | None,
     supply_nature: SupplyNature | None,
@@ -201,7 +201,7 @@ def _domestic_rate_tier_is_reachable(
     """
     if issuer_scope is None or customer_scope is None:
         return False
-    kinds = (_NATURE_TO_KIND[supply_nature],) if supply_nature is not None else tuple(_NATURE_TO_KIND.values())
+    kinds = (NATURE_TO_KIND[supply_nature],) if supply_nature is not None else tuple(NATURE_TO_KIND.values())
     return any(
         domestic_rate_tier_is_required(
             issuer_residency=issuer_scope,

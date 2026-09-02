@@ -36,7 +36,7 @@ import sys
 from collections.abc import Mapping, Sequence
 from enum import StrEnum
 from types import MappingProxyType
-from typing import IO, Any, Final, Protocol, cast, runtime_checkable
+from typing import IO, Any, Final, Protocol, TypeGuard, cast, runtime_checkable
 
 from pydantic import (
     BaseModel,
@@ -604,6 +604,17 @@ def _record_captured_envelope(envelope_payload: object) -> None:
         _log.debug("json_contract: envelope capture failed; continuing", exc_info=True)
 
 
+def _is_strict_output_schema(value: object) -> TypeGuard[OutputSchema | OutputRootSchema[object]]:
+    """Narrow to either strict output-schema base.
+
+    ``OutputRootSchema`` is generic, so a bare ``isinstance`` against it yields
+    ``OutputRootSchema[Unknown]`` and erases the type of everything derived from
+    the result. The guard states the root parameter the caller actually relies
+    on: it only reads the instance back through ``model_validate``.
+    """
+    return isinstance(value, OutputSchema | OutputRootSchema)
+
+
 def validate_registered_result(command: str, result: object) -> OutputSchema | OutputRootSchema[Any]:
     """Strictly revalidate an already typed operator result.
 
@@ -612,7 +623,7 @@ def validate_registered_result(command: str, result: object) -> OutputSchema | O
     through this check so an envelope cannot claim a registered command while
     carrying an arbitrary result shape.
     """
-    if not isinstance(result, OutputSchema | OutputRootSchema):
+    if not _is_strict_output_schema(result):
         raise OutputSchemaError(f"operator JSON result for {command!r} is not a strict output schema")
     schema = type(result)
     payload = result.model_dump(mode="python") if isinstance(result, BaseModel) else result

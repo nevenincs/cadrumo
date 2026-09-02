@@ -67,7 +67,7 @@ from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
 from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.parsing import parse_iso8601_date
+from ...core.parsing.dates import parse_iso8601_date
 from ...domain.attachments.errors import AttachmentNotFoundError
 from ...domain.attachments.service import link_attachment_invoice
 from ...domain.currency.service import ExchangeRateProvider
@@ -84,15 +84,15 @@ from .confirm_party_identity import (
     refuse_an_issued_document_the_filer_did_not_issue,
 )
 from .confirmed_field_resolution import (
-    _confirmed_counterparty_name,
-    _confirmed_currency,
-    _confirmed_lines_from_the_document,
-    _operator_restated_the_amounts,
-    _operator_value_or_reading,
-    _rate_tier_the_document_charged,
-    _require_confirmed_field,
-    _resolve_confirmed_invoice_date,
-    _resolved_invoice_class,
+    confirmed_counterparty_name,
+    confirmed_currency,
+    confirmed_lines_from_the_document,
+    operator_restated_the_amounts,
+    operator_value_or_reading,
+    rate_tier_the_document_charged,
+    require_confirmed_field,
+    resolve_confirmed_invoice_date,
+    resolve_invoice_class,
 )
 from .evidence import PurchaseInvoiceEvidenceService
 from .evidence_draft import (
@@ -513,7 +513,7 @@ def _prepare_invoice_confirmation(
         settings=resolved_settings,
     )
     counterparty_side = counterparty_draft_side(draft, kind=kind)
-    operator_restated_amounts = _operator_restated_the_amounts(
+    operator_restated_amounts = operator_restated_the_amounts(
         taxable_base=taxable_base,
         iva_rate=iva_rate,
         iva_amount=iva_amount,
@@ -524,7 +524,7 @@ def _prepare_invoice_confirmation(
         draft=draft,
         kind=kind,
         invoice_date=classification_date,
-        rate_tier=_rate_tier_the_document_charged(
+        rate_tier=rate_tier_the_document_charged(
             draft,
             invoice_date=classification_date,
             operator_restated_amounts=operator_restated_amounts,
@@ -585,7 +585,7 @@ def _build_confirmed_invoice_candidate(
     """Resolve operator/document fields and build the exact catalogue candidate."""
     draft = preparation.draft
     counterparty_side = counterparty_draft_side(draft, kind=kind)
-    resolved_counterparty_tax_id = _require_confirmed_field(
+    resolved_counterparty_tax_id = require_confirmed_field(
         agreed_counterparty_tax_id(
             supplied=counterparty_tax_id,
             extracted=counterparty_side.tax_id,
@@ -599,21 +599,21 @@ def _build_confirmed_invoice_candidate(
         extracted_supplier_tax_id=draft.supplier_tax_id,
     )
     refuse_a_counterparty_that_is_the_filer(resolved_counterparty_tax_id)
-    resolved_invoice_number = _require_confirmed_field(
-        _operator_value_or_reading(invoice_number, draft.invoice_number),
+    resolved_invoice_number = require_confirmed_field(
+        operator_value_or_reading(invoice_number, draft.invoice_number),
         field="invoice_number",
     )
     assert isinstance(resolved_invoice_number, str)
-    resolved_invoice_date = _resolve_confirmed_invoice_date(invoice_date, draft)
-    resolved_taxable_base = _require_confirmed_field(
-        _operator_value_or_reading(taxable_base, draft.taxable_base),
+    resolved_invoice_date = resolve_confirmed_invoice_date(invoice_date, draft)
+    resolved_taxable_base = require_confirmed_field(
+        operator_value_or_reading(taxable_base, draft.taxable_base),
         field="taxable_base",
     )
     assert isinstance(resolved_taxable_base, Decimal)
-    resolved_iva_rate = _operator_value_or_reading(iva_rate, draft.iva_rate)
-    resolved_currency = _confirmed_currency(currency, draft.currency)
-    resolved_counterparty_name = _confirmed_counterparty_name(counterparty_name, counterparty_side.name)
-    confirmed_lines = _confirmed_lines_from_the_document(
+    resolved_iva_rate = operator_value_or_reading(iva_rate, draft.iva_rate)
+    resolved_currency = confirmed_currency(currency, draft.currency)
+    resolved_counterparty_name = confirmed_counterparty_name(counterparty_name, counterparty_side.name)
+    confirmed_lines = confirmed_lines_from_the_document(
         draft=draft,
         invoice_number=resolved_invoice_number,
         taxable_base=resolved_taxable_base,
@@ -624,12 +624,12 @@ def _build_confirmed_invoice_candidate(
     resolved_recargo_amount = (
         recargo_amount
         if preparation.operator_restated_amounts
-        else _operator_value_or_reading(recargo_amount, draft.recargo_amount)
+        else operator_value_or_reading(recargo_amount, draft.recargo_amount)
     )
-    resolved_iva_category = _operator_value_or_reading(iva_category, preparation.establishment.category.category)
-    resolved_rectifies = _operator_value_or_reading(rectifies_invoice_number, draft.rectifies_invoice_number)
-    resolved_series = _operator_value_or_reading(series, draft.invoice_series)
-    resolved_invoice_class = _resolved_invoice_class(
+    resolved_iva_category = operator_value_or_reading(iva_category, preparation.establishment.category.category)
+    resolved_rectifies = operator_value_or_reading(rectifies_invoice_number, draft.rectifies_invoice_number)
+    resolved_series = operator_value_or_reading(series, draft.invoice_series)
+    resolved_invoice_class = resolve_invoice_class(
         draft,
         invoice_class=invoice_class,
         rectifies_invoice_number=resolved_rectifies,

@@ -191,7 +191,7 @@ class TestJsonlRunSinkRunIdFilter:
 
 class TestStoreRunIdValidation:
     def test_load_trace_rejects_path_traversal(self, tmp_path: Path) -> None:
-        from ..store import _validate_run_id, load_events, load_trace
+        from ..store import load_events, load_trace, validate_run_id
 
         bad_run_ids = (
             "../escape",
@@ -207,7 +207,7 @@ class TestStoreRunIdValidation:
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             for bad_run_id in bad_run_ids:
                 with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
-                    _validate_run_id(bad_run_id)
+                    validate_run_id(bad_run_id)
                 with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
                     load_trace(bad_run_id)
                 with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
@@ -266,7 +266,7 @@ class TestStorePersistenceErrors:
 
     def test_save_trace_wraps_unusable_runs_root(self, tmp_path: Path) -> None:
         """The write path is the sole materialiser: its mkdir(parents=True) covers the
-        runs root too, so an unusable root now surfaces from `_run_dir`, not `runs_dir` —
+        runs root too, so an unusable root now surfaces from `run_dir`, not `runs_dir` —
         `runs_dir` is a pure resolver post-fix and never attempts a mkdir of its own."""
         trace = self._trace()
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)) as settings:
@@ -278,7 +278,7 @@ class TestStorePersistenceErrors:
                 save_trace(trace, settings=settings)
 
         error = excinfo.value
-        assert error.operation == "_run_dir"
+        assert error.operation == "run_dir"
         assert error.path == runs_root / trace.run_id
         assert isinstance(error.__cause__, OSError)
 

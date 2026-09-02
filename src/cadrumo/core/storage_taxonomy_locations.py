@@ -28,8 +28,42 @@ from .storage_taxonomy import (
     StorageNodeKind,
     StorageOverridePolicy,
     StorageScope,
-    _location,
 )
+
+
+def _location(
+    category: StorageCategory,
+    subpath: str,
+    *,
+    lifecycle: StorageLifecycle,
+    grouping: StorageGrouping,
+    consumer_module: str | None = None,
+    dormant_reason: str | None = None,
+    settings_field: str | None = None,
+    node_kind: StorageNodeKind = StorageNodeKind.DIRECTORY,
+    scope: StorageScope = StorageScope.ROOT,
+    override_policy: StorageOverridePolicy = StorageOverridePolicy.OPERATOR_OVERRIDABLE,
+    fingerprint_participation: FingerprintParticipation = FingerprintParticipation.PARTICIPATING,
+    derives_settings_default: bool = True,
+    test_pinned_exception: str | None = None,
+) -> StorageLocation:
+    """Build one declaration, defaulting the axes most members share."""
+    return StorageLocation(
+        category=category,
+        subpath=subpath,
+        node_kind=node_kind,
+        scope=scope,
+        override_policy=override_policy,
+        lifecycle=lifecycle,
+        grouping=grouping,
+        fingerprint_participation=fingerprint_participation,
+        consumer_module=consumer_module,
+        dormant_reason=dormant_reason,
+        settings_field=settings_field,
+        derives_settings_default=derives_settings_default and settings_field is not None,
+        test_pinned_exception=test_pinned_exception,
+    )
+
 
 if TYPE_CHECKING:
     from .config import Settings
@@ -67,7 +101,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.SECRETS,
         "secrets",
-        consumer_module="adapters/persistence/storage/blob_store/_materialisation.py",
+        consumer_module="adapters/persistence/storage/blob_store/materialisation.py",
         settings_field="cadrumo_secret_store_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -75,7 +109,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.BLOBS,
         "blobs",
-        consumer_module="adapters/persistence/storage/blob_store/_materialisation.py",
+        consumer_module="adapters/persistence/storage/blob_store/materialisation.py",
         settings_field="cadrumo_blob_store_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,

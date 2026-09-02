@@ -44,7 +44,7 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from pydantic import SecretStr, TypeAdapter
 
-from ...adapters.persistence.storage.blob_store._materialisation import get_secret_store
+from ...adapters.persistence.storage.blob_store.materialisation import get_secret_store
 from ...adapters.persistence.storage.errors import SecretNotFoundError
 from ...adapters.persistence.storage.secret_store.store import SecretRecord, SecretStore
 from ...core.classification.policies import SensitivityClass

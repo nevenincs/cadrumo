@@ -28,7 +28,7 @@ catalogue integrity boundary turns that signal into a hard failure.
 from __future__ import annotations
 
 import atexit
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
 from importlib.resources import as_file, files  # nosemgrep
 from importlib.resources.abc import Traversable  # nosemgrep
@@ -84,7 +84,7 @@ def bundled_path(*parts: str) -> Path:
 
 
 @contextmanager
-def as_path(node: Traversable) -> Iterator[Path]:
+def as_path(node: Traversable) -> Generator[Path]:
     """Materialise ``node`` as a real on-disk path for the lifetime of the context.
 
     ``importlib.resources.as_file`` extracts the resource to a

@@ -69,7 +69,7 @@ def test_m100_build_on_renta_free_import_path_registers_the_gate() -> None:
 
         from cadrumo.core.resources import resources
         from cadrumo.domain.calculations.registry.authority import bundled_authority
-        from cadrumo.domain.calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+        from cadrumo.domain.calculations.registry.validate_cross_domain_snapshot import _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
         assert "cadrumo.domain.renta" not in sys.modules, (
             "renta must not be imported before the snapshot build on this path"
@@ -116,7 +116,7 @@ def test_m100_build_succeeds_when_the_check_module_is_imported() -> None:
 
         from cadrumo.core.resources import resources
         from cadrumo.domain.calculations.registry.authority import bundled_authority
-        from cadrumo.domain.calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+        from cadrumo.domain.calculations.registry.validate_cross_domain_snapshot import _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
         assert _CROSS_DOMAIN_SNAPSHOT_CHECKS, (
             "importing the check module must register at least one cross-domain check"
@@ -148,7 +148,7 @@ def test_non_m100_build_on_renta_free_path_does_not_require_the_gate() -> None:
 
         from cadrumo.core.resources import resources
         from cadrumo.domain.calculations.registry.authority import bundled_authority
-        from cadrumo.domain.calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+        from cadrumo.domain.calculations.registry.validate_cross_domain_snapshot import _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
         assert "cadrumo.domain.renta" not in sys.modules, (
             "renta must not be imported on this path"

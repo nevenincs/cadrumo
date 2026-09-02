@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import csv
 import json
-from collections.abc import Iterator, Sequence
+from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from http import HTTPStatus
 from pathlib import Path
@@ -349,7 +349,7 @@ def test_parsing_is_deterministic() -> None:
 
 
 @contextmanager
-def _serve_ollama(reply_text: str) -> Iterator[tuple[str, Queue[dict[str, object]]]]:
+def _serve_ollama(reply_text: str) -> Generator[tuple[str, Queue[dict[str, object]]]]:
     """Serve one Ollama-shaped loopback endpoint returning ``reply_text``."""
     events: Queue[dict[str, object]] = Queue()
 
@@ -368,7 +368,7 @@ def _serve_ollama(reply_text: str) -> Iterator[tuple[str, Queue[dict[str, object
 
 
 @contextmanager
-def _mapper(tmp_path: Path, endpoint: str) -> Iterator[SemanticColumnRoleMapper]:
+def _mapper(tmp_path: Path, endpoint: str) -> Generator[SemanticColumnRoleMapper]:
     """Yield a mapper bound to the production client over a loopback provider.
 
     The endpoint is set through ``override_settings`` as well as on the injected

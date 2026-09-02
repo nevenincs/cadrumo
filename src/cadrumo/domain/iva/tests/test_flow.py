@@ -11,7 +11,7 @@ See Also:
     :mod:`~domain.iva.flow`
         Flow-direction enum, settlement-side mapping, and canonical predicates
         under test.
-    :mod:`~application.aggregation._iva_ledger`
+    :mod:`~application.aggregation.iva_ledger`
         Ledger aggregation consumer that recomputes effective IVA flow for
         modelo observations.
     :mod:`~domain.calculations.registry._bindings`

@@ -51,7 +51,7 @@ import unicodedata
 from dataclasses import asdict, dataclass
 from typing import Final
 
-from ..quality.cli_action_census import production_sources
+from ..quality.repository_sources import production_sources
 
 #: The noun vocabulary, matched against a field's DOCUMENTATION rather than its
 #: name. Deliberately Spanish: this codebase names AEAT domain concepts with

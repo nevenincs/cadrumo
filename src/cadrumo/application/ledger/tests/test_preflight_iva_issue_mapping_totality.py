@@ -26,11 +26,6 @@ from pathlib import Path
 
 import pytest
 
-# Imported absolutely, not as `from .. import <module>`: the test needs
-# the MODULE object, and the package-facade gate reads any `from ..
-# import` edge as reaching through the inert namespace.
-import cadrumo.application.ledger.preflight as preflight_module
-
 from ....core.aggregation import BindingSourceKind
 from ....core.operator_action_enums import OperatorActionAxis
 from ....domain.iva.schema import EUMemberState, IvaCategory

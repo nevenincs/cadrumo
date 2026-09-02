@@ -25,7 +25,7 @@ legal and source references.
 from __future__ import annotations
 
 import re
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Final
 from urllib.parse import urlsplit
@@ -175,7 +175,7 @@ def assert_declarations_read_landing(
 @asynccontextmanager
 async def shared_playwright(
     session: AeatSession,
-) -> AsyncIterator[Playwright]:
+) -> AsyncGenerator[Playwright]:
     """Yield a long-lived Playwright instance for bulk register sweeps.
 
     `walk_declarations_register` and `capture_declaration` each spin
@@ -489,7 +489,7 @@ async def open_declarations_register(
     *,
     settings: Settings | None = None,
     playwright: Playwright | None = None,
-) -> AsyncIterator[DeclaracionesRegisterSession]:
+) -> AsyncGenerator[DeclaracionesRegisterSession]:
     """Open a :class:`DeclaracionesRegisterSession` for repeated filed-declaration register reads."""
     async with _open_register_page(session, settings=settings, playwright=playwright) as (
         page,
@@ -504,7 +504,7 @@ async def _open_register_page(
     *,
     settings: Settings | None = None,
     playwright: Playwright | None = None,
-) -> AsyncIterator[tuple[Page, BrowserContext]]:
+) -> AsyncGenerator[tuple[Page, BrowserContext]]:
     """Yield a Playwright ``(page, context)`` bound to the AEAT session.
 
     Both :func:`walk_declarations_register` and :func:`capture_declaration`
@@ -560,7 +560,7 @@ async def _opened_browser_session(
     settings: Settings,
     profile: Profile,
     storage_state: dict[str, object],
-) -> AsyncIterator[tuple[Page, BrowserContext]]:
+) -> AsyncGenerator[tuple[Page, BrowserContext]]:
     """Inner helper: create + tear down a BrowserSession + context."""
     async with opened_browser_page(pw, settings, profile, storage_state=storage_state) as (page, context):
         yield page, context

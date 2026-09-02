@@ -61,14 +61,14 @@ _BLOCKED_RESET_HARNESS = _SETTINGS_PREAMBLE + dedent(
     from cadrumo.adapters.persistence.storage.bucket import BucketBusyError
     from cadrumo.application.config_reset import start_config_reset
 
-    config_module._settings_override.reset(token)
+    config_module.settings_override.reset(token)
     settings = settings.model_copy(
         update={
             "cadrumo_file_lock_timeout_s": float(sys.argv[2]),
             "cadrumo_bucket_lock_poll_interval_s": 0.01,
         },
     )
-    token = config_module._settings_override.set(settings)
+    token = config_module.settings_override.set(settings)
     started = time.monotonic()
     try:
         start_config_reset(confirmed=True)
@@ -83,7 +83,7 @@ _BLOCKED_RESET_HARNESS = _SETTINGS_PREAMBLE + dedent(
         )
         raise SystemExit(73) from exc
     finally:
-        config_module._settings_override.reset(token)
+        config_module.settings_override.reset(token)
     raise RuntimeError("reset unexpectedly acquired every target lock")
     """,
 )
@@ -111,14 +111,14 @@ _WRITER_HARNESS = _SETTINGS_PREAMBLE + dedent(
     from cadrumo.application.auth.operator import reset_operator_auth
     from cadrumo.tests.profile_capsule import open_test_profile_session
 
-    config_module._settings_override.reset(token)
+    config_module.settings_override.reset(token)
     settings = settings.model_copy(
         update={
             "cadrumo_file_lock_timeout_s": float(sys.argv[3]),
             "cadrumo_bucket_lock_poll_interval_s": 0.01,
         },
     )
-    token = config_module._settings_override.set(settings)
+    token = config_module.settings_override.set(settings)
     started = time.monotonic()
     try:
         with open_test_profile_session(sys.argv[2]):
@@ -136,7 +136,7 @@ _WRITER_HARNESS = _SETTINGS_PREAMBLE + dedent(
     else:
         raise RuntimeError("application writer unexpectedly entered the reset-owned bucket")
     finally:
-        config_module._settings_override.reset(token)
+        config_module.settings_override.reset(token)
     """,
 )
 
@@ -148,7 +148,7 @@ _START_HARNESS = _SETTINGS_PREAMBLE + dedent(
         operation = start_config_reset(confirmed=True)
         print(operation.model_dump_json())
     finally:
-        config_module._settings_override.reset(token)
+        config_module.settings_override.reset(token)
     """,
 )
 
@@ -165,7 +165,7 @@ _EXCLUDED_START_HARNESS = _SETTINGS_PREAMBLE + dedent(
         print(exc.context["operation_id"])
         raise SystemExit(76) from exc
     finally:
-        config_module._settings_override.reset(token)
+        config_module.settings_override.reset(token)
     raise RuntimeError("overlapping reset start unexpectedly succeeded")
     """,
 )
@@ -193,7 +193,7 @@ _RESUME_HARNESS = _SETTINGS_PREAMBLE + dedent(
         print("CONFIRMATION_REQUIRED")
         raise SystemExit(75) from exc
     finally:
-        config_module._settings_override.reset(token)
+        config_module.settings_override.reset(token)
     """,
 )
 
@@ -356,12 +356,12 @@ def test_fresh_process_reset_exclusion_retention_recheck_and_renewed_confirmatio
     tmp_path: Path,
 ) -> None:
     from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
-    from .._config_reset_models import (
+    from .._config_reset_repository import ConfigResetJournalRepository
+    from ..config_reset_models import (
         ConfigResetOperation,
         ConfigResetOperationStatus,
         ConfigResetPauseReason,
     )
-    from .._config_reset_repository import ConfigResetJournalRepository
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")

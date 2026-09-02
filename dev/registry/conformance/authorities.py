@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -46,7 +46,7 @@ class RegistryClosureAuthorities:
 @contextmanager
 def canonical_live_registry_closure_authorities(
     repository_root: Path,
-) -> Iterator[RegistryClosureAuthorities]:
+) -> Generator[RegistryClosureAuthorities]:
     """Yield current live authorities without inventing absent proof entries."""
     resolved_root = repository_root.resolve(strict=True)
     registry = bundled_authority()

@@ -46,7 +46,7 @@ from ..aggregation import (
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
 from .observations_repository import CalculationObservationRepository
 
-_STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
+STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
 
 # ---------------------------------------------------------------------------
@@ -406,7 +406,7 @@ class PreviousFilingSourceResolver:
                 activity_start_date=activity_start_date_for_bucket(str(context.bucket_id)),
                 excluded_binding_ids=self._excluded_binding_ids,
             )
-        except _STORAGE_DEGRADATION_ERRORS as exc:
+        except STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

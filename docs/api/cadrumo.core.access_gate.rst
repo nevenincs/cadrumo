@@ -13,6 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.core.access_gate._authorization
+   cadrumo.core.access_gate.authorization
    cadrumo.core.access_gate.errors
    cadrumo.core.access_gate.gate

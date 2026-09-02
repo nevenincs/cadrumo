@@ -29,12 +29,12 @@ import pytest
 from .....core.resources.bundled_data import bundled_path
 from ..record_design import extract_record_design
 from ..record_design_pdf_repairs import (
-    _collapse_stuttered_row_prefix,
-    _join_wrapped_row_descriptions,
-    _reattach_stranded_casilla_tags,
+    collapse_stuttered_row_prefix,
+    join_wrapped_row_descriptions,
+    reattach_stranded_casilla_tags,
 )
-from ..record_design_pdf_rows import _clean_pdf_line, _pdf_page_name
-from ..record_design_pdf_visual import _extract_pdf_text_lines
+from ..record_design_pdf_rows import clean_pdf_line, pdf_page_name
+from ..record_design_pdf_visual import extract_pdf_text_lines
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -50,9 +50,9 @@ _ORDINAL, _OFFSET, _CASILLA = "15", 164, "194"
 def _prepared_lines(name: str) -> tuple[str, ...]:
     """The line stream as the reader sees it just before the fold."""
     design = _MODELO_200 / name
-    return _collapse_stuttered_row_prefix(
-        _join_wrapped_row_descriptions(
-            _extract_pdf_text_lines(design.read_bytes(), source_label=name),
+    return collapse_stuttered_row_prefix(
+        join_wrapped_row_descriptions(
+            extract_pdf_text_lines(design.read_bytes(), source_label=name),
         ),
     )
 
@@ -80,7 +80,7 @@ def test_that_tag_is_stranded_before_the_fold_runs() -> None:
 
     assert f"[{_CASILLA}]" in stranded, "this design no longer strands the tag under test"
 
-    remaining = [line.strip() for line in _reattach_stranded_casilla_tags(prepared) if _STRANDED.match(line)]
+    remaining = [line.strip() for line in reattach_stranded_casilla_tags(prepared) if _STRANDED.match(line)]
 
     assert f"[{_CASILLA}]" not in remaining, "the fold left the tag under test stranded"
     assert len(remaining) < len(stranded), "the fold recovered nothing at all"
@@ -103,16 +103,16 @@ def test_the_fold_declines_a_neighbour_that_is_not_field_shaped() -> None:
     )
     heading = next(
         line.strip()
-        for line in _extract_pdf_text_lines(design.read_bytes(), source_label=design.name)
-        if _pdf_page_name(_clean_pdf_line(line)) is not None
+        for line in extract_pdf_text_lines(design.read_bytes(), source_label=design.name)
+        if pdf_page_name(clean_pdf_line(line)) is not None
     )
 
-    assert _reattach_stranded_casilla_tags((heading, "[523]")) == (heading, "[523]")
-    assert _reattach_stranded_casilla_tags(("Datos adicionales", "[523]")) == (
+    assert reattach_stranded_casilla_tags((heading, "[523]")) == (heading, "[523]")
+    assert reattach_stranded_casilla_tags(("Datos adicionales", "[523]")) == (
         "Datos adicionales",
         "[523]",
     )
-    assert _reattach_stranded_casilla_tags(("[523]",)) == ("[523]",)
+    assert reattach_stranded_casilla_tags(("[523]",)) == ("[523]",)
 
 
 def test_the_fold_does_not_append_a_tag_to_a_row_that_already_closes_with_one() -> None:
@@ -123,4 +123,4 @@ def test_the_fold_does_not_append_a_tag_to_a_row_that_already_closes_with_one() 
     """
     row = "15 164 17 N Balance - Otras reservas [193]"
 
-    assert _reattach_stranded_casilla_tags((row, "[194]")) == (row, "[194]")
+    assert reattach_stranded_casilla_tags((row, "[194]")) == (row, "[194]")

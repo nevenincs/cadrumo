@@ -17,7 +17,7 @@ from ....core.payment_election import PaymentElection
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
-from .._export import FilingExportError, export_draft
+from ..export import FilingExportError, export_draft
 from ..producer_snapshot import (
     FilingElectionFacts,
     Modelo111ProfileFacts,

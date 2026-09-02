@@ -26,28 +26,28 @@ from __future__ import annotations
 import pytest
 
 from ..record_design import extract_record_design
-from ..record_design_pdf_rows import _parse_pdf_row
+from ..record_design_pdf_rows import parse_pdf_row
 from .test_every_bundled_design_is_read_or_reported import _bundled_designs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_a_titular_row_keeps_its_position() -> None:
-    row = _parse_pdf_row("26 192 1 Tit C Bienes inmuebles no afectos. Inmueble 2. Contribuyente", 1)
+    row = parse_pdf_row("26 192 1 Tit C Bienes inmuebles no afectos. Inmueble 2. Contribuyente", 1)
 
     assert row is not None
     assert (row.offset, row.length, row.type_code) == (192, 1, "Tit")
 
 
 def test_a_length_and_type_written_without_a_space_still_split() -> None:
-    row = _parse_pdf_row('5 9 1A Indicador de pagina complementaria. Blanco o "C"', 1)
+    row = parse_pdf_row('5 9 1A Indicador de pagina complementaria. Blanco o "C"', 1)
 
     assert row is not None
     assert (row.offset, row.length, row.type_code) == (9, 1, "A")
 
 
 def test_a_spaced_row_is_unaffected() -> None:
-    row = _parse_pdf_row("6 10 13 N (A) Rdto. Trabajo - Retribuciones dinerarias", 1)
+    row = parse_pdf_row("6 10 13 N (A) Rdto. Trabajo - Retribuciones dinerarias", 1)
 
     assert row is not None
     assert (row.offset, row.length, row.type_code) == (10, 13, "N")
@@ -55,7 +55,7 @@ def test_a_spaced_row_is_unaffected() -> None:
 
 def test_an_unknown_type_token_is_still_refused() -> None:
     """Admitting these two tokens must not admit any token at all."""
-    assert _parse_pdf_row("26 192 1 Zzz Alguna descripcion", 1) is None
+    assert parse_pdf_row("26 192 1 Zzz Alguna descripcion", 1) is None
 
 
 @pytest.mark.parametrize("prefix", ["14-100-ejercicio-2009", "15-100-ejercicio-2010", "16-100-ejercicio-2011"])

@@ -21,21 +21,21 @@ from __future__ import annotations
 import pytest
 
 from ..record_design import extract_record_design
-from ..record_design_pdf_rows import _parse_pdf_row
+from ..record_design_pdf_rows import parse_pdf_row
 from .test_every_bundled_design_is_read_or_reported import _bundled_designs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_a_lettered_row_keeps_its_single_position() -> None:
-    row = _parse_pdf_row("A. 325 Alphabetic CORRECTION.", 1)
+    row = parse_pdf_row("A. 325 Alphabetic CORRECTION.", 1)
 
     assert row is not None
     assert (row.offset, row.length) == (325, 1)
 
 
 def test_a_lettered_row_keeps_its_position_range() -> None:
-    row = _parse_pdf_row("A. 350-367 Numeric CORRECTED TAX", 1)
+    row = parse_pdf_row("A. 350-367 Numeric CORRECTED TAX", 1)
 
     assert row is not None
     assert (row.offset, row.length) == (350, 18)
@@ -43,11 +43,11 @@ def test_a_lettered_row_keeps_its_position_range() -> None:
 
 def test_a_lettered_prose_line_is_still_refused() -> None:
     """The naturaleza guard, not the marker, is what admits a row."""
-    assert _parse_pdf_row("A. 15 personas que conviven con el declarante", 1) is None
+    assert parse_pdf_row("A. 15 personas que conviven con el declarante", 1) is None
 
 
 def test_an_unlettered_prose_line_is_still_refused() -> None:
-    assert _parse_pdf_row("68-107 APELLIDOS Y NOMBRE: Se consignara el primer", 1) is None
+    assert parse_pdf_row("68-107 APELLIDOS Y NOMBRE: Se consignara el primer", 1) is None
 
 
 def test_the_bundled_modelo_604_design_reads_both_records_whole() -> None:

@@ -42,7 +42,7 @@ import pytest
 
 from .....core.resources.bundled_data import bundled_path
 from ..record_design import extract_record_design
-from ..record_design_pdf_repairs import _BARE_COORDINATE_TRIPLE_RE, _rejoin_bare_coordinate_rows
+from ..record_design_pdf_repairs import _BARE_COORDINATE_TRIPLE_RE, rejoin_bare_coordinate_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -116,7 +116,7 @@ def test_a_triple_whose_successor_does_not_resume_is_declined() -> None:
         "7 11 1 A C The row below",
     )
 
-    assert _rejoin_bare_coordinate_rows(lines) == lines
+    assert rejoin_bare_coordinate_rows(lines) == lines
 
 
 def test_the_same_shape_is_rebuilt_when_the_successor_does_resume() -> None:
@@ -127,7 +127,7 @@ def test_the_same_shape_is_rebuilt_when_the_successor_does_resume() -> None:
         "6 11 1 A C The row below",
     )
 
-    rebuilt = _rejoin_bare_coordinate_rows(lines)
+    rebuilt = rejoin_bare_coordinate_rows(lines)
 
     assert rebuilt == (
         "5 10 1 An C Indicador de pagina complementaria.",
@@ -152,7 +152,7 @@ def test_the_mirrored_shape_is_rebuilt_when_the_naturaleza_half_sits_above() -> 
         "6 11 1 A C The row below",
     )
 
-    rebuilt = _rejoin_bare_coordinate_rows(lines)
+    rebuilt = rejoin_bare_coordinate_rows(lines)
 
     assert rebuilt[0] == "4 9 1 An C Fin de identificador de modelo."
     assert rebuilt[1].startswith("5 10 1 An C Indicador de pagina complementaria.")

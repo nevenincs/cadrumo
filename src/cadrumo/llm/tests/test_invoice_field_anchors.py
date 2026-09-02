@@ -38,6 +38,7 @@ from __future__ import annotations
 import json
 import re
 from decimal import Decimal
+from typing import ClassVar
 
 import pytest
 
@@ -389,7 +390,7 @@ class TestAForeignRateSurvivesTheSpanishEnumeration:
     these drive the real parser and the real grounder.
     """
 
-    _GERMAN_INVOICE: dict[str, str | None] = {
+    _GERMAN_INVOICE: ClassVar[dict[str, str | None]] = {
         "supplier_tax_id": "DE811907980",
         "invoice_number": "RE-2026-88",
         "invoice_date": "14/04/2026",
@@ -399,7 +400,7 @@ class TestAForeignRateSurvivesTheSpanishEnumeration:
         "grand_total": "1.190,00",
         "currency": "EUR",
     }
-    _GERMAN_ANCHORS: dict[str, str | None] = {
+    _GERMAN_ANCHORS: ClassVar[dict[str, str | None]] = {
         "supplier_tax_id": "USt-IdNr. DE811907980",
         "invoice_number": "Rechnung RE-2026-88",
         "invoice_date": "14/04/2026",

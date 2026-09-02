@@ -297,7 +297,7 @@ def test_prorrata_repository_caller_ast_census_has_only_explicit_dependencies() 
     """Every production/test consumer names its store; only two contract-refusal probes omit it."""
     target_calls = {
         "ProrrataRegularizacionSourceResolver",
-        "_resolve_iva_deduction_ratio",
+        "resolve_iva_deduction_ratio",
         "_resolve_prorrata_regularizacion_sources",
         "resolve_prorrata_regularizacion_sources",
         "aggregate_renta_ledger_expenses_from_repositories",

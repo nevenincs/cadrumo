@@ -32,6 +32,8 @@ from pathlib import Path
 
 import rtoml
 
+from .type_guards import is_object_dict, is_object_list
+
 
 def read_toml(path: Path, *, error_factory: Callable[[str], Exception]) -> dict[str, object]:
     """Parse a TOML file, re-raising failures via ``error_factory``.
@@ -51,9 +53,10 @@ def read_toml(path: Path, *, error_factory: Callable[[str], Exception]) -> dict[
             (``rtoml.TomlParsingError``).
     """
     try:
+        # No root-shape guard: TOML's grammar makes the document a table by
+        # construction, and `rtoml.load` is a py.typed dependency declaring
+        # `-> dict[str, Any]`. A refusal here could not fire.
         loaded = rtoml.load(path)
-        if not isinstance(loaded, Mapping):
-            raise error_factory(f"{path}: TOML root must be a mapping")
         raw: dict[object, object] = {}
         for key, value in loaded.items():
             raw[key] = value
@@ -123,9 +126,9 @@ def freeze_toml_value(value: object) -> object:
     this helper before validating nested payloads. Mappings stay mappings with
     their values frozen recursively; scalar TOML values are returned unchanged.
     """
-    if isinstance(value, list):
+    if is_object_list(value):
         return tuple(freeze_toml_value(item) for item in value)
-    if isinstance(value, dict):
+    if is_object_dict(value):
         return {key: freeze_toml_value(item) for key, item in value.items()}
     return value
 

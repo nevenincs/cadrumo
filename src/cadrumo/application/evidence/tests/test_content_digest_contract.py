@@ -15,7 +15,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from ....core.identity import ContentDigest
 from ....domain.buckets.event import BucketEventObjectType
-from ....entrypoints.cli._modelo_aux_payloads import EvidenceRecordRefPayload
+from ....entrypoints.cli.modelo_aux_payloads import EvidenceRecordRefPayload
 from ..models import EvidenceRecordRef
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

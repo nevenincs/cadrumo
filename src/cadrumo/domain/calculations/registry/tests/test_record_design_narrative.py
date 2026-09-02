@@ -10,7 +10,7 @@ import pytest
 from ..record_design import (
     extract_record_design,
 )
-from ..record_design_pdf_rows import _unnamed_position_candidate
+from ..record_design_pdf_rows import unnamed_position_candidate
 from ..record_design_schema import (
     RecordDesignSinglePositionCorrection,
 )
@@ -366,7 +366,7 @@ class TestSinglePositionCorrection:
     def test_a_declared_single_position_row_is_admitted(self) -> None:
         index = {("Tipo 1 - Registro De Declarante", 58): self._declaration()}
 
-        candidate = _unnamed_position_candidate(
+        candidate = unnamed_position_candidate(
             "58 TIPO DE SOPORTE",
             1,
             sheet="Tipo 1 - Registro De Declarante",
@@ -381,7 +381,7 @@ class TestSinglePositionCorrection:
     def test_an_undeclared_single_position_row_is_still_refused(self) -> None:
         """The control: without this the declaration would be buying nothing."""
         assert (
-            _unnamed_position_candidate(
+            unnamed_position_candidate(
                 "58 TIPO DE SOPORTE",
                 1,
                 sheet="Tipo 1 - Registro De Declarante",
@@ -395,13 +395,13 @@ class TestSinglePositionCorrection:
         index = {("Tipo 1 - Registro De Declarante", 58): self._declaration()}
 
         assert (
-            _unnamed_position_candidate(
+            unnamed_position_candidate(
                 "58 TIPO DE SOPORTE", 1, sheet="Tipo 2 - Registro De Declarado", single_position_corrections=index
             )
             is None
         )
         assert (
-            _unnamed_position_candidate(
+            unnamed_position_candidate(
                 "59 TIPO DE SOPORTE", 1, sheet="Tipo 1 - Registro De Declarante", single_position_corrections=index
             )
             is None

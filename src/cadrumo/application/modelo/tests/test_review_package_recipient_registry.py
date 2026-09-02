@@ -17,7 +17,7 @@ See Also:
         Strict register model roundtripped through the secure object store.
     :mod:`~application.modelo._review_package_recipient_encryption`:
         Consumer that encrypts review packages to registered public keys.
-    :mod:`~entrypoints.cli._config._collab`:
+    :mod:`~entrypoints.cli.config._collab`:
         CLI surface that lets operators add, list, and remove recipients.
 """
 

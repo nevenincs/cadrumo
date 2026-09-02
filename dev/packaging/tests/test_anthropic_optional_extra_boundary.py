@@ -92,8 +92,9 @@ def test_client_and_provider_loader_preserve_the_registered_extra_facts(
         import cadrumo
         from cadrumo.core import MissingOptionalExtraError
         from cadrumo.core.config import load_settings
-        from cadrumo.llm import LLMClient, LLMProvider
-        from cadrumo.llm._providers.anthropic import _load_anthropic_sdk
+        from cadrumo.llm.client import LLMClient
+        from cadrumo.llm.models import LLMProvider
+        from cadrumo.llm.providers.anthropic import _load_anthropic_sdk
 
         client = LLMClient(settings=load_settings())
         boundaries = (

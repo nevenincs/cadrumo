@@ -18,4 +18,3 @@ src/cadrumo/**/_test_*.py
 src/cadrumo/tests/
 
 # Test-only support modules whose names intentionally avoid pytest collection.
-src/cadrumo/adapters/outbound/aeat/auth/_fixtures.py

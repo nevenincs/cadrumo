@@ -9,12 +9,12 @@ from datetime import date
 
 import typer
 
-from ...application.modelo._data_inventory import (
+from ...application.modelo.binding_readiness import profile_resolvable_binding_ids
+from ...application.modelo.data_inventory import (
     DataInventoryCasilla,
     DataInventoryChecklist,
     data_inventory_checklist,
 )
-from ...application.modelo.binding_readiness import profile_resolvable_binding_ids
 from ...application.modelo.registry_discovery import (
     registry_bindings,
     registry_bindings_for_scope,

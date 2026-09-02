@@ -10,7 +10,7 @@ from ._common import active_bucket_id_or_refuse, emit_envelope
 
 
 def _evidence_bundle_service():
-    from ...application.evidence._service import EvidenceBundleService
+    from ...application.evidence.service import EvidenceBundleService
 
     return EvidenceBundleService()
 

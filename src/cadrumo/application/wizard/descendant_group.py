@@ -37,7 +37,7 @@ from ...core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES, Descendan
 from ...core.errors.hierarchy import ProfileAnswerTypeError
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR, CopyRefKind, FlowWidgetKind
 from ...core.identity import IdentityError, validate_identity
-from ...core.parsing import parse_iso8601_date
+from ...core.parsing.dates import parse_iso8601_date
 from ...core.text_bounds import CALENDAR_MONTH_MAX, CALENDAR_MONTH_MIN, is_calendar_month
 from ...core.time.clock import today_madrid
 from ...domain.deadlines.models import EntityType

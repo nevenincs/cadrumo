@@ -33,7 +33,7 @@ from __future__ import annotations
 
 import os
 import sys
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -141,7 +141,7 @@ def ready_clave_settings(tax_id: str) -> Settings:
 
 
 @contextmanager
-def isolated_aeat_env(**overrides: str) -> Iterator[None]:
+def isolated_aeat_env(**overrides: str) -> Generator[None]:
     """Clear every Settings env slot, apply explicit overrides, restore on exit.
 
     Despite its historical name, this includes Cadrumo product settings and
@@ -188,7 +188,7 @@ def isolated_aeat_env(**overrides: str) -> Iterator[None]:
 
 
 @contextmanager
-def scoped_sys_argv(argv: list[str]) -> Iterator[None]:
+def scoped_sys_argv(argv: list[str]) -> Generator[None]:
     """Pin ``sys.argv`` for the with-block.
 
     The CLI startup helpers in :mod:`cadrumo.entrypoints.cli._stdio` (and
@@ -247,7 +247,7 @@ def activate_output_language(language: OutputLanguage | None) -> None:
 
 
 @contextmanager
-def output_language_scope(language: OutputLanguage | None) -> Iterator[None]:
+def output_language_scope(language: OutputLanguage | None) -> Generator[None]:
     """Pin the output language for the with-block and restore it on exit.
 
     Restores the prior value even when the block mutates the variable partway
@@ -278,7 +278,7 @@ def output_language_scope(language: OutputLanguage | None) -> Iterator[None]:
 
 
 @contextmanager
-def scoped_env_var(name: str, value: str | None) -> Iterator[None]:
+def scoped_env_var(name: str, value: str | None) -> Generator[None]:
     """Pin a single ``os.environ`` entry for the with-block.
 
     Use this for env vars the AEAT backend deliberately reads from
@@ -312,7 +312,7 @@ def scoped_env_var(name: str, value: str | None) -> Iterator[None]:
 
 
 @contextmanager
-def scoped_cwd(path: Path) -> Iterator[None]:
+def scoped_cwd(path: Path) -> Generator[None]:
     """Change the process working directory for the with-block.
 
     The determinism-conformance and CLI path-echo suites need to prove a

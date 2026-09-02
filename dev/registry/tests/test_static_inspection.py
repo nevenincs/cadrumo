@@ -126,26 +126,36 @@ def test_m303_midyear_designs_are_canonically_selected_without_a_snapshot() -> N
 
 
 def test_m038_inspection_retains_exact_model_law_and_construct_evidence() -> None:
-    """The non-filing projection carries the selected revision's evidence union."""
+    """The non-filing projection carries the selected revision's evidence union.
+
+    The expected values track modelo 038's re-grounding from the 2002 orden onto
+    Orden HAC/646/2024: the revision was renamed, its legal refs gained the 2024
+    orden, its layout source became the 2024 design, and its parity ref was
+    renamed to match. The casillas, bindings and cross references are unchanged
+    by that move. This test asserted the pre-move values and had therefore never
+    passed since; four of its seven assertions were stale together.
+    """
     inspection = bundled_revision_inspection("038", filing_year=2025, period="01")
 
-    assert inspection.revision_id == "2002-y-siguientes"
+    assert inspection.revision_id == "2025-y-siguientes"
     assert inspection.legal_ref_ids == frozenset(
         {
             "ley-58-2003:art-93",
             "orden-hac-66-2002:art-1",
             "orden-hac-66-2002:art-6",
+            "orden-hac-646-2024:art-1",
+            "orden-hac-646-2024:df-unica",
         },
     )
     assert inspection.source_ref_ids == frozenset(
         {
-            "enrolled-modelo-038-layout",
+            "aeat-dr-038-2024",
             "enrolled-modelo-038-procedure",
         },
     )
     assert inspection.casilla_ids == frozenset({"decl.ejercicio", "decl.tipo-declaracion"})
     assert inspection.binding_ids == frozenset()
-    assert tuple(ref.id for ref in inspection.workbook_parity_refs) == ("modelo-038-orden-static-layout",)
+    assert tuple(ref.id for ref in inspection.workbook_parity_refs) == ("modelo-038-2024-static-layout",)
     assert inspection.live_cross_references == ()
 
 

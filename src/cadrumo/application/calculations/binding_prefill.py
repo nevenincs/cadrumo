@@ -76,7 +76,6 @@ from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ...domain.iva_compensation.errors import IvaCompensationCasillaReferenceError
 from ._per_grupo_member_keys import per_grupo_member_requirement_keys
-from ._revision_carry_gate import revision_carry_outcome
 from .errors import BindingPrefillTypeError
 from .iva_compensation_casillas import M303_COMPENSACION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA
 from .iva_compensation_casillas import (
@@ -89,6 +88,7 @@ from .iva_compensation_casillas import M303_RESULTADO_CASILLA as _M303_RESULTADO
 from .iva_compensation_casillas import M303_RESULTADO_FINAL_CASILLA as _M303_RESULTADO_FINAL_CASILLA
 from .iva_compensation_history import IvaCompensationHistoryRepository
 from .observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
+from .revision_carry_gate import revision_carry_outcome
 
 _STRING_SEQUENCE = TypeAdapter(tuple[str, ...])
 
@@ -138,7 +138,7 @@ def _revision_carry_outcome(payload: ObservationEnvelopePayload) -> bool:
     """Return whether a payload's revision stamp must be refused.
 
     Thin adapter over the single shared
-    :func:`~application.calculations._revision_carry_gate.revision_carry_outcome`
+    :func:`~application.calculations.revision_carry_gate.revision_carry_outcome`
     gate: it extracts the source context off the payload's observation and
     delegates the refusal decision so the binding-prefill, cross-period
     clean-state, and relation-prefill carry reads share one law-determined

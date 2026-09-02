@@ -13,7 +13,7 @@ import asyncio
 import secrets
 import threading
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -712,7 +712,7 @@ class LLMClient:
                 attempt += 1
 
     @contextmanager
-    def _on_host_admission(self, provider: LLMProvider) -> Iterator[None]:
+    def _on_host_admission(self, provider: LLMProvider) -> Generator[None]:
         """Hold one on-host inference slot for the duration of a dispatch.
 
         Applied at the client's single dispatch point, like every other boundary

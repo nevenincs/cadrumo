@@ -278,13 +278,13 @@ def collect_minimo_descendientes_prorrata_inferred_diagnostics(
 #: at exactly the moment it had something to say. Naming a few and counting the
 #: remainder keeps it actionable without letting household size decide whether
 #: the advisory can be raised at all.
-_MAX_NAMED_DESCENDANTS = 3
+MAX_NAMED_DESCENDANTS = 3
 
 
 def _name_indices(indices: list[int]) -> str:
     """Render descendant paths for a message, bounded regardless of household size."""
-    shown = ", ".join(f"renta_family.descendiente.{index}" for index in indices[:_MAX_NAMED_DESCENDANTS])
-    remainder = len(indices) - _MAX_NAMED_DESCENDANTS
+    shown = ", ".join(f"renta_family.descendiente.{index}" for index in indices[:MAX_NAMED_DESCENDANTS])
+    remainder = len(indices) - MAX_NAMED_DESCENDANTS
     return f"{shown} and {remainder} more" if remainder > 0 else shown
 
 

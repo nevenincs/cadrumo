@@ -17,8 +17,8 @@ from openpyxl import load_workbook
 
 from ......domain.transactions.enums import TransactionDirection
 from ......tests import FIXTURES_DIR
-from .._xlsx import XlsxProvider
 from ..base import InvalidFinancialSourceError
+from ..xlsx import XlsxProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

@@ -226,22 +226,22 @@ def load_registry_diagnostic_classification(
     authority through :meth:`ValidatedRegistryAuthority.load`.
     """
     from .authority import (
-        _canonical_authority_root_pair,
-        _construct_authority,
-        _fingerprint_key,
+        canonical_authority_root_pair,
         collect_registry_identity_fingerprints,
+        construct_authority,
+        fingerprint_key,
     )
     from .identity import resolve_registry_identity
 
-    identity_pair = _canonical_authority_root_pair(root, source_root)
+    identity_pair = canonical_authority_root_pair(root, source_root)
     resolved_root = identity_pair.root
     resolved_source_root = identity_pair.source_root
     identity = resolve_registry_identity(
         resolved_root,
         collect_fingerprints=collect_registry_identity_fingerprints,
     )
-    source_evidence_key = _fingerprint_key(collect_source_evidence_fingerprints(resolved_source_root))
-    authority = _construct_authority(
+    source_evidence_key = fingerprint_key(collect_source_evidence_fingerprints(resolved_source_root))
+    authority = construct_authority(
         resolved_root,
         resolved_source_root,
         source_evidence_key.fingerprints,

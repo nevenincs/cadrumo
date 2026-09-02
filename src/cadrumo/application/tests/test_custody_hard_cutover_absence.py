@@ -249,7 +249,7 @@ _MASTER_KEY_BUCKET_SESSION = "master-key-module:adapters.persistence.storage.mas
 # the boundary rule it breaches is closed by promoting the module, and the
 # declaration expires the moment that lands.  Two sibling bucket declarations
 # stood here until that promotion landed for them, and were deleted with it.
-_BLOB_STORE_MATERIALISATION = "private-path:adapters.persistence.storage.blob_store._materialisation"
+_BLOB_STORE_MATERIALISATION = "private-path:adapters.persistence.storage.blob_store.materialisation"
 
 _DECLARED_OPEN_VIOLATIONS: dict[str, _OpenViolation] = {
     "auth/certificate_secret_backend.py": _OpenViolation(

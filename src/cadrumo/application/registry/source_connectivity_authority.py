@@ -347,9 +347,9 @@ class LiveSourceConnectivityProofAuthority:
         if self.independent_expectations and self._expectation_for(connection) is None:
             return False
         ownership = self.source_ownership.ownership_for(connection.source_kind)
-        if isinstance(ownership, CalculationRouteManualSourceOwnership):
-            return ownership.owner_id == connection.resolver_id
-        return ownership is not None and ownership.resolver_id == connection.resolver_id
+        if isinstance(ownership, CalculationRouteResolverSourceOwnership):
+            return ownership.resolver_id == connection.resolver_id
+        return ownership is not None and ownership.owner_id == connection.resolver_id
 
     def operator_workflow_reaches_source(
         self,
@@ -380,9 +380,9 @@ class LiveSourceConnectivityProofAuthority:
         if ownership is None or len(workflows) != 1 or ownership.route_id is not workflows[0].route_id:
             return False
         owner_id = (
-            ownership.owner_id
-            if isinstance(ownership, CalculationRouteManualSourceOwnership)
-            else ownership.resolver_id
+            ownership.resolver_id
+            if isinstance(ownership, CalculationRouteResolverSourceOwnership)
+            else ownership.owner_id
         )
         return owner_id == connection.resolver_id
 

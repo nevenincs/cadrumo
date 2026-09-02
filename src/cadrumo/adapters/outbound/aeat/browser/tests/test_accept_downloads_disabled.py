@@ -39,7 +39,7 @@ See Also:
 from __future__ import annotations
 
 import threading
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -83,7 +83,7 @@ class _DownloadHandler(BaseHTTPRequestHandler):
 
 
 @asynccontextmanager
-async def _local_download_server() -> AsyncIterator[str]:
+async def _local_download_server() -> AsyncGenerator[str]:
     server = ThreadingHTTPServer(("127.0.0.1", 0), _DownloadHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()

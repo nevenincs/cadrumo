@@ -26,24 +26,9 @@ accidentally depend on private compatibility aliases.
 
 from __future__ import annotations
 
-from datetime import date
-
 from .codes import IsoCurrencyCode, normalise_iso_3166_alpha2_jurisdiction, normalise_iso_4217_currency
-from .dates import IsoDateString, parse_date, require_iso8601_date
-from .dates import _parse_ddmmyyyy_date as _parse_ddmmyyyy_date_impl
-from .dates import _parse_iso8601_date as _parse_iso8601_date_impl
+from .dates import IsoDateString, parse_date, parse_ddmmyyyy_date, parse_iso8601_date, require_iso8601_date
 from .utils import enum_value, parse_bool
-
-
-def parse_iso8601_date(raw: str | None) -> date | None:
-    """Parse an ISO-8601 date string (``YYYY-MM-DD``) into a :class:`~datetime.date`."""
-    return _parse_iso8601_date_impl(raw)
-
-
-def parse_ddmmyyyy_date(raw: str | None) -> date | None:
-    """Parse a Spanish day-first date string (``DD-MM-YYYY`` / ``DD/MM/YYYY``)."""
-    return _parse_ddmmyyyy_date_impl(raw)
-
 
 __all__ = [
     "IsoCurrencyCode",

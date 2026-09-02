@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -29,7 +29,7 @@ def _invoke(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Res
 
 
 @contextmanager
-def open_bucket_session(tmp_path: Path) -> Iterator[None]:
+def open_bucket_session(tmp_path: Path) -> Generator[None]:
     """Open the shared real-CLI ledger session against an isolated storage root.
 
     The registered profile is minimal PLUS a declared IVA block, and the second

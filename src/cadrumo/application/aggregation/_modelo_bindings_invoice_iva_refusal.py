@@ -10,23 +10,23 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...domain.invoices.models import Invoice
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
-from ._iva_ledger import (
-    IvaLedgerProrrataApportionment,
-    resolve_iva_ledger_binding_values,
-)
 from ._modelo_bindings_invoice_iva import (
-    _INVOICE_LEDGER_SCREEN_BINDINGS,
-    _M303_INVOICE_EVIDENCE_SAMPLE_LIMIT,
-    _InvoiceIvaSilenceReport,
-    _line_contributes_to_the_iva_screen,
-    _screened_invoice_iva_observations,
-    _ScreenedInvoiceIva,
+    INVOICE_LEDGER_SCREEN_BINDINGS,
+    M303_INVOICE_EVIDENCE_SAMPLE_LIMIT,
+    InvoiceIvaSilenceReport,
+    ScreenedInvoiceIva,
+    line_contributes_to_the_iva_screen,
+    screened_invoice_iva_observations,
 )
 from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from ._source_mesh import (
     CalculationSourceContext,
 )
 from .errors import AggregationValidationError, t
+from .iva_ledger import (
+    IvaLedgerProrrataApportionment,
+    resolve_iva_ledger_binding_values,
+)
 
 
 def _uncovered_withheld_invoice_cuota(
@@ -58,7 +58,7 @@ def _uncovered_withheld_invoice_cuota(
             line.iva_amount
             for invoice in invoices
             for line in invoice.lines
-            if _line_contributes_to_the_iva_screen(line.subtotal, line.iva_amount)
+            if line_contributes_to_the_iva_screen(line.subtotal, line.iva_amount)
         ),
         Decimal("0"),
     )
@@ -69,7 +69,7 @@ def _uncovered_withheld_invoice_cuota(
     return max(evidence - ledger_total, Decimal("0"))
 
 
-def _raise_if_invoice_iva_would_be_silent(
+def raise_if_invoice_iva_would_be_silent(
     *,
     context: CalculationSourceContext,
     period: Period,
@@ -77,7 +77,7 @@ def _raise_if_invoice_iva_would_be_silent(
     ledger_observations: Sequence[IvaLedgerObservation] = (),
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
     prorrata_apportionment: IvaLedgerProrrataApportionment | None,
-) -> _InvoiceIvaSilenceReport:
+) -> InvoiceIvaSilenceReport:
     """Refuse a filing whose invoice IVA would be absent from its ledger totals.
 
     The IVA cuota boxes are sourced from ``ledger_iva_aggregation``: the
@@ -116,10 +116,10 @@ def _raise_if_invoice_iva_would_be_silent(
         every invoice was withheld produces no observations at all, and that is
         precisely the case where staying silent would be worst.
     """
-    screened_bindings = _INVOICE_LEDGER_SCREEN_BINDINGS.get(str(context.modelo))
+    screened_bindings = INVOICE_LEDGER_SCREEN_BINDINGS.get(str(context.modelo))
     if screened_bindings is None:
-        return _InvoiceIvaSilenceReport()
-    screened = _screened_invoice_iva_observations(
+        return InvoiceIvaSilenceReport()
+    screened = screened_invoice_iva_observations(
         context=context,
         period=period,
         ledger_observations=ledger_observations,
@@ -138,10 +138,10 @@ def _raise_if_screened_invoice_iva_would_be_silent(
     *,
     context: CalculationSourceContext,
     screened_bindings: tuple[BindingId, ...],
-    screened: _ScreenedInvoiceIva,
+    screened: ScreenedInvoiceIva,
     transaction_binding_values: Mapping[BindingId, Decimal],
     prorrata_apportionment: IvaLedgerProrrataApportionment | None,
-) -> _InvoiceIvaSilenceReport:
+) -> InvoiceIvaSilenceReport:
     """Compare screened invoice facts with the canonical ledger projection.
 
     The repository-backed wrapper owns acquisition and period screening. This
@@ -171,7 +171,7 @@ def _raise_if_screened_invoice_iva_would_be_silent(
                 "filing_year": str(context.filing_year),
                 "period": context.period.registry_token,
                 "source_kind": "ledger_iva_aggregation",
-                "invoice_ids": missing_invoice_ids[:_M303_INVOICE_EVIDENCE_SAMPLE_LIMIT],
+                "invoice_ids": missing_invoice_ids[:M303_INVOICE_EVIDENCE_SAMPLE_LIMIT],
                 "invoice_count": str(len(missing_invoice_ids)),
                 "invoice_cuota_exceeding_ledger": str(uncovered_authority_evidence),
             },
@@ -188,7 +188,7 @@ def _raise_if_screened_invoice_iva_would_be_silent(
             ),
         )
     if not screened.observations:
-        return _InvoiceIvaSilenceReport(
+        return InvoiceIvaSilenceReport(
             category_counterparty_mismatches=screened.category_counterparty_mismatches,
             reverse_charge_underivable=screened.reverse_charge_underivable,
             deduction_authority_missing=screened.deduction_authority_missing,
@@ -207,7 +207,7 @@ def _raise_if_screened_invoice_iva_would_be_silent(
         > (transaction_value := transaction_binding_values.get(binding_id, Decimal("0")))
     }
     if not missing_binding_values:
-        return _InvoiceIvaSilenceReport(
+        return InvoiceIvaSilenceReport(
             compared=screened.compared,
             category_counterparty_mismatches=screened.category_counterparty_mismatches,
             reverse_charge_underivable=screened.reverse_charge_underivable,
@@ -226,7 +226,7 @@ def _raise_if_screened_invoice_iva_would_be_silent(
             "invoice_domestic_iva_excess_by_binding": {
                 str(binding_id): str(amount) for binding_id, amount in missing_binding_values.items()
             },
-            "invoice_ids": tuple(sorted(screened.invoice_ids)[:_M303_INVOICE_EVIDENCE_SAMPLE_LIMIT]),
+            "invoice_ids": tuple(sorted(screened.invoice_ids)[:M303_INVOICE_EVIDENCE_SAMPLE_LIMIT]),
             "invoice_count": str(len(screened.invoice_ids)),
         },
         precondition_verdict=aggregation_no_recovery_verdict(

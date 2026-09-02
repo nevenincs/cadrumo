@@ -9,7 +9,7 @@ binds the exact record session around each read or replacement.
 from __future__ import annotations
 
 import contextlib
-from collections.abc import Iterable, Iterator
+from collections.abc import Generator, Iterable
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -53,7 +53,7 @@ def _active_bucket_dek(profile_id: UUID) -> bytes:
 
 
 @contextmanager
-def open_test_profile_session(profile_id: str | UUID) -> Iterator[str]:
+def open_test_profile_session(profile_id: str | UUID) -> Generator[str]:
     """Open one real bucket session for capsule-backed integration tests.
 
     The application no longer exposes a create-time or generic storage-span
@@ -144,7 +144,7 @@ def bound_test_profile_record(
     profile_id: str | UUID,
     *,
     root: Path | None = None,
-) -> Iterator[ProfileRecordRepository]:
+) -> Generator[ProfileRecordRepository]:
     """Yield the current repository while its real record session is bound."""
     identity = UUID(canonical_profile_bucket_id(profile_id))
     storage_root = effective_storage_root(root)

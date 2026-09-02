@@ -57,8 +57,8 @@ def test_resume_pauses_when_a_content_covered_custody_record_changed(tmp_path: P
     The capsule still parses cleanly afterwards, so nothing but the digest
     comparison can be what refuses it -- which is precisely the claim.
     """
-    from .._config_reset_models import ConfigResetOperationStatus, ConfigResetPauseReason
     from ..config_reset import resume_config_reset, start_config_reset
+    from ..config_reset_models import ConfigResetOperationStatus, ConfigResetPauseReason
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_ID, label="Tamper target", tax_id="00000000T")

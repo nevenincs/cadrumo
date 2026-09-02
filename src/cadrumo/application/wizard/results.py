@@ -9,7 +9,7 @@ the wizard, not the CLI transport — because the CLI package sits above
 cannot reach back up into an ``entrypoints.cli`` payload module for a class
 to construct.
 
-Before this module existed, ``entrypoints.cli._config_payloads`` carried a
+Before this module existed, ``entrypoints.cli.config_payloads`` carried a
 same-shaped pair of classes purely to satisfy the CLI-leaf-has-a-registered-
 schema conformance gate; nothing ever imported or constructed them, and the
 wizard emitted an untyped ``dict`` instead. A field drifting between the two

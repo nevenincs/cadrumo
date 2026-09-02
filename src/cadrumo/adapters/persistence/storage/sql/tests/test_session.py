@@ -7,7 +7,7 @@ running statements through real SQLAlchemy sessions backed by SQLite.
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -24,7 +24,7 @@ _SESSION_LOGGER_NAME = "cadrumo.adapters.persistence.storage.sql.session"
 
 
 @contextmanager
-def _engine(tmp_path: Path) -> Iterator[Engine]:
+def _engine(tmp_path: Path) -> Generator[Engine]:
     engine = bootstrap_sqlite_engine(tmp_path / "session.db")
     try:
         yield engine

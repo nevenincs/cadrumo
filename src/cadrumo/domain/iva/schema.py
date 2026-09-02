@@ -32,7 +32,7 @@ from pydantic import (
 from ...core.citation_grounding import CitationGrounding
 from ...core.errors.severity import BaseSeverity
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.parsing import parse_iso8601_date
+from ...core.parsing.dates import parse_iso8601_date
 from ...core.validity_window import ValidityWindow
 from .errors import IvaValidationError
 

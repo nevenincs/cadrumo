@@ -29,7 +29,7 @@ from ...core.external_constants import (
 )
 from ...core.identity import SubjectTaxId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.parsing import parse_iso8601_date
+from ...core.parsing.dates import parse_iso8601_date
 from ...core.text_bounds import CalendarMonth
 from .errors import ProfileValidationError
 

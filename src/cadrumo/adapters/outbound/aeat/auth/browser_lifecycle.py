@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from .....application.auth.protocols import BrowserContextPort, BrowserSessionPort
@@ -31,7 +31,7 @@ class _CloseIntentBarrier:
         return self._close_intents
 
     @asynccontextmanager
-    async def work(self) -> AsyncIterator[None]:
+    async def work(self) -> AsyncGenerator[None]:
         """Enter ordinary work only when every registered closer has exited."""
         while True:
             await self._no_close_intents.wait()
@@ -45,7 +45,7 @@ class _CloseIntentBarrier:
             self._gate.release()
 
     @asynccontextmanager
-    async def close(self) -> AsyncIterator[None]:
+    async def close(self) -> AsyncGenerator[None]:
         """Register one close intent and serialize its teardown sequence."""
         async with self._state_lock:
             self._close_intents += 1

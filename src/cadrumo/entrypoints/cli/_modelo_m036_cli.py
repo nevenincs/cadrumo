@@ -13,7 +13,7 @@ from ...application.modelo.m036_lifecycle import (
     record_m036_declaration,
 )
 from ...core.i18n.render import tr
-from ...core.parsing import parse_iso8601_date
+from ...core.parsing.dates import parse_iso8601_date
 from ...domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ._common import active_bucket_id_or_refuse, emit_envelope
 from ._modelo_behavior_support import require_active_profile

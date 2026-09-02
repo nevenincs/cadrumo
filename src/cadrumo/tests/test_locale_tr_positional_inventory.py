@@ -70,7 +70,7 @@ _NON_AEAT_EXCEPTION_CLASSES = frozenset(
 _NON_AEAT_FACTORY_FUNCTIONS = frozenset(
     {
         "_bad",  # cli/_common.py factory for typer.BadParameter
-        "_google_refusal",  # cli/_config/_google.py factory for CliRefusedBoundaryError — has its own correct pattern
+        "google_refusal",  # cli/config/_google.py factory for CliRefusedBoundaryError — has its own correct pattern
     },
 )
 

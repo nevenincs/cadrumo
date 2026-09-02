@@ -6,9 +6,9 @@ Rows map CLI boundary exception qualnames to stable
 
 from ..error_codes import ErrorCategory, ErrorCode
 
-_DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
+DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "cadrumo.entrypoints.cli._config.errors.ConfigBoundaryError",
+        "cadrumo.entrypoints.cli.config.errors.ConfigBoundaryError",
         ErrorCode(
             code="ERROR_CONFIG_BOUNDARY",
             category=ErrorCategory.ERROR,

@@ -17,8 +17,8 @@ _BARE_CORE_PROBE = "\n".join(
     (
         "import json",
         "from pathlib import Path",
-        "from cadrumo.adapters.inbound.financial.providers import OfxProvider",
-        "from cadrumo.core import OFX_EXTRA, optional_extra_available",
+        "from cadrumo.adapters.inbound.financial.providers.ofx import OfxProvider",
+        "from cadrumo.core.optional_extras import OFX_EXTRA, optional_extra_available",
         "assert not optional_extra_available(OFX_EXTRA)",
         "validation = OfxProvider().validate_source(Path(__import__('sys').argv[1]))",
         "print(json.dumps({'is_valid': validation.is_valid, 'extra': validation.unavailable_optional_extra, 'warnings': validation.warnings}))",

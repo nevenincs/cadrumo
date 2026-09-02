@@ -370,7 +370,7 @@ def _identification_state(
 def _counterparty_residency_field(direction: InvoiceKind) -> str:
     """Return which residency slot the COUNTERPARTY occupies, for this direction.
 
-    The establishment counterpart of :func:`_counterparty_identification_field`,
+    The establishment counterpart of :func:`counterparty_identification_field`,
     and it resolves the same way: on an issued invoice the filer is the issuer,
     so the counterparty is the customer; on a received one the filer is the
     customer, so the counterparty is the issuer.
@@ -536,7 +536,7 @@ def _status_axis_gap(
     """Demand the customer's IVA status only where the table's verdict turns on it."""
     if status is not None:
         return None
-    if not _rules._axis_forks_the_law(probe, slices=[(_STATUS_CANDIDATES, (kind,)) for kind in kind_candidates]):
+    if not _rules.axis_forks_the_law(probe, slices=[(_STATUS_CANDIDATES, (kind,)) for kind in kind_candidates]):
         return None
     return _customer_tax_status_gap(inputs)
 
@@ -551,7 +551,7 @@ def _supply_nature_axis_gap(
     """Demand the supply nature only where the table's verdict turns on it."""
     if supply_nature is not None:
         return None
-    if not _rules._axis_forks_the_law(
+    if not _rules.axis_forks_the_law(
         probe,
         slices=[((candidate,), kind_candidates) for candidate in status_candidates],
     ):
@@ -577,7 +577,7 @@ def _identification_axis_gap(
     """Demand the counterparty's NIF-IVA only where a reachable branch consumes it."""
     if counterparty_state is not None:
         return None
-    if PartyFact.IVA_IDENTIFICATION_STATE not in _rules._facts_consumed(
+    if PartyFact.IVA_IDENTIFICATION_STATE not in _rules.facts_consumed(
         consumption_probe,
         status_candidates=status_candidates,
         kind_candidates=kind_candidates,
@@ -616,9 +616,7 @@ def _unresolved_axis_gaps(
     # value, so it holds genuinely fixed while the other is judged.
     status_candidates = (status,) if status is not None else _STATUS_CANDIDATES
     kind_candidates = (
-        (_rules._NATURE_TO_KIND[supply_nature],)
-        if supply_nature is not None
-        else tuple(_rules._NATURE_TO_KIND.values())
+        (_rules.NATURE_TO_KIND[supply_nature],) if supply_nature is not None else tuple(_rules.NATURE_TO_KIND.values())
     )
     gaps = (
         _status_axis_gap(_probe, status=status, kind_candidates=kind_candidates, inputs=inputs),
@@ -690,7 +688,7 @@ def _initial_classification_state(
     # An undetermined status is passed as an OPEN axis rather than as a value,
     # so the tier is demanded alongside it instead of one round-trip later.
     settled_status = None if status is _UNDETERMINED_STATUS else status
-    if rate_tier is None and _rules._domestic_rate_tier_is_reachable(
+    if rate_tier is None and _rules.domestic_rate_tier_is_reachable(
         issuer_scope,
         customer_scope,
         supply_nature,
@@ -822,14 +820,14 @@ def assemble_classification_criteria(
             rate_tier=rate_tier,
         )
 
-    counterparty_field = _rules._counterparty_identification_field(direction)
+    counterparty_field = _rules.counterparty_identification_field(direction)
     missing.extend(
         _unresolved_axis_gaps(
             _criteria_for,
             status=status,
             supply_nature=supply_nature,
             counterparty_field=counterparty_field,
-            counterparty_state=_rules._state_for_field(
+            counterparty_state=_rules.state_for_field(
                 counterparty_field,
                 issuer=issuer_state,
                 customer=customer_state,
@@ -844,7 +842,7 @@ def assemble_classification_criteria(
     return ClassificationAssembly(
         criteria=_criteria_for(
             status if status is not None else _UNDETERMINED_STATUS,
-            _rules._NATURE_TO_KIND[supply_nature] if supply_nature is not None else _rules._NATURE_INDIFFERENT_KIND,
+            _rules.NATURE_TO_KIND[supply_nature] if supply_nature is not None else _rules.NATURE_INDIFFERENT_KIND,
         ),
     )
 
@@ -943,7 +941,7 @@ def _table_verdict(assembly: ClassificationAssembly) -> IvaCategory | None:
     """Return the category the rule table placed this operation in, if any.
 
     :attr:`~domain.iva.IvaCategory.UNKNOWN` is read as "not established" rather
-    than as a treatment, matching how :func:`_axis_forks_the_law` reads it: it
+    than as a treatment, matching how :func:`axis_forks_the_law` reads it: it
     is the table's no-rule-matched sentinel, and carrying it forward as a
     verdict would make an unplaced operation indistinguishable from a placed
     one at every later reader.

@@ -8,7 +8,7 @@ from ....application.auth.operator_results import AuthConfigureResult
 from ....application.operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .._common import resolve_cli_precondition_action
-from .._config_payloads import AuthConfigurePayload
+from ..config_payloads import AuthConfigurePayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

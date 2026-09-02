@@ -23,7 +23,7 @@ _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), 
 _STR = ValueContract(DeferredTarget("builtins", "str"))
 _INT = ValueContract(DeferredTarget("builtins", "int"))
 _BOOL = ValueContract(DeferredTarget("builtins", "bool"))
-_TIER = ValueContract(DeferredTarget("cadrumo.core.telemetry", "TelemetryTier"))
+_TIER = ValueContract(DeferredTarget("cadrumo.core.telemetry.tier", "TelemetryTier"))
 _PAYLOADS = "cadrumo.entrypoints.cli._diagnostics_payloads"
 
 

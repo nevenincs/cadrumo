@@ -6,7 +6,7 @@ Rows map domain-layer exception qualnames to stable
 
 from ..error_codes import ErrorCategory, ErrorCode
 
-_DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
+DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "cadrumo.domain.buckets.errors.BucketsError",
         ErrorCode(

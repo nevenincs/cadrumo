@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.sync_surface import SyncSurface
 from ....core.time.clock import now
-from ..sync_runs._persist import record_sync_run
+from ..sync_runs.persist import record_sync_run
 from ..sync_runs.records import SyncRunRecordRepositoryProtocol, bounded_scope_description, coverage_of
 
 if TYPE_CHECKING:

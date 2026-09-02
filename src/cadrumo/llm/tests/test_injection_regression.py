@@ -46,7 +46,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from decimal import Decimal
 from hashlib import sha256
@@ -142,7 +142,7 @@ def _transcription() -> DocumentTranscription:
 
 
 @contextmanager
-def _serve_authored_reply(reply: str) -> Iterator[str]:
+def _serve_authored_reply(reply: str) -> Generator[str]:
     """Serve one test-authored reply over a real loopback HTTP server.
 
     The bytes are this module's, never a model's. What is real here is the

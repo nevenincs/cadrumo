@@ -42,11 +42,11 @@ from ...domain.modelos.row_models import ModeloDetailRow
 from ..operations.models import OperationDefinitionId, OperationId
 from ..operator_actions.models import ActionReference
 from .edit_contract import (
+    EditModel,
     ModeloEditCompatibilityTupleV1,
     ModeloEditExecutionEffect,
     ModeloEditMutationFamily,
     ModeloEditMutationResultReceiptV1,
-    _EditModel,
 )
 from .workspace_models import (
     ModeloWorkspaceCapabilityDisposition,
@@ -178,20 +178,20 @@ class ModeloEditRefusalCode(StrEnum):
     STALE_EDIT_BASELINE = "stale_edit_baseline"
 
 
-class ModeloEditVersionHeader(_EditModel):
+class ModeloEditVersionHeader(EditModel):
     """Minimal pre-dispatch shape read before target or financial input parsing."""
 
     edit_contract_version: Annotated[int, Field(ge=1)]
 
 
-class ModeloEditScalarAddressV1(_EditModel):
+class ModeloEditScalarAddressV1(EditModel):
     """A canonical semantic scalar address, keyed by the registry casilla identity."""
 
     kind: Literal["scalar"] = "scalar"
     casilla_id: CasillaId
 
 
-class ModeloEditBindingAddressV1(_EditModel):
+class ModeloEditBindingAddressV1(EditModel):
     """A canonical binding-override address, keyed by the registry binding identity.
 
     Distinct from :class:`ModeloEditScalarAddressV1`: a binding override
@@ -205,7 +205,7 @@ class ModeloEditBindingAddressV1(_EditModel):
     binding_id: BindingId
 
 
-class ModeloEditExistingRowAddressV1(_EditModel):
+class ModeloEditExistingRowAddressV1(EditModel):
     """The application-issued canonical coordinate of one persisted repeated row."""
 
     kind: Literal["existing_row"] = "existing_row"
@@ -213,7 +213,7 @@ class ModeloEditExistingRowAddressV1(_EditModel):
     row_index: Annotated[int, Field(ge=1)]
 
 
-class ModeloEditNewRowCorrelationV1(_EditModel):
+class ModeloEditNewRowCorrelationV1(EditModel):
     """An opaque client correlation for a row not yet assigned persistence identity.
 
     Carries no persistence meaning; the canonical row coordinate is minted by
@@ -232,7 +232,7 @@ type ModeloEditRowAddressV1 = Annotated[
 ]
 
 
-class ModeloEditDetailRowAddressV1(_EditModel):
+class ModeloEditDetailRowAddressV1(EditModel):
     """The natural-key address of one ``ModeloDetailRow``, never position or a minted id.
 
     ``detail_row_kind`` is the discriminated ``ModeloDetailRow.row_type`` value
@@ -292,7 +292,7 @@ axis, and the permitted surface carries no casilla value.
 """
 
 
-class ModeloEditWritableScalarSurfaceEntryV1(_EditModel):
+class ModeloEditWritableScalarSurfaceEntryV1(EditModel):
     """One scalar address the baseline admits for writing, with its allowed intents."""
 
     kind: Literal["writable_scalar"] = "writable_scalar"
@@ -310,7 +310,7 @@ class ModeloEditWritableScalarSurfaceEntryV1(_EditModel):
         return value
 
 
-class ModeloEditNonWritableScalarSurfaceEntryV1(_EditModel):
+class ModeloEditNonWritableScalarSurfaceEntryV1(EditModel):
     """One scalar address the baseline exposes as read-only, with its reason."""
 
     kind: Literal["non_writable_scalar"] = "non_writable_scalar"
@@ -318,7 +318,7 @@ class ModeloEditNonWritableScalarSurfaceEntryV1(_EditModel):
     reason: ModeloEditNonWritableReason
 
 
-class ModeloEditWritableRowGroupSurfaceEntryV1(_EditModel):
+class ModeloEditWritableRowGroupSurfaceEntryV1(EditModel):
     """One repeated-row group the baseline admits for writing."""
 
     kind: Literal["writable_row_group"] = "writable_row_group"
@@ -343,7 +343,7 @@ class ModeloEditWritableRowGroupSurfaceEntryV1(_EditModel):
         return self
 
 
-class ModeloEditNonWritableRowGroupSurfaceEntryV1(_EditModel):
+class ModeloEditNonWritableRowGroupSurfaceEntryV1(EditModel):
     """One repeated-row group the baseline exposes as read-only, with its reason."""
 
     kind: Literal["non_writable_row_group"] = "non_writable_row_group"
@@ -351,7 +351,7 @@ class ModeloEditNonWritableRowGroupSurfaceEntryV1(_EditModel):
     reason: ModeloEditNonWritableReason
 
 
-class ModeloEditWritableBindingOverrideSurfaceEntryV1(_EditModel):
+class ModeloEditWritableBindingOverrideSurfaceEntryV1(EditModel):
     """One binding the baseline admits the operator-facing ``--binding`` override for.
 
     Distinct from a scalar or row-group entry: it addresses
@@ -375,7 +375,7 @@ class ModeloEditWritableBindingOverrideSurfaceEntryV1(_EditModel):
         return value
 
 
-class ModeloEditNonWritableBindingOverrideSurfaceEntryV1(_EditModel):
+class ModeloEditNonWritableBindingOverrideSurfaceEntryV1(EditModel):
     """One binding the baseline exposes as override-locked, with its reason."""
 
     kind: Literal["non_writable_binding_override"] = "non_writable_binding_override"
@@ -383,7 +383,7 @@ class ModeloEditNonWritableBindingOverrideSurfaceEntryV1(_EditModel):
     reason: ModeloEditNonWritableReason
 
 
-class ModeloEditWritableDetailRowSurfaceEntryV1(_EditModel):
+class ModeloEditWritableDetailRowSurfaceEntryV1(EditModel):
     """One ``ModeloDetailRow`` kind the baseline admits for writing, natural-key addressed.
 
     Distinct from the (permanently empty) ``BindingId``-keyed row-group axis:
@@ -432,7 +432,7 @@ def _surface_entry_address(entry: ModeloEditPermittedSurfaceEntryV1) -> tuple[st
     return ("row_group", entry.binding_id)
 
 
-class ModeloEditSchemaIdentityV1(_EditModel):
+class ModeloEditSchemaIdentityV1(EditModel):
     """The edit contract's own schema identity: a compare-and-swap coordinate, not a display fact.
 
     Deliberately its own type rather than a reuse of
@@ -456,7 +456,7 @@ class ModeloEditSchemaIdentityV1(_EditModel):
     completeness_manifest_digest: ContentDigest
 
 
-class ModeloEditBaselineV1(_EditModel):
+class ModeloEditBaselineV1(EditModel):
     """One admitted, independently re-resolved compare-and-swap edit coordinate.
 
     Contains only safe coordinates and no values. It is a compare-and-swap
@@ -518,7 +518,7 @@ class ModeloEditBaselineV1(_EditModel):
         return self
 
 
-class ModeloEditPermittedSurfacePageRequestV1(_EditModel):
+class ModeloEditPermittedSurfacePageRequestV1(EditModel):
     """One continuation request for an application-issued permitted-surface page.
 
     Echoes the baseline, schema fingerprint, and surface digest; a mismatch on
@@ -531,7 +531,7 @@ class ModeloEditPermittedSurfacePageRequestV1(_EditModel):
     cursor: _BoundedText | None = None
 
 
-class ModeloEditPermittedSurfacePageV1(_EditModel):
+class ModeloEditPermittedSurfacePageV1(EditModel):
     """One bounded page of a baseline's permitted edit surface."""
 
     baseline_id: ModeloEditBaselineId
@@ -541,7 +541,7 @@ class ModeloEditPermittedSurfacePageV1(_EditModel):
     next_cursor: _BoundedText | None = None
 
 
-class ModeloEditAdmissionRequestV1(_EditModel):
+class ModeloEditAdmissionRequestV1(EditModel):
     """One request to admit an edit baseline for a target and mutation family."""
 
     edit_contract_version: Literal[1] = 1
@@ -549,14 +549,14 @@ class ModeloEditAdmissionRequestV1(_EditModel):
     mutation_family: ModeloEditMutationFamily
 
 
-class ModeloEditAdmittedV1(_EditModel):
+class ModeloEditAdmittedV1(EditModel):
     """A successful admission carrying the exact re-resolved baseline."""
 
     outcome: Literal["admitted"] = "admitted"
     baseline: ModeloEditBaselineV1
 
 
-class ModeloEditParsedValueV1(_EditModel):
+class ModeloEditParsedValueV1(EditModel):
     """A successfully parsed canonical typed value for one scalar address.
 
     Never echoes the transient raw lexeme that produced it.
@@ -567,7 +567,7 @@ class ModeloEditParsedValueV1(_EditModel):
     value: ModeloScalar
 
 
-class ModeloEditPreflightEvaluatedV1(_EditModel):
+class ModeloEditPreflightEvaluatedV1(EditModel):
     """A completed preflight evaluation carrying every finding.
 
     A green (empty-error) preflight is review material, not authorization;
@@ -579,7 +579,7 @@ class ModeloEditPreflightEvaluatedV1(_EditModel):
     findings: Annotated[tuple[ModeloEditFindingV1, ...], Field(max_length=_MAX_FINDINGS)]
 
 
-class ModeloEditVersionRefusalV1(_EditModel):
+class ModeloEditVersionRefusalV1(EditModel):
     """Minimal refusal produced before a rejected request target is parsed."""
 
     kind: Literal["unsupported_version"] = "unsupported_version"
@@ -587,7 +587,7 @@ class ModeloEditVersionRefusalV1(_EditModel):
     supported_version: Literal[1] = 1
 
 
-class ModeloEditCompatibilityRefusalV1(_EditModel):
+class ModeloEditCompatibilityRefusalV1(EditModel):
     """Refusal produced when the requested compatibility tuple is unsupported."""
 
     kind: Literal["unsupported_compatibility"] = "unsupported_compatibility"
@@ -597,7 +597,7 @@ class ModeloEditCompatibilityRefusalV1(_EditModel):
     reconsideration_condition: _BoundedText
 
 
-class ModeloEditStaleBaselineRefusalV1(_EditModel):
+class ModeloEditStaleBaselineRefusalV1(EditModel):
     """The compare-and-swap refusal naming every coordinate that disagreed.
 
     Writes nothing and settles the domain effect as ``NONE``. Never silently
@@ -620,7 +620,7 @@ class ModeloEditStaleBaselineRefusalV1(_EditModel):
         return value
 
 
-class ModeloEditDomainRefusalV1(_EditModel):
+class ModeloEditDomainRefusalV1(EditModel):
     """Typed post-admission refusal without a partial projection or raw exception."""
 
     kind: Literal["domain"] = "domain"
@@ -659,7 +659,7 @@ class ModeloEditUnsupportedIntentReason(StrEnum):
     RECALCULATE_NOT_YET_WIRED = "recalculate_not_yet_wired"
 
 
-class ModeloEditUnsupportedIntentRefusalV1(_EditModel):
+class ModeloEditUnsupportedIntentRefusalV1(EditModel):
     """A syntactically admitted intent this V1 executor cannot yet execute.
 
     Distinct from :class:`ModeloEditDomainRefusalV1`'s ``DISALLOWED_INTENT``:
@@ -688,7 +688,7 @@ type ModeloEditRefusalV1 = Annotated[
 ]
 
 
-class ModeloEditRefusedV1(_EditModel):
+class ModeloEditRefusedV1(EditModel):
     """The result arm that exposes a refusal without calling it a partial success."""
 
     outcome: Literal["refused"] = "refused"
@@ -711,7 +711,7 @@ type ModeloEditPreflightResultV1 = Annotated[
 ]
 
 
-class ModeloEditFindingV1(_EditModel):
+class ModeloEditFindingV1(EditModel):
     """One preflight finding at a semantic address or global scope."""
 
     code: _BoundedCode
@@ -724,7 +724,7 @@ class ModeloEditFindingV1(_EditModel):
 ModeloEditPreflightEvaluatedV1.model_rebuild()
 
 
-class ModeloEditParseRequestV1(_EditModel):
+class ModeloEditParseRequestV1(EditModel):
     """One parse request for a single semantic address and transient raw lexeme.
 
     Carries the complete admitted baseline rather than an opaque id: the
@@ -742,7 +742,7 @@ class ModeloEditParseRequestV1(_EditModel):
     raw_lexeme: _BoundedText
 
 
-class ModeloScalarEditIntentV1(_EditModel):
+class ModeloScalarEditIntentV1(EditModel):
     """One scalar edit intent; zero, false, and empty text remain distinct states."""
 
     address: ModeloEditScalarAddressV1
@@ -758,7 +758,7 @@ class ModeloScalarEditIntentV1(_EditModel):
         return self
 
 
-class ModeloBindingEditIntentV1(_EditModel):
+class ModeloBindingEditIntentV1(EditModel):
     """One binding-override edit intent; zero and false remain distinct from UNCHANGED.
 
     Addresses ``CalculationRevision.binding_overrides`` directly by
@@ -779,7 +779,7 @@ class ModeloBindingEditIntentV1(_EditModel):
         return self
 
 
-class ModeloRowEditIntentV1(_EditModel):
+class ModeloRowEditIntentV1(EditModel):
     """One repeatable-row edit intent addressed by canonical or correlation identity."""
 
     address: ModeloEditRowAddressV1
@@ -809,7 +809,7 @@ class ModeloRowEditIntentV1(_EditModel):
         return self
 
 
-class ModeloDetailRowEditIntentV1(_EditModel):
+class ModeloDetailRowEditIntentV1(EditModel):
     """One ``ModeloDetailRow`` edit intent, addressed by the row's own natural key.
 
     ADD_ROW and UPDATE_ROW submit a complete typed ``ModeloDetailRow``.
@@ -850,7 +850,7 @@ def _intent_address_key(
     return ("new_row", f"{address.binding_id}:{address.client_correlation_id}")
 
 
-class ModeloEditSubmissionV1(_EditModel):
+class ModeloEditSubmissionV1(EditModel):
     """One baseline plus its complete normalized ordered intent set.
 
     Carries no frontend state. Duplicate or contradictory address intents
@@ -880,14 +880,14 @@ class ModeloEditSubmissionV1(_EditModel):
         return self
 
 
-class ModeloEditPreflightRequestV1(_EditModel):
+class ModeloEditPreflightRequestV1(EditModel):
     """One preflight request over a baseline and its complete ordered intent set."""
 
     edit_contract_version: Literal[1] = 1
     submission: ModeloEditSubmissionV1
 
 
-class ModeloEditApplyRequestV1(_EditModel):
+class ModeloEditApplyRequestV1(EditModel):
     """The guarded apply request only the enrolled operation executor may invoke."""
 
     edit_contract_version: Literal[1] = 1
@@ -895,14 +895,14 @@ class ModeloEditApplyRequestV1(_EditModel):
     submission: ModeloEditSubmissionV1
 
 
-class ModeloMutationCapabilityRequestV1(_EditModel):
+class ModeloMutationCapabilityRequestV1(EditModel):
     """One request for the closed mutation-capability projection over a target."""
 
     edit_contract_version: Literal[1] = 1
     target: ModeloWorkspaceTargetV1
 
 
-class ModeloMutationCapabilityRowV1(_EditModel):
+class ModeloMutationCapabilityRowV1(EditModel):
     """One closed capability row for a mutation candidate; composed, never inferred."""
 
     mutation_id: _BoundedCode
@@ -921,7 +921,7 @@ class ModeloMutationCapabilityRowV1(_EditModel):
         return self
 
 
-class ModeloMutationCapabilityProjectionV1(_EditModel):
+class ModeloMutationCapabilityProjectionV1(EditModel):
     """The complete closed capability denominator for one edit target."""
 
     edit_contract_version: Literal[1] = 1
@@ -938,14 +938,14 @@ class ModeloMutationCapabilityProjectionV1(_EditModel):
         return value
 
 
-class ModeloEditExecutionUpdatedV1(_EditModel):
+class ModeloEditExecutionUpdatedV1(EditModel):
     """The successful compare-and-swap arm carrying the authoritative receipt."""
 
     effect: Literal[ModeloEditExecutionEffect.UPDATED] = ModeloEditExecutionEffect.UPDATED
     receipt: ModeloEditMutationResultReceiptV1
 
 
-class ModeloEditExecutionNoEffectV1(_EditModel):
+class ModeloEditExecutionNoEffectV1(EditModel):
     """The failed compare-and-swap arm; writes nothing and names the refusal."""
 
     effect: Literal[ModeloEditExecutionEffect.NONE] = ModeloEditExecutionEffect.NONE

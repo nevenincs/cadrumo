@@ -35,8 +35,8 @@ from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.flow import is_deducible_flow
 from ....domain.iva.schema import IvaCategory
-from .._iva_ledger import resolve_iva_ledger_binding_values
 from .._modelo_bindings_invoice_iva import _DECLARED_CATEGORY_BASE_ONLY_FLOWS, _invoice_line_iva_observation
+from ..iva_ledger import resolve_iva_ledger_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

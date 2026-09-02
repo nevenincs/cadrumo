@@ -11,14 +11,14 @@ from __future__ import annotations
 import http.server
 import socketserver
 import threading
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from functools import partial
 from pathlib import Path
 
 
 @contextmanager
-def serve_directory(directory: Path) -> Iterator[tuple[socketserver.TCPServer, int]]:
+def serve_directory(directory: Path) -> Generator[tuple[socketserver.TCPServer, int]]:
     """Serve ``directory`` over HTTP on an ephemeral loopback port.
 
     Yields the running server and the port it bound. The server always shuts

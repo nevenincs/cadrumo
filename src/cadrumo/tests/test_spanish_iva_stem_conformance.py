@@ -29,7 +29,7 @@ _EXTERNAL_IVA_LOCATOR = re.compile(
 _IDENTITY_TOKEN = re.compile(r"^[A-Za-z0-9_.:/-]+$")
 _EXTERNAL_IDENTITY_TOKENS = {
     "adapters/inbound/einvoice/parsers.py": frozenset({"vat", "vatid"}),
-    "entrypoints/cli/_config/tests/test_apoderado_scopes_payload.py": frozenset({"VAT"}),
+    "entrypoints/cli/config/tests/test_apoderado_scopes_payload.py": frozenset({"VAT"}),
 }
 _EXTERNAL_VAT_PROSE_VALUES = {
     "adapters/inbound/einvoice/parsers.py": frozenset({"vat"}),
@@ -47,7 +47,7 @@ _EXTERNAL_VAT_PROSE_VALUES = {
         },
     ),
     "domain/iva/tests/test_saturation.py": frozenset({"verify the customer VAT ID"}),
-    "entrypoints/cli/_config/tests/test_apoderado_scopes_payload.py": frozenset({"VAT"}),
+    "entrypoints/cli/config/tests/test_apoderado_scopes_payload.py": frozenset({"VAT"}),
     "tests/fixtures/justificantes/_generate_modelo_390_english.py": frozenset(
         {
             "Deductible VAT",

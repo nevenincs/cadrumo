@@ -2,10 +2,10 @@
 
 Contract under test (contract / contract):
 
-* :func:`_parse_iso8601_date` — accepts ``YYYY-MM-DD``; REJECTS
+* :func:`parse_iso8601_date` — accepts ``YYYY-MM-DD``; REJECTS
   ``DD/MM/YYYY`` and ``DD-MM-YYYY`` with :exc:`ValueError`.
 
-* :func:`_parse_ddmmyyyy_date` — accepts ``DD-MM-YYYY`` and ``DD/MM/YYYY``;
+* :func:`parse_ddmmyyyy_date` — accepts ``DD-MM-YYYY`` and ``DD/MM/YYYY``;
   REJECTS ``YYYY-MM-DD`` with :exc:`ValueError`.
 
 The two variants are intentionally distinct because they serve different wire
@@ -20,7 +20,7 @@ from datetime import date
 
 import pytest
 
-from ..dates import _parse_ddmmyyyy_date, _parse_iso8601_date
+from ..dates import parse_ddmmyyyy_date, parse_iso8601_date
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -31,7 +31,7 @@ def test_date_parsers_accept_contract_formats_and_reject_foreign_formats() -> No
     cases: tuple[tuple[str, _Parser, tuple[tuple[str, tuple[int, int, int]], ...], tuple[str, ...]], ...] = (
         (
             "iso8601",
-            _parse_iso8601_date,
+            parse_iso8601_date,
             (
                 ("2024-12-31", (2024, 12, 31)),
                 ("2000-01-01", (2000, 1, 1)),
@@ -46,7 +46,7 @@ def test_date_parsers_accept_contract_formats_and_reject_foreign_formats() -> No
         ),
         (
             "ddmmyyyy",
-            _parse_ddmmyyyy_date,
+            parse_ddmmyyyy_date,
             (
                 ("31-12-2024", (2024, 12, 31)),
                 ("31/12/2024", (2024, 12, 31)),

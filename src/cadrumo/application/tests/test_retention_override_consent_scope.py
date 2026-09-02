@@ -18,8 +18,8 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from .._config_reset_models import ConfigResetRetentionDecision
 from ..config_reset import _retention_decision_from_record
+from ..config_reset_models import ConfigResetRetentionDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

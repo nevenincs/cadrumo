@@ -489,14 +489,14 @@ class TestDatabaseUrlDerivation:
             return selected
 
         monkeypatch.setattr(bucket_pointer, "read_pointer", switch_after_observation)
-        override_token = config._settings_override.set(None)
+        override_token = config.settings_override.set(None)
         reset_settings_cache()
         try:
             with _isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=storage_root.as_posix()):
                 settings = load_settings()
         finally:
             reset_settings_cache()
-            config._settings_override.reset(override_token)
+            config.settings_override.reset(override_token)
 
         assert calls == 1
         assert classify_storage_route(settings).bucket_id == "profile-a"
@@ -533,14 +533,14 @@ class TestDatabaseUrlDerivation:
 
         monkeypatch.setattr(config, "normalize_project_relative_path", normalize_root)
         monkeypatch.setattr(bucket_pointer, "read_pointer", switch_after_observation)
-        override_token = config._settings_override.set(None)
+        override_token = config.settings_override.set(None)
         reset_settings_cache()
         try:
             with _isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=relative_root.as_posix()):
                 settings = load_settings()
         finally:
             reset_settings_cache()
-            config._settings_override.reset(override_token)
+            config.settings_override.reset(override_token)
 
         assert calls == 1
         assert settings.cadrumo_local_storage_root == canonical_root

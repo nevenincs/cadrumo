@@ -37,7 +37,7 @@ import pytest
 from ....tests import module_name, production_ast_items, repo_relative
 from ..error_codes import ERROR_REGISTRY, ErrorCategory, get_registered_error_code
 from ..hierarchy import CadrumoError
-from ..registry.declared_codes import _ALL_DECLARED_ERROR_CODES
+from ..registry.declared_codes import ALL_DECLARED_ERROR_CODES
 from .optional_extras import describe_optional_extras
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -145,8 +145,8 @@ def test_every_cadrumo_error_subclass_has_a_registered_code() -> None:
 
 
 def test_raw_error_declarations_have_single_class_and_code_authority() -> None:
-    qualname_counts = Counter(qualname for qualname, _ in _ALL_DECLARED_ERROR_CODES)
-    code_counts = Counter(code.code for _, code in _ALL_DECLARED_ERROR_CODES)
+    qualname_counts = Counter(qualname for qualname, _ in ALL_DECLARED_ERROR_CODES)
+    code_counts = Counter(code.code for _, code in ALL_DECLARED_ERROR_CODES)
 
     assert {qualname: count for qualname, count in qualname_counts.items() if count > 1} == {}
     assert {code: count for code, count in code_counts.items() if count > 1} == {}

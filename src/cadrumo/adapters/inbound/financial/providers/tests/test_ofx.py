@@ -16,8 +16,8 @@ import pytest
 from ......core.optional_extras import OFX_EXTRA, optional_extra_available
 from ......domain.transactions.enums import TransactionDirection
 from ......tests import FIXTURES_DIR
-from .._ofx import OfxProvider
 from ..base import InvalidFinancialSourceError
+from ..ofx import OfxProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -199,7 +199,7 @@ def test_ofx_provider_invalid_source_does_not_expose_filename(
     source = tmp_path / "12345678Z-private-account.ofx"
     source.write_text("not an OFX document", encoding="utf-8")
 
-    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.financial.providers._ofx"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.financial.providers.ofx"):
         validation = OfxProvider().validate_source(source)
 
     rendered_logs = "\n".join(record.getMessage() for record in caplog.records)

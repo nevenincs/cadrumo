@@ -182,20 +182,23 @@ class ModeloEditSession:
     _closed: bool = field(default=False, init=False)
 
     @classmethod
-    def _opened(
+    def opened_from_admission(
         cls,
-        baseline: ModeloEditBaselineV1,
+        admitted: ModeloEditAdmittedV1,
         *,
         mutation_family: ModeloEditMutationFamily,
     ) -> ModeloEditSession:
         """Open a session whose two baselines start identical.
 
-        Package-internal on purpose: the only sanctioned way in is
-        :func:`open_modelo_edit_session`, which admits first. A public
-        constructor taking a baseline would hand a frontend the one record
-        this whole module exists to keep on this side of the boundary.
+        Keyed on the admission record rather than on a bare baseline, so the
+        "admit first" rule is carried by the signature instead of by a naming
+        convention: the only way to hold a :class:`ModeloEditAdmittedV1` is to
+        have been admitted. A constructor taking a baseline directly would hand
+        a frontend the one record this module exists to keep on this side of
+        the boundary; this one cannot be called without the admission that
+        already published it.
         """
-        return cls(_edit_baseline=baseline, _mutation_family=mutation_family)
+        return cls(_edit_baseline=admitted.baseline, _mutation_family=mutation_family)
 
     @property
     def is_closed(self) -> bool:
@@ -485,16 +488,24 @@ class ModeloEditSession:
 
     def _wire_detail_row_intents(self) -> tuple[ModeloEditApplyDetailRowIntentV1, ...]:
         """Mirror every staged detail row, addressed by its retained components."""
-        return tuple(
-            ModeloEditApplyDetailRowIntentV1(
-                address=ModeloEditApplyDetailRowAddressV1(
-                    detail_row_kind=self._rows[key].address.detail_row_kind,
-                    identity_components=self._row_components[key],
-                ),
-                kind=self._rows[key].kind,
-                row=None if self._rows[key].row is None else wire_detail_row(self._rows[key].row),
-            )
-            for key in sorted(self._rows)
+        return tuple(self._wire_detail_row_intent(key) for key in sorted(self._rows))
+
+    def _wire_detail_row_intent(self, key: tuple[str, str]) -> ModeloEditApplyDetailRowIntentV1:
+        """Mirror one staged detail row onto its wire intent.
+
+        The staged intent is bound to a local before the ``None`` test: repeating
+        ``self._rows[key].row`` across the test and the call is two separate
+        subscripts, so the absence check narrows neither of them.
+        """
+        intent = self._rows[key]
+        row = intent.row
+        return ModeloEditApplyDetailRowIntentV1(
+            address=ModeloEditApplyDetailRowAddressV1(
+                detail_row_kind=intent.address.detail_row_kind,
+                identity_components=self._row_components[key],
+            ),
+            kind=intent.kind,
+            row=None if row is None else wire_detail_row(row),
         )
 
     def _submission(self) -> ModeloEditSubmissionV1:
@@ -568,6 +579,6 @@ def open_modelo_edit_session(
     if not isinstance(admitted, ModeloEditAdmittedV1):
         return SessionOpenOutcome(session=None, message_key=_refusal_message_key(admitted.refusal))
     return SessionOpenOutcome(
-        session=ModeloEditSession._opened(admitted.baseline, mutation_family=mutation_family),
+        session=ModeloEditSession.opened_from_admission(admitted, mutation_family=mutation_family),
         message_key=None,
     )

@@ -7,7 +7,14 @@ from typing import TYPE_CHECKING, cast
 
 import typer
 
-from ._config.secure_input import (
+from ._profile_authentication_contract import (
+    ProfileAuthenticationSecrets,
+    ProfileSecretSourceOptions,
+    profile_authentication_posture,
+    root_profile_secret_model,
+)
+from .command_spec import CommandSpec, MachineSecretVariantSpec, ProfileAuthenticationPosture
+from .config.secure_input import (
     MachineSecretChannel,
     MachineSecretPayload,
     MachineSecretSelection,
@@ -19,13 +26,6 @@ from ._config.secure_input import (
     select_profile_secret_channel,
     stage_machine_secret_payload,
 )
-from ._profile_authentication_contract import (
-    ProfileAuthenticationSecrets,
-    ProfileSecretSourceOptions,
-    profile_authentication_posture,
-    root_profile_secret_model,
-)
-from .command_spec import CommandSpec, MachineSecretVariantSpec, ProfileAuthenticationPosture
 
 if TYPE_CHECKING:
     from collections.abc import Mapping

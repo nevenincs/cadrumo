@@ -1,270 +1,123 @@
-"""Live filing-export proof refuses invented, stale, and non-executable evidence."""
+"""Payload acceptance re-hashes emitted bytes and checks official field positions.
+
+These tests once ran over modelo 200 and over ``LiveFilingExportProofAuthority``.
+Both supports were withdrawn beneath them. The authority now refuses on
+construction, because the single-channel filing proof it implements was replaced
+by the two-channel source-and-custody authority, and modelo 200 lost both its
+filing grade and every one of its export layouts while the tests still probed
+into ``m200-2025.dp200001.f0001``.
+
+What remains here is the part that was never about either: a pure re-hash of
+emitted bytes against independently recorded acceptance evidence. That surface is
+live, and while its tests sat red against a withdrawn modelo it was gated by
+nothing. It is re-sited onto modelo 151, whose annual coordinate holds filing
+grade and whose layout carries the filing envelope these checks need.
+"""
 
 from __future__ import annotations
 
-import shutil
 from dataclasses import replace
-from pathlib import Path
 
 import pytest
 
 from cadrumo.application.filing.tests._export_support import (
-    _approved_modelo_111_registry_draft,
-    _approved_modelo_200_registry_draft,
-    _typed_producer_snapshot,
+    _m151_producer_snapshot,
+    _modelo_151_export_coordinate_draft,
 )
-from cadrumo.application.registry.filing_export_authority import FilingExportProofConflictError
-from cadrumo.application.registry.filing_export_coverage import compose_filing_export_coverage
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.modelo import Modelo
-from cadrumo.core.payment_election import PaymentElection
 from cadrumo.core.period import Period
-from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
-from cadrumo.core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
-from cadrumo.core.refund_election import RefundElection
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..filing_export_proof import (
     FilingExportLiveProofEntry,
     FilingExportOfficialOffsetProbe,
-    LiveFilingExportProofAuthority,
     verify_filing_export_payload_acceptance,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_REPO_ROOT = Path(__file__).parents[3]
+_FIRST_RECORD = "m151-page-01"
+_FIRST_FIELD = "m151-2023.pagina01.f001"
+_SECOND_FIELD = "m151-2023.pagina01.f002"
 
 
-def _m111_entry() -> FilingExportLiveProofEntry:
+def _m151_layout(registry_authority):
+    return registry_authority.snapshot("151", filing_year=2025, period="0A").revision.export_layouts[0]
+
+
+def _m151_entry() -> FilingExportLiveProofEntry:
+    """One acceptance entry at the modelo 151 annual coordinate.
+
+    The digest and extent are placeholders every test replaces with values
+    computed from the payload it builds; only the coordinate, draft and probe
+    identity are fixed here.
+    """
     return FilingExportLiveProofEntry(
-        modelo=Modelo.M111,
-        revision="2019-y-siguientes",
-        design_epoch="2019",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        draft=_approved_modelo_111_registry_draft(),
-        producer_snapshot=_typed_producer_snapshot(),
-        expected_payload_sha256="0" * 64,
-        expected_emitted_bytes=1,
-        official_offset_probes=(FilingExportOfficialOffsetProbe(record_id="invented", field_id="invented"),),
-    )
-
-
-def _m200_producer_snapshot():
-    from cadrumo.application.filing.producer_snapshot import (
-        FilingElectionFacts,
-        GeneralFilingProfileFacts,
-        PresenterIdentity,
-        TaxpayerIdentityFacts,
-        build_filing_producer_snapshot,
-    )
-
-    return build_filing_producer_snapshot(
-        modelo=Modelo.M200,
-        taxpayer_tax_id="B12345674",
-        taxpayer_identity=TaxpayerIdentityFacts(
-            legal_name="Emilio Export Test SL",
-            given_name=None,
-            surnames=None,
-            full_name="Emilio Export Test SL",
-        ),
-        presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
-        model_profile=GeneralFilingProfileFacts(),
-        elections=FilingElectionFacts(
-            result_disposition=ResultDisposition.NEGATIVA,
-            payment=PaymentElection.INGRESO,
-            refund=RefundElection.COMPENSAR,
-            prior_domiciliation=PriorDomiciliationElection.KEEP,
-        ),
-        amendment_evidence=None,
-        m303_filing_facts=None,
-        refund_account=None,
-        charge_account=None,
-    )
-
-
-def _m200_entry() -> FilingExportLiveProofEntry:
-    return FilingExportLiveProofEntry(
-        modelo=Modelo.M200,
-        revision="2024",
-        design_epoch="2025",
+        modelo=Modelo.M151,
+        revision="2025-y-siguientes",
+        design_epoch="2023",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "0A"),
-        draft=_approved_modelo_200_registry_draft(),
-        producer_snapshot=_m200_producer_snapshot(),
+        draft=_modelo_151_export_coordinate_draft(),
+        producer_snapshot=_m151_producer_snapshot(),
         expected_payload_sha256="0" * 64,
         expected_emitted_bytes=1,
-        official_offset_probes=(
-            FilingExportOfficialOffsetProbe(record_id="m200-page-001", field_id="m200-2025.dp200001.f0001"),
-        ),
-        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-        product_software_identity=AeatProductSoftwareIdentity(
-            program_identifier="C200",
-            developer_tax_id="Y0000001S",
-            evidence=(AeatProductSoftwareEvidence(reference="test-live-proof", digest="a" * 64),),
-        ),
+        official_offset_probes=(FilingExportOfficialOffsetProbe(record_id=_FIRST_RECORD, field_id=_FIRST_FIELD),),
     )
 
 
-def _authority(registry_authority, *, workspace_root: Path, entries):
-    return LiveFilingExportProofAuthority(
-        workspace_root=workspace_root,
-        registry_root=bundled_path("registry", "aeat"),
-        source_root=bundled_path(),
-        authority=registry_authority,
-        entries=entries,
-    )
-
-
-def test_modelo_111_invented_catalogue_values_cannot_replace_missing_canonical_generation(
-    registry_authority,
-) -> None:
-    """Well-shaped zero hashes never reach a satisfied proof for Modelo 111."""
-    entry = _m111_entry()
-    authority = _authority(registry_authority, workspace_root=_REPO_ROOT, entries=(entry,))
-    snapshot = registry_authority.snapshot("111", filing_year=2026, period="1T")
-
-    with pytest.raises(FileNotFoundError):
-        authority.proof_for(
-            modelo=entry.modelo,
-            revision=entry.revision,
-            layout_ids=tuple(layout.id for layout in snapshot.revision.export_layouts),
-        )
-
-
-def test_modelo_111_fabricated_entry_remains_a_visible_stale_evidence_refusal(registry_authority) -> None:
-    entry = _m111_entry()
-    modelo = registry_authority.modelo("111")
-    revision = modelo.revisions[entry.revision]
-    narrowed_modelo = modelo.model_copy(update={"revisions": {revision.id: revision}})
-    narrowed = replace(
-        registry_authority,
-        modelos=(narrowed_modelo,),
-        _modelos_by_id={narrowed_modelo.id: narrowed_modelo},
-        _snapshots={},
-    )
-    authority = _authority(narrowed, workspace_root=_REPO_ROOT, entries=(entry,))
-
-    limb = compose_filing_export_coverage(authority=narrowed, proof_authority=authority).limbs[0]
-
-    assert limb.outcome == "refused"
-    assert limb.refusal is not None
-    assert limb.refusal.reason == "stale_evidence"
-    assert "_generation.provenance.json" in limb.refusal.detail
-
-
-def test_live_authority_reports_layout_identity_conflict_before_reading_catalogue_bytes(registry_authority) -> None:
-    entry = _m111_entry()
-    authority = _authority(registry_authority, workspace_root=_REPO_ROOT, entries=(entry,))
-
-    with pytest.raises(FilingExportProofConflictError, match="conflicts with the law-selected loaded layouts"):
-        authority.proof_for(modelo=entry.modelo, revision=entry.revision, layout_ids=("fabricated-layout",))
-
-
-def test_live_authority_rejects_a_stale_generated_output_digest(registry_authority, tmp_path: Path) -> None:
-    """The canonical verifier re-hashes generated TOML instead of trusting its catalogue row."""
-    entry = _m200_entry()
-    _copy_m200_authored_proof_surface(tmp_path)
-    output = next(
-        path
-        for path in (tmp_path / "src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export").glob(
-            "*.toml",
-        )
-    )
-    output.write_bytes(output.read_bytes() + b"\n")
-    authority = _authority(registry_authority, workspace_root=tmp_path, entries=(entry,))
-    snapshot = registry_authority.snapshot("200", filing_year=2025, period="0A")
-
-    with pytest.raises(RegistryValidationError, match="output-file digests do not match"):
-        authority.proof_for(
-            modelo=entry.modelo,
-            revision=entry.revision,
-            layout_ids=tuple(layout.id for layout in snapshot.revision.export_layouts),
-        )
-
-
-@pytest.mark.parametrize(
-    "digest_field",
-    ("semantic_map_sha256", "render_profile_sha256", "loader_semantic_sha256"),
-)
-def test_live_authority_rehashes_each_canonical_generation_semantic(
-    registry_authority,
-    tmp_path: Path,
-    digest_field: str,
-) -> None:
-    entry = _m200_entry()
-    _copy_m200_authored_proof_surface(tmp_path)
-    manifest = (
-        tmp_path / "src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export" / "_generation.provenance.json"
-    )
-    raw = manifest.read_bytes()
-    marker = f'"{digest_field}":"'.encode()
-    start = raw.index(marker) + len(marker)
-    manifest.write_bytes(raw[:start] + b"0" * 64 + raw[start + 64 :])
-    authority = _authority(registry_authority, workspace_root=tmp_path, entries=(entry,))
-    snapshot = registry_authority.snapshot("200", filing_year=2025, period="0A")
-
-    with pytest.raises(RegistryValidationError, match=r"does not match current generation authorities|loader-semantic"):
-        authority.proof_for(
-            modelo=entry.modelo,
-            revision=entry.revision,
-            layout_ids=tuple(layout.id for layout in snapshot.revision.export_layouts),
-        )
-
-
-def test_current_generation_proof_does_not_hide_a_non_executable_production_export(registry_authority) -> None:
-    """Current M200 generation reaches export_draft, whose live refusal remains a refusal."""
-    entry = _m200_entry()
-    authority = _authority(registry_authority, workspace_root=_REPO_ROOT, entries=(entry,))
-    snapshot = registry_authority.snapshot("200", filing_year=2025, period="0A")
-
-    with pytest.raises(ValueError, match="cannot render its fixed-width value"):
-        authority.proof_for(
-            modelo=entry.modelo,
-            revision=entry.revision,
-            layout_ids=tuple(layout.id for layout in snapshot.revision.export_layouts),
-        )
-
-
-def test_live_proof_entry_refuses_duplicate_official_probe_identities() -> None:
-    probe = FilingExportOfficialOffsetProbe(record_id="m200-page-001", field_id="m200-2025.dp200001.f0001")
+def test_proof_entry_refuses_duplicate_official_probe_identities() -> None:
+    """Two probes naming the same field would prove one position twice and call it two."""
+    probe = FilingExportOfficialOffsetProbe(record_id=_FIRST_RECORD, field_id=_FIRST_FIELD)
 
     with pytest.raises(ValueError, match="probes must identify distinct fields"):
-        replace(_m200_entry(), official_offset_probes=(probe, probe))
+        replace(_m151_entry(), official_offset_probes=(probe, probe))
 
 
 def test_payload_acceptance_rehashes_bytes_extent_and_official_offset(registry_authority) -> None:
-    base = _m200_entry()
-    layout = registry_authority.snapshot("200", filing_year=2025, period="0A").revision.export_layouts[0]
+    """Digest, extent and official field position are each re-derived from the payload.
+
+    Each of the three is broken separately, because a single check passing does
+    not show the other two are wired: a payload can hash correctly and still sit
+    at the wrong offset.
+    """
+    layout = _m151_layout(registry_authority)
     prefix_extent = layout.filing_envelope.prefix_extent
     payload = b" " * prefix_extent + b"<T" + b" " * 8
     entry = replace(
-        base,
+        _m151_entry(),
         expected_payload_sha256=sha256_hex(payload),
         expected_emitted_bytes=len(payload),
     )
 
     verify_filing_export_payload_acceptance(entry=entry, layout=layout, payload=payload)
+
     with pytest.raises(RegistryValidationError, match="digest does not match"):
         verify_filing_export_payload_acceptance(entry=entry, layout=layout, payload=payload + b"x")
+
     wrong_extent = replace(entry, expected_emitted_bytes=len(payload) + 1)
     with pytest.raises(RegistryValidationError, match="extent does not match"):
         verify_filing_export_payload_acceptance(entry=wrong_extent, layout=layout, payload=payload)
+
+    # The literal is present but displaced by one byte, so a check that only
+    # searched for it rather than reading its declared position would pass.
     moved = b" " * prefix_extent + b"X<T" + b" " * 7
-    moved_entry = replace(entry, expected_payload_sha256=sha256_hex(moved))
+    moved_entry = replace(entry, expected_payload_sha256=sha256_hex(moved), expected_emitted_bytes=len(moved))
     with pytest.raises(RegistryValidationError, match="disagrees at official field"):
         verify_filing_export_payload_acceptance(entry=moved_entry, layout=layout, payload=moved)
 
 
 def test_payload_acceptance_refuses_distinct_probe_ids_at_overlapping_emitted_bytes(registry_authority) -> None:
-    base = _m200_entry()
-    layout = registry_authority.snapshot("200", filing_year=2025, period="0A").revision.export_layouts[0]
+    """Distinct probes covering the same bytes are refused, not counted twice.
+
+    The overlap is constructed by moving the second field onto the first rather
+    than found in the corpus, because the shipped layouts do not overlap and a
+    check that never sees the condition proves nothing about it.
+    """
+    layout = _m151_layout(registry_authority)
     first = min(layout.records, key=lambda record: record.order)
-    first_field = next(field for field in first.fields if str(field.id) == "m200-2025.dp200001.f0001")
-    overlapping_field = next(field for field in first.fields if str(field.id) == "m200-2025.dp200001.f0002")
+    overlapping_field = next(field for field in first.fields if str(field.id) == _SECOND_FIELD)
     overlapping_record = first.model_copy(
         update={
             "fields": tuple(
@@ -274,30 +127,19 @@ def test_payload_acceptance_refuses_distinct_probe_ids_at_overlapping_emitted_by
         },
     )
     overlapping_layout = layout.model_copy(
-        update={
-            "records": tuple(record if record != first else overlapping_record for record in layout.records),
-        },
+        update={"records": tuple(record if record != first else overlapping_record for record in layout.records)},
     )
     prefix_extent = layout.filing_envelope.prefix_extent
     payload = b" " * prefix_extent + b"<T" + b" " * 8
     entry = replace(
-        base,
+        _m151_entry(),
         expected_payload_sha256=sha256_hex(payload),
         expected_emitted_bytes=len(payload),
         official_offset_probes=(
-            FilingExportOfficialOffsetProbe(record_id=str(first.id), field_id=str(first_field.id)),
-            FilingExportOfficialOffsetProbe(record_id=str(first.id), field_id=str(overlapping_field.id)),
+            FilingExportOfficialOffsetProbe(record_id=_FIRST_RECORD, field_id=_FIRST_FIELD),
+            FilingExportOfficialOffsetProbe(record_id=_FIRST_RECORD, field_id=_SECOND_FIELD),
         ),
     )
 
     with pytest.raises(RegistryValidationError, match="distinct emitted byte positions"):
         verify_filing_export_payload_acceptance(entry=entry, layout=overlapping_layout, payload=payload)
-
-
-def _copy_m200_authored_proof_surface(root: Path) -> None:
-    for relative in (
-        Path("dev/registry/mappings/modelo_200/2025"),
-        Path("dev/registry/render_profiles/modelo_200/2025"),
-        Path("src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export"),
-    ):
-        shutil.copytree(_REPO_ROOT / relative, root / relative)

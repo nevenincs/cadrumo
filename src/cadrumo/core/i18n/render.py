@@ -10,7 +10,7 @@ from __future__ import annotations
 import importlib.resources  # nosemgrep
 import os
 import re
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Generator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import lru_cache
@@ -21,32 +21,33 @@ from typing import IO, TYPE_CHECKING
 import i18n
 import yaml
 
-from ..config import _settings_override, coerce_output_language_setting, load_settings
+from ..config import coerce_output_language_setting, load_settings, settings_override
 from ..config_state_root import FormerProductStateError
 from ..errors.hierarchy import CoreError
 from ..external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VAR, SUPPORTED_OUTPUT_LANGUAGES
 from ..logging import get_logger
 from ..product_identity import PRODUCT_IDENTITY, normalise_product_identity_references
+from ..type_guards import is_object_mapping
 
 if TYPE_CHECKING:
     from ._lazy_catalogue import LazyLocaleCatalogue
 
 _log = get_logger(__name__)
-_INITIALISED = False
+_initialised = False
 _PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
 _FORMAT_FIELD_ROOT_RE = re.compile(r"(?P<name>[A-Za-z_][A-Za-z0-9_]*)(?=$|[.\[])")
 _FORMATTER = Formatter()
-_OUTPUT_LANGUAGE_CACHE_VERSION = 0
+_output_language_cache_version = 0
 
 # Test-scope flag: when True, tr raises UnmatchedPlaceholderError for any
 # declared placeholder not supplied by the caller. Production leaves this False.
-_I18N_STRICT_PLACEHOLDERS: ContextVar[bool] = ContextVar("cadrumo_i18n_strict_placeholders", default=False)
+I18N_STRICT_PLACEHOLDERS: ContextVar[bool] = ContextVar("cadrumo_i18n_strict_placeholders", default=False)
 
 # Test-scope flag: when True, tr raises MissingTranslationError for a key the
 # catalogue does not carry, instead of returning a humanised fallback. A caller
 # supplying an explicit `default` has opted into a fallback and never raises.
 # Production leaves this False so a missing string can never abort a filing.
-_I18N_STRICT_MISSING_KEYS: ContextVar[bool] = ContextVar("cadrumo_i18n_strict_missing_keys", default=False)
+I18N_STRICT_MISSING_KEYS: ContextVar[bool] = ContextVar("cadrumo_i18n_strict_missing_keys", default=False)
 
 
 class UnmatchedPlaceholderError(CoreError):
@@ -123,17 +124,17 @@ def register_profile_language_resolver(fn: Callable[[], str | None]) -> None:
 
 def _ensure_initialised() -> None:
     """Lazy-initialise the ``python-i18n`` backend on first call."""
-    global _INITIALISED
-    if _INITIALISED:
+    global _initialised
+    if _initialised:
         return
     i18n.load_path.append(str(importlib.resources.files(PRODUCT_IDENTITY.python_package).joinpath("locales")))
     i18n.set("filename_format", "{locale}.{format}")
     i18n.set("file_format", "yml")
     i18n.set("skip_locale_root_data", True)
-    _INITIALISED = True
+    _initialised = True
 
 
-def _normalise_supported_language(value: object) -> str | None:
+def normalise_supported_language(value: object) -> str | None:
     language = coerce_output_language_setting(str(value))
     return language.value if language is not None else None
 
@@ -155,8 +156,8 @@ def output_language() -> str:
 
 def clear_output_language_cache() -> None:
     """Invalidate cached language resolution after profile/config writes."""
-    global _OUTPUT_LANGUAGE_CACHE_VERSION
-    _OUTPUT_LANGUAGE_CACHE_VERSION += 1
+    global _output_language_cache_version
+    _output_language_cache_version += 1
     _cached_output_language.cache_clear()
 
 
@@ -200,9 +201,9 @@ _OUTPUT_LANGUAGE_KEY_ENV_VARS: tuple[str, ...] = (
 
 
 def _output_language_cache_key() -> tuple[object, ...]:
-    override = _settings_override.get()
+    override = settings_override.get()
     if override is not None:
-        return ("override", id(override), _OUTPUT_LANGUAGE_CACHE_VERSION)
+        return ("override", id(override), _output_language_cache_version)
     # The key is built from in-memory inputs ONLY — no filesystem call. It
     # samples the raw env vars Pydantic merges into ``Settings`` so a cache
     # miss still rebuilds ``Settings`` normally (with the correct
@@ -232,7 +233,7 @@ def _output_language_cache_key() -> tuple[object, ...]:
     return (
         "env",
         *env_signature,
-        _OUTPUT_LANGUAGE_CACHE_VERSION,
+        _output_language_cache_version,
     )
 
 
@@ -265,13 +266,13 @@ def _resolve_output_language() -> str:
         )
         return DEFAULT_OUTPUT_LANGUAGE
     if "cadrumo_output_language" in settings.model_fields_set:
-        explicit = _normalise_supported_language(settings.cadrumo_output_language)
+        explicit = normalise_supported_language(settings.cadrumo_output_language)
         if explicit is not None:
             return explicit
     profile_language = _active_profile_output_language()
     if profile_language is not None:
         return profile_language
-    return _normalise_supported_language(settings.cadrumo_output_language) or DEFAULT_OUTPUT_LANGUAGE
+    return normalise_supported_language(settings.cadrumo_output_language) or DEFAULT_OUTPUT_LANGUAGE
 
 
 def _active_profile_output_language() -> str | None:
@@ -286,7 +287,7 @@ def _active_profile_output_language() -> str | None:
     if resolver is None:
         return None
     try:
-        return _normalise_supported_language(resolver() or "")
+        return normalise_supported_language(resolver() or "")
     except Exception as exc:
         _log.debug(
             "i18n: unable to resolve active-profile output language; falling back to settings (%s)",
@@ -319,7 +320,7 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
     """
     if "locale" not in kwargs or kwargs["locale"] is None:
         kwargs["locale"] = output_language()
-    locale = _normalise_supported_language(kwargs["locale"]) or "en"
+    locale = normalise_supported_language(kwargs["locale"]) or "en"
     default = kwargs.pop("default", None)
     looked_up = _lookup_translation(locale, translation_key, default=default)
     interpolation = {key: value for key, value in kwargs.items() if key not in {"locale", "default"}}
@@ -328,7 +329,7 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
     else:
         interpolated, format_succeeded = looked_up, True
     rendered = normalise_product_identity_references(interpolated)
-    if _I18N_STRICT_PLACEHOLDERS.get():
+    if I18N_STRICT_PLACEHOLDERS.get():
         _enforce_strict_placeholders(
             translation_key,
             looked_up=looked_up,
@@ -464,7 +465,7 @@ _I18N_LOCALES_ROOT: ContextVar[Path | None] = ContextVar("cadrumo_i18n_locales_r
 
 
 @contextmanager
-def _override_locales_root(root: Path) -> Iterator[None]:
+def override_locales_root(root: Path) -> Generator[None]:
     """Resolve catalogues from ``root`` instead of the packaged resources.
 
     The renderer's miss semantics — an absent key and a key-echo value are
@@ -482,7 +483,7 @@ def _override_locales_root(root: Path) -> Iterator[None]:
         _I18N_LOCALES_ROOT.reset(token)
 
 
-def _locale_map(locale: str) -> Mapping[str, str | None]:
+def locale_map(locale: str) -> Mapping[str, str | None]:
     from ._lazy_catalogue import LazyLocaleCatalogue
 
     override = _I18N_LOCALES_ROOT.get()
@@ -524,7 +525,7 @@ def _load_locale_yaml(handle: IO[str]) -> object:
 
 
 def _flatten_translations(value: object, prefix: str = "") -> dict[str, str | None]:
-    if isinstance(value, Mapping):
+    if is_object_mapping(value):
         flattened: dict[str, str | None] = {}
         for key, child in value.items():
             child_prefix = f"{prefix}.{key}" if prefix else str(key)
@@ -547,16 +548,16 @@ def lookup_translation(translation_key: str, /, *, locale: str) -> str | None:
 
 def lookup_translation_entry(translation_key: str, /, *, locale: str) -> tuple[bool, str | None]:
     """Return catalogue membership separately from its optional scalar value."""
-    normalized_locale = _normalise_supported_language(locale)
+    normalized_locale = normalise_supported_language(locale)
     if normalized_locale is None:
         return False, None
     try:
-        locale_map = _locale_map(normalized_locale)
+        catalogue_entries = locale_map(normalized_locale)
     except (OSError, yaml.YAMLError, IndexError):
         return False, None
-    if translation_key not in locale_map:
+    if translation_key not in catalogue_entries:
         return False, None
-    rendered = locale_map[translation_key]
+    rendered = catalogue_entries[translation_key]
     if rendered is None or rendered == translation_key:
         return True, None
     return True, rendered
@@ -565,7 +566,7 @@ def lookup_translation_entry(translation_key: str, /, *, locale: str) -> tuple[b
 def _lookup_translation(locale: str, translation_key: str, *, default: object | None = None) -> str:
     rendered: str | None
     try:
-        rendered = _locale_map(locale).get(translation_key)
+        rendered = locale_map(locale).get(translation_key)
     except (OSError, yaml.YAMLError, IndexError) as exc:
         _log.debug(
             "i18n: unable to load locale %s; falling back to python-i18n (%s)",
@@ -597,7 +598,7 @@ def _missing_translation(locale: str, translation_key: str, *, default: object |
     """
     if default is not None:
         return str(default)
-    if _I18N_STRICT_MISSING_KEYS.get():
+    if I18N_STRICT_MISSING_KEYS.get():
         raise MissingTranslationError(key=translation_key, locale=locale)
     return _humanise_key(translation_key)
 
@@ -620,7 +621,7 @@ def _humanise_key(translation_key: str) -> str:
     return stripped.replace("_", " ").capitalize()
 
 
-def _interpolate(translation_key: str, rendered: str, values: Mapping[str, object]) -> str:
+def interpolate(translation_key: str, rendered: str, values: Mapping[str, object]) -> str:
     rendered, _format_succeeded = _interpolate_with_status(translation_key, rendered, values)
     return rendered
 

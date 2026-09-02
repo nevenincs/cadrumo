@@ -24,7 +24,7 @@ from ....domain.renta.maritime_exemption import (
     MaritimeWorkerFacts,
     ProfileCompletenessError,
 )
-from .._maritime_exemption_service import (
+from ..maritime_exemption_service import (
     MaritimeExemptionResult,
     resolve_maritime_exemption,
 )

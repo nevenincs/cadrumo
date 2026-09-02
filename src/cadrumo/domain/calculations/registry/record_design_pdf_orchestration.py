@@ -8,74 +8,74 @@ from pathlib import Path
 
 from .errors import RegistryValidationError
 from .record_design_pdf_repairs import (
-    _collapse_doubled_coordinate_rows,
-    _collapse_stuttered_row_prefix,
-    _join_wrapped_row_descriptions,
-    _reattach_stranded_casilla_tags,
-    _recover_coordinate_stutter_rows,
-    _rejoin_bare_coordinate_rows,
-    _rejoin_reversed_column_rows,
-    _repair_truncated_offset_rows,
-    _split_fused_ordinal_offset_rows,
-    _split_fused_ordinal_position_prefix,
-    _split_glued_naturaleza_rows,
-    _split_row_from_wrapped_content,
-    _split_tail_from_leading_fragment,
-    _undouble_struck_rows,
+    collapse_doubled_coordinate_rows,
+    collapse_stuttered_row_prefix,
+    join_wrapped_row_descriptions,
+    reattach_stranded_casilla_tags,
+    recover_coordinate_stutter_rows,
+    rejoin_bare_coordinate_rows,
+    rejoin_reversed_column_rows,
+    repair_truncated_offset_rows,
+    split_fused_ordinal_offset_rows,
+    split_fused_ordinal_position_prefix,
+    split_glued_naturaleza_rows,
+    split_row_from_wrapped_content,
+    split_tail_from_leading_fragment,
+    undouble_struck_rows,
 )
-from .record_design_pdf_state import _extract_pdf_lines, _PdfParseState, contiguity_failure
+from .record_design_pdf_state import PdfParseState, contiguity_failure, extract_pdf_lines
 from .record_design_pdf_visual import (
-    _extract_pdf_text_lines,
-    _extract_pdfplumber_text_lines,
-    _extract_visual_record_design_chart,
-    _snapshot_pdf_page,
-    _uses_page_record_layout,
+    extract_pdf_text_lines,
+    extract_pdfplumber_text_lines,
+    extract_visual_record_design_chart,
+    snapshot_pdf_page,
+    uses_page_record_layout,
 )
 from .record_design_schema import RecordDesignExtraction, RecordDesignSkippedSheet
-from .record_design_sources import _EMPTY_CORRECTIONS, _CorrectionIndex, _load_corrections
+from .record_design_sources import EMPTY_CORRECTIONS, CorrectionIndex, load_corrections
 
 
 @lru_cache(maxsize=256)
-def _extract_record_design_pdf_cached(
+def extract_record_design_pdf_cached(
     path: str,
     byte_count: int,
     modified_ns: int,
 ) -> RecordDesignExtraction:
     del byte_count, modified_ns
     source_path = Path(path)
-    corrections = _load_corrections(source_path)
+    corrections = load_corrections(source_path)
     with source_path.open("rb") as pdf_file:
-        return _extract_record_design_pdf_stream(
+        return extract_record_design_pdf_stream(
             pdf_file,
             source_label=str(source_path),
             corrections=corrections,
         )
 
 
-def _extract_record_design_pdf_stream(
+def extract_record_design_pdf_stream(
     stream: BufferedReader | BytesIO,
     *,
     source_label: str,
-    corrections: _CorrectionIndex = _EMPTY_CORRECTIONS,
+    corrections: CorrectionIndex = EMPTY_CORRECTIONS,
 ) -> RecordDesignExtraction:
     import pdfplumber
 
     pdf_bytes = stream.read()
-    base_lines = _extract_pdf_text_lines(pdf_bytes, source_label=source_label)
-    lines = _reattach_stranded_casilla_tags(
-        _split_row_from_wrapped_content(
-            _split_fused_ordinal_offset_rows(
-                _collapse_doubled_coordinate_rows(
-                    _collapse_stuttered_row_prefix(_join_wrapped_row_descriptions(base_lines)),
+    base_lines = extract_pdf_text_lines(pdf_bytes, source_label=source_label)
+    lines = reattach_stranded_casilla_tags(
+        split_row_from_wrapped_content(
+            split_fused_ordinal_offset_rows(
+                collapse_doubled_coordinate_rows(
+                    collapse_stuttered_row_prefix(join_wrapped_row_descriptions(base_lines)),
                 ),
             ),
         ),
     )
-    if _uses_page_record_layout(base_lines):
-        page_lines = _reattach_stranded_casilla_tags(
-            _collapse_stuttered_row_prefix(
-                _join_wrapped_row_descriptions(
-                    _extract_pdfplumber_text_lines(pdf_bytes, source_label=source_label),
+    if uses_page_record_layout(base_lines):
+        page_lines = reattach_stranded_casilla_tags(
+            collapse_stuttered_row_prefix(
+                join_wrapped_row_descriptions(
+                    extract_pdfplumber_text_lines(pdf_bytes, source_label=source_label),
                 ),
             ),
         )
@@ -92,20 +92,20 @@ def _extract_record_design_pdf_stream(
     except ValueError as pdfium_exc:
         text_fallback_error = pdfium_exc
         try:
-            fallback_lines = _extract_pdfplumber_text_lines(pdf_bytes, source_label=source_label)
-            return _extract_pdf_lines(fallback_lines, source_label=source_label, corrections=corrections)
+            fallback_lines = extract_pdfplumber_text_lines(pdf_bytes, source_label=source_label)
+            return extract_pdf_lines(fallback_lines, source_label=source_label, corrections=corrections)
         except ValueError as fallback_exc:
             text_fallback_error = fallback_exc
         if "did not contain parseable field rows" not in str(text_fallback_error):
             raise text_fallback_error from pdfium_exc
         try:
             with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
-                pages = tuple(_snapshot_pdf_page(page) for page in pdf.pages)
+                pages = tuple(snapshot_pdf_page(page) for page in pdf.pages)
         except Exception as pdf_exc:  # pragma: no cover - defensive; pdfplumber surface
             raise RegistryValidationError(
                 f"pdfplumber could not open record-design PDF {source_label}: {pdf_exc}",
             ) from pdf_exc
-        visual_chart = _extract_visual_record_design_chart(pages, source_label=source_label)
+        visual_chart = extract_visual_record_design_chart(pages, source_label=source_label)
         if visual_chart:
             # The geometry reader was documented as "complete by construction",
             # and it is not: modelo 349's 2002 edition and modelo 180's 2000
@@ -128,7 +128,7 @@ def _better_page_record_lines(
     base_lines: tuple[str, ...],
     *,
     source_label: str,
-    corrections: _CorrectionIndex,
+    corrections: CorrectionIndex,
 ) -> tuple[str, ...]:
     """Return whichever text extraction reads a page-record design more completely.
 
@@ -195,7 +195,7 @@ def _read_with_reversed_column_repair(
     lines: tuple[str, ...],
     *,
     source_label: str,
-    corrections: _CorrectionIndex,
+    corrections: CorrectionIndex,
 ) -> RecordDesignExtraction:
     """Read the design, retrying with the reversed-column repair only where it can help.
 
@@ -216,19 +216,19 @@ def _read_with_reversed_column_repair(
     record the lines produce, including the ones that stay reported, because
     that is where this repair does its work.
     """
-    first = _extract_pdf_lines(lines, source_label=source_label, corrections=corrections)
+    first = extract_pdf_lines(lines, source_label=source_label, corrections=corrections)
     if not first.skipped:
         return first
-    repaired_lines = _recover_coordinate_stutter_rows(
-        _repair_truncated_offset_rows(
-            _rejoin_bare_coordinate_rows(
-                _split_glued_naturaleza_rows(
-                    _split_fused_ordinal_position_prefix(
-                        _reattach_stranded_casilla_tags(
-                            _collapse_stuttered_row_prefix(
-                                _join_wrapped_row_descriptions(
-                                    _rejoin_reversed_column_rows(
-                                        _split_tail_from_leading_fragment(_undouble_struck_rows(lines)),
+    repaired_lines = recover_coordinate_stutter_rows(
+        repair_truncated_offset_rows(
+            rejoin_bare_coordinate_rows(
+                split_glued_naturaleza_rows(
+                    split_fused_ordinal_position_prefix(
+                        reattach_stranded_casilla_tags(
+                            collapse_stuttered_row_prefix(
+                                join_wrapped_row_descriptions(
+                                    rejoin_reversed_column_rows(
+                                        split_tail_from_leading_fragment(undouble_struck_rows(lines)),
                                     ),
                                 ),
                             ),
@@ -239,7 +239,7 @@ def _read_with_reversed_column_repair(
         ),
     )
     try:
-        repaired = _extract_pdf_lines(
+        repaired = extract_pdf_lines(
             repaired_lines,
             source_label=source_label,
             corrections=corrections,
@@ -263,7 +263,7 @@ def _unread_positions_over_lines(
     lines: tuple[str, ...],
     *,
     source_label: str,
-    corrections: _CorrectionIndex,
+    corrections: CorrectionIndex,
     repair_glued_rows: bool = False,
 ) -> int:
     """Positions no row covers, counted over EVERY record these lines produce.
@@ -277,7 +277,7 @@ def _unread_positions_over_lines(
     the repair while thousands of positions differ, which is what made two
     earlier decision rules read as "no improvement" and leave the repair dead.
     """
-    state = _PdfParseState(
+    state = PdfParseState(
         source_label=source_label,
         corrections=corrections,
         repair_glued_rows=repair_glued_rows,

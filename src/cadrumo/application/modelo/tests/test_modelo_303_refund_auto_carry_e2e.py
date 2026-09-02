@@ -31,7 +31,7 @@ Ley 37/1992 art. 116.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -112,7 +112,7 @@ _NEGATIVE_CREDIT_ENGINE_INPUTS = {
 
 
 @contextmanager
-def _secure_backend(tmp_path: Path) -> Iterator[None]:
+def _secure_backend(tmp_path: Path) -> Generator[None]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         yield
 

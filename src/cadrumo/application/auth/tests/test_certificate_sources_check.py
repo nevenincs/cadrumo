@@ -19,7 +19,7 @@ import pytest
 from pydantic import SecretStr
 
 from ....adapters.outbound.aeat.auth import session_store
-from ....adapters.persistence.storage.blob_store._materialisation import get_secret_store
+from ....adapters.persistence.storage.blob_store.materialisation import get_secret_store
 from ....adapters.persistence.storage.master_key.active_session import current_active_bucket_session
 from ....adapters.persistence.storage.secret_store.store import SecretStore
 from ....adapters.persistence.storage.storage_path_definitions import SECRET_INDEX_FILENAME

@@ -48,11 +48,11 @@ from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.retencion_parameters import load_retencion_actividades_rates
-from .._iva_ledger import (
+from .._renta_income_ledger import aggregate_renta_income_ledger
+from ..iva_ledger import (
     IvaLedgerAggregationIssueReason,
     resolve_iva_ledger_binding_values,
 )
-from .._renta_income_ledger import aggregate_renta_income_ledger
 from .iva_authority_support import aggregate_iva_ledger_observations
 from .renta_income_aggregation_support import _raw_transaction
 

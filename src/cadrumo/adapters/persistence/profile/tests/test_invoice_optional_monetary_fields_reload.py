@@ -1,6 +1,6 @@
 """Strict roundtrip for every optional monetary field on :class:`Invoice`.
 
-``_normalise_invoice_monetary_fields`` used to treat a field PRESENT as
+``normalise_invoice_monetary_fields`` used to treat a field PRESENT as
 explicit JSON ``null`` differently from a field ABSENT from the payload: an
 absent key was skipped (the model default applies), but a present ``null``
 raised ``InvoiceValidationError`` ("could not be parsed as a decimal").
@@ -163,7 +163,7 @@ def test_deleting_a_populated_optional_field_from_disk_surfaces_as_refusal(tmp_p
     Saves an invoice with real, non-default ``fx_rate``/``fx_rate_date``/
     ``fx_rate_source``, then reaches into the persisted envelope and deletes
     the ``fx_rate`` key entirely (not nulls it -- an ABSENT key is exactly
-    the shape ``_normalise_invoice_monetary_fields`` treats as "no value",
+    the shape ``normalise_invoice_monetary_fields`` treats as "no value",
     by design). Reload must not silently re-default ``fx_rate`` to ``None``
     and report success as if the persisted figure survived.
 
@@ -206,7 +206,7 @@ def test_a_genuinely_unparseable_optional_field_still_refuses(tmp_path: Path) ->
 
     Mutates the persisted ``fx_rate`` to a non-numeric string (simulating a
     mis-mapped import column, the case
-    ``_normalise_invoice_monetary_fields``'s error message was written for).
+    ``normalise_invoice_monetary_fields``'s error message was written for).
     Distinguished from the two tests above by asserting on the SAME
     cause-unique message the pre-fix code used for this genuinely-bad-data
     case, so a fix that accidentally stopped raising on real garbage (rather

@@ -61,10 +61,20 @@ _FIRST_QUOTED_RE = re.compile(r"'([^']+)'")
 
 
 def _vendored_exceptions() -> tuple[type[BaseException], type[BaseException], type[BaseException]]:
-    """Return (ClickException, UsageError, Abort) from Typer's vendored fork."""
+    """Return (ClickException, UsageError, Abort) from Typer's vendored fork.
+
+    ``Abort`` is read defensively because Typer's fork does not always export
+    it: 0.27.1 did, 0.27.2 does not, and the attribute error that produced
+    turned every invocation through
+    :func:`run_standalone_with_error_contract` into an exit-1 with no output.
+    Falling back to :class:`click.Abort` costs nothing -- every caller already
+    catches the two together (see the ``except`` clause below), because Typer
+    raises the upstream class anyway.
+    """
     from typer._click import exceptions as ty_exceptions
 
-    return ty_exceptions.ClickException, ty_exceptions.UsageError, ty_exceptions.Abort
+    vendored_abort = getattr(ty_exceptions, "Abort", click.Abort)
+    return ty_exceptions.ClickException, ty_exceptions.UsageError, vendored_abort
 
 
 def _invocation_argv() -> list[str]:

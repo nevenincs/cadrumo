@@ -52,7 +52,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application._bucket_deletion_contracts
-   cadrumo.application._config_reset_models
    cadrumo.application._config_reset_repository
    cadrumo.application._foreign_asset_thresholds
    cadrumo.application._provisioning_contracts
@@ -63,6 +62,7 @@ Submodules
    cadrumo.application.bucket_event_repository
    cadrumo.application.cli_exception_preconditions
    cadrumo.application.config_reset
+   cadrumo.application.config_reset_models
    cadrumo.application.diagnostic_models
    cadrumo.application.diagnostics
    cadrumo.application.diagnostics_run_health

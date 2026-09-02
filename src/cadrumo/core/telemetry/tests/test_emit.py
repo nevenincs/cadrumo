@@ -17,7 +17,7 @@ from __future__ import annotations
 import pytest
 
 from ...config import Settings
-from .._emit import LocalNoopTelemetrySink, emit_telemetry_event
+from ..emit import LocalNoopTelemetrySink, emit_telemetry_event
 from ..schema import TelemetryEventPayload, build_telemetry_payload
 from ..tier import TelemetryTier
 

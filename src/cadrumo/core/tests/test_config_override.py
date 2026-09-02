@@ -19,7 +19,7 @@ itself.
 from __future__ import annotations
 
 import os
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -142,7 +142,7 @@ def test_override_settings_preserves_explicit_fields_set_signal() -> None:
 
 
 @contextmanager
-def _absent_env_var(name: str) -> Iterator[None]:
+def _absent_env_var(name: str) -> Generator[None]:
     """Remove ``name`` from the process environment for the scope, then restore it.
 
     A local context manager rather than the pytest ``monkeypatch`` fixture, per

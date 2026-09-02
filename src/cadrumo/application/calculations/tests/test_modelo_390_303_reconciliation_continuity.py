@@ -69,7 +69,7 @@ from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
-from .._iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
+from ..iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
 from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository, ResultDispositionProjection
 from ..relation_prefill import resolve_relations_from_local_store

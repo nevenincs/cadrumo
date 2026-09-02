@@ -195,7 +195,7 @@ def test_interpolation_failure_is_logged_without_values(caplog: pytest.LogCaptur
     """Format failures preserve fallback output and do not log interpolation values."""
 
     with caplog.at_level(logging.DEBUG, logger="cadrumo.core.i18n.render"):
-        rendered = _render._interpolate(
+        rendered = _render.interpolate(
             "test.format.failure",
             "{amount:.2f}",
             {"amount": "abc-secret-xyz"},

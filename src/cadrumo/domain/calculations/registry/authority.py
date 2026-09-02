@@ -203,7 +203,7 @@ def _fingerprint_key_payload(fingerprints: tuple[tuple[object, ...], ...]) -> di
     }
 
 
-def _fingerprint_key[T: tuple[tuple[object, ...], ...]](fingerprints: T) -> _FingerprintKey[T]:
+def fingerprint_key[T: tuple[tuple[object, ...], ...]](fingerprints: T) -> _FingerprintKey[T]:
     """Digest one fingerprint tuple set into an O(1)-hashable cache key."""
     return _FingerprintKey(digest=content_hash_hex(_fingerprint_key_payload(fingerprints)), fingerprints=fingerprints)
 
@@ -281,7 +281,7 @@ _authority_generation = 0
 _authority_reset_epoch = 0
 
 
-def _canonical_authority_root_pair(root: Path, source_root: Path) -> _AuthorityRootPairIdentity:
+def canonical_authority_root_pair(root: Path, source_root: Path) -> _AuthorityRootPairIdentity:
     """Resolve one physical owner pair with the host filesystem's case policy.
 
     Strict resolution makes nonexistent or broken aliases a refusal.  Symlinks,
@@ -435,7 +435,7 @@ class ValidatedRegistryAuthority:
     ) -> ValidatedRegistryAuthority:
         """Load registry TOML and construct a reusable :class:`ValidatedRegistryAuthority` instance."""
         _guard_authority_process()
-        identity = _canonical_authority_root_pair(root, source_root)
+        identity = canonical_authority_root_pair(root, source_root)
         return _load_authority(
             identity,
             lifecycle_observer=lifecycle_observer,
@@ -943,7 +943,7 @@ def _load_authority(
                 root,
                 collect_fingerprints=collect_registry_identity_fingerprints,
             )
-            source_evidence_key = _fingerprint_key(collect_source_evidence_fingerprints(source_root))
+            source_evidence_key = fingerprint_key(collect_source_evidence_fingerprints(source_root))
             key = (identity, source_evidence_key)
             if state.current_key == key:
                 if state.current_failure is not None:
@@ -1001,7 +1001,7 @@ def _load_validated_authority(
     source_evidence_key: _FingerprintKey[_SourceEvidenceFingerprints],
 ) -> ValidatedRegistryAuthority:
     _source_evidence_fingerprint = source_evidence_key.fingerprints
-    authority = _construct_authority(root, source_root, _source_evidence_fingerprint, identity=identity)
+    authority = construct_authority(root, source_root, _source_evidence_fingerprint, identity=identity)
     # A persisted green verdict keyed by the observed identity lets an
     # immutable tree skip the multi-second re-validation. The build and
     # continuous integration are the validation gate; the runtime asserts
@@ -1023,7 +1023,7 @@ def _load_validated_authority(
     return authority
 
 
-def _construct_authority(
+def construct_authority(
     root: Path,
     source_root: Path,
     source_evidence_fingerprint: tuple[tuple[str, int, int], ...],

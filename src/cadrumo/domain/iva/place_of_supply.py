@@ -213,12 +213,12 @@ def place_of_supply_years(path: Path | None = None) -> frozenset[int]:
     return years_covered_by_every_group([window] for window in windows)
 
 
-def _is_object_list(value: object) -> TypeGuard[list[object]]:
+def is_object_list(value: object) -> TypeGuard[list[object]]:
     """Narrow an unparameterized runtime list to untrusted object entries."""
     return isinstance(value, list)
 
 
-def _is_str_keyed_mapping(value: object) -> TypeGuard[Mapping[str, object]]:
+def is_str_keyed_mapping(value: object) -> TypeGuard[Mapping[str, object]]:
     """Narrow an unparameterized runtime dict to a string-keyed mapping.
 
     True by construction for a table parsed from TOML: ``tomllib`` always
@@ -234,13 +234,13 @@ def _hydrated_rule(raw_rule: object, *, path: Path, index: int) -> IvaPlaceOfSup
     boundary: the model is strict, so a raw list and a raw token are both
     refused rather than silently coerced further in.
     """
-    if not _is_str_keyed_mapping(raw_rule):
+    if not is_str_keyed_mapping(raw_rule):
         raise IvaCatalogueError(f"{path}: place_of_supply_rules[{index}] must be a table")
     # Shape only. WHETHER a row may cite nothing is the model's call, so
     # that the legal-basis exemption is decided in one place rather than
     # half here and half there.
     raw_references = raw_rule.get("legal_references", [])
-    if not _is_object_list(raw_references):
+    if not is_object_list(raw_references):
         raise IvaCatalogueError(
             f"{path}: place_of_supply_rules[{index}] legal_references must be an array",
         )
@@ -266,7 +266,7 @@ def _rules_in_table(path: Path) -> dict[str, IvaPlaceOfSupplyRule]:
     """
     payload = read_toml(path, error_factory=IvaCatalogueError)
     raw_rules = payload.get("place_of_supply_rules")
-    if not _is_object_list(raw_rules) or not raw_rules:
+    if not is_object_list(raw_rules) or not raw_rules:
         raise IvaCatalogueError(f"{path}: missing [[place_of_supply_rules]] entries")
     rules: dict[str, IvaPlaceOfSupplyRule] = {}
     for index, raw_rule in enumerate(raw_rules, start=1):

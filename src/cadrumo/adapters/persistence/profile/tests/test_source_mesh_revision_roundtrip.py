@@ -16,9 +16,9 @@ See Also:
         Encrypted catalogue repository exercised by the save/load cycle.
     :class:`~adapters.persistence.storage.SecureObjectRepository`
         Secure SQL-backed object boundary used for the corruption proof.
-    :func:`~application.modelo._revision_persistence.persist_calculation_revision`
+    :func:`~application.modelo.revision_persistence.persist_calculation_revision`
         Application writer that threads source provenance into persisted revisions.
-    :func:`~application.modelo._revision_persistence._source_provenance_trace_sha256`
+    :func:`~application.modelo.revision_persistence._source_provenance_trace_sha256`
         Bucket-event digest over source provenance used by the live writer.
 """
 

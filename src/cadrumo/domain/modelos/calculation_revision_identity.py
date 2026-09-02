@@ -107,7 +107,7 @@ def _validated_row_binding_index(value: object, *, surface: str) -> str:
     return str(index)
 
 
-def _canonical_row_binding_values(
+def canonical_row_binding_values(
     row_binding_values: Mapping[object, object],
     *,
     surface: str,
@@ -131,7 +131,7 @@ def _canonical_row_binding_values(
     return dict(sorted(canonical.items()))
 
 
-def _canonical_row_source_identities(
+def canonical_row_source_identities(
     value: Mapping[RowBindingKey, RowSourceIdentity],
 ) -> list[dict[str, object]]:
     canonical: list[dict[str, object]] = []
@@ -149,14 +149,14 @@ def _canonical_row_source_identities(
     return canonical
 
 
-def _canonical_row_casilla_values(value: Mapping[RowCasillaKey, Decimal]) -> list[dict[str, object]]:
+def canonical_row_casilla_values(value: Mapping[RowCasillaKey, Decimal]) -> list[dict[str, object]]:
     return [
         {"casilla_id": casilla_id, "row_index": row_index, "value": _canonical_decimal(amount)}
         for (casilla_id, row_index), amount in sorted(value.items())
     ]
 
 
-def _canonical_row_casilla_provenance(
+def canonical_row_casilla_provenance(
     value: Mapping[RowCasillaKey, DirectRowMaterializationProvenance],
 ) -> list[dict[str, object]]:
     return [
@@ -195,7 +195,7 @@ def _base_revision_id_payload(
                 (_validated_binding_id(k, surface="binding_overrides"), v.strip()) for k, v in binding_overrides.items()
             ),
         ),
-        "outputs": _outputs_for_hash_from_mapping(casilla_values),
+        "outputs": outputs_for_hash_from_mapping(casilla_values),
         "source_transaction_ids": tuple(sorted(item.strip() for item in source_transaction_ids)),
     }
 
@@ -319,7 +319,7 @@ def _m303_regimen_simplificado_annual_summary_handoff_revision_id_payload(
     return {"m303_regimen_simplificado_annual_summary_handoff": handoff.unsigned_identity_payload()}
 
 
-def _derive_calculation_revision_id_from_identity_inputs(
+def derive_calculation_revision_id_from_identity_inputs(
     identity_inputs: CalculationRevisionIdentityInputs,
 ) -> str:
     """Hash a value returned only by :func:`calculation_revision_identity_inputs`.
@@ -388,21 +388,21 @@ def _derive_calculation_revision_id_from_identity_inputs(
     raw_row_bindings: dict[object, object] = {
         binding_id: rows for binding_id, rows in (row_binding_values or {}).items()
     }
-    canonical_row_bindings = _canonical_row_binding_values(
+    canonical_row_bindings = canonical_row_binding_values(
         raw_row_bindings,
         surface="row_binding_values",
     )
     if canonical_row_bindings:
         payload["row_binding_values"] = canonical_row_bindings
-    canonical_row_identities = _canonical_row_source_identities(row_source_identities)
+    canonical_row_identities = canonical_row_source_identities(row_source_identities)
     if canonical_row_identities:
         payload["row_source_identities"] = canonical_row_identities
-    canonical_row_casilla_values = _canonical_row_casilla_values(row_casilla_values)
-    if canonical_row_casilla_values:
-        payload["row_casilla_values"] = canonical_row_casilla_values
-    canonical_row_casilla_provenance = _canonical_row_casilla_provenance(row_casilla_provenance)
-    if canonical_row_casilla_provenance:
-        payload["row_casilla_provenance"] = canonical_row_casilla_provenance
+    canonical_casilla_values = canonical_row_casilla_values(row_casilla_values)
+    if canonical_casilla_values:
+        payload["row_casilla_values"] = canonical_casilla_values
+    canonical_casilla_provenance = canonical_row_casilla_provenance(row_casilla_provenance)
+    if canonical_casilla_provenance:
+        payload["row_casilla_provenance"] = canonical_casilla_provenance
     payload.update(
         _borrador_revision_id_payload(borrador_snapshot_id, bindings_sourced_from_borrador),
     )
@@ -423,14 +423,14 @@ def _derive_calculation_revision_id_from_identity_inputs(
     return content_hash_hex(payload)
 
 
-def _outputs_for_hash_from_mapping(casilla_values: Mapping[CasillaId, Decimal]) -> dict[CasillaId, str]:
+def outputs_for_hash_from_mapping(casilla_values: Mapping[CasillaId, Decimal]) -> dict[CasillaId, str]:
     """Canonical ``{casilla_id: canonical_decimal_str}`` projection from the flat mapping.
 
     Pure function â€” same input â†’ same output, no side effects, no
     dependence on observation order. Used by
     :func:`derive_calculation_revision_id` to produce the ``outputs``
     payload key consumed by the SHA-256 hash, AND by
-    :func:`_outputs_for_hash_from_observations` to project the typed
+    :func:`outputs_for_hash_from_observations` to project the typed
     envelope into the same canonical form so the validator's
     consistency check is byte-exact.
 
@@ -447,10 +447,10 @@ def _outputs_for_hash_from_mapping(casilla_values: Mapping[CasillaId, Decimal]) 
     )
 
 
-def _outputs_for_hash_from_observations(
+def outputs_for_hash_from_observations(
     observations: Sequence[CasillaObservation],
 ) -> dict[CasillaId, str]:
-    """Same canonical projection as :func:`_outputs_for_hash_from_mapping`, sourced from observations.
+    """Same canonical projection as :func:`outputs_for_hash_from_mapping`, sourced from observations.
 
     The typed ``observations`` envelope is the logical source of truth for
     derivation. This helper materialises the same
@@ -463,6 +463,6 @@ def _outputs_for_hash_from_observations(
     this helper; currently both fields are kept and this helper is used for
     the consistency check only.
     """
-    return _outputs_for_hash_from_mapping(
+    return outputs_for_hash_from_mapping(
         {obs.casilla_id: obs.value for obs in observations if isinstance(obs.value, Decimal)}
     )

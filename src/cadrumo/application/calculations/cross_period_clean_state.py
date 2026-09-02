@@ -49,7 +49,6 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.verification_report import VerificationCompletenessStatus, VerificationReportCatalogue
 from ._per_grupo_member_keys import per_grupo_member_requirement_keys
-from ._revision_carry_gate import revision_carry_outcome
 from .cross_period_external_evidence import filing_external_evidence_blockers as _filing_external_evidence_blockers
 from .cross_period_models import (
     CrossPeriodCleanStateBlocker,
@@ -71,6 +70,7 @@ from .observations_repository import (
     ObservationSourceKind,
     is_official_aeat_observation_source,
 )
+from .revision_carry_gate import revision_carry_outcome
 
 
 def cross_period_dependency_requirements(snapshot: RegistrySnapshot) -> tuple[CrossPeriodDependencyRequirement, ...]:
@@ -649,7 +649,7 @@ def _revision_carry_check(
     """Return blockers for a carry-read revision check.
 
     Thin adapter over the single shared
-    :func:`~application.calculations._revision_carry_gate.revision_carry_outcome`
+    :func:`~application.calculations.revision_carry_gate.revision_carry_outcome`
     gate: it maps the shared refusal decision onto this site's
     blocker shape. A divergent or unreconfirmable stamp becomes a
     ``REGISTRY_REVISION_DIVERGENCE`` blocker so the cross-period clean-state,

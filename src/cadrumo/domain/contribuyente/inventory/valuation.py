@@ -115,7 +115,7 @@ def _inventory_projection_source_fingerprint(ledger: InventoryLedger) -> Content
     )
 
 
-def _derive_inventory_anexo_d_values(ledger: InventoryLedger) -> _InventoryAnexoDDerivation:
+def derive_inventory_anexo_d_values(ledger: InventoryLedger) -> _InventoryAnexoDDerivation:
     """Derive every public projection field from one retained canonical source."""
     if ledger.year != 2025:
         raise InventoryLedgerError(
@@ -193,7 +193,7 @@ def compute_inventory_anexo_d_projection(
     ledger: InventoryLedger,
 ) -> InventoryAnexoDResult:
     """Project one complete 2025 activity ledger to inventory casillas."""
-    projection_values = _derive_inventory_anexo_d_values(ledger)
+    projection_values = derive_inventory_anexo_d_values(ledger)
     payload = {field.name: getattr(projection_values, field.name) for field in dataclass_fields(projection_values)}
     projection = InventoryAnexoDResult.model_construct(
         None,
@@ -252,7 +252,7 @@ def _compute_fifo(ledger: InventoryLedger) -> InventoryValuationResult:
             continue
         if movement.kind is MovementKind.COUNT:
             layers = _apply_count(layers, movement)
-    closing = _layers_value(layers)
+    closing = layers_value(layers)
     return InventoryValuationResult(
         closing_layers=tuple(layers),
         closing_value=_quantize(closing),
@@ -408,7 +408,7 @@ def _sorted_movements(ledger: InventoryLedger) -> tuple[MovementRecord, ...]:
     return tuple(sorted(ledger.period_movements, key=lambda item: (item.movement_date, item.movement_id)))
 
 
-def _layers_value(layers: tuple[StockLayer, ...] | list[StockLayer]) -> Decimal:
+def layers_value(layers: tuple[StockLayer, ...] | list[StockLayer]) -> Decimal:
     return sum((layer.quantity * layer.unit_cost for layer in layers), _ZERO)
 
 

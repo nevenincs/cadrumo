@@ -23,7 +23,7 @@ and bundled ``_data`` excluded), with NO stored baseline and NO allowlist:
 
 Exactly ONE carve-out is sanctioned: ``cadrumo.core.config.override_settings``.
 It is a scoped context manager (not a swappable slot) backed by a
-``contextvars.ContextVar`` named ``_settings_override`` — NOT an ``_override_*``
+``contextvars.ContextVar`` named ``settings_override`` — NOT an ``_override_*``
 global, so rule 1 never touches it — and it has real production callers
 (``application.auth.sessions``, ``operator_scope``, ``credentials``,
 ``application.workflow.profile_health``) that scope active-profile settings for
@@ -237,22 +237,22 @@ from __future__ import annotations
 import contextvars
 from contextlib import contextmanager
 
-_settings_override: contextvars.ContextVar = contextvars.ContextVar("_settings_override", default=None)
+settings_override: contextvars.ContextVar = contextvars.ContextVar("settings_override", default=None)
 
 
 @contextmanager
 def override_settings(**overrides):
-    token = _settings_override.set(overrides)
+    token = settings_override.set(overrides)
     try:
         yield overrides
     finally:
-        _settings_override.reset(token)
+        settings_override.reset(token)
 """
 
 
 def test_rule_one_fires_on_a_module_global_override_slot() -> None:
     violations = override_global_state_violations(
-        "src/cadrumo/adapters/persistence/storage/blob_store/_materialisation.py",
+        "src/cadrumo/adapters/persistence/storage/blob_store/materialisation.py",
         ast.parse(_OVERRIDE_STATE_SEAM),
     )
 
@@ -261,7 +261,7 @@ def test_rule_one_fires_on_a_module_global_override_slot() -> None:
 
 
 def test_rule_one_ignores_the_sanctioned_settings_contextvar() -> None:
-    """The ``_settings_override`` ContextVar is not an ``_override_*`` slot; rule 1 stays silent."""
+    """The ``settings_override`` ContextVar is not an ``_override_*`` slot; rule 1 stays silent."""
     assert (
         override_global_state_violations(
             f"src/cadrumo/{SANCTIONED_CARVEOUT_MODULE}", ast.parse(_SANCTIONED_SETTINGS_SHAPE)
@@ -272,7 +272,7 @@ def test_rule_one_ignores_the_sanctioned_settings_contextvar() -> None:
 
 def test_rule_two_fires_on_a_public_override_setter() -> None:
     violations = override_setter_function_violations(
-        "src/cadrumo/adapters/persistence/storage/blob_store/_materialisation.py",
+        "src/cadrumo/adapters/persistence/storage/blob_store/materialisation.py",
         ast.parse(_OVERRIDE_STATE_SEAM),
         is_sanctioned_carveout=False,
     )

@@ -51,8 +51,8 @@ from ._common import (
     resolve_cli_precondition_action,
     resolve_notice_action,
 )
-from ._config.status_rendering import precondition_action_lines
 from ._ledger_evidence_batch_payloads import EvidenceBatchResult
+from .config.status_rendering import precondition_action_lines
 
 if TYPE_CHECKING:
     from ...application.ledger.batch_ingest import BatchItemResult, BatchRunResult, UnresolvedBatchSource

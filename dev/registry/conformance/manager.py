@@ -91,7 +91,6 @@ import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
-from pathlib import Path
 from typing import Final, Literal, cast
 
 from pydantic import BaseModel, Field, model_serializer, model_validator
@@ -107,7 +106,7 @@ from cadrumo.application.registry.conformance import (
     audit_bundled_registry_conformance,
     compare_annual_casilla_population_for_revision,
 )
-from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n import lookup_translation_entry
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.revision_review import RevisionReviewStatus
@@ -159,16 +158,11 @@ __all__ = [
     "OraclePayloadGapRow",
     "RevisionConformancePayload",
     "RevisionLocaleCoverage",
-    "baseline_path",
-    "baseline_weakenings",
     "build_annual_coordinate_matrix",
     "build_conformance_report",
     "build_coverage_report",
-    "check_conformance_ratchet",
-    "load_baseline",
     "load_conformance_report",
     "load_locale_coverage_index",
-    "record_baseline",
     "render_audit",
     "render_coverage",
     "render_report",
@@ -871,176 +865,6 @@ class ConformanceAuditResult(ConformanceModel):
         return not self.violations
 
 
-def baseline_path() -> Path:
-    """Return the committed ratchet baseline path.
-
-    Lives beside this module under ``dev/`` and is read only by dev-side code:
-    nothing shipped in the wheel may consume it.
-    """
-    return Path(__file__).resolve().parent / _BASELINE_FILENAME
-
-
-def load_baseline(path: Path | None = None) -> ConformanceBaseline:
-    """Load the committed conformance ratchet baseline.
-
-    Args:
-        path: Optional override for tests and staged reviews. Defaults to the
-            committed baseline beside this module.
-
-    Returns:
-        The parsed :class:`ConformanceBaseline`.
-
-    Raises:
-        SystemExit: The baseline is missing or unreadable. A gate that silently
-            invented a baseline would pass on any tree at all.
-    """
-    resolved = baseline_path() if path is None else path
-    try:
-        raw = json.loads(resolved.read_text(encoding=UTF_8_ENCODING))
-    except OSError as exc:
-        raise SystemExit(f"{resolved}: conformance baseline cannot be read: {exc}") from exc
-    except json.JSONDecodeError as exc:
-        raise SystemExit(f"{resolved}: conformance baseline is not valid JSON: {exc}") from exc
-    return ConformanceBaseline.model_validate(raw)
-
-
-def baseline_weakenings(candidate: ConformanceBaseline, committed: ConformanceBaseline) -> tuple[str, ...]:
-    """Name every counter ``candidate`` would move in the WEAKENING direction.
-
-    Weakening has two shapes and they are opposite movements. A CEILING that
-    RISES permits more backlog than the committed one; a FLOOR that FALLS
-    demands less measurement. Both make the gate accept a tree the committed
-    baseline refuses, which is the whole content of "the ratchet moved the wrong
-    way", and neither is visible in a capture that simply overwrites.
-
-    The floor direction is the one that needs a guard. A raised ceiling
-    self-heals loudly: the backlog it now permits shows up on the census and the
-    coverage screen, and the next honest capture pulls it back down. A lowered
-    floor is silent forever. A capture taken while a peer's half-landed change
-    has removed revisions from the tree permanently lowers ``composed_revisions``,
-    and from then on a genuinely half-read tree passes the anti-vacuity check
-    that exists to catch exactly that.
-
-    Args:
-        candidate: The baseline a capture is about to write.
-        committed: The baseline already on disk.
-
-    Returns:
-        One sentence per weakened counter, ceilings first, empty when the
-        capture only strengthens or leaves every counter flat.
-    """
-    weakened: list[str] = []
-    for field_name in ConformanceRatchetCeilings.model_fields:
-        proposed = getattr(candidate.ceilings, field_name)
-        allowed = getattr(committed.ceilings, field_name)
-        if proposed > allowed:
-            weakened.append(f"ceiling {field_name} would rise from {allowed} to {proposed}, permitting more defects")
-    for field_name in ConformanceVacuityFloors.model_fields:
-        proposed = getattr(candidate.floors, field_name)
-        required = getattr(committed.floors, field_name)
-        if proposed < required:
-            weakened.append(
-                f"floor {field_name} would fall from {required} to {proposed}, demanding less measurement",
-            )
-    for field_name in ConformanceProgressFloors.model_fields:
-        proposed = getattr(candidate.progress, field_name)
-        required = getattr(committed.progress, field_name)
-        if proposed < required:
-            weakened.append(
-                f"progress {field_name} would fall from {required} to {proposed}, forgetting recorded work",
-            )
-    return tuple(weakened)
-
-
-def record_baseline(
-    report: ConformanceReport,
-    *,
-    note: str,
-    recorded_at: str,
-    review_cadence: str = _DEFAULT_REVIEW_CADENCE,
-    source: str = _RECORD_COMMAND,
-    path: Path | None = None,
-    accept_weakening: bool = False,
-) -> ConformanceBaseline:
-    """Write a baseline captured from ``report`` and return it.
-
-    Generated from a real run rather than hand-authored, so a committed ceiling
-    is always a number the tool actually measured. Refuses a degraded report
-    outright: three axes are unmeasured under the degraded read and would be
-    frozen as clean zeros nothing established.
-
-    A capture over an EXISTING baseline is also compared against it. The three
-    prior guards — not degraded, non-empty rows, non-empty note — all describe
-    the report in isolation, so a capture could raise a ceiling or lower a floor
-    without anything saying so, and the note requirement only proves a sentence
-    was typed, never that it describes the movement. Every weakened counter is
-    now named, and accepting one is an explicit act.
-
-    Args:
-        report: The freshly composed report to capture.
-        note: Why this capture happened and under what tree conditions.
-        recorded_at: The capture date.
-        review_cadence: When the ceilings should next be revisited.
-        source: The command that produced the capture.
-        path: Optional override for tests. Defaults to the committed baseline.
-        accept_weakening: Take the weakened counters deliberately. Absent a
-            prior baseline there is nothing to weaken and this has no effect.
-
-    Returns:
-        The written :class:`ConformanceBaseline`.
-
-    Raises:
-        SystemExit: The report is degraded, composed no rows at all, or would
-            weaken a counter against the baseline already on disk without
-            ``accept_weakening``.
-    """
-    if not report.registry_validated:
-        raise SystemExit(
-            "refusing to record a baseline from a degraded read: evidence-tier coverage, the "
-            "support probe, and the derived authorization were never measured, and freezing them "
-            "as zero would state a fact nobody established",
-        )
-    if not report.rows:
-        raise SystemExit(
-            "refusing to record a baseline from a report with zero revision rows; every ceiling "
-            "would be zero and every floor unmeetable",
-        )
-    baseline = ConformanceBaseline(
-        recorded_at=recorded_at,
-        source=source,
-        review_cadence=review_cadence,
-        note=note,
-        ceilings=_current_ceilings(report),
-        floors=_current_floors(report),
-        progress=_current_progress(report),
-    )
-    resolved = baseline_path() if path is None else path
-    if resolved.exists() and not accept_weakening:
-        weakened = baseline_weakenings(baseline, load_baseline(resolved))
-        if weakened:
-            listed = "\n  ".join(weakened)
-            raise SystemExit(
-                "refusing to record a baseline that weakens the ratchet:\n  "
-                f"{listed}\n"
-                "A rising ceiling permits a backlog the committed baseline refuses; a falling floor "
-                "lets a half-read tree pass the anti-vacuity check that exists to catch it, and that "
-                "one never heals on its own. If the movement is real and intended, re-run with the "
-                "acceptance flag and say in the note which counter moved and why.",
-            )
-    # BYTES, not text, for the same reason the governance writer reads and writes
-    # bytes: ``write_text`` re-encodes under the platform's newline convention, so
-    # on Windows every capture expanded this file's LF terminators to CRLF while
-    # git — which normalises under ``text=auto eol=lf`` — reported no change at
-    # all. The committed baseline and the baseline on disk therefore differed for
-    # every reader that is not git, and this file is the artefact the gate READS.
-    # Measured on the tree that carried it: the HEAD blob held 28 LF terminators
-    # in 1932 bytes, the working tree 28 CRLF ones in 1960, ``git diff`` silent.
-    resolved.write_bytes(
-        (json.dumps(baseline.model_dump(mode="json"), indent=2, sort_keys=True) + "\n").encode(UTF_8_ENCODING),
-    )
-    return baseline
-
-
 @lru_cache(maxsize=2)
 def _cached_profile(validate: bool) -> RegistryConformanceProfile:
     """Compose the profile once per process per read mode.
@@ -1436,71 +1260,6 @@ def build_coverage_report(report: ConformanceReport) -> CoverageReport:
         registry_validated=validated,
         revision_count=revisions,
         modelo_count=modelos,
-    )
-
-
-def check_conformance_ratchet(
-    report: ConformanceReport,
-    baseline: ConformanceBaseline,
-) -> ConformanceAuditResult:
-    """Compare a report against the committed baseline in all three directions.
-
-    Args:
-        report: The freshly composed report.
-        baseline: The committed ceilings, floors, and progress floors.
-
-    Returns:
-        A :class:`ConformanceAuditResult` naming every grown defect counter,
-        every shrunken measurement population, and every lost provenance or
-        translation claim.
-
-    Raises:
-        SystemExit: The report composed no rows at all. A ratchet over an empty
-            input reports every counter clean while having examined nothing,
-            which is worse than no gate.
-    """
-    if not report.rows:
-        raise SystemExit(
-            "conformance audit composed zero revision rows; every counter would read clean while "
-            "nothing was examined, so the result would be meaningless",
-        )
-
-    current_ceilings = _current_ceilings(report)
-    ratchet: list[str] = []
-    for field_name in ConformanceRatchetCeilings.model_fields:
-        current = getattr(current_ceilings, field_name)
-        allowed = getattr(baseline.ceilings, field_name)
-        if current > allowed:
-            ratchet.append(f"{field_name} grew from {allowed} to {current}")
-
-    current_floors = _current_floors(report)
-    vacuity: list[str] = []
-    for field_name in ConformanceVacuityFloors.model_fields:
-        current = getattr(current_floors, field_name)
-        required = getattr(baseline.floors, field_name)
-        if current < required:
-            vacuity.append(
-                f"{field_name} fell from {required} to {current}; the measurement shrank, so the "
-                "ratchet reading above cannot be trusted",
-            )
-
-    current_progress = _current_progress(report)
-    progress: list[str] = []
-    for field_name in ConformanceProgressFloors.model_fields:
-        current = getattr(current_progress, field_name)
-        required = getattr(baseline.progress, field_name)
-        if current < required:
-            progress.append(
-                f"{field_name} fell from {required} to {current}; declared work the baseline "
-                "recorded is no longer in the tree",
-            )
-
-    return ConformanceAuditResult(
-        report=report,
-        baseline=baseline,
-        ratchet_violations=tuple(ratchet),
-        vacuity_violations=tuple(vacuity),
-        progress_violations=tuple(progress),
     )
 
 

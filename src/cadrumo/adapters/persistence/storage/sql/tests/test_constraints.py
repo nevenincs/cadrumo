@@ -17,7 +17,7 @@ layer rather than at the pydantic record layer:
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -45,7 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 @contextmanager
-def _schema_engine(tmp_path: Path, name: str = "constraints.db") -> Iterator[Engine]:
+def _schema_engine(tmp_path: Path, name: str = "constraints.db") -> Generator[Engine]:
     engine = bootstrap_sqlite_engine(tmp_path / name)
     try:
         yield engine

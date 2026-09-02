@@ -39,11 +39,6 @@ from ._ledger_value_fixtures import repository
 
 __all__ = ["repository"]
 
-# Imported absolutely, not as `from .. import <module>`: the test needs
-# the MODULE object, and the package-facade gate reads any `from ..
-# import` edge as reaching through the inert namespace.
-import cadrumo.application.ledger.establishment_ladder as ladder_module
-
 from ....adapters.inbound.einvoice.parsers import ParsedEInvoice, parse_einvoice_document
 from ....adapters.persistence.storage.errors import SecureObjectRowIdentityError
 from ....core.classifier_input_source import ClassifierInputSource

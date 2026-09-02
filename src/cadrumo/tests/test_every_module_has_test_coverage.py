@@ -80,13 +80,13 @@ _DYNAMIC_DISPATCH_EXEMPTIONS: Final[Mapping[str, str]] = {
         "it end-to-end through that spawn. Retire when the worker body is "
         "reachable without the subprocess boundary."
     ),
-    "src/cadrumo/entrypoints/cli/_config/_archive_reconcile.py": (
+    "src/cadrumo/entrypoints/cli/config/_archive_reconcile.py": (
         "Typer subcommand reached only by module-path string from "
-        "_config/_profile_command_specs.py, so no static import references it; "
+        "config/_profile_command_specs.py, so no static import references it; "
         "exercised end-to-end by the profile archive-reconcile CLI suite. "
         "Retire when the command module is registered statically."
     ),
-    "src/cadrumo/entrypoints/cli/_config/_archive_reconcile_payloads.py": (
+    "src/cadrumo/entrypoints/cli/config/_archive_reconcile_payloads.py": (
         "Response payload models reachable only through the dynamically "
         "dispatched archive-reconcile command module above, which the CLI "
         "suite drives. Retire when the owning command is registered statically."

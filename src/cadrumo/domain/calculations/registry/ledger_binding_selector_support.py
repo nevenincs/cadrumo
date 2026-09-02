@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from ....core.casilla_id import CasillaId, validated_casilla_id
 
 
-def _mapping_lacks_fact(value: object) -> bool:
+def mapping_lacks_fact(value: object) -> bool:
     """Whether *value* is a mapping with no ``fact`` key."""
     return isinstance(value, Mapping) and "fact" not in value
 

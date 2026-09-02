@@ -1,7 +1,7 @@
 """Shared content-hash integrity verification for outbound storage backends.
 
 Both
-:class:`adapters.outbound.storage._local.LocalFileSystemProvider` and
+:class:`adapters.outbound.storage.local.LocalFileSystemProvider` and
 :class:`adapters.outbound.storage._google_drive.GoogleDriveProvider`
 persist a ``content_hash`` (optionally ``sha256-``-prefixed) alongside each
 object and re-check it on read. This module centralises the
@@ -72,7 +72,7 @@ def verify_content_hash(
     (:class:`adapters.outbound.storage._google_drive.GoogleDriveProvider`
     policy); without it any non-empty stripped digest is compared against
     ``actual_hash``
-    (:class:`adapters.outbound.storage._local.LocalFileSystemProvider`
+    (:class:`adapters.outbound.storage.local.LocalFileSystemProvider`
     policy). ``actual_hash`` is supplied by the caller because the local backend
     reuses it to stamp the written sidecar.
     """

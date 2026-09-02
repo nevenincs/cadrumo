@@ -50,9 +50,16 @@ if TYPE_CHECKING:
     from .observability.context import RunContextInfo
 from .cli_metadata import is_metadata_invocation
 from .redaction.rules import ALWAYS_REDACT_KEY_TERMS, redact_for_log
+from .type_guards import (
+    is_object_list,
+    is_object_list_or_tuple,
+    is_object_mapping,
+    is_object_set,
+    is_object_tuple,
+)
 
-_CONFIGURED = False
-_FACTORY_INSTALLED = False
+_configured = False
+_factory_installed = False
 # Built directly rather than through ``logging.makeLogRecord``, which dispatches
 # via the process-global record factory. This set is the redaction filter's
 # exemption list, so any field an installed factory adds would enrol itself as
@@ -85,6 +92,15 @@ the base is never redeclared independently."""
 
 LogExtraValue = str | int | float | bool | None
 """Closed union of stdlib-loggable scalar types accepted by :class:`LogExtra`."""
+
+
+#: dictConfig resolves a handler by dotted path, so the name must be a string.
+#: Derived from the class rather than hand-spelled: the literal and the import
+#: below could otherwise drift apart, and a typo would only surface at the first
+#: file-logging run.
+_ROTATING_FILE_HANDLER_PATH = (
+    f"{logging.handlers.RotatingFileHandler.__module__}.{logging.handlers.RotatingFileHandler.__qualname__}"
+)
 
 
 class LogExtra(RootModel[dict[str, LogExtraValue]]):
@@ -303,13 +319,13 @@ def _scrub_value(value: object, *, key: str | None = None) -> Any:  # ANY-RETURN
         return _scrub_text(value, key=key)
     if isinstance(value, bytes | bytearray):
         return _PAYLOAD_REDACTION_MARKER if len(value) > _MAX_LOGGED_BYTES else value
-    if isinstance(value, Mapping):
+    if is_object_mapping(value):
         return {item_key: _scrub_value(item_value, key=str(item_key)) for item_key, item_value in value.items()}
-    if isinstance(value, tuple):
+    if is_object_tuple(value):
         return tuple(_scrub_items(value, key))
-    if isinstance(value, list):
+    if is_object_list(value):
         return list(_scrub_items(value, key))
-    if isinstance(value, set):
+    if is_object_set(value):
         return set(_scrub_items(value, key))
     if _looks_sensitive_key(key):
         return _redacted_value(key, str(value))
@@ -341,8 +357,10 @@ def _scrub_opaque_object(value: object) -> Any:  # ANY-RETURN-RATIONALE-OPAQUE-L
 
 # ANY-RETURN-RATIONALE-LOGGING-POSITIONAL-ARGS: args/return mirror the stdlib
 # logging.LogRecord positional-args tuple, whose element types are arbitrary
-# %-formatting operands.
-def _scrub_positional_args(message: str, args: tuple[Any, ...]) -> tuple[Any, ...]:
+# %-formatting operands -- `object`, not `Any`: typeshed already annotates
+# `LogRecord.args` as `tuple[object, ...] | ...`, and `Any` here erased the
+# element type of everything this helper returned.
+def _scrub_positional_args(message: str, args: tuple[object, ...]) -> tuple[object, ...]:
     """Scrub tuple-style logging args using keys inferred from ``message``."""
     placeholders = list(_PERCENT_PLACEHOLDER_RE.finditer(message))
     return tuple(
@@ -373,13 +391,17 @@ class SecretScrubbingFilter(logging.Filter):
         Returns:
             Always ``True`` — every record is allowed through after scrubbing.
         """
-        if isinstance(record.msg, str):
-            record.msg = _scrub_text(record.msg)
-        else:
-            record.msg = _scrub_value(record.msg)
+        # `LogRecord.msg` is `Any`, which selects no `_scrub_value` overload and
+        # returns `Any` in turn. Binding it as `object` first picks the
+        # `(object) -> object` overload, so the scrubbed message stays typed; it
+        # is also bound once rather than re-read, since the attribute is
+        # reassigned immediately below.
+        raw_msg: object = record.msg
+        scrubbed_msg = _scrub_text(raw_msg) if isinstance(raw_msg, str) else _scrub_value(raw_msg)
+        record.msg = scrubbed_msg
 
-        if isinstance(record.args, tuple | list) and isinstance(record.msg, str):
-            scrubbed_args = _scrub_positional_args(record.msg, tuple(record.args))
+        if is_object_list_or_tuple(record.args) and isinstance(scrubbed_msg, str):
+            scrubbed_args = _scrub_positional_args(scrubbed_msg, tuple(record.args))
             # ``logging.LogRecord.args`` is annotated ``tuple[object, ...]
             # | Mapping[str, object] | None``; ``list`` is not in the
             # union even though logging accepts it at runtime.
@@ -429,8 +451,8 @@ def _install_run_context_record_factory() -> None:
     foundation. This note exists because an always-empty ``run_id`` on every log
     line reads as unwired plumbing, and has twice been reported as one.
     """
-    global _FACTORY_INSTALLED
-    if _FACTORY_INSTALLED:
+    global _factory_installed
+    if _factory_installed:
         return
     previous_factory = logging.getLogRecordFactory()
     # Cache the contextvars across record creations. The `import` statement
@@ -457,10 +479,10 @@ def _install_run_context_record_factory() -> None:
         return record
 
     logging.setLogRecordFactory(_factory)
-    _FACTORY_INSTALLED = True
+    _factory_installed = True
 
 
-class _DropRunEventFilter(logging.Filter):
+class DropRunEventFilter(logging.Filter):
     """Suppress observability ``run_event`` records on the stderr handler.
 
     Records carrying a ``run_event`` extra are the per-run JSONL sink's
@@ -525,7 +547,7 @@ class _ThirdPartyDebugFilter(logging.Filter):
 OPERATOR_DOCUMENT_LOG_EXTRA = "operator_document"
 
 
-class _DropOperatorDocumentEchoFilter(logging.Filter):
+class DropOperatorDocumentEchoFilter(logging.Filter):
     """Suppress records already rendered as an operator document, on stderr only.
 
     stderr is the machine-readable error channel: the CLI's terminal boundary
@@ -622,8 +644,8 @@ def configure_logging() -> None:
     The function is idempotent so early imports can safely call
     :func:`get_logger` without duplicating handlers.
     """
-    global _CONFIGURED
-    if _CONFIGURED or _is_cli_metadata_invocation():
+    global _configured
+    if _configured or _is_cli_metadata_invocation():
         return
 
     from .config import load_settings
@@ -636,7 +658,7 @@ def configure_logging() -> None:
         # A normal command must reach the typed CLI refusal boundary instead
         # of crashing while its import-time logger tries to open former state.
         # Do not configure a file handler or inspect the rejected root.
-        _CONFIGURED = True
+        _configured = True
         return
     log_directory_failure = _prepare_log_directory(log_file)
     file_logging_enabled = log_directory_failure is None
@@ -655,7 +677,7 @@ def configure_logging() -> None:
         configured_handlers["file"] = {
             "level": settings.cadrumo_log_file_level,
             "formatter": "standard",
-            "class": "logging.handlers.RotatingFileHandler",
+            "class": _ROTATING_FILE_HANDLER_PATH,
             "filename": str(log_file),
             "maxBytes": settings.cadrumo_log_file_max_bytes,
             "backupCount": settings.cadrumo_log_file_backup_count,
@@ -671,8 +693,8 @@ def configure_logging() -> None:
                 "standard": {"format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"},
             },
             "filters": {
-                "drop_run_event": {"()": f"{__name__}._DropRunEventFilter"},
-                "drop_operator_document": {"()": f"{__name__}._DropOperatorDocumentEchoFilter"},
+                "drop_run_event": {"()": f"{__name__}.DropRunEventFilter"},
+                "drop_operator_document": {"()": f"{__name__}.DropOperatorDocumentEchoFilter"},
                 "third_party_debug": {"()": f"{__name__}._ThirdPartyDebugFilter"},
             },
             "handlers": configured_handlers,
@@ -705,7 +727,7 @@ def configure_logging() -> None:
     _install_run_context_record_factory()
     _install_secret_scrubbing_filters()
 
-    _CONFIGURED = True
+    _configured = True
 
     if not file_logging_enabled:
         # Surface the degrade at ERROR so it clears the default ERROR-gated
@@ -742,14 +764,14 @@ def allow_logging_reconfiguration() -> None:
     from the CURRENT environment. Callers that change a logging-relevant setting
     must reset the settings cache before calling :func:`configure_logging` again.
     """
-    global _CONFIGURED
+    global _configured
 
     root_logger = logging.getLogger()
     for handler in list(root_logger.handlers):
         root_logger.removeHandler(handler)
         with contextlib.suppress(OSError, ValueError):
             handler.close()
-    _CONFIGURED = False
+    _configured = False
 
 
 def set_log_level(level: int, *, file_level: int = logging.DEBUG) -> None:

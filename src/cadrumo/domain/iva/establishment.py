@@ -280,12 +280,12 @@ def _territory_carve_outs() -> dict[str, _CarveOut]:
     return _carve_out_rows_from_payload(target, payload)
 
 
-def _is_object_list(value: object) -> TypeGuard[list[object]]:
+def is_object_list(value: object) -> TypeGuard[list[object]]:
     """Narrow an unparameterized runtime list to untrusted object entries."""
     return isinstance(value, list)
 
 
-def _is_str_keyed_mapping(value: object) -> TypeGuard[Mapping[str, object]]:
+def is_str_keyed_mapping(value: object) -> TypeGuard[Mapping[str, object]]:
     """Narrow an unparameterized runtime dict to a string-keyed mapping.
 
     True by construction for a table parsed from TOML: ``tomllib`` always
@@ -300,7 +300,7 @@ def _str_tuple_or_none(value: object) -> tuple[str, ...] | None:
     Returns ``None`` when *value* is not a list, or when any entry is not a
     string, so the caller raises its own domain-specific refusal.
     """
-    if not _is_object_list(value):
+    if not is_object_list(value):
         return None
     widened: list[str] = []
     for item in value:
@@ -493,7 +493,7 @@ def _resolvable_parents(rows: dict[str, _CarveOut]) -> frozenset[str]:
     nothing uses it today.
     """
     return (
-        frozenset(_country_vocabulary._country_codes_by_printed_name().values())
+        frozenset(_country_vocabulary.country_codes_by_printed_name().values())
         | _EU_MEMBER_CODES
         | {SPAIN_COUNTRY_CODE}
         | set(rows)
@@ -526,7 +526,7 @@ def _catalogued_country_codes() -> frozenset[str]:
             its one-name-one-country invariant.
     """
     return (
-        frozenset(_country_vocabulary._country_codes_by_printed_name().values())
+        frozenset(_country_vocabulary.country_codes_by_printed_name().values())
         | _EU_MEMBER_CODES
         | {SPAIN_COUNTRY_CODE}
         | frozenset(_territory_carve_outs())
@@ -901,7 +901,7 @@ def country_code_for_stated_country_code(stated_code: str | None) -> str | None:
             return None
         return normalised
     if len(candidate) == _ALPHA3_LENGTH:
-        return _country_vocabulary._country_codes_by_alpha3().get(candidate)
+        return _country_vocabulary.country_codes_by_alpha3().get(candidate)
     return None
 
 
@@ -1033,10 +1033,10 @@ def country_code_for_printed_country_name(printed_name: str | None) -> str | Non
     """
     if printed_name is None:
         return None
-    candidate = _country_vocabulary._normalise_printed_country_name(printed_name)
+    candidate = _country_vocabulary.normalise_printed_country_name(printed_name)
     if not candidate:
         return None
-    return _country_vocabulary._country_codes_by_printed_name().get(candidate)
+    return _country_vocabulary.country_codes_by_printed_name().get(candidate)
 
 
 def territorial_scope_for_printed_country_name(printed_name: str | None) -> IvaTerritorialScope | None:

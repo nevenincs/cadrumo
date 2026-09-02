@@ -38,6 +38,8 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.core._config_runtime
+   cadrumo.core._config_validation
    cadrumo.core.action_argument_resolution
    cadrumo.core.address_components
    cadrumo.core.aeat_csv
@@ -95,6 +97,7 @@ Submodules
    cadrumo.core.filed_history_discovery_signal
    cadrumo.core.filing_producer_key
    cadrumo.core.filing_projection_ref
+   cadrumo.core.filing_projection_ref_support
    cadrumo.core.filing_year
    cadrumo.core.flows
    cadrumo.core.foreign_asset_obligation

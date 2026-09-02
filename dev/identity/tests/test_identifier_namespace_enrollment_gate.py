@@ -391,7 +391,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/application/aggregation/_iva_ledger.py",
+        path="src/cadrumo/application/aggregation/iva_ledger.py",
         model="IvaLedgerAggregationIssue",
         field="transaction_id",
         group="mixed-source diagnostic references",

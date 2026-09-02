@@ -6,7 +6,7 @@ Rows map adapter-layer exception qualnames to stable
 
 from ..error_codes import ErrorCategory, ErrorCode
 
-_DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
+DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "cadrumo.core.errors.hierarchy.AeatLoginAssertionError",
         ErrorCode(

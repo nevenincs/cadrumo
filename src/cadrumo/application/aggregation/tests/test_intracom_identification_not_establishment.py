@@ -37,7 +37,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .. import IvaLedgerAggregationIssueReason
-from .._iva_ledger import IvaLedgerAggregation
+from ..iva_ledger import IvaLedgerAggregation
 from .iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

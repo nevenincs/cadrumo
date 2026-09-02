@@ -15,7 +15,7 @@ from ...core.decimal.coercion import coerce_decimal
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.identity import IdentityError, tax_id_identity_token
 from ...core.parsing import normalise_iso_4217_currency
-from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
+from ...core.parsing.dates import parse_iso8601_date as _parse_iso8601_date
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ..iva.classification import InvoiceKind
 from ..iva.identification import identification_state_for_printed_tax_identifier
@@ -70,7 +70,7 @@ def _coerce_optional_datetime(value: object) -> datetime | None:
     return _coerce_optional(value, _coerce_datetime)
 
 
-def _normalise_invoice_dates(payload: dict[str, object]) -> dict[str, object]:
+def normalise_invoice_dates(payload: dict[str, object]) -> dict[str, object]:
     for key, converter in (
         ("issued_at", _coerce_date),
         ("fx_rate_date", _coerce_optional_date),
@@ -126,7 +126,7 @@ def _judging[T](field: str, judge: Callable[[], T]) -> T:
         raise
 
 
-def _normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, object]:
+def normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, object]:
     country_raw = payload.get("counterparty_country")
     if isinstance(country_raw, str):
         payload["counterparty_country"] = _judging(
@@ -161,7 +161,7 @@ def _normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, obj
     return payload
 
 
-def _normalise_invoice_currency(payload: dict[str, object]) -> dict[str, object]:
+def normalise_invoice_currency(payload: dict[str, object]) -> dict[str, object]:
     if "currency" in payload and isinstance(payload["currency"], str):
         try:
             payload["currency"] = normalise_iso_4217_currency(payload["currency"])
@@ -192,23 +192,23 @@ def _bounded_rejected_value(value: object) -> str:
     return f"{text[:_REJECTED_VALUE_ECHO_LIMIT]}... ({len(text)} chars)"
 
 
-def _raise_first_invoice_violation(violations: Iterable[tuple[bool, str]]) -> None:
+def raise_first_invoice_violation(violations: Iterable[tuple[bool, str]]) -> None:
     for violated, message in violations:
         if violated:
             raise InvoiceValidationError(message)
 
 
-def _require_optional_non_negative(value: Decimal | None, message: str) -> None:
+def require_optional_non_negative(value: Decimal | None, message: str) -> None:
     if value is not None and value < Decimal("0"):
         raise InvoiceValidationError(message)
 
 
-def _require_equal(actual: Decimal, expected: Decimal, message: str) -> None:
+def require_equal(actual: Decimal, expected: Decimal, message: str) -> None:
     if actual != expected:
         raise InvoiceValidationError(message)
 
 
-def _normalise_invoice_monetary_fields(payload: dict[str, object]) -> dict[str, object]:
+def normalise_invoice_monetary_fields(payload: dict[str, object]) -> dict[str, object]:
     optional_fields = frozenset({"retention_rate", "retention_amount", "recargo_amount", "suplido_amount", "fx_rate"})
     for key in (
         "grand_total",
@@ -284,7 +284,7 @@ def _validated_invoice_identity_values(
     )
 
 
-def _derive_invoice_id_when_complete(
+def derive_invoice_id_when_complete(
     payload: dict[str, object],
     *,
     derive_invoice_id: Callable[..., str],
@@ -315,7 +315,7 @@ def _derive_invoice_id_when_complete(
     return payload
 
 
-def _normalise_invoice_collections(
+def normalise_invoice_collections(
     payload: dict[str, object],
     *,
     normalise_linked_transaction_ids: Callable[[object], tuple[str, ...]],
@@ -327,7 +327,7 @@ def _normalise_invoice_collections(
     return payload
 
 
-def _normalise_invoice_payment_id(payload: dict[str, object]) -> dict[str, object]:
+def normalise_invoice_payment_id(payload: dict[str, object]) -> dict[str, object]:
     if "payment_id" not in payload or not isinstance(payload["payment_id"], str):
         return payload
     normalized = payload["payment_id"].strip().lower()

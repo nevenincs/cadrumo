@@ -34,14 +34,14 @@ _ACTIVE_PROFILE_WITHOUT_SECRET_HARNESS = dedent(
         cadrumo_secret_store_dir=storage_root / "fallback-store",
         cadrumo_output_language="en",
     )
-    token = config_module._settings_override.set(settings)
+    token = config_module.settings_override.set(settings)
     try:
         sys.argv = ["aeat", *cli_args]
         from cadrumo.entrypoints.cli import main
 
         main()
     finally:
-        config_module._settings_override.reset(token)
+        config_module.settings_override.reset(token)
     """,
 )
 

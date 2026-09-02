@@ -15,7 +15,7 @@ provides — outside the source tree under the configured local-storage root.
 from __future__ import annotations
 
 import os
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -63,7 +63,7 @@ def passphrase() -> str:
 
 
 @contextmanager
-def harness_storage(*, fresh: bool = False, namespace: str = "profile") -> Iterator[Path]:
+def harness_storage(*, fresh: bool = False, namespace: str = "profile") -> Generator[Path]:
     """Enter the harness's own storage root for the duration of a block.
 
     The devtool owns this isolated configuration seam rather than importing a

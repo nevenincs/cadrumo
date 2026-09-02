@@ -18,7 +18,7 @@ from pydantic import ValidationError
 
 from ....application.auth.diagnostics import AuthDiagnosticDetail, AuthDiagnosticPhoneState, AuthDiagnosticSummary
 from ....tests.aeat_literal_fixtures import AUTH_DIAGNOSTIC_SEDE_URL_FIXTURE
-from .._config_payloads import AuthDiagnosticsListResult, AuthDiagnosticsReportResult, AuthDiagnosticsViewResult
+from ..config_payloads import AuthDiagnosticsListResult, AuthDiagnosticsReportResult, AuthDiagnosticsViewResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

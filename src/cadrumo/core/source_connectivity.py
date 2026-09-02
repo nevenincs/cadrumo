@@ -17,6 +17,7 @@ ratchet.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from enum import StrEnum
 from typing import Annotated, Protocol, Self, runtime_checkable
@@ -29,6 +30,7 @@ from .aggregation import BindingSourceKind
 from .calculation_route import ModeloCalculationRouteId
 from .identity import CalculationRevisionId, ContentDigest
 from .models import STRICT_FROZEN_CONFIG
+from .type_guards import is_object_mapping
 
 __all__ = [
     "SourceConnectivityCandidateId",
@@ -274,6 +276,7 @@ class SourceConnectivityProofAuthority(Protocol):
 
     def source_is_enrolled(self, connection: SourceConnectivityConnectionIdentity) -> bool:
         """Return whether the canonical source mesh currently enrolls this source."""
+        ...
 
     def operator_workflow_reaches_source(
         self,
@@ -281,15 +284,18 @@ class SourceConnectivityProofAuthority(Protocol):
         proof: SourceConnectivityOperatorReachabilityProof,
     ) -> bool:
         """Return whether this workflow reaches the exact asserted connection."""
+        ...
 
     def encrypted_revision_matches(
         self,
         proof: SourceConnectivityEncryptedRevisionProof,
     ) -> bool:
         """Return whether encrypted storage contains the exact asserted source proof."""
+        ...
 
     def executable_evidence_digest(self, evidence: SourceConnectivityExecutableEvidence) -> ContentDigest | None:
         """Return the verified digest of the existing executable artifact, if any."""
+        ...
 
 
 class SourceConnectivityResolverOwnershipProof(BaseModel):
@@ -466,7 +472,11 @@ class SourceConnectivityCensusRow(SourceConnectivityCandidateIdentity):
                 raise ValueError("connected connectivity row requires complete connected_proof")
             if self.connected_proof.connection.candidate_id != self.candidate_id:
                 raise ValueError("connected proof candidate_id must match the census row")
-            authority = (info.context or {}).get("source_connectivity_proof_authority")
+            # `ValidationInfo.context` is `Any | None`; narrowing it first keeps the
+            # lookup and the authority it yields typed rather than Unknown.
+            raw_context = info.context
+            context: Mapping[object, object] = raw_context if is_object_mapping(raw_context) else {}
+            authority = context.get("source_connectivity_proof_authority")
             if not isinstance(authority, SourceConnectivityProofAuthority):
                 raise ValueError("connected connectivity row requires live proof authority validation")
             self._verify_connected_authority(authority)

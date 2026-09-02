@@ -54,7 +54,7 @@ from ...core.decimal.coercion import coerce_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.foreign_asset_obligation import M720AssetClassCode
 from ...core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada
-from ...core.parsing import parse_iso8601_date
+from ...core.parsing.dates import parse_iso8601_date
 from ...domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
 from ...domain.calculations.registry.detail_record_bindings import (

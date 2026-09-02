@@ -1,4 +1,4 @@
-"""Focused unit tests for financial._detection._ordered_candidates.
+"""Focused unit tests for financial.detection._ordered_candidates.
 
 `_ordered_candidates` builds the content-prioritised candidate
 provider list `detect_provider` walks. The first provider whose
@@ -30,12 +30,12 @@ from pathlib import Path
 
 import pytest
 
-from .._detection import _ordered_candidates
 from .._mapped_tabular import MappedTabularProvider
-from .._ofx import OfxProvider
-from .._pdf_n26 import PdfN26Provider
-from .._xlsx import XlsxProvider
 from ..csv import CsvProvider
+from ..detection import _ordered_candidates
+from ..ofx import OfxProvider
+from ..pdf_n26 import PdfN26Provider
+from ..xlsx import XlsxProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

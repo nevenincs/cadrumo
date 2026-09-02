@@ -16,7 +16,7 @@ ORPHAN
 SURPLUS
     A ``tr()`` call site supplies a kwarg that has no corresponding
     placeholder in the locale value. The kwarg is silently ignored by
-    ``_interpolate``; the call site author probably misnamed a kwarg or
+    ``interpolate``; the call site author probably misnamed a kwarg or
     the locale value lost a placeholder without the call site being
     updated.
 
@@ -65,7 +65,7 @@ _CANONICAL_LOCALE = _LOCALES_DIR / "es"
 
 # (key, token) pairs whose ``{name}`` tokens are intentionally passed THROUGH
 # tr() to a downstream formatter rather than supplied by the tr() call site,
-# so they are NOT orphans. ``_interpolate`` fails closed on an unsupplied
+# so they are NOT orphans. ``interpolate`` fails closed on an unsupplied
 # ``{name}`` (its ``str.format`` pass raises ``KeyError`` and returns the
 # pre-format string), leaving the token intact for the downstream formatter.
 # ``cli.help.try_for_help`` routes Typer's RICH_HELP through tr() for
@@ -206,7 +206,7 @@ def test_no_surplus_kwargs(
 ) -> None:
     """No call site supplies a kwarg that the locale value does not declare.
 
-    A SURPLUS kwarg is silently dropped by ``_interpolate``; the call
+    A SURPLUS kwarg is silently dropped by ``interpolate``; the call
     site author either misnamed the kwarg or the locale template lost
     the matching ``%{name}`` token without the call site being updated.
     Fix by either:

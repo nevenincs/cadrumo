@@ -50,6 +50,7 @@ from ..json_contract import (
     RegisteredSchema,
     SchemaEnvelope,
 )
+from ..type_guards import is_object_dict, is_object_list_or_tuple, is_object_mapping
 from .errors import GoldenCaptureError, GoldenReplayMismatchError
 
 #: The sentinel a masked leaf is replaced with before comparison.
@@ -120,19 +121,19 @@ def _mask_existing_path(document: dict[str, object], path: str) -> None:
     segments = path.split(".")
     node: object = document
     for segment in segments[:-1]:
-        if not isinstance(node, dict) or segment not in node:
+        if not is_object_dict(node) or segment not in node:
             return
         node = node[segment]
     leaf = segments[-1]
-    if isinstance(node, dict) and leaf in node:
+    if is_object_dict(node) and leaf in node:
         node[leaf] = MASK_SENTINEL
 
 
 def _mask_value(value: object, fields: frozenset[str]) -> object:
     """Recursively copy ``value``, masking mapping entries whose key is in ``fields``."""
-    if isinstance(value, Mapping):
+    if is_object_mapping(value):
         return {key: (MASK_SENTINEL if key in fields else _mask_value(item, fields)) for key, item in value.items()}
-    if isinstance(value, list | tuple):
+    if is_object_list_or_tuple(value):
         return [_mask_value(item, fields) for item in value]
     return value
 
@@ -152,7 +153,7 @@ def flatten_paths(document: Mapping[str, object]) -> dict[str, object]:
 
 def _flatten_into(value: object, prefix: str, out: dict[str, object]) -> None:
     """Populate ``out`` with the flattened ``path -> leaf`` mapping for ``value``."""
-    if isinstance(value, Mapping):
+    if is_object_mapping(value):
         if not value:
             out[prefix] = {}
             return
@@ -160,7 +161,7 @@ def _flatten_into(value: object, prefix: str, out: dict[str, object]) -> None:
             child = f"{prefix}.{key}" if prefix else str(key)
             _flatten_into(item, child, out)
         return
-    if isinstance(value, list | tuple):
+    if is_object_list_or_tuple(value):
         if not value:
             out[prefix] = []
             return

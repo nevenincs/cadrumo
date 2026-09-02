@@ -137,7 +137,7 @@ from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.calculations.registry.tests._manual_oracle_support import oracle_declared_figures
+from ....domain.calculations.registry.tests.manual_oracle_support import oracle_declared_figures
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations

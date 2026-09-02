@@ -22,7 +22,7 @@ Two layers, because the callers need two genuinely different things:
   child pins its ``Settings``.
 - :func:`run_cadrumo_subprocess` layers the SHARED settings-injection
   mechanism on top: the child constructs an explicit ``Settings(...)`` and
-  registers it on ``cadrumo.core.config._settings_override`` before calling
+  registers it on ``cadrumo.core.config.settings_override`` before calling
   ``main()``, bypassing the real environment entirely. Three independent
   harnesses converged on this exact mechanism; this is their one home.
 
@@ -84,7 +84,7 @@ _CONTEXTVAR_HARNESS_SOURCE = dedent(
     payload = json.loads(sys.argv[1])
     cli_args = sys.argv[2:]
     settings = Settings(_env_file=None, **payload["settings"])
-    token = config_module._settings_override.set(settings)
+    token = config_module.settings_override.set(settings)
     try:
         expected_route_kind = payload.get("expected_storage_route_kind")
         if expected_route_kind is not None:
@@ -106,7 +106,7 @@ _CONTEXTVAR_HARNESS_SOURCE = dedent(
         finally:
             resume_logging_configuration()
     finally:
-        config_module._settings_override.reset(token)
+        config_module.settings_override.reset(token)
     """,
 )
 
@@ -197,7 +197,7 @@ def run_cadrumo_subprocess(
     """Run one real ``cadrumo`` CLI invocation in a fresh interpreter.
 
     The child constructs ``Settings(_env_file=None, **settings)`` and
-    registers it on the ``_settings_override`` ContextVar before importing
+    registers it on the ``settings_override`` ContextVar before importing
     and calling ``cadrumo.entrypoints.cli.main`` -- the mechanism three
     independent harnesses converged on. ``settings`` takes exactly the
     keyword arguments a caller would otherwise pass to ``Settings(...)``

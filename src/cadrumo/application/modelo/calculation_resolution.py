@@ -12,9 +12,9 @@ resolution helpers, then returns typed channel bundles that
 :class:`CalculationRevision` persistence boundary.
 
 See Also:
-    :func:`application.modelo._binding_resolution.resolve_borrador_source_tier`
+    :func:`application.modelo.binding_resolution.resolve_borrador_source_tier`
         Resolves the optional borrador tier before the final precedence merge.
-    :func:`application.modelo._binding_resolution.resolve_profile_source_tier`
+    :func:`application.modelo.binding_resolution.resolve_profile_source_tier`
         Resolves profile-sourced bindings as the lowest-precedence tier.
     :func:`application.aggregation.merge_source_resolutions_by_precedence`
         Applies the ordered overlay contract used by this module.
@@ -43,7 +43,7 @@ from ...domain.identifiers import canonical_decimal_string as _canonical_decimal
 from ...domain.modelos.work_unit import WorkUnit
 from ..aggregation import CalculationSourceResolution
 from ..aggregation.source_resolution_operations import merge_source_resolutions_by_precedence
-from ._binding_resolution import (
+from .binding_resolution import (
     lift_previous_filing_casilla_overrides_to_bindings,
     reject_binding_channel_mismatch,
     resolve_borrador_source_tier,
@@ -128,9 +128,9 @@ def resolve_calculation_binding_channels(
     enum, and date channels, plus any
     :class:`~application.live.Borrador100SnapshotRepository` provenance,
     after
-    :func:`application.modelo._binding_resolution.reject_binding_channel_mismatch`
+    :func:`application.modelo.binding_resolution.reject_binding_channel_mismatch`
     verifies the registry-declared channel shape and
-    :func:`application.modelo._binding_resolution.lift_previous_filing_casilla_overrides_to_bindings`
+    :func:`application.modelo.binding_resolution.lift_previous_filing_casilla_overrides_to_bindings`
     mirrors eligible previous-filing casilla overrides onto their binding ids.
     """
     borrador_resolution = resolve_borrador_source_tier(

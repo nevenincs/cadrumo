@@ -9,7 +9,6 @@ from pydantic import ValidationError
 
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from .._command_schema import command_registration_metadata, command_registration_projection
-from .._config.secure_input import MACHINE_SECRET_MAX_BYTES, ProfileSecretChannel, select_profile_secret_channel
 from .._profile_authentication_contract import (
     ProfileAuthenticationSecrets,
     ProfileSecretSourceOptions,
@@ -25,6 +24,7 @@ from ..command_spec import (
     ProfileSecretChannelKind,
 )
 from ..command_specs import COMMAND_GRAPH
+from ..config.secure_input import MACHINE_SECRET_MAX_BYTES, ProfileSecretChannel, select_profile_secret_channel
 from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

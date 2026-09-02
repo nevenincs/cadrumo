@@ -85,7 +85,7 @@ from ...domain.calculations.registry.temporal import select_revision
 from ...domain.calculations.registry.verification_tolerance import verification_tolerance_or_exact
 from ..operations.events import OperationLogSeverity
 from ..operations.owner import OperationEventEmitter
-from ..storage.sync_runs._persist import record_sync_run
+from ..storage.sync_runs.persist import record_sync_run
 from ..storage.sync_runs.records import (
     SyncRunRecordReference,
     SyncRunRecordRepositoryProtocol,

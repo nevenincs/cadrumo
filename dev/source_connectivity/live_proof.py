@@ -5,7 +5,7 @@ from __future__ import annotations
 import secrets
 import tempfile
 import tomllib
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
@@ -28,13 +28,13 @@ from cadrumo.application.aggregation import CalculationSourceContext
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from cadrumo.application.invoices.source_resolver import InvoiceCatalogueSourceResolver
 from cadrumo.application.modelo._calculation_helpers import build_typed_observations
-from cadrumo.application.modelo._revision_persistence import persist_calculation_revision
 from cadrumo.application.modelo.calculation_actions import (
     _require_calculation_route_resolver,
     _source_bound_casilla_inputs,
     _source_provenance_refs,
 )
 from cadrumo.application.modelo.calculation_resolution import build_calculation_replay_payloads
+from cadrumo.application.modelo.revision_persistence import persist_calculation_revision
 from cadrumo.application.operator_surface.calculation_workflows import (
     build_supported_modelo_calculation_workflow_catalogue,
 )
@@ -298,7 +298,7 @@ def _require_unique_primary(revision: CalculationRevision, fixture: ConnectedPro
 @contextmanager
 def _ephemeral_connected_proof_material(
     fixtures: tuple[ConnectedProofFixture, ...],
-) -> Iterator[
+) -> Generator[
     tuple[
         CalculationRevisionCatalogueRepository,
         tuple[LiveSourceConnectivityProofExpectation, ...],
@@ -332,7 +332,7 @@ def _ephemeral_connected_proof_material(
 def _live_authority_for_fixtures(
     repository_root: Path,
     fixtures: tuple[ConnectedProofFixture, ...],
-) -> Iterator[LiveSourceConnectivityProofAuthority]:
+) -> Generator[LiveSourceConnectivityProofAuthority]:
     """Compose canonical authorities over independently executed proof material."""
     with _ephemeral_connected_proof_material(fixtures) as (revisions, expectations, _database_path):
         yield LiveSourceConnectivityProofAuthority(
@@ -349,7 +349,7 @@ def _live_authority_for_fixtures(
 @contextmanager
 def canonical_live_connected_proof_authority(
     repository_root: Path,
-) -> Iterator[LiveSourceConnectivityProofAuthority | None]:
+) -> Generator[LiveSourceConnectivityProofAuthority | None]:
     """Yield the canonical live authority only when connected rows require it."""
     candidate_ids = connected_candidate_ids()
     if not candidate_ids:

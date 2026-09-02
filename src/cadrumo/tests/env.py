@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 
 
 @contextmanager
-def temporary_env(**values: str) -> Iterator[None]:
+def temporary_env(**values: str) -> Generator[None]:
     """Temporarily set environment variables and restore their prior state."""
     previous = {name: os.environ.get(name) for name in values}
     os.environ.update(values)

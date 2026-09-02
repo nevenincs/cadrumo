@@ -27,7 +27,7 @@ from .binding_selector_utils import invariant_diagnostics, selector_against_mode
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .ledger_binding_selector_support import _mapping_lacks_fact, casilla_id_set
+from .ledger_binding_selector_support import casilla_id_set, mapping_lacks_fact
 from .quantity_screen_enrolment import assert_quantity_readers_cover_independent_facts, independent_quantity_facts
 from .schema import DataBindingDefinition, ModeloRevision
 
@@ -96,7 +96,7 @@ class _RentaLedgerIncomeSelector(BaseModel):
         closes the missing-value half so a binding author reads the choice
         instead of guessing it.
         """
-        if _mapping_lacks_fact(value):
+        if mapping_lacks_fact(value):
             raise ValueError(
                 "ledger_renta_income_aggregation selector requires an explicit 'fact'; "
                 f"accepted facts are {sorted(_RENTA_INCOME_SUPPORTED_FACTS)!r}",

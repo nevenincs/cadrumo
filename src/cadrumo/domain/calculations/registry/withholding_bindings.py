@@ -136,7 +136,7 @@ _WithholdingRowField = Literal[
     "clave_mercado",
     "numero_orden",
 ]
-_WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave"]
+WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave"]
 _WITHHOLDING_FACTS = frozenset(
     {
         "row_field",
@@ -529,7 +529,7 @@ class _WithholdingSelector(BaseModel):
     fact: _WithholdingFact
     claves: tuple[str, ...] = ()
     row_field: _WithholdingRowField | None = None
-    grouping: _WithholdingGrouping | None = None
+    grouping: WithholdingGrouping | None = None
     record: str | None = Field(default=None, min_length=1, max_length=64)
     data_type: BindingExportDataType | None = None
     """Scalar type of the value this row field contributes to the export.
@@ -741,7 +741,7 @@ def resolve_withholding_binding_row_values(
     available = tuple(observations)
     resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     cohorts: dict[
-        tuple[_WithholdingGrouping, tuple[str, ...]],
+        tuple[WithholdingGrouping, tuple[str, ...]],
         list[tuple[DataBindingDefinition, _WithholdingSelector]],
     ] = {}
     for binding in revision.bindings:
@@ -758,9 +758,9 @@ def resolve_withholding_binding_row_values(
         _, sample_selector = members[0]
         scope_filtered = tuple(_filter_withholding_observations(available, sample_selector))
         required_fields = frozenset(selector.row_field for _, selector in members if selector.row_field is not None)
-        from ._withholding_rows import _build_withholding_rows
+        from ._withholding_rows import build_withholding_rows
 
-        rows = _build_withholding_rows(grouping, scope_filtered, required_fields=required_fields)
+        rows = build_withholding_rows(grouping, scope_filtered, required_fields=required_fields)
         for binding, selector in members:
             assert selector.row_field is not None
             for row_index, row in enumerate(rows, start=1):

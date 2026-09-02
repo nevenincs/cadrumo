@@ -55,7 +55,6 @@ Usage::
 
     python -m dev.audit.checkout_drift [--json] [--full]
     python -m dev.audit.checkout_drift --check
-    python -m dev.audit.checkout_drift --write-baseline
 """
 
 from __future__ import annotations
@@ -84,7 +83,7 @@ _BASELINE_PATH: Final = Path(__file__).resolve().parent / "checkout_drift_baseli
 _BASELINE_COMMENT: Final = (
     "Shrink-only ceiling for tracked files whose on-disk bytes differ from their "
     "committed bytes while git reports them unmodified. Regenerate with "
-    "`python -m dev.audit.checkout_drift --write-baseline`. The default screen run "
+    "The default screen run "
     "never fails; `--check` applies this ceiling and is not wired into a blocking "
     "lane. 'buckets' are top-level path segments, so growth is attributable to a "
     "tree rather than only to the total."
@@ -243,13 +242,16 @@ def measure(root: Path) -> DriftMeasurement:
 
 
 def load_ceiling(path: Path = _BASELINE_PATH) -> tuple[int | None, dict[str, int]]:
-    """Return the committed ``(total, buckets)`` ceiling, or ``(None, {})``."""
-    if not path.is_file():
-        return None, {}
-    document = json.loads(path.read_text(encoding=_UTF_8))
-    buckets = {str(key): int(value) for key, value in document.get("buckets", {}).items()}
-    total = document.get("total")
-    return (int(total) if total is not None else None), buckets
+    """Return no ceiling: drift is reported as measured, never against a pin.
+
+    Args:
+        path: Retained for signature compatibility with callers.
+
+    Returns:
+        ``(None, {})`` always.
+    """
+    del path
+    return None, {}
 
 
 def write_ceiling(measurement: DriftMeasurement, head: str, path: Path = _BASELINE_PATH) -> None:
@@ -303,7 +305,7 @@ def _render(measurement: DriftMeasurement, total: int | None, buckets: dict[str,
         print(f"    {bucket:<14} {count} (ceiling {allowed}){marker}")
 
     if total is None:
-        print("\nno ceiling recorded yet; run --write-baseline to record one")
+        print("\nno ceiling is recorded or accepted; drift is reported as measured")
     else:
         print(f"\nrecorded ceiling: total {total}")
 
@@ -320,7 +322,6 @@ def main(argv: list[str] | None = None) -> int:
         description="Screen tracked files whose on-disk bytes differ from their committed bytes."
     )
     parser.add_argument("--check", action="store_true", help="Apply the shrink-only ceiling and exit 1 on growth.")
-    parser.add_argument("--write-baseline", action="store_true", help="Record the current measurement as the ceiling.")
     parser.add_argument("--json", action="store_true", help="Emit the measurement as JSON.")
     parser.add_argument("--full", action="store_true", help="List every drifted path, uncapped.")
     args = parser.parse_args(argv)
@@ -328,12 +329,6 @@ def main(argv: list[str] | None = None) -> int:
     root = REPO_ROOT
     measurement = measure(root)
     total, buckets = load_ceiling()
-
-    if args.write_baseline:
-        head = _git(root, "rev-parse", "HEAD").decode("ascii").strip()
-        write_ceiling(measurement, head)
-        print(f"recorded ceiling: total {measurement.total} at {head}")
-        return 0
 
     if args.json:
         print(

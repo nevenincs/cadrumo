@@ -30,7 +30,7 @@ See Also:
         quarantine operation supply the repair data.
     :data:`~cadrumo.adapters.persistence.storage.STORAGE_NAMESPACE_REGISTRY`
         Central registry copied into repair-policy namespace rows.
-    :mod:`cadrumo.entrypoints.cli._config._repair_cli`
+    :mod:`cadrumo.entrypoints.cli.config._repair_cli`
         CLI command surface that renders these reports and policy-backed repair
         actions.
 """

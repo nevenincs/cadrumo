@@ -26,8 +26,8 @@ from __future__ import annotations
 
 import pytest
 
-from ..record_design_pdf_state import _PdfParseState
-from ..record_design_sources import _EMPTY_CORRECTIONS
+from ..record_design_pdf_state import PdfParseState
+from ..record_design_sources import EMPTY_CORRECTIONS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -42,7 +42,7 @@ _HEADER = (
 
 
 def _read(lines: tuple[str, ...], *, repair: bool):
-    state = _PdfParseState(source_label="probe.pdf", corrections=_EMPTY_CORRECTIONS, repair_glued_rows=repair)
+    state = PdfParseState(source_label="probe.pdf", corrections=EMPTY_CORRECTIONS, repair_glued_rows=repair)
     for number, line in enumerate(lines, start=1):
         state.feed(line, number)
     state.close_current_body()

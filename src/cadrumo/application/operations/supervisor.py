@@ -113,7 +113,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         execution_timeout: timedelta | None = None,
         cleanup_timeout: timedelta | None = None,
         response_authority_issuer: OperationResponseAuthorityIssuer | None = None,
-        response_token_factory: Callable[[], str] = _supervisor_context._new_response_token,
+        response_token_factory: Callable[[], str] = _supervisor_context.new_response_token,
         financial_operand_custody: OperationFinancialOperandCustodyRepository | None = None,
     ) -> None:
         """Bind the registry and durable ports for one process owner."""
@@ -303,7 +303,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             executor_entered_at=now,
         )
         context = self._build_context(running)
-        executor_context = _supervisor_context._SupervisorExecutorContext(
+        executor_context = _supervisor_context.SupervisorExecutorContext(
             context=context,
             operands=self._operands,
             ephemeral_secret=BoundEphemeralSecretAccess(
@@ -1149,7 +1149,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             idempotency_key=None,
         )
         context = self._build_context(snapshot)
-        executor_context = _supervisor_context._SupervisorExecutorContext(
+        executor_context = _supervisor_context.SupervisorExecutorContext(
             context=context,
             operands=self._operands,
             ephemeral_secret=BoundEphemeralSecretAccess(

@@ -1,10 +1,10 @@
 """Prorrata apportionment regressions for the shared IVA ledger path.
 
 See Also:
-    :func:`~application.aggregation._iva_ledger.aggregate_iva_ledger_observations_from_repositories`
+    :func:`~application.aggregation.iva_ledger.aggregate_iva_ledger_observations_from_repositories`
         Repository-backed aggregation path that loads the active prorrata
         register and emits the apportionment carrier under test.
-    :func:`~application.aggregation._iva_ledger.resolve_iva_ledger_binding_values`
+    :func:`~application.aggregation.iva_ledger.resolve_iva_ledger_binding_values`
         Binding resolver wrapper that applies prorrata only to deducible cuota
         bindings.
     :mod:`~domain.prorrata_register`
@@ -48,7 +48,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import AggregationValidationError
 from .. import aggregate_iva_ledger_observations_from_repositories as _aggregate_from_repositories
-from .._iva_ledger import _active_prorrata_apportionment, resolve_iva_ledger_binding_values
+from ..iva_ledger import _active_prorrata_apportionment, resolve_iva_ledger_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

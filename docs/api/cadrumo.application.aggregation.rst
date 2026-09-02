@@ -26,14 +26,12 @@ Submodules
    cadrumo.application.aggregation._invoice_kind
    cadrumo.application.aggregation._invoice_retencion
    cadrumo.application.aggregation._irnr_income_ledger
-   cadrumo.application.aggregation._iva_ledger
    cadrumo.application.aggregation._iva_transaction
    cadrumo.application.aggregation._ledger_filing_snapshot
    cadrumo.application.aggregation._m303_arrivals
    cadrumo.application.aggregation._modelo_bindings
    cadrumo.application.aggregation._modelo_bindings_invoice_iva
    cadrumo.application.aggregation._modelo_bindings_invoice_iva_refusal
-   cadrumo.application.aggregation._modelo_bindings_renta_expenses
    cadrumo.application.aggregation._modelo_bindings_retenciones
    cadrumo.application.aggregation._modelo_bindings_support
    cadrumo.application.aggregation._models
@@ -56,4 +54,6 @@ Submodules
    cadrumo.application.aggregation._undeclared_activity_advisory
    cadrumo.application.aggregation._withholding_source
    cadrumo.application.aggregation.errors
+   cadrumo.application.aggregation.iva_ledger
+   cadrumo.application.aggregation.modelo_bindings_renta_expenses
    cadrumo.application.aggregation.source_resolution_operations

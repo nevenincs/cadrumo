@@ -13,7 +13,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from ....application._config_reset_models import (
+from ....application.config_reset_models import (
     ConfigResetOperation,
     ConfigResetOperationStatus,
     ConfigResetPointerSnapshot,
@@ -23,7 +23,7 @@ from ....application._config_reset_models import (
 )
 from ....core.bucket_pointer import BucketPointer
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from .._config_payloads import ConfigResetOperationPayload
+from ..config_payloads import ConfigResetOperationPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

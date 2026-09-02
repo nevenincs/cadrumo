@@ -36,7 +36,7 @@ See Also:
     :mod:`~cadrumo.application.modelo.semantic_role_resolution`:
         Provides the canonical semantic-role-to-casilla resolver and ambiguity
         refusal used for the cuota resultante and cuota diferencial roles.
-    :mod:`~cadrumo.application.modelo._binding_resolution`:
+    :mod:`~cadrumo.application.modelo.binding_resolution`:
         Supplies the profile-bound values used by the work-unit entry point.
     :mod:`~cadrumo.application.modelo.work_addressing`:
         Resolves natural or exact work addresses before CLI comparison.
@@ -370,8 +370,8 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
     from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
     from ...domain.calculations.registry.errors import RegistrySnapshotError
     from ..aggregation import CalculationSourceContext, ProfileSourceResolver
-    from ._binding_resolution import resolve_declaration_period_inputs
     from .action_errors import WorkUnitNotFoundError
+    from .binding_resolution import resolve_declaration_period_inputs
     from .work_addressing import ModeloWorkSelectorState, resolve_modelo_work_bucket
 
     request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id)

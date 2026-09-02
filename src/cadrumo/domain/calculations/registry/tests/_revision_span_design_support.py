@@ -19,8 +19,8 @@ from ..record_design import (
     extract_record_design_xls_workbook,
 )
 from ..record_design_coverage import _CASILLA_TAG_RE
-from ..record_design_pdf_rows import _clean_pdf_line
-from ..record_design_pdf_visual import _extract_pdf_text_lines
+from ..record_design_pdf_rows import clean_pdf_line
+from ..record_design_pdf_visual import extract_pdf_text_lines
 from ..record_design_schema import RecordDesignSheet
 from ..schema import ModeloDefinition, ModeloRevision
 from ..schema_references import SourceReference
@@ -209,8 +209,8 @@ def _title_ejercicio_years(path: Path) -> tuple[int, ...]:
 
 
 def _pdf_title_lines(path: Path) -> list[str]:
-    lines = _extract_pdf_text_lines(path.read_bytes(), source_label=str(path))
-    return [cleaned for line in lines[:60] if (cleaned := _clean_pdf_line(line))]
+    lines = extract_pdf_text_lines(path.read_bytes(), source_label=str(path))
+    return [cleaned for line in lines[:60] if (cleaned := clean_pdf_line(line))]
 
 
 def _workbook_title_lines(path: Path) -> list[str]:

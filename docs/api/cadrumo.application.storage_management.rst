@@ -13,6 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.application.storage_management._models
-   cadrumo.application.storage_management._service
    cadrumo.application.storage_management.errors
+   cadrumo.application.storage_management.models
+   cadrumo.application.storage_management.service

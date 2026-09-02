@@ -18,7 +18,7 @@ application functions and pydantic records.
 from __future__ import annotations
 
 import os
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -34,12 +34,12 @@ if TYPE_CHECKING:
     from ._command_schema import command_schema_refs as command_schema_refs
     from ._command_schema import command_schema_type as command_schema_type
     from ._command_schema import command_schema_types as command_schema_types
-    from ._config._google import OAuthClientPayload as OAuthClientPayload
     from ._modelo_rendering import calculation_revision_lines, calculation_revision_payload
     from ._verb_input_schema import VerbInputSchema as VerbInputSchema
     from ._verb_input_schema import cli_path_for_command_key as cli_path_for_command_key
     from ._verb_input_schema import is_exposable_command as is_exposable_command
     from .command_spec import CommandSpec
+    from .config.google import OAuthClientPayload as OAuthClientPayload
 from ._stdio import _disable_rich_cli_rendering as _disable_rich_cli_rendering
 from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
 
@@ -176,7 +176,7 @@ _VERB_INPUT_SCHEMA_EXPORTS: frozenset[str] = frozenset(
 def __getattr__(name: str) -> object:
     """Lazily resolve re-exported names without importing heavy submodules eagerly.
 
-    ``_command_schema``, ``_config._google``, and ``_modelo_rendering`` are
+    ``_command_schema``, ``config.google``, and ``_modelo_rendering`` are
     kept off the eager import path precisely so constructing the Cadrumo CLI
     app object never pulls the registry-dependent command tree; a
     top-level ``from ._command_schema import command_schema_refs`` (and
@@ -192,7 +192,7 @@ def __getattr__(name: str) -> object:
 
         return getattr(_verb_input_schema, name)
     if name == "OAuthClientPayload":
-        from ._config._google import OAuthClientPayload
+        from .config.google import OAuthClientPayload
 
         return OAuthClientPayload
     if name in ("calculation_revision_lines", "calculation_revision_payload"):
@@ -281,7 +281,7 @@ def _refuse_former_product_state_at_startup() -> None:
 
 
 @contextmanager
-def _metadata_state_isolation(arguments: list[str]) -> Iterator[None]:
+def _metadata_state_isolation(arguments: list[str]) -> Generator[None]:
     """Keep help and version imports off an operator's retired ``aeat`` state root.
 
     Lazy subgroup construction can import modules that instantiate Settings.

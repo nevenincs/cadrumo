@@ -1,7 +1,7 @@
 """Prorrata settlement filing writes definitive register state.
 
 See Also:
-    :func:`~application.modelo._revision_persistence.persist_filed_revision`
+    :func:`~application.modelo.revision_persistence.persist_filed_revision`
         Filing transition that co-emits the settlement register write.
     :class:`~adapters.persistence.profile.prorrata_register.ProrrataRegisterRepository`
         Encrypted profile repository receiving the definitive prorrata state.
@@ -50,7 +50,7 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.prorrata_register.register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry
 from ....tests import general_m303_filing_evidence
 from ....tests.secure_sql import isolated_runtime_profile
-from .._revision_persistence import persist_filed_revision
+from ..revision_persistence import persist_filed_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

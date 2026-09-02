@@ -16,7 +16,6 @@ from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .._service import EvidenceBundleRepository, EvidenceBundleService
 from ..models import (
     BundleVerificationState,
     EvidenceBundle,
@@ -26,6 +25,7 @@ from ..models import (
     VerificationCheck,
     derive_bundle_id,
 )
+from ..service import EvidenceBundleRepository, EvidenceBundleService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

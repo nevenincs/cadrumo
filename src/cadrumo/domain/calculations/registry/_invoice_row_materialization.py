@@ -231,7 +231,7 @@ def compute_modelo_349_operador_totals_parity(
     )
 
 
-def _normalise_m349_nif_export_rows(
+def normalise_m349_nif_export_rows(
     rows: dict[tuple[BindingId, int], Decimal | str],
 ) -> dict[tuple[BindingId, int], Decimal | str]:
     normalised = dict(rows)
@@ -246,7 +246,7 @@ def _normalise_m349_nif_export_rows(
     return normalised
 
 
-def _m349_public_row_union(
+def m349_public_row_union(
     rows: dict[tuple[BindingId, int], Decimal | str],
 ) -> dict[tuple[BindingId, int], Decimal | str]:
     """Append payable acquisition rows onto the public Modelo 349 row ids."""
@@ -266,7 +266,7 @@ def _max_row_index(rows: Mapping[tuple[BindingId, int], object], bindings: froze
     return max((row_index for (binding_id, row_index) in rows if binding_id in bindings), default=0)
 
 
-def _build_invoice_rows(
+def build_invoice_rows(
     grouping: _InvoiceGrouping,
     observations: tuple[InvoiceObservation, ...],
     *,

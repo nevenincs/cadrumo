@@ -239,9 +239,14 @@ def test_scaffolded_toml_declares_only_fields_the_schema_knows(tmp_path: Path) -
     assert declared_revision, "revision fixture produced no keys; the scaffold changed shape"
 
 
-def test_render_checklist_contains_all_twelve_items() -> None:
-    """The checklist module carries exactly the 12 contributor items #410 requires."""
-    assert len(CHECKLIST) == 12
+def test_render_checklist_renders_every_item() -> None:
+    """Every checklist item reaches the rendered report, numbered in order.
+
+    The item count is deliberately not asserted. It is not the contract, and
+    pinning it made adding a required authoring step fail three tests that were
+    not about the new step at all.
+    """
+    assert CHECKLIST
     rendered = render_checklist()
     for index, item in enumerate(CHECKLIST, start=1):
         assert item.title in rendered

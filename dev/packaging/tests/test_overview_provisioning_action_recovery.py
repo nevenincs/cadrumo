@@ -128,8 +128,8 @@ def _run_provisioning_matrix(*, work_dir: Path, python: Path, state_name: str) -
         from cadrumo.core import LLM_EXTRA, optional_extra_available
         from cadrumo.core.config import load_settings, override_settings
         from cadrumo.core.json_contract import validate_registered_result
-        from cadrumo.entrypoints.cli._config._check_cli import _dependency_payload, _dependency_text_lines
-        from cadrumo.entrypoints.cli._config._check_payloads import ConfigCheckResult
+        from cadrumo.entrypoints.cli.config._check_cli import _dependency_payload, _dependency_text_lines
+        from cadrumo.entrypoints.cli.config._check_payloads import ConfigCheckResult
 
         def project(status):
             payload = _dependency_payload(status)

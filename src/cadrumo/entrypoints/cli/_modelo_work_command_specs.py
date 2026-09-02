@@ -41,7 +41,9 @@ _RESCATE_TYPE = ValueContract(DeferredTarget("cadrumo.core.rescate_type", "Resca
 _VERIFY_SELECTOR = ValueContract(DeferredTarget("cadrumo.application.modelo.verify_selector", "ModeloVerifySelector"))
 _REFUND = ValueContract(DeferredTarget("cadrumo.core.refund_election", "RefundElection"))
 _PAYMENT = ValueContract(DeferredTarget("cadrumo.core.payment_election", "PaymentElection"))
-_DOMICILIATION = ValueContract(DeferredTarget("cadrumo.core.prior_domiciliation_election", "PriorDomiciliationElection"))
+_DOMICILIATION = ValueContract(
+    DeferredTarget("cadrumo.core.prior_domiciliation_election", "PriorDomiciliationElection")
+)
 
 
 def _key(value: str) -> TranslationKey:
@@ -346,7 +348,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "cadrumo.entrypoints.cli._modelo_work_runs_cli",
         (_a("run_id", required=True), _LANG),
         _MODEL_READ,
-        "cadrumo.entrypoints.cli._modelo_aux_payloads",
+        "cadrumo.entrypoints.cli.modelo_aux_payloads",
         "WorkRunResult",
     ),
     _leaf(
@@ -354,7 +356,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "cadrumo.entrypoints.cli._modelo_work_runs_cli",
         (_a("run_id", required=True), _LANG),
         _MODEL_READ,
-        "cadrumo.entrypoints.cli._modelo_aux_payloads",
+        "cadrumo.entrypoints.cli.modelo_aux_payloads",
         "WorkRunDetailsResult",
     ),
     _leaf(
@@ -362,7 +364,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "cadrumo.entrypoints.cli._modelo_work_runs_cli",
         (_LANG,),
         _MODEL_READ,
-        "cadrumo.entrypoints.cli._modelo_aux_payloads",
+        "cadrumo.entrypoints.cli.modelo_aux_payloads",
         "WorkRunsResult",
     ),
     _leaf(

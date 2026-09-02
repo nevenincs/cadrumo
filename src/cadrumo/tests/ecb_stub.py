@@ -19,7 +19,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 from urllib.parse import parse_qs, urlparse
 
-from ..core.parsing import parse_iso8601_date
+from ..core.parsing.dates import parse_iso8601_date
 
 if TYPE_CHECKING:
     from ..adapters.outbound.fx.ecb_provider import RateFetch

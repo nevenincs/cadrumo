@@ -167,7 +167,7 @@ def test_a_per_modelo_class_keeps_its_own_modelo_named_fields() -> None:
 
 def test_the_branch_detector_sees_a_planted_modelo_branch() -> None:
     """Prove the branch scan bites, and only inside generic construction."""
-    planted = ast.parse("def _construct_authority():\n    return modelo.id == Modelo.M303\n")
+    planted = ast.parse("def construct_authority():\n    return modelo.id == Modelo.M303\n")
     generic = SRC_CADRUMO / _REGISTRY_PACKAGE / "authority.py"
     per_modelo = SRC_CADRUMO / _REGISTRY_PACKAGE / "m303_orden_resolution.py"
 

@@ -23,7 +23,7 @@ from pydantic import ValidationError
 
 from ....core.period import Period
 from ....domain.calculations.registry.query_reports import ModeloDescribeReport
-from .._modelo_aux_payloads import ModeloDescribeResult
+from ..modelo_aux_payloads import ModeloDescribeResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

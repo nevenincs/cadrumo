@@ -16,7 +16,7 @@ that never names a translated string.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 
 import pytest
@@ -30,7 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 @contextmanager
-def _output_language(language: str) -> Iterator[None]:
+def _output_language(language: str) -> Generator[None]:
     """Pin ``cadrumo_output_language`` and flush the resolver cache on both edges."""
     with override_settings(cadrumo_output_language=language):
         clear_output_language_cache()

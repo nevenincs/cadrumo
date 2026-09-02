@@ -19,7 +19,7 @@ and would pass against a client that never consulted the authority at all.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from http import HTTPStatus
 from pathlib import Path
@@ -123,7 +123,7 @@ def _profile(*, free_vram_bytes: int | None, free_ram_bytes: int) -> HardwarePro
 
 
 @contextmanager
-def _serve_ollama() -> Iterator[tuple[str, list[str]]]:
+def _serve_ollama() -> Generator[tuple[str, list[str]]]:
     """Serve a loopback runtime that answers, recording what reached it."""
     arrivals: list[str] = []
 

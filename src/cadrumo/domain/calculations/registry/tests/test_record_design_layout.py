@@ -370,7 +370,7 @@ def test_a_two_byte_closing_part_that_is_not_a_terminator_is_not_peeled() -> Non
     the record identifier. Peeling on width would silently truncate that closing and
     reclassify a real identifier component as physical padding.
     """
-    from ..record_design_layout_markers import _split_record_terminator
+    from ..record_design_layout_markers import split_record_terminator
     from ..record_design_schema import RecordDesignRelativeSuffixMarker
 
     def suffix(length: int, description: str, ordinal: int) -> RecordDesignRelativeSuffixMarker:
@@ -385,12 +385,12 @@ def test_a_two_byte_closing_part_that_is_not_a_terminator_is_not_peeled() -> Non
         )
 
     identifier_part = suffix(2, "Periodo. Constante 0A", 2)
-    kept, terminator = _split_record_terminator([suffix(18, "Constante. </T...>", 1), identifier_part])
+    kept, terminator = split_record_terminator([suffix(18, "Constante. </T...>", 1), identifier_part])
     assert terminator is None, "a two-byte identifier component was mistaken for a line terminator"
     assert len(kept) == 2
 
     real = suffix(2, "Fin de Registro. Constante CRLF (Hexadecimal 0D0A)", 2)
-    kept, terminator = _split_record_terminator([suffix(18, "Constante. </T...>", 1), real])
+    kept, terminator = split_record_terminator([suffix(18, "Constante. </T...>", 1), real])
     assert terminator is real
     assert len(kept) == 1
 
@@ -468,11 +468,11 @@ def test_the_workbook_and_pdf_parsers_share_one_notion_of_a_crlf_row() -> None:
     Asserted by composition, not by equality of behaviour: this fails if either side
     grows its own copy.
     """
-    from ..record_design_layout_markers import _RECORD_TERMINATOR, _RECORD_TERMINATOR_PHRASE
+    from ..record_design_layout_markers import _RECORD_TERMINATOR, RECORD_TERMINATOR_PHRASE
     from ..record_design_pdf_rows import _COMPACT_PDF_CRLF_ROW_RE
 
-    assert _RECORD_TERMINATOR_PHRASE in _COMPACT_PDF_CRLF_ROW_RE.pattern
-    assert _RECORD_TERMINATOR.pattern == _RECORD_TERMINATOR_PHRASE
+    assert RECORD_TERMINATOR_PHRASE in _COMPACT_PDF_CRLF_ROW_RE.pattern
+    assert _RECORD_TERMINATOR.pattern == RECORD_TERMINATOR_PHRASE
 
     # Every wording the shared phrase claims to cover must actually match, so a
     # dead alternative cannot hide behind a live one. The bare-CRLF spelling was

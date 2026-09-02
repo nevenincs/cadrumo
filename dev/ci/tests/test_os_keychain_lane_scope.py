@@ -13,7 +13,7 @@ lane exists for. Widening it to directories fixed those three; it did not make
 the scoping property self-enforcing, which is what this gate adds.
 
 The gap this guards is one directory wide. The lane names
-``entrypoints/cli/tests`` but not ``entrypoints/cli/_config/tests``, and both
+``entrypoints/cli/tests`` but not ``entrypoints/cli/config/tests``, and both
 hold custody-adjacent CLI cases, so a marked case added to the second is
 invisible to every lane while looking exactly like covered work.
 
