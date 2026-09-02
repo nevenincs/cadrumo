@@ -32,6 +32,7 @@ __all__ = [
     "CalculationClass",
     "CalculationClassField",
     "DateAxis",
+    "DateAxisField",
     "EvidenceTier",
     "FormulaOperator",
     "GovernanceStampMarker",
@@ -414,7 +415,31 @@ broken", and neither can the absence of a record_design_epoch, which also covers
 designs whose selection window is merely not assigned yet.
 """
 
-DateAxis = Literal["filing_period", "devengo_date", "transaction_date", "invoice_date", "submission_date"]
+class DateAxis(StrEnum):
+    """Which date a registry value or bracket table is keyed to."""
+
+    FILING_PERIOD = "filing_period"
+    """The period the declaration covers, rather than any single date."""
+
+    DEVENGO_DATE = "devengo_date"
+    """The accrual date the liability arises on."""
+
+    TRANSACTION_DATE = "transaction_date"
+    """The date the underlying transaction occurred."""
+
+    INVOICE_DATE = "invoice_date"
+    """The date the invoice was issued."""
+
+    SUBMISSION_DATE = "submission_date"
+    """The date the declaration was submitted."""
+
+
+DateAxisField = Annotated[DateAxis, BeforeValidator(coerce_enum_member(DateAxis))]
+"""Registry date-axis token hydrated into a member.
+
+Registry schema models validate strictly, which refuses a bare TOML string for an
+enum-typed field, so the token is coerced at the boundary.
+"""
 class EvidenceTier(StrEnum):
     """What kind of authority grounds a registry entity."""
 
@@ -546,6 +571,77 @@ RegistrySourceKindField = Annotated[
 Registry schema models validate strictly, which refuses a bare TOML string for an
 enum-typed field, so the token is coerced at the boundary.
 """
+
+class CasillaDataType(StrEnum):
+    """The scalar kind a casilla declares, and the root of every narrowing of it."""
+
+    DECIMAL = "decimal"
+    """A decimal quantity that is not money."""
+
+    MONEY = "money"
+    """A monetary amount, the default for a casilla."""
+
+    INTEGER = "integer"
+    """A whole count."""
+
+    RATIO = "ratio"
+    """A proportion or rate expressed as a fraction."""
+
+    TEXT = "text"
+    """Free text the taxpayer or AEAT supplies."""
+
+    BOOLEAN = "boolean"
+    """A declared yes or no."""
+
+    NIF = "nif"
+    """A Spanish tax identity number."""
+
+    YEAR = "year"
+    """A four-digit ejercicio."""
+
+    PERIOD_CODE = "period_code"
+    """A filing-period token."""
+
+    COUNTRY_CODE = "country_code"
+    """An ISO country code."""
+
+    IBAN = "iban"
+    """An international bank account number."""
+
+    NAME = "name"
+    """A party name."""
+
+    NIF_IVA = "nif_iva"
+    """An intra-community VAT identifier."""
+
+    CCAA_CODE = "ccaa_code"
+    """An autonomous-community code."""
+
+    PROVINCE_CODE = "province_code"
+    """A Spanish province code."""
+
+    POSTAL_CODE = "postal_code"
+    """A Spanish postal code."""
+
+    MUNICIPALITY_CODE = "municipality_code"
+    """A municipality code."""
+
+    BIC = "bic"
+    """A SWIFT business identifier code."""
+
+    DATE = "date"
+    """A calendar date."""
+
+
+CasillaDataTypeField = Annotated[
+    CasillaDataType, BeforeValidator(coerce_enum_member(CasillaDataType))
+]
+"""Registry casilla ``data_type`` token hydrated into a member.
+
+Registry schema models validate strictly, which refuses a bare TOML string for an
+enum-typed field, so the token is coerced at the boundary.
+"""
+
 
 LegalRefs = Annotated[tuple[LegalRefId, ...], Field(min_length=1)]
 SourceRefs = Annotated[tuple[SourceRefId, ...], Field(min_length=1)]

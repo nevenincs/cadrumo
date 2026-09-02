@@ -12,13 +12,14 @@ previously worked around with two function-local imports of a private
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
 from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
 from .errors import RegistryValidationError
+from .schema_base import CasillaDataType, coerce_enum_member
 
 __all__ = [
     "MANUAL_INPUT_RECORD_SHAPE_KEYS",
@@ -27,7 +28,15 @@ __all__ = [
     "is_layout_binding_selector",
 ]
 
-ManualInputDataType = Literal["boolean", "integer", "text", "decimal", "money"]
+ManualInputDataType = Annotated[
+    Literal[CasillaDataType.BOOLEAN, CasillaDataType.INTEGER, CasillaDataType.TEXT, CasillaDataType.DECIMAL, CasillaDataType.MONEY],
+    BeforeValidator(coerce_enum_member(CasillaDataType)),
+]
+"""The scalar kinds a manual input may declare.
+
+A narrowing of the casilla vocabulary rather than a vocabulary of its own, so a
+type added there cannot leave this surface silently admitting the old set.
+"""
 
 MANUAL_INPUT_RECORD_SHAPE_KEYS: frozenset[str] = frozenset(("record", "field", "offset", "length"))
 """Canonical record-field shape keys on the manual_input selector.

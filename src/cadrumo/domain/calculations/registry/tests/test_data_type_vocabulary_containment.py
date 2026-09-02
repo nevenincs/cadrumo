@@ -22,6 +22,7 @@ See Also:
 
 from __future__ import annotations
 
+import enum
 import typing
 
 import pytest
@@ -38,20 +39,32 @@ from ..schema_surfaces import CasillaDefinition
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+def _vocabulary_of(annotation: object) -> frozenset[str]:
+    """Return the closed vocabulary an annotation admits, in any of its forms.
+
+    A vocabulary reaches this gate as an enum, as a literal over that enum's members,
+    or as either wrapped in ``Annotated`` to carry a coercion hop. Reading only one
+    form would make the gate silently measure nothing the first time a surface
+    changed how it spells the same vocabulary.
+    """
+    if isinstance(annotation, type) and issubclass(annotation, enum.Enum):
+        return frozenset(str(member.value) for member in annotation)
+    args = typing.get_args(annotation)
+    if typing.get_origin(annotation) is not typing.Literal and args:
+        return _vocabulary_of(args[0])
+    return frozenset(str(arg.value if isinstance(arg, enum.Enum) else arg) for arg in args)
+
+
 def _declared_members(model: type[BaseModel]) -> frozenset[str]:
     """Return the closed ``data_type`` vocabulary a model declares."""
-    members: set[str] = set()
-    for arg in typing.get_args(model.model_fields["data_type"].annotation):
-        assert isinstance(arg, str)
-        members.add(arg)
-    return frozenset(members)
+    return _vocabulary_of(model.model_fields["data_type"].annotation)
 
 
 #: The narrowings, each expected to stay inside the casilla vocabulary.
 _SCALAR_NARROWINGS: dict[str, frozenset[str]] = {
     "ExportFieldDefinition.data_type": _declared_members(ExportFieldDefinition),
-    "BindingExportDataType": frozenset(typing.get_args(BindingExportDataType)),
-    "ManualInputDataType": frozenset(typing.get_args(ManualInputDataType)),
+    "BindingExportDataType": _vocabulary_of(BindingExportDataType),
+    "ManualInputDataType": _vocabulary_of(ManualInputDataType),
 }
 
 

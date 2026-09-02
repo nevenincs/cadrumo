@@ -35,6 +35,7 @@ from ...core.identity import (
 from ...core.period import Period
 from ...core.time.utc import validate_utc_aware
 from ...domain.calculations.registry.ids import BindingId, RevisionId
+from ...domain.calculations.registry.schema_base import CasillaDataTypeField
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.filing.schema import ModeloScalar
 from ...domain.modelos.codes import ModeloCode
@@ -264,32 +265,12 @@ type ModeloEditAddressV1 = Annotated[
 ]
 
 
-type ModeloEditCasillaDataType = Literal[
-    "decimal",
-    "money",
-    "integer",
-    "ratio",
-    "text",
-    "boolean",
-    "nif",
-    "year",
-    "period_code",
-    "country_code",
-    "iban",
-    "name",
-    "nif_iva",
-    "ccaa_code",
-    "province_code",
-    "postal_code",
-    "municipality_code",
-    "bic",
-    "date",
-]
-"""The exact registry ``CasillaDefinition.data_type`` closed set, mirrored here.
-
-Metadata only, not a value: the parse service selects its grammar from this
-axis, and the permitted surface carries no casilla value.
-"""
+#: The registry's casilla data-type vocabulary, reached at its definition rather
+#: than mirrored. Metadata only, not a value: the parse service selects its grammar
+#: from this axis, and the permitted surface carries no casilla value. The mirror this
+#: replaced was a hand-maintained copy of the same nineteen members, so a member added
+#: to the registry never reached it.
+ModeloEditCasillaDataType = CasillaDataTypeField
 
 
 class ModeloEditWritableScalarSurfaceEntryV1(EditModel):

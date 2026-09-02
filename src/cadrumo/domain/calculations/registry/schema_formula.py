@@ -14,7 +14,7 @@ from ....core.casilla_id import CasillaId
 from ._formula_operator_contracts import require_formula_operator_arity
 from .errors import RegistryValidationError
 from .ids import BindingId, ParameterId, RelationId
-from .schema_base import DateAxis, FormulaOperator, LegalRefs, RegistryModel, SourceCitation, SourceRefs
+from .schema_base import DateAxis, DateAxisField, FormulaOperator, LegalRefs, RegistryModel, SourceCitation, SourceRefs
 from .schema_scalars import DecimalValue
 
 __all__ = [
@@ -142,7 +142,7 @@ class DatedValue(RegistryModel):
     """Map one decimal value to a date axis and validity window."""
 
     value: DecimalValue
-    date_axis: DateAxis
+    date_axis: DateAxisField
     valid_from: date
     valid_to: date | None = None
 
@@ -293,7 +293,7 @@ class ParameterDefinition(RegistryModel):
     values: tuple[DatedValue, ...] = Field(default_factory=tuple)
     brackets: tuple[BracketEntry, ...] = Field(default_factory=tuple)
     keyed_brackets: tuple[KeyedBracketEntry, ...] = Field(default_factory=tuple)
-    bracket_axis: DateAxis | None = None
+    bracket_axis: DateAxisField | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)

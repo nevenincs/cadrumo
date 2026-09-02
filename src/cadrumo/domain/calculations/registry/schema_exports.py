@@ -37,7 +37,7 @@ from .fixed_width_codec import (
     validate_fixed_width_shape,
 )
 from .ids import BindingId, ExportFieldId, ExportLayoutId, RecordId, SourceRefId
-from .schema_base import LegalRefs, RegistryModel, SourceRefs
+from .schema_base import CasillaDataType, LegalRefs, RegistryModel, SourceRefs, coerce_enum_member
 
 __all__ = [
     "DeclaracionIdiomaValue",
@@ -60,7 +60,15 @@ type OneBasedExportOffset = Annotated[int, Field(ge=1)]
 """A positive one-based byte coordinate in an AEAT fixed-width export record."""
 
 
-type ExportFieldDataType = Literal["text", "integer", "decimal", "money", "date", "boolean"]
+ExportFieldDataType = Annotated[
+    Literal[CasillaDataType.TEXT, CasillaDataType.INTEGER, CasillaDataType.DECIMAL, CasillaDataType.MONEY, CasillaDataType.DATE, CasillaDataType.BOOLEAN],
+    BeforeValidator(coerce_enum_member(CasillaDataType)),
+]
+"""The scalar kinds a fixed-width export field may carry.
+
+A narrowing of the casilla vocabulary rather than a vocabulary of its own, so a
+type added there cannot leave this surface silently admitting the old set.
+"""
 """The canonical wire-facing scalar vocabulary for an export field's rendered/parsed shape.
 
 Deliberately narrower than :class:`~._schema_surfaces.CasillaDefinition`'s own

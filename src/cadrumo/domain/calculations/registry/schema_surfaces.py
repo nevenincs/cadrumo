@@ -29,7 +29,7 @@ from .relation_dependency import (
     RelationDependencyRoleField,
     RelationKindField,
 )
-from .schema_base import LegalRefs, RegistryModel, SourceRefs
+from .schema_base import CasillaDataType, CasillaDataTypeField, LegalRefs, RegistryModel, SourceRefs
 from .schema_input_kind import InputKind, InputKindValue
 from .schema_scalars import DecimalValue
 
@@ -224,27 +224,7 @@ class CasillaDefinition(RegistryModel):
     )
     localization_keys: tuple[str, ...] = Field(min_length=1, exclude=True, repr=False)
     section: tuple[str, ...]
-    data_type: Literal[
-        "decimal",
-        "money",
-        "integer",
-        "ratio",
-        "text",
-        "boolean",
-        "nif",
-        "year",
-        "period_code",
-        "country_code",
-        "iban",
-        "name",
-        "nif_iva",
-        "ccaa_code",
-        "province_code",
-        "postal_code",
-        "municipality_code",
-        "bic",
-        "date",
-    ] = "money"
+    data_type: CasillaDataTypeField = CasillaDataType.MONEY
     required: bool = False
     input_kind: InputKindValue = InputKind.MANUAL
     formula: FormulaId | None = None

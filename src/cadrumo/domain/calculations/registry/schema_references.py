@@ -23,6 +23,7 @@ from .ids import LegalRefId, ModeloId, ParameterId, RevisionId, SourceRefId
 from .schema_base import (
     CorpusTierField,
     DateAxis,
+    DateAxisField,
     DesignAuthority,
     EvidenceTier,
     EvidenceTierField,
@@ -161,7 +162,7 @@ class PeriodSelector(RegistryModel):
 class TemporalApplicability(RegistryModel):
     """Describe the date axis and optional period selector for a valid window."""
 
-    date_axis: DateAxis
+    date_axis: DateAxisField
     valid_from: date
     valid_to: date | None = None
     period_selector: PeriodSelector | None = None
