@@ -13,6 +13,7 @@ docstrings alone. Any other difference is reported and exits 1.
 from __future__ import annotations
 
 import ast
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -41,8 +42,12 @@ def _skeleton(source: str) -> str:
 
 def _committed(path: str, ref: str) -> str | None:
     """Return ``path`` as of ``ref``, or None when it is not tracked there."""
-    result = subprocess.run(
-        ["git", "show", f"{ref}:{path}"],
+    git = shutil.which("git")
+    if git is None:
+        msg = "git executable not found on PATH"
+        raise RuntimeError(msg)
+    result = subprocess.run(  # noqa: S603  # resolved absolute git path, fixed argument list, no shell
+        [git, "show", f"{ref}:{path}"],
         capture_output=True,
         check=False,
     )
