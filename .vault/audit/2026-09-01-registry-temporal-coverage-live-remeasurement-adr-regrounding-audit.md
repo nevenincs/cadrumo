@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:42c5bd7e3a80a15e46a7e8ab8f3156592d933604945875b15b2e46d0f2cb06ba'
+body_hash: 'sha256:d76d1e7702137353cf2eac76c80e76dca2c83e8f69276a5018663d048937faa4'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
