@@ -84,6 +84,14 @@ def test_every_detector_resolves_against_the_real_tree(label: str, detector: obj
     )
 
 
+def test_current_inventory_write_is_discovered_while_its_read_only_sibling_is_excluded() -> None:
+    """The current enum-shaped specs retain the policy boundary structurally."""
+    capability_ids = {row.capability_id for row in discover_ingress_surfaces(_REPO_ROOT)}
+
+    assert "ingress:src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:inventory_create" in capability_ids
+    assert "ingress:src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:inventory_list" not in capability_ids
+
+
 def test_the_census_entry_points_resolve_against_the_real_tree() -> None:
     """The two aggregate entry points the census consumes must resolve too.
 

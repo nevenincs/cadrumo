@@ -293,7 +293,36 @@ def census_universe(graph: grimp.ImportGraph) -> frozenset[str]:
     """
     closure = static_load_closure(graph)
     members = closure | dynamic_reach(graph, closure) | registry_package_modules()
-    return frozenset(m for m in members if not is_test_module(m))
+    return frozenset(m for m in _with_ancestor_packages(members) if not is_test_module(m))
+
+
+def _with_ancestor_packages(modules: Iterable[str]) -> frozenset[str]:
+    """Return ``modules`` together with every package that importing them loads.
+
+    The import graph records the edges written in source, and importing
+    ``cadrumo.core.hashing`` writes no edge to ``cadrumo.core``. The interpreter
+    loads that parent all the same, and every ancestor above it, so a closure
+    built from edges alone omits packages a running load certainly holds.
+
+    Measured before this was added: five modules a real load has in
+    ``sys.modules`` were absent from the universe, four of them packages, and
+    rules naming them were reported stale for naming something real.
+
+    Args:
+        modules: The modules whose ancestors are wanted, included in the result.
+
+    Returns:
+        The modules and their ancestor packages within the root package.
+    """
+    found: set[str] = set()
+    for module in modules:
+        found.add(module)
+        parts = module.split(".")
+        for depth in range(1, len(parts)):
+            ancestor = ".".join(parts[:depth])
+            if ancestor == ROOT_PACKAGE or ancestor.startswith(ROOT_PACKAGE + "."):
+                found.add(ancestor)
+    return frozenset(found)
 
 
 @dataclass(frozen=True)

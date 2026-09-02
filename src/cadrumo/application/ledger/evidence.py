@@ -867,8 +867,6 @@ emit_evidence_event = _emit_evidence_event
 __all__ = [
     "PurchaseInvoiceEvidence",
     "PurchaseInvoiceEvidenceDocument",
-    "PurchaseInvoiceEvidenceInputError",
-    "PurchaseInvoiceEvidenceNotFoundError",
     "PurchaseInvoiceEvidencePatch",
     "PurchaseInvoiceEvidenceRepository",
     "PurchaseInvoiceEvidenceResult",

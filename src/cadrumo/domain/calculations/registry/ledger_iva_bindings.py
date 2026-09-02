@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Annotated, Literal, NamedTuple, Protocol
+from typing import Annotated, NamedTuple, Protocol
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
@@ -39,6 +39,7 @@ from .binding_selector_utils import invariant_diagnostics, selector_against_mode
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
+from .ledger_binding_selector_support import LedgerIvaFact, LedgerIvaFactValue
 from .quantity_screen_enrolment import assert_quantity_readers_cover_independent_facts, independent_quantity_facts
 from .schema import DataBindingDefinition, ModeloRevision
 from .schema_base import coerce_decimal_tuple, coerce_enum_member, coerce_enum_tuple
@@ -224,7 +225,7 @@ class _IvaLedgerSelector(BaseModel):
     unmeasured line in a box that asserts a specific rate, and the annual return
     is where that assertion is read.
     """
-    fact: Literal["iva_amount_sum", "base_amount_sum", "recargo_amount_sum"] = "iva_amount_sum"
+    fact: LedgerIvaFactValue = LedgerIvaFact.IVA_AMOUNT_SUM
 
     @field_validator("categories", mode="after")
     @classmethod

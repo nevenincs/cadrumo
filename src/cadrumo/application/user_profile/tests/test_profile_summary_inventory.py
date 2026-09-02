@@ -11,7 +11,6 @@ from __future__ import annotations
 import base64
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Literal
 from uuid import UUID, uuid4
 
 import pytest
@@ -28,6 +27,7 @@ from ....adapters.persistence.storage.custody.sentinel import create_profile_cus
 from ....adapters.persistence.storage.profile_custody import build_profile_custody_port
 from ....core.config import Settings
 from ....core.profile_discovery import ProfileSummaryOutcome
+from ....core.profile_publication import ProfilePublicationKind
 from ..custody_ports import bind_profile_custody_port
 from ..profile_summary import ProfileSummaryInventory, summary_inventory
 
@@ -61,7 +61,7 @@ def _publish(
     profile_id: UUID,
     label: str,
     *,
-    publication_kind: Literal["enroll", "restore"] = "enroll",
+    publication_kind: ProfilePublicationKind = ProfilePublicationKind.ENROLL,
 ) -> Path:
     envelope = ProfileCustodyEnvelope.create(
         profile_id=profile_id,
@@ -105,7 +105,7 @@ def test_a_populated_store_projects_every_capsule_in_deterministic_uuid_order(tm
     third = UUID("33333333-3333-4333-8333-333333333333")
     _publish(tmp_path, third, "Third")
     _publish(tmp_path, first, "First")
-    _publish(tmp_path, second, "Second", publication_kind="restore")
+    _publish(tmp_path, second, "Second", publication_kind=ProfilePublicationKind.RESTORE)
 
     inventory = summary_inventory(root=tmp_path)
 
@@ -118,14 +118,14 @@ def test_a_populated_store_projects_every_capsule_in_deterministic_uuid_order(tm
 def test_each_summary_carries_the_provenance_its_own_two_records_proved(tmp_path: Path) -> None:
     """Provenance is read from the observation, never defaulted or re-derived."""
     profile_id = UUID("44444444-4444-4444-8444-444444444444")
-    _publish(tmp_path, profile_id, "Restored", publication_kind="restore")
+    _publish(tmp_path, profile_id, "Restored", publication_kind=ProfilePublicationKind.RESTORE)
 
     (summary,) = summary_inventory(root=tmp_path).summaries
 
     assert summary.profile_id == str(profile_id)
     assert summary.label == "Restored"
     assert summary.label_revision == 1
-    assert summary.publication_kind == "restore"
+    assert summary.publication_kind is ProfilePublicationKind.RESTORE
     assert summary.published_at.tzinfo is not None
 
 

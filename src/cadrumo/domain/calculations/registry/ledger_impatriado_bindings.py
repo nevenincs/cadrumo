@@ -38,7 +38,7 @@ from .binding_selector_utils import invariant_diagnostics, selector_against_mode
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .ledger_binding_selector_support import mapping_lacks_fact
+from .ledger_binding_selector_support import ImpatriadoLedgerIncomeFact, mapping_lacks_fact
 from .schema import DataBindingDefinition, ModeloRevision
 
 # Ledger-aggregation binding source kinds. Re-exported from
@@ -108,7 +108,7 @@ class _ImpatriadoLedgerIncomeSelector(BaseModel):
 
     modelo: Literal[Modelo.M151] = Modelo.M151
     target_casilla_id: CasillaId
-    fact: Literal["ingresos_integros_sum", "cash_received_sum"]
+    fact: ImpatriadoLedgerIncomeFact
 
     @model_validator(mode="before")
     @classmethod

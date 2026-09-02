@@ -8,9 +8,10 @@ the ``ModeloRevision`` aggregate merely consumes their collection types.
 
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Annotated, Literal
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from ....core.casilla_id import CasillaId
 from .errors import RegistryValidationError
@@ -35,7 +36,7 @@ from .modelo_localization import require_modelo_localization
 from .relation_dependency import (
     RelationDependencyTreatmentField,
 )
-from .schema_base import LegalRefs, RegistryModel, SourceRefs
+from .schema_base import LegalRefs, RegistryModel, SourceRefs, coerce_enum_member
 
 __all__ = [
     "ApplicabilityRuleDefinition",
@@ -45,24 +46,39 @@ __all__ = [
 ]
 
 
+class ApplicationLinkSurface(StrEnum):
+    """Which product surface consumes a declared application link.
+
+    Distinct from the extraction surfaces and the live verification surfaces: those name
+    an artefact and an AEAT endpoint respectively, while this names a part of the
+    product. The three share no token by accident.
+    """
+
+    CALCULATION = "calculation"
+    FILING = "filing"
+    REVIEW = "review"
+    APPROVAL = "approval"
+    RECONCILIATION = "reconciliation"
+    EXPORT = "export"
+    DEADLINE = "deadline"
+    PORTAL = "portal"
+    EXTRACTOR = "extractor"
+    WORKFLOW = "workflow"
+    COMMUNICATION = "communication"
+    PAYER_DELIVERY = "payer_delivery"
+
+
+ApplicationLinkSurfaceField = Annotated[
+    ApplicationLinkSurface, BeforeValidator(coerce_enum_member(ApplicationLinkSurface))
+]
+"""Registry token hydrated into a ApplicationLinkSurface member."""
+
+
 class ApplicationLinkDefinition(RegistryModel):
     """Declare one application surface that requires this registry authority."""
 
     id: ApplicationLinkId
-    surface: Literal[
-        "calculation",
-        "filing",
-        "review",
-        "approval",
-        "reconciliation",
-        "export",
-        "deadline",
-        "portal",
-        "extractor",
-        "workflow",
-        "communication",
-        "payer_delivery",
-    ]
+    surface: ApplicationLinkSurfaceField
     consumer: str
     requires_snapshot: Literal[True]
     legal_refs: LegalRefs

@@ -26,6 +26,21 @@ from ..object_name_rehearsal import ObjectNameRehearsalError, rehearse_object_na
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+def test_snapshot_records_a_file_deleted_between_stat_and_hash_as_absent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = tmp_path / "dev/concurrent_helper.py"
+    source.parent.mkdir()
+    source.write_text("def concurrent_helper() -> None:\n    pass\n", encoding="utf-8")
+    monkeypatch.setattr(
+        rehearsal_module,
+        "sha256_file",
+        lambda _path: (_ for _ in ()).throw(FileNotFoundError(source)),
+    )
+
+    assert rehearsal_module._snapshot(tmp_path, ("dev/concurrent_helper.py",)) == (("dev/concurrent_helper.py", None),)
+
+
 @pytest.fixture(autouse=True)
 def _unbind_host_worktree_packages(monkeypatch: pytest.MonkeyPatch) -> None:
     """Let graph discovery bind imports to each disposable test repository."""
@@ -133,7 +148,7 @@ def _fixture(
     return inventory, manifest, component
 
 
-def test_rehearsal_captures_dirty_and_untracked_bytes_but_excludes_git_and_caches(tmp_path: Path) -> None:
+def test_rehearsal_receipt_binds_only_declared_component_paths(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     inventory, manifest, component = _fixture(repo)
     before = _live_bytes(repo)
@@ -141,16 +156,7 @@ def test_rehearsal_captures_dirty_and_untracked_bytes_but_excludes_git_and_cache
     receipt = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
 
     baseline = dict(receipt.baseline_files)
-    assert baseline["dev/tracked.txt"] == _digest(b"dirty tracked bytes\n")
-    assert baseline["dev/untracked.txt"] == _digest(b"untracked bytes\n")
-    assert baseline["dev/deleted.txt"] is None
-    assert not any(".git" in Path(path).parts or "__pycache__" in Path(path).parts for path in baseline)
-    assert not any(".pytest_cache" in Path(path).parts or path.endswith(".pyc") for path in baseline)
-    assert not any(
-        set(Path(path).parts).intersection({".mypy_cache", ".ruff_cache", ".tox", ".venv", "node_modules"})
-        or path == "ignored.log"
-        for path in baseline
-    )
+    assert baseline == {"src/example/contracts.py": _digest(before["src/example/contracts.py"])}
     assert receipt.manifest_digest == object_name_manifest_digest(manifest)
     assert receipt.inventory_digest == manifest.inventory_digest
     assert receipt.component_id == component.component_id
@@ -527,7 +533,7 @@ def test_post_gate_filesystem_side_effect_must_equal_allowlist(tmp_path: Path) -
 def test_live_tree_mutation_during_gate_is_refused_and_retains_root(tmp_path: Path, return_code: int) -> None:
     repo = tmp_path / "repo"
     inventory, manifest, component = _fixture(repo)
-    live_path = repo / "dev/tracked.txt"
+    live_path = repo / "src/example/contracts.py"
     original = live_path.read_bytes()
     gate = (
         sys.executable,
@@ -548,6 +554,55 @@ def test_live_tree_mutation_during_gate_is_refused_and_retains_root(tmp_path: Pa
         assert Path(str(raised.value).rsplit("retained rehearsal root: ", 1)[1]).is_dir()
     finally:
         live_path.write_bytes(original)
+
+
+def test_unrelated_live_tree_mutation_does_not_stale_selected_component(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    inventory, manifest, component = _fixture(repo)
+    live_path = repo / "dev/tracked.txt"
+    original = live_path.read_bytes()
+    gate = (
+        sys.executable,
+        "-c",
+        f"from pathlib import Path; Path({str(live_path)!r}).write_bytes(b'unrelated peer edit')",
+    )
+    operation = manifest.operations[0].model_copy(update={"focused_gates": (gate,)})
+    mutated_manifest = manifest.model_copy(update={"operations": (operation,)})
+
+    try:
+        receipt = rehearse_object_name_component(
+            mutated_manifest,
+            inventory=inventory,
+            component=component,
+            repo_root=repo,
+        )
+        assert receipt.source_tree_unchanged
+    finally:
+        live_path.write_bytes(original)
+
+
+def test_copy_race_that_adds_selected_reference_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = tmp_path / "repo"
+    inventory, manifest, component = _fixture(repo)
+    consumer = repo / "src/example/consumer.py"
+    consumer.write_text("VALUE = 1\n", encoding="utf-8")
+    _git(repo, "add", "src/example/consumer.py")
+    original_copy = rehearsal_module._copy_snapshot
+
+    def copy_then_add_reference(*args: Any, **kwargs: Any) -> None:
+        original_copy(*args, **kwargs)
+        target_root = args[1]
+        (target_root / "src/example/consumer.py").write_text(
+            "from example.contracts import Widgets\n",
+            encoding="utf-8",
+        )
+
+    monkeypatch.setattr(rehearsal_module, "_copy_snapshot", copy_then_add_reference)
+
+    with pytest.raises(ObjectNameRehearsalError, match=r"hard reference .* is outside the changed-path allowlist"):
+        rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
 
 
 def test_unsafe_system_temp_and_escaped_allocation_are_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

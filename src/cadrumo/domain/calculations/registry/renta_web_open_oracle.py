@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
+from enum import StrEnum
 from json import JSONDecodeError, loads
 from typing import Final, Literal, Protocol
 
@@ -37,6 +38,24 @@ _RENTA_WEB_OPEN_ORACLE_ID: OracleId = "modelo-100-renta-web-open"
 _RENTA_REPLAY_SURFACE_LABEL: Final[str] = "Renta WEB Open replay"
 
 
+class RentaWebSyntheticSex(StrEnum):
+    """The sex token the Renta WEB Open synthetic profile submits.
+
+    Spanish-cased because it is typed into an AEAT form exactly as written; this is a
+    wire value, not display text.
+    """
+
+    HOMBRE = "Hombre"
+    MUJER = "Mujer"
+
+
+RentaWebSyntheticSexValue = Literal[
+    RentaWebSyntheticSex.HOMBRE,
+    RentaWebSyntheticSex.MUJER,
+]
+"""The same vocabulary for a strict model field."""
+
+
 class RentaWebOpenModel(BaseModel):
     """Strict frozen base for Renta WEB Open parity records."""
 
@@ -50,7 +69,7 @@ class RentaWebOpenSyntheticProfile(RentaWebOpenModel):
     name: str = Field(default="DECLARANTE PRUEBA", min_length=1, max_length=80)
     civil_status: str = Field(default="SOLTERO/A", min_length=1, max_length=64)
     birth_date: str = Field(default="01/01/1980", min_length=10, max_length=10)
-    sex: Literal["Hombre", "Mujer"] = "Hombre"
+    sex: RentaWebSyntheticSexValue = RentaWebSyntheticSex.HOMBRE
     autonomous_community: str = Field(default="ANDALUCIA", min_length=1, max_length=80)
 
     @field_validator("nif", "name", "civil_status", "birth_date", "autonomous_community")

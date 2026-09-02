@@ -14,7 +14,7 @@ from cadrumo.core.fsync import fsync_parent_dir
 from cadrumo.core.hashing import canonical_json_bytes, prefixed_digest, sha256_file
 from cadrumo.core.link_safety import is_link_like
 
-from ..audit.object_names import ObjectNameAuditResult, scan, to_json
+from ..audit.object_names import ObjectNameAuditResult, scan
 from .object_name_graph import OperationComponent, ReferenceKind
 from .object_name_manifest import ObjectNameRenameManifest, object_name_manifest_digest
 from .object_name_rehearsal import (
@@ -305,13 +305,10 @@ def replay_object_name_component(
         raise ObjectNameReplayError(f"live replay root is not a repository worktree: {root}")
     if receipt.manifest_digest != object_name_manifest_digest(manifest):
         raise ObjectNameReplayError("receipt manifest digest differs from the supplied manifest")
-    inventory_digest = to_json(inventory)["inventory_digest"]
-    if receipt.inventory_digest != inventory_digest or receipt.inventory_digest != manifest.inventory_digest:
-        raise ObjectNameReplayError("receipt inventory digest differs from current authority")
     if (receipt.component_id, receipt.operation_ids) != (component.component_id, component.operation_ids):
         raise ObjectNameReplayError("receipt component identity differs from the supplied component")
 
-    snapshot_paths = _git_snapshot_paths(root)
+    snapshot_paths = tuple(path for path, _digest in receipt.baseline_files)
     baseline_files = _snapshot(root, snapshot_paths)
     if baseline_files != receipt.baseline_files or _tree_digest(baseline_files) != receipt.baseline_tree_digest:
         raise ObjectNameReplayError("live tree differs from the receipt baseline")
@@ -323,7 +320,7 @@ def replay_object_name_component(
         exact = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=root)
     except ObjectNameRehearsalError as exc:
         raise ObjectNameReplayError(f"exact preflight rehearsal refused replay: {exc}") from exc
-    if exact.receipt_id != receipt.receipt_id or (
+    if (
         exact.proposed_file_digests,
         exact.changed_paths,
         exact.finding_delta,
@@ -407,10 +404,7 @@ def replay_object_name_component(
                 target.parent.mkdir(parents=True, exist_ok=True)
                 created_directories.extend(reversed(missing))
                 stages[relative] = _stage_bytes(target, payload, label="stage")
-        current_paths = _git_snapshot_paths(root)
-        stage_paths = frozenset(path.relative_to(root).as_posix() for path in stages.values())
-        non_stage_paths = tuple(path for path in current_paths if path not in stage_paths)
-        if non_stage_paths != snapshot_paths or _snapshot(root, snapshot_paths) != baseline_files:
+        if _snapshot(root, snapshot_paths) != baseline_files:
             raise ObjectNameReplayError("live tree drifted before the replay transaction")
         for relative, payload in sorted(direct_payloads.items()):
             target = _safe_path(root, relative, allow_missing_leaf=True)
@@ -458,8 +452,7 @@ def replay_object_name_component(
         after_inventory = scan((root / "src", root / "dev"), root)
         if _finding_delta(inventory, after_inventory) != receipt.finding_delta:
             raise ObjectNameReplayError("post-apply object-name finding delta differs from the receipt")
-        after_paths = _git_snapshot_paths(root)
-        after_files = _snapshot(root, after_paths)
+        after_files = _snapshot(root, snapshot_paths)
         actual_changed = tuple(
             sorted(
                 path

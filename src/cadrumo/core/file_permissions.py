@@ -1,8 +1,8 @@
 r"""Cross-platform best-effort file-permission hardening for sensitive files.
 
-App-owned sensitive files such as locally generated corpus-signing keys must be
-restricted to the operator's user account. Browser session state is persisted
-through secure objects and does not use this plaintext-file helper.
+App-owned sensitive plaintext files must be restricted to the operator's user
+account. Browser session state is persisted through secure objects and does not
+use this plaintext-file helper.
 
 POSIX: ``chmod 0o600`` is sufficient. Windows: ``icacls.exe
 /inheritance:r /grant:r <user>:(F)`` strips inherited ACLs and grants
@@ -18,9 +18,6 @@ The public :func:`restrict_file_permissions` entry point accepts a
 :class:`~pathlib.Path` target and deliberately returns ``None`` even when the
 best-effort hardening step cannot be applied.
 
-See Also:
-    :mod:`~core.corpus_manifest._bundle_signing`
-        Corpus-signing key writer that applies this hardening helper.
 """
 
 from __future__ import annotations

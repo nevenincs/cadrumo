@@ -118,7 +118,9 @@ def test_generic_csv_missing_currency_warning_is_provider_neutral_in_cli(tmp_pat
     payload = _json_object(_json_document(result.output)["result"])
     # One file imported, so one report. The field is a list because a
     # DIRECTORY import folds several and used to keep only the first.
-    validation = payload["validations"][0]
+    validations = payload["validations"]
+    assert isinstance(validations, list), "the result must carry a list of validation reports"
+    validation = validations[0]
     assert isinstance(validation, dict)
     assert validation["valid"] is True
     assert len(validation["warnings"]) == 1

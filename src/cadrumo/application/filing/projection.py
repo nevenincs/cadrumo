@@ -456,7 +456,7 @@ def _context(
 def _require_nonrepeated_projection_record(record: ExportRecordDefinition) -> None:
     if record.repeat is not None:
         raise FilingExportValidationError(
-            f"projection record {record.id!r} uses repeat={record.repeat!r} for a non-repeated family",
+            f"projection record {record.id!r} uses repeat={str(record.repeat)!r} for a non-repeated family",
         )
 
 

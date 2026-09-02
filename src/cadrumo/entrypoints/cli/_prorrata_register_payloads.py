@@ -86,6 +86,66 @@ class ProrrataDeclareSectorResult(OutputSchema):
     count: int
 
 
+class ProrrataSeedSourcePayload(OutputSchema):
+    """Identity of the prior settlement observation a carried seed was read from.
+
+    The percentage is the taxpayer's own prior Modelo 303 definitive prorrata as
+    locally observed and stamped; it is not a value AEAT issued for the seeded
+    ejercicio.
+    """
+
+    modelo: str
+    filing_year: int
+    period: str
+    casilla_id: str
+    stamped_revision_id: str
+    authority: str
+
+
+class ProrrataSeedFindingPayload(OutputSchema):
+    """One seed or cross-check finding raised while resolving the carried seed.
+
+    Mirrors :class:`~application.prorrata_register.seed.ProrrataSeedFinding`
+    field for field so a blocking contradiction is never reduced to a boolean.
+    """
+
+    code: str
+    blocking: bool
+    message: str
+    source_modelo: str
+    source_filing_year: int
+    source_period: str
+    stamped_revision_id: str
+    selected_revision_id: str | None = None
+
+
+class ProrrataSeedResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger prorrata seed``."""
+
+    bucket_id: BucketId
+    entry: ProrrataEntryPayload
+    source: ProrrataSeedSourcePayload
+    findings: list[ProrrataSeedFindingPayload]
+    count: int
+
+
+class ProrrataSeedSectorResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger prorrata seed-sector``."""
+
+    bucket_id: BucketId
+    entry: ProrrataEntryPayload
+    prior_ejercicio: int
+    count: int
+
+
+class ProrrataSettleSectorResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger prorrata settle-sector``."""
+
+    bucket_id: BucketId
+    entry: ProrrataEntryPayload
+    count: int
+
+
 class ProrrataListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger prorrata list``."""
 
@@ -104,5 +164,10 @@ __all__ = [
     "ProrrataEspecialTransitionPayload",
     "ProrrataListResult",
     "ProrrataRevokeEspecialResult",
+    "ProrrataSeedFindingPayload",
+    "ProrrataSeedResult",
+    "ProrrataSeedSectorResult",
+    "ProrrataSeedSourcePayload",
+    "ProrrataSettleSectorResult",
     "SectorDefinitionPayload",
 ]

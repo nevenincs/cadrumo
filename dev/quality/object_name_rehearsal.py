@@ -14,7 +14,8 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path, PurePosixPath
 from typing import Final, cast
@@ -58,10 +59,30 @@ _COMMAND_TIMEOUT_SECONDS: Final[int] = 1_800
 _EXCLUDED_DIRECTORY_NAMES: Final[frozenset[str]] = frozenset(
     {".git", ".mypy_cache", ".pytest_cache", ".ruff_cache", ".tox", ".venv", "__pycache__", "node_modules"}
 )
+_FIRST_PARTY_IMPORT_ROOTS: Final[tuple[str, ...]] = ("cadrumo", "cadrumo_harness", "dev")
 
 
 class ObjectNameRehearsalError(RuntimeError):
     """The current tree cannot produce a safe successful rehearsal receipt."""
+
+
+@contextmanager
+def _isolated_first_party_import_state() -> Iterator[None]:
+    """Keep live-tree imports from contaminating graph inspection in the copy."""
+    owned = {
+        name: module
+        for name, module in tuple(sys.modules.items())
+        if any(name == root or name.startswith(f"{root}.") for root in _FIRST_PARTY_IMPORT_ROOTS)
+    }
+    for name in owned:
+        sys.modules.pop(name, None)
+    try:
+        yield
+    finally:
+        for name in tuple(sys.modules):
+            if any(name == root or name.startswith(f"{root}.") for root in _FIRST_PARTY_IMPORT_ROOTS):
+                sys.modules.pop(name, None)
+        sys.modules.update(owned)
 
 
 @dataclass(frozen=True, slots=True)
@@ -166,7 +187,12 @@ def _snapshot(repo_root: Path, paths: Sequence[str]) -> tuple[tuple[str, str | N
     files: list[tuple[str, str | None]] = []
     for relative in paths:
         path = _regular_file(repo_root, relative)
-        digest = None if path is None else f"{_DIGEST_PREFIX}{sha256_file(path)}"
+        try:
+            digest = None if path is None else f"{_DIGEST_PREFIX}{sha256_file(path)}"
+        except FileNotFoundError:
+            # A concurrent tracked deletion between the existence check and
+            # hashing is the same observable snapshot state as an absent file.
+            digest = None
         files.append((relative, digest))
     return tuple(files)
 
@@ -204,7 +230,10 @@ def _copy_snapshot(
     source_root: Path,
     target_root: Path,
     files: Sequence[tuple[str, str | None]],
+    *,
+    guarded_paths: frozenset[str] | None = None,
 ) -> None:
+    exact_paths = frozenset(path for path, _digest in files) if guarded_paths is None else guarded_paths
     for source_root_name in ("src", "dev"):
         (target_root / source_root_name).mkdir(parents=True, exist_ok=True)
     for relative, expected_digest in files:
@@ -212,12 +241,14 @@ def _copy_snapshot(
             continue
         source = _regular_file(source_root, relative)
         if source is None:
-            raise ObjectNameRehearsalError(f"snapshot source disappeared during copy: {relative}")
+            if relative in exact_paths:
+                raise ObjectNameRehearsalError(f"snapshot source disappeared during copy: {relative}")
+            continue
         target = target_root.joinpath(*PurePosixPath(relative).parts)
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, target, follow_symlinks=False)
         actual_digest = f"{_DIGEST_PREFIX}{sha256_file(target)}"
-        if actual_digest != expected_digest:
+        if relative in exact_paths and actual_digest != expected_digest:
             raise ObjectNameRehearsalError(f"temporary copy hash differs for {relative}")
 
 
@@ -465,8 +496,10 @@ def rehearse_object_name_component(
 
     snapshot_paths = _git_snapshot_paths(root)
     baseline_files = _snapshot(root, snapshot_paths)
-    baseline_tree_digest = _tree_digest(baseline_files)
     input_paths = tuple(sorted({item.path for operation in selected for item in operation.preconditions}))
+    guarded_paths = tuple(sorted(set(input_paths) | set(allowed_paths)))
+    receipt_baseline_files = _snapshot(root, guarded_paths)
+    baseline_tree_digest = _tree_digest(receipt_baseline_files)
     baseline_by_path = dict(baseline_files)
     try:
         input_file_digests = tuple(
@@ -497,15 +530,34 @@ def rehearse_object_name_component(
         if temporary_parent.parent != system_temporary_root or is_link_like(temporary_parent):
             raise ObjectNameRehearsalError(f"allocated rehearsal parent is unsafe: {temporary_parent}")
         temporary_root.mkdir()
-        _copy_snapshot(root, temporary_root, baseline_files)
-        if _snapshot(temporary_root, tuple(path for path, _digest in baseline_files)) != baseline_files:
-            raise ObjectNameRehearsalError("verified temporary snapshot differs from the current tree")
+        _copy_snapshot(root, temporary_root, baseline_files, guarded_paths=frozenset(guarded_paths))
+        copied_baseline_files = _snapshot(temporary_root, tuple(path for path, _digest in baseline_files))
+        if _snapshot(temporary_root, guarded_paths) != receipt_baseline_files:
+            raise ObjectNameRehearsalError("selected component bytes changed during the temporary copy")
         copied_inventory = scan((temporary_root / "src", temporary_root / "dev"), temporary_root)
-        copied_inventory_digest = to_json(copied_inventory)["inventory_digest"]
-        supplied_inventory_digest = to_json(inventory)["inventory_digest"]
-        if copied_inventory_digest != supplied_inventory_digest or copied_inventory_digest != manifest.inventory_digest:
-            raise ObjectNameRehearsalError("verified snapshot inventory differs from reviewed manifest authority")
-
+        with _isolated_first_party_import_state():
+            copied_components = canonical_object_name_component_set(
+                manifest,
+                inventory=copied_inventory,
+                repo_root=temporary_root,
+            )
+        copied_component = next(
+            (item for item in copied_components if item.component_id == component.component_id),
+            None,
+        )
+        if copied_component is None or (
+            copied_component.operation_ids,
+            copied_component.affected_paths,
+            copied_component.hard_edges,
+        ) != (
+            component.operation_ids,
+            component.affected_paths,
+            component.hard_edges,
+        ):
+            raise ObjectNameRehearsalError("copied repository graph differs from the reviewed component")
+        copied_inventory_digest = cast("str", to_json(copied_inventory)["inventory_digest"])
+        if not isinstance(copied_inventory_digest, str):
+            raise ObjectNameRehearsalError("copied inventory did not emit a string digest")
         try:
             result = plan_object_name_transformation(component_manifest, repo_root=temporary_root)
         except ObjectNameTransformError as exc:
@@ -545,8 +597,8 @@ def rehearse_object_name_component(
         changed = tuple(
             sorted(
                 path
-                for path in set(dict(baseline_files)) | set(dict(after_files))
-                if dict(baseline_files).get(path) != dict(after_files).get(path)
+                for path in set(dict(copied_baseline_files)) | set(dict(after_files))
+                if dict(copied_baseline_files).get(path) != dict(after_files).get(path)
             )
         )
         if changed != allowed_paths:
@@ -568,21 +620,18 @@ def rehearse_object_name_component(
                 )
             )
         )
-        source_paths_after = _git_snapshot_paths(root)
-        source_unchanged = (
-            source_paths_after == snapshot_paths and _snapshot(root, source_paths_after) == baseline_files
-        )
+        source_unchanged = _snapshot(root, guarded_paths) == receipt_baseline_files
         if not source_unchanged:
             raise ObjectNameRehearsalError("source tree changed while rehearsal was running")
         provisional = ObjectNameRehearsalReceipt(
             schema_version=_RECEIPT_SCHEMA_VERSION,
             rehearsal_root=str(temporary_root),
             manifest_digest=object_name_manifest_digest(manifest),
-            inventory_digest=manifest.inventory_digest,
+            inventory_digest=copied_inventory_digest,
             component_id=component.component_id,
             operation_ids=component.operation_ids,
             baseline_tree_digest=baseline_tree_digest,
-            baseline_files=baseline_files,
+            baseline_files=receipt_baseline_files,
             input_file_digests=input_file_digests,
             proposed_file_digests=proposed_digests,
             changed_paths=changed,
@@ -613,10 +662,7 @@ def rehearse_object_name_component(
         raise ObjectNameRehearsalError(f"rehearsal failed; retained rehearsal root: {temporary_root}") from exc
     finally:
         try:
-            current_paths = _git_snapshot_paths(root)
-            final_source_unchanged = (
-                current_paths == snapshot_paths and _snapshot(root, current_paths) == baseline_files
-            )
+            final_source_unchanged = _snapshot(root, guarded_paths) == receipt_baseline_files
         except Exception as exc:
             raise ObjectNameRehearsalError(
                 f"cannot verify source immutability; retained rehearsal root: {temporary_root}"

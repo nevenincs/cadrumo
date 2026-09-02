@@ -8,12 +8,17 @@ cannot by itself supply 2024 meaning.
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import re
+import shutil
+import subprocess
 import sys
+import tarfile
 from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from datetime import date
 from enum import StrEnum
 from pathlib import Path
 
@@ -21,15 +26,16 @@ import rtoml
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, governed_period_span
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ..pipeline._record_design_ir import intermediate_anchor_key, load_record_design_intermediate
 from ..pipeline._semantic_map import semantic_anchor_key
 from ..pipeline._semantic_map_loader import load_semantic_map
 
-_RESTORED_MARKER = "Semantic payload reviewed from pinned repository commit"
 _QUALIFIED_RESTORATION = "DP200018:00588"
 _REVISION_ROOT = Path("src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024")
+_RESTORATION_COMMITS = ("c930a14cf9", "075ed0294b", "9a3e6f05bb", "0be4f4cd2f")
 
 
 class AuditDisposition(StrEnum):
@@ -62,60 +68,105 @@ class RestoredSemanticAudit:
     official_description: str
     template: str
     path: str
+    source_ref: str
+    source_sha256: str
     disposition: AuditDisposition
     reason: str
     current: SemanticPayload
     proposed: SemanticPayload | None = None
+    cross_revision_status: str = "no_applicable_match"
+    cross_revision_evidence_count: int = 0
+    cross_revision_proposed: SemanticPayload | None = None
 
 
-def audit_bundled_restorations() -> tuple[RestoredSemanticAudit, ...]:
-    """Audit every restoration marker plus the reviewed DP200018 identity."""
+def audit_bundled_restorations(
+    *,
+    canonical_restoration_root: Path | None = None,
+) -> tuple[RestoredSemanticAudit, ...]:
+    """Audit the pinned pre-canonical candidate set against current peers."""
+    if canonical_restoration_root is not None and any(canonical_restoration_root.iterdir()):
+        raise ValueError("pre-canonical audit root must be empty")
     registry_root = bundled_path("registry", "aeat")
     modelo = load_modelo_directory(registry_root / "modelos" / "200")
     revision = modelo.revisions["2024"]
-    catalogues = load_catalogue_file(registry_root / "legal" / "is.toml")
+    catalogue_parts = tuple(load_catalogue_file(path) for path in (registry_root / "legal").glob("*.toml"))
+    sources = {key: value for part in catalogue_parts for key, value in part.sources.items()}
+    legal = {key: value for part in catalogue_parts for key, value in part.legal.items()}
     design = load_record_design_intermediate(
         bundled_path(),
-        catalogues.sources,
+        sources,
         source_ref="aeat-dr-200-2024",
         filing_year=2024,
         design_epoch="2024",
     )
     semantic_map = load_semantic_map(Path(__file__).parents[1] / "mappings" / "modelo_200" / "2024")
     declarations = {str(item.id): item for item in revision.casillas}
-    restored_paths = _restored_paths(bundled_path().parents[2])
-    rows: list[tuple[str, str, str, CasillaDefinition]] = []
+    candidates = _candidate_payloads()
+    candidate_ids = frozenset(candidates)
     fields = {intermediate_anchor_key(field): field for sheet in design.sheets for field in sheet.fields}
+
+    candidate_rows: list[tuple[str, str, str, str, Path, SemanticPayload, tuple[object, ...], str, int]] = []
+    for entry in semantic_map.entries:
+        if entry.casilla_id is None:
+            continue
+        field = fields[semantic_anchor_key(entry.anchor)]
+        printed = _printed_number(field.normalized_description)
+        if printed is None:
+            continue
+        qualified = f"{field.record_identity}:{printed}"
+        candidate_id = qualified if qualified in candidates else printed
+        candidate = candidates.get(candidate_id)
+        if candidate is not None:
+            path, payload = candidate
+            candidate_rows.append(
+                (
+                    str(entry.export_field_id),
+                    field.normalized_description,
+                    _template(field.normalized_description),
+                    candidate_id,
+                    path,
+                    payload,
+                    semantic_anchor_key(entry.anchor),
+                    field.aeat_type,
+                    field.length,
+                )
+            )
+
+    peer_payloads: dict[str, set[SemanticPayload]] = defaultdict(set)
     for entry in semantic_map.entries:
         if entry.casilla_id is None:
             continue
         declaration = _resolve_declaration(str(entry.casilla_id), declarations)
-        if declaration is None:
+        if declaration is None or str(declaration.id) in candidate_ids:
             continue
         field = fields[semantic_anchor_key(entry.anchor)]
-        rows.append(
-            (
-                str(entry.export_field_id),
-                field.normalized_description,
-                _template(field.normalized_description),
-                declaration,
-            )
+        peer_payloads[_template(field.normalized_description)].add(_payload(declaration))
+
+    sibling = modelo.revisions["2025-y-siguientes"]
+    sibling_design = load_record_design_intermediate(
+        bundled_path(), sources, source_ref="aeat-dr-200-2025", filing_year=2025, design_epoch="2025"
+    )
+    sibling_map = load_semantic_map(Path(__file__).parents[1] / "mappings" / "modelo_200" / "2025")
+    sibling_fields = {
+        intermediate_anchor_key(field): field for sheet in sibling_design.sheets for field in sheet.fields
+    }
+    sibling_declarations = {str(item.id): item for item in sibling.casillas}
+    cross_index: dict[tuple[str, str, int], list[tuple[tuple[object, ...], SemanticPayload]]] = defaultdict(list)
+    for entry in sibling_map.entries:
+        declaration = sibling_declarations.get(str(entry.casilla_id))
+        if declaration is None or not _legal_refs_cover_2024(
+            declaration, legal, revision.valid_from, revision.valid_to
+        ):
+            continue
+        anchor = semantic_anchor_key(entry.anchor)
+        field = sibling_fields[anchor]
+        cross_index[(_template(field.normalized_description), field.aeat_type, field.length)].append(
+            (anchor, _payload(declaration))
         )
 
-    restored_ids = set(restored_paths) | {_QUALIFIED_RESTORATION}
-    peer_payloads: dict[str, set[SemanticPayload]] = defaultdict(set)
-    for _export_id, _description, template, declaration in rows:
-        if str(declaration.id) not in restored_ids:
-            peer_payloads[template].add(_payload(declaration))
-
     audits: list[RestoredSemanticAudit] = []
-    for export_id, description, template, declaration in rows:
-        declaration_id = str(declaration.id)
-        if declaration_id not in restored_ids:
-            continue
-        path = restored_paths.get(declaration_id, _REVISION_ROOT / "casillas" / "cDP200018+00588.toml")
+    for export_id, description, template, declaration_id, path, current, anchor, aeat_type, length in candidate_rows:
         peers = peer_payloads.get(template, set())
-        current = _payload(declaration)
         contradiction = _direct_contradiction(description, current)
         if len(peers) == 1:
             proposed = next(iter(peers))
@@ -129,6 +180,19 @@ def audit_bundled_restorations() -> tuple[RestoredSemanticAudit, ...]:
             proposed = None
             disposition = AuditDisposition.UNRESOLVED
             reason = contradiction or "no non-restored same-revision official-description template peer"
+        cross_payloads = {
+            payload
+            for sibling_anchor, payload in cross_index.get((template, aeat_type, length), ())
+            if sibling_anchor != anchor
+        }
+        cross_count = len(cross_payloads)
+        cross_status = (
+            "unique_non_authoritative"
+            if cross_count == 1
+            else "conflicting_non_authoritative"
+            if cross_count > 1
+            else "no_applicable_match"
+        )
         audits.append(
             RestoredSemanticAudit(
                 casilla_id=declaration_id,
@@ -136,12 +200,19 @@ def audit_bundled_restorations() -> tuple[RestoredSemanticAudit, ...]:
                 official_description=description,
                 template=template,
                 path=path.as_posix(),
+                source_ref=str(design.source.source_ref),
+                source_sha256=design.source.source_sha256,
                 disposition=disposition,
                 reason=reason,
                 current=current,
                 proposed=proposed,
+                cross_revision_status=cross_status,
+                cross_revision_evidence_count=cross_count,
+                cross_revision_proposed=next(iter(cross_payloads)) if cross_count == 1 else None,
             )
         )
+    if len(audits) != 156:
+        raise ValueError(f"current 2024 map/design must join all 156 pinned candidates, found {len(audits)}")
     return tuple(sorted(audits, key=lambda item: item.export_field_id))
 
 
@@ -155,12 +226,18 @@ def render_review_toml(audits: tuple[RestoredSemanticAudit, ...]) -> str:
             "official_description": audit.official_description,
             "template": audit.template,
             "path": audit.path,
+            "source_ref": audit.source_ref,
+            "source_sha256": audit.source_sha256,
             "disposition": audit.disposition.value,
             "reason": audit.reason,
+            "cross_revision_status": audit.cross_revision_status,
+            "cross_revision_evidence_count": audit.cross_revision_evidence_count,
             "current": _payload_dict(audit.current),
         }
         if audit.proposed is not None:
             row["proposed"] = _payload_dict(audit.proposed)
+        if audit.cross_revision_proposed is not None:
+            row["cross_revision_proposed_non_authoritative"] = _payload_dict(audit.cross_revision_proposed)
         rows.append(row)
     return rtoml.dumps({"schema_version": 1, "audit": rows}, pretty=True)
 
@@ -199,23 +276,70 @@ def main(argv: list[str] | None = None) -> int:
     print(f"total={len(audits)}")
     for disposition in AuditDisposition:
         print(f"{disposition.value}={counts[disposition.value]}")
+    cross_statuses = ("unique_non_authoritative", "conflicting_non_authoritative", "no_applicable_match")
+    for status in cross_statuses:
+        print(f"cross_revision_{status}={sum(item.cross_revision_status == status for item in audits)}")
     for item in audits:
         if item.disposition is not AuditDisposition.CONFIRMED:
             print(f"{item.disposition.value}[{item.casilla_id}]={item.reason}")
     return 0
 
 
-def _restored_paths(workspace_root: Path) -> dict[str, Path]:
-    root = workspace_root / _REVISION_ROOT / "casillas"
-    result: dict[str, Path] = {}
-    for path in root.glob("*.toml"):
-        text = path.read_text(encoding="utf-8")
-        if _RESTORED_MARKER not in text:
-            continue
-        document = rtoml.loads(text)
-        for declaration in document["revisions"]["2024"]["casillas"]:
-            result[str(declaration["id"])] = path.relative_to(workspace_root)
+def _candidate_payloads() -> dict[str, tuple[Path, SemanticPayload]]:
+    """Load candidate payloads from the four pinned pre-canonical reviews."""
+    result: dict[str, tuple[Path, SemanticPayload]] = {}
+    for commit in _RESTORATION_COMMITS:
+        paths = _git(
+            "diff-tree",
+            "--no-commit-id",
+            "--name-only",
+            "-r",
+            "--diff-filter=A",
+            commit,
+            "--",
+            (_REVISION_ROOT / "casillas").as_posix(),
+        ).splitlines()
+        archive = _git_bytes("archive", "--format=tar", commit, "--", *paths)
+        with tarfile.open(fileobj=io.BytesIO(archive), mode="r:") as stream:
+            documents = {
+                member.name: rtoml.loads(stream.extractfile(member).read().decode("utf-8"))
+                for member in stream.getmembers()
+                if member.isfile() and member.name in paths
+            }
+        for raw_path in paths:
+            document = documents[raw_path]
+            for raw in document["revisions"]["2024"]["casillas"]:
+                candidate_id = str(raw["id"])
+                if candidate_id in result:
+                    raise ValueError(f"duplicate restoration candidate id {candidate_id!r}")
+                result[candidate_id] = (Path(raw_path), _raw_payload(raw))
+    if len(result) != 156:
+        raise ValueError(f"pinned restoration reviews must yield 156 candidates, found {len(result)}")
     return result
+
+
+def _git(*args: str) -> str:
+    executable = shutil.which("git")
+    if executable is None:
+        raise RuntimeError("git executable is required to read pinned restoration candidates")
+    return subprocess.run(  # noqa: S603 - fixed executable and internally constructed arguments
+        [executable, *args],
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    ).stdout
+
+
+def _git_bytes(*args: str) -> bytes:
+    executable = shutil.which("git")
+    if executable is None:
+        raise RuntimeError("git executable is required to read pinned restoration candidates")
+    return subprocess.run(  # noqa: S603 - fixed executable and internally constructed arguments
+        [executable, *args],
+        check=True,
+        capture_output=True,
+    ).stdout
 
 
 def _resolve_declaration(token: str, declarations: dict[str, CasillaDefinition]) -> CasillaDefinition | None:
@@ -235,6 +359,11 @@ def _resolve_declaration(token: str, declarations: dict[str, CasillaDefinition])
 def _template(description: str) -> str:
     without_box = re.sub(r"\[[0-9]{5}\]", "[#]", description)
     return re.sub(r"\b20[0-9]{2}\b", "{year}", without_box)
+
+
+def _printed_number(description: str) -> str | None:
+    matches = re.findall(r"\[([0-9]{5})\]", description)
+    return matches[0] if len(matches) == 1 else None
 
 
 def _direct_contradiction(description: str, payload: SemanticPayload) -> str | None:
@@ -257,6 +386,36 @@ def _payload(declaration: CasillaDefinition) -> SemanticPayload:
         input_kind=str(declaration.input_kind),
         legal_refs=tuple(declaration.legal_refs),
         source_refs=tuple(declaration.source_refs),
+    )
+
+
+def _legal_refs_cover_2024(
+    declaration: CasillaDefinition,
+    legal: Mapping[object, LegalReference],
+    valid_from: date,
+    valid_to: date | None,
+) -> bool:
+    for reference_id in declaration.legal_refs:
+        reference = legal.get(reference_id)
+        if reference is None:
+            return False
+        span_from, span_to = governed_period_span(reference)
+        if span_from > valid_from:
+            return False
+        if valid_to is not None and span_to is not None and span_to < valid_to:
+            return False
+    return True
+
+
+def _raw_payload(raw: dict[str, object]) -> SemanticPayload:
+    return SemanticPayload(
+        section=tuple(str(item) for item in raw["section"]),
+        semantic_role=str(raw["semantic_role"]) if raw.get("semantic_role") is not None else None,
+        data_type=str(raw["data_type"]),
+        required=bool(raw["required"]),
+        input_kind=str(raw["input_kind"]),
+        legal_refs=tuple(str(item) for item in raw["legal_refs"]),
+        source_refs=tuple(str(item) for item in raw["source_refs"]),
     )
 
 

@@ -69,11 +69,11 @@ def test_a_row_cannot_acquire_a_handle_after_construction() -> None:
     original = row.result_destination
 
     with pytest.raises((dataclasses.FrozenInstanceError, TypeError)):
-        row.result_destination = "modelo.workspace.overview"  # type: ignore[misc]
+        row.result_destination = "modelo.workspace.overview"  # type: ignore[misc]  # ty: ignore[invalid-assignment]  # reason: writing to the frozen row IS the refusal under test
     assert row.result_destination == original, "the write was raised on but still landed"
 
     with pytest.raises((AttributeError, TypeError)):
-        row.injected_service = object()  # type: ignore[attr-defined]
+        row.injected_service = object()  # type: ignore[attr-defined]  # ty: ignore[invalid-assignment]  # reason: attaching an unknown attribute IS the refusal under test
     assert not hasattr(row, "injected_service"), "a service handle was attached to an inert row"
 
 

@@ -16,11 +16,9 @@ Submodules
    cadrumo.application.wizard._checkpoint_store
    cadrumo.application.wizard._format_hints
    cadrumo.application.wizard._registered_values
-   cadrumo.application.wizard._translations
    cadrumo.application.wizard.catalogue
    cadrumo.application.wizard.commands
    cadrumo.application.wizard.compiler
-   cadrumo.application.wizard.copy_sources
    cadrumo.application.wizard.descendant_door
    cadrumo.application.wizard.descendant_group
    cadrumo.application.wizard.errors

@@ -26,13 +26,13 @@ class ScreenHostApp[ResultT](App[ResultT | None]):
 
     CSS = tokenised(BASE_CSS)
 
-    def __init__(self, screen: Screen[ResultT]) -> None:
+    def __init__(self, screen: Screen[ResultT | None]) -> None:
         """Bind the one screen this host exists to run."""
         super().__init__()
         self._hosted_screen = screen
 
     @property
-    def hosted_screen(self) -> Screen[ResultT]:
+    def hosted_screen(self) -> Screen[ResultT | None]:
         """The screen under this host, for a caller that addresses it directly."""
         return self._hosted_screen
 

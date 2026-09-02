@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from decimal import Decimal
+from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
@@ -22,6 +23,20 @@ __all__ = [
     "RegistryFiledStateDrift",
     "compare_calculation_to_filed_observation",
 ]
+
+
+class RegistryFiledStateStatus(StrEnum):
+    """Whether a filed-state comparison matched what the registry expected."""
+
+    SATISFIED = "satisfied"
+    FAILED = "failed"
+
+
+RegistryFiledStateStatusValue = Literal[
+    RegistryFiledStateStatus.SATISFIED,
+    RegistryFiledStateStatus.FAILED,
+]
+"""The same vocabulary for a strict model field."""
 
 
 class RegistryFiledStateDrift(BaseModel):
@@ -53,7 +68,7 @@ class RegistryFiledStateComparison(BaseModel):
     filing_period: Period | None = None
     filing_year: FilingYear
     period: FilingPeriodCode
-    status: Literal["satisfied", "failed"]
+    status: RegistryFiledStateStatusValue
     compared_casilla_ids: tuple[CasillaId, ...]
     missing_local_casilla_ids: tuple[CasillaId, ...] = ()
     missing_filed_casilla_ids: tuple[CasillaId, ...] = ()

@@ -52,7 +52,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Annotated, Final, Literal
+from typing import Annotated, Final
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
@@ -77,6 +77,7 @@ from .schema_base import (
     SettlementDirection,
     SettlementDirectionField,
     SourceRefs,
+    coerce_enum_member,
 )
 from .schema_scalars import DecimalValue, WorkbookCellRefStr
 
@@ -124,6 +125,52 @@ importantly, so a method removed from read-only cannot silently survive here.
 """
 
 
+class ProfilePredicateOp(StrEnum):
+    """The comparison a profile predicate performs."""
+
+    EQUALS = "equals"
+    NOT_EQUALS = "not_equals"
+
+
+ProfilePredicateOpField = Annotated[
+    ProfilePredicateOp, BeforeValidator(coerce_enum_member(ProfilePredicateOp))
+]
+"""Registry token hydrated into a ProfilePredicateOp member."""
+
+
+class WorkbookFormulaCoverage(StrEnum):
+    """How much of a parity workbook's behaviour the reference actually covers."""
+
+    FORMULA_FORM = "formula_form"
+    STATIC_LAYOUT = "static_layout"
+    RECORD_DESIGN_LAYOUT = "record_design_layout"
+    UNSUPPORTED_BINARY_XLS = "unsupported_binary_xls"
+
+
+WorkbookFormulaCoverageField = Annotated[
+    WorkbookFormulaCoverage, BeforeValidator(coerce_enum_member(WorkbookFormulaCoverage))
+]
+"""Registry token hydrated into a WorkbookFormulaCoverage member."""
+
+
+class VerificationFindingKind(StrEnum):
+    """Whether a failed verification predicate blocks or merely advises.
+
+    Upper-case because these are the tokens the registry declares, and a finding kind
+    that renders differently from its declaration is a finding an operator cannot grep
+    for in the source that produced it.
+    """
+
+    BLOCKING_RULE = "BLOCKING_RULE"
+    ADVISORY = "ADVISORY"
+
+
+VerificationFindingKindField = Annotated[
+    VerificationFindingKind, BeforeValidator(coerce_enum_member(VerificationFindingKind))
+]
+"""Registry token hydrated into a VerificationFindingKind member."""
+
+
 class LiveVerificationSurface(StrEnum):
     """The kind of AEAT surface a live cross-reference verifies against.
 
@@ -163,6 +210,19 @@ SIMULATOR_SURFACES: Final[frozenset[LiveVerificationSurface]] = frozenset(
     },
 )
 """Surfaces that are not AEAT production infrastructure."""
+
+LiveVerificationSurfaceField = Annotated[
+    LiveVerificationSurface,
+    BeforeValidator(coerce_enum_member(LiveVerificationSurface)),
+]
+"""The surface as a REGISTRY SCHEMA field.
+
+`LiveCrossReferenceDecision` validates strictly and is built from registry TOML, so the
+declared token needs the coercion hop to arrive as a member. The bare enum stays the
+form this module's own comparisons use, and the two subsets stay derived from it.
+"""
+
+
 
 
 def _validate_open_or_public_authentication(
@@ -213,7 +273,7 @@ class ProfilePredicateDefinition(RegistryModel):
     """Declare one profile condition that controls verification applicability."""
 
     field: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z_][A-Za-z0-9_.-]*$")
-    op: Literal["equals", "not_equals"]
+    op: ProfilePredicateOpField
     value: ProfileFactValue
     explanation: str = Field(min_length=1)
     legal_refs: LegalRefs
@@ -225,14 +285,7 @@ class LiveCrossReferenceDecision(RegistryModel):
 
     id: CrossReferenceId
     evidence_tier: EvidenceTierField
-    surface: Literal[
-        "open_simulator",
-        "integration_test_service",
-        "public_read_surface",
-        "authenticated_read_surface",
-        "authenticated_simulator",
-        "static_official_documentation",
-    ]
+    surface: LiveVerificationSurfaceField
     guard_policy_id: str
     allowed_hosts: tuple[str, ...] = ()
     allowed_methods: tuple[str, ...] = ()
@@ -395,7 +448,7 @@ class WorkbookParityReference(RegistryModel):
     id: WorkbookParityRefId
     workbook_source: SourceRefId
     fixture_id: WorkbookFixtureId
-    formula_coverage: Literal["formula_form", "static_layout", "record_design_layout", "unsupported_binary_xls"]
+    formula_coverage: WorkbookFormulaCoverageField
     runner_required: bool
     output_cells: Mapping[WorkbookOutputId, WorkbookCellRefStr] = Field(default_factory=dict)
     tolerance: DecimalValue = Decimal("0.00")
@@ -1279,4 +1332,4 @@ class VerificationPredicateDefinition(RegistryModel):
     predicate_id: str = Field(min_length=1, max_length=128)
     legal_refs: LegalRefs
     expression: str = Field(min_length=1, max_length=512)
-    finding_kind: Literal["BLOCKING_RULE", "ADVISORY"] = "BLOCKING_RULE"
+    finding_kind: VerificationFindingKindField = VerificationFindingKind.BLOCKING_RULE

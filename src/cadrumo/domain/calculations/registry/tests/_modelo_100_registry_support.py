@@ -784,6 +784,15 @@ _NO_PAYMENTS_ON_ACCOUNT_2025_INPUT_SECTION_COUNTS: Mapping[tuple[str, str], int]
     ("toma_datos_ampliada", "regimenes_especiales"): 66,
 }
 _M100_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_SURFACE: Mapping[str, frozenset[str]] = {
+    "borrador_pdf": frozenset(
+        {
+            _BASE_LIQUIDABLE_ART_50_REF,
+            _GENERAL_SCALE_ART_63_REF,
+            _STATE_DEDUCTION_ART_67_REF,
+            _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
+            _AUTONOMIC_DEDUCTION_ART_77_REF,
+        }
+    ),
     "declaracion_pdf": frozenset(
         {
             "ley-35-2006:art-27",

@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from decimal import Decimal, InvalidOperation
+from enum import StrEnum
 from typing import Literal
 
 from pydantic import (
@@ -192,6 +193,67 @@ def _decimal_tuple_from_json_array(value: object) -> object:
     return value
 
 
+class CasillaObservationValueKind(StrEnum):
+    """Whether an observed casilla value is a number or free text."""
+
+    DECIMAL = "decimal"
+    TEXT = "text"
+
+
+CasillaObservationValueKindValue = Literal[
+    CasillaObservationValueKind.DECIMAL,
+    CasillaObservationValueKind.TEXT,
+]
+"""The same vocabulary for a strict model field."""
+
+
+class BienesInversionRegularizacionOutput(StrEnum):
+    """Which casilla a bienes-de-inversion regularizacion lands in.
+
+    Distinct from the prorrata regularizacion outputs even though both name a 303 and a
+    390 destination: these are different casillas for a different adjustment, and one
+    set is not a spelling of the other.
+    """
+
+    MODELO_303_CASILLA_43 = "modelo_303_casilla_43"
+    MODELO_390_CASILLA_63 = "modelo_390_casilla_63"
+
+
+BienesInversionRegularizacionOutputValue = Literal[
+    BienesInversionRegularizacionOutput.MODELO_303_CASILLA_43,
+    BienesInversionRegularizacionOutput.MODELO_390_CASILLA_63,
+]
+"""The same vocabulary for a strict model field."""
+
+
+class IvaCompensationAnnualPartition(StrEnum):
+    """Which half of the annual IVA compensation partition a binding reads."""
+
+    LAST_PERIOD_AMOUNT = "last_period_amount"
+    GENERATED_NOT_IN_LAST_AMOUNT = "generated_not_in_last_amount"
+
+
+IvaCompensationAnnualPartitionValue = Literal[
+    IvaCompensationAnnualPartition.LAST_PERIOD_AMOUNT,
+    IvaCompensationAnnualPartition.GENERATED_NOT_IN_LAST_AMOUNT,
+]
+"""The same vocabulary for a strict model field."""
+
+
+class ProrrataRegularizacionOutput(StrEnum):
+    """Which casilla a prorrata regularizacion lands in."""
+
+    MODELO_303_CASILLA_44 = "modelo_303_casilla_44"
+    MODELO_390_REGULARIZACION_ANUAL = "modelo_390_regularizacion_anual"
+
+
+ProrrataRegularizacionOutputValue = Literal[
+    ProrrataRegularizacionOutput.MODELO_303_CASILLA_44,
+    ProrrataRegularizacionOutput.MODELO_390_REGULARIZACION_ANUAL,
+]
+"""The same vocabulary for a strict model field."""
+
+
 class CasillaObservation(BaseModel):
     """One typed casilla observation emitted by the formula runtime.
 
@@ -212,7 +274,10 @@ class CasillaObservation(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
-    value_kind: Literal["decimal", "text"] = Field(default="decimal", exclude_if=lambda value: value == "decimal")
+    value_kind: CasillaObservationValueKindValue = Field(
+        default=CasillaObservationValueKind.DECIMAL,
+        exclude_if=lambda value: value == CasillaObservationValueKind.DECIMAL,
+    )
     value: Decimal | str
     formula_id: FormulaId | None = None
     # ``op`` is the formula's top-level operator label (``add``, ``multiply``,
@@ -525,7 +590,7 @@ class _BienesInversionRegularizacionSelector(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     source_modelo: Literal["303"]
-    regularizacion_output: Literal["modelo_303_casilla_43", "modelo_390_casilla_63"]
+    regularizacion_output: BienesInversionRegularizacionOutputValue
 
 
 class _IvaCompensationAnnualPartitionSelector(BaseModel):
@@ -536,7 +601,7 @@ class _IvaCompensationAnnualPartitionSelector(BaseModel):
     source_modelo: Literal["303"]
     source_casilla_ids: tuple[CasillaId, ...]
     source_periods: tuple[str, ...]
-    partition_output: Literal["last_period_amount", "generated_not_in_last_amount"]
+    partition_output: IvaCompensationAnnualPartitionValue
 
     @field_validator("source_casilla_ids")
     @classmethod
@@ -719,7 +784,7 @@ class _ProrrataRegularizacionSelector(BaseModel):
     source_modelo: Literal["303"]
     source_casilla_ids: tuple[CasillaId, ...]
     source_periods: tuple[str, ...]
-    regularizacion_output: Literal["modelo_303_casilla_44", "modelo_390_regularizacion_anual"]
+    regularizacion_output: ProrrataRegularizacionOutputValue
 
     @field_validator("source_casilla_ids")
     @classmethod

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Annotated, Literal
+from typing import Annotated
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator
 
@@ -29,6 +29,7 @@ from .binding_selector_utils import invariant_diagnostics, selector_against_mode
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
+from .ledger_binding_selector_support import LedgerIvaFact, OssIossLedgerFact
 from .schema import DataBindingDefinition, ModeloRevision
 from .schema_base import coerce_enum_member, coerce_enum_tuple
 
@@ -91,7 +92,7 @@ class _OssIossLedgerSelector(BaseModel):
         tuple[TransactionKind, ...],
         BeforeValidator(coerce_enum_tuple(TransactionKind)),
     ] = Field(min_length=1)
-    fact: Literal["iva_amount_sum", "base_amount_sum"] = "iva_amount_sum"
+    fact: OssIossLedgerFact = LedgerIvaFact.IVA_AMOUNT_SUM
 
     @field_validator("transaction_kinds", mode="after")
     @classmethod

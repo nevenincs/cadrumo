@@ -375,13 +375,12 @@ def test_merge_authority_is_retained_for_adjudication_but_never_selected(tmp_pat
     assert select_object_name_execution(manifest) == ()
 
 
-def test_validator_refuses_stale_inventory_finding_locator_and_advisory_selection(tmp_path: Path) -> None:
+def test_validator_tolerates_unrelated_inventory_churn_but_refuses_stale_selected_identity(tmp_path: Path) -> None:
     inventory, declaration, finding = _symbol_fixture(tmp_path)
     operation = _operation(declaration, finding)
 
     stale_inventory = _model(inventory, operation).model_copy(update={"inventory_digest": "sha256:" + "0" * 64})
-    with pytest.raises(ObjectNameManifestError, match="inventory is stale"):
-        validate_object_name_manifest(stale_inventory, inventory=inventory, repo_root=tmp_path)
+    assert validate_object_name_manifest(stale_inventory, inventory=inventory, repo_root=tmp_path) is stale_inventory
 
     unknown_finding = deepcopy(operation)
     unknown_finding["finding_id"] = "sha256:" + "1" * 64

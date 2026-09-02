@@ -30,6 +30,20 @@ CENSO_MODELO_ERROR_CODES: tuple[str, ...] = ("ERROR_CALCULATIONS_REGISTRY_VALIDA
 _LOGGER = get_logger(__name__)
 
 
+class CensoModeloFoundationDecision(StrEnum):
+    """What the censo foundation log concluded about a modelo."""
+
+    ACTIVE_WORK_UNIT_ALLOWED = "active_work_unit_allowed"
+    HISTORICAL_METADATA_ONLY = "historical_metadata_only"
+
+
+CensoModeloFoundationDecisionValue = Literal[
+    CensoModeloFoundationDecision.ACTIVE_WORK_UNIT_ALLOWED,
+    CensoModeloFoundationDecision.HISTORICAL_METADATA_ONLY,
+]
+"""The same vocabulary for a strict model field."""
+
+
 class CensoModeloRole(StrEnum):
     """Lifecycle role for censo modelos under the registry foundation."""
 
@@ -54,7 +68,7 @@ class CensoModeloFoundationLogFields(BaseModel):
     service_owner: str = Field(pattern=r"^cadrumo\.domain\.calculations\.registry$")
     modelo: str = Field(min_length=3, max_length=3, pattern=r"^[0-9]{3}$")
     role: CensoModeloRole
-    decision: Literal["active_work_unit_allowed", "historical_metadata_only"]
+    decision: CensoModeloFoundationDecisionValue
     event_kind: CensoModeloEventKind | None = None
     active_work_unit_allowed: bool
     superseded_by: str | None = Field(default=None, min_length=3, max_length=3, pattern=r"^[0-9]{3}$")

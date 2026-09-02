@@ -33,6 +33,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
+from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, Field, NonNegativeInt
@@ -48,6 +49,20 @@ from .binding_selector_utils import BooleanBindingEncodedValue
 from .ids import BindingId, FormulaId, LegalRefId, ParameterId, RelationId, RevisionId, SourceRefId
 from .schema_input_kind import InputKind
 from .support_matrix import ModeloEntry
+
+
+class BindingInputChannel(StrEnum):
+    """How a binding receives its value from the operator surface."""
+
+    DECIMAL = "decimal"
+    ENUM = "enum"
+
+
+BindingInputChannelValue = Literal[
+    BindingInputChannel.DECIMAL,
+    BindingInputChannel.ENUM,
+]
+"""The same vocabulary for a strict model field."""
 
 
 class ModeloListRow(BaseModel):
@@ -213,7 +228,7 @@ class ModeloBindingQueryRow(BaseModel):
     binding_id: BindingId
     source: BindingSourceKind
     typed_enum: str | None
-    input_channel: Literal["decimal", "enum"]
+    input_channel: BindingInputChannelValue
     selector: BindingSelectorQueryProjection
     aggregation: Mapping[str, object] | None
     legal_refs: tuple[str, ...]

@@ -80,6 +80,8 @@ def test_a_modelo_with_no_export_layout_refuses_before_writing_output(tmp_path: 
             schema_provider=unbuilt,
         )
     assert refusal.value.translated_message == "application.filing.export.errors.layout_not_renderable"
-    assert refusal.value.context["modelo"] == "111"
+    context = refusal.value.context
+    assert context is not None, "the refusal must carry the context that names the modelo"
+    assert context["modelo"] == "111"
 
     assert not output.exists()

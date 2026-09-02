@@ -23,6 +23,7 @@ from ..ledger_oss_bindings import (
 )
 from ..record_design import extract_record_design
 from ..schema import ModeloDefinition, RegistryCatalogues
+from ..schema_verification import LiveVerificationSurface
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -391,12 +392,12 @@ def test_modelo_369_live_cross_references_are_read_only() -> None:
     for revision in modelo.revisions.values():
         cross_refs = {ref.surface: ref for ref in revision.live_cross_references}
 
-        static_ref = cross_refs["static_official_documentation"]
+        static_ref = cross_refs[LiveVerificationSurface.STATIC_OFFICIAL_DOCUMENTATION]
         assert static_ref.requires_authentication is False
         assert static_ref.synthetic_data_allowed is False
         assert _FORBIDDEN_REMOTE_ACTIONS.issubset(static_ref.forbidden_actions)
 
-        filed_ref = cross_refs["authenticated_read_surface"]
+        filed_ref = cross_refs[LiveVerificationSurface.AUTHENTICATED_READ_SURFACE]
         assert filed_ref.requires_authentication is True
         assert filed_ref.requires_aeat_authorization is True
         assert filed_ref.synthetic_data_allowed is False

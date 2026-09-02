@@ -29,6 +29,7 @@ from ..remote_state_guard import (
 )
 from ..schema import DataBindingDefinition, RegistrySnapshot
 from ..schema_input_kind import InputKind
+from ..schema_revision_members import ApplicationLinkSurface
 from ..schema_surfaces import CasillaDefinition
 from ._modelo_100_registry_support import (
     _DECLARATIONS_LISTING_URL,
@@ -472,15 +473,19 @@ def test_modelo_100_application_links_route_current_workflows_through_snapshots(
     }.issubset(links_by_surface)
     assert all(link.requires_snapshot is True for link in snapshot.revision.application_links)
     assert (
-        links_by_surface["calculation"].consumer == "cadrumo.domain.calculations.registry.calculate_registry_snapshot"
+        links_by_surface[ApplicationLinkSurface.CALCULATION].consumer
+        == "cadrumo.domain.calculations.registry.calculate_registry_snapshot"
     )
-    assert links_by_surface["export"].consumer == "cadrumo.application.filing.export_draft"
-    assert links_by_surface["filing"].consumer == "cadrumo.application.filing"
+    assert links_by_surface[ApplicationLinkSurface.EXPORT].consumer == "cadrumo.application.filing.export_draft"
+    assert links_by_surface[ApplicationLinkSurface.FILING].consumer == "cadrumo.application.filing"
     assert "verification" not in links_by_surface
-    assert links_by_surface["review"].consumer == "cadrumo.application.filing.review"
-    assert links_by_surface["approval"].consumer == "cadrumo.application.filing.approval"
-    assert links_by_surface["reconciliation"].consumer == "cadrumo.application.modelo.modelo_reconcile"
-    assert links_by_surface["workflow"].consumer == "cadrumo.application.workflow"
+    assert links_by_surface[ApplicationLinkSurface.REVIEW].consumer == "cadrumo.application.filing.review"
+    assert links_by_surface[ApplicationLinkSurface.APPROVAL].consumer == "cadrumo.application.filing.approval"
+    assert (
+        links_by_surface[ApplicationLinkSurface.RECONCILIATION].consumer
+        == "cadrumo.application.modelo.modelo_reconcile"
+    )
+    assert links_by_surface[ApplicationLinkSurface.WORKFLOW].consumer == "cadrumo.application.workflow"
 
 
 def test_modelo_100_constructs_declare_their_revision_members() -> None:

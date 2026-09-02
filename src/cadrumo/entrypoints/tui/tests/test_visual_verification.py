@@ -23,6 +23,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 from pydantic import BaseModel
@@ -30,6 +31,10 @@ from textual.containers import ScrollableContainer
 from textual.css.query import NoMatches
 from textual.screen import Screen
 from textual.widgets import Button, Input, Static
+
+if TYPE_CHECKING:
+    from ....application.user_profile.login_session import ProfileLoginOutcome
+    from ....application.user_profile.registration import ProfileRegistrationOutcome
 
 from ....application.flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
@@ -90,7 +95,7 @@ _THEMES = [CADRUMO_LIGHT_THEME_NAME, CADRUMO_DARK_THEME_NAME]
 
 
 @contextmanager
-def _registration(tmp_path: Path) -> Generator[ScreenHostApp[None]]:
+def _registration(tmp_path: Path) -> Generator[ScreenHostApp[ProfileRegistrationOutcome | None]]:
     from ....core.credentials import assess_profile_password
     from ..devtools.fixture import registration_attempt
 
@@ -173,7 +178,7 @@ def _manager(tmp_path: Path) -> Generator[ScreenHostApp[None]]:
 
 
 @contextmanager
-def _login(tmp_path: Path) -> Generator[ScreenHostApp[None]]:
+def _login(tmp_path: Path) -> Generator[ScreenHostApp[ProfileLoginOutcome | None]]:
     """The login screen, composed through the application interaction contract.
 
     Needs a real profile that exists but is LOCKED -- registration leaves it

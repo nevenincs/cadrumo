@@ -20,12 +20,19 @@ from datetime import date
 from typing import TYPE_CHECKING
 
 from ...application.overview.calendar import build_overview_calendar_events, calendar_events_from_modelo_records
-from ...application.overview.calendar_evidence import calendar_filing_evidence_from_sources, no_aeat_history_notice
+from ...application.overview.calendar_evidence import no_aeat_history_notice
 from ...application.overview.calendar_models import (
     OverviewCalendarEvent,
     OverviewCalendarFilingEvidence,
     OverviewCalendarRange,
 )
+from ...application.overview.evidence import (
+    AeatCalendarEvidenceSources,
+    CalendarEvidenceReadOutcome,
+    LocalCalendarEvidenceSources,
+    build_calendar_evidence_projection,
+)
+from ...application.overview.home import HomeAvailability, HomeZoneState
 from ...core.hashing import sha256_hex
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -306,18 +313,28 @@ def local_calendar_filing_evidence(
             "overview.calendar_filing_evidence_degraded",
             message_key="cli.overview.calendar_local_filing_evidence_unavailable",
         )
-    evidence = calendar_filing_evidence_from_sources(
-        filing_records=filing_records,
-        observed_events=events,
-        filed_declaration_observations=tuple(filed_declaration_observations),
-        verified_filed_declaration_artefact_refs=tuple(verified_filed_artefact_csvs),
-        verified_filed_declaration_artefact_csvs=verified_filed_artefact_csvs,
-        calculation_observations=calculation_observations,
-        justificante_capture_snapshots=tuple(justificante_captures),
-        justificantes=justificantes,
+    available = HomeZoneState(availability=HomeAvailability.AVAILABLE)
+    projection = build_calendar_evidence_projection(
+        local=CalendarEvidenceReadOutcome(
+            state=available,
+            value=LocalCalendarEvidenceSources(filing_records=filing_records),
+        ),
+        aeat=CalendarEvidenceReadOutcome(
+            state=available,
+            value=AeatCalendarEvidenceSources(
+                filing_records=filing_records,
+                observed_events=events,
+                filed_declaration_observations=tuple(filed_declaration_observations),
+                verified_filed_declaration_artefact_refs=tuple(verified_filed_artefact_csvs),
+                verified_filed_declaration_artefact_csvs=tuple(sorted(verified_filed_artefact_csvs.items())),
+                calculation_observations=calculation_observations,
+                justificante_capture_snapshots=tuple(justificante_captures),
+                justificantes=justificantes,
+            ),
+        ),
         expected_tax_id=expected_tax_id,
     )
-    return evidence, None
+    return projection.evidence, None
 
 
 def _calendar_verified_filed_declaration_observations(

@@ -37,6 +37,7 @@ from ..routes import (
     resolve_destination,
 )
 from ..view.controller import ModeloWorkspaceReadSession, admit_workspace_session
+from ..view.models import ModeloWorkspaceDestinationIdV1
 
 # The real-projection fixture lives beside the view tests. Sibling test
 # packages do not share a conftest, so it is re-exposed here by name rather
@@ -63,7 +64,7 @@ _GEOMETRIES = SUPPORTED_TERMINAL_SIZES
 _DESTINATION_IDS = sorted(MODELO_WORKSPACE_DESTINATIONS)
 
 
-def _host_for(destination: str, session: ModeloWorkspaceReadSession) -> ScreenHostApp[None]:
+def _host_for(destination: ModeloWorkspaceDestinationIdV1, session: ModeloWorkspaceReadSession) -> ScreenHostApp[None]:
     """Host one destination exactly as the production launcher does.
 
     Composes the shared :class:`ScreenHostApp` rather than defining a local
@@ -98,7 +99,7 @@ def test_the_selection_outcome_names_a_routed_destination() -> None:
 @pytest.mark.asyncio
 @pytest.mark.parametrize("destination", _DESTINATION_IDS)
 async def test_every_destination_mounts_and_leaves_without_deciding_anything(
-    destination: str,
+    destination: ModeloWorkspaceDestinationIdV1,
     bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
     """Each route builds a reachable read screen that returns no value."""
@@ -117,7 +118,7 @@ async def test_every_destination_mounts_and_leaves_without_deciding_anything(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("destination", _DESTINATION_IDS)
 async def test_no_destination_offers_an_editing_affordance_before_c3(
-    destination: str,
+    destination: ModeloWorkspaceDestinationIdV1,
     bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
     """The whole cohort is read-only, proven per destination rather than per file.
@@ -140,7 +141,7 @@ async def test_no_destination_offers_an_editing_affordance_before_c3(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("destination", _DESTINATION_IDS)
 async def test_every_destination_mounts_in_all_four_locales(
-    destination: str,
+    destination: ModeloWorkspaceDestinationIdV1,
     bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
     """Four locales, six destinations, no missing key and no crash.
@@ -163,7 +164,7 @@ async def test_every_destination_mounts_in_all_four_locales(
 @pytest.mark.parametrize("size", _GEOMETRIES, ids=SUPPORTED_TERMINAL_SIZE_IDS)
 @pytest.mark.parametrize("destination", _DESTINATION_IDS)
 async def test_every_destination_survives_three_geometries(
-    destination: str,
+    destination: ModeloWorkspaceDestinationIdV1,
     size: tuple[int, int],
     bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
@@ -179,7 +180,7 @@ async def test_every_destination_survives_three_geometries(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("destination", _DESTINATION_IDS)
 async def test_every_destination_toggles_between_both_shipped_themes(
-    destination: str,
+    destination: ModeloWorkspaceDestinationIdV1,
     bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
     """The shared appearance toggle reaches every destination."""

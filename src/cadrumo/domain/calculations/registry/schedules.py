@@ -15,7 +15,7 @@ from pydantic import ConfigDict, TypeAdapter, ValidationError
 from .errors import RegistryValidationError
 from .schema import ModeloRevision
 from .schema_deadlines import ModeloScheduleDefinition
-from .schema_verification import ProfilePredicateDefinition
+from .schema_verification import ProfilePredicateDefinition, ProfilePredicateOp
 
 __all__ = [
     "applicable_filing_schedules",
@@ -91,11 +91,11 @@ def profile_condition_matches(
 ) -> bool:
     """Return whether one declared predicate matches the supplied profile facts."""
     observed = _resolve_profile_fact(profile_facts, condition.field)
-    if condition.op == "equals":
+    if condition.op == ProfilePredicateOp.EQUALS:
         return observed == condition.value
-    if condition.op == "not_equals":
+    if condition.op == ProfilePredicateOp.NOT_EQUALS:
         return observed != condition.value
-    raise RegistryValidationError(f"profile condition uses unsupported op {condition.op!r}")
+    raise RegistryValidationError(f"profile condition uses unsupported op {str(condition.op)!r}")
 
 
 def _resolve_profile_fact(profile_facts: object, field: str) -> object:

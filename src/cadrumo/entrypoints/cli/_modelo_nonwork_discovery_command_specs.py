@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+from typing import Final
+
 from ._modelo_nonwork_command_spec_policies import (
     _REGISTRY_MODEL_READ,
     _REGISTRY_READ,
@@ -24,6 +26,50 @@ from .command_spec import (
     ValueContract,
 )
 
+_REGISTRY_YEAR_OPTION: Final[OptionSpec] = OptionSpec(
+    name="year",
+    declarations=("--year",),
+    value=ValueContract(DeferredTarget("builtins", "int")),
+    default=ParameterDefault.value(None),
+    help_key=TranslationKey("cli.app.modelo.list.year_help"),
+    multiple=False,
+    is_flag=False,
+    flag_value=None,
+    constraint=ParameterConstraint(),
+)
+
+CASILLA_LOOKUP_SCOPE: Final[tuple[ArgumentSpec | OptionSpec, ...]] = (
+    ArgumentSpec(
+        name="modelo",
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.required(),
+        help_key=TranslationKey("cli.app.modelo.casillas.modelo_help"),
+    ),
+    _REGISTRY_YEAR_OPTION,
+    OptionSpec(
+        name="period",
+        declarations=("--period",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.modelo.casillas.period_help"),
+        multiple=False,
+        is_flag=False,
+        flag_value=None,
+        constraint=ParameterConstraint(),
+    ),
+    OptionSpec(
+        name="as_of",
+        declarations=("--as-of",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.modelo.casillas.as_of_help"),
+        multiple=False,
+        is_flag=False,
+        flag_value=None,
+        constraint=ParameterConstraint(),
+    ),
+)
+
 MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
         key="app_modelo_list",
@@ -34,17 +80,7 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(
-            OptionSpec(
-                name="year",
-                declarations=("--year",),
-                value=ValueContract(DeferredTarget("builtins", "int")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.list.year_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
+            _REGISTRY_YEAR_OPTION,
             OptionSpec(
                 name="domain",
                 declarations=("--domain",),
@@ -80,17 +116,7 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.modelo.describe.modelo_help"),
             ),
-            OptionSpec(
-                name="year",
-                declarations=("--year",),
-                value=ValueContract(DeferredTarget("builtins", "int")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.list.year_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
+            _REGISTRY_YEAR_OPTION,
             OptionSpec(
                 name="period",
                 declarations=("--period",),
@@ -133,45 +159,7 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(
-            ArgumentSpec(
-                name="modelo",
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.modelo.casillas.modelo_help"),
-            ),
-            OptionSpec(
-                name="year",
-                declarations=("--year",),
-                value=ValueContract(DeferredTarget("builtins", "int")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.list.year_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
-            OptionSpec(
-                name="period",
-                declarations=("--period",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.casillas.period_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
-            OptionSpec(
-                name="as_of",
-                declarations=("--as-of",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.casillas.as_of_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
+            *CASILLA_LOOKUP_SCOPE,
             OptionSpec(
                 name="input_kind",
                 declarations=("--input-kind",),
@@ -247,51 +235,14 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(
-            ArgumentSpec(
-                name="modelo",
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.modelo.casillas.modelo_help"),
-            ),
+            CASILLA_LOOKUP_SCOPE[0],
             ArgumentSpec(
                 name="casilla_id",
                 value=ValueContract(DeferredTarget("builtins", "str")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.modelo.casilla.casilla_help"),
             ),
-            OptionSpec(
-                name="year",
-                declarations=("--year",),
-                value=ValueContract(DeferredTarget("builtins", "int")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.list.year_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
-            OptionSpec(
-                name="period",
-                declarations=("--period",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.casillas.period_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
-            OptionSpec(
-                name="as_of",
-                declarations=("--as-of",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.casillas.as_of_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
+            *CASILLA_LOOKUP_SCOPE[1:],
         ),
         policy=_REGISTRY_READ,
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._modelo_discovery_cli", "casilla")),

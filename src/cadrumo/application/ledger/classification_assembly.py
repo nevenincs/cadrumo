@@ -108,7 +108,7 @@ from ...domain.iva.establishment import (
 from ...domain.iva.identification import identification_state_for_printed_tax_identifier
 from ...domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ...domain.iva.supply_nature import SupplyNature
-from . import _classification_assembly_rules as _rules
+from . import classification_assembly_rules as _rules
 
 if TYPE_CHECKING:
     from datetime import date

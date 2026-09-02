@@ -157,7 +157,7 @@ def _validate_dispositive_content(reference: LegalReference, source_root: Path) 
     corpus_text = _legal_corpus_text(source_root, reference)
     if not _DISPOSITIVE_CONTENT_SIGNAL.search(corpus_text):
         raise RegistryValidationError(
-            f"legal reference {reference.id!r} (kind={reference.kind!r}) cites corpus text with no "
+            f"legal reference {reference.id!r} (kind={str(reference.kind)!r}) cites corpus text with no "
             "dispositive article or disposición of its own -- the resolved text paraphrases or "
             "cross-references another instrument rather than stating its own operative provision. "
             "A required_text clause cannot clear this: it is satisfied by any phrase the author "

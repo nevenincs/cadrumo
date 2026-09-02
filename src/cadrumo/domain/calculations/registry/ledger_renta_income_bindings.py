@@ -27,7 +27,7 @@ from .binding_selector_utils import invariant_diagnostics, selector_against_mode
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .ledger_binding_selector_support import casilla_id_set, mapping_lacks_fact
+from .ledger_binding_selector_support import LedgerIncomeFactValue, casilla_id_set, mapping_lacks_fact
 from .quantity_screen_enrolment import assert_quantity_readers_cover_independent_facts, independent_quantity_facts
 from .schema import DataBindingDefinition, ModeloRevision
 
@@ -84,7 +84,7 @@ class _RentaLedgerIncomeSelector(BaseModel):
 
     modelo: Literal[Modelo.M130, Modelo.M100, Modelo.M131] = Modelo.M130
     target_casilla_id: CasillaId
-    fact: Literal["ingresos_integros_sum", "cash_received_sum", "taxable_base_sum", "withheld_amount_sum"]
+    fact: LedgerIncomeFactValue
 
     @model_validator(mode="before")
     @classmethod

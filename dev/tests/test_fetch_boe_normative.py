@@ -16,7 +16,7 @@ distinguish a per-fieldset invariant from a document-wide one.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from http import HTTPStatus
 from pathlib import Path
 from typing import Final
@@ -229,7 +229,7 @@ def test_a_consolidated_payload_is_refused_by_the_as_published_arm() -> None:
         assert_serves_the_published_document(_payload(_MULTI_BLOCK), document_id="BOE-A-2024-12944")
 
 
-def _boe_endpoint(routes: dict[str, tuple[int, bytes]]) -> Callable[..., list[bytes]]:
+def _boe_endpoint(routes: Mapping[str, tuple[int, bytes]]) -> Callable[..., list[bytes]]:
     """Return a WSGI endpoint serving ``routes`` keyed by request path.
 
     A real HTTP endpoint handler, not a test double: it is mounted under a real
@@ -254,7 +254,7 @@ def _boe_endpoint(routes: dict[str, tuple[int, bytes]]) -> Callable[..., list[by
     return endpoint
 
 
-def _boe_client(routes: dict[str, tuple[int, bytes]]) -> httpx.Client:
+def _boe_client(routes: Mapping[str, tuple[int, bytes]]) -> httpx.Client:
     """A real httpx client whose transport runs the in-process BOE endpoint."""
     return httpx.Client(
         transport=httpx.WSGITransport(app=_boe_endpoint(routes)),

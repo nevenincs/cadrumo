@@ -1,7 +1,7 @@
-cadrumo.application.wizard._translations module
+cadrumo.adapters.inbound.borrador.parser module
 ===============================================
 
-.. automodule:: cadrumo.application.wizard._translations
+.. automodule:: cadrumo.adapters.inbound.borrador.parser
    :members:
    :show-inheritance:
    :ignore-module-all:

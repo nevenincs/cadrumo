@@ -1,15 +1,13 @@
-"""Ed25519 signing primitive shared by every artefact-signing surface.
+"""Ed25519 signing primitive used by the review-package signing surface.
 
-Two surfaces sign a checksum-manifest digest with Ed25519 and verify it
-later: :mod:`~core.corpus_manifest._bundle_signing` (a maintainer signs a
-distributable corpus bundle, key on disk) and
-:mod:`~application.modelo._review_package_signing` (a profile signs a review
-package for an accountant, key in encrypted secure storage). Their CUSTODY,
-envelope metadata, and error vocabularies are genuinely different and stay
-in those modules. The cryptography is not different, and lives here.
+The review-package signer signs a checksum-manifest digest with Ed25519 and
+keeps its profile key in encrypted secure storage. Its custody, envelope
+metadata, and error vocabulary stay in
+:mod:`~application.modelo._review_package_signing`; the cryptography lives
+here.
 
 What this module owns is deliberately narrow: key generation, the raw-bytes
-hex projection both surfaces persist, and the sign / verify pair over a
+hex projection the signer persists, and the sign / verify pair over a
 hex-encoded digest. It knows nothing about manifests, bundles, packages,
 files, or storage, so it cannot acquire a custody policy by accident.
 
@@ -22,8 +20,8 @@ signature, and the failure would look like key mismatch rather than an
 encoding bug.
 
 See Also:
-    :mod:`~core.corpus_manifest`
-        Corpus-bundle signing built on this primitive.
+    :mod:`~application.modelo._review_package_signing`
+        Review-package signing built on this primitive.
 """
 
 from __future__ import annotations

@@ -175,6 +175,30 @@ def test_successful_symbol_replay_applies_exact_receipt_and_preserves_unrelated_
     ).exists()
 
 
+def test_successful_symbol_replay_tolerates_unrelated_post_receipt_bytes(tmp_path: Path) -> None:
+    repo, inventory, manifest, component, receipt = _case(tmp_path)
+    unrelated = repo / "dev/concurrent_helper.py"
+    unrelated.write_bytes(b"def helper_runtime() -> None:\n    pass\n")
+    current_inventory = scan((repo / "src", repo / "dev"), repo)
+    assert to_json(current_inventory)["inventory_digest"] != to_json(inventory)["inventory_digest"]
+    current_component = build_manifest_components(
+        manifest,
+        inventory=cast("Any", current_inventory),
+        hard_edges=component.hard_edges,
+    )[0]
+
+    replay_object_name_component(
+        manifest,
+        inventory=current_inventory,
+        component=current_component,
+        receipt=receipt,
+        repo_root=repo,
+    )
+
+    assert unrelated.read_bytes() == b"def helper_runtime() -> None:\n    pass\n"
+    assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
+
+
 def test_successful_generator_backed_replay_applies_and_reports_exact_owner_output(tmp_path: Path) -> None:
     repo, inventory, manifest, component, receipt = _generated_case(tmp_path)
 
@@ -381,7 +405,7 @@ def test_invalid_receipt_integrity_refuses_before_any_live_write(
 
 @pytest.mark.parametrize(
     "drift",
-    ["manifest", "inventory", "component", "file", "tool", "generator", "gate", "content"],
+    ["manifest", "inventory", "component", "tool", "generator", "gate", "content"],
 )
 def test_authority_and_regenerated_evidence_drift_refuses_before_transaction(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, drift: str
@@ -400,8 +424,6 @@ def test_authority_and_regenerated_evidence_drift_refuses_before_transaction(
         supplied_inventory = replace(inventory, declarations=())
     elif drift == "component":
         supplied_component = replace(component, component_id=_digest(b"other-component"))
-    elif drift == "file":
-        (repo / "dev/untracked.txt").write_bytes(b"drift\n")
     elif drift == "tool":
         supplied_receipt = _retag(replace(receipt, tool_versions=((*receipt.tool_versions[:-1], ("uv", "changed")))))
     elif drift == "generator":
@@ -621,7 +643,7 @@ def test_unsafe_replay_path_forms_are_refused(tmp_path: Path, relative: str) -> 
         replay_module._safe_path(root, relative, allow_missing_leaf=True)
 
 
-@pytest.mark.parametrize("failure", ["stage", "replace", "post-gate", "finding", "changed-path", "content"])
+@pytest.mark.parametrize("failure", ["stage", "replace", "post-gate", "finding", "content"])
 def test_apply_and_postcondition_failures_restore_exact_live_bytes(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure: str
 ) -> None:
@@ -651,25 +673,6 @@ def test_apply_and_postcondition_failures_restore_exact_live_bytes(
         )
     elif failure == "finding":
         monkeypatch.setattr(replay_module, "_finding_delta", lambda *_args: object())
-    elif failure == "changed-path":
-        original_paths = replay_module._git_snapshot_paths
-        original_gates = replay_module._run_gates_in_verified_copy
-        post_gate = False
-
-        def gates_finished_paths(**kwargs: Any) -> Any:
-            nonlocal post_gate
-            result = original_gates(**kwargs)
-            post_gate = True
-            return result
-
-        def omit_live_path(root: Path) -> tuple[str, ...]:
-            paths = original_paths(root)
-            if post_gate and root.resolve() == repo.resolve():
-                return tuple(path for path in paths if path != "dev/tracked.txt")
-            return paths
-
-        monkeypatch.setattr(replay_module, "_run_gates_in_verified_copy", gates_finished_paths)
-        monkeypatch.setattr(replay_module, "_git_snapshot_paths", omit_live_path)
     else:
         original_snapshot = replay_module._snapshot
         original_gates = replay_module._run_gates_in_verified_copy

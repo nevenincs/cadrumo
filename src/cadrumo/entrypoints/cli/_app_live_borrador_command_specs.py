@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from ...core.modelo import Modelo
+from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._app_live_command_spec_support import _key
 from .command_spec import (
     ArgumentSpec,
@@ -65,6 +66,70 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         handler=None,
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
+    ),
+    CommandSpec(
+        key="app_live_borrador_100_import",
+        parent_key="app_live_borrador_100",
+        token="import",
+        kind=CommandNodeKind.LEAF,
+        help_key=_key("cli.app.live.borrador.import_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(no_args_is_help=False, context_parameter="ctx"),
+        parameters=(
+            OptionSpec(
+                name="file",
+                declarations=("--file",),
+                value=ValueContract(DeferredTarget("pathlib", "Path")),
+                default=ParameterDefault.required(),
+                help_key=_key("cli.app.live.borrador.import_file_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(exists=True, dir_okay=False),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
+            ),
+            OptionSpec(
+                name="filing_year",
+                declarations=("--filing-year",),
+                value=ValueContract(DeferredTarget("builtins", "int")),
+                default=ParameterDefault.required(),
+                help_key=_key("cli.app.live.borrador.filing_year_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(minimum=2000, maximum=2099),
+            ),
+            OptionSpec(
+                name="period",
+                declarations=("--period",),
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.value("0A"),
+                help_key=_key("cli.app.live.borrador.import_period_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(minimum=None, maximum=None),
+            ),
+        ),
+        policy=ExecutionPolicySpec(
+            capabilities=frozenset(["registry", "encrypted-facts"]),
+            side_effects=frozenset(["local-state"]),
+            performance="local-io",
+            write_route=CommandWriteRoute.PROFILE_BOUND,
+            destructive=False,
+            handoff=False,
+            live_write=False,
+        ),
+        handler=LazyBinding.available(
+            DeferredTarget("cadrumo.entrypoints.cli._app_live_borrador_cli", "borrador_100_import")
+        ),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_borrador_payloads", "Borrador100ImportResult"),
+            identity="app.live.borrador.100.import",
+        ),
     ),
     CommandSpec(
         key="app_live_borrador_100_list",

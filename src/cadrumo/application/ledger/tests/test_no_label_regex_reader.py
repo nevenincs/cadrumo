@@ -38,6 +38,7 @@ See Also:
 from __future__ import annotations
 
 import ast
+from importlib import import_module
 from pathlib import Path
 from typing import TypeIs
 
@@ -45,7 +46,6 @@ import pytest
 
 # The MODULE object, not names from it: the tests below scope an attribute
 # on it. `from .. import <module>` is the relative form that yields one.
-from .. import invoice_draft_extraction as invoice_draft_extraction_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -58,6 +58,12 @@ _AEAT_LAYOUT_PARSERS = (
     _SRC_ROOT / "adapters" / "inbound" / "justificante" / "_extract.py",
     _SRC_ROOT / "adapters" / "inbound" / "declaracion" / "_parser.py",
 )
+
+
+#: The defining module itself, for the attribute scoping below. Named through
+#: `import_module` rather than `from .. import`: the ledger package facade is
+#: inert and its tests may not import through it.
+invoice_draft_extraction_module = import_module("cadrumo.application.ledger.invoice_draft_extraction")
 
 
 def _compiled_patterns(module_path: Path) -> tuple[str, ...]:

@@ -24,15 +24,10 @@ implementation of the same :class:`~core.telemetry.TelemetrySink` protocol: it
 is structurally inert (a pure no-op) unless a caller both builds it with a
 configured ``settings.cadrumo_telemetry_endpoint`` AND the consent gate already
 permitted emission, and any transport failure is swallowed rather than raised.
-No caller wires it as a default sink today; a producer or CLI surface must
-explicitly opt a call site into it.
-
-Three non-sensitive operational producers are wired
-(:func:`~core.telemetry.emit_command_invocation_telemetry`,
-:func:`~core.telemetry.emit_llm_run_telemetry`,
-:func:`~core.telemetry.emit_error_frequency_telemetry`), each registered in
-:data:`~core.telemetry.TELEMETRY_METRIC_REGISTRY` and exercising the full
-gate-then-schema-then-emit pipeline against the local sink.
+No caller wires it as a default sink today; an application or CLI surface must
+explicitly opt a call site into it. The metric registry retains the one
+application-level ``diagnostics.llm_run`` payload shape used by the diagnostics
+telemetry flush path.
 
 See Also:
     :func:`~core.telemetry.telemetry_emit_permitted`

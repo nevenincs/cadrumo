@@ -154,7 +154,7 @@ def _prompt(host: ScreenHostApp[None]) -> str:
 
 
 def _answer_input(host: ScreenHostApp[None]) -> Input:
-    return host.screen.query_one("#widget-area", expect_type=None).query_one(Input)
+    return host.screen.query_one("#widget-area").query_one(Input)
 
 
 @pytest.mark.asyncio

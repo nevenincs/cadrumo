@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import re
 from decimal import Decimal
-from typing import Literal
+from enum import StrEnum
+from typing import Annotated, Literal
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from ....core.aggregation import RelationAggregation
 from ....core.casilla_id import CasillaId
@@ -37,6 +38,7 @@ from .schema_base import (
     LegalRefs,
     RegistryModel,
     SourceRefs,
+    coerce_enum_member,
 )
 from .schema_input_kind import InputKind, InputKindValue
 from .schema_scalars import DecimalValue
@@ -54,6 +56,68 @@ __all__ = [
 ]
 
 
+class CasillaEvolutionKind(StrEnum):
+    """How a casilla changed between two revisions.
+
+    ``REPURPOSED`` and ``RETIRED`` are not degrees of change: a repurposed casilla still
+    exists and now means something else, a retired one is gone. Reading one as the other
+    would carry a prior year's value into a box that no longer holds it.
+    """
+
+    UNCHANGED = "unchanged"
+    LABEL_EVOLVED = "label_evolved"
+    LEGAL_REFS_EVOLVED = "legal_refs_evolved"
+    LABEL_AND_LEGAL_REFS_EVOLVED = "label_and_legal_refs_evolved"
+    REPURPOSED = "repurposed"
+    RETIRED = "retired"
+
+
+CasillaEvolutionKindField = Annotated[
+    CasillaEvolutionKind, BeforeValidator(coerce_enum_member(CasillaEvolutionKind))
+]
+"""Registry token hydrated into a CasillaEvolutionKind member."""
+
+
+class SemanticRoleCardinality(StrEnum):
+    """Whether a semantic role is shared across casillas or deliberately unique."""
+
+    SHARED = "shared"
+    INTENTIONAL_SINGLETON = "intentional_singleton"
+
+
+SemanticRoleCardinalityField = Annotated[
+    SemanticRoleCardinality, BeforeValidator(coerce_enum_member(SemanticRoleCardinality))
+]
+"""Registry token hydrated into a SemanticRoleCardinality member."""
+
+
+class RelationPeriodAlignmentMode(StrEnum):
+    """How a relation lines its source periods up against its target period."""
+
+    PREVIOUS_QUARTER = "previous_quarter"
+    PRIOR_PAGOS_CUMULATIVE = "prior_pagos_cumulative"
+
+
+RelationPeriodAlignmentModeField = Annotated[
+    RelationPeriodAlignmentMode, BeforeValidator(coerce_enum_member(RelationPeriodAlignmentMode))
+]
+"""Registry token hydrated into a RelationPeriodAlignmentMode member."""
+
+
+class RelationSourcePeriodShape(StrEnum):
+    """The shape of the period series a relation draws from."""
+
+    QUARTERS = "quarters"
+    MONTHS = "months"
+    ANNUAL_SUMMARY = "annual_summary"
+
+
+RelationSourcePeriodShapeField = Annotated[
+    RelationSourcePeriodShape, BeforeValidator(coerce_enum_member(RelationSourcePeriodShape))
+]
+"""Registry token hydrated into a RelationSourcePeriodShape member."""
+
+
 class CasillaContinuidadEvolutionDefinition(RegistryModel):
     """Declared cross-revision evolution for one casilla continuity chain."""
 
@@ -61,14 +125,7 @@ class CasillaContinuidadEvolutionDefinition(RegistryModel):
     continuidad_id: ContinuidadId
     from_revision: RevisionId
     to_revision: RevisionId
-    evolution_kind: Literal[
-        "unchanged",
-        "label_evolved",
-        "legal_refs_evolved",
-        "label_and_legal_refs_evolved",
-        "repurposed",
-        "retired",
-    ]
+    evolution_kind: CasillaEvolutionKindField
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
@@ -270,7 +327,7 @@ class CasillaDefinition(RegistryModel):
         ),
     )
     semantic_role: str | None = Field(default=None, min_length=1, max_length=128)
-    semantic_role_cardinality: Literal["shared", "intentional_singleton"] = "shared"
+    semantic_role_cardinality: SemanticRoleCardinalityField = SemanticRoleCardinality.SHARED
     semantic_role_cardinality_reason: str | None = Field(default=None, min_length=1, max_length=256)
     aliases: tuple[CasillaAlias, ...] = ()
     internal_only: bool = Field(
@@ -558,8 +615,8 @@ class RelationPeriodAlignment(RegistryModel):
     validation enforcing the required target and year-offset fields.
     """
 
-    mode: Literal["previous_quarter", "prior_pagos_cumulative"] | None = None
-    source_periods: Literal["quarters", "months", "annual_summary"] | None = None
+    mode: RelationPeriodAlignmentModeField | None = None
+    source_periods: RelationSourcePeriodShapeField | None = None
     source_period_kind: Literal["quarterly"] | None = None
     source_period: FilingPeriodCode | None = None
     target_period: FilingPeriodCode | None = None
