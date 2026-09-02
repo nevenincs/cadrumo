@@ -305,8 +305,9 @@ packaging-smoke-dependencies:
 # contract in it -- including the modules named for the packaging-smoke, Scoop,
 # Homebrew, and Docker workflows the campaign driver (`dev.packaging.campaign`)
 # runs this preflight ahead of -- and still exited zero.
-# The excluded `serial` tests are not dropped silently: the installed-oracle
-# cohort is owned by `packaging-smoke-installed-oracles`, and the serving-path
+# The excluded `serial` tests are not dropped silently: every one of them is
+# owned by `packaging-smoke-serial`, the installed-oracle cohort additionally by
+# the narrower `packaging-smoke-installed-oracles`, and the serving-path
 # benchmark by the `-m perf` lane in `.github/workflows/ci-full.yml`. Guarded by
 # `dev/packaging/tests/test_preflight_recipe_selection.py`.
 [doc('Verify the packaging preflight command contracts (dependency surface, source data, Docker/Scoop/Homebrew workflows).')]
@@ -450,6 +451,20 @@ packaging-build-python-cohort: packaging-smoke-source
 [group('packaging')]
 packaging-smoke-installed-oracles: packaging-build-python-cohort
     @uv run --no-sync pytest -q -n0 -m "integration and serial" dev/packaging/tests/test_installed_oracles.py
+
+# Own the rest of the serial contracts in this directory. The preflight lane
+# selects `not serial` because these must not run concurrently, and the oracle
+# lane above names one module, so without this recipe the remaining serial
+# tests here have no packaging-scoped owner: reaching them means running the
+# tree-wide `test-integration-serial`, and someone verifying packaging alone
+# gets a green result that never touched them. Depends on the cohort because
+# several of these install the built wheels; the ones that do not are
+# unaffected by having it. Guarded by
+# `dev/packaging/tests/test_preflight_recipe_selection.py`.
+[doc('Run the serial packaging contracts the preflight lane excludes.')]
+[group('packaging')]
+packaging-smoke-serial: packaging-build-python-cohort
+    @uv run --no-sync pytest -q -n0 -m "integration and serial" dev/packaging/tests
 
 # Local release-artifact smoke gates that do not need host package-manager access.
 # The campaign driver builds the cohort once and runs the flavor lanes
