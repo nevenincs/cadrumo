@@ -43,6 +43,7 @@ _Reference = Annotated[
 type RegistryClosureLimbName = Literal["temporal_coverage", "source_connectivity", "filing_export"]
 """One independently-derived conjunct of the registry release predicate."""
 
+
 class RegistryClosureLimbOutcomeKind(StrEnum):
     """The result of one closure limb, including an explicitly out-of-scope capability."""
 

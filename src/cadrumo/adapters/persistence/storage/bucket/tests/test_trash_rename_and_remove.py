@@ -29,7 +29,7 @@ from typing import BinaryIO
 import pytest
 
 from ......core.directory_scan import scan_directory
-from ..directory_layout import trash_rename_and_remove
+from ..directory_layout import TreeRemovalErrorPolicy, trash_rename_and_remove
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -83,7 +83,7 @@ def test_rename_succeeds_ignore_policy_also_removes_it(tmp_path: Path) -> None:
     """The "ignore" policy does not change the ordinary success-path outcome."""
     target = _make_target(tmp_path)
 
-    trash_rename_and_remove(target, on_trash_cleanup_error="ignore")
+    trash_rename_and_remove(target, on_trash_cleanup_error=TreeRemovalErrorPolicy.IGNORE)
 
     assert not target.exists()
     assert scan_directory(tmp_path) == ()
@@ -128,7 +128,7 @@ def test_rename_fails_raise_policy_propagates_the_in_place_removal_failure(tmp_p
     held = (target / "payload.txt").open("rb")
     try:
         with pytest.raises(OSError):
-            trash_rename_and_remove(target, on_trash_cleanup_error="raise")
+            trash_rename_and_remove(target, on_trash_cleanup_error=TreeRemovalErrorPolicy.RAISE)
     finally:
         held.close()
         gc.collect()
@@ -143,7 +143,7 @@ def test_rename_fails_ignore_policy_swallows_the_in_place_removal_failure(tmp_pa
     target = _make_target(tmp_path)
     held = (target / "payload.txt").open("rb")
     try:
-        trash_rename_and_remove(target, on_trash_cleanup_error="ignore")  # must not raise
+        trash_rename_and_remove(target, on_trash_cleanup_error=TreeRemovalErrorPolicy.IGNORE)  # must not raise
     finally:
         held.close()
         gc.collect()

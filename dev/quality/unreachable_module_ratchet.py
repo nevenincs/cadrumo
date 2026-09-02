@@ -14,10 +14,10 @@ ships, and nothing is red. :mod:`dev.audit.unreachable_code` walks the import
 graph from the declared entrypoints and reports the whole set; this gate is what
 stops that set from growing while the backlog inside it is worked down.
 
-The baseline is an identity set, not a count. A count ratchet ("no more than N
+The actionable baseline is an identity set, not a count. A count ratchet ("no more than N
 unreachable modules") accepts a swap: retire one module, admit another, and the
 number is undisturbed while the boundary quietly moves. So the baseline names
-every module currently unreached, and the comparison is set equality in both
+every actionable module currently unreached, and the comparison is set equality in both
 directions:
 
 * a module the tree reports that the baseline does not name is a regression --
@@ -25,7 +25,12 @@ directions:
 * a module the baseline names that the tree no longer reports is a stale
   entry -- the debt was paid and the baseline must shrink to record it.
 
-The second direction is what makes the first honest. Without it the baseline
+Some unreachable modules are intentional design-time authorities rather than
+runtime capabilities. They belong in a separately typed, reviewable
+``[[intentional]]`` disposition with an exact kind and rationale. Intentional
+modules remain in the scanner's factual output and must remain reported; the
+verdict carries them separately so they cannot disappear into the actionable
+backlog. The second direction is what makes both lists honest. Without it the baseline
 only accumulates, and a later reader cannot distinguish an accepted exception
 from a line nobody removed.
 
@@ -47,6 +52,7 @@ from __future__ import annotations
 import sys
 import tomllib
 from dataclasses import dataclass
+from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
@@ -67,6 +73,34 @@ _NOT_SCRIPT_REACHED: Final[frozenset[ModuleReach]] = frozenset(
 )
 
 
+class IntentionalReachabilityKind(StrEnum):
+    """Closed reasons an unreached shipped module is intentional."""
+
+    DESIGN_TIME_AUTHORITY = "design_time_authority"
+
+
+@dataclass(frozen=True, slots=True)
+class IntentionalReachabilityDisposition:
+    """A reviewable intentional unreached module disposition."""
+
+    module: str
+    kind: IntentionalReachabilityKind
+    rationale: str
+
+    def __post_init__(self) -> None:
+        if not self.module.strip():
+            raise ValueError("intentional reachability disposition module must be non-empty")
+        if not self.rationale.strip():
+            raise ValueError(f"intentional reachability disposition {self.module!r} needs a rationale")
+
+
+def _string_list(data: object, *, field: str) -> tuple[str, ...]:
+    """Read one non-empty TOML string list without accepting scalar lookalikes."""
+    if not isinstance(data, list) or any(not isinstance(item, str) or not item.strip() for item in data):
+        raise ValueError(f"{field} must be a list of non-empty strings")
+    return tuple(data)
+
+
 @dataclass(frozen=True, slots=True)
 class UnreachableBaseline:
     """The accepted set of shipped modules the entrypoints do not reach.
@@ -77,10 +111,32 @@ class UnreachableBaseline:
         frozen_prefixes: Dotted prefixes wholly outside this gate's scope.
             Modules under one are neither required to be baselined nor
             required to persist.
+        intentional: Explicit, typed dispositions for modules that remain
+            intentionally unreached as design-time authorities. They are
+            visible but do not enter the actionable backlog.
     """
 
     allowed: frozenset[str]
     frozen_prefixes: tuple[str, ...]
+    intentional: tuple[IntentionalReachabilityDisposition, ...] = ()
+
+    def __post_init__(self) -> None:
+        allowed = frozenset(self.allowed)
+        intentional_by_module = {disposition.module: disposition for disposition in self.intentional}
+        if len(intentional_by_module) != len(self.intentional):
+            raise ValueError("intentional reachability dispositions must name each module once")
+        intentional_modules = frozenset(intentional_by_module)
+        overlap = sorted(allowed & intentional_modules)
+        if overlap:
+            raise ValueError(f"allowed and intentional reachability entries overlap: {overlap}")
+        frozen_intentional = sorted(
+            disposition.module for disposition in self.intentional if self.is_frozen(disposition.module)
+        )
+        if frozen_intentional:
+            raise ValueError(f"intentional reachability entries cannot be frozen: {frozen_intentional}")
+        frozen_allowed = sorted(module for module in allowed if self.is_frozen(module))
+        if frozen_allowed:
+            raise ValueError(f"allowed reachability entries cannot be frozen: {frozen_allowed}")
 
     def is_frozen(self, module: str) -> bool:
         """Whether ``module`` falls under a deferred cluster."""
@@ -90,9 +146,35 @@ class UnreachableBaseline:
     def load(cls, path: Path = BASELINE_PATH) -> UnreachableBaseline:
         """Read the committed baseline."""
         data = tomllib.loads(path.read_text(encoding=UTF_8))
+        allowed = _string_list(data.get("allowed", []), field="allowed")
+        frozen_prefixes = _string_list(data.get("frozen_prefixes", []), field="frozen_prefixes")
+        raw_intentional = data.get("intentional", [])
+        if not isinstance(raw_intentional, list):
+            raise ValueError("intentional must be a list of tables")
+        intentional: list[IntentionalReachabilityDisposition] = []
+        for row in raw_intentional:
+            if not isinstance(row, dict):
+                raise ValueError("intentional entries must be tables")
+            module = row.get("module")
+            kind = row.get("kind")
+            rationale = row.get("rationale")
+            if not isinstance(module, str) or not isinstance(kind, str) or not isinstance(rationale, str):
+                raise ValueError("intentional entries require string module, kind, and rationale")
+            try:
+                disposition_kind = IntentionalReachabilityKind(kind)
+            except ValueError as exc:
+                raise ValueError(f"unknown intentional reachability kind: {kind!r}") from exc
+            intentional.append(
+                IntentionalReachabilityDisposition(
+                    module=module,
+                    kind=disposition_kind,
+                    rationale=rationale,
+                )
+            )
         return cls(
-            allowed=frozenset(data.get("allowed", ())),
-            frozen_prefixes=tuple(data.get("frozen_prefixes", ())),
+            allowed=frozenset(allowed),
+            frozen_prefixes=frozen_prefixes,
+            intentional=tuple(intentional),
         )
 
 
@@ -105,16 +187,22 @@ class RatchetVerdict:
         stale: Baselined modules the tree no longer reports.
         frozen: Reported modules under a deferred cluster, carried for
             visibility and excluded from both failure directions.
+        intentional: Typed intentional dispositions currently reported by the
+            scanner, carried separately from actionable entries.
+        stale_intentional: Intentional dispositions whose module the scanner
+            no longer reports and which must be removed or reconsidered.
     """
 
     regressions: tuple[str, ...]
     stale: tuple[str, ...]
     frozen: tuple[str, ...]
+    intentional: tuple[IntentionalReachabilityDisposition, ...] = ()
+    stale_intentional: tuple[IntentionalReachabilityDisposition, ...] = ()
 
     @property
     def is_clean(self) -> bool:
         """True when the unreached set is exactly what the baseline says."""
-        return not self.regressions and not self.stale
+        return not self.regressions and not self.stale and not self.stale_intentional
 
     def report(self) -> str:
         """Human-readable rendering naming every module in every direction."""
@@ -135,6 +223,15 @@ class RatchetVerdict:
                 f"Delete them from {BASELINE_PATH.name} so the baseline records the repair:",
             )
             lines.extend(f"  - {name}" for name in self.stale)
+        if self.stale_intentional:
+            lines.append(
+                f"{len(self.stale_intentional)} intentional reachability disposition(s) the tree no longer reports. "
+                f"Remove or reconsider them in {BASELINE_PATH.name}:",
+            )
+            lines.extend(f"  - {entry.module} ({entry.kind})" for entry in self.stale_intentional)
+        if self.intentional:
+            lines.append(f"{len(self.intentional)} intentional unreached module(s) remain visible:")
+            lines.extend(f"  = {entry.module} ({entry.kind}): {entry.rationale}" for entry in self.intentional)
         if not lines:
             return f"unreachable-module set matches the baseline ({len(self.frozen)} deferred)"
         return "\n".join(lines)
@@ -168,11 +265,15 @@ def evaluate(result: UnreachableCodeResult, baseline: UnreachableBaseline) -> Ra
     reported = unreachable_modules(result)
     frozen = frozenset(name for name in reported if baseline.is_frozen(name))
     live = reported - frozen
-    allowed = frozenset(name for name in baseline.allowed if not baseline.is_frozen(name))
+    intentional_by_module = {disposition.module: disposition for disposition in baseline.intentional}
+    intentional_modules = frozenset(intentional_by_module)
+    allowed = baseline.allowed
     return RatchetVerdict(
-        regressions=tuple(sorted(live - allowed)),
+        regressions=tuple(sorted(live - allowed - intentional_modules)),
         stale=tuple(sorted(allowed - live)),
         frozen=tuple(sorted(frozen)),
+        intentional=tuple(intentional_by_module[name] for name in sorted(live & intentional_modules)),
+        stale_intentional=tuple(intentional_by_module[name] for name in sorted(intentional_modules - live)),
     )
 
 

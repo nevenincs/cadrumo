@@ -159,7 +159,7 @@ def bucket_paths(root: Path, bucket_id: str) -> BucketPaths:
 def trash_rename_and_remove(
     target: Path,
     *,
-    on_trash_cleanup_error: TreeRemovalErrorPolicyValue = "raise",
+    on_trash_cleanup_error: TreeRemovalErrorPolicyValue = TreeRemovalErrorPolicy.RAISE,
 ) -> None:
     """Trash-rename ``target`` then recursively remove it.
 

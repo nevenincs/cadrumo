@@ -5,6 +5,7 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.application.operator_actions.models import DeclaredNextAction
 from cadrumo.application.overview.calendar_models import (
     OverviewAeatSubmissionState,
     OverviewLocalFilingState,
@@ -18,6 +19,7 @@ from ..home_projection import (
     HomeAvailability,
     HomeDeclarationState,
     HomeLedgerReadiness,
+    HomeNextAction,
     HomeProjectionV1,
     HomeSessionPosture,
     HomeZoneState,
@@ -164,4 +166,70 @@ def test_declaration_state_is_closed_and_period_year_must_match() -> None:
             period=Period.from_year_and_code(2026, "3T"),
             name="IVA third quarter",
             state=HomeDeclarationState.NEEDS_REVIEW,
+        )
+
+
+def test_never_captured_aeat_evidence_refuses_an_observed_submission() -> None:
+    agenda = HomeAgendaEntry(
+        modelo="303",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "3T"),
+        due_on=date(2026, 10, 20),
+        period_state=OverviewPeriodState.DUE,
+        local_filing_state=OverviewLocalFilingState.READY_TO_FILE,
+        aeat_submission_state=OverviewAeatSubmissionState.ACCEPTED,
+    )
+    with pytest.raises(ValidationError, match="cannot claim AEAT submission"):
+        HomeProjectionV1(
+            generated_at=_NOW,
+            account=HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Example profile"),
+            actions_state=_AVAILABLE,
+            declarations_state=_AVAILABLE,
+            ledger_state=_AVAILABLE,
+            ledger=HomeLedgerReadiness(entries=0, requiring_review=0, unclassified=0, missing_evidence=0),
+            agenda_state=_AVAILABLE,
+            agenda_evidence_state=HomeZoneState(
+                availability=HomeAvailability.NEVER_CAPTURED,
+                reason_code="aeat.never_captured",
+            ),
+            agenda=(agenda,),
+            messages_state=_AVAILABLE,
+            messages_requiring_attention=0,
+        )
+
+
+def test_non_available_messages_cannot_claim_a_zero_count() -> None:
+    with pytest.raises(ValidationError, match="non-available Messages zone"):
+        HomeProjectionV1(
+            generated_at=_NOW,
+            account=HomeAccountSession(posture=HomeSessionPosture.LOCKED, profile_label="Example profile"),
+            actions_state=_LOCKED,
+            declarations_state=_LOCKED,
+            ledger_state=_LOCKED,
+            agenda_state=_LOCKED,
+            agenda_evidence_state=_LOCKED,
+            messages_state=_LOCKED,
+            messages_requiring_attention=0,
+        )
+
+
+def test_action_preview_requires_contiguous_ranks_and_complete_address() -> None:
+    declared = DeclaredNextAction.model_construct()
+    with pytest.raises(ValidationError, match="complete or absent"):
+        HomeNextAction(rank=0, action=declared, reason_code="declaration.review", modelo="303")
+
+    actions = tuple(HomeNextAction(rank=index + 1, action=declared, reason_code="review") for index in range(2))
+    with pytest.raises(ValidationError, match="contiguous ranks"):
+        HomeProjectionV1(
+            generated_at=_NOW,
+            account=HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Example profile"),
+            actions_state=_AVAILABLE,
+            actions=actions,
+            declarations_state=_AVAILABLE,
+            ledger_state=_AVAILABLE,
+            ledger=HomeLedgerReadiness(entries=0, requiring_review=0, unclassified=0, missing_evidence=0),
+            agenda_state=_AVAILABLE,
+            agenda_evidence_state=_AVAILABLE,
+            messages_state=_AVAILABLE,
+            messages_requiring_attention=0,
         )

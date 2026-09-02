@@ -32,6 +32,8 @@ import pytest
 from ..audit.unreachable_code import EntryPoint, ShippedTreeSpec, scan_unreachable_code
 from ..quality.unreachable_module_ratchet import (
     BASELINE_PATH,
+    IntentionalReachabilityDisposition,
+    IntentionalReachabilityKind,
     UnreachableBaseline,
     evaluate,
     run_gate,
@@ -78,6 +80,25 @@ def test_the_live_shipped_tree_matches_its_committed_baseline() -> None:
     assert verdict.is_clean, verdict.report()
 
 
+def test_address_component_vocabulary_is_a_visible_intentional_design_time_authority() -> None:
+    """The vocabulary remains factual scanner output but not actionable runtime debt."""
+    baseline = UnreachableBaseline.load()
+    expected = IntentionalReachabilityDisposition(
+        module="cadrumo.core.address_components",
+        kind=IntentionalReachabilityKind.DESIGN_TIME_AUTHORITY,
+        rationale=(
+            "Canonical AEAT address-component vocabulary constraining producer-key declarations; "
+            "it deliberately has no runtime transport caller."
+        ),
+    )
+
+    assert expected in baseline.intentional
+    assert expected.module not in baseline.allowed
+    verdict = run_gate()
+    assert expected in verdict.intentional
+    assert expected.module not in verdict.regressions
+
+
 def test_the_committed_baseline_names_only_modules_the_tree_still_reports() -> None:
     """A baseline entry that no longer corresponds to anything is the stale direction.
 
@@ -97,6 +118,7 @@ def test_a_new_unreachable_module_is_reported_as_a_regression(planted: ShippedTr
     verdict = evaluate(result, baseline)
 
     assert "pkg.stranded" in verdict.regressions
+    assert verdict.intentional == ()
     assert not verdict.is_clean
 
 
@@ -128,6 +150,27 @@ def test_a_baselined_module_passes_while_it_remains_unreachable(planted: Shipped
     assert verdict.is_clean, verdict.report()
 
 
+def test_a_listed_intentional_module_passes_but_remains_visible(planted: ShippedTreeSpec) -> None:
+    """An intentional disposition is separate from an allowed actionable backlog entry."""
+    result = scan_unreachable_code(planted)
+    disposition = IntentionalReachabilityDisposition(
+        module="pkg.stranded",
+        kind=IntentionalReachabilityKind.DESIGN_TIME_AUTHORITY,
+        rationale="Synthetic design-time vocabulary authority.",
+    )
+    baseline = UnreachableBaseline(
+        allowed=frozenset({"pkg.deferred", "pkg.deferred.screen"}),
+        frozen_prefixes=(),
+        intentional=(disposition,),
+    )
+
+    verdict = evaluate(result, baseline)
+
+    assert verdict.is_clean, verdict.report()
+    assert verdict.intentional == (disposition,)
+    assert "pkg.stranded" not in verdict.regressions
+
+
 def test_a_paid_down_baseline_entry_is_reported_as_stale(planted: ShippedTreeSpec) -> None:
     """Naming a module the tree no longer reports fails, so the baseline cannot rot."""
     result = scan_unreachable_code(planted)
@@ -142,6 +185,27 @@ def test_a_paid_down_baseline_entry_is_reported_as_stale(planted: ShippedTreeSpe
     assert not verdict.is_clean
 
 
+def test_a_paid_down_intentional_disposition_is_reported_as_stale(planted: ShippedTreeSpec) -> None:
+    """An intentional exception cannot stay after the scanner stops reporting its module."""
+    result = scan_unreachable_code(planted)
+    disposition = IntentionalReachabilityDisposition(
+        module="pkg.already_deleted",
+        kind=IntentionalReachabilityKind.DESIGN_TIME_AUTHORITY,
+        rationale="Synthetic authority that has been retired.",
+    )
+    baseline = UnreachableBaseline(
+        allowed=frozenset({"pkg.stranded", "pkg.deferred", "pkg.deferred.screen"}),
+        frozen_prefixes=(),
+        intentional=(disposition,),
+    )
+
+    verdict = evaluate(result, baseline)
+
+    assert verdict.stale == ()
+    assert verdict.stale_intentional == (disposition,)
+    assert not verdict.is_clean
+
+
 def test_a_frozen_prefix_is_excluded_in_both_directions(planted: ShippedTreeSpec) -> None:
     """A deferred cluster neither has to be baselined nor has to persist.
 
@@ -151,7 +215,7 @@ def test_a_frozen_prefix_is_excluded_in_both_directions(planted: ShippedTreeSpec
     """
     result = scan_unreachable_code(planted)
     baseline = UnreachableBaseline(
-        allowed=frozenset({"pkg.stranded", "pkg.deferred.retired_screen"}),
+        allowed=frozenset({"pkg.stranded"}),
         frozen_prefixes=("pkg.deferred",),
     )
 
@@ -159,6 +223,44 @@ def test_a_frozen_prefix_is_excluded_in_both_directions(planted: ShippedTreeSpec
 
     assert verdict.is_clean, verdict.report()
     assert "pkg.deferred" in verdict.frozen
+
+
+@pytest.mark.parametrize(
+    ("contents", "message"),
+    (
+        (
+            "allowed = []\nfrozen_prefixes = []\n"
+            '[[intentional]]\nmodule = "pkg.stranded"\nkind = "unknown"\nrationale = "reason"\n',
+            "unknown intentional reachability kind",
+        ),
+        (
+            'allowed = ["pkg.stranded"]\nfrozen_prefixes = []\n'
+            '[[intentional]]\nmodule = "pkg.stranded"\n'
+            'kind = "design_time_authority"\nrationale = "reason"\n',
+            "allowed and intentional reachability entries overlap",
+        ),
+        (
+            'allowed = []\nfrozen_prefixes = ["pkg"]\n'
+            '[[intentional]]\nmodule = "pkg.stranded"\n'
+            'kind = "design_time_authority"\nrationale = "reason"\n',
+            "intentional reachability entries cannot be frozen",
+        ),
+        (
+            "allowed = []\nfrozen_prefixes = []\n"
+            '[[intentional]]\nmodule = 1\nkind = "design_time_authority"\nrationale = "reason"\n',
+            "intentional entries require string module, kind, and rationale",
+        ),
+    ),
+)
+def test_malformed_or_overlapping_intentional_dispositions_are_refused(
+    tmp_path: Path, contents: str, message: str
+) -> None:
+    """Configuration must not turn an unreviewed or out-of-scope exception into a pass."""
+    baseline_path = tmp_path / "baseline.toml"
+    baseline_path.write_text(contents, encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        UnreachableBaseline.load(baseline_path)
 
 
 def test_an_unscannable_tree_refuses_rather_than_reporting_clean(tmp_path: Path) -> None:

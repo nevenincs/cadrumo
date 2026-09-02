@@ -7,7 +7,7 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Final
+from typing import Final, cast
 
 import pytest
 
@@ -42,21 +42,26 @@ def _just(*args: str, environment: dict[str, str] | None = None) -> subprocess.C
 def _dump() -> dict[str, object]:
     result = _just("--unstable", "--dump", "--dump-format", "json")
     assert result.returncode == 0, result.stderr
-    document = json.loads(result.stdout)
+    document: object = json.loads(result.stdout)
     assert isinstance(document, dict)
-    recipes = document["recipes"]
+    recipes = cast("dict[str, object]", document)["recipes"]
     assert isinstance(recipes, dict)
-    recipe = recipes[_RECIPE]
+    recipe = cast("dict[str, object]", recipes)[_RECIPE]
     assert isinstance(recipe, dict)
-    return recipe
+    return cast("dict[str, object]", recipe)
 
 
 @pytest.fixture
-def uv_probe(tmp_path: Path) -> tuple[dict[str, str], Path]:
-    """Shadow ``uv`` with a PowerShell probe that records exact received argv."""
-    if shutil.which("pwsh.exe") is None:
+def _pwsh_runtime() -> str:
+    executable = shutil.which("pwsh.exe")
+    if executable is None:
         pytest.skip("the Justfile recipe requires pwsh.exe")
+    return executable
 
+
+@pytest.fixture
+def uv_probe(tmp_path: Path, _pwsh_runtime: str) -> tuple[dict[str, str], Path]:
+    """Shadow ``uv`` with a PowerShell probe that records exact received argv."""
     probe = tmp_path / "probe.ps1"
     probe.write_text(
         """param([Parameter(ValueFromRemainingArguments=$true)][string[]]$Remaining)
@@ -133,8 +138,13 @@ def test_no_argument_show_and_dry_run_contain_no_apply_authority() -> None:
     dry_run = _just("--dry-run", _RECIPE)
 
     assert shown.returncode == dry_run.returncode == 0
-    for rendered in (shown.stdout, dry_run.stdout):
-        assert "dev.quality.object_name_declustering @args" in rendered
+    assert "dev.quality.object_name_declustering @args" in shown.stdout
+    assert dry_run.stdout == ""
+    assert dry_run.stderr.splitlines() == [
+        "& uv run --no-sync python -m dev.quality.object_name_declustering @args",
+        "exit $LASTEXITCODE",
+    ]
+    for rendered in (shown.stdout, dry_run.stderr):
         assert " apply" not in rendered
         assert "--receipt" not in rendered
         assert "--receipt-id" not in rendered
@@ -206,7 +216,10 @@ def test_recipe_propagates_the_powershell_child_exit_code(
         "mode$(Write-Output-injected)",
     ],
 )
-def test_invalid_mode_metacharacters_remain_one_argv_and_propagate_exit_two(invalid_mode: str) -> None:
+def test_invalid_mode_metacharacters_remain_one_argv_and_propagate_exit_two(
+    invalid_mode: str,
+    _pwsh_runtime: str,
+) -> None:
     result = _just(_RECIPE, invalid_mode)
 
     assert result.returncode == 2
@@ -215,14 +228,17 @@ def test_invalid_mode_metacharacters_remain_one_argv_and_propagate_exit_two(inva
     assert "injected\n" not in result.stdout
 
 
-def test_missing_s19_manifest_makes_real_no_argument_invocation_fail_closed() -> None:
-    manifest = _REPOSITORY_ROOT / "dev/quality/object_name_rename_manifest.toml"
-    assert not manifest.exists(), "S19 now owns the successful no-argument rehearsal proof"
-    before = manifest.exists()
+def test_explicit_nonexistent_manifest_makes_real_rehearsal_fail_closed(
+    tmp_path: Path,
+    _pwsh_runtime: str,
+) -> None:
+    relative_manifest = Path("dev/quality/tests") / f"missing-{tmp_path.name}.toml"
+    manifest = _REPOSITORY_ROOT / relative_manifest
+    assert not manifest.exists()
 
-    result = _just(_RECIPE)
+    result = _just(_RECIPE, "rehearse", "--manifest", relative_manifest.as_posix())
 
     assert result.returncode == 2
     assert result.stdout == ""
     assert "manifest path is not a regular file" in result.stderr
-    assert manifest.exists() is before
+    assert not manifest.exists()

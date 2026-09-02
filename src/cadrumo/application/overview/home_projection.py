@@ -210,6 +210,15 @@ class HomeProjectionV1(BaseModel):
         due_dates = tuple(item.due_on for item in self.agenda)
         if due_dates != tuple(sorted(due_dates)):
             raise ValueError("Home agenda entries must be chronological")
+        evidence_unobserved = self.agenda_evidence_state.availability in {
+            HomeAvailability.LOCKED,
+            HomeAvailability.NEVER_CAPTURED,
+            HomeAvailability.UNAVAILABLE,
+        }
+        if evidence_unobserved and any(
+            item.aeat_submission_state is not OverviewAeatSubmissionState.NOT_OBSERVED for item in self.agenda
+        ):
+            raise ValueError("agenda entries cannot claim AEAT submission when AEAT evidence is not observable")
         return self
 
 
