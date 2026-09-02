@@ -49,7 +49,7 @@ from .authority import ValidatedRegistryAuthority
 from .ids import ModeloId, RevisionId
 from .record_design_coverage import calculation_closure_casilla_ids
 from .schema import ModeloDefinition, ModeloRevision
-from .schema_base import CalculationClass, EvidenceTier
+from .schema_base import CalculationClass, EvidenceTierField
 from .schema_surfaces import CasillaContinuidadEvolutionDefinition
 
 __all__ = [
@@ -172,7 +172,7 @@ class ModeloPortalCompatibilityRef(BaseModel):
 
     id: str
     surface: str
-    evidence_tier: EvidenceTier
+    evidence_tier: EvidenceTierField
 
 
 class ModeloEntry(BaseModel):

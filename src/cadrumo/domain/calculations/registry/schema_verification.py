@@ -70,7 +70,7 @@ from .ids import (
     WorkbookOutputId,
     WorkbookParityRefId,
 )
-from .schema_base import EvidenceTier, LegalRefs, RegistryModel, SourceRefs
+from .schema_base import EvidenceTierField, LegalRefs, RegistryModel, SourceRefs
 from .schema_scalars import DecimalValue, WorkbookCellRefStr
 
 __all__ = [
@@ -157,7 +157,7 @@ class LiveCrossReferenceDecision(RegistryModel):
     """Declare a resolved live cross-reference and its supporting evidence."""
 
     id: CrossReferenceId
-    evidence_tier: EvidenceTier
+    evidence_tier: EvidenceTierField
     surface: Literal[
         "open_simulator",
         "integration_test_service",

@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Annotated, Final, Literal
 
-from pydantic import AfterValidator, AnyHttpUrl, Field, TypeAdapter, field_validator, model_validator
+from pydantic import AfterValidator, AnyHttpUrl, BeforeValidator, Field, TypeAdapter, field_validator, model_validator
 
 from ....core.external_constants import (
     PDF_EXTENSION,
@@ -24,8 +24,10 @@ from .schema_base import (
     DateAxis,
     DesignAuthority,
     EvidenceTier,
+    EvidenceTierField,
     LegalRefs,
     RegistryModel,
+    coerce_enum_member,
     RevisionReviewStatusField,
 )
 
@@ -198,7 +200,9 @@ class LegalReference(RegistryModel):
     """Legal-authority citation row carried by registry definitions."""
 
     id: LegalRefId
-    evidence_tier: Literal["legal_authority"]
+    evidence_tier: Annotated[
+        Literal[EvidenceTier.LEGAL_AUTHORITY], BeforeValidator(coerce_enum_member(EvidenceTier))
+    ]
     authority: Literal["boe", "aeat", "eu", "autonomous_community", "other"]
     kind: Literal[
         "ley",
@@ -323,7 +327,7 @@ class SourceReference(RegistryModel):
     """Official-source evidence row with bundled-corpus integrity metadata."""
 
     id: SourceRefId
-    evidence_tier: EvidenceTier
+    evidence_tier: EvidenceTierField
     authority: Literal["aeat", "boe", "eu", "autonomous_community", "other"]
     kind: Literal[
         "record_design",
@@ -486,7 +490,9 @@ class LegalParameter(RegistryModel):
     """Versioned legal parameter value cited by registry formulas."""
 
     id: ParameterId
-    evidence_tier: Literal["legal_authority"]
+    evidence_tier: Annotated[
+        Literal[EvidenceTier.LEGAL_AUTHORITY], BeforeValidator(coerce_enum_member(EvidenceTier))
+    ]
     value: str
     unit: str
     applies_to: str
