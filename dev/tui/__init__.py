@@ -14,7 +14,3 @@ the TUI. The renderer drives that in-boundary harness as a subprocess and
 rasterises what it writes, and the inventory reads the source tree as text
 rather than importing it.
 """
-
-from __future__ import annotations
-
-__all__: list[str] = []
