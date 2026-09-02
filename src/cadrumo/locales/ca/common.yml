@@ -752,10 +752,6 @@ review:
         del backend segur.
       invoices_load_failed: No s'han pogut carregar les factures de l'adaptador.
       transactions_load_failed: No s'han pogut carregar les transaccions de l'adaptador.
-  edit:
-    errors:
-      parse_failed: No s'ha pogut interpretar el token d'edició. El valor indicat
-        s'ha ocultat.
   filing:
     draft_placeholder_summary: Esborrany pendent
     finding_summary: Incidència detectada a l'esborrany

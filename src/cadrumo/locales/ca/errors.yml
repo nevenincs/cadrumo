@@ -1101,8 +1101,6 @@ errors:
       58/2003, LGT art. 66 i 70). La data més primerenca d''esborrament segur és %{earliest_safe_erase_date}.
       Espereu fins aleshores o torneu a executar amb --override-retention i --reason
       per forçar-ho.'
-    refused_review_edit_parse: No s'ha pogut interpretar `--set CLAU=VALOR`. Comprova
-      la sintaxi del valor indicat.
     refused_review_filter_parse: No s'ha pogut interpretar `--filter CLAU=VALOR`.
       Comprova la sintaxi del filtre indicat.
     refused_review_kind_reserved: El valor de `--kind` indicat està reservat i no

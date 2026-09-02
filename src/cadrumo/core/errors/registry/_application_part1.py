@@ -458,16 +458,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.review.errors.EditParseError",
-        ErrorCode(
-            code="REFUSED_REVIEW_EDIT_PARSE",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_review_edit_parse",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.workflow.errors.BootstrapAlreadyCompleteError",
         ErrorCode(
             code="REFUSED_BOOTSTRAP_ALREADY_COMPLETE",

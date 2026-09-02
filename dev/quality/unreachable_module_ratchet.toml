@@ -60,7 +60,6 @@ allowed = [
   "cadrumo.adapters.persistence.profile.filing_export_replay",  # unreachable
   "cadrumo.adapters.persistence.profile.fincas",  # unreachable
   "cadrumo.application.inventory._source_readiness",  # unreachable
-  "cadrumo.application.invoices._projection",  # unreachable
   "cadrumo.application.invoices._reconciliation",  # unreachable
   "cadrumo.application.ledger.aeat_record_projection",  # unreachable
   "cadrumo.application.modelo._edit_facade",  # unreachable
@@ -70,8 +69,6 @@ allowed = [
   "cadrumo.application.operator_surface.crud_registry",  # unreachable
   "cadrumo.application.prorrata_register.sector_lifecycle",  # unreachable
   "cadrumo.application.prorrata_register.seed",  # unreachable
-  "cadrumo.application.review._edit",  # unreachable
-  "cadrumo.application.review.actions",  # unreachable
   "cadrumo.application.storage.calc_sheets._row_set_assembly",  # unreachable
   "cadrumo.application.storage.calc_sheets.evidence",  # unreachable
   "cadrumo.application.user_profile.acquisition_sources",  # module-exec-only

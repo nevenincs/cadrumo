@@ -2,9 +2,6 @@
 
 - The wizard catalogue materializes bounded dynamic choice translation
   keys in its runtime descriptors.
-- Google API response TypedDicts (``GoogleDriveFile``,
-  ``GoogleSheetsRange``, ``GoogleSpreadsheet``) are importable from
-  ``_api``.
 - ``OAuthClientPayload`` TypedDict and ``_OAuthClientWrapper`` pydantic
   model validate the Cloud Console Desktop envelope.
 - Orphan namespace ``__init__`` modules carry intent documentation.
@@ -13,14 +10,11 @@ See Also:
     :mod:`~application.wizard`
         Wizard descriptor package whose bounded dynamic locale keys are
         materialized at runtime.
-    :mod:`~adapters.outbound.google`
-        Public Google outbound adapter surface that re-exports response
-        TypedDict contracts.
     :class:`~entrypoints.cli.OAuthClientPayload`
         CLI Google OAuth payload boundary validated from Cloud Console JSON.
 
 These locale and typed-boundary contracts group the wizard's dynamic-key
-materialization with the Google payload boundaries it shares.
+materialization with the OAuth payload boundary it shares.
 """
 
 from __future__ import annotations

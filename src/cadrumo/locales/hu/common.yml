@@ -746,10 +746,6 @@ review:
         sikertelen.
       transactions_load_failed: A tranzakciókatalógus betöltése a biztonságos háttértárból
         sikertelen.
-  edit:
-    errors:
-      parse_failed: A szerkesztési token nem értelmezhető. A megadott érték el lett
-        rejtve.
   filing:
     draft_placeholder_summary: Tervezet függőben
     finding_summary: Érvényesítési megállapítás a tervezeten
