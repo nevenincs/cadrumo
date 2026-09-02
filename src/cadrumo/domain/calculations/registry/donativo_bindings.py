@@ -189,12 +189,16 @@ def resolve_donativo_binding_row_values(
     rows = _build_donativo_rows(available)
     resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     for binding, selector in members:
-        assert selector.row_field is not None
+        row_field = selector.row_field
+        if row_field is None:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key",
+            )
         for row_index, row in enumerate(rows, start=1):
-            value = row.get(selector.row_field)
+            value = row.get(row_field)
             if value is None:
                 raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {selector.row_field!r} not produced for donativo rows",
+                    f"binding {binding.id!r} row_field {row_field!r} not produced for donativo rows",
                 )
             resolved[(binding.id, row_index)] = value
     return resolved

@@ -750,8 +750,12 @@ def resolve_withholding_binding_row_values(
         selector = _validated_withholding_selector(binding)
         if selector.fact != "row_field":
             continue
-        assert selector.grouping is not None
-        cohort_key = (selector.grouping, tuple(sorted(selector.claves)))
+        grouping = selector.grouping
+        if grouping is None:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key",
+            )
+        cohort_key = (grouping, tuple(sorted(selector.claves)))
         cohorts.setdefault(cohort_key, []).append((binding, selector))
     for cohort_key, members in cohorts.items():
         grouping = cohort_key[0]
@@ -762,12 +766,16 @@ def resolve_withholding_binding_row_values(
 
         rows = build_withholding_rows(grouping, scope_filtered, required_fields=required_fields)
         for binding, selector in members:
-            assert selector.row_field is not None
+            row_field = selector.row_field
+            if row_field is None:
+                raise RegistryValidationError(
+                    f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key",
+                )
             for row_index, row in enumerate(rows, start=1):
-                value = row.get(selector.row_field)
+                value = row.get(row_field)
                 if value is None:
                     raise RegistryValidationError(
-                        f"binding {binding.id!r} row_field {selector.row_field!r} not produced "
+                        f"binding {binding.id!r} row_field {row_field!r} not produced "
                         f"for grouping {grouping!r}",
                     )
                 resolved[(binding.id, row_index)] = value

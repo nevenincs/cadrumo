@@ -622,11 +622,15 @@ def resolve_invoice_family_row_values(
         selector = validate_selector(binding)
         if selector.fact != "row_field":
             continue
-        assert selector.grouping is not None  # guarded by validator
+        grouping = selector.grouping
+        if grouping is None:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key",
+            )
         cohort_source = binding.source if cohort_by_source else None
         cohort_key = (
             cohort_source,
-            selector.grouping,
+            grouping,
             selector.rectification_scope,
             tuple(sorted(selector.claves)),
             selector.iva_regime,
@@ -635,7 +639,10 @@ def resolve_invoice_family_row_values(
     for members in cohorts.values():
         sample_binding, sample_selector = members[0]
         grouping = sample_selector.grouping
-        assert grouping is not None
+        if grouping is None:
+            raise RegistryValidationError(
+                f"binding {sample_binding.id!r} row cohort carries no 'grouping' selector key",
+            )
         scope_filtered = tuple(
             _filter_invoice_observations(observations_for_binding(sample_binding), sample_selector),
         )
@@ -645,12 +652,16 @@ def resolve_invoice_family_row_values(
             m347_threshold_filter=_m347_row_family_threshold_filter,
         )
         for binding, selector in members:
-            assert selector.row_field is not None  # guarded by validator
+            row_field = selector.row_field
+            if row_field is None:
+                raise RegistryValidationError(
+                    f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key",
+                )
             for row_index, row in enumerate(rows, start=1):
-                value = row.get(selector.row_field)
+                value = row.get(row_field)
                 if value is None:
                     raise RegistryValidationError(
-                        f"binding {binding.id!r} row_field {selector.row_field!r} not produced "
+                        f"binding {binding.id!r} row_field {row_field!r} not produced "
                         f"for grouping {grouping!r}",
                     )
                 resolved[(binding.id, row_index)] = value
@@ -903,7 +914,10 @@ def _aggregate_invoice_binding(
             if not observation.is_rectification:
                 raise RegistryValidationError(f"binding {binding.id!r} requires rectification observations only")
             previous = observation.rectified_base_previous
-            assert previous is not None  # guaranteed by InvoiceObservation validator
+            if previous is None:
+                raise RegistryValidationError(
+                    f"binding {binding.id!r} rectification observation declares no rectified base to compare",
+                )
             total += observation.base_amount - previous
         return total
     raise RegistryValidationError(f"binding {binding.id!r} declares unsupported invoice fact {selector.fact!r}")

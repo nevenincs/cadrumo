@@ -197,17 +197,17 @@ class _BindingExportProjection(BaseModel):
                 data_type=self.data_type,
             )
 
-        fixed_values = (self.offset, self.length, self.data_type)
+        offset = self.offset
+        length = self.length
+        data_type = self.data_type
+        fixed_values = (offset, length, data_type)
         fixed_count = sum(value is not None for value in fixed_values)
-        if fixed_count == len(fixed_values):
-            assert self.offset is not None
-            assert self.length is not None
-            assert self.data_type is not None
+        if offset is not None and length is not None and data_type is not None:
             return BindingFixedExportSelector(
                 record=self.record,
-                offset=self.offset,
-                length=self.length,
-                data_type=self.data_type,
+                offset=offset,
+                length=length,
+                data_type=data_type,
                 decimals=self.decimals,
                 field=self.field,
                 signed=bool(self.signed),
@@ -404,14 +404,19 @@ def manual_input_record_field_selector(
     # ManualInputSelector._validate_manual_input_shape already proved that a
     # non-None record implies field/offset/length are all non-None too -- the
     # record-field shape's four keys are required together.
-    assert selector.field is not None
-    assert selector.offset is not None
-    assert selector.length is not None
+    field = selector.field
+    offset = selector.offset
+    length = selector.length
+    if field is None or offset is None or length is None:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} manual_input selector names a record without its "
+            "field, offset and length; the record-field shape requires all four keys together",
+        )
     return ManualInputRecordFieldSelector(
         record=selector.record,
-        field=selector.field,
-        offset=selector.offset,
-        length=selector.length,
+        field=field,
+        offset=offset,
+        length=length,
         decimals=selector.decimals,
     )
 

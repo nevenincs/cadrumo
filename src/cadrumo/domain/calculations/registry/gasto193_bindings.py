@@ -134,19 +134,20 @@ def _build_gasto193_rows(
     observations: tuple[Gasto193Observation, ...],
 ) -> tuple[Mapping[str, Decimal | str], ...]:
     accum: dict[str, dict[str, Decimal | str]] = {}
+    importe_gastos: dict[str, Decimal] = {}
     for observation in observations:
         identity: dict[str, Decimal | str] = {
             "contributor_tax_id": observation.contributor_tax_id,
             "contributor_legal_name": observation.contributor_legal_name,
-            "importe_gastos": Decimal("0"),
         }
         if observation.representative_tax_id is not None:
             identity["representative_tax_id"] = observation.representative_tax_id
-        bucket = accum.setdefault(observation.contributor_tax_id, identity)
-        previous = bucket["importe_gastos"]
-        assert isinstance(previous, Decimal)
-        bucket["importe_gastos"] = previous + observation.importe_gastos
-    return tuple(accum[key] for key in sorted(accum.keys()))
+        contributor_tax_id = observation.contributor_tax_id
+        accum.setdefault(contributor_tax_id, identity)
+        importe_gastos[contributor_tax_id] = (
+            importe_gastos.get(contributor_tax_id, Decimal("0")) + observation.importe_gastos
+        )
+    return tuple({**accum[key], "importe_gastos": importe_gastos[key]} for key in sorted(accum.keys()))
 
 
 def resolve_gasto193_binding_row_values(
@@ -167,14 +168,18 @@ def resolve_gasto193_binding_row_values(
         selector = _gasto193_selector(binding)
         if selector.fact != "row_field":
             continue
-        assert selector.row_field is not None
+        row_field = selector.row_field
+        if row_field is None:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key",
+            )
         for row_index, row in enumerate(rows, start=1):
-            value = row.get(selector.row_field)
-            if value is None and selector.row_field == "representative_tax_id":
+            value = row.get(row_field)
+            if value is None and row_field == "representative_tax_id":
                 value = " " * 9
             if value is None:
                 raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {selector.row_field!r} not produced "
+                    f"binding {binding.id!r} row_field {row_field!r} not produced "
                     f"for gasto193 row {row_index}",
                 )
             resolved[(str(binding.id), row_index)] = value

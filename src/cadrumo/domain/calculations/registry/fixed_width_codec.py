@@ -408,12 +408,12 @@ def pad_fixed_width_text(
 
 def _validate_signed_shape(field: _ExportField) -> None:
     """Refuse a signed declaration the fixed-width sign marker cannot carry."""
-    assert field.length is not None
+    length = _require_length(field)
     if field.data_type != "money":
         raise RegistryValidationError(
             f"export field {field.id!r} can declare signed only for money data",
         )
-    if field.length < 2:
+    if length < 2:
         raise RegistryValidationError(f"signed export field {field.id!r} requires at least two bytes")
     if field.padding is not ExportPadding.LEFT_ZERO or field.justification is not ExportJustification.RIGHT:
         raise RegistryValidationError(
@@ -425,6 +425,13 @@ def _require_decimals(field: _ExportField) -> int:
     if field.decimals is None:
         raise RegistryValidationError(f"decimal export field {field.id!r} must declare decimals")
     return field.decimals
+
+
+def _require_length(field: _ExportField) -> int:
+    """Return the field's declared byte length, refusing a slot that declares none."""
+    if field.length is None:
+        raise RegistryValidationError(f"export field {field.id!r} must declare length")
+    return field.length
 
 
 def _render_typed_value(field: _ExportField, value: object) -> str:
@@ -566,16 +573,16 @@ def _render_fractional_digits(field: _ExportField, value: object) -> str:
     figure while leaving a structurally valid record behind, which is precisely
     the failure a fixed-width export must never produce silently.
     """
-    assert field.length is not None
+    length = _require_length(field)
     number = _coerce_numeric(field, value)
     fraction = number - number.to_integral_value(rounding=ROUND_DOWN)
-    scaled = fraction * (Decimal(10) ** field.length)
+    scaled = fraction * (Decimal(10) ** length)
     if scaled != scaled.to_integral_value():
         raise RegistryValidationError(
-            f"export field {field.id!r} cannot represent {field.length} fractional digits "
+            f"export field {field.id!r} cannot represent {length} fractional digits "
             f"of a value carrying more precision",
         )
-    return str(int(scaled)).rjust(field.length, "0")
+    return str(int(scaled)).rjust(length, "0")
 
 
 def _render_scaled_numeric(field: _ExportField, value: object, *, scale: int) -> str:
@@ -591,13 +598,13 @@ def _render_money(field: _ExportField, value: object) -> str:
 
 
 def _render_numeric_digits(field: _ExportField, digits: str, *, negative: bool) -> str:
-    assert field.length is not None
+    length = _require_length(field)
     if negative and not field.signed:
         raise RegistryValidationError(f"unsigned export field {field.id!r} cannot render a negative value")
     if field.signed:
-        magnitude_width = field.length - 1
+        magnitude_width = length - 1
         if len(digits) > magnitude_width:
-            raise RegistryValidationError(f"export field {field.id!r} value exceeds length {field.length}")
+            raise RegistryValidationError(f"export field {field.id!r} value exceeds length {length}")
         return ("N" if negative else " ") + digits.rjust(magnitude_width, "0")
     return _pad(field, digits)
 
@@ -646,11 +653,11 @@ def _render_boolean(value: object) -> str:
 
 
 def _pad(field: _ExportField, value: str) -> str:
-    assert field.length is not None
+    length = _require_length(field)
     try:
         return pad_fixed_width_text(
             value,
-            length=field.length,
+            length=length,
             padding=field.padding,
             justification=field.justification,
         )

@@ -46,6 +46,16 @@ __all__ = [
 ]
 
 
+def _required_detail_record_row_field[RowFieldT](
+    binding: DataBindingDefinition,
+    row_field: RowFieldT | None,
+) -> RowFieldT:
+    """Return the selector row field, refusing a detail-record binding that names none."""
+    if row_field is None:
+        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key")
+    return row_field
+
+
 def _validate_detail_record_row_field(
     binding: DataBindingDefinition,
     selector_fact: object,
@@ -214,12 +224,12 @@ def resolve_related_party_binding_row_values(
     rows = _build_related_party_rows(available)
     resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     for binding, selector in members:
-        assert selector.row_field is not None
+        row_field = _required_detail_record_row_field(binding, selector.row_field)
         for row_index, row in enumerate(rows, start=1):
-            value = row.get(selector.row_field)
+            value = row.get(row_field)
             if value is None:
                 raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {selector.row_field!r} not produced for related-party rows",
+                    f"binding {binding.id!r} row_field {row_field!r} not produced for related-party rows",
                 )
             resolved[(binding.id, row_index)] = value
     return resolved
@@ -230,9 +240,10 @@ def _build_related_party_rows(
 ) -> tuple[Mapping[str, Decimal | str], ...]:
     """Group related-party observations by (party, country, kind, method) summing amounts."""
     accum: dict[tuple[str, str, str, str], dict[str, Decimal | str]] = {}
+    amounts: dict[tuple[str, str, str, str], Decimal] = {}
     for obs in observations:
         key = (obs.country_code, obs.counterparty_tax_id, obs.operation_kind_code, obs.transfer_pricing_method_code)
-        bucket = accum.setdefault(
+        accum.setdefault(
             key,
             {
                 "country_code": obs.country_code,
@@ -240,13 +251,10 @@ def _build_related_party_rows(
                 "counterparty_legal_name": obs.counterparty_legal_name,
                 "operation_kind_code": obs.operation_kind_code,
                 "transfer_pricing_method_code": obs.transfer_pricing_method_code,
-                "amount": Decimal("0"),
             },
         )
-        prev = bucket["amount"]
-        assert isinstance(prev, Decimal)
-        bucket["amount"] = prev + obs.amount
-    return tuple(accum[key] for key in sorted(accum.keys()))
+        amounts[key] = amounts.get(key, Decimal("0")) + obs.amount
+    return tuple({**accum[key], "amount": amounts[key]} for key in sorted(accum.keys()))
 
 
 # ---------------------------------------------------------------------------
@@ -381,12 +389,12 @@ def resolve_foreign_asset_binding_row_values(
     rows = _build_foreign_asset_rows(filtered)
     resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     for binding, selector in members:
-        assert selector.row_field is not None
+        row_field = _required_detail_record_row_field(binding, selector.row_field)
         for row_index, row in enumerate(rows, start=1):
-            value = row.get(selector.row_field)
+            value = row.get(row_field)
             if value is None:
                 raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {selector.row_field!r} not produced for foreign-asset rows",
+                    f"binding {binding.id!r} row_field {row_field!r} not produced for foreign-asset rows",
                 )
             resolved[(binding.id, row_index)] = value
     return resolved
@@ -600,13 +608,13 @@ def resolve_atribucion_binding_row_values(
     )
     resolved: dict[tuple[BindingId, int], Decimal | str | int | bool] = {}
     for binding, selector in members:
-        assert selector.row_field is not None
+        row_field = _required_detail_record_row_field(binding, selector.row_field)
         for row_index, row in enumerate(rows, start=1):
-            if selector.row_field not in row:
+            if row_field not in row:
                 raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {selector.row_field!r} not produced for atribucion rows",
+                    f"binding {binding.id!r} row_field {row_field!r} not produced for atribucion rows",
                 )
-            value = row[selector.row_field]
+            value = row[row_field]
             # A clave/subclave-conditional field is legitimately absent for a
             # row whose declared clave does not license it (e.g.
             # naturaleza_inmueble on a clave-D row) -- not a "not produced"
@@ -737,12 +745,12 @@ def resolve_refund_binding_row_values(
     )
     resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     for binding, selector in members:
-        assert selector.row_field is not None
+        row_field = _required_detail_record_row_field(binding, selector.row_field)
         for row_index, row in enumerate(rows, start=1):
-            value = row.get(selector.row_field)
+            value = row.get(row_field)
             if value is None:
                 raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {selector.row_field!r} not produced for refund rows",
+                    f"binding {binding.id!r} row_field {row_field!r} not produced for refund rows",
                 )
             resolved[(binding.id, row_index)] = value
     return resolved
