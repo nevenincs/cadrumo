@@ -19,6 +19,7 @@ import pytest
 
 from ......application.modelo.edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
 from ......application.modelo.edit_session import ModeloEditSession, open_modelo_edit_session
+from ......application.modelo.operation_definitions import ModeloEditApply349OperadorRowV1
 from ......application.modelo.work_addressing import ModeloExactWorkUnitTarget
 from ......application.modelo.workspace_models import ModeloWorkspaceExactWorkUnitTargetV1
 from ......application.operations.registry import OperationSchemaIdentityV1
@@ -274,10 +275,13 @@ def test_a_staged_row_reaches_the_operation_payload_with_its_components_intact()
     assert len(address.identity_components) > 1, (
         "a single-component key would not exercise the join, and this row's key is compound"
     )
-    assert staged[0].row is not None, "an update intent must carry its row"
-    assert staged[0].row.nif_comunitario == "DE123456789"
+    row = staged[0].row
+    assert isinstance(row, ModeloEditApply349OperadorRowV1), (
+        "an update intent must carry its row, and this one staged an operador row"
+    )
+    assert row.nif_comunitario == "DE123456789"
     # The amount crosses as characters, exactly as the scalar path does.
-    assert staged[0].row.importe == "100.00"
+    assert row.importe == "100.00"
 
 
 def test_a_removal_reaches_the_payload_addressed_but_carrying_no_row() -> None:

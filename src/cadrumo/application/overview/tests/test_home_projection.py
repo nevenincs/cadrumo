@@ -17,6 +17,7 @@ from ..home import (
     HomeAccountSession,
     HomeAgendaEntry,
     HomeAvailability,
+    HomeDeclarationResume,
     HomeDeclarationState,
     HomeLedgerReadiness,
     HomeNextAction,
@@ -157,8 +158,6 @@ def test_agenda_requires_chronological_order_and_preview_bound() -> None:
 def test_declaration_state_is_closed_and_period_year_must_match() -> None:
     assert HomeDeclarationState.NEEDS_REVIEW.value == "needs_review"
     with pytest.raises(ValidationError, match="filing_year must match"):
-        from cadrumo.application.overview.home_projection import HomeDeclarationResume
-
         HomeDeclarationResume(
             work_unit_id="a" * 64,
             modelo="303",

@@ -10,6 +10,8 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
+import subprocess
 import sys
 from collections import defaultdict
 from collections.abc import Callable
@@ -27,9 +29,9 @@ from ..pipeline._record_design_ir import intermediate_anchor_key, load_record_de
 from ..pipeline._semantic_map import semantic_anchor_key
 from ..pipeline._semantic_map_loader import load_semantic_map
 
-_RESTORED_MARKER = "Semantic payload reviewed from pinned repository commit"
 _QUALIFIED_RESTORATION = "DP200018:00588"
 _REVISION_ROOT = Path("src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024")
+_RESTORATION_COMMITS = ("c930a14cf9", "075ed0294b", "9a3e6f05bb", "0be4f4cd2f")
 
 
 class AuditDisposition(StrEnum):
@@ -62,14 +64,21 @@ class RestoredSemanticAudit:
     official_description: str
     template: str
     path: str
+    source_ref: str
+    source_sha256: str
     disposition: AuditDisposition
     reason: str
     current: SemanticPayload
     proposed: SemanticPayload | None = None
 
 
-def audit_bundled_restorations() -> tuple[RestoredSemanticAudit, ...]:
-    """Audit every restoration marker plus the reviewed DP200018 identity."""
+def audit_bundled_restorations(
+    *,
+    canonical_restoration_root: Path | None = None,
+) -> tuple[RestoredSemanticAudit, ...]:
+    """Audit the pinned pre-canonical candidate set against current peers."""
+    if canonical_restoration_root is not None and any(canonical_restoration_root.iterdir()):
+        raise ValueError("pre-canonical audit root must be empty")
     registry_root = bundled_path("registry", "aeat")
     modelo = load_modelo_directory(registry_root / "modelos" / "200")
     revision = modelo.revisions["2024"]
@@ -83,39 +92,47 @@ def audit_bundled_restorations() -> tuple[RestoredSemanticAudit, ...]:
     )
     semantic_map = load_semantic_map(Path(__file__).parents[1] / "mappings" / "modelo_200" / "2024")
     declarations = {str(item.id): item for item in revision.casillas}
-    restored_paths = _restored_paths(bundled_path().parents[2])
-    rows: list[tuple[str, str, str, CasillaDefinition]] = []
+    candidates = _candidate_payloads()
+    candidate_ids = frozenset(candidates)
     fields = {intermediate_anchor_key(field): field for sheet in design.sheets for field in sheet.fields}
+
+    candidate_rows: list[tuple[str, str, str, str, Path, SemanticPayload]] = []
+    for entry in semantic_map.entries:
+        if entry.casilla_id is None:
+            continue
+        field = fields[semantic_anchor_key(entry.anchor)]
+        printed = _printed_number(field.normalized_description)
+        if printed is None:
+            continue
+        qualified = f"{field.record_identity}:{printed}"
+        candidate_id = qualified if qualified in candidates else printed
+        candidate = candidates.get(candidate_id)
+        if candidate is not None:
+            path, payload = candidate
+            candidate_rows.append(
+                (
+                    str(entry.export_field_id),
+                    field.normalized_description,
+                    _template(field.normalized_description),
+                    candidate_id,
+                    path,
+                    payload,
+                )
+            )
+
+    peer_payloads: dict[str, set[SemanticPayload]] = defaultdict(set)
     for entry in semantic_map.entries:
         if entry.casilla_id is None:
             continue
         declaration = _resolve_declaration(str(entry.casilla_id), declarations)
-        if declaration is None:
+        if declaration is None or str(declaration.id) in candidate_ids:
             continue
         field = fields[semantic_anchor_key(entry.anchor)]
-        rows.append(
-            (
-                str(entry.export_field_id),
-                field.normalized_description,
-                _template(field.normalized_description),
-                declaration,
-            )
-        )
-
-    restored_ids = set(restored_paths) | {_QUALIFIED_RESTORATION}
-    peer_payloads: dict[str, set[SemanticPayload]] = defaultdict(set)
-    for _export_id, _description, template, declaration in rows:
-        if str(declaration.id) not in restored_ids:
-            peer_payloads[template].add(_payload(declaration))
+        peer_payloads[_template(field.normalized_description)].add(_payload(declaration))
 
     audits: list[RestoredSemanticAudit] = []
-    for export_id, description, template, declaration in rows:
-        declaration_id = str(declaration.id)
-        if declaration_id not in restored_ids:
-            continue
-        path = restored_paths.get(declaration_id, _REVISION_ROOT / "casillas" / "cDP200018+00588.toml")
+    for export_id, description, template, declaration_id, path, current in candidate_rows:
         peers = peer_payloads.get(template, set())
-        current = _payload(declaration)
         contradiction = _direct_contradiction(description, current)
         if len(peers) == 1:
             proposed = next(iter(peers))
@@ -136,12 +153,16 @@ def audit_bundled_restorations() -> tuple[RestoredSemanticAudit, ...]:
                 official_description=description,
                 template=template,
                 path=path.as_posix(),
+                source_ref=str(design.source.source_ref),
+                source_sha256=design.source.source_sha256,
                 disposition=disposition,
                 reason=reason,
                 current=current,
                 proposed=proposed,
             )
         )
+    if len(audits) != 156:
+        raise ValueError(f"current 2024 map/design must join all 156 pinned candidates, found {len(audits)}")
     return tuple(sorted(audits, key=lambda item: item.export_field_id))
 
 
@@ -155,6 +176,8 @@ def render_review_toml(audits: tuple[RestoredSemanticAudit, ...]) -> str:
             "official_description": audit.official_description,
             "template": audit.template,
             "path": audit.path,
+            "source_ref": audit.source_ref,
+            "source_sha256": audit.source_sha256,
             "disposition": audit.disposition.value,
             "reason": audit.reason,
             "current": _payload_dict(audit.current),
@@ -205,17 +228,43 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def _restored_paths(workspace_root: Path) -> dict[str, Path]:
-    root = workspace_root / _REVISION_ROOT / "casillas"
-    result: dict[str, Path] = {}
-    for path in root.glob("*.toml"):
-        text = path.read_text(encoding="utf-8")
-        if _RESTORED_MARKER not in text:
-            continue
-        document = rtoml.loads(text)
-        for declaration in document["revisions"]["2024"]["casillas"]:
-            result[str(declaration["id"])] = path.relative_to(workspace_root)
+def _candidate_payloads() -> dict[str, tuple[Path, SemanticPayload]]:
+    """Load candidate payloads from the four pinned pre-canonical reviews."""
+    result: dict[str, tuple[Path, SemanticPayload]] = {}
+    for commit in _RESTORATION_COMMITS:
+        paths = _git(
+            "diff-tree",
+            "--no-commit-id",
+            "--name-only",
+            "-r",
+            "--diff-filter=A",
+            commit,
+            "--",
+            (_REVISION_ROOT / "casillas").as_posix(),
+        ).splitlines()
+        for raw_path in paths:
+            document = rtoml.loads(_git("show", f"{commit}:{raw_path}"))
+            for raw in document["revisions"]["2024"]["casillas"]:
+                candidate_id = str(raw["id"])
+                if candidate_id in result:
+                    raise ValueError(f"duplicate restoration candidate id {candidate_id!r}")
+                result[candidate_id] = (Path(raw_path), _raw_payload(raw))
+    if len(result) != 156:
+        raise ValueError(f"pinned restoration reviews must yield 156 candidates, found {len(result)}")
     return result
+
+
+def _git(*args: str) -> str:
+    executable = shutil.which("git")
+    if executable is None:
+        raise RuntimeError("git executable is required to read pinned restoration candidates")
+    return subprocess.run(  # noqa: S603 - fixed executable and internally constructed arguments
+        [executable, *args],
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    ).stdout
 
 
 def _resolve_declaration(token: str, declarations: dict[str, CasillaDefinition]) -> CasillaDefinition | None:
@@ -235,6 +284,11 @@ def _resolve_declaration(token: str, declarations: dict[str, CasillaDefinition])
 def _template(description: str) -> str:
     without_box = re.sub(r"\[[0-9]{5}\]", "[#]", description)
     return re.sub(r"\b20[0-9]{2}\b", "{year}", without_box)
+
+
+def _printed_number(description: str) -> str | None:
+    matches = re.findall(r"\[([0-9]{5})\]", description)
+    return matches[0] if len(matches) == 1 else None
 
 
 def _direct_contradiction(description: str, payload: SemanticPayload) -> str | None:
@@ -257,6 +311,18 @@ def _payload(declaration: CasillaDefinition) -> SemanticPayload:
         input_kind=str(declaration.input_kind),
         legal_refs=tuple(declaration.legal_refs),
         source_refs=tuple(declaration.source_refs),
+    )
+
+
+def _raw_payload(raw: dict[str, object]) -> SemanticPayload:
+    return SemanticPayload(
+        section=tuple(str(item) for item in raw["section"]),
+        semantic_role=str(raw["semantic_role"]) if raw.get("semantic_role") is not None else None,
+        data_type=str(raw["data_type"]),
+        required=bool(raw["required"]),
+        input_kind=str(raw["input_kind"]),
+        legal_refs=tuple(str(item) for item in raw["legal_refs"]),
+        source_refs=tuple(str(item) for item in raw["source_refs"]),
     )
 
 
