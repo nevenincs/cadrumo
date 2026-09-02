@@ -47,6 +47,7 @@ class M200TargetAnchorDisposition:
     aeat_type: str
     length: int
     source_refs: tuple[str, ...]
+    legal_evidence_state: str
     applicable_legal_refs: tuple[str, ...]
     inapplicable_legal_refs: tuple[str, ...]
 
@@ -69,6 +70,7 @@ class M200ReconciliationRow:
     same_2024_template_state: str
     cross_revision_status: str
     cross_revision_proposal_non_authoritative: SemanticPayload | None
+    legal_evidence_state: str
     applicable_legal_refs: tuple[str, ...]
     inapplicable_legal_refs: tuple[str, ...]
     declaration_payload: SemanticPayload | None
@@ -178,7 +180,9 @@ def reconcile_bundled_m200_2024() -> M200ReconciliationCensus:
         identity_review_required = any(
             field.printed_identity_state != "matches_declared_owner" for field in fields
         )
-        applicable, inapplicable = _legal_partition(payload.legal_refs, legal, revision.valid_from, revision.valid_to)
+        applicable, inapplicable, legal_state = _legal_evidence(
+            payload.legal_refs, legal, revision.valid_from, revision.valid_to
+        )
         declared_export_refs = tuple(current_declarations[identifier].export_refs) if not is_candidate else ()
         generated_refs = tuple(field.export_field_id for field in fields)
         reciprocity = (
@@ -228,6 +232,7 @@ def reconcile_bundled_m200_2024() -> M200ReconciliationCensus:
                 cross_revision_proposal_non_authoritative=(
                     next(iter(cross_payloads)) if len(cross_payloads) == 1 else None
                 ),
+                legal_evidence_state=legal_state,
                 applicable_legal_refs=applicable,
                 inapplicable_legal_refs=inapplicable,
                 declaration_payload=None if is_candidate else payload,
@@ -317,8 +322,8 @@ def main(argv: list[str] | None = None) -> int:
         "anchor_identity_mismatches="
         f"{sum(anchor.owner_state not in {'exact_planned_owner', 'non_casilla'} for anchor in anchors)}"
     )
-    print(f"declaration_legal_gaps={sum(bool(row.inapplicable_legal_refs) for row in rows)}")
-    print(f"map_legal_gaps={sum(bool(anchor.inapplicable_legal_refs) for anchor in anchors)}")
+    print(f"declaration_legal_gaps={sum(row.legal_evidence_state != 'applicable' for row in rows)}")
+    print(f"map_legal_gaps={sum(anchor.legal_evidence_state != 'applicable' for anchor in anchors)}")
     return 0
 
 
@@ -351,7 +356,7 @@ def _classify_anchor(entry, field, *, planned_ids, legal, valid_from, valid_to) 
         printed_state = "matches_identity_proposal"
     else:
         printed_state = "conflicts_with_declared_owner"
-    applicable, inapplicable = _legal_partition(entry.legal_refs, legal, valid_from, valid_to)
+    applicable, inapplicable, legal_state = _legal_evidence(entry.legal_refs, legal, valid_from, valid_to)
     return M200TargetAnchorDisposition(
         export_field_id=str(entry.export_field_id),
         anchor=semantic_anchor_key(entry.anchor),
@@ -366,6 +371,7 @@ def _classify_anchor(entry, field, *, planned_ids, legal, valid_from, valid_to) 
         aeat_type=field.aeat_type,
         length=field.length,
         source_refs=tuple(entry.source_refs),
+        legal_evidence_state=legal_state,
         applicable_legal_refs=applicable,
         inapplicable_legal_refs=inapplicable,
     )
@@ -425,6 +431,19 @@ def _legal_partition(refs, legal, valid_from, valid_to):
         )
         target.append(ref)
     return tuple(applicable), tuple(inapplicable)
+
+
+def _legal_evidence(refs, legal, valid_from, valid_to):
+    """Partition refs and distinguish absent proof from applicable authority."""
+    applicable, inapplicable = _legal_partition(refs, legal, valid_from, valid_to)
+    state = (
+        "missing_legal_provenance"
+        if not refs
+        else "unresolved_or_inapplicable"
+        if inapplicable
+        else "applicable"
+    )
+    return applicable, inapplicable, state
 
 
 def _same_year_state(payload, fields, templates):

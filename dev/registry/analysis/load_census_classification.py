@@ -792,7 +792,7 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "forms with withholding_bindings and cannot be hoisted without restoring that cycle. "
             "Both are reached only when the function holding the import runs."
         ),
-        members=_registry("_withholding_rows", "calculation_revision_identity"),
+        members=(*_registry("_withholding_rows"), "cadrumo.domain.modelos.calculation_revision_identity"),
     ),
 )
 

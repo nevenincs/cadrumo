@@ -81,6 +81,7 @@ def test_report_carries_exact_source_map_and_legal_evidence_deterministically(ce
     assert len(document["row"]) == 3329
     assert len(document["anchor"]) == 6709
     assert all("source_refs" in anchor for anchor in document["anchor"])
+    assert all("legal_evidence_state" in anchor for anchor in document["anchor"])
     assert all("applicable_legal_refs" in anchor for anchor in document["anchor"])
     assert all("inapplicable_legal_refs" in anchor for anchor in document["anchor"])
 
@@ -150,6 +151,14 @@ def test_missing_map_legal_ref_is_visible_and_unreviewed_candidates_cannot_seed_
     )
     assert applicable == ()
     assert inapplicable == ("missing-legal-ref",)
+    assert subject._legal_evidence(
+        (), {}, subject.TARGET_VALID_FROM, subject.TARGET_VALID_TO
+    ) == ((), (), "missing_legal_provenance")
+    assert subject._legal_evidence(
+        ("missing-legal-ref",), {}, subject.TARGET_VALID_FROM, subject.TARGET_VALID_TO
+    ) == ((), ("missing-legal-ref",), "unresolved_or_inapplicable")
+    assert all(row.legal_evidence_state == "applicable" for row in census.rows)
+    assert all(anchor.legal_evidence_state == "applicable" for anchor in census.anchors)
 
     trusted_payload = next(row.declaration_payload for row in census.rows if row.declaration_payload)
     candidate_payload = replace(trusted_payload, semantic_role="candidate-only-role")
