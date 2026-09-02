@@ -19,8 +19,7 @@ from cadrumo.domain.deadlines.models import ObligationStatus
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
 from ..agenda import OverviewAgenda
-from ..home import HomeProjectionInput, compose_home_projection
-from ..home_projection import (
+from ..home import (
     HomeAccountSession,
     HomeAvailability,
     HomeDeclarationResume,
@@ -29,6 +28,8 @@ from ..home_projection import (
     HomeNextAction,
     HomeSessionPosture,
     HomeZoneState,
+    HomeProjectionInput,
+    compose_home_projection,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
