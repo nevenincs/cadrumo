@@ -24,9 +24,9 @@ from cadrumo.core.link_safety import is_link_like
 
 from ..audit.object_names import ObjectNameAuditResult, ObjectNameFinding, scan, to_json
 from .object_name_graph import (
+    HardEdge,
     InventoryLike,
     ObjectNameGraphError,
-    HardEdge,
     OperationComponent,
     ReferenceKind,
     RenameManifestLike,
