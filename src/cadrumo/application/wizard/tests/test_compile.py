@@ -15,7 +15,7 @@ import pytest
 
 from ....core.i18n import Translatable as tr
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ....domain.contribuyente.keys import ProfileKeyRequirement
+from ....core.requirement import Requirement
 from ..catalogue import WIZARD_FLOWS
 from ..compiler import compile_profile_keys
 from ..errors import WizardCompileError
@@ -92,13 +92,13 @@ def test_none_bound_questions_are_skipped() -> None:
 def test_required_without_condition_is_required() -> None:
     flow = _flow((_question("tax-id", profile_key="tax.id", required=True),))
     (entry,) = compile_profile_keys((flow,))
-    assert entry.requirement is ProfileKeyRequirement.REQUIRED
+    assert entry.requirement is Requirement.REQUIRED
 
 
 def test_optional_when_flagged_optional() -> None:
     flow = _flow((_question("notes", profile_key="notes", required=False),))
     (entry,) = compile_profile_keys((flow,))
-    assert entry.requirement is ProfileKeyRequirement.OPTIONAL
+    assert entry.requirement is Requirement.OPTIONAL
 
 
 def test_conditional_question_is_optional() -> None:
@@ -111,7 +111,7 @@ def test_conditional_question_is_optional() -> None:
     )
     keys = {entry.key: entry for entry in compile_profile_keys((flow,))}
     spouse = keys["spouse.name"]
-    assert spouse.requirement is ProfileKeyRequirement.OPTIONAL
+    assert spouse.requirement is Requirement.OPTIONAL
     assert spouse.required_when_key == "declaration.type"
     assert spouse.required_when_value == "2"
 

@@ -15,7 +15,8 @@ from __future__ import annotations
 from collections.abc import Iterator, Sequence
 
 from ...core.i18n import Translatable as tr
-from ...domain.contribuyente.keys import ProfileKey, ProfileKeyRequirement
+from ...core.requirement import Requirement
+from ...domain.contribuyente.keys import ProfileKey
 from .errors import WizardCompileError
 from .models import WizardCondition, WizardFlow, WizardQuestion, WizardVisibility
 
@@ -61,9 +62,9 @@ def _compile_one(
     by_id: dict[str, WizardQuestion],
 ) -> ProfileKey:
     requirement = (
-        ProfileKeyRequirement.REQUIRED
+        Requirement.REQUIRED
         if question.required and question.visible_when is None
-        else ProfileKeyRequirement.OPTIONAL
+        else Requirement.OPTIONAL
     )
     # The ``required_when_*`` pair expresses a *conditional requirement*:
     # the key is REQUIRED only while its gate predicate holds. It is

@@ -48,7 +48,7 @@ import asyncio
 import sys
 from datetime import date
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, Literal
+from typing import TYPE_CHECKING, Final
 
 from pydantic import AnyHttpUrl, TypeAdapter
 
@@ -61,6 +61,7 @@ from ..core.logging import default_log_file_path, get_logger
 from ..core.modelo import Modelo
 from ..core.operator_action_enums import NoRecoveryOutcome
 from ..core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
+from ..core.requirement import RequirementValue
 from ..core.resources.bundled_data import bundled_path
 from ..core.time.clock import now
 from .diagnostic_models import (
@@ -732,7 +733,7 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[_Diagnosti
         raw = values.get(entry.key)
         if raw is not None and raw.strip() != "":
             continue
-        requirement: Literal["required", "optional"] = (
+        requirement: RequirementValue = (
             "required" if entry.requirement.value == "required" else "optional"
         )
         label = tr(str(entry.description))

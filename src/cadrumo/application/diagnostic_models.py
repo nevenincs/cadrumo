@@ -20,6 +20,7 @@ from ..core.operator_action_enums import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
+from ..core.requirement import RequirementValue
 from .errors import DiagnosticModelError
 from .operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 
@@ -78,7 +79,7 @@ class DiagnosticFinding(BaseModel):
 
     summary: str
     detail: str | None = None
-    requirement: Literal["required", "optional"] | None = None
+    requirement: RequirementValue | None = None
 
 
 class DiagnosticCheck(BaseModel):

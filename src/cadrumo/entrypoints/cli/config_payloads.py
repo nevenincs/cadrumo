@@ -43,6 +43,7 @@ from ...core.hex import Hex64Str
 from ...core.identity import BucketId, ProfileId, ProfileLabel
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.requirement import RequirementValue
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.time.utc import validate_utc_aware
 from ...domain.auth.apoderamientos.catalogue import ApoderadoScopeCode, ApoderadoScopeName
@@ -159,7 +160,7 @@ class ConfigRepairFindingPayload(OutputSchema):
 
     summary: str
     detail: str | None = None
-    requirement: Literal["required", "optional"] | None = None
+    requirement: RequirementValue | None = None
 
 
 class ConfigRepairCheckPayload(OutputSchema):
