@@ -297,6 +297,7 @@ def _validate_projection(
     admission: WorkbenchDestinationAdmission,
     action_candidate_id: str | None,
     identity_basis: SecretStr | None = None,
+    validate_identity_basis: bool = False,
 ) -> None:
     if source is not _SOURCE_BY_KIND[kind]:
         raise ValueError(f"{kind.value} requires source {_SOURCE_BY_KIND[kind].value!r}")
@@ -317,10 +318,11 @@ def _validate_projection(
         raise ValueError(f"{kind.value} requires exact {expected_address_type.__name__}")
     if admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE and action_candidate_id is not None:
         raise ValueError("a non-available destination cannot carry an action candidate")
-    if kind in _OPAQUE_IDENTITY_KINDS and identity_basis is None:
-        raise ValueError(f"{kind.value} requires a private opaque identity basis")
-    if kind not in _OPAQUE_IDENTITY_KINDS and identity_basis is not None:
-        raise ValueError(f"{kind.value} derives identity from its natural address")
+    if validate_identity_basis:
+        if kind in _OPAQUE_IDENTITY_KINDS and identity_basis is None:
+            raise ValueError(f"{kind.value} requires a private opaque identity basis")
+        if kind not in _OPAQUE_IDENTITY_KINDS and identity_basis is not None:
+            raise ValueError(f"{kind.value} derives identity from its natural address")
 
 
 class WorkbenchSearchDocument(BaseModel):
@@ -364,6 +366,7 @@ class WorkbenchSearchDocument(BaseModel):
             admission=self.admission,
             action_candidate_id=self.action_candidate_id,
             identity_basis=self.identity_basis,
+            validate_identity_basis=True,
         )
         return self
 
