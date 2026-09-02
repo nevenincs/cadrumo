@@ -202,15 +202,20 @@ class RevisionRenderInputs:
 
 
 def revision_render_inputs(
-    authority: ValidatedRegistryAuthority, *, modelo: str, revision: str
+    authority: ValidatedRegistryAuthority,
+    *,
+    modelo: str,
+    revision: str,
+    source_ref: str | None = None,
 ) -> RevisionRenderInputs:
     """Derive one revision's render inputs from the validated authority.
 
     Raises:
-        ValueError: If the revision declares no generated export layout, or no
-            record-design source, or its authored inputs are absent. Each is
-            reported by name rather than substituted, because a silent fallback
-            would derive the wrong thing and look like success.
+        ValueError: If the revision declares no generated export layout, a requested
+            record-design source is not declared by the revision, or its authored
+            inputs are absent. Each is reported by name rather than substituted,
+            because a silent fallback would derive the wrong thing and look like
+            success.
     """
     definition = authority.modelo(modelo)
     if revision not in definition.revisions:
@@ -230,8 +235,16 @@ def revision_render_inputs(
     ]
     if not design_refs:
         raise ValueError(f"{modelo}/{revision} cites no record-design source to render from")
-    source_ref = design_refs[0]
-    epoch = sources[source_ref].record_design_epoch
+    selected_source_ref = next((ref for ref in design_refs if str(ref) == source_ref), None)
+    if source_ref is not None and selected_source_ref is None:
+        raise ValueError(f"{modelo}/{revision} does not declare record-design source {source_ref!r}")
+    if selected_source_ref is None:
+        if len(design_refs) != 1:
+            raise ValueError(
+                f"{modelo}/{revision} declares multiple record-design sources; select one explicitly",
+            )
+        selected_source_ref = design_refs[0]
+    epoch = sources[selected_source_ref].record_design_epoch
     if epoch is None:  # pragma: no cover - filtered above, restated for the type checker
         raise ValueError(f"source {source_ref} declares no design epoch")
 
@@ -250,7 +263,7 @@ def revision_render_inputs(
     intermediate = load_record_design_intermediate(
         bundled_path(),
         design_sources,
-        source_ref=source_ref,
+        source_ref=selected_source_ref,
         filing_year=selected.valid_from.year,
         design_epoch=epoch,
     )
@@ -262,11 +275,14 @@ def revision_render_inputs(
         legal_ref_ids=frozenset(authority.catalogues.legal),
     )
     joined = join_record_design_semantics(semantic_map, intermediate, inspection)
-    evidence = load_render_profile_source_evidence(bundled_path() / sources[source_ref].corpus_path, render_profile)
+    evidence = load_render_profile_source_evidence(
+        bundled_path() / sources[selected_source_ref].corpus_path,
+        render_profile,
+    )
     transport = ExportTreeTransportProfile(
         modelo=modelo,
         design_epoch=epoch,
-        source_ref=source_ref,
+        source_ref=selected_source_ref,
         source_sha256=intermediate.source.source_sha256,
         layout_id=str(layout.id),
         format="fixed_width",
