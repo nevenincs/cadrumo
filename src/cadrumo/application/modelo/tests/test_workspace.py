@@ -5,8 +5,12 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
+
+if TYPE_CHECKING:
+    from ....domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -904,7 +908,7 @@ def test_schema_facet_stale_cursor_refuses_rather_than_returning_a_different_pag
         )
 
 
-def _real_303_inspection():
+def _real_303_inspection() -> RegistryRevisionInspection:
     from ....domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
     authority = bundled_authority()
