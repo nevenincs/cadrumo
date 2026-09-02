@@ -1,0 +1,36 @@
+---
+tags:
+  - '#exec'
+  - '#object-name-declustering'
+date: '2026-09-02'
+modified: '2026-09-02'
+body_schema: 'body-v2'
+body_hash: 'sha256:37a70f7cf56481ddd7a52079bf7d0bb70d0b225b09e78b5b4175620d17977601'
+related:
+  - "[[2026-09-02-object-name-declustering-plan]]"
+---
+
+<!-- Machine-owned: filename and frontmatter, scaffolded by
+     `vaultspec-core vault add exec`; never hand-edit. Add no frontmatter
+     fields. Wiki-links belong in `related:` only, never in the body.
+
+     Rolls up every Step Record (S##) of one Phase. -->
+
+# `object-name-declustering` `W01.P03` summary
+
+## Changes
+
+- `A` `dev/quality/object_name_graph.py`
+- `A` `dev/quality/tests/test_object_name_graph.py`
+- `verify:` `uv run --no-sync pytest -q -n0 dev/quality/tests/test_object_name_graph.py` -> `pass`
+- `verify:` `uv run --no-sync ruff check dev/quality/object_name_graph.py dev/quality/tests/test_object_name_graph.py` -> `pass`
+- `verify:` `uv run --no-sync ty check dev/quality/object_name_graph.py dev/quality/tests/test_object_name_graph.py` -> `pass`
+- `verify:` `independent combined S05/S06 CRITICAL/HIGH review` -> `pass`
+
+## Notes
+
+The S05 implementation, Step Record, and plan state were ready as one owned
+path-scoped commit, but concurrent broad staging captured them in commits
+`6ce6496a27` and `94380d6237` while `.git/index.lock` was held. The executor did
+not remove or bypass the lock and did not rewrite shared history. S06 restores
+path-scoped execution from the already-landed S05 bytes.

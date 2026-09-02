@@ -1154,3 +1154,56 @@ these tests should be rewritten against the defining modules or deleted belongs 
 whoever owns that migration, and two independent instances suggest there may be more.
 
 Package-wide after eighteen targets: 6 duplicated, 0 crossing the registry boundary.
+
+## Finding 53 — five landed, and the count reaches one
+
+`SnapshotLifecycleState` and `ModeloWorkWizardPromptChannel` already existed; the CLI
+spelled both out anyway, the first needing only a both-members literal and the second
+being a rival alias (`WizardPromptChannel`) in the CLI payload module.
+`ProfileDeletionHoldOwner`, `LiveCaptureMode` and `M303CompensationBasis` were hosted for
+the first time; the deletion-hold owner had a third site the scan could not see, a
+constructor parameter in `custody_hold.py`.
+
+A real defect was introduced and caught here: inserting the `M303CompensationBasis` enum
+before `class M303CompensationAvailableDerivation` placed it directly beneath that
+class's `@dataclass(frozen=True, slots=True)` decorator, producing an enum decorated as a
+dataclass. Ruff's RUF049 reported it; the decorator was restored to the class it was
+written for, and both were then asserted directly -- the enum is not a dataclass, the
+derivation is. Inserting text before a class is unsafe whenever the class is decorated.
+
+97 + 11 + 54 + 34 tests pass across the five areas.
+
+## Finding 54 — the last count is a FALSE POSITIVE, and the gate cannot reach zero honestly
+
+The single remaining duplicate is `["1", "2"]`, declared by `M184NaturalezaInmueble` in
+`domain/modelos/row_models.py` and `IndicadorAuxiliarActividad` in
+`domain/iva/regimen_simplificado_rows.py`. These are not one vocabulary. One is the
+nature of a property on Modelo 184; the other is an auxiliary-activity indicator in the
+IVA simplified regime. They come from different forms, are already correctly named, and
+each is a single declaration used at its own sites. Nothing about them should be merged.
+
+They collide only because both AEAT code sets happen to use the digits 1 and 2, and the
+scan's predicate is member-set equality. This is the mirror of the `HealthSeverity` case:
+there the predicate cannot see two vocabularies that ARE one under different tokens; here
+it insists two vocabularies are one because their tokens match. Member-set equality
+finds candidates; it does not decide vocabulary identity.
+
+Three ways to reach zero, and none may be taken silently:
+
+1. Merge them. Wrong: it would let an M184 property nature validate an IVA activity
+   indicator, and the shared digits are a coincidence of AEAT numbering.
+2. Exempt the pair. Forbidden: the operator ruled out hand-maintained exception lists,
+   and that mechanism is what this campaign exists to remove.
+3. Change the predicate so a field rooted in a distinct NAMED type counts as a distinct
+   vocabulary. This is coherent and allowlist-free, but it is a real trade: under it the
+   `WriteRoute` / `CommandWriteRouteScope` pair -- two named aliases that genuinely WERE
+   one vocabulary -- would not have been reported. It removes a false positive by
+   accepting a class of false negative, and that class is exactly the module-restates-its
+   -neighbour pattern that produced eight of this campaign's findings.
+
+The gate therefore stands at one, and that one is a measurement of the instrument's
+limit rather than of the codebase. Widening the gate to package scope is deferred: it
+would assert a zero that is not true, and the choice above belongs to the operator.
+
+Package-wide after twenty-three targets: 1 duplicated (this false positive), 0 crossing
+the registry boundary. Registry-schema-scoped remains 0 with 73 vocabularies at 73 fields.
