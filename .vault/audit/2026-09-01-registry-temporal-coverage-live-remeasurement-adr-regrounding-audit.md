@@ -3845,3 +3845,33 @@ anything. The four lines came from wrapping one over-long return; binding the fo
 members to locals once at the top of the function removed the wrap and brought the module
 to 1396, three lines below where it started. The gate passes, the 24 marker-held parity
 tests still pass, and the function reads better than either previous version.
+
+### The load census cannot survive a rename, and the residue is not this campaign's to clear
+
+`run_census` reports 21 registry modules carrying no classification and 14 rules naming
+modules that are no longer in the universe. The two numbers are one condition seen from
+both ends. `_validate_references` appears among the stale rules and `validate_references`
+among the unclassified modules: a module lost its leading underscore, and the
+classification followed neither the old name nor the new one.
+
+That is worth naming as a property of the census rather than a backlog. A classification
+keyed on a module path is a second declaration of where a symbol lives, and this campaign
+has argued throughout that a second declaration drifts from the first. Here the drift is
+mechanical and silent - the rename succeeded, the tests that matter passed, and the only
+signal was a census gate reporting a set difference. The same rename that this campaign
+has been performing deliberately, promoting private definitions to public canonical
+modules, is what produced it.
+
+The residue was checked for this campaign's own fingerprints before anything else.
+`ledger_bindings`, deleted here earlier, appears in neither set, so the module removed by
+this work left no orphaned rule behind. The 21 unclassified modules are the
+`record_design_*` and binding splits from the concurrent consolidation, and they are
+still landing.
+
+They are therefore reported and not adjudicated. Writing 21 classifications would mean
+asserting what each module is for while another writer is still moving it, and the
+assertions would be stale before anyone read them. That is the same judgement already
+applied to the 25 staled attestations: measure it, attribute it, name the owner, and
+leave the remedy where the knowledge is. The distinction this audit keeps returning to is
+between work that is blocked and work that belongs to somebody else; only the second kind
+is finished by reporting it.

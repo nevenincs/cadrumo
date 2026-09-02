@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:1a2e6ae617c8b648f1b6a03365909d38b5ec9eb00c9d3cee733a0b5be4ca067f'
+body_hash: 'sha256:8c03a2c357e5a43f24a5ee6c4a4b25c8452a83d6e0acc9a461ada18157b0701b'
 ---
 
 <!-- RETIRED: S73 -->
@@ -412,6 +412,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S173` - Adjudicate every same-layer name collision and gate that each stays explained and each explanation stays live; `dev/quality/name_collision_dispositions.toml,dev/quality/tests/test_name_collision_dispositions.py`.
 - [x] `W06.P13.S174` - Report constants whose name carries more than one value and gate that no public name does; `dev/quality/constant_value_agreement.py,dev/quality/tests/test_constant_value_agreement.py`.
 - [x] `W06.P13.S175` - Keep the evidence tier change inside the reviewed module size rather than raising the baseline; `dev/registry/parity/_workbook_parity.py`.
+- [x] `W06.P13.S176` - Measure the load census residue left by the concurrent rename campaign and record it as inherited rather than adjudicating another writer's moving modules; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -494,7 +495,30 @@ in flight and holds a large pending diff. Any Step whose scope names a file that
 has modified waits, whatever its Wave. At authoring time this blocked the recipe repoint,
 the boundary contract, the ratchet residue deletion and the dependency move.
 
-## Verification
+That constraint has since sharpened into a different one. The worktree is shared with a
+concurrent closed-vocabulary campaign that commits across the whole tree, and its commits
+land mid-Step rather than between them. Three consequences bind the work here.
+
+A committed change from that campaign can turn this plan's gates red without any Step
+running. The enum conversion moved the two registry test directories from 15 failures to
+46 by changing how one field is serialised, and every one of those failures had to be
+attributed before any of them could be acted on. Attribution is therefore a precondition
+of every red gate, not a courtesy: a failure this plan did not cause must be named as
+inherited, and one it did cause must be owned in the same breath. The reviewed-size
+baseline that caught a four-line growth from this campaign's own evidence-tier repair is
+the second kind, and it was fixed by shrinking the change rather than raising the ceiling.
+
+Work whose remedy lies in that campaign's surface is reported rather than performed. The
+twenty-one registry modules carrying no load classification and the fourteen rules naming
+modules that no longer exist are the visible edge of a rename still in flight; adjudicating
+them here would assert facts about code another writer is still moving, and the
+adjudications would be stale before they were read. The same reasoning holds for the
+twenty-five generated trees whose attestation that campaign staled: the remedy is
+republication by the commit's owner, and this plan carries the measurement instead.
+
+What remains fully available is the dev-owned surface, which is why the twelve Steps of
+`W06.P13` all live there. A screen, its dispositions and its gate can be authored, proved
+and left green without touching a file the other campaign holds.
 
 The plan is complete when every Step is closed. Beyond that, ten criteria decide whether the work
 achieved what it was for. Each names the evidence that settles it, because a criterion whose proof is
