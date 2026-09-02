@@ -21,7 +21,6 @@ import rtoml
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
 
 from ..pipeline._record_design_ir import (
@@ -290,17 +289,6 @@ def _classify_sibling(
         )
     if len(unqualified) > 1:
         return M200CasillaDisposition.UNRESOLVED, "current official printed identity is ambiguous", None, None
-    if (
-        sibling_field is not None
-        and sibling_entry is not None
-        and (sibling_entry.kind is not CasillaFieldKind.CASILLA or sibling_entry.casilla_id is None)
-    ):
-        return (
-            M200CasillaDisposition.NON_CASILLA,
-            "exact anchored sibling is explicitly reviewed as non-casilla",
-            None,
-            str(sibling_entry.kind),
-        )
     return (
         M200CasillaDisposition.REVISION_MISSING_DECLARATION,
         "current official printed identity is absent from the target revision",

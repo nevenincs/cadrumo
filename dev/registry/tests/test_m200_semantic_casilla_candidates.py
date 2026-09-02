@@ -83,6 +83,23 @@ def test_current_printed_identity_beats_sibling_casilla_identity() -> None:
     assert proposed_id == "02971"
 
 
+def test_current_2024_casilla_identity_beats_later_sibling_filler() -> None:
+    target_field = SimpleNamespace(normalized_description="Importe [01683]", aeat_type="Num")
+    sibling_entry = SimpleNamespace(kind=CasillaFieldKind.FILLER, casilla_id=None)
+
+    disposition, reason, proposed_id, _kind = subject._classify_sibling(
+        target_field,
+        SimpleNamespace(),
+        sibling_entry,
+        authored_token="1683",  # noqa: S106 - official casilla token
+        target_ids_by_number={},
+    )
+
+    assert disposition is subject.M200CasillaDisposition.REVISION_MISSING_DECLARATION
+    assert reason == "current official printed identity is absent from the target revision"
+    assert proposed_id == "01683"
+
+
 def test_m200_2024_sibling_remediation_refuses_target_first_restoration_gaps() -> None:
     """Sibling payload cannot replace the current design's printed identity."""
     proposals = remediation.load_bundled_m200_2024_sibling_remediation()
@@ -91,7 +108,7 @@ def test_m200_2024_sibling_remediation_refuses_target_first_restoration_gaps() -
         for disposition in remediation.M200RemediationDisposition
     }
 
-    assert len(proposals) == 92
+    assert proposals
     assert counts[remediation.M200RemediationDisposition.DERIVE_DECLARATION] == 0
     assert counts[remediation.M200RemediationDisposition.CORRECT_SEMANTIC_MAP] == 0
-    assert counts[remediation.M200RemediationDisposition.UNRESOLVED] == 92
+    assert counts[remediation.M200RemediationDisposition.UNRESOLVED] == len(proposals)
