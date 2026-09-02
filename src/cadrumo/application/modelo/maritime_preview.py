@@ -38,7 +38,12 @@ from ...application.calculations.maritime_exemption_service import (
 )
 from ...application.user_profile.projections import fact_value
 from ...core.parsing import parse_bool
-from ...domain.renta.maritime_exemption import MaritimeWorkerFacts, ProfileCompletenessError, VesselRegistryValue
+from ...domain.renta.maritime_exemption import (
+    MaritimeWorkerFacts,
+    ProfileCompletenessError,
+    VesselRegistry,
+    VesselRegistryValue,
+)
 from ..calculations.maritime_exemption_service import MaritimeExemptionResult
 from ..workflow.persistence import workflow_state_repository
 
@@ -106,11 +111,11 @@ def _vessel_registry(
 ) -> VesselRegistryValue | None:
     match value:
         case "REBECA":
-            return "REBECA"
+            return VesselRegistry.REBECA
         case "rebeca_eu_eea":
-            return "rebeca_eu_eea"
+            return VesselRegistry.REBECA_EU_EEA
         case "scheduled_canary_route":
-            return "scheduled_canary_route"
+            return VesselRegistry.SCHEDULED_CANARY_ROUTE
         case _:
             return None
 
