@@ -224,7 +224,7 @@ def required_pdf_group(match: re.Match[str], name: str) -> str:
     than asserted, because an ``assert`` vanishes under ``python -O``.
     """
     value = match.group(name)
-    if value is None:
+    if not isinstance(value, str):
         raise RegistryValidationError(
             f"record-design PDF pattern matched without its required {name!r} group",
         )
