@@ -1010,6 +1010,29 @@ def _question_parameters(flow: WizardFlow) -> tuple[inspect.Parameter, ...]:
     return tuple(parameters)
 
 
+def _wizard_command_metadata(
+    parameters: tuple[inspect.Parameter, ...],
+) -> tuple[inspect.Signature, dict[str, object]]:
+    """Build the public signature and annotation map for a wizard callback.
+
+    The callback is assembled at runtime because each flow contributes a
+    different set of flags.  Keep the ``inspect.Signature`` and the function's
+    annotation mapping derived from the same canonical parameter objects: a
+    future change in how Python stores annotations must not make Typer inspect
+    one representation while ``typing.get_type_hints`` sees another.  The
+    public ``inspect.Parameter.annotation`` sentinel is deliberately retained
+    for an unannotated parameter rather than importing any private ``inspect``
+    or ``typing`` implementation detail.
+    """
+    signature = inspect.Signature(parameters=parameters)
+    annotations = {
+        parameter.name: parameter.annotation
+        for parameter in signature.parameters.values()
+        if parameter.annotation is not inspect.Parameter.empty
+    }
+    return signature, annotations
+
+
 def _collect_flag_values(
     flow: WizardFlow,
     kwargs: dict[str, object],
@@ -1957,6 +1980,7 @@ def build_wizard_command(
     question_params = _question_parameters(flow)
     mode_params = _mode_parameters(flow, mode=mode)
     parameters = (*mode_params, *question_params)
+    signature, annotations = _wizard_command_metadata(parameters)
 
     def _command(**kwargs: object) -> None:
         import contextlib
@@ -1993,8 +2017,8 @@ def build_wizard_command(
     # only widens the static view so the attribute assignments below are
     # accepted by the type checker.
     typed = typing.cast(typing.Any, _command)
-    typed.__signature__ = inspect.Signature(parameters=list(parameters))
-    typed.__annotations__ = {param.name: param.annotation for param in parameters}
+    typed.__signature__ = signature
+    typed.__annotations__ = annotations
     typed.__name__ = flow.id
     typed.__doc__ = tr(f"wizard.{flow.id}.description")
     typed.__wizard_flow__ = flow
