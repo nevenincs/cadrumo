@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import date
 from decimal import Decimal
+from enum import StrEnum
 from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, TypeAdapter, ValidationError, field_validator
@@ -137,24 +138,34 @@ _WithholdingRowField = Literal[
     "numero_orden",
 ]
 WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave"]
-_WITHHOLDING_FACTS = frozenset(
-    {
-        "row_field",
-        "perceptor_count",
-        "percepcion_count",
-        "percibido_sum",
-        "retencion_sum",
-        "retenciones_ingresadas_sum",
-    },
-)
+class _WithholdingFactKind(StrEnum):
+    """Which fact a withholding selector reads from a resolved row set."""
+
+    ROW_FIELD = "row_field"
+    PERCEPTOR_COUNT = "perceptor_count"
+    PERCEPCION_COUNT = "percepcion_count"
+    PERCIBIDO_SUM = "percibido_sum"
+    RETENCION_SUM = "retencion_sum"
+    RETENCIONES_INGRESADAS_SUM = "retenciones_ingresadas_sum"
+
+
 _WithholdingFact = Literal[
-    "row_field",
-    "perceptor_count",
-    "percepcion_count",
-    "percibido_sum",
-    "retencion_sum",
-    "retenciones_ingresadas_sum",
+    _WithholdingFactKind.ROW_FIELD,
+    _WithholdingFactKind.PERCEPTOR_COUNT,
+    _WithholdingFactKind.PERCEPCION_COUNT,
+    _WithholdingFactKind.PERCIBIDO_SUM,
+    _WithholdingFactKind.RETENCION_SUM,
+    _WithholdingFactKind.RETENCIONES_INGRESADAS_SUM,
 ]
+"""The selector field's type. The model validates strictly and is built from registry
+TOML, so it takes the literal over the members rather than the bare enum."""
+
+_WITHHOLDING_FACTS: Final[frozenset[_WithholdingFactKind]] = frozenset(_WithholdingFactKind)
+"""The same facts as a runtime membership set, derived from the enum.
+
+The selector field's comment below says this set and that type mirror each other. They
+did, by hand, as two lists of six tokens on adjacent lines -- so the mirror held only
+while someone maintained both. It is now one declaration and two views of it."""
 _CLAVE_TOKEN_SEQUENCE_ADAPTER: TypeAdapter[list[object] | tuple[object, ...]] = TypeAdapter(
     list[object] | tuple[object, ...], config=ConfigDict(strict=True)
 )

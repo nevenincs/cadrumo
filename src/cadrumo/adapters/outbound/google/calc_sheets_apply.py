@@ -749,10 +749,9 @@ def _current_cell_values(
 ) -> dict[str, Any]:
     """Read every managed-tab cell currently holding a value, keyed by qualified address.
 
-    Shares the read-range derivation and response shape with
-    :func:`_occupied_addresses`, which is now a thin ``frozenset`` view of
-    these same keys. The export preview needs the raw values themselves —
-    presence alone cannot answer whether a write would change anything.
+    The export preview needs the raw values themselves — presence alone
+    cannot answer whether a write would change anything. Callers that need
+    occupancy derive it from the returned mapping's keys.
     """
     ranges = _occupied_address_ranges(grid_by_tab)
     if not ranges:
@@ -785,25 +784,16 @@ def _occupied_address_ranges(
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
-def occupied_addresses_from_response(
-    ranges: tuple[_OccupiedAddressRange, ...],
-    response: Mapping[str, Any],
-) -> frozenset[str]:
-    """Combine aligned response blocks, truncating missing and extra ranges safely."""
-    return frozenset(_current_cell_values_from_response(ranges, response))
-
-
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _current_cell_values_from_response(
     ranges: tuple[_OccupiedAddressRange, ...],
     response: Mapping[str, Any],
 ) -> dict[str, Any]:
     """Combine aligned response blocks into one address-to-value mapping.
 
-    Companion to :func:`occupied_addresses_from_response`, which is now a
-    thin ``frozenset`` view of these same keys. An export preview needs the
-    VALUES, not merely which addresses are occupied, to answer whether a
-    write would actually change anything.
+    Missing and extra response blocks are safely truncated to the requested
+    ranges. Non-blank values, including ``0`` and ``False``, remain in the
+    mapping so callers can use both the values and ``frozenset(values)`` as
+    the occupied-address view.
     """
     values: dict[str, Any] = {}
     for address_range, value_range in zip(ranges, response.get("valueRanges", []) or [], strict=False):
@@ -812,19 +802,12 @@ def _current_cell_values_from_response(
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
-def occupied_addresses_in_range(tab: TabName, value_range: Mapping[str, Any]) -> frozenset[str]:
-    """Return non-empty cells from one A1-anchored managed-tab response block."""
-    return frozenset(_current_cell_values_in_range(tab, value_range))
-
-
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _current_cell_values_in_range(tab: TabName, value_range: Mapping[str, Any]) -> dict[str, Any]:
     """Return one A1-anchored managed-tab response block's non-blank cells, keyed by address.
 
-    Shares its read-range derivation with :func:`occupied_addresses_in_range`,
-    which is now a thin ``frozenset`` projection of this function's keys: the
-    two walk the same response shape and must never drift on what counts as
-    occupied.
+    This is the per-range primitive used by the canonical response reader;
+    its mapping preserves values such as ``0`` and ``False`` for preview
+    comparisons while its keys provide the occupied-address view.
     """
     values: dict[str, Any] = {}
     for row_offset, row_values in enumerate(value_range.get("values", []) or []):

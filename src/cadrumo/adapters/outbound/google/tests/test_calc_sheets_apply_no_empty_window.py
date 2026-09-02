@@ -34,7 +34,7 @@ from .._calc_sheets_apply_values import (
     payload_written_addresses,
     stale_addresses,
 )
-from ..calc_sheets_apply import _occupied_address_ranges, occupied_addresses_from_response
+from ..calc_sheets_apply import _current_cell_values_from_response, _occupied_address_ranges
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -81,7 +81,7 @@ def test_occupied_ranges_keep_only_sorted_managed_positive_grids() -> None:
     assert ranges[0].address == "'Evidencia'!A1:B3"
 
 
-def test_occupied_response_preserves_zero_false_and_truncates_unaligned_blocks() -> None:
+def test_current_values_response_preserves_values_and_occupancy_keys() -> None:
     """Only empty-string/None cells are vacant; missing or extra blocks cannot misalign tabs."""
     second_tab = next(tab for tab in TabName if tab is not TabName.EVIDENCIA)
     ranges = _occupied_address_ranges(
@@ -92,7 +92,7 @@ def test_occupied_response_preserves_zero_false_and_truncates_unaligned_blocks()
     )
     evidence_range = next(item for item in ranges if item.tab is TabName.EVIDENCIA)
 
-    occupied = occupied_addresses_from_response(
+    current_values = _current_cell_values_from_response(
         ranges,
         {
             "valueRanges": [
@@ -109,14 +109,20 @@ def test_occupied_response_preserves_zero_false_and_truncates_unaligned_blocks()
         },
     )
 
-    assert occupied == {
+    assert current_values == {
+        SheetCellAddress.at(evidence_range.tab, 1, 3).qualified(): 0,
+        SheetCellAddress.at(evidence_range.tab, 2, 1).qualified(): False,
+        SheetCellAddress.at(evidence_range.tab, 2, 2).qualified(): "occupied",
+        SheetCellAddress.at(second_tab, 1, 1).qualified(): "second-tab",
+    }
+    assert frozenset(current_values) == {
         SheetCellAddress.at(evidence_range.tab, 1, 3).qualified(),
         SheetCellAddress.at(evidence_range.tab, 2, 1).qualified(),
         SheetCellAddress.at(evidence_range.tab, 2, 2).qualified(),
         SheetCellAddress.at(second_tab, 1, 1).qualified(),
     }
-    missing_second = occupied_addresses_from_response(ranges, {"valueRanges": [{"values": [["first"]]}]})
-    assert missing_second == {SheetCellAddress.at(ranges[0].tab, 1, 1).qualified()}
+    missing_second = _current_cell_values_from_response(ranges, {"valueRanges": [{"values": [["first"]]}]})
+    assert missing_second == {SheetCellAddress.at(ranges[0].tab, 1, 1).qualified(): "first"}
 
 
 class TestWrittenAddressesCoverThePayload:
