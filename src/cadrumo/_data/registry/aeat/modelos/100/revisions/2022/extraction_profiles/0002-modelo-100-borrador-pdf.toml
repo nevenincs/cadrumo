@@ -3,7 +3,7 @@ id = "modelo-100-2022-borrador-pdf"
 surface = "borrador_pdf"
 artefact_kind = "modelo_100_renta_borrador"
 accepted_artefact_kinds = ["declaration_pdf"]
-parser = "cadrumo.adapters.inbound.borrador.parse_borrador"
+parser = "cadrumo.adapters.inbound.borrador.parser.parse_borrador"
 target_casillas = [
     {casilla_id = "0505", match_strategy = "numeric_casilla", value_kind = "amount"},
     {casilla_id = "0545", match_strategy = "numeric_casilla", value_kind = "amount"},
