@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:001b4b7d36668cb3e54a870d25af9c968e9ed7b3192e53554efe62a74d4deaa0'
+body_hash: 'sha256:ca83f1221e91e07a5ed72f485d0d247e86f720264c20e8b1309f97f8fb41344c'
 step_id: 'S16'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
@@ -24,19 +24,17 @@ related:
 
 ## Changes
 
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
+- `M` `dev/quality/object_name_declustering.py`
+- `A` `dev/quality/tests/test_object_name_declustering.py`
+- `verify:` `uv run --no-sync pytest -q -n0 dev/quality/tests/test_object_name_declustering.py` -> `pass`
+- `verify:` `uv run --no-sync ruff format --check dev/quality/object_name_declustering.py dev/quality/tests/test_object_name_declustering.py` -> `pass`
+- `verify:` `uv run --no-sync ruff check dev/quality/object_name_declustering.py dev/quality/tests/test_object_name_declustering.py` -> `pass`
+- `verify:` `uv run --no-sync ty check dev/quality/object_name_declustering.py dev/quality/tests/test_object_name_declustering.py` -> `pass`
+- `verify:` `uv run --no-sync basedpyright dev/quality/object_name_declustering.py dev/quality/tests/test_object_name_declustering.py` -> `pass`
+- `verify:` `uv run --no-sync python -m compileall -q dev/quality/object_name_declustering.py dev/quality/tests/test_object_name_declustering.py` -> `pass`
+- `verify:` `git diff --check -- dev/quality/object_name_declustering.py dev/quality/tests/test_object_name_declustering.py` -> `pass`
+- `verify:` `independent current-byte S16 CLI safety review` -> `pass`
 
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
+## Notes
 
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
+Shared-tree commit `1c641ef7ad` materially landed the first 394 lines of the S16 test module. Commit `0dc6daea30` landed the remaining detector teeth and receipt-boundary correction. Mixed commit `fef064a4d8` landed the plan closure, review audit, and initial Step Record together with an unrelated TUI plan change. This record claims only the two implementation paths above.
