@@ -27,7 +27,6 @@ from ..command_spec import (
     TuiCapability,
     ValueContract,
 )
-from ..command_spec import translation_key as _key
 from ._spec_policies import (
     BOOTSTRAP_DESTRUCTIVE,
     BOOTSTRAP_WRITE,
@@ -773,3 +772,8 @@ PROFILE_COMMAND_SPECS = (
 )
 
 __all__ = ["PROFILE_COMMAND_SPECS"]
+
+
+def _key(value: str) -> TranslationKey:
+    """TEMPORARY A/B copy."""
+    return TranslationKey(value)

@@ -23,7 +23,6 @@ from ..command_spec import (
     TuiCapability,
     ValueContract,
 )
-from ..command_spec import translation_key as _key
 from ._command_spec_schema import config_payload_schema as _schema
 from ._spec_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, STATE_FREE
 
@@ -478,3 +477,8 @@ AUTH_COMMAND_SPECS = (
 
 
 __all__ = ["AUTH_COMMAND_SPECS"]
+
+
+def _key(value: str) -> TranslationKey:
+    """TEMPORARY A/B copy."""
+    return TranslationKey(value)

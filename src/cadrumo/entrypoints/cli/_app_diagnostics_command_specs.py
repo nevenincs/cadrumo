@@ -221,3 +221,4 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["DIAGNOSTICS_COMMAND_SPECS"]
+

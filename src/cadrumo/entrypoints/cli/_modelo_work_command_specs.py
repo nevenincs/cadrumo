@@ -24,7 +24,6 @@ from .command_spec import (
     ValueContract,
     WriteRoute,
 )
-from .command_spec import translation_key as _key
 
 _STR = ValueContract(DeferredTarget("builtins", "str"))
 _INT = ValueContract(DeferredTarget("builtins", "int"))
@@ -432,3 +431,8 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["MODELO_WORK_COMMAND_SPECS"]
+
+
+def _key(value: str) -> TranslationKey:
+    """TEMPORARY A/B copy."""
+    return TranslationKey(value)

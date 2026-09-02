@@ -20,7 +20,6 @@ from ..command_spec import (
     SchemaState,
     ValueContract,
 )
-from ..command_spec import translation_key as _key
 from ._spec_policies import (
     GOOGLE_DESTRUCTIVE,
     GOOGLE_READ,
@@ -321,3 +320,8 @@ GOOGLE_COMMAND_SPECS = (
 
 
 __all__ = ["GOOGLE_COMMAND_SPECS"]
+
+
+def _key(value: str) -> TranslationKey:
+    """TEMPORARY A/B copy."""
+    return TranslationKey(value)
