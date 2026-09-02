@@ -403,6 +403,7 @@ class ProfileSecretSpec:
     model: DeferredTarget
 
     def __post_init__(self) -> None:
+        """Validate that fields are declared and their names are unique, or raise."""
         if not self.fields:
             raise ValueError("profile-secret spec must declare at least one field")
         names = tuple(field.name for field in self.fields)
@@ -430,6 +431,7 @@ class RecoveryHandoffSpec:
     windows_handle_bootstrap: str
 
     def __post_init__(self) -> None:
+        """Validate the recovery handoff protocol's parameters and flag invariants, or raise."""
         if self.handoff_direction != "write" or self.verification_direction != "read":
             raise ValueError("recovery handoff directions must be write then read")
         for value in (self.handoff_parameter, self.verification_parameter, *self.collides_with_parameters):
@@ -507,6 +509,7 @@ class ArgumentSpec:
     kind: ParameterKind = "argument"
 
     def __post_init__(self) -> None:
+        """Validate the argument's name, metavar, and transport coherence, or raise."""
         _require_identifier(self.name, field="argument name")
         if self.metavar is not None:
             _require_token(self.metavar, field="argument metavar")
@@ -548,6 +551,7 @@ class OptionSpec:
     kind: ParameterKind = "option"
 
     def __post_init__(self) -> None:
+        """Validate the option's declarations, flags, secret channels, and transport coherence, or raise."""
         _require_identifier(self.name, field="option name")
         if not self.declarations:
             raise ValueError("option must declare at least one CLI token")
@@ -612,11 +616,14 @@ class InvocationSpec:
     terminal_behavior: Literal["introspection", "executable"] | None = None
 
     def __post_init__(self) -> None:
+        """Validate the context parameter name, when declared, or raise."""
         if self.context_parameter is not None:
             _require_identifier(self.context_parameter, field="invocation context parameter")
 
 
 class SchemaState(Enum):
+    """Whether a result schema is targeted, not supported, or explicitly unavailable."""
+
     TARGET = "target"
     NOT_SUPPORTED = "not-supported"
     UNAVAILABLE = "unavailable"
@@ -639,6 +646,7 @@ class ResultSchemaSpec:
     identity: str | None = None
 
     def __post_init__(self) -> None:
+        """Validate the result-schema shape agrees with the declared ``state``, or raise."""
         if self.state is SchemaState.TARGET:
             if self.target is None or self.reason_key is not None or self.identity is None:
                 raise ValueError("schema target state requires an identity and target")
@@ -679,6 +687,7 @@ class CommandSpec:
     tui_capability: TuiCapability = TuiCapability.NOT_IMPLEMENTED
 
     def __post_init__(self) -> None:
+        """Validate the command node's identity, hierarchy, and dispatch invariants, or raise."""
         _require_identifier(self.key, field="command key")
         if self.parent_key is not None:
             _require_identifier(self.parent_key, field="command parent key")
@@ -801,6 +810,7 @@ class CommandSpecGraph:
     specs: tuple[CommandSpec, ...]
 
     def __post_init__(self) -> None:
+        """Validate key uniqueness, single root, parent references, and path uniqueness, or raise."""
         if not self.specs:
             raise ValueError("command spec graph cannot be empty")
         by_key = {spec.key: spec for spec in self.specs}
@@ -837,9 +847,11 @@ class CommandSpecGraph:
             raise ValueError("command spec operator paths must be unique")
 
     def by_key(self) -> MappingProxyType[str, CommandSpec]:
+        """Return every command spec indexed by its key."""
         return MappingProxyType({spec.key: spec for spec in self.specs})
 
     def nodes(self) -> tuple[CommandSpecNode, ...]:
+        """Return every command spec paired with its derived operator path."""
         by_key = self.by_key()
 
         def path_for(spec: CommandSpec) -> tuple[str, ...]:

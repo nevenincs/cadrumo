@@ -124,6 +124,7 @@ class ProfileSecretSelection:
     descriptor: int | None = None
 
     def __post_init__(self) -> None:
+        """Keep descriptor state impossible to misinterpret downstream."""
         channel = cast(object, self.channel)
         if not isinstance(channel, ProfileSecretChannel):
             raise TypeError("profile-secret selection requires a known channel")

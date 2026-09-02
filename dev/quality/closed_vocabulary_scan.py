@@ -71,6 +71,7 @@ class VocabularyField:
 
     @property
     def location(self) -> str:
+        """Return the ``path:lineno`` string identifying this finding."""
         return f"{self.path}:{self.lineno}"
 
 
