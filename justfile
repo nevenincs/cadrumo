@@ -784,16 +784,16 @@ test-smoke:
 test-workbook-parity:
     uv run --no-sync pytest -m external_tool dev/registry/tests/test_workbook_parity.py
 
-# Run the Homebrew/Scoop/mcpb channel-artifact conformance tests. These bind
+# Run the Homebrew/Scoop channel-artifact conformance tests. These bind
 # the generated formula and manifest to a real built cohort. Explicit paths
 # and -n0, never marker selection alone: a marker-filtered xdist run holds
 # serial tests out while still reporting a clean pass. Dispatch-only
 # (ci-full.yml) rather than per-push: these tests build real sdists and
 # wheels, costing minutes the per-push budget cannot absorb.
-[doc('Run the Homebrew/Scoop/mcpb channel-artifact conformance tests (serial, builds real sdists and wheels).')]
+[doc('Run the Homebrew/Scoop channel-artifact conformance tests (serial, builds real sdists and wheels).')]
 [group('testing')]
 test-channel-artifacts:
-    @uv run --no-sync pytest -q -n0 --timeout=900 -m serial packaging/homebrew/tests packaging/scoop/tests packaging/mcpb/tests
+    @uv run --no-sync pytest -q -n0 --timeout=900 -m serial packaging/homebrew/tests packaging/scoop/tests
 
 # Run the unit test suite with coverage report and fail-under check. Quiet progress.
 [doc('Run the unit test suite with a coverage report and a fail-under check.')]
@@ -1279,22 +1279,3 @@ release-collect-evidence *run_ids:
     Remove-Item -Recurse -Force $tmp
     Write-Host "collected $n record(s) into $dest (client-row records from emit_real_client_evidence are already local there)"
 
-# Automated Claude Desktop real-client capture (claude-desktop-mcpb /
-# claude-desktop-plugin). Provisions a clean isolated Desktop profile (auth
-# seeded from the operator's logged-in profile, one extension, isolated
-# per-run platform root), launches the real Store app as the debug-enabled
-# primary over MSIX activation, drives it via CDP, verifies the tool CALL
-# RESULT from Desktop's own MCP telemetry, and mints the evidence row.
-# MUST run from a NON-ELEVATED INTERACTIVE session; closes a running Desktop
-# only with --allow-close-running (graceful close first) and leaves it closed.
-[doc('Automated Claude Desktop real-client capture (claude-desktop-mcpb / claude-desktop-plugin).')]
-[group('release')]
-[windows]
-desktop-capture row_id release_cohort_dir acquisition_source destination_locator *extra_args:
-    @uv run --no-sync python -m dev.packaging.smoke_desktop_client \
-        --row-id {{row_id}} \
-        --release-cohort-dir {{release_cohort_dir}} \
-        --evidence-dir var/desktop-capture \
-        --acquisition-source {{acquisition_source}} \
-        --destination-locator {{destination_locator}} \
-        --run-real-capture {{extra_args}}
