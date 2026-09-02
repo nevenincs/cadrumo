@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:a86478588855a4b7ddb8ffd03cb83493cd6ba86152b543f9c5b3228d8dc15805'
+body_hash: 'sha256:9e2f18b71308053c8135ae22b8427f36936b25fabdf829fcd8f3af155e50e3bb'
 ---
 
 # `cli-distribution-consolidation` plan
@@ -70,18 +70,18 @@ Merge the MCP console script into the product distribution and remove the two ho
 
 Route the root option to the full-screen session, add a headless self-test, and retire the second console script.
 
-- [ ] `P05.S16` - Declare the root command's full-screen capability; `src/cadrumo/entrypoints/cli/_root_command_specs.py`.
-- [ ] `P05.S17` - Route a bare full-screen request to the root session; `src/cadrumo/entrypoints/cli/_root_cli.py`.
-- [ ] `P05.S18` - Add the headless self-test option and its console-capability bypass; `src/cadrumo/entrypoints/cli/_tui_policy.py`.
-- [ ] `P05.S19` - Translate the self-test help key across every supported locale; `src/cadrumo/locales/en/cli.yml`.
-- [ ] `P05.S20` - Retire the second console script, repoint its entry-point test, and assert the headless full-screen start in the distribution smoke check; `src/cadrumo/entrypoints/tui/tests/test_installed_entrypoint.py`.
+- [x] `P05.S16` - Declare the root command's full-screen capability; `src/cadrumo/entrypoints/cli/_root_command_specs.py`.
+- [x] `P05.S17` - Route a bare full-screen request to the root session; `src/cadrumo/entrypoints/cli/_root_cli.py`.
+- [x] `P05.S18` - Add the headless self-test option and its console-capability bypass; `src/cadrumo/entrypoints/cli/_tui_policy.py`.
+- [x] `P05.S19` - Translate the self-test help key across every supported locale; `src/cadrumo/locales/en/cli.yml`.
+- [x] `P05.S20` - Retire the second console script, repoint its entry-point test, and assert the headless full-screen start in the distribution smoke check; `src/cadrumo/entrypoints/tui/tests/test_installed_entrypoint.py`.
 
 ### Phase `P06` - Replace the install proof mechanism
 
 Prove installs in an isolated environment holding only the artifact, removing the container-daemon dependency.
 
-- [ ] `P06.S21` - Replace nested-container install proof with an isolated environment probe; `dev/packaging/smoke_core.py`.
-- [ ] `P06.S22` - Remove the container-daemon prerequisite from the prove legs; `dev/packaging/smoke_docker.py`.
+- [x] `P06.S21` - Replace nested-container install proof with an isolated environment probe; `dev/packaging/smoke_core.py`.
+- [x] `P06.S22` - Remove the container-daemon prerequisite from the prove legs; `dev/packaging/smoke_docker.py`.
 
 ### Phase `P07` - Remove launch-phase vocabulary from the tooling
 
