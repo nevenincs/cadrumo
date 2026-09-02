@@ -15,14 +15,6 @@ legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-modelo-309-procedure"]
 
 [[revisions."2016-2017".application_links]]
-id = "modelo-309-extractor"
-surface = "extractor"
-consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
-requires_snapshot = true
-legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
-source_refs = ["aeat-dr-309-2016"]
-
-[[revisions."2016-2017".application_links]]
 id = "modelo-309-review"
 surface = "review"
 consumer = "cadrumo.application.filing.review"

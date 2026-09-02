@@ -99,7 +99,6 @@ dependency_classifications = [
 application_links = [
     "modelo-714-calculation",
     "modelo-714-filing",
-    "modelo-714-extractor",
     "modelo-714-review",
     "modelo-714-approval",
     "modelo-714-reconciliation",

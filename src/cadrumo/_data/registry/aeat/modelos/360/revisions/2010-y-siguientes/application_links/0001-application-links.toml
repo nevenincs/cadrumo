@@ -15,18 +15,9 @@ legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1"]
 source_refs = ["aeat-modelo-360-procedure"]
 
 [[revisions."2010-y-siguientes".application_links]]
-id = "modelo-360-extractor"
-surface = "extractor"
-consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
-requires_snapshot = true
-legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1"]
-source_refs = ["aeat-dr-360-2010"]
-
-[[revisions."2010-y-siguientes".application_links]]
 id = "modelo-360-deadline"
 surface = "deadline"
 consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4"]
 source_refs = ["boe-modelo-360-2010-form", "aeat-modelo-360-procedure"]
-
