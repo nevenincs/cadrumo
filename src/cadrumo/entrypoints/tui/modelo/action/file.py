@@ -29,7 +29,7 @@ See Also:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 from .....application.modelo.operation_definitions import (
     MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
@@ -56,6 +56,18 @@ FILE_ACTION = MODELO_ACTION_DISPATCH[MODELO_WORK_FILE_OPERATION_DEFINITION_ID]
 """This action's dispatch row, carrying the filing-readiness capability."""
 
 
+class _OperatorElections(TypedDict, total=False):
+    """The elections the operator may have chosen, absent when they did not.
+
+    Every key is optional so that "not chosen" is expressed by omitting the
+    key, letting the request type's own declared defaults apply rather than
+    this module restating them.
+    """
+
+    refund_election: RefundElection
+    payment_election: PaymentElection
+
+
 def build_file_operation_request(
     *,
     work_unit_id: str,
@@ -74,7 +86,7 @@ def build_file_operation_request(
     place for it to be wrong, and these two decide whether a refund is
     compensated or paid out.
     """
-    elections: dict[str, object] = {}
+    elections: _OperatorElections = {}
     if refund_election is not None:
         elections["refund_election"] = refund_election
     if payment_election is not None:
@@ -90,7 +102,7 @@ def build_file_operation_request(
             ),
             notes=notes,
             actor=actor_ref,
-            **elections,  # type: ignore[arg-type]
+            **elections,
         ),
     )
 

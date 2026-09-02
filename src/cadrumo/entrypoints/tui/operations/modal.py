@@ -32,7 +32,10 @@ from ....application.operations.frontend_contracts import (
     OperationResponseMutationSuccessV1,
     OperationResponseRejectRequestV1,
 )
-from ....application.operations.interactions import OperationResponseIntentValue
+from ....application.operations.interactions import (
+    OperationResponseIntent,
+    OperationResponseIntentValue,
+)
 from ....application.operations.models import OperationId, OperationRevision
 from ....core.i18n.render import tr
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -256,9 +259,9 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1]):
         elif event.button.id == "btn-operation-detach":
             await self._request_detach()
         elif event.button.id == "btn-operation-apply":
-            await self._respond(intent="apply")
+            await self._respond(intent=OperationResponseIntent.APPLY)
         elif event.button.id == "btn-operation-reject":
-            await self._respond(intent="reject")
+            await self._respond(intent=OperationResponseIntent.REJECT)
         elif event.button.id == "btn-operation-close":
             await self.action_request_close()
 
