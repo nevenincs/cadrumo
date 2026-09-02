@@ -223,6 +223,7 @@ def posix_open_child_directory(parent_fd: int, name: str) -> int:
 
 
 def posix_mkdir_child_directory(parent_fd: int, name: str) -> int:
+    """Create directory ``name`` below ``parent_fd`` and return its open descriptor."""
     try:
         os.mkdir(name, mode=0o700, dir_fd=parent_fd)
     except OSError as exc:
@@ -231,6 +232,7 @@ def posix_mkdir_child_directory(parent_fd: int, name: str) -> int:
 
 
 def is_reparse_metadata(metadata: os.stat_result) -> bool:
+    """Return whether ``metadata`` describes a reparse-point entry."""
     return bool(getattr(metadata, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0))
 
 
@@ -296,4 +298,7 @@ __all__ = [
     "posix_open_child_directory",
     "windows_create_file_api",
     "windows_directory_anchor",
-    "windows_file_informatio
+    "windows_file_information_type",
+    "write_exclusive_fsynced",
+    "write_exclusive_fsynced_fd",
+]
