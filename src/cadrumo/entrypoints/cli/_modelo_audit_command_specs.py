@@ -6,6 +6,7 @@ from ...core.transport_locus import TransportLocus, TransportRole, TransportShap
 from .command_spec import (
     ArgumentSpec,
     CommandSpec,
+    CommandWriteRoute,
     DeferredTarget,
     ExecutionPolicySpec,
     InvocationSpec,

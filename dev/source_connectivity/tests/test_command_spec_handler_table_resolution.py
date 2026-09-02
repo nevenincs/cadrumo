@@ -45,7 +45,7 @@ PROBE_WRITE = ExecutionPolicySpec(
     capabilities=frozenset({"encrypted-facts"}),
     side_effects=frozenset({"local-state"}),
     performance="local-io",
-    write_route=CommandWriteRoute.PROFILE_BOUND,
+    write_route="profile-bound",
 )
 
 

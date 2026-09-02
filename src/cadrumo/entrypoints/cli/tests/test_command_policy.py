@@ -14,7 +14,7 @@ from .._command_policy import (
     CommandWriteRouteValue,
 )
 from .._command_schema import CommandCapabilityClass
-from ..command_spec import Capability, SideEffect
+from ..command_spec import Capability, CommandWriteRoute, SideEffect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

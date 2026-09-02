@@ -39,14 +39,14 @@ _SPEC_MODULE = """PROBE_WRITE = ExecutionPolicySpec(
     capabilities=frozenset({"encrypted-facts"}),
     side_effects=frozenset({"local-state"}),
     performance="local-io",
-    write_route=CommandWriteRoute.PROFILE_BOUND,
+    write_route="profile-bound",
 )
 
 PROBE_READ = ExecutionPolicySpec(
     capabilities=frozenset({"encrypted-facts"}),
     side_effects=frozenset({"none"}),
     performance="local-io",
-    write_route=CommandWriteRoute.NONE,
+    write_route="none",
 )
 
 PROBE_COMMAND_SPECS = (

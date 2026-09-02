@@ -9,6 +9,7 @@ from .command_spec import (
     ArgumentSpec,
     Capability,
     CommandSpec,
+    CommandWriteRoute,
     CommandWriteRouteValue,
     DeferredTarget,
     ExecutionPolicySpec,
@@ -66,24 +67,33 @@ def _policy(
 
 
 _CALC_WRITE = _policy(
-    frozenset({"calculation", "encrypted-facts"}), frozenset({"local-state"}), "compute", "profile-bound"
+    frozenset({"calculation", "encrypted-facts"}),
+    frozenset({"local-state"}),
+    "compute",
+    CommandWriteRoute.PROFILE_BOUND,
 )
-_MODEL_WRITE = _policy(frozenset({"encrypted-facts"}), frozenset({"local-state"}), "local-io", "profile-bound")
-_MODEL_READ = _policy(frozenset({"encrypted-facts"}), frozenset({"none"}), "local-io", "none")
-_CALC_READ = _policy(frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute", "none")
-_CREATE = _policy(frozenset({"encrypted-facts", "registry"}), frozenset({"local-state"}), "local-io", "profile-bound")
+_MODEL_WRITE = _policy(
+    frozenset({"encrypted-facts"}), frozenset({"local-state"}), "local-io", CommandWriteRoute.PROFILE_BOUND
+)
+_MODEL_READ = _policy(frozenset({"encrypted-facts"}), frozenset({"none"}), "local-io", CommandWriteRoute.NONE)
+_CALC_READ = _policy(
+    frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute", CommandWriteRoute.NONE
+)
+_CREATE = _policy(
+    frozenset({"encrypted-facts", "registry"}), frozenset({"local-state"}), "local-io", CommandWriteRoute.PROFILE_BOUND
+)
 _FILE = _policy(
     frozenset({"encrypted-facts", "filing"}),
     frozenset({"local-state"}),
     "compute",
-    "profile-bound",
+    CommandWriteRoute.PROFILE_BOUND,
     handoff=True,
 )
 _WIZARD = _policy(
     frozenset({"calculation", "encrypted-facts"}),
     frozenset({"local-state"}),
     "interactive",
-    "profile-bound",
+    CommandWriteRoute.PROFILE_BOUND,
 )
 
 
@@ -263,7 +273,11 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _o("confirmed", "--yes", _BOOL, help_name="discard_yes", flag=True),
         ),
         _policy(
-            frozenset({"encrypted-facts"}), frozenset({"local-state"}), "local-io", "profile-bound", destructive=True
+            frozenset({"encrypted-facts"}),
+            frozenset({"local-state"}),
+            "local-io",
+            CommandWriteRoute.PROFILE_BOUND,
+            destructive=True,
         ),
         "cadrumo.entrypoints.cli._modelo_payloads",
         "WorkDiscardResult",

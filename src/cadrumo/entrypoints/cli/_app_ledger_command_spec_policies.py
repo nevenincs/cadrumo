@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .command_spec import ExecutionPolicySpec
+from .command_spec import CommandWriteRoute, ExecutionPolicySpec
 
 _POLICY_1 = ExecutionPolicySpec(
     capabilities=frozenset(("state-free",)),

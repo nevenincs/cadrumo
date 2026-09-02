@@ -8,6 +8,7 @@ from ...core.transport_locus import TransportLocus, TransportRole, TransportShap
 from ._app_live_command_spec_support import _key
 from .command_spec import (
     CommandSpec,
+    CommandWriteRoute,
     DeferredTarget,
     ExecutionPolicySpec,
     InvocationSpec,

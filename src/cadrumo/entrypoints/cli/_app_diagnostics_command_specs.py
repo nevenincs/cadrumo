@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .command_spec import (
     CommandSpec,
+    CommandWriteRoute,
     DeferredTarget,
     ExecutionPolicySpec,
     InvocationSpec,
@@ -18,7 +19,9 @@ from .command_spec import (
 from .command_spec import translation_key as _key
 
 _READ = ExecutionPolicySpec(frozenset({"local-storage"}), frozenset({"none"}), "local-io", CommandWriteRoute.NONE)
-_WRITE = ExecutionPolicySpec(frozenset({"local-storage"}), frozenset({"local-state"}), "local-io", CommandWriteRoute.NONE)
+_WRITE = ExecutionPolicySpec(
+    frozenset({"local-storage"}), frozenset({"local-state"}), "local-io", CommandWriteRoute.NONE
+)
 _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)
 _STR = ValueContract(DeferredTarget("builtins", "str"))
 _INT = ValueContract(DeferredTarget("builtins", "int"))

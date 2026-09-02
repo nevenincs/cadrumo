@@ -14,6 +14,7 @@ from .._command_runtime import (
 from ..command_spec import (
     CommandSpec,
     CommandSpecGraph,
+    CommandWriteRoute,
     DeferredTarget,
     ExecutionPolicySpec,
     InvocationSpec,

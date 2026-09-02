@@ -9,6 +9,7 @@ from ._app_live_command_spec_support import _key
 from .command_spec import (
     ArgumentSpec,
     CommandSpec,
+    CommandWriteRoute,
     DeferredTarget,
     ExecutionPolicySpec,
     InvocationSpec,

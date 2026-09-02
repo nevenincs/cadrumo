@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .command_spec import ExecutionPolicySpec
+from .command_spec import CommandWriteRoute, ExecutionPolicySpec
 
 _METADATA = ExecutionPolicySpec(frozenset(("state-free",)), frozenset(("none",)), "metadata", CommandWriteRoute.NONE)
 
@@ -10,7 +10,7 @@ _BROWSER_MODEL_WRITE = ExecutionPolicySpec(
     frozenset(("browser", "registry", "encrypted-facts")),
     frozenset(("browser", "local-state", "network")),
     "external-io",
-    "profile-bound",
+    CommandWriteRoute.PROFILE_BOUND,
     destructive=False,
     handoff=False,
 )
@@ -19,7 +19,7 @@ _CALCULATION_READ = ExecutionPolicySpec(
     frozenset(("calculation", "encrypted-facts")),
     frozenset(("none",)),
     "compute",
-    "none",
+    CommandWriteRoute.NONE,
     destructive=False,
     handoff=False,
 )
@@ -28,7 +28,7 @@ _CALCULATION_WRITE = ExecutionPolicySpec(
     frozenset(("calculation", "encrypted-facts")),
     frozenset(("local-state",)),
     "compute",
-    "profile-bound",
+    CommandWriteRoute.PROFILE_BOUND,
     destructive=False,
     handoff=False,
 )
@@ -37,7 +37,7 @@ _CRYPTO_FACT_FILE_WRITE = ExecutionPolicySpec(
     frozenset(("crypto", "encrypted-facts")),
     frozenset(("local-state",)),
     "local-io",
-    "none",
+    CommandWriteRoute.NONE,
     destructive=False,
     handoff=False,
 )
@@ -46,7 +46,7 @@ _CRYPTO_PROFILE_WRITE = ExecutionPolicySpec(
     frozenset(("crypto", "encrypted-facts")),
     frozenset(("local-state",)),
     "local-io",
-    "profile-bound",
+    CommandWriteRoute.PROFILE_BOUND,
     destructive=False,
     handoff=False,
 )
@@ -55,7 +55,7 @@ _CRYPTO_READ = ExecutionPolicySpec(
     frozenset(("crypto",)),
     frozenset(("none",)),
     "local-io",
-    "none",
+    CommandWriteRoute.NONE,
     destructive=False,
     handoff=False,
 )
@@ -64,7 +64,7 @@ _INTERACTIVE_MODEL_WRITE = ExecutionPolicySpec(
     frozenset(("calculation", "encrypted-facts")),
     frozenset(("local-state",)),
     "interactive",
-    "profile-bound",
+    CommandWriteRoute.PROFILE_BOUND,
     destructive=False,
     handoff=False,
 )
@@ -73,20 +73,25 @@ _MODEL_HANDOFF = ExecutionPolicySpec(
     frozenset(("encrypted-facts", "filing")),
     frozenset(("local-state",)),
     "compute",
-    "profile-bound",
+    CommandWriteRoute.PROFILE_BOUND,
     destructive=False,
     handoff=True,
 )
 
 _MODEL_READ = ExecutionPolicySpec(
-    frozenset(("encrypted-facts",)), frozenset(("none",)), "local-io", "none", destructive=False, handoff=False
+    frozenset(("encrypted-facts",)),
+    frozenset(("none",)),
+    "local-io",
+    CommandWriteRoute.NONE,
+    destructive=False,
+    handoff=False,
 )
 
 _MODEL_WRITE = ExecutionPolicySpec(
     frozenset(("encrypted-facts",)),
     frozenset(("local-state",)),
     "local-io",
-    "profile-bound",
+    CommandWriteRoute.PROFILE_BOUND,
     destructive=False,
     handoff=False,
 )
@@ -95,13 +100,13 @@ _REGISTRY_MODEL_READ = ExecutionPolicySpec(
     frozenset(("registry", "encrypted-facts")),
     frozenset(("none",)),
     "local-io",
-    "none",
+    CommandWriteRoute.NONE,
     destructive=False,
     handoff=False,
 )
 
 _REGISTRY_READ = ExecutionPolicySpec(
-    frozenset(("registry",)), frozenset(("none",)), "compute", "none", destructive=False, handoff=False
+    frozenset(("registry",)), frozenset(("none",)), "compute", CommandWriteRoute.NONE, destructive=False, handoff=False
 )
 
 __all__ = [

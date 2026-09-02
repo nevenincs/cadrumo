@@ -5,6 +5,7 @@ from __future__ import annotations
 from .command_spec import (
     ArgumentSpec,
     CommandSpec,
+    CommandWriteRoute,
     DeferredTarget,
     ExecutionPolicySpec,
     InvocationSpec,

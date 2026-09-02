@@ -19,6 +19,7 @@ from __future__ import annotations
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
     CommandSpec,
+    CommandWriteRoute,
     DeferredTarget,
     ExecutionPolicySpec,
     InvocationSpec,
@@ -34,19 +35,22 @@ from .command_spec import (
 
 _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)
 _GOOGLE_CALCULATION_READ = ExecutionPolicySpec(
-    frozenset({"calculation", "encrypted-facts", "google"}), frozenset({"google"}), "external-io", "none"
+    frozenset({"calculation", "encrypted-facts", "google"}),
+    frozenset({"google"}),
+    "external-io",
+    CommandWriteRoute.NONE,
 )
 _GOOGLE_CALCULATION_WRITE = ExecutionPolicySpec(
     frozenset({"calculation", "encrypted-facts", "google", "profile-custody"}),
     frozenset({"google", "local-state"}),
     "external-io",
-    "profile-bound",
+    CommandWriteRoute.PROFILE_BOUND,
 )
 _GOOGLE_CALCULATION_HANDOFF = ExecutionPolicySpec(
     frozenset({"calculation", "encrypted-facts", "filing", "google", "profile-custody"}),
     frozenset({"google", "local-state"}),
     "external-io",
-    "profile-bound",
+    CommandWriteRoute.PROFILE_BOUND,
     handoff=True,
 )
 

@@ -119,7 +119,7 @@ def test_new_command_spec_ingress_is_detected_without_a_typer_decorator(tmp_path
     capabilities=frozenset({"encrypted-facts"}),
     side_effects=frozenset({"local-state"}),
     performance="local-io",
-    write_route=CommandWriteRoute.PROFILE_BOUND,
+    write_route="profile-bound",
 )
 
 PROBE_COMMAND_SPECS = (
@@ -171,7 +171,7 @@ def test_command_spec_leaf_resolves_declared_and_fallback_handlers_without_execu
     capabilities=frozenset({"encrypted-facts"}),
     side_effects=frozenset({"local-state"}),
     performance="local-io",
-    write_route=CommandWriteRoute.PROFILE_BOUND,
+    write_route="profile-bound",
 )
 
 def _leaf(token, module, policy, *, handler_name=None):

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .command_spec import (
     CommandSpec,
+    CommandWriteRoute,
     DeferredTarget,
     ExecutionPolicySpec,
     InvocationSpec,
