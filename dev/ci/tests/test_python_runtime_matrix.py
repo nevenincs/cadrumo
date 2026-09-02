@@ -50,7 +50,7 @@ def test_matrix_projection_keeps_stable_and_canary_verdict_dimensions() -> None:
     assert [row["python-version"] for row in rows] == ["3.13", "3.14", "3.15.0-rc.2"]
     assert [row["phase"] for row in rows] == ["stable", "stable", "prerelease"]
     assert [row["blocking"] for row in rows] == [True, True, False]
-    assert [row["classifier-eligible"] for row in rows] == [True, False, False]
+    assert [row["classifier-eligible"] for row in rows] == [True, True, False]
 
 
 def test_missing_stable_minor_is_refused() -> None:

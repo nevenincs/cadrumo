@@ -19,7 +19,7 @@
       "implementation": "CPython",
       "phase": "stable",
       "blocking": true,
-      "classifier_eligible": false
+      "classifier_eligible": true
     }
   ],
   "next": {

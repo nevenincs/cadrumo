@@ -101,12 +101,12 @@ def test_python_classifier_gate_detects_divergence() -> None:
     """A companion that drifts from the root cannot pass the parity contract."""
     inventory = load_runtime_inventory(_INVENTORY_PATH)
     classifiers = {name: _extract_python_minors(path) for name, path in _PYPROJECTS.items()}
-    classifiers["cadrumo_data_manuals"] = frozenset({"3.13", "3.14"})
+    classifiers["cadrumo_data_manuals"] = frozenset({"3.13"})
 
     with pytest.raises(AssertionError, match="diverge"):
         _assert_python_classifier_policy(
             classifiers,
-            eligible_minors=frozenset({"3.13"}),
+            eligible_minors=frozenset({"3.13", "3.14"}),
             prerelease_minor=inventory.next.minor,
         )
 
