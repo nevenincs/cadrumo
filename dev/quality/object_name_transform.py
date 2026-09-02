@@ -40,7 +40,7 @@ __all__ = [
     "ObjectNameProposedOutput",
     "ObjectNameTransformError",
     "ObjectNameTransformResult",
-    "plan_object_name_transformations",
+    "plan_object_name_transformation",
 ]
 
 
@@ -295,7 +295,8 @@ class _RenameTransformer(cst.CSTTransformer):
                 if operation.operation_kind != "module-rename" or operation.old_path != self.path:
                     continue
                 old_module, _old_name, new_module, _new_name = self._operation_names(operation)
-                assert operation.new_path is not None
+                if operation.new_path is None:
+                    raise ObjectNameTransformError(f"module operation {operation.operation_id!r} has no target path")
                 old_package = _import_package(old_module, operation.old_path)
                 new_package = _import_package(new_module, operation.new_path)
                 if old_package != new_package:
@@ -452,7 +453,7 @@ def _transform_python(
     return changed.bytes, transformer
 
 
-def plan_object_name_transformations(
+def plan_object_name_transformation(
     manifest: ObjectNameRenameManifest,
     *,
     repo_root: Path,
