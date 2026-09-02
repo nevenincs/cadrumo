@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-python-runtime-compatibility-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:77b8dabc04d3f34b9856c328a1db7828c32c1e3bdea2cf6cebf39f886f6e1706'
+body_hash: 'sha256:ff1c273ed74e5d6446eabdf2b9b0f7b4181b637e550c921941e728b0069ca16c'
 ---
 
 <!-- RETIRED: S33, S35, S37, S39, S41, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 -->
@@ -89,7 +89,7 @@ Make stable support claims only after their blocking evidence passes.
 - [x] `P05.S34` - Enforce root and companion classifier parity and prerelease exclusion; `dev/packaging/tests/test_classifier_parity.py`.
 - [x] `P05.S36` - Test sealed release artifacts across supported stable runtimes; `.github/workflows/publish.yml`.
 - [x] `P05.S38` - Document local runtime selection and source versus binary evidence; `CONTRIBUTING.md`.
-- [ ] `P05.S40` - Document final-runtime promotion and classifier evidence; `RELEASING.md`.
+- [x] `P05.S40` - Document final-runtime promotion and classifier evidence; `RELEASING.md`.
 - [ ] `P05.S42` - Add an inventory-driven local compatibility command; `justfile`.
 
 ## Parallelization
