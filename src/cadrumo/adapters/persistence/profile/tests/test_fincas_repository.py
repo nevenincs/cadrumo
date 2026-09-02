@@ -18,7 +18,7 @@ from ._fincas_engine_fixture import engine
 
 __all__ = ["engine"]
 
-from .....domain.fincas.enums import ExpenseCategory, UseType
+from .....domain.fincas.enums import ExpenseCategory, TitularContribuyente, TitularidadRegime, UseType
 from .....domain.fincas.models import (
     Arrendamiento,
     Finca,
@@ -26,6 +26,7 @@ from .....domain.fincas.models import (
     FincaGasto,
     FincaRendimientoRecord,
 )
+from .....domain.fincas.titularidad import Titularidad
 from ...storage.errors import RepositoryError
 from ...storage.sql.session import session_scope
 from ..fincas import (
@@ -50,6 +51,11 @@ def _sample_finca(identifier: str = "calle-mayor-12-3a") -> Finca:
         coste_adquisicion_construccion=Decimal("166666.67"),
         acquisition_date=date(2010, 5, 14),
         use_type=UseType.VIVIENDA_ARRENDADA,
+        titularidad=Titularidad(
+            regime=TitularidadRegime.PLENO_DOMINIO,
+            contribuyente=TitularContribuyente.PRIMER_DECLARANTE,
+            porcentaje_propiedad=Decimal("100.00"),
+        ),
         is_stressed_area=True,
     )
 
@@ -78,6 +84,11 @@ def test_finca_repository_round_trip(engine: Engine) -> None:
                 coste_adquisicion_construccion=created.coste_adquisicion_construccion,
                 acquisition_date=created.acquisition_date,
                 use_type=created.use_type,
+                titularidad=Titularidad(
+                    regime=TitularidadRegime.PLENO_DOMINIO,
+                    contribuyente=TitularContribuyente.PRIMER_DECLARANTE,
+                    porcentaje_propiedad=Decimal("100.00"),
+                ),
                 is_stressed_area=False,
             ),
         )
@@ -101,6 +112,11 @@ def test_finca_construction_basis_validation_rejects_inverted_split(tmp_path: Pa
             coste_adquisicion_construccion=Decimal("150"),
             acquisition_date=date(2020, 1, 1),
             use_type=UseType.VIVIENDA_ARRENDADA,
+            titularidad=Titularidad(
+                regime=TitularidadRegime.PLENO_DOMINIO,
+                contribuyente=TitularContribuyente.PRIMER_DECLARANTE,
+                porcentaje_propiedad=Decimal("100.00"),
+            ),
         )
 
 

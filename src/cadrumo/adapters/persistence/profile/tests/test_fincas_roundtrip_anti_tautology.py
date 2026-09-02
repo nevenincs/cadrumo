@@ -17,8 +17,9 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy.engine import Engine
 
-from .....domain.fincas.enums import UseType
+from .....domain.fincas.enums import TitularContribuyente, TitularidadRegime, UseType
 from .....domain.fincas.models import Finca
+from .....domain.fincas.titularidad import Titularidad
 from ._fincas_engine_fixture import engine
 
 __all__ = ["engine"]
@@ -43,6 +44,11 @@ def _populated_finca() -> Finca:
         acquisition_date=date(2015, 6, 1),
         disposal_date=date(2024, 12, 31),
         use_type=UseType.VIVIENDA_ARRENDADA,
+        titularidad=Titularidad(
+            regime=TitularidadRegime.PLENO_DOMINIO,
+            contribuyente=TitularContribuyente.PRIMER_DECLARANTE,
+            porcentaje_propiedad=Decimal("100.00"),
+        ),
         is_stressed_area=True,
         schema_version="1",
     )

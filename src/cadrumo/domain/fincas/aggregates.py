@@ -11,6 +11,12 @@ rental register repositories for a given ejercicio and returns a
 * residential rental reduction under art. 23.2.
 * real-estate imputation under art. 85.
 
+Each of those is computed for the whole property first and then reduced
+to the share the declaring contribuyente is the titular of, per
+Ley 35/2006 IRPF art. 11.3. See :mod:`domain.fincas.titularidad` for the
+attribution rules and the two states in which no filing-grade share can
+be produced.
+
 Filing targets are registry-owned; this module does not encode
 filing-line identifiers.
 """
@@ -27,7 +33,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents as _round_to_cents
 from .amortization_ledger import compute_amortization_for_year
 from .enums import ReduccionTier, UseType
-from .errors import FincaAggregationError
+from .errors import FincaAggregationError, FincaValidationError
 from .expense_rollup import CarryForwardEntry, compute_gastos_for_year
 from .imputacion_parameters import load_imputacion_parameters
 from .models import Arrendamiento, Finca
@@ -57,12 +63,20 @@ _NOT_APPLICABLE_REDUCCION = TierResolution(
 
 
 class FincaAttribution(BaseModel):
-    """Per-finca contribution to rental aggregate totals."""
+    """Per-finca contribution to rental aggregate totals.
+
+    Every amount below is the share attributable to the declaring
+    contribuyente, not the whole-property figure:
+    ``titularidad_share`` is the factor already applied to each of
+    them, so the whole-property figure is recoverable for audit by
+    dividing through it.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     finca_id: int
     finca_identifier: str
+    titularidad_share: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
     ingresos: Decimal = Field(ge=Decimal("0"))
     gastos_deducibles: Decimal = Field(ge=Decimal("0"))
     amortizacion: Decimal = Field(ge=Decimal("0"))
@@ -71,7 +85,12 @@ class FincaAttribution(BaseModel):
 
 
 class ContractTierAttribution(BaseModel):
-    """Per-contract tier resolution + reducción amount."""
+    """Per-contract tier resolution + reducción amount.
+
+    ``rendimiento_neto_positivo`` and ``reduccion_amount`` carry the
+    declaring contribuyente's share, on the same basis as
+    :class:`FincaAttribution`.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -135,8 +154,11 @@ def compute_finca_aggregates(
 
     Raises:
         FincaAggregationError: When a contract references a missing
-            finca, or when the ledger surfaces an inconsistent
-            cumulative entry.
+            finca, when the ledger surfaces an inconsistent cumulative
+            entry, or when a finca's titularidad cannot attribute a
+            filing-grade share — either because it was never declared
+            or because it combines pleno dominio with usufructo, whose
+            amortización rule the register does not model.
     """
     fincas = finca_repo.list_all()
     if not fincas:
@@ -165,6 +187,7 @@ def compute_finca_aggregates(
     for finca in fincas:
         if finca.id is None:
             continue
+        share = _attribution_share(finca)
         if _finca_is_active_for_period(finca, period_year):
             ingresos, gastos, amortization, reduccion_total, contract_attribs = _aggregate_finca(
                 finca,
@@ -175,7 +198,12 @@ def compute_finca_aggregates(
                 ledger_repo=ledger_repo,
             )
             for attrib in contract_attribs:
-                contract_tier[attrib.contract_id] = attrib
+                contract_tier[attrib.contract_id] = attrib.model_copy(
+                    update={
+                        "rendimiento_neto_positivo": _attributed(attrib.rendimiento_neto_positivo, share),
+                        "reduccion_amount": _attributed(attrib.reduccion_amount, share),
+                    },
+                )
         else:
             _log.debug(
                 "rental aggregates: finca id=%s identifier=%s skipped "
@@ -194,9 +222,20 @@ def compute_finca_aggregates(
             income_repo=income_repo,
         )
 
+        # Ley 35/2006 IRPF art. 11.3: the cotitular declares the result of
+        # applying their participation percentage to the total produced by the
+        # property. Whole-property figures are computed first, exactly as the
+        # manual's worked examples do, and attributed here.
+        ingresos = _attributed(ingresos, share)
+        gastos = _attributed(gastos, share)
+        amortization = _attributed(amortization, share)
+        reduccion_total = _attributed(reduccion_total, share)
+        imputacion = _attributed(imputacion, share)
+
         finca_attribution[finca.id] = FincaAttribution(
             finca_id=finca.id,
             finca_identifier=finca.identifier,
+            titularidad_share=share,
             ingresos=ingresos,
             gastos_deducibles=gastos,
             amortizacion=amortization,
@@ -239,6 +278,28 @@ def compute_finca_aggregates(
         aggregates.imputacion_rentas_inmobiliarias,
     )
     return aggregates
+
+
+def _attribution_share(finca: Finca) -> Decimal:
+    """Return the share of ``finca``'s whole-property figures this contribuyente declares.
+
+    Raises:
+        FincaAggregationError: When the finca's titularidad is not
+            filing-grade. The refusal names the finca and the reason,
+            so a never-declared share and an unsupported mixed regime
+            stay distinguishable at the handoff.
+    """
+    try:
+        return finca.titularidad.attribution_share()
+    except FincaValidationError as exc:
+        raise FincaAggregationError(
+            f"finca id={finca.id} identifier={finca.identifier!r} cannot be attributed: {exc}",
+        ) from exc
+
+
+def _attributed(whole_property_amount: Decimal, share: Decimal) -> Decimal:
+    """Return ``whole_property_amount`` reduced to the declaring contribuyente's ``share``."""
+    return _round_to_cents(whole_property_amount * share)
 
 
 _RENDIMIENTO_ELIGIBLE_USE_TYPES: frozenset[UseType] = frozenset(

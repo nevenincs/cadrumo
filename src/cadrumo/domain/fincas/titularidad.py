@@ -241,9 +241,7 @@ class Titularidad(BaseModel):
         if self.regime is TitularidadRegime.NUDA_PROPIEDAD:
             return Decimal("0")
         percentage = (
-            self.porcentaje_usufructo
-            if self.regime is TitularidadRegime.USUFRUCTO
-            else self.porcentaje_propiedad
+            self.porcentaje_usufructo if self.regime is TitularidadRegime.USUFRUCTO else self.porcentaje_propiedad
         )
         return percentage / _FULL_PERCENTAGE
 

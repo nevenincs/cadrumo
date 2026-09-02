@@ -23,7 +23,13 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ....core.logging import get_logger
-from ....domain.fincas.enums import ExpenseCategory, UseType
+from ....domain.fincas.enums import (
+    ExpenseCategory,
+    TitularContribuyente,
+    TitularidadRegime,
+    UseType,
+)
+from ....domain.fincas.errors import FincaValidationError
 from ....domain.fincas.models import (
     Arrendamiento,
     Finca,
@@ -31,6 +37,7 @@ from ....domain.fincas.models import (
     FincaGasto,
     FincaRendimientoRecord,
 )
+from ....domain.fincas.titularidad import Titularidad
 
 if TYPE_CHECKING:  # pragma: no cover — type-only imports
     from ..storage.sql import orm as _orm
@@ -132,6 +139,13 @@ class FincaRepository:
                 disposal_date=record.disposal_date,
                 use_type=record.use_type.value,
                 is_stressed_area=record.is_stressed_area,
+                titularidad_regime=record.titularidad.regime.value,
+                titularidad_contribuyente=(
+                    None if record.titularidad.contribuyente is None else record.titularidad.contribuyente.value
+                ),
+                titularidad_hijo_ordinal=record.titularidad.hijo_ordinal,
+                porcentaje_propiedad=record.titularidad.porcentaje_propiedad,
+                porcentaje_usufructo=record.titularidad.porcentaje_usufructo,
                 schema_version=record.schema_version,
             )
             self.session.add(row)
@@ -148,6 +162,13 @@ class FincaRepository:
             row.disposal_date = record.disposal_date
             row.use_type = record.use_type.value
             row.is_stressed_area = record.is_stressed_area
+            row.titularidad_regime = record.titularidad.regime.value
+            row.titularidad_contribuyente = (
+                None if record.titularidad.contribuyente is None else record.titularidad.contribuyente.value
+            )
+            row.titularidad_hijo_ordinal = record.titularidad.hijo_ordinal
+            row.porcentaje_propiedad = record.titularidad.porcentaje_propiedad
+            row.porcentaje_usufructo = record.titularidad.porcentaje_usufructo
             row.schema_version = record.schema_version
         _flush_or_wrap(self.session, "rental_finca")
         return self._to_record(row)
@@ -180,6 +201,23 @@ class FincaRepository:
             raise RepositoryError(
                 f"rental_finca id={row.id} has unknown use_type={row.use_type!r}",
             ) from exc
+        try:
+            titularidad = Titularidad(
+                regime=TitularidadRegime(row.titularidad_regime),
+                contribuyente=(
+                    None
+                    if row.titularidad_contribuyente is None
+                    else TitularContribuyente(row.titularidad_contribuyente)
+                ),
+                hijo_ordinal=row.titularidad_hijo_ordinal,
+                porcentaje_propiedad=row.porcentaje_propiedad,
+                porcentaje_usufructo=row.porcentaje_usufructo,
+            )
+        except (ValueError, FincaValidationError) as exc:
+            _log.error("rental_finca id=%s has an unreadable titularidad", row.id, exc_info=True)
+            raise RepositoryError(
+                f"rental_finca id={row.id} has an unreadable titularidad: {exc}",
+            ) from exc
         return Finca(
             id=row.id,
             identifier=row.identifier,
@@ -193,6 +231,7 @@ class FincaRepository:
             disposal_date=row.disposal_date,
             use_type=use_type,
             is_stressed_area=row.is_stressed_area,
+            titularidad=titularidad,
             schema_version=row.schema_version,
         )
 

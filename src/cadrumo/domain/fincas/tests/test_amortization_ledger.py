@@ -14,9 +14,10 @@ from decimal import Decimal
 import pytest
 
 from ..amortization_ledger import computation_to_ledger_entry, compute_amortization_for_year
-from ..enums import UseType
+from ..enums import TitularContribuyente, TitularidadRegime, UseType
 from ..errors import AmortizationLedgerCapExceededError
 from ..models import Finca, FincaRendimientoRecord
+from ..titularidad import Titularidad
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -36,6 +37,11 @@ def _finca(
         coste_adquisicion_construccion=coste_construccion,
         acquisition_date=date(2020, 1, 1),
         use_type=UseType.VIVIENDA_ARRENDADA,
+        titularidad=Titularidad(
+            regime=TitularidadRegime.PLENO_DOMINIO,
+            contribuyente=TitularContribuyente.PRIMER_DECLARANTE,
+            porcentaje_propiedad=Decimal("100.00"),
+        ),
     )
 
 
