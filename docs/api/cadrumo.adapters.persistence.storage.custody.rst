@@ -18,6 +18,7 @@ Submodules
    cadrumo.adapters.persistence.storage.custody._inventory
    cadrumo.adapters.persistence.storage.custody._kdf_attestation
    cadrumo.adapters.persistence.storage.custody._kdf_codec
+   cadrumo.adapters.persistence.storage.custody._kdf_operations
    cadrumo.adapters.persistence.storage.custody._kdf_process
    cadrumo.adapters.persistence.storage.custody._kdf_windows_job
    cadrumo.adapters.persistence.storage.custody._kdf_worker

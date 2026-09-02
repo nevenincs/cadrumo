@@ -853,9 +853,6 @@ errors:
     refused_access_gate_live_read_not_enabled: L'accés de lectura en viu a l'AEAT
       està desactivat. Aquesta operació no pot contactar amb l'AEAT amb la configuració
       actual.
-    refused_aeat_record_multi_recipient: El registre declarat anomena més d'un destinatari,
-      de manera que no pot convertir-se en un assentament de contrapart única. Concilieu-lo
-      per destinatari.
     refused_apoderado_invalid_represented_nif: L'identificador fiscal del representat
       no és un NIF, NIE o CIF vàlid.
     refused_apoderado_live_check_unavailable: La comprovació en viu d'apoderaments

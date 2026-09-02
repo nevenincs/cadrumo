@@ -653,14 +653,6 @@ ignore_imports =
     # records a reviewed decision rather than suppressing something that would
     # otherwise have gone unnoticed.
     cadrumo.application.ledger.batch_ingest -> cadrumo.adapters.inbound.einvoice.shape
-    # Same shape, same reason: the AEAT submission BATCH is read by the inbound
-    # adapter (reading an externally-authored format is inbound-adapter work),
-    # and this module is the projection that decides how many recipients a
-    # single-counterparty ledger record can accept. The batch reader carries
-    # every recipient deliberately and names this refusal as the consumer's
-    # obligation, so the constraint has to live where the projection does --
-    # which means consuming the adapter's record type here.
-    cadrumo.application.ledger.aeat_record_projection -> cadrumo.adapters.inbound.einvoice.record_batch
     cadrumo.application.filing.history_repository -> cadrumo.adapters.persistence.**
     cadrumo.application.filing.persistence_wiring -> cadrumo.adapters.persistence.**
     cadrumo.application.inventory.service -> cadrumo.adapters.persistence.**
@@ -673,7 +665,7 @@ ignore_imports =
     # ── application/ledger narrowed from `adapters.**` to the layer each module
     #    actually reaches. A broad wildcard admits an INBOUND-adapter edge from
     #    these modules without review, and that is the one class this contract
-    #    exists to surface: the three einvoice pins above were each justified by
+    #    exists to surface: the two einvoice pins above were each justified by
     #    name, while three more inbound edges sat inside these wildcards
     #    unexamined. Narrowing is to keep the inbound class loud, not tidiness.
     #    Each target below was read out of the module's runtime imports;
@@ -722,8 +714,8 @@ ignore_imports =
     # A fourth einvoice consumer, previously hidden inside a broad wildcard while
     # its three siblings were individually reviewed. A structured e-invoice is
     # read exactly by parse_einvoice_document and its parse failure is caught
-    # here; same justification as _evidence_input, _batch_ingest and
-    # _aeat_record_projection, now stated rather than assumed.
+    # here; same justification as _evidence_input and _batch_ingest, now stated
+    # rather than assumed.
     # Splitting evidence_draft turned that one consumer into three, each holding
     # the part of the read it owns: the extraction lane calls the parser and
     # catches its XML failure, and the two record-shaping modules consume the

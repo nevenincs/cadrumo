@@ -51,8 +51,6 @@ frozen_prefixes = [
 ]
 
 allowed = [
-  "cadrumo.adapters.inbound.einvoice._aeat_record_schema",  # unreachable
-  "cadrumo.adapters.inbound.einvoice.record_batch",  # unreachable
   "cadrumo.adapters.outbound.aeat.sede._renta_web_open_safety",  # unreachable
   "cadrumo.adapters.outbound.aeat.sede.renta_web_open",  # unreachable
   "cadrumo.adapters.outbound.aeat.verify",  # unreachable
@@ -60,7 +58,6 @@ allowed = [
   "cadrumo.adapters.persistence.profile.fincas",  # unreachable
   "cadrumo.application.inventory._source_readiness",  # unreachable
   "cadrumo.application.invoices._reconciliation",  # unreachable
-  "cadrumo.application.ledger.aeat_record_projection",  # unreachable
   "cadrumo.application.modelo._edit_facade",  # unreachable
   "cadrumo.application.modelo.edit_session",  # unreachable
   "cadrumo.application.operator_surface.calculation_workflows",  # unreachable

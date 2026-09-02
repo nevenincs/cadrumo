@@ -783,8 +783,6 @@ errors:
       file.
     refused_access_gate_live_read_not_enabled: Live-read access to the AEAT is disabled.
       This operation cannot contact the AEAT under the current configuration.
-    refused_aeat_record_multi_recipient: The declared record names more than one recipient,
-      so it cannot become a single-counterparty ledger record. Reconcile it per recipient.
     refused_apoderado_invalid_represented_nif: The represented party's tax identifier
       is not a valid NIF, NIE, or CIF.
     refused_apoderado_live_check_unavailable: The live check of representatives is

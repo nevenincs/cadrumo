@@ -13,8 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.adapters.inbound.einvoice._aeat_record_schema
    cadrumo.adapters.inbound.einvoice.parsers
-   cadrumo.adapters.inbound.einvoice.record_batch
    cadrumo.adapters.inbound.einvoice.shape
    cadrumo.adapters.inbound.einvoice.xml

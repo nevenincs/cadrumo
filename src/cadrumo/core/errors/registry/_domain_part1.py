@@ -458,16 +458,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.ledger.aeat_record_projection.AeatRecordProjectionError",
-        ErrorCode(
-            code="REFUSED_AEAT_RECORD_MULTI_RECIPIENT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_aeat_record_multi_recipient",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.ledger.confirmation_gate.ConfirmationBlockedError",
         ErrorCode(
             code="REFUSED_LEDGER_CONFIRMATION_BLOCKED",
