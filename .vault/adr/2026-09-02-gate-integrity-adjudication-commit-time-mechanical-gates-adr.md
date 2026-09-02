@@ -5,9 +5,10 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:c31ad2630543eb5b5b045655ef9603baa164e8943820cf19128ccdc88622a990'
+body_hash: 'sha256:673eb89c6b987e2715f914628f94ee4178db0fbf9ba6778079e4306a0012fee0'
 related:
   - "[[2026-09-02-gate-integrity-adjudication-tui-entrypoint-contracts-adr]]"
+  - '[[2026-09-02-gate-integrity-adjudication-research]]'
 ---
 
 # `gate-integrity-adjudication` adr: `mechanical gates stay verify-only and out of commit time` | (**status:** `accepted`)
@@ -92,14 +93,16 @@ rationale is left in place and is now corroborated rather than revised.
 
 A change-scoped verification recipe is added beside the existing static gates. It
 resolves the Python paths a change touches against a base reference, and runs the
-formatting and style checks over exactly those paths, reporting nothing on a clean
-change. It manipulates no git state, rewrites no file, and its cost is bounded by the
-size of the change rather than the size of the tree, so it is usable as a habit
+formatting, style and relative-import checks over exactly those paths, reporting nothing
+on a clean change. It manipulates no git state, rewrites no file, and its cost is bounded
+by the size of the change rather than the size of the tree, so it is usable as a habit
 immediately before committing.
 
-The relative-import and dependency gates are deliberately not folded into it. Both are
-whole-tree predicates whose answer does not decompose to the changed paths, and the
-aggregate static gate already owns them.
+Three of the four gates are covered because each decomposes to a single file: the
+relative-import scanner already accepts explicit paths for exactly this reason. The
+dependency gate is deliberately left out. It is a usage-versus-declaration predicate over
+the whole tree, so a per-path answer would be meaningless, and the aggregate static gate
+already owns it.
 
 The recipe is a convenience, not a barrier. Nothing enforces it, which is the point: in a
 worktree with concurrent writers, the enforcement position that would make it binding is
@@ -135,6 +138,6 @@ accepted deliberately, and the recipe narrows the window in which one goes unnot
 rather than closing it.
 
 The recipe adds a surface that must stay correct as the gates evolve, and it deliberately
-covers only the two gates that decompose to changed paths, so it can report clean while a
+covers only the gates that decompose to changed paths, so it can report clean while a
 whole-tree predicate is red. It is a fast preflight and not a substitute for the aggregate
 gate, and it should not be extended into one.

@@ -5,10 +5,11 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:15bd2911a96bd2aa6b5802ff8b7ddc2e49b60a09ee7ba12e31cb0a24cc426d8d'
+body_hash: 'sha256:44792164beda31986ad1008685f3135c5349553fc18a579b048a52b8f61b8420'
 related:
   - "[[2026-09-02-gate-integrity-adjudication-tui-entrypoint-contracts-adr]]"
   - "[[2026-09-02-registry-enum-canonicalization-adr]]"
+  - '[[2026-09-02-gate-integrity-adjudication-research]]'
 ---
 
 # `gate-integrity-adjudication` adr: `no suppression policy: the deliberate-wrong-type population is empty` | (**status:** `accepted`)

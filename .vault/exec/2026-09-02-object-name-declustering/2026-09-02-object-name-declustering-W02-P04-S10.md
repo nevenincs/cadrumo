@@ -5,16 +5,11 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:06b19ed5a92be9cdec8e0ec93b0570ca4f34271725c72e168437b36ca5ec6248'
+body_hash: 'sha256:a33b7b97d076cd91001f166fc54f23e07cba2bc6c3efa5a2a3476aecc160f04e'
 step_id: 'S10'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Test exact edits, unsupported constructs, changed-path bounds, and byte-level refusal behavior
 

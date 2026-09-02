@@ -5,11 +5,12 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:c8631f90e89e7dd675a20e554cb1b946bd3c48dccf5fbf5780660c7b870e150e'
+body_hash: 'sha256:1ee8362787bb7a99b209035c6ca81ce7be97fbd30df388dd81f9150d11d76b9c'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
   - "[[2026-09-02-cli-distribution-consolidation-adr]]"
+  - '[[2026-09-02-gate-integrity-adjudication-research]]'
 ---
 
 # `gate-integrity-adjudication` adr: `the CLI-to-TUI import edges are a code defect, not a stale contract` | (**status:** `accepted`)

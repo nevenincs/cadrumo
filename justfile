@@ -290,6 +290,22 @@ check-unreachable-ratchet:
 check-dependencies:
     @uv run --no-sync python -m dev.quality.quiet deptry src/cadrumo src/cadrumo_harness dev/registry --known-first-party cadrumo --known-first-party cadrumo_harness --known-first-party dev --non-dev-dependency-groups registry --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
 
+# Verify format, style and relative-import shape over ONLY the paths a change
+# touches. A seconds-long preflight to run before committing, where the whole-tree
+# gates are too slow to run between batches and report drift owned by other writers.
+#
+# Reads `git diff --name-only` and nothing else: it manipulates no git state and
+# rewrites no file, so it is safe to run at any time in a shared worktree. It is
+# deliberately NOT installed as a commit hook -- see the policy at the top of
+# `prek.toml`. Repair stays a separate explicit step (`just fix-all`).
+#
+# Partial by design: check-dependencies is a whole-tree usage-versus-declaration
+# predicate that does not decompose to changed paths, and stays with check-all.
+[doc('Verify format, style and relative imports over only the paths changed since BASE.')]
+[group('static-checks')]
+check-changed BASE="HEAD":
+    @uv run --no-sync python -m dev.quality.changed_paths {{BASE}}
+
 # Cheap dependency-surface preflight: verify pyproject, optional-extra registry,
 # and frozen core/all-extras/all-groups exports before any artifact work.
 [doc('Cheap dependency-surface preflight: verify pyproject, optional-extra registry, and frozen exports.')]

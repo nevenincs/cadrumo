@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:835c0e22521c1aee2167c5808136006e2cb51b0e366885717c785b1306096ebb'
+body_hash: 'sha256:b912dee1fadd44b335808f326fade12315d386baa2022490d5bef73837202e57'
 related: []
 ---
 
@@ -1329,3 +1329,41 @@ Not unified, for the same reason as `HealthSeverity`: these are declared tokens 
 registry surface, and deciding they are one concept means changing what one of them
 emits. That is a registry-declaration change with its own grounding requirement, not a
 de-duplication edit. Recorded so the question is visible.
+
+## Finding 62 — the campaign's own rule, broken by the campaign
+
+`ProfileHealthStatus` was a `Literal` alias of eight verdicts whose docstring carried an
+explicit warning: `profile_locked` must never be absorbed into `missing_profile_record`
+or `profile_record_unreadable`, because "collapsing the three told an operator whose
+profile was merely locked that their financial records were gone". That warning was
+prose at one site and three separately hand-written pairs everywhere else.
+
+It is now a `StrEnum` with `RECORD_FAULT_STATUSES` naming the two, and
+`UNREADABLE_PROFILE_STATUSES` derived from that set by union rather than restated, so
+the two cannot disagree about which record faults exist. The warned-about member is now
+structurally excluded, proven rather than asserted.
+
+The promotion also broke sixteen tests, and the cause is the exact rule this campaign
+has been writing into its own procedure since the first target: `ActiveProfileHealth`
+is a strict frozen model, and its `status` field was given the BARE enum. Strict
+validation refuses a raw token for a bare enum, so every construction from a persisted
+string failed with `Input should be an instance of ProfileHealthStatus`. The field needed
+the literal-over-members form.
+
+Two things are worth recording beyond the fix. First, the load check passed throughout:
+the tree loads, every module imports, and nothing about the failure was visible until the
+owning tests ran. That is the whole reason the procedure puts the tests immediately after
+the load check rather than treating a clean import as success.
+
+Second, the first test run used a broad `-k` filter and reported 126 failures, in which
+these sixteen were invisible. Running the EDITED MODULE's own tests found them at once.
+A wide selection is not a stronger check than a narrow one; it is a noisier one, and
+noise hides regressions rather than surfacing them.
+
+After the fix: 47 failures fell to 39 and 98 passes rose to 106 in that package, with
+the `ActiveProfileHealth` class of error gone entirely. The 39 that remain are the
+`_WorkflowRunEnvelopeHeader` extra-fields refusal in `adapters/persistence/workflow.py`
+-- a file this change never touched, and the same shape as the known
+`_OperationRequestResolutionHeader` failure -- plus the inert-package cluster.
+
+Blind-spot scope: 23 -> 21 member sets declared in more than one place.
