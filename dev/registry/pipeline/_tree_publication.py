@@ -156,7 +156,6 @@ def publish_validated_generated_export_tree(
         _require_expected_target_state(context, target_export_root)
         recovery_completed = _recover_interrupted_publication(
             context=context,
-            candidate_export_root=candidate_export_root,
             target_export_root=target_export_root,
             journal_path=journal_path,
             joined=joined,
@@ -186,6 +185,12 @@ def publish_validated_generated_export_tree(
         )
         candidate_manifest = _verify_generated_export_package(candidate_export_root)
         candidate_manifest_sha256 = _sha256(candidate_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME)
+        staged_candidate_export_root = _stage_verified_candidate_package(
+            candidate_export_root=candidate_export_root,
+            target_export_root=target_export_root,
+            expected_manifest_sha256=candidate_manifest_sha256,
+            expected_manifest=candidate_manifest,
+        )
 
         backup_export_root = _rollback_sibling(
             target_root=context.target_root.resolve(),
@@ -197,7 +202,7 @@ def publish_validated_generated_export_tree(
             state="intent",
             modelo=str(context.validation.target.modelo),
             revision_id=str(context.validation.target.revision_id),
-            candidate_export=str(candidate_export_root),
+            candidate_export=str(staged_candidate_export_root),
             backup_export=str(backup_export_root),
             candidate_manifest_sha256=candidate_manifest_sha256,
         )
@@ -210,13 +215,14 @@ def publish_validated_generated_export_tree(
             journal = journal.model_copy(update={"state": "backup_staged"})
             _write_journal(journal_path, journal)
         try:
-            os.replace(candidate_export_root, target_export_root)
+            os.replace(staged_candidate_export_root, target_export_root)
         except OSError as publish_error:
             _restore_backup_or_raise(
                 target_export_root=target_export_root,
                 backup_export_root=backup_export_root,
                 publish_error=publish_error,
             )
+            _delete_verified_staged_candidate_if_present(staged_candidate_export_root)
             _delete_journal(journal_path)
             raise RegistryValidationError(
                 f"generated export publication failed; the previous target was restored: {publish_error}",
@@ -435,7 +441,6 @@ def _verify_post_cutover_target(
 def _recover_interrupted_publication(
     *,
     context: GeneratedExportTreePublicationContext,
-    candidate_export_root: Path,
     target_export_root: Path,
     journal_path: Path,
     joined: JoinedRecordDesign,
@@ -451,23 +456,10 @@ def _recover_interrupted_publication(
         context.validation.target.revision_id
     ):
         raise RegistryValidationError(f"generated publication journal does not belong to this target: {journal_path}")
-    expected_candidate = str(candidate_export_root)
     backup_export_root = _journal_backup_path(journal, target_export_root, context.target_root.resolve())
-    if journal.candidate_export != expected_candidate:
-        # A failed cross-volume replacement can have restored the old target,
-        # removed its rollback sibling, and lost the caller's temporary root
-        # before this process can clean up the journal.  That completed
-        # rollback is safe to forget, but only when there is nothing left to
-        # recover from the recorded transaction.
-        recorded_candidate = Path(journal.candidate_export)
-        if target_export_root.exists() and not backup_export_root.exists() and not recorded_candidate.exists():
-            _delete_journal(journal_path)
-            return False
-        raise RegistryValidationError(
-            "generated publication journal candidate does not match the explicit caller temporary root",
-        )
-    candidate_is_verified = candidate_export_root.exists() and _matches_journal_candidate(
-        candidate_export_root,
+    staged_candidate_export_root = _journal_staged_candidate_path(journal, target_export_root)
+    candidate_is_verified = staged_candidate_export_root.exists() and _matches_journal_candidate(
+        staged_candidate_export_root,
         journal,
     )
     target_is_verified = target_export_root.exists() and _matches_journal_candidate(target_export_root, journal)
@@ -494,7 +486,7 @@ def _recover_interrupted_publication(
     if backup_export_root.exists():
         if candidate_is_verified:
             candidate_manifest = _verify_recovery_package_against_current_authorities(
-                candidate_export_root,
+                staged_candidate_export_root,
                 context=context,
                 joined=joined,
                 semantic_map=semantic_map,
@@ -504,7 +496,7 @@ def _recover_interrupted_publication(
             )
             if target_export_root.exists():
                 _move_failed_candidate_aside(target_export_root)
-            os.replace(candidate_export_root, target_export_root)
+            os.replace(staged_candidate_export_root, target_export_root)
             fsync_parent_dir(target_export_root)
             _verify_post_cutover_target(
                 target_export_root,
@@ -522,7 +514,7 @@ def _recover_interrupted_publication(
         return False
     if candidate_is_verified and not target_export_root.exists():
         candidate_manifest = _verify_recovery_package_against_current_authorities(
-            candidate_export_root,
+            staged_candidate_export_root,
             context=context,
             joined=joined,
             semantic_map=semantic_map,
@@ -530,7 +522,7 @@ def _recover_interrupted_publication(
             render_profile=render_profile,
             render_profile_source_evidence=render_profile_source_evidence,
         )
-        os.replace(candidate_export_root, target_export_root)
+        os.replace(staged_candidate_export_root, target_export_root)
         fsync_parent_dir(target_export_root)
         _verify_post_cutover_target(
             target_export_root,
@@ -616,6 +608,90 @@ def _rollback_sibling(
     if backup.exists() or is_link_like(backup):
         raise RegistryValidationError(f"generated export rollback sibling unexpectedly exists: {backup}")
     return backup
+
+
+def _staging_sibling(target_export_root: Path) -> Path:
+    """Return one opaque, same-volume candidate sibling for the final swap."""
+    staging = target_export_root.with_name(
+        f".{target_export_root.name}.generated-stage-{secrets.token_hex(16)}",
+    )
+    if staging.exists() or is_link_like(staging):
+        raise RegistryValidationError(f"generated export staging sibling unexpectedly exists: {staging}")
+    return staging
+
+
+def _stage_verified_candidate_package(
+    *,
+    candidate_export_root: Path,
+    target_export_root: Path,
+    expected_manifest_sha256: str,
+    expected_manifest: ExportFragmentProvenanceManifest,
+) -> Path:
+    """Copy exactly one verified package to the target revision's filesystem.
+
+    The caller-owned candidate can live on a different filesystem (as it does
+    when a system temporary directory is on ``C:`` and the registry is on
+    ``Y:``).  Only this fresh, opaque sibling is ever the source of the final
+    ``os.replace`` into ``export/``.
+    """
+    staging = _staging_sibling(target_export_root)
+    try:
+        staging.mkdir()
+        for source in scan_directory(candidate_export_root, recursive=True, select=DirectoryEntryKind.FILES):
+            if is_link_like(source) or not source.is_file():
+                raise RegistryValidationError(f"generated candidate package changed while staging: {source}")
+            relative = source.relative_to(candidate_export_root)
+            destination = staging / relative
+            destination_parent = destination.parent
+            destination_parent.mkdir(parents=True, exist_ok=True)
+            _copy_and_fsync_regular_file(source, destination)
+            fsync_parent_dir(destination)
+        fsync_parent_dir(staging / ".staging-complete")
+        fsync_parent_dir(staging)
+        staged_manifest = _verify_generated_export_package(staging)
+        if (
+            _sha256(staging / EXPORT_FRAGMENT_PROVENANCE_FILENAME) != expected_manifest_sha256
+            or staged_manifest != expected_manifest
+        ):
+            raise RegistryValidationError("same-volume staged export does not match the validated candidate")
+    except OSError as exc:
+        _delete_verified_staged_candidate_if_present(staging)
+        raise RegistryValidationError(f"cannot stage generated export package beside target: {exc}") from exc
+    except RegistryValidationError:
+        _delete_verified_staged_candidate_if_present(staging)
+        raise
+    return staging
+
+
+def _copy_and_fsync_regular_file(source: Path, destination: Path) -> None:
+    """Copy one already enumerated regular member without metadata inheritance."""
+    with source.open("rb") as input_stream, destination.open("xb") as output_stream:
+        shutil.copyfileobj(input_stream, output_stream)
+        output_stream.flush()
+        os.fsync(output_stream.fileno())
+
+
+def _journal_staged_candidate_path(journal: _PublicationJournal, target_export_root: Path) -> Path:
+    candidate = Path(journal.candidate_export)
+    prefix = f".{target_export_root.name}.generated-stage-"
+    if candidate.parent != target_export_root.parent or not candidate.name.startswith(prefix):
+        raise RegistryValidationError(
+            "generated publication journal candidate is not a target-revision staging sibling",
+        )
+    if is_link_like(candidate):
+        raise RegistryValidationError("generated publication journal candidate must not be a symbolic link or junction")
+    return candidate
+
+
+def _delete_verified_staged_candidate_if_present(staging: Path) -> None:
+    if staging.exists():
+        _require_complete_regular_tree(staging, subject="generated export staging directory")
+        try:
+            shutil.rmtree(staging)
+        except OSError as exc:
+            raise RegistryValidationError(f"cannot delete generated export staging directory {staging}: {exc}") from exc
+        if staging.exists():
+            raise RegistryValidationError(f"generated export staging residue remains: {staging}")
 
 
 def _journal_path(context: GeneratedExportTreePublicationContext) -> Path:

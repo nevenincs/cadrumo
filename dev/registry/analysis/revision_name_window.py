@@ -18,8 +18,17 @@ shapes carry a temporal claim:
 
 Six conditions are reported, and every row names one of them:
 
-- ``name_misstates_opening`` - the name's leading year is not the year the
-  window opens.
+- ``selector_declares_no_window`` - the name claims a span of years and the
+  period selector carries neither an opening nor a closing year, so the span is
+  stated nowhere a consumer reads. A single-year revision declaring no bounds is
+  NOT reported: its id names the year, selection resolves through ``valid_from``,
+  and thirty-five such revisions resolve correctly today. The remedy here is to
+  author the declaration rather than to correct the name.
+- ``name_opens_after_window`` - the name's leading year is later than the year
+  the window opens, so the revision serves years its name does not claim. A
+  reader selecting by name understates the revision's reach.
+- ``name_opens_before_window`` - the name's leading year is earlier than the
+  year the window opens, so the name claims years the revision does not serve.
 - ``name_misstates_closing`` - the name closes at a year the window does not.
 - ``name_claims_single_year`` - the name gives one year while the window runs
   open-ended. This understates reach rather than overstating it, which is why
@@ -98,6 +107,26 @@ def name_window_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[R
             )
         )
 
+    # A single-year revision legitimately declares no selector bounds: its own id
+    # names the year and selection resolves through ``valid_from``. Confirmed
+    # against the live authority - modelo 100's 2023 and 2024, modelo 714's 2023
+    # and modelo 390's 2024 each admit themselves. Reporting those would put
+    # thirty-five correct declarations around the one that is wrong.
+    #
+    # A name claiming a SPAN is different: the span is then stated nowhere but the
+    # name, which no consumer reads.
+    selector = revision.period_selector
+    span_claimed = len(_YEAR.findall(name)) > 1 or name.endswith(_OPEN_ENDED)
+    if span_claimed and selector.year_from is None and selector.year_to is None:
+        findings.append(
+            RevisionNameFinding(
+                modelo=modelo_id,
+                revision=name,
+                kind="selector_declares_no_window",
+                detail=f"period selector declares neither year_from nor year_to; valid_from is {opening}",
+            )
+        )
+
     years = [int(match) for match in _YEAR.findall(name)]
     if not years:
         findings.append(
@@ -116,7 +145,7 @@ def name_window_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[R
             RevisionNameFinding(
                 modelo=modelo_id,
                 revision=name,
-                kind="name_misstates_opening",
+                kind=("name_opens_after_window" if claimed_open > opening else "name_opens_before_window"),
                 detail=f"name claims {claimed_open}; {source} declares {opening}",
             )
         )

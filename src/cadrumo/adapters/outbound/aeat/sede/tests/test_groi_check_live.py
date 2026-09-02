@@ -25,11 +25,11 @@ import pytest
 
 from ......core.config import Settings
 from ......tests.live_gate import requires_live_enabled
-from .._adapter_utils import extract_marker_verdict
 from ...browser.factory import default_browser_session_factory
+from .._adapter_utils import extract_marker_verdict
 from ..groi_check import (
-    GroiSedeDriver,
     _POSITIVE_MARKERS,
+    GroiSedeDriver,
 )
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]

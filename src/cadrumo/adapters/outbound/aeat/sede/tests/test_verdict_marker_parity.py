@@ -58,8 +58,14 @@ def test_surface_specific_affirmations_stay_surface_specific() -> None:
     assert extract_marker_verdict("NIF-IVA válido", positive_markers=_NIF_IVA_POSITIVE_MARKERS) == "valid"
     assert extract_marker_verdict("NIF-IVA válido", positive_markers=_GROI_POSITIVE_MARKERS) == "unknown"
 
-    assert extract_marker_verdict("CONSTA UN OPERADOR INTRACOMUNITARIO", positive_markers=_GROI_POSITIVE_MARKERS) == "valid"
-    assert extract_marker_verdict("CONSTA UN OPERADOR INTRACOMUNITARIO", positive_markers=_NIF_IVA_POSITIVE_MARKERS) == "unknown"
+    assert (
+        extract_marker_verdict("CONSTA UN OPERADOR INTRACOMUNITARIO", positive_markers=_GROI_POSITIVE_MARKERS)
+        == "valid"
+    )
+    assert (
+        extract_marker_verdict("CONSTA UN OPERADOR INTRACOMUNITARIO", positive_markers=_NIF_IVA_POSITIVE_MARKERS)
+        == "unknown"
+    )
 
 
 def test_empty_and_unanswerable_text_is_unknown() -> None:

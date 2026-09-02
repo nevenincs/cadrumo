@@ -464,8 +464,6 @@ def _definition_lines(operation: ObjectNameRenameOperation, source: bytes) -> fr
     except UnicodeDecodeError as exc:
         raise ObjectNameTransformError(f"operation {operation.operation_id!r} definition source is not UTF-8") from exc
     declarations = declarations_in_source(text, operation.old_path)
-    kind, qualified, _occurrence = _locator_parts(operation.old_locator)
-    old_name = qualified.rsplit(".", 1)[-1]
     line_values: set[int] = set()
     for declaration in declarations:
         if declaration.qualified_locator == operation.old_locator:

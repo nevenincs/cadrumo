@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+from typing import Final
+
 from ._modelo_nonwork_command_spec_policies import (
     _MODEL_READ,
     _MODEL_WRITE,
@@ -23,6 +25,42 @@ from .command_spec import (
     ValueContract,
 )
 
+M036_DECLARATION_PARAMETERS: Final[tuple[OptionSpec, ...]] = (
+    OptionSpec(
+        name="declared_on",
+        declarations=("--declared-on",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.required(),
+        help_key=TranslationKey("cli.app.modelo.m036.declared_on_help"),
+        multiple=False,
+        is_flag=False,
+        flag_value=None,
+        constraint=ParameterConstraint(),
+    ),
+    OptionSpec(
+        name="sede_justificante",
+        declarations=("--sede-justificante",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.modelo.m036.justificante_help"),
+        multiple=False,
+        is_flag=False,
+        flag_value=None,
+        constraint=ParameterConstraint(),
+    ),
+    OptionSpec(
+        name="note",
+        declarations=("--note",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.modelo.m036.note_help"),
+        multiple=False,
+        is_flag=False,
+        flag_value=None,
+        constraint=ParameterConstraint(),
+    ),
+)
+
 MODELO_NONWORK_M036_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
         key="app_modelo_m036_alta",
@@ -32,41 +70,7 @@ MODELO_NONWORK_M036_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         help_key=TranslationKey("cli.app.modelo.m036.alta_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(
-            OptionSpec(
-                name="declared_on",
-                declarations=("--declared-on",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.modelo.m036.declared_on_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
-            OptionSpec(
-                name="sede_justificante",
-                declarations=("--sede-justificante",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.m036.justificante_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
-            OptionSpec(
-                name="note",
-                declarations=("--note",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.m036.note_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
-        ),
+        parameters=M036_DECLARATION_PARAMETERS,
         policy=_MODEL_WRITE,
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._modelo_m036_cli", "m036_alta")),
         result_schema=ResultSchemaSpec(
@@ -83,41 +87,7 @@ MODELO_NONWORK_M036_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         help_key=TranslationKey("cli.app.modelo.m036.modificacion_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(
-            OptionSpec(
-                name="declared_on",
-                declarations=("--declared-on",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.modelo.m036.declared_on_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
-            OptionSpec(
-                name="sede_justificante",
-                declarations=("--sede-justificante",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.m036.justificante_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
-            OptionSpec(
-                name="note",
-                declarations=("--note",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.m036.note_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
-        ),
+        parameters=M036_DECLARATION_PARAMETERS,
         policy=_MODEL_WRITE,
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._modelo_m036_cli", "m036_modificacion")),
         result_schema=ResultSchemaSpec(
@@ -134,41 +104,7 @@ MODELO_NONWORK_M036_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         help_key=TranslationKey("cli.app.modelo.m036.baja_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(
-            OptionSpec(
-                name="declared_on",
-                declarations=("--declared-on",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.modelo.m036.declared_on_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
-            OptionSpec(
-                name="sede_justificante",
-                declarations=("--sede-justificante",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.m036.justificante_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
-            OptionSpec(
-                name="note",
-                declarations=("--note",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.m036.note_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
-            ),
-        ),
+        parameters=M036_DECLARATION_PARAMETERS,
         policy=_MODEL_WRITE,
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._modelo_m036_cli", "m036_baja")),
         result_schema=ResultSchemaSpec(
