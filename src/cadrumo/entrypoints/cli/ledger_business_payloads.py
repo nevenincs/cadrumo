@@ -153,7 +153,7 @@ class InventoryLedgerPayload(OutputSchema):
 class InventoryListRowPayload(InventoryLedgerPayload):
     """One inventory summary row returned by the list command."""
 
-    schema_version: _InventorySchemaVersion = INVENTORY_SCHEMA_VERSION  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-SCHEMA-VERSION: runtime annotated validator mirrors the canonical inventory schema constant
+    schema_version: _InventorySchemaVersion = INVENTORY_SCHEMA_VERSION
     movement_count: int = 0
 
 

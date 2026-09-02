@@ -22,6 +22,7 @@ from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.config import load_settings
 from ...core.decimal.coercion import coerce_decimal
 from ...core.period import Period
+from ...core.type_guards import is_object_dict
 from ...domain.calculations.registry.authority import bundled_authority as _bundled_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId, RelationId
@@ -40,13 +41,14 @@ from .errors import CliRefusedBoundaryError
 
 if TYPE_CHECKING:
     import typer
+    from google.auth.credentials import Credentials
 
     from ...adapters.outbound.google.calc_sheets_pull_records import PullResult, RowSetEdit
     from ...application.export.google_operation import GoogleSheetsExportOperationResult
     from ...domain.calculations.registry.schema import RegistrySnapshot
 
 
-def resolve_credentials_and_root(profile: str) -> tuple[object, str]:
+def resolve_credentials_and_root(profile: str) -> tuple[Credentials, str]:
     """Hydrate refreshable Google credentials + the configured Drive root."""
     settings = load_settings()
     credentials = build_google_credentials(profile=profile)
@@ -291,7 +293,7 @@ def modelo_spreadsheet_verify(
                 raise RegistryValidationError(f"scenario relation key must be canonical: {value!r}") from exc
 
         def _to_casilla_decimal_map(node: object) -> dict[CasillaId, Decimal]:
-            if not isinstance(node, dict):
+            if not is_object_dict(node):
                 return {}
             return {
                 validated_casilla_id(k, surface="google sync calc scenario casilla.id"): _decimal_value(v)
@@ -299,17 +301,17 @@ def modelo_spreadsheet_verify(
             }
 
         def _to_binding_decimal_map(node: object) -> dict[BindingId, Decimal]:
-            if not isinstance(node, dict):
+            if not is_object_dict(node):
                 return {}
             return {_binding_id(k): _decimal_value(v) for k, v in node.items()}
 
         def _to_enum_binding_map(node: object) -> dict[BindingId, str]:
-            if not isinstance(node, dict):
+            if not is_object_dict(node):
                 return {}
             return {_binding_id(k): str(v) for k, v in node.items()}
 
         def _to_relation_decimal_map(node: object) -> dict[RelationId, Decimal]:
-            if not isinstance(node, dict):
+            if not is_object_dict(node):
                 return {}
             return {_relation_id(k): _decimal_value(v) for k, v in node.items()}
 

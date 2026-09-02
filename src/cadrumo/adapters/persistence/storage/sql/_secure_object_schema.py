@@ -11,6 +11,7 @@ from sqlalchemy import Engine, text
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hex import HEX_PATTERN_64
 from .....core.time.clock import now as _utc_now
+from .....core.type_guards import is_object_list
 from ..errors import StorageValidationError
 
 VARCHAR_64: Final[str] = "VARCHAR(64)"
@@ -52,8 +53,10 @@ def ensure_quarantine_table(engine: Engine) -> None:
 
 def coerce_raw_bytes(value: object) -> bytes:
     """Coerce SQLite BLOB/TEXT return values into bytes."""
-    if isinstance(value, bytes | bytearray | memoryview):
+    if isinstance(value, bytes | bytearray):
         return bytes(value)
+    if isinstance(value, memoryview):
+        return value.tobytes()
     if isinstance(value, str):
         return value.encode(UTF_8_ENCODING)
     raise StorageValidationError(
@@ -66,7 +69,9 @@ def parse_revision_ancestor_ids(raw_value: object) -> tuple[str, ...]:
     """Parse stored secure-object revision ancestry JSON."""
     if raw_value in (None, ""):
         return ()
-    if isinstance(raw_value, bytes | bytearray | memoryview):
+    if isinstance(raw_value, memoryview):
+        text_value = raw_value.tobytes().decode(UTF_8_ENCODING)
+    elif isinstance(raw_value, bytes | bytearray):
         text_value = bytes(raw_value).decode(UTF_8_ENCODING)
     else:
         text_value = str(raw_value)
@@ -76,7 +81,7 @@ def parse_revision_ancestor_ids(raw_value: object) -> tuple[str, ...]:
         raise StorageValidationError(
             translated_message="errors.integrity.integrity_storage_secure_object_revision_ancestry_json",
         ) from exc
-    if not isinstance(parsed, list):
+    if not is_object_list(parsed):
         raise StorageValidationError(
             translated_message="errors.integrity.integrity_storage_secure_object_revision_ancestry_shape",
         )
@@ -105,8 +110,10 @@ def build_revision_ancestor_ids(
 
 def database_bytes(value: object) -> bytes:
     """Normalise SQLite bytes-ish values returned through text queries."""
-    if isinstance(value, bytes | bytearray | memoryview):
+    if isinstance(value, bytes | bytearray):
         return bytes(value)
+    if isinstance(value, memoryview):
+        return value.tobytes()
     if isinstance(value, str):
         return value.encode(UTF_8_ENCODING)
     raise TypeError(f"database_bytes: expected bytes-like or str, found {type(value).__name__}")

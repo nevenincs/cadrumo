@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import ClassVar, override
+from typing import ClassVar, cast, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -181,7 +181,11 @@ class ChoiceEditScreen(ModalScreen[str | None]):
         if event.button.id != "btn-edit-save":
             self.dismiss(None)
             return
-        picked = self.query_one("#edit-choices", SelectionList).selected
+        # CAST-RATIONALE-thirdparty: Textual's ``query_one`` isinstance-checks the
+        # type it is handed, so a subscripted generic cannot be passed; the widget's
+        # cell/option type is fixed where it is constructed and asserted here.
+        choices = cast("SelectionList[str]", self.query_one("#edit-choices", SelectionList))
+        picked = choices.selected
         self.dismiss(_MULTI_CHOICE_SEPARATOR.join(str(token) for token in picked))
 
 

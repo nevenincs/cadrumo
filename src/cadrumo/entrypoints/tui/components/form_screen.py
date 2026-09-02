@@ -25,7 +25,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, ClassVar, override
+from typing import TYPE_CHECKING, ClassVar, cast, override
 
 from rich.cells import cell_len
 from textual.app import ComposeResult
@@ -41,6 +41,7 @@ from ....core.presentation import (
     FormPage,
     multi_choice_tokens,
 )
+from ..components.app_access import TypedAppAccess
 from .dialogs import ChoiceEditScreen, OneChoiceEditScreen, TextEditScreen
 from .host import ScreenHostApp
 from .theme import (
@@ -105,7 +106,7 @@ def _edit_screen_for(field: FormField, *, translate: FormTranslator) -> ModalScr
             return TextEditScreen(field, cancel_label=cancel_label, save_label=save_label)
 
 
-class FormScreen(Screen["Mapping[str, str] | None"]):
+class FormScreen(TypedAppAccess, Screen["Mapping[str, str] | None"]):
     """The editable field page itself, as a screen any host can push.
 
     A plain screen rather than a modal one: the modal styling centres its
@@ -166,7 +167,7 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
             Vertical(classes="cadrumo-column"),
             Vertical(id="form-body", classes="cadrumo-panel"),
         ):
-            yield ContentDataTable(id="form-table", cursor_type="row", zebra_stripes=True)
+            yield ContentDataTable[str](id="form-table", cursor_type="row", zebra_stripes=True)
             yield Static(id="form-refusal")
             with Horizontal(id="form-actions"):
                 yield Button(self._translate("flows.manager.edit.cancel"), id="btn-form-cancel")
@@ -193,7 +194,10 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
         application, which has no such method — and precisely the kind of
         collision that only appears once the page becomes a screen.
         """
-        table = self.query_one("#form-table", DataTable)
+        # CAST-RATIONALE-thirdparty: Textual's ``query_one`` isinstance-checks the
+        # type it is handed, so a subscripted generic cannot be passed; the widget's
+        # cell/option type is fixed where it is constructed and asserted here.
+        table = cast("ContentDataTable[str]", self.query_one("#form-table", ContentDataTable))
         rows = tuple(
             (
                 form_field.key,

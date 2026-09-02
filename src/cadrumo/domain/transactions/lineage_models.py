@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
-from typing import Literal, Self, TypeGuard
+from typing import Literal, Self
 
 from pydantic import (
     BaseModel,
@@ -24,6 +24,7 @@ from ...core.identity import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.utc import UtcInstant, parse_iso_datetime
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
+from ...core.type_guards import is_object_mapping
 from ..identifiers import canonical_decimal_string
 from .enums import BusinessClassification, SplitRole, TransactionLifecycleState
 from .errors import TransactionValidationError
@@ -50,11 +51,6 @@ def _string_keyed_mapping(data: object) -> dict[str, object]:
         raise TransactionValidationError("transaction payload keys must be strings") from exc
 
 
-def _is_object_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
-    """Narrow an unparameterized runtime mapping to untrusted object entries."""
-    return isinstance(value, Mapping)
-
-
 class DecisionProvenance(BaseModel):
     """Typed provenance for one classification decision."""
 
@@ -72,7 +68,7 @@ class DecisionProvenance(BaseModel):
         """Parse JSON-mode confidence strings back into ``Decimal`` on load."""
         if isinstance(data, cls):
             return data
-        if not _is_object_mapping(data):
+        if not is_object_mapping(data):
             return data
         payload = _string_keyed_mapping(data)
         raw_confidence = payload.get("confidence")
@@ -126,7 +122,7 @@ class ClassificationHistoryEntry(BaseModel):
         """Parse JSON-mode strings back into strict Python types on load."""
         if isinstance(data, cls):
             return data
-        if not _is_object_mapping(data):
+        if not is_object_mapping(data):
             return data
         payload = _string_keyed_mapping(data)
         raw_state = payload.get("business_classification")
@@ -252,7 +248,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _coerce_lifecycle_states(cls, data: object) -> object:
-        if not _is_object_mapping(data):
+        if not is_object_mapping(data):
             return data
         payload = _string_keyed_mapping(data)
         for key in ("previous_state", "state"):
@@ -295,7 +291,7 @@ class SplitLineage(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _coerce_role(cls, data: object) -> object:
-        if not _is_object_mapping(data):
+        if not is_object_mapping(data):
             return data
         payload = _string_keyed_mapping(data)
         raw_role = payload.get("role")
@@ -369,7 +365,6 @@ __all__ = [
     "TransactionEditLineageEntry",
     "TransactionEvidenceProvenanceEntry",
     "TransactionLifecycleLineageEntry",
-    "_is_object_mapping",
     "_string_keyed_mapping",
     "derive_split_group_id",
 ]

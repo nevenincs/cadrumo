@@ -181,17 +181,17 @@ from __future__ import annotations
 
 import re
 import tomllib
-from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 from pathlib import Path
-from typing import Final, TypeGuard
+from typing import Final
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.core.toml import to_str_keyed_dict
+from cadrumo.core.type_guards import is_object_mapping
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 from cadrumo.domain.calculations.registry.schema import REVISION_GOVERNANCE_FIELDS, ModeloRevision
@@ -812,7 +812,7 @@ def _declared_governance(manifest: Path, text: str, revision: str) -> _Stamp:
     except tomllib.TOMLDecodeError as exc:
         raise StampError(f"{manifest}: revision manifest is not valid TOML: {exc}") from exc
     revisions_raw = parsed.get("revisions")
-    if not _is_object_mapping(revisions_raw):
+    if not is_object_mapping(revisions_raw):
         raise StampError(f'{manifest}: manifest declares no [revisions."{revision}"] table')
     revisions = to_str_keyed_dict(
         revisions_raw,
@@ -826,7 +826,7 @@ def _declared_governance(manifest: Path, text: str, revision: str) -> _Stamp:
             "requires exactly one so the stamp has a single unambiguous home",
         )
     table_raw = revisions[revision]
-    if not _is_object_mapping(table_raw):
+    if not is_object_mapping(table_raw):
         raise StampError(f'{manifest}: [revisions."{revision}"] is not a table')
     table = to_str_keyed_dict(
         table_raw,
@@ -838,11 +838,6 @@ def _declared_governance(manifest: Path, text: str, revision: str) -> _Stamp:
         reviewed_by=_declared_text(manifest, table, "reviewed_by"),
         reviewed_at=_declared_date(manifest, table),
     )
-
-
-def _is_object_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
-    """Narrow an unparameterized TOML table to object entries."""
-    return isinstance(value, Mapping)
 
 
 def _declared_text(manifest: Path, table: dict[str, object], key: str) -> str | None:

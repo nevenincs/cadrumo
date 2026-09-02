@@ -122,7 +122,7 @@ async def resolve_modal_interaction_state[ReviewProjectionT: BaseModel](
         revision=pending.revision,
     )
     availability = await control.inspect()
-    permitted = (
+    permitted: frozenset[Literal["apply", "reject"]] = (
         availability.permitted_intents if isinstance(availability, OperationResponseControlSuccessV1) else frozenset()
     )
     return OperationModalReviewInteractionV1[ReviewProjectionT](

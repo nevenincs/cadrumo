@@ -44,6 +44,7 @@ if TYPE_CHECKING:
 
 from ...core.click_context import argv_requests_json, context_chain_requests_json
 from ...core.errors.error_codes import get_error_exit_code, get_registered_error_code, render_error_json
+from ...core.type_guards import is_object_tuple, is_str_keyed_dict
 
 _ABORTED_EXIT_CODE = 1
 _KEYBOARD_INTERRUPT_EXIT_CODE = 130
@@ -272,7 +273,7 @@ def _render_click_exception_text(exc: BaseException) -> None:
 
     Reads ``typer.core.HAS_RICH`` live rather than assuming Rich is available:
     the CLI package globally disables Rich rendering at import
-    (:func:`cadrumo.entrypoints.cli._stdio._disable_rich_cli_rendering`), and
+    (:func:`cadrumo.entrypoints.cli._stdio.disable_rich_cli_rendering`), and
     this funnel must honour that the same way Typer's own standalone ``main``
     does, instead of unconditionally preferring Rich.
     """
@@ -315,13 +316,13 @@ def _resolved_command_identifier(exc: BaseException) -> str | None:
     Duck-typed on ``command_path`` for the same reason the sibling resolver is:
     the vendored Typer Context is not a guaranteed subclass of click's.
     """
-    from .errors import _command_identifier_from_path
+    from .errors import command_identifier_from_path
 
     context = getattr(exc, "ctx", None)
     command_path = getattr(context, "command_path", None)
     if not isinstance(command_path, str):
         return None
-    return _command_identifier_from_path(command_path)
+    return command_identifier_from_path(command_path)
 
 
 def _emit_click_exception(exc: BaseException) -> NoReturn:
@@ -392,9 +393,11 @@ def _structured_refusal_context(exc: BaseException) -> dict[str, str] | None:
     ``accepted_period_tokens``: the error-context scrubber redacts any key
     containing ``token``, so the attribute name is kept off the wire key.
     """
-    tokens = getattr(exc, "accepted_period_tokens", None)
-    if isinstance(tokens, tuple) and tokens and all(isinstance(token, str) for token in tokens):
-        return {"accepted_periods": ", ".join(tokens)}
+    raw_tokens = getattr(exc, "accepted_period_tokens", None)
+    if is_object_tuple(raw_tokens) and raw_tokens:
+        tokens = [token for token in raw_tokens if isinstance(token, str)]
+        if len(tokens) == len(raw_tokens):
+            return {"accepted_periods": ", ".join(tokens)}
     return None
 
 
@@ -472,7 +475,7 @@ def _emit_crash(exc: Exception) -> NoReturn:
         # longer does.
         requested_leaf = current_requested_cli_leaf()
     boundary_context = getattr(boundary, "context", None)
-    boundary_command = boundary_context.get("command") if isinstance(boundary_context, dict) else None
+    boundary_command = boundary_context.get("command") if is_str_keyed_dict(boundary_context) else None
     payload = render_error_payload(
         boundary,
         as_json=_json_requested_for(exc),

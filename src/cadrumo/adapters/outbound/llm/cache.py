@@ -24,6 +24,7 @@ from ....core.hashing import canonical_json_bytes, content_hash_hex, sha256_hex
 from ....core.logging import get_logger
 from ....core.redaction.rules import default_rules_for_class, redact_structured
 from ....core.time.clock import now
+from ....core.type_guards import is_object_dict
 from ....llm.errors import LLMCacheError
 from ....llm.models import CachedEntry, CacheKey, CacheStats, LLMProvider, LLMRequest, LLMResponse
 from ....llm.retention import select_retention_removal_keys
@@ -182,13 +183,12 @@ class LLMCache:
             entry.model_dump(mode="json"),
             rules=default_rules_for_class(SensitivityClass.DIAGNOSTIC),
         )
-        if not isinstance(redacted, dict):
+        if not is_object_dict(redacted):
             raise LLMCacheError("redacted LLM cache entry must be a JSON object")
-        # ``redact_structured`` returns ``object``; the isinstance
-        # narrow above promotes the value to a dict with JSON-shape
-        # contents. Re-key as ``str`` so the typed boundary holds
-        # without an Any leak; ``_payload_for_entry`` treats the
-        # mapping opaquely (only ever serialises to JSON).
+        # ``redact_structured`` returns ``object``; the guard above promotes it
+        # to a mapping with JSON-shape contents. Re-key as ``str`` so the typed
+        # boundary holds; ``_payload_for_entry`` treats the mapping opaquely
+        # (only ever serialises it to JSON).
         redacted_entry: Mapping[str, object] = {str(k): v for k, v in redacted.items()}
         payload = self._payload_for_entry(redacted_entry)
         object_key = self._object_key_for(key)
@@ -420,7 +420,7 @@ class LLMCache:
         except (ValueError, TypeError):
             _log.debug("ignoring malformed LLM cache payload while filtering logical root", exc_info=True)
             return False
-        if not isinstance(decoded, dict):
+        if not is_object_dict(decoded):
             return False
         logical_root = decoded.get("logical_root")
         return isinstance(logical_root, str) and logical_root == self._logical_root()

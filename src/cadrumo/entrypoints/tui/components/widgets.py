@@ -10,6 +10,7 @@ from typing import Final, override
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.geometry import Size
+from textual.widget import Widget
 from textual.widgets import Button, Collapsible, DataTable, Static
 
 from ....core.presentation import NoticePresentation
@@ -127,7 +128,7 @@ class DisclosureGroup(Collapsible):
     title and defaults.
     """
 
-    def __init__(self, *children, title: str, collapsed: bool = True, id: str | None = None) -> None:
+    def __init__(self, *children: Widget, title: str, collapsed: bool = True, id: str | None = None) -> None:
         """Store the group's already-localized title and initial disclosure state."""
         super().__init__(*children, title=title, collapsed=collapsed, id=id)
 

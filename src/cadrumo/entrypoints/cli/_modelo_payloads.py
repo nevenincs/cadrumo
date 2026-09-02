@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, ClassVar, Literal
 
 from pydantic import ConfigDict, Field, NonNegativeInt, computed_field, field_validator, model_validator
 
@@ -59,6 +59,7 @@ from ...core.refund_election import RefundElection
 from ...core.result_disposition import ResultDisposition
 from ...core.text_bounds import NonEmptyStr
 from ...core.time.utc import UtcInstant
+from ...core.type_guards import is_object_list
 from ...domain.buckets.event import (
     BucketActorLabel,
     BucketEventId,
@@ -266,8 +267,13 @@ class CalculationRevisionPayload(OutputSchema):
 #: Longest rendered verification-finding message the wire carries.
 FINDING_MESSAGE_CAP = 500
 
-FindingMessage = elided_prose(FINDING_MESSAGE_CAP)
-"""A rendered finding message, elided at the cap rather than refused."""
+if TYPE_CHECKING:
+    #: A rendered finding message, elided at the cap rather than refused. The
+    #: runtime annotation below carries the cap as a real pydantic constraint;
+    #: the checker only needs to know the field is text.
+    type FindingMessage = str
+else:
+    FindingMessage = elided_prose(FINDING_MESSAGE_CAP)
 
 
 class FindingPayload(OutputSchema):
@@ -722,7 +728,11 @@ class WorkReviewPayload(OutputSchema):
     detail explicit.
     """
 
-    model_config = ConfigDict(**{**OutputSchema.model_config, "hide_input_in_errors": True})
+    # Annotated as `ConfigDict` so the literal is checked against the TypedDict.
+    # A bare `ConfigDict(**{**base, "key": value})` collapses every value to
+    # `object | bool` and mistyped all 48 keys; passing the keyword alongside
+    # `**base` instead makes the checker suspect a duplicate it cannot rule out.
+    model_config: ClassVar[ConfigDict] = {**OutputSchema.model_config, "hide_input_in_errors": True}
     bucket_id: BucketId
     modelo: ModeloCode
     filing_year: int
@@ -813,7 +823,18 @@ class WorkAmendResult(ModeloRecordPayload):
     operation: str = "modelo.work.amend"
     amendment_kind: str
     m303_rectificativa_motive: M303RectificativaMotive | None
-    amends_filing_record_id: FilingRecordId
+
+    @model_validator(mode="after")
+    def _amendment_names_the_record_it_supersedes(self) -> WorkAmendResult:
+        """Refuse an amendment result that does not name the record it amends.
+
+        The field stays optional in type because the shared record payload
+        declares it that way for every non-amending result. An amendment
+        without it is incomplete, so it is refused here rather than emitted.
+        """
+        if self.amends_filing_record_id is None:
+            raise ValueError("an amendment result must carry amends_filing_record_id")
+        return self
 
 
 class ModeloRecordListResult(OutputSchema):
@@ -1430,7 +1451,7 @@ class ModeloAggregateResult(OutputSchema):
     @classmethod
     def _coerce_source_kinds(cls, value: object) -> object:
         """Hydrate raw source-kind tokens to their closed-enum members."""
-        if isinstance(value, list):
+        if is_object_list(value):
             return [
                 BindingSourceKind(item) if isinstance(item, str) and not isinstance(item, BindingSourceKind) else item
                 for item in value

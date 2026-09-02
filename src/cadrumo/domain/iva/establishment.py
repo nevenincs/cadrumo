@@ -81,7 +81,7 @@ import tomllib
 from collections.abc import Mapping
 from enum import StrEnum
 from functools import lru_cache
-from typing import Any, Final, NamedTuple, TypeGuard
+from typing import Any, Final, NamedTuple
 
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.identity import (
@@ -92,6 +92,7 @@ from ...core.identity import (
 )
 from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction
 from ...core.resources.bundled_data import bundled_path
+from ...core.type_guards import is_object_list
 from . import country_vocabulary as _country_vocabulary
 from .classification import IvaTerritorialScope
 from .schema import EUMemberState
@@ -278,20 +279,6 @@ def _territory_carve_outs() -> dict[str, _CarveOut]:
     except tomllib.TOMLDecodeError as exc:
         raise IvaCatalogueError(f"{target}: malformed carve-out table: {exc}") from exc
     return _carve_out_rows_from_payload(target, payload)
-
-
-def is_object_list(value: object) -> TypeGuard[list[object]]:
-    """Narrow an unparameterized runtime list to untrusted object entries."""
-    return isinstance(value, list)
-
-
-def is_str_keyed_mapping(value: object) -> TypeGuard[Mapping[str, object]]:
-    """Narrow an unparameterized runtime dict to a string-keyed mapping.
-
-    True by construction for a table parsed from TOML: ``tomllib`` always
-    produces string keys.
-    """
-    return isinstance(value, dict)
 
 
 def _str_tuple_or_none(value: object) -> tuple[str, ...] | None:

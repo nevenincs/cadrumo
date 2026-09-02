@@ -14,6 +14,7 @@ from typing import TypedDict
 import typer
 
 from ...application.live.verify import (
+    VerifyObservation,
     VerifySurface,
     VerifyVerdict,
 )
@@ -43,7 +44,7 @@ def _expected(value: str | None) -> VerifyVerdict | None:
     raise typer.BadParameter(tr("cli.app.live.verify.expected_values_error"))
 
 
-def _verify_row(observation) -> _VerifyRow:
+def _verify_row(observation: VerifyObservation) -> _VerifyRow:
     """Project a stored verify observation into the shared CLI row shape."""
     return _VerifyRow(
         observation_id=observation.observation_id,

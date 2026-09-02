@@ -30,9 +30,11 @@ from typing import TYPE_CHECKING, Any, ClassVar
 if TYPE_CHECKING:
     from playwright.async_api import BrowserContext, Page, Playwright, Response
     from playwright.async_api import Error as PlaywrightError
+    from playwright.async_api import Locator as Locator
     from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 else:
     type BrowserContext = Any
+    type Locator = Any
     type Page = Any
     type Playwright = Any
     type Response = Any

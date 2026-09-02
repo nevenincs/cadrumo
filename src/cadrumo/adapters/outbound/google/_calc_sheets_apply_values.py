@@ -8,8 +8,8 @@ Sheets ``values.batchUpdate`` call. This module stays pure: it maps
 ranges plus row values and never opens a Google service object itself.
 
 See Also:
-    :func:`_build_value_data` and :func:`_build_formula_data` emit the main
-    workbook grid, while :func:`_build_evidence_value_data` mirrors
+    :func:`build_value_data` and :func:`build_formula_data` emit the main
+    workbook grid, while :func:`build_evidence_value_data` mirrors
     :func:`application.storage.calc_sheets.evidence_table` so the online
     Evidencia tab stays aligned with the offline workbook renderer.
 """
@@ -19,7 +19,7 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ....application.storage.calc_sheets.records import (
     SheetCellAddress,
@@ -33,6 +33,9 @@ from ....application.storage.calc_sheets.records import (
 from ....application.storage.calc_sheets.workbook_export import evidence_table, guide_stamps
 from ....core.decimal.coercion import coerce_decimal
 
+if TYPE_CHECKING:
+    from googleapiclient._apis.sheets.v4.schemas import ValueRange
+
 #: Matches the single-cell anchor of a ``values.batchUpdate`` entry range:
 #: ``'Tab Name'!B4``. Every builder in this module emits an anchor plus a
 #: values block rather than a rectangle, so the written extent is the anchor
@@ -40,7 +43,7 @@ from ....core.decimal.coercion import coerce_decimal
 _ANCHOR_PATTERN = re.compile(r"^'(?P<tab>(?:[^']|'')+)'!(?P<letters>[A-Z]{1,3})(?P<row>\d+)$")
 
 
-def _coerce_cell_value(value: Decimal | str | bool | None) -> object:
+def coerce_cell_value(value: Decimal | str | bool | None) -> object:
     """Convert a :class:`application.storage.calc_sheets.SheetValueCell` value.
 
     ``None`` becomes an empty cell, booleans stay native, and
@@ -58,27 +61,27 @@ def _coerce_cell_value(value: Decimal | str | bool | None) -> object:
     return str(value)
 
 
-def _build_value_data(value_cells: Iterable[SheetValueCell]) -> list[dict[str, Any]]:
+def build_value_data(value_cells: Iterable[SheetValueCell]) -> list[ValueRange]:
     """Build ``values.batchUpdate`` entries for :class:`application.storage.calc_sheets.SheetValueCell`."""
-    data: list[dict[str, Any]] = []
+    data: list[ValueRange] = []
     for cell in value_cells:
         data.append(
             {
                 "range": cell.address.qualified(),
-                "values": [[_coerce_cell_value(cell.value)]],
+                "values": [[coerce_cell_value(cell.value)]],
             },
         )
     return data
 
 
-def _build_formula_data(formula_cells: Iterable[SheetFormulaCell]) -> list[dict[str, Any]]:
+def build_formula_data(formula_cells: Iterable[SheetFormulaCell]) -> list[ValueRange]:
     """Build entries for :class:`application.storage.calc_sheets.SheetFormulaCell` records.
 
     Formula text is prefixed with ``=`` because
     :mod:`application.storage.calc_sheets` stores formula bodies without
     the leading Sheets marker.
     """
-    data: list[dict[str, Any]] = []
+    data: list[ValueRange] = []
     for cell in formula_cells:
         data.append(
             {
@@ -89,9 +92,9 @@ def _build_formula_data(formula_cells: Iterable[SheetFormulaCell]) -> list[dict[
     return data
 
 
-def _build_row_set_header_data(row_sets: Iterable[SheetRowSet]) -> list[dict[str, Any]]:
+def build_row_set_header_data(row_sets: Iterable[SheetRowSet]) -> list[ValueRange]:
     """Emit Detalle-tab header cells for :class:`application.storage.calc_sheets.SheetRowSet`."""
-    data: list[dict[str, Any]] = []
+    data: list[ValueRange] = []
     for row_set in row_sets:
         for column in row_set.columns:
             data.append(
@@ -103,7 +106,7 @@ def _build_row_set_header_data(row_sets: Iterable[SheetRowSet]) -> list[dict[str
     return data
 
 
-def _build_evidence_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
+def build_evidence_value_data(plan: SheetExportPlan) -> list[ValueRange]:
     """Build Evidencia-tab value writes for ``plan``.
 
     Uses :func:`application.storage.calc_sheets.evidence_table`, the same
@@ -112,7 +115,7 @@ def _build_evidence_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
     """
     fingerprint, header, body = evidence_table(plan)
     tab = TabName.EVIDENCIA.value
-    data: list[dict[str, Any]] = [
+    data: list[ValueRange] = [
         {"range": f"'{tab}'!A1", "values": [["Snapshot fingerprint", fingerprint]]},
         {"range": f"'{tab}'!A3", "values": [list(header)]},
     ]
@@ -121,9 +124,9 @@ def _build_evidence_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
     return data
 
 
-def _build_guide_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
+def build_guide_value_data(plan: SheetExportPlan) -> list[ValueRange]:
     """Build Guide-tab title, paragraph, and export-stamp rows for ``plan``."""
-    data: list[dict[str, Any]] = [
+    data: list[ValueRange] = [
         {"range": f"'{TabName.GUIDE.value}'!A1", "values": [[plan.guide.title]]},
     ]
     for index, paragraph in enumerate(plan.guide.paragraphs, start=3):
@@ -199,7 +202,7 @@ def written_cell_values(data: Sequence[Mapping[str, Any]]) -> dict[str, object]:
 
     Companion to :func:`payload_written_addresses`, sharing the same walk so
     the address set and the value map cannot drift against each other. Values
-    are the entry's raw cell content — the same shape :func:`_coerce_cell_value`
+    are the entry's raw cell content — the same shape :func:`coerce_cell_value`
     already produced for a real write — never re-derived from the plan. This is
     what an export preview diffs against a read-back of current content to
     answer "would this cell's value change".

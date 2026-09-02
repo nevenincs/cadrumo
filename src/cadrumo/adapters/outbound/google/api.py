@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING, Any, Protocol, TypedDict
 from ....application.operator_actions.models import PreconditionVerdict
 from ....application.operator_actions.preconditions import no_action_precondition_verdict
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.type_guards import is_object_dict, is_object_list
 from ..storage.errors import (
     OutboundStorageError,
     OutboundStorageNetworkError,
@@ -62,14 +63,17 @@ def _external_verdict(condition_id: str, **facts: object) -> PreconditionVerdict
     )
 
 
-class _ExecutableRequest(Protocol):
+class _ExecutableRequest[ResponseBodyT](Protocol):
     """Structural type for google-api-python-client request objects.
 
     ``google-api-python-client-stubs`` types the concrete ``HttpRequest`` class.
     This protocol captures the part
     :func:`~adapters.outbound.google.api.execute_request` needs: the
     ``execute()`` method with optional ``http`` and ``num_retries`` parameters
-    for Google client retry handling. ``http`` mirrors ``HttpRequest.execute``'s
+    for Google client retry handling. The response body is a type parameter so a
+    stub-typed request (whose ``execute`` returns a per-endpoint ``TypedDict``)
+    keeps that precise type through :func:`execute_request` instead of widening
+    to the untyped body. ``http`` mirrors ``HttpRequest.execute``'s
     own stub type (``httplib2.Http | HttpMock | None``) rather than a bare
     ``object`` so the real ``HttpRequest`` the production callers and tests
     construct satisfies this protocol structurally.
@@ -79,7 +83,7 @@ class _ExecutableRequest(Protocol):
         self,
         http: httplib2.Http | HttpMock | None = ...,
         num_retries: int = ...,
-    ) -> GoogleApiResponseBody: ...
+    ) -> ResponseBodyT: ...
 
 
 # The google-api-python-client wire protocol returns JSON-decoded dicts whose
@@ -163,7 +167,7 @@ class GoogleSpreadsheet(_GoogleSpreadsheetRequired, total=False):
     sheets: list[dict[str, Any]]
 
 
-def execute_request(request: _ExecutableRequest, *, action: str) -> GoogleApiResponseBody:
+def execute_request[ResponseBodyT](request: _ExecutableRequest[ResponseBodyT], *, action: str) -> ResponseBodyT:
     """Execute a google-api-python-client request, translating failures.
 
     Runs ``request.execute(num_retries=3)`` and returns the decoded JSON
@@ -203,7 +207,7 @@ def execute_request(request: _ExecutableRequest, *, action: str) -> GoogleApiRes
     """
     try:
         result = request.execute(num_retries=_GOOGLE_API_NUM_RETRIES)
-        if not isinstance(result, dict):
+        if not is_object_dict(result):
             raise OutboundStorageNetworkError(
                 f"Google {action} returned a non-mapping response body",
                 context={"action": action, "response_type": type(result).__name__},
@@ -282,10 +286,10 @@ def _quota_marker(error: Exception) -> str | None:
         payload = json.loads(body)
     except json.JSONDecodeError:
         return None
-    if not isinstance(payload, dict):
+    if not is_object_dict(payload):
         return None
     raw_error = payload.get("error")
-    if not isinstance(raw_error, dict):
+    if not is_object_dict(raw_error):
         return None
 
     markers: list[str] = []
@@ -294,15 +298,21 @@ def _quota_marker(error: Exception) -> str | None:
         markers.append(status)
 
     errors = raw_error.get("errors")
-    if isinstance(errors, list):
+    if is_object_list(errors):
         for entry in errors:
-            if isinstance(entry, dict) and isinstance(entry.get("reason"), str):
-                markers.append(entry["reason"])
+            if not is_object_dict(entry):
+                continue
+            reason = entry.get("reason")
+            if isinstance(reason, str):
+                markers.append(reason)
 
     details = raw_error.get("details")
-    if isinstance(details, list):
+    if is_object_list(details):
         for entry in details:
-            if isinstance(entry, dict) and isinstance(entry.get("reason"), str):
-                markers.append(entry["reason"])
+            if not is_object_dict(entry):
+                continue
+            reason = entry.get("reason")
+            if isinstance(reason, str):
+                markers.append(reason)
 
     return next((marker for marker in markers if marker in _RATE_LIMIT_MARKERS), None)

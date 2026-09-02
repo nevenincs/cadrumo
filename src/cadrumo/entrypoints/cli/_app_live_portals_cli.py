@@ -15,6 +15,7 @@ import typer
 from ...core.i18n.render import tr
 from ...domain.portals.categories import PortalCategory
 from ...domain.portals.errors import PortalRegistryError
+from ...domain.portals.metadata import PortalMetadata
 from ._common import emit_envelope
 
 
@@ -46,7 +47,7 @@ def _project_portal_refusal(error: PortalRegistryError) -> PortalRegistryError:
     return attach_cli_policy_verdict(error, verdict=verdict)
 
 
-def _portal_row(metadata) -> _PortalRow:
+def _portal_row(metadata: PortalMetadata) -> _PortalRow:
     from ...domain.portals.hosts import portal_host_name
 
     # `metadata.label` and `metadata.purpose` are Translatable

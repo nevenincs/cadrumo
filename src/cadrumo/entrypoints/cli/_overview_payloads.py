@@ -26,9 +26,9 @@ documents and validates the transport shape emitted by :mod:`_overview`.
 
 from __future__ import annotations
 
-from typing import Literal, Self
+from typing import ClassVar, Literal, Self
 
-from pydantic import NonNegativeInt, model_validator
+from pydantic import ConfigDict, NonNegativeInt, model_validator
 
 from ...application.operator_actions.models import ActionReference
 from ...application.overview.data_prep import DataPrepStepId, DataPrepStepState
@@ -350,7 +350,7 @@ class OverviewStatusResult(OutputSchema):
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]  # reason: Full status-report passthrough (model_dump of OverviewStatusReport). The status report is an application-layer pydantic model; the full shape is fo...
+    model_config: ClassVar[ConfigDict] = {"extra": "allow"}
 
 
 class OverviewCalendarResult(OutputSchema):
@@ -399,7 +399,7 @@ class OverviewAgendaResult(OutputSchema):
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]  # reason: TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is...
+    model_config: ClassVar[ConfigDict] = {"extra": "allow"}
 
 
 class OverviewBacklogResult(OutputSchema):
@@ -415,7 +415,7 @@ class OverviewBacklogResult(OutputSchema):
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]  # reason: TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is...
+    model_config: ClassVar[ConfigDict] = {"extra": "allow"}
 
 
 class OverviewExplainResult(OutputSchema):
@@ -433,7 +433,7 @@ class OverviewExplainResult(OutputSchema):
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]  # reason: TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is...
+    model_config: ClassVar[ConfigDict] = {"extra": "allow"}
 
 
 class OverviewPrepareStepPayload(OutputSchema):

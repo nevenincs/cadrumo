@@ -34,6 +34,7 @@ from ...core.time.clock import now
 from ...core.time.utc import parse_iso_datetime
 from ...core.tipos_actividad import TipoActividad
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
+from ...core.type_guards import is_object_mapping
 from ..identifiers import canonical_decimal_string
 from ..iva.deduction_facts import IvaDeductionClassificationProvenance
 from ..iva.prorrata import InputClassification
@@ -61,7 +62,6 @@ from .lineage_models import (
     TransactionEditLineageEntry,
     TransactionEvidenceProvenanceEntry,
     TransactionLifecycleLineageEntry,
-    _is_object_mapping,
     _string_keyed_mapping,
     derive_split_group_id,
 )
@@ -1082,7 +1082,7 @@ class TransactionCatalogue(BaseModel):
         """Accept either a bare mapping or an iterable of transactions."""
         if isinstance(data, cls):
             return data
-        if _is_object_mapping(data):
+        if is_object_mapping(data):
             payload = _string_keyed_mapping(data)
             if "transactions" in payload:
                 return payload

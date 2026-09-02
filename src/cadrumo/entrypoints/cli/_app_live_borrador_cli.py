@@ -14,7 +14,7 @@ from typing import Literal, TypedDict
 
 import typer
 
-from ...application.live.borrador_100 import Borrador100SnapshotService
+from ...application.live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotService
 from ...application.live.snapshot_base import (
     SnapshotLifecycleState,
     SnapshotStateFilter,
@@ -120,7 +120,7 @@ def borrador_100_latest(ctx: typer.Context, filing_year: int) -> None:
     )
 
 
-def _borrador_row(snapshot) -> _BorradorRow:
+def _borrador_row(snapshot: Borrador100Snapshot) -> _BorradorRow:
     """Project snapshot metadata into the shared Borrador 100 summary shape."""
     return _BorradorRow(
         snapshot_id=snapshot.snapshot_id,

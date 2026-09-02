@@ -24,6 +24,7 @@ from .....core.errors.hierarchy import AeatLoginAssertionError
 from .....core.identity import ContentDigest
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.time.utc import validate_utc_aware
+from .....core.type_guards import is_str_keyed_dict
 
 AEAT_STORAGE_STATE_SCHEMA_VERSION: Final[int] = 2
 """Schema version for certificate-auth :class:`PersistedSessionMetadata` records."""
@@ -111,7 +112,7 @@ def persisted_session_reason_from_error(error: AeatLoginAssertionError) -> str:
     generic persisted-session invalidation code.
     """
     context = getattr(error, "context", None)
-    if isinstance(context, Mapping):
+    if is_str_keyed_dict(context):
         reason = context.get("reason")
         if isinstance(reason, str) and reason:
             return reason

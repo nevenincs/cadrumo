@@ -10,10 +10,12 @@ from textual.widgets import LoadingIndicator, Static
 
 from ..components.theme import tokenised
 
-StatusTone = Literal["idle", "progress", "success", "warning", "error"]
+type StatusTone = Literal["idle", "progress", "success", "warning", "error"]
 """Closed presentation states supported by :class:`PinnedStatusBar`."""
 
 _TONES: Final[tuple[StatusTone, ...]] = ("idle", "progress", "success", "warning", "error")
+#: The tone a status carries before any has been applied.
+_DEFAULT_TONE: Final[StatusTone] = "idle"
 _TONE_CLASSES: Final[tuple[str, ...]] = tuple(f"tone-{tone}" for tone in _TONES)
 _GLYPH: Final[dict[StatusTone, str]] = {
     "idle": "·",
@@ -93,7 +95,10 @@ class PinnedStatusBar(Vertical):
     @property
     def tone(self) -> StatusTone:
         """Closed tone currently rendered by the status message."""
-        return next((tone for tone in _TONES if self.has_class(f"tone-{tone}")), "idle")
+        for tone in _TONES:
+            if self.has_class(f"tone-{tone}"):
+                return tone
+        return _DEFAULT_TONE
 
     @override
     def compose(self) -> ComposeResult:

@@ -11,6 +11,7 @@ from functools import lru_cache
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.resources.bundled_data import bundled_path
 from ...core.text_fold import fold_printed_phrase
+from ...core.type_guards import is_str_keyed_mapping
 from . import establishment as _establishment
 
 _ALPHA2_LENGTH = 2
@@ -101,7 +102,7 @@ def _index_country_names(payload: object, *, source: str) -> dict[str, str]:
     from .errors import IvaCatalogueError
 
     target = source
-    if not _establishment.is_str_keyed_mapping(payload):
+    if not is_str_keyed_mapping(payload):
         raise IvaCatalogueError(f"{target}: the country-name vocabulary is not a table")
 
     countries = payload.get("country", ())
@@ -127,7 +128,7 @@ def _country_record_code_and_names(record: object, *, target: str) -> tuple[str,
     """
     from .errors import IvaCatalogueError
 
-    if not _establishment.is_str_keyed_mapping(record):
+    if not is_str_keyed_mapping(record):
         raise IvaCatalogueError(f"{target}: country record is not a table: {record!r}")
     code = str(record.get("code", "")).strip().upper()
     if len(code) != _ALPHA2_LENGTH or not code.isalpha():
@@ -215,7 +216,7 @@ def _index_country_alpha3(payload: object, *, source: str) -> dict[str, str]:
     from .errors import IvaCatalogueError
 
     target = source
-    if not _establishment.is_str_keyed_mapping(payload):
+    if not is_str_keyed_mapping(payload):
         raise IvaCatalogueError(f"{target}: the country-name vocabulary is not a table")
 
     countries = payload.get("country", ())
@@ -225,7 +226,7 @@ def _index_country_alpha3(payload: object, *, source: str) -> dict[str, str]:
     resolved: dict[str, str] = {}
     alpha3_by_code: dict[str, str] = {}
     for record in countries:
-        if not _establishment.is_str_keyed_mapping(record):
+        if not is_str_keyed_mapping(record):
             raise IvaCatalogueError(f"{target}: country record is not a table: {record!r}")
         code = str(record.get("code", "")).strip().upper()
         if len(code) != _ALPHA2_LENGTH or not code.isalpha():

@@ -37,12 +37,16 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..storage.errors import OutboundStorageConflictError, OutboundStorageError, OutboundStorageValidationError
 from ._preconditions import google_terminal_refusal
 from .api import execute_request
+
+if TYPE_CHECKING:
+    from googleapiclient._apis.drive.v3.resources import DriveResource
+    from googleapiclient._apis.drive.v3.schemas import File
 
 OWNERSHIP_KEY: Final[str] = "cadrumo_vault_app"
 OWNERSHIP_VALUE: Final[str] = "cadrumo"
@@ -105,11 +109,8 @@ def build_owned_entry_query(*, parent_id: str, name: str, mime_type: str) -> str
     return f"'{parent_id}' in parents and name = '{safe_name}' and mimeType = '{mime_type}' and trashed = false"
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: dict[str, Any] is the
-# irreducible Drive API boundary shape; google-api-python-client stubs
-# surface entry metadata as Any, so narrowing breaks string-key lookups.
 def require_drive_entry_id(
-    entry: dict[str, Any],
+    entry: File,
     *,
     name: str,
     parent_id: str,
@@ -148,10 +149,8 @@ def require_drive_entry_id(
     return raw_id
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: drive is a
-# googleapiclient Resource; no stub type ships with google-api-python-client.
 def find_owned_drive_entry(
-    drive: Any,
+    drive: DriveResource,
     *,
     parent_id: str,
     name: str,
@@ -159,7 +158,7 @@ def find_owned_drive_entry(
     list_action: str,
     backfill_action: str,
     conflict_message: str,
-) -> dict[str, Any] | None:
+) -> File | None:
     """Return the app-owned Drive entry of ``name`` under ``parent_id``, if any.
 
     Applies the one ownership policy shared by every Drive lookup: an entry

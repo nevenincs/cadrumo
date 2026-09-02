@@ -174,6 +174,11 @@ def main(argv: list[str] | None = None) -> int:
             out = Path(args.out)
             out.parent.mkdir(parents=True, exist_ok=True)
             _emit(f"wrote {screenshot(session, str(out))}")
+        case unknown:
+            # The parser owns the accepted verb set; an unrecognised one here
+            # means the two drifted apart, and refusing beats silent success.
+            _emit(f"unknown command: {unknown}")
+            return 2
 
     return 0
 

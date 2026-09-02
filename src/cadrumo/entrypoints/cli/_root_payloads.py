@@ -28,8 +28,9 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable, Mapping
+from typing import ClassVar
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from ...core.json_contract import OutputSchema
 
@@ -118,7 +119,7 @@ class RootStatusResult(OutputSchema):
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class var shadows ConfigDict descriptor;
     # mypy assignment check is incorrect.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]  # reason: TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check is in...
+    model_config: ClassVar[ConfigDict] = {"extra": "allow"}
 
     @model_validator(mode="before")
     @classmethod
@@ -147,7 +148,7 @@ class AppRootResult(OutputSchema):
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class var shadows ConfigDict descriptor;
     # mypy assignment check is incorrect.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]  # reason: TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check is in...
+    model_config: ClassVar[ConfigDict] = {"extra": "allow"}
 
     @model_validator(mode="before")
     @classmethod

@@ -45,7 +45,6 @@ from __future__ import annotations
 import ast
 import asyncio
 import inspect
-import json
 import textwrap
 from collections.abc import Mapping, Sequence
 from functools import cache
@@ -63,6 +62,7 @@ from .client import LLMClient
 from .errors import LLMConfigError, LLMValidationError
 from .models import LLMProvider, LLMRequest
 from .preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
+from .response_json import first_json_object as _first_json_object
 
 #: Identifier under which this capability's calls are recorded in LLM usage and
 #: run telemetry, so a mapping call is attributable separately from a read.
@@ -311,30 +311,6 @@ def build_column_role_mapping_prompt(headers: Sequence[str]) -> str:
         "Reply with this JSON object and nothing else:\n"
         '{"assignments": [{"column_index": 0, "role": "<role token>"}]}'
     )
-
-
-def _first_json_object(text: str) -> str | None:
-    """Return the first complete JSON object in ``text`` as its source substring, or ``None``.
-
-    The SUBSTRING rather than the decoded object, so validation runs in
-    pydantic's JSON mode. Strict validation of an already-decoded object would
-    refuse a JSON array where the schema declares a tuple -- which every real
-    reply carries, because JSON has no tuple.
-
-    A small model routinely wraps its answer in a fence or a sentence, so the
-    object is located rather than assumed to be the whole reply. Decoding is
-    delegated to the stdlib decoder, which knows where an object ends.
-    """
-    decoder = json.JSONDecoder()
-    index = text.find("{")
-    while index >= 0:
-        try:
-            _, end = decoder.raw_decode(text, index)
-        except ValueError:
-            index = text.find("{", index + 1)
-            continue
-        return text[index:end]
-    return None
 
 
 def parse_column_role_mapping_response(text: str, headers: Sequence[str]) -> ColumnRoleProposal:

@@ -36,7 +36,7 @@ from datetime import date
 from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
-from typing import Final, TypeGuard
+from typing import Final
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -45,6 +45,7 @@ from ...core.external_constants import UTF_8_ENCODING
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.paths import path_stat_fingerprint
 from ...core.resources.bundled_data import bundled_path
+from ...core.type_guards import is_object_list
 from ...core.unit_proportion import UnitProportion
 from ._grounding import verify_table_legal_refs
 from .errors import IvaCatalogueError, IvaValidationError
@@ -263,11 +264,6 @@ def _hydrate_row(row: Mapping[str, object]) -> dict[str, object]:
     if is_object_list(raw_refs):
         hydrated["legal_refs"] = _coerce_legal_refs(raw_refs)
     return hydrated
-
-
-def is_object_list(value: object) -> TypeGuard[list[object]]:
-    """Narrow an unparameterized runtime list to untrusted object entries."""
-    return isinstance(value, list)
 
 
 def _coerce_legal_refs(refs: list[object]) -> tuple[str, ...]:
