@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:a2d380c7abed9b9bed159219105b4aa8b44cdb6509025a850126d91e607c7322'
+body_hash: 'sha256:3f4ad937177e8e309d00453f9d841d00d7de39521e624227152c2086e2272fb3'
 related: []
 ---
 
@@ -28,3 +28,5 @@ The Google parameters are optional upstream keywords that Cadrumo never passes, 
 ## Recommendations
 
 Remove the three global whitelist entries. Narrow the Google Protocols to the call surface Cadrumo actually uses and rename the positional-only operation parameter with a leading underscore. Add focused detector tests proving the live scan remains green without expanding global suppression.
+
+Resolved by commit `bf49393e6d`: all three exemptions were removed, the Protocols were narrowed without changing runtime arity, and an isolated real-Vulture regression proves those names remain detectable. Focused runtime, type, lint, and dead-code checks pass; second-pass review found no residual issue.
