@@ -15,7 +15,7 @@ import re
 import unicodedata
 from collections.abc import Sequence
 from enum import StrEnum
-from typing import Annotated, Self, cast
+from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, field_validator, model_validator
 
@@ -76,7 +76,7 @@ def digest_operator_safe_tokens(*values: str) -> tuple[Hex64Str, ...]:
             raise ValueError(f"operator-safe search terms cannot exceed {_MAX_OPERATOR_TERM_LENGTH} characters")
         _reject_control_characters(value)
         for token in _tokens(value):
-            digests.add(cast(Hex64Str, hashlib.sha256(token.encode("utf-8")).hexdigest()))
+            digests.add(hashlib.sha256(token.encode("utf-8")).hexdigest())
     return tuple(sorted(digests))
 
 
