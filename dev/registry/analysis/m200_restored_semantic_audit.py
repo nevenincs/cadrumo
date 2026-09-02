@@ -116,18 +116,19 @@ def audit_bundled_restorations() -> tuple[RestoredSemanticAudit, ...]:
         path = restored_paths.get(declaration_id, _REVISION_ROOT / "casillas" / "cDP200018+00588.toml")
         peers = peer_payloads.get(template, set())
         current = _payload(declaration)
+        contradiction = _direct_contradiction(description, current)
         if len(peers) == 1:
             proposed = next(iter(peers))
             disposition = AuditDisposition.CONFIRMED if proposed == current else AuditDisposition.REPAIRABLE
-            reason = "unique same-revision official-description template peer"
+            reason = contradiction or "unique same-revision official-description template peer"
         elif peers:
             proposed = None
             disposition = AuditDisposition.UNRESOLVED
-            reason = f"same-revision template has {len(peers)} conflicting semantic payloads"
+            reason = contradiction or f"same-revision template has {len(peers)} conflicting semantic payloads"
         else:
             proposed = None
             disposition = AuditDisposition.UNRESOLVED
-            reason = "no non-restored same-revision official-description template peer"
+            reason = contradiction or "no non-restored same-revision official-description template peer"
         audits.append(
             RestoredSemanticAudit(
                 casilla_id=declaration_id,
@@ -165,11 +166,10 @@ def render_review_toml(audits: tuple[RestoredSemanticAudit, ...]) -> str:
 
 
 def render_apply_patch(audits: tuple[RestoredSemanticAudit, ...]) -> str:
-    """Emit repairs only when the complete restoration surface is resolved."""
-    unresolved = tuple(item for item in audits if item.disposition is AuditDisposition.UNRESOLVED)
-    if unresolved:
-        raise ValueError(f"cannot emit semantic patch while {len(unresolved)} restorations remain unresolved")
+    """Emit only uniquely proved repairs; unresolved rows remain untouched."""
     repairs = tuple(item for item in audits if item.disposition is AuditDisposition.REPAIRABLE)
+    if not repairs:
+        raise ValueError("cannot emit semantic patch because no restoration has a uniquely proved repair")
     lines = ["*** Begin Patch"]
     for audit in repairs:
         assert audit.proposed is not None  # noqa: S101 - disposition invariant
@@ -235,6 +235,17 @@ def _resolve_declaration(token: str, declarations: dict[str, CasillaDefinition])
 def _template(description: str) -> str:
     without_box = re.sub(r"\[[0-9]{5}\]", "[#]", description)
     return re.sub(r"\b20[0-9]{2}\b", "{year}", without_box)
+
+
+def _direct_contradiction(description: str, payload: SemanticPayload) -> str | None:
+    normalized = description.casefold()
+    role = (payload.semantic_role or "").casefold()
+    section = " ".join(payload.section).casefold()
+    if "otras deducciones relativas a programas de apoyo" in normalized and "innovacion_tecnologica" in role:
+        return "official exceptional-public-interest description contradicts restored innovation semantic role"
+    if "reserva de nivelaci" in normalized and ("capitalizacion" in role or "capitalizacion" in section):
+        return "official nivelacion description contradicts restored capitalizacion semantic payload"
+    return None
 
 
 def _payload(declaration: CasillaDefinition) -> SemanticPayload:

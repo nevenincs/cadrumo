@@ -41,6 +41,7 @@ from dataclasses import dataclass
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
 
 __all__ = [
     "SelectionProbe",
@@ -103,18 +104,39 @@ def probe_modelo(
             # them. That refusal is the registry being right, so the probe asks
             # again with a date inside the revision's own window rather than
             # reporting its own under-specified question as a finding.
-            for on in (None, revision.valid_from):
+            for grade in _GRADES:
+                try:
+                    resolved = str(
+                        authority.admitted_revision_id(modelo_id, filing_year=year, period=code, grade=grade)
+                    )
+                    break
+                except AmbiguousRevisionSelectionError:
+                    refusal = AmbiguousRevisionSelectionError.__name__
+                    break
+                except Exception as error:
+                    refusal = type(error).__name__
+
+            # Only an ambiguity is worth asking again: it means the year did not
+            # decide between windows splitting inside it, which a date does
+            # decide. Any other refusal is the revision's own answer, and
+            # retrying it with a date doubles the work to hear the same thing.
+            if refusal == AmbiguousRevisionSelectionError.__name__:
                 for grade in _GRADES:
                     try:
                         resolved = str(
-                            authority.admitted_revision_id(modelo_id, filing_year=year, period=code, on=on, grade=grade)
+                            authority.admitted_revision_id(
+                                modelo_id,
+                                filing_year=year,
+                                period=code,
+                                on=revision.valid_from,
+                                grade=grade,
+                            )
                         )
+                        refusal = None
                         break
                     except Exception as error:
                         refusal = type(error).__name__
-                if resolved is not None:
-                    refusal = None
-                    break
+
             probes.append(
                 SelectionProbe(
                     modelo=modelo_id,
