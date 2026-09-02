@@ -3,7 +3,9 @@
 Defines the closed catalogues the rental register's pydantic models
 constrain themselves with: :class:`UseType` (finca purpose),
 :class:`ExpenseCategory` (LIRPF art. 23.1 deductible-expense slots),
-and :class:`ReduccionTier` (LIRPF art. 23.2 reducción outcomes).
+:class:`ReduccionTier` (LIRPF art. 23.2 reducción outcomes),
+:class:`TitularidadRegime` (which right over the finca the contribuyente
+holds) and :class:`TitularContribuyente` (casilla [0062] titular).
 """
 
 from __future__ import annotations
@@ -116,8 +118,77 @@ class ReduccionTier(StrEnum):
     NOT_APPLICABLE = "NOT_APPLICABLE"
 
 
+class TitularidadRegime(StrEnum):
+    """Closed catalogue of the rights a contribuyente may hold over a finca.
+
+    The regime selects which of the two declared percentages attributes
+    the finca's figures to this contribuyente, and it is not derivable
+    from the percentages themselves: a pleno propietario and a nudo
+    propietario both declare a porcentaje de propiedad in casilla
+    [0063] and no porcentaje de usufructo in casilla [0064], yet the
+    first declares the property's income and the second declares
+    nothing.
+
+    Authority: *Manual práctico de Renta 2025*, Parte 1, Capítulo 4,
+    "Individualización de los rendimientos del capital inmobiliario"
+    (págs. 292-293, Art. 11.3 Ley IRPF) and Capítulo 10,
+    "Individualización de las rentas inmobiliarias" (pág. 805).
+
+    Members:
+        NO_DECLARADA: The titularidad facts were never declared. A
+            distinct state from any share, including a full one: the
+            aggregation refuses rather than assuming sole full title.
+        PLENO_DOMINIO: Full ownership of the declared porcentaje de
+            propiedad. Attribution follows casilla [0063].
+        NUDA_PROPIEDAD: Bare ownership, the usufructo resting with
+            another party. Attribution is zero for both the rendimiento
+            and the art. 85 imputación, whatever casilla [0063] says.
+        USUFRUCTO: The contribuyente holds the derecho de usufructo.
+            Attribution follows casilla [0064], and covers both the
+            rendimiento and the imputación.
+        PLENO_DOMINIO_Y_USUFRUCTO: Pleno dominio over part of the finca
+            and usufructo over the rest. Legally real and declarable,
+            but its amortización splits into two rules (Capítulo 4,
+            "Gastos deducibles", pág. 281) of which the register models
+            only one, so the aggregation refuses instead of guessing.
+    """
+
+    NO_DECLARADA = "NO_DECLARADA"
+    PLENO_DOMINIO = "PLENO_DOMINIO"
+    NUDA_PROPIEDAD = "NUDA_PROPIEDAD"
+    USUFRUCTO = "USUFRUCTO"
+    PLENO_DOMINIO_Y_USUFRUCTO = "PLENO_DOMINIO_Y_USUFRUCTO"
+
+
+class TitularContribuyente(StrEnum):
+    """Closed catalogue for casilla [0062], the titular of the inmueble.
+
+    The declaration identifies the holder by their place in the unidad
+    familiar, not by name or NIF: "Común" when a joint declaration's
+    inmueble belongs to both cónyuges in equal parts, otherwise the
+    member who holds total or partial title. Authority: *Manual
+    práctico de Renta 2025*, Parte 1, Capítulo 4, "Declaración bienes
+    inmuebles — Datos particulares de cada inmueble" (pág. 295).
+
+    Members:
+        COMUN: "Común" — a joint declaration where the inmueble belongs
+            to both cónyuges in equal parts.
+        PRIMER_DECLARANTE: "Primer declarante".
+        CONYUGE: "Cónyuge".
+        HIJO: "Hijo 1º", "Hijo 2º" …; the ordinal is carried beside
+            this member rather than folded into it.
+    """
+
+    COMUN = "COMUN"
+    PRIMER_DECLARANTE = "PRIMER_DECLARANTE"
+    CONYUGE = "CONYUGE"
+    HIJO = "HIJO"
+
+
 __all__ = [
     "ExpenseCategory",
     "ReduccionTier",
+    "TitularContribuyente",
+    "TitularidadRegime",
     "UseType",
 ]
