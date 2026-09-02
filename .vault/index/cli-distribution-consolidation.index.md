@@ -6,7 +6,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:c7781af73fa3d2c900ff419eeabc04338f90174b5bc3e0da012550f2fb737d84'
+body_hash: 'sha256:2fb149126f1a7a82306c4418ed585187b72738ace5496a498ea904ea64658cbe'
 related:
   - '[[2026-09-02-cli-distribution-consolidation-P01-S01]]'
   - '[[2026-09-02-cli-distribution-consolidation-P01-S02]]'
@@ -40,8 +40,15 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-P08-S30]]'
   - '[[2026-09-02-cli-distribution-consolidation-P08-S31]]'
   - '[[2026-09-02-cli-distribution-consolidation-P08-S32]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S33]]'
   - '[[2026-09-02-cli-distribution-consolidation-P09-S34]]'
   - '[[2026-09-02-cli-distribution-consolidation-P09-S35]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S36]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P10-S38]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P10-S41]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P11-S42]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P11-S43]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P11-S44]]'
   - '[[2026-09-02-cli-distribution-consolidation-adr]]'
   - '[[2026-09-02-cli-distribution-consolidation-plan]]'
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
@@ -91,8 +98,15 @@ Auto-generated index of all documents tagged with `#cli-distribution-consolidati
 - `2026-09-02-cli-distribution-consolidation-P08-S30` - Delete the branch-only runner probe workflows
 - `2026-09-02-cli-distribution-consolidation-P08-S31` - Delete the control-plane document and restate its sizing rule at the call sites
 - `2026-09-02-cli-distribution-consolidation-P08-S32` - Drop the stale runner count from the load-sizing gate, leaving the invariant it actually asserts
+- `2026-09-02-cli-distribution-consolidation-P09-S33` - Bind the two corpus distributions to project-level Trusted Publishers
 - `2026-09-02-cli-distribution-consolidation-P09-S34` - Build every declared distribution from one command and refuse any file over the index cap
 - `2026-09-02-cli-distribution-consolidation-P09-S35` - Prove both console scripts from the built wheel in an isolated interpreter
+- `2026-09-02-cli-distribution-consolidation-P09-S36` - Render the Homebrew formula and the Scoop manifest from the built cohort
+- `2026-09-02-cli-distribution-consolidation-P10-S38` - Remove the publication-input dispatcher left without a consumer
+- `2026-09-02-cli-distribution-consolidation-P10-S41` - Reduce the release module family to what the adopted path invokes
+- `2026-09-02-cli-distribution-consolidation-P11-S42` - Rewrite the release runbook against the adopted workflow pair
+- `2026-09-02-cli-distribution-consolidation-P11-S43` - Reduce the recipe surface to the commands the adopted path uses
+- `2026-09-02-cli-distribution-consolidation-P11-S44` - Reconcile the packaging workflow family against the sibling shape
 
 ### plan
 
