@@ -8,6 +8,7 @@ confirm the structural contracts hold at runtime — no mocks, no patches.
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import TYPE_CHECKING, Never, cast
 
 import pytest
 
@@ -22,7 +23,25 @@ from ..calc_sheets_pull import (
 )
 from ..calc_sheets_pull_records import ValueRange
 
+if TYPE_CHECKING:
+    from googleapiclient._apis.sheets.v4.resources import SheetsResource
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+
+class _UnreachableSheetsService:
+    """A Sheets stand-in that fails loudly if the adapter reaches the API.
+
+    The vendor ``SheetsResource`` is ``type_check_only`` and cannot be
+    subclassed at runtime, so the cast at the call site is how the
+    stand-in is named. Any attribute access is a test failure rather
+    than the bare ``AttributeError`` a plain object would raise.
+    """
+
+    def __getattr__(self, name: str) -> Never:
+        message = f"the adapter must not reach the Sheets API, but read .{name}"
+        raise AssertionError(message)
+
 
 # ---------------------------------------------------------------------------
 # ValueRange structural shape preserved through helpers
@@ -67,9 +86,10 @@ def test_batch_get_values_returns_empty_list_for_empty_ranges() -> None:
     returned and its type is correct (empty list of dicts).
     """
 
-    # A plain object has no .spreadsheets() attribute, so any call beyond
-    # the empty-list guard would raise AttributeError.
-    result = _batch_get_values(object(), "some-id", [])
+    # The stand-in raises on any attribute access, so any call beyond the
+    # empty-list guard fails the test rather than reaching the API.
+    service = cast("SheetsResource", _UnreachableSheetsService())
+    result = _batch_get_values(service, "some-id", [])
     assert result == []
     assert isinstance(result, list)
 
