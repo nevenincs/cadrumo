@@ -33,7 +33,7 @@ class _IdentifiedRecord(Protocol):
     id: str
 
 
-def _records_by_id[RecordT: _IdentifiedRecord](records: Iterable[RecordT]) -> dict[str, RecordT]:
+def records_by_id[RecordT: _IdentifiedRecord](records: Iterable[RecordT]) -> dict[str, RecordT]:
     return {record.id: record for record in records}
 
 
@@ -62,7 +62,7 @@ two stay in lock-step rather than one drifting to a bare ``object``.
 """
 
 
-def _export_field_ids(revision: ModeloRevision) -> set[str]:
+def collect_export_field_ids(revision: ModeloRevision) -> set[str]:
     return {field.id for layout in revision.export_layouts for record in layout.records for field in record.fields}
 
 
@@ -133,10 +133,10 @@ class RevisionValidationContext:
 
 def build_revision_validation_context(revision: ModeloRevision) -> RevisionValidationContext:
     ids_by_kind = collect_record_id_lists(revision)
-    formula_by_id = _records_by_id(revision.formulas)
-    binding_by_id = _records_by_id(revision.bindings)
-    relation_by_id = _records_by_id(revision.relations)
-    parameter_by_id = _records_by_id(revision.parameters)
+    formula_by_id = records_by_id(revision.formulas)
+    binding_by_id = records_by_id(revision.bindings)
+    relation_by_id = records_by_id(revision.relations)
+    parameter_by_id = records_by_id(revision.parameters)
     casillas = set(declared_casilla_ids(revision))
     bindings = set(binding_by_id)
     relations = set(relation_by_id)
@@ -157,22 +157,22 @@ def build_revision_validation_context(revision: ModeloRevision) -> RevisionValid
         binding_by_id=binding_by_id,
         relation_by_id=relation_by_id,
         parameter_by_id=parameter_by_id,
-        export_layout_by_id=_records_by_id(revision.export_layouts),
-        extraction_profile_by_id=_records_by_id(revision.extraction_profiles),
-        cross_reference_by_id=_records_by_id(revision.live_cross_references),
-        workbook_parity_by_id=_records_by_id(revision.workbook_parity_refs),
-        verification_expectation_by_id=_records_by_id(revision.verification_expectations),
-        application_link_by_id=_records_by_id(revision.application_links),
-        deadline_window_by_id=_records_by_id(revision.deadline_windows),
-        filing_schedule_by_id=_records_by_id(revision.filing_schedules),
-        construct_by_id=_records_by_id(revision.constructs),
-        dependency_classification_by_id=_records_by_id(revision.dependency_classifications),
+        export_layout_by_id=records_by_id(revision.export_layouts),
+        extraction_profile_by_id=records_by_id(revision.extraction_profiles),
+        cross_reference_by_id=records_by_id(revision.live_cross_references),
+        workbook_parity_by_id=records_by_id(revision.workbook_parity_refs),
+        verification_expectation_by_id=records_by_id(revision.verification_expectations),
+        application_link_by_id=records_by_id(revision.application_links),
+        deadline_window_by_id=records_by_id(revision.deadline_windows),
+        filing_schedule_by_id=records_by_id(revision.filing_schedules),
+        construct_by_id=records_by_id(revision.constructs),
+        dependency_classification_by_id=records_by_id(revision.dependency_classifications),
         casillas=casillas,
         formulas=formula_by_id,
         bindings=bindings,
         relations=relations,
         parameters=parameters,
         resolvable_values=casillas | bindings | relations | parameters,
-        export_field_ids=_export_field_ids(revision),
+        export_field_ids=collect_export_field_ids(revision),
         exported_casillas=_exported_casilla_ids(revision),
     )

@@ -270,7 +270,6 @@ type ModeloEditAddressV1 = Annotated[
 #: from this axis, and the permitted surface carries no casilla value. The mirror this
 #: replaced was a hand-maintained copy of the same nineteen members, so a member added
 #: to the registry never reached it.
-ModeloEditCasillaDataType = CasillaDataTypeField
 
 
 class ModeloEditWritableScalarSurfaceEntryV1(EditModel):
@@ -278,7 +277,7 @@ class ModeloEditWritableScalarSurfaceEntryV1(EditModel):
 
     kind: Literal["writable_scalar"] = "writable_scalar"
     casilla_id: CasillaId
-    data_type: ModeloEditCasillaDataType
+    data_type: CasillaDataTypeField
     allowed_intents: Annotated[tuple[ModeloEditScalarIntentKind, ...], Field(min_length=1, max_length=3)]
 
     @field_validator("allowed_intents")
@@ -963,7 +962,6 @@ __all__ = [
     "ModeloEditBaselineV1",
     "ModeloEditBindingAddressV1",
     "ModeloEditBindingIntentKind",
-    "ModeloEditCasillaDataType",
     "ModeloEditCompatibilityRefusalV1",
     "ModeloEditCompatibilityTupleV1",
     "ModeloEditDetailRowAddressV1",

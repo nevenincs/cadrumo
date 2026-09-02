@@ -30,7 +30,7 @@ from .m303_orden_projection_models import (
     M303AnnualOrdenGeneratedSource,
     M303AnnualOrdenProjection,
 )
-from .schema_base import RegistrySourceKind, PublishingAuthority
+from .schema_base import PublishingAuthority, RegistrySourceKind
 from .schema_references import LegalReference, SourceReference
 
 if TYPE_CHECKING:

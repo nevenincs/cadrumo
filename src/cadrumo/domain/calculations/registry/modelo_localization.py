@@ -121,7 +121,7 @@ def _localised_casilla_aliases(
     casilla_id: str,
 ) -> tuple[dict[str, object], ...] | None:
     """Return one casilla's aliases with derived locale keys, or ``None`` if absent."""
-    aliases_array = _as_toml_array(raw_aliases)
+    aliases_array = as_toml_array(raw_aliases)
     if aliases_array is None:
         return None
     aliases: list[dict[str, object]] = []
@@ -182,7 +182,7 @@ def _localised_construct(raw_construct: object, *, modelo_id: str, revision_id: 
     }
 
 
-def _as_toml_array(value: object) -> tuple[object, ...] | None:
+def as_toml_array(value: object) -> tuple[object, ...] | None:
     """Narrow a frozen TOML array to object entries, or return ``None``."""
     if not isinstance(value, tuple):
         return None
@@ -201,13 +201,13 @@ def enroll_revision_localization(
         **raw_revision,
         "localization_key": revision_locale_key(modelo_id, revision_id),
     }
-    raw_casillas = _as_toml_array(raw_revision.get("casillas"))
+    raw_casillas = as_toml_array(raw_revision.get("casillas"))
     if raw_casillas is not None:
         payload["casillas"] = tuple(
             _localised_casilla(raw_casilla, modelo_id=modelo_id, revision_id=revision_id)
             for raw_casilla in raw_casillas
         )
-    raw_constructs = _as_toml_array(raw_revision.get("constructs"))
+    raw_constructs = as_toml_array(raw_revision.get("constructs"))
     if raw_constructs is not None:
         payload["constructs"] = tuple(
             _localised_construct(raw_construct, modelo_id=modelo_id, revision_id=revision_id)

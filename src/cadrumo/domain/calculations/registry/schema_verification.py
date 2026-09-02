@@ -70,7 +70,14 @@ from .ids import (
     WorkbookOutputId,
     WorkbookParityRefId,
 )
-from .schema_base import SettlementDirection, SettlementDirectionField, EvidenceTierField, LegalRefs, RegistryModel, SourceRefs
+from .schema_base import (
+    EvidenceTierField,
+    LegalRefs,
+    RegistryModel,
+    SettlementDirection,
+    SettlementDirectionField,
+    SourceRefs,
+)
 from .schema_scalars import DecimalValue, WorkbookCellRefStr
 
 __all__ = [

@@ -16,13 +16,11 @@ there is no stricter of two casilla ids, so any tie-break would be an invention.
 
 from __future__ import annotations
 
-from typing import Literal
-
 import pytest
 
 from .....core.casilla_id import validated_casilla_id
-from ..schema_base import SettlementDirection
 from ..errors import RegistryValidationError
+from ..schema_base import SettlementDirection
 from ..schema_verification import (
     DiscrepancyCause,
     VerificationExpectationDefinition,

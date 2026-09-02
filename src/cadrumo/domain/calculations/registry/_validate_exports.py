@@ -39,7 +39,6 @@ from ....core.aggregation import BindingAggregationOp
 from ....core.casilla_id import CasillaId
 from ....core.filing_projection_ref import FilingProjectionRef
 from ..export_field_kind import CasillaFieldKind
-from .schema_base import RegistrySourceKind
 from ._validate_evidence import EvidenceValidator
 from ._validate_export_field_widths import validate_draft_field_slot_width
 from ._validate_helpers import missing_refs as _missing_refs
@@ -56,6 +55,7 @@ from .corpus_catalogue import verify_source_file
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .schema import DataBindingDefinition, ModeloRevision
+from .schema_base import RegistrySourceKind
 from .schema_exports import (
     AuxiliaryEnvelopeHeaderDefinition,
     ExportFieldDefinition,

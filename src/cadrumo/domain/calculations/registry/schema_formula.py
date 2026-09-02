@@ -14,7 +14,7 @@ from ....core.casilla_id import CasillaId
 from ._formula_operator_contracts import require_formula_operator_arity
 from .errors import RegistryValidationError
 from .ids import BindingId, ParameterId, RelationId
-from .schema_base import DateAxis, DateAxisField, FormulaOperator, LegalRefs, RegistryModel, SourceCitation, SourceRefs
+from .schema_base import DateAxisField, FormulaOperator, LegalRefs, RegistryModel, SourceCitation, SourceRefs
 from .schema_scalars import DecimalValue
 
 __all__ = [

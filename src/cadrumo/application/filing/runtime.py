@@ -46,7 +46,7 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
-from typing import Literal, Protocol
+from typing import Protocol
 
 from pydantic import BaseModel, Field
 
@@ -56,7 +56,7 @@ from ...core.identity import SubjectTaxId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.resources.bundled_data import bundled_path
-from ...domain.calculations.registry.schema_base import SettlementDirection, SettlementDirectionField
+from ...domain.calculations.registry.schema_base import SettlementDirectionField
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.errors import (
     RegistryFailureCondition,
