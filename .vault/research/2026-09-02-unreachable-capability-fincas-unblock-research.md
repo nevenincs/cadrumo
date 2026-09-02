@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:34d6066397f9af43a9bd0e0659863bcf74310eb4112564867168fe155bfa091a'
+body_hash: 'sha256:aa54a8d3dc3b9ea01bd75917203292e8ad7b7796c4b6c9f4e191afe70641aeec'
 related:
   - "[[2026-09-02-unreachable-capability-research]]"
 ---
@@ -119,11 +119,32 @@ and is in fact the last of three.
 Ahead of all of them sit `W04.P12.S72`, grounding the per-finca M100 semantics,
 and `W04.P12.S73`, deciding the aggregation grain. Neither document exists yet.
 
+### The grounding step is a reading task, not external research
+
+This was the largest open unknown and it resolves in the repository's favour.
+The official AEAT Renta manual is bundled for filing years 2020 through 2025,
+with extracted text sidecars beside each source PDF, and it covers every
+quantity the review condition names: capital inmobiliario, arrendamiento,
+gastos deducibles, amortización, reducción, and imputación de rentas
+inmobiliarias. It cites casillas directly in bracket notation, including the
+`[0102]` to `[0154]` range the rental sections address.
+
+The legal grounding for the computation is further along than the row implies.
+Sixty rental parameters already ship across the M100 revisions, each carrying
+`legal_refs` to LIRPF article 23 and, for amortisation, additionally to the
+RIRPF article 14 rate. Several carry `source_citations` with `required_text`
+assertions, so the citation is verified against corpus text rather than
+asserted.
+
+What is therefore missing is narrower than "official evidence". The rates,
+thresholds, tiers and lookback windows are grounded. The undecided part is the
+DESTINATION MAPPING: which casilla each computed aggregate lands in, at which
+of the four grains, and how attribution splits across owners. That is
+`W04.P12.S72` and `S73`, and both can be executed by reading bundled material.
+
 ### What was not investigated
 
-Whether the official AEAT sources needed for `S72` are already in the bundled
-corpus, which would change the grounding step from external research to a
-reading task. Whether amortization's `ingress_blocked` state has a shorter path
+Whether amortization's `ingress_blocked` state has a shorter path
 than fincas, which would matter because the sequencing puts it first. And
 whether the census validator should gain locator resolution as a gate, which
 looks correct but belongs to the source-connectivity owner rather than this
