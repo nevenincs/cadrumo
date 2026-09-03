@@ -39,6 +39,33 @@ churn in both directions is expected and is not this gate's to adjudicate. A
 frozen prefix is scope, not permission: the audit still reports everything
 inside it, and the baseline records why it is deferred.
 
+A prefix defers by LOCATION, and that alone cannot describe a cluster whose
+work spans two locations by architectural mandate. An entrypoint cluster is
+required to keep its application-layer projections outside its own package, so
+freezing the entrypoint prefix defers the screens while still failing on the
+projections those screens exclusively consume. The finding that produces is not
+actionable on its own terms: its only remedy is to finish wiring the deferred
+cluster, which is exactly the work the freeze says this gate does not
+adjudicate. Worse, it must be baselined and unbaselined on every step of that
+construction, in both directions -- the churn the freeze exists to absorb, and
+churn is how a baseline erodes.
+
+So the deferral is transitive over exclusive suppliers: a finding every one of
+whose shipped importers is frozen, or is itself deferred this way, is deferred
+too. The property is read from the live import graph rather than declared, so
+it cannot go stale or carry a rationale that stopped being true. Two conditions
+keep it from becoming a blanket exemption, and both are the mechanism's teeth:
+
+* a finding NO shipped module imports is not supplying anything to a deferred
+  cluster, so it stays actionable -- that is the "capability that lost its last
+  caller" case the gate exists to catch;
+* a finding with even one importer outside the deferred set stays actionable,
+  so the exemption cannot be inherited through a module that is merely nearby.
+
+Deferred-by-derivation modules are reported with the frozen importers that
+defer them. If the deferred cluster is ever abandoned, its exclusive suppliers
+are named in this gate's own output rather than disappearing quietly.
+
 This gate does not overlap the import-direction gate in
 ``cadrumo.tests.test_production_never_imports_test_support``. That one proves
 production never imports test support -- a direction. This one proves no
@@ -181,6 +208,75 @@ class UnreachableBaseline:
 
 
 @dataclass(frozen=True, slots=True)
+class DeferredDerivation:
+    """One finding deferred because only a deferred cluster still leads to it.
+
+    Args:
+        module: The reported module the deferral covers.
+        deferring_importers: The shipped importers that carry the deferral,
+            every one of them frozen or itself deferred by derivation. Named in
+            the report so the deferral can be checked against the graph rather
+            than trusted.
+    """
+
+    module: str
+    deferring_importers: tuple[str, ...]
+
+
+def _finding_owner(module: str, finding_modules: frozenset[str]) -> str | None:
+    """The reported finding whose span contains ``module``, if any.
+
+    A package finding stands for its whole subtree, so an importer named
+    inside one is spoken for by that finding. The longest match wins, so a
+    nested finding is never mistaken for its ancestor.
+    """
+    candidates = [name for name in finding_modules if module == name or module.startswith(name + ".")]
+    return max(candidates, key=len) if candidates else None
+
+
+def derived_deferrals(
+    result: UnreachableCodeResult,
+    baseline: UnreachableBaseline,
+) -> tuple[DeferredDerivation, ...]:
+    """Findings reached only from inside a deferred cluster.
+
+    Grown to a fixpoint rather than resolved in one pass, because a supplier of
+    a supplier is just as exclusively consumed by the deferred cluster as the
+    first hop is, and stopping at one hop would defer a module while still
+    failing on the module it alone depends upon.
+    """
+    findings = {finding.module: finding for finding in result.modules if finding.reach in _NOT_SCRIPT_REACHED}
+    finding_modules = frozenset(findings)
+    derived: dict[str, tuple[str, ...]] = {}
+    while True:
+        grew = False
+        for name, finding in findings.items():
+            if name in derived or baseline.is_frozen(name):
+                continue
+            # Nothing imports it, so it supplies no deferred cluster and stays
+            # this gate's to adjudicate.
+            if not finding.importers:
+                continue
+            deferring: list[str] = []
+            for importer in finding.importers:
+                if baseline.is_frozen(importer):
+                    deferring.append(importer)
+                    continue
+                owner = _finding_owner(importer, finding_modules)
+                if owner is not None and owner in derived:
+                    deferring.append(importer)
+                    continue
+                break
+            else:
+                derived[name] = tuple(deferring)
+                grew = True
+        if not grew:
+            return tuple(
+                DeferredDerivation(module=name, deferring_importers=derived[name]) for name in sorted(derived)
+            )
+
+
+@dataclass(frozen=True, slots=True)
 class RatchetVerdict:
     """What the live tree reports measured against the baseline.
 
@@ -189,6 +285,9 @@ class RatchetVerdict:
         stale: Baselined modules the tree no longer reports.
         frozen: Reported modules under a deferred cluster, carried for
             visibility and excluded from both failure directions.
+        derived: Reported modules a deferred cluster alone still leads to,
+            excluded from both failure directions and named with the importers
+            that defer them.
         intentional: Typed intentional dispositions currently reported by the
             scanner, carried separately from actionable entries.
         stale_intentional: Intentional dispositions whose module the scanner
@@ -198,6 +297,7 @@ class RatchetVerdict:
     regressions: tuple[str, ...]
     stale: tuple[str, ...]
     frozen: tuple[str, ...]
+    derived: tuple[DeferredDerivation, ...] = ()
     intentional: tuple[IntentionalReachabilityDisposition, ...] = ()
     stale_intentional: tuple[IntentionalReachabilityDisposition, ...] = ()
 
@@ -221,8 +321,9 @@ class RatchetVerdict:
             lines.extend(f"  + {name}" for name in self.regressions)
         if self.stale:
             lines.append(
-                f"{len(self.stale)} baseline entry/entries the tree no longer reports. "
-                f"Delete them from {BASELINE_PATH.name} so the baseline records the repair:",
+                f"{len(self.stale)} baseline entry/entries the tree no longer reports as actionable. "
+                f"Either the debt was paid or only a deferred cluster still leads there; "
+                f"delete them from {BASELINE_PATH.name} so the baseline records it:",
             )
             lines.extend(f"  - {name}" for name in self.stale)
         if self.stale_intentional:
@@ -234,8 +335,18 @@ class RatchetVerdict:
         if self.intentional:
             lines.append(f"{len(self.intentional)} intentional unreached module(s) remain visible:")
             lines.extend(f"  = {entry.module} ({entry.kind}): {entry.rationale}" for entry in self.intentional)
+        if self.derived:
+            lines.append(
+                f"{len(self.derived)} module(s) deferred because only a frozen cluster still imports them:",
+            )
+            lines.extend(
+                f"  ~ {entry.module} <- {', '.join(entry.deferring_importers)}" for entry in self.derived
+            )
         if not lines:
-            return f"unreachable-module set matches the baseline ({len(self.frozen)} deferred)"
+            return (
+                f"unreachable-module set matches the baseline "
+                f"({len(self.frozen)} frozen, {len(self.derived)} deferred by derivation)"
+            )
         return "\n".join(lines)
 
 
@@ -266,7 +377,9 @@ def evaluate(result: UnreachableCodeResult, baseline: UnreachableBaseline) -> Ra
     """Compare the live unreachable set against ``baseline`` in both directions."""
     reported = unreachable_modules(result)
     frozen = frozenset(name for name in reported if baseline.is_frozen(name))
-    live = reported - frozen
+    derived = derived_deferrals(result, baseline)
+    derived_modules = frozenset(entry.module for entry in derived)
+    live = reported - frozen - derived_modules
     intentional_by_module = {disposition.module: disposition for disposition in baseline.intentional}
     intentional_modules = frozenset(intentional_by_module)
     allowed = baseline.allowed
@@ -274,6 +387,7 @@ def evaluate(result: UnreachableCodeResult, baseline: UnreachableBaseline) -> Ra
         regressions=tuple(sorted(live - allowed - intentional_modules)),
         stale=tuple(sorted(allowed - live)),
         frozen=tuple(sorted(frozen)),
+        derived=derived,
         intentional=tuple(intentional_by_module[name] for name in sorted(live & intentional_modules)),
         stale_intentional=tuple(intentional_by_module[name] for name in sorted(intentional_modules - live)),
     )
