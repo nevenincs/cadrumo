@@ -51,6 +51,16 @@ refusal, and sanitized host failure, but it intentionally does not construct
 the controller or modal. Wiring that contract is the installed-session work in
 S384 and is not claimed here.
 
+### generic-operation-copy-and-missing-filed-pull | high | The screens did not preserve the admitted action's meaning
+
+Resolved. Operation labels now come from a closed exact
+action/operation-to-locale-key map after controller admission, never from a
+caller-selected generic label. The Filed declarations screen obtains
+`operator.live.filed.pull_all` plus `live.filed-history.pull` from the
+application-declared overview row and uses the existing one-shot supervisor
+handoff. Census retains local review/adoption wording. The notification-list
+action has no operation and therefore creates no fake pull button or refusal.
+
 ## Recommendations
 
 1. In S384, implement `AeatSyncOperationHandoffV1` with the existing
@@ -77,7 +87,7 @@ exact action/operation admission, double-submit prevention, missing-host
 refusal, sanitized generic failure, and opaque notification focus across
 reorder, refresh, resize, and child return.
 
-Final evidence: 52 focused tests passed with all lanes enabled; Ruff lint and
+Final evidence: 60 focused tests passed with all lanes enabled; Ruff lint and
 format checks passed; ty passed; basedpyright reported zero errors, warnings,
 and notes.
 
