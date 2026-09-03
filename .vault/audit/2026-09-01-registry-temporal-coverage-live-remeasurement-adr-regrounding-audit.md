@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1ee0855211a6f7c478ece8ee1b8a46e3a21fafbfec17aedacd64c2db88ff0ed0'
+body_hash: 'sha256:a50b90f9ca272453d5f0e63c43dd00aa06fed69756129fe6ba0578df401ff5bc'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7945,3 +7945,34 @@ unresolved dynamic site, scoped to the registry because a gate failing on all
 five at once would not say which one broke the census. It is red, correctly, and
 its message says what to do and what not to: teach the resolver this shape or
 restore a readable one, and do not delete the rules.
+
+### the-census-can-follow-the-snapshot-edge-again-by-asking-instead-of-parsing | high | The resolver evaluates the declaration in a separate interpreter; renta is back in the universe and the stale count fell from seven to six
+
+The blinded resolver is repaired, and deliberately not by teaching it the shape
+that blinded it. The tuple of cross-domain check modules was a literal when the
+scan was written and is now built from another module's mapping values; a scan
+taught to read `X.values()` would go blind again at the next construction, and
+its own docstring already declines to guess at computed names for that reason.
+
+It now asks. An unresolved loop constant is evaluated by importing its module
+and reading the name, in a separate interpreter - for the reason every other
+measurement here uses one: importing the module in this process would add it and
+its imports to this process's module set, and this is a census of what gets
+imported. The instrument stays out of its own reading. Any failure returns None,
+so the caller still records an unresolved site rather than receiving a guess.
+
+One correction to the first attempt, caught by its cost rather than by a test.
+The evaluation was placed before the check for an actual `import_module` call,
+so every ordinary loop in the tree spawned an interpreter to resolve a constant
+nothing imported; the census stopped completing in ten minutes. Finding the
+import sites first and evaluating only when one exists takes 17.4 seconds over
+sixteen sites. A fallback that fires on every candidate rather than every case
+is not a fallback, it is a scan.
+
+The result is measured: `_snapshot_internals` resolves to the two renta
+routing-integrity modules, renta is back in the universe, and the stale count
+fell from seven to six. The registry-scoped gate added alongside now passes. The
+remaining six entries name modules that still exist and are no longer reached,
+and each needs the same question asked separately - whether the load genuinely
+narrowed or another edge stopped being followed - which is why they are left
+standing rather than deleted in a sweep.
