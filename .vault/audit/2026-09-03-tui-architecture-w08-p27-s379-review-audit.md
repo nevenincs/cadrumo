@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e57561414667a0de7af1058d0e1f7928513007e29ab74289c27fed00398472cc'
+body_hash: 'sha256:13b0df8f71190160cc84ad084ea5ce324618be0c6f2bbe34a4b2885affcd7308'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -13,7 +13,7 @@ related:
 
 ## Scope
 
-Read-only review of S379 commits `8705132387`, `6fff2f1555`, `643a38d922`, prior remediation commits `257015ff7260`, `e4170744abf7`, `e26a5f5c2a`, and `11107a48b5`, locale remediation commits `fdf50282b9`, `e14bc2e9a9`, and `d691a54528`, and final fixture remediation `3943d6d234`. The review rechecked the six-route workspace, protected-data and action-handoff boundaries, supported locale namespace/key and placeholder parity, live four-locale rendering, and the focused application and TUI suites.
+Read-only review of S379 commits `8705132387`, `6fff2f1555`, `643a38d922`, prior remediation commits `257015ff7260`, `e4170744abf7`, `e26a5f5c2a`, and `11107a48b5`, locale remediation commits `fdf50282b9`, `e14bc2e9a9`, `d691a54528`, and `e58a4a2ca7`, and final fixture remediation `3943d6d234`. The review rechecked the six-route workspace, protected-data and action-handoff boundaries, supported locale namespace/key and placeholder parity, live four-locale rendering, and the focused application and TUI suites.
 
 ## Findings
 
@@ -31,17 +31,16 @@ Resolved in `fdf50282b9`, `e14bc2e9a9`, and `d691a54528`. The four `tui.aeat_syn
 
 ### notification-selection-contract-breaks-s379-focused-tui-suite | high | The hardened public projection makes six claimed focused TUI tests fail before mount
 
-Resolved in `3943d6d234`: the S379 fixture now enters through `project_aeat_sync_workspace` using scoped facts and lets the public projector derive the mandatory opaque notification selection key. All 18 relevant S397 tests and seven S379 TUI tests pass, including six mounts, redaction, source/refusal, action-handoff, and semantic notification-focus behavior.
+Resolved in `3943d6d234`: the S379 fixture now enters through `project_aeat_sync_workspace` using scoped facts and lets the public projector derive the mandatory opaque notification selection key. All relevant S397 and S379 tests pass, including six mounts, redaction, source/refusal, action-handoff, and semantic notification-focus behavior.
 
 ### aeat-sync-hu-catalogue-retains-english-operator-copy | high | Hungarian has key parity but not complete real translation coverage
 
-Hungarian retains 20 values equal to English. Some are legitimate invariant syntax or AEAT terminology, but several are operator-visible prose and enum labels, including the filed-declarations title, activity, adopted, conflict, document custody, read, state mismatch, not captured, available, unavailable, not observed, keep local, notifications, and evidence comparison. A live Hungarian mount renders the English filed-declarations title. The locale contract requires a real translation for every required key; key and placeholder parity does not excuse copied source text.
+Resolved in `e58a4a2ca7`. The complete namespace has 111 matching keys and placeholder parity in every supported locale. Hungarian now retains only four intentional invariant or non-prose equalities: AEAT, the declaration template form, source interpolation templates, and the missing-value glyph. The six live Hungarian screen titles, action/refusal text, and semantic labels render authored Hungarian copy rather than English source values.
 
 ## Positive findings
 
-The internal route catalogue covers the six declared zones exactly once. The controller accepts only a singleton action-operation pair that matches both the canonical action catalogue and an injected public operation contract with TUI frontend admission; unknown, ambiguous, unregistered, and host-absent paths visibly fail closed. The application projection retains protected-data stripping and safe notification-key construction. The six screens mount one nonempty public row each for every supported locale; source availability, local/AEAT state, discrepancy, redaction, and no mount-time host callback remain covered. The TUI package imports only safe projection and operation identifiers, with no adapter, persistence, filesystem, browser, network, calculation, or business implementation authority. Escape dismisses the child rather than the application. The reviewed committed test file is format-clean, and Ruff, ty, and basedpyright pass.
+The internal route catalogue covers the six declared zones exactly once. The controller accepts only a singleton action-operation pair that matches both the canonical action catalogue and an injected public operation contract with TUI frontend admission; unknown, ambiguous, unregistered, and host-absent paths visibly fail closed. The application projection retains protected-data stripping and safe notification-key construction. The six screens mount one nonempty public row each for every supported locale; source availability, local/AEAT state, discrepancy, redaction, and no mount-time host callback remain covered. The TUI package imports only safe projection and operation identifiers, with no adapter, persistence, filesystem, browser, network, calculation, or business implementation authority. Escape dismisses the child rather than the application. Ruff format, Ruff lint, ty, and basedpyright pass, as do all 26 focused application-plus-TUI tests.
 
 ## Recommendations
 
-1. Replace every copied Hungarian semantic value in the `tui.aeat_sync` namespace with reviewed Hungarian translation, retaining only true transport/invariant forms such as AEAT, the declaration template placeholders, and the missing-value glyph.
-2. Add a parameterized mounted-screen locale contract for all six screens and all four supported locales. It must assert semantic visible labels, action/refusal states, and operation failure copy are genuinely localized while route identities and row keys stay invariant; retain the full namespace key-set and placeholder-parity checks.
+1. Retain the complete four-locale namespace and placeholder-parity checks. Add a parameterized mounted-screen locale test for all six screens so future changes prove semantic visible labels, action/refusal states, and operation failure copy remain localized while route identities and row keys stay invariant.
