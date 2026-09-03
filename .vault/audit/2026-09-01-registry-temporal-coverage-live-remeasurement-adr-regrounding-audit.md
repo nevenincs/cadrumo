@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:db2208e686b9d91e85167e9c5762f7fe343742b3a864fb243b7e86ad82a7fe9c'
+body_hash: 'sha256:3712ab33d22c0a0197195f63f779be13b2ee68a54aa38ab6aeeb78c74e55ca32'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -6755,3 +6755,39 @@ durations report from the completed run rather than inferred, and no second
 pytest was started against the directory while the first was still running,
 because two runs over one cache contend and would have made both readings
 untrustworthy.
+
+### the-repository-already-answers-which-tests-no-lane-reaches | high | A hard gate computes the unreached set with no allowlist, and it disagreed with both my hand analysis and the plan
+
+Three Steps propose naming test directories in a lane on the grounds that CI
+never runs them. Comparing the directory listing against the justfile by hand
+gave a set of four, which felt like a finding. It was not: `dev/tests` is named
+by the tooling lane, `dev/registry` appears in a deptry invocation rather than a
+pytest one, and `dev/source_connectivity/tests` is named by no recipe at all yet
+is still reached, because it sits in the pyproject `testpaths` that every
+path-less recipe falls back to. Thirteen declared lanes cover it.
+
+`dev/tests/test_lane_reachability.py` already answers this question properly. It
+resolves lanes from config, recipes and workflows, asks both whether a lane's
+path scope covers a file and whether its marker expression selects each test,
+and keeps no baseline. Run today it fails with a precise worklist: three tracked
+files sit outside every lane's path scope - two in
+`dev/registry/conformance/tests` and one in `dev/tui/tests` - and a hundred and
+fifty-six findings in total, the remainder being tests whose markers no covering
+lane selects, including nineteen in `dev/packaging/tests` that are path-covered
+but marker-deselected.
+
+Two corrections follow. The Step proposing to name `dev/source_connectivity/tests`
+rested on a false premise and has been rewritten to record that the directory is
+already reached; its hundred and thirty tests are run by the default unit lane,
+so whatever they report, they have been reporting it in CI rather than in
+silence. And the justfile comment introducing the tooling lane still says
+`testpaths` names "only `src/cadrumo` plus one packaging file", which stopped
+being true when the source-connectivity directory was added to it; the comment
+sits outside this work's file scope and is recorded here rather than edited.
+
+The method lesson is the one this campaign keeps relearning from the other
+direction. Before measuring something by hand, ask whether the repository
+already measures it, and prefer the gate's answer to your own: mine was wrong in
+two independent ways, and the gate's worklist is per-test where mine was
+per-directory. A hand analysis that merely agrees with a gate is wasted work; one
+that disagrees is a defect in the analysis until proven otherwise.

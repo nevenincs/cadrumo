@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:27b33f9959465ca772e2bd6d4ce1040c1ae2e1b974c19c8a6cdcaacfba55ebb4'
+body_hash: 'sha256:0c396ba3b212b8279218d7b7aef79bac0cb6565c64daba017a7dab652200fec2'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -417,7 +417,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S178` - Confirm this campaign's gates are lane-reachable and report the conformance files that no lane path covers; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S179` - Retire the lane screen's duplicate reachability assertion and scope it to the question the canonical gate does not answer; `dev/quality/default_lane_visibility.py,dev/quality/tests/test_default_lane_visibility.py`.
 - [x] `W06.P13.S180` - Reconcile the reachability gate's location note with the directory it actually occupies; `dev/tests/test_lane_reachability.py`.
-- [ ] `W06.P13.S181` - Name dev/registry/conformance/tests in the dev tooling lane so the nineteen closure tests CI never runs are executed; `justfile`.
+- [ ] `W06.P13.S181` - Name dev/registry/conformance/tests in the dev tooling lane; the reachability gate reports its two files outside every lane path scope, holding thirty-one unreached tests; `justfile`.
 - [x] `W06.P13.S182` - Establish the red the conformance lane will inherit and separate it from a concurrent writer's transient import breakage; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S183` - Record in the plan Description how the declaration question extended from the registry to the codebase and which screens were declined; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S184` - Report the operator path leaked into a sibling campaign's committed audit and confirm this feature's documents carry none; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
@@ -477,8 +477,8 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S239` - Identify the third import-graph blind spot behind the last stale member, a class named by string rather than imported; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S240` - Establish that this campaign's lane figures and the CI dev-tooling selection overlap in one directory of eighteen; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S241` - Measure which dev test directories no recipe or workflow names and size what they contain; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
-- [ ] `W06.P13.S242` - Name dev/source_connectivity/tests in a lane, after establishing what its hundred and thirty collected tests report, of which the default lane selection admits a hundred and eight; `justfile`.
-- [ ] `W06.P13.S243` - Name dev/tui/tests in a lane, after establishing what its thirty-nine never-run tests report; `justfile`.
+- [x] `W06.P13.S242` - Establish that dev/source_connectivity/tests is already reached through the pyproject testpaths default lane, retiring the premise that it needs naming; `justfile`.
+- [ ] `W06.P13.S243` - Name dev/tui/tests in a lane; its thirty-nine tests are the one file the reachability gate reports outside every lane path scope, and its coverage-table failure is now repaired; `justfile`.
 - [x] `W06.P13.S244` - Establish what the never-run TUI suite reports and confirm its single failure is a coverage table naming absent interfaces; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S245` - Establish what the never-run source connectivity suite reports and separate its environmental errors from its drifted hashes; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S246` - Classify the last source connectivity failure as another writer's mid-edit syntax error rather than a suite defect; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.

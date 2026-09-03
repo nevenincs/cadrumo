@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6b7135ce4ecc55533f81b543985b7c3672416a94f82347305f8d5ef26fd99929'
+body_hash: 'sha256:19005e4e611ec6101d2cab84202918ac3356e00d0ff3a6af341c1da1cdaed5f5'
 related:
   - "[[2026-09-02-aeat-design-relayout-boundary-plan]]"
 ---
@@ -58,6 +58,29 @@ The one transaction detector injects the second directory replacement as an
 a subsequent application to prove deterministic next-run recovery and cleanup.
 Those cases are central to the journal protocol and remain unproven.
 
+### source-rebind-journal-state-remediation | low | Unknown journal states now preserve recovery evidence
+
+The recovery reader now requires a string member of the closed `intent`,
+`backup_staged`, and `candidate_live` state set before it creates any cleanup
+path. The detector proves an unrecognised state leaves both the live tree and
+backup/journal evidence unchanged.
+
+### source-rebind-recovery-detector-remediation | low | BaseException and pre-candidate recovery are now covered
+
+The detector suite now injects a `BaseException` during cutover and proves
+rollback, then persists both `intent` and `backup_staged` recovery journals
+and invokes the next dry-run application. Each pre-candidate case restores a
+casillas tree and removes the stage, backup, and journal in the temporary
+registry root.
+
+### source-rebind-candidate-live-detector | medium | The committed-candidate recovery branch remains unproven
+
+`_recover_m200_source_rebind` has a distinct `candidate_live` branch: it must
+retain a verified target-bound candidate and remove its backup, or restore the
+backup if candidate verification fails. No detector persists that journal
+state and exercises either outcome. This is a durable cutover state, not an
+inapplicable branch.
+
 ## Recommendations
 
 Implement a transactional staged-tree or per-file rollback protocol with a
@@ -69,3 +92,7 @@ and retain an invalid journal for operator recovery. Add isolated temporary
 tree detectors for `BaseException` rollback and next-run recovery from each
 durable cutover state, checking canonical bytes, journal disposition, and
 stage/backup cleanup.
+
+Add a temporary-tree detector for persisted `candidate_live` recovery in both
+the verified-candidate and failed-verification cases. It must prove the
+resulting casillas source bindings, non-source bytes, and cleanup disposition.
