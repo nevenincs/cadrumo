@@ -158,3 +158,44 @@ def test_the_unmodified_revision_carries_no_dual_form(authority: ValidatedRegist
     revision = authority.modelo("303").revisions["2025"]
     kinds = [finding.kind for finding in site_agreement_findings(revision, modelo_id="303")]
     assert "selector_dual_form" not in kinds
+
+
+def test_a_year_between_two_revisions_is_reported_unserved() -> None:
+    """The condition the coverage gate refuses, constructed.
+
+    No modelo in the corpus has one, so the gate over the live registry proves
+    the corpus clean and says nothing about the gate. This is what proves it
+    would catch one.
+    """
+    from ..analysis.temporal_site_agreement import unserved_interior_years
+
+    assert unserved_interior_years(((2020, 2021), (2023, 2024))) == (2022,)
+
+
+def test_years_before_the_first_revision_are_not_a_gap() -> None:
+    """The interior is measured from the earliest year served, not a fixed year.
+
+    Modelo 322's revision named `2008-2022` serves 2022 alone. Measuring from a
+    fixed origin would report fourteen missing years; measuring from the modelo's
+    own earliest coverage reports none, which is correct - years before a modelo
+    begins are outside the registry rather than missing from it.
+    """
+    from ..analysis.temporal_site_agreement import unserved_interior_years
+
+    assert unserved_interior_years(((2022, 2022), (2023, 2023), (2024, 2025))) == ()
+
+
+def test_an_open_ended_revision_creates_no_gap_to_a_horizon_nobody_declared() -> None:
+    """An unclosed window is closed at the latest year any revision mentions."""
+    from ..analysis.temporal_site_agreement import unserved_interior_years
+
+    assert unserved_interior_years(((2020, 2021), (2022, None))) == ()
+    # It still cannot paper over a real gap beneath it.
+    assert unserved_interior_years(((2020, 2020), (2022, None))) == (2021,)
+
+
+def test_a_modelo_with_no_closed_window_yields_nothing() -> None:
+    """With no closed revision there is no span to find an interior of."""
+    from ..analysis.temporal_site_agreement import unserved_interior_years
+
+    assert unserved_interior_years(((2020, None),)) == ()

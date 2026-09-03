@@ -657,26 +657,20 @@ def test_no_modelo_leaves_a_year_inside_its_span_unserved(
     a modelo whose newest revision runs open-ended contributes no spurious gap
     between that revision and the horizon.
     """
-    gapped: dict[str, list[int]] = {}
+    from ..analysis.temporal_site_agreement import unserved_interior_years
+
+    gapped: dict[str, tuple[int, ...]] = {}
     examined = 0
     for modelo_id in modelo_ids:
         revisions = authority.modelo(modelo_id).revisions.values()
-        closed = [
-            (revision.valid_from.year, revision.valid_to.year)
+        spans = tuple(
+            (revision.valid_from.year, revision.valid_to.year if revision.valid_to is not None else None)
             for revision in revisions
-            if revision.valid_to is not None
-        ]
-        if not closed:
+        )
+        if not any(end is not None for _, end in spans):
             continue
         examined += 1
-        open_starts = [revision.valid_from.year for revision in revisions if revision.valid_to is None]
-        horizon = max(max(end for _, end in closed), *(open_starts or [0]))
-        served: set[int] = set()
-        for start, end in closed:
-            served |= set(range(start, end + 1))
-        for start in open_starts:
-            served |= set(range(start, horizon + 1))
-        missing = sorted(set(range(min(served), max(served) + 1)) - served)
+        missing = unserved_interior_years(spans)
         if missing:
             gapped[modelo_id] = missing
 

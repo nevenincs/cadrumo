@@ -46,6 +46,7 @@ __all__ = [
     "screen_authority",
     "site_agreement_findings",
     "undated_window_years",
+    "unserved_interior_years",
 ]
 
 #: Every declared field that states which YEARS a revision serves, as a dotted
@@ -80,6 +81,38 @@ class TemporalSiteFinding:
     revision: str
     kind: str
     detail: str
+
+
+def unserved_interior_years(spans: tuple[tuple[int, int | None], ...]) -> tuple[int, ...]:
+    """Return years inside a modelo's own span that none of its revisions serves.
+
+    ``spans`` is one ``(first_year, last_year)`` pair per revision, with ``None``
+    for a revision that never closes. The interior is measured from the earliest
+    year any revision serves, never from a fixed year: the corpus's modelos begin
+    anywhere from 2003 to 2026, and years before a modelo's first revision are
+    outside the registry's reach rather than missing from it. Modelo 322 carries
+    a revision directory named `2008-2022` that serves 2022 alone, which reads
+    like a fourteen-year hole and is not one.
+
+    Open-ended revisions are closed at the latest year any revision mentions, so
+    the newest revision running open-ended contributes no gap to a horizon
+    nobody declared.
+
+    Separated from the gate that uses it so a constructed gap can be shown to be
+    caught. A gate over a corpus with no instance of its condition proves the
+    corpus clean and says nothing about the gate.
+    """
+    closed = [(start, end) for start, end in spans if end is not None]
+    if not closed:
+        return ()
+    open_starts = [start for start, end in spans if end is None]
+    horizon = max(max(end for _, end in closed), *(open_starts or [0]))
+    served: set[int] = set()
+    for start, end in closed:
+        served |= set(range(start, end + 1))
+    for start in open_starts:
+        served |= set(range(start, horizon + 1))
+    return tuple(year for year in range(min(served), max(served) + 1) if year not in served)
 
 
 def undated_window_years(revision: ModeloRevision) -> tuple[int, ...]:
