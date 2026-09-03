@@ -584,6 +584,7 @@ def collect_import_edges(
     repo_root: Path = REPO_ROOT,
     all_graph: grimp.ImportGraph | None = None,
     runtime_graph: grimp.ImportGraph | None = None,
+    cache_dir: str | None = None,
 ) -> tuple[HardEdge, ...]:
     """Collect definition, runtime, type-only, symbol, export, and dynamic edges.
 
@@ -604,14 +605,14 @@ def collect_import_edges(
                 *_FIRST_PARTY_ROOTS[1:],
                 include_external_packages=False,
                 exclude_type_checking_imports=False,
-                cache_dir=None,
+                cache_dir=cache_dir,
             )
             runtime_graph = grimp.build_graph(
                 _FIRST_PARTY_ROOTS[0],
                 *_FIRST_PARTY_ROOTS[1:],
                 include_external_packages=False,
                 exclude_type_checking_imports=True,
-                cache_dir=None,
+                cache_dir=cache_dir,
             )
     edges: set[HardEdge] = set()
     locators_by_module: dict[str, list[OperationLocator]] = defaultdict(list)

@@ -274,6 +274,7 @@ def _copy_snapshot(
     guarded_paths: frozenset[str] | None = None,
 ) -> None:
     exact_paths = frozenset(path for path, _digest in files) if guarded_paths is None else guarded_paths
+    exact_paths |= frozenset(path for path, _digest in files if PurePosixPath(path).suffix == ".py")
     for source_root_name in ("src", "dev"):
         (target_root / source_root_name).mkdir(parents=True, exist_ok=True)
     for relative, expected_digest in files:
@@ -286,7 +287,7 @@ def _copy_snapshot(
             continue
         target = target_root.joinpath(*PurePosixPath(relative).parts)
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(source, target, follow_symlinks=False)
+        shutil.copy2(source, target, follow_symlinks=False)
         actual_digest = f"{_DIGEST_PREFIX}{sha256_file(target)}"
         if relative in exact_paths and actual_digest != expected_digest:
             raise ObjectNameRehearsalError(f"temporary copy hash differs for {relative}")
@@ -427,13 +428,18 @@ def canonical_object_name_component_set(
     *,
     inventory: ObjectNameAuditResult,
     repo_root: Path,
+    graph_cache_dir: str | None = None,
 ) -> tuple[OperationComponent, ...]:
     """Derive canonical components from repository evidence and reviewed generator intent."""
     root = repo_root.resolve()
     try:
         graph_manifest = cast("RenameManifestLike", manifest)
         graph_inventory = cast("InventoryLike", inventory)
-        discovered_edges = collect_import_edges(operation_locators(graph_manifest), repo_root=root)
+        discovered_edges = collect_import_edges(
+            operation_locators(graph_manifest),
+            repo_root=root,
+            cache_dir=graph_cache_dir,
+        )
         discovered_by_operation: dict[str, set[str]] = {}
         for edge in discovered_edges:
             discovered_by_operation.setdefault(edge.operation_id, set()).add(edge.path)
@@ -481,8 +487,14 @@ def rehearse_object_name_component(
     root = repo_root.resolve()
     if not (root / ".git").exists() or not (root / "src").is_dir() or not (root / "dev").is_dir():
         raise ObjectNameRehearsalError(f"rehearsal root is not a repository worktree: {root}")
+    graph_cache = tempfile.TemporaryDirectory(prefix="cadrumo-object-name-graph-")
     executable = {operation.operation_id: operation for operation in select_object_name_execution(manifest)}
-    canonical_components = canonical_object_name_component_set(manifest, inventory=inventory, repo_root=root)
+    canonical_components = canonical_object_name_component_set(
+        manifest,
+        inventory=inventory,
+        repo_root=root,
+        graph_cache_dir=graph_cache.name,
+    )
     canonical = next((item for item in canonical_components if item.component_id == component.component_id), None)
     if canonical is None or (
         canonical.component_id,
@@ -580,6 +592,7 @@ def rehearse_object_name_component(
                 manifest,
                 inventory=copied_inventory,
                 repo_root=temporary_root,
+                graph_cache_dir=graph_cache.name,
             )
         copied_component = next(
             (item for item in copied_components if item.component_id == component.component_id),
@@ -705,6 +718,7 @@ def rehearse_object_name_component(
     except Exception as exc:
         raise ObjectNameRehearsalError(f"rehearsal failed; retained rehearsal root: {temporary_root}") from exc
     finally:
+        graph_cache.cleanup()
         try:
             final_source_unchanged = _snapshot(root, guarded_paths) == receipt_baseline_files
         except Exception as exc:
