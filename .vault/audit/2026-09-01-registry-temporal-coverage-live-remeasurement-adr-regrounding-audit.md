@@ -10487,3 +10487,47 @@ because it rises the moment a design arrives carrying neither a type convention
 nor a design note. The screen's full breakdown stays available to anyone running
 it directly; what the runner shows is the part that can change without the
 population changing.
+
+
+## The enrolment gate had the campaign's own blind spot
+
+The gate that caught three unenrolled screens last iteration was itself
+incomplete, and passing was how it hid that. It discovered a screen by looking
+for `def screen_authority(` in a module. Two of the screens built for this
+thread read the design corpus rather than the loaded authority - a transcription
+belongs to a design, not to a revision, so they take no authority and no modelo
+set and present `screen_corpus` instead. The gate never saw them. It reported
+its own blind spot as absence, which is precisely the instrument failure this
+campaign has now recorded against a keyword vocabulary, a filename convention, a
+`kind` attribute assumed universal, a static kind extractor, and a duplicate
+coordinate key.
+
+It is worth saying plainly that a gate is not exempt from the defect class it
+was written to catch.
+
+The gate now discovers either entry point, and both tables count as enrolment:
+`SCREENS` for screens taking the authority, `CORPUS_SCREENS` for screens taking
+the corpus. The second is a separate table rather than a widened first because
+the signature genuinely differs, and forcing a corpus screen through the
+authority entry would mean passing it arguments it ignores. The README gate
+takes the union too, since a reader looking for a screen does not care which
+table it sits in.
+
+The enrolment assertion is two-sided, which is what makes it a proof rather than
+an agreement: `defining == enrolled` fails if a module presents an entry point
+and no table names it, and equally if a table names a module that has stopped
+presenting one. The corpus screens being enrolled and the gate passing is
+therefore evidence that the widened discovery really does find `screen_corpus`,
+not merely that the two sides were written to match.
+
+The corpus runner reports 128 designs where one note label is defined on more
+than one sheet, and 51 carrying an unnumbered note.
+
+Recorded also: the edit that widened this gate was written twice. The first
+script asserted its way to the README replacement, failed on an escaping
+mistake, and never reached its own write - so the enrolment widening it had
+already computed was discarded while its sibling import change, applied by a
+later script, made the file look edited. The gate then failed with its ORIGINAL
+message text, which is what gave it away. A script that computes several edits
+and writes once loses all of them when any assertion fails, and the half-applied
+result is harder to see than an outright error.
