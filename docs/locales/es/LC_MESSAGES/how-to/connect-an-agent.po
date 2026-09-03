@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-24 20:06+0200\n"
+"POT-Creation-Date: 2026-09-03 05:07+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -43,15 +43,16 @@ msgid "What the agent connection is"
 msgstr "Qué es la conexión del agente"
 
 #: ../../how-to/connect-an-agent.md:12
+#, fuzzy
 msgid ""
-"The separate `cadrumo-harness` distribution ships an MCP (Model Context "
-"Protocol) server, `cadrumo-mcp`, for the `aeat` command. MCP is an open "
-"standard that lets assistants call tools. Any MCP-capable client can "
-"connect; Claude is one such client."
+"Installing Cadrumo installs two commands: `aeat`, the application, and "
+"`cadrumo-mcp`, an MCP (Model Context Protocol) server that exposes it. "
+"MCP is an open standard that lets assistants call tools. Any MCP-capable "
+"client can connect; Claude is one such client."
 msgstr ""
 "La distribución independiente `cadrumo-harness` incluye un servidor MCP "
-"(Model Context Protocol), `cadrumo-mcp`, para el comando `aeat`. MCP es un "
-"estándar abierto que permite a los asistentes invocar herramientas. "
+"(Model Context Protocol), `cadrumo-mcp`, para el comando `aeat`. MCP es "
+"un estándar abierto que permite a los asistentes invocar herramientas. "
 "Cualquier cliente compatible con MCP puede conectarse; Claude es uno de "
 "esos clientes."
 
@@ -67,52 +68,42 @@ msgstr ""
 "directo por diseño, exactamente igual que la CLI."
 
 #: ../../how-to/connect-an-agent.md:21
-msgid ""
-"In the beta, connect from the repository checkout below. Every release "
-"also builds the plugin and Desktop extension artifacts; their marketplace"
-" and registry listings open with the public launch (see [Get "
-"Cadrumo](../download.md) for channel status)."
+msgid "Check the server is installed"
 msgstr ""
-"En la beta, conéctate desde la copia del repositorio de abajo. Cada "
-"versión también compila los artefactos del plugin y de la extensión de "
-"Desktop; sus listados en el marketplace y en los registros se abrirán con"
-" el lanzamiento público (consulta [Obtén Cadrumo](../download.md) para "
-"ver el estado de cada canal)."
 
-#: ../../how-to/connect-an-agent.md:26
-msgid "Prepare the source checkout"
-msgstr "Preparar la copia de trabajo del código fuente"
+#: ../../how-to/connect-an-agent.md:27
+msgid ""
+"If the command is not found, install Cadrumo first — see [Get "
+"Cadrumo](../download.md)."
+msgstr ""
 
-#: ../../how-to/connect-an-agent.md:35
-msgid "Register the source server"
+#: ../../how-to/connect-an-agent.md:30
+#, fuzzy
+msgid "Register the server"
 msgstr "Registrar el servidor de código fuente"
 
-#: ../../how-to/connect-an-agent.md:37
+#: ../../how-to/connect-an-agent.md:32
+#, fuzzy
 msgid ""
-"Register `uv run --package cadrumo-harness cadrumo-mcp` as a stdio server"
-" and set the checkout as the working directory. In clients that accept a "
-"JSON server definition:"
+"Register `cadrumo-mcp` as a stdio server. In clients that accept a JSON "
+"server definition:"
 msgstr ""
 "Registra `uv run --package cadrumo-harness cadrumo-mcp` como un servidor "
-"stdio y establece la copia del repositorio como directorio de trabajo. En "
-"clientes que aceptan una definición de servidor en JSON:"
+"stdio y establece la copia del repositorio como directorio de trabajo. En"
+" clientes que aceptan una definición de servidor en JSON:"
 
-#: ../../how-to/connect-an-agent.md:53
+#: ../../how-to/connect-an-agent.md:45
 msgid ""
-"Replace the example path with the absolute path to your authorized "
-"checkout. Do not replace this with `uvx`, a marketplace install, or a "
-"downloaded extension until public distribution is announced."
+"That is the whole configuration. The command is on your `PATH` after "
+"installation, and it finds your profile the same way `aeat` does, so it "
+"needs no working directory and no path of its own."
 msgstr ""
-"Sustituye la ruta de ejemplo por la ruta absoluta a tu copia de trabajo "
-"autorizada. No lo sustituyas por `uvx`, una instalación desde un "
-"marketplace ni una extensión descargada hasta que se anuncie la "
-"distribución pública."
 
-#: ../../how-to/connect-an-agent.md:57
+#: ../../how-to/connect-an-agent.md:49
 msgid "Before the first agent session"
 msgstr "Antes de la primera sesión del agente"
 
-#: ../../how-to/connect-an-agent.md:59
+#: ../../how-to/connect-an-agent.md:51
 msgid ""
 "The server uses the same local encrypted store and the same active "
 "profile as the CLI. A server cannot answer a passphrase prompt, so "
@@ -126,11 +117,11 @@ msgstr ""
 "ejecuciones desatendidas; consulta [Ejecutar sin que se pida la frase de "
 "contraseña](protect-data-access.md#run-without-a-passphrase-prompt)."
 
-#: ../../how-to/connect-an-agent.md:64
+#: ../../how-to/connect-an-agent.md:56
 msgid "What the agent can and cannot do"
 msgstr "Qué puede y qué no puede hacer el agente"
 
-#: ../../how-to/connect-an-agent.md:66
+#: ../../how-to/connect-an-agent.md:58
 msgid ""
 "The agent can import and classify records, run calculations, verify "
 "drafts, and prepare exports, because those are local operations. It "
@@ -164,3 +155,42 @@ msgstr ""
 #~ "Los artefactos generados de complemento "
 #~ "y extensión son candidatos de versión,"
 #~ " no canales públicos de instalación."
+
+#~ msgid ""
+#~ "In the beta, connect from the "
+#~ "repository checkout below. Every release "
+#~ "also builds the plugin and Desktop "
+#~ "extension artifacts; their marketplace and "
+#~ "registry listings open with the public"
+#~ " launch (see [Get Cadrumo](../download.md) "
+#~ "for channel status)."
+#~ msgstr ""
+#~ "En la beta, conéctate desde la "
+#~ "copia del repositorio de abajo. Cada "
+#~ "versión también compila los artefactos "
+#~ "del plugin y de la extensión de"
+#~ " Desktop; sus listados en el "
+#~ "marketplace y en los registros se "
+#~ "abrirán con el lanzamiento público "
+#~ "(consulta [Obtén Cadrumo](../download.md) para "
+#~ "ver el estado de cada canal)."
+
+#~ msgid "Prepare the source checkout"
+#~ msgstr "Preparar la copia de trabajo del código fuente"
+
+#~ msgid ""
+#~ "Replace the example path with the "
+#~ "absolute path to your authorized "
+#~ "checkout. Do not replace this with "
+#~ "`uvx`, a marketplace install, or a "
+#~ "downloaded extension until public distribution"
+#~ " is announced."
+#~ msgstr ""
+#~ "Sustituye la ruta de ejemplo por "
+#~ "la ruta absoluta a tu copia de "
+#~ "trabajo autorizada. No lo sustituyas por"
+#~ " `uvx`, una instalación desde un "
+#~ "marketplace ni una extensión descargada "
+#~ "hasta que se anuncie la distribución "
+#~ "pública."
+

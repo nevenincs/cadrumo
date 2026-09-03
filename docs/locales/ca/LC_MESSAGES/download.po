@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 19:58+0200\n"
+"POT-Creation-Date: 2026-09-03 05:07+0200\n"
 "PO-Revision-Date: 2026-07-18 22:45+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -23,311 +23,260 @@ msgstr "Obtén Cadrumo"
 
 #: ../../download.md:3
 msgid ""
-"This page covers how to install the current Cadrumo beta: the supported install paths, what each one gives you, and "
-"how to confirm the install before you prepare your first declaration. Cadrumo runs on Windows, macOS, and Linux."
+"Cadrumo is a command-line application. Install it, then run `aeat`. It "
+"works on Windows, macOS, and Linux."
 msgstr ""
-"Aquesta pàgina tracta com instal·lar la beta actual de Cadrumo: les vies d'instal·lació admeses, què t'ofereix "
-"cadascuna i com confirmar la instal·lació abans de preparar la teva primera declaració. Cadrumo funciona a Windows, "
-"macOS i Linux."
 
-#: ../../download.md:8
-msgid ""
-"Cadrumo is in beta. Every release ships installable packages for each supported channel, and every package is "
-"install-tested on its platform before the release is cut. The beta is distributed through the project's GitHub "
-"repository; public registry listings open with the public launch."
-msgstr ""
-"Cadrumo és en fase beta. Cada versió inclou paquets instal·lables per a cada canal admès, i cada paquet es prova "
-"d'instal·lació a la seva plataforma abans de tancar la versió. La beta es distribueix a través del repositori de "
-"GitHub del projecte; les llistes als registres públics s'obriran amb el llançament públic."
-
-#: ../../download.md:14
+#: ../../download.md:6
 msgid "What you need"
 msgstr "Què necessites"
 
-#: ../../download.md:16
+#: ../../download.md:8
 msgid "Python 3.13 or newer."
 msgstr "Python 3.13 o superior."
 
-#: ../../download.md:17
-msgid ""
-"[Git](https://git-scm.com/downloads) and [uv](https://docs.astral.sh/uv/getting-started/installation/), each "
-"installed per its official guide for your operating system."
-msgstr ""
-"[Git](https://git-scm.com/downloads) i [uv](https://docs.astral.sh/uv/getting-started/installation/), cadascun "
-"instal·lat segons la seva guia oficial per al teu sistema operatiu."
-
-#: ../../download.md:19
+#: ../../download.md:9
 msgid "Around 200 MB of free disk space."
 msgstr "Uns 200 MB d'espai lliure al disc."
 
-#: ../../download.md:20
-msgid "Access to the [project repository](https://github.com/nevenincs/cadrumo) as a beta participant."
-msgstr "Accés al [repositori del projecte](https://github.com/nevenincs/cadrumo) com a participant de la beta."
+#: ../../download.md:11
+msgid ""
+"No taxpayer data, AEAT credentials, or online account is involved in the "
+"install. Cadrumo stores everything locally and encrypted; nothing about "
+"your taxes leaves your machine."
+msgstr ""
+"En la instal·lació no intervé cap dada del contribuent, credencial de "
+"l'AEAT ni compte en línia. Cadrumo ho desa tot localment i xifrat; res "
+"sobre els teus impostos no surt de la teva màquina."
+
+#: ../../download.md:15
+#, fuzzy
+msgid "Install"
+msgstr "Canals d'instal·lació"
+
+#: ../../download.md:17
+msgid ""
+"Pick the channel for your platform from [Install channels](#install-"
+"channels) below and run the command it lists. PyPI is the primary channel"
+" and installs the `aeat` command with its bundled legal corpus into an "
+"isolated environment; Homebrew and Scoop install the same package for "
+"platforms where a Python toolchain cannot be assumed."
+msgstr ""
 
 #: ../../download.md:23
 msgid ""
-"No taxpayer data, AEAT credentials, or online account is involved in the install. Cadrumo stores everything locally "
-"and encrypted; nothing about your taxes leaves your machine."
+"The channel table is generated from the shipped channel inventory, so the"
+" commands there are the ones this release actually publishes."
 msgstr ""
-"En la instal·lació no intervé cap dada del contribuent, credencial de l'AEAT ni compte en línia. Cadrumo ho desa tot "
-"localment i xifrat; res sobre els teus impostos no surt de la teva màquina."
 
-#: ../../download.md:27
-msgid "Install the current beta"
-msgstr "Instal·la la beta actual"
-
-#: ../../download.md:29
-msgid "Install from the repository checkout. The flow is identical on Windows, macOS, and Linux:"
-msgstr "Instal·la des de la còpia del repositori. El procés és idèntic a Windows, macOS i Linux:"
-
-#: ../../download.md:38
-msgid ""
-"`uv sync` creates an isolated environment and installs the `aeat` command into it with every dependency pinned to the"
-" tested versions. Nothing is installed globally and nothing outside the checkout directory is modified: removing the "
-"directory removes Cadrumo. To move to a newer beta release later, run `git pull` followed by `uv sync` in the same "
-"directory."
-msgstr ""
-"`uv sync` crea un entorn aïllat i hi instal·la l'ordre `aeat` amb totes les dependències fixades a les versions "
-"provades. No s'instal·la res de manera global i no es modifica res fora del directori de la còpia: eliminar el "
-"directori elimina Cadrumo. Per passar més endavant a una versió beta més nova, executa `git pull` seguit de `uv sync`"
-" en el mateix directori."
-
-#: ../../download.md:44
-msgid ""
-"Release artifacts for the current version, including the packaged builds for every channel below, are attached to the"
-" [latest release](https://github.com/nevenincs/cadrumo/releases/latest)."
-msgstr ""
-"Els artefactes de la versió actual, inclosos els paquets construïts per a cada canal de sota, s'adjunten a l'[última "
-"versió](https://github.com/nevenincs/cadrumo/releases/latest)."
-
-#: ../../download.md:48
+#: ../../download.md:26
 msgid "Confirm the install"
 msgstr "Confirma la instal·lació"
 
-#: ../../download.md:50
-msgid "Run the version check from the checkout:"
-msgstr "Executa la comprovació de versió des de la còpia:"
+#: ../../download.md:32
+#, fuzzy
+msgid ""
+"A version number confirms the install. Then run the full workstation "
+"check and add the optional extras you want (Google export, the live AEAT "
+"browser, OFX/QFX import) by following [Install Cadrumo](workstation-"
+"setup.md), which covers the dependency report, platform checks, and per-"
+"extra install commands."
+msgstr ""
+"Un número de versió confirma la instal·lació. Després executa la "
+"comprovació completa de l'estació de treball i afegeix els extres "
+"opcionals que vulguis (exportació a Google, el navegador AEAT en directe,"
+" la importació OFX/QFX, la superfície d'agent) seguint [Instal·la Cadrumo"
+"](workstation-setup.md), que cobreix l'informe de dependències, les "
+"comprovacions de plataforma i les ordres d'instal·lació de cada extra. "
+"Per deixar que un assistent d'IA com ara Claude faci servir Cadrumo, "
+"continua amb [Connecta un agent (MCP)](how-to/connect-an-agent.md)."
+
+#: ../../download.md:37
+#, fuzzy
+msgid ""
+"To let an AI assistant such as Claude drive Cadrumo, continue with "
+"[Connect an agent (MCP)](how-to/connect-an-agent.md)."
+msgstr ""
+"Permet que un assistent d'IA com ara Claude faci servir Cadrumo amb tu, a"
+" la teva màquina."
+
+#: ../../download.md:40
+msgid "Two ways to work"
+msgstr ""
+
+#: ../../download.md:42
+msgid "`aeat` runs as ordinary commands that print their results:"
+msgstr ""
+
+#: ../../download.md:48
+msgid "Add `--tui` to work in a full-screen interface instead:"
+msgstr ""
+
+#: ../../download.md:54
+msgid "Both drive the same engine and the same local records."
+msgstr ""
 
 #: ../../download.md:56
-msgid ""
-"A version number confirms the install. Then run the full workstation check and add the optional extras you want "
-"(Google export, the live AEAT browser, OFX/QFX import, the agent surface) by following [Install Cadrumo](workstation-"
-"setup.md), which covers the dependency report, platform checks, and per-extra install commands. To let an AI "
-"assistant such as Claude drive Cadrumo, continue with [Connect an agent (MCP)](how-to/connect-an-agent.md)."
-msgstr ""
-"Un número de versió confirma la instal·lació. Després executa la comprovació completa de l'estació de treball i "
-"afegeix els extres opcionals que vulguis (exportació a Google, el navegador AEAT en directe, la importació OFX/QFX, "
-"la superfície d'agent) seguint [Instal·la Cadrumo](workstation-setup.md), que cobreix l'informe de dependències, les "
-"comprovacions de plataforma i les ordres d'instal·lació de cada extra. Per deixar que un assistent d'IA com ara "
-"Claude faci servir Cadrumo, continua amb [Connecta un agent (MCP)](how-to/connect-an-agent.md)."
-
-#: ../../download.md:64
 msgid "Install channels"
 msgstr "Canals d'instal·lació"
 
-#: ../../download.md:66
+#: ../../download.md:58
 msgid ""
-"Each release builds and install-tests a native package per channel. Beta participants get every artifact from the "
-"release page; each channel's registry listing opens with the public launch, and this page shows a channel's install "
-"command once that channel is live."
+"PyPI is the primary channel; Homebrew and Scoop install the same package "
+"for users without a Python toolchain. Each release is install-tested on "
+"every platform it claims before it is published."
 msgstr ""
-"Cada versió compila i prova mitjançant instal·lació un paquet natiu per canal. Els participants de la beta obtenen "
-"tots els artefactes des de la pàgina de la versió; el llistat al registre de cada canal s'obrirà amb el llançament "
-"públic, i aquesta pàgina mostra l'ordre d'instal·lació d'un canal quan aquest canal ja està actiu."
 
-#: ../../download.md:78
+#: ../../download.md:69
 msgid "Platform"
 msgstr "Plataforma"
 
-#: ../../download.md:79
+#: ../../download.md:70
 msgid "Channel"
 msgstr "Canal"
 
-#: ../../download.md:80
-msgid "How you get the current beta"
-msgstr "Com obtens la beta actual"
+#: ../../download.md:71
+msgid "Where it comes from"
+msgstr ""
 
-#: ../../download.md:81
+#: ../../download.md:72
 msgid "Any platform with Python 3.13+"
 msgstr "Qualsevol plataforma amb Python 3.13+"
 
-#: ../../download.md:82
+#: ../../download.md:73
 msgid "Python package"
 msgstr "Paquet de Python"
 
-#: ../../download.md:83
-msgid "Release page artifact; PyPI listing at public launch"
-msgstr "Artefacte de la pàgina de la versió; llistat a PyPI al llançament públic"
+#: ../../download.md:74
+msgid "PyPI listing"
+msgstr ""
 
-#: ../../download.md:84
-msgid "Windows (x86-64)"
-msgstr "Windows (x86-64)"
-
-#: ../../download.md:85
-msgid "Scoop package"
-msgstr "Paquet de Scoop"
-
-#: ../../download.md:86
-msgid "Release page artifact; Scoop bucket at public launch"
-msgstr "Artefacte de la pàgina de la versió; bucket de Scoop al llançament públic"
-
-#: ../../download.md:87
+#: ../../download.md:75
 msgid "macOS (Apple silicon), Linux (x86-64 and arm64)"
 msgstr "macOS (Apple silicon), Linux (x86-64 i arm64)"
 
-#: ../../download.md:88
+#: ../../download.md:76
 msgid "Homebrew formula"
 msgstr "Fórmula de Homebrew"
 
-#: ../../download.md:89
-msgid "Release page artifact; Homebrew tap at public launch"
-msgstr "Artefacte de la pàgina de la versió; tap de Homebrew al llançament públic"
+#: ../../download.md:77
+#, fuzzy
+msgid "Homebrew tap"
+msgstr "Fórmula de Homebrew"
 
-#: ../../download.md:90
-msgid "Claude Code, Claude Desktop, Claude Cowork"
-msgstr "Claude Code, Claude Desktop, Claude Cowork"
+#: ../../download.md:78
+msgid "Windows (x86-64)"
+msgstr "Windows (x86-64)"
 
-#: ../../download.md:91
-msgid "Claude plugin"
-msgstr "Connector de Claude"
+#: ../../download.md:79
+msgid "Scoop package"
+msgstr "Paquet de Scoop"
 
-#: ../../download.md:92
-msgid "Release page artifact; neve marketplace listing at public launch"
-msgstr "Artefacte de la pàgina de la versió; llistat a PyPI al llançament públic"
+#: ../../download.md:80
+#, fuzzy
+msgid "Scoop bucket"
+msgstr "Paquet de Scoop"
 
-#: ../../download.md:93
-msgid "Claude Desktop"
-msgstr "Claude Desktop"
-
-#: ../../download.md:94
-msgid "Claude Desktop extension (MCPB)"
-msgstr "Extensió de Claude Desktop (MCPB)"
-
-#: ../../download.md:95
-msgid "Release page artifact; Claude Desktop extension directory at public launch"
-msgstr "Artefacte de la pàgina de la versió; bucket de Scoop al llançament públic"
-
-#: ../../download.md:98
+#: ../../download.md:83
 msgid "Per-channel install paths:"
 msgstr "Vies d'instal·lació per canal:"
 
-#: ../../download.md:100
+#: ../../download.md:85
 msgid "**Python package**: Any platform with Python 3.13+"
 msgstr "**Paquet de Python**: Qualsevol plataforma amb Python 3.13+"
 
-#: ../../download.md:102
-msgid "The PyPI listing opens at public launch; until then, install the release-page artifact attached to the latest release."
-msgstr ""
-"El llistat a PyPI s'obrirà amb el llançament públic; fins llavors, instal·la l'artefacte de la pàgina de la versió "
-"adjunt a l'última versió."
-
-#: ../../download.md:104
-msgid "**Scoop package**: Windows (x86-64)"
-msgstr "**Paquet de Scoop**: Windows (x86-64)"
-
-#: ../../download.md:106
-msgid "The Scoop bucket opens at public launch; until then, install the release-page artifact attached to the latest release."
-msgstr ""
-"El bucket de Scoop s'obrirà amb el llançament públic; fins llavors, instal·la l'artefacte de la pàgina de la versió "
-"adjunt a l'última versió."
-
-#: ../../download.md:108
+#: ../../download.md:93
 msgid "**Homebrew formula**: macOS (Apple silicon), Linux (x86-64 and arm64)"
 msgstr "**Fórmula de Homebrew**: macOS (Apple silicon), Linux (x86-64 i arm64)"
 
+#: ../../download.md:100
+msgid "**Scoop package**: Windows (x86-64)"
+msgstr "**Paquet de Scoop**: Windows (x86-64)"
+
 #: ../../download.md:110
-msgid "The Homebrew tap opens at public launch; until then, install the release-page artifact attached to the latest release."
+msgid "Each release's notes in [Updates](updates.md) name what changed."
 msgstr ""
-"El tap de Homebrew s'obrirà amb el llançament públic; fins llavors, instal·la l'artefacte de la pàgina de la versió "
-"adjunt a l'última versió."
 
 #: ../../download.md:112
-msgid "**Claude plugin**: Claude Code, Claude Desktop, Claude Cowork"
-msgstr "**Connector de Claude**: Claude Code, Claude Desktop, Claude Cowork"
-
-#: ../../download.md:114
-msgid ""
-"The neve marketplace listing opens at public launch; until then, install the release-page artifact attached to the "
-"latest release."
-msgstr ""
-"El llistat a PyPI s'obrirà amb el llançament públic; fins llavors, instal·la l'artefacte de la pàgina de la versió "
-"adjunt a l'última versió."
-
-#: ../../download.md:116
-msgid "**Claude Desktop extension (MCPB)**: Claude Desktop"
-msgstr "**Extensió de Claude Desktop (MCPB)**: Claude Desktop"
-
-#: ../../download.md:118
-msgid ""
-"The Claude Desktop extension directory opens at public launch; until then, install the release-page artifact attached"
-" to the latest release."
-msgstr ""
-"El bucket de Scoop s'obrirà amb el llançament públic; fins llavors, instal·la l'artefacte de la pàgina de la versió "
-"adjunt a l'última versió."
-
-#: ../../download.md:123
-msgid ""
-"Every published artifact carries the exact bytes that passed its platform's install-and-run checks for that release, "
-"and each release's notes in [Updates](updates.md) name what changed."
-msgstr ""
-"Cada artefacte publicat porta els bytes exactes que van superar les comprovacions d'instal·lació i execució de la "
-"seva plataforma per a aquella versió, i les notes de cada versió a [Actualitzacions](updates.md) indiquen què ha "
-"canviat."
-
-#: ../../download.md:127
 msgid "After you install"
 msgstr "Després d'instal·lar"
 
-#: ../../download.md:133
+#: ../../download.md:118
 msgid "Quickstart"
 msgstr "Inici ràpid"
 
-#: ../../download.md:138
+#: ../../download.md:123
 msgid "Take the shortest path from an empty profile to an exported modelo file."
 msgstr "Fes el camí més curt d'un perfil buit a un fitxer de modelo exportat."
 
-#: ../../download.md:141
+#: ../../download.md:126
 msgid "Connect an agent (MCP)"
 msgstr "Connecta un agent (MCP)"
 
-#: ../../download.md:146
-msgid "Let an AI assistant such as Claude drive Cadrumo with you, on your machine."
-msgstr "Permet que un assistent d'IA com ara Claude faci servir Cadrumo amb tu, a la teva màquina."
+#: ../../download.md:131
+msgid ""
+"Let an AI assistant such as Claude drive Cadrumo with you, on your "
+"machine."
+msgstr ""
+"Permet que un assistent d'IA com ara Claude faci servir Cadrumo amb tu, a"
+" la teva màquina."
 
 #~ msgid ""
-#~ "Cadrumo is pre-alpha. The one supported way to get it"
-#~ " today is the source checkout below. Do not install "
-#~ "Cadrumo from PyPI, a public plugin marketplace, Scoop, Homebrew,"
-#~ " or a Desktop extension bundle until the project announces "
-#~ "those channels as available: packages under the same name on"
-#~ " public registries are not this project's tested releases. "
-#~ "Release announcements land in [Updates](updates.md)."
+#~ "Cadrumo is pre-alpha. The one "
+#~ "supported way to get it today is"
+#~ " the source checkout below. Do not"
+#~ " install Cadrumo from PyPI, a public"
+#~ " plugin marketplace, Scoop, Homebrew, or"
+#~ " a Desktop extension bundle until the"
+#~ " project announces those channels as "
+#~ "available: packages under the same name"
+#~ " on public registries are not this"
+#~ " project's tested releases. Release "
+#~ "announcements land in [Updates](updates.md)."
 #~ msgstr ""
-#~ "Cadrumo és en fase pre-alfa. L'única manera admesa d"
-#~ "'obtenir-lo avui és la còpia del codi font que trobaràs"
-#~ " més avall. No instal·lis Cadrumo des de PyPI, un mercat"
-#~ " públic de connectors, Scoop, Homebrew ni un paquet "
-#~ "d'extensions d'escriptori fins que el projecte anunciï que aquests"
-#~ " canals estan disponibles: els paquets amb el mateix nom "
-#~ "als registres públics no són les versions provades d'aquest "
-#~ "projecte. Els anuncis de versions es publiquen a "
+#~ "Cadrumo és en fase pre-alfa. "
+#~ "L'única manera admesa d'obtenir-lo avui"
+#~ " és la còpia del codi font que"
+#~ " trobaràs més avall. No instal·lis "
+#~ "Cadrumo des de PyPI, un mercat "
+#~ "públic de connectors, Scoop, Homebrew ni"
+#~ " un paquet d'extensions d'escriptori fins"
+#~ " que el projecte anunciï que aquests"
+#~ " canals estan disponibles: els paquets "
+#~ "amb el mateix nom als registres "
+#~ "públics no són les versions provades "
+#~ "d'aquest projecte. Els anuncis de "
+#~ "versions es publiquen a "
 #~ "[Actualitzacions](updates.md)."
 
-#~ msgid "The install is identical on every operating system once Git and uv are present. Run, in a terminal:"
-#~ msgstr "La instal·lació és idèntica a tots els sistemes operatius un cop hi ha Git i uv. Executa, en un terminal:"
+#~ msgid ""
+#~ "The install is identical on every "
+#~ "operating system once Git and uv "
+#~ "are present. Run, in a terminal:"
+#~ msgstr ""
+#~ "La instal·lació és idèntica a tots "
+#~ "els sistemes operatius un cop hi "
+#~ "ha Git i uv. Executa, en un "
+#~ "terminal:"
 
 #~ msgid ""
-#~ "Native packages are built and tested per release for the "
-#~ "channels below. They are in final pre-publication verification:"
-#~ " none is published yet, and this page will show the "
-#~ "exact install command for each channel the moment its "
-#~ "release is announced."
+#~ "Native packages are built and tested "
+#~ "per release for the channels below. "
+#~ "They are in final pre-publication "
+#~ "verification: none is published yet, and"
+#~ " this page will show the exact "
+#~ "install command for each channel the "
+#~ "moment its release is announced."
 #~ msgstr ""
-#~ "Els paquets natius es construeixen i es proven a cada "
-#~ "versió per als canals següents. Estan en la verificació "
-#~ "final prèvia a la publicació: encara no se n'ha publicat "
-#~ "cap, i aquesta pàgina mostrarà l'ordre d'instal·lació exacta de"
-#~ " cada canal en el moment que se n'anunciï la versió."
+#~ "Els paquets natius es construeixen i "
+#~ "es proven a cada versió per als"
+#~ " canals següents. Estan en la "
+#~ "verificació final prèvia a la "
+#~ "publicació: encara no se n'ha publicat"
+#~ " cap, i aquesta pàgina mostrarà "
+#~ "l'ordre d'instal·lació exacta de cada "
+#~ "canal en el moment que se "
+#~ "n'anunciï la versió."
 
 #~ msgid "Status"
 #~ msgstr "Estat"
@@ -339,16 +288,22 @@ msgstr "Permet que un assistent d'IA com ara Claude faci servir Cadrumo amb tu, 
 #~ msgstr "Paquet de PyPI (pip, uvx)"
 
 #~ msgid ""
-#~ "Every published artifact will carry the exact bytes that "
-#~ "passed the release cohort's install-and-run evidence on its"
-#~ " platform; a channel is only listed as available here "
-#~ "once that evidence exists for the published release."
+#~ "Every published artifact will carry the"
+#~ " exact bytes that passed the release"
+#~ " cohort's install-and-run evidence on"
+#~ " its platform; a channel is only "
+#~ "listed as available here once that "
+#~ "evidence exists for the published "
+#~ "release."
 #~ msgstr ""
-#~ "Cada artefacte publicat portarà els bytes exactes que van "
-#~ "superar les proves d'instal·lació i execució de la cohort de"
-#~ " la versió a la seva plataforma; un canal només apareix"
-#~ " aquí com a disponible un cop existeix aquesta evidència "
-#~ "per a la versió publicada."
+#~ "Cada artefacte publicat portarà els "
+#~ "bytes exactes que van superar les "
+#~ "proves d'instal·lació i execució de la"
+#~ " cohort de la versió a la seva"
+#~ " plataforma; un canal només apareix "
+#~ "aquí com a disponible un cop "
+#~ "existeix aquesta evidència per a la "
+#~ "versió publicada."
 
 #~ msgid "macOS (Apple silicon)"
 #~ msgstr "macOS (Apple silicon)"
@@ -360,10 +315,13 @@ msgstr "Permet que un assistent d'IA com ara Claude faci servir Cadrumo amb tu, 
 #~ msgstr "Claude Code, Claude Desktop, Claude Cowork"
 
 #~ msgid "Claude plugin"
-#~ msgstr "Plugin de Claude"
+#~ msgstr "Connector de Claude"
 
 #~ msgid "Release page artifact; neve marketplace listing at public launch"
-#~ msgstr "Artefacte de la pàgina de la versió; llistat al marketplace neve al llançament públic"
+#~ msgstr ""
+#~ "Artefacte de la pàgina de la "
+#~ "versió; llistat a PyPI al llançament "
+#~ "públic"
 
 #~ msgid "Claude Desktop"
 #~ msgstr "Claude Desktop"
@@ -371,35 +329,254 @@ msgstr "Permet que un assistent d'IA com ara Claude faci servir Cadrumo amb tu, 
 #~ msgid "Claude Desktop extension (MCPB)"
 #~ msgstr "Extensió de Claude Desktop (MCPB)"
 
-#~ msgid "Release page artifact; Claude Desktop extension directory at public launch"
-#~ msgstr "Artefacte de la pàgina de la versió; directori d'extensions de Claude Desktop al llançament públic"
+#~ msgid ""
+#~ "Release page artifact; Claude Desktop "
+#~ "extension directory at public launch"
+#~ msgstr ""
+#~ "Artefacte de la pàgina de la "
+#~ "versió; bucket de Scoop al llançament"
+#~ " públic"
 
 #~ msgid "**Claude plugin**: Claude Code, Claude Desktop, Claude Cowork"
-#~ msgstr "**Plugin de Claude** — Claude Code, Claude Desktop, Claude Cowork"
+#~ msgstr "**Connector de Claude**: Claude Code, Claude Desktop, Claude Cowork"
 
 #~ msgid ""
-#~ "The neve marketplace listing opens at public launch; until "
-#~ "then, install the release-page artifact attached to the "
-#~ "latest release."
+#~ "The neve marketplace listing opens at"
+#~ " public launch; until then, install "
+#~ "the release-page artifact attached to"
+#~ " the latest release."
 #~ msgstr ""
-#~ "El llistat al marketplace neve s'obrirà amb el llançament "
-#~ "públic; fins llavors, instal·la l'artefacte de la pàgina de "
-#~ "la versió adjunt a l'última versió."
+#~ "El llistat a PyPI s'obrirà amb el"
+#~ " llançament públic; fins llavors, instal·la"
+#~ " l'artefacte de la pàgina de la "
+#~ "versió adjunt a l'última versió."
 
 #~ msgid "**Claude Desktop extension (MCPB)**: Claude Desktop"
-#~ msgstr "**Extensió de Claude Desktop (MCPB)** — Claude Desktop"
+#~ msgstr "**Extensió de Claude Desktop (MCPB)**: Claude Desktop"
 
 #~ msgid ""
-#~ "The Claude Desktop extension directory opens at public launch; "
-#~ "until then, install the release-page artifact attached to "
-#~ "the latest release."
+#~ "The Claude Desktop extension directory "
+#~ "opens at public launch; until then, "
+#~ "install the release-page artifact "
+#~ "attached to the latest release."
 #~ msgstr ""
-#~ "El directori d'extensions de Claude Desktop s'obrirà amb el "
-#~ "llançament públic; fins llavors, instal·la l'artefacte de la "
-#~ "pàgina de la versió adjunt a l'última versió."
+#~ "El bucket de Scoop s'obrirà amb el"
+#~ " llançament públic; fins llavors, instal·la"
+#~ " l'artefacte de la pàgina de la "
+#~ "versió adjunt a l'última versió."
 
 #~ msgid "Connect an agent (MCP)"
 #~ msgstr "Connecta un agent (MCP)"
 
-#~ msgid "Let an AI assistant such as Claude drive Cadrumo with you, on your machine."
-#~ msgstr "Deixa que un assistent d'IA com ara Claude faci servir Cadrumo amb tu, a la teva màquina."
+#~ msgid ""
+#~ "Let an AI assistant such as Claude"
+#~ " drive Cadrumo with you, on your "
+#~ "machine."
+#~ msgstr ""
+#~ "Deixa que un assistent d'IA com "
+#~ "ara Claude faci servir Cadrumo amb "
+#~ "tu, a la teva màquina."
+
+#~ msgid ""
+#~ "This page covers how to install "
+#~ "the current Cadrumo beta: the supported"
+#~ " install paths, what each one gives"
+#~ " you, and how to confirm the "
+#~ "install before you prepare your first"
+#~ " declaration. Cadrumo runs on Windows, "
+#~ "macOS, and Linux."
+#~ msgstr ""
+#~ "Aquesta pàgina tracta com instal·lar la"
+#~ " beta actual de Cadrumo: les vies "
+#~ "d'instal·lació admeses, què t'ofereix "
+#~ "cadascuna i com confirmar la "
+#~ "instal·lació abans de preparar la teva"
+#~ " primera declaració. Cadrumo funciona a "
+#~ "Windows, macOS i Linux."
+
+#~ msgid ""
+#~ "Cadrumo is in beta. Every release "
+#~ "ships installable packages for each "
+#~ "supported channel, and every package is"
+#~ " install-tested on its platform "
+#~ "before the release is cut. The "
+#~ "beta is distributed through the "
+#~ "project's GitHub repository; public registry"
+#~ " listings open with the public "
+#~ "launch."
+#~ msgstr ""
+#~ "Cadrumo és en fase beta. Cada "
+#~ "versió inclou paquets instal·lables per "
+#~ "a cada canal admès, i cada paquet"
+#~ " es prova d'instal·lació a la seva"
+#~ " plataforma abans de tancar la "
+#~ "versió. La beta es distribueix a "
+#~ "través del repositori de GitHub del "
+#~ "projecte; les llistes als registres "
+#~ "públics s'obriran amb el llançament "
+#~ "públic."
+
+#~ msgid ""
+#~ "[Git](https://git-scm.com/downloads) and "
+#~ "[uv](https://docs.astral.sh/uv/getting-started/installation/),"
+#~ " each installed per its official "
+#~ "guide for your operating system."
+#~ msgstr ""
+#~ "[Git](https://git-scm.com/downloads) i "
+#~ "[uv](https://docs.astral.sh/uv/getting-started/installation/),"
+#~ " cadascun instal·lat segons la seva "
+#~ "guia oficial per al teu sistema "
+#~ "operatiu."
+
+#~ msgid ""
+#~ "Access to the [project "
+#~ "repository](https://github.com/nevenincs/cadrumo) as a "
+#~ "beta participant."
+#~ msgstr ""
+#~ "Accés al [repositori del "
+#~ "projecte](https://github.com/nevenincs/cadrumo) com a "
+#~ "participant de la beta."
+
+#~ msgid "Install the current beta"
+#~ msgstr "Instal·la la beta actual"
+
+#~ msgid ""
+#~ "Install from the repository checkout. "
+#~ "The flow is identical on Windows, "
+#~ "macOS, and Linux:"
+#~ msgstr ""
+#~ "Instal·la des de la còpia del "
+#~ "repositori. El procés és idèntic a "
+#~ "Windows, macOS i Linux:"
+
+#~ msgid ""
+#~ "`uv sync` creates an isolated "
+#~ "environment and installs the `aeat` "
+#~ "command into it with every dependency"
+#~ " pinned to the tested versions. "
+#~ "Nothing is installed globally and "
+#~ "nothing outside the checkout directory "
+#~ "is modified: removing the directory "
+#~ "removes Cadrumo. To move to a "
+#~ "newer beta release later, run `git "
+#~ "pull` followed by `uv sync` in the"
+#~ " same directory."
+#~ msgstr ""
+#~ "`uv sync` crea un entorn aïllat i"
+#~ " hi instal·la l'ordre `aeat` amb "
+#~ "totes les dependències fixades a les "
+#~ "versions provades. No s'instal·la res de"
+#~ " manera global i no es modifica "
+#~ "res fora del directori de la "
+#~ "còpia: eliminar el directori elimina "
+#~ "Cadrumo. Per passar més endavant a "
+#~ "una versió beta més nova, executa "
+#~ "`git pull` seguit de `uv sync` en"
+#~ " el mateix directori."
+
+#~ msgid ""
+#~ "Release artifacts for the current "
+#~ "version, including the packaged builds "
+#~ "for every channel below, are attached"
+#~ " to the [latest "
+#~ "release](https://github.com/nevenincs/cadrumo/releases/latest)."
+#~ msgstr ""
+#~ "Els artefactes de la versió actual, "
+#~ "inclosos els paquets construïts per a"
+#~ " cada canal de sota, s'adjunten a "
+#~ "l'[última "
+#~ "versió](https://github.com/nevenincs/cadrumo/releases/latest)."
+
+#~ msgid "Run the version check from the checkout:"
+#~ msgstr "Executa la comprovació de versió des de la còpia:"
+
+#~ msgid ""
+#~ "Each release builds and install-tests"
+#~ " a native package per channel. Beta"
+#~ " participants get every artifact from "
+#~ "the release page; each channel's "
+#~ "registry listing opens with the public"
+#~ " launch, and this page shows a "
+#~ "channel's install command once that "
+#~ "channel is live."
+#~ msgstr ""
+#~ "Cada versió compila i prova mitjançant"
+#~ " instal·lació un paquet natiu per "
+#~ "canal. Els participants de la beta "
+#~ "obtenen tots els artefactes des de "
+#~ "la pàgina de la versió; el llistat"
+#~ " al registre de cada canal s'obrirà"
+#~ " amb el llançament públic, i aquesta"
+#~ " pàgina mostra l'ordre d'instal·lació d'un"
+#~ " canal quan aquest canal ja està "
+#~ "actiu."
+
+#~ msgid "How you get the current beta"
+#~ msgstr "Com obtens la beta actual"
+
+#~ msgid "Release page artifact; PyPI listing at public launch"
+#~ msgstr ""
+#~ "Artefacte de la pàgina de la "
+#~ "versió; llistat a PyPI al llançament "
+#~ "públic"
+
+#~ msgid "Release page artifact; Scoop bucket at public launch"
+#~ msgstr ""
+#~ "Artefacte de la pàgina de la "
+#~ "versió; bucket de Scoop al llançament"
+#~ " públic"
+
+#~ msgid "Release page artifact; Homebrew tap at public launch"
+#~ msgstr ""
+#~ "Artefacte de la pàgina de la "
+#~ "versió; tap de Homebrew al llançament"
+#~ " públic"
+
+#~ msgid ""
+#~ "The PyPI listing opens at public "
+#~ "launch; until then, install the "
+#~ "release-page artifact attached to the "
+#~ "latest release."
+#~ msgstr ""
+#~ "El llistat a PyPI s'obrirà amb el"
+#~ " llançament públic; fins llavors, instal·la"
+#~ " l'artefacte de la pàgina de la "
+#~ "versió adjunt a l'última versió."
+
+#~ msgid ""
+#~ "The Scoop bucket opens at public "
+#~ "launch; until then, install the "
+#~ "release-page artifact attached to the "
+#~ "latest release."
+#~ msgstr ""
+#~ "El bucket de Scoop s'obrirà amb el"
+#~ " llançament públic; fins llavors, instal·la"
+#~ " l'artefacte de la pàgina de la "
+#~ "versió adjunt a l'última versió."
+
+#~ msgid ""
+#~ "The Homebrew tap opens at public "
+#~ "launch; until then, install the "
+#~ "release-page artifact attached to the "
+#~ "latest release."
+#~ msgstr ""
+#~ "El tap de Homebrew s'obrirà amb el"
+#~ " llançament públic; fins llavors, instal·la"
+#~ " l'artefacte de la pàgina de la "
+#~ "versió adjunt a l'última versió."
+
+#~ msgid ""
+#~ "Every published artifact carries the "
+#~ "exact bytes that passed its platform's"
+#~ " install-and-run checks for that "
+#~ "release, and each release's notes in "
+#~ "[Updates](updates.md) name what changed."
+#~ msgstr ""
+#~ "Cada artefacte publicat porta els bytes"
+#~ " exactes que van superar les "
+#~ "comprovacions d'instal·lació i execució de "
+#~ "la seva plataforma per a aquella "
+#~ "versió, i les notes de cada versió"
+#~ " a [Actualitzacions](updates.md) indiquen què "
+#~ "ha canviat."
+
