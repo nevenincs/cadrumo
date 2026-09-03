@@ -35,4 +35,3 @@ related:
 - `verify:` `uv run --no-sync pytest -q -m integration src/cadrumo/entrypoints/tui/aeat_sync/tests` -> `pass`
 - `verify:` `uv run --no-sync ruff format --check src/cadrumo/entrypoints/tui/aeat_sync && uv run --no-sync ruff check src/cadrumo/entrypoints/tui/aeat_sync && uv run --no-sync ty check src/cadrumo/entrypoints/tui/aeat_sync && uv run --no-sync basedpyright src/cadrumo/entrypoints/tui/aeat_sync` -> `pass`
 - `verify:` `npx --yes jscpd@4.2.0 src/cadrumo/entrypoints/tui/aeat_sync --format python --min-lines 6 --min-tokens 80 --max-size 250kb --reporters console --noTips` -> `pass`
-
