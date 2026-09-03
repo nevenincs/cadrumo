@@ -6494,3 +6494,29 @@ Three of this plan's criteria have now been corrected against measurement and a 
 its own arithmetic. The common cause is not carelessness in any one of them: each was written
 from a figure that was true when taken, in a document that offers no way to notice when its
 figures stop being true.
+
+### the-obvious-fix-for-stale-criteria-is-forbidden-and-rightly | medium | A gate checking the plan's figures would make code depend on the vault, which the project explicitly forbids
+
+Four of this plan's criteria have been corrected after measuring what they asserted, and the
+diagnosis written for the fourth was that the document offers no way to notice when its figures
+stop being true. The obvious repair is a gate: extract the checkable claims - ten screens,
+twelve criteria, eight conditions - and assert each against what the tooling reports.
+
+It cannot be built. The project's code-stands-alone mandate forbids embedding references to
+`.vault/` documents in source, tests or configuration, on the ground that the vault is removable
+development scaffolding and the reference direction is one-way: vault documents cite code by
+locator, and code never cites the vault. A test reading the plan to check its numbers is exactly
+the dependency that mandate exists to prevent, and it would fail the moment someone removed the
+scaffolding the code is not supposed to know about.
+
+That is worth recording rather than quietly not building, because the reasoning generalises. A
+document's figures going stale is a real defect, and the tempting fix - make a machine watch the
+document - inverts a dependency the project has deliberately chosen. The cost of that inversion
+is paid later and by someone else, which is the same trade this campaign has refused four times
+in the form of baselined gates.
+
+What replaces it is cheaper and already demonstrated. Two figures in this plan were rewritten to
+name their source rather than state a number: the screen count is whatever the analysis package's
+entry point enumerates, and the dev-owned phase's Step count became "every Step" instead of
+twelve. A figure that says where it comes from does not need a machine to check it, because the
+next reader can.

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:d23391516df68956930ff03ddc07d7edd1ed22286382be3ec8e46185a00e8132'
+body_hash: 'sha256:f534b8ed752023557aadb3bb42a476bab48723c9a60df43247c9cccf86ed0507'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -505,6 +505,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S267` - Measure the CI dev tooling selection to a reconciling total and record what the pipe cost the breakdown; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S268` - Correct the lane criterion to name which lane each figure describes; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S269` - Replace the stale failure accounting with a dated one and record that one failure did belong to this plan; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S270` - Establish that a gate checking the plan's own figures is forbidden by the code-stands-alone mandate and record what replaces it; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
