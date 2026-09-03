@@ -1,0 +1,38 @@
+# Accepted drift between the registered CRUD noun-group catalogue and the live
+# command tree, as it stood when the comparison was first performed.
+#
+# THIS FILE IS A BACKLOG, NOT PERMISSION. Every row is a noun-group contract
+# naming a verb the operator cannot run. The catalogue calls itself the single
+# source of truth for the mutating-noun-group shape, so each row is either a
+# stale contract or a command the CLI never grew -- and which of those it is
+# cannot be settled by a gate.
+#
+# The gate is shrink-only: removing a row is always allowed, adding one fails.
+# Resolve a row by deciding which side is authoritative and changing that side,
+# then delete the row.
+#
+# On the day this was written the catalogue held six entries and five of them
+# drifted. The catalogue's own tests never noticed, because they import only
+# the catalogue and assert it against itself.
+
+accepted = [
+  # Declares a link orthogonal axis; the live group mounts add/import/list/
+  # remove/update/view/wizard and no link verb.
+  "aeat app ledger invoice link",
+
+  # Key-value-as-record exception declaring set/get/unset/list; the live group
+  # mounts eligible/list/set/unset/validate and no get.
+  "aeat app ledger ratios get",
+
+  # Declares a reset lifecycle verb; the live group mounts
+  # closing-authority-record/create/list/movement/valuation.
+  "aeat app ledger inventory reset",
+
+  # Declares a reset lifecycle verb; the live group mounts
+  # check/clear/configure/scopes/status.
+  "aeat config auth apoderado reset",
+
+  # Declares a reset lifecycle verb; the live group mounts
+  # check/init/list/reclaim/view.
+  "aeat config storage reset",
+]
