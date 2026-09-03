@@ -321,6 +321,41 @@ def campaign_metadata_scan_text(token_string: str) -> str:
     return _NOQA_LINT_CODE_PATTERN.sub(lambda match: match.group(1), token_string)
 
 
+def lint_codes_suppressed_in(module_text: str) -> frozenset[str]:
+    """Return every lint code this module suppresses through a noqa directive.
+
+    Scrubbing the directive is not enough on its own. A suppression is usually
+    explained in prose beside it - "hence the S603" - and that sentence carries
+    the code without carrying the directive, so a line-scoped scrub reports the
+    explanation as campaign metadata. It also wraps, which is why the sentence
+    cannot be recognised by looking at one line.
+
+    A module that suppresses a code has established what that token means
+    inside it, so prose naming the same code is explaining the suppression
+    rather than addressing a plan step. The judgement is per module and needs
+    the whole text, which is why this is separate from the token-level scrub.
+    """
+    return frozenset(
+        code.strip()
+        for match in _NOQA_LINT_CODE_PATTERN.finditer(module_text)
+        for code in match.group(2).split(",")
+    )
+
+
+def campaign_metadata_findings(module_text: str, cases: tuple[PatternCase, ...]) -> tuple[str, ...]:
+    """Return the campaign markers in one module's text, less its own lint vocabulary."""
+    suppressed = lint_codes_suppressed_in(module_text)
+    found: list[str] = []
+    for line in module_text.splitlines():
+        scrubbed = campaign_metadata_scan_text(line)
+        for case in cases:
+            match = case.pattern.search(scrubbed)
+            if match is not None and match.group(0).strip() not in suppressed:
+                found.append(match.group(0).strip())
+                break
+    return tuple(found)
+
+
 def assert_cases_discriminate(cases: tuple[PatternCase, ...]) -> None:
     """Assert each case's pattern matches every target and rejects every near-miss."""
     assert cases, "pattern case table is empty, so the control asserts nothing"
