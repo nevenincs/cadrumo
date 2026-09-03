@@ -28,6 +28,7 @@ from typing import Final, Literal
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
+from .capability_continuity import screen_authority as capability_continuity_screen
 from .casilla_id_grammar import screen_authority as grammar_screen
 from .continuity_integrity import screen_authority as continuity_screen
 from .export_ref_symmetry import screen_authority as export_ref_screen
@@ -233,6 +234,11 @@ SCREENS: tuple[ScreenEntry, ...] = (
         "modelo_capability",
         modelo_capability_screen,
         "disagreements between a revision's declared filing rung and the machinery behind it",
+    ),
+    ScreenEntry(
+        "capability_continuity",
+        capability_continuity_screen,
+        "capabilities a revision stopped declaring after its predecessor had them",
     ),
     ScreenEntry(
         "manifest_uncited_references",

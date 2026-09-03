@@ -90,6 +90,7 @@ says which. What each one owns:
 | `unnumbered_note_scope` | designs carrying an unnumbered note, by the structure that bears on its scope |
 | `note_text_drift` | note labels whose wording differs between a modelo's designs |
 | `manifest_uncited_references` | manifest references no child of the revision cites |
+| `capability_continuity` | capabilities a revision stopped declaring after its predecessor had them |
 
 Three rules keep the suite honest.
 
