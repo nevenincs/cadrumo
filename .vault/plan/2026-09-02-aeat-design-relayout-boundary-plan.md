@@ -10,7 +10,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:4d9d6cad01f33e8e332db1cbaaba5df4bcbf10ff791710b58c8e2b22b5a3e678'
+body_hash: 'sha256:1d0f0b87b61c3d03eb01e0b082ca7293d5b34ac529507c86ac23c54e0ee5adc1'
 ---
 
 # `modelo-200-semantic-crosswalk` plan
@@ -75,10 +75,10 @@ Resolve legal-catalogue gaps against applicable 2024 authority before semantic r
 
 Resolve every candidate semantic through explicit reviewed target-year families and reviewer provenance.
 
-- [ ] `W03.P06.S12` - Compile reviewed target-year authority for exact same-2024 template repairs; `dev/registry/mappings/modelo_200/2024/`.
-- [ ] `W03.P06.S13` - Adjudicate uniquely proposed cross-revision candidates against official 2024 evidence; `dev/registry/mappings/modelo_200/2024/`.
-- [ ] `W03.P06.S14` - Adjudicate conflicting cross-revision candidate sets against official 2024 evidence; `dev/registry/mappings/modelo_200/2024/`.
-- [ ] `W03.P06.S15` - Author target-year authority for target fields with no applicable cross-revision candidate; `dev/registry/mappings/modelo_200/2024/`.
+- [x] `W03.P06.S12` - Compile reviewed target-year authority for exact same-2024 template repairs; `dev/registry/mappings/modelo_200/2024/`.
+- [x] `W03.P06.S13` - Adjudicate uniquely proposed cross-revision candidates against official 2024 evidence; `dev/registry/mappings/modelo_200/2024/`.
+- [x] `W03.P06.S14` - Adjudicate conflicting cross-revision candidate sets against official 2024 evidence; `dev/registry/mappings/modelo_200/2024/`.
+- [x] `W03.P06.S15` - Author target-year authority for target fields with no applicable cross-revision candidate; `dev/registry/mappings/modelo_200/2024/`.
 
 ## Wave `W04` - materialize complete target authority and generate privately
 
