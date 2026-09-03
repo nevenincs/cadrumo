@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:0791d260831ce663751e5fab50d9fa4a9e40104bc2fffa91da3a516a3e93b36f'
+body_hash: 'sha256:483d0a3851f34637c80fc30c496cd567f127056e48934c627a5747387f49452b'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -629,6 +629,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S335` - Verify a sample of the closed Steps scoped outside this execution against the live tree; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S336` - Establish that the largest screen's headline is the actionable unit and record the live restatement ratio; `dev/registry/analysis/provenance_consistency.py`.
 - [x] `W06.P13.S337` - Carry both the surface and corpus answers for the citation figure in the Description; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S338` - Declare what a caller may assume about a screen finding, and learn from the gate that a runner row is not one; `dev/registry/analysis/screens.py dev/registry/tests/test_declaration_invariant_gates.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

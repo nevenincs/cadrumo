@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:dfa4253feda7840ecfeee785440ff4864a7b36f80e012b8f4dd1f7218cc13527'
+body_hash: 'sha256:47f155660dfba85a0d905f6cd2ce41a4834fe1e1a1a48885db8dd99ec13d8fda'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8660,3 +8660,36 @@ that identifies a defect differs by condition. A cross-screen tool that assumes
 a common shape will silently mis-read the screens whose conditions do not have
 one, which is what happened here and would have been reported as a finding had
 the numbers been less absurd.
+
+### the-contract-i-wrote-was-wrong-and-its-own-gate-said-so-within-a-minute | high | A runner row is not a finding, and writing the contract as though it were is what seven mis-reads had in common
+
+Seven instrument errors in this campaign share one cause: assuming a uniform
+surface where the tree has variety. The structural answer is to write down what
+IS uniform, so a cross-screen tool knows what it may assume. That is now
+declared beside the runner: every finding type these screens define identifies
+its modelo, and nothing more is promised.
+
+The first version of the gate asserted the contract over the rows the runner
+emits and failed immediately on two screens. That failure was correct and the
+contract was wrong. The runner deliberately collapses two entries onto a
+different unit - a reference sitting outside a manifest, a wire-type transition
+- and those rows are a REPORT, not a finding. A caller reading the runner gets
+whatever the entry chose; a caller calling a screen gets a finding, and a
+finding names its modelo.
+
+That distinction is the thing seven mis-reads had in common, restated at the
+level of the contract rather than the level of any one check. A report and a
+finding look identical - both are rows with attributes - and the difference is
+whose question they answer. Every cross-screen key that has failed here failed
+by keying a report as though it were a finding.
+
+Both are now written down: the contract says what a finding promises, and says
+in the same breath that the runner's rows are not covered by it. The gate reads
+the finding types rather than the rows, because a caller keying on a field wants
+to know the type declares it, and twenty-six tests pass in that module, exit 0.
+
+One field, deliberately. Eight of the nine types also carry a revision and one
+does not, because a continuity chain spans revisions and pinning one would name
+a revision the defect does not belong to. Promising the revision would have
+promised a shape one screen correctly does not have - the same over-reach in a
+smaller font.
