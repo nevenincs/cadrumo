@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:b307edd1496ecfe783e0951caebc516d4ac25f18e50d3a861e2e4cae413c8a65'
+body_hash: 'sha256:1e3057c2b973d1c28bca537793d1ab44e2a02bde5ce7cb82756a1d61c72efd23'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -455,6 +455,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S225` - Separate the thirteen stale census entries into a universe too narrow, a rule that over-claims and one missing module; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S226` - Include ancestor packages in the census universe so a rule naming a package a load actually holds stops reading as stale; `dev/registry/analysis/load_census.py,dev/registry/analysis/load_census_classification.py`.
 - [x] `W06.P13.S227` - Correct the classification measured in the tooling's own process against a clean load in both regimes; `dev/registry/analysis/load_census_classification.py`.
+- [x] `W06.P13.S228` - Re-verify every live classification against clean cold and warm loads and reclassify the one that differs between regimes; `dev/registry/analysis/load_census_classification.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

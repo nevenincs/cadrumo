@@ -5551,3 +5551,43 @@ writer's rule and still not edited here.
 Three measurements in this campaign have now been taken in a process that had already imported
 the thing being measured - the stale bytecode twice, and this. The remedy each time was a
 clean interpreter, and it costs one subprocess.
+
+### Re-measured cleanly, the regimes differ by forty-three modules and one classification was wrong
+
+Having found one classification decided by a contaminated measurement, the remaining eighteen
+were re-measured the same way: two clean subprocesses importing nothing but the authority, one
+with empty cache directories and one with the real ones.
+
+Seventeen of the eighteen hold in both regimes. `formula_runtime_m100` does not: it is in
+`sys.modules` on a cold load and absent on a warm one. It is now `conditionally_reachable`,
+classified by the regime that does not load it rather than the one that does, because a rule
+saying a module always loads is falsified by any load where it does not.
+
+The regimes differ by more than that one module. A cold load holds 378 first-party modules and
+a warm load 335 - forty-three modules loaded only when the caches are empty, and none loaded
+only when they are full. That asymmetry is worth stating: the warm path is a strict subset, so
+every classification made against a warm load is safe as a lower bound and every one made
+against a cold load may over-claim. The rule table distinguishes exactly these two states, and
+until now this campaign had been measuring one of them without saying which.
+
+A module appeared mid-measurement that no rule covers, `renta_web_open_replay_corpus`, added by
+the concurrent campaign while the subprocesses ran. It is left unruled rather than guessed at,
+for the same reason the `snapshot` successor was: its load behaviour is measurable in ten
+minutes by whoever needs it, and inventing a classification is cheaper and worse.
+
+### A scratch file written to the repository root was committed before it could be removed
+
+The measurement needed the repository root on its import path, so a script was copied there and
+deleted in the same command - the same slip recorded earlier in this campaign, repeated after
+being recorded. This time the concurrent campaign's tree-wide sweep committed it in the window
+between the two, under a message describing it as captured scratch.
+
+Deleting it now leaves a tracked deletion in the working tree rather than an untracked file
+disappearing. The deletion is correct and is left standing for the next sweep to carry, since
+committing is not this campaign's to do.
+
+The lesson is not that scratch files are risky in general. It is that in a worktree where
+another writer commits everything on a timer, the window between creating a file and removing it
+is a window in which it becomes part of the project's history - and the earlier finding that
+recorded this slip described it as harmless because nothing persisted. That was true then and is
+not a property of the practice.

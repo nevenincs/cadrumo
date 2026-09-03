@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f775d99428f9c475385ed0e27f04cd097188fab7970681ad54f5a55827b0e073'
+body_hash: 'sha256:640ba9f31db9decd58c6f6b41a5118a70ae770dd1eca9d0a104ab96493fc8eb2'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
@@ -74,3 +74,36 @@ another.
 The complete focused graph and rehearsal suites passed 46 tests in 56.92 seconds. Ruff lint,
 Ruff format, and ty passed for all four S25 files. Final review status is two medium findings
 and no critical, high, or low findings.
+
+## Redesign resolution
+
+Resolved: `cache-source-identity` is closed by removing Grimp caching from this workflow.
+Rehearsal now snapshots and copies first, requires every copied Python file to match its
+captured content digest, scans the copied inventory, and constructs the canonical graph
+exactly once from the isolated disposable tree. That graph is compared by component ID,
+operation membership, affected paths, and hard edges to the supplied component before any
+transformation. No live-tree graph evidence or metadata-based cache artifact crosses into
+the authorization decision.
+
+Resolved: `cache-reuse-detector-teeth` is closed by removing the behavior it covered. The
+amended detector observes exactly one canonical reconstruction and asserts its root is the
+retained disposable repository. The copy-race detector mutates a copied consumer to introduce
+a selected reference before graph reconstruction and production refuses the undeclared hard
+edge. Existing post-copy corruption coverage verifies that a Python copy changed during
+copying is refused before graph use. Link traversal, source disappearance, exact guarded
+bytes, copied component equality, changed-path equality, and later replay freshness remain
+fail-closed.
+
+### redesigned-format-gate | medium | Current S25 test bytes fail the recorded format check
+
+The focused runtime suite, Ruff lint, and ty pass, but Ruff format currently reports three
+`pytest.raises` blocks in `test_object_name_rehearsal.py` that would be reformatted. The S25
+execution record says the same format check passes, so the record does not describe the
+reviewed bytes and the approved quality gate is not presently green. This is mechanical and
+does not weaken the redesigned safety semantics.
+
+## Final re-review validation
+
+The complete graph and rehearsal suites passed 46 tests in 45.43 seconds. Ruff lint and ty
+passed. Ruff format failed on the three blocks described above. Final S25 status is one
+medium finding and no critical, high, or low findings.

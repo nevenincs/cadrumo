@@ -25,19 +25,9 @@ related:
 
 ## Changes
 
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
+- `M` `dev/quality/object_name_rehearsal.py`
+- `M` `dev/quality/tests/test_object_name_rehearsal.py`
+- `verify:` `uv run --no-sync pytest -q -n0 dev/quality/tests/test_object_name_graph.py dev/quality/tests/test_object_name_rehearsal.py` -> `pass`
+- `verify:` `uv run --no-sync ruff format --check dev/quality/object_name_rehearsal.py dev/quality/tests/test_object_name_rehearsal.py` -> `pass`
+- `verify:` `uv run --no-sync ruff check dev/quality/object_name_rehearsal.py dev/quality/tests/test_object_name_rehearsal.py` -> `pass`
+- `verify:` `uv run --no-sync ty check dev/quality/object_name_rehearsal.py dev/quality/tests/test_object_name_rehearsal.py` -> `pass`
