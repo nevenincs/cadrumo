@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:47f155660dfba85a0d905f6cd2ce41a4834fe1e1a1a48885db8dd99ec13d8fda'
+body_hash: 'sha256:02b0ac1e7fa545f079895d7c75e3a5d290b010257576a2a97979e2bddd4c957d'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8693,3 +8693,27 @@ does not, because a continuity chain spans revisions and pinning one would name
 a revision the defect does not belong to. Promising the revision would have
 promised a shape one screen correctly does not have - the same over-reach in a
 smaller font.
+
+### the-runner-called-every-row-a-finding-including-the-two-that-are-reports | medium | One word in two output lines, and it was the conflation the contract had just been written to separate
+
+Having declared that a screen's finding names its modelo and that the runner's
+rows are not covered by that promise, the runner was still printing
+`findings=N` on every line - including for the two entries whose rows are a
+collapsed reference and a wire-type transition. The distinction had been written
+into a constant and a gate while the user-visible output went on erasing it.
+
+The output now says `rows`. Each line already carried a `counts` label naming
+what that screen's rows are - references cited from outside their manifest,
+transitions that diverge, revisions whose grade and machinery disagree - so the
+honest reading was always available and the word above it contradicted it. The
+summary reads `screens=10 rows=1651`.
+
+Nothing depended on the old wording: no test, no recipe and no documentation
+matched `findings=`, which is worth checking before changing an output string
+and worth recording once checked, because the next person to consider this will
+otherwise repeat the search.
+
+The change is one word in two lines and it closes the last place this package
+said finding where it meant row. That matters more than its size: seven
+cross-screen mis-reads in this campaign began by treating a report as a finding,
+and the runner's own output was teaching exactly that.
