@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-03'
-body_hash: 'sha256:e73439717530a211502f2e202b520c3472bea9cd8afa10bc485da981b451e2b3'
+body_hash: 'sha256:4d871b456857cb36af197e09f5f8de7300d3186735665be141ee8dd16f938326'
 ---
 
 <!-- RETIRED: S370 -->
@@ -558,7 +558,7 @@ Define frontend-neutral session, Home, destination-admission, search, calendar-e
 - [x] `W08.P25.S366` - Compose HomeProjectionV1 from canonical profile, overview, Ledger, declaration, notification, and filing-evidence readers with no implicit network activity; `src/cadrumo/application/overview/home.py`.
 - [x] `W08.P25.S367` - Promote the calendar evidence assembly into a frontend-neutral application provider consumed by CLI and TUI; `src/cadrumo/application/overview/evidence.py`.
 - [x] `W08.P25.S368` - Define typed workbench search results and a cross-domain query service that preserves source, natural address, status, and admission; `src/cadrumo/application/search/workbench.py`.
-- [ ] `W08.P25.S369` - Define the TUI destination catalogue, explicit admission states, screen-factory protocol, and semantic focus identities; `src/cadrumo/entrypoints/tui/navigation.py`.
+- [x] `W08.P25.S369` - Define the TUI destination catalogue, explicit admission states, screen-factory protocol, and semantic focus identities; `src/cadrumo/entrypoints/tui/navigation.py`.
 
 ### Phase `W08.P26` - Responsive prototype and interaction decision
 
