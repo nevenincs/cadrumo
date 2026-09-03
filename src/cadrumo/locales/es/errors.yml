@@ -579,8 +579,6 @@ errors:
       no se pudo completar.
     integrity_manuals_manifest: El manifiesto del manual no superó las comprobaciones
       de esquema o de hash.
-    integrity_observability_aeat_corpus_drift: La reproducción detectó que el corpus
-      de referencia de la AEAT ha cambiado respecto al registrado.
     integrity_observability_run_trace_validation: La traza de ejecución guardada no
       superó la validación estricta.
     integrity_outbound_storage: El contenido descargado no superó las comprobaciones
