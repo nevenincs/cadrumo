@@ -276,8 +276,11 @@ def _copy_snapshot(
     *,
     guarded_paths: frozenset[str] | None = None,
 ) -> None:
+    git_executable = shutil.which("git")
+    if git_executable is None:
+        raise ObjectNameRehearsalError("git executable is unavailable for isolated snapshot metadata")
     head = subprocess.run(  # noqa: S603
-        ("git", "-C", str(source_root), "rev-parse", "HEAD"),
+        (git_executable, "-C", str(source_root), "rev-parse", "HEAD"),
         capture_output=True,
         check=False,
         text=True,
@@ -285,7 +288,15 @@ def _copy_snapshot(
     if head.returncode == 0:
         captured_head = head.stdout.strip()
         clone = subprocess.run(  # noqa: S603
-            ("git", "clone", "--shared", "--no-checkout", "--quiet", str(source_root), str(target_root)),
+            (
+                git_executable,
+                "clone",
+                "--shared",
+                "--no-checkout",
+                "--quiet",
+                str(source_root),
+                str(target_root),
+            ),
             capture_output=True,
             check=False,
             text=True,
@@ -293,7 +304,7 @@ def _copy_snapshot(
         if clone.returncode != 0:
             raise ObjectNameRehearsalError(f"cannot create isolated Git metadata: {clone.stderr.strip()}")
         pin = subprocess.run(  # noqa: S603
-            ("git", "-C", str(target_root), "update-ref", "--no-deref", "HEAD", captured_head),
+            (git_executable, "-C", str(target_root), "update-ref", "--no-deref", "HEAD", captured_head),
             capture_output=True,
             check=False,
             text=True,
