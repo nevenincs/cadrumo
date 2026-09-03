@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6f5d4f704775512c9895277059cd0c3ec229ebe1090ccca70598891535210b6e'
+body_hash: 'sha256:7fa9918076e865c48ce0247b08318c1657afbcb80609f922e74e0b93ba7c1a0b'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7518,3 +7518,38 @@ already had, and `screen_authority` is a loop over it. The census is unchanged
 at twenty-six findings across the same kinds, which is what makes the extraction
 safe to believe. Both proofs now assert the kind the screen reports, one of them
 matching the finding's full detail text. Six tests pass, exit 0.
+
+### a-gate-recovered-its-own-subject-with-four-regexes-and-now-reads-a-declaration | high | Each regex was added when a new assignment shape appeared, which is the failure the sibling gates refuse by design
+
+Sweeping every screen test module for the defect found last iteration - a test
+named for the screen that never runs it - returned three candidates. Two are
+correct: the site-list tests added earlier gate a declaration rather than screen
+behaviour, and calling the screen would not make them stronger.
+
+The third was worse than the defect being swept for. A gate asserting that every
+documented condition is reachable recovered the emitted set by matching the
+screen's source with four separate regexes: a plain keyword argument, a
+conditional expression, an else-branch, and a docstring scan. Each was added
+when a new assignment shape appeared and the previous set under-read. That is
+exactly the technique the sibling gate's docstring refuses and says why -
+"a static extractor silently under-reads every shape it does not know" - and it
+is worse in this direction than in the one that warning was written for. Both
+sides of this comparison were derived from the same file: an under-read set
+compares equal to a docstring that lost the same entry, so the gate reports
+agreement between two wrong answers and reports it as a pass.
+
+The screen now declares its eight kinds as data, beside the pattern it uses to
+read a name, with a note saying what the declaration replaces. The gate compares
+the docstring to that declaration and separately asserts what fires on the
+corpus is a subset of it. Fourteen tests pass, exit 0, and the census is
+unchanged at fourteen findings across five kinds.
+
+The residual coverage is worth stating rather than glossing. The declaration is
+checked against live findings for the five kinds that fire and against the
+constructed cases in the same module for two more. The eighth is
+`name_claims_open_ended`, which the shipped registry refuses at build time, so
+nothing can exercise it here - the canary recorded two iterations ago. Seven of
+eight kinds are therefore pinned by something that would fail if a literal
+drifted from the declaration, and the eighth is pinned by a validator in another
+package. That is a complete account, which is more useful than a claim of full
+coverage would have been.
