@@ -87,9 +87,7 @@ def _require_verified_catalogue(catalogue: IvaCatalogue, *, target: Path) -> Non
         raise IvaCatalogueError(f"{target}: IVA catalogue verification could not complete: {exc}") from exc
     if report.ok:
         return
-    failures = "\n".join(
-        f" - [{issue.category_id}] {issue.code}: {issue.message}" for issue in report.errors
-    )
+    failures = "\n".join(f" - [{issue.category_id}] {issue.code}: {issue.message}" for issue in report.errors)
     raise IvaCatalogueError(f"{target}: IVA catalogue verification failed:\n{failures}")
 
 

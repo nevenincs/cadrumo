@@ -6,9 +6,10 @@ from datetime import date
 
 import pytest
 
+from .._grounding import registry_catalogues
 from ..catalogue import resolve_catalogue
 from ..schema import IvaCatalogue, IvaCategory, IvaCitation, IvaRegulation
-from ..verify import verify_catalogue
+from ..verify import _citation_issues, verify_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -102,3 +103,24 @@ def test_unknown_registry_legal_reference_is_reported() -> None:
         issue.code == "unknown_legal_reference" and issue.category_id == IvaCategory.DOMESTIC_GENERAL.value
         for issue in report.errors
     )
+
+
+def test_a_non_article_legal_reference_is_reported() -> None:
+    """Article qualification remains a catalogue-verifier requirement.
+
+    The bundled legal catalogue currently has no non-article entries, so this
+    isolates the otherwise unreachable future-registry mutation without
+    monkeypatching the production catalogue access path.
+    """
+    original = _CATALOGUE.regulations[IvaCategory.DOMESTIC_GENERAL].citations[0]
+    legal, _sources, source_root = registry_catalogues()
+    non_article = legal[original.legal_reference].model_copy(update={"article": None})
+
+    issues = _citation_issues(
+        original,
+        category_id=IvaCategory.DOMESTIC_GENERAL.value,
+        legal={**legal, original.legal_reference: non_article},
+        source_root=source_root,
+    )
+
+    assert [issue.code for issue in issues] == ["legal_reference_not_article_qualified"]
