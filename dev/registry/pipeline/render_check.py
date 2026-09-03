@@ -58,6 +58,7 @@ from cadrumo.domain.calculations.registry.ids import RevisionId, SourceRefId
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource, RegistryRevisionInspection
 
 from ._export_tree import ExportTreeTransportProfile, render_complete_export_tree
+from ._provenance_manifest import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ._record_design_ir import load_record_design_intermediate
 from ._render_profile import (
     RenderProfile,
@@ -83,7 +84,11 @@ _SERIALIZER_CONVENTION = "rtoml-pretty-v1"
 #: correct records with a stale attestation; a tree differing in a record file
 #: ships bytes its inputs no longer produce. The two need different remedies and
 #: are reported separately.
-_PROVENANCE_MANIFEST = "_generation.provenance.json"
+#: The generation manifest's filename comes from the module that owns it.
+#: It was restated here as a literal while nine other modules imported the
+#: declaration - one filename, three spellings across this repository, of
+#: which this was the one nobody would have found when it changed.
+_PROVENANCE_MANIFEST = EXPORT_FRAGMENT_PROVENANCE_FILENAME
 _AUTHORED_ROOT = Path(__file__).resolve().parent.parent
 
 
