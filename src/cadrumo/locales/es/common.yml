@@ -1353,6 +1353,13 @@ tui:
       filed: Presentada
       late: Fuera de plazo
       unknown: Calendario desconocido
+    reason:
+      blocked_dependency: Una dependencia de la declaración está bloqueada
+      blocked_evidence: Un bloqueo necesita justificante de respaldo
+      blocked_review: El trabajo bloqueado necesita revisión
+      declaration_needs_review: La declaración necesita revisión
+      evidence_missing: Falta el justificante de respaldo
+      ledger_classification_pending: Falta clasificar apuntes del libro
     session:
       active: Sesión local activa
       expired: Sesión caducada

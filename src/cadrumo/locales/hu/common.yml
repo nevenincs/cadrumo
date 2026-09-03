@@ -1335,6 +1335,13 @@ tui:
       filed: Benyújtva
       late: Késedelmes
       unknown: Ismeretlen határidő
+    reason:
+      blocked_dependency: A bevallás egyik függősége blokkolva van
+      blocked_evidence: Egy blokkolóhoz alátámasztó bizonylat kell
+      blocked_review: A blokkolt munka ellenőrzésre vár
+      declaration_needs_review: A bevallás ellenőrzésre vár
+      evidence_missing: Hiányzik az alátámasztó bizonylat
+      ledger_classification_pending: A főkönyvi besorolás még hiányzik
     session:
       active: Aktív helyi munkamenet
       expired: A munkamenet lejárt

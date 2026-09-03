@@ -1341,6 +1341,13 @@ tui:
       filed: Presentada
       late: Fora de termini
       unknown: Calendari desconegut
+    reason:
+      blocked_dependency: Una dependència de la declaració està blocada
+      blocked_evidence: Un bloqueig necessita justificant de suport
+      blocked_review: La feina blocada necessita revisió
+      declaration_needs_review: La declaració necessita revisió
+      evidence_missing: Falta el justificant de suport
+      ledger_classification_pending: Falta classificar apunts del llibre
     session:
       active: Sessió local activa
       expired: Sessió caducada

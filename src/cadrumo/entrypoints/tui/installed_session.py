@@ -40,8 +40,6 @@ from ...application.user_profile.workbench_bootstrap import (
     WorkbenchBootstrapV1,
     WorkbenchRegistrationRequiredV1,
 )
-from ...core.external_constants import OutputLanguage
-from ...core.i18n.render import output_language
 from .bootstrap import run_workbench_bootstrap
 from .launcher import (
     InstalledWorkbenchAccountInputsV1,
@@ -168,7 +166,6 @@ def compose_authenticated_root_inputs_provider(
             compose_secure_profile_workbench_generation_provider(
                 profile_id=profile_id,
                 profile_label=profile_label,
-                output_language=OutputLanguage(output_language()),
                 operation_contracts=operation_runtime.public_contracts,
             ),
             dependencies,
@@ -177,12 +174,15 @@ def compose_authenticated_root_inputs_provider(
     return provide
 
 
-def observe_installed_bootstrap(*, allow_registration: bool = True) -> InstalledBootstrapObservationV1:
+def observe_installed_bootstrap(*, allow_credential_screens: bool = True) -> InstalledBootstrapObservationV1:
     """Take one truthful inventory observation and run the journey it names.
 
     Registration and login are the existing full-screen owners, each run as
-    its own session. ``allow_registration`` is lowered only where creating a
-    profile would be a side effect of merely proving the artifact starts.
+    its own session. ``allow_credential_screens`` is lowered for a headless
+    run: nobody is there to type a passphrase, so opening either screen would
+    block forever, and creating a profile would be a side effect of merely
+    proving the artifact starts. A lowered run reports the inventory it
+    observed and stops rather than pretending to authenticate.
     """
     from ...core.credentials import assess_profile_password
     from .secret.credentials import run_credential_screen
@@ -191,10 +191,12 @@ def observe_installed_bootstrap(*, allow_registration: bool = True) -> Installed
     registered: list[bool] = [False]
 
     def run_login(screen: LoginScreen, /) -> ProfileLoginOutcome | None:
+        if not allow_credential_screens:
+            return None
         return run_credential_screen(screen)
 
     def register(_requirement: WorkbenchRegistrationRequiredV1, /) -> None:
-        if not allow_registration:
+        if not allow_credential_screens:
             return
         outcome = run_credential_screen(
             RegistrationScreen(
@@ -232,7 +234,7 @@ def run_installed_workbench_session(
 
     with profile_adapter_composition():
         while True:
-            observation = observe_installed_bootstrap(allow_registration=not headless)
+            observation = observe_installed_bootstrap(allow_credential_screens=not headless)
             state = observation.state
             if state.inventory_state in {
                 WorkbenchBootstrapInventoryState.CONCURRENT_CHANGE,

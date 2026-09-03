@@ -43,15 +43,8 @@ def test_metadata_covers_every_inventoried_modelo_interface_and_state_floor() ->
 
 def test_fixture_module_has_no_storage_network_random_or_test_fixture_dependency() -> None:
     tree = ast.parse(_MODULE.read_text(encoding="utf-8"), filename=str(_MODULE))
-    imports = {
-        node.module or ""
-        for node in ast.walk(tree)
-        if isinstance(node, ast.ImportFrom)
-    } | {
-        alias.name
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Import)
-        for alias in node.names
+    imports = {node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)} | {
+        alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names
     }
     assert not any(
         token in imported

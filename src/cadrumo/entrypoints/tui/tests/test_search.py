@@ -44,9 +44,9 @@ from ..search import (
     _SEARCH_LOCALE_KEYS,
     WorkbenchCommandProviderV1,
     WorkbenchSearchProviderV1,
-    _action_text,
     _destination_text,
     _result_text,
+    workbench_action_label,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -200,12 +200,11 @@ async def test_command_provider_discovers_admitted_destinations_and_action_ident
     async with app.run_test() as pilot:
         provider = WorkbenchCommandProviderV1(app.screen)
         discovery = await _discover(provider)
-        action_hit = next(hit for hit in discovery if hit.text == _action_text(action.action_candidate_id))
+        action_hit = next(hit for hit in discovery if hit.text == workbench_action_label(action.action_candidate_id))
         assert any(hit.text == _destination_text("workbench.home") for hit in discovery)
         assert action_hit.help == _destination_text("workbench.declarations")
         assert all(
-            hit.help is not None and "workbench." not in hit.help and "operator." not in hit.help
-            for hit in discovery
+            hit.help is not None and "workbench." not in hit.help and "operator." not in hit.help for hit in discovery
         )
         action_hit.command()
         await pilot.pause()
@@ -233,7 +232,7 @@ def test_search_copy_is_available_and_human_facing_in_every_locale(locale: str) 
                 tr(key, locale=locale)
         rendered = _result_text(result, locale=locale)
         destination = _destination_text("workbench.declarations", locale=locale)
-        action = _action_text("operator.declaration.open", locale=locale)
+        action = workbench_action_label("operator.declaration.open", locale=locale)
     finally:
         I18N_STRICT_MISSING_KEYS.reset(strict_token)
 
@@ -256,9 +255,13 @@ def test_search_copy_changes_with_locale_without_changing_stable_result_identity
     rendered = tuple(_result_text(result, locale=locale) for locale in SUPPORTED_OUTPUT_LANGUAGES)
 
     assert len(set(rendered)) == len(SUPPORTED_OUTPUT_LANGUAGES)
-    assert result.stable_id == WorkbenchSearchService([_document()]).search(
-        WorkbenchSearchRequest(query="declaration")
-    ).results[0].stable_id
+    assert (
+        result.stable_id
+        == WorkbenchSearchService([_document()])
+        .search(WorkbenchSearchRequest(query="declaration"))
+        .results[0]
+        .stable_id
+    )
 
 
 @pytest.mark.asyncio

@@ -10,6 +10,8 @@ import pytest
 from textual.containers import VerticalScroll
 from textual.widgets import DataTable, Static
 
+from ....core.config import override_settings
+from ....core.external_constants import OutputLanguage
 from ..components.host import ScreenHostApp
 from ..components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
 from ..devtools.frame import geometry_band, screen_text
@@ -17,6 +19,19 @@ from ..devtools.home_fixtures import HomeFixtureScenario, build_home_projection_
 from ..home import HomeScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def _english_surface():
+    """Assert against one named language rather than the ambient default.
+
+    Home renders through the locale catalogue, so its words follow whichever
+    language the environment resolves. Pinning English here keeps these
+    assertions about LAYOUT and CONCEPT; the per-language coverage is the
+    catalogue parity gate's job, not this module's.
+    """
+    with override_settings(cadrumo_output_language=OutputLanguage.EN.value):
+        yield
 
 
 @pytest.mark.asyncio
@@ -57,9 +72,9 @@ async def test_home_renders_the_selected_due_driven_projection_without_overflow(
         assert tuple(
             cast("DataTable[str]", action_table).get_row_at(index)[0] for index in range(action_table.row_count)
         ) == (
-            "Review declaration",
-            "Classify Ledger entries",
-            "Add missing evidence",
+            "Open declaration",
+            "Classify ledger",
+            "Review ledger evidence",
         )
 
 

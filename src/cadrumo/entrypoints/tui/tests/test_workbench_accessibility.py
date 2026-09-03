@@ -105,7 +105,9 @@ async def test_every_home_zone_states_its_availability_in_words(tmp_path: Path) 
         async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
             await pilot.pause()
             rendered = "\n".join(
-                str(widget.render()) for widget in app.screen.query(Widget) if widget.display and widget.is_container is False
+                str(widget.render())
+                for widget in app.screen.query(Widget)
+                if widget.display and widget.is_container is False
             )
             app.exit(None)
 

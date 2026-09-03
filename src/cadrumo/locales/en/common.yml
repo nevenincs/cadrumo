@@ -1311,6 +1311,13 @@ tui:
       filed: Filed
       late: Overdue
       unknown: Schedule unknown
+    reason:
+      blocked_dependency: A declaration dependency is blocked
+      blocked_evidence: A blocker needs supporting evidence
+      blocked_review: Blocked work needs review
+      declaration_needs_review: Declaration needs review
+      evidence_missing: Supporting evidence is missing
+      ledger_classification_pending: Ledger classification is pending
     session:
       active: Active local session
       expired: Session expired

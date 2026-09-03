@@ -75,7 +75,6 @@ def compose_secure_profile_workbench_generation_provider(
     *,
     profile_id: str,
     profile_label: str,
-    output_language: OutputLanguage,
     operation_contracts: OperationPublicContractSetV1 | None = None,
 ) -> InstalledWorkbenchGenerationProviderV1:
     """Bind the installed provider to the current secure profile session.
@@ -135,24 +134,29 @@ def compose_secure_profile_workbench_generation_provider(
         invoice_repository=InvoiceCatalogueRepository(bucket_id=profile_id),
         bucket_event_repository=build_bucket_event_history_repository(bucket_id=profile_id),
         operation_contracts=operation_contracts,
-        modelo_projection_reader=_modelo_projection_reader(output_language),
+        modelo_projection_reader=_modelo_projection_reader(),
     )
     return ApplicationGenerationProviderV1(door)
 
 
-
-def _modelo_projection_reader(
-    output_language: OutputLanguage,
-) -> Callable[[WorkUnit], ModeloWorkspaceProjectionV1]:
+def _modelo_projection_reader() -> Callable[[WorkUnit], ModeloWorkspaceProjectionV1]:
     """Read one work unit's canonical workspace projection for search.
 
     The read is the same static inspection the Modelo workspace itself is
     admitted through, so a searchable declaration and an opened one cannot
-    describe different registry state.
+    describe different registry state. The output language is resolved per
+    read rather than closed over: a profile language change clears the
+    resolver cache, and a projection captured under the previous language
+    would leave the workbench half-translated until sign-out.
     """
+    from ...core.external_constants import OutputLanguage as _OutputLanguage
+    from ...core.i18n.render import output_language as resolve_output_language
 
     def project(unit: WorkUnit) -> ModeloWorkspaceProjectionV1:
-        return resolve_modelo_workspace_static_inspection(unit, output_language=output_language).projection
+        return resolve_modelo_workspace_static_inspection(
+            unit,
+            output_language=_OutputLanguage(resolve_output_language()),
+        ).projection
 
     return project
 
@@ -503,23 +507,31 @@ def build_modelo_work_review_for_unit(unit: WorkUnit) -> ModeloWorkReview:
 def resolve_modelo_workspace_static_inspection(
     unit: WorkUnit, *, output_language: OutputLanguage
 ) -> ModeloWorkspaceStaticInspectionResultV1:
-    """Assemble the workspace read result for one resolved unit."""
+    """Assemble the workspace read result for one already-resolved unit.
+
+    The unit is addressed by its exact identity rather than by its visible
+    modelo/year/period coordinates. A profile that discarded a declaration and
+    created a new one at the same address holds two units there, and a
+    coordinate request is ambiguous across them — which would refuse a read
+    the caller had already resolved. The catalogue is opened on the unit's own
+    bucket rather than the active-profile pointer, so the read cannot drift to
+    another profile.
+    """
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...application.modelo.work_addressing import ModeloVisibleFilingTarget
+    from ...application.modelo.work_addressing import ModeloExactWorkUnitTarget
     from ...application.modelo.workspace import resolve_static_inspection_result
-    from ...application.modelo.workspace_models import ModeloWorkspaceVisibleFilingTargetV1
+    from ...application.modelo.workspace_models import ModeloWorkspaceExactWorkUnitTargetV1
     from ...domain.calculations.registry.authority import bundled_authority
 
     return resolve_static_inspection_result(
-        ModeloWorkspaceVisibleFilingTargetV1(
-            target=ModeloVisibleFilingTarget(
-                modelo=unit.modelo,
-                filing_year=unit.filing_year,
-                period=unit.period,
+        ModeloWorkspaceExactWorkUnitTargetV1(
+            target=ModeloExactWorkUnitTarget(
+                work_unit_id=unit.work_unit_id,
+                bucket_id=unit.bucket_id,
             )
         ),
         bucket_id=unit.bucket_id,
-        catalogue_repository=WorkUnitCatalogueRepository(),
+        catalogue_repository=WorkUnitCatalogueRepository(bucket_id=unit.bucket_id),
         authority=bundled_authority(),
         output_language=output_language,
     )

@@ -36,6 +36,7 @@ from ...application.overview.home import (
 from ...core.i18n.render import tr
 from .components.theme import BASE_CSS, tokenised
 from .components.widgets import ContentDataTable, ContentScroll
+from .search import workbench_action_label
 
 
 @dataclass(frozen=True, slots=True)
@@ -136,8 +137,19 @@ def home_agenda_identity(item: HomeAgendaEntry) -> str:
 
 
 def _action_cells(item: HomeNextAction) -> tuple[str, str, str]:
-    label = tr("tui.home.action.label")
-    reason = tr("tui.home.action.reason")
+    """Name the action and its reason from the ids the application ranked.
+
+    Both come from catalogues rather than from local prose: the verb resolves
+    through the same authority the command palette uses, so a suggested task
+    and the command that performs it are never described differently, and an
+    unrecognised reason code degrades to the honest generic line instead of
+    exposing its identifier.
+    """
+    label = workbench_action_label(str(item.action.action.action_id))
+    reason_key = f"tui.home.reason.{item.reason_code}"
+    reason = tr(reason_key)
+    if reason == reason_key:
+        reason = tr("tui.home.action.reason")
     if item.period is None:
         context = tr("tui.home.action.context_across_records")
     elif item.modelo is None or item.filing_year is None:  # pragma: no cover - projection rejects this shape
