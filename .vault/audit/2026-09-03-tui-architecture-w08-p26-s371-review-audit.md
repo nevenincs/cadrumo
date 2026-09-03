@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:014b251169c647c39ac2065a7314cd278f071c18363ea3bc654b911cdfb940dc'
+body_hash: 'sha256:c6df421fe046ac8222ee552c84fefda50f384b364308d8e54c4b796171285ecf'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-09-02-unreachable-capability-tui-homepage-product-design-research]]"
@@ -56,6 +56,10 @@ Ready and blocked now each carry three uniquely ranked actions, three distinct d
 
 The suite now serializes every scenario, constrains Hex64 values, checks several credential/email/IBAN/DNI patterns, and scans both import forms plus a wider call denylist. Current fixtures remain synthetic, deterministic, fresh and pure by inspection. The detector does not recognize NIE-shaped NIFs such as `X2482300W`, despite claiming PII coverage, and the I/O scan still permits paths such as `os.open` and arbitrary repository imports. The freshness test still asserts object replacement only for the projection and account, so caching populated action, declaration or agenda records would stay green; stable declaration identity across rebuilt projections is likewise unasserted. `sensitive-purity-gate-teeth` therefore remains open at medium severity even though no live sensitive literal, retention or I/O defect was found.
 
+### final-test-integrity-closure | low | Sensitive, purity and nested-isolation detectors now cover the reproduced gaps
+
+The serialized-fixture detector now recognizes representative DNI, NIE and CIF shapes and explicitly proves the `X2482300W` NIE case is caught. The AST gate covers both import forms, forbids `os` and repository/persistence/reader/client families, and rejects direct and suffix-shaped filesystem, network and repository calls including `os.open`. Freshness checks now prove every populated action, declaration and agenda row, plus Ledger readiness, is reconstructed as a distinct object; a separate test proves the same declaration identities survive fresh builds. The current module remains synthetic and pure by inspection. `sensitive-purity-gate-teeth` and the residual medium finding are closed.
+
 <!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
      severity, using the heading form
 
@@ -74,4 +78,5 @@ The suite now serializes every scenario, constrains Hex64 values, checks several
 5. Focused Pytest passed 15 tests; Ruff and ty passed; Basedpyright reported 0 errors, warnings or notes. No critical finding exists, but one high and one medium remain open. `W08.P26.S371` must not close.
 6. Add an NIE/NIF probe, cover broad filesystem/repository entry points rather than a short denylist, and assert populated nested records are distinct objects across builds while their declaration identities remain equal.
 7. Final focused Pytest passed 16 tests; Ruff and ty passed; Basedpyright reported 0 errors, warnings or notes. The high finding is closed, but one medium test-integrity finding remains open. `W08.P26.S371` must not close yet.
+8. Final remediation verification reports 17 focused tests passing; Ruff and ty pass; Basedpyright reports 0 errors, warnings or notes. No critical, high or medium finding remains open. `W08.P26.S371` may close.
 
