@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:99acf81bbb24b4d9bcf55bbfac7f11b3c59436787ea4c1c4bddc93fee59426cf'
+body_hash: 'sha256:f2acc40f90db3193cea4b9ab96acbdce955416de0dae6033f637c06730c73e3e'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -498,6 +498,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S260` - Date every current registry failure against this campaign's own lane logs and correct the publication attribution; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S261` - Diagnose the static inspection boundary failure as four application modules reaching the inspection authority since late August; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S262` - Break the embed classification failure into its three conditions and name the seven modules the refactor left unclassified; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S263` - Enrol this campaign's own footnote pointer screen in the regulatory prose parser channel it had been failing; `dev/registry/analysis/regulatory_prose_parser_channel.toml`.
 
 ### Phase `W06.P14` - declaration contract migration
 

@@ -6311,3 +6311,30 @@ drift classes. Four times now a single number has hidden three remedies.
 Not adjudicated. The load-census rulings were derivable by measurement because loading is
 observable; this ledger asks whether a Python literal encodes a value the law fixes, which is a
 reading of intent against the official source and belongs to whoever authored the modules.
+
+### this-campaign-was-one-of-the-four-undeclared-prose-parsers | high | A screen written here read design prose without enrolling in the channel, and the failure was filed as inherited for six lane runs
+
+The last undiagnosed inherited registry failure names four undeclared regulatory-prose parsers.
+One of them is `dev/registry/analysis/footnote_pointer_notes.py`, written by this campaign.
+
+The channel exists because reading AEAT prose is permitted and must be declared: the ledger's own
+ruling retains design-prose grammars rather than migrating them, on the reasoning that the prose
+keeps changing and a one-shot import would remove the ability to onboard the next design. Its
+condition is that enrolment authorises reading prose and authorises no value. A screen that
+resolves a Contenido footnote pointer to the note beneath the table is exactly what the channel
+governs, and it was added without an entry.
+
+It is now enrolled, naming the corpus and stating what the enrolment does and does not authorise,
+and the undeclared list falls from four to three. The ledger holds fifteen parsers and every
+entry carries a corpus and a reason.
+
+What is worth recording is not the fix but the six lane runs. This failure appears in every
+retained log, and each time it was counted as inherited - a word this campaign used to mean
+"present before any measurement here". It was, in part: two of the four modules date from 31
+August. But the campaign added a third on 2 September and went on filing the whole failure as
+someone else's for four more runs, because the label was applied to the failing test rather than
+to its contents.
+
+The dating technique established two findings ago would have caught it, and was applied to the
+module list only after the diagnosis. Attribution has to reach the items inside a failure, not
+just the first date the failure appeared.
