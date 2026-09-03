@@ -82,6 +82,21 @@ class ProvenanceFinding:
     outside: tuple[str, ...]
 
 
+def _child_id(item: object, *, family: str, position: int) -> str:
+    """Return a stable identifier for one citing child.
+
+    Not every family names its members: a verification predicate carries no
+    `id`, and the walk met that only once it followed the schema's nineteen
+    families rather than the eight that all happened to have one. Where there is
+    no id the child is named by its family and position, which is stable for a
+    given declaration file and is honest about being a location rather than a
+    name. Inventing an id would put a value in a finding that no declaration
+    carries.
+    """
+    identifier = getattr(item, "id", None)
+    return str(identifier) if identifier is not None else f"{family}[{position}]"
+
+
 def citing_children(
     revision: ModeloRevision,
 ) -> tuple[tuple[str, tuple[_CitedChild, ...]], ...]:
@@ -146,9 +161,9 @@ def provenance_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[Pr
 
     families = citing_children(revision)
     for kind, items in families:
-        for item in items:
+        for position, item in enumerate(items):
             legal, source = refs(item)
-            check(kind, str(item.id), legal, source)
+            check(kind, _child_id(item, family=kind, position=position), legal, source)
     seen_fields: set[tuple[str, str, str]] = set()
     for endpoint in resolved_export_endpoints(revision):
         if endpoint.field is None:

@@ -103,7 +103,7 @@ def test_casilla_citing_outside_legal_ref_is_reported_with_the_ref() -> None:
 
     (finding,) = provenance_findings(revision, modelo_id="000")
 
-    assert (finding.child_kind, finding.child_id, finding.ref_kind) == ("casilla", str(_CASILLA_01), "legal")
+    assert (finding.child_kind, finding.child_id, finding.ref_kind) == ("casillas", str(_CASILLA_01), "legal")
     assert finding.outside == (_EXTRA_LEGAL_REF,)
 
 
@@ -198,7 +198,7 @@ def test_a_deadline_window_citing_outside_its_manifest_is_reported() -> None:
     from ..analysis.provenance_consistency import screen_authority
 
     findings = screen_authority(bundled_authority(), bundled_modelo_ids())
-    windows = [item for item in findings if item.child_kind == "deadline_window"]
+    windows = [item for item in findings if item.child_kind == "deadline_windows"]
     assert windows, "no deadline window cites outside its manifest, so this proves nothing"
     for item in windows:
         assert item.outside
@@ -206,27 +206,34 @@ def test_a_deadline_window_citing_outside_its_manifest_is_reported() -> None:
 
 
 def test_the_walked_families_and_the_declared_child_kinds_agree() -> None:
-    """Every kind the vocabulary names is walked, except the derived one.
+    """Every walked family is one the schema declares.
 
-    `ProvenanceChildKind` is the vocabulary and `citing_children` is the walk,
-    and a kind added to one without the other is invisible in exactly the way
-    `deadline_window` was: named nowhere, walked nowhere, and reported as an
-    absence rather than a gap. `export_field` is the one kind deliberately not
-    walked here - it exists only after derivation and its citations are copied
-    from a template - and the screen adds it separately.
+    The walk was a hand-written list of eight names and the schema declares
+    nineteen; nine of the omitted eleven carried citations. The list is now the
+    annotation, so this asserts containment rather than equality: a family the
+    revision leaves empty is absent, and the derived export-field surface is
+    added by the screen rather than by the walk.
     """
-    import typing
 
     from cadrumo.domain.calculations.registry.authority import bundled_authority
+    from cadrumo.domain.calculations.registry.schema import SCHEMA_FAMILY, ModeloRevision
 
-    from ..analysis.provenance_consistency import ProvenanceChildKind, citing_children
+    from ..analysis.provenance_consistency import citing_children
 
-    declared = set(typing.get_args(ProvenanceChildKind.__value__))
-    assert declared, "the child-kind vocabulary is empty, so this proves nothing"
+    annotated = {
+        name
+        for name, field in ModeloRevision.model_fields.items()
+        if any(item is SCHEMA_FAMILY for item in getattr(field, "metadata", ()))
+    }
+    assert annotated, "the schema annotates no family, so this proves nothing"
 
     revision = bundled_authority().modelo("303").revisions["2025"]
     walked = {kind for kind, _ in citing_children(revision)}
-    assert walked == declared - {"export_field"}
+    # Every walked family is one the schema declares. The reverse does not hold:
+    # a family this revision leaves empty, or that carries no citations at all,
+    # is absent rather than reported empty.
+    assert walked <= annotated
+    assert len(walked) > 8, "the walk no longer covers more than the eight it once listed by hand"
 
 
 def test_both_provenance_screens_walk_the_same_families() -> None:
@@ -245,15 +252,17 @@ def test_both_provenance_screens_walk_the_same_families() -> None:
     authority = bundled_authority()
     revision = authority.modelo("303").revisions["2025"]
     walked = {kind for kind, items in citing_children(revision) if items}
-    assert "deadline_window" in walked, "the family that motivated this is not walked"
+    assert "deadline_windows" in walked, "the family that motivated this is not walked"
 
     # The mirror consumes the same walk, so a reference cited by any walked
     # family is not reported as uncited.
+    # A family may carry one reference kind and not the other, which is why the
+    # screens read them with a default rather than by attribute.
     cited = {
         str(reference)
         for _, items in citing_children(revision)
         for item in items
-        for reference in (*item.legal_refs, *item.source_refs)
+        for reference in (*getattr(item, "legal_refs", ()), *getattr(item, "source_refs", ()))
     }
     reported = {item.reference for item in uncited_manifest_references(revision, modelo_id="303")}
     assert not (cited & reported)
