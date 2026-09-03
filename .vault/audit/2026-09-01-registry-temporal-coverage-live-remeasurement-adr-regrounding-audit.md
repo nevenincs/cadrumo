@@ -11796,3 +11796,48 @@ The screen reports and does not gate. A modelo may lose a capability because the
 law removed what it served, and nothing here can tell that from an oversight -
 what it can do is stop the difference being invisible, which for modelo 322 it
 was.
+
+
+## An ordering constraint that no longer protects anything
+
+The plan's parallelization section carried a constraint discovered by
+measurement: correct the eligibility predicate before publishing any further
+export tree, because publishing first converts the rules it makes due from
+authoring into a correction of shipped filing data. It sized that at one hundred
+and eighty three fields, eighty-seven of them in designs not yet published.
+
+Both halves are now wrong, and the second one matters more.
+
+The figure is the retired one. One hundred and eighty three is one hundred and
+forty nine plus thirty four, the pair this audit established cannot be
+reproduced from any basis. The live predicate admits **forty-one**. That the
+retired number was still standing in a third place is its own small lesson: it
+was corrected in the step that owned it and in the verification criterion, and
+survived in the parallelization prose because nothing links the three.
+
+**The constraint itself is spent.** Every one of the forty-one fields sits in a
+revision whose export tree is already published - thirty-two in modelo 200's
+`2025-y-siguientes`, six across three revisions of modelo 303, one each in
+modelos 202, 222 and 353, and **none** in an unpublished design. The conversion
+the constraint existed to prevent has already happened in full, so ordering the
+predicate ahead of publication protects nothing that is still protectable.
+
+The section now says so, and points at the blocker that does still bind: the
+correction cannot land honestly until a render profile can declare a field
+eligible with its representation unsupported, because twenty-nine of the
+forty-one have no wording that settles them. A spent constraint left in place
+reads like a live one, and a reader sequencing work by it would be sequencing
+around nothing.
+
+## Widening the continuity screen's capability set would find nothing
+
+The capability-continuity screen judges five directional capabilities. Five more
+were measured against it - the completeness manifest, relations, bindings,
+parameters and continuity evolutions - and **no consecutive pair loses any of
+them anywhere in the corpus**.
+
+The zero was checked before being believed: all five attributes exist on a
+revision and carry real values, so this is a measured absence rather than a
+`getattr` returning `None` on a name that was never there. That check is worth
+naming because the same shape - a probe for an attribute that does not exist,
+reporting clean - is a defect this audit has recorded more than once.

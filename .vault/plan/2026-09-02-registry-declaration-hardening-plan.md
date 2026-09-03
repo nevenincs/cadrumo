@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:6ce9472318de8500b6eb6cac888d58669a0597be153aba659abe7afae3efe131'
+body_hash: 'sha256:38cca488af0d441fe322caae3d6d3d0d039e78757bd51cfa9650789f580789fa'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -474,6 +474,7 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S434` - Sweep for other undeclared screen derivations and record that none exists: the two flags are a CLI-only import and a screen consuming others for attributes rather than population, so import-reach is a prompt not a verdict, and give both entry types the same declarations; `dev/registry/analysis/screens.py`.
 - [x] `W04.P09.S435` - Verify the record-spelled envelope consequence in the shipped export path rather than from the screens docstring, confirming that renders_filing_envelope is set from the typed slot alone and that all eighteen typed layouts declare a product identity requirement while the thirty-one record-spelled ones cannot; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W04.P09.S437` - Compare a revisions declared capability with its predecessors in the same modelo, since nothing does: modelo 322 lost its typed envelope and product identity requirement between two consecutive filing-grade revisions and the capability screen reports each revision alone; `dev/registry/analysis`.
+- [x] `W04.P09.S438` - Retire the spent ordering constraint in the parallelization prose, which carried the retired 183 figure and sequenced the predicate ahead of publication to prevent a conversion that has already happened, since all forty-one newly eligible fields sit in revisions whose trees are published; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 
@@ -791,12 +792,20 @@ manifests and must be serialised behind one writer.
 Three ordering constraints were discovered by measurement rather than planned, and each overrides
 the Wave order above.
 
-The eligibility-predicate correction must land before any further export tree is published. Correcting
-it makes one hundred and eighty three numeric fields newly eligible for render-profile authority, and
-the coverage gate demands exact coverage of the eligible set in both directions, so each needs a
-reviewed representation rule authored in the same change. Eighty-seven of those fields sit in designs
-whose trees are not yet published, sixty of them in the corporate-tax design. Publishing such a tree
-first does not avoid the work; it converts it from authoring into a correction of shipped filing data.
+The eligibility-predicate correction was to land before any further export tree was published, so that
+the rules it makes due would be authored rather than retrofitted. **That constraint is spent, and
+re-measuring it is what showed so.** The correction admits forty-one numeric fields, not the hundred
+and eighty three this section claimed - a figure retired elsewhere in this plan and left standing here
+- and every one of the forty-one sits in a revision whose export tree is ALREADY published: thirty-two
+in modelo 200's `2025-y-siguientes`, six across three revisions of modelo 303, and one each in modelos
+202, 222 and 353. None sits in an unpublished design.
+
+So the conversion this constraint existed to prevent has already happened, in full. The work is a
+correction of shipped filing data whichever order the remaining Steps run in, and sequencing the
+predicate ahead of publication no longer protects anything. What replaces it is the structural
+blocker recorded in the verification section: the correction cannot land honestly at all until a
+render profile can declare a field eligible with its representation unsupported, because twenty-nine
+of the forty-one have no wording that settles them.
 
 The generator verb must be reachable before any generated-tree defect can be corrected. A defect whose
 root cause is proven, whose corrected value is stated in the official design, and whose authored input
