@@ -23,6 +23,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
@@ -44,7 +45,7 @@ from ..enums import (
     TitularidadRegime,
     UseType,
 )
-from ..errors import FincaAggregationError, FincaValidationError
+from ..errors import FincaAggregationError
 from ..models import Arrendamiento, Finca, FincaGasto, FincaRendimientoRecord
 from ..titularidad import Titularidad, not_declared
 
@@ -204,9 +205,7 @@ def test_sole_full_ownership_reproduces_the_manual_worked_example(engine: Engine
         aggregates = _aggregate(session)
 
     assert aggregates.ingresos_integros == MANUAL_INGRESOS_INTEGROS
-    assert aggregates.gastos_deducibles == (
-        MANUAL_REPARACION_Y_CONSERVACION + MANUAL_IBI + MANUAL_COMUNIDAD
-    )
+    assert aggregates.gastos_deducibles == (MANUAL_REPARACION_Y_CONSERVACION + MANUAL_IBI + MANUAL_COMUNIDAD)
     assert aggregates.amortizacion == MANUAL_AMORTIZACION
     assert aggregates.reduccion_arrendamiento_vivienda == MANUAL_REDUCCION
 
@@ -232,9 +231,7 @@ def test_two_owner_split_halves_every_figure_of_the_manual_example(engine: Engin
 
     half = Decimal("2")
     assert aggregates.ingresos_integros == MANUAL_INGRESOS_INTEGROS / half
-    assert aggregates.gastos_deducibles == (
-        MANUAL_REPARACION_Y_CONSERVACION + MANUAL_IBI + MANUAL_COMUNIDAD
-    ) / half
+    assert aggregates.gastos_deducibles == (MANUAL_REPARACION_Y_CONSERVACION + MANUAL_IBI + MANUAL_COMUNIDAD) / half
     assert aggregates.amortizacion == MANUAL_AMORTIZACION / half
     assert aggregates.reduccion_arrendamiento_vivienda == MANUAL_REDUCCION / half
 
@@ -295,8 +292,13 @@ def test_undeclared_titularidad_refuses_instead_of_attributing_the_whole(
 
 
 def test_incoherent_shares_refuse_rather_than_normalising() -> None:
-    """A porcentaje set summing beyond 100 is refused, not scaled back to 100."""
-    with pytest.raises(FincaValidationError) as refusal:
+    """A porcentaje set summing beyond 100 is refused, not scaled back to 100.
+
+    The refusal is raised as ``FincaValidationError`` inside the record's
+    own validator, which pydantic surfaces to the caller wrapped in a
+    ``ValidationError`` carrying the same message.
+    """
+    with pytest.raises(ValidationError) as refusal:
         Titularidad(
             regime=TitularidadRegime.PLENO_DOMINIO_Y_USUFRUCTO,
             contribuyente=TitularContribuyente.PRIMER_DECLARANTE,
@@ -344,7 +346,7 @@ def test_not_declared_and_unsupported_mixed_holding_stay_distinguishable() -> No
 
 def test_declared_percentage_carrying_more_than_two_decimals_is_refused() -> None:
     """Casillas [0063] and [0064] take two decimals; a third is not rounded away."""
-    with pytest.raises(FincaValidationError) as refusal:
+    with pytest.raises(ValidationError) as refusal:
         _pleno_dominio("33.333")
     assert "[0063]" in str(refusal.value)
 
