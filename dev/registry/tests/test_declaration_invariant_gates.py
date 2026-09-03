@@ -596,6 +596,45 @@ def test_a_derived_screen_reports_nothing_its_source_does_not(
         )
 
 
+def test_every_committed_export_tree_is_enrolled_in_its_reproduction_test(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> None:
+    """No committed tree ships without a test that would notice it drifting.
+
+    The reproduction test enrols its targets in an explicit table, which is the
+    right design - discovery by convention hides a typo - and its cost is that a
+    row can be forgotten. Two were: `m210-2026-y-siguientes` and `m303-2022`
+    shipped committed bytes with no gate, and a drift in their records would
+    have failed nothing. They were found only because a separate report counted
+    the renderable population independently.
+
+    The containment holds one way only. A target may be enrolled without a
+    committed tree - modelo 390's `2022` is, deliberately, and its failure says
+    to publish it rather than retire the row - so this asserts that every
+    committed tree is enrolled and not that every enrolled target is committed.
+    """
+    from cadrumo.core.resources.bundled_data import bundled_path
+
+    from ..pipeline._provenance_manifest import EXPORT_FRAGMENT_PROVENANCE_FILENAME
+    from .test_generated_export_trees import _GENERATED_TREES
+
+    committed = {
+        (modelo_id, str(revision_id))
+        for modelo_id in modelo_ids
+        for revision_id in authority.modelo(modelo_id).revisions
+        if (
+            bundled_path("registry", "aeat", "modelos", modelo_id, "revisions", str(revision_id), "export")
+            / EXPORT_FRAGMENT_PROVENANCE_FILENAME
+        ).is_file()
+    }
+    assert committed, "no export tree is committed, so this gate checked nothing"
+    enrolled = {(tree.modelo, tree.revision) for tree in _GENERATED_TREES}
+    assert not (committed - enrolled), (
+        "committed export trees with no reproduction target, so a drift in their records would fail "
+        f"nothing: {sorted(committed - enrolled)}"
+    )
+
+
 def test_every_package_initialiser_in_the_development_registry_tree_is_inert() -> None:
     """A package initialiser here declares a namespace and nothing else.
 
