@@ -10057,3 +10057,57 @@ than corrected in the step, because 149 may have been measured against a
 narrower population - width-17 fields, or one epoch - that is worth recovering
 before the number is replaced. Until it is recovered, 41 is the count that a
 reader can reproduce with one command.
+
+
+## A note label is scoped to its sheet, and the reader made it global
+
+The blob observed in the previous section is not a transcription defect. It is a
+parsing defect, and it had a second consequence nobody could have seen.
+
+A workbook record design prints one sheet per page and numbers each page's notes
+from one, so `Nota 1` names a different note on every sheet. Modelo 200's 2025
+design has seventy-seven sheets and defines `Nota 1` on **six** of them. The
+reader keyed definitions by label alone, and on meeting the second definition it
+did not overwrite or refuse - it appended. Every field in the design citing
+`Nota 1` therefore received all six notes concatenated: accounting-statement
+codes, identifier types, a rate filling rule and a domiciliation condition in
+one 1,290-character entry.
+
+Scoping definitions by sheet separates them cleanly - 459, 69, 305, 251, 97 and
+109 characters - and locates the rate filling rule, the one piece of genuine
+wire wording found in this whole population, on sheet **DP200014** alone. Every
+other sheet's `Nota 1` says something else entirely. The test written last
+iteration to pin that counterexample named the wrong sheet on its first draft,
+which the design-wide reader had made impossible to notice: every sheet returned
+the same merged text, so any sheet name looked right.
+
+The second consequence is the one that matters for filing evidence. One field -
+modelo 200, `DP200020B!A38`, offset 472, length 17 - cites `Nota 1` on a sheet
+that **defines no `Nota 1`**. Under the design-wide reader it resolved happily,
+against a note printed on another page, and was reported as a resolved note
+whose wording merely lacked wire vocabulary. It is now reported as
+`pointer_unresolved`, which is what it is. Resolving to another page's text is
+strictly worse than not resolving: an unresolved pointer is reported and chased,
+while a wrongly resolved one reads as evidence and would have been carried into
+a reviewed representation rule.
+
+The screen's census moved accordingly, from 39 vocabulary misses and 2
+unresolved to 38 and 3. The population of 41 fields across 5 modelos is
+unchanged, because eligibility never depended on the notes.
+
+`note_definitions` now requires its sheet rather than defaulting. A default
+would have to choose between the design-wide reading just removed and one
+arbitrary sheet, and both are wrong silently, which is the property that let
+this survive. The sheet key is not inferred: the transcription's headings were
+checked against the parser's own `field.sheet` values first, and all seventy-six
+sheets carrying fields match exactly.
+
+Two tests hold the correction. One asserts that a label defined on several
+sheets yields several DISTINCT texts - distinct wording rather than distinct
+keys, because a parser that scoped the keys while still accumulating one text
+would satisfy a key-count assertion - and that the rate rule belongs to exactly
+one sheet. The other asserts that `DP200020B` defines no `Nota 1` while other
+sheets do, which is the shape that used to resolve wrongly. Both run against the
+shipped design rather than a fixture: the merge only appears where a label
+repeats, and constructing that would prove the parser handles a case the corpus
+is the reason to care about.
