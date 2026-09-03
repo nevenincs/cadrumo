@@ -284,6 +284,29 @@ def test_slice3_routes_and_actions_fail_closed_without_declared_dependencies() -
             evidence_action=_link_action(),
             evidence_items=(),
         )
+    with pytest.raises(ValueError, match="canonical command"):
+        LedgerWorkspaceController(
+            TuiScreenContextV1(destination="workbench.ledger"),
+            _projection(),
+            review_action=_review_action(),
+            link_action=_evidence_action(),
+            link_submitter=_LinkDoor(),
+        )
+
+
+@pytest.mark.asyncio
+async def test_link_door_is_not_called_for_a_pair_absent_from_visible_projection() -> None:
+    door = _LinkDoor()
+    controller = LedgerWorkspaceController(
+        TuiScreenContextV1(destination="workbench.ledger"),
+        _reconciled_projection(),
+        review_action=_review_action(),
+        link_action=_link_action(),
+        link_submitter=door,
+    )
+    with pytest.raises(ValueError, match="absent from the visible reconciliation projection"):
+        await controller.submit_link(_TX, "f" * 64)
+    assert not door.calls
 
 
 @pytest.mark.asyncio
