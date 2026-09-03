@@ -207,15 +207,22 @@ def revision_pressure(
 
     Census screens are excluded, for the reason their declaration exists: their
     rows are transitions examined, and counting them would rank a revision by how
-    many fields it has.
+    many fields it has. Screens declaring a source they derive from are excluded
+    too: they re-describe that source's findings, so counting both makes one
+    condition look like two, and modelo 200's leading revision was reported with
+    nine conditions where seven are independent.
     """
     from .screens import CORPUS_SCREENS, SCREENS
 
     census = {entry.name for entry in (*SCREENS, *CORPUS_SCREENS) if entry.entry_returns == "census"}
+    # A screen built on another re-describes its findings, so counting both
+    # reports a revision as carrying two conditions where it has one. Measured:
+    # the grounding screen returns the same 41 cells the pointer screen does.
+    derived = {entry.name for entry in SCREENS if entry.derives_from is not None}
     filing = filing_grade_revisions(authority, modelo_ids)
     carried: dict[tuple[str, str], set[str]] = collections.defaultdict(set)
     for name, findings in screen_findings(authority, modelo_ids):
-        if name in census:
+        if name in census or name in derived:
             continue
         for finding in findings:
             modelo = getattr(finding, "modelo", None)

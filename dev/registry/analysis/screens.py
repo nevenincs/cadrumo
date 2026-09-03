@@ -88,6 +88,20 @@ class ScreenEntry:
     #: set - so it is an author's statement, and its worth is that a consumer
     #: reads it instead of inferring one.
     entry_returns: Literal["findings", "census"] = "findings"
+    #: The screen this one is built ON, when it re-describes another's findings
+    #: rather than measuring its own population.
+    #:
+    #: The grounding screen calls the pointer screen and emits one finding per
+    #: field it returns, so their populations are identical by construction -
+    #: measured, 41 findings over the same 41 cells. A consumer counting
+    #: distinct conditions per revision therefore counts that pair twice and
+    #: reports a revision as more contradictory than it is.
+    #:
+    #: Unlike the entry shape above, half of this IS verifiable: a derived
+    #: screen's population must be contained in its source's, and a gate asserts
+    #: that much. What no test can decide is whether a screen that happens to
+    #: agree today was actually built on the other.
+    derives_from: str | None = None
 
 
 def _divergent_transitions(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> Sequence[object]:
@@ -239,6 +253,7 @@ SCREENS: tuple[ScreenEntry, ...] = (
         "rule_grounding_coverage",
         _fields_without_grounding,
         "fields needing a reviewed rule for which no official wording was located at all",
+        derives_from="footnote_only_wire_facts",
     ),
 )
 

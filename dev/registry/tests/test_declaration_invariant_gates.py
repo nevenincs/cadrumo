@@ -561,6 +561,41 @@ def test_a_runner_projection_never_reports_a_kind_its_screen_does_not_emit(
     assert not invented, f"runner entries reporting a kind their screen does not emit: {invented}"
 
 
+def test_a_derived_screen_reports_nothing_its_source_does_not(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> None:
+    """A screen declaring a source may re-describe its findings, not exceed them.
+
+    The grounding screen is built on the pointer screen: it calls it and emits
+    one finding per field it returns. That makes its population a re-description
+    rather than independent evidence, which matters to any consumer counting
+    distinct conditions - the revision-pressure ranking reported modelo 200 with
+    nine conditions where seven are independent, until the derivation was
+    declared.
+
+    Half the declaration is verifiable and this is it: whatever the derived
+    screen reports must name a revision its source also reports. What no test
+    can decide is whether a screen that happens to agree today was actually
+    built on the other, which is why the declaration is an author's and not
+    inferred from this containment holding.
+    """
+    from ..analysis.screens import SCREENS, screen_findings
+
+    sources = {entry.name: entry.derives_from for entry in SCREENS if entry.derives_from}
+    assert sources, "no screen declares a source, so this gate checked nothing"
+
+    populations = {
+        name: {(getattr(f, "modelo", None), str(getattr(f, "revision", ""))) for f in findings}
+        for name, findings in screen_findings(authority, modelo_ids)
+    }
+    for derived, source in sources.items():
+        assert source in populations, f"{derived} derives from {source!r}, which is not an enrolled screen"
+        assert populations[derived] <= populations[source], (
+            f"{derived} reports revisions its declared source {source} does not: "
+            f"{sorted(populations[derived] - populations[source])}"
+        )
+
+
 def test_every_package_initialiser_in_the_development_registry_tree_is_inert() -> None:
     """A package initialiser here declares a namespace and nothing else.
 
