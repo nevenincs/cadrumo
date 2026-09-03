@@ -110,6 +110,7 @@ _TRANSLATIONS: Final[dict[OutputLanguage, dict[str, str]]] = {
         "Profile locked": "Perfil bloqueado",
         "Active local session": "Sesión local activa",
         "Session expired": "Sesión caducada",
+        "Account": "Cuenta",
         "Available": "Disponible",
         "Locked — unlock the selected profile to view this information": (
             "Bloqueado — desbloquee el perfil para ver esta información"
@@ -165,6 +166,11 @@ _TRANSLATIONS: Final[dict[OutputLanguage, dict[str, str]]] = {
         "Agenda": "Agenda",
         "AEAT evidence": "Evidencia AEAT",
         "need review": "requieren revisión",
+        "entries": "asientos",
+        "unclassified": "sin clasificar",
+        "missing evidence": "sin justificante",
+        "Local declaration status": "Estado local de la declaración",
+        "Due": "Vence",
         "requiring attention": "requieren atención",
         "no suggested actions": "sin acciones sugeridas",
         "no resumable declarations": "sin declaraciones para continuar",
@@ -187,6 +193,7 @@ _TRANSLATIONS: Final[dict[OutputLanguage, dict[str, str]]] = {
         "Profile locked": "Perfil bloquejat",
         "Active local session": "Sessió local activa",
         "Session expired": "Sessió caducada",
+        "Account": "Compte",
         "Available": "Disponible",
         "Locked — unlock the selected profile to view this information": (
             "Bloquejat — desbloquegeu el perfil per veure aquesta informació"
@@ -241,6 +248,11 @@ _TRANSLATIONS: Final[dict[OutputLanguage, dict[str, str]]] = {
         "Agenda": "Agenda",
         "AEAT evidence": "Evidència AEAT",
         "need review": "requereixen revisió",
+        "entries": "assentaments",
+        "unclassified": "sense classificar",
+        "missing evidence": "sense justificant",
+        "Local declaration status": "Estat local de la declaració",
+        "Due": "Venç",
         "requiring attention": "requereixen atenció",
         "no suggested actions": "sense accions suggerides",
         "no resumable declarations": "sense declaracions per continuar",
@@ -263,6 +275,7 @@ _TRANSLATIONS: Final[dict[OutputLanguage, dict[str, str]]] = {
         "Profile locked": "Zárolt profil",
         "Active local session": "Aktív helyi munkamenet",
         "Session expired": "Lejárt munkamenet",
+        "Account": "Fiók",
         "Available": "Elérhető",
         "Locked — unlock the selected profile to view this information": "Zárolt — az adatokhoz oldja fel a profilt",
         "Stale — the last local snapshot needs refresh": "Elavult — frissítse az utolsó helyi pillanatképet",
@@ -316,6 +329,11 @@ _TRANSLATIONS: Final[dict[OutputLanguage, dict[str, str]]] = {
         "Agenda": "Határidők",
         "AEAT evidence": "AEAT-bizonyíték",
         "need review": "felülvizsgálandó",
+        "entries": "tétel",
+        "unclassified": "besorolatlan",
+        "missing evidence": "hiányzó bizonylat",
+        "Local declaration status": "Helyi bevallási állapot",
+        "Due": "Határidő",
         "requiring attention": "figyelmet igényel",
         "no suggested actions": "nincs javasolt művelet",
         "no resumable declarations": "nincs folytatható bevallás",
@@ -343,7 +361,7 @@ def _text(locale: OutputLanguage, value: str) -> str:
 def _state_copy(state: HomeZoneState, locale: OutputLanguage, *, empty_copy: str | None = None) -> str:
     label = _text(locale, _AVAILABILITY_COPY[state.availability])
     if state.availability is HomeAvailability.STALE and state.observed_at is not None:
-        observed = state.observed_at.strftime("%d %b %Y %H:%M %Z")
+        observed = state.observed_at.strftime("%d/%m/%Y %H:%M UTC")
         return f"{label}; {_text(locale, 'last observed')} {observed}"
     if state.availability is HomeAvailability.AVAILABLE and empty_copy is not None:
         return f"{label} — {_text(locale, empty_copy)}"
