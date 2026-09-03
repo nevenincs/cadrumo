@@ -11921,3 +11921,40 @@ That is the same shape as the truncation rule this audit recorded early - a
 measurement piped through `head` or `tail` is not a measurement - reached from a
 different direction, and it cost nothing this time only because the real summary
 arrived a minute later.
+
+
+## The "single repair" is three repairs, and two of them are not republication
+
+The parallelization constraint attributes most of this directory's failures to one
+repair: republishing generated trees. Reading the assertions rather than the
+count, the twenty-six tree failures are three classes with three different
+remedies, and only the first is republication.
+
+| class | count | remedy |
+| ----- | ----- | ------ |
+| manifest-only staleness: records reproduce byte-for-byte and only `_generation.provenance.json` differs | 23 | republish |
+| record drift: `0002-record-m347-declarado.toml` differs as well | 2 | **must not** republish |
+| enrolled, renders, never committed | 1 | publish, which is not the same act |
+
+**The twenty-three are the constraint's case and it is sound for them.** A
+generator refactor invalidates every manifest at once, which is why the
+disposition ledger deliberately declines to record them: twenty-three rows saying
+"a refactor moved the generator" would be churn rather than explanation.
+
+**The two are modelo 347's revisions and republishing them would ship worse
+bytes.** They are exactly the two rows the disposition ledger does carry, whose
+reason says the shipped declarado record repeats over binding rows and a fresh
+render would not - so the committed bytes are correct and the current inputs are
+not. A repair that treated all twenty-six alike would overwrite them.
+
+**The one is modelo 390's `2022`.** Its assertion says it plainly: enrolled with
+no committed export tree though the fresh render succeeded, and it names the
+remedy - publish through the publication authority, do not retire the row. That
+is an independent confirmation, from a failing test rather than from a
+filesystem walk, of the unpublished renderable trees measured in the previous
+section.
+
+So the constraint's proportion is right and its unit is wrong. Twenty-three of
+thirty-six failures share one repair; two share a refusal to apply it; one needs
+a different verb. Naming them apart matters because the ledger already exists to
+stop exactly the mistake the merged figure invites.

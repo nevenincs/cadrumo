@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:70b3e9a1b7840802bcc11417cf6846fe44bf46416fa0ca8a6774eaf59f2c879d'
+body_hash: 'sha256:c03bfba55c8c09c6bf648a9895ef39dcd402da847b803eb029af896214136626'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -477,6 +477,7 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S438` - Retire the spent ordering constraint in the parallelization prose, which carried the retired 183 figure and sequenced the predicate ahead of publication to prevent a conversion that has already happened, since all forty-one newly eligible fields sit in revisions whose trees are published; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W04.P09.S439` - Re-measure all three parallelization constraints: the generator verb is registered and its lifted status holds, the conformance vector tuple is still empty so that constraint binds, and the unpublished renderable trees are three not two in modelos 308, 360 and 390; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W04.P09.S440` - Re-measure the registry directorys failure figures: 1,152 passing and 36 failing with 30 in the four generated-tree modules, against the twenty-seven of thirty-five written in the constraint, and confirm the single conformance failure the third constraint rests on; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W04.P09.S441` - Split the single repair the constraint names into the three it actually is: twenty-three manifest-only trees to republish, two modelo 347 revisions the disposition ledger forbids republishing, and modelo 390 2022 which needs publication instead; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 
@@ -823,7 +824,15 @@ machinery, only somebody with the scope to run it. Re-measured on 2026-09-03, th
 1,152 passing and **36 failing** tests in twelve minutes, of which **30 sit in the four
 generated-tree modules**: twenty-six in the tree comparison itself and the rest across its
 publication, CLI and envelope proofs. The figures written here were twenty-seven of thirty-five, and
-the proportion they expressed still holds while both numbers have moved. It gates every correction
+the proportion they expressed still holds while both numbers have moved.
+
+The unit, however, was wrong. The twenty-six tree-comparison failures are three classes with three
+remedies: **twenty-three** differ only in the generation manifest and are the republication this
+constraint describes; **two** are modelo 347's revisions, whose committed records are correct and
+whose inputs are not, carried in the disposition ledger precisely so republication does not overwrite
+them; and **one** is modelo 390's `2022`, enrolled and rendering with no committed tree at all, which
+needs publication rather than republication. A repair applied to all twenty-six alike would ship the
+two that the ledger exists to protect. It gates every correction
 Step touching a generated modelo, whatever Wave the Step sits in, and it also gates the enrolled
 trees that render successfully and have never been committed - **three** of them on re-measurement,
 not the two written here: modelo 308's `2019-y-siguientes`, modelo 360's `2010-y-siguientes` and
