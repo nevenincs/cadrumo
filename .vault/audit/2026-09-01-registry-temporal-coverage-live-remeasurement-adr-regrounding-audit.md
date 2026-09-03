@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:77cd5ea72083dcf3ff357967f4c167bfba4f3883a147f5b8cfd49e5231602526'
+body_hash: 'sha256:7f8b01427817bd479f7289928610e81ab2dd27b2072edd571af4cb326cc305bb'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7621,3 +7621,39 @@ The remedy is not this work's to apply: the module belongs to another campaign
 and the shape - recompiling an authority inside a comparison against itself -
 needs its owner. What this plan owes is the attribution, and it now has one that
 does not depend on a quiet machine.
+
+### the-recompile-shape-is-in-three-sibling-modules-and-a-collision-gate-caught-a-new-name | high | One anti-pattern written three times, and a gate red for exactly the reason it exists
+
+Sweeping the development tree for the shape behind the lane's fourteen errors -
+a comparison whose operand is a freshly compiled authority - returns eleven
+sites. Eight are tests comparing a value against a freshly loaded file, which is
+what those assertions are for. Three are production analysis modules, and they
+are the same function written three times: `promoted_candidate_ids` in the
+blocker, same-template and unique adjudication modules, each comparing its
+authority against a fresh compile, each then calling the same verification, each
+returning the same frozenset comprehension over its own rows. One concept, three
+spellings, three separate recompiles - and the cost of one of them is the
+fourteen errors already attributed.
+
+They sit outside this work's ownership, so the finding is recorded rather than
+repaired. What is worth naming is that the campaign's subject and the lane's
+slowest failure turn out to be the same defect seen from two ends: the
+restatement is why the work is done three times, and doing it inside a
+comparison is why it is done at all.
+
+The sweep also caught a live gate red. The public-name collision census reports
+a same-layer collision the dispositions file did not carry -
+`availability_label`, defined in both the declarations and ledger TUI
+controllers - so the gate failed exactly as designed on a name that arrived
+through somebody else's commit. It is adjudicated `distinct_by_design`: the two
+take unrelated availability enums, read different locale catalogues, are
+exported by their own modules and imported by neither, and the shared name is
+the convention that lets a reader move between sibling workspaces. Collapsing
+them would mean inventing a union over two unrelated enums for a function with
+no shared caller. Five tests pass, exit 0.
+
+One correction to my own reading. The dispositions file appeared to hold zero
+rows, which would have meant the gate had been emptied; it holds them under
+single-bracket table headers rather than the double-bracket form I grepped for.
+The gate's own failure message showed a populated set and corrected me before
+the mistake reached this record.
