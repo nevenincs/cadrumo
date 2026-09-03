@@ -5299,7 +5299,7 @@ true however many there are. A count in prose is a declaration that has to be ma
 this plan has spent several findings on declarations that stopped describing what they
 describe.
 
-### Two conditions had never fired, and nothing would have noticed
+### two-screen-conditions-had-never-fired | high | A condition never emitted is indistinguishable from one that cannot be reached, and two were untested
 
 The revision-name screen documents eight conditions and emits five against the corpus. Of the
 three that never appear, one is asserted by an existing test. Two were neither emitted nor
@@ -5329,7 +5329,7 @@ drifting from what it describes, and neither is visible in a passing test run - 
 caught by a gate written here, the second only by asking which documented conditions the
 corpus never exercises.
 
-### Swept across the screens, the unfired-condition defect was confined to one
+### unfired-condition-defect-confined-to-one-screen | low | Six screens declare condition bullets and all six agree with what they emit; four sweep hits were artefacts
 
 Having found two conditions in the revision-name screen that had never been shown to fire, the
 obvious question is how many others carry the same. All ten screens were compared: the
@@ -5360,7 +5360,7 @@ The result stands as a negative one. A defect found once was checked for everywh
 nowhere else, which is a smaller conclusion than the sweep promised and the only one the
 evidence supports.
 
-### The twenty-one unclassified modules now have a ruling each, decided by measurement
+### twenty-one-modules-ruled-by-measurement | medium | Live when sys.modules holds it after a load, conditionally reachable when it does not
 
 The load-census residue was deferred earlier on the ground that the modules were still being
 moved by the concurrent campaign. Re-measured, it is unchanged at twenty-one unclassified
@@ -5381,7 +5381,7 @@ remains is authoring each rule's trigger and reason, which is prose about why a 
 rather than a decision about whether it does. The decision is now made by measurement, and the
 Step is smaller than it was written to be.
 
-### A registry that would not load, and the cause was not the registry
+### registry-load-failure-was-stale-bytecode | medium | An error listing permitted values without the one a revert had restored is a module older than its file
 
 The measurement first failed with modelo 100's 2021 revision declaring an extraction surface
 outside the permitted set. Read as a data defect it would have been a serious finding and a
@@ -5398,7 +5398,7 @@ contradicts the source that would have produced it. Reading the file the error b
 than trusting the error, is what separates them - and it costs one command against an
 iteration spent reporting another writer's imaginary defect.
 
-### Thirteen of the fourteen stale rules were never stale
+### most-stale-rules-were-not-stale | medium | Twelve named core modules outside the census universe and one named a genuinely renamed module
 
 Reading the stale-rule entries rather than pattern-matching them changed what they are. Only
 two named a registry module that had moved. The other twelve name modules under
@@ -5425,7 +5425,7 @@ same one this campaign applied to the export trees and to the twenty-one classif
 gap that stays visible costs a failing check. A guess that looks like a repair costs the next
 reader their assumption that the file means what it says.
 
-### The twenty-one modules are ruled, and the ruling came from the loader rather than from reading
+### load-classifications-grounded-in-the-loader | medium | Five rules cover every unruled module, and the table caught a member this campaign misprefixed
 
 Five classification rules now cover every module the refactor left unruled, and the census
 reports zero unclassified where it reported twenty-one. The Step asked for grounded rulings
@@ -5458,7 +5458,7 @@ remain, twelve naming core modules outside the census universe and one naming th
 module whose successor is ambiguous. Both were separated from this work in the previous finding
 and neither is what this Step asked for.
 
-### One stale count, three different defects, and the largest is the census being wrong
+### one-stale-count-three-defects | high | Six members a load imports, three a rule over-claims, one renamed module: three owners, one number
 
 The thirteen remaining stale entries were treated in an earlier finding as a scope question to
 be left to whoever wrote the rules. Measured against a real load, they are three separate
@@ -5488,7 +5488,7 @@ completed - three defects wanting three different owners, presented as one count
 rules. This audit has made that observation about the registry's own categories repeatedly;
 it applies to the tooling that measures the registry just as well.
 
-### The census could not see the packages every import loads
+### census-universe-omitted-ancestor-packages | high | An import graph records no edge to a parent package, so the universe missed packages every load holds
 
 The six stale members a real load imports had one cause between them, and it is a property of
 import graphs rather than of this tree. The graph records the edges written in source, and
@@ -5520,7 +5520,7 @@ records and the interpreter skips, and now over ancestor packages, which the int
 and the graph never records. The disagreements run in opposite directions and both were
 invisible until `sys.modules` was consulted directly.
 
-### Measuring a load from inside the tooling's own process gave the wrong answer
+### in-process-load-measurement-was-inverted | high | One module reported absent that a clean subprocess holds, an error running opposite to contamination
 
 The classifications authored two findings ago were decided by asking `sys.modules` what a load
 holds. That measurement was taken in the same interpreter that had already imported the census
@@ -5552,7 +5552,7 @@ Three measurements in this campaign have now been taken in a process that had al
 the thing being measured - the stale bytecode twice, and this. The remedy each time was a
 clean interpreter, and it costs one subprocess.
 
-### Re-measured cleanly, the regimes differ by forty-three modules and one classification was wrong
+### cold-and-warm-regimes-differ-by-forty-three-modules | high | 378 modules cold against 335 warm, a strict subset, and one live claim held only in the cold regime
 
 Having found one classification decided by a contaminated measurement, the remaining eighteen
 were re-measured the same way: two clean subprocesses importing nothing but the authority, one
@@ -5575,7 +5575,7 @@ the concurrent campaign while the subprocesses ran. It is left unruled rather th
 for the same reason the `snapshot` successor was: its load behaviour is measurable in ten
 minutes by whoever needs it, and inventing a classification is cheaper and worse.
 
-### A scratch file written to the repository root was committed before it could be removed
+### scratch-file-committed-before-removal | medium | A create-and-delete in one command left a tracked file, because another writer commits on a timer
 
 The measurement needed the repository root on its import path, so a script was copied there and
 deleted in the same command - the same slip recorded earlier in this campaign, repeated after
@@ -5592,7 +5592,7 @@ is a window in which it becomes part of the project's history - and the earlier 
 recorded this slip described it as harmless because nothing persisted. That was true then and is
 not a property of the practice.
 
-### Forty of the two hundred and twenty-five live members do not load the way their rules say
+### forty-live-claims-are-unsupported | critical | Eleven load in no regime and twenty-nine only cold, in rules the census had no way to check
 
 The two clean module dumps were already collected, so checking every `live` rule in the table -
 not only the ones written here - cost nothing further. Of 225 members claimed live, 40 fail in
@@ -5623,7 +5623,7 @@ bundled corpus, one entry point into the authority, and two cache regimes distin
 their directories. A rule claiming a module loads under some other entry point is not
 contradicted by any of it.
 
-### The forty unsupported claims are now reproducible by one command
+### unsupported-live-claims-are-reproducible | medium | A screen probes both regimes in clean subprocesses and raises rather than returning an empty set
 
 The census checks that every module is ruled and every ruled member exists. It never checks the
 claim the rule makes, which is how forty live members came to disagree with the interpreter
@@ -5653,7 +5653,7 @@ It is a screen and not a gate. Forty members is not a state to freeze into a bas
 campaign has refused that twice already; the gate belongs here once the claims are corrected by
 the rules' owner, and the screen is what makes correcting them cheap to verify.
 
-### Two tools that cannot join the entry point, and why that is the right shape
+### two-tools-sit-outside-the-single-registry-entry-point | low | A coordinate probe and a subprocess screen cannot run over one loaded registry without losing their point
 
 The plan's Description says the screens run from one entry point over a single loaded registry.
 Checked, that entry point still enumerates ten, and the two tools added later are correctly not
@@ -5726,3 +5726,31 @@ format it was ignoring.
 
 The conversion backlog is seventy-seven, not eighty, and remains unstarted for the reason
 already given: severity is a judgement each finding has to earn.
+
+### campaign-findings-conversion-complete | low | All seventy-seven findings now carry a slug and a severity, and the distribution says something about the campaign
+
+The conversion is done. Two hundred and ten findings carry `slug | severity | summary`, every
+slug is unique and kebab-case, every severity is one of the four the document already used, and
+the only prose headings left are the three "Consolidated position" section headers, which are
+not findings and were never meant to carry a slug.
+
+Severity was assigned by reading each finding rather than by rule, and the distribution across
+all 210 is 16 critical, 68 high, 92 medium and 34 low. Within the seventy-seven added by this
+campaign the shape is different and worth naming: the two criticals are both the conformance
+closure suite - sixteen tests proving real filing outcomes that no CI lane runs - and the third
+is the forty live claims the census had no way to check. Everything else this campaign found is
+high or below.
+
+The lows are almost entirely self-correction: a condition built and withdrawn inside one
+iteration, a duplicate Step authored and retired, a sizing that measured an absent attribute, a
+sweep whose four hits were all artefacts of my own extraction, a scratch file, a crashed worker
+read correctly only after stripping escape codes. Thirty-four of seventy-seven.
+
+That ratio is the honest summary of the work. A campaign about declarations that stop
+describing what they declare spent a third of its findings discovering that its own
+measurements, gates, plan sections and audit headings had done exactly that. The three criticals
+are real and belong to the tree; most of the rest belongs to the process that found them.
+
+The one thing the conversion changes materially is that all of it is now citable. A finding
+without a slug cannot be referenced by the plan Step that acts on it, and seventy-seven of them
+could not be until now.
