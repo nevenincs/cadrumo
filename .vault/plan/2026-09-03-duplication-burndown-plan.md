@@ -11,7 +11,7 @@ related:
   - '[[2026-09-03-duplication-burndown-honest-clone-closure-research]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:c4430a4c21666fd1c7c5d88d236f7cc2890233c3aacb740cca9cef60682d759d'
+body_hash: 'sha256:44385672d7a75639df1ed2efce350ceeea6acb7d54e42b229691a3ba9aa95870'
 ---
 
 <!-- RETIRED: W05, W06, W07, P02, P03, P04, P06, P09, P12, P14, P16, P17, P19, P20, P21, P22, P23, P24, P25, P26, P27, S03, S06, S07 -->
@@ -35,7 +35,7 @@ Recover the deleted disposition registry and audit tests from history, then reco
 - [x] `W01.P01.S01` - Recover the historical clone dispositions from the last trustworthy revision without accepting stale locators or counts; `dev/audit/duplication_dispositions.toml`.
 - [x] `W01.P01.S02` - Restore and run the deleted duplication instrument tests against the current typed runner; `src/cadrumo/tests/test_dev_audit_report.py`.
 - [x] `W01.P01.S04` - Recover and reconcile one disposition for every currently observed clone group without carrying stale groups or muting findings; `dev/audit/duplication_dispositions.toml`.
-- [ ] `W01.P01.S05` - Prove disposition parsing and live-clone reconciliation preserve unavailable and changed-scan failures as non-green evidence; `dev/audit/tests`.
+- [x] `W01.P01.S05` - Prove disposition parsing and live-clone reconciliation preserve unavailable and changed-scan failures as non-green evidence; `dev/audit/tests`.
 
 ## Wave `W02` - reduce CLI declaration clones
 
