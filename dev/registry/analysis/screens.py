@@ -23,6 +23,7 @@ import sys
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Final
 
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
@@ -46,6 +47,10 @@ from .wire_type_compatibility import screen_authority as wire_type_screen
 
 #: A newline, named so the entry-point search below carries no escape.
 LINE_BREAK = chr(10)
+
+#: Named once per module rather than repeated at each read site, where a typo
+#: would be a silent decode change rather than an error.
+_UTF_8: Final[str] = "utf-8"
 
 __all__ = [
     "CORPUS_SCREENS",
@@ -273,7 +278,7 @@ def screen_module_names() -> frozenset[str]:
         path.stem
         for path in analysis.glob("*.py")
         if path.name != Path(__file__).name
-        and any(f"{LINE_BREAK}def {entry}(" in path.read_text(encoding="utf-8") for entry in SCREEN_ENTRY_POINTS)
+        and any(f"{LINE_BREAK}def {entry}(" in path.read_text(encoding=_UTF_8) for entry in SCREEN_ENTRY_POINTS)
     )
 
 

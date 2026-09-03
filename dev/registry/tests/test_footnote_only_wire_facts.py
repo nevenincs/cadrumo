@@ -9,6 +9,8 @@ carries a live counterexample, because it was very nearly reported as one.
 
 from __future__ import annotations
 
+from typing import Final
+
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
@@ -16,6 +18,10 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from ..analysis.footnote_only_wire_facts import KINDS, revision_findings, would_become_eligible
 from ..analysis.footnote_pointer_notes import note_definitions
 from ..pipeline._render_profile import project_render_profile_eligibility
+
+#: Named once per module rather than repeated at each read site, where a typo
+#: would be a silent decode change rather than an error.
+_UTF_8: Final[str] = "utf-8"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -103,7 +109,7 @@ def test_a_vocabulary_miss_does_not_mean_the_note_states_no_wire_fact(
 
     inputs = revision_render_inputs(authority, modelo="200", revision="2025-y-siguientes")
     corpus_path = bundled_path() / authority.catalogues.sources[inputs.joined.source.source_ref].corpus_path
-    extracted = design_transcription_path(corpus_path).read_text(encoding="utf-8")
+    extracted = design_transcription_path(corpus_path).read_text(encoding=_UTF_8)
     # The counterexample belongs to the sheet that prints it. This design
     # defines "Nota 1" on six sheets and only DP200014's carries the rate
     # filling rule, which is exactly why a design-wide lookup was wrong.

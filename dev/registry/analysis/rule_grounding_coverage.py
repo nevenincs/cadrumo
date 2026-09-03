@@ -43,6 +43,7 @@ from __future__ import annotations
 import collections
 import sys
 from dataclasses import dataclass
+from typing import Final
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
@@ -51,6 +52,10 @@ from ..pipeline.render_check import revision_render_inputs
 from .footnote_only_wire_facts import revision_findings as fields_needing_rules
 from .footnote_pointer_notes import design_transcription_path, sheet_unnumbered_notes
 from .type_convention_notes import revision_findings as type_conventions
+
+#: Named once per module rather than repeated at each read site, where a typo
+#: would be a silent decode change rather than an error.
+_UTF_8: Final[str] = "utf-8"
 
 __all__ = [
     "KINDS",
@@ -104,7 +109,7 @@ def revision_findings(
     corpus_path = bundled_path() / authority.catalogues.sources[inputs.joined.source.source_ref].corpus_path
     transcription = design_transcription_path(corpus_path)
     design_notes = (
-        sheet_unnumbered_notes(transcription.read_text(encoding="utf-8")) if transcription.is_file() else {}
+        sheet_unnumbered_notes(transcription.read_text(encoding=_UTF_8)) if transcription.is_file() else {}
     )
 
     return classify_grounding(

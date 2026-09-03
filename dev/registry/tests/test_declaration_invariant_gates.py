@@ -280,10 +280,13 @@ def test_every_enrolled_screen_runs_over_the_whole_corpus(
     a contract. What is asserted is that each screen completes and describes
     what it counted.
     """
-    from ..analysis.screens import SCREENS, run_screens
+    from ..analysis.screens import CORPUS_SCREENS, SCREENS, run_corpus_screens, run_screens
 
-    results = run_screens(authority, modelo_ids)
-    assert len(results) == len(SCREENS)
+    # Both runners. Asserting against the authority table alone left the corpus
+    # screens unexercised by the gate whose whole purpose is that a screen
+    # crashing on one input should not wait for someone to run it by hand.
+    results = (*run_screens(authority, modelo_ids), *run_corpus_screens())
+    assert len(results) == len(SCREENS) + len(CORPUS_SCREENS)
     for name, count, meaning in results:
         assert count >= 0, f"{name} returned a negative count"
         assert meaning.strip(), f"{name} does not say what its count means"
@@ -390,7 +393,7 @@ def test_running_every_screen_leaves_the_shipped_registry_untouched(
 
     from cadrumo.core.resources.bundled_data import bundled_path
 
-    from ..analysis.screens import run_screens
+    from ..analysis.screens import run_corpus_screens, run_screens
 
     def fingerprint() -> dict[str, tuple[int, int]]:
         root = bundled_path("registry")
@@ -405,6 +408,10 @@ def test_running_every_screen_leaves_the_shipped_registry_untouched(
     before = fingerprint()
     assert before, "the shipped registry must contain files to fingerprint"
     run_screens(authority, modelo_ids)
+    # The corpus screens read the same shipped tree - the design transcriptions
+    # live inside it - so leaving them out of this fingerprint left the half of
+    # the suite that touches those files unchecked for writes.
+    run_corpus_screens()
     after = fingerprint()
 
     changed = sorted(path for path in before if path in after and before[path] != after[path])

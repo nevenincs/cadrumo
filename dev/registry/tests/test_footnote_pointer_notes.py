@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pathlib
+from typing import Final
 
 import pytest
 
@@ -11,6 +12,10 @@ from ..analysis.footnote_pointer_notes import (
     note_definitions,
     resolve_pointer_notes,
 )
+
+#: Named once per module rather than repeated at each read site, where a typo
+#: would be a silent decode change rather than an error.
+_UTF_8: Final[str] = "utf-8"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -28,7 +33,7 @@ _SHEET = "35301"
 
 @pytest.fixture(scope="module")
 def definitions() -> dict[str, str]:
-    return note_definitions(_DESIGN.read_text(encoding="utf-8"), sheet=_SHEET)
+    return note_definitions(_DESIGN.read_text(encoding=_UTF_8), sheet=_SHEET)
 
 
 def test_the_note_behind_the_known_defect_states_applicability_and_no_wire_fact(
@@ -152,7 +157,7 @@ def test_one_label_defined_on_several_sheets_stays_several_notes() -> None:
         pathlib.Path("src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_200/files")
         / "01-200-ejercicio-2025-10-9-mb-xls.xls.extracted.md"
     )
-    by_sheet = sheet_note_definitions(design.read_text(encoding="utf-8"))
+    by_sheet = sheet_note_definitions(design.read_text(encoding=_UTF_8))
     carrying = {sheet: labels["nota 1"] for sheet, labels in by_sheet.items() if "nota 1" in labels}
     assert len(carrying) > 1, "this design no longer repeats a note label, so pick another that does"
     # Distinct wording, not merely distinct keys: a parser that scoped the keys
@@ -177,7 +182,7 @@ def test_a_pointer_naming_a_note_its_own_sheet_omits_stays_unresolved() -> None:
         pathlib.Path("src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_200/files")
         / "01-200-ejercicio-2025-10-9-mb-xls.xls.extracted.md"
     )
-    by_sheet = sheet_note_definitions(design.read_text(encoding="utf-8"))
+    by_sheet = sheet_note_definitions(design.read_text(encoding=_UTF_8))
     assert "nota 1" not in by_sheet.get("DP200020B", {})
     assert any("nota 1" in labels for labels in by_sheet.values())
 
@@ -233,7 +238,7 @@ def test_no_unnumbered_note_in_the_corpus_carries_another_note_marker() -> None:
 
     read = 0
     for path in transcription_paths():
-        for text in sheet_unnumbered_notes(path.read_text(encoding="utf-8")).values():
+        for text in sheet_unnumbered_notes(path.read_text(encoding=_UTF_8)).values():
             read += 1
             assert not re.search(r"nota", text, re.IGNORECASE), f"{path.name}: {text!r}"
     assert read, "no unnumbered note was read, so this checked nothing"

@@ -9,10 +9,15 @@ distinguishes its unnumbered notes by sheet.
 from __future__ import annotations
 
 import pathlib
+from typing import Final
 
 import pytest
 
 from ..analysis.unnumbered_note_scope import KINDS, design_finding, screen_corpus
+
+#: Named once per module rather than repeated at each read site, where a typo
+#: would be a silent decode change rather than an error.
+_UTF_8: Final[str] = "utf-8"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -31,7 +36,7 @@ def _design(tmp_path: pathlib.Path, name: str, *lines: str) -> pathlib.Path:
     directory = tmp_path / "modelo_999" / "files"
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / f"{name}.xlsx.extracted.md"
-    path.write_text(LINE_BREAK.join(lines) + LINE_BREAK, encoding="utf-8")
+    path.write_text(LINE_BREAK.join(lines) + LINE_BREAK, encoding=_UTF_8)
     return path
 
 
