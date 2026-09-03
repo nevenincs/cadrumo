@@ -244,15 +244,18 @@ def test_notification_selection_identity_is_stable_opaque_and_order_independent(
     assert all(key is not None for key in keys)
     assert len(set(keys)) == 2
     assert all(key.startswith("aeat_sync.notification.") and len(key) <= 160 for key in keys if key is not None)
-    first_key = first.notifications[0].selection_key
-    assert first_key is not None
+    single = _projection(
+        notifications=(_fact(_notification(), private_identity="notification-alpha"),)
+    )
+    single_key = single.notifications[0].selection_key
+    assert single_key is not None
     raw_digest = content_hash_hex(
         {
             "namespace": "aeat_sync.notification.selection.v1",
             "private_identity": "notification-alpha",
         }
     )
-    assert first_key.removeprefix("aeat_sync.notification.") != raw_digest
+    assert single_key.removeprefix("aeat_sync.notification.") != raw_digest
     encoded = first.model_dump_json() + repr(first)
     assert "notification-alpha" not in encoded
     assert "notification-beta" not in encoded
@@ -283,6 +286,28 @@ def test_notification_selection_identity_collision_fails_closed(monkeypatch: pyt
                 _fact(_notification(), private_identity="notification-beta"),
             )
         )
+
+
+@pytest.mark.parametrize(
+    "bad_key",
+    (
+        "aeat_sync.other." + "a" * 64,
+        "aeat_sync.notification." + "a" * 63,
+        "aeat_sync.notification." + "A" * 64,
+        "aeat_sync.notification." + "g" * 64,
+    ),
+)
+def test_notification_selection_key_shape_is_closed(bad_key: str) -> None:
+    row_values = _notification().model_dump(mode="python")
+    row_values["selection_key"] = bad_key
+    with pytest.raises(ValidationError):
+        AeatSyncWorkspaceNotificationRowV1.model_validate(row_values)
+
+    projection = _projection()
+    projection_values = projection.model_dump(mode="python")
+    projection_values["notifications"] = ({**projection_values["notifications"][0], "selection_key": bad_key},)
+    with pytest.raises(ValidationError):
+        AeatSyncWorkspaceProjectionV1.model_validate(projection_values)
 
 
 def test_output_physically_omits_protected_scope_payload_and_identity() -> None:

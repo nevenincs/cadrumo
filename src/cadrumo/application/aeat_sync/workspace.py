@@ -9,9 +9,9 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
-from typing import Any, Final, Protocol, Self, override
+from typing import Annotated, Any, Final, Protocol, Self, override
 
-from pydantic import BaseModel, Field, NonNegativeInt, TypeAdapter, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, TypeAdapter, model_validator
 
 from ...core.filing_year import FilingYear
 from ...core.identifier_grammar import NamespacedId
@@ -28,8 +28,17 @@ from ..operator_actions.models import ActionReference
 AEAT_SYNC_WORKSPACE_CONTRACT_VERSION: Final[int] = 1
 
 _NOTIFICATION_SELECTION_KEY: Final[bytes] = secrets.token_bytes(32)
+_NOTIFICATION_SELECTION_PREFIX: Final[str] = "aeat_sync.notification."
+_NOTIFICATION_SELECTION_DIGEST_LENGTH: Final[int] = 64
 
-type AeatSyncNotificationSelectionKey = NamespacedId
+type AeatSyncNotificationSelectionKey = Annotated[
+    str,
+    StringConstraints(
+        min_length=len(_NOTIFICATION_SELECTION_PREFIX) + _NOTIFICATION_SELECTION_DIGEST_LENGTH,
+        max_length=len(_NOTIFICATION_SELECTION_PREFIX) + _NOTIFICATION_SELECTION_DIGEST_LENGTH,
+        pattern=r"^aeat_sync\.notification\.[0-9a-f]{64}$",
+    ),
+]
 """Opaque, bounded identity for one projected notification row.
 
 The admission coordinate remains on :class:`AeatSyncWorkspaceFactV1` only.
@@ -757,7 +766,7 @@ def _notification_selection_key(private_identity: str) -> AeatSyncNotificationSe
     """Derive a process-stable public focus key without retaining private data."""
     canonical = "\x1f".join((_NOTIFICATION_SELECTION_NAMESPACE, private_identity)).encode("utf-8")
     digest = hmac.digest(_NOTIFICATION_SELECTION_KEY, canonical, hashlib.sha256).hex()
-    return f"aeat_sync.notification.k{digest}"
+    return f"{_NOTIFICATION_SELECTION_PREFIX}{digest}"
 
 
 def _project_notification_rows(
