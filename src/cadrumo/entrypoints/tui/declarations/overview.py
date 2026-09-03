@@ -21,6 +21,7 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
     """List local declaration facts without implying filing or AEAT state."""
 
     def __init__(self, controller: DeclarationsWorkspaceController) -> None:
+        """Retain injected state and semantic selection."""
         super().__init__(controller, id="declarations-overview-screen")
         self.selected_work_unit_id: str | None = None
 
@@ -33,6 +34,7 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
             yield Static(id="declarations-refusal", classes="declarations-refusal", markup=False)
 
     def on_mount(self) -> None:
+        """Populate safe natural-coordinate declaration rows."""
         self.populate_navigation()
         table = cast("DataTable[str]", self.query_one("#declarations-list", DataTable))
         table.add_column(declarations_copy("tui.declarations.column.declaration"), key="declaration")
@@ -58,6 +60,7 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
             table.focus()
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        """Route a navigation row or invoke the injected declaration handoff."""
         if self.handle_navigation(event):
             return
         table = cast("DataTable[str]", event.data_table)

@@ -21,6 +21,7 @@ class DeclarationsRevisionsScreen(DeclarationsWorkspaceScreen):
     """Distinguish calculation revision identity from registry revision vocabulary."""
 
     def __init__(self, controller: DeclarationsWorkspaceController) -> None:
+        """Retain injected state and semantic selection."""
         super().__init__(controller, id="declarations-revisions-screen")
         self.selected_calculation_revision_id: str | None = None
 
@@ -34,6 +35,7 @@ class DeclarationsRevisionsScreen(DeclarationsWorkspaceScreen):
             yield Static(id="declarations-refusal", classes="declarations-refusal", markup=False)
 
     def on_mount(self) -> None:
+        """Populate calculation revisions from the safe projection."""
         self.populate_navigation()
         table = cast("DataTable[str]", self.query_one("#declarations-revisions", DataTable))
         table.add_column(declarations_copy("tui.declarations.column.declaration"), key="declaration")
@@ -57,6 +59,7 @@ class DeclarationsRevisionsScreen(DeclarationsWorkspaceScreen):
             table.focus()
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        """Route a navigation row or invoke the injected revision handoff."""
         if self.handle_navigation(event):
             return
         table = cast("DataTable[str]", event.data_table)

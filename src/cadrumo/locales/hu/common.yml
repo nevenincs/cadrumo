@@ -992,6 +992,64 @@ transactions:
     unreadable: Olvashatatlan fájl vagy nem támogatott formátum.
     verified: Az import sikeresen ellenőrizve.
 tui:
+  declarations:
+    availability:
+      available: Elérhető
+      locked: Zárolva
+      never_captured: Még nincs rögzítve
+      stale: Legutóbb rögzített adatok
+      unavailable: Nem érhető el
+    column:
+      aeat_accepted: Megfigyelt AEAT-elfogadás
+      aeat_evidence: AEAT-bizonyíték
+      availability: Elérhetőség
+      calculation: Aktuális számítás
+      calculation_revision: Számítási változat létrehozva
+      declaration: Bevallás
+      destination: Cél
+      local_filing: Helyi benyújtási állapot
+      local_state: Helyi állapot
+    destination:
+      filing_history: Benyújtási előzmények
+      modelo_workspace: Bevallási munkaterület megnyitása
+      overview: Bevallások
+      revisions: Számítási változatok
+    empty: Nincs mért rekord.
+    evidence:
+      aeat_justificante_pdf: Megfigyelt AEAT PDF-nyugta
+      aeat_live_capture: Élő AEAT-megfigyelés
+      none: Nincs megfigyelt AEAT-bizonyíték
+    filing_history:
+      axes: A helyi benyújtási állapot és a megfigyelt AEAT-bizonyíték külön tény.
+      title: Benyújtási előzmények
+    filing_state:
+      supersedido: Felváltott helyi rekord
+      vigente: Aktuális helyi rekord
+    overview:
+      title: Bevallások áttekintése
+    refusal:
+      handoff: A gazda nem biztosította ezt a célt.
+      source: Ez a forrás jelenleg nem érhető el.
+    revision_state:
+      borrador: Piszkozat
+      descartado: Elvetve
+      presentado: Benyújtott számítás
+      presentado_supersedido: Felváltott benyújtott számítás
+      verificado_completo: Ellenőrzés kész
+    revisions:
+      explanation: A számítási változatok mentett számítások, nem a Modelo-nyilvántartás
+        változatai.
+      title: Számítási változatok
+    unavailable:
+      title: A bevallási terület nem érhető el
+    value:
+      available: Elérhető
+      'no': Nem
+      none: Nincs
+      'yes': Igen
+    work_state:
+      borrador: Piszkozat
+      descartado: Elvetve
   ledger:
     area:
       classification: Besorolás

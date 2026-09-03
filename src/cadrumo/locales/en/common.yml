@@ -968,6 +968,65 @@ transactions:
     unreadable: Unreadable file or unsupported format
     verified: Import verified successfully
 tui:
+  declarations:
+    availability:
+      available: Available
+      locked: Locked
+      never_captured: Never captured
+      stale: Last captured data
+      unavailable: Unavailable
+    column:
+      aeat_accepted: AEAT acceptance observed
+      aeat_evidence: AEAT evidence
+      availability: Availability
+      calculation: Current calculation
+      calculation_revision: Calculation revision created
+      declaration: Declaration
+      destination: Destination
+      local_filing: Local filing status
+      local_state: Local status
+    destination:
+      filing_history: Filing history
+      modelo_workspace: Open declaration workspace
+      overview: Declarations
+      revisions: Calculation revisions
+    empty: No measured records.
+    evidence:
+      aeat_justificante_pdf: AEAT receipt PDF observed
+      aeat_live_capture: AEAT live observation
+      none: No AEAT evidence observed
+    filing_history:
+      axes: Local filing status and externally observed AEAT evidence are separate
+        facts.
+      title: Filing history
+    filing_state:
+      supersedido: Superseded local record
+      vigente: Current local record
+    overview:
+      title: Declarations overview
+    refusal:
+      handoff: This destination has not been supplied by the host.
+      source: This source is not currently available.
+    revision_state:
+      borrador: Draft
+      descartado: Discarded
+      presentado: Filed calculation
+      presentado_supersedido: Superseded filed calculation
+      verificado_completo: Verification complete
+    revisions:
+      explanation: Calculation revisions are saved calculation versions, not Modelo
+        registry revisions.
+      title: Calculation revisions
+    unavailable:
+      title: Declarations area unavailable
+    value:
+      available: Available
+      'no': 'No'
+      none: None
+      'yes': 'Yes'
+    work_state:
+      borrador: Draft
+      descartado: Discarded
   ledger:
     area:
       classification: Classification

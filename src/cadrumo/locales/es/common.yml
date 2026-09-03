@@ -1008,6 +1008,65 @@ transactions:
     unreadable: Archivo ilegible o formato no soportado
     verified: Importación verificada con éxito
 tui:
+  declarations:
+    availability:
+      available: Disponible
+      locked: Bloqueado
+      never_captured: Nunca capturado
+      stale: Últimos datos capturados
+      unavailable: No disponible
+    column:
+      aeat_accepted: Aceptación de la AEAT observada
+      aeat_evidence: Evidencia de la AEAT
+      availability: Disponibilidad
+      calculation: Cálculo actual
+      calculation_revision: Revisión de cálculo creada
+      declaration: Declaración
+      destination: Destino
+      local_filing: Estado local de presentación
+      local_state: Estado local
+    destination:
+      filing_history: Historial de presentaciones
+      modelo_workspace: Abrir espacio de declaración
+      overview: Declaraciones
+      revisions: Revisiones de cálculo
+    empty: No hay registros medidos.
+    evidence:
+      aeat_justificante_pdf: Justificante PDF de la AEAT observado
+      aeat_live_capture: Observación en directo de la AEAT
+      none: Sin evidencia observada de la AEAT
+    filing_history:
+      axes: El estado local de presentación y la evidencia observada de la AEAT son
+        hechos distintos.
+      title: Historial de presentaciones
+    filing_state:
+      supersedido: Registro local sustituido
+      vigente: Registro local vigente
+    overview:
+      title: Resumen de declaraciones
+    refusal:
+      handoff: El anfitrión no ha proporcionado este destino.
+      source: Esta fuente no está disponible actualmente.
+    revision_state:
+      borrador: Borrador
+      descartado: Descartado
+      presentado: Cálculo presentado
+      presentado_supersedido: Cálculo presentado sustituido
+      verificado_completo: Verificación completa
+    revisions:
+      explanation: Las revisiones de cálculo son versiones guardadas del cálculo,
+        no revisiones del registro del modelo.
+      title: Revisiones de cálculo
+    unavailable:
+      title: Área de declaraciones no disponible
+    value:
+      available: Disponible
+      'no': 'No'
+      none: Ninguno
+      'yes': Sí
+    work_state:
+      borrador: Borrador
+      descartado: Descartado
   ledger:
     area:
       classification: Clasificación

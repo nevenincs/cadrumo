@@ -34,19 +34,25 @@ class DeclarationsRouteTargetV1(BaseModel):
 class DeclarationHandoffV1(Protocol):
     """Injected navigation handoff for an application-projected declaration."""
 
-    def __call__(self, declaration: DeclarationsWorkspaceDeclarationRefV1, /) -> None: ...
+    def __call__(self, declaration: DeclarationsWorkspaceDeclarationRefV1, /) -> None:
+        """Open the selected declaration in an injected host target."""
+        ...
 
 
 class RevisionHandoffV1(Protocol):
     """Injected navigation handoff for one calculation revision identity."""
 
-    def __call__(self, revision: DeclarationsWorkspaceCalculationRevisionRefV1, /) -> None: ...
+    def __call__(self, revision: DeclarationsWorkspaceCalculationRevisionRefV1, /) -> None:
+        """Open the selected calculation revision."""
+        ...
 
 
 class FilingHandoffV1(Protocol):
     """Injected navigation handoff for one filing-history identity."""
 
-    def __call__(self, filing: DeclarationsWorkspaceFilingRefV1, /) -> None: ...
+    def __call__(self, filing: DeclarationsWorkspaceFilingRefV1, /) -> None:
+        """Open the selected filing-history entry."""
+        ...
 
 
 __all__ = [

@@ -997,6 +997,65 @@ transactions:
     unreadable: Arxiu il·legible o format no suportat
     verified: Importació verificada amb èxit
 tui:
+  declarations:
+    availability:
+      available: Disponible
+      locked: Bloquejat
+      never_captured: Mai capturat
+      stale: Últimes dades capturades
+      unavailable: No disponible
+    column:
+      aeat_accepted: Acceptació de l'AEAT observada
+      aeat_evidence: Evidència de l'AEAT
+      availability: Disponibilitat
+      calculation: Càlcul actual
+      calculation_revision: Revisió de càlcul creada
+      declaration: Declaració
+      destination: Destinació
+      local_filing: Estat local de presentació
+      local_state: Estat local
+    destination:
+      filing_history: Historial de presentacions
+      modelo_workspace: Obre l'espai de declaració
+      overview: Declaracions
+      revisions: Revisions de càlcul
+    empty: No hi ha registres mesurats.
+    evidence:
+      aeat_justificante_pdf: Justificant PDF de l'AEAT observat
+      aeat_live_capture: Observació en directe de l'AEAT
+      none: Sense evidència observada de l'AEAT
+    filing_history:
+      axes: L'estat local de presentació i l'evidència observada de l'AEAT són fets
+        separats.
+      title: Historial de presentacions
+    filing_state:
+      supersedido: Registre local substituït
+      vigente: Registre local vigent
+    overview:
+      title: Resum de declaracions
+    refusal:
+      handoff: L'amfitrió no ha proporcionat aquesta destinació.
+      source: Aquesta font no està disponible actualment.
+    revision_state:
+      borrador: Esborrany
+      descartado: Descartat
+      presentado: Càlcul presentat
+      presentado_supersedido: Càlcul presentat substituït
+      verificado_completo: Verificació completa
+    revisions:
+      explanation: Les revisions de càlcul són versions desades del càlcul, no revisions
+        del registre del model.
+      title: Revisions de càlcul
+    unavailable:
+      title: Àrea de declaracions no disponible
+    value:
+      available: Disponible
+      'no': 'No'
+      none: Cap
+      'yes': Sí
+    work_state:
+      borrador: Esborrany
+      descartado: Descartat
   ledger:
     area:
       classification: Classificació

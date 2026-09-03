@@ -77,23 +77,32 @@ def natural_address(modelo: object, year: object, period: object) -> str:
 
 
 def availability_label(value: DeclarationsWorkspaceAvailability) -> str:
+    """Render one explicit source availability."""
     return declarations_copy(_AVAILABILITY_KEYS[value])
 
 
 def work_state_label(value: WorkUnitState) -> str:
+    """Render a local declaration state."""
     return declarations_copy(_WORK_STATE_KEYS[value])
 
 
 def revision_state_label(value: CalculationRevisionState) -> str:
+    """Render a calculation-revision state."""
     return declarations_copy(_REVISION_STATE_KEYS[value])
 
 
 def filing_state_label(value: ModeloRecordStatus) -> str:
+    """Render local filing-record currency."""
     return declarations_copy(_FILING_STATE_KEYS[value])
 
 
 def evidence_label(value: ExternalEvidenceKind | None) -> str:
-    return declarations_copy("tui.declarations.evidence.none") if value is None else declarations_copy(_EVIDENCE_KEYS[value])
+    """Render separately observed AEAT evidence metadata."""
+    return (
+        declarations_copy("tui.declarations.evidence.none")
+        if value is None
+        else declarations_copy(_EVIDENCE_KEYS[value])
+    )
 
 
 class DeclarationsWorkspaceController:
@@ -111,6 +120,7 @@ class DeclarationsWorkspaceController:
         revision_handoff: RevisionHandoffV1 | None = None,
         filing_handoff: FilingHandoffV1 | None = None,
     ) -> None:
+        """Validate the context, projection version, and declared read actions."""
         if context.destination != "workbench.declarations":
             raise ValueError("Declarations workspace requires the workbench.declarations context")
         if projection.contract_version != DECLARATIONS_WORKSPACE_CONTRACT_VERSION:
@@ -133,12 +143,15 @@ class DeclarationsWorkspaceController:
         self.filing_handoff = filing_handoff
 
     def zone_state(self, zone: DeclarationsWorkspaceZone) -> DeclarationsWorkspaceZoneStateV1:
+        """Return one closed zone state."""
         return next(item for item in self.projection.zones if item.zone is zone)
 
     def target(self, destination: DeclarationsDestinationIdV1) -> DeclarationsRouteTargetV1:
+        """Construct a typed target from the closed route map."""
         return DeclarationsRouteTargetV1(destination=destination, zone=_ZONE_BY_DESTINATION[destination])
 
     def restored_id(self, semantic_key: str) -> str | None:
+        """Return the matching opaque semantic restore token, if any."""
         focus = self.context.focus
         return focus.restore_token if focus is not None and focus.semantic_key == semantic_key else None
 
@@ -155,11 +168,13 @@ class DeclarationsWorkspaceScreen(Screen[None]):
     )
 
     def __init__(self, controller: DeclarationsWorkspaceController, *, id: str) -> None:
+        """Retain the injected controller."""
         super().__init__(id=id)
         self.controller = controller
         self.requested_target: DeclarationsRouteTargetV1 | None = None
 
     def populate_navigation(self) -> None:
+        """Populate every closed internal destination exactly once."""
         table = cast("DataTable[str]", self.query_one("#declarations-navigation", DataTable))
         table.add_column(declarations_copy("tui.declarations.column.destination"), key="destination")
         table.add_column(declarations_copy("tui.declarations.column.availability"), key="availability")
@@ -172,6 +187,7 @@ class DeclarationsWorkspaceScreen(Screen[None]):
             )
 
     def handle_navigation(self, event: DataTable.RowSelected) -> bool:
+        """Handle a navigation selection without reading application state."""
         table = cast("DataTable[str]", event.data_table)
         if table.id != "declarations-navigation":
             return False
@@ -190,11 +206,13 @@ class DeclarationsWorkspaceScreen(Screen[None]):
         return True
 
     def refuse_handoff(self) -> None:
+        """Show an explicit refusal when the host omitted a target."""
         self.query_one("#declarations-refusal", Static).update(
             declarations_copy("tui.declarations.refusal.handoff")
         )
 
     def action_back(self) -> None:
+        """Dismiss only this child screen."""
         self.dismiss(None)
 
 
@@ -202,14 +220,15 @@ class DeclarationsRouteRequested(Message):
     """Request that the owning host replace the current internal body."""
 
     def __init__(self, target: DeclarationsRouteTargetV1) -> None:
+        """Retain the typed internal target."""
         super().__init__()
         self.target = target
 
 
 __all__ = [
+    "DeclarationsRouteRequested",
     "DeclarationsWorkspaceController",
     "DeclarationsWorkspaceScreen",
-    "DeclarationsRouteRequested",
     "availability_label",
     "declarations_copy",
     "evidence_label",
