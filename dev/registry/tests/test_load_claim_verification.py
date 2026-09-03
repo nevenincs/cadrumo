@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import pytest
 
-from dev.registry.analysis.load_census_classification import RULES
-from dev.registry.analysis.load_claim_verification import ClaimFinding, verify_live_claims
+from ..analysis.load_census_classification import RULES
+from ..analysis.load_claim_verification import ClaimFinding, verify_live_claims
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

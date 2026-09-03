@@ -46,8 +46,8 @@ import tempfile
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from dev.registry.analysis.load_census import COLD_REGIME_ENV
-from dev.registry.analysis.load_census_classification import RULES
+from .load_census import COLD_REGIME_ENV
+from .load_census_classification import RULES
 
 __all__ = [
     "ClaimFinding",

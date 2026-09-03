@@ -600,7 +600,6 @@ ignore_imports =
     # only the layer direction, not a private reach. Production
     # application -> llm coupling stays individually pinned above and a NEW
     # production edge still fails loudly.
-    cadrumo.application.**.tests.** -> cadrumo.llm
     cadrumo.application.**.tests.** -> cadrumo.llm.**
     cadrumo.application.evidence.service -> cadrumo.adapters.persistence.**
     # The confirmation record is the third of that same family and is pinned for
