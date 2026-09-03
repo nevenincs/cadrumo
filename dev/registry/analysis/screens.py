@@ -29,13 +29,16 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from .casilla_id_grammar import screen_authority as grammar_screen
 from .continuity_integrity import screen_authority as continuity_screen
 from .export_ref_symmetry import screen_authority as export_ref_screen
+from .footnote_only_wire_facts import screen_authority as footnote_only_screen
 from .grade_earned import screen_authority as grade_screen
 from .modelo_capability import screen_authority as modelo_capability_screen
 from .monetary_scale import screen_authority as monetary_scale_screen
 from .provenance_consistency import outside_reference_index
 from .provenance_consistency import screen_authority as provenance_screen
 from .revision_name_window import screen_authority as revision_name_screen
+from .rule_grounding_coverage import screen_authority as rule_grounding_screen
 from .temporal_site_agreement import screen_authority as temporal_site_screen
+from .type_convention_notes import screen_authority as type_convention_screen
 from .wire_type_compatibility import screen_authority as wire_type_screen
 
 __all__ = ["FINDING_IDENTITY_CONTRACT", "SCREENS", "ScreenEntry", "run_screens"]
@@ -160,6 +163,21 @@ SCREENS: tuple[ScreenEntry, ...] = (
         "modelo_capability",
         modelo_capability_screen,
         "disagreements between a revision's declared filing rung and the machinery behind it",
+    ),
+    ScreenEntry(
+        "footnote_only_wire_facts",
+        footnote_only_screen,
+        "fields whose wire fact sits behind a footnote pointer rather than in their own cell",
+    ),
+    ScreenEntry(
+        "type_convention_notes",
+        type_convention_screen,
+        "design notes stating a wire convention for a whole AEAT type",
+    ),
+    ScreenEntry(
+        "rule_grounding_coverage",
+        rule_grounding_screen,
+        "fields needing a reviewed rule, counted by the strength of the wording available to them",
     ),
 )
 

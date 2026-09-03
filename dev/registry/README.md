@@ -83,6 +83,9 @@ says which. What each one owns:
 | `grade_earned` | declared grades not matching what their prerequisites support, either way |
 | `provenance_consistency` | references cited from outside their revision's own manifest |
 | `modelo_capability` | what each modelo declares it can do, and where the filing claim and its machinery disagree |
+| `footnote_only_wire_facts` | fields whose wire fact sits behind a footnote pointer rather than in their own cell |
+| `type_convention_notes` | design notes stating how a whole AEAT type is written to the wire |
+| `rule_grounding_coverage` | fields needing a reviewed rule, counted by the strength of the wording available to them |
 
 Three rules keep the suite honest.
 
