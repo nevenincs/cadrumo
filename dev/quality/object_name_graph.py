@@ -657,16 +657,28 @@ def collect_import_edges(
         bindings = _import_bindings(tree, owner, package_module=path.name == "__init__.py")
         type_checking_nodes = _type_checking_node_ids(tree)
         for node in ast.walk(tree):
-            if isinstance(node, ast.Constant) and isinstance(node.value, str):
-                for locator in locators_by_module.get(node.value, ()):
-                    edges.add(
-                        HardEdge(
-                            locator.operation_id,
-                            relative,
-                            ReferenceKind.DYNAMIC_IMPORT,
-                            detail=f"literal-line:{node.lineno}",
+            if (
+                isinstance(node, ast.Call)
+                and owner == "dev.packaging.campaign"
+                and isinstance(node.func, ast.Name)
+                and node.func.id == "Form"
+            ):
+                module_argument: ast.expr | None = node.args[1] if len(node.args) > 1 else None
+                for keyword in node.keywords:
+                    if keyword.arg == "module":
+                        module_argument = keyword.value
+                if isinstance(module_argument, ast.Constant) and isinstance(module_argument.value, str):
+                    for locator in locators_by_module.get(module_argument.value, ()):
+                        if locator.symbol is not None:
+                            continue
+                        edges.add(
+                            HardEdge(
+                                locator.operation_id,
+                                relative,
+                                ReferenceKind.DYNAMIC_IMPORT,
+                                detail=f"form-module-line:{node.lineno}",
+                            )
                         )
-                    )
             if isinstance(node, ast.ImportFrom):
                 target = _import_from_target(node, owner, package_module=path.name == "__init__.py")
                 for locator in locators_by_module.get(target, ()):

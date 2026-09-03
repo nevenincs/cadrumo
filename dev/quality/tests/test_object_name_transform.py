@@ -281,10 +281,17 @@ def test_opaque_or_star_module_reference_is_refused(tmp_path: Path, consumer: st
         plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
 
 
-def test_exact_module_string_target_is_renamed_and_classified(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("call", "expected"),
+    [
+        ("Form('widgets', 'cadrumo.widgets')", "Form('widgets', 'cadrumo.widget')"),
+        ("Form('widgets', module='cadrumo.widgets')", "Form('widgets', module='cadrumo.widget')"),
+    ],
+)
+def test_exact_campaign_form_module_target_is_renamed_and_classified(tmp_path: Path, call: str, expected: str) -> None:
     inventory = _inventory(
         tmp_path,
-        {"src/cadrumo/widgets.py": "VALUE = 1\n", "dev/consumer.py": "target = 'cadrumo.widgets'\n"},
+        {"src/cadrumo/widgets.py": "VALUE = 1\n", "dev/packaging/campaign.py": f"target = {call}\n"},
     )
     declaration = _declaration(inventory, path="src/cadrumo/widgets.py", name="widgets")
     operation = _operation(
@@ -293,18 +300,18 @@ def test_exact_module_string_target_is_renamed_and_classified(tmp_path: Path) ->
         target_path="src/cadrumo/widget.py",
         sources=_tree_bytes(tmp_path),
         expected_reference_classes=("definition", "dynamic-target"),
-        changed_paths=("dev/consumer.py", "src/cadrumo/widget.py", "src/cadrumo/widgets.py"),
+        changed_paths=("dev/packaging/campaign.py", "src/cadrumo/widget.py", "src/cadrumo/widgets.py"),
     )
 
     result = plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
 
-    assert result.content_by_path()["dev/consumer.py"] == b"target = 'cadrumo.widget'\n"
+    assert result.content_by_path()["dev/packaging/campaign.py"] == f"target = {expected}\n".encode()
 
 
 def test_near_match_module_string_remains_unsupported(tmp_path: Path) -> None:
     inventory = _inventory(
         tmp_path,
-        {"src/cadrumo/widgets.py": "VALUE = 1\n", "dev/consumer.py": "target = 'load cadrumo.widgets'\n"},
+        {"src/cadrumo/widgets.py": "VALUE = 1\n", "dev/consumer.py": "target = 'cadrumo.widgets'\n"},
     )
     declaration = _declaration(inventory, path="src/cadrumo/widgets.py", name="widgets")
     operation = _operation(
