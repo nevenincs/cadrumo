@@ -231,10 +231,12 @@ class AeatSyncWorkspaceScreen(Screen[None]):
         """Render an explicit mutation button only for a closed admitted pair."""
         if not label:
             return
-        request = self.controller.admitted_operation(
-            getattr(row, "supported_actions", ()), getattr(row, "supported_operations", ())
-        )
+        request = self.controller.admitted_operation(row.supported_actions, row.supported_operations)
         if request is None:
+            if row.supported_actions or row.supported_operations:
+                self.query_one("#aeat-sync-status", Static).update(
+                    aeat_sync_copy("tui.aeat_sync.refusal.operation_handoff")
+                )
             return
         button_id = f"aeat-sync-operation-{len(self._requests)}"
         self._requests[button_id] = request
@@ -391,6 +393,7 @@ class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
                 _label(row.status),
                 key=_census_identity(row.path),
             )
+            self.add_operation(cast("_OperationRow", row), label=aeat_sync_copy("tui.aeat_sync.action.review_census"))
 
 
 class AeatSyncFiledDeclarationsScreen(AeatSyncWorkspaceScreen):

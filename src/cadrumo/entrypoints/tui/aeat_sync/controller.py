@@ -44,9 +44,7 @@ _EXPECTED_ACTION_COMMANDS: Final = {
     "operator.live.filed.pull": "app.live.filed.pull",
     "operator.live.filed.pull_all": "app.live.filed.pull_all",
 }
-_CANONICAL_OPERATION_IDS: Final = frozenset(
-    {"user-profile.censo-review", "live.filed-history.pull"}
-)
+_CANONICAL_OPERATION_IDS: Final = frozenset({"user-profile.censo-review", "live.filed-history.pull"})
 
 
 class AeatSyncWorkspaceController:
@@ -130,9 +128,7 @@ class AeatSyncWorkspaceController:
                 return None
         return AeatSyncOperationRequestV1(action=action, operation=operation)
 
-    async def retrieve_notification_document(
-        self, row: object
-    ) -> bool:
+    async def retrieve_notification_document(self, row: object) -> bool:
         """Open a notification document only after an explicit read fact.
 
         ``row`` is accepted as ``object`` at this boundary so a stale event
