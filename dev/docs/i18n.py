@@ -197,7 +197,7 @@ def _language_catalogue_root(docs_root: Path, language: str) -> Path | None:
     language tree.
     """
     language_path = Path(language)
-    if language_path.parts != (language,) or language in {"", ".", ".."}:
+    if language_path.parts != (language,) or language_path.drive or language_path.root or language in {"", ".", ".."}:
         raise ValueError(f"language must be one directory name, got {language!r}")
 
     locales = locale_root(docs_root).resolve()
