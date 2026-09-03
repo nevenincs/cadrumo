@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:d0240880cf9dc57dd96d240d2f3cc18f1f56d26e0029a83b5700b47e92d27410'
+body_hash: 'sha256:150fe3fd38f028b3f54adfcdecd7eabd4d2a294f2dd5de018726df012d430238'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -490,6 +490,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S252` - Diagnose the sixteen vacuity screen failures as a git dependency added without updating the temp-tree fixtures; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S253` - Establish that the import-linter boundary proofs fail while the contracts themselves pass, and that the default lane deselects them; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S254` - Bound the crashed run's usable lower bound across fifty-two modules and stop mining it rather than drifting off the registry; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S255` - Record the second live sibling-scale disagreement in modelo 353 and correct the criterion asserting there is one; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

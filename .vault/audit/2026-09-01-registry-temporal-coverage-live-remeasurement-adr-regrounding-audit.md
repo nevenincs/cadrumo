@@ -6128,3 +6128,29 @@ own lane figures rather than an intent to audit the tooling at large.
 What is left behind is the list and the method: run the module directly, read the first error
 rather than the tally, check whether the file it blames carries a pending diff, and re-run once
 any transient clears. Three modules took roughly one iteration each at that rate.
+
+### second-live-monetary-scale-defect-in-modelo-353 | critical | A second field emits unscaled where its siblings emit cents, and the gate proving the first now fails on the count
+
+The monetary-scale screen reports two sibling-scale disagreements where the plan's Verification
+criterion says there is one. The known defect is modelo 200's casilla 03594, emitting unscaled
+where 88 sibling amounts of width 17 in the same record emit cents. The new one is modelo 353,
+revision 2026-desde-02, casilla 10, field `m353-2026.pagina01.f127`: unscaled where 7 sibling
+amounts of width 17 in `m353-declaracion` emit cents.
+
+The test that caught it is the one this campaign has held up as the right shape - a gate whose
+teeth are proven against a live defect rather than a fixture, asserting exactly one
+disagreement so that correcting the defect forces the test to be rewritten rather than
+silently passing. It asserted one, found two, and failed. That is the design working: a gate
+pinned to a known defect reports both a repair and a regression, and this is the second.
+
+Two things follow for the plan. The Verification criterion stating "the one field that fails
+this today is the plan's only known filing-correctness defect" is now false, and the criterion
+is what a reader checks the work against. And the registry data carries no pending diff, so
+this arrived through a commit rather than an edit in flight - the modelo 353 directory's recent
+history is a closed-vocabulary canonicalisation and an extractor-link retirement, either of
+which could have touched a field's declared scale.
+
+Not corrected here. A monetary field's scale is filing-grade: emitting euros where the record
+design expects cents is a hundredfold error in a submitted amount, and the fix is a registry
+data change grounded in the official design for that revision, which is neither this
+iteration's scope nor a change to make from a screen's output alone.
