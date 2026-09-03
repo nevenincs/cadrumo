@@ -5,16 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:53a7df0f436eed4ec5b84610fb2e166913d44122fba9c61b0275125ba0a1bede'
+body_hash: 'sha256:de97d7fd80f0a5d747c25a277cc78a6b4c58c2ca53bbd4696da88abbd56262a0'
 step_id: 'S10'
 related:
   - "[[2026-09-02-aeat-design-relayout-boundary-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Author reviewed 2024-applicable legal catalogue entries and anchors for the closed worklist
 

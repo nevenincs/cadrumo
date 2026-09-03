@@ -5,16 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:863d9323eee9a8c17c7506ce92f08dd5981e96c86fe9d821bb8e7bb2b8d79370'
+body_hash: 'sha256:ebeecba038121ef0dd99f6ca8afb016cb14b48a8ce6761297bf2d1da3ad79fbb'
 step_id: 'S11'
 related:
   - "[[2026-09-02-aeat-design-relayout-boundary-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Enforce legal resolution, target-window coverage, anchor reachability, and rejection of later-year substitution
 

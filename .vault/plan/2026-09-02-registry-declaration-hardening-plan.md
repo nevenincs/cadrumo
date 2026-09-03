@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:5a7a8f8b715322f83735eeb44b4e25c897ecb886697fece0f3351d006b8a7d64'
+body_hash: 'sha256:9420eed6548a1b35f6a765a0752ef21b44836f6ccf364f021d1d1af91bc15408'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -417,7 +417,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S178` - Confirm this campaign's gates are lane-reachable and report the conformance files that no lane path covers; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S179` - Retire the lane screen's duplicate reachability assertion and scope it to the question the canonical gate does not answer; `dev/quality/default_lane_visibility.py,dev/quality/tests/test_default_lane_visibility.py`.
 - [x] `W06.P13.S180` - Reconcile the reachability gate's location note with the directory it actually occupies; `dev/tests/test_lane_reachability.py`.
-- [ ] `W06.P13.S181` - Name dev/registry/conformance/tests in the dev tooling lane; the reachability gate reports its two files outside every lane path scope, holding thirty-one unreached tests; `justfile`.
+- [ ] `W06.P13.S181` - Name dev/registry/conformance/tests in the dev tooling lane, accepting the three-minute serial floor its live-mode closure test imposes, or split that test out first; `justfile`.
 - [x] `W06.P13.S182` - Establish the red the conformance lane will inherit and separate it from a concurrent writer's transient import breakage; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S183` - Record in the plan Description how the declaration question extended from the registry to the codebase and which screens were declined; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S184` - Report the operator path leaked into a sibling campaign's committed audit and confirm this feature's documents carry none; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
@@ -515,10 +515,11 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S277` - Repoint the TUI coverage table at the interface the flows refactor left it naming; `dev/tui/_coverage.py`.
 - [x] `W06.P13.S278` - Correct the three name-window replacement instructions that named successors themselves stepped for rename; `dev/registry/tests/test_revision_name_window.py`.
 - [x] `W06.P13.S279` - Correct the source-connectivity Step figure against a live collection and record the authority startup cost; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
-- [ ] `W06.P13.S280` - Re-measure the conformance closure test that hit the per-test timeout ceiling on an uncontended host before naming its directory in a lane; `dev/registry/conformance/tests/test_closure.py`.
+- [x] `W06.P13.S280` - Re-measure the conformance closure test that hit the per-test timeout ceiling on an uncontended host before naming its directory in a lane; `dev/registry/conformance/tests/test_closure.py`.
 - [x] `W06.P13.S281` - Establish that the src-to-dev boundary survived the marker-gate deletion, so no coverage hole exists; `dev/tests/_marker_metadata_patterns.py`.
 - [x] `W06.P13.S282` - Restore a marker-integrity gate over test names from the orphaned pattern table its deleted consumer left behind; `dev/tests/_marker_metadata_patterns.py`.
 - [x] `W06.P13.S283` - Rename the four development-tree test symbols that carried a plan step id, and redeem the pin that expected them; `dev/locales/tests/test_ledger_notice_action_conformance.py dev/registry/tests/test_modelo_303_semantic_maps.py dev/source_connectivity/tests/test_census_completeness.py dev/tests/test_suggestion_command_conformance.py dev/tests/test_campaign_marker_patterns.py`.
+- [x] `W06.P13.S284` - Remove the plan-step citations from the registry tooling prose, leaving only the detector fixtures that must carry them; `dev/registry/pipeline/_tree_check.py dev/registry/pipeline/_tree_publication.py dev/registry/pipeline/_tree_validation.py dev/registry/analysis/m303_semantic_census.py dev/registry/tests/test_record_design_intermediate_source_boundary.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

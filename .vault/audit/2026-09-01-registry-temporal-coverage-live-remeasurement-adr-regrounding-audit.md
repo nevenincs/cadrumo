@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:286d14dcdaf5563305077ee57629fd830bdb81213af2c431d803643b52957894'
+body_hash: 'sha256:50785b6acda7df319d0ca3ba4ff9ad008d09581835186ca39466e7f56c2b421e'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -6966,3 +6966,61 @@ still meant anything.
 
 The twelve `src/` files remain, recorded and not asserted. They are not this
 work's to rename, and the gate deliberately does not fail on them.
+
+### the-registry-tooling-prose-cited-plan-steps-as-if-they-were-components | high | Thirteen sites named a step where they meant a boundary; the subtree now carries only the fixtures a detector must contain
+
+Extending the restored marker table from symbol names to prose found campaign
+markers in twenty-three development files. Three classes came out of that,
+and only one is a defect. Detector fixtures are the first and are legitimate:
+the governance gate, the vault-citation gate and the pattern table itself must
+contain the shape they detect, and a gate that could not name its own target
+would be unprovable. Wrapped lint prose is the second - a comment explaining a
+suppression, where the directive is scrubbed but the sentence describing it is
+not, and a line-scoped discriminator misses it when the sentence wraps.
+
+The third class is real, and thirteen of its sites were in this campaign's own
+subtree. The pipeline modules called a loader boundary "the S10 loader
+boundary", said "S10 validates it", described a candidate as "the S10
+candidate", and gated publication "before S11 is allowed to publish it". The
+census called a record's anchor index "the S63 declaration-index". In every case
+a step id stood where the name of a thing belonged, which is worse than a bare
+citation: it reads as though S10 were a component, and a reader who goes looking
+for it finds a plan row describing work rather than a boundary in the code.
+
+The rewrites name the thing. `S63` was checked against the registry data before
+being touched, because a token that looks like a step id can be an official one:
+it appears nowhere in the shipped declarations, while the real domain token
+beside it, `DP30302`, is what the error message should have been quoting all
+along. The test sentinel `S03-IR-DERIVATIVE` lost its prefix for the same
+reason - a unique marker does not need a step number to be unique. Two hundred
+and forty-seven tests pass over the edited surfaces, exit 0.
+
+Re-measuring the subtree afterwards leaves six markers, all inside one test
+function: the fixtures the vault-citation detector must carry to prove it fires.
+That is the correct end state, and it is worth saying explicitly, because a
+sweep that drove this count to zero would have done it by disarming the detector
+that keeps the count honest.
+
+### the-conformance-closure-test-passes-in-three-minutes-and-was-never-hung | medium | It exits 0 in 182 seconds under a host at 98.8% CPU; the earlier timeout was the ceiling being struck, not a deadlock
+
+The test that struck the per-test ceiling was re-run with the ceiling raised to
+twenty minutes. It passed in 182.58 seconds, exit 0, on a host carrying a
+hundred and eighty-nine python processes at 98.8% CPU - worse contention than
+the run that timed out. So the earlier `Timeout` was exactly what the ceiling is
+for and nothing more: a slow test crossing a fixed line, with the deepcopy in
+the dump being where it happened to be standing, not a deadlock.
+
+Three minutes is still the finding. A test at that duration is not a unit test
+in any useful sense, and naming its directory in a lane puts a three-minute
+serial floor under that lane. The Step to name the directory should carry that
+cost explicitly rather than discover it in CI.
+
+The method deserves a correction against itself. This run was set up to measure
+CPU time on the theory that CPU-seconds are contention-robust where wall-clock
+is not, which is true but was not what happened: the shell's own timer reported
+USER=0.015 and SYS=0.031, because `uv run` spawns its child in a process tree
+the shell's accounting never sees. Those two numbers describe the wrapper, not
+the test, and they would have been a confident nonsense had the wall-clock not
+answered the question on its own. A timing technique needs its own sanity check
+- a measurement reporting fifteen milliseconds for a three-minute run is
+reporting nothing.
