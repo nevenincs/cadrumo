@@ -403,20 +403,6 @@ class Settings(CadrumoLlmSettings):
         """
         return _live_test_config.strict_live_test_opt_in(self.cadrumo_live_tests_google)
 
-    # ── Replay IPC ──────────────────────────────────────────────────────────
-    # Set by ``cadrumo.core.observability.replay.replay_run`` on the parent
-    # process before it re-enters the CLI, then read by ``run_context`` in
-    # the child invocation so the persisted trace can label its
-    # ``replay_of`` field with the original run id. Subprocess IPC writes
-    # still go through ``os.environ[REPLAY_ACTIVE_ENV_VAR] = run_id``
-    # (Settings is read-only and ``Settings()`` is re-instantiated by
-    # ``load_settings()`` on each call, so the write is visible to the
-    # next read).
-    cadrumo_replay_active: str = Field(
-        default="",
-        description="Subprocess-IPC marker carrying the original run_id when a CLI invocation is a replay re-entry",
-    )
-
     # ── TTY / colour ────────────────────────────────────────────────────────
     cadrumo_force_color: bool = Field(
         default=False,
