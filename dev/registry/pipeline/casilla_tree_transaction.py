@@ -44,6 +44,9 @@ def publish_verified_casilla_tree(
     """
     _require_regular_tree(casillas_root, subject="canonical casilla tree")
     replace = _replace_tree if replace_tree is None else replace_tree
+    _require_transaction_token(journal_name, subject="journal name")
+    _require_transaction_token(stage_prefix, subject="stage prefix")
+    _require_transaction_token(backup_prefix, subject="backup prefix")
     revision_root = casillas_root.parent
     _require_regular_directory(revision_root, subject="canonical revision root")
     workspace = revision_root if transaction_root is None else transaction_root
@@ -103,6 +106,9 @@ def recover_verified_casilla_tree(
     transaction_root: Path | None = None,
 ) -> bool:
     """Recover one interrupted transaction; return whether recovery changed state."""
+    _require_transaction_token(journal_name, subject="journal name")
+    _require_transaction_token(stage_prefix, subject="stage prefix")
+    _require_transaction_token(backup_prefix, subject="backup prefix")
     revision_root = casillas_root.parent
     workspace = revision_root if transaction_root is None else transaction_root
     _require_regular_directory(workspace, subject="casilla publication transaction root")
@@ -179,6 +185,19 @@ def _transaction_child(root: Path, name: object, prefix: str) -> Path:
     if not isinstance(name, str) or not name.startswith(prefix) or Path(name).name != name:
         raise RegistryValidationError("casilla publication journal carries an unsafe transaction path")
     return root / name
+
+
+def _require_transaction_token(value: object, *, subject: str) -> None:
+    """Refuse a caller-controlled artifact component that could escape its workspace."""
+    if (
+        not isinstance(value, str)
+        or not value
+        or Path(value).name != value
+        or Path(value).is_absolute()
+        or "/" in value
+        or "\\" in value
+    ):
+        raise RegistryValidationError(f"casilla publication {subject} is not a single path component")
 
 
 def _require_regular_directory(path: Path, *, subject: str) -> None:

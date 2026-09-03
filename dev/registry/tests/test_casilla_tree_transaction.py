@@ -181,3 +181,32 @@ def test_external_workspace_keeps_all_transaction_artifacts_out_of_the_revision(
     assert not tuple(root.parent.glob(".backup-*"))
     assert not tuple(root.parent.glob(".journal.json"))
     assert not tuple(workspace.iterdir())
+
+
+@pytest.mark.parametrize(
+    ("keyword", "value"),
+    (("journal_name", "../escaped.json"), ("stage_prefix", "../stage-"), ("backup_prefix", "dir\\backup-")),
+)
+def test_transaction_artifact_components_cannot_escape_the_workspace(
+    tmp_path: Path, keyword: str, value: str
+) -> None:
+    root = tmp_path / "revision" / "casillas"
+    workspace = tmp_path / "workspace"
+    root.mkdir(parents=True)
+    workspace.mkdir()
+    (root / "c00001.toml").write_bytes(b"old\n")
+    arguments: dict[str, object] = {
+        "casillas_root": root,
+        "rendered": {root / "c00001.toml": "new\n"},
+        "verifier": _verify({"c00001.toml": b"new\n"}),
+        "journal_name": ".journal.json",
+        "stage_prefix": ".stage-",
+        "backup_prefix": ".backup-",
+        "transaction_root": workspace,
+    }
+    arguments[keyword] = value
+
+    with pytest.raises(RegistryValidationError, match="single path component"):
+        subject.publish_verified_casilla_tree(**arguments)  # type: ignore[arg-type]
+    assert _tree(root) == {"c00001.toml": b"old\n"}
+    assert not tuple(workspace.iterdir())

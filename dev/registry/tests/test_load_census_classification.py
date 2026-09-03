@@ -175,3 +175,43 @@ def test_no_registry_dynamic_import_site_is_left_unresolved() -> None:
         "reaches is missing from the universe and the rules describing it will read as stale. "
         f"Teach the resolver this shape or restore a readable one; do not delete the rules: {registry_sites}"
     )
+
+
+def test_the_evaluator_reads_a_constant_whatever_shape_it_is_built_from() -> None:
+    """A name's value is the answer; how the value was written is not.
+
+    The census followed a literal tuple and went blind when the same names were
+    rebuilt from another module's mapping values. This resolves by asking the
+    module, so both spellings answer identically - which is the property that
+    stops the next construction from blinding it again.
+    """
+    from ..analysis.load_census import evaluated_string_sequence
+
+    members = evaluated_string_sequence(
+        "cadrumo.domain.calculations.registry._snapshot_internals",
+        "_CROSS_DOMAIN_CHECK_MODULES",
+    )
+
+    assert members is not None, "the live non-literal construction must resolve"
+    assert all(name.startswith("cadrumo.domain.renta.") for name in members)
+
+
+def test_the_evaluator_returns_none_rather_than_guessing() -> None:
+    """Every failure is a refusal, because a guessed target is worse than none.
+
+    The caller records an unresolved site and a gate reads that record. A
+    fallback that returned a partial or invented answer would fill the universe
+    with modules nothing imports, and the census would look complete while
+    describing a tree that does not exist.
+    """
+    from ..analysis.load_census import evaluated_string_sequence
+
+    assert evaluated_string_sequence("cadrumo.module.that.does.not.exist", "ANY") is None
+    assert evaluated_string_sequence("cadrumo.domain.calculations.registry._snapshot_internals", "NO_SUCH_NAME") is None
+    assert (
+        evaluated_string_sequence(
+            "cadrumo.domain.calculations.registry._snapshot_internals",
+            "_install_cross_domain_snapshot_checks",
+        )
+        is None
+    ), "a callable is not a sequence of module names"
