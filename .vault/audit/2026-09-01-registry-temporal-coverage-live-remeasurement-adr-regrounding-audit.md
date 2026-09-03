@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:546dd3b5a71f94b5a2abfc662ba22b6d3c9ee71f6ee11b69a0b6a35f159cd880'
+body_hash: 'sha256:c4c42c06cd5259099a590df35c7ed9da09c8f620c0626a14d098d26b29b7accf'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8199,3 +8199,32 @@ that description: proving an instrument can still see what it measures. It was
 never planned. It exists because a figure this plan quoted was wrong four
 separate times, and each correction found a screen, a probe or a gate reporting
 a clean result it was no longer able to earn.
+
+### the-two-modules-this-session-created-had-no-tests-and-no-gate-asked-for-any | high | The screen-test gate requires a test module of screens only, so a defining module slips past it
+
+Collapsing duplication produced two new defining modules - the corpus accessor
+ten screens had declared privately, and the two path guards duplicated across
+three pipeline modules. Both were verified where they landed, by the census
+being unchanged and by the tests of the modules that import them. Neither had a
+test of its own, and nothing asked for one: the gate that requires a test module
+requires it of screens, identified by their `screen_authority` signature, and a
+defining module has none.
+
+That is the same shape this campaign keeps finding. A gate covers the population
+it was written for, the tree grows a member outside that population, and the
+absence of a complaint reads as coverage. The remedy here is the tests rather
+than a broader gate, because widening the screen-test gate to every module in
+the package would demand a test module for every private helper and teach
+authors to write empty ones.
+
+Six tests now stand behind them. The corpus accessor is held against the
+authority's own modelo set rather than a count, so a stale list fails instead of
+silently shrinking every screen's sweep, and its ordering and member types are
+asserted because the screens' rows are compared line by line.
+
+The path guards get the branch that matters. A real directory passes, so the
+refusals are not vacuous; a missing path is refused by subject name; and a
+symlink is refused THOUGH IT EXISTS, which is the case a guard checking only
+`exists()` would admit and the way a publication writes outside the tree it
+believes it is in. Containment is asserted in both directions, including that a
+parent is not inside its own child. Ten tests across the two modules, exit 0.

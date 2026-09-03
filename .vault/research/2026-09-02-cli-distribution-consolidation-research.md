@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f1fba07d51ae8d60bbd87ec6ae24e09a50e0dc73b479c369c3ccee66217e4c5f'
+body_hash: 'sha256:8a5ac8ddf7bee5b007b2a685f1facad7c9d2cec4a656473f0d9d7bf9b7f6d755'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -702,6 +702,31 @@ two independent blocks in series, the second invisible until the first cleared.
 
 Both branches now exist on the remote, `release-please--branches--main` carrying the
 correct six-surface bump. Neither is a pull request, and neither cuts a tag.
+
+### The release pull request merged, and the tag did not follow
+
+The pull request is merged and the default branch carries `0.4.0` across every surface.
+release-please then ran twice against that commit, succeeded both times, and produced no
+tag, no release and no dispatch. Both runs end the same way: it finds pull request #670,
+recognises it as merged and untagged, and aborts - correctly, since a merged release
+awaiting a tag is a reason not to open another. What never happens is the other half. The
+release-creation phase leaves no trace in either log.
+
+The condition is the bootstrap one. The repository has never carried a tag, and the
+manifest on the default branch now already reads the version being released, so the tool
+looks for `v0.4.0`, finds no prior release to anchor against, and has nothing it
+recognises as work. A first release has no predecessor by definition, and that is the
+case this configuration has never been through.
+
+Consequential because the dispatch is conditioned on it. `publish.yml` is triggered by
+the release step reporting a release was created, so an untagged merge does not merely
+delay publication - it removes the trigger. Creating the tag by hand would not dispatch
+the workflow either; that takes an explicit dispatch against the tag.
+
+The merge itself needed an administrative bypass. A ruleset named `protect-main` forbids
+updates to the branch, and it carries no required review and no required status check, so
+the bypass skipped no gate that exists - it is the same bypass an ordinary push by the
+owner already uses.
 
 ### Not investigated
 
