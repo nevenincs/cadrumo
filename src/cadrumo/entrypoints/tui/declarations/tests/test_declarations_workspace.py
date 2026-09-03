@@ -5,7 +5,7 @@ from __future__ import annotations
 import ast
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import cast, override
+from typing import override
 
 import pytest
 from textual.app import App, ComposeResult
@@ -14,29 +14,40 @@ from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
 from .....application.modelo.declarations_workspace import (
+    DeclarationsLifecycleKind,
+    DeclarationsSanitizedLifecycleFactV1,
     DeclarationsWorkspaceAvailability,
-    DeclarationsWorkspaceCalculationRevisionRefV1,
     DeclarationsWorkspaceDeclarationRefV1,
-    DeclarationsWorkspaceFilingRefV1,
     DeclarationsWorkspaceProjectionV1,
-    DeclarationsWorkspaceSource,
     DeclarationsWorkspaceZone,
-    DeclarationsWorkspaceZoneStateV1,
+    DeclarationsWorkspaceZoneObservationV1,
+    project_declarations_workspace,
 )
 from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
+from .....core.casilla_id import validated_casilla_id
 from .....core.external_constants import OutputLanguage
-from .....core.identity import CalculationRevisionId, FilingRecordId, WorkUnitId
 from .....core.period import Period
-from .....domain.modelos.calculation_revision import CalculationRevisionState
-from .....domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
-from .....domain.modelos.work_unit import WorkUnitState
+from .....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
+from .....domain.modelos.filing_record import (
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    derive_filing_record_id,
+)
+from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...components.host import ScreenHostApp
 from ...devtools.frame import geometry_band
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ..controller import DeclarationsWorkspaceController, declarations_copy
 from ..filing_history import DeclarationsFilingHistoryScreen
-from ..models import DeclarationHandoffV1, FilingHandoffV1, RevisionHandoffV1
+from ..models import FilingHandoffV1, ModeloWorkspaceScreenFactoryV1, RevisionHandoffV1
 from ..overview import DeclarationsOverviewScreen
 from ..revisions import DeclarationsRevisionsScreen
 from ..routes import (
@@ -48,26 +59,48 @@ from ..routes import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_WORK = cast("WorkUnitId", "a" * 64)
-_REVISION = cast("CalculationRevisionId", "b" * 64)
-_FILING = cast("FilingRecordId", "c" * 64)
 _NOW = datetime(2026, 9, 3, 10, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2026, "1T")
+_BUCKET = "11111111-1111-4111-8111-111111111111"
+_CASILLA = validated_casilla_id("01")
 _EXPECTED = {
-    OutputLanguage.ES: ("Resumen de declaraciones", "Revisiones de cálculo", "Historial de presentaciones"),
-    OutputLanguage.EN: ("Declarations overview", "Calculation revisions", "Filing history"),
-    OutputLanguage.CA: ("Resum de declaracions", "Revisions de càlcul", "Historial de presentacions"),
-    OutputLanguage.HU: ("Bevallások áttekintése", "Számítási változatok", "Benyújtási előzmények"),
+    OutputLanguage.ES: (
+        "Resumen de declaraciones",
+        "Revisiones de cálculo",
+        "Historial de presentaciones",
+        "El estado local de presentación y la evidencia observada de la AEAT son hechos distintos.",
+        "Presentación registrada localmente",
+    ),
+    OutputLanguage.EN: (
+        "Declarations overview",
+        "Calculation revisions",
+        "Filing history",
+        "Local filing status and externally observed AEAT evidence are separate facts.",
+        "Filing recorded locally",
+    ),
+    OutputLanguage.CA: (
+        "Resum de declaracions",
+        "Revisions de càlcul",
+        "Historial de presentacions",
+        "L'estat local de presentació i l'evidència observada de l'AEAT són fets separats.",
+        "Presentació registrada localment",
+    ),
+    OutputLanguage.HU: (
+        "Bevallások áttekintése",
+        "Számítási változatok",
+        "Benyújtási előzmények",
+        "A helyi benyújtási állapot és a megfigyelt AEAT-bizonyíték külön tény.",
+        "Benyújtás helyben rögzítve",
+    ),
 }
 
 
 def _projection(
     *, unavailable: DeclarationsWorkspaceZone | None = None, empty: bool = False
 ) -> DeclarationsWorkspaceProjectionV1:
-    zones = tuple(
-        DeclarationsWorkspaceZoneStateV1(
+    observations = tuple(
+        DeclarationsWorkspaceZoneObservationV1(
             zone=zone,
-            sources=(DeclarationsWorkspaceSource.LOCAL_DECLARATIONS,),
             availability=(
                 DeclarationsWorkspaceAvailability.NEVER_CAPTURED
                 if zone is unavailable
@@ -75,50 +108,129 @@ def _projection(
             ),
             observed_at=None if zone is unavailable else _NOW,
             reason_code="declarations.source.missing" if zone is unavailable else None,
-            item_count=None if zone is unavailable else (0 if empty else 1),
         )
         for zone in DeclarationsWorkspaceZone
     )
-    declaration = DeclarationsWorkspaceDeclarationRefV1(
-        work_unit_id=_WORK,
+    if empty:
+        return project_declarations_workspace(
+            bucket_id=_BUCKET,
+            work_units=WorkUnitCatalogue(),
+            calculation_revisions=CalculationRevisionCatalogue(),
+            filing_records=ModeloRecordCatalogue(),
+            lifecycle_facts=(),
+            zone_observations=observations,
+        )
+    work_unit_id = derive_work_unit_id(
+        bucket_id=_BUCKET,
         modelo="130",
         filing_year=2026,
         period=_PERIOD,
-        state=WorkUnitState.BORRADOR,
-        has_current_calculation=True,
-        has_current_filing=False,
+        revision_id="2026",
     )
-    revision = DeclarationsWorkspaceCalculationRevisionRefV1(
-        calculation_revision_id=_REVISION,
-        work_unit_id=_WORK,
+    filed_revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        input_values_by_casilla_id={_CASILLA: "10.00"},
+        binding_overrides={},
+        casilla_values={},
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    draft_revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        input_values_by_casilla_id={_CASILLA: "20.00"},
+        binding_overrides={},
+        casilla_values={},
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    filing_record_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=filed_revision_id,
+        filed_by="operator",
+        member_nif="12345678Z",
+    )
+    unit = WorkUnit(
+        work_unit_id=work_unit_id,
+        bucket_id=_BUCKET,
         modelo="130",
         filing_year=2026,
         period=_PERIOD,
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        revision_id="2026",
+        name="private label",
         created_at=_NOW,
         updated_at=_NOW,
-        is_current=True,
-        is_filed=False,
+        current_calculation_revision_id=filed_revision_id,
+        filed_calculation_revision_id=filed_revision_id,
+        current_filing_record_id=filing_record_id,
     )
-    filing = DeclarationsWorkspaceFilingRefV1(
-        filing_record_id=_FILING,
-        work_unit_id=_WORK,
-        calculation_revision_id=_REVISION,
+    filed_revision = CalculationRevision(
+        calculation_revision_id=filed_revision_id,
+        work_unit_id=work_unit_id,
+        state=CalculationRevisionState.PRESENTADO,
+        input_values_by_casilla_id={_CASILLA: "10.00"},
+        casilla_values={},
+        created_at=_NOW,
+        updated_at=_NOW,
+        verified_at=_NOW,
+        verified_by="operator",
+        filed_at=_NOW,
+        filed_by="operator",
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    draft_revision = CalculationRevision(
+        calculation_revision_id=draft_revision_id,
+        work_unit_id=work_unit_id,
+        state=CalculationRevisionState.BORRADOR,
+        input_values_by_casilla_id={_CASILLA: "20.00"},
+        casilla_values={},
+        created_at=_NOW.replace(day=2),
+        updated_at=_NOW.replace(day=2),
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    filing = ModeloRecord(
+        filing_record_id=filing_record_id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=filed_revision_id,
+        bucket_id=_BUCKET,
         modelo="130",
         filing_year=2026,
         period=_PERIOD,
+        member_nif="12345678Z",
         filed_at=_NOW,
-        local_status=ModeloRecordStatus.VIGENTE,
+        filed_by="operator",
+        notes="private notes",
         aeat_accepted=True,
-        evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+        external_evidence=ExternalEvidence(
+            kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            reference_id="private-reference",
+            imported_at=_NOW,
+        ),
     )
-    return DeclarationsWorkspaceProjectionV1(
-        bucket_id="11111111-1111-4111-8111-111111111111",
-        zones=zones,
-        declarations=() if empty else (declaration,),
-        calculation_revisions=() if empty else (revision,),
-        filings=() if empty else (filing,),
-        lifecycle=(),
+    lifecycle = (
+        DeclarationsSanitizedLifecycleFactV1(
+            fact_id="event-created",
+            work_unit_id=work_unit_id,
+            occurred_at=_NOW.replace(day=1),
+            kind=DeclarationsLifecycleKind.CREATED,
+        ),
+        DeclarationsSanitizedLifecycleFactV1(
+            fact_id="event-filed",
+            work_unit_id=work_unit_id,
+            occurred_at=_NOW,
+            kind=DeclarationsLifecycleKind.FILED,
+        ),
+    )
+    return project_declarations_workspace(
+        bucket_id=_BUCKET,
+        work_units=WorkUnitCatalogue.from_work_units((unit,)),
+        calculation_revisions=CalculationRevisionCatalogue(
+            revisions={filed_revision_id: filed_revision, draft_revision_id: draft_revision}
+        ),
+        filing_records=ModeloRecordCatalogue(records={filing_record_id: filing}),
+        lifecycle_facts=lifecycle,
+        zone_observations=observations,
     )
 
 
@@ -130,7 +242,7 @@ def _controller(
     projection: DeclarationsWorkspaceProjectionV1,
     context: TuiScreenContextV1 | None = None,
     *,
-    declaration_handoff: DeclarationHandoffV1 | None = None,
+    modelo_workspace_factory: ModeloWorkspaceScreenFactoryV1 | None = None,
     revision_handoff: RevisionHandoffV1 | None = None,
     filing_handoff: FilingHandoffV1 | None = None,
 ) -> DeclarationsWorkspaceController:
@@ -140,7 +252,7 @@ def _controller(
         work_action=_action("operator.modelo.work.list"),
         revisions_action=_action("operator.modelo.work.revisions"),
         filing_action=_action("operator.modelo.filing_record.list"),
-        declaration_handoff=declaration_handoff,
+        modelo_workspace_factory=modelo_workspace_factory,
         revision_handoff=revision_handoff,
         filing_handoff=filing_handoff,
     )
@@ -200,9 +312,10 @@ async def test_each_screen_has_four_targets_one_outer_scroll_and_no_overflow(scr
 
 @pytest.mark.asyncio
 async def test_semantic_selection_uses_exact_projected_identity_and_typed_callbacks() -> None:
+    projection = _projection()
     selected: list[object] = []
     screen = DeclarationsRevisionsScreen(
-        _controller(_projection(), revision_handoff=selected.append)
+        _controller(projection, revision_handoff=selected.append)
     )
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
@@ -213,29 +326,33 @@ async def test_semantic_selection_uses_exact_projected_identity_and_typed_callba
         await pilot.pause()
         assert len(selected) == 1
         assert selected[0] is screen.controller.projection.calculation_revisions[0]
-        assert screen.selected_calculation_revision_id == _REVISION
+        assert screen.selected_calculation_revision_id == projection.calculation_revisions[0].calculation_revision_id
         rendered = _copy(screen)
-        assert _WORK not in rendered and _REVISION not in rendered and _FILING not in rendered
+        assert all(row.work_unit_id not in rendered for row in projection.declarations)
+        assert all(row.calculation_revision_id not in rendered for row in projection.calculation_revisions)
+        assert all(row.filing_record_id not in rendered for row in projection.filings)
         assert "Modelo 130" in rendered
 
 
 @pytest.mark.asyncio
 async def test_focus_restores_by_calculation_revision_identity_not_registry_revision_or_position() -> None:
+    projection = _projection()
+    revision_id = projection.calculation_revisions[-1].calculation_revision_id
     context = TuiScreenContextV1(
         destination="workbench.declarations",
         focus=TuiFocusIdentityV1(
             destination="workbench.declarations",
             semantic_key="declarations.calculation_revision",
-            restore_token=_REVISION,
+            restore_token=revision_id,
         ),
     )
-    screen = DeclarationsRevisionsScreen(_controller(_projection(), context))
+    screen = DeclarationsRevisionsScreen(_controller(projection, context))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
         table = screen.query_one("#declarations-revisions", DataTable)
         assert app.focused is table
-        assert table.ordered_rows[table.cursor_row].key.value == _REVISION
+        assert table.ordered_rows[table.cursor_row].key.value == revision_id
 
 
 @pytest.mark.asyncio
@@ -258,6 +375,101 @@ async def test_unavailable_is_refusal_empty_is_measured_and_missing_handoff_refu
         assert declarations_copy("tui.declarations.refusal.handoff") in _copy(screen)
 
 
+class _ModeloChild(Screen[None]):
+    @override
+    def compose(self) -> ComposeResult:
+        """Render an identifiable injected child."""
+        yield Static("modelo child", id="modelo-child")
+
+
+@pytest.mark.asyncio
+async def test_modelo_workspace_route_opens_exact_selected_factory_child_and_restores_focus() -> None:
+    projection = _projection()
+    calls: list[object] = []
+    child = _ModeloChild()
+
+    def factory(declaration: DeclarationsWorkspaceDeclarationRefV1) -> Screen[None]:
+        calls.append(declaration)
+        return child
+
+    controller = _controller(projection, modelo_workspace_factory=factory)
+    launcher = resolve_declarations_screen(controller, controller.target("declarations.modelo_workspace"))
+    assert launcher.id == "declarations-modelo-workspace-launcher-screen"
+    root = _Root()
+    async with root.run_test(size=(80, 24)) as pilot:
+        await root.push_screen(launcher)
+        await pilot.pause()
+        table = launcher.query_one("#declarations-list", DataTable)
+        table.focus()
+        await pilot.press("enter")
+        await pilot.pause()
+        assert calls == [projection.declarations[0]]
+        assert root.screen is child
+        child.dismiss(None)
+        await pilot.pause()
+        assert root.screen is launcher
+        assert root.focused is table
+        assert table.ordered_rows[table.cursor_row].key.value == projection.declarations[0].work_unit_id
+
+
+@pytest.mark.asyncio
+async def test_history_renders_filing_and_sanitized_lifecycle_in_chronological_semantic_rows() -> None:
+    projection = _projection()
+    screen = DeclarationsFilingHistoryScreen(_controller(projection))
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(100, 30)) as pilot:
+        await pilot.pause()
+        table = screen.query_one("#declarations-filings", DataTable)
+        history_state = next(
+            state for state in projection.zones if state.zone is DeclarationsWorkspaceZone.FILING_HISTORY
+        )
+        assert history_state.item_count == table.row_count == 3
+        assert table.row_count == len(projection.filings) + len(projection.lifecycle) == 3
+        keys = tuple(str(row.key.value) for row in table.ordered_rows)
+        assert set(keys[:2]) == {
+            "lifecycle:event-filed",
+            f"filing:{projection.filings[0].filing_record_id}",
+        }
+        assert keys[-1] == "lifecycle:event-created"
+        assert f"filing:{projection.filings[0].filing_record_id}" in keys
+        table.move_cursor(row=keys.index("lifecycle:event-filed"))
+        table.focus()
+        await pilot.press("enter")
+        assert screen.selected_lifecycle_fact_id == "event-filed"
+        rendered = _copy(screen)
+        assert "event-filed" not in rendered
+        assert "private" not in rendered.lower()
+
+
+@pytest.mark.asyncio
+async def test_revision_and_filing_rows_render_exact_chronology_and_independent_axes() -> None:
+    projection = _projection()
+    revisions = DeclarationsRevisionsScreen(_controller(projection))
+    revision_app = ScreenHostApp[None](revisions)
+    async with revision_app.run_test(size=(100, 30)) as pilot:
+        await pilot.pause()
+        table = revisions.query_one("#declarations-revisions", DataTable)
+        assert table.row_count == 2
+        rows = tuple(tuple(str(cell) for cell in table.get_row_at(index)) for index in range(2))
+        assert rows[0] != rows[1]
+        assert all("2026-09-" in row[1] for row in rows)
+        assert {row[-2:] for row in rows} == {
+            (declarations_copy("tui.declarations.value.yes"), declarations_copy("tui.declarations.value.yes")),
+            (declarations_copy("tui.declarations.value.no"), declarations_copy("tui.declarations.value.no")),
+        }
+    filings = DeclarationsFilingHistoryScreen(_controller(projection))
+    filing_app = ScreenHostApp[None](filings)
+    async with filing_app.run_test(size=(100, 30)) as pilot:
+        await pilot.pause()
+        table = filings.query_one("#declarations-filings", DataTable)
+        filing_key = f"filing:{projection.filings[0].filing_record_id}"
+        row = tuple(str(cell) for cell in table.get_row(filing_key))
+        assert row[1] == "2026-09-03"
+        assert row[2] == declarations_copy("tui.declarations.filing_state.vigente")
+        assert row[3] == declarations_copy("tui.declarations.value.yes")
+        assert row[4] == declarations_copy("tui.declarations.evidence.aeat_justificante_pdf")
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("locale", tuple(OutputLanguage))
 async def test_real_locales_change_copy_without_changing_semantic_rows(locale: OutputLanguage) -> None:
@@ -269,7 +481,9 @@ async def test_real_locales_change_copy_without_changing_semantic_rows(locale: O
             DeclarationsRevisionsScreen(_controller(_projection())),
             DeclarationsFilingHistoryScreen(_controller(_projection())),
         )
-        for screen, expected in zip(screens, _EXPECTED[locale], strict=True):
+        filing_copy = ""
+        filing_keys: tuple[object, ...] = ()
+        for screen, expected in zip(screens, _EXPECTED[locale][:3], strict=True):
             app = ScreenHostApp[None](screen)
             async with app.run_test(size=(80, 24)) as pilot:
                 await pilot.pause()
@@ -280,6 +494,19 @@ async def test_real_locales_change_copy_without_changing_semantic_rows(locale: O
                 assert tuple(row.key.value for row in screen.query_one("#declarations-navigation", DataTable).ordered_rows) == tuple(
                     route.destination for route in DECLARATIONS_ROUTES
                 )
+                if isinstance(screen, DeclarationsFilingHistoryScreen):
+                    filing_copy = rendered
+                    filing_keys = tuple(
+                        row.key.value
+                        for row in screen.query_one("#declarations-filings", DataTable).ordered_rows
+                    )
+        assert _EXPECTED[locale][3] in filing_copy
+        assert _EXPECTED[locale][4] in filing_copy
+        assert filing_keys == (
+            f"filing:{screens[-1].controller.projection.filings[0].filing_record_id}",
+            "lifecycle:event-filed",
+            "lifecycle:event-created",
+        )
 
 
 class _Root(App[None]):

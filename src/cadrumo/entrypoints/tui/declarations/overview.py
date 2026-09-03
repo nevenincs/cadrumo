@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import cast, override
 
-from textual.app import ComposeResult
+from textual.app import App, ComposeResult
 from textual.widgets import DataTable, Static
 
 from ..components.widgets import ContentDataTable, ContentScroll
@@ -78,7 +78,7 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
             self.refuse_handoff()
         else:
             child = factory(row)
-            self.app.push_screen(child, self._restore_declaration_focus)
+            cast("App[None]", self.app).push_screen(child, self._restore_declaration_focus)
 
     def _restore_declaration_focus(self, _: None) -> None:
         """Restore the semantic declaration table after its child dismisses."""
