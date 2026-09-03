@@ -10868,3 +10868,37 @@ came from. Modelo 303's note belongs to its 2023 revision and modelo 353's to
 `2026-desde-02`; read there, every one of the eleven carries text, between
 thirty-five and four hundred and fifty-nine characters. The correction cost one
 command and the wrong version never left the session.
+
+
+## A note is identified by its design as well as its sheet
+
+The near-miss recorded above - looking a note up in the wrong revision and
+briefly seeing three of eleven as empty - was treated as a query mistake. It was
+also a gap in the artifact. The worklist named a note by modelo, sheet and
+label, which is exactly enough information to open the wrong file. It now
+carries the transcription, so a reader has the document rather than a hint
+towards it.
+
+Carrying it changed the count, and the change is the finding. The worklist
+reported **eleven** items grouped by modelo and label; grouped by design it
+reports **thirteen**. The two extra are modelo 303's `DP30302:nota 5`, which
+appears in three of that modelo's design transcriptions.
+
+The merge was not harmless. Ten of the eleven notes carry identical text
+wherever they appear, so for those the grouping was a fair economy. The eleventh
+does not: `DP30302:nota 5` carries **three hundred and thirty characters in one
+design and two hundred and nine in another**. A reader handed one row for it
+would have read one of the two texts and applied it to fields governed by the
+other - which is precisely the failure mode of reading a note from the wrong
+page, arrived at by a different route.
+
+This is the sheet-merge defect one level up. A label identifies a note only
+together with the sheet that prints it and the design that sheet belongs to, and
+each level of that was learned by finding a merge that had already happened. The
+justification written for the eleven - "several revisions of a modelo share one
+design, so a note common to them is one reading" - is true of modelo 200 and
+false of modelo 303, whose revisions carry separate transcriptions. It was
+written from the case in front of me and generalised without checking the other.
+
+Both halves are now tested: two revisions sharing one design produce one work
+item, and one label in two designs produces two.
