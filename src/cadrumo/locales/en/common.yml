@@ -1003,6 +1003,7 @@ tui:
     census_status:
       adopted: Adopted
       conflict: Conflict
+      unchanged: Unchanged
       unset: Unset
     column:
       aeat: AEAT
@@ -1018,6 +1019,7 @@ tui:
       local_filing: Local filing
       read: Read
       receipt: Receipt
+      resolution: Resolution
       sources: Sources
       status: Status
     discrepancy:
@@ -1032,6 +1034,8 @@ tui:
       not_captured: Not captured
       refused: Refused
       unavailable: Unavailable
+    evidence_comparison:
+      title: AEAT Sync evidence comparison
     filed_declarations:
       title: AEAT Sync filed declarations
     justificante_state:
@@ -1080,8 +1084,10 @@ tui:
         filings: Local filings
         notification_custody: Local notification custody
         profile: Local profile
+        reconciliation: Local reconciliation
     source_state:
       absent: Absent
+      accepted: Accepted
       not_observed: Not observed
       present: Present
       rejected: Rejected
