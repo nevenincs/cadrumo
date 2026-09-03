@@ -1107,7 +1107,9 @@ def _importers_of_span(
     needs the span.
     """
     span = frozenset(member for member in modules if member == name or member.startswith(name + "."))
-    outside_importers = {source for member in span for source in importers.get(member, frozenset()) if source not in span}
+    outside_importers = {
+        source for member in span for source in importers.get(member, frozenset()) if source not in span
+    }
     return tuple(sorted(outside_importers))
 
 

@@ -22,8 +22,9 @@ directions:
 
 * a module the tree reports that the baseline does not name is a regression --
   new unreachable code entered the shipped package;
-* a module the baseline names that the tree no longer reports is a stale
-  entry -- the debt was paid and the baseline must shrink to record it.
+* a module the baseline names that the tree no longer reports as actionable
+  is a stale entry -- either the debt was paid or only a deferred cluster
+  still leads there, and the baseline must shrink to record it.
 
 Some unreachable modules are intentional design-time authorities rather than
 runtime capabilities. They belong in a separately typed, reviewable
@@ -271,9 +272,7 @@ def derived_deferrals(
                 derived[name] = tuple(deferring)
                 grew = True
         if not grew:
-            return tuple(
-                DeferredDerivation(module=name, deferring_importers=derived[name]) for name in sorted(derived)
-            )
+            return tuple(DeferredDerivation(module=name, deferring_importers=derived[name]) for name in sorted(derived))
 
 
 @dataclass(frozen=True, slots=True)
@@ -339,9 +338,7 @@ class RatchetVerdict:
             lines.append(
                 f"{len(self.derived)} module(s) deferred because only a frozen cluster still imports them:",
             )
-            lines.extend(
-                f"  ~ {entry.module} <- {', '.join(entry.deferring_importers)}" for entry in self.derived
-            )
+            lines.extend(f"  ~ {entry.module} <- {', '.join(entry.deferring_importers)}" for entry in self.derived)
         if not lines:
             return (
                 f"unreachable-module set matches the baseline "
