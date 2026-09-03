@@ -11593,3 +11593,81 @@ untidinesses and nothing here weighs them. Census screens are excluded, since
 their rows are transitions examined and including them would rank a revision by
 how many fields it has - the same error the entry-point declaration exists to
 prevent, arriving by a second route, and it has its own test.
+
+
+## The worst revision's nine conditions are seven, and one screen was counted twice
+
+Modelo 200's `2025-y-siguientes` led the pressure ranking with nine conditions.
+Reading them found two pairs that are one fact each.
+
+The pointer screen reports 31 fields citing a note; the grounding screen reports
+the same 31 as grounded by a note they cite. The pointer screen reports one
+field whose citation does not resolve; the grounding screen reports that same
+field as falling back to a design note. Not a coincidence - **the grounding
+screen calls the pointer screen** and emits one finding per field it returns.
+Measured across the corpus: 41 findings each, over the same 41 cells, in the
+same revisions.
+
+So every revision carrying pointer fields gained a second condition
+automatically, and the ranking overstated all five of them. Corrected, modelo
+200 carries **seven** independent conditions, modelo 347 six, and modelos 308
+and 353 five.
+
+The remaining seven on modelo 200 are genuinely distinct: three separate
+monetary-scale problems, three uncited manifest references, and 4,022 provenance
+citations reaching outside its manifest, of which the largest names the modelo's
+own 2024 manual.
+
+### Declared, and gated as far as a gate can reach
+
+`ScreenEntry.derives_from` now names the source a screen is built on, and the
+pressure ranking skips derived screens because their findings are a
+re-description rather than independent evidence.
+
+Half of this declaration is verifiable and is now gated: whatever a derived
+screen reports must name a revision its source also reports. The other half is
+not - no test can decide whether a screen that happens to agree today was
+actually built on the other - so the declaration stays an author's statement and
+the gate does not pretend to confirm it. That distinction is written into both
+the field's comment and the gate's docstring, because the previous declaration
+added for the same reason carries no gate at all and a reader is owed the
+difference.
+
+This is the second undeclared producer contract found by a consumer getting it
+wrong, in two consecutive iterations, in tooling written during this campaign.
+
+
+## Sweeping for other undeclared derivations found none, and a weak instrument
+
+Having found one screen derived from another by reading, the obvious next move
+is to sweep for others mechanically: which screen modules import another
+screen's entry point? Two rows came back and neither is a missed declaration.
+
+**The provenance screen imports the manifest screen inside `main()`**, to print
+both populations from one command. Its `screen_authority` never touches it, so
+nothing about its findings derives from that screen. The sweep flagged it because
+it read module text rather than what the entry point calls.
+
+**The grounding screen reaches three screens and declares one.** That is correct
+and the distinction is the useful part: `fields_needing_rules` supplies its
+POPULATION - the fields it reports are exactly the fields that screen returns -
+while the convention screen supplies an attribute of each row and the drift
+screen supplies a flag in `main()`. A screen derives its population from at most
+one source; consuming others for attributes is not derivation and must not be
+declared as it, or the ranking that reads the declaration would drop findings
+that are independent.
+
+So the sweep is a prompt and not a verdict, like the population-identity sweep
+before it. Import-reach over-reports because a screen may consume another for
+enrichment, and the property that matters - where a screen's population comes
+from - is not visible in an import. The declaration stays an author's statement
+with the containment half gated.
+
+### An asymmetry introduced and removed in the same iteration
+
+`derives_from` was added to `ScreenEntry` and not to `CorpusScreenEntry`, so the
+sweep crashed reading the corpus table. The two entry types now declare the same
+things. An asymmetry between them is a place where a consumer must know which
+table a screen sits in before it can ask a question about it, which is the shape
+of several defects already in this audit and was worth removing rather than
+working around.
