@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8a5ac8ddf7bee5b007b2a685f1facad7c9d2cec4a656473f0d9d7bf9b7f6d755'
+body_hash: 'sha256:1bdd58e6f0438821cc378713766da110d6993f59b417d80c905b1cd0b66ae95b'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -343,13 +343,25 @@ That asymmetry decides the binding form rather than leaving it to preference: a 
 publisher applies only to a name with no project behind it, so the two corpus
 distributions take the ordinary project-level form, registered per project.
 
-All three are registered, on the operator's word. That is the only evidence available and
-it is sufficient: a publisher registration lives in the account and is visible from
-nowhere else, so no probe in this repository and no request to the index can confirm or
-refute one. An earlier version of this record asserted the two corpus bindings were
-outstanding; that was inferred from the distributions existing, never measured, and it
-was wrong. The first publish run is what demonstrates all three, and because an upload is
-per-file it demonstrates them one at a time.
+The first publish run measured it, and only one of the three was bound. The primary
+name's pending publisher worked - `cadrumo` uploaded - and the next file was refused:
+`OIDC scoped token is not valid for project 'cadrumo-data-manuals'`. Neither companion
+carries a binding.
+
+This record twice got that wrong in opposite directions. It first asserted the two
+companion bindings were outstanding, inferring it from the distributions merely existing.
+It then retracted that on the operator's word and wrote that operator confirmation was
+sufficient evidence. Neither was defensible: the first was an inference dressed as a
+finding, and the second treated an unverifiable claim as settled rather than as
+unverifiable. A publisher registration is visible only from inside the account, so the
+honest state was "cannot be confirmed here" until an upload tested it. The upload has now
+tested it.
+
+Because an upload is per-file and not atomic, the run left the index in a mixed state:
+`cadrumo` at `0.4.0`, both companions still at `0.0.0`. That is worse than a clean
+failure. The published root distribution pins both companions at `0.4.0` exactly, so
+`pip install cadrumo` cannot resolve until they land - the product is on the index and not
+installable from it.
 
 The release runbook still drives the retired orchestrator. `release-orchestrator.yml`
 no longer exists in the workflow directory, yet `RELEASING.md` names it eight times as
@@ -727,6 +739,24 @@ The merge itself needed an administrative bypass. A ruleset named `protect-main`
 updates to the branch, and it carries no required review and no required status check, so
 the bypass skipped no gate that exists - it is the same bypass an ordinary push by the
 owner already uses.
+
+### The pipeline is proven capable, up to the upload
+
+The first real publish run exercised every stage the campaign had only measured locally,
+and each one held. The runtime inventory produced a non-empty matrix. The three
+distributions built from the tag. The index file-cap check passed against the single
+declaration of the limit. The bytes were sealed and re-verified after transport. And the
+smoke check ran on six legs - Linux, macOS and Windows, each on Python 3.13 and 3.14 -
+proving both console scripts from the built wheel on every supported platform.
+
+Then the upload refused on the second of six files. So the shape of the result is worth
+stating precisely: the pipeline is demonstrated capable of building, proving and shipping
+this product, and the one thing it could not do was authenticate for two distributions
+whose registrations were never made. Nothing in the tree was at fault.
+
+The release also needed a tag created by hand. release-please would not cut one, and its
+dispatch is conditioned on cutting it, so the workflow had to be dispatched explicitly
+against the tag as well.
 
 ### Not investigated
 

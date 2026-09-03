@@ -11,8 +11,9 @@ related:
   - '[[2026-09-03-duplication-burndown-honest-clone-closure-research]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:4e894bce0896057a78f220780fd6f56192e2cc8e650b5ddcb936c59f0b19cb5d'
+body_hash: 'sha256:2ea13bb223b25235e77f1c61158901e3afca3bd100e1fd50b798c0687a719cbf'
 ---
+
 <!-- RETIRED: W05, W06, W07, P02, P03, P04, P06, P09, P12, P14, P16, P17, P19, P20, P21, P22, P23, P24, P25, P26, P27, S03, S06, S07 -->
 
 # `duplication-burndown` plan
@@ -31,8 +32,8 @@ Re-establish stable clone evidence and historical dispositions without weakening
 
 Recover the deleted disposition registry and audit tests from history, then reconcile renamed locators against the current tree.
 
-- [ ] `W01.P01.S01` - Recover the historical clone dispositions from the last trustworthy revision without accepting stale locators or counts; `dev/audit/duplication_dispositions.toml`.
-- [ ] `W01.P01.S02` - Restore and run the deleted duplication instrument tests against the current typed runner; `src/cadrumo/tests/test_dev_audit_report.py`.
+- [x] `W01.P01.S01` - Recover the historical clone dispositions from the last trustworthy revision without accepting stale locators or counts; `dev/audit/duplication_dispositions.toml`.
+- [x] `W01.P01.S02` - Restore and run the deleted duplication instrument tests against the current typed runner; `src/cadrumo/tests/test_dev_audit_report.py`.
 - [ ] `W01.P01.S04` - Recover and reconcile one disposition for every currently observed clone group without carrying stale groups or muting findings; `dev/audit/duplication_dispositions.toml`.
 - [ ] `W01.P01.S05` - Prove disposition parsing and live-clone reconciliation preserve unavailable and changed-scan failures as non-green evidence; `dev/audit/tests`.
 

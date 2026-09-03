@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:5afb6d2d5944405ab8acf22c4a98e26cd692d1734d4349c215ec5aaa261ab6a4'
+body_hash: 'sha256:19f4e2562798685bf51e2a938c223f6ccd6f41b29c8c4206afb8fcb2abb69da8'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -81,10 +81,24 @@ today and its cost is visible. The filing envelope is declared two ways: twenty 
 typed slot, which carries record identity, prefix extent, total and closer derivations, a schema
 version, a digest-bearing source reference and a product-identity requirement; thirty-one revisions
 across sixteen modelos spell the same envelope as an ordinary record, where none of those facts has a
-home and all survive as offsets. The cost is not hypothetical - three iterations of this campaign went
+home and all survive as offsets. The typed form's advantage is in use rather than theoretical:
+eighteen of those envelopes declare `aeat-product-software-identity-v1` as their product-identity
+requirement, so the fact modelo 714 cannot state is one eighteen of its peers state in a field. The
+cost is not hypothetical - three iterations of this campaign went
 into deciding whether four bytes at position 93 of one modelo's envelope should be authored, and the
 answer, that they are delegated to the software house and this product must not write them, is a fact
 the typed slot states in a field and the record spelling cannot state at all.
+
+A second live example is larger and cost this campaign a wrong recommendation. A casilla's label is a
+property of the casilla, and the catalogues key it by revision, so the Spanish catalogues carry 29,522
+casilla label strings of which 11,286 are the same text repeated under a second revision - 4,733 for
+modelo 100 alone, and 3,173 for modelo 200, where the two revisions' shared labels are byte-identical
+on every one. Four shipped locales multiply it. The consequence is that declaring a revision costs a
+full re-translation of text that has not changed, and 156 labels missing from one revision were first
+recorded here as work to author by hand before the operator pointed out that the derivation, not the
+translation, is the deliverable. The tooling exists - `dev.locales` scaffolds keys, carries a
+revision's keys onto renamed ids, and applies generated migrations - and what is missing is one label
+per casilla with a per-revision override only where the official text genuinely differs.
 
 The remaining two await the same treatment. Detection after the fact is the wrong
 shape. This plan
@@ -669,6 +683,25 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S359` - Resolve why the layout coverage validator accepts modelo 714 while its cited design declares an uncovered developer-identity position; `src/cadrumo/domain/calculations/registry/_validate_export_layout_coverage.py`.
 - [x] `W06.P13.S360` - Connect the envelope migration to the modelo 714 offsets it explains, and measure both declaration forms; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S361` - Give the description a live countable example of one fact declared two ways, with its measured cost; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S362` - Establish that the typed envelope's product-identity requirement is declared by eighteen revisions, not merely available; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [ ] `W06.P13.S363` - Decide the never-populated engineered_by governance field, whose three stamp siblings are used by 122 of 128 revisions; `src/cadrumo/domain/calculations/registry/schema.py`.
+- [x] `W06.P13.S364` - Sweep the revision schema for declared fields nothing populates and record the one exception; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S365` - Sweep the casilla and export-field types for unused declarations and attach the count to the retirement Step; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S366` - Measure the casilla number field before its retirement and surface the second number field beside it; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S367` - Resolve the two casilla number fields: they carry different facts, and the confusion is the name rather than a duplication; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S369` - Measure what the casilla number field actually holds across the corpus; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S370` - Sweep every casilla string field for heterogeneous value kinds and separate the real finding from the classifier's artefacts; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S372` - Examine the two remaining shape-sweep tails and reduce 415 to the six occurrences that are real; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S373` - Bound the accented-identifier finding by asking the direct question of every casilla field; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S374` - Sweep the export surface for encoding, line-ending and record-less defects and record that it is clean; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S375` - Gate the three export-surface properties the sweep found clean, so they stay clean; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W06.P13.S376` - Prove the three export gates against planted defects through the helpers they call; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W06.P13.S377` - Record the three export-surface gates and their skip in the declaration-gate criterion; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S378` - Sweep the deadline windows for inverted spans, stray payment cutoffs and duplicate coordinates; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S379` - Write the keying rule into the contributor README beside the two rules already there; `dev/registry/README.md`.
+- [x] `W06.P13.S381` - Measure whether every declared casilla localization key resolves in the shipped catalogues; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [ ] `W06.P13.S382` - Complete the localization crossing across all five key-bearing declaration families and decline to gate the one carrying findings; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S383` - Measure the per-revision label restatement corpus-wide after the operator corrected the authoring framing; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -677,9 +710,12 @@ Apply the accepted contract across the registry so restatement becomes unconstru
 - [ ] `W06.P14.S47` - Refuse an authored value on any field the accepted contract marks derived; `src/cadrumo/domain/calculations/registry/loader_cache.py`.
 - [ ] `W06.P14.S48` - Migrate the temporal axis onto the single owned declaration and derive its projections; `src/cadrumo/_data/registry/aeat/modelos`.
 - [ ] `W06.P14.S49` - Migrate the identifier grammar onto one declared form per modelo; `src/cadrumo/_data/registry/aeat/modelos`.
-- [ ] `W06.P14.S50` - Retire the restated casilla number field and the unused alias field; `src/cadrumo/domain/calculations/registry/schema.py`.
+- [ ] `W06.P14.S50` - Retire the alias field, which carries no value on any of the 29,678 casillas, and decide the number field rather than retiring it: it restates the identifier on 24,524 casillas and carries a number the identifier does not on 5,154 semantically named ones; `src/cadrumo/domain/calculations/registry/schema.py`.
 - [ ] `W06.P14.S51` - Migrate provenance onto attesting references and drop the verbatim restatements; `src/cadrumo/_data/registry/aeat/modelos`.
 - [ ] `W06.P14.S52` - Move the non-temporal scheme axis of modelo 369 out of the revision slot; `src/cadrumo/_data/registry/aeat/modelos/369/revisions`.
+- [ ] `W06.P14.S368` - Split the casilla number field by what it holds: 25,615 plain box numbers, 2,002 position ranges and 2,061 slugs that are not numbers at all; `src/cadrumo/domain/calculations/registry/schema.py`.
+- [ ] `W06.P14.S371` - Transliterate the one semantic role identifier retaining an accent, which six casillas of modelo 100 carry while the other 24,042 are ASCII; `src/cadrumo/_data/registry/aeat/modelos/100`.
+- [ ] `W06.P14.S380` - Derive casilla labels per modelo rather than per revision: modelo 200's two revisions carry 3,173 byte-identical label strings each, so a revision costs a full re-translation today, and only genuinely new casillas need text; `dev/locales src/cadrumo/locales`.
 
 ## Parallelization
 
@@ -864,6 +900,13 @@ condition-count gate exists because naming was not enough: two screens named eve
 opening with a count from an earlier version of themselves, and one of those went stale in the very
 edit that added the missing name. A wrong count is worse than a missing one, because it tells the
 reader the list is complete.
+
+Three gates now hold the export surface itself, on properties measured clean and then guarded so they
+stay so: no export declaration carries a character outside ASCII across 25,031 fields, no modelo
+declares two record encodings across 419 records, and no layout mixes terminated with unterminated
+records across the 88 layouts that have records. The record-less layouts are skipped rather than
+counted as agreeing, because an XML dictionary layout has no termination to disagree about, and each
+gate asserts what it read before asserting what it did not find.
 
 Each declaration gate demonstrates detection of a representative defect from a constructed fixture or
 an isolated temporary registry tree, never by mutating the working tree, and each passes the normal path in the same suite. Several gates are exempt and

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:9e49e73d82f975ab6aed06b9e92937f650e5244a1204bcf641de8de7493fd669'
+body_hash: 'sha256:b8bdfb07699ca6d11f510943c2317a8a5a6f1873b9f3559100c39471af322af7'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -9347,3 +9347,494 @@ re-derive.
 That is the closing state of the description's evidence: the original five
 figures remain, marked as history and as unreproducible, and beside them sits
 one example that is current, countable, and carries its own cost.
+
+### the-typed-envelope-s-advantage-is-declared-eighteen-times-not-merely-available | high | A field that exists and nobody uses would have made the whole argument theoretical
+
+The description now argues that the typed envelope slot can state a
+product-identity requirement where the record spelling cannot. That argument
+would have been worthless if the field existed and sat empty, which is the
+shape of half the defects this campaign has recorded - a declaration available,
+unused, and quoted as though it were a capability.
+
+It is used. Eighteen typed envelopes declare
+`aeat-product-software-identity-v1` as their product-identity requirement,
+across modelos 151, 200, 202 and others. So the fact modelo 714 spent three
+iterations failing to express is a fact eighteen of its peers state in one
+field, and the difference between the two forms is a difference in what can be
+said rather than in how tidily it is said.
+
+Checking this before leaving the claim in the plan is the discipline the rest of
+this session has been about, applied to my own new sentence rather than to
+somebody else's old one. The claim was written from reading the schema, which
+establishes that a field exists; the count establishes that the field carries
+something. Those are different claims and only the second supports the argument
+the description makes.
+
+### one-revision-field-of-thirty-five-has-never-been-populated | high | The governance stamp's other three members are used by 122 of 128 revisions
+
+Sweeping the revision schema for declared fields nothing uses - the shape behind
+half this campaign's findings, a slot available and quoted as capability -
+returns one of thirty-five. The schema is otherwise fully in use, which is worth
+recording as a negative result of some size: 128 revisions populate 34 fields
+between them.
+
+The exception is `engineered_by`, one of a four-member governance stamp. Its
+siblings are used: `reviewed_by` and `reviewed_at` are set on 122 of 128
+revisions, and `review_status` reads `agent_reviewed` on the same 122 and
+`pending_review` on the remaining six, which is the fail-closed default the
+schema documents. So the stamp is adopted, thoroughly, and one of its four
+fields has never carried a value.
+
+That leaves a decision rather than a defect, and the decision needs somebody who
+knows what the field was for. It may duplicate `reviewed_by` - who engineered a
+revision and who reviewed it are the same person in an agent-authored registry -
+in which case it is a second spelling of one fact and belongs deleted under this
+plan's own thesis. Or it may record something the reviewer is not, in which case
+122 revisions are missing it and the omission is the finding.
+
+A Step carries the question with the counts attached. What this measurement can
+settle is that the field is unused and its neighbours are not; what it cannot
+settle is which of those two readings is right, and guessing between them is how
+an unused field acquires 122 hastily-authored values.
+
+### the-unused-alias-field-is-unused-on-all-29678-casillas-and-the-export-field-is-fully-used | high | A retirement Step's premise verified independently, and a second sweep that found nothing
+
+Extending the unused-field sweep from revisions to the types beneath them. The
+casilla declares twenty-three fields across 29,678 instances and one of them,
+`aliases`, carries a value on none. The export field declares its fields across
+25,031 instances and every one is used somewhere.
+
+The alias result confirms a Step this plan already carries, independently and
+from the other direction. That Step asks to retire "the restated casilla number
+field and the unused alias field", and "unused" was an assertion nobody had
+counted; it is now 0 of 29,678, and the Step carries the figure. A retirement
+argued from a count is harder to defer than one argued from an adjective.
+
+The export-field result is the more interesting half and it found nothing. Every
+declared field on the type that carries the most instances in this registry is
+populated somewhere, which says the export surface has been authored rather than
+inherited - a schema accumulates unused fields when it is designed ahead of its
+data, and this one has not. Recording a clean sweep matters because the next
+person asking this question should not have to repeat it, and because two of the
+three types swept came back with one unused field each while the largest came
+back with none.
+
+Three sweeps, two findings, both already known to the plan in prose and neither
+previously counted. That is the pattern this session has settled into: the plan's
+instincts have been sound and its evidence thin, and the work is mostly turning
+the second into the first's equal.
+
+### the-restated-casilla-number-is-a-restatement-on-24524-casillas-and-load-bearing-on-5154 | high | Retiring it as the Step asked would have deleted a fact for one casilla in six
+
+The retirement Step pairs two fields: the unused alias, now measured at 0 of
+29,678, and "the restated casilla number field". The second half does not
+survive measurement as stated.
+
+The `number` field is derivable from the identifier on 24,524 casillas - the
+identifier contains it, so the field restates what the id already says, which is
+exactly the defect the Step names. On 5,154 it is not derivable, and the reason
+is visible in any of them: a casilla identified semantically, like
+`act.actividad-descripcion`, carries number 400, and nothing in the identifier
+encodes 400. For one casilla in six the field is the only place the form's
+printed number appears.
+
+So the Step would have been lossy. Retiring `number` deletes a fact for 5,154
+casillas while removing a duplication for 24,524, and the two populations are
+not separable by anything the Step mentions. It now asks to retire the alias and
+DECIDE the number, with both figures attached, because the remedies differ:
+derive it where the identifier carries it and require it where the identifier
+does not, or keep it everywhere and gate agreement on the derivable majority.
+
+A second observation for whoever takes that decision: the casilla declares
+`form_number` as well as `number`. Two number fields on one declaration is the
+shape this campaign exists to remove, and no Step mentions the pair. Whether
+they are the same fact under two names or two facts sharing a word is not
+settled here, and the 5,154 make it likely that at least one of them is
+carrying the printed form number that the identifier cannot.
+
+### the-two-casilla-number-fields-are-two-facts-and-the-defect-is-the-name | high | Both set on 138 casillas, 134 of them different, because one holds a range and the other a printed box
+
+The pair raised last iteration is resolved, and against the guess that raised
+it. `number` and `form_number` are both set on 138 of 29,678 casillas. On 134 of
+those they differ, and the examples say why in one line: `conyuge.deduccion`
+carries `number=238-254` and `form_number=574`. One is a RANGE of positions, the
+other the single box number printed on the form. The four that agree are
+coincidence - a one-position range reading as its own number.
+
+Everywhere else, 29,540 casillas carry `number` alone and none carries
+`form_number` alone. So this is not one fact under two names, which is what a
+count of two number-like fields suggests before anyone looks. It is two facts,
+one of which is needed by a sixth of the corpus and 138 of which need both at
+once.
+
+The defect is therefore the naming, not the duplication. A field called `number`
+that sometimes holds `238-254` is telling a reader it holds a number, and the
+plan's own retirement Step read it that way - "the restated casilla number
+field" - which is how a measurement of derivability from the identifier came to
+be the wrong question for a sixth of the corpus.
+
+That closes this thread with the opposite of what it opened with. The sweep for
+unused declarations found one genuinely dead field, one field the plan wanted to
+retire that carries a fact for 5,154 casillas, and a pair that looked like a
+duplication and is a naming problem. Three results, one retirement, and two
+Steps that would have removed information had their premises not been counted.
+
+### the-casilla-number-field-holds-three-different-kinds-of-value | high | 25,615 box numbers, 2,002 position ranges, and 2,061 slugs that are not numbers
+
+Quantifying the naming defect found more than a naming defect. The casilla
+`number` field carries three shapes across 29,678 declarations: 25,615 plain
+digit strings, which are box numbers; 2,002 ranges like `238-254`, which are
+spans of positions; and 2,061 values that are neither, the first of them
+`act-sin-local-codigo-provincia` - a kebab-case slug in a field called
+`number`.
+
+One field, three kinds of thing, and the type system permits it because the
+field is a string. A consumer reading `number` cannot know whether it will get
+something it can compare numerically, a span it must parse, or an identifier
+that will fail every numeric operation applied to it. Nothing declares which to
+expect, so every consumer either handles all three or breaks on the ones it did
+not anticipate.
+
+This is the same defect the plan's opening argument describes - one name
+carrying facts that should be distinguished - measured on the field the plan
+proposed to retire as a mere restatement. A Step now carries the split with its
+counts, in the migration Phase rather than the decisions Phase, because what to
+do is clear once the shapes are named: a box number, a position range and an
+identifier are three declarations, and the 5,154 casillas whose number the
+identifier cannot derive are exactly the ones this distinction matters for.
+
+The measurement took one query. The plan had carried "the restated casilla
+number field" through every iteration of this campaign, and one query would have
+shown at any point that a sixth of its values are not restatements and a
+fourteenth are not numbers.
+
+### five-fields-looked-heterogeneous-and-one-is | high | A segment identifier of the form 714-02 matched a range pattern, which is the eighth instrument error of this campaign
+
+Sweeping every string field on the casilla for more than one value shape
+returned five: `number`, `id`, `segmento`, `binding` and `semantic_role`. Only
+one of the five is the finding it appeared to be.
+
+`number` stands. It carries digits, ranges, kebab slugs, dotted identifiers and
+prose across 29,678 declarations, and the previous entry records the split.
+
+`id` is already owned. The casilla identifier grammar screen exists precisely to
+report which grammars the corpus uses and which modelos mix them, so the four
+shapes my classifier saw are a condition with a screen, a test and a place in
+the runner.
+
+`segmento` is an artefact of my own pattern. Its 530 apparent ranges are values
+like `714-02`, which is modelo 714's page-02 segment identifier and matches
+`digits-digits` for the same reason a date matches it. Reading three values
+settled what the regex could not, and the finding was withdrawn before it was
+written down as one.
+
+`binding` and `semantic_role` are unexamined. Each shows a small "prose" tail
+against a large regular population - 45 against 720, and 415 against 23,633 -
+and "prose" in my classifier means only "none of the four patterns matched",
+which is where the segmento error came from. Whether those tails are a defect or
+a legitimate second form is not established, and stating that is better than
+counting them as findings on the strength of a bucket named after what it is
+not.
+
+Eight instrument errors now, and this is the first caught by inspecting the
+VALUES rather than by a contradiction in the numbers. A shape classifier is a
+heuristic over syntax, and a corpus that names its segments after its modelo and
+page will defeat any pattern chosen without reading it.
+
+### the-two-tails-are-one-artefact-and-one-accented-identifier | high | 415 became 6, and the six are a single role name that kept an accent its own transliteration dropped
+
+Both unexamined tails from the shape sweep are examined, and between them they
+show the two ways a heuristic goes wrong in one pass.
+
+The `binding` tail is my pattern being too narrow. Its values look like
+`modelo-232-2018.page_01.144-158.vinculada-1-nif` - a structured path mixing
+dots, underscores, dashes and a position range - and no single character class
+I chose would have admitted it. Forty-five values, no defect.
+
+The `semantic_role` tail is real but a seventieth of its apparent size. My
+classifier reported 415; counting non-ASCII characters directly reports six
+occurrences of one distinct value, out of 24,048 semantic roles. The value is
+`irpf_re_atrib_act_eco_provisiones_dif´cil`, and what makes it a defect is
+internal rather than stylistic: the rest of the identifier is transliterated
+Spanish - `atrib`, `act`, `eco`, `provisiones` - so the accent survived in one
+word of a name whose own convention is to drop them. A key that is
+inconsistently transliterated cannot be typed reliably by anyone reading it
+aloud or from a form.
+
+A Step carries the transliteration, scoped to modelo 100 where all six sit.
+
+The arithmetic is the lesson. One sweep produced five candidates; on inspection
+one was already owned by a screen, two were artefacts of the patterns I chose,
+one was real at full size, and one was real at a seventieth of the size
+reported. The pattern that produced 415 and the count that produced 6 differ
+only in that the second asked the question directly - `str.isascii()` rather
+than a bucket named for what did not match.
+
+### exactly-one-accented-identifier-in-the-corpus-and-the-rest-of-the-non-ascii-is-correct-prose | high | Two fields carry non-ASCII; one is a reason written in Spanish and the other is the defect already found
+
+The direct question - which casilla string values carry a non-ASCII character -
+was asked of every field rather than only the one where the accent turned up.
+Two fields answer.
+
+`semantic_role_cardinality_reason` carries thirty-one such values across sixteen
+distinct ones, and they are correct. It is a prose field explaining why a
+semantic role's cardinality reads as it does, written in Spanish, and a reason
+about `declaración` that spelled it `declaracion` would be worse rather than
+more consistent. Accents belong in prose about a Spanish tax form.
+
+`semantic_role` carries the six occurrences of one value already recorded. So
+the finding is bounded: across 29,678 casillas and every string field they
+declare, exactly one identifier retains an accent, and every other non-ASCII
+character in the casilla surface is prose doing its job.
+
+The boundary is what makes this worth recording rather than the count. A sweep
+for non-ASCII that did not separate keys from prose would have reported
+thirty-seven findings and been wrong about thirty-one of them, which is the same
+arithmetic as the 415 that became 6 - and the separation is not something a
+pattern can do, because both populations are Spanish text and only their role in
+the declaration distinguishes them. `id` carries no non-ASCII at all, which is
+the reassuring half: the identifiers this registry keys on are clean, and the
+exception is a semantic role rather than a casilla identity.
+
+### the-export-surface-sweeps-clean-on-every-question-asked-of-it | high | No non-ASCII in 25,031 fields, one encoding across 419 records, no layout mixing line endings, and six record-less layouts explained by their format
+
+Four direct questions were asked of the surface that produces filing bytes, and
+all four came back clean. Recording that matters more than recording a defect
+would, because this is the surface where a defect reaches a taxpayer's return.
+
+No non-ASCII anywhere. Across 25,031 export fields, no declared string carries a
+character outside ASCII, so nothing in the declarations can emit a byte the
+iso-8859-1 codec would have to guess at. The accents that will appear at emission
+come from taxpayer data, which is what the encoding is for.
+
+One encoding, declared 419 times. Every record says iso-8859-1 and no modelo
+declares two, so there is no record whose bytes would be written under one
+assumption and read under another.
+
+No layout mixes line endings. Fifty-nine layouts terminate no record, twenty-nine
+terminate every record with CRLF, and none does both - which is the defect worth
+looking for, since a file whose records disagree about termination is malformed
+in a way no single record is.
+
+Six layouts declare no records, and all six are modelo 100's XML dictionary
+layouts for 2020 through 2025. That format carries its content in the cited
+dictionary rather than in fixed-width records, so record-lessness is what the
+format means rather than an omission - the same distinction that made the
+capability screen count XML-dictionary layouts separately.
+
+Four questions, four clean answers, and each was cheap. The value is in having
+asked: an export surface that has never been swept for these is
+indistinguishable from one that has, and the difference only becomes visible when
+a filing is wrong.
+
+### the-three-clean-export-properties-are-gated-now | high | Twenty-nine gates pass; a clean sweep that nothing holds is a fact about one afternoon
+
+The export surface swept clean on four questions last iteration. Three of them
+are now gates, because a sweep result is a statement about the day it ran and a
+gate is a statement about every day after.
+
+No export declaration carries a character outside ASCII, over 25,031 fields. No
+modelo declares two record encodings, over 419 records. And no layout mixes
+terminated with unterminated records, over the 88 layouts that have records at
+all - the six that do not are skipped rather than counted as agreeing, because
+modelo 100's XML dictionary layouts have no termination to disagree about and
+including them would let a future record-less layout satisfy a gate about
+records.
+
+Each carries the non-vacuity guard this campaign learned to require: a count of
+what was read, asserted before the absence is asserted, so a walk that finds
+nothing fails instead of passing. That guard has already caught one broken
+pattern in this module and would have caught a second.
+
+The fourth question is deliberately not gated. "Six layouts declare no records"
+is not a property to preserve or forbid - it is a consequence of the XML
+dictionary format, and a gate asserting the number would break the day a
+seventh dictionary layout is authored, while a gate forbidding record-less
+layouts would refuse the format outright. A measurement that explains itself
+needs no gate; the three that could regress silently are the three that got one.
+
+### the-three-export-gates-now-have-the-teeth-the-plan-requires-of-them | high | Thirty gates pass, and the proof calls the same helpers the gates do
+
+The three export gates written last iteration were unproven, which this plan's
+own verification section forbids: each declaration gate must demonstrate
+detection of a representative defect from a constructed fixture. They were green
+over a clean corpus, which is the state where a gate and a gate that cannot fire
+look identical.
+
+The judgements they make are now two named helpers, and the gates and the proof
+both call them. That ordering matters and cost this campaign a correction
+earlier: a proof that reimplements the walk it verifies proves the
+reimplementation, and a branch dropped from the gate leaves the proof green.
+
+The planted defects are constructed by copy from real declarations. A field's
+identifier gains an accent and must be reported; the fixture field is asserted
+clean first, so the planted defect is the only thing the report can be
+responding to. A layout gains a record carrying the opposite line ending and
+must be reported as mixing; the fixture layout is asserted to agree with itself
+first, for the same reason. And a record-less layout is asserted to declare no
+ending at all, which is the skip the line-ending gate depends on - without it a
+future record-less layout would satisfy a gate about records.
+
+Thirty tests pass in that module, exit 0. The encoding gate is proven by the
+same layout fixture agreeing with itself; a modelo declaring two encodings
+cannot be constructed by copy without building a second revision, and the
+agreement assertion over 419 live records is the stronger evidence anyway.
+
+### the-export-gates-are-in-the-criterion-that-governs-them | medium | A gate not named by any criterion is a gate nobody is accountable for
+
+The three export-surface gates are recorded in the declaration-gate criterion
+that governs them. Until now they existed in the suite and in this record, and
+the criterion a reader consults to know what holds this plan's claims together
+did not mention them.
+
+That gap is small and worth closing precisely because these gates were written
+from a clean sweep. A gate born from a defect explains itself - somebody
+remembers the failure it prevents. A gate born from a clean measurement has no
+such story: it exists so a property that is true stays true, and if no criterion
+names it, the next person weighing whether it earns its runtime has only its own
+docstring to go on.
+
+What the criterion now says is the pair of facts a reader needs: the properties
+gated, with the populations they were measured over, and the one skip the
+line-ending gate depends on. The skip is the part worth writing down at this
+level rather than only in the test, because it is the kind of exception that
+looks like an oversight from outside - a gate about records that ignores six
+layouts - and is in fact what keeps the gate honest about a format that has no
+records to terminate.
+
+### the-deadline-windows-sweep-clean-and-the-one-apparent-duplicate-was-my-key | high | 843 windows, no inverted span, no stray cutoff, and modelo 210's four windows per coordinate are four different results
+
+Three direct questions of the surface that decides when a filing is due, across
+843 declared windows.
+
+None opens after it closes. None carries a payment cutoff outside its own span.
+Both are the kind of defect that would be invisible until a deadline passed, and
+both are absent.
+
+The third question looked like it found something. Two coordinates - modelo
+210's annual periods for 2025 and 2026 - each carry four deadline windows, which
+keyed on year, period and period kind reads as a fourfold ambiguity about when
+one filing is due. The window identifiers say otherwise in four words:
+`arrendamiento-ingreso`, `cuota-cero`, `devolucion`, `renta-imputada`. Modelo
+210's deadline depends on what the return produces - rental income with a
+payment, a zero quota, a refund, imputed income - and the schema carries
+`resultado_scope` and `tipo_renta_scope` for exactly that. Keyed with those, the
+duplicates are zero.
+
+Ninth instrument error of this campaign, and the second in three iterations
+caught by reading the identifiers rather than the numbers. The pattern is now
+consistent enough to state as a rule for this corpus: when a coordinate appears
+to be declared twice, the declarations usually differ on an axis the key
+omitted, and the axis is usually named in the identifier. Reading four ids cost
+less than the sweep that produced them.
+
+### the-keying-rule-is-in-the-readme-now-with-the-nine-errors-that-bought-it | high | Two rules kept that suite honest; the third is the one this campaign paid for
+
+The contributor README carried two rules for keeping the screens honest: read
+the resolved surface rather than the authored one, and gate invariants rather
+than counts. Both were written from defects. A third now sits between them,
+written from nine.
+
+It says to key a measurement on every axis the declaration has, and gives the
+reason a reader will actually meet: a coordinate that appears declared twice
+usually differs on an axis the key omitted, and that axis is usually named in
+the identifier. Modelo 210's four deadline windows for one annual period are the
+worked example, with the four identifiers quoted, because reading them is what
+settled the question and reading them is the behaviour the rule asks for.
+
+The evidence is the nine errors themselves, three of them named: a key over
+modelo and revision that reported two screens collapsing every row onto one
+coordinate, a shape pattern that read `714-02` as a numeric range, and a bucket
+named for what did not match that reported 415 findings where six were real. The
+rule closes with the cheapest version of the advice - prefer a direct question
+like `str.isascii()` to a pattern that infers one - because that single
+substitution is the difference between the 415 and the 6.
+
+Putting it in the README rather than only in this record is the point. This
+audit is removable scaffolding and the README ships with the tooling it
+describes; a lesson that cost nine measurements should be where the next person
+writing a screen will meet it, not where somebody has to go looking.
+
+### 156-declared-localization-keys-resolve-in-no-locale | high | Every one is a modelo 200 2024 casilla, and the gap is identical in Spanish, English, Catalan and Hungarian
+
+Every casilla in the corpus declares localization keys - 29,678 of them, 35,768
+keys in total - and the crossing question is whether those keys resolve in the
+catalogues that ship beside them. All but 156 do.
+
+The 156 are all modelo 200's 2024 revision, plain casilla identifiers like
+`00067`, `00093` and `00814`, and the shortfall is identical in all four
+locales: 3,329 keys declared for that revision, 156 unresolved in Spanish,
+English, Catalan and Hungarian alike. A gap uniform across locales is not a
+translation backlog, which would show as one locale trailing the others; it is
+casillas declared before any label was written for them.
+
+The attribution is visible in the worktree. Casilla `c00093.toml` under modelo
+200's 2024 revision is one of the few files carrying a pending diff, and the
+modelo 200 reconciliation work has been committing throughout this session. So
+these are casillas under active construction whose labels have not caught up.
+
+What makes it worth recording rather than leaving to that campaign is that
+nothing notices. A declared key that resolves nowhere renders as a blank label
+or a fallback, and no gate compares the registry's declared keys against the
+catalogues that must answer them. A Step now carries both halves - author the
+labels, or gate the crossing so the next 156 fail loudly - and the second is the
+durable one, because a revision can always be declared faster than it is
+translated.
+
+### the-localization-crossing-is-complete-and-only-the-casilla-labels-are-short | high | 58 official names, 58 titles, 128 revision keys and 181 construct keys all resolve; 156 casilla labels do not
+
+Five declaration families carry a localization key, and the crossing is now
+measured for all five rather than the one where the gap turned up.
+
+Everything but the casillas resolves. Fifty-eight modelo official-name keys,
+fifty-eight title keys, one hundred and twenty-eight revision keys and one
+hundred and eighty-one construct keys all answer in the shipped Spanish
+catalogue. The casilla keys answer 35,612 times out of 35,768, and the 156 that
+do not are the modelo 200 2024 labels already recorded.
+
+The shape of that result is worth as much as the gap. The families whose keys
+are authored one per declaration - a modelo's title, a revision's name, a
+construct's label - are complete, and the only shortfall is in the family
+authored 29,678 times. A crossing that must be maintained per casilla falls
+behind; a crossing maintained per modelo does not. That is an argument about
+where to put a gate rather than about whose backlog this is.
+
+And the gate is deliberately not written yet. The README rule this campaign
+added earlier says conditions still carrying findings are not gated, because
+gating them needs a tolerance and a tolerance is the ratchet this project
+retired. One hundred and fifty-six findings is exactly that condition. The Step
+records the gate as due when the labels land, which is the same discipline
+applied to every other screen here - and writing the gate now, against my own
+rule, would have been the more satisfying and less defensible move.
+
+### the-casilla-labels-are-restated-per-revision-11286-times-and-the-fix-is-derivation-not-translation | high | 38 per cent of the Spanish label corpus is the same text under a second revision, and the operator said so before the measurement did
+
+The 156 unresolved labels were recorded as work to author. That framing was
+wrong and the operator corrected it: cross-revision localization must be
+DERIVED, and hand-translating three thousand casillas per revision is not work
+anybody should do. Measuring what the catalogues actually hold proves the point
+at a scale the original finding hid.
+
+Modelo 200 declares two revisions. Their catalogues share 3,173 labelled
+casillas, and the text is byte-identical on every one of them - 3,173 identical,
+zero differing. Corpus-wide, the Spanish catalogues carry 29,522 casilla label
+strings of which 11,286 are the same text repeated under a second revision.
+Modelo 100 alone restates 4,733. Multiply by four shipped locales and roughly
+forty-five thousand strings exist to say what eleven thousand already say.
+
+Two of my own readings were wrong on the way here and both are worth recording.
+I first proposed authoring the 156 by hand. I then found that all 156 casillas
+carry no continuity chain and framed the gap as a continuity problem - but no
+casilla in that revision carries a chain, the 3,173 resolved ones included, so
+chaining does not distinguish the labelled from the unlabelled and the framing
+had no support.
+
+What the numbers do support is the operator's reading. A label is a property of
+a casilla, not of a casilla-in-a-revision, and the catalogue keys it by
+revision, so every new revision costs a full re-translation of text that has not
+changed. The tooling to fix it is already there - `dev.locales` carries
+`scaffold`, `move-revision` and `set-batch`, and a revision-drift module that
+already recognises a rename as a MOVE rather than a translate. What is missing
+is the derivation: one label per casilla per modelo, with a per-revision
+override only where the official text genuinely differs, which for modelo 200 is
+zero casillas out of 3,173.
