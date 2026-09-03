@@ -10220,3 +10220,54 @@ the newly eligible fields are authored one by one or derived from a handful of
 per-type conventions. On the evidence of this one design the second is likely,
 which would make the authoring task an order smaller than the field count
 suggests.
+
+
+## The conventions are stated once per type, across most of the corpus
+
+The question left open by the previous section - whether modelo 202's per-type
+notes are a quirk or the corpus's habit - is answered.
+`dev/registry/analysis/type_convention_notes.py` reports design notes that name
+an AEAT type code the design's own fields carry. **Seventeen of the thirty-one
+designs that produce render inputs carry such a note**, fifty-eight notes across
+eight modelos: 303 with thirty-five, 390 with nine, 202, 222 and 322 with three
+each, 232 and 353 with two, 151 with one.
+
+Those fifty-eight notes resolve to **forty-nine distinct design-and-type pairs**,
+and the fields they govern number **5,232**.
+
+The type set is read from the parsed fields rather than from a list kept in the
+screen. A list would be a second declaration of the type vocabulary and would be
+the copy that stopped matching the day a design introduced a code nobody had
+seen. Parentheses are required, because an AEAT type code is a short token - `N`,
+`An`, `Num` - and matching one bare fires on ordinary Spanish; the anchoring also
+keeps `(Num)` from satisfying a search for `(N)`, which matters because sign is
+precisely what those two conventions differ on.
+
+The screen deliberately does not classify whether a matched note states a
+convention. It finds the notes worth reading and says which types they name. A
+keyword classifier has already reported the plainest wire wording in this corpus
+as absent, and the remedy for that is not a longer keyword list.
+
+### What this does to the rules-authoring step
+
+The step has been sized by counting fields. On the pointer route the grounding
+for those fields is empty, and that emptiness was very nearly written down as
+the designs being silent about representation. They are not silent: they state
+it once per type, and a field does not cite what governs its whole class.
+
+Forty-nine conventions stand behind 5,232 fields. Reading forty-nine notes is a
+different task from researching several thousand fields one at a time, and it is
+the task the corpus actually supports. Whether every newly eligible field falls
+under one of those forty-nine is not yet established and is the next thing to
+measure; fourteen of the thirty-one designs state no per-type convention at all,
+so some fields will still need their own grounding.
+
+### A count corrected before it was published
+
+The screen first reported coverage as 20,711, summing each note's governed-field
+count across notes. Modelo 303 alone carries thirty-five such notes, so every
+numeric field in that design was counted once per note naming its type. The
+figure is now computed over distinct design-and-type pairs and is **5,232**, four
+times smaller. The per-note count is kept on the finding, but decomposed per
+type, so a consumer can count a type once per design rather than once per
+mention - which is the only reason the corrected figure is computable at all.

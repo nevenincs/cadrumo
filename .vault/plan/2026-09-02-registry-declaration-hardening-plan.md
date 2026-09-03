@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:07a184da79b326813fbdc3e5492711921743813bbcd989be220a72b42d6929a9'
+body_hash: 'sha256:f1780337aedbaefdbd88b8c60a1e4a9f7a6e57f103afae732b787681356f8fa2'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -416,7 +416,8 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S391` - Measure how far the design-wide note reading reached: 38 of 215 transcriptions repeat a note label across sheets, accounting for 225 definitions a design-wide reader absorbed, with modelo 303 carrying the condition in every revision and modelo 220 defining one label on twelve of thirteen sheets; `dev/registry/analysis/note_label_scope.py dev/registry/tests/test_note_label_scope.py`.
 - [x] `W04.P07.S392` - Recognise a sheet heading that carries spaces, since capturing a single token matched DP200001 but failed on every sheet named like dr M202 (1), which sent an entire designs notes to an empty sheet name where no field could match them and read exactly like a design with no notes; `dev/registry/analysis/footnote_pointer_notes.py`.
 - [x] `W04.P07.S393` - Accept the three separators the corpus uses between a note label and its wording, since requiring the colon made every note of modelo 202 invisible including the three that state how each AEAT type is aligned padded and signed; `dev/registry/analysis/footnote_pointer_notes.py`.
-- [ ] `W04.P07.S394` - Measure whether designs state their wire conventions once per AEAT type rather than per field, since modelo 202 settles alignment padding and sign for An Num and N in three general notes that no field cites, which would make the reviewed rules derivable from a handful of per-type conventions instead of authored one field at a time; `dev/registry/analysis`.
+- [x] `W04.P07.S394` - Measure whether designs state their wire conventions once per AEAT type rather than per field, since modelo 202 settles alignment padding and sign for An Num and N in three general notes that no field cites, which would make the reviewed rules derivable from a handful of per-type conventions instead of authored one field at a time; `dev/registry/analysis`.
+- [x] `W04.P07.S395` - Report the design notes that state a wire convention for a whole AEAT type, matching only codes the designs own fields carry: seventeen of thirty-one designs carry fifty-eight such notes resolving to forty-nine design-and-type pairs that govern 5,232 fields, which is the grounding the per-field pointer route does not have; `dev/registry/analysis/type_convention_notes.py dev/registry/tests/test_type_convention_notes.py`.
 
 ### Phase `W04.P08` - grade earned gate
 
