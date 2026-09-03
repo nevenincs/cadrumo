@@ -44,6 +44,7 @@ __all__ = [
     "pointer_evidence_for_design",
     "resolve_pointer_notes",
     "sheet_note_definitions",
+    "sheet_unnumbered_notes",
 ]
 
 #: A Contenido cell holding only a footnote pointer: "Nota 4", "Notas 1 y 2",
@@ -69,6 +70,13 @@ _ROW = re.compile(r"^\s*\|?\s*(nota\s*\d+)\b", re.IGNORECASE)
 #: and no field could match it. That failure is invisible from the outside:
 #: it looks exactly like a design whose notes are undefined.
 _SHEET_HEADING = re.compile(r"^#\s+(.+?)\s*$")
+#: A note carrying no number. It cannot answer a pointer - a pointer names a
+#: number - so it is read separately from the labelled definitions.
+_UNNUMBERED = re.compile(r"^\s*\|?\s*notas?\s*[:.]\s*(.*)$", re.IGNORECASE)
+#: Any line opening a note, in every marking the corpus uses. Used only to
+#: END an unnumbered note's text, so it deliberately matches more than the
+#: patterns that START one.
+_ANY_NOTE = re.compile(r"^\s*\|?\s*notas?", re.IGNORECASE)
 
 
 @dataclass(frozen=True, slots=True)
@@ -129,6 +137,59 @@ def sheet_note_definitions(extracted: str) -> dict[str, dict[str, str]]:
         name: {label: " ".join(parts).strip() for label, parts in labels.items()}
         for name, labels in sheets.items()
     }
+
+
+def sheet_unnumbered_notes(extracted: str) -> dict[str, str]:
+    """Return each sheet's unnumbered ``NOTA`` line, keyed by sheet.
+
+    A design also states facts in a note carrying no number - modelo 200 settles
+    the integer width, sign carriage and decimal places of every amount it
+    reports with "NOTA: Los importes son de 15 enteros (o N + 14) y 2
+    decimales". Fifty-two of the bundled transcriptions carry such a line, one
+    hundred and three in total.
+
+    These are kept apart from the numbered definitions rather than merged into
+    them, for two reasons. A pointer names a number, so an unnumbered note can
+    never answer one, and putting it in the same mapping would offer it as an
+    answer to a question it cannot be the answer to. And its key would have to
+    be a label it does not have: a shared placeholder would then repeat on every
+    sheet, which the label-scope screen would read as one label defined many
+    times - the very ambiguity that screen exists to find.
+
+    The note is read as its own line and nothing is gathered after it. A
+    numbered definition is bounded by the next label; an unnumbered one has no
+    label to bound it, and every rule tried for where it ends absorbed a
+    neighbour somewhere in the corpus - a `NOTA*` line, a `(*) NOTA.` inside a
+    table cell, the next table's rows. Under-reading a wrapped note loses a
+    clause the reader can see is missing; absorbing the next note produces text
+    that reads as authoritative and is not. The corpus uses at least seven
+    markings for a note, and this reader deliberately claims only the plainest.
+
+    What the note's scope IS remains unsettled and is not decided here. Forty-
+    seven of the fifty-two designs carrying one carry exactly one, which is
+    consistent with a sheet footer and equally with a design-level statement
+    printed once; of the five carrying several, two repeat identical text and
+    three differ. Modelo 200 prints its amounts convention once, on the first of
+    seventy-seven sheets, while the fields it would govern sit on other sheets -
+    so keying it to its sheet would put it out of their reach. The mapping is
+    returned by sheet because that is where the note was FOUND, which is a fact;
+    what it governs is a judgement this evidence does not support making.
+    """
+    notes: dict[str, str] = {}
+    sheet = ""
+    for line in extracted.splitlines():
+        heading = _SHEET_HEADING.match(line)
+        if heading is not None:
+            sheet = heading.group(1)
+            continue
+        match = _UNNUMBERED.match(line)
+        if match is None or _DEFINITION.match(line):
+            continue
+        text = match.group(1).strip()
+        if text and sheet not in notes:
+            notes[sheet] = text
+    return notes
+
 
 
 def note_definitions(extracted: str, *, sheet: str) -> dict[str, str]:

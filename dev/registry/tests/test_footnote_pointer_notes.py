@@ -14,6 +14,9 @@ from ..analysis.footnote_pointer_notes import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+#: A newline, named so the constructed transcriptions below carry no escape.
+LINE_BREAK = chr(10)
+
 _DESIGN = (
     pathlib.Path("src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_353/files")
     / "01-353-ejercicio-2026-y-siguientes-actualizado-03-02-26.xlsx.extracted.md"
@@ -177,3 +180,73 @@ def test_a_pointer_naming_a_note_its_own_sheet_omits_stays_unresolved() -> None:
     by_sheet = sheet_note_definitions(design.read_text(encoding="utf-8"))
     assert "nota 1" not in by_sheet.get("DP200020B", {})
     assert any("nota 1" in labels for labels in by_sheet.values())
+
+
+def _extracted(*lines: str) -> str:
+    """Join transcription lines. Written as lines so no escape appears here."""
+    return LINE_BREAK.join(lines) + LINE_BREAK
+
+
+def test_an_unnumbered_note_is_read_against_the_sheet_it_appears_on() -> None:
+    """The plainest case, and the one modelo 200 states its amounts rule in."""
+    from ..analysis.footnote_pointer_notes import sheet_unnumbered_notes
+
+    found = sheet_unnumbered_notes(
+        _extracted("# A", "NOTA: Los importes son de 15 enteros.", "", "# B", "1 | 2 | An | x")
+    )
+    assert found == {"A": "Los importes son de 15 enteros."}
+
+
+def test_an_unnumbered_note_does_not_absorb_what_follows_it() -> None:
+    """Nothing after the note's own line joins its text.
+
+    Every boundary rule tried for these absorbed a neighbour somewhere in the
+    corpus, so none is used: the note is its own line. A reader that gathered
+    continuations would produce text reading as authoritative that is partly
+    another note's.
+    """
+    from ..analysis.footnote_pointer_notes import sheet_unnumbered_notes
+
+    found = sheet_unnumbered_notes(
+        _extracted(
+            "# A",
+            "NOTA: Los importes son de 15 enteros.",
+            "NOTA* El Tipo puede ser I, U, G.",
+            "| 1 | 2 | An |",
+        )
+    )
+    assert found == {"A": "Los importes son de 15 enteros."}
+
+
+def test_no_unnumbered_note_in_the_corpus_carries_another_note_marker() -> None:
+    """The invariant that says the reader is not merging notes.
+
+    Asserted over the whole bundled corpus rather than a sample: the absorption
+    this guards against appeared in one design out of fifty-two, and a sample
+    that missed it would have passed while the reader returned another note's
+    words as this one's.
+    """
+    import re
+
+    from ..analysis.footnote_pointer_notes import sheet_unnumbered_notes
+    from ..analysis.note_label_scope import transcription_paths
+
+    read = 0
+    for path in transcription_paths():
+        for text in sheet_unnumbered_notes(path.read_text(encoding="utf-8")).values():
+            read += 1
+            assert not re.search(r"nota", text, re.IGNORECASE), f"{path.name}: {text!r}"
+    assert read, "no unnumbered note was read, so this checked nothing"
+
+
+def test_an_unnumbered_note_can_never_answer_a_pointer() -> None:
+    """A pointer names a number; an unnumbered note has none.
+
+    Kept in a separate mapping for exactly this reason, so it cannot be offered
+    as the answer to a question it cannot answer.
+    """
+    from ..analysis.footnote_pointer_notes import note_definitions, sheet_unnumbered_notes
+
+    extracted = _extracted("# A", "NOTA: Los importes son de 15 enteros.")
+    assert sheet_unnumbered_notes(extracted) == {"A": "Los importes son de 15 enteros."}
+    assert note_definitions(extracted, sheet="A") == {}
