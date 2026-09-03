@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:a0d6d6491cb5ef66b9b7a35948a7c9a187526f3b79f875383075059c294e58c0'
+body_hash: 'sha256:c6022a406cac326318f17d765729094e4a15df6838f4e21d3c043d5036fa8b9d'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -10111,3 +10111,45 @@ sheets do, which is the shape that used to resolve wrongly. Both run against the
 shipped design rather than a fixture: the merge only appears where a label
 repeats, and constructing that would prove the parser handles a case the corpus
 is the reason to care about.
+
+
+## The blast radius of the design-wide note reading
+
+The sheet-scoping correction was found through one modelo. Screening the whole
+corpus with `dev/registry/analysis/note_label_scope.py` shows how much of it the
+design-wide reading covered.
+
+Of **215 bundled design transcriptions, 38 repeat a note label across sheets**,
+and those repetitions account for **225 definitions past the first** - notes a
+design-wide reader absorbed into another note's entry. The count is the surplus
+rather than the number of definitions involved, because the surplus is what was
+lost: three sheets sharing one label merged two notes, not three.
+
+Modelo 200 was not the worst case and was not even close to it. Modelo 303
+carries the condition in **every one of its revisions**, its 2024 design
+defining seven repeated labels across seven sheets - `nota 1` on six of them,
+`nota 2` on five, `nota 3` on four - for sixteen merged definitions in one
+design. Modelo 220's 2025 design defines `nota 2` on twelve of its thirteen
+sheets. Any pointer into either design returned a concatenation before this
+week.
+
+A repeated label is not a corpus defect. It is AEAT's own page numbering, and
+each page numbering its notes from one is ordinary. The defect was reading the
+label without its sheet, which is why the correction landed at the reader and
+why this screen reports rather than gates: there is nothing here to demand
+anyone fix.
+
+The census also records that **136 of the 215 transcriptions define no note at
+all**. That is deliberately a census figure and not a row per design. Most of
+those designs genuinely have no notes, and 136 rows carrying no work would bury
+the 87 that do - but a design whose notes failed to transcribe is
+indistinguishable from one that has none, so the count stays visible for a
+pointer to chase later.
+
+The screen's detector is proven on constructed designs rather than on the
+corpus: one where a label repeats across two sheets, one where the labels are
+unique and nothing may be reported, one carrying no notes, and one where three
+sheets share a label so the surplus is two rather than three. The corpus
+assertion then holds by shape - every row names more than one sheet and its
+surplus equals the sheet count less one - and not by figure, since those move
+whenever a design is added or re-transcribed.

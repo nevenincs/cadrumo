@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:f3399b21d2ea69f3635ba0a65befb5ba070e94f62be6735e8e51f3bae5257308'
+body_hash: 'sha256:8de1b028ab127dc6958c43fb5908b858569e7b5bcba4dd10ef003e3b5b7d6214'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -413,6 +413,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S388` - Pin the counterexample that stops a vocabulary miss being read as a note stating no wire fact, since modelo 200 nota 1 states a filling rule in full while carrying none of the words the reading aid looks for; `dev/registry/tests/test_footnote_only_wire_facts.py`.
 - [ ] `W04.P07.S389` - Recover or replace the unreproducible field counts the rules-authoring step rests on: the live predicate reports 6,434 already eligible, 41 newly admitted by refusing a bare pointer and 4,184 if any content cell stopped counting, against a step stating 149 across six modelos where seventeen carry a profile; `dev/registry/render_profiles`.
 - [x] `W04.P07.S390` - Scope note definitions to the sheet that prints them, since a workbook numbers each pages notes from one and modelo 200 defines Nota 1 on six of seventy-seven sheets, which the design-wide reader concatenated into one entry and used to resolve a pointer on a sheet defining no such note; `dev/registry/analysis/footnote_pointer_notes.py dev/registry/tests/test_footnote_pointer_notes.py`.
+- [x] `W04.P07.S391` - Measure how far the design-wide note reading reached: 38 of 215 transcriptions repeat a note label across sheets, accounting for 225 definitions a design-wide reader absorbed, with modelo 303 carrying the condition in every revision and modelo 220 defining one label on twelve of thirteen sheets; `dev/registry/analysis/note_label_scope.py dev/registry/tests/test_note_label_scope.py`.
 
 ### Phase `W04.P08` - grade earned gate
 
