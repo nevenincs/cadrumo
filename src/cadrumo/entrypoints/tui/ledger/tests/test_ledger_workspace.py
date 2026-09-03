@@ -129,12 +129,15 @@ def test_routes_cover_all_seven_areas_and_deferred_bodies_are_typed_placeholders
         LedgerWorkspaceArea.IMPORT,
         LedgerWorkspaceArea.CLASSIFICATION,
         LedgerWorkspaceArea.EVIDENCE,
-        LedgerWorkspaceArea.RECONCILIATION,
     ):
         screen = resolve_ledger_screen(controller, controller.route_target(area))
         assert isinstance(screen, LedgerUnavailableScreen)
         assert screen.refusal is not None
         assert screen.refusal.target.area is area
+    assert not isinstance(
+        resolve_ledger_screen(controller, controller.route_target(LedgerWorkspaceArea.RECONCILIATION)),
+        LedgerUnavailableScreen,
+    )
 
 
 def test_factory_requires_real_outer_context_and_keeps_injected_projection() -> None:

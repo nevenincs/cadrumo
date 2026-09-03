@@ -32,7 +32,7 @@ from ..evidence import LedgerEvidenceScreen
 from ..models import LedgerFlowState, LedgerLinkResultV1, LedgerLinkSubmissionV1, LedgerPreparedImportV1
 from ..reconciliation import LedgerReconciliationScreen
 from ..routes import LedgerUnavailableScreen, resolve_ledger_screen
-from .test_ledger_flows import _ClassificationDoor, _ImportDoor, _classify_action
+from .test_ledger_flows import _ClassificationDoor, _classify_action, _ImportDoor
 from .test_ledger_workspace import _projection, _review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -359,25 +359,28 @@ def test_slice3_routes_and_actions_fail_closed_without_declared_dependencies() -
 
 @pytest.mark.asyncio
 async def test_reconciliation_without_mutation_door_preserves_read_only_drift_and_hides_controls() -> None:
-    controller = LedgerWorkspaceController(
-        TuiScreenContextV1(destination="workbench.ledger"),
-        _reconciled_projection(),
-        review_action=_review_action(),
-    )
-    screen = LedgerReconciliationScreen(controller)
-    app = ScreenHostApp[None](screen)
-    async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
-        assert screen.query_one("#ledger-suggestions", DataTable).row_count == 1
-        assert screen.query_one("#ledger-inconsistencies", DataTable).row_count == 1
-        assert screen.query_one("#ledger-affected", DataTable).row_count == 1
-        assert not screen.query_one("#ledger-reconciliation-confirm", Button).display
-        assert not screen.query_one("#ledger-reconciliation-cancel", Button).display
-        assert screen.flow_state is LedgerFlowState.EDITING
-        await pilot.press("enter")
-        assert screen.flow_state is LedgerFlowState.EDITING
-        assert screen.selected_pair is None
-        assert str(screen.query_one("#ledger-flow-status", Static).render())
+    with override_settings(cadrumo_output_language="en"):
+        controller = LedgerWorkspaceController(
+            TuiScreenContextV1(destination="workbench.ledger"),
+            _reconciled_projection(),
+            review_action=_review_action(),
+        )
+        screen = LedgerReconciliationScreen(controller)
+        app = ScreenHostApp[None](screen)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            assert screen.query_one("#ledger-suggestions", DataTable).row_count == 1
+            assert screen.query_one("#ledger-inconsistencies", DataTable).row_count == 1
+            assert screen.query_one("#ledger-affected", DataTable).row_count == 1
+            assert not screen.query_one("#ledger-reconciliation-confirm", Button).display
+            assert not screen.query_one("#ledger-reconciliation-cancel", Button).display
+            assert screen.flow_state is LedgerFlowState.EDITING
+            await pilot.press("enter")
+            assert screen.flow_state is LedgerFlowState.EDITING
+            assert screen.selected_pair is None
+            assert str(screen.query_one("#ledger-flow-status", Static).render()) == (
+                "This task is unavailable until a prepared operation is supplied."
+            )
 
 
 def _all_routes_controller() -> LedgerWorkspaceController:
