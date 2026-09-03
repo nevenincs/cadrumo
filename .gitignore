@@ -469,6 +469,12 @@ cache/
 # and is reclaimed on the next attempt if its holder died.
 /src/cadrumo/locales/.catalogue-write.lock
 
+# Transient mutexes and journals written beside the AEAT registry sources while
+# a rebind or publication transaction runs. They record in-flight state, never
+# work, and are reclaimed on the next attempt if their holder died.
+/src/cadrumo/_data/registry/aeat/.*.lock
+/src/cadrumo/_data/registry/aeat/.*.lock.lock
+
 # Rendered generator scratch output never enters the tree.
 dev/registry/scratch*/
 
