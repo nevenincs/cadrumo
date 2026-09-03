@@ -45,6 +45,8 @@ from .._modelo_nonwork_review_package_command_specs import (
     _SIGNATURE_INPUT,
     MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS,
 )
+from .._modelo_nonwork_work_amend_command_specs import MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS
+from .._modelo_work_command_specs import _ADDRESS, _LANGUAGE, _a, _o
 from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -253,6 +255,30 @@ def test_reconcile_target_parameters_keep_order_and_import_extras_local() -> Non
     assert pull.result_schema is not imported.result_schema
     assert COMMAND_GRAPH.resolve_path(("aeat", "app", "modelo", "reconcile", "pull")) is pull
     assert COMMAND_GRAPH.resolve_path(("aeat", "app", "modelo", "reconcile", "import")) is imported
+
+
+def test_work_amend_wizard_parameters_reuse_the_canonical_work_kernel() -> None:
+    wizard = MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS[0]
+    expected = (
+        _a("work_unit_id"),
+        *_ADDRESS,
+        _o("actor", "--by"),
+        _o("output_language_opt", "--output-language", _LANGUAGE, help_name="output_language"),
+    )
+
+    assert tuple(parameter.name for parameter in wizard.parameters) == (
+        "work_unit_id",
+        "modelo",
+        "year",
+        "period",
+        "revision",
+        "bucket_id",
+        "actor",
+        "output_language_opt",
+    )
+    assert wizard.parameters == expected
+    assert all(actual is expected for actual, expected in zip(wizard.parameters[1:6], _ADDRESS, strict=True))
+    assert COMMAND_GRAPH.resolve_path(("aeat", "app", "modelo", "work", "amend-wizard")) is wizard
 
 
 def test_m036_declaration_parameters_keep_exact_order_and_identity() -> None:
