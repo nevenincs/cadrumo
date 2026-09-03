@@ -11,10 +11,6 @@ related:
   - "[[2026-09-03-duplication-burndown-plan]]"
 ---
 
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Consolidate the evidence, foundation, classification, and counterparty clone components with focused command graph proofs
 

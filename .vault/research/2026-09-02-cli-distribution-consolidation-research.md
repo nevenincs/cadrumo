@@ -777,6 +777,34 @@ file for the primary distribution moments after the upload, which read as a miss
 source archive. It was propagation, not absence - both files were there on the next
 request. A single read of an index immediately after an upload is not a measurement.
 
+### The acquisition evidence cannot be produced from a local rebuild
+
+Reacquiring the published product refuses, and correctly: the index serves a wheel whose
+digest does not match a cohort rebuilt here from the release commit. The index is not at
+fault - the digest it declares is exactly the one the acquirer downloaded, so it is
+serving precisely what the workflow uploaded.
+
+Diffing the two wheels member by member locates it exactly. Of 24,838 entries every one
+is byte-identical except two, present only in the local build:
+`_data/registry/aeat-registry-identity.json` and
+`_data/registry/aeat-validation-verdict.json`. `RECORD` differs as a consequence of
+listing them. Both are the registry-validation verdict cache - a persisted certification
+that a prior validation passed, written so a later load can skip re-validating an
+immutable bundled registry. Neither is tracked, neither is ignored, and neither is in the
+source tree now, so they are produced during the build and captured by it.
+
+The build is therefore reproducible in everything except its own cache: a tree where
+registry validation has run yields a wheel two files larger than a clean one. The
+published artifact is the clean build, which is the right one to have shipped.
+
+The consequence for the evidence set is structural rather than a matter of scheduling. An
+acquisition row proves the installed bytes match the cohort that was promoted, so it can
+only be minted against the cohort the workflow actually built - never against a local
+rebuild of the same commit. Every one of the three `python-*` rows therefore belongs to
+CI, alongside the four `homebrew-*` and `scoop-*` rows that need channels nobody has
+published. Zero of the seven are producible on a workstation, and an earlier note in this
+record that one of them was is wrong.
+
 ### Not investigated
 
 Nothing outstanding for this decision.
