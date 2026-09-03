@@ -22,18 +22,26 @@ module constructs them, and nothing here wires a concrete adapter.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING, ClassVar, override
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
+from textual.screen import Screen
 from textual.widgets import Footer, Static
 
 from ...core.i18n.render import tr
 from .components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
+from .home import HomeBackRequested, HomeScreen
+from .navigation import TuiDestinationCatalogueV1, TuiFocusIdentityV1, TuiNavigationTargetV1
 
 if TYPE_CHECKING:
     from ...application.operations.composition import OperationComposedServices
+    from ...application.overview.home import HomeProjectionV1
+
+
+type HomeRefreshDoorV1 = Callable[[], HomeProjectionV1]
 
 
 class CadrumoTuiApp(App[None]):
@@ -46,30 +54,89 @@ class CadrumoTuiApp(App[None]):
         Binding("q", "quit", "", show=False),
     ]
 
-    def __init__(self, *, services: OperationComposedServices) -> None:
+    def __init__(
+        self,
+        *,
+        services: OperationComposedServices,
+        destination_catalogue: TuiDestinationCatalogueV1 | None = None,
+        refresh_home: HomeRefreshDoorV1 | None = None,
+    ) -> None:
         """Bind the root to the operation services composed for this session."""
         super().__init__()
         self._services = services
+        self._destination_catalogue = destination_catalogue
+        self._refresh_home = refresh_home
+        self._active_target: TuiNavigationTargetV1 | None = None
 
     @property
     def services(self) -> OperationComposedServices:
         """The composed operation services an area receives when it mounts."""
         return self._services
 
+    @property
+    def destination_catalogue(self) -> TuiDestinationCatalogueV1:
+        """Return the caller-composed closed catalogue for palette navigation."""
+        if self._destination_catalogue is None:
+            raise RuntimeError("the root has no composed destination catalogue")
+        return self._destination_catalogue
+
     @override
     def compose(self) -> ComposeResult:
         with Vertical(id="root-shell"):
             yield Static(tr("tui.root.title"), id="root-title", markup=False)
+            yield Static("", id="root-account", markup=False)
             yield Static(tr("tui.root.no_areas"), id="root-no-areas", markup=False)
         yield Footer()
 
     def on_mount(self) -> None:
         """Install the shared appearance for this session."""
         install_cadrumo_themes(self)
+        if self._destination_catalogue is not None and self._refresh_home is not None:
+            self.navigate_to(
+                TuiNavigationTargetV1(
+                    destination="workbench.home",
+                    focus=TuiFocusIdentityV1(destination="workbench.home", semantic_key="navigation.home"),
+                )
+            )
 
     def action_toggle_appearance(self) -> None:
         """Flip between the light and dark appearance."""
         toggle_appearance(self)
 
+    def navigate_to(self, target: TuiNavigationTargetV1, /) -> None:
+        """Mount only the current admitted destination with its semantic focus."""
+        catalogue = self.destination_catalogue
+        if target.destination == "workbench.home":
+            self._show_home(target.focus)
+            return
+        self._active_target = target
+        self._replace_destination(catalogue.create_screen(target))
 
-__all__ = ["CadrumoTuiApp"]
+    def on_home_back_requested(self, _: HomeBackRequested) -> None:
+        """Refresh Home after a completed or dismissed journey."""
+        if self._refresh_home is not None:
+            self._show_home(None)
+
+    def _show_home(self, focus: TuiFocusIdentityV1 | None) -> None:
+        """Rebuild the projection-only Home screen after every return."""
+        refresh_home = self._refresh_home
+        if refresh_home is None:
+            return
+        projection = refresh_home()
+        self.query_one("#root-account", Static).update(projection.account.profile_label or "Account")
+        self.query_one("#root-no-areas", Static).display = False
+        if projection.account.posture.value == "expired":
+            self._active_target = None
+            self._replace_destination(HomeScreen(projection))
+            return
+        self._active_target = None
+        self._replace_destination(HomeScreen(projection))
+
+    def _replace_destination(self, screen: Screen[None]) -> None:
+        """Discard the inactive destination before mounting exactly one replacement."""
+        while len(self.screen_stack) > 1:
+            self.pop_screen()
+        self.push_screen(screen)
+
+
+__all__ = ["CadrumoTuiApp", "HomeRefreshDoorV1"]
