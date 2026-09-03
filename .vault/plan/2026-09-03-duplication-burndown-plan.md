@@ -3,186 +3,158 @@ tags:
   - '#plan'
   - '#duplication-burndown'
 date: '2026-09-03'
-modified: '2026-09-03'
-body_schema: 'body-v2'
-body_hash: 'sha256:a3205fb6eb3bb5149607750ceedb1eaaa23db2445ad4c4eea18af16e327e131d'
 tier: L3
 related:
-  - "[[2026-07-14-honest-all-green-adr]]"
-  - "[[2026-07-17-duplication-evidence-repair-adr]]"
-  - "[[2026-07-17-duplication-evidence-repair-plan]]"
+  - '[[2026-07-14-honest-all-green-adr]]'
+  - '[[2026-07-17-duplication-evidence-repair-adr]]'
+  - '[[2026-07-17-duplication-evidence-repair-plan]]'
+modified: '2026-09-03'
+body_schema: body-v2
+body_hash: 'sha256:1a02f8b30cb73a88e9faf6d78047bdb47e857a147d490a0a0b825afda18cc73e'
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #plan) and one feature tag.
-     Replace duplication-burndown with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     tier is mandatory for new plans. Allowed: L1, L2, L3, L4.
-     L1 = Steps only. L2 = Phases above Steps. L3 = Waves above
-     Phases above Steps. L4 = Epic above Waves above Phases above
-     Steps; PM association required. Pre-existing plans without this
-     field default to L2.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'. The related field
-     carries the AUTHORIZING documents (ADR, research, reference, prior
-     plan) for every Step in this plan; Steps inherit this chain;
-     per-row reference footers do not exist.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - The related: field carries the AUTHORIZING documents (ADR, research,
-       reference, prior plan) for every Step in this plan. Steps inherit this
-       chain; per-row reference footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- HIERARCHY AND TIERS:
-     Epic > Wave > Phase > Step. Step is the canonical leaf-row
-     noun. Execution Record artifact: <Step Record>.
-     Tier is declared in frontmatter as tier: L1/L2/L3/L4
-     (mandatory for new plans; pre-existing plans without the
-     field default to L2 and the writer adds the field on first
-     edit). The tier selects containers:
-       L1 = Steps only.
-       L2 = Phases above Steps.
-       L3 = Waves above Phases above Steps.
-       L4 = Epic above Waves above Phases above Steps; MUST declare
-            a project-management association in the Epic intent
-            block prose.
-     Selection is by complexity criteria, not container counting.
-     Writer never invents containers to qualify a tier. -->
-
-<!-- IDENTIFIERS AND ROW CONTRACT:
-     S##, P##, W## are flat, per-document, append-only, immutable.
-     Promotion adds containers without renumbering. Gaps are not
-     reused.
-     Display paths are computed from current grouping:
-       Step path:    L1 S##   L2 P##.S##   L3/L4 W##.P##.S##
-       Phase heading:        L2 P##       L3/L4 W##.P##
-       Wave heading:                      L3/L4 W##
-     Row format:
-       - [ ] `<display-path>` - imperative-verb action; `path/to/file`.
-     Two-state checkboxes only ([ ] open, [x] closed). No per-row
-     reference footers; wiki-links and markdown links are forbidden
-     in plan body. Authorizing documents go in the plan's `related:`
-     frontmatter once.
-     ASCII spaced hyphens everywhere; em-dash (U+2014) and en-dash
-     (U+2013) are forbidden. Step rows within a Phase are
-     contiguous. -->
-
-<!-- NO COMPRESSION:
-     N self-similar actions = N rows. Never collapse into "for each
-     X, do Y" / "across all callers, do Z" / "in every module,
-     replace W". The rule applies at every tier including L1. -->
-
-<!-- VAULTSPEC-CORE VAULT PLAN CLI:
-     The `vaultspec-core vault plan` CLI is the canonical surface for
-     structural manipulation of this plan document. Writers and
-     executors MUST use `vaultspec-core vault plan step add/insert/move/
-     remove/check/uncheck/toggle/edit`,
-     `vaultspec-core vault plan phase add/move/remove/edit`,
-     `vaultspec-core vault plan wave add/move/remove/edit`,
-     `vaultspec-core vault plan epic intent`, and
-     `vaultspec-core vault plan tier promote/demote` for every
-     identifier-affecting change rather than hand-editing the row
-     grammar. Hand edits are tolerated by the parser but flagged by
-     `vaultspec-core vault plan check`; canonical-identifier preservation is
-     guaranteed only when the CLI performs the mutation. Run
-     `vaultspec-core vault plan --help` for the full subcommand
-     surface. -->
+<!-- RETIRED: P02, S03, S06 -->
 
 # `duplication-burndown` plan
 
-<!-- One-line headline summary plan. -->
-
 ## Description
-
-<!-- Briefly describe the proposed work. Reference `{adr}`s,
-`{research}`, `{reference}`. Supporting documentation must be read prior to
-writing the plan document. A plan may execute one ADR or a cluster; when
-several feed it, state here which Wave or Phase each ADR governs. -->
 
 ## Steps
 
-<!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
-`L4`) determines the structure under this section:
+## Wave `W01` - restore trustworthy evidence
 
-- `L1`: a flat list of Step rows (no Phase, Wave, or Epic).
-- `L2`: one or more `### Phase` blocks each containing Step rows.
-- `L3`: one or more `## Wave` blocks each containing Phase blocks.
-- `L4`: a `## Epic intent` block, followed by Wave blocks. -->
+Re-establish stable clone evidence and historical dispositions without weakening the detector; every reduction wave depends on this authority.
 
-<!-- Replace this scaffold with the tier-appropriate structure for your plan.
-Format examples for each block type are embedded below as commented
-templates. -->
+### Phase `W01.P01` - recover disposition memory
 
-<!-- IMPORTANT: This document must be updated between execution runs to
-     track progress. -->
+Recover the deleted disposition registry and audit tests from history, then reconcile renamed locators against the current tree.
 
-<!-- PHASE BLOCK FORMAT (L2, L3, L4):
-     ### Phase `P02` - rewrite the writer-agent contract
+- [ ] `W01.P01.S01` - Recover the historical clone dispositions from the last trustworthy revision without accepting stale locators or counts; `dev/audit/duplication_dispositions.toml`.
+- [ ] `W01.P01.S02` - Restore and run the deleted duplication instrument tests against the current typed runner; `src/cadrumo/tests/test_dev_audit_report.py`.
+- [ ] `W01.P01.S04` - Recover and reconcile one disposition for every currently observed clone group without carrying stale groups or muting findings; `dev/audit/duplication_dispositions.toml`.
+- [ ] `W01.P01.S05` - Prove disposition parsing and live-clone reconciliation preserve unavailable and changed-scan failures as non-green evidence; `dev/audit/tests`.
 
-     One sentence stating what this Phase delivers.
+### Phase `W01.P03` - freeze the live evidence graph
 
-     - [ ] `P02.S01` - imperative-verb action; `path/to/file`.
-     - [ ] `P02.S02` - imperative-verb action; `path/to/file`.
+Capture one stable 52-clone snapshot and classify connected components, ownership, and intended treatment before source edits.
 
-     At L3/L4 the Phase heading uses the ancestor-aware path
-     (### Phase `W01.P02` - ...). The intent sentence is mandatory. -->
+- [ ] `W01.P03.S07` - Define minimal typed builders for repeated Ledger leaf invocation and result schema declarations; `src/cadrumo/entrypoints/cli/_app_ledger_command_spec_support.py`.
 
-<!-- WAVE BLOCK FORMAT (L3, L4):
-     ## Wave `W01` - language-only convention rollout
+### Phase `W01.P04` - freeze the live evidence graph
 
-     One paragraph stating what this Wave delivers, which downstream
-     Wave depends on it, and which authorizing documents back it.
+Capture a stable clone snapshot and classify its connected components before editing source.
 
-     ### Phase `W01.P01` - ...
-     ### Phase `W01.P02` - ...
 
-     The Wave intent paragraph is mandatory. -->
+### Phase `W01.P17` - reconcile live evidence
 
-<!-- EPIC INTENT BLOCK FORMAT (L4 only):
-     ## Epic intent
+Reconcile historical dispositions against one stable live scan without suppressing or baselining findings.
 
-     One paragraph stating the strategic goal, the external project-
-     management association (milestone name, project board identifier,
-     roadmap entry), the timeline horizon, and the teams or agents
-     involved.
 
-     ## Wave `W01` - ...
-     ## Wave `W02` - ...
+## Wave `W02` - reduce CLI declaration clones
 
-     The ## Epic intent block is mandatory at L4 and absent at L1, L2,
-     L3. The plan title (the level-one # heading at the top of the
-     document) is the Epic title; no separate Epic heading is emitted. -->
+Reduce the dominant CLI clone family through dependency-graph-bounded primitives while preserving each command contract; semantic-risk work waits for this high-volume family to stabilize.
+
+### Phase `W02.P05` - design command declaration primitives
+
+Introduce only the minimal typed declaration primitives justified by repeated Ledger command semantics and prove contract equivalence.
+
+
+### Phase `W02.P06` - design declaration primitives
+
+Define only typed CLI declaration primitives justified by repeated command semantics.
+
+
+### Phase `W02.P08` - reduce Ledger command clusters
+
+Migrate graph-bounded Ledger CommandSpec components with contract proof after each batch.
+
+
+### Phase `W02.P09` - reduce Ledger command clusters
+
+Migrate Ledger CommandSpec components in bounded batches with focused command-contract verification after each batch.
+
+
+### Phase `W02.P10` - reduce remaining CLI pairs
+
+Resolve the three non-Ledger CLI pairs without coupling unrelated command families.
+
+
+### Phase `W02.P12` - reduce remaining CLI pairs
+
+Resolve the three non-Ledger CLI clone pairs without coupling unrelated command families.
+
+
+### Phase `W02.P22` - ledger command specifications
+
+Consolidate exact Ledger parameter records by dependency-connected family and verify the materialized command graph after each component.
+
+
+## Wave `W03` - resolve semantic-risk clone pairs
+
+Adjudicate and repair each non-CLI semantic pair independently so shared concepts are centralized without merging merely similar authorities.
+
+### Phase `W03.P07` - resolve application-local pairs
+
+Resolve each application-local pair at its owning boundary.
+
+
+### Phase `W03.P11` - resolve AEAT adapter pair
+
+Centralize shared check mechanics while retaining protocol-specific behavior.
+
+
+### Phase `W03.P13` - resolve TUI Ledger pair
+
+Remove duplicated controller and route behavior at the owning TUI boundary.
+
+
+### Phase `W03.P14` - resolve application-local pairs
+
+Treat each application-local pair according to its owning boundary and established authority.
+
+
+### Phase `W03.P15` - resolve registry binding pair
+
+Unify binding declarations only where registry and calculation semantics are identical.
+
+
+### Phase `W03.P16` - resolve AEAT adapter pair
+
+Centralize only the shared NIF and GROI check mechanics while preserving protocol-specific behavior and evidence.
+
+
+### Phase `W03.P19` - resolve TUI Ledger pair
+
+Remove duplicated controller and routing behavior at the owning TUI boundary.
+
+
+### Phase `W03.P21` - resolve registry binding pair
+
+Unify the shared Ledger to Renta binding declaration only where registry authority and calculation semantics are identical.
+
+
+## Wave `W04` - prove and reconcile honest green
+
+Run focused and repository-wide gates, reconcile every residual clone, and close only with stable evidence and no detector weakening.
+
+### Phase `W04.P18` - verify gates
+
+Prove detector teeth and run focused, subsystem, and full repository gates.
+
+
+### Phase `W04.P20` - reconcile closure
+
+Re-audit every residual clone and record final dispositions and closure evidence.
+
+
+## Wave `W05` - restore trustworthy duplication evidence
+
+Recover the live disposition ledger and freeze reproducible clone evidence before changing product code; every later Wave depends on this authority.
+
+## Wave `W06` - consolidate declarative CLI contracts
+
+Reduce the dominant CommandSpec clone family through narrow typed constants and constructors while preserving every public CLI token, help key, policy, binding, and result schema.
 
 ## Parallelization
 
-<!-- State which Steps, Phases, or Waves can be executed in parallel and
-which carry hard ordering. At `L1` and `L2`, parallelism is decided
-per-Step or per-Phase. At `L3` and `L4`, Waves are sequenced by
-default (one Wave must land before the next can begin); Phases
-within a single Wave may be parallelized when they share no hard
-interdependency. -->
-
 ## Verification
-
-<!-- State the mission success criteria for this plan. Each criterion
-should be a verifiable check (test passes, surface conforms,
-reviewer signs off) rather than a free-form assertion.
-
-The plan is complete when every Step in the plan is closed
-(`- [x]`). At `L4`, the Epic-completion check additionally requires
-the declared project-management association to report the Epic
-complete.
-
-For tier-specific verification cadence, see the authorizing
-documents linked in the `related:` frontmatter. -->

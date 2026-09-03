@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:f7f936879094d2dfa4010f9edb69e14305552fb0350f2d25ae0413db951d2fe7'
+body_hash: 'sha256:abcf6a9a795e3c2078557574253f4d17fa94b324e85cc2400ef531adebcb93f4'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -511,6 +511,7 @@ Author the four architectural decision records the contract requires before any 
 - [ ] `W06.P13.S286` - Replace the plan-phase owning_authority values in the workspace action denominator with a durable authority, coordinating with that surface's writer; `dev/quality/modelo_workspace_action_denominator.py`.
 - [x] `W06.P13.S287` - Remove three restatements from the plan prose and record the cross-Wave evidence dependency once; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S288` - Give the two superseded consolidated positions the forward pointers their precedence claims required; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S289` - Make the selection probe record the ambiguity its own retry was erasing, and re-ground the temporal criterion on the measured figure; `dev/registry/analysis/revision_selection_probe.py dev/registry/tests/test_revision_selection_probe.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -700,7 +701,12 @@ proven against a live defect is for.
 
 Every revision directory name agrees with the window that revision declares, and a gate refuses a name
 that does not. Temporal selection resolves every coordinate the law can decide and refuses only those
-it genuinely cannot. Fourteen names fail the first today and two coordinates fail the second.
+it genuinely cannot. Fourteen names fail the first today. The second is now measured rather than
+asserted: over 441 probes across 58 modelos no coordinate refuses outright, and exactly one - modelo
+308 at filing year 2011, where the windows split at the end of June - cannot be decided by the filing
+year alone and needs a date. The probe used to erase that case, because the retry that answers it
+also cleared the refusal, so the one coordinate this criterion is about was reported like any other.
+It is now carried on the probe and counted in its summary.
 
 The development registry lane passes, and until it does every failure in it is named and attributed.
 The lane is red, and which lane is meant now has to be said. Over the registry directories this

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b2a054e02eaab477febf1106fe68cf2e4f76f68b0627f3bde47cbafb72f4ee8f'
+body_hash: 'sha256:b2a80041e11fcde9f5b702333b34668cf3c3ea930401cdc7891b7e51aab1df2a'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -116,6 +116,34 @@ S397 must not close in its current form.
 Focused gate evidence: 8 tests passed; Ruff passed; ty passed; basedpyright
 reported zero errors and warnings. These green checks do not close the semantic
 and security findings.
+
+## Final disposition
+
+Post-remediation review resolves every finding above. Public projection and row
+types physically omit protected payload, bucket, subject, and private
+notification identity fields; those coordinates exist only on mandatory
+admission facts and are projected away. Python pickle, `vars`, attribute
+absence, subclass-stripping, and repr/JSON tests pin that boundary. The package
+initializer is inert.
+
+Each zone now retains independent source observations with availability,
+freshness, refusal, and measured count. Confident rows require the exact
+attributed source to be observable and non-empty, while known-empty and unknown
+remain distinct. Overview authority joins are area-specific. Logical duplicate
+checks use overview area, private admission-only notification identity, natural
+filing address, and a census path normalized by case and collapsed whitespace.
+
+Only overview, evidence-comparison, and reconciliation outputs expose action or
+operation references. Supplied action declarations must equal their complete
+entry in `OPERATOR_ACTION_CATALOGUE`; forged same-ID/different-command entries
+are refused. Row/area/state closure, exact public operation-contract lookup,
+TUI frontend admission, pull-action operation joins, and `NO_ACTION` closure are
+enforced before projection.
+
+Final focused evidence: 11 tests passed with all lanes enabled; Ruff passed; ty
+passed; basedpyright reported zero errors, warnings, and notes.
+
+Final result: **CLOSE**. S397 may close.
 
 ### inert-facade-stale-consumer | high | Current focused tests still import the retired package facade
 

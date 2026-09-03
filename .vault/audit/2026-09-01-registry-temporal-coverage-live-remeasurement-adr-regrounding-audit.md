@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:19dd308d4a7f22e90b8da305fdd49993fe5c2174b2d12ea17f2e060a92d1347e'
+body_hash: 'sha256:32925a388fcc36689eeee4f76aefa9a2a84aef5e7fce63d61d4cdddbe938ddd0'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7191,3 +7191,38 @@ three headings being pointed at their corrections - so what remained was one
 family the earlier sweep had not reached, not a record that never marks its
 supersessions. Reporting the first number would have condemned a convention that
 was being followed.
+
+### the-selection-probe-erased-the-one-case-it-was-built-to-show | high | A retry that rescued the answer also cleared the refusal, so the single undecidable coordinate reported like any other row
+
+Checking the plan's temporal criterion against the live registry rather than
+against the audit produced a suspicious answer: 441 probes across 58 modelos,
+zero not resolving to themselves, zero refusing. A screen that finds nothing is
+worth one more question, and the answer was in the screen rather than the
+registry. Asking the authority directly for modelo 308 at filing year 2011
+raises `AmbiguousRevisionSelectionError` at every grade, exactly as it should -
+the windows split at the end of June, so the year alone cannot choose - while
+the probe reported that coordinate as resolved.
+
+The mechanism was two lines. The probe retries an ambiguous year with a date
+inside the revision's own window, which is right: the year alone is an
+under-specified question and refusing it is the registry being correct. But the
+retry set `refusal = None` on success, and the row was then built with
+`refusal=None if resolved else refusal`, so the ambiguity was cleared twice and
+nothing downstream could tell a coordinate the year cannot decide from one it
+decides outright. The probe's own docstring explains the 308 split as its
+motivating example, and the probe could not report it.
+
+The flag is now carried on the result and counted in the summary, and the
+corpus-wide figure is one: modelo 308, filing year 2011, answered by a date.
+A test pins it with the replacement instruction the pin owes, and says that if
+the corpus ever holds no such pair the flag must still be proven against a
+constructed one, because an erasure returns silently.
+
+The plan's criterion said two coordinates failed this test. It now carries the
+measured figures instead - 441 probes, zero refusing, one undecidable by year
+alone - because the earlier number could not be reproduced by the instrument the
+criterion names, and a criterion whose evidence cannot be re-run is a claim
+rather than a check. This is the second screen in this campaign found reporting
+a clean result because it could not see its own subject, and both were found the
+same way: by asking whether a zero was the tree being clean or the instrument
+being blind.
