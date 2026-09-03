@@ -54,11 +54,7 @@ class LedgerOverviewScreen(LedgerWorkspaceScreen):
         affected = len(self.controller.projection.affected_declarations)
         table.add_row(
             ledger_copy("tui.ledger.overview.affected_declarations"),
-            (
-                ledger_copy("tui.ledger.status.needs_attention")
-                if affected
-                else ledger_copy("tui.ledger.status.empty")
-            ),
+            (ledger_copy("tui.ledger.status.needs_attention") if affected else ledger_copy("tui.ledger.status.empty")),
             str(affected),
             key="affected-declarations",
         )

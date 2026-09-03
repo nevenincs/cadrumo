@@ -38,6 +38,8 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.support_matrix import revision_capability_probe
 
+from .corpus import bundled_modelo_ids
+
 __all__ = ["GradeFinding", "grade_findings", "screen_authority"]
 
 type GradeFindingKind = Literal["under_supported", "under_declared"]
@@ -97,15 +99,9 @@ def screen_authority(authority: ValidatedRegistryAuthority, modelo_ids: tuple[st
     return tuple(findings)
 
 
-def _bundled_modelo_ids() -> tuple[str, ...]:
-    from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
-
-    return tuple(sorted(str(code) for code in registry_modelo_codes()))
-
-
 def main() -> int:
     """Print one greppable row per finding and a summary; always exit 0."""
-    findings = screen_authority(bundled_authority(), _bundled_modelo_ids())
+    findings = screen_authority(bundled_authority(), bundled_modelo_ids())
     for f in findings:
         sys.stdout.write(
             f"grade_{f.kind} modelo={f.modelo} revision={f.revision} declared={f.declared_grade} "

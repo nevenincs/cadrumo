@@ -49,6 +49,8 @@ from ._casilla_export_refs import export_refs_by_casilla, write_generated_casill
 from ._export_tree import RenderedExportTree
 from ._provenance_manifest import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
+    LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME,
+    SHA256_PATTERN,
     ExportFragmentOutputDigest,
     ExportFragmentProvenanceManifest,
     collect_export_fragment_output_digests,
@@ -59,6 +61,7 @@ from ._provenance_manifest import (
 from ._render_profile import RenderProfile, RenderProfileSourceEvidence
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign
+from ._tree_paths import contains
 from ._tree_validation import (
     GeneratedExportTreeValidationContext,
     ValidatedGeneratedExportTree,
@@ -73,9 +76,7 @@ __all__ = [
 ]
 
 
-_LEGACY_SIBLING_MANIFEST: Final[str] = "export.provenance.json"
 _JOURNAL_SCHEMA_VERSION: Final[int] = 1
-_SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
 
 
 class _StrictModel(BaseModel):
@@ -91,7 +92,7 @@ class _PublicationJournal(_StrictModel):
     revision_id: str = Field(min_length=1)
     candidate_export: str = Field(min_length=1)
     backup_export: str = Field(min_length=1)
-    candidate_manifest_sha256: str = Field(pattern=_SHA256_PATTERN)
+    candidate_manifest_sha256: str = Field(pattern=SHA256_PATTERN)
 
 
 @dataclass(frozen=True, slots=True)
@@ -315,7 +316,7 @@ def _require_narrow_root(path: Path, *, subject: str) -> Path:
         raise RegistryValidationError(f"{subject} must be an existing non-linked directory: {path}")
     resolved = path.resolve()
     workspace_root = Path.cwd().resolve()
-    if resolved == resolved.parent or resolved == workspace_root or _contains(resolved, workspace_root):
+    if resolved == resolved.parent or resolved == workspace_root or contains(resolved, workspace_root):
         raise RegistryValidationError(f"{subject} is too broad for generated publication: {path}")
     if (resolved / ".git").exists():
         raise RegistryValidationError(f"{subject} must not be a workspace root: {path}")
@@ -323,7 +324,7 @@ def _require_narrow_root(path: Path, *, subject: str) -> Path:
 
 
 def _require_disjoint_roots(temporary_root: Path, target_root: Path) -> None:
-    if _contains(temporary_root, target_root) or _contains(target_root, temporary_root):
+    if contains(temporary_root, target_root) or contains(target_root, temporary_root):
         raise RegistryValidationError("generated temporary and publication target roots must be disjoint")
 
 
@@ -380,7 +381,7 @@ def _require_existing_link_free_path(path: Path, *, root: Path, subject: str) ->
 
 
 def _require_no_stale_sibling_manifest(revision_root: Path, *, subject: str) -> None:
-    stale = revision_root / _LEGACY_SIBLING_MANIFEST
+    stale = revision_root / LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME
     if stale.exists() or is_link_like(stale):
         raise RegistryValidationError(f"{subject} refuses stale sibling provenance manifest: {stale}")
 
@@ -856,9 +857,3 @@ def _sha256(path: Path) -> str:
     return digest
 
 
-def _contains(parent: Path, child: Path) -> bool:
-    try:
-        child.relative_to(parent)
-    except ValueError:
-        return False
-    return True

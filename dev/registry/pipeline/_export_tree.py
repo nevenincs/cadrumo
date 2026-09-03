@@ -85,7 +85,7 @@ __all__ = [
 ]
 
 
-_SERIALIZER_CONVENTION: Final[str] = "rtoml-pretty-v1"
+SERIALIZER_CONVENTION: Final[str] = "rtoml-pretty-v1"
 _SAFE_IDENTIFIER_RE: Final[re.Pattern[str]] = re.compile(r"^[^/\\\x00-\x1f]+$")
 _SLUG_RE: Final[re.Pattern[str]] = re.compile(r"[^a-z0-9]+")
 # A bare trailing full stop is SENTENCE PUNCTUATION on the official content, not
@@ -539,7 +539,7 @@ def _validate_transport_profile(joined: JoinedRecordDesign, profile: ExportTreeT
         )
     if profile.source_sha256 != joined.source.source_sha256:
         raise RegistryValidationError("export tree transport profile SHA-256 does not match joined official source")
-    if profile.serializer_convention != _SERIALIZER_CONVENTION:
+    if profile.serializer_convention != SERIALIZER_CONVENTION:
         raise RegistryValidationError(
             f"export tree transport profile serializer {profile.serializer_convention!r} is not supported",
         )

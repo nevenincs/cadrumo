@@ -32,6 +32,10 @@ from ._marker_metadata_patterns import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+#: This tree requires each module needing text IO to name its own encoding once
+#: rather than repeat the literal, so a module reading files carries this.
+_UTF_8: Final[str] = "utf-8"
+
 _STEP_ID_CASE: Final = PROCESS_SYMBOL_METADATA_CASES[-1]
 
 
@@ -48,7 +52,7 @@ def _tracked_test_modules() -> tuple[Path, ...]:
 
 def _test_symbol_names(path: Path) -> tuple[str, ...]:
     try:
-        tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
+        tree = ast.parse(path.read_text(encoding=_UTF_8, errors="replace"))
     except (SyntaxError, OSError):
         return ()
     return tuple(
@@ -96,14 +100,18 @@ def test_no_development_tree_test_name_carries_a_step_id() -> None:
     count belongs in the record, not in an assertion that would go stale on
     somebody else's schedule.
     """
-    carrying = {
-        str(path.relative_to(REPO_ROOT)).replace("\\", "/")
+    carrying = sorted(
+        f"{str(path.relative_to(REPO_ROOT)).replace(chr(92), '/')}::{name}"
         for path in _tracked_test_modules()
-        if str(path.relative_to(REPO_ROOT)).replace("\\", "/").startswith("dev/")
+        if str(path.relative_to(REPO_ROOT)).replace(chr(92), "/").startswith("dev/")
         for name in _test_symbol_names(path)
         if _STEP_ID_CASE.pattern.search(name)
-    }
-    assert carrying == set(), f"a step id returned to a development-tree test name: {sorted(carrying)}"
+    )
+    assert not carrying, (
+        "a step id returned to a development-tree test name. Rename the symbol to describe what it "
+        "asserts; do not add the coordinate to an exemption, and do not rename only the test when its "
+        f"module carries the same id in its prose - that silences the gate without removing the leak: {carrying}"
+    )
 
 
 def test_a_module_explaining_its_own_lint_suppression_is_not_campaign_metadata() -> None:

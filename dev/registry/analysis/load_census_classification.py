@@ -48,7 +48,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Final, Literal
 
-REGISTRY_PACKAGE: Final[str] = "cadrumo.domain.calculations.registry"
+from .load_census import REGISTRY_PACKAGE
 
 Classification = Literal["live", "conditionally_reachable", "dead"]
 
@@ -253,7 +253,6 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
         members=_registry(
             "errors",
             "period_selector_match",
-            "snapshot",
             "temporal",
             "validate_cross_domain_snapshot",
             "_validate_reference_checker",
@@ -484,7 +483,6 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "cadrumo.core.decimal.coercion",
             "cadrumo.core.errors.error_codes",
             "cadrumo.core.errors.hierarchy",
-            "cadrumo.core.errors.not_found",
             "cadrumo.core.errors.registry",
             "cadrumo.core.errors.registry._adapters",
             "cadrumo.core.errors.registry._adapters_part1",
@@ -525,8 +523,6 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "cadrumo.domain.iva.regimen_simplificado_rows",
             "cadrumo.domain.iva.schema",
             "cadrumo.domain.justificante",
-            "cadrumo.domain.justificante.errors",
-            "cadrumo.domain.justificante._protocols",
             "cadrumo.domain.justificante.schema",
             "cadrumo.domain.manuals.errors",
             "cadrumo.domain.manuals._ids",
@@ -558,7 +554,6 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "traced alongside the registry members of the same trigger."
         ),
         members=("cadrumo.core.i18n._translatable",),
-        prefixes=("cadrumo.domain.categories",),
     ),
     ClassificationRule(
         classification="conditionally_reachable",
@@ -660,12 +655,6 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "It consumes the loaded authority; it does not participate in loading it."
         ),
         prefixes=("cadrumo.domain.deadlines",),
-    ),
-    ClassificationRule(
-        classification="conditionally_reachable",
-        trigger="authenticated AEAT session establishment",
-        reason="Auth domain types are resolved when a session is opened against the sede.",
-        prefixes=("cadrumo.domain.auth",),
     ),
     ClassificationRule(
         classification="conditionally_reachable",

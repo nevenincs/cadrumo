@@ -8,7 +8,12 @@ from textual.app import ComposeResult
 from textual.widgets import DataTable, Static
 
 from ..components.widgets import ContentDataTable, ContentScroll
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
+from .controller import (
+    LedgerEvidenceReviewRequested,
+    LedgerWorkspaceController,
+    LedgerWorkspaceScreen,
+    ledger_copy,
+)
 
 
 class LedgerEvidenceScreen(LedgerWorkspaceScreen):
@@ -18,6 +23,7 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
         """Retain an injected canonical review queue."""
         super().__init__(controller, id="ledger-evidence-screen")
         self.selected_evidence_id: str | None = None
+        self.requested_review: LedgerEvidenceReviewRequested | None = None
 
     @override
     def compose(self) -> ComposeResult:
@@ -58,6 +64,9 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
         evidence_id = str(event.row_key.value)
         row = next(item for item in self.controller.evidence_rows() if item.attachment_id == evidence_id)
         self.selected_evidence_id = evidence_id
+        request = LedgerEvidenceReviewRequested(attachment_id=evidence_id, action=row.action)
+        self.requested_review = request
+        self.post_message(request)
         self.query_one("#ledger-evidence-detail", Static).update(
             ledger_copy(
                 "tui.ledger.evidence.detail",

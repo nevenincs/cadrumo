@@ -135,9 +135,7 @@ def test_identity_cli_has_no_filesystem_write_surface() -> None:
         "write_text",
     }
     called_attributes = {
-        node.func.attr
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+        node.func.attr for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
     }
 
     assert filesystem_writes.isdisjoint(called_attributes)
@@ -224,9 +222,9 @@ def test_target_identity_worklist_classifies_every_noncanonical_owner_and_true_o
         "DP200014:SAL_RESERVA_DOTACION",
         "DP200014:bin-aplicada-maxima",
     }
-    assert {
-        row.disposition for row in worklist.orphaned_declarations
-    } == {subject.M200OrphanDisposition.UNMAPPED_DECLARATION}
+    assert {row.disposition for row in worklist.orphaned_declarations} == {
+        subject.M200OrphanDisposition.UNMAPPED_DECLARATION
+    }
 
 
 def test_target_identity_worklist_keeps_printed_diagnostics_separate_from_map_owner(target_identity_worklist) -> None:

@@ -57,7 +57,8 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncodin
 from cadrumo.domain.calculations.registry.ids import RevisionId, SourceRefId
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource, RegistryRevisionInspection
 
-from ._export_tree import ExportTreeTransportProfile, render_complete_export_tree
+from ._export_tree import SERIALIZER_CONVENTION, ExportTreeTransportProfile, render_complete_export_tree
+from ._provenance_manifest import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ._record_design_ir import load_record_design_intermediate
 from ._render_profile import (
     RenderProfile,
@@ -76,14 +77,21 @@ __all__ = [
     "parsed_tree_file",
 ]
 
-_SERIALIZER_CONVENTION = "rtoml-pretty-v1"
+#: The serializer convention token is the renderer's to state; a second
+#: copy here would let the two drift into disagreeing about what a
+#: rendered tree is.
+_SERIALIZER_CONVENTION = SERIALIZER_CONVENTION
 
 #: The generation manifest attests which inputs produced the tree, so it changes
 #: whenever an input or the generator does. A tree differing ONLY here ships
 #: correct records with a stale attestation; a tree differing in a record file
 #: ships bytes its inputs no longer produce. The two need different remedies and
 #: are reported separately.
-_PROVENANCE_MANIFEST = "_generation.provenance.json"
+#: The generation manifest's filename comes from the module that owns it.
+#: It was restated here as a literal while nine other modules imported the
+#: declaration - one filename, three spellings across this repository, of
+#: which this was the one nobody would have found when it changed.
+_PROVENANCE_MANIFEST = EXPORT_FRAGMENT_PROVENANCE_FILENAME
 _AUTHORED_ROOT = Path(__file__).resolve().parent.parent
 
 

@@ -9,6 +9,7 @@ from typing import Final, get_args
 from textual.screen import Screen
 
 from ....application.aeat_sync.workspace import AeatSyncWorkspaceProjectionV1, AeatSyncWorkspaceZone
+from ....application.operations.registry import OperationPublicContractSetV1
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
 from .controller import AeatSyncWorkspaceController
 from .models import (
@@ -80,6 +81,7 @@ def aeat_sync_screen_factory(
     *,
     operation_handoff: AeatSyncOperationHandoffV1 | None = None,
     notification_document_handoff: AeatSyncNotificationDocumentHandoffV1 | None = None,
+    operation_contracts: OperationPublicContractSetV1 | None = None,
 ) -> TuiScreenFactoryV1:
     """Bind only a preloaded safe projection and an optional typed host handoff."""
 
@@ -89,6 +91,7 @@ def aeat_sync_screen_factory(
             projection,
             operation_handoff=operation_handoff,
             notification_document_handoff=notification_document_handoff,
+            operation_contracts=operation_contracts,
         )
         return resolve_aeat_sync_screen(controller, controller.target(AeatSyncWorkspaceZone.OVERVIEW))
 

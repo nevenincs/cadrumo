@@ -239,9 +239,7 @@ class HomeProjectionV1(BaseModel):
             raise ValueError("Home next actions require unique contiguous ranks in display order")
         if len(self.agenda) > 3:
             raise ValueError("Home may preview at most three agenda entries")
-        agenda_addresses = tuple(
-            (item.modelo, item.filing_year, item.period.registry_token) for item in self.agenda
-        )
+        agenda_addresses = tuple((item.modelo, item.filing_year, item.period.registry_token) for item in self.agenda)
         if len(set(agenda_addresses)) != len(agenda_addresses):
             raise ValueError("Home agenda entries require unique natural addresses")
         due_dates = tuple(item.due_on for item in self.agenda)

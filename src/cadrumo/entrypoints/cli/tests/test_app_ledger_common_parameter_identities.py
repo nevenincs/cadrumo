@@ -69,12 +69,8 @@ def _fields(option: OptionSpec) -> tuple[object, ...]:
 def test_shared_ledger_parameter_fields_are_complete_and_immutable() -> None:
     """Every shared option retains its full literal CLI contract."""
     expected = {
-        _LEDGER_ADD_CATEGORY_ID_OPTION: _option(
-            "category_id", "--category-id", "cli.ledger.add.category_help"
-        ),
-        _LEDGER_USAGE_RATIO_ID_OPTION: _option(
-            "usage_ratio_id", "--usage-ratio-id", "cli.ledger.add.usage_ratio_help"
-        ),
+        _LEDGER_ADD_CATEGORY_ID_OPTION: _option("category_id", "--category-id", "cli.ledger.add.category_help"),
+        _LEDGER_USAGE_RATIO_ID_OPTION: _option("usage_ratio_id", "--usage-ratio-id", "cli.ledger.add.usage_ratio_help"),
         _LEDGER_ACTOR_OPTION: _option("actor", "--actor", "cli.ledger.add.actor_help"),
         _ARCHIVE_REASON_OPTION: _option("reason", "--reason", "cli.ledger.archive.reason_help", default=""),
         _OPTIONAL_PERIOD_OPTION: _option("period", "--period", "cli.ledger.export.period_help"),
@@ -89,26 +85,58 @@ def test_common_ledger_parameters_keep_their_full_command_order_and_identity() -
     """Only equal immutable records are shared at their exact parameter locations."""
     specs = {spec.key: spec for spec in (*LEDGER_FOUNDATION_COMMAND_SPECS, *LEDGER_LIFECYCLE_COMMAND_SPECS)}
 
-    assert {key: tuple(parameter.name for parameter in specs[key].parameters) for key in (
-        "app_ledger_add",
-        "app_ledger_allocate",
-        "app_ledger_archive",
-        "app_ledger_attach",
-        "app_ledger_check",
-        "app_ledger_restore",
-        "app_ledger_stash",
-        "app_ledger_status",
-    )} == {
+    assert {
+        key: tuple(parameter.name for parameter in specs[key].parameters)
+        for key in (
+            "app_ledger_add",
+            "app_ledger_allocate",
+            "app_ledger_archive",
+            "app_ledger_attach",
+            "app_ledger_check",
+            "app_ledger_restore",
+            "app_ledger_stash",
+            "app_ledger_status",
+        )
+    } == {
         "app_ledger_add": (
-            "booked_date", "amount", "direction", "description", "value_date", "currency", "counterparty",
-            "business_classification", "business_pct", "category_id", "taxable_base", "iva_rate", "iva_amount",
-            "iva_category", "deduction_fact_kind", "counterparty_country", "counterparty_identification_state",
-            "recargo_amount", "irpf_category", "usage_ratio_id", "prorrata_reference", "art_104_tres_exclusion",
-            "input_classification", "prorrata_sector", "purchase_invoice_evidence_id", "attachment_ids", "notes",
-            "actor", "idempotency_key", "source_jurisdiction",
+            "booked_date",
+            "amount",
+            "direction",
+            "description",
+            "value_date",
+            "currency",
+            "counterparty",
+            "business_classification",
+            "business_pct",
+            "category_id",
+            "taxable_base",
+            "iva_rate",
+            "iva_amount",
+            "iva_category",
+            "deduction_fact_kind",
+            "counterparty_country",
+            "counterparty_identification_state",
+            "recargo_amount",
+            "irpf_category",
+            "usage_ratio_id",
+            "prorrata_reference",
+            "art_104_tres_exclusion",
+            "input_classification",
+            "prorrata_sector",
+            "purchase_invoice_evidence_id",
+            "attachment_ids",
+            "notes",
+            "actor",
+            "idempotency_key",
+            "source_jurisdiction",
         ),
         "app_ledger_allocate": (
-            "transaction_id", "business_pct", "category_id", "usage_ratio_id", "prorrata_reference", "actor",
+            "transaction_id",
+            "business_pct",
+            "category_id",
+            "usage_ratio_id",
+            "prorrata_reference",
+            "actor",
         ),
         "app_ledger_archive": ("transaction_id", "reason", "yes", "actor"),
         "app_ledger_attach": ("transaction_id", "purchase_invoice_evidence_id", "attachment_ids", "actor"),
@@ -119,12 +147,29 @@ def test_common_ledger_parameters_keep_their_full_command_order_and_identity() -
     }
 
     add, allocate, archive, attach, check = (
-        specs[key] for key in ("app_ledger_add", "app_ledger_allocate", "app_ledger_archive", "app_ledger_attach", "app_ledger_check")
+        specs[key]
+        for key in (
+            "app_ledger_add",
+            "app_ledger_allocate",
+            "app_ledger_archive",
+            "app_ledger_attach",
+            "app_ledger_check",
+        )
     )
     restore, stash, status = (specs[key] for key in ("app_ledger_restore", "app_ledger_stash", "app_ledger_status"))
     assert add.parameters[9] is allocate.parameters[2] is _LEDGER_ADD_CATEGORY_ID_OPTION
     assert add.parameters[19] is allocate.parameters[3] is _LEDGER_USAGE_RATIO_ID_OPTION
-    assert all(parameter is _LEDGER_ACTOR_OPTION for parameter in (add.parameters[27], allocate.parameters[5], archive.parameters[3], attach.parameters[3], restore.parameters[3], stash.parameters[3]))
+    assert all(
+        parameter is _LEDGER_ACTOR_OPTION
+        for parameter in (
+            add.parameters[27],
+            allocate.parameters[5],
+            archive.parameters[3],
+            attach.parameters[3],
+            restore.parameters[3],
+            stash.parameters[3],
+        )
+    )
     assert archive.parameters[1] is restore.parameters[1] is stash.parameters[1] is _ARCHIVE_REASON_OPTION
     assert status.parameters[0] is _OPTIONAL_PERIOD_OPTION
     assert check.parameters[2] is status.parameters[1] is _OPTIONAL_YEAR_OPTION
@@ -138,7 +183,12 @@ def test_domain_specific_scalar_options_remain_distinct() -> None:
 
     assert rule["app_ledger_rule_add"].parameters[2] is not _LEDGER_ADD_CATEGORY_ID_OPTION
     assert rule["app_ledger_rule_add"].parameters[-1] is not _LEDGER_ACTOR_OPTION
-    assert foundation["app_ledger_add"].parameters[10] is not inventory["app_ledger_inventory_movement_add"].parameters[7]
+    assert (
+        foundation["app_ledger_add"].parameters[10] is not inventory["app_ledger_inventory_movement_add"].parameters[7]
+    )
     assert rule["app_ledger_rule_add"].parameters[2].help_key != _LEDGER_ADD_CATEGORY_ID_OPTION.help_key
     assert rule["app_ledger_rule_add"].parameters[-1].help_key != _LEDGER_ACTOR_OPTION.help_key
-    assert foundation["app_ledger_add"].parameters[10].help_key != inventory["app_ledger_inventory_movement_add"].parameters[7].help_key
+    assert (
+        foundation["app_ledger_add"].parameters[10].help_key
+        != inventory["app_ledger_inventory_movement_add"].parameters[7].help_key
+    )

@@ -36,6 +36,8 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.export import resolved_export_endpoints
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
+from .corpus import bundled_modelo_ids
+
 __all__ = ["ProvenanceFinding", "outside_reference_index", "provenance_findings", "screen_authority"]
 
 type ProvenanceChildKind = Literal[
@@ -133,12 +135,6 @@ def screen_authority(
     return tuple(findings)
 
 
-def _bundled_modelo_ids() -> tuple[str, ...]:
-    from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
-
-    return tuple(sorted(str(code) for code in registry_modelo_codes()))
-
-
 def outside_reference_index(
     findings: tuple[ProvenanceFinding, ...],
 ) -> dict[tuple[str, str, str, str], int]:
@@ -160,7 +156,7 @@ def outside_reference_index(
 
 def main() -> int:
     """Print one greppable row per outside reference and a per-kind summary; always exit 0."""
-    findings = screen_authority(bundled_authority(), _bundled_modelo_ids())
+    findings = screen_authority(bundled_authority(), bundled_modelo_ids())
     index = outside_reference_index(findings)
     for (modelo, revision, ref_kind, reference), sites in sorted(index.items()):
         sys.stdout.write(

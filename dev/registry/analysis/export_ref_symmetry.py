@@ -32,6 +32,8 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.export import resolved_export_casillas
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
+from .corpus import bundled_modelo_ids
+
 __all__ = [
     "ExportRefSymmetryFinding",
     "screen_authority",
@@ -76,16 +78,10 @@ def screen_authority(
     return tuple(findings)
 
 
-def _bundled_modelo_ids() -> tuple[str, ...]:
-    from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
-
-    return tuple(sorted(str(code) for code in registry_modelo_codes()))
-
-
 def main() -> int:
     """Print one greppable row per finding and a closing summary; always exit 0."""
     authority = bundled_authority()
-    findings = screen_authority(authority, _bundled_modelo_ids())
+    findings = screen_authority(authority, bundled_modelo_ids())
     for finding in findings:
         sys.stdout.write(
             f"export_ref_unsatisfied modelo={finding.modelo} revision={finding.revision} "

@@ -29,6 +29,7 @@ what makes it evidence.
 from __future__ import annotations
 
 import collections
+from typing import Final
 
 import pytest
 
@@ -39,7 +40,13 @@ from ..analysis.casilla_id_grammar import screen_authority as grammar_screen
 from ..analysis.continuity_integrity import screen_authority as continuity_screen
 from ..analysis.export_ref_symmetry import screen_authority as export_ref_screen
 
+_BINDING_DERIVATION = "derive_export_layouts_from_bindings"
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+#: Named once per module, as this tree requires, rather than repeated at each
+#: read site where a typo would be a silent decode change.
+_UTF_8: Final[str] = "utf-8"
 
 
 @pytest.fixture(scope="module")
@@ -99,7 +106,7 @@ def test_every_screen_module_is_enrolled_in_the_runner() -> None:
     defining = {
         path.stem
         for path in analysis.glob("*.py")
-        if path.name != "screens.py" and "\ndef screen_authority(" in path.read_text(encoding="utf-8")
+        if path.name != "screens.py" and "\ndef screen_authority(" in path.read_text(encoding=_UTF_8)
     }
     enrolled = {entry.name for entry in SCREENS}
     assert defining == enrolled, f"screens not enrolled in the runner: {sorted(defining - enrolled)}"
@@ -139,7 +146,7 @@ def test_the_readme_screen_table_lists_exactly_the_enrolled_screens() -> None:
 
     from ..analysis.screens import SCREENS
 
-    readme = (pathlib.Path(__file__).resolve().parent.parent / "README.md").read_text(encoding="utf-8")
+    readme = (pathlib.Path(__file__).resolve().parent.parent / "README.md").read_text(encoding=_UTF_8)
     documented = set(re.findall(r"^\| `([a-z_]+)` \| ", readme, re.MULTILINE))
     enrolled = {entry.name for entry in SCREENS}
     assert documented == enrolled, (
@@ -169,7 +176,7 @@ def test_every_symbol_the_contributor_readmes_name_still_resolves() -> None:
     documented: set[str] = set()
     for readme in readmes:
         if readme.is_file():
-            documented.update(re.findall(r"`((?:cadrumo|dev)\.[A-Za-z0-9_.]+)`", readme.read_text(encoding="utf-8")))
+            documented.update(re.findall(r"`((?:cadrumo|dev)\.[A-Za-z0-9_.]+)`", readme.read_text(encoding=_UTF_8)))
     assert documented, "the contributor READMEs must name at least one symbol"
 
     unresolved: list[str] = []
@@ -239,7 +246,7 @@ def test_every_screen_module_has_a_test_module() -> None:
     screens = {
         path.stem
         for path in (registry_root / "analysis").glob("*.py")
-        if path.name != "screens.py" and "\ndef screen_authority(" in path.read_text(encoding="utf-8")
+        if path.name != "screens.py" and "\ndef screen_authority(" in path.read_text(encoding=_UTF_8)
     }
     untested = sorted(name for name in screens if not (registry_root / "tests" / f"test_{name}.py").is_file())
     assert not untested, f"screens carrying no test module, so their detection is unproven: {untested}"
@@ -283,19 +290,63 @@ def test_no_screen_reassembles_the_resolved_export_surface() -> None:
     result cannot show whether it was reached correctly. A module reaching for
     the binding derivation directly is rebuilding the surface, whatever it does
     with it afterwards.
+
+    Read through the syntax tree rather than as text. A substring search sees
+    the name wherever it appears, including in a docstring explaining why the
+    module does NOT use it - so the previous form of this gate punished a module
+    for documenting the rule, which is the opposite of what it exists to
+    encourage. Names in comments, docstrings and string literals are not
+    reaches; imports and attribute access are.
     """
+    import ast
     import pathlib
 
     analysis = pathlib.Path(__file__).resolve().parent.parent / "analysis"
-    offenders = sorted(
-        path.stem
-        for path in analysis.glob("*.py")
-        if "derive_export_layouts_from_bindings" in path.read_text(encoding="utf-8")
-    )
+    offenders: list[str] = []
+    for path in sorted(analysis.rglob("*.py")):
+        tree = ast.parse(path.read_text(encoding=_UTF_8))
+        reached = False
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom):
+                reached |= any(alias.name == _BINDING_DERIVATION for alias in node.names)
+            elif isinstance(node, ast.Name):
+                reached |= node.id == _BINDING_DERIVATION
+            elif isinstance(node, ast.Attribute):
+                reached |= node.attr == _BINDING_DERIVATION
+        if reached:
+            offenders.append(path.stem)
+
     assert not offenders, (
         "these modules reach for the binding derivation instead of the resolved-surface accessor, "
-        f"which is how four wrong figures were published: {offenders}"
+        f"which is how four wrong figures were published: {sorted(offenders)}"
     )
+
+
+def test_the_reassembly_gate_reads_syntax_not_text() -> None:
+    """It catches a reach and stays silent on a module that only names one.
+
+    Both halves matter. Without the first the gate protects nothing; without the
+    second it makes the rule undocumentable, and a rule nobody may explain is
+    one the next author re-breaks.
+    """
+    import ast
+
+    def reaches(source: str) -> bool:
+        tree = ast.parse(source)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and any(a.name == _BINDING_DERIVATION for a in node.names):
+                return True
+            if isinstance(node, ast.Name) and node.id == _BINDING_DERIVATION:
+                return True
+            if isinstance(node, ast.Attribute) and node.attr == _BINDING_DERIVATION:
+                return True
+        return False
+
+    newline = chr(10)
+    assert reaches(f"from x.y import {_BINDING_DERIVATION}{newline}")
+    assert reaches(f"import x.y{newline}rows = x.y.{_BINDING_DERIVATION}(revision){newline}")
+    assert not reaches(f'"""A screen must not call {_BINDING_DERIVATION}; it asks the accessor."""{newline}')
+    assert not reaches(f"# never {_BINDING_DERIVATION}{newline}value = 1{newline}")
 
 
 def test_running_every_screen_leaves_the_shipped_registry_untouched(
@@ -402,7 +453,7 @@ def test_every_package_initialiser_in_the_development_registry_tree_is_inert() -
     checked = 0
     for path in sorted(root.rglob("__init__.py")):
         checked += 1
-        tree = ast.parse(path.read_text(encoding="utf-8"))
+        tree = ast.parse(path.read_text(encoding=_UTF_8))
         offending = [
             type(node).__name__
             for node in tree.body
@@ -499,7 +550,7 @@ def test_no_registry_source_or_declaration_cites_a_vault_record() -> None:
                 # and removing the examples would leave the patterns unproven.
                 continue
             scanned += 1
-            citations = _vault_citations(path.read_text(encoding="utf-8", errors="ignore"))
+            citations = _vault_citations(path.read_text(encoding=_UTF_8, errors="ignore"))
             if citations:
                 offenders[str(path)] = sorted(set(citations))
 
@@ -572,7 +623,11 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
     for entry in SCREENS:
         module = importlib.import_module(f"dev.registry.analysis.{entry.name}")
         doc = module.__doc__ or ""
-        claim = re.search(r"\b([A-Za-z]+) conditions are reported\b", doc)
+        # Any noun, not just "conditions". The screens say conditions,
+        # disagreements, kinds - the claim is "N somethings are reported", and a
+        # gate keyed to one spelling read four screens while a fifth stated its
+        # count in a synonym and went unchecked.
+        claim = re.search(r"([A-Za-z]+) [a-z]+ are reported", doc)
         if claim is None:
             continue
         stated = _NUMBER_WORDS.get(claim.group(1).lower())
@@ -669,3 +724,52 @@ def test_the_gate_detects_a_decimal_field_that_declares_no_scale(
     assert str(stripped.data_type) == "decimal"
     assert stripped.decimals is None
     assert getattr(sample, "decimals", None) is not None, "the donor field must still declare its own scale"
+
+
+def test_a_screen_that_counts_the_facts_it_reads_states_the_right_number() -> None:
+    """A docstring claiming "N facts decide it" must agree with the bullets under it.
+
+    The sibling gate above counts the bullets that follow a "N conditions are
+    reported" claim and deliberately stops before the FACT bullets several
+    screens list first - counting those made it fail on a docstring whose stated
+    number was right. That exclusion left the fact claims unchecked entirely,
+    and one was wrong: a screen said four facts decided its answer and listed
+    five.
+
+    The two claims are read the same way and cannot be merged, because they
+    count different bullet runs in one docstring and a gate that conflated them
+    would be wrong in whichever direction it guessed.
+    """
+    import importlib
+    import re
+
+    from ..analysis.screens import SCREENS
+
+    wrong: list[str] = []
+    checked = 0
+    for entry in SCREENS:
+        module = importlib.import_module(f"dev.registry.analysis.{entry.name}")
+        doc = module.__doc__ or ""
+        claim = re.search(r"\b([A-Za-z]+) facts decide\b", doc)
+        if claim is None:
+            continue
+        stated = _NUMBER_WORDS.get(claim.group(1).lower())
+        if stated is None:
+            wrong.append(f"{entry.name} states an unrecognised fact count {claim.group(1)!r}")
+            continue
+        checked += 1
+        # Any bullet, not only one opening with a backticked name. The
+        # conditions gate can use the narrower pattern because every condition
+        # bullet names its kind first; fact bullets are prose, and counting
+        # only the backticked ones reported five facts as one.
+        listed = 0
+        for line in doc[claim.end() :].splitlines():
+            if line.startswith("- "):
+                listed += 1
+            elif line.strip() and not line.startswith(" ") and listed:
+                break
+        if stated != listed:
+            wrong.append(f"{entry.name} says {stated} facts and lists {listed}")
+
+    assert checked, "no screen stated a fact count, so this gate checked nothing"
+    assert not wrong, "\n".join(wrong)

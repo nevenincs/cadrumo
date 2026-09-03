@@ -621,3 +621,62 @@ def test_naming_a_package_without_the_module_flag_draws_no_edge(tmp_path: Path) 
 
     exec_only = {f.module for f in outcome.modules if f.reach is ModuleReach.MODULE_EXEC_ONLY}
     assert "pkg.session.screen" in exec_only
+
+
+def _importer_tree(root: Path) -> ShippedTreeSpec:
+    """One unreached module with a shipped importer, and one with none at all."""
+    _write(root, "src/pkg/__init__.py")
+    _write(root, "src/pkg/cli.py", "from .live import go\n\n\ndef main() -> None:\n    go()\n")
+    _write(root, "src/pkg/live.py", "def go() -> None: ...\n")
+    _write(root, "src/pkg/consumer.py", "from .supplied import give\n\n\ndef take() -> None:\n    give()\n")
+    _write(root, "src/pkg/supplied.py", "def give() -> None: ...\n")
+    _write(root, "src/pkg/nobody.py", "def alone() -> None: ...\n")
+    return ShippedTreeSpec(
+        repo_root=root,
+        src_root=root / "src",
+        package="pkg",
+        entry_points=(EntryPoint("pkg.cli", "main"),),
+        exclude_globs=_EXCLUDES,
+    )
+
+
+def test_a_finding_names_the_shipped_modules_that_still_import_it(tmp_path: Path) -> None:
+    """An unreached module with a live-in-tree importer is a different shape than an orphan.
+
+    Both are equally unreachable, so the reach category cannot tell them apart.
+    Only the importer set distinguishes "nothing needs this any more" from
+    "something still needs this, and that something is unreached too".
+    """
+    outcome = scan_unreachable_code(_importer_tree(tmp_path))
+
+    importers = {f.module: f.importers for f in outcome.modules}
+    assert importers["pkg.supplied"] == ("pkg.consumer",)
+    assert importers["pkg.nobody"] == ()
+
+
+def test_importers_exclude_a_findings_own_span(tmp_path: Path) -> None:
+    """A package's members importing each other say nothing about outside need.
+
+    Counting internal traffic would give every collapsed package a non-empty
+    importer set, so the distinction the field exists to draw would vanish for
+    exactly the findings that span more than one module.
+    """
+    root = tmp_path
+    _write(root, "src/pkg/__init__.py")
+    _write(root, "src/pkg/cli.py", "def main() -> None: ...\n")
+    _write(root, "src/pkg/cluster/__init__.py")
+    _write(root, "src/pkg/cluster/head.py", "from .tail import end\n\n\ndef start() -> None:\n    end()\n")
+    _write(root, "src/pkg/cluster/tail.py", "def end() -> None: ...\n")
+    spec = ShippedTreeSpec(
+        repo_root=root,
+        src_root=root / "src",
+        package="pkg",
+        entry_points=(EntryPoint("pkg.cli", "main"),),
+        exclude_globs=_EXCLUDES,
+    )
+
+    outcome = scan_unreachable_code(spec)
+
+    cluster = next(f for f in outcome.modules if f.module == "pkg.cluster")
+    assert cluster.spanned_modules == 3
+    assert cluster.importers == ()

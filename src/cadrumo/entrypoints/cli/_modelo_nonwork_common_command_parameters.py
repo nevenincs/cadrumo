@@ -121,9 +121,7 @@ _PAYMENT_ELECTION_OPTION: Final[OptionSpec] = OptionSpec(
 _PRIOR_DOMICILIATION_ELECTION_OPTION: Final[OptionSpec] = OptionSpec(
     name="prior_domiciliation_election",
     declarations=("--prior-domiciliation-election",),
-    value=ValueContract(
-        DeferredTarget("cadrumo.core.prior_domiciliation_election", "PriorDomiciliationElection")
-    ),
+    value=ValueContract(DeferredTarget("cadrumo.core.prior_domiciliation_election", "PriorDomiciliationElection")),
     default=ParameterDefault.value("keep"),
     help_key=TranslationKey("cli.app.modelo.work.prior_domiciliation_election_help"),
     multiple=False,

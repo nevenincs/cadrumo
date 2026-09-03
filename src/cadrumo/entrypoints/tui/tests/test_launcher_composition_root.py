@@ -4,9 +4,13 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
-from typing import Final
+from typing import Final, cast
 
 import pytest
+
+from ....application.operations.composition import OperationComposedServices
+from ....application.operations.registry import OperationPublicContractSetV1
+from ..launcher import operation_services_scope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -58,3 +62,33 @@ def test_the_launcher_actually_holds_the_composition() -> None:
 
     assert "compose_operation_dependencies" in launcher
     assert "operation_services_scope" in launcher
+
+
+@pytest.mark.asyncio
+async def test_operation_scope_exposes_same_graph_contracts_and_settles_once(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The TUI receives contracts from its exact service graph, never a rebuilt registry."""
+    contracts = cast(OperationPublicContractSetV1, object())
+
+    class _Services:
+        public_contracts = contracts
+
+        def __init__(self) -> None:
+            self.shutdown_calls = 0
+
+        async def shutdown(self) -> None:
+            self.shutdown_calls += 1
+
+    services = _Services()
+    monkeypatch.setattr(
+        "cadrumo.entrypoints.operation_composition.compose_operation_dependencies",
+        lambda: cast(OperationComposedServices, services),
+    )
+
+    async with operation_services_scope() as composition:
+        assert composition.services is services
+        assert composition.public_contracts is contracts
+        assert services.shutdown_calls == 0
+
+    assert services.shutdown_calls == 1

@@ -10,7 +10,7 @@ name = "cadrumo-data-manuals"
 # two ever drift, so the companion can only ship at the same version as the
 # runtime wheel that resolves it. Bump both (and the sibling
 # `cadrumo-data-official`) together on every release.
-version = "0.3.0" # x-release-please-version
+version = "0.4.0" # x-release-please-version
 description = "AEAT/BOE práctico manuals (corpus source binaries) for the Cadrumo distribution"
 readme = "README.md"
 requires-python = ">=3.13"

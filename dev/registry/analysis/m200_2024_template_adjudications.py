@@ -112,9 +112,20 @@ def render_canonical_declaration(authority: CompiledM200Same2024TemplateAuthorit
     )
 
 
-def verify_canonical_declarations(authority: CompiledM200Same2024TemplateAuthority) -> None:
-    """Require committed declarations to be exactly the reviewed compiler output."""
-    root = bundled_path("registry", "aeat", "modelos", "200", "revisions", "2024", "casillas")
+def verify_canonical_declarations(
+    authority: CompiledM200Same2024TemplateAuthority, *, casillas_root: Path | None = None
+) -> None:
+    """Require declarations to be exactly the reviewed compiler output.
+
+    ``casillas_root`` permits the rebind transaction to verify its isolated
+    candidate tree by the same compiler, rather than treating bundle bytes as
+    proof for a different tree.
+    """
+    root = (
+        bundled_path("registry", "aeat", "modelos", "200", "revisions", "2024", "casillas")
+        if casillas_root is None
+        else casillas_root
+    )
     for entry in authority.adjudications:
         path = root / f"c{entry.casilla_id}.toml"
         if not path.is_file() or path.read_text(encoding="utf-8") != render_canonical_declaration(
@@ -125,9 +136,20 @@ def verify_canonical_declarations(authority: CompiledM200Same2024TemplateAuthori
             )
 
 
-def promoted_candidate_ids(authority: CompiledM200Same2024TemplateAuthority) -> frozenset[str]:
-    """Return only reviewed candidates whose exact compiler bytes are live."""
-    verify_canonical_declarations(authority)
+def promoted_candidate_ids(
+    authority: CompiledM200Same2024TemplateAuthority, *, casillas_root: Path | None = None
+) -> frozenset[str]:
+    """Return only candidates admitted by the live compiler receipt and bytes.
+
+    The argument is deliberately not trusted merely because it has the compiled
+    type.  Recompiling and comparing the whole immutable receipt keeps a caller
+    from excluding a current-design declaration with a hand-constructed or
+    stale authority object.  The committed declaration must then still equal
+    the canonical bytes rendered by that same receipt.
+    """
+    if authority != compile_m200_2024_same_template_authority():
+        raise RegistryValidationError("M200/2024 same-template compiler receipt/provenance drifted")
+    verify_canonical_declarations(authority, casillas_root=casillas_root)
     return frozenset(entry.casilla_id for entry in authority.adjudications)
 
 

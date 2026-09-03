@@ -102,6 +102,9 @@ COLD_REGIME_ENV: Final[tuple[str, ...]] = (
     "CADRUMO_VALIDATION_VERDICT_CACHE_DIR",
 )
 
+#: Named once, as this tree requires of a module doing text IO.
+_UTF_8: Final[str] = "utf-8"
+
 TRACE_REGIMES: Final[tuple[str, ...]] = ("warm", "cold", "inspection_snapshot")
 
 
@@ -413,7 +416,51 @@ def _is_import_module_call(node: ast.AST) -> TypeGuard[ast.Call]:
     return name == "import_module"
 
 
-def _loop_resolved_targets(tree: ast.Module, constants: Mapping[str, tuple[str, ...]]) -> dict[int, tuple[str, ...]]:
+def evaluated_string_sequence(module: str, name: str) -> tuple[str, ...] | None:
+    """Return the string sequence ``module.name`` holds, or None if it holds none.
+
+    Asks the module rather than reading how the value is built. A module-level
+    tuple of module paths is the shape this census follows, and its
+    CONSTRUCTION is not the census's business: a literal, a tuple over a
+    mapping's values, a sorted set - all name the same thing, and a scan taught
+    one spelling goes blind at the next without saying so.
+
+    Evaluated in a separate interpreter, for the reason every other measurement
+    here is: importing the module in this process would add it and its imports
+    to this process's own module set, and this is a census of what gets
+    imported. A subprocess keeps the instrument out of its own reading.
+
+    Returns None on any failure - an import error, a missing name, a value that
+    is not a sequence of strings - because a fallback that guessed would be
+    worse than the unresolved record the caller already knows how to report.
+    """
+    script = chr(10).join(
+        (
+            "import importlib, json, sys",
+            "module = importlib.import_module(sys.argv[1])",
+            "value = getattr(module, sys.argv[2], None)",
+            "ok = isinstance(value, (tuple, list)) and all(isinstance(i, str) for i in value)",
+            "sys.stdout.write(json.dumps(list(value)) if ok else str())",
+        )
+    )
+    completed = subprocess.run(  # noqa: S603 - resolved interpreter, fixed argv, no caller input
+        [sys.executable, "-c", script, module, name],
+        capture_output=True,
+        check=False,
+        cwd=REPO_ROOT,
+    )
+    if completed.returncode != 0 or not completed.stdout.strip():
+        return None
+    try:
+        members = json.loads(completed.stdout.decode(_UTF_8))
+    except (ValueError, UnicodeDecodeError):
+        return None
+    return tuple(members)
+
+
+def _loop_resolved_targets(
+    tree: ast.Module, constants: Mapping[str, tuple[str, ...]], *, module: str
+) -> dict[int, tuple[str, ...]]:
     """Resolve ``for name in CONSTANT: import_module(name)`` to the constant's members.
 
     This is the one indirection worth following, because it is how every
@@ -421,20 +468,44 @@ def _loop_resolved_targets(tree: ast.Module, constants: Mapping[str, tuple[str, 
     of module paths, iterated, each imported for its registration side effect.
     Reading the tuple recovers targets an argument-only scan reports as
     unknowable, and the cross-domain snapshot checks are exactly this shape.
+
+    The tuple's CONSTRUCTION is deliberately not parsed. It was a literal when
+    this was written and is now built from another module's mapping values, and
+    a scan taught to read that shape would go blind again at the next one - the
+    failure this census already suffered once, silently, until the resolver
+    stopped following the snapshot checks and the loss surfaced as classification
+    rules that appeared stale. Unreadable constructions are handed to the
+    evaluating fallback, which asks the module what the name holds instead of
+    deducing it from syntax.
     """
     resolved: dict[int, tuple[str, ...]] = {}
     for node in ast.walk(tree):
         if not isinstance(node, ast.For) or not isinstance(node.iter, ast.Name):
             continue
-        members = constants.get(node.iter.id)
         variable = node.target.id if isinstance(node.target, ast.Name) else None
-        if members is None or variable is None:
+        if variable is None:
             continue
-        for inner in ast.walk(node):
-            if _is_import_module_call(inner) and inner.args:
-                argument = inner.args[0]
-                if isinstance(argument, ast.Name) and argument.id == variable:
-                    resolved[inner.lineno] = members
+        # Find the import sites FIRST. Evaluating a constant costs an
+        # interpreter, and a loop that imports nothing has no target to
+        # recover; resolving before looking would pay that price for every
+        # ordinary loop in the tree.
+        sites = [
+            inner.lineno
+            for inner in ast.walk(node)
+            if _is_import_module_call(inner)
+            and inner.args
+            and isinstance(inner.args[0], ast.Name)
+            and inner.args[0].id == variable
+        ]
+        if not sites:
+            continue
+        members = constants.get(node.iter.id)
+        if members is None:
+            members = evaluated_string_sequence(module, node.iter.id)
+        if members is None:
+            continue
+        for lineno in sites:
+            resolved[lineno] = members
     return resolved
 
 
@@ -464,7 +535,7 @@ def dynamic_import_sites(*, production_only: bool = True) -> tuple[DynamicImport
         if production_only and is_test_module(module):
             continue
         package = module.rsplit(".", 1)[0] if path.name != "__init__.py" else module
-        loop_targets = _loop_resolved_targets(tree, _string_tuple_constants(tree))
+        loop_targets = _loop_resolved_targets(tree, _string_tuple_constants(tree), module=module)
         for node in ast.walk(tree):
             if not _is_import_module_call(node):
                 continue

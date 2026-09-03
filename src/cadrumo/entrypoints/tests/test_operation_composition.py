@@ -46,6 +46,7 @@ def test_production_composition_reaches_the_owner_registry_fixed_point(tmp_path:
             item.definition_id for item in expected_registry.definitions
         )
         assert registry.public_contract_set == expected_registry.public_contract_set
+        assert dependencies.public_contracts == registry.public_contract_set
         assert len(registry.public_contract_set.contract_set_digest) == 64
         assert isinstance(dependencies.observation, OperationObservationService)
         assert isinstance(dependencies.submission, OperationSubmissionService)
@@ -103,7 +104,16 @@ def test_submission_issues_actor_bound_opaque_response_capability(tmp_path: Path
 def test_production_composition_exposes_only_public_services() -> None:
     public_fields = {item.name for item in fields(OperationComposedServices) if not item.name.startswith("_")}
 
-    assert public_fields == {"submission", "observation", "review", "result", "refresh", "cancellation", "detach"}
+    assert public_fields == {
+        "public_contracts",
+        "submission",
+        "observation",
+        "review",
+        "result",
+        "refresh",
+        "cancellation",
+        "detach",
+    }
     assert {"registry", "supervisor", "response"}.isdisjoint(public_fields)
     assert callable(OperationComposedServices.response)
 

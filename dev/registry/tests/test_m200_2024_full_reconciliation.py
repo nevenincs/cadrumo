@@ -22,13 +22,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 @pytest.fixture(scope="module")
-def census():
-    return subject.reconcile_bundled_m200_2024()
+def reviewed_promotions():
+    """One explicit evidence snapshot for the full reconciliation invocation."""
+    from ..analysis.m200_2024_reviewed_promotions import build_m200_2024_reviewed_promotion_snapshot
+
+    return build_m200_2024_reviewed_promotion_snapshot()
 
 
 @pytest.fixture(scope="module")
-def source_rebind_plan(census):
-    return subject.build_m200_source_rebind_plan(census)
+def census(reviewed_promotions):
+    return subject._reconcile_bundled_m200_2024(reviewed_promotions)
+
+
+@pytest.fixture(scope="module")
+def source_rebind_plan(census, reviewed_promotions):
+    return subject._build_m200_source_rebind_plan(census, reviewed_promotions)
 
 
 @pytest.fixture
@@ -44,8 +52,8 @@ def test_full_reconciliation_accounts_for_every_declaration_candidate_and_target
     anchors = census.anchors
 
     assert len(rows) == 3329
-    assert sum(row.origin == "current_declaration" for row in rows) == 3177
-    assert sum(row.origin == "restoration_candidate" for row in rows) == 152
+    assert sum(row.origin == "current_declaration" for row in rows) == 3329
+    assert sum(row.origin == "restoration_candidate" for row in rows) == 0
     assert len(anchors) == 6709
     assert len({anchor.anchor for anchor in anchors}) == len(anchors)
     assert len({anchor.export_field_id for anchor in anchors}) == len(anchors)
@@ -62,12 +70,12 @@ def test_rebind_census_preserves_exact_map_ownership_and_withholds_identity_anom
 
     assert sum(row.source_ref_state == "mechanical_rebind" for row in current) == 3171
     assert sum(row.source_ref_state == "unmapped_no_rebind" for row in current) == 2
-    assert sum(bool(row.fields) for row in current) == 3175
+    assert sum(bool(row.fields) for row in current) == 3327
     assert sum(row.identity_review_required for row in current) == 15
     assert all(
-        row.source_ref_state == "candidate_non_authoritative"
+        row.source_ref_state != "candidate_non_authoritative"
         for row in census.rows
-        if row.origin == "restoration_candidate"
+        if row.origin == "current_declaration"
     )
 
     mismatched = next(anchor for anchor in census.anchors if anchor.export_field_id == "m200-2024.dp200022.f0032")
@@ -78,12 +86,10 @@ def test_rebind_census_preserves_exact_map_ownership_and_withholds_identity_anom
     assert mismatched in by_id["03627"].fields
     assert mismatched not in by_id["00927"].fields
 
-    candidate = by_id["00093"]
-    assert candidate.fields == ()
-    assert candidate.proposed_fields_non_authoritative
-    assert {field.declared_map_owner for field in candidate.proposed_fields_non_authoritative} == {"93"}
-    assert candidate.declaration_payload is None
-    assert candidate.candidate_payload_non_authoritative is not None
+    promoted = by_id["00093"]
+    assert promoted.origin == "current_declaration"
+    assert promoted.declaration_payload is not None
+    assert promoted.candidate_payload_non_authoritative is None
 
 
 def test_report_carries_exact_source_map_and_legal_evidence_deterministically(census) -> None:
@@ -338,18 +344,101 @@ def test_cli_legal_admission_refuses_an_open_worklist_and_pending_authority(cens
         subject._verify_m200_2024_worklist_legal_authority((applicable,), {reference_id: pending})
 
 
-def test_source_rebind_plan_is_complete_target_map_owned_and_refuses_only_true_orphans(source_rebind_plan) -> None:
+def test_source_rebind_plan_is_complete_target_map_owned_and_refuses_only_true_orphans(
+    source_rebind_plan, reviewed_promotions
+) -> None:
     assert source_rebind_plan.source_ref == subject.TARGET_SOURCE_REF
     assert source_rebind_plan.source_sha256 == subject.TARGET_SOURCE_SHA256
     assert source_rebind_plan.semantic_map_source_ref == subject.TARGET_SOURCE_REF
     assert source_rebind_plan.semantic_map_source_sha256 == subject.TARGET_SOURCE_SHA256
     assert len(source_rebind_plan.rebinds) == 3171
+    from ..analysis.m200_2024_reviewed_promotions import _verified_promoted_candidate_ids
+
+    receipted = _verified_promoted_candidate_ids(reviewed_promotions)
+    assert len(receipted) == 156
+    assert source_rebind_plan.verified_current_design_ids == tuple(sorted(receipted))
     assert len(source_rebind_plan.refused_orphan_ids) == 2
-    assert len(source_rebind_plan.expected_current_ids) == 3177
-    assert {item.casilla_id for item in source_rebind_plan.rebinds}.isdisjoint(source_rebind_plan.refused_orphan_ids)
+    assert len(source_rebind_plan.expected_current_ids) == 3329
+    assert {
+        *(item.casilla_id for item in source_rebind_plan.rebinds),
+        *source_rebind_plan.verified_current_design_ids,
+        *source_rebind_plan.refused_orphan_ids,
+    } == set(source_rebind_plan.expected_current_ids)
     assert all(item.expected_source_refs[0] == subject.SIBLING_SOURCE_REF for item in source_rebind_plan.rebinds)
     assert all(item.target_source_refs[0] == subject.TARGET_SOURCE_REF for item in source_rebind_plan.rebinds)
     assert all(len(item.non_source_payload_sha256) == 64 for item in source_rebind_plan.rebinds)
+
+
+def test_source_rebind_excludes_only_receipted_current_design_declarations() -> None:
+    """The closed receipt admits promotions before later identity-join review."""
+    receipted = frozenset({"00942", "01603", "02239", "02412"})
+
+    assert tuple(
+        subject._receipted_current_design_id(
+            SimpleNamespace(
+                casilla_id=identifier,
+                fields=(),
+                declaration_payload=SimpleNamespace(source_refs=(subject.TARGET_SOURCE_REF,)),
+            ),
+            receipted,
+        )
+        for identifier in sorted(receipted)
+    ) == ("00942", "01603", "02239", "02412")
+
+
+def test_source_rebind_refuses_an_unreceipted_current_design_declaration() -> None:
+    """A generic target-source row cannot bypass the receipt-bound exclusion."""
+
+    with pytest.raises(RegistryValidationError, match="unreceipted current-design declaration"):
+        subject._receipted_current_design_id(
+            SimpleNamespace(
+                casilla_id="99999",
+                fields=(object(),),
+                declaration_payload=SimpleNamespace(source_refs=(subject.TARGET_SOURCE_REF,)),
+            ),
+            frozenset({"00942", "01603", "02239", "02412"}),
+        )
+
+
+def test_source_rebind_refuses_a_receipted_declaration_bound_to_a_different_design() -> None:
+    with pytest.raises(RegistryValidationError, match="not bound to the target design"):
+        subject._receipted_current_design_id(
+            SimpleNamespace(
+                casilla_id="00093",
+                fields=(),
+                declaration_payload=SimpleNamespace(source_refs=(subject.SIBLING_SOURCE_REF,)),
+            ),
+            frozenset({"00093"}),
+        )
+
+
+def test_source_rebind_refuses_current_design_bytes_that_do_not_match_the_receipt(
+    tmp_path: Path,
+    reviewed_promotions,
+) -> None:
+    """The skipped generated row is rechecked against the same receipt at apply time."""
+    casillas_root = tmp_path / "casillas"
+    shutil.copytree(bundled_path("registry", "aeat", "modelos", "200", "revisions", "2024", "casillas"), casillas_root)
+    path = casillas_root / "c00093.toml"
+    path.write_text(path.read_text(encoding="utf-8").replace("manual", "drifted", 1), encoding="utf-8", newline="\n")
+    plan = subject.M200SourceRebindPlan(
+        source_ref=subject.TARGET_SOURCE_REF,
+        source_sha256=subject.TARGET_SOURCE_SHA256,
+        semantic_map_source_ref=subject.TARGET_SOURCE_REF,
+        semantic_map_source_sha256=subject.TARGET_SOURCE_SHA256,
+        rebinds=(),
+        verified_current_design_ids=subject._build_m200_source_rebind_plan(
+            subject._reconcile_bundled_m200_2024(reviewed_promotions),
+            reviewed_promotions,
+        ).verified_current_design_ids,
+        refused_orphan_ids=(),
+        expected_current_ids=(),
+    )
+    tampered = _tree_bytes(casillas_root)
+
+    with pytest.raises(RegistryValidationError, match="not compiler-identical"):
+        subject._require_verified_current_design(plan, casillas_root)
+    assert _tree_bytes(casillas_root) == tampered
 
 
 def test_source_rebind_dry_run_and_apply_change_only_planned_source_lines(

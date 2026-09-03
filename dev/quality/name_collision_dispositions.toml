@@ -153,3 +153,22 @@ right and does not cover this case: neither is a copy, and what a caller
 importing the wrong one gets is not a stale set but a different one. Each name
 should say which destinations it means.
 """
+
+[availability_label]
+class = "distinct_by_design"
+sites = ["entrypoints/tui/declarations/controller.py", "entrypoints/tui/ledger/controller.py"]
+reason = """
+Two workspace controllers in one layer, each rendering its OWN availability
+enum through its OWN locale catalogue: the declarations version takes
+DeclarationsWorkspaceAvailability and reads declarations copy, the ledger
+version takes LedgerWorkspaceAvailability and reads ledger copy. The types do
+not overlap, so neither could stand in for the other, and neither module
+imports the other - each exports the name in its own __all__ and uses it only
+within its own controller.
+
+The shared name is the convention rather than an accident. Both controllers
+carry a family of label renderers beside this one, and a reader moving between
+workspaces finds the same role under the same name. Collapsing them would mean
+inventing a union type over two unrelated enums to serve a function that has no
+shared caller.
+"""

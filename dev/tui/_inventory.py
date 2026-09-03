@@ -89,7 +89,7 @@ def scan(root: Path = TUI_ROOT) -> tuple[Interface, ...]:
     it stops growing, so declaration order across files never decides whether
     an interface is found.
     """
-    declared: dict[str, tuple[Path, int, tuple[str, ...]]] = {}
+    declared: dict[str, tuple[str, Path, int, tuple[str, ...]]] = {}
     for path in sorted(root.rglob("*.py")):
         if _is_test_path(path):
             continue
@@ -99,29 +99,44 @@ def scan(root: Path = TUI_ROOT) -> tuple[Interface, ...]:
                 continue
             bases = tuple(name for name in (_base_name(base) for base in node.bases) if name is not None)
             if bases:
-                declared[node.name] = (path, node.lineno, bases)
+                module = _module_name(path)
+                declared[f"{module}.{node.name}"] = (node.name, path, node.lineno, bases)
+
+    by_name: dict[str, list[str]] = {}
+    for qualname, (name, _path, _line, _bases) in declared.items():
+        by_name.setdefault(name, []).append(qualname)
+
+    def resolve_base(module: str, base: str) -> str | None:
+        """Resolve a local base first, then an unambiguous imported class name."""
+        local = f"{module}.{base}"
+        if local in declared:
+            return local
+        candidates = by_name.get(base, ())
+        return candidates[0] if len(candidates) == 1 else None
 
     apps: set[str] = set()
     screens: set[str] = set()
     while True:
         grown = False
-        for name, (_path, _line, bases) in declared.items():
-            if name in apps or name in screens:
+        for qualname, (_name, path, _line, bases) in declared.items():
+            if qualname in apps or qualname in screens:
                 continue
-            if "App" in bases or apps & set(bases):
-                apps.add(name)
+            resolved_bases = {resolved for base in bases if (resolved := resolve_base(_module_name(path), base))}
+            if "App" in bases or apps & resolved_bases:
+                apps.add(qualname)
                 grown = True
-            elif {"Screen", "ModalScreen"} & set(bases) or screens & set(bases):
-                screens.add(name)
+            elif {"Screen", "ModalScreen"} & set(bases) or screens & resolved_bases:
+                screens.add(qualname)
                 grown = True
         if not grown:
             break
 
     children: dict[str, list[str]] = {}
-    for name, (_path, _line, bases) in declared.items():
+    for qualname, (_name, path, _line, bases) in declared.items():
         for base in bases:
-            if base in apps or base in screens:
-                children.setdefault(base, []).append(name)
+            resolved = resolve_base(_module_name(path), base)
+            if resolved in apps or resolved in screens:
+                children.setdefault(resolved, []).append(qualname)
 
     interfaces = [
         Interface(
@@ -129,12 +144,12 @@ def scan(root: Path = TUI_ROOT) -> tuple[Interface, ...]:
             module=_module_name(path),
             path=path,
             line=line,
-            kind="app" if name in apps else "screen",
+            kind="app" if qualname in apps else "screen",
             bases=bases,
-            subclassed_by=tuple(sorted(children.get(name, ()))),
+            subclassed_by=tuple(sorted(children.get(qualname, ()))),
         )
-        for name, (path, line, bases) in declared.items()
-        if name in apps or name in screens
+        for qualname, (name, path, line, bases) in declared.items()
+        if qualname in apps or qualname in screens
     ]
     return tuple(sorted(interfaces, key=lambda item: item.qualname))
 

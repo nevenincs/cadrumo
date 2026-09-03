@@ -19,10 +19,14 @@ from ....application.search.workbench import (
     WorkbenchSearchDocument,
     WorkbenchSearchKind,
     WorkbenchSearchLabelKey,
+    WorkbenchSearchRequest,
     WorkbenchSearchService,
     WorkbenchSearchSource,
     WorkbenchSearchStatus,
 )
+from ....core.config import override_settings
+from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from ....core.i18n.render import I18N_STRICT_MISSING_KEYS, tr
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ..navigation import (
@@ -35,7 +39,15 @@ from ..navigation import (
     TuiScreenFactoryV1,
     build_destination_catalogue,
 )
-from ..search import WorkbenchCommandProviderV1, WorkbenchSearchProviderV1
+from ..search import (
+    _RESULT_STATUS_LOCALE_KEYS,
+    _SEARCH_LOCALE_KEYS,
+    WorkbenchCommandProviderV1,
+    WorkbenchSearchProviderV1,
+    _action_text,
+    _destination_text,
+    _result_text,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -142,6 +154,7 @@ async def test_search_provider_preserves_application_stable_identity_and_admitte
     """A search choice routes the authoritative result identity, never a row index."""
     action = TuiActionCandidateV1(action_candidate_id="operator.declaration.open", destination="workbench.declarations")
     service = WorkbenchSearchService([_document(action_candidate_id=action.action_candidate_id)])
+    stable_id = service.search(WorkbenchSearchRequest(query="declaration")).results[0].stable_id
     app = SearchHostApp(service=service, catalogue=_catalogue(actions=(action,)))
 
     async with app.run_test() as pilot:
@@ -149,7 +162,8 @@ async def test_search_provider_preserves_application_stable_identity_and_admitte
         hits = await _hits(provider, "declaration")
         assert len(hits) == 1
         hit = hits[0]
-        assert hit.help is not None and len(hit.help) == 64
+        assert hit.help == _destination_text("workbench.declarations")
+        assert stable_id not in hit.help
         hit.command()
         await pilot.pause()
 
@@ -157,7 +171,7 @@ async def test_search_provider_preserves_application_stable_identity_and_admitte
     target = app.targets[0]
     assert target.destination == "workbench.declarations"
     assert target.focus.semantic_key == "search.declaration"
-    assert target.focus.restore_token == hit.help
+    assert target.focus.restore_token == stable_id
     assert target.action_candidate_id == action.action_candidate_id
 
 
@@ -186,8 +200,13 @@ async def test_command_provider_discovers_admitted_destinations_and_action_ident
     async with app.run_test() as pilot:
         provider = WorkbenchCommandProviderV1(app.screen)
         discovery = await _discover(provider)
-        action_hit = next(hit for hit in discovery if hit.help == action.action_candidate_id)
-        assert any(hit.help == "workbench.home" for hit in discovery)
+        action_hit = next(hit for hit in discovery if hit.text == _action_text(action.action_candidate_id))
+        assert any(hit.text == _destination_text("workbench.home") for hit in discovery)
+        assert action_hit.help == _destination_text("workbench.declarations")
+        assert all(
+            hit.help is not None and "workbench." not in hit.help and "operator." not in hit.help
+            for hit in discovery
+        )
         action_hit.command()
         await pilot.pause()
 
@@ -198,6 +217,87 @@ async def test_command_provider_discovers_admitted_destinations_and_action_ident
             action_candidate_id=action.action_candidate_id,
         )
     ]
+
+
+@pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)
+def test_search_copy_is_available_and_human_facing_in_every_locale(locale: str) -> None:
+    """Every palette key resolves while safe IDs stay out of visible copy."""
+    response = WorkbenchSearchService([_document()]).search(WorkbenchSearchRequest(query="declaration"))
+    result = response.results[0]
+    strict_token = I18N_STRICT_MISSING_KEYS.set(True)
+    try:
+        for key in _SEARCH_LOCALE_KEYS:
+            if key == "tui.search.result.address":
+                tr(key, locale=locale, modelo="303", filing_year=2025, period="1T")
+            else:
+                tr(key, locale=locale)
+        rendered = _result_text(result, locale=locale)
+        destination = _destination_text("workbench.declarations", locale=locale)
+        action = _action_text("operator.declaration.open", locale=locale)
+    finally:
+        I18N_STRICT_MISSING_KEYS.reset(strict_token)
+
+    protected_tokens = (
+        result.label_key.value,
+        result.source.value,
+        result.status.value,
+        "workbench.declarations",
+        "operator.declaration.open",
+    )
+    assert all(token not in rendered for token in protected_tokens)
+    assert "tui.search." not in rendered
+    assert "workbench." not in destination
+    assert "operator." not in action
+
+
+def test_search_copy_changes_with_locale_without_changing_stable_result_identity() -> None:
+    """Language changes affect presentation only, never application identity."""
+    result = WorkbenchSearchService([_document()]).search(WorkbenchSearchRequest(query="declaration")).results[0]
+    rendered = tuple(_result_text(result, locale=locale) for locale in SUPPORTED_OUTPUT_LANGUAGES)
+
+    assert len(set(rendered)) == len(SUPPORTED_OUTPUT_LANGUAGES)
+    assert result.stable_id == WorkbenchSearchService([_document()]).search(
+        WorkbenchSearchRequest(query="declaration")
+    ).results[0].stable_id
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)
+async def test_palette_help_is_localized_and_never_exposes_internal_identity(locale: str) -> None:
+    """Both providers keep stable identities in callbacks, never visible help."""
+    action = TuiActionCandidateV1(action_candidate_id="operator.declaration.open", destination="workbench.declarations")
+    service = WorkbenchSearchService([_document(action_candidate_id=action.action_candidate_id)])
+    stable_id = service.search(WorkbenchSearchRequest(query="declaration")).results[0].stable_id
+    with override_settings(cadrumo_output_language=locale):
+        app = SearchHostApp(service=service, catalogue=_catalogue(actions=(action,)))
+        async with app.run_test():
+            result_hits = await _hits(WorkbenchSearchProviderV1(app.screen), "declaration")
+            command_hits = await _discover(WorkbenchCommandProviderV1(app.screen))
+
+    expected_destination = _destination_text("workbench.declarations", locale=locale)
+    assert result_hits[0].help == expected_destination
+    assert any(hit.help == expected_destination for hit in command_hits)
+    visible_help = "\n".join(hit.help or "" for hit in (*result_hits, *command_hits))
+    assert stable_id not in visible_help
+    assert "workbench." not in visible_help
+    assert "operator." not in visible_help
+
+
+@pytest.mark.parametrize(
+    "status",
+    (
+        WorkbenchSearchStatus.LEDGER_EVIDENCE_MISSING,
+        WorkbenchSearchStatus.MODELO_UNAVAILABLE,
+        WorkbenchSearchStatus.HISTORY_NOT_OBSERVED,
+    ),
+)
+def test_missing_and_unavailable_statuses_have_localized_palette_copy(status: WorkbenchSearchStatus) -> None:
+    """The palette's closed status vocabulary includes honest missing states."""
+    key = _RESULT_STATUS_LOCALE_KEYS[status]
+    values = tuple(tr(key, locale=locale) for locale in SUPPORTED_OUTPUT_LANGUAGES)
+
+    assert all(value != key for value in values)
+    assert all(status.value not in value for value in values)
 
 
 def test_search_provider_has_no_network_or_application_search_reimplementation() -> None:

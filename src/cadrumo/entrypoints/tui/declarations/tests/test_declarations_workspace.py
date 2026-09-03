@@ -338,9 +338,7 @@ async def test_each_screen_has_four_targets_one_outer_scroll_and_no_overflow(scr
 async def test_semantic_selection_uses_exact_projected_identity_and_typed_callbacks() -> None:
     projection = _projection()
     selected: list[object] = []
-    screen = DeclarationsRevisionsScreen(
-        _controller(projection, revision_handoff=selected.append)
-    )
+    screen = DeclarationsRevisionsScreen(_controller(projection, revision_handoff=selected.append))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
@@ -532,14 +530,13 @@ async def test_real_locales_change_copy_without_changing_semantic_rows(locale: O
                 assert expected in rendered
                 assert "tui.declarations." not in rendered
                 assert "work_unit" not in rendered.lower()
-                assert tuple(row.key.value for row in screen.query_one("#declarations-navigation", DataTable).ordered_rows) == tuple(
-                    route.destination for route in DECLARATIONS_ROUTES
-                )
+                assert tuple(
+                    row.key.value for row in screen.query_one("#declarations-navigation", DataTable).ordered_rows
+                ) == tuple(route.destination for route in DECLARATIONS_ROUTES)
                 if isinstance(screen, DeclarationsFilingHistoryScreen):
                     filing_copy = rendered
                     filing_keys = tuple(
-                        row.key.value
-                        for row in screen.query_one("#declarations-filings", DataTable).ordered_rows
+                        row.key.value for row in screen.query_one("#declarations-filings", DataTable).ordered_rows
                     )
         assert _EXPECTED[locale][3] in filing_copy
         assert _EXPECTED[locale][4] in filing_copy
@@ -574,17 +571,8 @@ def test_declarations_tui_has_no_io_adapter_cli_reader_or_raw_payload_surface() 
     package = Path(__file__).parents[1]
     production = tuple(path for path in package.glob("*.py") if path.name != "__init__.py")
     trees = tuple(ast.parse(path.read_text(encoding="utf-8")) for path in production)
-    imports = {
-        node.module or ""
-        for tree in trees
-        for node in ast.walk(tree)
-        if isinstance(node, ast.ImportFrom)
-    } | {
-        alias.name
-        for tree in trees
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Import)
-        for alias in node.names
+    imports = {node.module or "" for tree in trees for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)} | {
+        alias.name for tree in trees for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names
     }
     calls = {
         node.func.id if isinstance(node.func, ast.Name) else node.func.attr

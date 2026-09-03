@@ -6,7 +6,12 @@ stated it. Some cells hold only a pointer - ``Nota 4.`` - which states nothing o
 its own, so the field is treated as governed by a fact that was never given.
 
 Correcting that predicate makes 183 fields newly eligible, and every eligible
-field needs a reviewed representation rule. An author writing those rules needs
+field needs a reviewed representation rule. That figure was measured once, by
+applying the corrected predicate to the whole corpus, and nothing in this tree
+reproduces it: the predicate it corrects still reads the old way, so re-running
+the measurement means correcting it first. Treat the number as the order of the
+work rather than a current count, and re-measure it as part of the correction
+rather than trusting it afterwards. An author writing those rules needs
 to know what each pointer actually points at, because the answer decides the
 rule: a note that gives the numeric convention constrains the rule, and a note
 about applicability leaves the wire fact still unstated.

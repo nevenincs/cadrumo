@@ -377,14 +377,10 @@ def test_order_is_deterministic_by_deadline_then_natural_identity() -> None:
 def test_defining_module_has_no_io_adapter_entrypoint_or_network_import() -> None:
     path = Path(__file__).parents[1] / "declarations_calendar.py"
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    imports = {
-        alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names
-    } | {node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)}
-    calls = {
-        node.func.id
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    imports = {alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names} | {
+        node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)
     }
+    calls = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
     assert not any(
         forbidden in imported
         for imported in imports

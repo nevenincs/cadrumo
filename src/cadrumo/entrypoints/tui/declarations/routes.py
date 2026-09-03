@@ -80,15 +80,14 @@ class DeclarationsUnavailableScreen(DeclarationsWorkspaceScreen):
 @dataclass(frozen=True, slots=True)
 class DeclarationsRouteV1:
     """One route and its projection zone."""
+
     destination: DeclarationsDestinationIdV1
     zone: DeclarationsWorkspaceZone | None
     factory: DeclarationsInternalScreenFactoryV1 | None
 
 
 DECLARATIONS_ROUTES: Final = (
-    DeclarationsRouteV1(
-        "declarations.overview", DeclarationsWorkspaceZone.DECLARATIONS, DeclarationsOverviewScreen
-    ),
+    DeclarationsRouteV1("declarations.overview", DeclarationsWorkspaceZone.DECLARATIONS, DeclarationsOverviewScreen),
     DeclarationsRouteV1(
         "declarations.revisions", DeclarationsWorkspaceZone.CALCULATION_REVISIONS, DeclarationsRevisionsScreen
     ),
@@ -96,9 +95,7 @@ DECLARATIONS_ROUTES: Final = (
         "declarations.filing_history", DeclarationsWorkspaceZone.FILING_HISTORY, DeclarationsFilingHistoryScreen
     ),
     DeclarationsRouteV1("declarations.calendar", None, None),
-    DeclarationsRouteV1(
-        "declarations.modelo_workspace", DeclarationsWorkspaceZone.DECLARATIONS, None
-    ),
+    DeclarationsRouteV1("declarations.modelo_workspace", DeclarationsWorkspaceZone.DECLARATIONS, None),
 )
 _ROUTES_BY_ID: Final = {route.destination: route for route in DECLARATIONS_ROUTES}
 
@@ -125,9 +122,7 @@ def resolve_declarations_screen(
     if route.destination == "declarations.calendar":
         calendar = controller.calendar_projection
         observable = calendar is not None and next(
-            item.availability
-            for item in calendar.sources
-            if item.source is DeclarationsCalendarSource.SCHEDULE
+            item.availability for item in calendar.sources if item.source is DeclarationsCalendarSource.SCHEDULE
         ) in {HomeAvailability.AVAILABLE, HomeAvailability.STALE}
         if not observable or calendar is None:
             return DeclarationsUnavailableScreen(controller, target)

@@ -17,6 +17,14 @@ a planted defect IS reported and that its healthy neighbour is NOT, and the
 frozen-prefix case proves the carve-out suppresses both directions rather than
 only the one it was written for.
 
+The exclusive-supplier deferral carries the same burden and more, because it
+exempts by graph property rather than by declaration and so has no line
+anyone must write. Its controls are what bound it: a module with a non-frozen
+importer and a module with no importer at all must both stay red, and with
+nothing frozen nothing may be deferred at all. Each of those would pass if
+the closure were "unreachable, and only unreachable modules import it",
+which would exempt the entire backlog.
+
 The defects are planted in a throwaway ``tmp_path`` tree built from outside the
 repository. No production module is monkeypatched and the contributor's working
 tree is never mutated, so a crashed run leaves no residue and a peer's sweep
@@ -323,3 +331,182 @@ def test_an_unscannable_tree_refuses_rather_than_reporting_clean(tmp_path: Path)
 
     with pytest.raises(RuntimeError, match="ratchet unproven"):
         run_gate(tmp_path, baseline_path=baseline)
+
+
+def _supplier_tree(root: Path) -> ShippedTreeSpec:
+    """A deferred cluster, its exclusive suppliers, and the shapes that must stay actionable.
+
+    ``deferred`` is the frozen cluster. ``projection`` is the supplier only that
+    cluster imports, and ``deep`` is the supplier only ``projection`` imports,
+    so the two hops together decide whether the deferral is transitive.
+    ``shared`` is imported by the cluster AND by the actionable ``orphan``, and
+    ``lonely`` is imported by nothing at all: those two are the controls that
+    prove the deferral is exclusive rather than contagious.
+    """
+    _write(root, "src/pkg/__init__.py")
+    _write(root, "src/pkg/cli.py", "from .live import go\n\n\ndef main() -> None:\n    go()\n")
+    _write(root, "src/pkg/live.py", "def go() -> None: ...\n")
+    _write(root, "src/pkg/deferred/__init__.py")
+    _write(
+        root,
+        "src/pkg/deferred/screen.py",
+        "from ..projection import project\nfrom ..shared import helper\n\n\ndef render() -> None:\n"
+        "    project()\n    helper()\n",
+    )
+    _write(root, "src/pkg/projection.py", "from .deep import compute\n\n\ndef project() -> None:\n    compute()\n")
+    _write(root, "src/pkg/deep.py", "def compute() -> None: ...\n")
+    _write(root, "src/pkg/shared.py", "def helper() -> None: ...\n")
+    _write(root, "src/pkg/orphan.py", "from .shared import helper\n\n\ndef stray() -> None:\n    helper()\n")
+    _write(root, "src/pkg/lonely.py", "def nobody() -> None: ...\n")
+    return ShippedTreeSpec(
+        repo_root=root,
+        src_root=root / "src",
+        package="pkg",
+        entry_points=(EntryPoint("pkg.cli", "main"),),
+        exclude_globs=_EXCLUDES,
+    )
+
+
+@pytest.fixture
+def suppliers(tmp_path: Path) -> ShippedTreeSpec:
+    return _supplier_tree(tmp_path)
+
+
+@pytest.fixture
+def supplier_baseline() -> UnreachableBaseline:
+    """The frozen cluster declared, and every genuinely actionable module accepted."""
+    return UnreachableBaseline(
+        allowed=frozenset({"pkg.shared", "pkg.orphan", "pkg.lonely"}),
+        frozen_prefixes=("pkg.deferred",),
+    )
+
+
+def test_a_supplier_only_a_frozen_cluster_imports_is_deferred_and_named(
+    suppliers: ShippedTreeSpec, supplier_baseline: UnreachableBaseline
+) -> None:
+    """The projection a deferred cluster alone consumes is not this gate's to adjudicate.
+
+    The deferral must be visible, so the importer that carries it is asserted
+    too: a silent exemption and a reported deferral pass the gate identically,
+    and only the reported one survives the cluster being abandoned.
+    """
+    result = scan_unreachable_code(suppliers)
+
+    verdict = evaluate(result, supplier_baseline)
+
+    assert verdict.is_clean, verdict.report()
+    deferred = {entry.module: entry.deferring_importers for entry in verdict.derived}
+    assert deferred["pkg.projection"] == ("pkg.deferred.screen",)
+    assert "pkg.projection" not in verdict.regressions
+    assert "pkg.projection" in verdict.report()
+
+
+def test_the_deferral_reaches_a_supplier_of_a_supplier(
+    suppliers: ShippedTreeSpec, supplier_baseline: UnreachableBaseline
+) -> None:
+    """One hop is not the boundary: what the deferred projection alone needs is deferred too.
+
+    Stopping at the first hop would defer a module while still failing on the
+    only module it depends upon, which is not a state anyone can act on.
+    """
+    result = scan_unreachable_code(suppliers)
+
+    verdict = evaluate(result, supplier_baseline)
+
+    deferred = {entry.module: entry.deferring_importers for entry in verdict.derived}
+    assert deferred["pkg.deep"] == ("pkg.projection",)
+
+
+def test_a_supplier_with_an_actionable_importer_stays_a_finding(suppliers: ShippedTreeSpec) -> None:
+    """Teeth: one importer outside the deferred set keeps the module adjudicated.
+
+    ``pkg.shared`` is imported by the frozen cluster, so a deferral keyed on
+    "some frozen importer" would clear it. It is also imported by the
+    actionable ``pkg.orphan``, and that is what must keep it red.
+    """
+    result = scan_unreachable_code(suppliers)
+    baseline = UnreachableBaseline(
+        allowed=frozenset({"pkg.orphan", "pkg.lonely"}),
+        frozen_prefixes=("pkg.deferred",),
+    )
+
+    verdict = evaluate(result, baseline)
+
+    assert "pkg.shared" in verdict.regressions
+    assert "pkg.shared" not in {entry.module for entry in verdict.derived}
+    assert not verdict.is_clean
+
+
+def test_a_module_nothing_imports_is_never_deferred(suppliers: ShippedTreeSpec) -> None:
+    """Teeth: capability that lost its last caller stays the finding this gate exists for.
+
+    A module with no importers supplies no deferred cluster. Treating an empty
+    importer set as "no importer outside the cluster" would silently clear
+    every orphan in the tree, which is the exact defect the ratchet catches.
+    """
+    result = scan_unreachable_code(suppliers)
+    baseline = UnreachableBaseline(
+        allowed=frozenset({"pkg.shared", "pkg.orphan"}),
+        frozen_prefixes=("pkg.deferred",),
+    )
+
+    verdict = evaluate(result, baseline)
+
+    assert "pkg.lonely" in verdict.regressions
+    assert "pkg.lonely" not in {entry.module for entry in verdict.derived}
+    assert not verdict.is_clean
+
+
+def test_no_deferral_is_derived_without_a_frozen_prefix(suppliers: ShippedTreeSpec) -> None:
+    """The control: the closure is anchored on a declared freeze, not on unreachability itself.
+
+    With nothing frozen, every module in the same tree is actionable. Without
+    this, the tests above would pass just as happily if the closure deferred
+    any unreachable module whose importers were also unreachable -- which
+    would exempt the whole backlog.
+    """
+    result = scan_unreachable_code(suppliers)
+    baseline = UnreachableBaseline(allowed=frozenset(), frozen_prefixes=())
+
+    verdict = evaluate(result, baseline)
+
+    assert verdict.derived == ()
+    assert {"pkg.projection", "pkg.deep", "pkg.shared", "pkg.orphan", "pkg.lonely"} <= set(verdict.regressions)
+
+
+def test_a_baseline_entry_the_deferral_now_covers_is_reported_as_stale(suppliers: ShippedTreeSpec) -> None:
+    """A module that becomes deferred must leave the actionable list, not sit in both.
+
+    Otherwise the backlog would keep naming modules the gate no longer
+    adjudicates, and a later reader could not tell an accepted debt from a
+    line the deferral quietly took over.
+    """
+    result = scan_unreachable_code(suppliers)
+    baseline = UnreachableBaseline(
+        allowed=frozenset({"pkg.shared", "pkg.orphan", "pkg.lonely", "pkg.projection"}),
+        frozen_prefixes=("pkg.deferred",),
+    )
+
+    verdict = evaluate(result, baseline)
+
+    assert verdict.stale == ("pkg.projection",)
+    assert not verdict.is_clean
+
+
+def test_the_live_tui_projections_are_deferred_by_their_frozen_consumers() -> None:
+    """The real tree: every importer that defers a module is frozen or deferred itself.
+
+    Asserted against the committed baseline rather than a synthetic tree, so a
+    deferral that starts resting on a module outside the deferred cluster fails
+    here even though the gate's set comparison would still be clean.
+    """
+    baseline = UnreachableBaseline.load()
+    verdict = run_gate()
+
+    assert verdict.derived, verdict.report()
+    deferred_modules = {entry.module for entry in verdict.derived}
+    for entry in verdict.derived:
+        assert entry.deferring_importers, entry.module
+        for importer in entry.deferring_importers:
+            carried = baseline.is_frozen(importer) or importer in deferred_modules
+            assert carried, f"{entry.module} deferred by non-deferred importer {importer}"

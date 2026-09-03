@@ -20,8 +20,9 @@
 #
 #   * a module the tree reports that is not listed here fails the gate --
 #     new unreachable code entered the shipped package;
-#   * an entry here that the tree no longer reports also fails -- the debt was
-#     paid and this file must shrink to record it.
+#   * an entry here the tree no longer reports as actionable also fails --
+#     either the debt was paid or only a deferred cluster still leads there,
+#     and this file must shrink to record it.
 #
 # So the correct response to a failure is never to add a line. Adding one is
 # how a boundary erodes. Resolve the module instead:
@@ -41,12 +42,27 @@
 # surfaces, the filing sub-steps) and the sede/renta-web-open
 # cluster (a live browser driver and its oracle, which stand or fall together).
 
+# A frozen prefix defers by LOCATION, and the deferral is transitive over
+# EXCLUSIVE SUPPLIERS: a module every one of whose shipped importers is frozen,
+# or is itself deferred that way, is deferred too. That closure is not
+# configured here -- the gate reads it from the live import graph and names the
+# deferring importers in its report, so it cannot go stale or state a reason
+# that stopped being true. A module nothing imports at all, or one with even a
+# single importer outside the deferred set, stays actionable and belongs below.
+#
+# So an entry does NOT belong here merely because a frozen cluster consumes it.
+# The list below is for modules this gate still adjudicates.
+
 frozen_prefixes = [
   # The TUI is in-flight work owned elsewhere. Its modules churn in both
   # directions and its reach categories move as its __main__ surfaces change,
   # so this gate does not adjudicate them and must not depend on their
   # classification holding still. The audit still reports everything under
   # this prefix -- freezing it sets scope, not permission.
+  #
+  # The cluster's application-layer projections live outside this prefix
+  # because the dependency direction requires it, so they are deferred by the
+  # exclusive-supplier closure described above rather than by being listed.
   "cadrumo.entrypoints.tui",
 ]
 
@@ -56,15 +72,9 @@ allowed = [
   "cadrumo.adapters.persistence.profile.filing_export_replay",  # unreachable
   "cadrumo.adapters.persistence.profile.fincas",  # unreachable
   "cadrumo.application.modelo._edit_facade",  # unreachable
-  "cadrumo.application.modelo.edit_session",  # unreachable
   "cadrumo.application.operator_surface.calculation_workflows",  # unreachable
   "cadrumo.application.operator_surface.crud_contract",  # unreachable
   "cadrumo.application.operator_surface.crud_registry",  # unreachable
-  "cadrumo.application.user_profile.acquisition_sources",  # module-exec-only
-  "cadrumo.application.user_profile.login_interaction",  # module-exec-only
-  "cadrumo.application.user_profile.overview",  # module-exec-only
-  "cadrumo.application.user_profile.presentation",  # module-exec-only
-  "cadrumo.application.user_profile.status_projection",  # module-exec-only
   "cadrumo.application.wizard._registered_values",  # unreachable
   "cadrumo.application.wizard.legal_zone",  # unreachable
   "cadrumo.core.compatibility_lifecycle",  # unreachable

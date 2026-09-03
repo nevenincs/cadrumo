@@ -7,7 +7,7 @@ can this product calculate and file, and for which years" should not have to
 reconstruct the answer from grades, layouts and directory listings, and until
 this screen existed that is exactly what it took.
 
-The answer is already declared; it was simply never assembled. Four facts decide
+The answer is already declared; it was simply never assembled. Five facts decide
 it, and each is read from the validated authority rather than a maintained list:
 
 - ``authority_grade`` is the modelo's own claim about the rung it reaches -
@@ -89,6 +89,8 @@ from dataclasses import dataclass
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+
+from .corpus import bundled_modelo_ids
 
 __all__ = [
     "ModeloCapability",
@@ -264,16 +266,10 @@ def screen_authority(
     return tuple(findings)
 
 
-def _bundled_modelo_ids() -> tuple[str, ...]:
-    from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
-
-    return tuple(sorted(str(code) for code in registry_modelo_codes()))
-
-
 def main() -> int:
     """Print one row per revision, then the findings and a closing census; always exit 0."""
     authority = bundled_authority()
-    modelo_ids = _bundled_modelo_ids()
+    modelo_ids = bundled_modelo_ids()
     census = capability_census(authority, modelo_ids)
     for row in census:
         sys.stdout.write(

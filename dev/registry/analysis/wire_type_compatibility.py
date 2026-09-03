@@ -39,6 +39,8 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.export import resolved_export_endpoints
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
+from .corpus import bundled_modelo_ids
+
 __all__ = [
     "WireTypeTransition",
     "screen_authority",
@@ -99,16 +101,10 @@ def screen_authority(
     return tuple(observed)
 
 
-def _bundled_modelo_ids() -> tuple[str, ...]:
-    from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
-
-    return tuple(sorted(str(code) for code in registry_modelo_codes()))
-
-
 def main() -> int:
     """Print one row per distinct transition with its count; always exit 0."""
     authority = bundled_authority()
-    observed = screen_authority(authority, _bundled_modelo_ids())
+    observed = screen_authority(authority, bundled_modelo_ids())
     pairs = collections.Counter((item.casilla_type, item.wire_type) for item in observed)
     divergent = sum(count for (source, target), count in pairs.items() if source != target)
     for (source, target), count in sorted(pairs.items(), key=lambda entry: (-entry[1], entry[0])):

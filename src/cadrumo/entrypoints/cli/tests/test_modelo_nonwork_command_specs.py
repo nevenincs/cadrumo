@@ -463,9 +463,7 @@ def test_review_package_shared_inputs_keep_exact_order_and_identity() -> None:
 def test_calculation_and_filing_common_parameters_keep_exact_order_and_identity() -> None:
     calculation_specs = {spec.key: spec for spec in MODELO_NONWORK_CALCULATION_COMMAND_SPECS}
     export = calculation_specs["app_modelo_export"]
-    build = {spec.key: spec for spec in MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS}[
-        "app_modelo_review_package_build"
-    ]
+    build = {spec.key: spec for spec in MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS}["app_modelo_review_package_build"]
 
     assert type(CALCULATION_REVISION_SELECTOR_OPTIONS) is tuple
     assert tuple(parameter.name for parameter in CALCULATION_REVISION_SELECTOR_OPTIONS) == (

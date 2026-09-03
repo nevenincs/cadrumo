@@ -11,12 +11,14 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
+from ....core.hashing import content_hash_hex
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ...operations.registry import OperationPublicContractSetV1
 from ...operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue, ActionCatalogueEntry
 from ...operator_actions.models import ActionReference
 from ...user_profile.censal_operation import CENSAL_OPERATION_DEFINITION, build_censal_operation_registration
+from .. import workspace as workspace_module
 from ..workspace import (
     AeatSyncAeatObservationState,
     AeatSyncCensusCategory,
@@ -38,6 +40,7 @@ from ..workspace import (
     AeatSyncWorkspaceNotificationRowV1,
     AeatSyncWorkspaceOverviewRowV1,
     AeatSyncWorkspaceProjectionError,
+    AeatSyncWorkspaceProjectionV1,
     AeatSyncWorkspaceReconciliationRowV1,
     AeatSyncWorkspaceSource,
     AeatSyncWorkspaceSourceObservationV1,
@@ -223,6 +226,88 @@ def test_exact_six_zones_and_deterministic_safe_projection() -> None:
     assert first.model_dump_json() == second.model_dump_json()
 
 
+def test_notification_selection_identity_is_stable_opaque_and_order_independent() -> None:
+    first = _projection(
+        notifications=(
+            _fact(_notification(), private_identity="notification-alpha"),
+            _fact(_notification(), private_identity="notification-beta"),
+        )
+    )
+    second = _projection(
+        notifications=(
+            _fact(_notification(), private_identity="notification-beta"),
+            _fact(_notification(), private_identity="notification-alpha"),
+        )
+    )
+    assert first == second
+    keys = tuple(row.selection_key for row in first.notifications)
+    assert all(key is not None for key in keys)
+    assert len(set(keys)) == 2
+    assert all(key.startswith("aeat_sync.notification.") and len(key) <= 160 for key in keys if key is not None)
+    single = _projection(notifications=(_fact(_notification(), private_identity="notification-alpha"),))
+    single_key = single.notifications[0].selection_key
+    assert single_key is not None
+    raw_digest = content_hash_hex(
+        {
+            "namespace": "aeat_sync.notification.selection.v1",
+            "private_identity": "notification-alpha",
+        }
+    )
+    assert single_key.removeprefix("aeat_sync.notification.") != raw_digest
+    encoded = first.model_dump_json() + repr(first)
+    assert "notification-alpha" not in encoded
+    assert "notification-beta" not in encoded
+    assert b"notification-alpha" not in pickle.dumps(first)
+    assert b"notification-beta" not in pickle.dumps(first)
+
+    invalid = first.model_dump(mode="python")
+    invalid["notifications"] = ({**invalid["notifications"][0], "selection_key": None},)
+    with pytest.raises(ValidationError, match="selection keys"):
+        AeatSyncWorkspaceProjectionV1.model_validate(invalid)
+    duplicate = first.model_dump(mode="python")
+    duplicate_row = first.notifications[0].model_dump(mode="python")
+    duplicate["notifications"] = (duplicate_row, duplicate_row)
+    with pytest.raises(ValidationError, match="selection keys must be unique"):
+        AeatSyncWorkspaceProjectionV1.model_validate(duplicate)
+
+
+def test_notification_selection_identity_collision_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        workspace_module,
+        "_notification_selection_key",
+        lambda _: "aeat_sync.notification.collision",
+    )
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="selection identities"):
+        _projection(
+            notifications=(
+                _fact(_notification(), private_identity="notification-alpha"),
+                _fact(_notification(), private_identity="notification-beta"),
+            )
+        )
+
+
+@pytest.mark.parametrize(
+    "bad_key",
+    (
+        "aeat_sync.other." + "a" * 64,
+        "aeat_sync.notification." + "a" * 63,
+        "aeat_sync.notification." + "A" * 64,
+        "aeat_sync.notification." + "g" * 64,
+    ),
+)
+def test_notification_selection_key_shape_is_closed(bad_key: str) -> None:
+    row_values = _notification().model_dump(mode="python")
+    row_values["selection_key"] = bad_key
+    with pytest.raises(ValidationError):
+        AeatSyncWorkspaceNotificationRowV1.model_validate(row_values)
+
+    projection = _projection()
+    projection_values = projection.model_dump(mode="python")
+    projection_values["notifications"] = ({**projection_values["notifications"][0], "selection_key": bad_key},)
+    with pytest.raises(ValidationError):
+        AeatSyncWorkspaceProjectionV1.model_validate(projection_values)
+
+
 def test_output_physically_omits_protected_scope_payload_and_identity() -> None:
     projection = _projection()
     encoded = pickle.dumps(projection) + projection.model_dump_json().encode() + repr(projection).encode()
@@ -313,21 +398,28 @@ def test_actions_require_catalogue_admission_and_area_state_closure() -> None:
     assert _projection(overview=(_fact(admitted_operation),)).overview[0].supported_operations == (
         "user-profile.censo-review",
     )
-    for row in (_overview(), _census(), _filed(), _notification(), _comparison(), _reconciliation()):
+    for row in (_overview(), _census(), _filed(), _comparison(), _reconciliation()):
         assert row.supported_actions == () or row.supported_actions
         assert row.supported_operations == ()
         assert "supported_actions" in row.model_dump()
         assert "supported_operations" in row.model_dump()
 
 
-def test_real_public_rows_retain_admitted_capability_provenance() -> None:
-    action = _action("operator.live.notifications.list")
-    notification = _notification().model_copy(update={"supported_actions": (action,), "supported_operations": ()})
-    projection = _projection(notifications=(_fact(notification, private_identity="notification-private"),))
-    projected = projection.notifications[0]
-    assert projected.supported_actions == (action,)
-    assert projected.supported_operations == ()
-    assert projected.model_dump()["supported_actions"] == ({"action_id": action.action_id},)
+def test_notification_rows_have_exact_safe_fields_and_no_capabilities() -> None:
+    assert set(AeatSyncWorkspaceNotificationRowV1.model_fields) == {
+        "issued_on",
+        "read_on",
+        "read_state",
+        "category",
+        "document_custody_state",
+        "document_custody_observed_at",
+        "selection_key",
+    }
+    projected = _projection().notifications[0]
+    assert not hasattr(projected, "supported_actions")
+    assert not hasattr(projected, "supported_operations")
+    assert "supported_actions" not in projected.model_dump()
+    assert "supported_operations" not in projected.model_dump()
 
 
 def test_row_subclass_protected_fields_are_reconstructed_away() -> None:

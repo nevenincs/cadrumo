@@ -50,25 +50,13 @@ class DeclarationsFilingHistoryScreen(DeclarationsWorkspaceScreen):
         """Populate separate local and external filing axes."""
         self.populate_navigation()
         table = cast("DataTable[str]", self.query_one("#declarations-filings", DataTable))
-        table.add_column(
-            declarations_copy("tui.declarations.column.declaration"), key="declaration", width=16
-        )
+        table.add_column(declarations_copy("tui.declarations.column.declaration"), key="declaration", width=16)
         table.add_column(declarations_copy("tui.declarations.column.when"), key="when", width=20)
-        table.add_column(
-            declarations_copy("tui.declarations.column.local_filing"), key="local", width=13
-        )
-        table.add_column(
-            declarations_copy("tui.declarations.column.aeat_accepted"), key="accepted", width=7
-        )
-        table.add_column(
-            declarations_copy("tui.declarations.column.aeat_evidence"), key="evidence", width=13
-        )
-        history = [
-            (row.filed_at, "filing", row)
-            for row in self.controller.projection.filings
-        ] + [
-            (row.occurred_at, "lifecycle", row)
-            for row in self.controller.projection.lifecycle
+        table.add_column(declarations_copy("tui.declarations.column.local_filing"), key="local", width=13)
+        table.add_column(declarations_copy("tui.declarations.column.aeat_accepted"), key="accepted", width=7)
+        table.add_column(declarations_copy("tui.declarations.column.aeat_evidence"), key="evidence", width=13)
+        history = [(row.filed_at, "filing", row) for row in self.controller.projection.filings] + [
+            (row.occurred_at, "lifecycle", row) for row in self.controller.projection.lifecycle
         ]
         for occurred_at, kind, source in sorted(history, key=lambda item: item[0], reverse=True):
             if kind == "lifecycle":
@@ -88,9 +76,7 @@ class DeclarationsFilingHistoryScreen(DeclarationsWorkspaceScreen):
                 timestamp_label(occurred_at),
                 filing_state_label(filing.local_status),
                 declarations_copy(
-                    "tui.declarations.value.yes"
-                    if filing.aeat_accepted
-                    else "tui.declarations.value.no"
+                    "tui.declarations.value.yes" if filing.aeat_accepted else "tui.declarations.value.no"
                 ),
                 evidence_label(filing.evidence_kind),
                 key=f"filing:{filing.filing_record_id}",

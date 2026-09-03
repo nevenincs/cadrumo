@@ -82,9 +82,7 @@ class CalendarEntryHandoffV1(Protocol):
 class CalendarRecoveryHandoffV1(Protocol):
     """Injected executor for the canonical excluded recovery action."""
 
-    def __call__(
-        self, action: DeclaredNextAction, entry: DeclarationsCalendarEntryRefV1, /
-    ) -> None:
+    def __call__(self, action: DeclaredNextAction, entry: DeclarationsCalendarEntryRefV1, /) -> None:
         """Submit the exact pre-admitted recovery action for this address."""
         ...
 

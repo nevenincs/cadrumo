@@ -113,9 +113,7 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
         if selected is None:  # pragma: no cover - guarded before worker creation
             raise RuntimeError("classification selection disappeared before submission")
         try:
-            await self.controller.submit_classification(
-                ManualLedgerTransactionPatch(business_classification=selected)
-            )
+            await self.controller.submit_classification(ManualLedgerTransactionPatch(business_classification=selected))
         except Exception:
             self._transition(LedgerFlowState.FAILED)
             status.update(ledger_copy("tui.ledger.classification.failure"))
@@ -132,5 +130,6 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
         self.query_one("#ledger-flow-status", Static).update("")
         self.query_one("#ledger-classification-confirm", Button).disabled = True
         self.query_one("#ledger-classification-cancel", Button).disabled = True
+
 
 __all__ = ["LedgerClassificationScreen"]

@@ -307,6 +307,8 @@ async def test_import_failure_is_localized_and_never_leaks_exception_path_or_pro
             assert protected_path not in rendered
             assert protected_provider not in rendered
             assert "RuntimeError" not in rendered
+
+
 def test_factory_refuses_undeclared_or_drifted_classification_action() -> None:
     with pytest.raises(KeyError, match="unknown operator action ID"):
         ledger_screen_factory(
@@ -365,11 +367,11 @@ async def test_flow_copy_is_localized_while_semantic_choices_are_invariant(local
     projection = _projection()
     command = LedgerSourceImportCommand(path=Path("C:/synthetic/input.csv"), provider="bank")
     prepared = LedgerPreparedImportV1(
-            choice_id="prepared-bank",
-            provider_label_key="tui.ledger.import.provider.bank",
-            source_label_key="tui.ledger.import.source.prepared",
-            command=command,
-        )
+        choice_id="prepared-bank",
+        provider_label_key="tui.ledger.import.provider.bank",
+        source_label_key="tui.ledger.import.source.prepared",
+        command=command,
+    )
     controller = LedgerWorkspaceController(
         _context(),
         projection,
@@ -398,9 +400,9 @@ async def test_flow_copy_is_localized_while_semantic_choices_are_invariant(local
             rendered = "\n".join(str(widget.render()) for widget in import_screen.query(Static))
             assert _FLOW_COPY[locale][1] in rendered
             assert "tui.ledger." not in rendered
-            assert tuple(row.key.value for row in import_screen.query_one("#ledger-import-choices", DataTable).ordered_rows) == (
-                "prepared-bank",
-            )
+            assert tuple(
+                row.key.value for row in import_screen.query_one("#ledger-import-choices", DataTable).ordered_rows
+            ) == ("prepared-bank",)
 
 
 @pytest.mark.asyncio
@@ -424,7 +426,9 @@ async def test_new_flows_have_exact_focus_and_real_compositor_geometry(screen_ki
         prepared_imports=(prepared,),
         import_submitter=_ImportDoor(),
     )
-    screen = LedgerClassificationScreen(controller) if screen_kind == "classification" else LedgerImportScreen(controller)
+    screen = (
+        LedgerClassificationScreen(controller) if screen_kind == "classification" else LedgerImportScreen(controller)
+    )
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
@@ -445,9 +449,12 @@ async def test_new_flows_have_exact_focus_and_real_compositor_geometry(screen_ki
         )
         assert geometry_band(app, 80) == []
         assert all(table.max_scroll_x == 0 for table in screen.query(DataTable))
-        owners = tuple(widget for widget in screen.query(VerticalScroll) if widget.display and widget.show_vertical_scrollbar)
+        owners = tuple(
+            widget for widget in screen.query(VerticalScroll) if widget.display and widget.show_vertical_scrollbar
+        )
         assert len(owners) <= 1
         assert all(isinstance(owner, VerticalScroll) and owner.id == "ledger-page" for owner in owners)
+
 
 def test_flow_modules_cannot_read_files_detect_providers_or_import_mutators() -> None:
     package = Path(__file__).parents[1]
@@ -456,10 +463,7 @@ def test_flow_modules_cannot_read_files_detect_providers_or_import_mutators() ->
         for path in (package / "classification.py", package / "import_flow.py")
     }
     imports = {
-        node.module or ""
-        for tree in trees.values()
-        for node in ast.walk(tree)
-        if isinstance(node, ast.ImportFrom)
+        node.module or "" for tree in trees.values() for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)
     }
     calls = {
         node.func.id if isinstance(node.func, ast.Name) else node.func.attr
