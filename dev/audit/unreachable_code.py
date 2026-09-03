@@ -67,7 +67,7 @@ import re
 import sys
 import tomllib
 from collections import deque
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
@@ -371,6 +371,12 @@ class ModuleFinding:
 
     ``spanned_modules`` is 1 for a single module and the member count for a
     package folder whose every module is unreachable and is reported once.
+
+    ``importers`` names the shipped modules outside this finding's own span
+    that still import it. It separates two shapes that are identical in the
+    reach categories: a module nothing imports at all, and a module whose
+    importers exist but are themselves unreached. The scan states the fact;
+    what a consumer makes of it is the consumer's disposition.
     """
 
     path: str
@@ -378,6 +384,7 @@ class ModuleFinding:
     reach: ModuleReach
     spanned_modules: int
     used_by: tuple[str, ...]
+    importers: tuple[str, ...] = ()
 
     @property
     def is_package(self) -> bool:
@@ -1072,6 +1079,38 @@ def relative_to_repo(path: Path, spec: ShippedTreeSpec) -> str:
     return path.relative_to(spec.repo_root).as_posix()
 
 
+def _shipped_importers(edges: Mapping[str, frozenset[str]]) -> dict[str, frozenset[str]]:
+    """Reverse ``edges`` into "who imports this", over shipped modules only.
+
+    Both runtime and type-checking edges count. The question the reverse graph
+    answers is "does anything shipped still name this module", and a
+    type-checking-only importer names it just as definitely as a runtime one
+    even though the statement never executes.
+    """
+    reverse: dict[str, set[str]] = {}
+    for source, targets in edges.items():
+        for target in targets:
+            reverse.setdefault(target, set()).add(source)
+    return {target: frozenset(sources) for target, sources in reverse.items()}
+
+
+def _importers_of_span(
+    name: str,
+    modules: Mapping[str, ShippedModule],
+    importers: Mapping[str, frozenset[str]],
+) -> tuple[str, ...]:
+    """Shipped importers of ``name``'s whole span, excluding the span itself.
+
+    A package finding stands for every module beneath it, so an importer of
+    any member is an importer of the finding. Members importing each other are
+    internal traffic and say nothing about whether anything outside still
+    needs the span.
+    """
+    span = frozenset(member for member in modules if member == name or member.startswith(name + "."))
+    outside_importers = {source for member in span for source in importers.get(member, frozenset()) if source not in span}
+    return tuple(sorted(outside_importers))
+
+
 def _module_findings(
     spec: ShippedTreeSpec,
     modules: dict[str, ShippedModule],
@@ -1079,6 +1118,7 @@ def _module_findings(
     runtime_reach: frozenset[str],
     full_reach: frozenset[str],
     outside: _OutsideUse,
+    importers: Mapping[str, frozenset[str]],
 ) -> tuple[ModuleFinding, ...]:
     findings: list[ModuleFinding] = []
     audited = frozenset(name for name in modules if name == spec.package or name.startswith(spec.package + "."))
@@ -1092,7 +1132,16 @@ def _module_findings(
         for member in modules:
             if member == name or member.startswith(name + "."):
                 used_by.update(outside.labels_for_module(member))
-        findings.append(ModuleFinding(rendered, name, ModuleReach.UNREACHABLE, spanned, tuple(sorted(used_by))))
+        findings.append(
+            ModuleFinding(
+                rendered,
+                name,
+                ModuleReach.UNREACHABLE,
+                spanned,
+                tuple(sorted(used_by)),
+                _importers_of_span(name, modules, importers),
+            ),
+        )
     for name in sorted((runtime_reach & audited) - script_reach):
         module = modules[name]
         findings.append(
@@ -1102,13 +1151,19 @@ def _module_findings(
                 ModuleReach.MODULE_EXEC_ONLY,
                 1,
                 outside.labels_for_module(name),
+                _importers_of_span(name, modules, importers),
             ),
         )
     for name in sorted((full_reach & audited) - runtime_reach):
         module = modules[name]
         findings.append(
             ModuleFinding(
-                relative_to_repo(module.path, spec), name, ModuleReach.TYPE_ONLY, 1, outside.labels_for_module(name)
+                relative_to_repo(module.path, spec),
+                name,
+                ModuleReach.TYPE_ONLY,
+                1,
+                outside.labels_for_module(name),
+                _importers_of_span(name, modules, importers),
             ),
         )
     return tuple(findings)
@@ -1275,7 +1330,10 @@ def scan_unreachable_code(spec: ShippedTreeSpec) -> UnreachableCodeResult:
     audited_total = len(audited_names)
     outside = _outside_use(spec, known)
     data_tokens = _data_tokens(spec)
-    module_findings = _module_findings(spec, modules, script_reach, runtime_reach, full_reach, outside)
+    shipped_importers = _shipped_importers(full_edges)
+    module_findings = _module_findings(
+        spec, modules, script_reach, runtime_reach, full_reach, outside, shipped_importers
+    )
     symbol_findings, data_cleared = _symbol_findings(spec, modules, runtime_reach, full_reach, outside, data_tokens)
 
     if not module_findings and not symbol_findings:
@@ -1412,6 +1470,7 @@ def result_as_json(result: UnreachableCodeResult) -> str:
                     "reach": f.reach.value,
                     "spanned_modules": f.spanned_modules,
                     "used_by": list(f.used_by),
+                    "importers": list(f.importers),
                 }
                 for f in result.modules
             ],

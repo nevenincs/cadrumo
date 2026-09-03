@@ -77,9 +77,15 @@ def _monetary_findings_needing_action(
     The screen reports four conditions and one of them is not a defect: a
     monetary casilla carried by several fields of one record is the official
     integer-and-decimal part split, reported so the shape is countable. It is
-    132 of the 158 rows, so counting them here presented a six-fold overstatement
-    of the work as the first number a maintainer reads. The screen still reports
-    them; this census does not count them as findings.
+    the large majority of the screen's rows, so counting them here presented a
+    several-fold overstatement of the work as the first number a maintainer
+    reads. The screen still reports them; this census does not count them as
+    findings.
+
+    The proportion is deliberately not written as a pair of numbers. It was, and
+    the totals drifted while the argument stayed true - which is the same defect
+    this package exists to find, in the explanation of a screen rather than in a
+    declaration.
     """
     return [item for item in monetary_scale_screen(authority, modelo_ids) if item.kind != "money_split_representation"]
 
