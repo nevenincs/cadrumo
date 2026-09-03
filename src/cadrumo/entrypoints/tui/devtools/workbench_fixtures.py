@@ -14,7 +14,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, Final, cast
+from typing import Any, Final, cast
 
 from textual.app import App
 from textual.screen import Screen
@@ -63,13 +63,17 @@ from ....application.modelo.declarations_workspace import (
     DeclarationsWorkspaceZoneObservationV1,
     project_declarations_workspace,
 )
+from ....application.operations.composition import OperationComposedServices, OperationSubmission
 from ....application.operations.frontend_contracts import (
     OperationNoPendingInteractionV1,
+    OperationObservationRequestV1,
     OperationObservationSuccessV1,
     OperationPublicEventPageV1,
     OperationPublicProjectionV1,
     OperationReplayStatus,
+    OperationSubmissionReceiptV1,
 )
+from ....application.operations.interactions import OperationActorReference
 from ....application.operations.models import OperationId
 from ....application.operations.registry import OperationPublicContractSetV1
 from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, lookup_action
@@ -114,10 +118,8 @@ from ..aeat_sync.screens import (
 from ..app import CadrumoTuiApp
 from ..components.host import ScreenHostApp
 from ..declarations.controller import DeclarationsWorkspaceController
-from ..declarations.filing_history import DeclarationsFilingHistoryScreen
 from ..declarations.models import DeclarationsDestinationIdV1
-from ..declarations.overview import DeclarationsModeloWorkspaceLauncherScreen, DeclarationsOverviewScreen
-from ..declarations.revisions import DeclarationsRevisionsScreen
+from ..declarations.overview import DeclarationsModeloWorkspaceLauncherScreen
 from ..declarations.routes import resolve_declarations_screen
 from ..home import HomeScreen
 from ..navigation import (
@@ -127,10 +129,6 @@ from ..navigation import (
 )
 from ..operations.controller import OperationController
 from ..operations.modal import OperationModal
-
-if TYPE_CHECKING:
-    from ....application.operations.event_replay import OperationEventCursor
-
 
 _BUCKET: Final[str] = "00000000-0000-4000-8000-000000000001"
 _AT: Final[datetime] = datetime(2026, 9, 3, 10, tzinfo=UTC)
@@ -551,13 +549,6 @@ def _declaration_controller(scenario: WorkbenchFixtureScenario) -> DeclarationsW
     )
 
 
-_DECLARATION_ROUTES: Final[tuple[tuple[str, type[Screen[Any]]], ...]] = (
-    ("declarations-overview", DeclarationsOverviewScreen),
-    ("declarations-revisions", DeclarationsRevisionsScreen),
-    ("declarations-filing-history", DeclarationsFilingHistoryScreen),
-)
-
-
 def _declaration_app(surface_id: str, scenario: WorkbenchFixtureScenario) -> App[Any]:
     controller = _declaration_controller(scenario)
     if surface_id == "declarations-calendar":
@@ -565,6 +556,8 @@ def _declaration_app(surface_id: str, scenario: WorkbenchFixtureScenario) -> App
         return _host(resolve_declarations_screen(controller, target))
     if surface_id == "declarations-modelo-launcher":
         return _host(DeclarationsModeloWorkspaceLauncherScreen(controller))
+    if surface_id == "declarations-unavailable":
+        return _host(resolve_declarations_screen(controller, controller.target("declarations.revisions")))
     destination = cast(
         DeclarationsDestinationIdV1,
         {
@@ -577,17 +570,20 @@ def _declaration_app(surface_id: str, scenario: WorkbenchFixtureScenario) -> App
 
 
 @dataclass(frozen=True, slots=True)
-class _FixtureOperationController:
-    """Minimal preloaded public observation door used only by the modal fixture."""
+class _FixtureObservationService:
+    """Preloaded observation service implementing the public operation door."""
 
-    observation: OperationObservationSuccessV1
+    result: OperationObservationSuccessV1
 
-    @property
-    def operation_id(self) -> OperationId:
-        return self.observation.projection.operation_id
+    async def observe(self, _request: OperationObservationRequestV1) -> OperationObservationSuccessV1:
+        return self.result
 
-    async def observe(self, _after_cursor: OperationEventCursor) -> OperationObservationSuccessV1:
-        return self.observation
+
+@dataclass(frozen=True, slots=True)
+class _FixtureOperationServices:
+    """Minimal injected service family used by the real OperationController."""
+
+    observation: _FixtureObservationService
 
 
 def _operation_modal_app() -> App[Any]:
@@ -631,7 +627,15 @@ def _operation_modal_app() -> App[Any]:
         restart_cursor=None,
     )
     observation = OperationObservationSuccessV1(projection=projection, event_page=page)
-    controller = cast(OperationController, _FixtureOperationController(observation))
+    submission = OperationSubmission(
+        receipt=OperationSubmissionReceiptV1(operation_id=operation_id, secret_requirement=None),
+        response_capability=cast(Any, object()),
+    )
+    controller = OperationController(
+        services=cast(OperationComposedServices, _FixtureOperationServices(_FixtureObservationService(observation))),
+        submission=submission,
+        actor_ref=cast(OperationActorReference, "fixture:operator"),
+    )
     return _host(OperationModal(controller))
 
 
@@ -667,8 +671,6 @@ def _root_app(scenario: WorkbenchFixtureScenario) -> App[Any]:
         ),
     }
     catalogue = build_destination_catalogue(admissions=admissions, factories={"workbench.home": home_factory})
-    from ....application.operations.composition import OperationComposedServices
-
     return CadrumoTuiApp(
         services=cast(OperationComposedServices, object()),
         destination_catalogue=catalogue,
@@ -766,6 +768,14 @@ def _build_specs() -> tuple[WorkbenchFixtureSpec, ...]:
             )
             for scenario in scenarios
         )
+    specs.append(
+        _spec(
+            "declarations-unavailable",
+            WorkbenchFixtureScenario.UNAVAILABLE,
+            ("cadrumo.entrypoints.tui.declarations.routes.DeclarationsUnavailableScreen",),
+            lambda: _declaration_app("declarations-unavailable", WorkbenchFixtureScenario.UNAVAILABLE),
+        )
+    )
     for surface_id, interfaces in _AEAT_INTERFACE_BY_SURFACE.items():
         scenarios = (
             WorkbenchFixtureScenario.READY,
