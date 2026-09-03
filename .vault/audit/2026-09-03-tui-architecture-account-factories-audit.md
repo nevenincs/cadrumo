@@ -5,49 +5,22 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:2542e3f56c6c2f6a4f44d20a69a3e2cdab328185386bee844fbe271bb69f2bef'
+body_hash: 'sha256:1e9143ae95c7acc23f72a4210f1c915853f921545821709b98d263a8189986c0'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `tui-architecture` audit: `account factories review`
 
 ## Scope
 
-<!-- What was audited and why -->
+Reviewed the S380 production account-factory composition and focused contracts for authority boundaries, deferred host effects, existing-screen reuse, locale ownership, and secret custody.
 
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
+### forwarding-and-deferred-effects | medium | Initial tests left optional door forwarding and most deferred effects unproven
 
-       ### account factories review | {level} | {summary}
-
-     followed by a paragraph carrying the detail. account factories review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+The initial focused tests could not detect removal of optional Profile and Login door forwarding, or an eager persistence, authentication, password-assessment, or rotation call. The focused contract now supplies refusing doors, proves no eager invocation, and verifies each optional door reaches its existing screen owner before Step closure.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+- Retain the focused forwarding and deferred-effect assertions when account composition changes.
