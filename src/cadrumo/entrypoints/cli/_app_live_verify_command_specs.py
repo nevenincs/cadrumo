@@ -4,15 +4,22 @@
 
 from __future__ import annotations
 
-from ._app_live_command_spec_support import _key
+from typing import Final
+
+from ._app_live_command_spec_support import (
+    _ENCRYPTED_LOCAL_READ_POLICY,
+    _LEAF_INVOCATION,
+    _METADATA_GROUP_INVOCATION,
+    _METADATA_POLICY,
+    _PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
+    NO_RESULT_SCHEMA,
+    _key,
+)
 from .command_spec import (
     ArgumentSpec,
     CommandNodeKind,
     CommandSpec,
-    CommandWriteRoute,
     DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
     LazyBinding,
     OptionSpec,
     ParameterConstraint,
@@ -20,6 +27,18 @@ from .command_spec import (
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
+)
+
+_VERIFY_EXPECTED_OPTION: Final[OptionSpec] = OptionSpec(
+    name="expected",
+    declarations=("--expected",),
+    value=ValueContract(DeferredTarget("builtins", "str")),
+    default=ParameterDefault.value(None),
+    help_key=_key("cli.app.live.verify.expected_help"),
+    multiple=False,
+    is_flag=False,
+    flag_value=None,
+    constraint=ParameterConstraint(minimum=None, maximum=None),
 )
 
 LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
@@ -30,19 +49,11 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.GROUP,
         help_key=_key("cli.app.live.verify.app_help"),
         short_help_key=None,
-        invocation=InvocationSpec(no_args_is_help=True, context_parameter=None),
+        invocation=_METADATA_GROUP_INVOCATION,
         parameters=(),
-        policy=ExecutionPolicySpec(
-            capabilities=frozenset(["state-free"]),
-            side_effects=frozenset(["none"]),
-            performance="metadata",
-            write_route=CommandWriteRoute.NONE,
-            destructive=False,
-            handoff=False,
-            live_write=False,
-        ),
+        policy=_METADATA_POLICY,
         handler=None,
-        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
+        result_schema=NO_RESULT_SCHEMA,
     ),
     CommandSpec(
         key="app_live_verify_list",
@@ -51,7 +62,7 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.verify.list_help"),
         short_help_key=None,
-        invocation=InvocationSpec(no_args_is_help=False, context_parameter="ctx"),
+        invocation=_LEAF_INVOCATION,
         parameters=(
             OptionSpec(
                 name="surface",
@@ -76,15 +87,7 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 constraint=ParameterConstraint(minimum=None, maximum=None),
             ),
         ),
-        policy=ExecutionPolicySpec(
-            capabilities=frozenset(["encrypted-facts"]),
-            side_effects=frozenset(["none"]),
-            performance="local-io",
-            write_route=CommandWriteRoute.NONE,
-            destructive=False,
-            handoff=False,
-            live_write=False,
-        ),
+        policy=_ENCRYPTED_LOCAL_READ_POLICY,
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live_verify_cli", "verify_list")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
@@ -99,7 +102,7 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.verify.view_help"),
         short_help_key=None,
-        invocation=InvocationSpec(no_args_is_help=False, context_parameter="ctx"),
+        invocation=_LEAF_INVOCATION,
         parameters=(
             ArgumentSpec(
                 name="observation_id",
@@ -109,15 +112,7 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 constraint=ParameterConstraint(minimum=None, maximum=None),
             ),
         ),
-        policy=ExecutionPolicySpec(
-            capabilities=frozenset(["encrypted-facts"]),
-            side_effects=frozenset(["none"]),
-            performance="local-io",
-            write_route=CommandWriteRoute.NONE,
-            destructive=False,
-            handoff=False,
-            live_write=False,
-        ),
+        policy=_ENCRYPTED_LOCAL_READ_POLICY,
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live_verify_cli", "verify_show")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
@@ -132,7 +127,7 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.verify.latest_help"),
         short_help_key=None,
-        invocation=InvocationSpec(no_args_is_help=False, context_parameter="ctx"),
+        invocation=_LEAF_INVOCATION,
         parameters=(
             OptionSpec(
                 name="surface",
@@ -157,15 +152,7 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 constraint=ParameterConstraint(minimum=None, maximum=None),
             ),
         ),
-        policy=ExecutionPolicySpec(
-            capabilities=frozenset(["encrypted-facts"]),
-            side_effects=frozenset(["none"]),
-            performance="local-io",
-            write_route=CommandWriteRoute.NONE,
-            destructive=False,
-            handoff=False,
-            live_write=False,
-        ),
+        policy=_ENCRYPTED_LOCAL_READ_POLICY,
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live_verify_cli", "verify_latest")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
@@ -180,7 +167,7 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.verify.nif_iva_help"),
         short_help_key=None,
-        invocation=InvocationSpec(no_args_is_help=False, context_parameter="ctx"),
+        invocation=_LEAF_INVOCATION,
         parameters=(
             ArgumentSpec(
                 name="nif",
@@ -189,27 +176,9 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 help_key=_key("cli.app.live.verify.nif_iva_arg_help"),
                 constraint=ParameterConstraint(minimum=None, maximum=None),
             ),
-            OptionSpec(
-                name="expected",
-                declarations=("--expected",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=_key("cli.app.live.verify.expected_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(minimum=None, maximum=None),
-            ),
+            _VERIFY_EXPECTED_OPTION,
         ),
-        policy=ExecutionPolicySpec(
-            capabilities=frozenset(["encrypted-facts", "network"]),
-            side_effects=frozenset(["local-state", "network"]),
-            performance="external-io",
-            write_route=CommandWriteRoute.PROFILE_BOUND,
-            destructive=False,
-            handoff=False,
-            live_write=False,
-        ),
+        policy=_PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live_verify_cli", "verify_nif_iva")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
@@ -224,7 +193,7 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.verify.tgvi_help"),
         short_help_key=None,
-        invocation=InvocationSpec(no_args_is_help=False, context_parameter="ctx"),
+        invocation=_LEAF_INVOCATION,
         parameters=(
             ArgumentSpec(
                 name="nif",
@@ -233,27 +202,9 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 help_key=_key("cli.app.live.verify.tgvi_arg_help"),
                 constraint=ParameterConstraint(minimum=None, maximum=None),
             ),
-            OptionSpec(
-                name="expected",
-                declarations=("--expected",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=_key("cli.app.live.verify.expected_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(minimum=None, maximum=None),
-            ),
+            _VERIFY_EXPECTED_OPTION,
         ),
-        policy=ExecutionPolicySpec(
-            capabilities=frozenset(["encrypted-facts", "network"]),
-            side_effects=frozenset(["local-state", "network"]),
-            performance="external-io",
-            write_route=CommandWriteRoute.PROFILE_BOUND,
-            destructive=False,
-            handoff=False,
-            live_write=False,
-        ),
+        policy=_PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live_verify_cli", "verify_tgvi")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,

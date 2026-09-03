@@ -9,7 +9,7 @@ handler module.
 from __future__ import annotations
 
 import inspect
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from functools import cache
 from types import GenericAlias
 from typing import Any, cast
@@ -164,7 +164,16 @@ def _parameter(spec: ArgumentSpec | OptionSpec) -> inspect.Parameter:
     )
 
 
-def _behavior_wrapper(spec: CommandSpec) -> Callable[..., object]:
+def _invoke_deferred_target(target_ref: DeferredTarget, arguments: Mapping[str, object]) -> object:
+    """Resolve and invoke one declared command behavior target."""
+    target = resolve_deferred_target(target_ref)
+    if not callable(target):
+        raise TypeError(f"command target is not callable: {target_ref.identity!r}")
+    invoke: Callable[..., object] = target
+    return invoke(**arguments)
+
+
+def _behavior_wrapper(graph: CommandSpecGraph, spec: CommandSpec) -> Callable[..., object]:
     binding = spec.handler
     if binding is None or binding.state is not BindingState.TARGET or binding.target is None:
         raise RuntimeError(f"command {spec.key!r} has no executable target")
@@ -197,19 +206,16 @@ def _behavior_wrapper(spec: CommandSpec) -> Callable[..., object]:
                 from ._tui_policy import enforce_tui_request
 
                 enforce_tui_request(cast(typer.Context, context), spec=spec)
-                preflight_parsed_leaf(cast(typer.Context, context), spec=spec, arguments=bound.arguments)
-                target = resolve_deferred_target(target_ref)
-                if not callable(target):
-                    raise TypeError(f"command target is not callable: {target_ref.identity!r}")
-                invoke: Callable[..., object] = target
-                return invoke(**bound.arguments)
+                preflight_parsed_leaf(
+                    cast(typer.Context, context),
+                    graph=graph,
+                    spec=spec,
+                    arguments=bound.arguments,
+                )
+                return _invoke_deferred_target(target_ref, bound.arguments)
             finally:
                 clear_staged_machine_secret_payloads()
-        target = resolve_deferred_target(target_ref)
-        if not callable(target):
-            raise TypeError(f"command target is not callable: {target_ref.identity!r}")
-        invoke_target: Callable[..., object] = target
-        return invoke_target(**bound.arguments)
+        return _invoke_deferred_target(target_ref, bound.arguments)
 
     parameters: list[inspect.Parameter] = []
     context_parameter = spec.invocation.context_parameter
@@ -295,7 +301,7 @@ def _node_app(graph: CommandSpecGraph, key: str) -> typer.Typer:
             help=tr(spec.help_key.value),
             short_help=None if spec.short_help_key is None else tr(spec.short_help_key.value),
             hidden=spec.invocation.hidden,
-        )(_behavior_wrapper(spec))
+        )(_behavior_wrapper(graph, spec))
         return app
 
     app = typer.Typer(
@@ -309,7 +315,7 @@ def _node_app(graph: CommandSpecGraph, key: str) -> typer.Typer:
         cls=_group_class(graph, key),
     )
     if spec.invocation.invoke_without_command:
-        app.callback(invoke_without_command=True)(_behavior_wrapper(spec))
+        app.callback(invoke_without_command=True)(_behavior_wrapper(graph, spec))
     else:
         # Typer needs a callback to materialize a group whose children are all
         # deferred.  This adapter carries no command facts; those come from the

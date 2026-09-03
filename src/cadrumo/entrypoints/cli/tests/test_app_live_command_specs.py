@@ -9,7 +9,21 @@ from pathlib import Path
 import pytest
 from typer.main import get_command
 
+from .._app_live_command_spec_support import (
+    _ENCRYPTED_LOCAL_READ_POLICY,
+    _LEAF_INVOCATION,
+    _METADATA_GROUP_INVOCATION,
+    _METADATA_POLICY,
+    _PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
+    NO_RESULT_SCHEMA,
+)
 from .._app_live_command_specs import LIVE_COMMAND_SPECS
+from .._app_live_notifications_command_specs import (
+    _NOTIFICATION_CERTIFICADO_ID_ARGUMENT,
+    LIVE_NOTIFICATIONS_COMMAND_SPECS,
+)
+from .._app_live_portals_command_specs import LIVE_PORTALS_COMMAND_SPECS
+from .._app_live_verify_command_specs import _VERIFY_EXPECTED_OPTION, LIVE_VERIFY_COMMAND_SPECS
 from .._command_runtime import build_command_subtree
 from .._root_command_specs import ROOT_COMMAND_SPECS
 from ..command_spec import BindingState, CommandSpecGraph, LazyBinding
@@ -21,6 +35,7 @@ EXPECTED_LIVE_PATHS = {
     "app live",
     "app live borrador",
     "app live borrador 100",
+    "app live borrador 100 import",
     "app live borrador 100 latest",
     "app live borrador 100 list",
     "app live borrador 100 view",
@@ -82,13 +97,96 @@ def test_live_specs_are_the_exact_complete_current_surface() -> None:
     graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS))
     live_keys = {spec.key for spec in LIVE_COMMAND_SPECS}
     actual = {" ".join(node.path[1:]) for node in graph.nodes() if node.spec.key in live_keys}
-    assert len(LIVE_COMMAND_SPECS) == 48
+    assert len(LIVE_COMMAND_SPECS) == 49
+    assert sum(spec.kind == "leaf" for spec in LIVE_COMMAND_SPECS) == 37
     assert actual == EXPECTED_LIVE_PATHS
+
+
+def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
+    verify = {spec.key: spec for spec in LIVE_VERIFY_COMMAND_SPECS}
+    portals = {spec.key: spec for spec in LIVE_PORTALS_COMMAND_SPECS}
+    notifications = {spec.key: spec for spec in LIVE_NOTIFICATIONS_COMMAND_SPECS}
+
+    for spec in (
+        verify["app_live_verify"],
+        portals["app_live_portals"],
+        notifications["app_live_notifications"],
+        notifications["app_live_notifications_document"],
+    ):
+        assert spec.invocation is _METADATA_GROUP_INVOCATION
+        assert spec.policy is _METADATA_POLICY
+        assert spec.result_schema is NO_RESULT_SCHEMA
+
+    for spec in (
+        *LIVE_VERIFY_COMMAND_SPECS[1:],
+        *LIVE_PORTALS_COMMAND_SPECS[1:],
+        *(spec for spec in LIVE_NOTIFICATIONS_COMMAND_SPECS[1:] if spec.kind == "leaf"),
+    ):
+        assert spec.invocation is _LEAF_INVOCATION
+
+    for key in (
+        "app_live_verify_list",
+        "app_live_verify_view",
+        "app_live_verify_latest",
+    ):
+        assert verify[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
+    for key in (
+        "app_live_notifications_list",
+        "app_live_notifications_view",
+        "app_live_notifications_latest",
+        "app_live_notifications_document_view",
+        "app_live_notifications_document_history",
+    ):
+        assert notifications[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
+
+    for key in ("app_live_verify_nif_iva", "app_live_verify_tgvi"):
+        assert verify[key].policy is _PROFILE_BOUND_NETWORK_CAPTURE_POLICY
+        assert tuple(parameter.name for parameter in verify[key].parameters) == ("nif", "expected")
+        assert verify[key].parameters[1] is _VERIFY_EXPECTED_OPTION
+    assert verify["app_live_verify_nif_iva"].parameters is not verify["app_live_verify_tgvi"].parameters
+    assert verify["app_live_verify_nif_iva"].parameters[0] is not verify["app_live_verify_tgvi"].parameters[0]
+    assert verify["app_live_verify_nif_iva"].handler is not verify["app_live_verify_tgvi"].handler
+    assert verify["app_live_verify_nif_iva"].result_schema is not verify["app_live_verify_tgvi"].result_schema
+
+    for key in ("app_live_notifications_pull", "app_live_notifications_document_pull"):
+        assert notifications[key].policy is _PROFILE_BOUND_NETWORK_CAPTURE_POLICY
+    for key in ("app_live_notifications_document_pull", "app_live_notifications_document_view"):
+        assert tuple(parameter.name for parameter in notifications[key].parameters) == ("certificado_id",)
+        assert notifications[key].parameters[0] is _NOTIFICATION_CERTIFICADO_ID_ARGUMENT
+    assert (
+        notifications["app_live_notifications_document_pull"].parameters
+        is not notifications["app_live_notifications_document_view"].parameters
+    )
+    assert (
+        notifications["app_live_notifications_document_pull"].handler
+        is not notifications["app_live_notifications_document_view"].handler
+    )
+    assert (
+        notifications["app_live_notifications_document_pull"].result_schema
+        is not notifications["app_live_notifications_document_view"].result_schema
+    )
+
+    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS))
+    for path, spec in (
+        (("aeat", "app", "live", "verify"), verify["app_live_verify"]),
+        (("aeat", "app", "live", "verify", "nif-iva"), verify["app_live_verify_nif_iva"]),
+        (("aeat", "app", "live", "verify", "tgvi"), verify["app_live_verify_tgvi"]),
+        (("aeat", "app", "live", "portals", "list"), portals["app_live_portals_list"]),
+        (
+            ("aeat", "app", "live", "notifications", "document", "pull"),
+            notifications["app_live_notifications_document_pull"],
+        ),
+        (
+            ("aeat", "app", "live", "notifications", "document", "view"),
+            notifications["app_live_notifications_document_view"],
+        ),
+    ):
+        assert graph.resolve_path(path) is spec
 
 
 def test_every_live_leaf_has_public_resolvable_behavior_and_schema_targets() -> None:
     leaves = [spec for spec in LIVE_COMMAND_SPECS if spec.kind == "leaf"]
-    assert len(leaves) == 36
+    assert len(leaves) == 37
     for spec in leaves:
         assert spec.handler is not None
         assert spec.handler.target is not None

@@ -13,7 +13,7 @@ from ._profile_authentication_contract import (
     profile_authentication_posture,
     root_profile_secret_model,
 )
-from .command_spec import CommandSpec, MachineSecretVariantSpec, ProfileAuthenticationPosture
+from .command_spec import CommandSpec, CommandSpecGraph, MachineSecretVariantSpec, ProfileAuthenticationPosture
 from .config.secure_input import (
     MachineSecretChannel,
     MachineSecretPayload,
@@ -157,14 +157,14 @@ def _resolve_login_target_or_refuse(raw: str):
 def preflight_parsed_leaf(
     ctx: typer.Context,
     *,
+    graph: CommandSpecGraph,
     spec: CommandSpec,
     arguments: Mapping[str, object],
 ) -> None:
     """Preflight parsed root/leaf sources, then run the ordinary root gate."""
     from ._profile_session_gate import activate_profile_session, bind_profile_target, normalize_ambient_profile
-    from .command_specs import COMMAND_GRAPH
 
-    node = next(node for node in COMMAND_GRAPH.nodes() if node.spec.key == spec.key)
+    node = next(node for node in graph.nodes() if node.spec.key == spec.key)
     posture = profile_authentication_posture(node)
     source = _root_source(ctx)
     root = select_profile_secret_channel(
