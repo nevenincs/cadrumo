@@ -5519,3 +5519,35 @@ static closure and a real load disagreeing - once over function-scoped imports, 
 records and the interpreter skips, and now over ancestor packages, which the interpreter loads
 and the graph never records. The disagreements run in opposite directions and both were
 invisible until `sys.modules` was consulted directly.
+
+### Measuring a load from inside the tooling's own process gave the wrong answer
+
+The classifications authored two findings ago were decided by asking `sys.modules` what a load
+holds. That measurement was taken in the same interpreter that had already imported the census
+tooling, and for one module it gave the opposite of the truth.
+
+`calculation_revision_identity` was classified `conditionally_reachable` because it was absent
+from `sys.modules` after `bundled_authority()` in that process. Measured in a clean subprocess
+importing nothing but the authority, it is present - in the cold regime and the warm regime
+alike, with separate cache directories to make the two genuinely different. The module is
+`live` and the rule now says so.
+
+The direction of the error is what makes it worth recording. Contamination adds modules to
+`sys.modules`; it cannot remove them, so the natural suspicion was backwards. Whatever the
+in-process mechanism is - most plausibly that importing the tooling had already produced an
+authority, leaving the later call a cache hit that imported nothing - the lesson does not
+depend on identifying it. A process that has imported the analysis package is not a process
+performing a plain load, and only the second one answers the question.
+
+`_withholding_rows` was re-measured the same way and is unchanged: absent in both regimes, no
+module-level importer, reached only when the function holding its import runs. It is now the
+sole member of the conditional rule, which is a smaller and more accurate claim than the pair
+it started as.
+
+The justificante over-claim is also now confirmed on a clean load rather than suspected: those
+modules are absent in both regimes, so the rule calling them live is wrong. It is still another
+writer's rule and still not edited here.
+
+Three measurements in this campaign have now been taken in a process that had already imported
+the thing being measured - the stale bytecode twice, and this. The remedy each time was a
+clean interpreter, and it costs one subprocess.

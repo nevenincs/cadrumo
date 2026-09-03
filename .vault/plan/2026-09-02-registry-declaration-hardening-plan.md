@@ -9,9 +9,9 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
   - '[[2026-06-10-period-revision-resolution-adr]]'
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
-modified: '2026-09-02'
+modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:986489d923a5c1ed182419cd61eec6291adc8a6e07210c94543df72fee2d597b'
+body_hash: 'sha256:b307edd1496ecfe783e0951caebc516d4ac25f18e50d3a861e2e4cae413c8a65'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -454,6 +454,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S224` - Repoint the load classification member the canonicalisation renamed and separate the one ambiguous stale name from the twelve outside the census universe; `dev/registry/analysis/load_census_classification.py`.
 - [x] `W06.P13.S225` - Separate the thirteen stale census entries into a universe too narrow, a rule that over-claims and one missing module; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S226` - Include ancestor packages in the census universe so a rule naming a package a load actually holds stops reading as stale; `dev/registry/analysis/load_census.py,dev/registry/analysis/load_census_classification.py`.
+- [x] `W06.P13.S227` - Correct the classification measured in the tooling's own process against a clean load in both regimes; `dev/registry/analysis/load_census_classification.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
