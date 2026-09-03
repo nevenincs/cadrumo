@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:9d95d8466ac72330a091329023510746601deff9fd623d7174e77d629daf728b'
+body_hash: 'sha256:f5a3358ffa454a78c81aa5300147c040750f70f6c1e8a0551a9248c760f0134d'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -467,6 +467,8 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S428` - Report how much of every screen condition sits in a filing-grade revision, counting findings that carry no revision as unmeasured rather than as safe, since eight of eleven conditions that first appeared to have no filing exposure had never been graded at all; `dev/registry/analysis/filing_exposure.py dev/registry/tests/test_filing_exposure.py`.
 - [x] `W04.P09.S429` - Correct the exposure report which counted the wire-type screens census of 13,624 examined transitions as findings where 29 diverge, by carrying each screens runner count beside the population measured so a census is visible without a declaration that does not exist; `dev/registry/analysis/filing_exposure.py dev/registry/tests/test_filing_exposure.py`.
 - [x] `W04.P09.S430` - Declare on the runner table whether a screens entry point returns findings or a census, since nothing said so and inferring it counted 13,624 examined transitions as defects, and state plainly that no mechanical test can verify the declaration because a findings screen may project onto a smaller subset than the census does; `dev/registry/analysis/screens.py dev/registry/analysis/filing_exposure.py dev/registry/tests/test_filing_exposure.py`.
+- [x] `W04.P09.S431` - Rank fileable revisions by how many distinct conditions name them, since 67 of 69 carry at least one and choosing work by condition means touching nearly every revision, with modelo 200 2025-y-siguientes carrying nine; `dev/registry/analysis/filing_exposure.py dev/registry/tests/test_filing_exposure.py`.
+- [ ] `W04.P09.S432` - Resolve the five revisions declaring filing grade without the completeness manifest their grade requires, in modelos 145, 165 twice, 308 and 360, since every other grade finding under-declares and these five over-declare; `src/cadrumo/_data/registry/aeat/modelos`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 

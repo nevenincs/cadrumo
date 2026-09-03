@@ -11559,3 +11559,37 @@ presents, whether a note label identifies a note, whether a finding carries a
 revision, what an unnumbered note governs - the inference has been wrong at least
 once, and the fix has been to declare the thing once and read it. This is the
 same shape at the level of the tooling's own interfaces.
+
+
+## Five revisions claim a filing grade their prerequisites do not support
+
+Working down the corrected exposure order, the grade screen's `under_supported`
+condition is small and points the dangerous way. Its five findings are all
+filing-grade revisions **declaring filing while missing the completeness
+manifest**: modelos 145, 165 in two revisions, 308 and 360. Every other grade
+finding in the corpus points the other way - a revision declaring less than it
+supports - and these five declare more.
+
+Several of those names recur. Modelo 308 also declares a filing calculation
+class with no formula and reaches filing grade with no deadline window; modelos
+145 and 165 also carry the deadline gap. That recurrence is the finding, and it
+suggested an axis nothing measured.
+
+## Sixty-seven of sixty-nine fileable revisions carry a declaration contradiction
+
+Exposure asks which CONDITION a filer would meet. The other question is which
+REVISION carries the most of them, and the two disagree about what to do first.
+
+**Sixty-seven of the sixty-nine filing-grade revisions carry at least one
+condition.** Choosing work by condition therefore means touching almost every
+fileable revision; choosing by revision clears several conditions at a time. The
+ranking is led by modelo 200's `2025-y-siguientes` with **nine distinct
+conditions**, then modelo 347's `2011-2024` and modelo 353's `2026-desde-02`
+with six each, and modelo 308's with five.
+
+The row names its conditions rather than only counting them, because a count is
+not a severity: one filing-correctness defect outweighs four declaration
+untidinesses and nothing here weighs them. Census screens are excluded, since
+their rows are transitions examined and including them would rank a revision by
+how many fields it has - the same error the entry-point declaration exists to
+prevent, arriving by a second route, and it has its own test.
