@@ -12305,3 +12305,72 @@ sixteen hundred citations - and a change of that size wants its own verification
 rather than the tail of an iteration. It is the largest tooling finding this
 campaign has made, and the four preceding corrections to these two screens were
 each a smaller instance of it.
+
+
+## The walk now follows the schema, and three more assumptions failed on the way
+
+`citing_children` enumerates the `SCHEMA_FAMILY` annotation instead of naming
+families. Seventeen families are walked for a modelo 303 revision where eight
+were before, and both screens move accordingly:
+
+| figure | eight families | derived |
+| ------ | -------------- | ------- |
+| citing sites reaching outside a manifest | 31,851 | **33,385** |
+| references outside a manifest | 1,459 | **1,555** |
+| modelo-and-reference pairs | 472 | **520** |
+| manifest references nothing cites | 159 | **57** |
+
+**The estimate was the right order and the wrong number.** It predicted 1,684
+citations added and 141 uncited findings cleared; the change delivers 1,534 and
+102. The estimate counted distinct references per revision while the screens
+count one finding per child and reference kind, and it could not include two
+families whose shape broke the probe. An estimate that agrees with the outcome
+to within an order is worth making; quoting it as the outcome would not have
+been.
+
+### Widening the walk broke three assumptions the narrow list never tested
+
+Each was invisible while the eight hand-picked families all happened to satisfy
+it, and each is a real fact about the registry rather than a defect:
+
+- **A family may carry one reference kind and not the other.** An applicability
+  rule cites law and names no source. Both readers assumed both fields existed.
+- **A family may not name its members.** A verification predicate carries no
+  `id`. Children without one are now identified by family and position, which is
+  honest about being a location; inventing an id would have put a value in a
+  finding that no declaration carries.
+- **A family may be empty in a given revision.** The walk reports it as absent
+  rather than present-and-empty, so a screen counting families sees what the
+  revision actually declares.
+
+The eight families were not chosen to avoid these - they were chosen because
+somebody listed the obvious ones, and the schema had nine more all along. That a
+list of eight satisfied three assumptions the full nineteen do not is the clearest
+argument in this campaign for deriving a walk from its declaration: the hand-list
+was not merely incomplete, it was uniform in ways the real population is not, and
+the uniformity read as a contract.
+
+
+## A figure restated three times, now written with its provenance
+
+The provenance repetition ratio has been corrected three times in three
+iterations: nineteen, then twenty-two, then thirty-eight, and the last two
+corrections were mine. The registry did not change. What changed is that the
+screen twice learned to read families it had been skipping - deadline windows,
+then the nine the schema declares and the walk omitted - so the population it
+measures grew twice underneath a sentence that quoted a number.
+
+Both places carrying it now state three things instead of one: the figure, the
+definition it answers to, and the date and command that produced it. On
+2026-09-04, `python -m dev.registry.analysis.provenance_consistency` reports
+59,184 citing children over 1,555 references outside a manifest, which is 38 per
+reference; its own finding count is 33,385, which counts a child once per KIND
+of reference.
+
+The point is not the number. It is that "nineteen", written without a
+definition, a date or a way to re-derive it, survived three corrections of the
+thing it described - and each time a reader had no way to tell a figure that
+still held from one that had been overtaken. This audit has now recorded that
+same failure in a step, a verification criterion, three parallelization
+constraints, a screen's docstring and its own pages; the remedy has been the
+same every time, and applying it to prose costs a sentence.

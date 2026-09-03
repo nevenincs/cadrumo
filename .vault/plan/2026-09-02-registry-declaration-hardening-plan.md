@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:dcf6c7dd30d5642c8d5fb913650e32ea07e8c533557a90da3aab71716c26c81e'
+body_hash: 'sha256:3601df6108df3a771824975c795daee6bd9036a93cf705c6aed5a9ec3b8910cd'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -47,15 +47,21 @@ source, in parallel fields. Whatever eleven counted, the surface a reader must k
 is several times wider, and the symmetry says the two citation kinds were declared as a pair 24
 separate times rather than once with two projections.
 
-The corpus answers the same question differently and both answers are worth carrying. The provenance
-screen measures **31,851** citing sites against the references they name - it measured 31,608 until
-deadline windows were found to be an eighth citing family neither provenance screen read - and states
-the ratio its own report is built on. That ratio needs its definition attached, because three
-different numbers answer to "the repetition" and two of them were written down: **55,065 citing
-children across 1,459 references outside a manifest, so a reference is cited by about 38 children for
-each place a fix lands**. The screen emits 31,851 findings, which is 21.8 per reference and counts a
-child once per KIND of reference rather than once per reference, and neither figure is the nineteen
-this plan and the index's own docstring both carried. So 48 fields across 25 types is how many places COULD restate a citation, and nineteen is how
+The corpus answers the same question differently and both answers are worth carrying, and the second
+is quoted with the command that produces it rather than as a bare figure. `python -m
+dev.registry.analysis.provenance_consistency` measures the citing side; on 2026-09-04 it reported
+**59,184 citing children across 1,555 references outside a manifest, so a reference is cited by about
+38 children for each place a fix lands**, from 33,385 findings which count a child once per KIND of
+reference rather than once per reference.
+
+This figure has been restated in this plan three times and been wrong twice - once at nineteen, once
+at twenty-two - because the number moved when the screens learned to read families they had been
+skipping, and because three ratios answer to "the repetition" and none of the sites carrying it said
+which. It is written here with its date, its definition and its command, so the next reader can tell
+whether it still holds instead of inheriting it. Nineteen restated without any of the three is how it
+survived three corrections.
+
+So 48 fields across 25 types is how many places COULD restate a citation, and thirty-eight is how
 many typically do. Neither is eleven, and a plan quoting one number where the surface and the corpus
 disagree by that much was hiding the more interesting fact - that the restatement is concentrated in
 the citing children rather than spread across the declaration types.
@@ -493,7 +499,8 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S449` - Declare a revisions citing children once instead of longhand in each screen, since the family list is written out twice and the deadline window omission propagated from the first screen to the second; `dev/registry/analysis`.
 - [x] `W04.P09.S450` - State the provenance repetition ratio with its definition in both places that carry it, since three ratios answer to it and the plan the index docstring and the first correction each gave a different bare number; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md dev/registry/analysis/provenance_consistency.py`.
 - [x] `W04.P09.S451` - Re-measure the reference worklist after the deadline window family joined the walk: 472 pairs, 224 systemic and 55 single-child of which 38 are deadline windows citing their years campaign orden at article 8, a second annual series confirming the manifest is the under-declared side; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
-- [ ] `W04.P09.S452` - Derive the citing-family walk from the schemas own SCHEMA_FAMILY annotation rather than naming eight of nineteen by hand, since nine unwalked families carry citations that would clear 141 of the 159 uncited findings and add 1,684 outside-manifest citations; `dev/registry/analysis/provenance_consistency.py dev/registry/analysis/manifest_uncited_references.py`.
+- [x] `W04.P09.S452` - Derive the citing-family walk from the schemas own SCHEMA_FAMILY annotation rather than naming eight of nineteen by hand, since nine unwalked families carry citations that would clear 141 of the 159 uncited findings and add 1,684 outside-manifest citations; `dev/registry/analysis/provenance_consistency.py dev/registry/analysis/manifest_uncited_references.py`.
+- [x] `W04.P09.S453` - Write the provenance ratio with its definition date and command in both places, since it has been corrected three times as the screen learned to read more families and a bare nineteen survived every correction; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md dev/registry/analysis/provenance_consistency.py`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 
