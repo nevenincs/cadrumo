@@ -1062,6 +1062,10 @@ tui:
       observation:
         not_recorded: Actual y disponible; hora de observación no registrada
         time_not_recorded: Hora de observación no registrada
+      recovery:
+        cancel: Cancelar
+        confirm: Confirmar
+        failure: No se pudo completar la recuperación.
       scope:
         all: Todas
         evidence_unknown: Evidencia AEAT desconocida

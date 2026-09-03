@@ -278,8 +278,8 @@ class DeclarationsCalendarScreen(Screen[None]):
                     ConfirmScreen(
                         title=declarations_copy("tui.declarations.calendar.action.create"),
                         message=natural_address(row.modelo, row.filing_year, row.period),
-                        confirm_label="Y",
-                        cancel_label="Esc",
+                        confirm_label=declarations_copy("tui.declarations.calendar.recovery.confirm"),
+                        cancel_label=declarations_copy("tui.declarations.calendar.recovery.cancel"),
                     ),
                     self._resolve_recovery_confirmation,
                 )
@@ -306,7 +306,9 @@ class DeclarationsCalendarScreen(Screen[None]):
         try:
             handoff(action, row)
         except Exception:
-            self.query_one("#declarations-calendar-notice", Static).update("Recovery request could not be completed.")
+            self.query_one("#declarations-calendar-notice", Static).update(
+                declarations_copy("tui.declarations.calendar.recovery.failure")
+            )
 
     def replace_projection(self, projection: DeclarationsCalendarProjectionV1) -> None:
         """Re-render a newly injected projection while preserving semantic focus."""

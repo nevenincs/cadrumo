@@ -1046,6 +1046,10 @@ tui:
       observation:
         not_recorded: Aktuális és elérhető; a megfigyelés ideje nincs rögzítve
         time_not_recorded: A megfigyelés ideje nincs rögzítve
+      recovery:
+        cancel: Mégse
+        confirm: Megerősítés
+        failure: A helyreállítási kérelem nem fejezhető be.
       scope:
         all: Mind
         evidence_unknown: Ismeretlen AEAT-bizonyíték
