@@ -144,32 +144,3 @@ Final focused evidence: 11 tests passed with all lanes enabled; Ruff passed; ty
 passed; basedpyright reported zero errors, warnings, and notes.
 
 Final result: **CLOSE**. S397 may close.
-
-### inert-facade-stale-consumer | high | Current focused tests still import the retired package facade
-
-94f373ddc4 correctly makes the package initializer inert, but the focused test module continues to import all workspace symbols from the package root. Focused pytest therefore fails during collection, and ty reports 26 unresolved imports. Move every test import to the public defining module before claiming the facade refactor is complete.
-
-## Remediation verification
-
-The replacement implementation resolves the blocking findings. Protected and
-scope-bearing inputs terminate in the non-model `AeatSyncWorkspaceFactV1`
-admission wrapper, while the returned projection contains only independently
-constructed strict frozen public rows; repr, pickle, JSON, object-state, and
-model-field probes retain none of the sentinels or private coordinates. Every
-fact requires bucket and subject provenance, notifications additionally require
-a private logical identity, and overview, census, notification, and natural
-filing-address duplicates fail closed.
-
-Supported actions are canonical `ActionReference` values resolved against the
-canonical action catalogue and a closed per-zone, per-area, and
-reconciliation-state allow-list. Public operations are resolved against the
-public TUI contract set, and pull actions require the exact contract action
-join. Source observations retain local
-and AEAT availability, observation time, refusal, and measured count
-independently, and confident rows are refused when their required source is not
-observable. The package initializer is inert and focused tests import the
-defining module directly.
-
-Verification: 10 focused tests passed; Ruff passed; ty passed; basedpyright
-reported zero errors and warnings; targeted duplicate detection reported zero
-clones.
