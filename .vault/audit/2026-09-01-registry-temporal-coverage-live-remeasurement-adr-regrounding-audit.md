@@ -11475,3 +11475,47 @@ report now counts unmeasured findings separately and refuses the deferral claim
 where nothing was measurable, so the honest split is **three conditions safe to
 defer, eight not asked, twenty-three exposed** - and the eight are visible as a
 gap rather than as a clean result.
+
+
+## Correction: the exposure report overstated one screen by a factor of five hundred
+
+The previous section reported that filing exposure "is dominated by two
+screens", naming the provenance screen's 27,498 exposed findings and the
+wire-type screen's 11,911. The second figure is wrong, and the error is in the
+report rather than in the wire-type screen.
+
+`wire_type_compatibility.screen_authority` does not return findings. It returns
+a **census** of every casilla-to-wire-type transition it examined - 13,624 rows -
+each carrying a `divergent` flag, and 29 of them diverge. Its runner entry
+filters to those 29, which is why the suite has always shown 29 for it. The
+exposure report read the unprojected population and counted all 13,624 as
+findings.
+
+Measured across the suite, three relationships exist between a screen's entry
+point and its runner row, and nothing in the code distinguishes them:
+
+| shape | screens | example |
+| ----- | ------- | ------- |
+| every row is a finding | eleven | 263 to 263 |
+| findings projected onto another unit | provenance | 31,608 to 1,389 |
+| a census with a flag | wire-type | 13,624 to 29 |
+
+The provenance figure is NOT of this kind and stands: its 31,608 rows are
+findings, one per citing child, and the 1,389 is an index over them. Only the
+wire-type row was wrong.
+
+The report now carries the runner's count beside the population it measured, so
+a reader sees `findings=13624 runner_findings=29` and can tell a census from a
+finding set without knowing which screens are which. That is a disclosure rather
+than a fix: there is no declaration to read the difference from, and inventing
+one would mean asserting a contract the screens were not written to.
+
+The corrected reading is that filing exposure is dominated by **one** screen -
+the provenance screen's 27,498 findings across 50 filing-grade revisions - with
+the monetary screen's 26 unscaled fields and the grounding screen's 38 cited-note
+fields wholly exposed beneath it.
+
+This is the third instrument error in this report's short life: it counted rows
+that carry no revision as measured-safe, it counted a census as findings, and
+both were found by reading its output against the thing it claimed to describe
+rather than by the report failing.
