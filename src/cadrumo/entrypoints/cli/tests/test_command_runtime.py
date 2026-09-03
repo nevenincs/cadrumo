@@ -65,7 +65,7 @@ def public_default_factory() -> str:
 
 
 def public_option_callback(value: str) -> str:
-    return f"callback:{value}"
+    return value.upper()
 
 
 def public_option_completion() -> list[str]:
@@ -281,6 +281,7 @@ def test_runtime_materializes_shared_value_and_constraint_kwargs_for_arguments_a
     option = _parameter(option_spec).default
 
     for parameter, spec in ((argument, argument_spec), (option, option_spec)):
+        assert spec.help_key is not None
         assert parameter.default == spec.default.literal
         assert parameter.default_factory is None
         assert parameter.help == tr(spec.help_key.value)
@@ -370,6 +371,8 @@ def test_runtime_materializes_and_exercises_option_only_hooks() -> None:
         flag_value=True,
     )
     materialized = _parameter(name_option).default
+    assert name_option.prompt_key is not None
+    assert name_option.confirmation_prompt_key is not None
     assert materialized.param_decls == name_option.declarations
     assert materialized.prompt == tr(name_option.prompt_key.value)
     assert materialized.confirmation_prompt == tr(name_option.confirmation_prompt_key.value)
@@ -405,4 +408,4 @@ def test_runtime_materializes_and_exercises_option_only_hooks() -> None:
     )
 
     assert result.exit_code == 0, result.output
-    assert _SEEN_OPTION_RUNTIME == [("callback:Ada", True)]
+    assert _SEEN_OPTION_RUNTIME == [("ADA", True)]
