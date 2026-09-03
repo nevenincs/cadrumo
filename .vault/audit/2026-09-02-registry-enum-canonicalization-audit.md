@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b5ce024790d55e5d5d5c5368e62a4fb5bef6060f130155f97bd2c0d5c7fae7c3'
+body_hash: 'sha256:747241548f84a56897f87629ce0897a87ca006977937466b69267850d59d2d6d'
 related: []
 ---
 
@@ -1689,3 +1689,25 @@ re-exporting it. Call sites carry members instead of bare tokens; neither datacl
 strict, so no literal-over-members form was needed.
 
 Package-wide duplicates are back to one, still the M184/IVA `["1", "2"]` false positive.
+
+## Finding 79 — a re-export list restated at two sites, left standing for the operator
+
+The blind-spot scope rose from two to three: `application/aeat_sync/__init__.py` restates
+`workspace.py`'s twenty-eight-name `__all__` verbatim. Two copies of one export list that
+can only agree by nobody having changed either — the campaign's own target shape, and a
+package root that forwards imports also contradicts the inert-namespace rule that the
+sibling `application/overview/__init__.py` follows.
+
+Making the root inert was tried and reverted. It is not an oversight: the package's own
+`test_public_facade_exposes_the_safe_workspace_contract` asserts that twenty-eight-name
+list on the package root, so the facade is a deliberate, test-backed design decision by
+its author. Removing it means deleting someone else's passing test, which is the
+operator's call and not this session's.
+
+Note the shape is the inverse of open item (3): there, tests expect exports from packages
+that are inert by design; here, a test demands that a package NOT be inert. Both are the
+same unresolved question about who owns the inert-namespace rule.
+
+Nothing imports the package root outside that test, so the facade is reachable-but-unused
+today. The blind-spot count stays at three until the operator decides; the third entry is
+this, not noise, and must not be reported as noise.

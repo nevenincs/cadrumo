@@ -5,16 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0dc900652e8d02da69db3ed41b5344f0b1c575dd8a55988a57f87d0a2569369f'
+body_hash: 'sha256:d581cee35104ae790145af73d2ebdc756fd2b6074bf8451c1b0e21cbad7c2932'
 step_id: 'S397'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Define a safe immutable AEAT Sync workspace projection that joins overview, census, filed-declaration, notification, evidence-comparison, and reconciliation facts while excluding protected taxpayer values and preserving source availability, freshness, contradiction, and supported-action axes
 

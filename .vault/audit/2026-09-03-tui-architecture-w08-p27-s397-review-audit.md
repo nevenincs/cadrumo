@@ -5,29 +5,10 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c088a815f411fb1f0fa1f2f6658e91b7bef4c6693ac2eff089995962ebcba4e5'
+body_hash: 'sha256:3dee585a75b48f5e5e644abb86d1312d68abb99f42ccd38da1d2d669035f3cc4'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-architecture-w08-p27-s397-review with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `tui-architecture-w08-p27-s397-review` audit: `AEAT Sync workspace projection review`
 
@@ -135,3 +116,7 @@ S397 must not close in its current form.
 Focused gate evidence: 8 tests passed; Ruff passed; ty passed; basedpyright
 reported zero errors and warnings. These green checks do not close the semantic
 and security findings.
+
+### inert-facade-stale-consumer | high | Current focused tests still import the retired package facade
+
+94f373ddc4 correctly makes the package initializer inert, but the focused test module continues to import all workspace symbols from the package root. Focused pytest therefore fails during collection, and ty reports 26 unresolved imports. Move every test import to the public defining module before claiming the facade refactor is complete.

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0a82299a9cdd2d3baee848d9475aba997c258389098fe5527692366cfef060f5'
+body_hash: 'sha256:015d72a104c756c7927904643a0eeeee34518d900ca505c14b85ea3dab9e2bad'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -6894,3 +6894,45 @@ authority construction explained a slow suite, and that this boundary had
 lapsed. Each was consistent with everything visible at the time. The cost of
 checking was one command in each case, and the cost of not checking would have
 been a confident false finding in a record other people act on.
+
+### the-orphaned-pattern-table-has-a-consumer-again-and-a-case-it-was-missing | high | Restoring the walk unchanged would have been green over sixteen files carrying a step id in a test name
+
+The deleted marker gate's pattern table was reconnected, but the first
+measurement said the restoration was not worth making as it stood: applied to
+every tracked test symbol name, the whole table reported zero. The two names
+that raised the question - `test_s115_...` and `test_s44_...` - matched none of
+its cases, because the table names process NOUNS (`adr`, `wave`, `plan`, `pr`,
+phase) and the live form is an ADDRESS. The nearest case matches the prose
+"Step 3". A gate restored on those patterns alone would have passed over the
+defect that motivated restoring it, which is the failure the table already keeps
+a retired transposed pattern to illustrate. That lesson was written about a
+pattern spelled `paln`; it applies unchanged to a table with a missing case.
+
+The case now exists: a bare step id in a durable symbol, two to three digits.
+The digit bound is the discrimination, not decoration - it admits the whole live
+step range while leaving a single digit to the domain, so an S3 client test
+keeps its name, and both halves are declared as the table's fixtures require.
+Measured over every tracked test module, it finds thirty-seven names in sixteen
+files: four under `dev/`, twelve under `src/`, one of them a whole module named
+`test_s423_selected_language_cli.py`.
+
+The table has a consumer again. It runs the table's own discrimination control,
+asserts the retired transposed pattern still matches nothing live, and pins the
+step-id case to the four `dev/` files, with the replacement instruction the pin
+owes: when the renames land the expectation becomes the empty set and the
+assertion stays, because its value afterwards is that it stays empty. The `src/`
+population is recorded here rather than asserted, since this work does not own
+those files and an assertion over them would go stale on somebody else's
+schedule. Three tests pass, exit 0, and the reachability gate confirms the new
+module is itself lane-reached - a marker gate outside every lane would be the
+same defect it exists to catch.
+
+One method failure is worth recording against my own earlier entry. The first
+measurement of this population reported fourteen files, and it was wrong: the
+listing was piped through `tail`, which cut two alphabetically-earlier `dev/`
+files off the top - including one in this campaign's own subtree. This is the
+same truncation that opened this campaign's trap list and that has now cost a
+figure three separate times. The failure mode is stable enough to state as a
+rule: a measurement whose output is piped through `head` or `tail` is not a
+measurement, because the number that matters is as likely to be in the part that
+was cut as in the part that was read.
