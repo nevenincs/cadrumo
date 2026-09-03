@@ -1073,6 +1073,7 @@ tui:
       unavailable: Unavailable
       verified: Verified
     local_filing_state:
+      draft: Draft
       filed: Filed
       not_observed: Not observed
       ready: Ready
