@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+import unicodedata
+from datetime import date, datetime
 from typing import ClassVar, Final, cast
 
 from textual.binding import Binding
@@ -10,6 +11,13 @@ from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
+from ....application.modelo.declarations_calendar import (
+    DECLARATIONS_CALENDAR_CONTRACT_VERSION,
+    DeclarationsCalendarEntryRefV1,
+    DeclarationsCalendarProjectionV1,
+    DeclarationsCalendarSource,
+    DeclarationsCalendarSourceStateV1,
+)
 from ....application.modelo.declarations_workspace import (
     DECLARATIONS_WORKSPACE_CONTRACT_VERSION,
     DeclarationsWorkspaceAvailability,
@@ -19,13 +27,23 @@ from ....application.modelo.declarations_workspace import (
 )
 from ....application.operator_actions.catalogue import lookup_action
 from ....application.operator_actions.models import ActionReference
+from ....application.overview.calendar_models import (
+    OverviewAeatSubmissionState,
+    OverviewLocalFilingState,
+    OverviewPeriodState,
+)
+from ....application.overview.home import HomeAvailability
 from ....core.i18n.render import tr
+from ....domain.deadlines.models import ObligationStatus
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
 from ....domain.modelos.work_unit import WorkUnitState
 from ..components.theme import BASE_CSS, tokenised
 from ..navigation import TuiScreenContextV1
 from .models import (
+    CalendarEntryHandoffV1,
+    CalendarRecoveryHandoffV1,
+    DeclarationsCalendarScopeV1,
     DeclarationsDestinationIdV1,
     DeclarationsRouteTargetV1,
     FilingHandoffV1,
@@ -37,12 +55,14 @@ _ZONE_BY_DESTINATION: Final = {
     "declarations.overview": DeclarationsWorkspaceZone.DECLARATIONS,
     "declarations.revisions": DeclarationsWorkspaceZone.CALCULATION_REVISIONS,
     "declarations.filing_history": DeclarationsWorkspaceZone.FILING_HISTORY,
+    "declarations.calendar": None,
     "declarations.modelo_workspace": DeclarationsWorkspaceZone.DECLARATIONS,
 }
 _DESTINATION_KEYS: Final = {
     "declarations.overview": "tui.declarations.destination.overview",
     "declarations.revisions": "tui.declarations.destination.revisions",
     "declarations.filing_history": "tui.declarations.destination.filing_history",
+    "declarations.calendar": "tui.declarations.destination.calendar",
     "declarations.modelo_workspace": "tui.declarations.destination.modelo_workspace",
 }
 _AVAILABILITY_KEYS: Final = {
@@ -80,6 +100,11 @@ def natural_address(modelo: object, year: object, period: object) -> str:
 def timestamp_label(value: datetime) -> str:
     """Render a deterministic minute-bearing UTC timestamp without locale ambiguity."""
     return value.strftime("%d/%m/%Y %H:%M UTC")
+
+
+def calendar_date_label(value: date | None) -> str:
+    """Render one non-ambiguous legal date."""
+    return declarations_copy("tui.declarations.calendar.none") if value is None else value.strftime("%d/%m/%Y")
 
 
 def availability_label(value: DeclarationsWorkspaceAvailability) -> str:
@@ -125,6 +150,9 @@ class DeclarationsWorkspaceController:
         modelo_workspace_factory: ModeloWorkspaceScreenFactoryV1 | None = None,
         revision_handoff: RevisionHandoffV1 | None = None,
         filing_handoff: FilingHandoffV1 | None = None,
+        calendar_projection: DeclarationsCalendarProjectionV1 | None = None,
+        calendar_entry_handoff: CalendarEntryHandoffV1 | None = None,
+        calendar_recovery_handoff: CalendarRecoveryHandoffV1 | None = None,
     ) -> None:
         """Validate the context, projection version, and declared read actions."""
         if context.destination != "workbench.declarations":
@@ -147,6 +175,14 @@ class DeclarationsWorkspaceController:
         self.modelo_workspace_factory = modelo_workspace_factory
         self.revision_handoff = revision_handoff
         self.filing_handoff = filing_handoff
+        if (
+            calendar_projection is not None
+            and calendar_projection.contract_version != DECLARATIONS_CALENDAR_CONTRACT_VERSION
+        ):
+            raise ValueError("unsupported Declarations calendar projection contract")
+        self.calendar_projection = calendar_projection
+        self.calendar_entry_handoff = calendar_entry_handoff
+        self.calendar_recovery_handoff = calendar_recovery_handoff
 
     def zone_state(self, zone: DeclarationsWorkspaceZone) -> DeclarationsWorkspaceZoneStateV1:
         """Return one closed zone state."""
@@ -155,6 +191,21 @@ class DeclarationsWorkspaceController:
     def target(self, destination: DeclarationsDestinationIdV1) -> DeclarationsRouteTargetV1:
         """Construct a typed target from the closed route map."""
         return DeclarationsRouteTargetV1(destination=destination, zone=_ZONE_BY_DESTINATION[destination])
+
+    def destination_availability(
+        self, destination: DeclarationsDestinationIdV1
+    ) -> DeclarationsWorkspaceAvailability | HomeAvailability:
+        """Return truthful availability for one route authority."""
+        zone = _ZONE_BY_DESTINATION[destination]
+        if zone is not None:
+            return self.zone_state(zone).availability
+        if self.calendar_projection is None:
+            return HomeAvailability.UNAVAILABLE
+        return next(
+            item.availability
+            for item in self.calendar_projection.sources
+            if item.source is DeclarationsCalendarSource.SCHEDULE
+        )
 
     def restored_id(self, semantic_key: str) -> str | None:
         """Return the matching opaque semantic restore token, if any."""
@@ -184,11 +235,12 @@ class DeclarationsWorkspaceScreen(Screen[None]):
         table = cast("DataTable[str]", self.query_one("#declarations-navigation", DataTable))
         table.add_column(declarations_copy("tui.declarations.column.destination"), key="destination")
         table.add_column(declarations_copy("tui.declarations.column.availability"), key="availability")
-        for destination in _DESTINATION_KEYS:
-            state = self.controller.zone_state(_ZONE_BY_DESTINATION[destination])
+        for raw_destination in _DESTINATION_KEYS:
+            destination = cast("DeclarationsDestinationIdV1", raw_destination)
+            availability = self.controller.destination_availability(destination)
             table.add_row(
                 declarations_copy(_DESTINATION_KEYS[destination]),
-                availability_label(state.availability),
+                declarations_copy(f"tui.declarations.availability.{availability.value}"),
                 key=destination,
             )
 
@@ -198,11 +250,11 @@ class DeclarationsWorkspaceScreen(Screen[None]):
         if table.id != "declarations-navigation":
             return False
         destination = cast("DeclarationsDestinationIdV1", event.row_key.value)
-        state = self.controller.zone_state(_ZONE_BY_DESTINATION[destination])
+        availability = self.controller.destination_availability(destination)
         notice = self.query_one("#declarations-refusal", Static)
-        if state.availability not in {
-            DeclarationsWorkspaceAvailability.AVAILABLE,
-            DeclarationsWorkspaceAvailability.STALE,
+        if availability.value not in {
+            DeclarationsWorkspaceAvailability.AVAILABLE.value,
+            DeclarationsWorkspaceAvailability.STALE.value,
         }:
             notice.update(declarations_copy("tui.declarations.refusal.source"))
             return True
@@ -231,11 +283,129 @@ class DeclarationsRouteRequested(Message):
         self.target = target
 
 
+class DeclarationsCalendarController:
+    """Pure custody and filtering for one injected safe calendar projection."""
+
+    def __init__(
+        self,
+        context: TuiScreenContextV1,
+        projection: DeclarationsCalendarProjectionV1,
+        *,
+        entry_handoff: CalendarEntryHandoffV1 | None = None,
+        recovery_handoff: CalendarRecoveryHandoffV1 | None = None,
+    ) -> None:
+        """Validate and retain only the injected safe calendar facts and callbacks."""
+        if context.destination != "workbench.declarations":
+            raise ValueError("Declarations calendar requires the workbench.declarations context")
+        if projection.contract_version != DECLARATIONS_CALENDAR_CONTRACT_VERSION:
+            raise ValueError("unsupported Declarations calendar projection contract")
+        self.context = context
+        self.projection = projection
+        self.entry_handoff = entry_handoff
+        self.recovery_handoff = recovery_handoff
+
+    def source(
+        self, source: DeclarationsCalendarSource
+    ) -> DeclarationsCalendarSourceStateV1:
+        """Return one explicit source state."""
+        return next(item for item in self.projection.sources if item.source is source)
+
+    def visible_entries(
+        self, scope: DeclarationsCalendarScopeV1, query: str
+    ) -> tuple[DeclarationsCalendarEntryRefV1, ...]:
+        """Apply closed scope semantics and Unicode AND search to safe fields only."""
+        aeat_observable = self.source(DeclarationsCalendarSource.AEAT_EVIDENCE).availability in {
+            HomeAvailability.AVAILABLE,
+            HomeAvailability.STALE,
+        }
+        rows = [
+            row
+            for row in self.projection.entries
+            if _scope_matches(row, scope, self.projection.as_of, aeat_observable)
+        ]
+        terms = tuple(part for part in _fold(query).split() if part)
+        if terms:
+            rows = [row for row in rows if all(term in _calendar_search_text(row) for term in terms)]
+        return tuple(sorted(rows, key=lambda row: (row.adjusted_closes_on, *row.semantic_key())))
+
+
+def _fold(value: str) -> str:
+    return "".join(
+        character
+        for character in unicodedata.normalize("NFKD", value).casefold()
+        if not unicodedata.combining(character)
+    )
+
+
+def _calendar_search_text(row: DeclarationsCalendarEntryRefV1) -> str:
+    values = (
+        natural_address(row.modelo, row.filing_year, row.period),
+        str(row.modelo),
+        str(row.filing_year),
+        row.period.registry_token,
+        calendar_legal_label(row.legal_status),
+        calendar_user_label(row.user_state),
+        calendar_local_label(row.local_filing_state),
+        calendar_aeat_label(row.aeat_submission_state),
+        calendar_date_label(row.opens_on),
+        calendar_date_label(row.adjusted_closes_on),
+        calendar_date_label(row.payment_cutoff_on),
+    )
+    return _fold(" ".join(values))
+
+
+def _scope_matches(
+    row: DeclarationsCalendarEntryRefV1,
+    scope: DeclarationsCalendarScopeV1,
+    as_of: date,
+    aeat_observable: bool,
+) -> bool:
+    if scope is DeclarationsCalendarScopeV1.ALL:
+        return True
+    if scope is DeclarationsCalendarScopeV1.PAST:
+        return row.adjusted_closes_on < as_of
+    if scope is DeclarationsCalendarScopeV1.UPCOMING:
+        return row.adjusted_closes_on >= as_of and row.user_state is OverviewPeriodState.DUE
+    if scope is DeclarationsCalendarScopeV1.OVERDUE:
+        return row.adjusted_closes_on < as_of and row.user_state is OverviewPeriodState.LATE
+    if scope is DeclarationsCalendarScopeV1.FILED:
+        return row.user_state is OverviewPeriodState.FILED
+    return not aeat_observable
+
+
+def calendar_legal_label(value: ObligationStatus) -> str:
+    """Render legal deadline status."""
+    return declarations_copy(f"tui.declarations.calendar.legal.{value.value}")
+
+
+def calendar_user_label(value: OverviewPeriodState) -> str:
+    """Render the safe derived user-facing schedule state."""
+    return declarations_copy(f"tui.declarations.calendar.user.{value.value}")
+
+
+def calendar_local_label(value: OverviewLocalFilingState | None) -> str:
+    """Render local filing state without implying AEAT acceptance."""
+    key = "unknown" if value is None else value.value
+    return declarations_copy(f"tui.declarations.calendar.local.{key}")
+
+
+def calendar_aeat_label(value: OverviewAeatSubmissionState | None) -> str:
+    """Render observed AEAT evidence state without inference."""
+    key = "unknown" if value is None else value.value
+    return declarations_copy(f"tui.declarations.calendar.aeat.{key}")
+
+
 __all__ = [
+    "DeclarationsCalendarController",
     "DeclarationsRouteRequested",
     "DeclarationsWorkspaceController",
     "DeclarationsWorkspaceScreen",
     "availability_label",
+    "calendar_aeat_label",
+    "calendar_date_label",
+    "calendar_legal_label",
+    "calendar_local_label",
+    "calendar_user_label",
     "declarations_copy",
     "evidence_label",
     "filing_state_label",
