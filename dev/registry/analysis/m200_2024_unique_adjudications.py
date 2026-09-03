@@ -269,7 +269,7 @@ def render_canonical_declaration(authority: CompiledM200UniqueAuthority, casilla
                 "",
             )
         )
-        + "\n"
+        + "\n\n"
     )
 
 

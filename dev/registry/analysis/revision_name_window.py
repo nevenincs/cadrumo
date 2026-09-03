@@ -73,10 +73,29 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 __all__ = [
+    "KINDS",
     "RevisionNameFinding",
     "name_window_findings",
     "screen_authority",
 ]
+
+#: Every condition this screen can report, declared once and used at each
+#: emission site below. The set was previously recovered by matching the source
+#: with four regexes, one added each time a new assignment shape appeared - a
+#: keyword argument, a conditional expression, an else-branch - which is the
+#: static extraction the sibling gates warn against: it under-reads silently,
+#: and an under-read set still compares equal to a docstring that lost the same
+#: entry. Declared, it cannot be misread.
+KINDS: tuple[str, ...] = (
+    "open_ended_window_not_selectable",
+    "name_opens_after_window",
+    "name_opens_before_window",
+    "name_misstates_closing",
+    "name_claims_single_year",
+    "name_claims_open_ended",
+    "no_temporal_claim",
+    "window_sources_disagree",
+)
 
 _YEAR = re.compile(r"(?<!\d)(\d{4})(?!\d)")
 _OPEN_ENDED = "y-siguientes"

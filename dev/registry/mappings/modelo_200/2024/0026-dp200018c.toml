@@ -801,7 +801,7 @@ record_identity = "DP200018C"
 export_field_id = "m200-2024.dp200018c.f0062"
 kind = "casilla"
 casilla_id = "2471"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+legal_refs = ["ley-49-2002:art-20"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
 sheet = "DP200018C"
@@ -814,7 +814,7 @@ record_identity = "DP200018C"
 export_field_id = "m200-2024.dp200018c.f0063"
 kind = "casilla"
 casilla_id = "2576"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+legal_refs = ["ley-49-2002:art-20"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
 sheet = "DP200018C"
@@ -827,7 +827,7 @@ record_identity = "DP200018C"
 export_field_id = "m200-2024.dp200018c.f0064"
 kind = "casilla"
 casilla_id = "2577"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+legal_refs = ["ley-49-2002:art-20"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
 sheet = "DP200018C"
@@ -840,7 +840,7 @@ record_identity = "DP200018C"
 export_field_id = "m200-2024.dp200018c.f0065"
 kind = "casilla"
 casilla_id = "2691"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+legal_refs = ["ley-49-2002:art-20"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
 sheet = "DP200018C"
@@ -853,7 +853,7 @@ record_identity = "DP200018C"
 export_field_id = "m200-2024.dp200018c.f0066"
 kind = "casilla"
 casilla_id = "2692"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+legal_refs = ["ley-49-2002:art-20"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
 sheet = "DP200018C"
@@ -866,7 +866,7 @@ record_identity = "DP200018C"
 export_field_id = "m200-2024.dp200018c.f0067"
 kind = "casilla"
 casilla_id = "2693"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+legal_refs = ["ley-49-2002:art-20"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
 sheet = "DP200018C"
@@ -1828,7 +1828,7 @@ record_identity = "DP200018C"
 export_field_id = "m200-2024.dp200018c.f0141"
 kind = "casilla"
 casilla_id = "2694"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
 sheet = "DP200018C"
@@ -1841,7 +1841,7 @@ record_identity = "DP200018C"
 export_field_id = "m200-2024.dp200018c.f0142"
 kind = "casilla"
 casilla_id = "2695"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
 sheet = "DP200018C"
@@ -1854,7 +1854,7 @@ record_identity = "DP200018C"
 export_field_id = "m200-2024.dp200018c.f0143"
 kind = "casilla"
 casilla_id = "2696"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
 sheet = "DP200018C"
@@ -1867,7 +1867,7 @@ record_identity = "DP200018C"
 export_field_id = "m200-2024.dp200018c.f0144"
 kind = "casilla"
 casilla_id = "2697"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
 sheet = "DP200018C"
@@ -1880,7 +1880,7 @@ record_identity = "DP200018C"
 export_field_id = "m200-2024.dp200018c.f0145"
 kind = "casilla"
 casilla_id = "2698"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
 sheet = "DP200018C"
@@ -1893,7 +1893,7 @@ record_identity = "DP200018C"
 export_field_id = "m200-2024.dp200018c.f0146"
 kind = "casilla"
 casilla_id = "2700"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
 sheet = "DP200018C"
