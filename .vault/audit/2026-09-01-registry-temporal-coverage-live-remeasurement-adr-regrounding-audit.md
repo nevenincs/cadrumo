@@ -6420,3 +6420,52 @@ That is the second of this campaign's nine adjudications to be acted on by anoth
 the verdict extractor's merge. Neither was requested; both were named in a file anyone can read
 and both were addressed within a day. A ledger that states a remedy and its reason turns out to
 be actionable in a way a finding buried in prose is not.
+
+### ci-selection-measured-at-167-failures-and-72-errors | critical | The lane CI actually runs carries 239 failing or erroring tests of 3,881, measured cleanly at last
+
+The CI dev-tooling selection has been measured to a total that reconciles. 3,881 tests
+collected; 167 failed, 3,640 passed, 2 skipped and 72 errored, which is 3,881 exactly. No
+lost-worker marker. Eighty-five minutes at two workers, where the automatic-parallelism attempt
+lost 263 tests to crashed workers in forty-seven.
+
+So the lane CI invokes on every push carries 239 tests that do not pass. This campaign has
+quoted a registry-subset figure of forty-two for most of its life and qualified it four findings
+ago as describing a selection sharing one directory of eighteen with this one. The qualification
+was right and understated: the real lane is two orders of magnitude larger in failures.
+
+The per-module breakdown is not usable from this run. The command piped pytest through `tail`,
+which was recorded at launch as costing the exit status; it also truncated the failure list to
+its last thirty-nine lines of two hundred and thirty-nine. The summary line survives because it
+is printed last, which is why the total reconciles and the detail does not.
+
+That is the second cost of the same mistake, and the more expensive one. An exit status has a
+known workaround - read the summary - and a truncated failure list does not: the information is
+simply gone, and recovering it means another eighty-five minutes. The earlier finding treated
+the pipe as a nuisance affecting one line. It affected the part of the output this campaign
+spends its iterations reading.
+
+What stands: the total, the reconciliation, and the three modules examined from the earlier
+crashed run, whose failures a lower bound made trustworthy even when its total was not.
+
+### lane-criterion-named-a-lane-nobody-runs | high | The acceptance criterion quoted fifteen failures over a path sharing one directory of eighteen with the lane CI invokes
+
+The plan's lane criterion said "the lane is red: fifteen failures over both directories", and a
+reader would take that as the state of the gate this work is accepted against. It is the state
+of a path this campaign chose on its first iteration and reused without asking what CI runs.
+
+Corrected, the criterion now names both and says they are not two readings of one number. Over
+the registry directories, the count has moved between fifteen and forty-two and every failure in
+it is dated and attributed. Over the eighteen-directory selection CI invokes, measured once to a
+reconciling total, it is 167 failures and 72 errors of 3,881 tests. The registry path shares a
+single directory with that selection, so the smaller figure was never a subset of the larger.
+
+The criterion's own reasoning survives and is worth keeping intact: it deliberately records no
+passing count, because the passing count rises whenever this plan adds a gate and moved by two
+within a day of being written. That instinct was right about one number and absent for the
+other - the failure count was quoted for iterations without anyone asking which population
+produced it.
+
+A criterion is what a reader checks the work against, so a criterion quoting the wrong lane is
+worse than one quoting no lane at all. This is the third acceptance criterion this campaign has
+had to correct after measuring what it asserted: the screen count, the monetary defect count,
+and now this.

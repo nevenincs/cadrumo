@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:c9003fce238594ba90d8b7a369370d2e4ef1d0f0630a447340461d8596bd4035'
+body_hash: 'sha256:04690945b4b7b83edbde021543aa803ab692bf63930f58094cc6c0b791df99cb'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -502,6 +502,8 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S264` - Restore the adjudication deleted while its collision remained and adjudicate the new destination-id collision; `dev/quality/name_collision_dispositions.toml`.
 - [x] `W06.P13.S265` - Watch the newly collapsed marker verdict extractor in the canonical definitions gate and correct the claim that it was merely removed; `dev/tests/test_canonical_definitions_stay_singular.py`.
 - [x] `W06.P13.S266` - Record that the contract conflict lost its optimiser-erased guard while the two contracts still differ; `dev/quality/name_collision_dispositions.toml`.
+- [x] `W06.P13.S267` - Measure the CI dev tooling selection to a reconciling total and record what the pipe cost the breakdown; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S268` - Correct the lane criterion to name which lane each figure describes; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -678,8 +680,13 @@ that does not. Temporal selection resolves every coordinate the law can decide a
 it genuinely cannot. Fourteen names fail the first today and two coordinates fail the second.
 
 The development registry lane passes, and until it does every failure in it is named and attributed.
-The lane is red: fifteen failures over both directories, fourteen under `dev/registry/tests` and one
-in the conformance suite beside it, down from eighteen. It also completes in six and a half minutes
+The lane is red, and which lane is meant now has to be said. Over the registry directories this
+plan has measured throughout, the count has moved between fifteen and forty-two and every failure
+in it is dated and attributed. Over the eighteen-directory selection CI actually invokes, measured
+once to a reconciling total, it is 167 failures and 72 errors of 3,881 tests. Those are not two
+readings of one number: the registry path shares a single directory with the CI selection, so the
+smaller figure was never a subset of the larger one and the criterion had been quoting a lane
+nobody runs. It also completes in six and a half minutes
 rather than fifteen, which is the performance work above showing up where a contributor feels it. The passing count is deliberately not recorded. It rises
 whenever this plan adds a gate - it moved by two within a day of being written down - so a criterion
 carrying it goes stale for the best possible reason, and a number that changes when nothing is wrong

@@ -1671,3 +1671,21 @@ disjoint.
 after the extraction surfaces and the live verification surfaces. One names an artefact,
 one an AEAT endpoint, one a part of the product. They share no token, and the name
 collision is the only thing they have in common.
+
+## Finding 78 — a Home selection vocabulary restated by its own prototype
+
+A peer edit reintroduced a duplicate in the package-wide annotation scope, taking that
+count from one to two. `HomeTargetKind` in `entrypoints/tui/home.py` and
+`CandidateTargetKind` in `entrypoints/tui/devtools/home_candidates.py` both spelled
+`["action", "declaration", "agenda"]`: the same three selectable zones of the same
+`HomeProjectionV1`, one module the devtools prototype of the other.
+
+Same root cause as the six before it — the definition could not be reached from where it
+was needed. Both frontends already import the projection, so the projection module is
+where the vocabulary belongs: a frontend that restates the zones can disagree with the
+projection it renders. Promoted to a `StrEnum` in `application/overview/home.py`; both
+modules now import it and both dropped their alias from `__all__` rather than
+re-exporting it. Call sites carry members instead of bare tokens; neither dataclass is
+strict, so no literal-over-members form was needed.
+
+Package-wide duplicates are back to one, still the M184/IVA `["1", "2"]` false positive.
