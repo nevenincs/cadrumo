@@ -127,30 +127,19 @@ from ...application.modelo.review_package_signing import (
 )
 from ...application.modelo.selectors import (
     ModeloCalculationRevisionSelector,
-    ModeloCalculationRevisionSelectorAmbiguousError,
-    ModeloCalculationRevisionSelectorNotFoundError,
-    ModeloCalculationRevisionSelectorStateError,
-)
-from ...application.modelo.work_addressing import (
-    ModeloWorkAddressNotFoundError,
-    ModeloWorkPeriodTokenError,
 )
 from ...application.modelo.work_lifecycle import get_work_unit
 from ...application.workflow.persistence import workflow_state_repository
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n.render import tr
 from ...core.payment_election import PaymentElection
-from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ._common import emit_envelope, filing_taxpayer_or_refuse
-from ._modelo_behavior_support import resolve_revision_for_cli
+from ._modelo_behavior_support import resolve_exportable_revision_for_cli
 from ._modelo_cli_support import (
-    parse_revision_selector,
     resolve_default_actor,
     resolve_explicit_or_active_bucket_id,
-    validate_calculation_revision_id,
-    validate_work_unit_id,
 )
 from ._modelo_review_package_rendering import (
     review_package_build_result_lines,
@@ -185,7 +174,7 @@ def review_package_build(
     notes: str = "",
 ) -> None:
     """Assemble a shareable review package for the resolved revision."""
-    from ._modelo_cli_support import bad_parameter_from_error, selector_bad_parameter
+    from ._modelo_cli_support import bad_parameter_from_error
 
     workflow_state = workflow_state_repository().load()
     workflow_profile = filing_taxpayer_or_refuse(workflow_state)
@@ -196,31 +185,16 @@ def review_package_build(
                 default="Supply --output PATH for the review package ZIP.",
             )
         )
-    try:
-        typed_period = _resolve_optional_cli_period(year=year, period=period)
-        selected_revision = resolve_revision_for_cli(
-            calculation_revision_id=validate_calculation_revision_id(revision) if revision is not None else None,
-            work_unit_id=validate_work_unit_id(work_unit_id) if work_unit_id is not None else None,
-            modelo=modelo,
-            year=year,
-            period=typed_period,
-            registry_revision=registry_revision,
-            bucket_id=bucket_id,
-            selector=parse_revision_selector(select),
-            default_for="export",
-        )
-    except CalculationRevisionNotFoundError as exc:
-        if revision is not None:
-            raise bad_parameter_from_error(exc) from exc
-        raise selector_bad_parameter(exc) from exc
-    except (
-        ModeloWorkAddressNotFoundError,
-        ModeloCalculationRevisionSelectorNotFoundError,
-        ModeloCalculationRevisionSelectorStateError,
-        ModeloCalculationRevisionSelectorAmbiguousError,
-        ModeloWorkPeriodTokenError,
-    ) as exc:
-        raise selector_bad_parameter(exc) from exc
+    selected_revision = resolve_exportable_revision_for_cli(
+        revision=revision,
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        registry_revision=registry_revision,
+        bucket_id=bucket_id,
+        select=select,
+    )
     target_revision_id = selected_revision.calculation_revision_id
     resolved_actor = actor or resolve_default_actor()
     work_unit = get_work_unit(selected_revision.work_unit_id)
@@ -645,14 +619,6 @@ def review_package_import_feedback(
         envelope_path, bucket_id=resolved_bucket_id, imported=imported, attached=attached
     )
     emit_envelope(ctx, command="modelo.review_package.import_feedback", result=result, lines=lines)
-
-
-def _resolve_optional_cli_period(*, year: int | None, period: str | None) -> Period | None:
-    if period is None:
-        return None
-    if year is None:
-        raise typer.BadParameter(tr("cli.common.errors.period_missing_year", token=period))
-    return Period.from_year_and_code(year, period.strip())
 
 
 __all__ = []

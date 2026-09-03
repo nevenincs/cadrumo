@@ -10,6 +10,15 @@ from pathlib import Path
 import pytest
 
 from .._command_runtime import _behavior_wrapper
+from .._modelo_nonwork_bindings_command_specs import (
+    _AS_OF_OPTION,
+    _BINDINGS_INVOCATION,
+    _BINDINGS_SCOPE,
+    _MODELO_OPTION,
+    _PERIOD_OPTION,
+    _YEAR_OPTION,
+    MODELO_NONWORK_BINDINGS_COMMAND_SPECS,
+)
 from .._modelo_nonwork_command_specs import MODELO_NONWORK_COMMAND_SPECS
 from .._modelo_nonwork_discovery_command_specs import (
     _REGISTRY_YEAR_OPTION,
@@ -110,6 +119,49 @@ def test_nonwork_modelo_specs_are_the_exact_54_node_set() -> None:
     assert sum(spec.kind == "group" for spec in MODELO_NONWORK_COMMAND_SPECS) == 8
     assert sum(spec.kind == "leaf" for spec in MODELO_NONWORK_COMMAND_SPECS) == 46
     assert sum(len(spec.parameters) for spec in MODELO_NONWORK_COMMAND_SPECS) == 197
+
+
+def test_bindings_parameters_keep_exact_order_and_identity() -> None:
+    specs = {spec.key: spec for spec in MODELO_NONWORK_BINDINGS_COMMAND_SPECS}
+    list_spec = specs["app_modelo_bindings_list"]
+    resolve_spec = specs["app_modelo_bindings_resolve"]
+
+    assert type(_BINDINGS_SCOPE) is tuple
+    assert tuple(parameter.name for parameter in _BINDINGS_SCOPE) == ("modelo", "year", "period")
+    assert _BINDINGS_SCOPE[0] is _MODELO_OPTION
+    assert _BINDINGS_SCOPE[1] is _YEAR_OPTION
+    assert _BINDINGS_SCOPE[2] is _PERIOD_OPTION
+    assert tuple(parameter.name for parameter in list_spec.parameters) == (
+        "modelo",
+        "year",
+        "period",
+        "missing",
+        "as_of",
+    )
+    assert tuple(parameter.name for parameter in resolve_spec.parameters) == (
+        "modelo",
+        "year",
+        "period",
+        "binding",
+        "as_of",
+    )
+
+    for parameters in (list_spec.parameters, resolve_spec.parameters):
+        assert all(actual is expected for actual, expected in zip(parameters[:3], _BINDINGS_SCOPE, strict=True))
+        assert parameters[-1] is _AS_OF_OPTION
+    assert list_spec.parameters[3].name == "missing"
+    assert resolve_spec.parameters[3].name == "binding"
+    assert list_spec.parameters[3] is not resolve_spec.parameters[3]
+    assert list_spec.invocation is _BINDINGS_INVOCATION
+    assert resolve_spec.invocation is _BINDINGS_INVOCATION
+
+    # The shared options do not collapse the command-specific behavior contract.
+    assert list_spec.handler is not resolve_spec.handler
+    assert list_spec.policy is resolve_spec.policy
+    assert list_spec.result_schema is not resolve_spec.result_schema
+
+    assert COMMAND_GRAPH.resolve_path(("aeat", "app", "modelo", "bindings", "list")) is list_spec
+    assert COMMAND_GRAPH.resolve_path(("aeat", "app", "modelo", "bindings", "resolve")) is resolve_spec
 
 
 def test_discovery_lookup_parameters_keep_exact_order_and_identity() -> None:
