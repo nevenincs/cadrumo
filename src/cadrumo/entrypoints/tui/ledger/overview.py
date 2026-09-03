@@ -7,9 +7,16 @@ from typing import cast, override
 from textual.app import ComposeResult
 from textual.widgets import DataTable, Static
 
-from ....application.ledger.workspace import LedgerWorkspaceArea, LedgerWorkspaceStatus
+from ....application.ledger.workspace import LedgerWorkspaceArea
 from ..components.widgets import ContentDataTable, ContentScroll
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, area_label, ledger_copy, status_label
+from .controller import (
+    LedgerWorkspaceController,
+    LedgerWorkspaceScreen,
+    area_label,
+    item_count_label,
+    ledger_copy,
+    status_label,
+)
 
 
 class LedgerOverviewScreen(LedgerWorkspaceScreen):
@@ -43,7 +50,7 @@ class LedgerOverviewScreen(LedgerWorkspaceScreen):
         ):
             state = self.controller.state_for(area)
             status = status_label(state.status)
-            table.add_row(area_label(area), status, str(state.item_count), key=area.value)
+            table.add_row(area_label(area), status, item_count_label(state), key=area.value)
         affected = len(self.controller.projection.affected_declarations)
         table.add_row(
             ledger_copy("tui.ledger.overview.affected_declarations"),

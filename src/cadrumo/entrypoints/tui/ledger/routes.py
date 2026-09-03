@@ -10,7 +10,7 @@ from textual.app import ComposeResult
 from textual.widgets import DataTable, Static
 
 from ....application.ledger.workspace import LedgerWorkspaceArea, LedgerWorkspaceProjectionV1
-from ....application.operator_actions.catalogue import ActionCatalogueEntry, lookup_action
+from ....application.operator_actions.catalogue import lookup_action
 from ....application.operator_actions.models import ActionReference
 from ..components.widgets import ContentDataTable, ContentScroll
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
@@ -115,10 +115,9 @@ def ledger_screen_factory(
     projection: LedgerWorkspaceProjectionV1,
     *,
     review_action: ActionReference,
-    action_lookup: Callable[[str], ActionCatalogueEntry] = lookup_action,
 ) -> TuiScreenFactoryV1:
     """Bind an injected immutable projection to the outer navigation factory contract."""
-    declaration = action_lookup(review_action.action_id)
+    declaration = lookup_action(review_action.action_id)
     if declaration.target_command_key != "ledger.review":
         raise ValueError("injected Ledger review action does not resolve to the canonical review query")
 

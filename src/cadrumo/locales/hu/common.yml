@@ -992,6 +992,57 @@ transactions:
     unreadable: Olvashatatlan fájl vagy nem támogatott formátum.
     verified: Az import sikeresen ellenőrizve.
 tui:
+  ledger:
+    area:
+      classification: Besorolás
+      entries: Tételek
+      evidence: Bizonylatok
+      import: Importálás
+      overview: Áttekintés
+      reconciliation: Egyeztetés
+      review: Felülvizsgálat
+    availability:
+      available: Elérhető
+      locked: Zárolt
+      never_captured: Még nincs rögzítve
+      stale: Elavult
+      unavailable: Nem érhető el
+    column:
+      area: Terület
+      availability: Elérhetőség
+      destination: Célterület
+      entry: Tétel
+      items: Elemek
+      next: Következő lépés
+      review_status: Felülvizsgálati állapot
+      status: Állapot
+    entries:
+      empty: Ez a pillanatkép nem tartalmaz tételeket.
+      redacted: Biztonságos tételjegyzék; a pénzügyi részletek védettek maradnak.
+      title: Főkönyvi tételek
+    overview:
+      affected_declarations: Érintett bevallások
+      quality: Adatminőség és megoldatlan feladatok
+      title: Főkönyvi áttekintés
+    refusal:
+      application_state: Ez a terület a főkönyv jelenlegi állapotában nem érhető el.
+      destination_pending: Ez a terület ebben a verzióban még nem érhető el.
+    review:
+      empty: Jelenleg nincs felülvizsgálandó tétel.
+      filter_all: 'Szűrő: minden felülvizsgálati állapot'
+      open: Felülvizsgálat megnyitása
+      title: Főkönyvi felülvizsgálat
+    review_status:
+      pending: Függőben
+      reviewed: Felülvizsgálva
+      skipped: Kihagyva
+    status:
+      empty: Nincs elem
+      needs_attention: Figyelmet igényel
+      ready: Kész
+      unmeasured: Nincs mérve
+    unavailable:
+      title: A főkönyvi terület nem érhető el
   root:
     no_areas: Ebben a munkamenetben még egyetlen terület sem érhető el.
     title: Cadrumo terminálmunkamenet

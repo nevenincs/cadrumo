@@ -36,6 +36,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _TX_A = cast("TransactionId", "a" * 64)
 _TX_B = cast("TransactionId", "b" * 64)
+_LOCALE_EXPECTED = {
+    OutputLanguage.ES: ("Resumen del libro contable", "Filtro: todos los estados de revisión", "Revisado"),
+    OutputLanguage.EN: ("Ledger overview", "Filter: all review statuses", "Reviewed"),
+    OutputLanguage.CA: ("Resum del llibre comptable", "Filtre: tots els estats de revisió", "Revisat"),
+    OutputLanguage.HU: ("Főkönyvi áttekintés", "Szűrő: minden felülvizsgálati állapot", "Felülvizsgálva"),
+}
 
 
 def _projection(*, unavailable: LedgerWorkspaceArea | None = None) -> LedgerWorkspaceProjectionV1:
@@ -151,6 +157,10 @@ def test_factory_refuses_undeclared_or_drifted_review_action_through_real_catalo
             _projection(),
             review_action=ActionReference(action_id=classified.action_id),
         )
+    review_action = _review_action()
+    controller = _controller(_projection())
+    assert all(row.action == review_action for row in controller.review_rows())
+    assert lookup_action(review_action.action_id).target_command_key == "ledger.review"
 
 
 @pytest.mark.asyncio
@@ -212,6 +222,37 @@ async def test_entry_rows_are_redacted_and_tables_are_each_one_tab_stop() -> Non
 
 
 @pytest.mark.asyncio
+async def test_unmeasured_areas_never_render_a_numeric_zero_and_review_discloses_all_statuses() -> None:
+    from .....core.config import override_settings
+
+    with override_settings(cadrumo_output_language="en"):
+        review_screen = LedgerReviewScreen(_controller(_projection()))
+        app = ScreenHostApp[None](review_screen)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            navigation = review_screen.query_one("#ledger-navigation", DataTable)
+            import_row = tuple(str(cell) for cell in navigation.get_row("import"))
+            evidence_row = tuple(str(cell) for cell in navigation.get_row("evidence"))
+            assert import_row[-1] == "Not measured"
+            assert evidence_row[-1] == "Not measured"
+            assert "0" not in {import_row[-1], evidence_row[-1]}
+            rendered = _all_copy(review_screen)
+            assert "Filter: all review statuses" in rendered
+            assert "Pending" in rendered
+            assert "Reviewed" in rendered
+            assert "all pending review rows" not in rendered
+
+        overview_screen = LedgerOverviewScreen(_controller(_projection()))
+        overview_app = ScreenHostApp[None](overview_screen)
+        async with overview_app.run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            quality = overview_screen.query_one("#ledger-quality", DataTable)
+            evidence_row = tuple(str(cell) for cell in quality.get_row("evidence"))
+            assert evidence_row == ("Evidence", "Not measured", "Not measured")
+            assert "0" not in evidence_row
+
+
+@pytest.mark.asyncio
 async def test_transaction_focus_restores_by_identity_after_row_reordering() -> None:
     projection = _projection()
     reordered = projection.model_copy(update={"entries": tuple(reversed(projection.entries))})
@@ -241,15 +282,35 @@ async def test_every_locale_uses_catalogue_calls_without_raw_internal_vocabulary
     from .....core.config import override_settings
 
     with override_settings(cadrumo_output_language=locale.value):
-        screen = LedgerOverviewScreen(_controller(_projection()))
-        app = ScreenHostApp[None](screen)
-        async with app.run_test(size=(80, 24)) as pilot:
+        overview = LedgerOverviewScreen(_controller(_projection()))
+        overview_app = ScreenHostApp[None](overview)
+        async with overview_app.run_test(size=(80, 24)) as pilot:
             await pilot.pause()
-            rendered = _all_copy(screen)
+            rendered = _all_copy(overview)
+            assert _LOCALE_EXPECTED[locale][0] in rendered
             assert "tui.ledger." not in rendered
             assert "needs_attention" not in rendered
             assert "never_captured" not in rendered
             assert "work_unit" not in rendered.lower()
+            assert tuple(row.key.value for row in overview.query_one("#ledger-navigation", DataTable).ordered_rows) == tuple(
+                area.value for area in LedgerWorkspaceArea
+            )
+        review = LedgerReviewScreen(_controller(_projection()))
+        review_app = ScreenHostApp[None](review)
+        async with review_app.run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            rendered = _all_copy(review)
+            assert _LOCALE_EXPECTED[locale][1] in rendered
+            assert _LOCALE_EXPECTED[locale][2] in rendered
+            assert tuple(row.key.value for row in review.query_one("#ledger-review", DataTable).ordered_rows) == (
+                _TX_A,
+                _TX_B,
+            )
+
+
+def test_ledger_locale_copy_is_genuinely_distinct_across_supported_languages() -> None:
+    assert len({expected[0] for expected in _LOCALE_EXPECTED.values()}) == len(OutputLanguage)
+    assert len({expected[1] for expected in _LOCALE_EXPECTED.values()}) == len(OutputLanguage)
 
 
 def test_ledger_tui_has_no_io_adapter_cli_calculation_or_mutation_imports() -> None:

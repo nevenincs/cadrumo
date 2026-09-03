@@ -1008,6 +1008,58 @@ transactions:
     unreadable: Archivo ilegible o formato no soportado
     verified: Importación verificada con éxito
 tui:
+  ledger:
+    area:
+      classification: Clasificación
+      entries: Asientos
+      evidence: Justificantes
+      import: Importación
+      overview: Resumen
+      reconciliation: Conciliación
+      review: Revisión
+    availability:
+      available: Disponible
+      locked: Bloqueado
+      never_captured: Aún no capturado
+      stale: Desactualizado
+      unavailable: No disponible
+    column:
+      area: Área
+      availability: Disponibilidad
+      destination: Destino
+      entry: Asiento
+      items: Elementos
+      next: Siguiente paso
+      review_status: Estado de revisión
+      status: Estado
+    entries:
+      empty: Esta captura no contiene asientos.
+      redacted: Índice seguro de asientos; los detalles financieros siguen protegidos.
+      title: Asientos del libro contable
+    overview:
+      affected_declarations: Declaraciones afectadas
+      quality: Calidad de los datos y trabajo pendiente
+      title: Resumen del libro contable
+    refusal:
+      application_state: Esta área no está disponible en el estado actual del libro
+        contable.
+      destination_pending: Esta área aún no está disponible en esta versión.
+    review:
+      empty: Ahora mismo no hay asientos que revisar.
+      filter_all: 'Filtro: todos los estados de revisión'
+      open: Abrir revisión
+      title: Revisión del libro contable
+    review_status:
+      pending: Pendiente
+      reviewed: Revisado
+      skipped: Omitido
+    status:
+      empty: Sin elementos
+      needs_attention: Requiere atención
+      ready: Preparado
+      unmeasured: Sin medir
+    unavailable:
+      title: Área del libro contable no disponible
   root:
     no_areas: Ninguna área está disponible todavía en esta sesión.
     title: 'Cadrumo: sesión de terminal'

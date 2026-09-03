@@ -997,6 +997,58 @@ transactions:
     unreadable: Arxiu il·legible o format no suportat
     verified: Importació verificada amb èxit
 tui:
+  ledger:
+    area:
+      classification: Classificació
+      entries: Apunts
+      evidence: Justificants
+      import: Importació
+      overview: Resum
+      reconciliation: Conciliació
+      review: Revisió
+    availability:
+      available: Disponible
+      locked: Bloquejat
+      never_captured: Encara no capturat
+      stale: Desactualitzat
+      unavailable: No disponible
+    column:
+      area: Àrea
+      availability: Disponibilitat
+      destination: Destinació
+      entry: Apunt
+      items: Elements
+      next: Pas següent
+      review_status: Estat de revisió
+      status: Estat
+    entries:
+      empty: Aquesta captura no conté cap apunt.
+      redacted: Índex segur d'apunts; els detalls financers continuen protegits.
+      title: Apunts del llibre comptable
+    overview:
+      affected_declarations: Declaracions afectades
+      quality: Qualitat de les dades i feina pendent
+      title: Resum del llibre comptable
+    refusal:
+      application_state: Aquesta àrea no està disponible en l'estat actual del llibre
+        comptable.
+      destination_pending: Aquesta àrea encara no està disponible en aquesta versió.
+    review:
+      empty: Ara mateix no hi ha cap apunt per revisar.
+      filter_all: 'Filtre: tots els estats de revisió'
+      open: Obre la revisió
+      title: Revisió del llibre comptable
+    review_status:
+      pending: Pendent
+      reviewed: Revisat
+      skipped: Omès
+    status:
+      empty: Sense elements
+      needs_attention: Requereix atenció
+      ready: Preparat
+      unmeasured: Sense mesurar
+    unavailable:
+      title: Àrea del llibre comptable no disponible
   root:
     no_areas: Cap àrea no està disponible encara en aquesta sessió.
     title: 'Cadrumo: sessió de terminal'

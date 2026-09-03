@@ -968,6 +968,57 @@ transactions:
     unreadable: Unreadable file or unsupported format
     verified: Import verified successfully
 tui:
+  ledger:
+    area:
+      classification: Classification
+      entries: Entries
+      evidence: Evidence
+      import: Import
+      overview: Overview
+      reconciliation: Reconciliation
+      review: Review
+    availability:
+      available: Available
+      locked: Locked
+      never_captured: Not captured yet
+      stale: Out of date
+      unavailable: Unavailable
+    column:
+      area: Area
+      availability: Availability
+      destination: Destination
+      entry: Entry
+      items: Items
+      next: Next step
+      review_status: Review status
+      status: Status
+    entries:
+      empty: No entries are present in this snapshot.
+      redacted: Safe entry index; financial details remain protected.
+      title: Ledger entries
+    overview:
+      affected_declarations: Affected declarations
+      quality: Data quality and unresolved work
+      title: Ledger overview
+    refusal:
+      application_state: This area is unavailable in the current Ledger state.
+      destination_pending: This area is not available in this version yet.
+    review:
+      empty: No entries currently need review.
+      filter_all: 'Filter: all review statuses'
+      open: Open review
+      title: Ledger review
+    review_status:
+      pending: Pending
+      reviewed: Reviewed
+      skipped: Skipped
+    status:
+      empty: No items
+      needs_attention: Needs attention
+      ready: Ready
+      unmeasured: Not measured
+    unavailable:
+      title: Ledger area unavailable
   root:
     no_areas: No area is available in this session yet.
     title: Cadrumo terminal session
