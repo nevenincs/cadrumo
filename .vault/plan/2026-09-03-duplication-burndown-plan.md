@@ -11,7 +11,7 @@ related:
   - '[[2026-09-03-duplication-burndown-honest-clone-closure-research]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:d6af2ee5bc8cfb4b163775560883cf8f151d4fefcc24c0778892b5be08e8b099'
+body_hash: 'sha256:7de84dd47cc5ea685f14ab03e1705c3b1f03c1412d3dfdb3a7562befb23ca961'
 ---
 
 <!-- RETIRED: W05, W06, W07, P02, P03, P04, P06, P09, P12, P14, P16, P17, P19, P20, P21, P22, P23, P24, P25, P26, P27, S03, S06, S07 -->
@@ -51,7 +51,7 @@ Introduce only the minimal typed declaration primitives justified by repeated Le
 
 Migrate graph-bounded Ledger CommandSpec components with contract proof after each batch.
 
-- [ ] `W02.P08.S09` - Consolidate the lifecycle and operations clone component while preserving every command token, help key, policy, handler, and schema; `src/cadrumo/entrypoints/cli`.
+- [x] `W02.P08.S09` - Consolidate the lifecycle and operations clone component while preserving every command token, help key, policy, handler, and schema; `src/cadrumo/entrypoints/cli`.
 - [ ] `W02.P08.S10` - Consolidate the evidence, foundation, classification, and counterparty clone components with focused command graph proofs; `src/cadrumo/entrypoints/cli`.
 
 ### Phase `W02.P10` - reduce remaining CLI pairs
