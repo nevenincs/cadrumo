@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -47,6 +48,11 @@ from .._paths import REPO_ROOT
 from .build import docs_build_jobs, ensure_isolated_storage_root
 
 _DOC_SUFFIXES: Final[frozenset[str]] = frozenset({".md", ".rst"})
+
+#: A BCP-47 language tag is a single, portable locale directory token. Keeping
+#: the grammar lexical (rather than asking the host ``Path`` parser) refuses
+#: Windows and POSIX path syntax consistently in every CI environment.
+_LANGUAGE_DIRECTORY_TOKEN: Final[re.Pattern[str]] = re.compile(r"[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*\Z")
 
 #: Top-level ``docs/`` directories that carry no authored, translatable pages:
 #: the generated API autodoc tree and viewcode source, the build output, the
@@ -196,9 +202,8 @@ def _language_catalogue_root(docs_root: Path, language: str) -> Path | None:
     keeps a malformed target from widening catalogue cleanup beyond its one
     language tree.
     """
-    language_path = Path(language)
-    if language_path.parts != (language,) or language_path.drive or language_path.root or language in {"", ".", ".."}:
-        raise ValueError(f"language must be one directory name, got {language!r}")
+    if _LANGUAGE_DIRECTORY_TOKEN.fullmatch(language) is None:
+        raise ValueError(f"language must be one BCP-47 directory token, got {language!r}")
 
     locales = locale_root(docs_root).resolve()
     catalogue_root = locales / language / "LC_MESSAGES"

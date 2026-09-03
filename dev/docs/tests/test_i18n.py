@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import pytest
 
@@ -60,14 +60,26 @@ def test_prune_orphan_catalogues_is_idempotent(tmp_path: Path) -> None:
     assert prune_orphan_catalogues(tmp_path, ("es",)) == ()
 
 
-@pytest.mark.parametrize("language", ("../outside", r"..\outside", "C:"))
+@pytest.mark.parametrize(
+    "language",
+    (
+        PurePosixPath("..", "outside").as_posix(),
+        str(PureWindowsPath("..", "outside")),
+        ".",
+        "..",
+        str(PureWindowsPath("C:")),
+        str(PureWindowsPath(r"C:\outside")),
+        PurePosixPath("/outside").as_posix(),
+        str(PureWindowsPath(r"\outside")),
+    ),
+)
 def test_prune_orphan_catalogues_rejects_language_path_traversal(tmp_path: Path, language: str) -> None:
     """A language argument cannot redirect cleanup outside its locale tree."""
     outside_catalogue = tmp_path / "docs" / "outside" / "LC_MESSAGES" / "orphan.po"
     outside_catalogue.parent.mkdir(parents=True)
     outside_catalogue.write_text("must remain\n", encoding="utf-8")
 
-    with pytest.raises(ValueError, match="one directory name"):
+    with pytest.raises(ValueError, match="BCP-47 directory token"):
         prune_orphan_catalogues(tmp_path, (language,))
 
     assert outside_catalogue.read_text(encoding="utf-8") == "must remain\n"
