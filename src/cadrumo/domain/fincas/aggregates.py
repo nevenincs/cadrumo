@@ -66,10 +66,12 @@ class FincaAttribution(BaseModel):
     """Per-finca contribution to rental aggregate totals.
 
     Every amount below is the share attributable to the declaring
-    contribuyente, not the whole-property figure:
-    ``titularidad_share`` is the factor already applied to each of
-    them, so the whole-property figure is recoverable for audit by
-    dividing through it.
+    contribuyente, not the whole-property figure.
+    ``titularidad_share`` records the factor already applied to each of
+    them, so an audit can see what the property produced against what
+    this contribuyente declares. Under nuda propiedad that factor is
+    exactly zero — the nudo propietario declares nothing — and the
+    whole-property figures are then not recoverable from this record.
     """
 
     model_config = STRICT_FROZEN_CONFIG
