@@ -1,21 +1,20 @@
-"""E2E threshold/continuity: Modelo 840 IAE INCN exemption across 2 annual contexts.
+"""Applicability-grade threshold continuity: Modelo 840 IAE INCN exemption.
 
 Modelo 840 (Impuesto sobre Actividades Economicas - declaracion censal) is an
 ad_hoc IAE declaration and communication surface (Orden HAC/2572/2003; TRLRHL
-RDL 2/2004 arts. 82 and 90). The cross-year invariant for this enrollment is
-the turnover-based exemption: each annual context must assess the
+RDL 2/2004 arts. 82 and 90). The cross-year verification is the turnover-based
+exemption: each annual context independently classifies the
 ``importe neto de la cifra de negocios`` independently against the strict
 1,000,000 EUR art. 82.1.c threshold.
 
-The enrollment evidence class is THRESHOLD_CONTINUITY. The test constructs a
-real two-year context (real domain assessment, real encrypted-SQLite store,
-real registry-grounded Modelo 840 observations) spanning two distinct
-``filing_year`` values and records both through the EnrollmentRecorder's
-context mode. The context label is the un-fakeable evidence token.
+The test builds applicability-grade registry observations for two distinct
+``filing_year`` values, persists them through encrypted SQLite, and verifies
+the local threshold classifications survive in the source metadata. It is
+storage and registry evidence, not an enrollment in a calculation backend.
 
 Cross-year invariants tested:
-- Year N records INCN below 1,000,000 EUR and is assessed exempt.
-- Year N+2 records INCN equal to 1,000,000 EUR and is assessed not exempt,
+- Year N records INCN below 1,000,000 EUR and classifies exempt.
+- Year N+2 records INCN equal to 1,000,000 EUR and classifies not exempt,
   proving the legal threshold is strict ("inferior a 1.000.000").
 - Both annual contexts are independently persisted and retrievable with their
   encrypted threshold source metadata intact.
@@ -45,7 +44,6 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
 from ._observation_lookup_support import find_observation
 
@@ -59,8 +57,8 @@ class Modelo840IaeExemptionStatus(StrEnum):
     NOT_EXEMPT = "not_exempt"
 
 
-class Modelo840IaeExemptionAssessment(BaseModel):
-    """One annual Modelo 840 IAE turnover-threshold assessment."""
+class Modelo840IaeExemptionClassification(BaseModel):
+    """One test-local annual Modelo 840 IAE threshold classification."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -79,12 +77,12 @@ class Modelo840IaeExemptionAssessment(BaseModel):
         return self.status is Modelo840IaeExemptionStatus.EXEMPT
 
 
-def assess_modelo_840_iae_cifra_negocios_exemption(
+def _classify_modelo_840_iae_cifra_negocios_exemption(
     *,
     filing_year: int,
     importe_neto_cifra_negocios_eur: Decimal,
-) -> Modelo840IaeExemptionAssessment:
-    """Assess the strict Modelo 840 IAE art. 82.1.c turnover exemption.
+) -> Modelo840IaeExemptionClassification:
+    """Classify the strict Modelo 840 IAE art. 82.1.c turnover threshold.
 
     TRLRHL art. 82.1.c exempts the covered entities only when their net turnover
     is below 1,000,000 EUR. Equality is outside the exemption.
@@ -94,23 +92,20 @@ def assess_modelo_840_iae_cifra_negocios_exemption(
         if importe_neto_cifra_negocios_eur < MODELO_840_IAE_CIFRA_NEGOCIOS_EXEMPTION_THRESHOLD_EUR
         else Modelo840IaeExemptionStatus.NOT_EXEMPT
     )
-    return Modelo840IaeExemptionAssessment(
+    return Modelo840IaeExemptionClassification(
         filing_year=filing_year,
         importe_neto_cifra_negocios_eur=importe_neto_cifra_negocios_eur,
         status=status,
     )
 
 
-#: Modelo id this module enrolls into the multi-year-renta authorization gate.
+#: Modelo id whose applicability-grade observations this test verifies.
 _MODELO = "840"
 
 #: Two distinct annual contexts. M840 cadence is ad_hoc, period selector = ["0A"].
-#: filing_year anchors which renta cycle the INCN assessment belongs to.
+#: filing_year anchors which renta cycle the INCN classification belongs to.
 _YEAR_N = 2024
 _YEAR_N_PLUS_2 = 2026
-
-#: Context label for the EnrollmentRecorder (non-calculation / threshold-continuity mode).
-_CONTEXT_LABEL = "840-iae-cifra-negocios-exemption-two-annual-contexts"
 
 #: External-authority scenario values for TRLRHL art. 82.1.c.
 _EXEMPT_CIFRA_NEGOCIOS_EUR = Decimal("999999.99")
@@ -130,21 +125,21 @@ _DECL_TIPO_DECLARACION_CASILLA: CasillaId = validated_casilla_id("decl.tipo-decl
 _DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.ejercicio")
 
 
-def _threshold_source_metadata(assessment: Modelo840IaeExemptionAssessment) -> dict[str, str]:
+def _threshold_source_metadata(classification: Modelo840IaeExemptionClassification) -> dict[str, str]:
     return {
-        _METADATA_CIFRA_NEGOCIOS_KEY: str(assessment.importe_neto_cifra_negocios_eur),
-        _METADATA_THRESHOLD_KEY: str(assessment.threshold_eur),
-        _METADATA_STATUS_KEY: assessment.status.value,
-        _METADATA_LEGAL_REFS_KEY: ",".join(assessment.legal_refs),
+        _METADATA_CIFRA_NEGOCIOS_KEY: str(classification.importe_neto_cifra_negocios_eur),
+        _METADATA_THRESHOLD_KEY: str(classification.threshold_eur),
+        _METADATA_STATUS_KEY: classification.status.value,
+        _METADATA_LEGAL_REFS_KEY: ",".join(classification.legal_refs),
     }
 
 
-def _threshold_assessment(
+def _threshold_classification(
     *,
     filing_year: int,
     cifra_negocios_eur: Decimal,
-) -> Modelo840IaeExemptionAssessment:
-    return assess_modelo_840_iae_cifra_negocios_exemption(
+) -> Modelo840IaeExemptionClassification:
+    return _classify_modelo_840_iae_cifra_negocios_exemption(
         filing_year=filing_year,
         importe_neto_cifra_negocios_eur=cifra_negocios_eur,
     )
@@ -158,7 +153,7 @@ def _threshold_context_observation(*, filing_year: int) -> RegistryModeloObserva
     - ``decl.ejercicio``: the filing year
 
     The INCN amount and exemption status are persisted as encrypted source
-    metadata on the real observation envelope. No undeclared registry casilla is
+    metadata on the observation envelope. No undeclared registry casilla is
     fabricated for the threshold amount.
     """
     return registry_grounded_modelo_observation(
@@ -178,17 +173,17 @@ def _threshold_context_observation(*, filing_year: int) -> RegistryModeloObserva
     )
 
 
-def test_below_threshold_context_persists_exempt_assessment_metadata(tmp_path: Path) -> None:
-    """Year-N 840 context stores an art.82 exempt INCN assessment."""
+def test_below_threshold_context_persists_exempt_classification_metadata(tmp_path: Path) -> None:
+    """Year-N 840 context stores an art.82 exempt INCN classification."""
     obs = _threshold_context_observation(filing_year=_YEAR_N)
-    assessment = _threshold_assessment(
+    classification = _threshold_classification(
         filing_year=_YEAR_N,
         cifra_negocios_eur=_EXEMPT_CIFRA_NEGOCIOS_EUR,
     )
 
-    assert assessment.threshold_eur == _LEGAL_THRESHOLD_EUR
-    assert assessment.status is Modelo840IaeExemptionStatus.EXEMPT
-    assert assessment.is_exempt is True
+    assert classification.threshold_eur == _LEGAL_THRESHOLD_EUR
+    assert classification.status is Modelo840IaeExemptionStatus.EXEMPT
+    assert classification.is_exempt is True
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
@@ -197,7 +192,7 @@ def test_below_threshold_context_persists_exempt_assessment_metadata(tmp_path: P
                 obs,
                 source_kind="app_filing",
                 captured_at=_CLOCK_N,
-                source_metadata=_threshold_source_metadata(assessment),
+                source_metadata=_threshold_source_metadata(classification),
             )
         )
         loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
@@ -206,20 +201,20 @@ def test_below_threshold_context_persists_exempt_assessment_metadata(tmp_path: P
         assert loaded.observation == obs, "840 year-N observation did not survive the encrypted-SQL roundtrip"
         assert loaded.source_kind == "app_filing"
         assert loaded.captured_at == _CLOCK_N
-        assert loaded.source_metadata == _threshold_source_metadata(assessment)
+        assert loaded.source_metadata == _threshold_source_metadata(classification)
 
 
-def test_at_threshold_context_persists_not_exempt_assessment_metadata(tmp_path: Path) -> None:
-    """Year-N+2 840 context stores a non-exempt INCN assessment at the strict threshold."""
+def test_at_threshold_context_persists_not_exempt_classification_metadata(tmp_path: Path) -> None:
+    """Year-N+2 840 context stores a non-exempt INCN classification at the strict threshold."""
     obs = _threshold_context_observation(filing_year=_YEAR_N_PLUS_2)
-    assessment = _threshold_assessment(
+    classification = _threshold_classification(
         filing_year=_YEAR_N_PLUS_2,
         cifra_negocios_eur=_NOT_EXEMPT_CIFRA_NEGOCIOS_EUR,
     )
 
-    assert assessment.threshold_eur == _LEGAL_THRESHOLD_EUR
-    assert assessment.status is Modelo840IaeExemptionStatus.NOT_EXEMPT
-    assert assessment.is_exempt is False
+    assert classification.threshold_eur == _LEGAL_THRESHOLD_EUR
+    assert classification.status is Modelo840IaeExemptionStatus.NOT_EXEMPT
+    assert classification.is_exempt is False
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
@@ -228,7 +223,7 @@ def test_at_threshold_context_persists_not_exempt_assessment_metadata(tmp_path: 
                 obs,
                 source_kind="app_filing",
                 captured_at=_CLOCK_N_PLUS_2,
-                source_metadata=_threshold_source_metadata(assessment),
+                source_metadata=_threshold_source_metadata(classification),
             )
         )
         loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_2, period="0A")
@@ -237,18 +232,18 @@ def test_at_threshold_context_persists_not_exempt_assessment_metadata(tmp_path: 
         assert loaded.observation == obs
         assert loaded.source_kind == "app_filing"
         assert loaded.captured_at == _CLOCK_N_PLUS_2
-        assert loaded.source_metadata == _threshold_source_metadata(assessment)
+        assert loaded.source_metadata == _threshold_source_metadata(classification)
 
 
-def test_exemption_assessments_are_independent_across_annual_contexts(tmp_path: Path) -> None:
-    """The art.82 INCN exemption is assessed per annual context without value bleed."""
+def test_exemption_classifications_are_independent_across_annual_contexts(tmp_path: Path) -> None:
+    """The art.82 INCN exemption is classified per annual context without value bleed."""
     obs_n = _threshold_context_observation(filing_year=_YEAR_N)
     obs_n2 = _threshold_context_observation(filing_year=_YEAR_N_PLUS_2)
-    assessment_n = _threshold_assessment(
+    classification_n = _threshold_classification(
         filing_year=_YEAR_N,
         cifra_negocios_eur=_EXEMPT_CIFRA_NEGOCIOS_EUR,
     )
-    assessment_n2 = _threshold_assessment(
+    classification_n2 = _threshold_classification(
         filing_year=_YEAR_N_PLUS_2,
         cifra_negocios_eur=_NOT_EXEMPT_CIFRA_NEGOCIOS_EUR,
     )
@@ -260,7 +255,7 @@ def test_exemption_assessments_are_independent_across_annual_contexts(tmp_path: 
                 obs_n,
                 source_kind="app_filing",
                 captured_at=_CLOCK_N,
-                source_metadata=_threshold_source_metadata(assessment_n),
+                source_metadata=_threshold_source_metadata(classification_n),
             )
         )
         repo.save(
@@ -268,7 +263,7 @@ def test_exemption_assessments_are_independent_across_annual_contexts(tmp_path: 
                 obs_n2,
                 source_kind="app_filing",
                 captured_at=_CLOCK_N_PLUS_2,
-                source_metadata=_threshold_source_metadata(assessment_n2),
+                source_metadata=_threshold_source_metadata(classification_n2),
             )
         )
         loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
@@ -296,11 +291,11 @@ def test_exemption_assessments_are_independent_across_annual_contexts(tmp_path: 
 def test_anti_tautology_proof_missing_turnover_metadata_surfaces_as_inequality(tmp_path: Path) -> None:
     """Anti-tautology: omitting INCN metadata is distinguishable after reload."""
     obs_n = _threshold_context_observation(filing_year=_YEAR_N)
-    assessment_n = _threshold_assessment(
+    classification_n = _threshold_classification(
         filing_year=_YEAR_N,
         cifra_negocios_eur=_EXEMPT_CIFRA_NEGOCIOS_EUR,
     )
-    full_metadata = _threshold_source_metadata(assessment_n)
+    full_metadata = _threshold_source_metadata(classification_n)
     metadata_without_incn = dict(full_metadata)
     metadata_without_incn.pop(_METADATA_CIFRA_NEGOCIOS_KEY)
 
@@ -323,71 +318,3 @@ def test_anti_tautology_proof_missing_turnover_metadata_surfaces_as_inequality(t
             "loaded metadata equals the INCN-omitted payload - the roundtrip silently dropped threshold evidence"
         )
         assert loaded.source_metadata == full_metadata
-
-
-def test_enrollment_recorder_evidences_two_distinct_annual_contexts_and_matches_manifest(
-    tmp_path: Path,
-) -> None:
-    """EnrollmentRecorder proves both art.82 threshold contexts and matches the manifest."""
-    obs_n = _threshold_context_observation(filing_year=_YEAR_N)
-    obs_n2 = _threshold_context_observation(filing_year=_YEAR_N_PLUS_2)
-    assessment_n = _threshold_assessment(
-        filing_year=_YEAR_N,
-        cifra_negocios_eur=_EXEMPT_CIFRA_NEGOCIOS_EUR,
-    )
-    assessment_n2 = _threshold_assessment(
-        filing_year=_YEAR_N_PLUS_2,
-        cifra_negocios_eur=_NOT_EXEMPT_CIFRA_NEGOCIOS_EUR,
-    )
-
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        # --- Year N: below threshold, exempt -----------------------------
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                source_metadata=_threshold_source_metadata(assessment_n),
-            )
-        )
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-        assert loaded_n is not None
-        assert loaded_n.observation == obs_n
-        assert loaded_n.source_metadata[_METADATA_STATUS_KEY] == Modelo840IaeExemptionStatus.EXEMPT.value
-        _count_n = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N)
-
-        # --- Year N+2: at threshold, not exempt --------------------------
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n2,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N_PLUS_2,
-                source_metadata=_threshold_source_metadata(assessment_n2),
-            )
-        )
-        loaded_n2 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_2, period="0A")
-        assert loaded_n2 is not None
-        assert loaded_n2.observation == obs_n2
-        assert loaded_n2.source_metadata[_METADATA_STATUS_KEY] == Modelo840IaeExemptionStatus.NOT_EXEMPT.value
-        _count_n2 = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N_PLUS_2)
-
-    # --- Enrollment recording (outside the profile context) -------------
-    recorder = EnrollmentRecorder(_MODELO)
-    recorder.record_context_year(
-        filing_year=_YEAR_N,
-        context_label=_CONTEXT_LABEL,
-        persisted_observation_count=(_count_n),
-    )
-    recorder.record_context_year(
-        filing_year=_YEAR_N_PLUS_2,
-        context_label=_CONTEXT_LABEL,
-        persisted_observation_count=(_count_n2),
-    )
-
-    evidence = recorder.evidence()
-    assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_2), (
-        f"expected distinct renta years {(_YEAR_N, _YEAR_N_PLUS_2)!r}; got {evidence.distinct_renta_years!r}"
-    )
-
-    assert_enrollment_matches_manifest(evidence)
