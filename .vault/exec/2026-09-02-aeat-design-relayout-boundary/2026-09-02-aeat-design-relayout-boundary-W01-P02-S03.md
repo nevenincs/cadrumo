@@ -21,3 +21,8 @@ related:
 
 - `M` `dev/registry/analysis/m200_2024_restoration_candidates.py`
 - `verify:` `uv run --no-sync ruff check dev/registry/analysis/m200_2024_restoration_candidates.py` -> `pass`
+
+## Notes
+
+- Remediation rejects every review destination whose lexical or resolved path is within the canonical registry root, including traversal and symlink containment.
+- Removed the unused historic-candidate compatibility alias and builder; the proposal-only API is now the sole exported surface.
