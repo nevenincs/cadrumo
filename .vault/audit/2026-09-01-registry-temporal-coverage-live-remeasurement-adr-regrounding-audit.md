@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:354d6e2a5d770b4ec2759b3d6c17f2434e3c85599349bfc2270295a14c3145e2'
+body_hash: 'sha256:77cd5ea72083dcf3ff357967f4c167bfba4f3883a147f5b8cfd49e5231602526'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7592,3 +7592,32 @@ Reporting six-to-forty as a regression would repeat the error already made once
 here with a per-test timeout, where a ceiling struck under saturation was nearly
 recorded as a property of the test. A wall-clock measured against contention
 measures the contention.
+
+### fourteen-of-the-lane-errors-are-one-authority-that-never-finishes-compiling | high | A 2.5 MB input takes more than ten minutes, which no amount of host contention explains
+
+The lane criterion requires every failure in it to be named and attributed. Of
+the 109 errors, 21 sit in terminology resolution, 17 in deployment search parity
+and 14 in the registry tree, the rest scattered; the registry fourteen are this
+plan's to account for.
+
+They are not assertions. All fourteen are the same fixture failing at the
+per-test timeout ceiling while compiling the modelo 200 blocker authority, and
+the traceback shows why the work is large: the compile calls a partition check,
+which compiles a second authority, which audits bundled restorations, which
+loads a 75-fragment semantic map - and the outermost call sits inside an
+equality comparison against a freshly compiled authority, so the whole chain is
+rebuilt to decide whether it equals itself.
+
+The attribution needed a measurement that contention could not distort, because
+the host has been saturated for hours and this campaign has twice nearly
+recorded a contended wall-clock as a property of a test. Two were taken. The
+input is 75 TOML fragments totalling 2.5 MB, which is fixed regardless of load.
+A single compile then failed to complete in ten minutes. Twenty-four cores at
+ninety percent still leave several times the capacity that parsing 2.5 MB needs,
+so the gap between the input and the duration is structural rather than
+environmental - a conclusion drawn from the ratio, not from the clock.
+
+The remedy is not this work's to apply: the module belongs to another campaign
+and the shape - recompiling an authority inside a comparison against itself -
+needs its owner. What this plan owes is the attribution, and it now has one that
+does not depend on a quiet machine.

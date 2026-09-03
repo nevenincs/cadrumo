@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:89e27a18f7a5286730346c1dedcc57a106e77c5d13ebda21e837072f0c74f5c3'
+body_hash: 'sha256:6a9f5f1a51c443e82a0ece0e4d1341fac8869a6c6a41f5ffa6451c438f6e491b'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -529,6 +529,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S299` - Give the continuity screen a per-definition function so its two detector proofs assert the reported kind rather than the index beneath it; `dev/registry/analysis/continuity_integrity.py dev/registry/tests/test_continuity_integrity.py`.
 - [x] `W06.P13.S300` - Declare the name-window screen's kinds and retire the four-regex source extraction that recovered them; `dev/registry/analysis/revision_name_window.py dev/registry/tests/test_revision_name_window.py`.
 - [x] `W06.P13.S301` - Re-measure the CI lane selection to a reconciling total and move the reassembly gate onto the syntax tree; `dev/registry/tests/test_declaration_invariant_gates.py .vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S302` - Attribute the fourteen registry lane errors to a blocker-authority compile that does not finish, and name the recompilation-inside-comparison shape; `dev/registry/analysis/m200_2024_blocker_adjudications.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
