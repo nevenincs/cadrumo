@@ -1034,7 +1034,7 @@ class Settings(CadrumoLlmSettings):
         scopes, and LLM endpoints through a single accessor.
 
         Returns:
-            The process-wide cached :class:`ExternalConstants` instance.
+            The process-wide cached :class:`ExternalConstantRegistry` instance.
         """
         from .external_constants import load_external_constants
 
