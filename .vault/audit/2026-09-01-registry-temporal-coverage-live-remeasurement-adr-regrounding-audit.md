@@ -10773,3 +10773,38 @@ inside the same edit that added the fourth. That is the second time this
 campaign a count in a screen's own opening line went stale in the edit that
 made it wrong, and the second time the gate written for precisely that caught it
 before a reader did.
+
+
+## The authoring task is eleven readings, and one of them covers twenty-six fields
+
+The grounding join now emits a worklist: the grounded fields grouped by the note
+that grounds them, ordered by how many each covers. That is the artifact the
+rules-authoring step needs, because the cost is notes to READ and not fields to
+visit - one note read covers every field citing it.
+
+**Forty-one fields resolve to eleven work items.** The largest is modelo 200's
+`DP200019:nota 1`, covering twenty-six fields, all of width seventeen and all
+typed `Num` - one reading, one rule, twenty-six fields settled. Modelo 303's
+`DP30302:nota 5` covers six, all of width one. The remaining nine items cover
+one field each.
+
+Each item carries the declared widths and types among its fields, and the widths
+are kept as a set rather than summarised. A note stating a seventeen-character
+amount cannot settle a one-character field, so an item spanning two widths is the
+signal to read before assuming one rule serves the group - which is precisely how
+modelo 200's three oddly-sized fields were found in the first place. That has its
+own test, constructed rather than sampled.
+
+### The census was measuring one concept two ways
+
+Adding the worklist exposed a disagreement inside a single summary line. The
+reading load was counted as distinct `(modelo, revision, note)` triples and
+reported thirteen, while the worklist grouped by `(modelo, note)` and produced
+eleven. Both were in the same output. Several revisions of a modelo share one
+design, so a note common to them is one reading and not two; the census now
+counts work items, and the two figures cannot drift because there is only one.
+
+This is the campaign's own target defect appearing in a summary line written
+within the same hour: the same concept expressed twice in different forms, in
+adjacent output, by one author. It was visible only because the second
+expression was built beside the first.
