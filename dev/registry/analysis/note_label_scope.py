@@ -67,6 +67,7 @@ _CORPUS_SEGMENTS = ("corpus", "aeat_official", "disenos_registro")
 class NoteLabelScopeFinding:
     """One design whose note labels do not identify a note on their own."""
 
+    modelo: str
     design: str
     kind: str
     label: str
@@ -77,6 +78,23 @@ class NoteLabelScopeFinding:
     def merged(self) -> int:
         """How many notes a design-wide reading of this label would absorb."""
         return max(len(self.sheets) - 1, 0)
+
+
+_MODELO_PREFIX = "modelo_"
+
+
+def modelo_of(path: Path) -> str:
+    """Return the modelo whose corpus directory holds this transcription.
+
+    Walked up rather than taken at a fixed depth: most designs sit under
+    ``modelo_NNN/files/``, and one sits directly under ``modelo_210/``. A fixed
+    parent count would return "disenos_registro" for that one, which is not a
+    modelo and would be reported as though it were.
+    """
+    for parent in path.parents:
+        if parent.name.startswith(_MODELO_PREFIX):
+            return parent.name.removeprefix(_MODELO_PREFIX)
+    raise ValueError(f"transcription outside any modelo directory: {path}")
 
 
 def transcription_paths(root: Path | None = None) -> tuple[Path, ...]:
@@ -99,6 +117,7 @@ def design_findings(path: Path) -> tuple[NoteLabelScopeFinding, ...]:
             sheets_by_label[label].append(sheet)
     return tuple(
         NoteLabelScopeFinding(
+            modelo=modelo_of(path),
             design=name,
             kind="label_repeats_across_sheets",
             label=label,
@@ -126,7 +145,8 @@ def main() -> int:
     tally: collections.Counter[str] = collections.Counter(item.kind for item in findings)
     for item in findings:
         sys.stdout.write(
-            f"note_label_scope design={item.design!r} kind={item.kind} label={item.label!r} "
+            f"note_label_scope modelo={item.modelo} design={item.design!r} kind={item.kind} "
+            f"label={item.label!r} "
             f"sheets={len(item.sheets)} merged={item.merged} detail={item.detail!r}\n"
         )
     merged = sum(item.merged for item in findings)

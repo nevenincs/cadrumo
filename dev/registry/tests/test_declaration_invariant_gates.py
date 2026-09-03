@@ -639,12 +639,14 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
     import importlib
     import re
 
-    from ..analysis.screens import SCREENS
 
     wrong: list[str] = []
     checked = 0
-    for entry in SCREENS:
-        module = importlib.import_module(f"dev.registry.analysis.{entry.name}")
+    from ..analysis.screens import enrolled_screen_findings, screen_module_names
+
+    findings_by_name = dict(enrolled_screen_findings(authority, modelo_ids))
+    for screen_name in sorted(screen_module_names()):
+        module = importlib.import_module(f"dev.registry.analysis.{screen_name}")
         doc = module.__doc__ or ""
         # Any noun, not just "conditions". The screens say conditions,
         # disagreements, kinds - the claim is "N somethings are reported", and a
@@ -655,10 +657,10 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
             continue
         stated = _NUMBER_WORDS.get(claim.group(1).lower())
         if stated is None:
-            wrong.append(f"{entry.name} states an unrecognised count {claim.group(1)!r}")
+            wrong.append(f"{screen_name} states an unrecognised count {claim.group(1)!r}")
             continue
         checked += 1
-        emitted = len({finding.kind for finding in entry.run(authority, modelo_ids) if hasattr(finding, "kind")})
+        emitted = len({finding.kind for finding in findings_by_name.get(screen_name, ()) if hasattr(finding, "kind")})
         # Count only the bullets belonging to this claim. Several screens also
         # bullet the FACTS they read, in the same backtick form, before naming
         # their conditions; counting those made this gate fail on a docstring
@@ -670,9 +672,9 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
             elif line.strip() and not line.startswith(" ") and named:
                 break
         if stated != named:
-            wrong.append(f"{entry.name} says {stated} conditions and documents {named}")
+            wrong.append(f"{screen_name} says {stated} conditions and documents {named}")
         if emitted > stated:
-            wrong.append(f"{entry.name} says {stated} conditions and emits {emitted} distinct kinds live")
+            wrong.append(f"{screen_name} says {stated} conditions and emits {emitted} distinct kinds live")
 
     assert checked, "no screen stated a condition count, so this gate checked nothing"
     assert not wrong, "\n".join(wrong)
@@ -766,19 +768,20 @@ def test_a_screen_that_counts_the_facts_it_reads_states_the_right_number() -> No
     import importlib
     import re
 
-    from ..analysis.screens import SCREENS
 
     wrong: list[str] = []
     checked = 0
-    for entry in SCREENS:
-        module = importlib.import_module(f"dev.registry.analysis.{entry.name}")
+    from ..analysis.screens import screen_module_names
+
+    for screen_name in sorted(screen_module_names()):
+        module = importlib.import_module(f"dev.registry.analysis.{screen_name}")
         doc = module.__doc__ or ""
         claim = re.search(r"\b([A-Za-z]+) facts decide\b", doc)
         if claim is None:
             continue
         stated = _NUMBER_WORDS.get(claim.group(1).lower())
         if stated is None:
-            wrong.append(f"{entry.name} states an unrecognised fact count {claim.group(1)!r}")
+            wrong.append(f"{screen_name} states an unrecognised fact count {claim.group(1)!r}")
             continue
         checked += 1
         # Any bullet, not only one opening with a backticked name. The
@@ -792,7 +795,7 @@ def test_a_screen_that_counts_the_facts_it_reads_states_the_right_number() -> No
             elif line.strip() and not line.startswith(" ") and listed:
                 break
         if stated != listed:
-            wrong.append(f"{entry.name} says {stated} facts and lists {listed}")
+            wrong.append(f"{screen_name} says {stated} facts and lists {listed}")
 
     assert checked, "no screen stated a fact count, so this gate checked nothing"
     assert not wrong, "\n".join(wrong)
@@ -910,14 +913,16 @@ def test_every_screen_finding_type_declares_the_identity_the_contract_promises()
     import dataclasses
     import importlib
 
-    from ..analysis.screens import FINDING_IDENTITY_CONTRACT, SCREENS
+    from ..analysis.screens import FINDING_IDENTITY_CONTRACT
 
     assert FINDING_IDENTITY_CONTRACT == ("modelo",), "the contract changed; this gate encodes it"
 
     checked = 0
     missing: list[str] = []
-    for entry in SCREENS:
-        module = importlib.import_module(f"dev.registry.analysis.{entry.name}")
+    from ..analysis.screens import screen_module_names
+
+    for screen_name in sorted(screen_module_names()):
+        module = importlib.import_module(f"dev.registry.analysis.{screen_name}")
         for name, obj in vars(module).items():
             if not dataclasses.is_dataclass(obj) or getattr(obj, "__module__", None) != module.__name__:
                 continue
@@ -926,7 +931,7 @@ def test_every_screen_finding_type_declares_the_identity_the_contract_promises()
             checked += 1
             fields = {field.name for field in dataclasses.fields(obj)}
             missing.extend(
-                f"{entry.name}.{name} declares no {required!r}"
+                f"{screen_name}.{name} declares no {required!r}"
                 for required in FINDING_IDENTITY_CONTRACT
                 if required not in fields
             )

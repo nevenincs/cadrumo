@@ -40,7 +40,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .footnote_pointer_notes import sheet_note_definitions, sheet_unnumbered_notes
-from .note_label_scope import transcription_paths
+from .note_label_scope import modelo_of, transcription_paths
 
 __all__ = [
     "KINDS",
@@ -64,6 +64,7 @@ _UTF_8 = "utf-8"
 class UnnumberedNoteScopeFinding:
     """One design's unnumbered notes and the structure around them."""
 
+    modelo: str
     design: str
     kind: str
     sheets_with_note: int
@@ -102,6 +103,7 @@ def design_finding(path: Path, *, sheets_seen: int | None = None) -> UnnumberedN
         kind = "note_on_several_sheets_differing"
         detail = f"{len(notes)} sheets carry {len(texts)} distinct texts"
     return UnnumberedNoteScopeFinding(
+        modelo=modelo_of(path),
         design=path.name,
         kind=kind,
         sheets_with_note=len(notes),
@@ -123,7 +125,7 @@ def main() -> int:
     tally: collections.Counter[str] = collections.Counter(item.kind for item in findings)
     for item in findings:
         sys.stdout.write(
-            f"unnumbered_note_scope design={item.design!r} kind={item.kind} "
+            f"unnumbered_note_scope modelo={item.modelo} design={item.design!r} kind={item.kind} "
             f"sheets_with_note={item.sheets_with_note} distinct_texts={item.distinct_texts} "
             f"sheets_seen={item.sheets_seen} detail={item.detail!r}\n"
         )
