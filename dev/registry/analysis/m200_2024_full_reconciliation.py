@@ -352,6 +352,9 @@ def build_m200_2024_legal_worklist(census: M200ReconciliationCensus) -> M200Lega
         raise RegistryValidationError("legal worklist carries a drifted Modelo 200/2024 partition")
 
     registry_root = bundled_path("registry", "aeat")
+    modelo = load_modelo_directory(registry_root / "modelos" / "200")
+    revision = modelo.revisions["2024"]
+    _require_partition(revision, modelo.revisions["2025-y-siguientes"])
     parts = tuple(load_catalogue_file(path) for path in sorted((registry_root / "legal").glob("*.toml")))
     legal = _merge_unique_catalogue(parts, attribute="legal")
     items = tuple(
@@ -366,10 +369,48 @@ def build_m200_2024_legal_worklist(census: M200ReconciliationCensus) -> M200Lega
             valid_to=census.revision_valid_to,
         )
         for evidence_home, subject_id, legal_refs in (
+            *(
+                ("revision", subject_id, legal_refs)
+                for subject_id, legal_refs in _m200_2024_revision_legal_carriers(registry_root)
+            ),
             *( ("declaration", row.casilla_id, row.legal_refs) for row in census.rows),
             *( ("semantic_map", anchor.export_field_id, anchor.legal_refs) for anchor in census.anchors),
         )
     )
+
+
+def _m200_2024_revision_legal_carriers(registry_root: Path) -> tuple[tuple[str, tuple[str, ...]], ...]:
+    """Extract every legal-reference carrier from the target revision declaration.
+
+    ``orden_aplicabilidad`` is a legal-reference carrier despite using a
+    distinct schema key.  Recursing the actual TOML keeps future nested family
+    dispositions visible instead of assuming the top-level ``legal_refs`` list
+    is the entire worklist.
+    """
+    document = rtoml.loads(
+        (registry_root / "modelos" / "200" / "revisions" / "2024" / "revision.toml").read_text(encoding="utf-8")
+    )
+    revision = document["revisions"]["2024"]
+    carriers: list[tuple[str, tuple[str, ...]]] = []
+
+    def visit(value: object, path: tuple[str, ...]) -> None:
+        if isinstance(value, Mapping):
+            for key, child in value.items():
+                child_path = (*path, str(key))
+                if key in {"legal_refs", "orden_aplicabilidad"}:
+                    if not isinstance(child, list) or not all(isinstance(ref, str) for ref in child):
+                        raise RegistryValidationError(
+                            f"Modelo 200/2024 revision legal carrier {'.'.join(child_path)!r} is malformed"
+                        )
+                    carriers.append((".".join(child_path), tuple(child)))
+                else:
+                    visit(child, child_path)
+        elif isinstance(value, list):
+            for index, child in enumerate(value):
+                visit(child, (*path, str(index)))
+
+    visit(revision, ())
+    return tuple(carriers)
     return M200LegalWorklist(
         source_ref=census.source_ref,
         source_sha256=census.source_sha256,

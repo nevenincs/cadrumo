@@ -193,6 +193,31 @@ def test_missing_map_legal_ref_is_visible_and_unreviewed_candidates_cannot_seed_
     assert candidate_payload not in peers["same-template"]
 
 
+def test_legal_worklist_measures_the_complete_2024_population_and_exposes_open_authority(census) -> None:
+    worklist = subject.build_m200_2024_legal_worklist(census)
+
+    assert worklist.source_ref == subject.TARGET_SOURCE_REF
+    assert worklist.source_sha256 == subject.TARGET_SOURCE_SHA256
+    assert len(worklist.items) == len(census.rows) + len(census.anchors) + 3 == 10041
+    assert {item.evidence_home for item in worklist.items} == {"declaration", "revision", "semantic_map"}
+    assert all(item.source_ref == subject.TARGET_SOURCE_REF for item in worklist.items)
+    assert all(item.source_sha256 == subject.TARGET_SOURCE_SHA256 for item in worklist.items)
+    assert worklist.missing_provenance_count == 0
+    assert worklist.unknown_reference_count == 0
+    assert worklist.out_of_window_count == 3
+    open_items = tuple(item for item in worklist.items if item.evidence_home == "revision")
+    assert tuple(item.subject_id for item in open_items) == (
+        "legal_refs",
+        "orden_aplicabilidad",
+        "family_dispositions.casilla_continuidad_evolutions.legal_refs",
+    )
+    assert all(item.out_of_window_legal_refs == ("orden-hac-657-2025:modelo-200",) for item in open_items)
+    with pytest.raises(RegistryValidationError, match="missing=0, unknown=0, out_of_window=3"):
+        subject.require_closed_m200_2024_legal_worklist(worklist)
+
+    with pytest.raises(RegistryValidationError, match="source identity drifted"):
+        subject.build_m200_2024_legal_worklist(replace(census, source_sha256="0" * 64))
+
 def test_source_rebind_plan_is_complete_target_map_owned_and_refuses_only_true_orphans(source_rebind_plan) -> None:
     assert source_rebind_plan.source_ref == subject.TARGET_SOURCE_REF
     assert source_rebind_plan.source_sha256 == subject.TARGET_SOURCE_SHA256
