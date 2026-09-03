@@ -105,18 +105,18 @@ from typing import Final
 from .._paths import REPO_ROOT
 from ..quality.import_hygiene_scan import resolve_relative_import
 from .unreachable_code import (
+    ShippedModule,
     ShippedTreeSpec,
-    _is_test_path,
-    _iter_python_files,
-    _module_edges,
-    _non_reference_nodes,
-    _parse,
-    _reachable,
-    _relative,
-    _resolved_symbol_uses,
-    _shipped_modules,
-    _ShippedModule,
-    _string_reference_names,
+    is_test_path,
+    iter_python_files,
+    module_edges,
+    non_reference_nodes,
+    parse_module,
+    reachable_closure,
+    relative_to_repo,
+    resolved_symbol_uses,
+    shipped_modules,
+    string_reference_names,
 )
 
 _EXIT_FINDINGS: Final[int] = 3
@@ -247,7 +247,7 @@ class WritePathResult:
 type _Symbol = tuple[str, str]
 
 
-def _symbol_imports(module: _ShippedModule, known: frozenset[str]) -> dict[str, _Symbol]:
+def _symbol_imports(module: ShippedModule, known: frozenset[str]) -> dict[str, _Symbol]:
     """Map each local binding that names a shipped module's symbol to that symbol.
 
     Only ``from M import N`` binds a class name into another module's
@@ -267,7 +267,7 @@ def _symbol_imports(module: _ShippedModule, known: frozenset[str]) -> dict[str, 
     return bindings
 
 
-def _module_aliases(module: _ShippedModule, known: frozenset[str]) -> dict[str, str]:
+def _module_aliases(module: ShippedModule, known: frozenset[str]) -> dict[str, str]:
     """Map each local binding that names a shipped MODULE to that module."""
     aliases: dict[str, str] = {}
     for node in ast.walk(module.tree):
@@ -286,7 +286,7 @@ def _module_aliases(module: _ShippedModule, known: frozenset[str]) -> dict[str, 
     return aliases
 
 
-def _base_symbols(node: ast.ClassDef, module: _ShippedModule, known: frozenset[str]) -> frozenset[_Symbol]:
+def _base_symbols(node: ast.ClassDef, module: ShippedModule, known: frozenset[str]) -> frozenset[_Symbol]:
     """Resolve every base of ``node`` to the ``(module, name)`` it denotes.
 
     Generic bases (``Base[TPayload, TCapture]``) are unwrapped; a base the
@@ -316,10 +316,10 @@ class _SurfaceClass:
     symbol: _Symbol
     node: ast.ClassDef
     bases: frozenset[_Symbol]
-    module: _ShippedModule
+    module: ShippedModule
 
 
-def _class_index(modules: dict[str, _ShippedModule], known: frozenset[str]) -> dict[_Symbol, _SurfaceClass]:
+def _class_index(modules: dict[str, ShippedModule], known: frozenset[str]) -> dict[_Symbol, _SurfaceClass]:
     """Every top-level class in the shipped tree, keyed by ``(module, name)``."""
     index: dict[_Symbol, _SurfaceClass] = {}
     for module in modules.values():
@@ -419,8 +419,9 @@ def _method_facts(ancestry: tuple[_SurfaceClass, ...]) -> dict[str, _MethodFacts
                 continue
             own, called = _called_attributes(node.body)
             previous = facts.get(node.name)
+            inherited: frozenset[str] = previous.self_calls if previous else frozenset()
             facts[node.name] = _MethodFacts(
-                self_calls=own | (previous.self_calls if previous else frozenset()),
+                self_calls=own | inherited,
                 persists_directly=(_PERSIST_VERB in called - own) or bool(previous and previous.persists_directly),
                 reads_directly=bool(_READ_VERBS & (called - own)) or bool(previous and previous.reads_directly),
             )
@@ -458,7 +459,7 @@ def _surface_verbs(ancestry: tuple[_SurfaceClass, ...]) -> _SurfaceVerbs:
     return _SurfaceVerbs(read=_public(reads), write=_public(writes))
 
 
-def _module_level_delegates(module: _ShippedModule, verbs: _SurfaceVerbs) -> tuple[frozenset[str], frozenset[str]]:
+def _module_level_delegates(module: ShippedModule, verbs: _SurfaceVerbs) -> tuple[frozenset[str], frozenset[str]]:
     """Top-level functions of the defining module that drive the surface for a caller.
 
     ``capture_expedientes`` constructs the service and calls its producer, so
@@ -491,7 +492,7 @@ def _spelled_attributes(tree: ast.Module) -> frozenset[str]:
     bare ``Name`` load is not counted either, because it says nothing about
     which object the name was reached on.
     """
-    skipped = _non_reference_nodes(tree)
+    skipped = non_reference_nodes(tree)
     names: set[str] = set()
     for node in ast.walk(tree):
         if id(node) in skipped:
@@ -499,13 +500,13 @@ def _spelled_attributes(tree: ast.Module) -> frozenset[str]:
         if isinstance(node, ast.Attribute):
             names.add(node.attr)
         elif isinstance(node, ast.Constant) and isinstance(node.value, str):
-            names.update(_string_reference_names(node.value))
+            names.update(string_reference_names(node.value))
     return frozenset(names)
 
 
 def _loaded_names(tree: ast.Module) -> frozenset[str]:
     """Bare identifier loads, used only where no import can bind the name."""
-    skipped = _non_reference_nodes(tree)
+    skipped = non_reference_nodes(tree)
     return frozenset(
         node.id
         for node in ast.walk(tree)
@@ -521,7 +522,7 @@ def _callers(
     surface: _SurfaceClass,
     verbs: _SurfaceVerbs,
     delegates: tuple[frozenset[str], frozenset[str]],
-    modules: dict[str, _ShippedModule],
+    modules: dict[str, ShippedModule],
     known: frozenset[str],
 ) -> tuple[frozenset[str], frozenset[str]]:
     """Return ``(reader modules, writer modules)`` among shipped production code.
@@ -538,7 +539,7 @@ def _callers(
     for name, module in modules.items():
         if name == surface.module.name:
             continue
-        resolved = _resolved_symbol_uses(module, known)
+        resolved = resolved_symbol_uses(module, known)
         spelled = _spelled_attributes(module.tree)
         if any((surface.module.name, delegate) in resolved for delegate in write_delegates):
             writers.add(name)
@@ -565,11 +566,11 @@ def _outside_write_labels(spec: ShippedTreeSpec, surface: _SurfaceClass, verbs: 
     labels: set[str] = set()
     write_verbs = frozenset(verbs.write)
     for corpus in spec.outside:
-        for path in _iter_python_files(corpus.root):
-            if corpus.test_modules_only and not _is_test_path(path, spec.src_root):
+        for path in iter_python_files(corpus.root):
+            if corpus.test_modules_only and not is_test_path(path, spec.src_root):
                 continue
             try:
-                tree = _parse(path)
+                tree = parse_module(path)
             except (OSError, SyntaxError, UnicodeDecodeError):
                 continue
             spelled = _spelled_attributes(tree)
@@ -583,18 +584,18 @@ def _outside_write_labels(spec: ShippedTreeSpec, surface: _SurfaceClass, verbs: 
 # ---------------------------------------------------------------------------
 
 
-def _script_reachable(spec: ShippedTreeSpec, modules: dict[str, _ShippedModule]) -> frozenset[str]:
+def _script_reachable(spec: ShippedTreeSpec, modules: dict[str, ShippedModule]) -> frozenset[str]:
     """Modules a declared console script reaches, the audit's strongest liveness."""
     known = frozenset(modules)
-    edges = {name: _module_edges(module, known)[0] for name, module in modules.items()}
+    edges = {name: module_edges(module, known)[0] for name, module in modules.items()}
     companion_entries = tuple(entry for companion in spec.companions for entry in companion.entry_points)
     roots = [entry.module for entry in spec.entry_points] + [entry.module for entry in companion_entries]
-    return _reachable(roots, modules, edges)
+    return reachable_closure(roots, modules, edges)
 
 
 def _surface_findings(
     spec: ShippedTreeSpec,
-    modules: dict[str, _ShippedModule],
+    modules: dict[str, ShippedModule],
     index: dict[_Symbol, _SurfaceClass],
     closure: frozenset[_Symbol],
     script_reach: frozenset[str],
@@ -616,7 +617,7 @@ def _surface_findings(
             continue
         findings.append(
             WritePathFinding(
-                path=_relative(leaf.module.path, spec),
+                path=relative_to_repo(leaf.module.path, spec),
                 line=leaf.node.lineno,
                 module=leaf.module.name,
                 service=leaf.node.name,
@@ -632,7 +633,7 @@ def _surface_findings(
 def scan_write_path_coverage(spec: ShippedTreeSpec, surface: PersistenceSurfaceSpec) -> WritePathResult:
     """Scan the tree ``spec`` describes for readable surfaces with no writer."""
     try:
-        modules = _shipped_modules(spec)
+        modules = shipped_modules(spec)
     except SyntaxError as exc:
         return WritePathResult.error(f"shipped module does not parse: {exc.filename}:{exc.lineno}: {exc.msg}")
     except OSError as exc:

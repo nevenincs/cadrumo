@@ -1,0 +1,40 @@
+# Backlog for the write-path coverage gate.
+#
+# THIS FILE IS A BACKLOG, NOT PERMISSION. Every entry names a persistence
+# surface under src/cadrumo whose READ side a declared console script reaches
+# and whose WRITE side has no production caller anywhere in the shipped tree.
+# The product therefore ships commands that read a store nothing on earth can
+# fill. That is a defect in each case; the list records which ones are known
+# and unresolved, so a NEW one fails loudly instead of arriving unnoticed.
+#
+# Entries are `module:ClassName`, the identifier the audit reports.
+#
+# The gate in dev/quality/write_path_backlog.py compares this list against the
+# live tree as a set, in both directions:
+#
+#   * a surface the tree reports that is not listed here fails the gate --
+#     a producer was deleted, or a reader was added over a store that never
+#     had one;
+#   * an entry here that the tree no longer reports also fails -- the write
+#     path was restored and this file must shrink to record it.
+#
+# So the correct response to a failure is never to add a line. Resolve the
+# surface instead:
+#
+#   * restore or rebuild the producer the refactor removed, and wire it to the
+#     command that should drive it;
+#   * or, if the capability is genuinely retired, delete the read commands,
+#     the service, its payload models, and its storage namespace together, so
+#     the product stops offering a view onto a store it cannot fill.
+#
+# Regenerate the current set for comparison with:
+#   just audit-write-paths
+
+allowed = [
+  # Three `app live deudas` commands (list, show, latest) read DeudasService
+  # storage. The only caller of DeudasService.capture in the repository is a
+  # CLI test fixture, which is wheel-excluded and cannot fill the store for a
+  # user. The acquisition path that would capture deudas from AEAT is not
+  # wired to any command.
+  "cadrumo.application.live.deudas:DeudasService",
+]
