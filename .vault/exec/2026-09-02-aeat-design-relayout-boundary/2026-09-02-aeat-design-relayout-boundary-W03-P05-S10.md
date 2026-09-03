@@ -24,19 +24,6 @@ related:
 
 ## Changes
 
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
+- `M` `src/cadrumo/_data/registry/aeat/legal/is.toml`
+- `M` `dev/registry/tests/test_m200_2024_full_reconciliation.py`
+- `verify:` `uv run pytest -n0 dev/registry/tests/test_m200_2024_full_reconciliation.py::test_legal_worklist_measures_the_complete_2024_population_and_closes_reviewed_authority dev/registry/tests/test_m200_2024_full_reconciliation.py::test_modelo_200_orden_governed_period_is_verified_against_its_bundled_boe_text -q` -> `pass`
