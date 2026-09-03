@@ -5,7 +5,11 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import ValidationError
 
+from ....core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
+from ....core.period import Period
+from ....domain.deadlines.models import ObligationStatus
 from ...operator_actions.models import ActionArgumentBinding, ActionReference, DeclaredNextAction
+from ..agenda import OverviewAgenda
 from ..calendar_models import (
     CalendarCompleteness,
     OverviewAeatSubmissionState,
@@ -14,11 +18,6 @@ from ..calendar_models import (
     OverviewLocalFilingState,
     OverviewPeriodState,
 )
-from ....core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
-from ....core.period import Period
-from ....domain.deadlines.models import ObligationStatus
-
-from ..agenda import OverviewAgenda
 from ..home import (
     HomeAccountSession,
     HomeAvailability,

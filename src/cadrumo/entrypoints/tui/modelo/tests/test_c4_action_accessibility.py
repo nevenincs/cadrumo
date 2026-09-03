@@ -99,9 +99,7 @@ def test_only_the_editor_apply_declares_a_mid_flight_interaction() -> None:
     """
     built = _built_definitions()
 
-    interactive = {
-        action_id for action_id in MODELO_ACTION_DISPATCH if built[action_id].interaction_kinds
-    }
+    interactive = {action_id for action_id in MODELO_ACTION_DISPATCH if built[action_id].interaction_kinds}
     assert interactive == {MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID}, (
         f"the set of actions declaring an interaction changed: {sorted(interactive)}"
     )

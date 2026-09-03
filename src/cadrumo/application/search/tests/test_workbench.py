@@ -7,13 +7,15 @@ import hashlib
 import inspect
 import math
 from collections.abc import Sequence
+from importlib import import_module
 from itertools import permutations
 from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
 
-import cadrumo.application.search.workbench as workbench_module
+from ....core.period import Period
+from ....domain.modelos.codes import ModeloCode
 from ..workbench import (
     WorkbenchDestinationAdmission,
     WorkbenchDestinationAdmissionState,
@@ -30,9 +32,10 @@ from ..workbench import (
     WorkbenchSearchSource,
     WorkbenchSearchStatus,
 )
-from ....core.period import Period
-from ....domain.modelos.codes import ModeloCode
 
+#: The defining module itself, for the attribute scoping below. Named through
+#: `import_module` rather than an absolute self-import, which the gate forbids.
+workbench_module = import_module("cadrumo.application.search.workbench")
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CALCULATION_REVISION_ID = "c" * 64

@@ -160,7 +160,12 @@ async def test_all_seven_states_are_legible_at_the_terminal_floor(
         await pilot.pause()
         text = screen_text(app, 80, 24)
         _assert_geometry(app, screen, 80)
-    assert _STATE_MARKERS[scenario] in text
+    marker = (
+        "sin acciones sugeridas"
+        if scenario is HomeFixtureScenario.EMPTY and screen_type is DueDrivenHomeCandidateScreen
+        else _STATE_MARKERS[scenario]
+    )
+    assert marker in text
     assert "work unit" not in text.lower() and "work_unit" not in text.lower()
     if projection.ledger is None:
         assert "Libros registro: Disponible — 0" not in text

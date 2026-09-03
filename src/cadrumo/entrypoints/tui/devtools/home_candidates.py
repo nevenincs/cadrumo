@@ -639,7 +639,8 @@ class DueDrivenHomeCandidateScreen(_ProjectionCandidateScreen):
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         """Track the semantic target independently of row order."""
-        if event.data_table is self.focused:
+        table = cast("DataTable[str]", event.data_table)
+        if table is self.focused:
             self._highlight(event.row_key.value)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
@@ -790,7 +791,8 @@ class TaskLauncherHomeCandidateScreen(_ProjectionCandidateScreen):
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         """Keep detail synchronized with arrow-key selection."""
-        if event.data_table is self.focused:
+        table = cast("DataTable[str]", event.data_table)
+        if table is self.focused:
             self._highlight(event.row_key.value)
             self._show_detail(event.row_key.value)
 

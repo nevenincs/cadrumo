@@ -5,14 +5,13 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import ValidationError
 
+from ....core.period import Period
 from ...operator_actions.models import DeclaredNextAction
 from ..calendar_models import (
     OverviewAeatSubmissionState,
     OverviewLocalFilingState,
     OverviewPeriodState,
 )
-from ....core.period import Period
-
 from ..home import (
     HomeAccountSession,
     HomeAgendaEntry,
