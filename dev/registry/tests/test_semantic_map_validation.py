@@ -16,7 +16,7 @@ from cadrumo.core.filing_projection_ref import (
 from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
-from ..pipeline import _semantic_map_validation
+from ..pipeline import _semantic_map_join, _semantic_map_validation
 from ..pipeline._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
 from ..pipeline._semantic_map import SemanticMap
 from ..pipeline._semantic_map_validation import (
@@ -237,6 +237,38 @@ def test_receipt_bound_qualified_identity_admission_is_exact_and_not_generic_pad
                 "generated.casilla.one": validated_casilla_id("DP200018:00589", surface="test")
             },
         )
+
+
+def test_join_qualified_identity_transform_requires_the_closed_reviewed_receipt() -> None:
+    """A matching qualified suffix alone is never a join-time admission proof."""
+    authored = _casilla_token_map("588").entries[0].model_copy(
+        update={"export_field_id": "m200-2024.dp200018.f0172"},
+    )
+    admitted = authored.model_copy(
+        update={"casilla_id": validated_casilla_id("DP200018:00588", surface="test")},
+    )
+    invented = authored.model_copy(
+        update={"casilla_id": validated_casilla_id("DP200018:00589", surface="test")},
+    )
+
+    assert _semantic_map_join._entry_is_exact_or_compiled_token(
+        authored,
+        admitted,
+        modelo="200",
+        revision_id="2024",
+    )
+    assert not _semantic_map_join._entry_is_exact_or_compiled_token(
+        authored,
+        invented,
+        modelo="200",
+        revision_id="2024",
+    )
+    assert not _semantic_map_join._entry_is_exact_or_compiled_token(
+        authored,
+        admitted,
+        modelo="130",
+        revision_id="2024",
+    )
 
 
 def test_numeric_official_casilla_token_refuses_ambiguous_left_padding() -> None:

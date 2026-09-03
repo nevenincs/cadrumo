@@ -1,27 +1,34 @@
 schema_version = 1
-inventory_digest = "sha256:60580606b189b05124d9cc9e29f1866af3ddad71dea6c5b744e12d927a38824c"
+inventory_digest = "sha256:a7663aadc340ebadeb45417c776f81da7c326b41b727ca86842d24f4f5bfa1e8"
 
 [[operations]]
-operation_id = "rename-load-census-classification-error"
-finding_id = "sha256:72f50f39d4e0136d9a54e81e12e6a479fef68262c536ce596232cac529bc38d4"
+operation_id = "rename-python-runtime-dependency-status"
+finding_id = "sha256:1c6852fe4af506ddc7cf90de2313d36410b8eb769854fe9d3de48653c9ee18a0"
 operation_kind = "symbol-rename"
 disposition = "rename-distinct"
 lifecycle = "reviewed"
-old_locator = "class:dev.registry.analysis.load_census_classification.ClassificationError#binding=1"
-old_path = "dev/registry/analysis/load_census_classification.py"
-new_locator = "class:dev.registry.analysis.load_census_classification.LoadCensusClassificationError#binding=1"
-new_path = "dev/registry/analysis/load_census_classification.py"
-owner = "dev-registry"
-rationale = "The exception reports integrity failures in the reviewed registry load census; the qualified singular name distinguishes it from the persistence-layer sensitivity classification error."
-expected_reference_classes = ["definition"]
-changed_paths = ["dev/registry/analysis/load_census_classification.py"]
+old_locator = "enum:dev.ci.python_runtime_compatibility.DependencyStatus#binding=1"
+old_path = "dev/ci/python_runtime_compatibility.py"
+new_locator = "enum:dev.ci.python_runtime_compatibility.PythonRuntimeDependencyStatus#binding=1"
+new_path = "dev/ci/python_runtime_compatibility.py"
+owner = "dev-ci"
+rationale = "The enum records dependency installation outcomes inside the Python runtime compatibility probe; the qualified singular name distinguishes it from the application provisioning result."
+expected_reference_classes = ["definition", "static-import"]
+changed_paths = [
+  "dev/ci/python_runtime_compatibility.py",
+  "dev/ci/tests/test_python_runtime_compatibility.py",
+]
 generator_commands = []
 focused_gates = [
-  ["uv", "run", "--no-sync", "pytest", "dev/registry/tests/test_load_census_classification.py", "-q"],
-  ["uv", "run", "--no-sync", "ruff", "check", "dev/registry/analysis/load_census_classification.py", "dev/registry/tests/test_load_census_classification.py"],
+  ["uv", "run", "--no-sync", "pytest", "dev/ci/tests/test_python_runtime_compatibility.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "dev/ci/python_runtime_compatibility.py", "dev/ci/tests/test_python_runtime_compatibility.py"],
 ]
 moves = []
 
 [[operations.preconditions]]
-path = "dev/registry/analysis/load_census_classification.py"
-sha256 = "sha256:4c2352b492629468eeb0dcb00786d5eeeb172f83d8cc6063c13d64f25bb7c581"
+path = "dev/ci/python_runtime_compatibility.py"
+sha256 = "sha256:273d67eeb6abf94366a3eaca98f06c3ea19ac09eb34f0978bcd609cc5786e020"
+
+[[operations.preconditions]]
+path = "dev/ci/tests/test_python_runtime_compatibility.py"
+sha256 = "sha256:0c38e86a2888f4eed554912988eb27b027f7ca46127fe7b604ae0c2d305f4e15"

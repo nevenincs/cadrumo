@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import (
     ModeloId,
@@ -126,14 +127,21 @@ class JoinedRecordDesign(_StrictModel):
             ):
                 raise ValueError("compiled semantic map may change only casilla tokens")
             if any(
-                not _entry_is_exact_or_compiled_token(authored, compiled)
+                not _entry_is_exact_or_compiled_token(
+                    authored,
+                    compiled,
+                    modelo=self.modelo,
+                    revision_id=self.revision_id,
+                )
                 for authored, compiled in zip(
                     self.authored_semantic_map.entries,
                     self.compiled_semantic_map.entries,
                     strict=True,
                 )
             ):
-                raise ValueError("compiled semantic-map casilla ids must be exact or solely left-zero-padded")
+                raise ValueError(
+                    "compiled semantic-map casilla ids must be exact, solely left-zero-padded, or receipt-admitted"
+                )
         record_fields = tuple(field for record in self.records for field in record.fields)
         if self.fields != record_fields:
             raise ValueError("joined record-design fields must exactly flatten its records")
@@ -166,7 +174,13 @@ class JoinedRecordDesign(_StrictModel):
         return self
 
 
-def _entry_is_exact_or_compiled_token(authored: SemanticMapEntry, compiled: SemanticMapEntry) -> bool:
+def _entry_is_exact_or_compiled_token(
+    authored: SemanticMapEntry,
+    compiled: SemanticMapEntry,
+    *,
+    modelo: ModeloId,
+    revision_id: RevisionId | None,
+) -> bool:
     """Prove validation changed an authored token only through its admitted form."""
     if authored == compiled:
         return True
@@ -186,8 +200,43 @@ def _entry_is_exact_or_compiled_token(authored: SemanticMapEntry, compiled: Sema
         return True
     if token.isdecimal() and ":" in resolved:
         _segment, tail = resolved.rsplit(":", 1)
-        return tail.isdecimal() and tail.lstrip("0") == token.lstrip("0") and bool(tail.lstrip("0"))
+        return (
+            tail.isdecimal()
+            and tail.lstrip("0") == token.lstrip("0")
+            and bool(tail.lstrip("0"))
+            and _reviewed_qualified_token_admits(
+                modelo=modelo,
+                revision_id=revision_id,
+                export_field_id=str(authored.export_field_id),
+                casilla_id=resolved,
+            )
+        )
     return False
+
+
+def _reviewed_qualified_token_admits(
+    *,
+    modelo: ModeloId,
+    revision_id: RevisionId | None,
+    export_field_id: str,
+    casilla_id: CasillaId,
+) -> bool:
+    """Re-prove the only qualified compiler transformation at the join boundary."""
+    if str(modelo) != "200" or str(revision_id) != "2024":
+        return False
+    from ..analysis.m200_2024_reviewed_promotions import (
+        _receipt_candidate_ids,
+        build_m200_2024_reviewed_promotion_snapshot,
+    )
+    from ..analysis.m200_2024_unique_adjudications import verify_canonical_declarations
+
+    snapshot = build_m200_2024_reviewed_promotion_snapshot()
+    _receipt_candidate_ids(snapshot)
+    verify_canonical_declarations(snapshot.unique_authority)
+    return any(
+        row.export_field_id == export_field_id and row.casilla_id == casilla_id
+        for row in snapshot.unique_authority.adjudications
+    )
 
 
 def join_record_design_semantics(

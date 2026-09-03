@@ -187,7 +187,7 @@ def test_binary_missing_wheel_is_a_failed_attributable_outcome(tmp_path: Path, m
     )
 
     assert commands[0].exit_status == 1
-    assert status is compatibility.DependencyStatus.MISSING_WHEEL
+    assert status is compatibility.PythonRuntimeDependencyStatus.MISSING_WHEEL
     assert detail and "wheel" in detail.lower()
     assert status.value != "skipped"
     argv = captured["argv"]
@@ -275,16 +275,22 @@ def test_binary_selection_attributes_advisory_missing_wheels() -> None:
 @pytest.mark.parametrize(
     ("stderr", "expected"),
     (
-        ("No compatible wheel was found for native dependency", compatibility.DependencyStatus.MISSING_WHEEL),
-        ("wheel metadata verification failed after download", compatibility.DependencyStatus.FAILED),
-        ("the local wheel was installed but its hash did not verify", compatibility.DependencyStatus.FAILED),
+        (
+            "No compatible wheel was found for native dependency",
+            compatibility.PythonRuntimeDependencyStatus.MISSING_WHEEL,
+        ),
+        ("wheel metadata verification failed after download", compatibility.PythonRuntimeDependencyStatus.FAILED),
+        (
+            "the local wheel was installed but its hash did not verify",
+            compatibility.PythonRuntimeDependencyStatus.FAILED,
+        ),
     ),
 )
 def test_binary_install_failure_taxonomy_is_not_triggered_by_the_word_wheel(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     stderr: str,
-    expected: compatibility.DependencyStatus,
+    expected: compatibility.PythonRuntimeDependencyStatus,
 ) -> None:
     """Only resolver diagnostics, not arbitrary wheel prose, mean missing-wheel."""
     artifact = tmp_path / "cadrumo-0.2.2-py3-none-any.whl"
