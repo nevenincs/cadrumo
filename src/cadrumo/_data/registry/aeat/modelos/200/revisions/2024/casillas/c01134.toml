@@ -1,0 +1,23 @@
+[[revisions.2024.casillas]]
+id = '01134'
+number = '01134'
+data_type = 'money'
+semantic_role = 'is_conversion_aid_exceso_cuota_importe'
+required = false
+input_kind = 'manual'
+section = [
+    'conversion_activos_impuesto_diferido_credito_exigi',
+    'exceso_cuota_liquida_positiva',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = [
+    'aeat-dr-200-2024',
+    'aeat-modelo-200-manual-2024',
+]
+

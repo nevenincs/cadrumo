@@ -1,0 +1,23 @@
+[[revisions.2024.casillas]]
+id = '01935'
+number = '01935'
+data_type = 'money'
+semantic_role = 'is_deduccion_idi_excluida_limite_info_adicional'
+required = false
+input_kind = 'manual'
+section = [
+    'deducciones_i_d_i_excluidas_de_limite',
+    'informacion_adicional_para_el_calculo_de_limites_d',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = [
+    'aeat-dr-200-2024',
+    'aeat-modelo-200-manual-2024',
+]
+
