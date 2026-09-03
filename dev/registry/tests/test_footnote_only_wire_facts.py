@@ -103,7 +103,11 @@ def test_a_vocabulary_miss_does_not_mean_the_note_states_no_wire_fact(
 
     inputs = revision_render_inputs(authority, modelo="200", revision="2025-y-siguientes")
     corpus_path = bundled_path() / authority.catalogues.sources[inputs.joined.source.source_ref].corpus_path
-    definitions = note_definitions(design_transcription_path(corpus_path).read_text(encoding="utf-8"))
+    extracted = design_transcription_path(corpus_path).read_text(encoding="utf-8")
+    # The counterexample belongs to the sheet that prints it. This design
+    # defines "Nota 1" on six sheets and only DP200014's carries the rate
+    # filling rule, which is exactly why a design-wide lookup was wrong.
+    definitions = note_definitions(extracted, sheet="DP200014")
 
     text = definitions["nota 1"]
     assert "2500" in text, "the counterexample's wording is no longer in nota 1"

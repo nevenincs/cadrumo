@@ -18,11 +18,14 @@ _DESIGN = (
     pathlib.Path("src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_353/files")
     / "01-353-ejercicio-2026-y-siguientes-actualizado-03-02-26.xlsx.extracted.md"
 )
+#: Note labels are scoped to the sheet that prints them; this design's
+#: pointer cells and their notes sit on its first sheet.
+_SHEET = "35301"
 
 
 @pytest.fixture(scope="module")
 def definitions() -> dict[str, str]:
-    return note_definitions(_DESIGN.read_text(encoding="utf-8"))
+    return note_definitions(_DESIGN.read_text(encoding="utf-8"), sheet=_SHEET)
 
 
 def test_the_note_behind_the_known_defect_states_applicability_and_no_wire_fact(
@@ -105,7 +108,7 @@ def test_pointer_evidence_separates_a_note_about_the_wire_from_one_about_periods
     """The reading aid points an author at the notes worth opening first."""
     from ..analysis.footnote_pointer_notes import pointer_evidence_for_design
 
-    evidence = pointer_evidence_for_design(["Nota 4.", "Nota 1", 'Constante "353"'], _DESIGN)
+    evidence = pointer_evidence_for_design(["Nota 4.", "Nota 1", 'Constante "353"'], _DESIGN, sheet=_SHEET)
     by_cell = {item.cell: item for item in evidence}
 
     assert set(by_cell) == {"Nota 4.", "Nota 1"}, "a cell stating a fact is not pointer evidence"
@@ -124,4 +127,4 @@ def test_a_design_with_no_transcription_yields_nothing_and_is_the_callers_proble
     """
     from ..analysis.footnote_pointer_notes import pointer_evidence_for_design
 
-    assert pointer_evidence_for_design(["Nota 1"], pathlib.Path("no/such/design.xlsx.extracted.md")) == ()
+    assert pointer_evidence_for_design(["Nota 1"], pathlib.Path("no/such/design.xlsx.extracted.md"), sheet=_SHEET) == ()

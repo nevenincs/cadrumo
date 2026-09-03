@@ -43,6 +43,7 @@ __all__ = [
     "note_definitions",
     "pointer_evidence_for_design",
     "resolve_pointer_notes",
+    "sheet_note_definitions",
 ]
 
 #: A Contenido cell holding only a footnote pointer: "Nota 4", "Notas 1 y 2",
@@ -50,6 +51,10 @@ __all__ = [
 POINTER = re.compile(r"^(?:v[eé]ase\s+)?notas?\s*[\d\s,y]*$", re.IGNORECASE)
 _DEFINITION = re.compile(r"^\s*\|?\s*(nota\s*\d+)\s*:\s*(.*)$", re.IGNORECASE)
 _ROW = re.compile(r"^\s*\|?\s*(nota\s*\d+)\b", re.IGNORECASE)
+#: A sheet heading in the extracted transcription. A workbook design prints one
+#: sheet per page and numbers each page's notes from one, so note labels are
+#: scoped to the sheet this matches and never to the design.
+_SHEET_HEADING = re.compile(r"^#\s+(\S+)\s*$")
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,22 +71,38 @@ class FootnotePointerNote:
         return bool(self.text)
 
 
-def note_definitions(extracted: str) -> dict[str, str]:
-    """Return each note label in a design's extracted text mapped to its wording.
+def sheet_note_definitions(extracted: str) -> dict[str, dict[str, str]]:
+    """Return each sheet's note labels mapped to their wording.
+
+    A note label is scoped to the sheet that prints it, not to the design. A
+    workbook design carries one sheet per page and numbers each page's notes
+    from one, so ``Nota 1`` names a different note on every sheet: modelo 200's
+    2025 design defines ``Nota 1`` six times across seventy-seven sheets. A flat
+    label-to-text mapping cannot hold that, and the earlier one did not fail on
+    it - it appended, so a field citing ``Nota 1`` received all six notes run
+    together, covering accounting-statement codes, identifier types and a rate
+    filling rule in one blob. Reading text belonging to another page is worse
+    than reading none, because it looks like evidence.
 
     A definition is a row whose first cell is ``Nota N:``. The wording may sit on
     that row or on the rows beneath it, so continuation lines are gathered until
-    the next note or a row that starts a table again.
+    the next note, a blank row, or the heading that starts the next sheet.
     """
-    definitions: dict[str, list[str]] = {}
+    sheets: dict[str, dict[str, list[str]]] = {}
+    sheet = ""
     current: str | None = None
     for line in extracted.splitlines():
+        heading = _SHEET_HEADING.match(line)
+        if heading is not None:
+            sheet = heading.group(1)
+            current = None
+            continue
         match = _DEFINITION.match(line)
         if match is not None:
             current = _normalise(match.group(1))
-            definitions.setdefault(current, [])
+            sheets.setdefault(sheet, {}).setdefault(current, [])
             if match.group(2).strip():
-                definitions[current].append(match.group(2).strip())
+                sheets[sheet][current].append(match.group(2).strip())
             continue
         if current is None:
             continue
@@ -89,8 +110,21 @@ def note_definitions(extracted: str) -> dict[str, str]:
         if not stripped or stripped.startswith("#") or _ROW.match(line):
             current = None
             continue
-        definitions[current].append(stripped)
-    return {label: " ".join(parts).strip() for label, parts in definitions.items()}
+        sheets[sheet][current].append(stripped)
+    return {
+        name: {label: " ".join(parts).strip() for label, parts in labels.items()}
+        for name, labels in sheets.items()
+    }
+
+
+def note_definitions(extracted: str, *, sheet: str) -> dict[str, str]:
+    """Return one sheet's note labels mapped to their wording.
+
+    The sheet is required rather than defaulted. A default would have to pick
+    between "the whole design" - the ambiguity this replaced - and one arbitrary
+    sheet, and both answers are wrong silently.
+    """
+    return sheet_note_definitions(extracted).get(sheet, {})
 
 
 def _normalise(label: str) -> str:
@@ -157,7 +191,9 @@ def design_transcription_path(corpus_path: Path) -> Path:
     return Path(str(corpus_path) + ".extracted.md")
 
 
-def pointer_evidence_for_design(contents: Iterable[str], transcription: Path) -> tuple[PointerEvidence, ...]:
+def pointer_evidence_for_design(
+    contents: Iterable[str], transcription: Path, *, sheet: str
+) -> tuple[PointerEvidence, ...]:
     """Return the pointer cells among ``contents`` with the notes they name resolved.
 
     A design with no transcription yields nothing, and the caller is expected to
@@ -167,7 +203,7 @@ def pointer_evidence_for_design(contents: Iterable[str], transcription: Path) ->
     """
     if not transcription.exists():
         return ()
-    definitions = note_definitions(transcription.read_text(encoding="utf-8"))
+    definitions = note_definitions(transcription.read_text(encoding="utf-8"), sheet=sheet)
     evidence: list[PointerEvidence] = []
     for content in contents:
         cell = content.strip()

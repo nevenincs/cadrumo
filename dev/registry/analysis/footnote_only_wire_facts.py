@@ -60,8 +60,8 @@ from ..pipeline.render_check import revision_render_inputs
 from .footnote_pointer_notes import (
     PointerEvidence,
     design_transcription_path,
-    note_definitions,
     resolve_pointer_notes,
+    sheet_note_definitions,
 )
 
 __all__ = [
@@ -123,7 +123,9 @@ def revision_findings(
     source_ref = inputs.joined.source.source_ref
     corpus_path = bundled_path() / authority.catalogues.sources[source_ref].corpus_path
     transcription = design_transcription_path(corpus_path)
-    definitions = note_definitions(transcription.read_text(encoding=_UTF_8)) if transcription.is_file() else {}
+    by_sheet = (
+        sheet_note_definitions(transcription.read_text(encoding=_UTF_8)) if transcription.is_file() else {}
+    )
 
     findings: list[PointerWireFactFinding] = []
     for joined_field in inputs.joined.fields:
@@ -131,7 +133,9 @@ def revision_findings(
         content = field.content
         if field.source_cell is None or content is None or not content.strip():
             continue
-        resolved = resolve_pointer_notes(content, definitions)
+        # Resolved against the field's OWN sheet. A design numbers each page's
+        # notes from one, so a design-wide lookup hands back another page's note.
+        resolved = resolve_pointer_notes(content, by_sheet.get(field.sheet, {}))
         if not resolved or not would_become_eligible(field):
             continue
         # Asked through the module that owns the reading aid rather than by
