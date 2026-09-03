@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1bdd58e6f0438821cc378713766da110d6993f59b417d80c905b1cd0b66ae95b'
+body_hash: 'sha256:66293854be131da980ec605dc60b24f2304260402e5b9f9b88dc4854612346ae'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -757,6 +757,25 @@ whose registrations were never made. Nothing in the tree was at fault.
 The release also needed a tag created by hand. release-please would not cut one, and its
 dispatch is conditioned on cutting it, so the workflow had to be dispatched explicitly
 against the tag as well.
+
+### The product is installable from the index
+
+Both companion registrations were made and the same workflow re-dispatched against the
+same tag. It converged rather than needing a new version: the log reads `File
+cadrumo-0.4.0-py3-none-any.whl already exists, skipping`, then uploads the remaining
+five. That is what `--check-url` is for, and a partial upload is exactly the condition it
+was added to recover from.
+
+All three distributions now serve `0.4.0`, wheel and source archive each. Verified from
+outside rather than from a local build: installing `cadrumo==0.4.0` into an isolated
+environment holding only the artifact resolves both corpora at the matching version,
+imports the package, runs `aeat --version` and `aeat --help` with both root command
+families present, and resolves `cadrumo-mcp` with its server runtime importable.
+
+One reading during that verification was wrong and worth noting: the index reported one
+file for the primary distribution moments after the upload, which read as a missing
+source archive. It was propagation, not absence - both files were there on the next
+request. A single read of an index immediately after an upload is not a measurement.
 
 ### Not investigated
 

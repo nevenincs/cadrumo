@@ -11,7 +11,7 @@ related:
   - '[[2026-09-03-duplication-burndown-honest-clone-closure-research]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:ba2f2d6177326d496c096cac8b00c9ba107a3c68af39865fa9b66bfa975ed707'
+body_hash: 'sha256:344ac9c496d026da1348adfc33128419ce2c43fe1b7e8c68239c0ec4133a6efd'
 ---
 
 <!-- RETIRED: W05, W06, W07, P02, P03, P04, P06, P09, P12, P14, P16, P17, P19, P20, P21, P22, P23, P24, P25, P26, P27, S03, S06, S07 -->
@@ -58,7 +58,7 @@ Migrate graph-bounded Ledger CommandSpec components with contract proof after ea
 
 Resolve the three non-Ledger CLI pairs without coupling unrelated command families.
 
-- [ ] `W02.P10.S11` - Resolve the Modelo nonwork CommandSpec pairs through their narrow shared declaration authority; `src/cadrumo/entrypoints/cli`.
+- [x] `W02.P10.S11` - Resolve the Modelo nonwork CommandSpec pairs through their narrow shared declaration authority; `src/cadrumo/entrypoints/cli`.
 - [ ] `W02.P10.S12` - Resolve the Modelo export and review package clone without coupling distinct workflows; `src/cadrumo/entrypoints/cli`.
 
 ## Wave `W03` - resolve semantic-risk clone pairs
