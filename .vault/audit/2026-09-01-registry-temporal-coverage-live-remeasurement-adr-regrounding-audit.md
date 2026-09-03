@@ -7976,3 +7976,37 @@ remaining six entries name modules that still exist and are no longer reached,
 and each needs the same question asked separately - whether the load genuinely
 narrowed or another edge stopped being followed - which is why they are left
 standing rather than deleted in a sweep.
+
+### the-census-is-clean-and-the-six-were-stale-after-all-but-only-provably-so-afterwards | high | Eight tests pass; the same deletion refused two iterations ago is now the right one, for a reason that did not exist then
+
+The six classification entries left standing last iteration are retired and the
+load census is clean: eight tests pass, exit 0, no unclassified module, no stale
+rule.
+
+The deletion is the same one the failure invited two iterations ago and it was
+right to refuse it then. What changed is not the entries, it is what can be
+proved about them. With the resolver blind, "not in the universe" had two
+possible causes and no way to tell them apart, and one of them - the census
+having stopped following an edge - would have been concealed rather than fixed
+by deleting the rules that noticed. With the resolver repaired, the second cause
+can be ruled out by measurement: every remaining unresolved dynamic site sits
+outside the load closure, and `dynamic_reach` only follows sites inside it, so
+none of them can contribute a module to the universe however they resolve. The
+five surviving modules are therefore genuinely unreached, and the sixth,
+`registry.snapshot`, is genuinely deleted - refactored into
+`_snapshot_internals`, `snapshot_coordinate` and `validate_cross_domain_snapshot`,
+all three of which the table already carried.
+
+The edits follow the shape of each entry rather than a rule about entries. Three
+member names were dropped from lists that keep other live members. The
+categories prefix was dropped from a rule whose remaining member is still in the
+universe. The auth rule carried nothing but its dead prefix, so the rule went
+whole rather than being left as an empty shell that reads like a considered
+decision. And the deleted module's entry was one bare package-relative name
+beside the three modules it became.
+
+The general form is worth keeping, because this campaign will meet it again: a
+finding that says "X no longer describes anything" is a claim about two things -
+the tree and the instrument - and it can only be acted on once the instrument is
+known to be sound. Fixing the instrument first cost two iterations and turned an
+unsafe deletion into a provable one.

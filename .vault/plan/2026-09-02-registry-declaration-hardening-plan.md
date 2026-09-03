@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:087920a6df0d6bacc2ea04f6f5ee0159a4babd5f8dcc6b82b34fa003de160576'
+body_hash: 'sha256:d11cedf46c623d81c2a4970f9d92643ee39a00b85b6ba58b00d22be0c8fe98d4'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -542,6 +542,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S312` - Collapse the three remaining one-value-many-names constants in the registry tooling; `dev/registry/analysis/load_census_classification.py dev/registry/pipeline/render_check.py dev/registry/pipeline/_export_tree.py dev/registry/pipeline/_provenance_manifest.py dev/registry/pipeline/_tree_publication.py`.
 - [x] `W06.P13.S313` - Gate that the census can follow the registry's own dynamic import, so a blinded resolver stops surfacing as stale rules; `dev/registry/tests/test_load_census_classification.py`.
 - [x] `W06.P13.S314` - Teach the dynamic-import resolver the tuple-from-mapping-values shape the snapshot internals now use; `dev/registry/analysis/load_census.py`.
+- [ ] `W06.P13.S315` - Retire the six classification entries proven stale once the resolver could see again, and return the census to clean; `dev/registry/analysis/load_census_classification.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
