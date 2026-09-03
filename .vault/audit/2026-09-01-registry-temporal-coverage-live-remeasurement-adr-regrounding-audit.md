@@ -6338,3 +6338,32 @@ to its contents.
 The dating technique established two findings ago would have caught it, and was applied to the
 module list only after the diagnosis. Attribution has to reach the items inside a failure, not
 just the first date the failure appeared.
+
+### collision-gate-caught-a-deleted-adjudication-and-a-new-collision | high | One row was removed correctly and one was removed while its collision remained, and this campaign missed both for a day
+
+A gate written here has been failing and this campaign did not notice, because the sweep that
+dated the registry failures filtered on `registry` in the path and this gate lives under
+`dev/quality`. A filter written to scope an inquiry excluded the author's own work from it.
+
+What the gate reports is exactly what it was built for. The disposition ledger went from nine
+rows to seven across two commits from the concurrent campaign, and the two removals are not the
+same act. `extract_verdict_from_response_text` no longer appears in the census at all: that was
+the one pair with byte-identical bodies, adjudicated here as owed a collapse, and somebody
+collapsed it. Removing its row was correct and the gate's second direction - a row whose
+collision is gone must fail - is what made the removal mandatory rather than optional.
+
+`extract_pages_text` is the other case. Its row was deleted and the collision it describes is
+still in the census, so the tree lost a reasoned judgement while keeping the thing it judged.
+The row is restored with its original reasoning and a note recording the removal, because a
+future reader finding it deleted a second time should know it has been deleted once already.
+
+A third name arrived meanwhile. `declared_destination_ids` is defined in the TUI's routes and in
+its navigation module, both reading a closed set from a type alias through `get_args` - and
+reading different aliases, the modelo workspace's destinations in one and the whole TUI's in the
+other. The first carries a docstring warning that a literal copy would be a second definition
+agreeing with the first only until it does not. Neither is a copy, so that warning does not
+cover this: a caller importing the wrong one gets a different set, not a stale one. Adjudicated
+as owed a rename.
+
+The gate passes at five tests. What it demonstrated is worth more than its green: it caught a
+correct removal, an incorrect removal, and an arrival, in a ledger nobody was watching.
