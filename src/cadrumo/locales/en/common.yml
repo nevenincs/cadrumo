@@ -1020,6 +1020,7 @@ tui:
       none: Not applicable
       observation:
         not_recorded: Current and available; observation time not recorded
+        time_not_recorded: Observation time not recorded
       scope:
         all: All
         evidence_unknown: Unknown AEAT evidence

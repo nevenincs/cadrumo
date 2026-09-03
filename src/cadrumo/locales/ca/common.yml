@@ -1050,6 +1050,7 @@ tui:
       none: No aplicable
       observation:
         not_recorded: Actual i disponible; hora d'observació no registrada
+        time_not_recorded: Hora d'observació no registrada
       scope:
         all: Totes
         evidence_unknown: Evidència AEAT desconeguda

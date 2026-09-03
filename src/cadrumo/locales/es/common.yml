@@ -1061,6 +1061,7 @@ tui:
       none: No aplicable
       observation:
         not_recorded: Actual y disponible; hora de observación no registrada
+        time_not_recorded: Hora de observación no registrada
       scope:
         all: Todas
         evidence_unknown: Evidencia AEAT desconocida

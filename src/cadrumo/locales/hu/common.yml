@@ -1045,6 +1045,7 @@ tui:
       none: Nem alkalmazható
       observation:
         not_recorded: Aktuális és elérhető; a megfigyelés ideje nincs rögzítve
+        time_not_recorded: A megfigyelés ideje nincs rögzítve
       scope:
         all: Mind
         evidence_unknown: Ismeretlen AEAT-bizonyíték
