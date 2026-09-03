@@ -136,8 +136,7 @@ def main() -> int:
         f"summary transcriptions={len(paths)} findings={len(findings)} "
         f"designs_with_repeated_label={designs} "
         f"definitions_a_design_wide_read_would_merge={merged} "
-        f"transcriptions_defining_no_note={without_notes} {kinds}
-"
+        f"transcriptions_defining_no_note={without_notes} {kinds}\n"
     )
     return 0
 
