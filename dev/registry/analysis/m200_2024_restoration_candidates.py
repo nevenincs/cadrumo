@@ -201,10 +201,16 @@ def main(argv: list[str] | None = None) -> int:
     if output_path is not None:
         rendered = render_review_toml(proposals, refusals)
         if args.check:
-            if not output_path.is_file() or output_path.read_text(encoding="utf-8") != rendered:
-                print(f"stale={output_path}")
+            try:
+                checked_path = _resolve_review_output_path(output_path)
+            except ValueError as exc:
+                parser.error(str(exc))
+            if checked_path != output_path:
+                parser.error("--output destination changed while checking")
+            if not checked_path.is_file() or checked_path.read_text(encoding="utf-8") != rendered:
+                print(f"stale={checked_path}")
                 return 1
-            print(f"current={output_path}")
+            print(f"current={checked_path}")
         else:
             try:
                 written_path = _write_review_output(output_path, rendered)

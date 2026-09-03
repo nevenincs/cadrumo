@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:dea10a9b983ef95ed3678521829a07ae65e6e5293081e4ddb4ef38404193ea40'
+body_hash: 'sha256:44aab0e21de26c43f845324b377adfc97acbaff416738934f88da4af4bcf1c42'
 step_id: 'S04'
 related:
   - "[[2026-09-02-aeat-design-relayout-boundary-plan]]"
@@ -25,3 +25,4 @@ related:
 ## Notes
 
 - Added detectors for direct, traversal, and symlink-based containment in the canonical registry root, and asserted that the retired candidate aliases are absent from the module surface.
+- Added real `SemanticMap`/official-design joining and coordinated map-plus-gap source-drift refusal coverage, including a parent-swap race proving canonical output is unchanged.

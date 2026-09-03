@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:385074c884395dfd060a75e494059a2a1ae525e4418548c1c0e53a822450bbca'
+body_hash: 'sha256:7938fe68be280e4a58ea8aaa5e6d429260916cb3531791368250ba42e15227a2'
 step_id: 'S03'
 related:
   - "[[2026-09-02-aeat-design-relayout-boundary-plan]]"
@@ -26,3 +26,5 @@ related:
 
 - Remediation rejects every review destination whose lexical or resolved path is within the canonical registry root, including traversal and symlink containment.
 - Removed the unused historic-candidate compatibility alias and builder; the proposal-only API is now the sole exported surface.
+- The semantic-map source reference and SHA-256 must exactly match the parsed pinned design source before historic evidence is joined.
+- Review output is revalidated at write time and written through a validated file handle, so a parent-directory swap during evidence generation cannot redirect bytes into registry authority.

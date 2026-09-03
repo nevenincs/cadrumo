@@ -10,7 +10,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:4cf77820868b2c27b4f0998542541889b934d6679abaa546339d52abe56d73e8'
+body_hash: 'sha256:4ea60a38dfd093dd3d192d41c3ad9e18e5b4f616e30017b2b3dfaeb3535d5b93'
 ---
 
 # `modelo-200-semantic-crosswalk` plan
@@ -38,8 +38,8 @@ Separate current declarations from semantic adjudications and bind every result 
 
 Prevent historical fragments, adjacent designs, and description similarity from becoming 2024 semantic or legal authority.
 
-- [ ] `W01.P02.S03` - Retire historic-payload restoration as authority-producing behavior while retaining proposal-only diagnostics; `dev/registry/analysis/m200_2024_restoration_candidates.py`.
-- [ ] `W01.P02.S04` - Detect target-description, semantic-role, legal-reference, and source-SHA mutations at the historic-restoration boundary; `dev/registry/tests/test_m200_2024_restoration_candidates.py`.
+- [x] `W01.P02.S03` - Retire historic-payload restoration as authority-producing behavior while retaining proposal-only diagnostics; `dev/registry/analysis/m200_2024_restoration_candidates.py`.
+- [x] `W01.P02.S04` - Detect target-description, semantic-role, legal-reference, and source-SHA mutations at the historic-restoration boundary; `dev/registry/tests/test_m200_2024_restoration_candidates.py`.
 
 ## Wave `W02` - derive physical reconciliation from the pinned design
 
