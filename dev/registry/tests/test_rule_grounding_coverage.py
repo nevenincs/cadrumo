@@ -82,12 +82,30 @@ def test_an_ungrounded_field_has_no_convention_for_its_type(
             assert item.aeat_type not in convention.types
 
 
-def test_a_revision_with_no_field_needing_a_rule_yields_nothing(
+def test_a_revision_stating_conventions_but_needing_no_rule_yields_nothing(
     authority: ValidatedRegistryAuthority,
 ) -> None:
     """The join reports fields, never conventions.
 
     A design can state conventions while no field of it needs a rule, and
-    reporting those would count wording as work.
+    reporting those would count wording as work. The subject is derived rather
+    than named: an earlier draft named a modelo and revision by hand and picked
+    a revision id the registry does not declare, which failed for a reason that
+    had nothing to do with the property.
     """
-    assert revision_findings(authority, modelo="390", revision="2025-y-siguientes") == ()
+    from ..analysis.footnote_only_wire_facts import revision_findings as fields_needing_rules
+
+    checked = 0
+    for modelo in bundled_modelo_ids():
+        for revision_id in authority.modelo(modelo).revisions:
+            revision = str(revision_id)
+            try:
+                needed = fields_needing_rules(authority, modelo=modelo, revision=revision)
+                conventions = type_conventions(authority, modelo=modelo, revision=revision)
+            except (ValueError, KeyError, FileNotFoundError, OSError):
+                continue
+            if needed or not conventions:
+                continue
+            assert revision_findings(authority, modelo=modelo, revision=revision) == ()
+            checked += 1
+    assert checked, "no revision states a convention without needing a rule, so this proves nothing"

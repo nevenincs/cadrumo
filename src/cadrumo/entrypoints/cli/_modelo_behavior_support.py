@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from pathlib import Path
-
 import typer
 
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -28,7 +25,6 @@ from ...application.modelo.work_addressing import (
     resolve_modelo_revision_for_operator_target,
     resolve_modelo_work_unit_for_operator_target,
 )
-from ...application.workflow.persistence import workflow_state_repository
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n.render import tr
@@ -36,8 +32,7 @@ from ...core.logging import get_logger
 from ...core.period import Period, PeriodError
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
-from ...domain.taxpayer.profile import TaxpayerProfile
-from ._common import filing_taxpayer_or_refuse, no_active_profile_refusal
+from ._common import no_active_profile_refusal
 from ._modelo_cli_support import (
     bad_parameter_from_error,
     bad_parameter_from_localized_context,
@@ -199,81 +194,6 @@ def resolve_exportable_revision_for_cli(
         if revision is not None:
             raise bad_parameter_from_error(exc) from exc
         raise selector_bad_parameter(exc) from exc
-
-
-@dataclass(frozen=True, slots=True)
-class ResolvedExportTarget:
-    """The revision and filing profile an export-shaped command acts on."""
-
-    workflow_profile: TaxpayerProfile
-    selected_revision: CalculationRevision
-
-    @property
-    def calculation_revision_id(self) -> str:
-        """The identifier of the revision to export."""
-        return self.selected_revision.calculation_revision_id
-
-
-def resolve_export_target_for_cli(
-    *,
-    output: Path | None,
-    output_required_key: str,
-    output_required_default: str,
-    revision: str | None,
-    work_unit_id: str | None,
-    modelo: str | None,
-    year: int | None,
-    period: str | None,
-    registry_revision: str | None,
-    bucket_id: str | None,
-    select: str,
-) -> ResolvedExportTarget:
-    """Resolve the filing profile and target revision for an export-shaped command.
-
-    Both the fichero-BOE export and the review-package build begin the same way:
-    load the workflow state, refuse without a filing taxpayer, require a real
-    output path, and resolve one exportable revision from the selection options.
-    That preamble is one authority and lives here.
-
-    What the two do NOT share is the message shown when the output path is
-    missing, because each names its own artefact. The key and its fallback are
-    therefore supplied by the caller rather than fixed here, which keeps the
-    shared step from flattening two distinct user-facing surfaces into one.
-
-    Args:
-        output: The destination path supplied on the command line.
-        output_required_key: Translation key for the missing-output refusal.
-        output_required_default: Fallback text for that refusal.
-        revision: An explicit revision address, when supplied.
-        work_unit_id: The owning work unit, when supplied.
-        modelo: The modelo identifier, when supplied.
-        year: The filing year, when supplied.
-        period: The filing period token, when supplied.
-        registry_revision: The registry revision, when supplied.
-        bucket_id: The owning bucket, when supplied.
-        select: The revision selector token.
-
-    Returns:
-        The resolved filing profile and revision.
-
-    Raises:
-        typer.BadParameter: If no usable output path was supplied.
-    """
-    workflow_state = workflow_state_repository().load()
-    workflow_profile = filing_taxpayer_or_refuse(workflow_state)
-    if output is None or not str(output).strip() or str(output).strip() == ".":
-        raise typer.BadParameter(tr(output_required_key, default=output_required_default))
-    selected_revision = resolve_exportable_revision_for_cli(
-        revision=revision,
-        work_unit_id=work_unit_id,
-        modelo=modelo,
-        year=year,
-        period=period,
-        registry_revision=registry_revision,
-        bucket_id=bucket_id,
-        select=select,
-    )
-    return ResolvedExportTarget(workflow_profile=workflow_profile, selected_revision=selected_revision)
 
 
 def require_active_profile() -> None:
@@ -442,10 +362,8 @@ def date_binding_profile_requirements(unit: WorkUnit | None, binding_id: str) ->
 
 
 __all__ = [
-    "ResolvedExportTarget",
     "bare_period_error",
     "require_active_profile",
-    "resolve_export_target_for_cli",
     "resolve_exportable_revision_for_cli",
     "resolve_optional_cli_period",
     "resolve_revision_for_cli",
