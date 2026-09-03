@@ -14,7 +14,7 @@ import pytest
 from pydantic import ValidationError
 
 import cadrumo.application.search.workbench as workbench_module
-from cadrumo.application.search.workbench import (
+from ..workbench import (
     WorkbenchDestinationAdmission,
     WorkbenchDestinationAdmissionState,
     WorkbenchFilingAddress,
@@ -30,8 +30,8 @@ from cadrumo.application.search.workbench import (
     WorkbenchSearchSource,
     WorkbenchSearchStatus,
 )
-from cadrumo.core.period import Period
-from cadrumo.domain.modelos.codes import ModeloCode
+from ....core.period import Period
+from ....domain.modelos.codes import ModeloCode
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

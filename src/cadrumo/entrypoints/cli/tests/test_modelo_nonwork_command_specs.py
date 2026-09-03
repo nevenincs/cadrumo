@@ -413,7 +413,7 @@ def test_every_nonwork_target_is_public_resolvable_and_runtime_materializable() 
         assert callable(behavior)
         behavior_parameters = {name for name in inspect.signature(behavior).parameters if name != "ctx"}
         assert behavior_parameters == {parameter.name for parameter in spec.parameters}
-        _behavior_wrapper(spec)
+        _behavior_wrapper(COMMAND_GRAPH, spec)
 
 
 def test_nonwork_handlers_and_schemas_have_no_legacy_authority() -> None:

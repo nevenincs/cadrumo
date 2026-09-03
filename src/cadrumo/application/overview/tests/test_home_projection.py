@@ -5,13 +5,13 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.operator_actions.models import DeclaredNextAction
-from cadrumo.application.overview.calendar_models import (
+from ...operator_actions.models import DeclaredNextAction
+from ..calendar_models import (
     OverviewAeatSubmissionState,
     OverviewLocalFilingState,
     OverviewPeriodState,
 )
-from cadrumo.core.period import Period
+from ....core.period import Period
 
 from ..home import (
     HomeAccountSession,

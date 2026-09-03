@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from dev.locales import wizard_translation_audit
-from dev.locales.wizard_translation_audit import (
+from .. import wizard_translation_audit
+from ..wizard_translation_audit import (
     audit_cli_translations,
     audit_wizard_translations,
     cli_keys_referenced_in_source,

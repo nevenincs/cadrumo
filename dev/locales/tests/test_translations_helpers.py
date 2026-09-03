@@ -18,7 +18,7 @@ from pydantic import BaseModel, ConfigDict
 
 from cadrumo.application.wizard.models import WizardChoice, WizardFlow, WizardQuestion, WizardSection, WizardWidget
 from cadrumo.core.i18n import Translatable as tr
-from dev.locales.wizard_translation_audit import (
+from ..wizard_translation_audit import (
     _FIXED_RUNTIME_KEYS,
     _resolves_in,
     _walk_keys,
@@ -234,7 +234,7 @@ def test_cli_keys_referenced_in_source_omits_f_string_interpolated_keys() -> Non
 def test_cli_keys_referenced_in_source_root_resolves_under_entrypoints_cli() -> None:
     """Sanity-check that the helper's root path resolution lands on the
     real entrypoints/cli directory (the AST walk visits every .py under it)."""
-    from dev.locales.wizard_translation_audit import _cli_entrypoints_root
+    from ..wizard_translation_audit import _cli_entrypoints_root
 
     root = _cli_entrypoints_root()
     assert root.is_dir()
