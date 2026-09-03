@@ -872,7 +872,7 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
             )
     from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...application.aggregation import stale_filed_revisions
+    from ...application.aggregation.ledger_filing_snapshot import stale_filed_revisions
 
     revisions = CalculationRevisionCatalogueRepository().load().revisions
     work_units = WorkUnitCatalogueRepository().load()

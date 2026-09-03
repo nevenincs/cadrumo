@@ -60,7 +60,7 @@ See Also:
         Source resolvers that turn transaction catalogues into
         :class:`~application.aggregation.CalculationSourceResolution`
         payloads for modelo calculation.
-    :func:`~application.aggregation._ledger_filing_snapshot.compute_ledger_filing_snapshot`
+    :func:`~application.aggregation.ledger_filing_snapshot.compute_ledger_filing_snapshot`
         Captures tax-relevant transaction fields for finalized calculation
         revisions.
     :mod:`~domain.invoices`

@@ -365,7 +365,7 @@ def _draft_ledger_anchor(
     """
     if not source_transaction_ids:
         return None
-    from ..aggregation import compute_ledger_filing_snapshot
+    from ..aggregation.ledger_filing_snapshot import compute_ledger_filing_snapshot
 
     tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
     return compute_ledger_filing_snapshot(

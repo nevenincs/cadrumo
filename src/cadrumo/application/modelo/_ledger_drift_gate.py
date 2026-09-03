@@ -22,7 +22,7 @@ standing up the whole verify path.
 See Also:
     :mod:`~application.modelo._ledger_evidence_gate`:
         The sibling filing-grade gate over the frozen evidence bundle.
-    :func:`~application.aggregation.evaluate_ledger_filing_staleness`:
+    :func:`~application.aggregation.ledger_filing_snapshot.evaluate_ledger_filing_staleness`:
         The shared comparison, which also guards finalized revisions.
 """
 
@@ -38,7 +38,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from ..aggregation import evaluate_ledger_filing_staleness
+from ..aggregation.ledger_filing_snapshot import evaluate_ledger_filing_staleness
 
 if TYPE_CHECKING:
     from ...domain.modelos.calculation_revision import CalculationRevision

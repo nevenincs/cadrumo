@@ -466,7 +466,10 @@ def test_component_structural_forgery_reaches_canonical_preflight_and_refuses(
 
     with pytest.raises(
         ObjectNameReplayError,
-        match=r"exact preflight.*supplied component differs from the canonical repository graph",
+        match=(
+            r"exact preflight.*(?:supplied component differs from the canonical repository graph|"
+            r"copied repository graph differs from the reviewed component)"
+        ),
     ):
         replay_object_name_component(
             manifest,

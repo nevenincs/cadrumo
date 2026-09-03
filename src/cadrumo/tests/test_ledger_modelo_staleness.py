@@ -10,12 +10,12 @@ filings, the staleness sweep is the defense-in-depth that catches any drift that
 reaches a snapshot-backed revision.
 
 See Also:
-    :func:`~application.aggregation.compute_ledger_filing_snapshot`
+    :func:`~application.aggregation.ledger_filing_snapshot.compute_ledger_filing_snapshot`
         Transaction-aware capture of contributor fingerprints for a revision.
-    :func:`~application.aggregation.evaluate_ledger_filing_staleness`
+    :func:`~application.aggregation.ledger_filing_snapshot.evaluate_ledger_filing_staleness`
         Runtime comparison between a stored snapshot and the live ledger
         catalogue.
-    :func:`~application.aggregation.stale_filed_revisions`
+    :func:`~application.aggregation.ledger_filing_snapshot.stale_filed_revisions`
         System-level sweep that reports finalized snapshot-backed revisions whose
         ledger contributors drifted.
     :func:`~application.ledger.actions_manual.update_manual_transaction_fields`
@@ -42,7 +42,7 @@ from ..adapters.persistence.profile.modelos_calculation import CalculationRevisi
 from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ..application.aggregation import (
+from ..application.aggregation.ledger_filing_snapshot import (
     compute_ledger_filing_snapshot,
     evaluate_ledger_filing_staleness,
     stale_filed_revisions,

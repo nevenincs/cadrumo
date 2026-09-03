@@ -35,8 +35,8 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
-from .. import assert_evidence_covers_snapshot
-from .._ledger_filing_snapshot import (
+from ..ledger_filing_snapshot import (
+    assert_evidence_covers_snapshot,
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
     row_fingerprint,
