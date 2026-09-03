@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b0fa6fb708a30b4b5fc3e2ccd01ea9c01c18fe4f5990c51a18eb651f15e5593f'
+body_hash: 'sha256:dfa4253feda7840ecfeee785440ff4864a7b36f80e012b8f4dd1f7218cc13527'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8602,3 +8602,61 @@ reading the vault, which this project forbids in that direction for good reason
 - the plan is scaffolding and the tree is the product, and a gate depending on a
 plan row would make the scaffolding load-bearing. The verification is a thing a
 person does when they have reason to, and the reason is recorded here.
+
+### the-largest-screen-already-reports-the-unit-somebody-acts-on | medium | 1,389 of the corpus's 1,651 findings come from one screen, and the number is the collapsed one, not the raw one
+
+Provenance consistency contributes 1,389 of the 1,651 findings the runner
+reports - eighty-four per cent of the total - which is exactly the shape that
+turned out to be a reporting artefact when the monetary screen's part-split rows
+made up 132 of its 165. The same question was worth asking here, and the answer
+is that this screen already asked it.
+
+The raw measurement is per citing child and there are 31,608 of them. The screen
+collapses those onto the reference that is actually outside its manifest,
+because one missing reference is cited by many children and the thing a person
+fixes is the reference. The runner reports the collapsed count. Both numbers are
+printed in the screen's own summary beside a third - 314 distinct references
+across 1,389 revision-and-kind keys - so a reader can see the raw surface, the
+actionable set, and the identities without reading the code.
+
+That is the pattern the monetary screen had to be given and this one was built
+with. The docstring even states the ratio: site count exceeds the number of
+things to fix by roughly nineteen to one.
+
+Nineteen is also the most defensible answer this campaign has found to the
+plan's "one citation can be restated at eleven". It is measured on live data
+rather than schema shape, it counts the thing the phrase describes - how many
+places repeat one citation - and it comes from the screen that owns the
+question. The schema-shape answer of 48 fields across 25 types remains true of
+the SURFACE; nineteen is true of the corpus. Neither is eleven, and the pair is
+more useful than either alone: one says how many places could restate a
+citation, the other how many typically do.
+
+### no-screen-hides-a-raw-count-behind-an-actionable-one-and-the-two-that-looked-like-it-were-my-key | medium | The finding shapes differ because the screens do, which is correct and which a generic check cannot assume
+
+With two screens found reporting collapsed counts deliberately - monetary after
+being given the treatment, provenance having been built with it - the remaining
+seven were checked for the same gap: does any report a raw site count where a
+smaller actionable one exists?
+
+None does, and the check had to be corrected before it could say so. Keying
+every finding on modelo, revision and kind reported wire-type compatibility and
+provenance as collapsing twenty-nine and 1,389 rows onto one coordinate each,
+which would have been a spectacular gap. Neither finding type has a `kind`
+field: provenance carries `ref_kind`, wire-type carries a `divergent` flag, and
+the missing attribute read as None for every row. The seventh instrument error
+of this campaign, same shape as the rest.
+
+The reason those two lack the field is the useful part. A screen reporting ONE
+condition needs no discriminator - a kind column would be a constant - so the
+absence is a property of the screen rather than an omission in the finding.
+Monetary reports thirty-three rows across eleven coordinates because several
+fields in one revision each need their own scale, and the field is what a person
+fixes, so per-field is already the actionable unit.
+
+The conclusion for anyone building across these screens: their finding types
+share modelo and revision and nothing else, deliberately, because the coordinate
+that identifies a defect differs by condition. A cross-screen tool that assumes
+a common shape will silently mis-read the screens whose conditions do not have
+one, which is what happened here and would have been reported as a finding had
+the numbers been less absurd.

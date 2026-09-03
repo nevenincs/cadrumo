@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:b123a4ed8b21af50ad9c20427a0c4eb1e0d60a8edb32082ffade15ed004c0bd0'
+body_hash: 'sha256:0791d260831ce663751e5fab50d9fa4a9e40104bc2fffa91da3a516a3e93b36f'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -46,6 +46,14 @@ citation can be restated across 25 declaration types and 48 fields, not eleven -
 source, in parallel fields. Whatever eleven counted, the surface a reader must keep consistent today
 is several times wider, and the symmetry says the two citation kinds were declared as a pair 24
 separate times rather than once with two projections.
+
+The corpus answers the same question differently and both answers are worth carrying. The provenance
+screen measures 31,608 citing sites against the references they name, and states the ratio its own
+report is built on: a citation is repeated by roughly nineteen children for every one place a fix
+lands. So 48 fields across 25 types is how many places COULD restate a citation, and nineteen is how
+many typically do. Neither is eleven, and a plan quoting one number where the surface and the corpus
+disagree by that much was hiding the more interesting fact - that the restatement is concentrated in
+the citing children rather than spread across the declaration types.
 
 Applicability re-derives to two different numbers and the plan's is neither, which is the clearest
 demonstration of why a boundary matters more than a count. Ten declared fields carry the word:
@@ -619,6 +627,8 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S333` - Establish that the money scale factor cannot be pinned from the development tree without a fake or a private import; `dev/registry/tests/test_monetary_scale.py`.
 - [ ] `W06.P13.S334` - Pin the money wire type's hundredfold scale beside the codec that applies it, where a real export field is available; `src/cadrumo/domain/calculations/registry/tests`.
 - [x] `W06.P13.S335` - Verify a sample of the closed Steps scoped outside this execution against the live tree; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S336` - Establish that the largest screen's headline is the actionable unit and record the live restatement ratio; `dev/registry/analysis/provenance_consistency.py`.
+- [x] `W06.P13.S337` - Carry both the surface and corpus answers for the citation figure in the Description; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
