@@ -635,6 +635,55 @@ def test_every_committed_export_tree_is_enrolled_in_its_reproduction_test(
     )
 
 
+def test_no_modelo_leaves_a_year_inside_its_span_unserved(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> None:
+    """Where one revision closes, the next opens.
+
+    A modelo's revisions divide the years it covers, and a year falling between
+    two of them is served by nothing while both neighbours suggest it should be.
+    That is a defect an author can fix, unlike the years BEFORE a modelo's first
+    revision, which are outside the registry's reach rather than missing from it
+    - the corpus's earliest coverage runs from 2003 to 2026 by modelo, and
+    nothing says they must agree.
+
+    The distinction is the whole gate. Modelo 322 carries a revision directory
+    named `2008-2022` that serves 2022 alone, which reads like a fourteen-year
+    hole and is not one: the modelo's coverage simply begins in 2022. Gating the
+    span from its own minimum rather than from any fixed year is what keeps that
+    out of the finding set.
+
+    Open-ended revisions are closed at the latest year any revision mentions, so
+    a modelo whose newest revision runs open-ended contributes no spurious gap
+    between that revision and the horizon.
+    """
+    gapped: dict[str, list[int]] = {}
+    examined = 0
+    for modelo_id in modelo_ids:
+        revisions = authority.modelo(modelo_id).revisions.values()
+        closed = [
+            (revision.valid_from.year, revision.valid_to.year)
+            for revision in revisions
+            if revision.valid_to is not None
+        ]
+        if not closed:
+            continue
+        examined += 1
+        open_starts = [revision.valid_from.year for revision in revisions if revision.valid_to is None]
+        horizon = max(max(end for _, end in closed), *(open_starts or [0]))
+        served: set[int] = set()
+        for start, end in closed:
+            served |= set(range(start, end + 1))
+        for start in open_starts:
+            served |= set(range(start, horizon + 1))
+        missing = sorted(set(range(min(served), max(served) + 1)) - served)
+        if missing:
+            gapped[modelo_id] = missing
+
+    assert examined, "no modelo declares a closed window, so this gate checked nothing"
+    assert not gapped, f"years inside a modelo's own span that no revision serves: {gapped}"
+
+
 def test_every_package_initialiser_in_the_development_registry_tree_is_inert() -> None:
     """A package initialiser here declares a namespace and nothing else.
 
