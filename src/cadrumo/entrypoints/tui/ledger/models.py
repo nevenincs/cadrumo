@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from enum import StrEnum
+from typing import Literal, Protocol
 
 from pydantic import BaseModel, model_validator
 
@@ -10,6 +11,12 @@ from ....application.ledger.workspace import (
     LedgerWorkspaceArea,
     LedgerWorkspaceAvailability,
     LedgerWorkspaceEntryRefV1,
+)
+from ....application.ledger.models import (
+    LedgerSourceImportCommand,
+    LedgerSourceImportResult,
+    ManualLedgerTransactionPatch,
+    ManualLedgerTransactionResult,
 )
 from ....application.operator_actions.models import ActionReference
 from ....core.identity import TransactionId
@@ -78,9 +85,76 @@ class LedgerReviewRowV1(BaseModel):
         return self
 
 
+class LedgerFlowState(StrEnum):
+    """Explicit state of a command-backed Ledger interaction."""
+
+    EDITING = "editing"
+    CONFIRMING = "confirming"
+    SUBMITTING = "submitting"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class LedgerClassificationSubmissionV1(BaseModel):
+    """Catalogue-authorized canonical classification patch submission."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    action: ActionReference
+    transaction_id: TransactionId
+    patch: ManualLedgerTransactionPatch
+
+
+class LedgerClassificationSubmitterV1(Protocol):
+    """Injected application door for a classification mutation."""
+
+    async def __call__(self, submission: LedgerClassificationSubmissionV1) -> ManualLedgerTransactionResult: ...
+
+
+class LedgerPreparedImportV1:
+    """Opaque pre-resolved import command plus safe catalogue display keys.
+
+    The command deliberately has no public attribute, representation, or model
+    serialization surface: paths and provider transport values remain inside
+    the injected command boundary.
+    """
+
+    __slots__ = ("_command", "choice_id", "provider_label_key", "source_label_key")
+
+    def __init__(
+        self,
+        *,
+        choice_id: str,
+        provider_label_key: str,
+        source_label_key: str,
+        command: LedgerSourceImportCommand,
+    ) -> None:
+        if not choice_id or not provider_label_key.startswith("tui.ledger.") or not source_label_key.startswith("tui.ledger."):
+            raise ValueError("prepared imports require safe Ledger catalogue identities")
+        self.choice_id = choice_id
+        self.provider_label_key = provider_label_key
+        self.source_label_key = source_label_key
+        self._command = command
+
+    def __repr__(self) -> str:
+        return f"LedgerPreparedImportV1(choice_id={self.choice_id!r})"
+
+
+class LedgerImportSubmitterV1(Protocol):
+    """Injected application door for an already-resolved import command."""
+
+    async def __call__(self, command: LedgerSourceImportCommand) -> LedgerSourceImportResult: ...
+
+
 __all__ = [
     "LedgerDestinationIdV1",
+    "LedgerClassificationSubmissionV1",
+    "LedgerClassificationSubmitterV1",
     "LedgerEntryRowV1",
+    "LedgerFlowState",
+    "LedgerImportSubmitterV1",
+    "LedgerPreparedImportV1",
     "LedgerReviewRowV1",
     "LedgerRouteRefusalV1",
     "LedgerRouteTargetV1",

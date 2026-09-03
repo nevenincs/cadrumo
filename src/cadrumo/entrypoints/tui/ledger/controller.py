@@ -23,6 +23,8 @@ from ....core.identity import TransactionId
 from ..components.theme import BASE_CSS, tokenised
 from ..navigation import TuiScreenContextV1
 from .models import (
+    LedgerClassificationSubmissionV1,
+    LedgerClassificationSubmitterV1,
     LedgerDestinationIdV1,
     LedgerEntryRowV1,
     LedgerReviewRowV1,
@@ -40,9 +42,7 @@ _DESTINATION_BY_AREA: Final = {
     LedgerWorkspaceArea.RECONCILIATION: "ledger.reconciliation",
 }
 
-_IMPLEMENTED_AREAS: Final = frozenset(
-    {LedgerWorkspaceArea.OVERVIEW, LedgerWorkspaceArea.ENTRIES, LedgerWorkspaceArea.REVIEW}
-)
+_IMPLEMENTED_AREAS: Final = frozenset(LedgerWorkspaceArea)
 
 _AREA_LOCALE_KEYS: Final = {
     LedgerWorkspaceArea.OVERVIEW: "tui.ledger.area.overview",
@@ -93,6 +93,29 @@ _LEDGER_LOCALE_KEYS: Final = (
     "tui.ledger.review.open",
     "tui.ledger.review.empty",
     "tui.ledger.unavailable.title",
+    "tui.ledger.refusal.submission_unavailable",
+    "tui.ledger.classification.title",
+    "tui.ledger.classification.prompt",
+    "tui.ledger.classification.business",
+    "tui.ledger.classification.personal",
+    "tui.ledger.classification.excluded",
+    "tui.ledger.classification.confirm",
+    "tui.ledger.classification.cancel",
+    "tui.ledger.classification.confirming",
+    "tui.ledger.classification.progress",
+    "tui.ledger.classification.success",
+    "tui.ledger.classification.failure",
+    "tui.ledger.import.title",
+    "tui.ledger.import.prompt",
+    "tui.ledger.import.provider.bank",
+    "tui.ledger.import.source.prepared",
+    "tui.ledger.import.confirm",
+    "tui.ledger.import.cancel",
+    "tui.ledger.import.confirming",
+    "tui.ledger.import.progress",
+    "tui.ledger.import.success",
+    "tui.ledger.import.failure",
+    "tui.ledger.import.empty",
     *_AREA_LOCALE_KEYS.values(),
     *_AVAILABILITY_LOCALE_KEYS.values(),
     *_REVIEW_STATUS_LOCALE_KEYS.values(),
@@ -142,6 +165,11 @@ class LedgerWorkspaceController:
         projection: LedgerWorkspaceProjectionV1,
         *,
         review_action: ActionReference,
+        classify_action: ActionReference | None = None,
+        classification_target: TransactionId | None = None,
+        classification_submitter: LedgerClassificationSubmitterV1 | None = None,
+        prepared_imports: tuple[LedgerPreparedImportV1, ...] = (),
+        import_submitter: LedgerImportSubmitterV1 | None = None,
     ) -> None:
         """Admit an outer Ledger context and retain its immutable snapshot."""
         if context.destination != "workbench.ledger":
@@ -151,6 +179,11 @@ class LedgerWorkspaceController:
         self.context = context
         self.projection = projection
         self.review_action = review_action
+        self.classify_action = classify_action
+        self.classification_target = classification_target
+        self.classification_submitter = classification_submitter
+        self.prepared_imports = prepared_imports
+        self.import_submitter = import_submitter
         self._states = {row.area: row for row in projection.areas}
 
     def state_for(self, area: LedgerWorkspaceArea) -> LedgerWorkspaceAreaStateV1:
@@ -171,11 +204,19 @@ class LedgerWorkspaceController:
                 availability=state.availability,
                 reason_key="tui.ledger.refusal.application_state",
             )
-        if area not in _IMPLEMENTED_AREAS:
+        missing_door = (
+            area is LedgerWorkspaceArea.CLASSIFICATION
+            and (self.classify_action is None or self.classification_target is None or self.classification_submitter is None)
+        ) or (area is LedgerWorkspaceArea.IMPORT and (not self.prepared_imports or self.import_submitter is None))
+        if area not in _IMPLEMENTED_AREAS or missing_door:
             return LedgerRouteRefusalV1(
                 target=target,
                 availability=LedgerWorkspaceAvailability.UNAVAILABLE,
-                reason_key="tui.ledger.refusal.destination_pending",
+                reason_key=(
+                    "tui.ledger.refusal.submission_unavailable"
+                    if missing_door
+                    else "tui.ledger.refusal.destination_pending"
+                ),
             )
         return None
 
@@ -215,6 +256,28 @@ class LedgerWorkspaceController:
                 )
             )
         return tuple(rows)
+
+    async def submit_classification(
+        self, patch: ManualLedgerTransactionPatch
+    ) -> ManualLedgerTransactionResult:
+        """Submit an explicit patch through the injected authorized door."""
+        if self.classify_action is None or self.classification_target is None or self.classification_submitter is None:
+            raise RuntimeError("classification submission is unavailable")
+        submission = LedgerClassificationSubmissionV1(
+            action=self.classify_action,
+            transaction_id=self.classification_target,
+            patch=patch,
+        )
+        result = await self.classification_submitter(submission)
+        if result.ref.transaction_id != self.classification_target:
+            raise ValueError("classification result transaction identity disagrees")
+        return result
+
+    async def submit_import(self, prepared: LedgerPreparedImportV1) -> LedgerSourceImportResult:
+        """Pass an opaque pre-resolved command to the injected import door."""
+        if self.import_submitter is None or prepared not in self.prepared_imports:
+            raise RuntimeError("import submission is unavailable")
+        return await self.import_submitter(prepared._command)
 
 
 class LedgerRouteRequested(Message):
@@ -322,3 +385,5 @@ __all__ = [
     "review_status_label",
     "status_label",
 ]
+    LedgerImportSubmitterV1,
+    LedgerPreparedImportV1,
