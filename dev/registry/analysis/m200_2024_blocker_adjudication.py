@@ -161,7 +161,23 @@ def _manual_pages(units: Iterable[dict[str, object]], family: str, segment: str)
             match = re.fullmatch(r"Pag\. ([0-9]+)", str(unit["section"]))
             if match is not None:
                 pages.append(int(match.group(1)))
-    return sorted(set(pages))
+    pages = sorted(set(pages))
+    if segment == "DP200016B":
+        return [page for page in pages if 689 <= page <= 717]
+    if segment == "DP200018":
+        return [page for page in pages if 457 <= page <= 466]
+    if segment == "DP200018C":
+        return [page for page in pages if 483 <= page <= 485]
+    if segment == "DP200020B":
+        limits = (359, 361) if "nivelaci" in _fold(family) else (352, 355)
+        return [page for page in pages if limits[0] <= page <= limits[1]]
+    if segment == "DP200022":
+        return [page for page in pages if 719 <= page <= 745]
+    if segment == "DP200022B":
+        return [page for page in pages if 773 <= page <= 789]
+    if segment == "DP200024":
+        return [page for page in pages if 579 <= page <= 587]
+    return pages
 
 
 def _manual_needles(family: str, segment: str) -> tuple[str, ...]:
@@ -185,6 +201,7 @@ def _manual_needles(family: str, segment: str) -> tuple[str, ...]:
     programme = re.sub(r"^[0-9]{4}\s+", "", family)
     programme = re.sub(r"\s+\([^()]{1,5}\)\s*$", "", programme)
     programme = re.sub(r"\s+2022-2024\s*$", "", programme)
+    programme = re.sub(r"^[0-9]+\.?ª\s+", "", programme)
     return (programme,)
 
 
@@ -196,8 +213,16 @@ def _legal_locator(
 ) -> dict[str, object]:
     explicit = re.findall(r"\(([^)]*(?:art\.|Ley|DA\s)[^)]*)\)", description, flags=re.IGNORECASE)
     provision = explicit[0] if explicit else _family_provision(family, segment)
+    if segment == "DP200012":
+        provision = "artículo 1.7 Ley 38/2022" if "energ" in _fold(family) else "artículo 2.6 Ley 38/2022"
+    elif segment == "DP200018C":
+        provision = (
+            "artículo 22 Ley 49/2002" if "actividades prioritarias" in _fold(family) else "artículo 20 Ley 49/2002"
+        )
+    elif segment == "DP200024":
+        provision = _dp200024_provision(family)
     if segment == "DP200018":
-        needle = re.sub(r"^[0-9]{4}:?\s*", "", family)
+        needle = _manual_needles(family, segment)[0]
         for unit in units:
             text = str(unit["text"]).replace("\n", " ")
             position = _fold(text).find(_fold(needle))
@@ -234,6 +259,47 @@ def _family_provision(family: str, segment: str) -> str:
     if segment == "DP200024":
         return "artículos 43 a 47 LIS; exact deduction or bonus named by the official field"
     return "provision named by the official field"
+
+
+def _dp200024_provision(family: str) -> str:
+    folded = _fold(family)
+    provisions = (
+        ("ventas bienes corporales", "artículo 26 Ley 19/1994"),
+        ("illes balears", "disposición adicional 70.Cinco Ley 31/2022"),
+        ("sociedades cooperativas", "artículo 34 Ley 20/1990"),
+        ("arrendamiento de viviendas", "artículos 48 y 49 LIS"),
+        ("empresas navieras en canarias", "artículo 76 Ley 19/1994"),
+        ("investigacion y desarrollo (ct)", "artículo 35.1 LIS"),
+        ("innovacion tecnologica (it)", "artículo 35.2 LIS"),
+        ("cinematograficas espanolas (pc)", "artículo 36.1 LIS"),
+        (
+            "artes escenicas y musicales en canarias",
+            "artículo 36.3 LIS y disposición adicional 14 Ley 19/1994",
+        ),
+        ("espectaculos en vivo", "artículo 36.3 LIS"),
+        ("trabajadores con discapacidad", "artículo 38 LIS"),
+        ("prevision social empresarial", "artículo 38 ter LIS"),
+        ("inversion de beneficios", "disposición transitoria 24 LIS"),
+        ("sociedades forestales", "disposiciones adicionales 5 y 13 Ley 43/2003"),
+        ("africa occidental", "artículo 27 bis Ley 19/1994"),
+        ("acontecimientos de excepcional interes publico", "artículo 27.3 Ley 49/2002"),
+        ("inversiones en canarias", "artículo 94 Ley 20/1991"),
+        ("cinematograficas extranjeras en canarias", "artículo 36.2 LIS y disposición adicional 14 Ley 19/1994"),
+        ("cinematograficas extranjeras", "artículo 36.2 LIS"),
+        ("autoridades portuarias", "artículo 38 bis LIS"),
+        ("donaciones a entidades sin fines de lucro", "artículo 20 Ley 49/2002"),
+        ("investigacion y desarrollo en canarias", "artículo 35.1 LIS y artículo 94 Ley 20/1991"),
+        ("innovacion tecnologica en canarias", "artículo 35.2 LIS y artículo 94 Ley 20/1991"),
+        ("cinematograficas espanolas en canarias", "artículo 36.1 LIS y disposición adicional 14 Ley 19/1994"),
+    )
+    for needle, provision in provisions:
+        if needle in folded:
+            return provision
+    if "normativa foral" in folded:
+        return "artículo 43 LIS; cuantía determinada por la normativa foral aplicable"
+    if "resto de bonificaciones" in folded or "otras deducciones" in folded:
+        return "artículo 43 LIS; categoría residual sin una única disposición subyacente"
+    return "artículos 43 a 47 LIS"
 
 
 def _fold(value: str) -> str:
