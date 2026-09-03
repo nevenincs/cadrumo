@@ -18,6 +18,7 @@ from ....application.search.installed_workbench import (
 )
 from ....application.search.workbench import WorkbenchSearchService
 from ....core.i18n.render import tr
+from ..__main__ import run
 from ..app import CadrumoTuiApp
 from ..launcher import main
 
@@ -133,3 +134,9 @@ def test_entry_point_injects_and_rebuilds_the_installed_search_provider() -> Non
 
     assert main(headless=True, auto_pilot=inspect_search, workbench_search_inputs_provider=provider) == 0
     assert len(calls) == 2
+
+
+def test_module_entry_refuses_missing_installed_search_composition(capsys: pytest.CaptureFixture[str]) -> None:
+    """Bare module execution cannot claim a search snapshot it was not given."""
+    assert run([]) == 2
+    assert capsys.readouterr().err == "workbench.search.composition_required\n"

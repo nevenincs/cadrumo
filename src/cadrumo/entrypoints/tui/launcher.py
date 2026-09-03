@@ -8,9 +8,9 @@ from contextlib import ExitStack, asynccontextmanager, contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ...application.search.installed_workbench import InstalledWorkbenchSearchInputsV1
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnitCatalogue
-from ...application.search.installed_workbench import InstalledWorkbenchSearchInputsV1
 
 if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
@@ -244,9 +244,9 @@ def main(
 
 
 __all__ = [
+    "InstalledWorkbenchSearchInputsProviderV1",
     "build_modelo_work_review_for_unit",
     "compose_installed_workbench_search",
-    "InstalledWorkbenchSearchInputsProviderV1",
     "load_modelo_work_unit_catalogue",
     "load_modelo_work_units",
     "main",

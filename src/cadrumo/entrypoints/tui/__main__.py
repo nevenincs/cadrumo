@@ -33,7 +33,7 @@ def run(
     request = parse_request_arguments(arguments)
     if request is None:
         if workbench_search_inputs_provider is None:
-            print("workbench.search.composition_required", file=sys.stderr)
+            sys.stderr.write("workbench.search.composition_required\n")
             return 2
         return main(
             headless=SELF_TEST_FLAG in arguments,
