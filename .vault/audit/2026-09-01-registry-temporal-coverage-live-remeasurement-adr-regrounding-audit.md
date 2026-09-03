@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:9885c099b863a5aa8ed19b84088fedbd3bb370c1e3fb527e4e8d72d48484523e'
+body_hash: 'sha256:9e49e73d82f975ab6aed06b9e92937f650e5244a1204bcf641de8de7493fd669'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -9320,3 +9320,30 @@ already using the typed slot as the pattern and the product-identity requirement
 as the thing the record spelling cannot express. Neither Step was wrong. They
 were unconnected, and the smaller one could not be resolved on its own terms
 because its subject was a consequence of the larger one.
+
+### the-description-now-carries-an-example-that-can-be-counted-today | medium | Twenty typed envelopes against thirty-one record-spelled ones, with the cost of the difference measured in this campaign's own iterations
+
+The plan's opening argument rested on five figures that turned out to be
+attributed to a record not containing them, of which four could not be
+reproduced and one reproduced while omitting the defect it described. The
+argument was never wrong; its evidence was unusable.
+
+It now carries an example that anyone can count. Twenty revisions declare their
+filing envelope in the typed slot; thirty-one across sixteen modelos spell the
+same envelope as an ordinary record. Both numbers come from the capability
+census in one query, both move visibly as the registry changes, and the
+difference between the two forms is not stylistic: the typed slot has a field
+for a product-identity requirement and the record spelling has nowhere to put
+one.
+
+The cost is stated in the currency this campaign actually spent. Three
+iterations went into whether four bytes at position 93 of modelo 714's envelope
+should be authored - a question that only exists because that envelope is
+record-spelled, and whose answer is a single field in the form it does not use.
+An argument about declaration duplication is more convincing measured in the
+hours it took to answer one question twice than in a count of sites nobody can
+re-derive.
+
+That is the closing state of the description's evidence: the original five
+figures remain, marked as history and as unreproducible, and beside them sits
+one example that is current, countable, and carries its own cost.

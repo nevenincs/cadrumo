@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:e2c70e0ef13d147420abdee7e9128dd14045d57c8bc03804df2e74989160b5b7'
+body_hash: 'sha256:5afb6d2d5944405ab8acf22c4a98e26cd692d1734d4349c215ec5aaa261ab6a4'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -76,6 +76,16 @@ cannot see it, which is why the count matching is not the same as the count bein
 The capability-grade figure could not be re-derived at all: no boundary survives saying what counts
 as an encoding of it, and the schema today carries one optional grade field with a documented reading
 and a documented absence, which is the shape this plan recommends rather than the defect it alleges.
+One live example carries the argument better than the five figures above, because it can be counted
+today and its cost is visible. The filing envelope is declared two ways: twenty revisions use the
+typed slot, which carries record identity, prefix extent, total and closer derivations, a schema
+version, a digest-bearing source reference and a product-identity requirement; thirty-one revisions
+across sixteen modelos spell the same envelope as an ordinary record, where none of those facts has a
+home and all survive as offsets. The cost is not hypothetical - three iterations of this campaign went
+into deciding whether four bytes at position 93 of one modelo's envelope should be authored, and the
+answer, that they are delegated to the software house and this product must not write them, is a fact
+the typed slot states in a field and the record spelling cannot state at all.
+
 The remaining two await the same treatment. Detection after the fact is the wrong
 shape. This plan
 moves the registry toward declaring a fact once and deriving its projections, and builds the tooling
@@ -658,6 +668,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S358` - Withdraw the declared-length request after counting the corpus, and name the official design as the authority on record extent; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S359` - Resolve why the layout coverage validator accepts modelo 714 while its cited design declares an uncovered developer-identity position; `src/cadrumo/domain/calculations/registry/_validate_export_layout_coverage.py`.
 - [x] `W06.P13.S360` - Connect the envelope migration to the modelo 714 offsets it explains, and measure both declaration forms; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S361` - Give the description a live countable example of one fact declared two ways, with its measured cost; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
