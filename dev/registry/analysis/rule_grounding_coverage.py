@@ -138,9 +138,18 @@ class NoteWorkItem:
     #: read before assuming a single rule.
     widths: tuple[int, ...]
     types: tuple[str, ...]
+    #: Whether this note's wording differs between the designs of its modelo.
+    #: A rule grounded in a drifting note holds for the design it was read in
+    #: and must be re-read for the others, so the flag belongs beside the note
+    #: rather than in a screen an author would have to know to run.
+    grounding_drifts: bool = False
 
 
-def grounding_worklist(findings: tuple[GroundingFinding, ...]) -> tuple[NoteWorkItem, ...]:
+def grounding_worklist(
+    findings: tuple[GroundingFinding, ...],
+    *,
+    drifting: frozenset[tuple[str, str, str]] = frozenset(),
+) -> tuple[NoteWorkItem, ...]:
     """Group grounded fields by the note that grounds them.
 
     The field count is not the size of the authoring task. One note read covers
@@ -150,6 +159,12 @@ def grounding_worklist(findings: tuple[GroundingFinding, ...]) -> tuple[NoteWork
 
     Ungrounded fields are absent by construction: they have no note to group
     under, and the census reports them.
+
+    ``drifting`` is the set of ``(modelo, sheet, label)`` keys whose wording is
+    not the same in every design of their modelo, as the drift screen reports
+    them. It is passed in rather than computed here so this stays a function of
+    its arguments, and defaults to empty so a caller that has not measured drift
+    gets no claim about it rather than a false negative.
     """
     grouped: dict[tuple[str, str, str, str], list[GroundingFinding]] = collections.defaultdict(list)
     for finding in findings:
@@ -164,6 +179,7 @@ def grounding_worklist(findings: tuple[GroundingFinding, ...]) -> tuple[NoteWork
             fields=tuple(sorted(item.cell for item in members)),
             widths=tuple(sorted({item.length for item in members})),
             types=tuple(sorted({item.aeat_type for item in members})),
+            grounding_drifts=(modelo, *note.split(":", 1)) in drifting,
         )
         for (modelo, design, note, kind), members in grouped.items()
     ]
@@ -295,14 +311,18 @@ def main() -> int:
     # a modelo share one design, so a note common to them is ONE reading; the
     # earlier count keyed on the revision and reported thirteen readings for
     # eleven notes, which is the same concept measured two ways in one census.
-    work = grounding_worklist(findings)
+    from .note_text_drift import screen_corpus as note_drift
+
+    drifting = frozenset((item.modelo, item.sheet, item.label) for item in note_drift())
+    work = grounding_worklist(findings, drifting=drifting)
     ungrounded_types = {(item.modelo, item.aeat_type) for item in findings if item.kind == "ungrounded"}
     for item in work:
         sys.stdout.write(
             f"rule_grounding_work modelo={item.modelo} design={item.design!r} note={item.note!r} "
             f"grounding={item.grounding} "
             f"fields={len(item.fields)} widths={','.join(str(width) for width in item.widths)} "
-            f"types={','.join(item.types)!r}\n"
+            f"types={','.join(item.types)!r} "
+            f"grounding_drifts={str(item.grounding_drifts).lower()}\n"
         )
     kinds = " ".join(f"{kind}={tally[kind]}" for kind in KINDS)
     sys.stdout.write(
