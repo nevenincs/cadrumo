@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:11ad126331fb5df5897c708fb5b014e5b7299dc7aa8ed02644aa6ebb4bcf6bc7'
+body_hash: 'sha256:f7f936879094d2dfa4010f9edb69e14305552fb0350f2d25ae0413db951d2fe7'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -510,6 +510,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S285` - Give the marker scan module-scoped lint discrimination so an explained suppression is not read as campaign metadata; `dev/tests/_marker_metadata_patterns.py dev/tests/test_campaign_marker_patterns.py`.
 - [ ] `W06.P13.S286` - Replace the plan-phase owning_authority values in the workspace action denominator with a durable authority, coordinating with that surface's writer; `dev/quality/modelo_workspace_action_denominator.py`.
 - [x] `W06.P13.S287` - Remove three restatements from the plan prose and record the cross-Wave evidence dependency once; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S288` - Give the two superseded consolidated positions the forward pointers their precedence claims required; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

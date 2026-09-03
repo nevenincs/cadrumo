@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c6367c8a3ddad82f553fbde1eab8aa06113cb95d9774147c06777f4af63e4028'
+body_hash: 'sha256:19dd308d4a7f22e90b8da305fdd49993fe5c2174b2d12ea17f2e060a92d1347e'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -3389,8 +3389,13 @@ follow them, since three of those gates measure that same surface.
 
 ### Consolidated position
 
+SUPERSEDED. Two later revisions of this section follow it, and the third revision is the current
+position. This one is retained because its withdrawals and its statement of the single proven
+filing defect are still the record of what was believed when it was written; its claim to take
+precedence is not, and that claim is what this marker corrects.
+
 The recommendations above accumulated as the audit ran and some are superseded by later findings.
-This section states the current position and takes precedence where they differ. Two of the earlier
+This section stated the current position when written and took precedence where they differed. Two of the earlier
 recommendations are withdrawn: the export-reference symmetry gate was described as repairing live
 violations and repairs none, and the estimate that the eligibility correction costs thirty-six
 reviewed decisions is wrong at one hundred and eighty three.
@@ -3427,6 +3432,9 @@ emitted byte matches what AEAT expects. The remaining distance to the claim this
 make is not more screens; it is one official reference file and the decisions above.
 
 ### Consolidated position, second revision
+
+SUPERSEDED by the third revision below, on scope rather than on substance: the two filing-data
+defects it locates still stand.
 
 The consolidated position above was written before roughly half this audit's findings existed and is
 superseded by this section. Nothing in it was wrong when written; it is simply no longer the whole
@@ -7154,3 +7162,32 @@ empty vector tuple cannot produce, and the lane Step that inherits the block
 through that test's failure. The Parallelization section now says this in one
 place, as a discovered ordering constraint beside the others, because a
 dependency recorded three times is the defect this entry is about.
+
+### three-sections-claimed-to-be-the-current-position-and-only-one-was | medium | The first two consolidated positions asserted precedence with no forward pointer; a reader arriving at either was told the wrong thing
+
+The same restatement measurement that found three duplicated arguments in the
+plan was turned on this record. It reports something better: two hundred and
+sixty-six findings and no near-duplicate pair, with the similarity distribution
+topping out at 0.33 against the plan's 0.74 before repair. Findings here are not
+restating one another.
+
+One structural defect did surface, and only through that measurement. The
+audit carries three consolidated positions. Each later one says it supersedes
+the one above it, so the chain is complete read backwards. Read forwards it was
+not: the first section says "this section states the current position and takes
+precedence where they differ", with nothing on it to say that two later
+revisions exist, and the second carried no marker at all. A reader arriving at
+either from a search or a link - which is how anyone reaches a section in a
+document this long - was told it governed. Both now carry a forward pointer, and
+the first's precedence claim is stated in the past tense, because the claim
+rather than the content is what had gone false.
+
+A measurement of my own measuring is owed here too. The first count of markers
+in this record said two, which would have made the gap look systemic; the true
+count is fourteen. The regex anchored on a line start, and this record's
+convention puts the marker in the heading line instead. The class was already
+known and had already been worked - a finding several iterations back records
+three headings being pointed at their corrections - so what remained was one
+family the earlier sweep had not reached, not a record that never marks its
+supersessions. Reporting the first number would have condemned a convention that
+was being followed.
