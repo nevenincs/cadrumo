@@ -15,7 +15,7 @@ from pathlib import Path
 
 import rtoml
 
-from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.hashing import content_hash_hex, sha256_hex
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file
@@ -43,6 +43,7 @@ class M200Same2024TemplateAdjudication:
     section: tuple[str, ...]
     semantic_role: str
     legal_refs: tuple[str, ...]
+    semantic_payload_sha256: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -92,27 +93,20 @@ def render_canonical_declaration(authority: CompiledM200Same2024TemplateAuthorit
     if len(matches) != 1:
         raise RegistryValidationError(f"M200/2024 same-template authority has no unique declaration for {casilla_id!r}")
     item = matches[0]
-    return rtoml.dumps(
-        {
-            "revisions": {
-                "2024": {
-                    "casillas": [
-                        {
-                            "id": item.casilla_id,
-                            "number": item.casilla_id,
-                            "section": list(item.section),
-                            "data_type": "money",
-                            "semantic_role": item.semantic_role,
-                            "required": False,
-                            "input_kind": "manual",
-                            "legal_refs": list(item.legal_refs),
-                            "source_refs": [authority.source_ref, authority.manual_source_ref],
-                        }
-                    ]
-                }
-            }
-        },
-        pretty=True,
+    return "\n".join(
+        (
+            "[[revisions.2024.casillas]]",
+            f"id = {_toml_literal(item.casilla_id)}",
+            f"number = {_toml_literal(item.casilla_id)}",
+            "data_type = 'money'",
+            f"semantic_role = {_toml_literal(item.semantic_role)}",
+            "required = false",
+            "input_kind = 'manual'",
+            f"section = {_toml_array(item.section)}",
+            f"legal_refs = {_toml_array(item.legal_refs)}",
+            f"source_refs = {_toml_array((authority.source_ref, authority.manual_source_ref))}",
+            "",
+        )
     )
 
 
@@ -127,6 +121,12 @@ def verify_canonical_declarations(authority: CompiledM200Same2024TemplateAuthori
             raise RegistryValidationError(
                 f"M200/2024 same-template declaration {entry.casilla_id!r} is not compiler-identical"
             )
+
+
+def promoted_candidate_ids(authority: CompiledM200Same2024TemplateAuthority) -> frozenset[str]:
+    """Return only reviewed candidates whose exact compiler bytes are live."""
+    verify_canonical_declarations(authority)
+    return frozenset(entry.casilla_id for entry in authority.adjudications)
 
 
 def _require_header(raw: dict[str, object]) -> None:
@@ -146,6 +146,30 @@ def _require_header(raw: dict[str, object]) -> None:
         raise RegistryValidationError("M200/2024 same-template adjudication lacks reviewer provenance")
 
 
+def _toml_literal(value: str) -> str:
+    if "'" in value:
+        raise RegistryValidationError("M200/2024 same-template declaration cannot render an apostrophe")
+    return f"'{value}'"
+
+
+def _toml_array(values: tuple[str, ...]) -> str:
+    return "[\n" + "".join(f"    {_toml_literal(value)},\n" for value in values) + "]"
+
+
+def _semantic_payload_digest(entry: M200Same2024TemplateAdjudication) -> str:
+    return content_hash_hex(
+        {
+            "section": entry.section,
+            "semantic_role": entry.semantic_role,
+            "data_type": "money",
+            "required": False,
+            "input_kind": "manual",
+            "legal_refs": entry.legal_refs,
+            "source_refs": (TARGET_SOURCE_REF, MANUAL_SOURCE_REF),
+        }
+    )
+
+
 def _parse_entry(raw: object) -> M200Same2024TemplateAdjudication:
     if not isinstance(raw, dict):
         raise RegistryValidationError("M200/2024 same-template adjudication entry is malformed")
@@ -158,11 +182,14 @@ def _parse_entry(raw: object) -> M200Same2024TemplateAdjudication:
             section=tuple(str(part) for part in raw["section"]),
             semantic_role=str(raw["semantic_role"]),
             legal_refs=tuple(str(reference) for reference in raw["legal_refs"]),
+            semantic_payload_sha256=str(raw["semantic_payload_sha256"]),
         )
     except (KeyError, TypeError, ValueError) as exc:
         raise RegistryValidationError("M200/2024 same-template adjudication entry is malformed") from exc
     if not value.manual_pages or not value.section or not value.semantic_role or not value.legal_refs:
         raise RegistryValidationError("M200/2024 same-template adjudication omits required reviewed authority")
+    if value.semantic_payload_sha256 != _semantic_payload_digest(value):
+        raise RegistryValidationError("M200/2024 same-template adjudication semantic payload drifted")
     return value
 
 

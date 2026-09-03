@@ -212,8 +212,8 @@ def reconcile_bundled_m200_2024() -> M200ReconciliationCensus:
     candidate_ids = frozenset(candidate_documents)
     declaration_ids = tuple(str(item.id) for item in revision.casillas)
     _require_unique_identifiers(declaration_ids, label="current declaration")
-    _require_disjoint_ids(frozenset(declaration_ids), candidate_ids)
     current_declarations = {str(item.id): item for item in revision.casillas}
+    _require_reviewed_candidate_promotions(frozenset(declaration_ids) & candidate_ids)
     current = {identifier: _payload(item) for identifier, item in current_declarations.items()}
     candidates = {identifier: payload for identifier, (_path, payload) in candidate_documents.items()}
     planned_ids = frozenset((*current, *candidates))
@@ -257,7 +257,7 @@ def reconcile_bundled_m200_2024() -> M200ReconciliationCensus:
     )
     rows: list[M200ReconciliationRow] = []
     for identifier in sorted(planned_ids):
-        is_candidate = identifier in candidates
+        is_candidate = identifier in candidates and identifier not in current
         payload = candidates[identifier] if is_candidate else current[identifier]
         fields = tuple(sorted(exact_ownership.get(identifier, ()), key=lambda item: item.export_field_id))
         proposed_fields = tuple(sorted(proposed_ownership.get(identifier, ()), key=lambda item: item.export_field_id))
@@ -1260,6 +1260,23 @@ def _require_disjoint_ids(current_ids: frozenset[str], candidate_ids: frozenset[
     collisions = sorted(current_ids & candidate_ids)
     if collisions:
         raise RegistryValidationError(f"current declarations collide with non-authoritative candidates: {collisions!r}")
+
+
+def _require_reviewed_candidate_promotions(collisions: frozenset[str]) -> None:
+    """Allow collisions only when the reviewed target compiler proves live bytes."""
+    if not collisions:
+        return
+    from .m200_2024_template_adjudications import (
+        compile_m200_2024_same_template_authority,
+        promoted_candidate_ids,
+    )
+
+    authority = compile_m200_2024_same_template_authority()
+    if collisions != promoted_candidate_ids(authority):
+        raise RegistryValidationError(
+            "current declarations collide with non-authoritative candidates outside reviewed target adjudications: "
+            f"{sorted(collisions)!r}"
+        )
 
 
 def _require_anchor_bijection(*, design_keys, map_keys, export_ids) -> None:

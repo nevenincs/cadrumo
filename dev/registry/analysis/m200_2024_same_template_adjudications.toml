@@ -17,6 +17,7 @@ manual_pages = [478, 479, 480, 481, 482, 483, 484, 485]
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
 semantic_role = "is_deduccion_donativos_prioritarias"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+semantic_payload_sha256 = "cbdfb3612fccb0b44b3393cbe5b2fcf456097a96b16f12728240eb049202dbf5"
 
 [[adjudications]]
 casilla_id = "02239"
@@ -26,6 +27,7 @@ manual_pages = [359, 360, 361]
 section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
 semantic_role = "is_reserva_nivelacion_adicion_realizada"
 legal_refs = ["ley-27-2014:art-105"]
+semantic_payload_sha256 = "a3585a89f0d2f0db7cdc3884192e8287bbe8c8381f2d76efe43d38ecb2a88ef9"
 
 [[adjudications]]
 casilla_id = "01603"
@@ -35,6 +37,7 @@ manual_pages = [359, 360, 361]
 section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
 semantic_role = "is_reserva_nivelacion_incumplimiento"
 legal_refs = ["ley-27-2014:art-105"]
+semantic_payload_sha256 = "1e22ce13a3eed02ea1978b1d95d7bb0b943308099ee44d9e85f7ec621e1dbb40"
 
 [[adjudications]]
 casilla_id = "02412"
@@ -44,3 +47,4 @@ manual_pages = [359, 360, 361]
 section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
 semantic_role = "is_reserva_nivelacion_adicion_pendiente"
 legal_refs = ["ley-27-2014:art-105"]
+semantic_payload_sha256 = "974df39776e21f3fcc1d8476c4101f8a30c969c553cdfcadb20e1d32100ec034"

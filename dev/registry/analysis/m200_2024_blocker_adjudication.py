@@ -145,7 +145,7 @@ def _family_and_column(description: str, segment: str) -> tuple[str, str]:
     family_parts = parts[:-1]
     if segment == "DP200024":
         family_parts = parts[3:-1]
-    elif segment in {"DP200018", "DP200018C", "DP200020", "DP200020B", "DP200022", "DP200022B"}:
+    elif segment in {"DP200018", "DP200018C"}:
         family_parts = parts[1:-1]
     family = " - ".join(family_parts).strip() or parts[0]
     family = re.sub(r"^2024:?\s*", "", family, flags=re.IGNORECASE)
