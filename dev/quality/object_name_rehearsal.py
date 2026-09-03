@@ -272,7 +272,6 @@ def _copy_snapshot(
     guarded_paths: frozenset[str] | None = None,
 ) -> None:
     exact_paths = frozenset(path for path, _digest in files) if guarded_paths is None else guarded_paths
-    exact_paths |= frozenset(path for path, _digest in files if PurePosixPath(path).suffix == ".py")
     for source_root_name in ("src", "dev"):
         (target_root / source_root_name).mkdir(parents=True, exist_ok=True)
     for relative, expected_digest in files:
@@ -289,7 +288,6 @@ def _copy_snapshot(
         actual_digest = f"{_DIGEST_PREFIX}{sha256_file(target)}"
         if relative in exact_paths and actual_digest != expected_digest:
             raise ObjectNameRehearsalError(f"temporary copy hash differs for {relative}")
-        shutil.copystat(source, target, follow_symlinks=False)
 
 
 def _materialise(target_root: Path, result: ObjectNameTransformResult) -> None:
