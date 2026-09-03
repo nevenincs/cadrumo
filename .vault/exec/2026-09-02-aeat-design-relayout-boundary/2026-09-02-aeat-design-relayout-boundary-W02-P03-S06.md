@@ -5,16 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:2d3f14b11036ef86bc6ae556055f5c6657dc84d73a64df0af415afe563ce9bbf'
+body_hash: 'sha256:c0684ddbaf5a361f2a77d720e6e5cc1cbf8609f7647c8aee2d1c14175ee7c838'
 step_id: 'S06'
 related:
   - "[[2026-09-02-aeat-design-relayout-boundary-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Reject missing anchors, source drift, duplicate output, altered non-source payloads, and partial rebind application
 

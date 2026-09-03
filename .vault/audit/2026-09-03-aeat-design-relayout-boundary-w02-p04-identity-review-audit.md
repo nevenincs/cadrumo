@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:9faf79226dbe18ab28b7b621712e4ff089673043c55619a0dd94198c402de6da'
+body_hash: 'sha256:f3f0e4ccca133752db4f4eb351331964d806c6b5db5d7fcb76c9842a4570dd4f'
 related:
   - "[[2026-09-02-aeat-design-relayout-boundary-plan]]"
 ---
@@ -17,13 +17,13 @@ Reviewed the target-source identity worklist CLI, its review-output boundary, an
 
 ## Findings
 
-### review-output-containment | high | Canonical registry overwrite was possible
+### review-output-containment | high | A writable review destination was unclosable
 
-The CLI accepted an arbitrary `--output` path and used an atomic replacement without proving that the destination stayed outside canonical registry authority through path traversal, link aliases, hardlinks, or a parent-swap race. The remediation now refuses lexical and resolved canonical-root containment, opens only non-linked regular files, requires a single link, and repeats path-and-handle identity checks before truncation.
+The CLI accepted an arbitrary `--output` path. Traversal, link aliases, hardlinks, and concurrent filesystem replacement make a user-space destination proof insufficient for a non-authoritative diagnostic. The remediation removes the destination argument and every filesystem-writing helper; the CLI emits the proposal-only TOML worklist to stdout only.
 
 ### target-worklist-export | high | CLI exported the retired candidate stream
 
-The CLI wrote the legacy 156-row candidate report instead of the target identity worklist. The remediation writes the proposal-only target worklist with all 185 map-owner mismatches, two orphaned declarations, and 15 printed-identity diagnostics.
+The CLI wrote the legacy 156-row candidate report instead of the target identity worklist. The remediation emits the proposal-only target worklist with all 185 map-owner mismatches, two orphaned declarations, and 15 printed-identity diagnostics, including typed counts in the TOML document.
 
 ### missing-casilla-owner | high | A casilla map entry could omit its owner without detector coverage
 
@@ -31,4 +31,4 @@ The classifier rejected a missing casilla owner in implementation, but no detect
 
 ## Recommendations
 
-Keep review diagnostics proposal-only and preserve the handle-verified output boundary for every future write-capable review CLI.
+Keep identity diagnostics stdout-only and proposal-only. Any future persistence capability needs a separately owned authority boundary rather than a destination argument on this CLI.

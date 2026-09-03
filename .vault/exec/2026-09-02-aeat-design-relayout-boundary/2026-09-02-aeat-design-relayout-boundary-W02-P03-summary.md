@@ -5,16 +5,10 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ea7c805388fd7cd1d73a38c6924d4c8de8145f6a90c361a020b8ff506c416978'
+body_hash: 'sha256:24da56a2cf53bad59cb332219c9428d854bed5d1f4e6bb3ba5989c35d9d25c10'
 related:
   - "[[2026-09-02-aeat-design-relayout-boundary-plan]]"
 ---
-
-<!-- Machine-owned: filename and frontmatter, scaffolded by
-     `vaultspec-core vault add exec`; never hand-edit. Add no frontmatter
-     fields. Wiki-links belong in `related:` only, never in the body.
-
-     Rolls up every Step Record (S##) of one Phase. -->
 
 # `aeat-design-relayout-boundary` `W02.P03` summary
 

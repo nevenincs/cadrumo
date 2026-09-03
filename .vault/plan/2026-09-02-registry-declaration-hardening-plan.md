@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:29f726c924438c26c2acab2aba4f9617e926d54ec1413f212217cc2b70e9493a'
+body_hash: 'sha256:dfb40861dcfb83cb1a0d16f025e5e74a1a9ac111024c5229751e19348e4a4dbe'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -516,6 +516,8 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S278` - Correct the three name-window replacement instructions that named successors themselves stepped for rename; `dev/registry/tests/test_revision_name_window.py`.
 - [x] `W06.P13.S279` - Correct the source-connectivity Step figure against a live collection and record the authority startup cost; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [ ] `W06.P13.S280` - Re-measure the conformance closure test that hit the per-test timeout ceiling on an uncontended host before naming its directory in a lane; `dev/registry/conformance/tests/test_closure.py`.
+- [x] `W06.P13.S281` - Establish that the src-to-dev boundary survived the marker-gate deletion, so no coverage hole exists; `dev/tests/_marker_metadata_patterns.py`.
+- [ ] `W06.P13.S282` - Restore a marker-integrity gate over test names from the orphaned pattern table its deleted consumer left behind; `dev/tests/_marker_metadata_patterns.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

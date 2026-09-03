@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:3848a3da8f4287c5f15335541df6fbb0e6ffb0d1a7c810705b615c49985ab209'
+body_hash: 'sha256:0a82299a9cdd2d3baee848d9475aba997c258389098fe5527692366cfef060f5'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -6843,3 +6843,54 @@ uncontended host, and it is a precondition of naming this directory in a lane:
 adding a path whose first slow test can consume the ceiling would make the lane's
 failure mode a timeout rather than an assertion, which is the least legible
 failure a contributor can be handed.
+
+### a-deleted-gate-left-its-pattern-table-orphaned-and-its-violations-standing | high | The marker-integrity gate was deleted with 1770 lines; its declarative half survives with no consumer, and two test names it forbade are back
+
+Two failing test names carrying plan Step identifiers -
+`test_s115_freezes_reviewed_s112_helper_set_by_secondary_count` and
+`test_s44_runner_observes_every_live_no_recovery_outcome` - raised the question
+of which gate should have refused them. One did.
+`dev/tests/test_marker_integrity.py` walked every test module's comments,
+docstrings and durable symbol names for exactly this leak, and it was deleted in
+`23eadb3884`, a private-to-public promotion sweep that removed two hundred and
+five files.
+
+Its declarative half was not deleted with it. `dev/tests/_marker_metadata_patterns.py`
+still ships the pattern/target/near-miss triples, including a `W01.P02.S03`
+firing fixture and a "the W3C standard" near-miss, and its module docstring
+still names `test_marker_integrity` as the walk that consumes it. Nothing in the
+live tree imports it: the only other copies are snapshots under `var/`. The
+declaration survived its consumer, which is this campaign's subject exactly,
+and the two Step-id test names are what the absence costs.
+
+The pattern table being intact is the opportunity. A restored gate does not need
+the deleted eighteen hundred lines, only the walk over test-module names and
+docstrings that the table already declares, and it lands with two known
+violations that have per-item causes rather than a bulk state - the shape where
+naming each one is explanation rather than churn.
+
+### the-src-to-dev-boundary-survived-that-deletion-and-a-third-hypothesis-died-checking-it | medium | The same sweep deleted the dev-path isolation gate, but its rule moved rather than lapsed, and the surviving gate's docstring is what misled
+
+`test_dev_path_isolation.py` went in the same commit, and
+`test_governance_corpus_isolation.py` still describes a deliberately
+non-overlapping division of labour with it, in the present tense, saying that
+gate "already closes the tooling tree for PYTHON modules ... and is proven".
+Its data scanner does exclude Python modules, delegating them to the AST
+families, and its `GOVERNANCE_TREE_ROOTS` names only `.vaultspec` and `.vault`.
+Read together those facts say a `dev/` path literal in a shipped module is
+caught by nothing, and a probe confirmed the governance scan is silent on one
+while catching a `.vault/` literal in the same file.
+
+It is caught. `dev/quality/import_hygiene_scan.py` declares itself the single
+authority for the one-way boundary and carries three families for it, and
+`find_dev_path_reach_violations` returns the planted literal when asked
+directly. The rule moved to a better home during the sweep; only the sibling
+gate's prose stayed behind, still crediting a module that no longer exists.
+
+That prose is the defect, and it is worth recording for what it nearly caused:
+three hypotheses in two iterations have now been killed by probing rather than
+reasoning - that a directory's tests carried no lane marker, that repeated
+authority construction explained a slow suite, and that this boundary had
+lapsed. Each was consistent with everything visible at the time. The cost of
+checking was one command in each case, and the cost of not checking would have
+been a confident false finding in a record other people act on.
