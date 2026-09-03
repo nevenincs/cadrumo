@@ -21,7 +21,7 @@ import pytest
 from .....application.modelo import operation_definitions as definitions
 from .....application.modelo.operation_definitions import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
 from .....application.modelo.workspace_models import ModeloWorkspaceCapabilityName
-from .....application.operations.registry import OperationInteractionKind
+from .....application.operations.registry import OperationDefinition, OperationInteractionKind
 from ..actions import MODELO_ACTION_DISPATCH, ModeloActionPort
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -29,13 +29,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _ACTION_ROOT = pathlib.Path(__file__).resolve().parents[1] / "action"
 
 
-def _built_definitions() -> dict[str, object]:
+def _built_definitions() -> dict[str, OperationDefinition]:
     """Build every modelo operation definition the application declares."""
-    built: dict[str, object] = {}
+    built: dict[str, OperationDefinition] = {}
     for name in dir(definitions):
         if not (name.startswith("build_modelo") and name.endswith("_definition")):
             continue
         definition = getattr(definitions, name)()
+        if not isinstance(definition, OperationDefinition):
+            raise AssertionError(f"{name} does not build an OperationDefinition: {type(definition).__name__}")
         built[definition.definition_id] = definition
     return built
 
@@ -98,7 +100,7 @@ def test_only_the_editor_apply_declares_a_mid_flight_interaction() -> None:
     built = _built_definitions()
 
     interactive = {
-        action_id for action_id in MODELO_ACTION_DISPATCH if getattr(built[action_id], "interaction_kinds", frozenset())
+        action_id for action_id in MODELO_ACTION_DISPATCH if built[action_id].interaction_kinds
     }
     assert interactive == {MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID}, (
         f"the set of actions declaring an interaction changed: {sorted(interactive)}"
