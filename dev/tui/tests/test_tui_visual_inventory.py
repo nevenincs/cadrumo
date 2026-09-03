@@ -131,6 +131,49 @@ def test_the_inventory_finds_transitively_derived_interfaces() -> None:
     assert "CredentialScreen" in found["LoginScreen"].bases
 
 
+def test_import_aliases_and_same_named_bases_cannot_escape_the_inventory(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Resolve Python import identity, not an ambiguous bare class spelling."""
+    source_root = tmp_path / "src"
+    root = source_root / "cadrumo" / "entrypoints" / "tui"
+    root.mkdir(parents=True)
+    (root / "aliased.py").write_text(
+        "from textual.screen import Screen as TuiScreen\n"
+        "class AliasedScreen(TuiScreen):\n    pass\n",
+        encoding=UTF_8,
+    )
+    (root / "qualified.py").write_text(
+        "import textual.app as textual_app\n"
+        "class AliasedApp(textual_app.App):\n    pass\n",
+        encoding=UTF_8,
+    )
+    (root / "first.py").write_text(
+        "from textual.screen import Screen as RootScreen\n"
+        "class Shared(RootScreen):\n    pass\n",
+        encoding=UTF_8,
+    )
+    (root / "second.py").write_text("class Shared(object):\n    pass\n", encoding=UTF_8)
+    (root / "child.py").write_text(
+        "from .first import Shared as ImportedShared\n"
+        "class ImportedChild(ImportedShared):\n    pass\n",
+        encoding=UTF_8,
+    )
+    monkeypatch.setattr(_inventory, "REPO_ROOT", tmp_path)
+
+    interfaces = _inventory.scan(root)
+    found = {interface.name: interface for interface in interfaces}
+
+    assert set(found) == {"AliasedApp", "AliasedScreen", "ImportedChild", "Shared"}
+    assert found["AliasedApp"].kind == "app"
+    assert found["AliasedScreen"].kind == "screen"
+    assert found["ImportedChild"].kind == "screen"
+    assert found["Shared"].module.endswith(".first")
+    with pytest.raises(_coverage.CoverageError, match="unclassified interface"):
+        _coverage.check(interfaces, (), classifications={}, rendered_table={})
+
+
 def test_the_inventory_excludes_test_trees_and_locates_real_source() -> None:
     for interface in _inventory.scan():
         assert "tests" not in interface.path.parts
@@ -800,13 +843,13 @@ def test_every_declared_background_band_is_actually_painted(tmp_path: Path) -> N
     markup = svg.read_text(encoding=UTF_8)
     cell_width_units, cell_height_units = _raster._cell_size(markup)
     image = Image.open(destination).convert("RGB")
-    cell_width = image.width // round(
-        float(_raster._TERMINAL_CLIP.search(markup)["width"]) / cell_width_units,
-    )
+    terminal = _raster._TERMINAL_CLIP.search(markup)
+    assert terminal is not None
+    cell_width = image.width // round(float(terminal["width"]) / cell_width_units)
 
     def expected(colour: str) -> tuple[int, int, int]:
         raw = colour.lstrip("#")
-        return tuple(int(raw[i : i + 2], 16) for i in (0, 2, 4))  # type: ignore[return-value]
+        return (int(raw[0:2], 16), int(raw[2:4], 16), int(raw[4:6], 16))
 
     # Cells carrying a glyph are excluded: the glyph's own ink legitimately
     # differs from the band colour underneath it.

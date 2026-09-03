@@ -283,6 +283,30 @@ def test_every_enrolled_screen_runs_over_the_whole_corpus(
         assert meaning.strip(), f"{name} does not say what its count means"
 
 
+def _reaches_binding_derivation(source: str) -> bool:
+    """Whether ``source`` REACHES the binding derivation, rather than naming it.
+
+    An import, a bare name or an attribute access is a reach; the same
+    characters inside a docstring, a comment or a string literal are not, which
+    is what lets a module explain the rule it obeys.
+
+    Defined once and used by both the gate below and its proof. Written twice,
+    the proof exercises its own copy: a branch dropped from the gate would leave
+    the proof green, and the detector would be proved against a
+    reimplementation of itself.
+    """
+    import ast
+
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.ImportFrom) and any(alias.name == _BINDING_DERIVATION for alias in node.names):
+            return True
+        if isinstance(node, ast.Name) and node.id == _BINDING_DERIVATION:
+            return True
+        if isinstance(node, ast.Attribute) and node.attr == _BINDING_DERIVATION:
+            return True
+    return False
+
+
 def test_no_screen_reassembles_the_resolved_export_surface() -> None:
     """A screen asks for the resolved surface; it never rebuilds one.
 
@@ -304,7 +328,6 @@ def test_no_screen_reassembles_the_resolved_export_surface() -> None:
     encourage. Names in comments, docstrings and string literals are not
     reaches; imports and attribute access are.
     """
-    import ast
     import pathlib
 
     analysis = pathlib.Path(__file__).resolve().parent.parent / "analysis"
@@ -312,16 +335,7 @@ def test_no_screen_reassembles_the_resolved_export_surface() -> None:
     scanned = 0
     for path in sorted(analysis.rglob("*.py")):
         scanned += 1
-        tree = ast.parse(path.read_text(encoding=_UTF_8))
-        reached = False
-        for node in ast.walk(tree):
-            if isinstance(node, ast.ImportFrom):
-                reached |= any(alias.name == _BINDING_DERIVATION for alias in node.names)
-            elif isinstance(node, ast.Name):
-                reached |= node.id == _BINDING_DERIVATION
-            elif isinstance(node, ast.Attribute):
-                reached |= node.attr == _BINDING_DERIVATION
-        if reached:
+        if _reaches_binding_derivation(path.read_text(encoding=_UTF_8)):
             offenders.append(path.stem)
 
     # A gate asserting an absence must first prove it looked. Without this a
@@ -341,24 +355,13 @@ def test_the_reassembly_gate_reads_syntax_not_text() -> None:
     second it makes the rule undocumentable, and a rule nobody may explain is
     one the next author re-breaks.
     """
-    import ast
-
-    def reaches(source: str) -> bool:
-        tree = ast.parse(source)
-        for node in ast.walk(tree):
-            if isinstance(node, ast.ImportFrom) and any(a.name == _BINDING_DERIVATION for a in node.names):
-                return True
-            if isinstance(node, ast.Name) and node.id == _BINDING_DERIVATION:
-                return True
-            if isinstance(node, ast.Attribute) and node.attr == _BINDING_DERIVATION:
-                return True
-        return False
 
     newline = chr(10)
-    assert reaches(f"from x.y import {_BINDING_DERIVATION}{newline}")
-    assert reaches(f"import x.y{newline}rows = x.y.{_BINDING_DERIVATION}(revision){newline}")
-    assert not reaches(f'"""A screen must not call {_BINDING_DERIVATION}; it asks the accessor."""{newline}')
-    assert not reaches(f"# never {_BINDING_DERIVATION}{newline}value = 1{newline}")
+    assert _reaches_binding_derivation(f"from x.y import {_BINDING_DERIVATION}{newline}")
+    assert _reaches_binding_derivation(f"import x.y{newline}rows = x.y.{_BINDING_DERIVATION}(revision){newline}")
+    docstring_only = f'"""A screen must not call {_BINDING_DERIVATION}; it asks the accessor."""{newline}'
+    assert not _reaches_binding_derivation(docstring_only)
+    assert not _reaches_binding_derivation(f"# never {_BINDING_DERIVATION}{newline}value = 1{newline}")
 
 
 def test_running_every_screen_leaves_the_shipped_registry_untouched(
