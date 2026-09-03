@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d35d5e0da4c116e93c44cd8cd48743d5342c88331eca71e41ce3d0b31f1aadb1'
+body_hash: 'sha256:df13664696a876cd021abe0f80531ebc161d8189ffa763c9d76b7c7c113ec75f'
 related:
   - '[[2026-08-11-tui-architecture-W02-P19-S124]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S128]]'
@@ -259,6 +259,40 @@ related:
   - '[[2026-08-11-tui-architecture-W07-P17-S360]]'
   - '[[2026-08-11-tui-architecture-W07-P17-S98]]'
   - '[[2026-08-11-tui-architecture-W07-P17-S99]]'
+  - '[[2026-08-11-tui-architecture-W08-P25-S365]]'
+  - '[[2026-08-11-tui-architecture-W08-P25-S366]]'
+  - '[[2026-08-11-tui-architecture-W08-P25-S367]]'
+  - '[[2026-08-11-tui-architecture-W08-P25-S368]]'
+  - '[[2026-08-11-tui-architecture-W08-P25-S369]]'
+  - '[[2026-08-11-tui-architecture-W08-P26-S371]]'
+  - '[[2026-08-11-tui-architecture-W08-P26-S372]]'
+  - '[[2026-08-11-tui-architecture-W08-P26-S373]]'
+  - '[[2026-08-11-tui-architecture-W08-P26-S374]]'
+  - '[[2026-08-11-tui-architecture-W08-P27-S375]]'
+  - '[[2026-08-11-tui-architecture-W08-P27-S376]]'
+  - '[[2026-08-11-tui-architecture-W08-P27-S377]]'
+  - '[[2026-08-11-tui-architecture-W08-P27-S378]]'
+  - '[[2026-08-11-tui-architecture-W08-P27-S379]]'
+  - '[[2026-08-11-tui-architecture-W08-P27-S380]]'
+  - '[[2026-08-11-tui-architecture-W08-P27-S391]]'
+  - '[[2026-08-11-tui-architecture-W08-P27-S392]]'
+  - '[[2026-08-11-tui-architecture-W08-P27-S393]]'
+  - '[[2026-08-11-tui-architecture-W08-P27-S397]]'
+  - '[[2026-08-11-tui-architecture-W08-P28-S381]]'
+  - '[[2026-08-11-tui-architecture-W08-P28-S382]]'
+  - '[[2026-08-11-tui-architecture-W08-P28-S383]]'
+  - '[[2026-08-11-tui-architecture-W08-P28-S384]]'
+  - '[[2026-08-11-tui-architecture-W08-P28-S385]]'
+  - '[[2026-08-11-tui-architecture-W08-P28-S398]]'
+  - '[[2026-08-11-tui-architecture-W08-P28-S400]]'
+  - '[[2026-08-11-tui-architecture-W08-P28-S401]]'
+  - '[[2026-08-11-tui-architecture-W08-P28-S402]]'
+  - '[[2026-08-11-tui-architecture-W08-P28-S403]]'
+  - '[[2026-08-11-tui-architecture-W08-P28-S404]]'
+  - '[[2026-08-11-tui-architecture-W08-P29-S386]]'
+  - '[[2026-08-11-tui-architecture-W08-P29-S387]]'
+  - '[[2026-08-11-tui-architecture-W08-P29-S388]]'
+  - '[[2026-08-11-tui-architecture-W08-P29-S389]]'
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-ledger]]'
   - '[[2026-08-11-tui-architecture-plan]]'
@@ -368,9 +402,37 @@ related:
   - '[[2026-08-27-tui-architecture-mcp-server-composition-root-audit]]'
   - '[[2026-08-27-tui-architecture-modelo-347-counterparty-residency-scope-adr]]'
   - '[[2026-08-27-tui-architecture-operation-stopping-coverage-audit]]'
-  - '[[2026-08-28-tui-architecture-modelo-edit-contract-c3-dependency-receipt-reference]]'
-  - '[[2026-08-28-tui-architecture-operation-financial-operand-dependency-receipt-reference]]'
   - '[[2026-08-31-tui-architecture-evidence-ancestry-practice-reference]]'
+  - '[[2026-09-02-tui-architecture-out-of-process-destination-protocol-adr]]'
+  - '[[2026-09-02-tui-architecture-w08-p25-s365-review-audit]]'
+  - '[[2026-09-03-tui-architecture-account-factories-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p25-s366-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p25-s367-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p25-s368-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p25-s369-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p26-s371-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p26-s372-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p26-s373-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p27-s375-final-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p27-s375-slice1-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p27-s375-slice2-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p27-s375-slice3-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p27-s376-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p27-s377-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p27-s378-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p27-s379-full-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p27-s379-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p27-s391-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p27-s392-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p27-s393-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p28-s381-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p28-s382-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p28-s383-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p28-s398-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p28-s400-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p28-s401-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p28-s402-review-audit]]'
+  - '[[2026-09-03-tui-architecture-w08-p28-s403-review-audit]]'
 ---
 
 # `tui-architecture` feature index
@@ -385,6 +447,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-26-tui-architecture-m184-socio-clave-subclave-row-shape-adr` - `tui-architecture` adr: `modelo 184 socio row shape: repeat per member, clave and subclave` | (**status:** `accepted`)
 - `2026-08-27-tui-architecture-credential-free-type-aware-gate-adr` - `tui-architecture` adr: `type-aware operation payload credential-free schema check` | (**status:** `accepted`)
 - `2026-08-27-tui-architecture-modelo-347-counterparty-residency-scope-adr` - `tui-architecture` adr: `modelo 347 counterparty residency scope` | (**status:** `accepted`)
+- `2026-09-02-tui-architecture-out-of-process-destination-protocol-adr` - `tui-architecture` adr: `the out-of-process protocol that opens a full-screen destination` | (**status:** `accepted`)
 
 ### audit
 
@@ -480,6 +543,35 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-27-tui-architecture-headless-create-refusal-sequence-audit` - `tui-architecture` audit: `headless profile create refuses twice, naming one blocker at a time`
 - `2026-08-27-tui-architecture-mcp-server-composition-root-audit` - `tui-architecture` audit: `the cadrumo-mcp server has no composition root`
 - `2026-08-27-tui-architecture-operation-stopping-coverage-audit` - `tui-architecture` audit: `What the operation platform's stopping clauses can actually prove`
+- `2026-09-02-tui-architecture-w08-p25-s365-review-audit` - `tui-architecture` audit: `w08 p25 s365 review`
+- `2026-09-03-tui-architecture-account-factories-audit` - `tui-architecture` audit: `account factories review`
+- `2026-09-03-tui-architecture-w08-p25-s366-review-audit` - `tui-architecture` audit: `w08 p25 s366 review`
+- `2026-09-03-tui-architecture-w08-p25-s367-review-audit` - `tui-architecture` audit: `w08 p25 s367 review`
+- `2026-09-03-tui-architecture-w08-p25-s368-review-audit` - `tui-architecture` audit: `w08 p25 s368 review`
+- `2026-09-03-tui-architecture-w08-p25-s369-review-audit` - `tui-architecture` audit: `w08 p25 s369 review`
+- `2026-09-03-tui-architecture-w08-p26-s371-review-audit` - `tui-architecture` audit: `w08 p26 s371 review`
+- `2026-09-03-tui-architecture-w08-p26-s372-review-audit` - `tui-architecture` audit: `W08.P26.S372 independent code review`
+- `2026-09-03-tui-architecture-w08-p26-s373-review-audit` - `tui-architecture` audit: `w08 p26 s373 review`
+- `2026-09-03-tui-architecture-w08-p27-s375-final-review-audit` - `tui-architecture` audit: `W08.P27.S375 holistic final review`
+- `2026-09-03-tui-architecture-w08-p27-s375-slice1-review-audit` - `tui-architecture` audit: `W08.P27.S375 slice 1 independent review`
+- `2026-09-03-tui-architecture-w08-p27-s375-slice2-review-audit` - `tui-architecture` audit: `W08.P27.S375 slice 2 independent review`
+- `2026-09-03-tui-architecture-w08-p27-s375-slice3-review-audit` - `tui-architecture` audit: `W08.P27.S375 slice 3 independent review`
+- `2026-09-03-tui-architecture-w08-p27-s376-review-audit` - `tui-architecture` audit: `W08.P27.S376 host-neutral Modelo route review`
+- `2026-09-03-tui-architecture-w08-p27-s377-review-audit` - `tui-architecture` audit: `W08.P27.S377 Declarations workspace screens review`
+- `2026-09-03-tui-architecture-w08-p27-s378-review-audit` - `tui-architecture` audit: `W08.P27.S378 Declarations calendar screen review`
+- `2026-09-03-tui-architecture-w08-p27-s379-full-audit` - `tui-architecture` audit: `W08.P27.S379 full review`
+- `2026-09-03-tui-architecture-w08-p27-s379-review-audit` - `tui-architecture` audit: `W08.P27.S379 Review`
+- `2026-09-03-tui-architecture-w08-p27-s391-review-audit` - `tui-architecture` audit: `w08 p27 s391 review`
+- `2026-09-03-tui-architecture-w08-p27-s392-review-audit` - `tui-architecture` audit: `W08.P27.S392 Declarations workspace projection review`
+- `2026-09-03-tui-architecture-w08-p27-s393-review-audit` - `tui-architecture` audit: `W08.P27.S393 Declarations calendar projection review`
+- `2026-09-03-tui-architecture-w08-p28-s381-review-audit` - `tui-architecture` audit: `W08.P28.S381 Review`
+- `2026-09-03-tui-architecture-w08-p28-s382-review-audit` - `tui-architecture` audit: `W08.P28.S382 Review`
+- `2026-09-03-tui-architecture-w08-p28-s383-review-audit` - `tui-architecture` audit: `W08.P28.S383 Review`
+- `2026-09-03-tui-architecture-w08-p28-s398-review-audit` - 2026-09-03-tui-architecture-w08-p28-s398-review-audit
+- `2026-09-03-tui-architecture-w08-p28-s400-review-audit` - 2026-09-03-tui-architecture-w08-p28-s400-review-audit
+- `2026-09-03-tui-architecture-w08-p28-s401-review-audit` - `tui-architecture` audit: `w08 p28 s401 review`
+- `2026-09-03-tui-architecture-w08-p28-s402-review-audit` - `tui-architecture` audit: `w08 p28 s402 review`
+- `2026-09-03-tui-architecture-w08-p28-s403-review-audit` - `tui-architecture` audit: `w08 p28 s403 review`
 
 ### exec
 
@@ -735,6 +827,40 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W07-P17-S360` - Restore the summary's wrapping margin at narrow widths -- THE CONTENT-SIDE HALF OF A DEFECT WHOSE LAYOUT-SIDE HALF IS ALREADY FIXED, so this row is not redundant with that fix and must not be closed by pointing at it. RULED OPTION A: the objective is the MARGIN, not the row count. CLOSING CONDITION, STATED STRUCTURALLY RATHER THAN AS A CONSTANT: THE PROGRESS LINE IS NO LONGER THE BINDING CONSTRAINT -- THE WORK-UNIT ID LINE GOVERNS THE UPPER TRANSITION. That survives content-width, chrome and indent changes because it names a RELATIONSHIP between two measured quantities rather than either one's value. WHY THE FORM CHANGED: an absolute target was invalidated twice in one afternoon by this campaign's own other rows. The `Collapsible` disclosure moved the content-width model from about `screen - 7` to about `screen - 14`, and the 7 columns removed by deleting the duplicated registry revision cancelled against it exactly -- a real improvement that produced ZERO movement in the number the row was to be judged by. An absolute measured constant is a valid target only while everything holding it still is stable, and in an active campaign the thing holding it still is precisely what the campaign is changing. OBSERVATION, dated 2026-08-30 and taken under the geometry of that date -- evidence, not criterion, so its going stale is informative rather than disqualifying: sweep gives 9 summary rows at 80 columns, 8 from about 90 to 97, and 7 from 98 upward, so the transition sits at 97/98 and the canonical 120-column sample clears it by 22 columns, against 6 before this work. Also remove the line 5 / line 1 duplication regardless -- the trailing `2024` is the registry revision already shown two rows above, it saves 7 of the 20 columns needed, and it is redundant either way. WHAT THE NARROWING EXCLUDES, stated because a campaign may not narrow its own completion criterion silently: AT THE 80x24 FLOOR THE OPERATOR SEES 5 OF 8 SUMMARY ROWS, AND THE REMAINING 3 ARE REACHABLE ONLY THROUGH A SECOND SCROLL AFFORDANCE NESTED INSIDE THE BODY'S OWN. Measured `region.height=9`, `container_size.height=5`, `virtual_size.height=8`; the outer 9 includes 2 rows of border and 2 of padding, so the content box is 5. An operator scrolling inside a scrolling panel cannot tell which one will move, and nothing announces that three rows exist below the fold. That is a real residual cost, it is what the original 6-row condition was reaching for, and Option A does not pay it. The 6-row condition was never reachable: it was written before anyone knew a 64-character content-addressed id sat on line 0. THE TWO WRAPPING LINES, with real rendered widths at 200 columns: line 0 `Unidad de trabajo` plus a 64-character id = 88 columns; line 5 `Progreso` plus `in_progress · 0/600 · calculation_completeness_manifest · aeat-dr-100-2024-dictionary · 2024` = 108 columns. The other four are 24 to 32 columns and never wrap. Content width is screen width minus 7, a model that PREDICTS BOTH MEASURED TRANSITIONS EXACTLY -- line 5 needs a screen of 115, matching the swept 114/115, and line 0 needs 95, pinning the lower step at 94/95 rather than the swept 90-95 band. Full profile: 10 rows at 60-70, 8 at 80-90, 7 at 95-114, 6 at 115 and above. Line 0 is IRREDUCIBLE without truncating an addressable identifier an operator may need to copy; whether a full 64-character id belongs on that surface at all is NOT settled here and is opened as its own row. RULE WORTH CARRYING, and what produced these numbers: MEASURE AN ESTIMATE AT THE MOMENT SOMETHING STARTS DEPENDING ON IT -- cheap because most estimates never carry weight, reliable because the trigger is a change in the estimate's ROLE rather than a remembered discipline, and its corollary is that a number nothing depends on can stay wrong indefinitely. HOW TO MEASURE: drive the session fixture's own generator rather than rebuilding its composition -- `compose_runtime_ports.__wrapped__()` from `src/cadrumo/conftest.py`, `next(gen)` to enter, `next(gen, None)` in a finally to unwind; without it a standalone driver over `build_real_modelo_work_review` raises `RuntimeError: profile custody infrastructure has not been composed`. Read rendered lines from the Static's `_content`, not `renderable`, which does not exist on it. AND SWEEP RATHER THAN BISECT: a bisection on the predicate 'is anything wrapping' returns only the LAST boundary and gives no sign that earlier steps exist, which is how the second transition stayed hidden through an interpolation and a bisection before a sweep found it
 - `2026-08-11-tui-architecture-W07-P17-S335` - Stop the operation modal blocking the interface event loop on a synchronous file lock, and make its detach shutdown reap the poll worker. TWO HALVES, both confirmed at their exact sites. FIRST: `OperationJournalRepository.read_observation` in the persistence adapter is an `async def` that calls the SYNC `self._repository.read_observation` inline, with no await and no offload; that sync path takes `exclusive_file_lock`, whose acquisition in `core/locks.py` is a `while True` with `time.sleep(retry_backoff)` against a deadline -- uncancellable and blocking. The modal polls it from a coroutine worker on the event loop, so a contended lock stalls the whole interface, not merely the modal. SECOND: `_request_detach` sets `_closing` and dismisses immediately, so the screen pops while the worker is still parked in its sleep or inside the read. MEASURED AND REJECTED, do not repeat: wrapping the read in `asyncio.to_thread` LOOKS right and regressed two modal tests -- `test_the_modal_renders_every_declared_fact_across_one_real_operation` and `test_rendered_state_follows_supervisor_revisions_and_never_regresses`. The modal stalls at Interaction-wait/Pending and never settles, because `_timeline` budgets 600 EVENT-LOOP TICKS calibrated against a synchronous read and a thread hop per poll needs real scheduling time that tick budget does not supply. Attribution was established by restoring both pre-fix behaviours from outside the repo: 16 passed with them, 14 passed / 3 failed without. Do NOT resolve it by widening the 600-tick budget, which accommodates the regression by loosening the assertion that caught it. Take the row's OTHER option instead: make the lock acquisition itself awaitable and cancellable, which adds no per-poll thread hop. ALSO MEASURED: `test_detach_closes_the_modal_while_the_operation_keeps_running` CRASHES its xdist worker at HEAD, with and without any change here -- 1 failed / 16 passed on reverted code -- so the second half has a pre-existing cause deeper than flag-versus-reap, and a reaper that cancels the worker and awaits it does not fix it. Diagnose that crash before claiming the detach half. NOTE deliberately NOT to encode a matcher for this shape: a rule forbidding a frontend from calling execute on an application service would match a NAME rather than a structure
 - `2026-08-11-tui-architecture-W07-P17-S348` - Regenerate the six GENERATED dev inventories that carry stale source paths, once the tree is quiet enough that regenerating does not bake in half-landed work: roughly 220 of 299 measured stale paths sit in artefacts that declare themselves generated, two of which name their own regeneration command -- a registry facade census, a complexity baseline, a fixture-ownership inventory marked do-not-hand-edit, an authority consumer census, a size-budget baseline and an import-hygiene baseline. They are stale because dozens of private-to-public relocations moved the modules they name. DO NOT hand-edit any of them, and DO NOT regenerate while the tree is churning: a regeneration absorbs whatever is mid-flight at that moment, which is precisely the contaminated-artefact hazard this campaign hit three times -- an evidence snapshot that ingested a gitignored source mirror, a consumer census 44 per cent contaminated by it, and a vacuity screen whose denominator was 86 per cent phantom paths. Regenerate each through its own declared command, then verify the regenerated artefact names only tracked files. THE SCAN THAT FOUND THEM, reproducible and to be re-run after any sweep: resolve every `src/cadrumo/**.py` path string in every tracked inventory under the dev quality, audit and registry-analysis trees against `git ls-files`, never against a filesystem walk -- a walk would absorb untracked and mid-relocation files and report a peer's in-flight work as drift. KNOWN LIMIT of that scan, stated by its author: it reports paths that no longer RESOLVE, not paths that resolve to the WRONG thing, so an entry silently re-pointed at a different module by a rename that split or merged one passes it. That is a second and harder question nobody has answered
+- `2026-08-11-tui-architecture-W08-P25-S365` - Define immutable account-session, zone-availability, next-action, declaration-resume, Ledger-readiness, and agenda records for the Home projection
+- `2026-08-11-tui-architecture-W08-P25-S366` - Compose HomeProjectionV1 from canonical profile, overview, Ledger, declaration, notification, and filing-evidence readers with no implicit network activity
+- `2026-08-11-tui-architecture-W08-P25-S367` - Promote the calendar evidence assembly into a frontend-neutral application provider consumed by CLI and TUI
+- `2026-08-11-tui-architecture-W08-P25-S368` - Define typed workbench search results and a cross-domain query service that preserves source, natural address, status, and admission
+- `2026-08-11-tui-architecture-W08-P25-S369` - Define the TUI destination catalogue, explicit admission states, screen-factory protocol, and semantic focus identities
+- `2026-08-11-tui-architecture-W08-P26-S371` - Build synthetic non-sensitive Home projections covering ready, locked, stale, never-captured, unavailable, empty, and blocked states
+- `2026-08-11-tui-architecture-W08-P26-S372` - Implement due-driven and task-launcher prototype screens over the same immutable projection
+- `2026-08-11-tui-architecture-W08-P26-S373` - Measure both candidates at supported terminal sizes, both themes, and every shipped locale for clipping, scroll ownership, focus reach, and task keystrokes
+- `2026-08-11-tui-architecture-W08-P26-S374` - Record the winning workbench layout and interaction parameters in the amended navigation decision execution evidence
+- `2026-08-11-tui-architecture-W08-P27-S375` - Build the Ledger overview, entries, review, import, classification, evidence, and reconciliation screens over canonical application doors
+- `2026-08-11-tui-architecture-W08-P27-S376` - Remove concrete-host narrowing and whole-application exits from the declaration picker, review, workspace, and editor route chain
+- `2026-08-11-tui-architecture-W08-P27-S377` - Build the Declarations landing, revision and filing-history routes around existing Modelo workspace destinations
+- `2026-08-11-tui-architecture-W08-P27-S378` - Build the full declaration calendar as an agenda-first searchable and filterable workbench with past, upcoming, overdue, filed, and evidence-unknown scopes
+- `2026-08-11-tui-architecture-W08-P27-S379` - Build AEAT Sync overview, profile-census, filed-declaration, notification, evidence-comparison, and reconciliation screens with explicit pull and supported push actions
+- `2026-08-11-tui-architecture-W08-P27-S380` - Compose production Profile, change-user, password, appearance, language, and sign-out factories without duplicating their existing screens
+- `2026-08-11-tui-architecture-W08-P27-S391` - Define an immutable Ledger workspace projection and public affected-declaration reconciliation provider from canonical Ledger, invoice-link, and filing-staleness authorities
+- `2026-08-11-tui-architecture-W08-P27-S392` - Define an immutable Declarations workspace projection from preloaded work, calculation-revision, filing-record, and sanitized lifecycle authorities
+- `2026-08-11-tui-architecture-W08-P27-S393` - Define a safe full Declarations calendar projection that preserves legal schedule, local filing, AEAT evidence, and source availability as independent axes
+- `2026-08-11-tui-architecture-W08-P27-S397` - Define a safe immutable AEAT Sync workspace projection that joins overview, census, filed-declaration, notification, evidence-comparison, and reconciliation facts while excluding protected taxpayer values and preserving source availability, freshness, contradiction, and supported-action axes
+- `2026-08-11-tui-architecture-W08-P28-S381` - Build the responsive Home screen from the selected projection-only candidate with status, next actions, Ledger readiness, resumable declarations, and filing agenda
+- `2026-08-11-tui-architecture-W08-P28-S382` - Add global workbench search and command-palette providers that route stable result and action identities to admitted destinations
+- `2026-08-11-tui-architecture-W08-P28-S383` - Compose the root destination stack, account header, semantic focus restoration, session expiry, and post-journey Home refresh
+- `2026-08-11-tui-architecture-W08-P28-S384` - Compose secure profile, overview, Ledger, declaration, evidence, notification, operation, and destination factories for one installed session
+- `2026-08-11-tui-architecture-W08-P28-S385` - Add complete localized workbench, account, Ledger, Declarations, calendar, AEAT Sync, search, availability, and refusal messages through the canonical locale workflow
+- `2026-08-11-tui-architecture-W08-P28-S398` - Connect cadrumo.application.search to the installed workbench by assembling one immutable redacted document snapshot from the current Ledger, Declarations, filing-history, reconciliation, notification, and Modelo projections, injecting its service into the root host, and rebuilding it after authoritative child returns without implicit I/O
+- `2026-08-11-tui-architecture-W08-P28-S400` - Build the child-owned installed-workbench generation provider from secure profile repositories and application projection builders, representing authorities without production loaders as explicit unavailable or never-captured sources rather than empty fixtures
+- `2026-08-11-tui-architecture-W08-P28-S401` - Build a child-process session bootstrap coordinator for recognized profile inventory, resumable custody, login, cancellation, degraded inventory, and zero-profile registration without importing dev fixtures or the CLI
+- `2026-08-11-tui-architecture-W08-P28-S402` - Expose one operation composition result containing services and the exact public contract set from the same registry so workbench actions and modals cannot drift
+- `2026-08-11-tui-architecture-W08-P28-S403` - Compose production account doors and root affordances for Profile, change user, password, language, appearance, sign out, expiry, and authenticated-session recomposition
+- `2026-08-11-tui-architecture-W08-P28-S404` - Compose the production Modelo workspace factory from admitted declaration targets, canonical workspace sessions, and existing Modelo editor pages
+- `2026-08-11-tui-architecture-W08-P29-S386` - Prove Home and every principal workspace preserve content, navigation, focus, and single-scroll ownership across supported sizes, themes, and locales
+- `2026-08-11-tui-architecture-W08-P29-S387` - Prove keyboard-only navigation, semantic focus restoration, non-colour state pairs, contextual help, and command-palette parity
+- `2026-08-11-tui-architecture-W08-P29-S388` - Prove locked, stale, unavailable, explicit-sync, redaction, secure-storage, and no-implicit-network invariants through real authority paths
+- `2026-08-11-tui-architecture-W08-P29-S389` - Prove the installed aeat --tui process composes the exact admitted destination catalogue and returns from every journey without a CLI-to-TUI import
 
 ### plan
 
@@ -749,8 +875,6 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-25-tui-architecture-workspace-v1-contract-reference` - `tui-architecture` reference: `Workspace V1 contract blueprint`
 - `2026-08-26-tui-architecture-graded-snapshot-assembly-sizing-reference` - `tui-architecture` reference: `graded snapshot assembly sizing`
 - `2026-08-26-tui-architecture-modelo-347-contraparte-binding-inventory-reference` - `tui-architecture` reference: `modelo 347 contraparte binding inventory`
-- `2026-08-28-tui-architecture-modelo-edit-contract-c3-dependency-receipt-reference` - `tui-architecture` reference: `modelo edit contract c3 dependency receipt`
-- `2026-08-28-tui-architecture-operation-financial-operand-dependency-receipt-reference` - `tui-architecture` reference: `operation financial operand dependency receipt`
 - `2026-08-31-tui-architecture-evidence-ancestry-practice-reference` - `tui-architecture` reference: `evidence ancestry practice`
 
 ### research

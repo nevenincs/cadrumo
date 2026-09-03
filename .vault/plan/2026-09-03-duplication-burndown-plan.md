@@ -11,7 +11,7 @@ related:
   - '[[2026-09-03-duplication-burndown-honest-clone-closure-research]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:b17fdc7181cae2c40c9cd9d057cdeaa80f13a0056e72b49a88ff0dbed79a5f56'
+body_hash: 'sha256:9ae8930b4a8a7b49d0647a69afc91ce122bd2fc1eeb18c1ed2badde00e98e462'
 ---
 
 <!-- RETIRED: W05, W06, W07, P02, P03, P04, P06, P09, P12, P14, P16, P17, P19, P20, P21, P22, P23, P24, P25, P26, P27, S03, S06, S07 -->
@@ -87,7 +87,7 @@ Remove duplicated controller and route behavior at the owning TUI boundary.
 
 Unify binding declarations only where registry and calculation semantics are identical.
 
-- [ ] `W03.P15.S16` - Adjudicate the Ledger Renta binding declarations against registry authority and consolidate only their shared concept; `src/cadrumo/domain/calculations/registry`.
+- [x] `W03.P15.S16` - Adjudicate the Ledger Renta binding declarations against registry authority and consolidate only their shared concept; `src/cadrumo/domain/calculations/registry`.
 
 ## Wave `W04` - prove and reconcile honest green
 
