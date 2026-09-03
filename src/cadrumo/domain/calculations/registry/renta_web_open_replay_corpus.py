@@ -45,11 +45,11 @@ from ....core.directory_scan import scan_directory
 from ....core.external_oracle_corpus import ExternalOracleCorpus
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.resources.bundled_data import bundled_path
+from .authority import bundled_authority
 from .errors import RegistryValidationError
 from .external_grounding import RentaWebOpenReplayPayload
 from .ids import CrossReferenceId, OracleId
 from .live_parity import ParityFieldComparison, ParityResult, ParityVerdict, ParityVerdictKind
-from .loader import load_registry_tree
 from .remote_state_guard import RemoteStateGuardPolicy, remote_state_policy_from_cross_reference
 from .renta_web_open_oracle import RentaWebOpenOracle, RentaWebOpenReplayDriver
 from .schema import ModeloDefinition
@@ -261,16 +261,18 @@ def build_renta_web_open_replay_parity(
 def verify_bundled_renta_web_open_replays() -> RentaWebOpenReplayParityReport:
     """Replay the bundled Renta WEB Open corpus against the bundled registry.
 
-    Uses the non-validating loader for the same reason the external-grounding
-    fold does: a governance read must survive a concurrently-edited registry
-    that the validating authority would refuse outright. The report is stamped
-    ``registry_validated=False`` accordingly.
+    This product convenience path enters through the canonical bundled
+    authority and validates its complete registry before examining the
+    cross-reference that authorises the replay. The report is offline evidence
+    only: replaying a bundled capture neither contacts AEAT nor certifies a
+    filing result.
 
     Returns:
         The :class:`RentaWebOpenReplayParityReport` for the bundled corpus.
     """
-    modelos, _catalogues = load_registry_tree(Path(bundled_path("registry", "aeat")))
-    return build_renta_web_open_replay_parity(modelos, registry_validated=False)
+    authority = bundled_authority()
+    authority.validate_registry()
+    return build_renta_web_open_replay_parity(authority.modelos, registry_validated=True)
 
 
 __all__ = [
