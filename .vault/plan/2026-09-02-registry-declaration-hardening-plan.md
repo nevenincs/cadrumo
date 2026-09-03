@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:ea3c02f696c853f77120186f5e61202e1c239a6f7279a9a63a0f21a7b7d18551'
+body_hash: 'sha256:4a0a8cc909412958716c00ec35968dc726247c0f59984d21e5291ea894a730ce'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -647,6 +647,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S347` - Verify the deadline and formula Step premises and give the deadline Step its revision identifiers; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S348` - Re-measure the multi-axis premise, which moved on both its figures, and surface the below-filing population it excluded; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S349` - Verify the registry suite end to end after the session's changes, comparing failure sets by identity; `dev/registry`.
+- [x] `W06.P13.S350` - Attribute the registry failures the manifest and publication entries do not cover; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

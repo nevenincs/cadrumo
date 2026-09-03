@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8fc53aec090a8b1add905b9387e966641ea5f4260878a2abe21d7e1dfa3d140e'
+body_hash: 'sha256:28df3c02c0df4367d55245d7d60e21decf4ed1601aa0f34e65fe1ffd535168c2'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8984,3 +8984,34 @@ minutes where the previous took twenty-eight, and the machine has been carrying
 other sessions throughout; a wall-clock measured against contention measures the
 contention, which this campaign has recorded twice and will not record a third
 time as an improvement.
+
+### twenty-eight-of-the-thirty-five-registry-failures-were-attributed-and-two-more-now-are | high | Both new ones are other campaigns' work tripping this campaign's gates, which is the gates working
+
+The lane criterion requires every failure to be named and attributed, so the
+thirty-five the registry suite reports were grouped. Twenty-eight already have
+entries here: twenty-six are the one parametrised reproducibility test over the
+manifest-stale trees, and two are the publication refusals - a journal candidate
+that is not a staging sibling, and a provenance file the fragment loader will not
+accept without a TOML suffix.
+
+Two more are now characterised, and both are the same kind of thing: another
+campaign's new code meeting a gate this one built or extended.
+
+The regulatory-prose parser channel refuses four undeclared parsers, among them
+a modelo 200 reconciliation module and a borrador extractor for the modelo 100
+summary. The channel exists so that every module parsing regulatory prose is
+declared in one place; new parsers arrived without being enrolled, which is
+precisely the condition it was written to catch, and the enrolment is the owning
+campaigns' to make.
+
+The static-inspection boundary refuses `RegistryRevisionInspection` reaching
+into `application/modelo/work_addressing` and its test. That gate asserts the
+inspection API cannot cross from static authority into runtime, and the crossing
+is new.
+
+Four remain uncharacterised and are named rather than glossed: two in the modelo
+200 semantic casilla candidates, one in the modelo 303 generated envelope proof,
+one in the generated-tree CLI. All four sit on surfaces belonging to the modelo
+200 and 303 work, which has been committing throughout this session. Naming them
+without reading them is the honest position - "attributed" means somebody knows
+what a failure is, and for these four nobody here does yet.
