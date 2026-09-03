@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:622e43c741a24b244c3c3b2e0b0bb1a040914461aa605684438e90379a94acec'
+body_hash: 'sha256:1bc9a11ebd6e583b1d3a76299bf5472298c23fd0c1f8dc5194f77f3bf8cd0ed4'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -543,6 +543,9 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S313` - Gate that the census can follow the registry's own dynamic import, so a blinded resolver stops surfacing as stale rules; `dev/registry/tests/test_load_census_classification.py`.
 - [x] `W06.P13.S314` - Teach the dynamic-import resolver the tuple-from-mapping-values shape the snapshot internals now use; `dev/registry/analysis/load_census.py`.
 - [x] `W06.P13.S315` - Retire the six classification entries proven stale once the resolver could see again, and return the census to clean; `dev/registry/analysis/load_census_classification.py`.
+- [x] `W06.P13.S316` - Prove the declaration evaluator resolves any construction and refuses rather than guessing; `dev/registry/tests/test_load_census_classification.py`.
+- [x] `W06.P13.S317` - Give the load census a verification criterion carrying both the coverage and the instrument condition; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S318` - Verify the session's consolidations against every screen module and the corpus census; `dev/registry/analysis dev/registry/pipeline`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -747,6 +750,16 @@ defects: modelo 200's casilla 03594 and modelo 353's casilla 10, each emitting u
 amounts beside it in the same record emit cents. The second appeared through a commit while this
 plan was being executed and was caught by the gate that pins the first, which is what a gate
 proven against a live defect is for.
+
+Every module the registry load reaches carries exactly one reviewed classification, and the census that
+decides this can see what it is measuring. Both halves are asserted, and the second is not decoration:
+the census reports a module as unclassified or a rule as stale by the same absence it reports when its
+own resolver has stopped following an edge, so a clean result proves nothing unless the instrument is
+known to be looking. It holds today - 411 modules in the universe, none unclassified, no stale rule -
+and it holds against a resolver that reads what a declaration HOLDS rather than how it is written,
+because the previous one followed a literal tuple and went blind when the same names were rebuilt from
+a mapping. A gate asserts no dynamic import inside the registry package is left unresolved, which is
+the condition that makes the coverage number mean anything.
 
 Every revision directory name agrees with the window that revision declares, and a gate refuses a name
 that does not. Temporal selection resolves every coordinate the law can decide and refuses only those

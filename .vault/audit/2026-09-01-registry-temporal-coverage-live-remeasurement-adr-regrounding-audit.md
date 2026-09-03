@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6944dc7a3243c7d57aff79399779e384cc50fc90a02434d07675524545980448'
+body_hash: 'sha256:eb626b1bd99fcd9860dcbb9b8ddee121f183a48a19eb548b858085ff319c0aca'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8010,3 +8010,80 @@ finding that says "X no longer describes anything" is a claim about two things -
 the tree and the instrument - and it can only be acted on once the instrument is
 known to be sound. Fixing the instrument first cost two iterations and turned an
 unsafe deletion into a provable one.
+
+### the-evaluator-is-proven-and-the-four-remaining-unresolved-sites-are-correctly-unresolvable | medium | Ten tests pass; every refusal path is exercised, and the residue is accounted for rather than left open
+
+The resolver added last iteration was public and untested, which this campaign
+refuses of any other declaration and should refuse of its own. It now carries
+two proofs. The first resolves the live non-literal construction and asserts the
+names it recovers are the renta routing-integrity modules - the property that
+matters, since a literal and a mapping-derived tuple must answer identically or
+the next construction blinds the census again. The second exercises every
+refusal path: a module that does not exist, a name the module does not carry,
+and a name that holds a callable rather than a sequence. Each returns None.
+
+The refusals are the half worth proving. The caller records an unresolved site
+and a gate reads that record, so a fallback that returned a partial or invented
+answer would populate the universe with modules nothing imports, and the census
+would report itself complete while describing a tree that is not there. A
+resolver that cannot fail loudly is worse than one that cannot resolve.
+
+The four unresolved sites that remain were checked rather than assumed to be
+fine. Two sit in the CLI and two in development tooling, and both dev ones are
+genuinely unresolvable by any means: one imports a module named by a function
+parameter, the other a name computed from a path. Neither has a value to read.
+All four also sit outside the load closure, and `dynamic_reach` follows only
+sites inside it, so none can affect the census whatever becomes of them. Ten
+tests pass in that module, exit 0.
+
+### the-load-census-now-has-a-criterion-and-it-carries-the-instrument-condition | medium | A coverage number means nothing unless the thing counting can see, and the plan now says so where the number is quoted
+
+Three iterations of work stood behind the load census and the plan's
+verification section never mentioned it. It does now, and the criterion is
+written in two halves deliberately.
+
+The first is the coverage: every module the registry load reaches carries
+exactly one reviewed classification, which holds today at 411 modules in the
+universe, none unclassified and no stale rule. The second is the condition that
+makes the first mean anything: the census must be able to see what it is
+measuring. Those halves are not separable here, because the census reports an
+unclassified module and a stale rule by the same absence it reports when its own
+resolver has stopped following an edge. A clean result from a blind instrument
+and a clean result from a sound one are the same text.
+
+That is not a general observation appended to a criterion; it is what happened.
+The resolver followed a literal tuple, the same names were rebuilt from a
+mapping, and the census lost a package while reporting the loss as somebody
+else's stale table. The criterion therefore names the gate that holds the
+instrument sound - no dynamic import inside the registry package left
+unresolved - beside the number it qualifies.
+
+Reviewing the other criteria against the same test, most already carry one: the
+screens must search a non-empty population and complete over the whole corpus,
+the conformance criterion requires an absent vector to refuse rather than read
+as unmeasured, and the temporal criterion now names the flag that stopped its
+probe erasing its own subject. The pattern was already the section's habit; the
+census criterion was the one that had never been written down at all.
+
+### the-consolidations-are-verified-against-every-screen-and-the-census-is-byte-stable | high | 79 tests pass across the ten screen modules, exit 0, and the corpus still reports 1,651 findings
+
+This session moved a good deal of structure: a helper collapsed from ten copies
+into a defining module, two duplicated path guards into one, four constants onto
+single declarations, a screen's kinds turned into data, a per-definition
+function extracted so two detector proofs could assert what the screen reports,
+and a dynamic-import resolver rewritten to evaluate rather than parse. Each was
+verified where it landed. This is the check that they hold together.
+
+All ten screen test modules run green: 79 tests, exit 0. The runner reports the
+same 1,651 findings across the same ten screens it reported before any of it,
+and the declaration invariant gates - which discover screens by signature, hold
+them against the contributor README, require a test module each, and assert no
+screen rebuilds the resolved surface - pass at 22.
+
+The unchanged total is the evidence that matters, and it is worth being precise
+about what it does and does not prove. It proves the consolidations were
+behaviour-preserving: the same corpus, read through moved and renamed
+declarations, still produces the same findings. It does not prove the findings
+are right, and no census total ever will. A refactor that changed the number
+would have needed an explanation; one that does not is simply a refactor, which
+is the whole of what was intended.
