@@ -10,7 +10,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:5c715c35fd3fb410b6a2be1bf835a277930e15a37c71f678c53852c5993a2f95'
+body_hash: 'sha256:4cf77820868b2c27b4f0998542541889b934d6679abaa546339d52abe56d73e8'
 ---
 
 # `modelo-200-semantic-crosswalk` plan
@@ -57,7 +57,7 @@ Derive exact 2024-anchor rebinds while preserving every non-source authority fac
 Assign identity mismatches and source-map orphans to closed target-first dispositions without sibling fallback.
 
 - [x] `W02.P04.S07` - Implement target-anchor identity classification and explicit dispositions for every unmapped declaration; `dev/registry/analysis/m200_semantic_casilla_candidates.py`.
-- [ ] `W02.P04.S08` - Prove identity ambiguity, segment qualification, non-casilla ownership, and orphan omission fail closed; `dev/registry/tests/test_m200_semantic_casilla_candidates.py`.
+- [x] `W02.P04.S08` - Prove identity ambiguity, segment qualification, non-casilla ownership, and orphan omission fail closed; `dev/registry/tests/test_m200_semantic_casilla_candidates.py`.
 
 ## Wave `W03` - adjudicate 2024 meaning and legal authority
 

@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-03'
-body_hash: 'sha256:e00f8222e4534cfcdb180215d6a42c1995f03ff9243bebc0dc034b3fe5a6b20e'
+body_hash: 'sha256:bbc56892372f8038210bd4e13c3e2b459afdef8f1639cea2cea085a959987075'
 ---
 
 <!-- RETIRED: S370 -->
@@ -593,7 +593,7 @@ Compose the production Home projection, destination catalogue, global search and
 - [x] `W08.P28.S383` - Compose the root destination stack, account header, semantic focus restoration, session expiry, and post-journey Home refresh; `src/cadrumo/entrypoints/tui/app.py`.
 - [ ] `W08.P28.S384` - Compose secure profile, overview, Ledger, declaration, evidence, notification, operation, and destination factories for one installed session; `src/cadrumo/entrypoints/tui/launcher.py`.
 - [ ] `W08.P28.S385` - Add complete localized workbench, account, Ledger, Declarations, calendar, AEAT Sync, search, availability, and refusal messages through the canonical locale workflow; `src/cadrumo/locales/`.
-- [ ] `W08.P28.S394` - Generate and enforce an exhaustive visual-review inventory that maps every production TUI page, dialog, and editor factory to a stable review surface identity and fails when a concrete surface is undiscovered or unclassified; `dev/tui/_inventory.py, dev/tui/_coverage.py, and dev/tui/tests/test_tui_visual_inventory.py`.
+- [ ] `W08.P28.S394` - Generate and enforce an exhaustive visual-review inventory that maps every production TUI page, dialog, and editor factory to a stable review surface identity and fails when a concrete surface is undiscovered or unclassified; `src/cadrumo/entrypoints/tui/devtools/surfaces.py, dev/tui/_inventory.py, dev/tui/_coverage.py, and dev/tui/tests/test_tui_visual_inventory.py`.
 - [ ] `W08.P28.S395` - Provide deterministic non-sensitive review fixtures for every inventoried page, dialog, and editor, including meaningful ready, empty, blocked, stale, unavailable, validation, confirmation, and failure states wherever that surface supports them; `dev/tui/_harness.py, src/cadrumo/entrypoints/tui/devtools/, and dev/tui/tests/test_tui_visual_inventory.py`.
 - [ ] `W08.P28.S396` - Expose every inventoried fixture through the dev TUI discovery and rendering commands and prove selectable interactive launch plus deterministic raster and text artifacts across supported viewports, themes, and locales with no missing-surface drift; `dev/tui/cli.py, dev/tui/_raster.py, dev/tui/_artifacts.py, dev/tui/README.md, and dev/tui/tests/`.
 
