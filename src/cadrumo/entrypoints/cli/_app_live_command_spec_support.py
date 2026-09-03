@@ -16,6 +16,8 @@ from .command_spec import (
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
+)
+from .command_spec import (
     translation_key as _key,
 )
 

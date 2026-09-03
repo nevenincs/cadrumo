@@ -146,13 +146,9 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
     ):
         assert spec.invocation is _LEAF_INVOCATION
 
-    for key in (
-        "app_live_filed_list",
-    ):
+    for key in ("app_live_filed_list",):
         assert foundation[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
-    for key in (
-        "app_live_iva_wallet_history",
-    ):
+    for key in ("app_live_iva_wallet_history",):
         assert iva_wallet[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
     for key in (
         "app_live_justificante_list",
@@ -191,13 +187,13 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
         justificante["app_live_justificante_pull"],
     ):
         assert spec.parameters[0] is _REQUIRED_MODELO_OPTION
-    for spec in (
-        foundation["app_live_filed_pull_sources"],
-        iva_wallet["app_live_iva_wallet_pull"],
-        justificante["app_live_justificante_pull"],
+    for spec, year_position, period_position in (
+        (foundation["app_live_filed_pull_sources"], 1, 2),
+        (iva_wallet["app_live_iva_wallet_pull"], 0, 1),
+        (justificante["app_live_justificante_pull"], 1, 2),
     ):
-        assert spec.parameters[1] is _REQUIRED_YEAR_OPTION
-        assert spec.parameters[2] is _REQUIRED_PERIOD_OPTION
+        assert spec.parameters[year_position] is _REQUIRED_YEAR_OPTION
+        assert spec.parameters[period_position] is _REQUIRED_PERIOD_OPTION
     for spec, position in (
         (iva_wallet["app_live_iva_wallet_pull"], 2),
         (iva_wallet["app_live_iva_wallet_pull_evidence"], 4),
