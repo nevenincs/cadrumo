@@ -9,7 +9,6 @@ for the schema.
 from __future__ import annotations
 
 import datetime
-import pathlib
 
 import pytest
 
@@ -257,29 +256,43 @@ def test_a_name_closing_at_the_wrong_year_is_reported(
     assert "2022" in detail and "2021" in detail
 
 
-def test_every_condition_the_screen_documents_can_be_reached(
+def test_every_condition_the_screen_documents_is_declared_and_reachable(
     authority: ValidatedRegistryAuthority,
 ) -> None:
-    """No documented condition is unreachable code.
+    """The documented conditions, the declared set, and what fires all agree.
 
-    Five conditions fire on the corpus and three are constructed across this
-    module. This pins the total so that a condition added to the docstring
-    without a way to reach it, or one whose predicate stops matching, is caught
-    here rather than by a reader counting bullets.
+    This once recovered the emitted set by matching the screen's source with
+    four regexes, one per assignment shape the author had used. That is the
+    static extraction the sibling gates refuse for a stated reason: it
+    under-reads whatever shape it does not know, and an under-read set still
+    compares equal to a docstring that happens to have lost the same entry, so
+    the gate reports agreement between two wrong answers.
+
+    The screen now declares its kinds. This compares the docstring against that
+    declaration, and separately asserts what fires on the corpus is a subset of
+    it. The conditions that do not fire are constructed by the tests above,
+    which is why those exist and why this one constructs nothing.
     """
     import re
 
+    from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
+
     from ..analysis import revision_name_window as screen
+    from ..analysis.revision_name_window import KINDS
 
     documented = set(re.findall(r"^- ``([a-z_]+)``", screen.__doc__ or "", re.M))
-    emitted = set(re.findall(r'kind=\(?"([a-z_]+)"', screen.name_window_findings.__doc__ or ""))
-    source = pathlib.Path(screen.__file__).read_text(encoding="utf-8")
-    emitted |= set(re.findall(r'kind=\(?\s*"([a-z_]+)"', source))
-    emitted |= set(re.findall(r'"([a-z_]+)"\s+if\s+claimed_open', source))
-    emitted |= set(re.findall(r'else\s+"([a-z_]+)"', source))
 
     assert documented, "the screen documents no conditions, so this gate proves nothing"
-    assert documented == emitted, (
-        f"documented but never emitted: {sorted(documented - emitted)}; "
-        f"emitted but undocumented: {sorted(emitted - documented)}"
+    assert documented == set(KINDS), (
+        f"documented but not declared: {sorted(documented - set(KINDS))}; "
+        f"declared but undocumented: {sorted(set(KINDS) - documented)}"
     )
+
+    live = {
+        finding.kind
+        for modelo in sorted(str(code) for code in registry_modelo_codes())
+        for revision in authority.modelo(modelo).revisions.values()
+        for finding in name_window_findings(revision, modelo_id=modelo)
+    }
+    assert live, "no condition fired on the corpus, so the declaration is unexercised"
+    assert live <= set(KINDS), f"the screen emitted a kind it does not declare: {sorted(live - set(KINDS))}"
