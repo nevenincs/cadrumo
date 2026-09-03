@@ -271,6 +271,30 @@ def test_source_rebind_refuses_duplicate_output_before_touching_the_tree(
     assert _tree_bytes(rebind_registry_root) == before
 
 
+def test_source_rebind_transaction_rolls_back_after_mid_cutover_failure(
+    source_rebind_plan, rebind_registry_root: Path, monkeypatch
+) -> None:
+    before = _tree_bytes(rebind_registry_root)
+    real_replace = subject._replace_rebind_tree
+    calls = 0
+
+    def fail_second_replace(source: Path, destination: Path) -> None:
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise OSError("injected candidate cutover failure")
+        real_replace(source, destination)
+
+    monkeypatch.setattr(subject, "_replace_rebind_tree", fail_second_replace)
+    with pytest.raises(OSError, match="injected candidate"):
+        subject.apply_m200_source_rebind_plan(source_rebind_plan, registry_root=rebind_registry_root)
+    assert _tree_bytes(rebind_registry_root) == before
+    revision_root = rebind_registry_root / "modelos" / "200" / "revisions" / "2024"
+    assert not (revision_root / subject._REBIND_JOURNAL).exists()
+    assert not tuple(revision_root.glob(f"{subject._REBIND_STAGE_PREFIX}*"))
+    assert not tuple(revision_root.glob(f"{subject._REBIND_BACKUP_PREFIX}*"))
+
+
 def _tree_bytes(root: Path) -> dict[Path, bytes]:
     return {path.relative_to(root): path.read_bytes() for path in root.rglob("*.toml")}
 

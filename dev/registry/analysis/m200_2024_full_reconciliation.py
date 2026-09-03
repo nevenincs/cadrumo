@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
+import secrets
+import shutil
 import sys
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping
@@ -16,6 +19,8 @@ import rtoml
 
 from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.fsync import fsync_parent_dir
+from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
@@ -36,6 +41,9 @@ SIBLING_VALID_FROM = date(2025, 1, 1)
 _CASILLA_TABLE = re.compile(r'^\[\[revisions\."2024"\.casillas\]\]\s*$')
 _ID_LINE = re.compile(r'^\s*id\s*=\s*"(?P<id>[^"]+)"\s*$')
 _SOURCE_REFS_LINE = re.compile(r"^(?P<prefix>\s*source_refs\s*=\s*)(?P<value>.*?)(?P<ending>\r?\n)?$")
+_REBIND_JOURNAL = ".m200-2024-source-rebind.journal.json"
+_REBIND_STAGE_PREFIX = ".m200-2024-source-rebind-stage-"
+_REBIND_BACKUP_PREFIX = ".m200-2024-source-rebind-backup-"
 
 
 @dataclass(frozen=True, slots=True)
@@ -401,6 +409,15 @@ def apply_m200_source_rebind_plan(
     for item in plan.rebinds:
         _require_rebind_source_refs(item)
 
+    registry_root = registry_root.resolve()
+    with exclusive_file_lock(registry_root / ".m200-2024-source-rebind.lock"):
+        _recover_m200_source_rebind(plan, registry_root)
+        return _apply_preflighted_m200_source_rebind(plan, registry_root=registry_root, dry_run=dry_run)
+
+
+def _apply_preflighted_m200_source_rebind(
+    plan: M200SourceRebindPlan, *, registry_root: Path, dry_run: bool
+) -> M200SourceRebindApplication:
     records = _read_m200_2024_casilla_records(registry_root)
     expected_ids = set(plan.expected_current_ids)
     actual_ids = set(records)
@@ -438,13 +455,139 @@ def apply_m200_source_rebind_plan(
 
     changed_paths = tuple(sorted(rendered))
     if not dry_run:
-        for path in changed_paths:
-            atomic_write_text(path, rendered[path], encoding="utf-8")
+        _publish_m200_source_rebind_transaction(registry_root, rendered, plan)
     return M200SourceRebindApplication(
         planned_rebind_count=len(plan.rebinds),
         changed_paths=changed_paths,
         dry_run=dry_run,
     )
+
+
+def _publish_m200_source_rebind_transaction(
+    registry_root: Path, rendered: Mapping[Path, str], plan: M200SourceRebindPlan
+) -> None:
+    """Stage a whole casilla tree, then cut it over with journaled directory moves."""
+    casillas_root = registry_root / "modelos" / "200" / "revisions" / "2024" / "casillas"
+    revision_root = casillas_root.parent
+    token = secrets.token_hex(8)
+    stage = revision_root / f"{_REBIND_STAGE_PREFIX}{token}"
+    backup = revision_root / f"{_REBIND_BACKUP_PREFIX}{token}"
+    journal_path = revision_root / _REBIND_JOURNAL
+    journal = {"schema_version": 1, "state": "intent", "stage": stage.name, "backup": backup.name}
+    _write_rebind_journal(journal_path, journal)
+    try:
+        shutil.copytree(casillas_root, stage)
+        for path, text in rendered.items():
+            atomic_write_text(stage / path.relative_to(casillas_root), text, encoding="utf-8")
+        _require_rebound_tree(plan, _read_m200_2024_casilla_records_for_root(stage))
+        _replace_rebind_tree(casillas_root, backup)
+        journal["state"] = "backup_staged"
+        _write_rebind_journal(journal_path, journal)
+        _replace_rebind_tree(stage, casillas_root)
+        journal["state"] = "candidate_live"
+        _write_rebind_journal(journal_path, journal)
+        _require_rebound_tree(plan, _read_m200_2024_casilla_records(registry_root))
+    except BaseException:
+        _restore_rebind_backup(casillas_root, backup)
+        _remove_rebind_tree(stage, revision_root)
+        if casillas_root.exists():
+            _delete_rebind_journal(journal_path)
+        raise
+    _remove_rebind_tree(backup, revision_root)
+    _delete_rebind_journal(journal_path)
+
+
+def _read_m200_2024_casilla_records_for_root(casillas_root: Path) -> dict[str, _M200CasillaSourceRecord]:
+    """Read a staged casilla tree using the same parser as a registry root."""
+    return _read_m200_2024_casilla_records_at(casillas_root)
+
+
+def _recover_m200_source_rebind(plan: M200SourceRebindPlan, registry_root: Path) -> None:
+    revision_root = registry_root / "modelos" / "200" / "revisions" / "2024"
+    journal_path = revision_root / _REBIND_JOURNAL
+    if not journal_path.exists():
+        return
+    try:
+        journal = json.loads(journal_path.read_text(encoding="utf-8"))
+        if set(journal) != {"schema_version", "state", "stage", "backup"} or journal["schema_version"] != 1:
+            raise ValueError("invalid schema")
+        stage = _rebind_transaction_child(revision_root, journal["stage"], _REBIND_STAGE_PREFIX)
+        backup = _rebind_transaction_child(revision_root, journal["backup"], _REBIND_BACKUP_PREFIX)
+    except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
+        raise RegistryValidationError(f"invalid source rebind recovery journal: {journal_path}") from exc
+    casillas_root = revision_root / "casillas"
+    state = journal["state"]
+    if state == "candidate_live" and casillas_root.exists() and backup.exists():
+        try:
+            _require_rebound_tree(plan, _read_m200_2024_casilla_records(registry_root))
+        except RegistryValidationError:
+            _restore_rebind_backup(casillas_root, backup)
+        else:
+            _remove_rebind_tree(backup, revision_root)
+        _remove_rebind_tree(stage, revision_root)
+        _delete_rebind_journal(journal_path)
+        return
+    if state in {"intent", "backup_staged"} and backup.exists():
+        _restore_rebind_backup(casillas_root, backup)
+    elif state != "intent" and not casillas_root.exists():
+        raise RegistryValidationError(f"source rebind journal cannot recover missing canonical tree: {journal_path}")
+    _remove_rebind_tree(stage, revision_root)
+    _delete_rebind_journal(journal_path)
+
+
+def _require_rebound_tree(plan: M200SourceRebindPlan, records: Mapping[str, _M200CasillaSourceRecord]) -> None:
+    if set(records) != set(plan.expected_current_ids):
+        raise RegistryValidationError("staged source rebind tree changed its declaration anchors")
+    for item in plan.rebinds:
+        record = records[item.casilla_id]
+        if (
+            record.source_refs != item.target_source_refs
+            or record.non_source_payload_sha256 != item.non_source_payload_sha256
+        ):
+            raise RegistryValidationError(f"staged source rebind tree drifted for {item.casilla_id!r}")
+
+
+def _replace_rebind_tree(source: Path, destination: Path) -> None:
+    import os
+
+    os.replace(source, destination)
+    fsync_parent_dir(destination)
+
+
+def _restore_rebind_backup(casillas_root: Path, backup: Path) -> None:
+    if not backup.exists():
+        return
+    if casillas_root.exists():
+        discarded = casillas_root.parent / f"{_REBIND_STAGE_PREFIX}discard-{secrets.token_hex(8)}"
+        _replace_rebind_tree(casillas_root, discarded)
+        _remove_rebind_tree(discarded, casillas_root.parent)
+    _replace_rebind_tree(backup, casillas_root)
+
+
+def _write_rebind_journal(path: Path, journal: Mapping[str, object]) -> None:
+    atomic_write_text(path, json.dumps(journal, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _delete_rebind_journal(path: Path) -> None:
+    path.unlink(missing_ok=True)
+    fsync_parent_dir(path)
+
+
+def _rebind_transaction_child(root: Path, name: object, prefix: str) -> Path:
+    if not isinstance(name, str) or not name.startswith(prefix) or Path(name).name != name:
+        raise RegistryValidationError("source rebind journal carries an unsafe transaction path")
+    return root / name
+
+
+def _remove_rebind_tree(path: Path, root: Path) -> None:
+    if not path.exists():
+        return
+    if path.parent.resolve() != root.resolve() or not path.name.startswith(
+        (_REBIND_STAGE_PREFIX, _REBIND_BACKUP_PREFIX)
+    ):
+        raise RegistryValidationError(f"unsafe source rebind transaction cleanup target: {path}")
+    shutil.rmtree(path)
+    fsync_parent_dir(path)
 
 
 @dataclass(frozen=True, slots=True)
@@ -488,6 +631,10 @@ def _require_rebind_source_refs(rebind: M200SourceRebind) -> None:
 
 def _read_m200_2024_casilla_records(registry_root: Path) -> dict[str, _M200CasillaSourceRecord]:
     casillas_root = registry_root / "modelos" / "200" / "revisions" / "2024" / "casillas"
+    return _read_m200_2024_casilla_records_at(casillas_root)
+
+
+def _read_m200_2024_casilla_records_at(casillas_root: Path) -> dict[str, _M200CasillaSourceRecord]:
     if not casillas_root.is_dir():
         raise RegistryValidationError(f"source rebind found no Modelo 200/2024 casilla root: {casillas_root}")
     records: dict[str, _M200CasillaSourceRecord] = {}

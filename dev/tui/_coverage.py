@@ -37,10 +37,10 @@ RENDERED_BY: Final[dict[str, tuple[str, ...]]] = {
         "cadrumo.entrypoints.tui.components.form_screen.FormApp",
         "cadrumo.entrypoints.tui.components.form_screen.FormScreen",
     ),
-    "modelo-work-wizard": (
-        "cadrumo.entrypoints.tui.flows.app.FlowTuiApp",
-        "cadrumo.entrypoints.tui.flows.app.QuestionScreen",
-    ),
+    # The question view this surface opens on is a pane rather than a screen, so
+    # it is not an interface in the inventory's vocabulary and cannot be named
+    # here. One entry is the whole of what this surface paints.
+    "modelo-work-wizard": ("cadrumo.entrypoints.tui.flows.app.FlowScreen",),
 }
 """Surface name to the interface classes opening it paints.
 
