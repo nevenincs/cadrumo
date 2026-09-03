@@ -26,6 +26,7 @@ from pydantic import BaseModel, model_validator
 from ..core.identifier_grammar import NamespacedId
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import UtcInstant
+from ..domain.modelos.filing_record import ModeloRecord
 from ..domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -49,7 +50,7 @@ from .modelo.declarations_workspace import (
 )
 from .modelo.workspace_models import ModeloWorkspaceProjectionV1
 from .overview.calendar import build_overview_calendar
-from .overview.calendar_models import OverviewCalendarRange
+from .overview.calendar_models import OverviewCalendar, OverviewCalendarRange
 from .overview.evidence import (
     AeatCalendarEvidenceSources,
     CalendarEvidenceReadOutcome,
@@ -323,10 +324,26 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         )
         taxpayer = projection_for_taxpayer(record, tax_id_default="00000000T")
         raw_values = record_to_path_values(record)
+        query_range = OverviewCalendarRange(
+            from_date=date(as_of.year, 1, 1),
+            to_date=date(as_of.year, 12, 31),
+        )
+        schedule_calendar = build_overview_calendar(
+            taxpayer,
+            query_range,
+            today=as_of,
+            raw_values=raw_values,
+            work_units=tuple(work_units.values()),
+        )
         evidence = build_calendar_evidence_projection(
             local=CalendarEvidenceReadOutcome(
                 state=HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at),
-                value=LocalCalendarEvidenceSources(filing_records=tuple(filings.records.values())),
+                value=LocalCalendarEvidenceSources(
+                    filing_records=_scope_filing_records(
+                        tuple(filings.records.values()),
+                        schedule_calendar,
+                    )
+                ),
             ),
             aeat=CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources](
                 state=HomeZoneState(
@@ -335,10 +352,6 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 ),
             ),
             expected_tax_id=taxpayer.tax_id,
-        )
-        query_range = OverviewCalendarRange(
-            from_date=date(as_of.year, 1, 1),
-            to_date=date(as_of.year, 12, 31),
         )
         calendar = build_overview_calendar(
             taxpayer,
@@ -352,11 +365,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             calendar=calendar,
             evidence=evidence,
             as_of=as_of,
-            schedule_observation=DeclarationsCalendarSourceObservationV1(
-                source=DeclarationsCalendarSource.SCHEDULE,
-                availability=HomeAvailability.AVAILABLE,
-                observed_at=observed_at,
-            ),
+            schedule_observation=_schedule_observation(calendar, observed_at),
         )
         account_session = self.account_session_reader()
         final_record = self.profile_repository.load(self.profile_id)
@@ -418,6 +427,43 @@ def _declarations_observation(
     return DeclarationsWorkspaceZoneObservationV1(
         zone=zone,
         availability=DeclarationsWorkspaceAvailability.AVAILABLE,
+        observed_at=observed_at,
+    )
+
+
+def _scope_filing_records(
+    filing_records: tuple[ModeloRecord, ...],
+    schedule_calendar: OverviewCalendar,
+) -> tuple[ModeloRecord, ...]:
+    """Keep only evidence addressed by this legal-calendar query.
+
+    The local source remains observed and available even when none of its
+    profile-wide filing records belongs to the requested window. That is a
+    measured empty query result, not an invented empty authority.
+    """
+    addresses = {
+        (entry.modelo, entry.period.filing_year, entry.period.registry_token) for entry in schedule_calendar.entries
+    }
+    return tuple(
+        record
+        for record in filing_records
+        if (str(record.modelo), record.filing_year, record.period.registry_token) in addresses
+    )
+
+
+def _schedule_observation(
+    calendar: OverviewCalendar,
+    observed_at: UtcInstant,
+) -> DeclarationsCalendarSourceObservationV1:
+    if not calendar.taxpayer_model_declared:
+        return DeclarationsCalendarSourceObservationV1(
+            source=DeclarationsCalendarSource.SCHEDULE,
+            availability=HomeAvailability.UNAVAILABLE,
+            reason_code="workbench.calendar.taxpayer_model_undeclared",
+        )
+    return DeclarationsCalendarSourceObservationV1(
+        source=DeclarationsCalendarSource.SCHEDULE,
+        availability=HomeAvailability.AVAILABLE,
         observed_at=observed_at,
     )
 

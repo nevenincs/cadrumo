@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Any, cast
 
 import pytest
@@ -19,7 +19,7 @@ from ..ledger.workspace import LedgerWorkspaceProjectionV1
 from ..modelo.declarations_calendar import DeclarationsCalendarProjectionV1
 from ..modelo.declarations_workspace import DeclarationsWorkspaceProjectionV1
 from ..modelo.workspace_models import ModeloWorkspaceProjectionV1
-from ..overview.calendar_models import OverviewCalendar
+from ..overview.calendar_models import OverviewCalendar, OverviewCalendarRange
 from ..overview.home import (
     HomeAccountSession,
     HomeAvailability,
@@ -27,6 +27,7 @@ from ..overview.home import (
     HomeSessionPosture,
     HomeZoneState,
 )
+from ..overview.tests.calendar_test_support import modelo_record
 from ..search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
 from ..workbench_generation import (
     CallableWorkbenchGenerationReadDoorV1,
@@ -155,9 +156,7 @@ def test_generation_inputs_reject_admission_source_contradictions() -> None:
         WorkbenchGenerationInputsV1.model_validate(payload)
 
 
-def test_secure_profile_provider_brackets_repository_capture_and_refuses_missing_loaders(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_secure_profile_provider_brackets_repository_capture_and_refuses_missing_loaders() -> None:
     """The production door verifies real local authorities without fake fixtures."""
 
     profile = _Repository(UserProfileRecord(profile_id=_PROFILE_ID, setup_state=ProfileSetupState.INCOMPLETE))
@@ -165,10 +164,6 @@ def test_secure_profile_provider_brackets_repository_capture_and_refuses_missing
     revisions = _Repository(CalculationRevisionCatalogue())
     filings = _Repository(ModeloRecordCatalogue())
 
-    def empty_calendar(_profile: object, calendar_range: object, **_kwargs: object) -> OverviewCalendar:
-        return OverviewCalendar(range=calendar_range, entries=(), generated_at=_NOW)  # type: ignore[arg-type]
-
-    monkeypatch.setattr(generation_module, "build_overview_calendar", empty_calendar)
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=_PROFILE_ID,
         profile_repository=cast(Any, profile),
@@ -191,6 +186,11 @@ def test_secure_profile_provider_brackets_repository_capture_and_refuses_missing
     assert filings.calls == 2
     assert generation.declarations.projection is not None
     assert generation.declarations_calendar.projection is not None
+    assert generation.declarations_calendar.projection.sources[0].availability is HomeAvailability.UNAVAILABLE
+    assert (
+        generation.declarations_calendar.projection.sources[0].reason_code
+        == "workbench.calendar.taxpayer_model_undeclared"
+    )
     assert generation.ledger.availability is WorkbenchGenerationAvailability.UNAVAILABLE
     assert generation.aeat_sync.availability is WorkbenchGenerationAvailability.UNAVAILABLE
     assert generation.modelo.availability is WorkbenchGenerationAvailability.UNAVAILABLE
@@ -226,6 +226,20 @@ def test_secure_profile_provider_refuses_a_generation_changed_during_capture(
 
     with pytest.raises(RuntimeError, match="changed during capture"):
         door.read_workbench_generation_inputs()
+
+
+def test_calendar_evidence_scope_preserves_available_empty_for_historical_filing() -> None:
+    """A prior-year filing is outside the query, not orphaned or never captured."""
+    historical = modelo_record()
+    schedule = OverviewCalendar(
+        range=OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
+        entries=(),
+        generated_at=_NOW,
+    )
+
+    scoped = generation_module._scope_filing_records((historical,), schedule)
+
+    assert scoped == ()
 
 
 def test_generation_projects_home_and_never_turns_missing_areas_into_empty() -> None:

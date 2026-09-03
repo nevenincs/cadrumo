@@ -303,7 +303,9 @@ def test_no_screen_reassembles_the_resolved_export_surface() -> None:
 
     analysis = pathlib.Path(__file__).resolve().parent.parent / "analysis"
     offenders: list[str] = []
+    scanned = 0
     for path in sorted(analysis.rglob("*.py")):
+        scanned += 1
         tree = ast.parse(path.read_text(encoding=_UTF_8))
         reached = False
         for node in ast.walk(tree):
@@ -316,6 +318,10 @@ def test_no_screen_reassembles_the_resolved_export_surface() -> None:
         if reached:
             offenders.append(path.stem)
 
+    # A gate asserting an absence must first prove it looked. Without this a
+    # moved directory or a changed suffix empties the walk and the assertion
+    # passes over nothing, which is the one failure a green result cannot show.
+    assert scanned, "the analysis package walk found no modules, so this gate checked nothing"
     assert not offenders, (
         "these modules reach for the binding derivation instead of the resolved-surface accessor, "
         f"which is how four wrong figures were published: {sorted(offenders)}"
@@ -627,7 +633,7 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
         # disagreements, kinds - the claim is "N somethings are reported", and a
         # gate keyed to one spelling read four screens while a fifth stated its
         # count in a synonym and went unchecked.
-        claim = re.search(r"([A-Za-z]+) [a-z]+ are reported", doc)
+        claim = re.search(r"\b([A-Za-z]+) [a-z]+ are reported\b", doc)
         if claim is None:
             continue
         stated = _NUMBER_WORDS.get(claim.group(1).lower())
