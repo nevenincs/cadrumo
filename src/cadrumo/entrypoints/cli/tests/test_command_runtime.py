@@ -6,6 +6,7 @@ import pytest
 from click import IntRange
 from typer.testing import CliRunner
 
+from ....core.i18n.render import tr
 from .._command_runtime import (
     _parameter,
     build_command_app,
@@ -36,6 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _SEEN: list[tuple[object, str]] = []
 _SEEN_MULTIPLE: list[list[str]] = []
+_SEEN_OPTION_RUNTIME: list[tuple[str, bool]] = []
 _POLICY = ExecutionPolicySpec(
     capabilities=frozenset({"state-free"}),
     side_effects=frozenset({"none"}),
@@ -56,6 +58,23 @@ def public_multiple_behavior(ctx: object, *, name: list[str]) -> None:
 
 def public_parser(value: str) -> str:
     return value
+
+
+def public_default_factory() -> str:
+    return "factory default"
+
+
+def public_option_callback(value: str) -> str:
+    return f"callback:{value}"
+
+
+def public_option_completion() -> list[str]:
+    return ["Ada"]
+
+
+def public_option_behavior(ctx: object, *, name: str, enabled: bool) -> None:
+    del ctx
+    _SEEN_OPTION_RUNTIME.append((name, enabled))
 
 
 def _graph() -> CommandSpecGraph:
@@ -235,13 +254,71 @@ def test_runtime_materializes_shared_value_and_constraint_kwargs_for_arguments_a
         resolve_path=True,
         allow_dash=True,
     )
+    default = ParameterDefault.value("literal default")
+    help_key = TranslationKey("cli.root.language_help")
+    argument_spec = ArgumentSpec(
+        name="item",
+        value=value,
+        default=default,
+        help_key=help_key,
+        metavar="ITEM",
+        show_default=False,
+        hidden=True,
+        constraint=constraint,
+    )
+    option_spec = OptionSpec(
+        name="item",
+        declarations=("--item",),
+        value=value,
+        default=default,
+        help_key=help_key,
+        metavar="ITEM",
+        show_default=False,
+        hidden=True,
+        constraint=constraint,
+    )
+    argument = _parameter(argument_spec).default
+    option = _parameter(option_spec).default
+
+    for parameter, spec in ((argument, argument_spec), (option, option_spec)):
+        assert parameter.default == spec.default.literal
+        assert parameter.default_factory is None
+        assert parameter.help == tr(spec.help_key.value)
+        assert parameter.metavar == spec.metavar
+        assert parameter.show_default is spec.show_default
+        assert parameter.hidden is spec.hidden
+        assert parameter.min == spec.constraint.minimum
+        assert parameter.max == spec.constraint.maximum
+        assert parameter.clamp is spec.constraint.clamp
+        assert parameter.case_sensitive is spec.constraint.case_sensitive
+        assert parameter.exists is spec.constraint.exists
+        assert parameter.file_okay is spec.constraint.file_okay
+        assert parameter.dir_okay is spec.constraint.dir_okay
+        assert parameter.writable is spec.constraint.writable
+        assert parameter.readable is spec.constraint.readable
+        assert parameter.resolve_path is spec.constraint.resolve_path
+        assert parameter.allow_dash is spec.constraint.allow_dash
+        assert parameter.parser is expected_parser
+        if expected_click_type is None:
+            assert parameter.click_type is None
+        else:
+            assert isinstance(parameter.click_type, expected_click_type)
+
+
+def test_runtime_materializes_factory_defaults_for_arguments_and_options() -> None:
+    default = ParameterDefault.from_factory(
+        DeferredTarget(
+            "cadrumo.entrypoints.cli.tests.test_command_runtime",
+            "public_default_factory",
+        )
+    )
+    value = ValueContract(DeferredTarget("builtins", "str"))
     argument = _parameter(
         ArgumentSpec(
             name="item",
             value=value,
-            default=ParameterDefault.required(),
+            default=default,
             help_key=None,
-            constraint=constraint,
         )
     ).default
     option = _parameter(
@@ -249,38 +326,83 @@ def test_runtime_materializes_shared_value_and_constraint_kwargs_for_arguments_a
             name="item",
             declarations=("--item",),
             value=value,
-            default=ParameterDefault.required(),
+            default=default,
             help_key=None,
-            constraint=constraint,
         )
     ).default
 
-    shared_values = (
-        "default_factory",
-        "help",
-        "show_default",
-        "hidden",
-        "min",
-        "max",
-        "clamp",
-        "case_sensitive",
-        "exists",
-        "file_okay",
-        "dir_okay",
-        "writable",
-        "readable",
-        "resolve_path",
-        "allow_dash",
-        "parser",
+    for parameter in (argument, option):
+        assert parameter.default is None
+        assert parameter.default_factory is not None
+        assert parameter.default_factory() == public_default_factory()
+
+
+def test_runtime_materializes_and_exercises_option_only_hooks() -> None:
+    name_option = OptionSpec(
+        name="name",
+        declarations=("--name",),
+        value=ValueContract(
+            DeferredTarget("builtins", "str"),
+            callback=DeferredTarget(
+                "cadrumo.entrypoints.cli.tests.test_command_runtime",
+                "public_option_callback",
+            ),
+            completion=DeferredTarget(
+                "cadrumo.entrypoints.cli.tests.test_command_runtime",
+                "public_option_completion",
+            ),
+        ),
+        default=ParameterDefault.required(),
+        help_key=TranslationKey("cli.root.language_help"),
+        metavar="NAME",
+        prompt_key=TranslationKey("cli.root.language_help"),
+        confirmation_prompt_key=TranslationKey("cli.root.language_help"),
+        envvar=("CADRUMO_TEST_NAME",),
+        eager=True,
     )
-    assert tuple(getattr(argument, name) for name in shared_values) == tuple(
-        getattr(option, name) for name in shared_values
+    enabled_option = OptionSpec(
+        name="enabled",
+        declarations=("--enabled/--disabled",),
+        value=ValueContract(DeferredTarget("builtins", "bool")),
+        default=ParameterDefault.value(False),
+        help_key=TranslationKey("cli.root.language_help"),
+        is_flag=True,
+        flag_value=True,
     )
-    assert argument.parser is expected_parser
-    assert option.parser is expected_parser
-    if expected_click_type is None:
-        assert argument.click_type is None
-        assert option.click_type is None
-    else:
-        assert isinstance(argument.click_type, expected_click_type)
-        assert isinstance(option.click_type, expected_click_type)
+    materialized = _parameter(name_option).default
+    assert materialized.param_decls == name_option.declarations
+    assert materialized.prompt == tr(name_option.prompt_key.value)
+    assert materialized.confirmation_prompt == tr(name_option.confirmation_prompt_key.value)
+    assert materialized.envvar == list(name_option.envvar)
+    assert materialized.is_eager is name_option.eager
+    assert materialized.callback is public_option_callback
+    assert materialized.shell_complete is public_option_completion
+
+    graph = _graph()
+    runtime_graph = CommandSpecGraph(
+        tuple(
+            replace(
+                spec,
+                parameters=(name_option, enabled_option),
+                handler=LazyBinding.available(
+                    DeferredTarget(
+                        "cadrumo.entrypoints.cli.tests.test_command_runtime",
+                        "public_option_behavior",
+                    )
+                ),
+            )
+            if spec.key == "greet"
+            else spec
+            for spec in graph.specs
+        )
+    )
+    _SEEN_OPTION_RUNTIME.clear()
+
+    result = CliRunner().invoke(
+        build_command_app(runtime_graph),
+        ["greet", "--enabled"],
+        input="Ada\nAda\n",
+    )
+
+    assert result.exit_code == 0, result.output
+    assert _SEEN_OPTION_RUNTIME == [("callback:Ada", True)]
