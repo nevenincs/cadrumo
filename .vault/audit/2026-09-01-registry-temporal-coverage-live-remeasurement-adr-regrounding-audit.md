@@ -11046,3 +11046,52 @@ and the reference set identical. And a modelo missing from the revision counts
 yields no claim rather than a false one - defaulting an unknown denominator to
 zero would make any single row match and report it as systemic, which is a claim
 built out of ignorance and has its own test.
+
+
+## Nothing in the provenance population is a dangling reference
+
+A citation outside its manifest could be either of two things, and the screen's
+own docstring says so: the child citing something outside the revision's scope,
+or the manifest under-declaring. Before either, there is a worse possibility
+worth ruling out - a reference cited and declared nowhere at all.
+
+It is ruled out. All **414** modelo-and-reference pairs resolve in their
+catalogue: 1,374 legal ids and 499 source ids are declared, and every cited
+reference is among them. Nothing here is broken; every one is a declared
+reference simply not listed in a manifest. That bounds the severity of the whole
+population and is recorded as a negative finding, because a reader looking at
+31,608 citing sites has no way to tell that from the count.
+
+### Where to look first, and why
+
+Direction is not decided by this screen, but the site count is evidence about
+it. A reference cited by one child and absent from the manifest is as likely to
+be a citation reaching outside its revision as a gap in the manifest. One cited
+by hundreds of children across every revision of its modelo is the manifest
+under-declaring; the alternative would have hundreds of authors independently
+citing something out of scope.
+
+The distribution splits cleanly. **Seventeen references are cited by exactly one
+child** - sixteen legal, one source - and those are the small set worth reading
+one at a time. At the other end, **ninety-nine are cited by a hundred children
+or more**, fifty-five of them absent from every revision of their modelo. The
+middle bands hold the rest: 175 references in the ten-to-ninety-nine band and
+123 in two-to-nine.
+
+The CLI now prints the reference scope beside the per-revision rows, and the
+census carries the three figures a reader needs: 414 pairs, 213 spanning every
+revision, 17 cited by a single child.
+
+### Two counts named the same thing
+
+The summary line briefly carried `distinct_references=314` and
+`references=414`. Both are real and they are different questions - 314 distinct
+reference IDS appear, forming 414 modelo-and-reference pairs, so about a hundred
+references sit outside the manifests of more than one modelo. Named as they
+were, a reader had two reference counts in one line and nothing to tell them
+apart. They are now `distinct_reference_ids` and `modelo_reference_pairs`.
+
+That is the third time in this campaign one output line has carried two figures
+for what looked like one concept. The previous two were the same concept
+measured twice and were resolved by deleting one; this one is two concepts
+sharing a name and is resolved by naming them.
