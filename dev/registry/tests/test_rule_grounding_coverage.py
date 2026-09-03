@@ -25,10 +25,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class _Field:
-    """The two attributes the classifier reads from a field needing a rule."""
+    """The attributes the classifier reads from a field needing a rule.
+
+    ``notes`` and ``kind`` carry what the field's own content cell cites and
+    whether that citation resolved, which is the strongest grounding a field can
+    have and was missing from the first version of this classifier.
+    """
 
     aeat_type: str
     cell: str
+    notes: tuple[str, ...] = ()
+    kind: str = "pointer_unresolved"
 
 
 @pytest.fixture(scope="module")
@@ -118,6 +125,46 @@ def test_the_ungrounded_condition_still_reports_when_nothing_is_available() -> N
     findings = classify_grounding((field,), by_type={}, design_notes=(), modelo="200", revision="r")
     assert [item.kind for item in findings] == ["ungrounded"]
     assert findings[0].notes == ()
+
+
+def test_a_note_the_field_itself_cites_outranks_every_other_grounding() -> None:
+    """A note the design pointed at FOR THIS FIELD needs no argument at all.
+
+    The other two conditions each require a claim that the field falls under
+    wording addressed to something larger - its type, or its design. A note the
+    field's own cell cites is addressed to the field, so it wins. Asserted
+    against both weaker sources being present, or the precedence would hold
+    only where nothing else did.
+    """
+    from ..analysis.rule_grounding_coverage import classify_grounding
+
+    field = _Field(
+        aeat_type="Num",
+        cell="DP200014!A36",
+        notes=("nota 1",),
+        kind="pointer_resolves_vocabulary_miss",
+    )
+    findings = classify_grounding(
+        (field,), by_type={"Num": ["S1:nota 4"]}, design_notes=("DP200001",), modelo="200", revision="r"
+    )
+    assert [item.kind for item in findings] == ["grounded_by_own_note"]
+    assert findings[0].notes == ("DP200014:nota 1",)
+
+
+def test_an_unresolved_citation_is_not_grounding() -> None:
+    """A pointer naming a note its sheet never defines grounds nothing.
+
+    The field cites something, so a classifier reading the citation alone would
+    call it grounded. What makes it grounding is that the citation RESOLVED, and
+    three fields in the corpus cite a note their own sheet does not carry.
+    """
+    from ..analysis.rule_grounding_coverage import classify_grounding
+
+    field = _Field(aeat_type="Num", cell="A!B1", notes=("nota 1",), kind="pointer_unresolved")
+    findings = classify_grounding(
+        (field,), by_type={}, design_notes=("DP200001",), modelo="200", revision="r"
+    )
+    assert [item.kind for item in findings] == ["grounded_by_design_note"]
 
 
 def test_a_type_convention_outranks_a_design_note() -> None:

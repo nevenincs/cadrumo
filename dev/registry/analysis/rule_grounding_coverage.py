@@ -12,7 +12,7 @@ The join is by AEAT type, because that is how the designs key these
 conventions. A field does not cite the note governing its class; the note names
 the class and the field belongs to it.
 
-Three conditions are reported, and every row names one of them:
+Four conditions are reported, and every row names one of them:
 
 - ``grounded_by_own_note`` - the field's content cell cites a note, and that
   note is defined on the field's own sheet. The strongest grounding there is:
