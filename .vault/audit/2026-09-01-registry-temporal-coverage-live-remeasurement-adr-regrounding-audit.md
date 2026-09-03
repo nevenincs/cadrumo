@@ -8367,3 +8367,36 @@ years the revision serves, and counting them inflates a restatement measure with
 facts that cannot disagree with what they are counted against. Six against eight
 is two definitions, not an error - and that is only apparent because one of them
 is finally written down.
+
+### the-grade-figure-cannot-be-re-derived-and-the-grade-looks-declared-once-today | high | One optional field, a documented reading and a documented distinction - the shape this plan recommends, not the defect it alleges
+
+Attempting the same re-derivation on the second breadth figure - capability
+grade in five encodings - fails at the first step, and the failure is the
+result. The temporal figure could be re-derived because a boundary could be
+stated: a year-level claim about which years a revision serves, which admits six
+declared fields and excludes three deadline dates for a reason anyone can check.
+No such boundary survives for the grade. What counts as an "encoding" of it was
+a judgement the original measurement made and did not record, so there is
+nothing to count against.
+
+What is there can still be measured, and it does not look like five of anything.
+The schema carries exactly one grade-bearing field on a revision and none on a
+modelo: `authority_grade`, optional by design. Beside it sit
+`effective_authority_grade`, which is the reading when the field is absent, and
+`is_graded`, which preserves the distinction between an ungraded revision and
+one explicitly graded at the floor - with a sentinel for the absent case. The
+schema's own docstring explains why each exists and why the field is not simply
+defaulted.
+
+That is a declared fact with a derived projection and an explicit absence, which
+is precisely the pattern this plan exists to move the registry towards. Counting
+it as five encodings of one concept would count a well-formed accessor family as
+duplication - the same error this campaign made when it read a screen's grammar
+names as finding kinds and a runner's deliberate filter as a silent screen.
+
+So the figure is recorded as unre-derivable rather than confirmed or withdrawn.
+It may have counted something else, or described a state since repaired; both
+are consistent with what is there. What matters for the next reader is that
+"grade in five encodings" should not be treated as a live defect on the strength
+of this plan's opening sentence, because nothing in the tree today supports it
+and nothing in the record explains what it meant.

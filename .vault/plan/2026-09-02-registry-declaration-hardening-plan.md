@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:792e14cc82139ddc9a99d65ef0d6779e1c887d64fa08205450e97ed3b318aa2f'
+body_hash: 'sha256:2c9ec2e69f1c846b425bf9c4e8600c636ef29951f27775d67a7dc348abcba3a8'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -581,6 +581,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S326` - Make the reassembly proof exercise the gate's own walk instead of a copy of it; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W06.P13.S327` - Establish that every constructed screen proof asserts through its own screen, and that the contributor README needs no entry for the new defining modules; `dev/registry/tests dev/registry/README.md`.
 - [x] `W06.P13.S328` - Correct the attribution of the five breadth figures, which the governing audit does not carry; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S329` - Establish that the capability-grade figure cannot be re-derived and that the grade is declared once today; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
