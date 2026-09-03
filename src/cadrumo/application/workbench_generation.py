@@ -34,7 +34,7 @@ from ..domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
 )
-from ..domain.modelos.work_unit import WorkUnitCatalogue
+from ..domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ..domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..domain.user_profile.values import UserProfileRecord
@@ -305,6 +305,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None
     operation_contracts: OperationPublicContractSetV1 | None = None
+    modelo_projection_reader: Callable[[WorkUnit], ModeloWorkspaceProjectionV1] | None = None
     """An absent reader below is a composition fact, not a data fact.
 
     A host that did not bind a ledger store or an operation contract set
@@ -385,7 +386,12 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             schedule_observation=_schedule_observation(calendar, observed_at),
         )
         ledger = self._read_ledger(revisions.revisions, work_units)
-        aeat_sync = self._read_aeat_sync(taxpayer.tax_id)
+        modelo = self._read_modelo(work_units)
+        aeat_sync = self._read_aeat_sync(
+            taxpayer.tax_id,
+            observed_at=observed_at,
+            filing_count=len(filings.records),
+        )
         account_session = self.account_session_reader()
         final_record = self.profile_repository.load(self.profile_id)
         _, final_work_units_revision = self.work_unit_repository.load_revisioned()
@@ -432,8 +438,14 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                     refusal="workbench.aeat_sync.reader_unavailable"
                 )
             ),
-            modelo=WorkbenchGenerationSourceResultV1[tuple[ModeloWorkspaceProjectionV1, ...]].unavailable(
-                refusal="workbench.modelo.bulk_reader_unavailable"
+            modelo=(
+                WorkbenchGenerationSourceResultV1[tuple[ModeloWorkspaceProjectionV1, ...]].available(
+                    modelo, observed_at=observed_at
+                )
+                if modelo is not None
+                else WorkbenchGenerationSourceResultV1[tuple[ModeloWorkspaceProjectionV1, ...]].unavailable(
+                    refusal="workbench.modelo.bulk_reader_unavailable"
+                )
             ),
             ledger_admission=(
                 _generation_admission("workbench.ledger", WorkbenchDestinationAdmissionState.AVAILABLE)
@@ -477,7 +489,25 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             work_units=work_units,
         )
 
-    def _read_aeat_sync(self, subject_key: str) -> AeatSyncWorkspaceProjectionV1 | None:
+    def _read_modelo(self, work_units: WorkUnitCatalogue) -> tuple[ModeloWorkspaceProjectionV1, ...] | None:
+        """Project every current work unit, or refuse when no reader was bound.
+
+        A profile holding no work yields an empty tuple, which is a proven
+        empty portfolio rather than an unread one; only an absent reader is
+        the unavailable case.
+        """
+        if self.modelo_projection_reader is None:
+            return None
+        reader = self.modelo_projection_reader
+        return tuple(reader(unit) for unit in work_units.values())
+
+    def _read_aeat_sync(
+        self,
+        subject_key: str,
+        *,
+        observed_at: UtcInstant,
+        filing_count: int,
+    ) -> AeatSyncWorkspaceProjectionV1 | None:
         """Project the pre-pull AEAT Sync workspace against composed contracts."""
         if self.operation_contracts is None:
             return None
@@ -486,6 +516,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         return read_local_aeat_sync_workspace_projection(
             bucket_id=self.profile_id,
             subject_key=subject_key,
+            observed_at=observed_at,
+            filing_count=filing_count,
             operation_contracts=self.operation_contracts,
         )
 

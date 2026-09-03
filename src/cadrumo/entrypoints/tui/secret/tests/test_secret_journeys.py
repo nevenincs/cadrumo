@@ -31,10 +31,9 @@ from .....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZE_IDS, SUPPORTED_TER
 from ...components.host import ScreenHostApp
 from ...components.status import PinnedStatusBar
 from ...components.widgets import ContentScroll
-from ...devtools.fixture import registration_attempt
 from ..credentials import CredentialScreen
 from ..passphrase import PassphraseChangeAttempt, PassphraseChangeRefusal, PassphraseScreen
-from ..registration import RegistrationScreen
+from ..registration import RegistrationScreen, build_profile_registration_attempt
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -57,7 +56,7 @@ def _enroll() -> UUID:
 def _rotate(profile_id: UUID, current: str, new: str, confirm: str) -> PassphraseChangeAttempt:
     """Adapt the public rotation door into the screen's presentation contract.
 
-    The same shape `devtools/fixture.py`'s `registration_attempt` uses for
+    The same shape the production registration door uses for
     registration: a refusal arrives as typed presentation data, never as an
     exception the screen has to recognise.
     """
@@ -124,7 +123,7 @@ async def test_credential_journeys_share_the_shell_but_keep_their_own_entry_cont
         journey_only_id="btn-change",
     )
     await _assert_credential_shell(
-        RegistrationScreen(assess=assess_profile_password, register=registration_attempt),
+        RegistrationScreen(assess=assess_profile_password, register=build_profile_registration_attempt),
         banner_id="registration-banner",
         panel_id="registration-body",
         first_field_id="field-username",

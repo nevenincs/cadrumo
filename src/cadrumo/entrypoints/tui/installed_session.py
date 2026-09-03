@@ -40,6 +40,8 @@ from ...application.user_profile.workbench_bootstrap import (
     WorkbenchBootstrapV1,
     WorkbenchRegistrationRequiredV1,
 )
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language
 from .bootstrap import run_workbench_bootstrap
 from .launcher import (
     InstalledWorkbenchAccountInputsV1,
@@ -166,6 +168,7 @@ def compose_authenticated_root_inputs_provider(
             compose_secure_profile_workbench_generation_provider(
                 profile_id=profile_id,
                 profile_label=profile_label,
+                output_language=OutputLanguage(output_language()),
                 operation_contracts=operation_runtime.public_contracts,
             ),
             dependencies,

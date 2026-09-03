@@ -30,7 +30,10 @@ if TYPE_CHECKING:
     from textual.screen import Screen
 
     from ...application.modelo.work_review import ModeloWorkReview
-    from ...application.modelo.workspace_models import ModeloWorkspaceStaticInspectionResultV1
+    from ...application.modelo.workspace_models import (
+        ModeloWorkspaceProjectionV1,
+        ModeloWorkspaceStaticInspectionResultV1,
+    )
     from ...application.operations.composition import OperationComposedServices
     from ...application.operations.registry import OperationPublicContractSetV1
     from ...application.operator_actions.models import ActionReference
@@ -72,6 +75,7 @@ def compose_secure_profile_workbench_generation_provider(
     *,
     profile_id: str,
     profile_label: str,
+    output_language: OutputLanguage,
     operation_contracts: OperationPublicContractSetV1 | None = None,
 ) -> InstalledWorkbenchGenerationProviderV1:
     """Bind the installed provider to the current secure profile session.
@@ -131,8 +135,26 @@ def compose_secure_profile_workbench_generation_provider(
         invoice_repository=InvoiceCatalogueRepository(bucket_id=profile_id),
         bucket_event_repository=build_bucket_event_history_repository(bucket_id=profile_id),
         operation_contracts=operation_contracts,
+        modelo_projection_reader=_modelo_projection_reader(output_language),
     )
     return ApplicationGenerationProviderV1(door)
+
+
+
+def _modelo_projection_reader(
+    output_language: OutputLanguage,
+) -> Callable[[WorkUnit], ModeloWorkspaceProjectionV1]:
+    """Read one work unit's canonical workspace projection for search.
+
+    The read is the same static inspection the Modelo workspace itself is
+    admitted through, so a searchable declaration and an opened one cannot
+    describe different registry state.
+    """
+
+    def project(unit: WorkUnit) -> ModeloWorkspaceProjectionV1:
+        return resolve_modelo_workspace_static_inspection(unit, output_language=output_language).projection
+
+    return project
 
 
 @dataclass(frozen=True, slots=True)
