@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6c0fd9ab48d103aba17a979768d4df654faa208da691c98a58323d5bbaf47e9b'
+body_hash: 'sha256:8125752918fe70b67115c121f74b36cfed2c6217efbe8cd57e8fbd60637f6c0a'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7722,3 +7722,66 @@ red is legible: the privacy gate had been red on a defect nobody owned, and this
 one is red on a defect with a named owner, a written remedy and a Step. The
 difference is not the redness, it is whether anyone can tell from the failure
 what to do.
+
+### this-campaign-added-eight-of-the-violations-it-was-triaging | high | The UTF-8 gate was flagging my own files, and truncated output hid it from me twice
+
+Triaging the 33 failures in `dev/tests` began with the right question - whether
+any were caused by this campaign's own changes - and then answered it wrongly.
+The UTF-8 enrolment gate reports 83 bare literals across non-ratcheted `dev/`
+files. Grepping its output for the files this session touched returned two hits
+in a module whose docstring I had edited but whose flagged lines predate me, so
+the first conclusion was that none were mine.
+
+That conclusion came from a truncated read. The grep carried a context limit
+smaller than the violation list, so it never reached the tail where this
+campaign's own files sit. Asking the gate's checker directly, rather than
+searching its output, reports eight violations in three modules I wrote or
+extended this session: one in the marker-pattern gate, one in the render-check
+tests, and six more in the declaration invariant gates, all of the form
+`read_text(encoding="utf-8")` written at each call site.
+
+This is the same failure mode this campaign has now recorded four times, and the
+third time it has cost me a wrong conclusion rather than merely a wrong figure.
+Truncating a measurement is not a shortcut with a small error term: the part
+that is cut is exactly as likely to hold the answer as the part that is read,
+and here the cut part held my own name.
+
+All eight are fixed the way the gate asks - a module-level constant naming the
+encoding once, used at every read site, so a typo becomes a NameError rather
+than a silent decode change. Thirty-three tests pass across the three modules,
+with the single remaining failure being the step-id gate held deliberately red
+on another campaign's file, for the reasons recorded beside it.
+
+The rule underneath is one this campaign keeps arriving at: a gate's output is
+evidence, and evidence read through `head` or `tail` is not evidence. Ask the
+checker, not its transcript.
+
+### the-held-file-constraint-has-lifted-and-was-hiding-a-different-one | high | Seven pending paths in the whole worktree; what blocks the remaining Steps now is this executor's scope, not another contributor's diff
+
+The plan's strongest ordering constraint says a Step whose scope names a file
+another contributor has modified waits, and at authoring time that blocked the
+whole of Wave two's residue and predicate Phases. The plan also instructs a
+re-check rather than an assumption, and the re-check was owed.
+
+It has lifted. The worktree carries seven pending paths in total, one of them
+under `src/`, and every path those Steps name is clean: the application closure
+module, the export schema, the filing export proof, the modelo 151 and 185
+revision directories, the justfile, the import-linter contract and the project
+file. The import refactor that held them is finished.
+
+Those Steps are still not done, and the reason has quietly changed underneath
+them. This execution is scoped to `dev/` and `.vault/`, so a Step naming `src/`,
+the justfile or the project file is outside what may be written here whatever
+its git state. The two blocks are worth separating precisely because they
+produce the same appearance and want opposite responses: a held file means wait
+and re-check, a scope limit means hand off and say so. Left conflated, a Step
+blocked only by scope reads as one that will clear itself, and nobody picks it
+up.
+
+Two smaller observations from the same check. The four remaining pending paths
+belong to the modelo 200 campaign, and one of them is the very module flagged
+here for carrying step ids as cohort vocabulary and for recompiling an authority
+inside a comparison - so that work is in hand, and the Step this plan raised for
+it should stay with its owner rather than be taken up here. And the single
+`src/` path is one casilla file, which is a measure of how quiet this tree has
+become compared with the state the constraint was written against.

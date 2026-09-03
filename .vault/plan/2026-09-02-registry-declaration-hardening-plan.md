@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:f4c03872b729b14f7a67b34821faa3a2a080e12dc648dad05175e0b255e8713d'
+body_hash: 'sha256:5d7257f98c9d790d1fe3dcbc0e6b49b05bc46823fff9ff3eb427b6ff70359fc6'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -534,6 +534,8 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S304` - Scrub the two operator home paths that reddened the documentation privacy gate and return the quality directory to green; `.vault/audit/2026-08-27-calculation-correctness-campaign-restrictive-default-sweep-audit.md .vault/audit/2026-09-02-object-name-declustering-pilot-rehearsal-audit.md`.
 - [x] `W06.P13.S305` - Name the returned step-id symbol in the marker gate's failure and refuse the cosmetic repair; `dev/tests/test_campaign_marker_patterns.py`.
 - [ ] `W06.P13.S306` - Rename the M200 2024 blocker cohort vocabulary off its plan step ids, with the owning campaign; `dev/registry/analysis/m200_2024_blocker_adjudications.py dev/registry/tests/test_m200_2024_blocker_adjudications.py`.
+- [x] `W06.P13.S307` - Name the encoding once in the three modules this campaign gave bare UTF-8 literals; `dev/tests/test_campaign_marker_patterns.py dev/registry/tests/test_declaration_invariant_gates.py dev/registry/tests/test_render_check.py`.
+- [x] `W06.P13.S308` - Re-check the held-file constraint against the live worktree and separate it from this execution's scope limit; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -609,6 +611,18 @@ That set is not static, and it is not a property of the file: two package initia
 when this constraint was written were released by a commit and became workable the same day. Re-read
 `git status --porcelain` for the specific path before assuming a Step is still blocked, and before
 every write. A Step deferred once is not deferred permanently.
+
+Re-checked on 2026-09-03, that constraint has largely lifted. The whole worktree carries seven
+pending paths, one of them under `src/`, and every path named by the Steps this constraint was
+written about - the closure module, the export schema, the filing export proof, the modelo 151 and
+185 revision directories, the justfile, the import-linter contract and the project file - is clean.
+Wave two's residue and predicate Phases are no longer blocked by another contributor's diff.
+
+What blocks them now is a different thing and should not be confused with it. This execution is
+scoped to `dev/` and `.vault/`, so a Step whose scope names `src/`, the justfile or the project file
+is outside what this agent may write, however clean the path. That is a limit on the executor, not on
+the work, and it is worth stating separately because the two produce the same "not done" and want
+opposite responses: a held file means wait, a scope limit means hand off.
 
 A hard external constraint overrides all of the above while it lasts: an import refactor is
 in flight and holds a large pending diff. Any Step whose scope names a file that refactor
