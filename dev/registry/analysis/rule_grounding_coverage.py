@@ -68,8 +68,8 @@ _UTF_8: Final[str] = "utf-8"
 
 __all__ = [
     "KINDS",
-    "NoteWorkItem",
     "GroundingFinding",
+    "NoteWorkItem",
     "classify_grounding",
     "grounding_worklist",
     "revision_findings",
@@ -261,11 +261,16 @@ def main() -> int:
             f"notes={(','.join(item.notes) or 'none')!r} detail={item.detail!r}\n"
         )
     # The reading load, which is what the authoring task costs: one note read
-    # covers every field of its type in its design, so the distinct notes matter
-    # and the field count does not.
-    reads = {(item.modelo, item.revision, note) for item in findings for note in item.notes}
+    # covers every field citing it, so the distinct notes matter and the field
+    # count does not.
+    #
+    # Counted as work items, not as (revision, note) pairs. Several revisions of
+    # a modelo share one design, so a note common to them is ONE reading; the
+    # earlier count keyed on the revision and reported thirteen readings for
+    # eleven notes, which is the same concept measured two ways in one census.
+    work = grounding_worklist(findings)
     ungrounded_types = {(item.modelo, item.aeat_type) for item in findings if item.kind == "ungrounded"}
-    for item in grounding_worklist(findings):
+    for item in work:
         sys.stdout.write(
             f"rule_grounding_work modelo={item.modelo} note={item.note!r} grounding={item.grounding} "
             f"fields={len(item.fields)} widths={','.join(str(width) for width in item.widths)} "
@@ -273,7 +278,7 @@ def main() -> int:
         )
     kinds = " ".join(f"{kind}={tally[kind]}" for kind in KINDS)
     sys.stdout.write(
-        f"summary fields={len(findings)} {kinds} distinct_notes_to_read={len(reads)} "
+        f"summary fields={len(findings)} {kinds} distinct_notes_to_read={len(work)} "
         f"ungrounded_modelo_type_pairs={len(ungrounded_types)}\n"
     )
     return 0

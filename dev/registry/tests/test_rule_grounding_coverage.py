@@ -34,6 +34,7 @@ class _Field:
 
     aeat_type: str
     cell: str
+    length: int = 17
     notes: tuple[str, ...] = ()
     kind: str = "pointer_unresolved"
 
@@ -223,3 +224,82 @@ def test_a_revision_stating_conventions_but_needing_no_rule_yields_nothing(
             assert revision_findings(authority, modelo=modelo, revision=revision) == ()
             checked += 1
     assert checked, "no revision states a convention without needing a rule, so this proves nothing"
+
+
+def test_the_worklist_groups_fields_by_the_note_that_grounds_them() -> None:
+    """The authoring cost is notes to read, not fields to visit.
+
+    One note read covers every field citing it, so the worklist groups by note
+    and orders by how many fields each covers. Asserted on constructed findings
+    so the grouping is shown rather than agreed with.
+    """
+    from ..analysis.rule_grounding_coverage import GroundingFinding, grounding_worklist
+
+    def _found(cell: str, note: str, length: int) -> GroundingFinding:
+        return GroundingFinding(
+            modelo="200",
+            revision="r",
+            cell=cell,
+            aeat_type="Num",
+            length=length,
+            kind="grounded_by_own_note",
+            notes=(note,),
+            detail="",
+        )
+
+    work = grounding_worklist(
+        (_found("S!A1", "S:nota 1", 17), _found("S!A2", "S:nota 1", 17), _found("S!A3", "S:nota 2", 4))
+    )
+    assert [(item.note, len(item.fields)) for item in work] == [("S:nota 1", 2), ("S:nota 2", 1)]
+    assert work[0].fields == ("S!A1", "S!A2")
+
+
+def test_a_note_cited_at_two_widths_shows_both() -> None:
+    """A single rule cannot serve two widths, and the work item says so.
+
+    Modelo 200's amounts note is the case: it states a seventeen-character value
+    and three fields credited to it declare one and four characters. Collapsing
+    the widths to one figure would hide exactly the thing an author has to
+    notice before writing one rule for the group.
+    """
+    from ..analysis.rule_grounding_coverage import GroundingFinding, grounding_worklist
+
+    def _found(cell: str, length: int) -> GroundingFinding:
+        return GroundingFinding(
+            modelo="200",
+            revision="r",
+            cell=cell,
+            aeat_type="Num",
+            length=length,
+            kind="grounded_by_design_note",
+            notes=("DP200001:unnumbered",),
+            detail="",
+        )
+
+    work = grounding_worklist((_found("S!A1", 17), _found("S!A2", 1)))
+    assert len(work) == 1
+    assert work[0].widths == (1, 17)
+
+
+def test_a_revision_sharing_a_design_is_one_reading_not_two() -> None:
+    """A note common to two revisions of one design is read once.
+
+    The census counted the reading load by revision before this, reporting
+    thirteen readings for eleven notes - one concept measured two ways inside a
+    single summary line.
+    """
+    from ..analysis.rule_grounding_coverage import GroundingFinding, grounding_worklist
+
+    def _found(revision: str) -> GroundingFinding:
+        return GroundingFinding(
+            modelo="200",
+            revision=revision,
+            cell="S!A1",
+            aeat_type="Num",
+            length=17,
+            kind="grounded_by_own_note",
+            notes=("S:nota 1",),
+            detail="",
+        )
+
+    assert len(grounding_worklist((_found("2024"), _found("2025")))) == 1
