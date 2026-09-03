@@ -43,6 +43,7 @@ from .corpus import bundled_modelo_ids
 __all__ = [
     "YEAR_LEVEL_TEMPORAL_SITES",
     "TemporalSiteFinding",
+    "ambiguously_claimed_periods",
     "screen_authority",
     "site_agreement_findings",
     "undated_window_years",
@@ -113,6 +114,38 @@ def unserved_interior_years(spans: tuple[tuple[int, int | None], ...]) -> tuple[
     for start in open_starts:
         served |= set(range(start, horizon + 1))
     return tuple(year for year in range(min(served), max(served) + 1) if year not in served)
+
+
+def ambiguously_claimed_periods(
+    claims: tuple[tuple[str, int, str], ...],
+) -> tuple[tuple[int, str, tuple[str, ...]], ...]:
+    """Return every filing year and period claimed by more than one revision.
+
+    ``claims`` is one ``(revision, filing_year, period)`` triple per declared
+    deadline window. Two revisions of one modelo claiming the same year AND
+    period is ambiguity a filer meets: both say they apply, and nothing in the
+    declaration decides between them.
+
+    The year alone is the wrong unit and reports ambiguity where there is none.
+    Five modelos in the corpus have two revisions claiming one calendar year -
+    modelo 303 splits 2024 at period 09, modelo 308 splits 2011 in July, modelos
+    490 and 763 split a year by quarter - and every one of those pairs is how a
+    mid-year rule change is correctly declared. Measured on the pair, the corpus
+    has none.
+
+    Separated from the gate that uses it so a constructed clash can be shown to
+    be caught. Silent about revisions declaring no deadline window: they claim
+    no period, so they cannot clash with anything by this measure, and the gate
+    that calls this says so rather than reading its zero as coverage.
+    """
+    claimants: dict[tuple[int, str], set[str]] = collections.defaultdict(set)
+    for revision, filing_year, period in claims:
+        claimants[(filing_year, period)].add(revision)
+    return tuple(
+        (year, period, tuple(sorted(revisions)))
+        for (year, period), revisions in sorted(claimants.items())
+        if len(revisions) > 1
+    )
 
 
 def undated_window_years(revision: ModeloRevision) -> tuple[int, ...]:

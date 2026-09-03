@@ -1299,3 +1299,68 @@ def test_the_export_declaration_gates_detect_their_defects(
 
     assert len(_mixed_line_endings(mixed)) == 2, "a layout carrying both endings must be reported"
     assert _mixed_line_endings(()) == set(), "a record-less layout declares no ending to disagree about"
+
+
+def test_no_two_revisions_of_a_modelo_claim_the_same_filing_year_and_period(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """Selection must be decidable: at most one revision claims a year and period.
+
+    The gap gate holds that a modelo's revisions leave no year inside its span
+    unserved. This holds the other direction: no year is served twice. Together
+    they say the revisions PARTITION the modelo's years, which is what makes
+    "which revision applies" a question with an answer.
+
+    Measured at year granularity the corpus looks like it violates this in five
+    modelos, and none of them does - 303 splits 2024 at period 09, 308 splits
+    2011 in July, 490 and 763 split a year by quarter, and 369's `esquema-*`
+    revisions are the non-temporal scheme axis. A mid-year rule change is
+    DECLARED as two revisions sharing a calendar year, so the year is the wrong
+    unit and gating on it would refuse correct declarations.
+
+    Boundary, asserted below rather than assumed: a revision declaring no
+    deadline window claims no period and cannot clash. Twenty-seven do, so this
+    gate is silent about them, and its holding is not a claim that every
+    revision is unambiguous - only that no two that speak, contradict.
+    """
+    offenders: list[str] = []
+    claimed_keys = 0
+    speaking = 0
+    for modelo_id in bundled_modelo_ids():
+        claims: list[tuple[str, int, str]] = []
+        for revision_id, revision in authority.modelo(modelo_id).revisions.items():
+            if revision.deadline_windows:
+                speaking += 1
+            for window in revision.deadline_windows:
+                claims.append((str(revision_id), window.filing_year, str(getattr(window, "period", ""))))
+        claimed_keys += len({(year, period) for _, year, period in claims})
+        for year, period, revisions in ambiguously_claimed_periods(tuple(claims)):
+            offenders.append(f"modelo {modelo_id} {year}/{period}: {', '.join(revisions)}")
+
+    assert claimed_keys > 500, f"only {claimed_keys} year-and-period keys examined; the gate is near-vacuous"
+    assert speaking > 50, f"only {speaking} revisions declare a deadline window"
+    assert not offenders, "one filing year and period claimed by two revisions: " + chr(10).join(sorted(offenders))
+
+
+def test_the_period_ambiguity_gate_detects_a_planted_clash() -> None:
+    """The gate is shown to catch a duplicate claim, and to tolerate a year split.
+
+    Both halves matter and the second is the one that took a wrong measurement
+    to find: a gate that fires on two revisions sharing a calendar year would
+    refuse modelo 303's correct 2024 declaration.
+    """
+    split_year = (
+        ("2024-hasta-08-y-2t", 2024, "2T"),
+        ("2024-desde-09-y-3t", 2024, "3T"),
+    )
+    assert ambiguously_claimed_periods(split_year) == (), "a mid-year split is not ambiguity"
+
+    clash = (*split_year, ("2024-desde-09-y-3t", 2024, "2T"))
+    reported = ambiguously_claimed_periods(clash)
+    assert len(reported) == 1
+    year, period, revisions = reported[0]
+    assert (year, period) == (2024, "2T")
+    assert revisions == ("2024-desde-09-y-3t", "2024-hasta-08-y-2t")
+
+    assert ambiguously_claimed_periods(()) == (), "a revision claiming nothing clashes with nothing"
+    assert ambiguously_claimed_periods((("r", 2024, "2T"),)) == (), "one claimant is not two"
