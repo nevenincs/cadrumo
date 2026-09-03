@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, Never
@@ -20,8 +20,8 @@ from ....application.modelo.workspace_models import (
     ModeloWorkspaceVisibleFilingTargetV1,
 )
 from ....application.operations.registry import OperationSchemaIdentityV1
-from ....core.external_constants import OutputLanguage
 from ....core.config import load_settings
+from ....core.external_constants import OutputLanguage
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.temporal import select_revision
@@ -39,8 +39,6 @@ from ..modelo.view.work_review import ModeloWorkReviewApp
 from ..modelo.view.work_select import ModeloWorkSelectApp
 
 if TYPE_CHECKING:
-    from collections.abc import Callable as Mutation
-
     from ....core.secure_object_write import SecureObjectWrite
 
 _BUCKET = "00000000-0000-4000-8000-000000000001"
@@ -94,16 +92,16 @@ class _WorkRepository:
     def load_revisioned(self) -> tuple[WorkUnitCatalogue, str]:
         return self.catalogue, _DIGEST
 
-    def save(self, _catalogue: WorkUnitCatalogue) -> Never:
+    def save(self, catalogue: WorkUnitCatalogue) -> Never:
         raise RuntimeError("visual fixtures are read-only")
 
-    def mutate(self, _mutation: Mutation[[WorkUnitCatalogue], WorkUnitCatalogue]) -> Never:
+    def mutate(self, mutation: Callable[[WorkUnitCatalogue], WorkUnitCatalogue]) -> Never:
         raise RuntimeError("visual fixtures are read-only")
 
     def save_with_secure_object_writes(
         self,
-        _catalogue: WorkUnitCatalogue,
-        _extra_writes: tuple[SecureObjectWrite, ...],
+        catalogue: WorkUnitCatalogue,
+        extra_writes: tuple[SecureObjectWrite, ...],
         *,
         expected_revision_id: str | None = None,
     ) -> Never:
@@ -111,7 +109,7 @@ class _WorkRepository:
 
     def to_secure_object_write(
         self,
-        _catalogue: WorkUnitCatalogue,
+        catalogue: WorkUnitCatalogue,
         *,
         expected_revision_id: str | None = None,
     ) -> Never:
@@ -120,7 +118,7 @@ class _WorkRepository:
 
 @dataclass(frozen=True, slots=True)
 class _CalculationRepository:
-    catalogue: CalculationRevisionCatalogue = CalculationRevisionCatalogue()
+    catalogue: CalculationRevisionCatalogue = field(default_factory=CalculationRevisionCatalogue)
 
     @property
     def bucket_id(self) -> str:
@@ -135,13 +133,13 @@ class _CalculationRepository:
     def load_revisioned(self) -> tuple[CalculationRevisionCatalogue, str]:
         return self.catalogue, _DIGEST
 
-    def save(self, _catalogue: CalculationRevisionCatalogue) -> Never:
+    def save(self, catalogue: CalculationRevisionCatalogue) -> Never:
         raise RuntimeError("visual fixtures are read-only")
 
     def save_with_secure_object_writes(
         self,
-        _catalogue: CalculationRevisionCatalogue,
-        _extra_writes: tuple[SecureObjectWrite, ...],
+        catalogue: CalculationRevisionCatalogue,
+        extra_writes: tuple[SecureObjectWrite, ...],
         *,
         expected_revision_id: str | None = None,
     ) -> Never:
@@ -149,7 +147,7 @@ class _CalculationRepository:
 
     def to_secure_object_write(
         self,
-        _catalogue: CalculationRevisionCatalogue,
+        catalogue: CalculationRevisionCatalogue,
         *,
         expected_revision_id: str | None = None,
     ) -> Never:
@@ -158,7 +156,7 @@ class _CalculationRepository:
 
 @dataclass(frozen=True, slots=True)
 class _VerificationRepository:
-    catalogue: VerificationReportCatalogue = VerificationReportCatalogue()
+    catalogue: VerificationReportCatalogue = field(default_factory=VerificationReportCatalogue)
 
     @property
     def bucket_id(self) -> str:
@@ -170,7 +168,7 @@ class _VerificationRepository:
     def load(self) -> VerificationReportCatalogue:
         return self.catalogue
 
-    def save(self, _catalogue: VerificationReportCatalogue) -> Never:
+    def save(self, catalogue: VerificationReportCatalogue) -> Never:
         raise RuntimeError("visual fixtures are read-only")
 
 
@@ -276,7 +274,7 @@ def _edit_app(*, invalid: bool = False) -> App[Any]:
     return ScreenHostApp(ModeloEditScreen(controller, catalogues=lambda: (work, calculations)))
 
 
-_WORKSPACE_INTERFACES = {
+_WORKSPACE_INTERFACES: dict[ModeloWorkspaceDestinationIdV1, str] = {
     "modelo.workspace.overview": "cadrumo.entrypoints.tui.modelo.view.overview.ModeloWorkspaceOverviewScreen",
     "modelo.workspace.inputs": "cadrumo.entrypoints.tui.modelo.view.inputs.ModeloWorkspaceInputsScreen",
     "modelo.workspace.results": "cadrumo.entrypoints.tui.modelo.view.results.ModeloWorkspaceResultsScreen",
@@ -288,21 +286,27 @@ _WORKSPACE_INTERFACES = {
 }
 
 
-MODELO_FIXTURES: tuple[ModeloFixtureSpec, ...] = tuple(
-    ModeloFixtureSpec(
-        surface_id=destination.replace("modelo.workspace.", "modelo-"),
-        scenario=(
-            ModeloFixtureScenario.EMPTY
-            if destination in {"modelo.workspace.results", "modelo.workspace.provenance"}
-            else ModeloFixtureScenario.UNAVAILABLE
-            if destination in {"modelo.workspace.verification", "modelo.workspace.filing"}
-            else ModeloFixtureScenario.READY
-        ),
-        interfaces=(interface,),
-        build=lambda destination=destination: _workspace_app(destination),
-    )
-    for destination, interface in _WORKSPACE_INTERFACES.items()
-) + (
+def _workspace_builder(destination: ModeloWorkspaceDestinationIdV1) -> Callable[[], App[Any]]:
+    """Close over one typed route without weakening it to an arbitrary string."""
+    return lambda: _workspace_app(destination)
+
+
+MODELO_FIXTURES: tuple[ModeloFixtureSpec, ...] = (
+    *(
+        ModeloFixtureSpec(
+            surface_id=destination.replace("modelo.workspace.", "modelo-"),
+            scenario=(
+                ModeloFixtureScenario.EMPTY
+                if destination in {"modelo.workspace.results", "modelo.workspace.provenance"}
+                else ModeloFixtureScenario.UNAVAILABLE
+                if destination in {"modelo.workspace.verification", "modelo.workspace.filing"}
+                else ModeloFixtureScenario.READY
+            ),
+            interfaces=(interface,),
+            build=_workspace_builder(destination),
+        )
+        for destination, interface in _WORKSPACE_INTERFACES.items()
+    ),
     ModeloFixtureSpec(
         "modelo-edit",
         ModeloFixtureScenario.READY,

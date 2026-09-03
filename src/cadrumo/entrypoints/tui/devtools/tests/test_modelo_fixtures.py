@@ -8,7 +8,12 @@ from pathlib import Path
 import pytest
 from textual.scroll_view import ScrollView
 
-from ..modelo_fixtures import MODELO_FIXTURES, ModeloFixtureScenario, resolve_modelo_fixture
+from ..modelo_fixtures import (
+    MODELO_FIXTURES,
+    ModeloFixtureScenario,
+    ModeloFixtureSpec,
+    resolve_modelo_fixture,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -56,10 +61,11 @@ def test_fixture_module_has_no_storage_network_random_or_test_fixture_dependency
 
 
 @pytest.mark.asyncio
+@pytest.mark.timeout(180)
 @pytest.mark.parametrize("width", _WIDTHS)
 @pytest.mark.parametrize("spec", MODELO_FIXTURES, ids=lambda spec: spec.fixture_id)
 async def test_every_fixture_mounts_at_supported_width_without_horizontal_overflow_or_sensitive_copy(
-    spec,
+    spec: ModeloFixtureSpec,
     width: int,
 ) -> None:
     app = spec.build()
@@ -67,12 +73,13 @@ async def test_every_fixture_mounts_at_supported_width_without_horizontal_overfl
         await pilot.pause()
         screenshot = app.export_screenshot()
         assert type(app.screen).__module__.startswith("cadrumo.entrypoints.tui.modelo")
-        overflowing = {
-            widget.id or type(widget).__name__: widget.max_scroll_x
+        escaped = {
+            widget.id or type(widget).__name__: widget.region
             for widget in app.screen.query(ScrollView)
-            if widget.max_scroll_x
+            if widget.region.right > app.screen.region.right
         }
-        assert overflowing == {}
+        assert app.screen.max_scroll_x == 0
+        assert escaped == {}, "inner table overflow must remain inside its own visible scroll owner"
         lowered = screenshot.casefold()
         assert "00000000t" not in lowered
         assert "secret" not in lowered
@@ -81,14 +88,16 @@ async def test_every_fixture_mounts_at_supported_width_without_horizontal_overfl
 
 
 @pytest.mark.asyncio
+@pytest.mark.timeout(180)
 @pytest.mark.parametrize(
     "spec",
-    tuple(next(item for item in MODELO_FIXTURES if item.surface_id == surface) for surface in {
-        item.surface_id for item in MODELO_FIXTURES
-    }),
+    tuple(
+        next(item for item in MODELO_FIXTURES if item.surface_id == surface)
+        for surface in sorted({item.surface_id for item in MODELO_FIXTURES})
+    ),
     ids=lambda spec: spec.surface_id,
 )
-async def test_rebuilding_a_surface_produces_the_same_rendered_frame(spec) -> None:
+async def test_rebuilding_a_surface_produces_the_same_rendered_frame(spec: ModeloFixtureSpec) -> None:
     frames: list[str] = []
     for _attempt in range(2):
         app = spec.build()

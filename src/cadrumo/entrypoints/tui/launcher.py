@@ -18,6 +18,7 @@ from ...application.workbench_generation import (
 )
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnitCatalogue
+from .account import AccountRecomposeRequiredV1
 
 if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
@@ -31,7 +32,7 @@ if TYPE_CHECKING:
     from ...application.overview.home import HomeProjectionV1
     from ...core.external_constants import OutputLanguage
     from ...domain.modelos.work_unit import WorkUnit
-    from .account import AccountFactoriesV1, AccountRecomposeRequiredV1
+    from .account import AccountFactoriesV1
     from .declarations.models import ModeloWorkspaceScreenFactoryV1
     from .navigation import (
         TuiActionCandidateV1,
@@ -153,6 +154,9 @@ class InstalledWorkbenchRootCompositionV1:
 
 
 type InstalledWorkbenchRootInputsProviderV1 = Callable[[TuiOperationCompositionV1], InstalledWorkbenchRootInputsV1]
+type AuthenticatedSessionRecomposeDoorV1 = Callable[
+    [AccountRecomposeRequiredV1], InstalledWorkbenchRootInputsProviderV1 | None
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -620,11 +624,43 @@ async def _run_root_session(
         ).run_async(headless=headless, auto_pilot=auto_pilot)
 
 
+async def run_authenticated_workbench_sessions(
+    *,
+    headless: bool,
+    auto_pilot: AutopilotCallbackType | None,
+    workbench_root_inputs_provider: InstalledWorkbenchRootInputsProviderV1,
+    recompose_authenticated_session: AuthenticatedSessionRecomposeDoorV1 | None = None,
+) -> AccountRecomposeRequiredV1 | None:
+    """Run fresh roots until the outer authenticated-session owner declines one.
+
+    Each root has its own operation-service scope. A handover, password
+    rotation, sign-out, or expiry first settles and discards that scope, then
+    gives only its non-secret recompose result to the injected outer owner.
+    The owner must select a new bootstrap/session generation and return a new
+    provider; returning ``None`` fails closed rather than reusing the former
+    profile-bound root.
+    """
+    provider = workbench_root_inputs_provider
+    while True:
+        outcome = await _run_root_session(
+            headless=headless,
+            auto_pilot=auto_pilot,
+            workbench_root_inputs_provider=provider,
+        )
+        if outcome is None or recompose_authenticated_session is None:
+            return outcome
+        next_provider = recompose_authenticated_session(outcome)
+        if next_provider is None:
+            return outcome
+        provider = next_provider
+
+
 def main(
     *,
     headless: bool = False,
     auto_pilot: AutopilotCallbackType | None = None,
     workbench_root_inputs_provider: InstalledWorkbenchRootInputsProviderV1 | None = None,
+    recompose_authenticated_session: AuthenticatedSessionRecomposeDoorV1 | None = None,
 ) -> int:
     """Start one dedicated TUI session and report its process exit status.
 
@@ -638,16 +674,18 @@ def main(
         sys.stderr.write("workbench.root.composition_required\n")
         return 2
     asyncio.run(
-        _run_root_session(
+        run_authenticated_workbench_sessions(
             headless=headless,
             auto_pilot=auto_pilot,
             workbench_root_inputs_provider=workbench_root_inputs_provider,
+            recompose_authenticated_session=recompose_authenticated_session,
         )
     )
     return 0
 
 
 __all__ = [
+    "AuthenticatedSessionRecomposeDoorV1",
     "InstalledWorkbenchFactoryDependenciesV1",
     "InstalledWorkbenchGenerationProviderV1",
     "InstalledWorkbenchRootCompositionV1",
@@ -667,4 +705,5 @@ __all__ = [
     "profile_storage_scope",
     "resolve_modelo_work_unit",
     "resolve_modelo_workspace_static_inspection",
+    "run_authenticated_workbench_sessions",
 ]

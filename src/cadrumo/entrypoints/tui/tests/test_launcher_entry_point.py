@@ -8,6 +8,7 @@ against, so none of them asserts on the symbol's existence or signature.
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import replace
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
@@ -26,9 +27,15 @@ from ....application.search.workbench import (
 )
 from ....core.i18n.render import tr
 from ..__main__ import run
+from ..account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from ..app import CadrumoTuiApp
 from ..devtools.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
-from ..launcher import InstalledWorkbenchRootInputsV1, compose_installed_workbench_root, main
+from ..launcher import (
+    InstalledWorkbenchRootInputsV1,
+    _run_root_session,
+    compose_installed_workbench_root,
+    main,
+)
 
 if TYPE_CHECKING:
     from textual.pilot import Pilot
@@ -188,6 +195,22 @@ def test_entry_point_hands_the_session_its_composed_services() -> None:
 
     assert main(headless=True, auto_pilot=read_services, workbench_root_inputs_provider=_root_inputs_provider()) == 0
     assert services and services[0] is not None
+
+
+def test_launcher_returns_a_non_secret_recomposition_request_after_the_root_settles() -> None:
+    """The next authenticated root is selected by its outer bootstrap owner."""
+
+    async def request_recomposition(pilot: Pilot[object]) -> None:
+        await pilot.pause()
+        pilot.app.exit(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.PASSWORD_CHANGED))
+
+    assert asyncio.run(
+        _run_root_session(
+            headless=True,
+            auto_pilot=request_recomposition,
+            workbench_root_inputs_provider=_root_inputs_provider(),
+        )
+    ) == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.PASSWORD_CHANGED)
 
 
 def test_entry_point_injects_and_rebuilds_the_installed_search_provider() -> None:
