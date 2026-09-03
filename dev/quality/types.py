@@ -176,7 +176,24 @@ def collect_basedpyright() -> list[Diagnostic]:
     # reported different things; it was deleted rather than kept in sync.  The
     # flag is retained so the boundary this gate measures stays legible at the
     # call site and cannot silently move if another config file reappears.
-    result = _run(["basedpyright", "--project", "pyproject.toml", "--threads", "8", "--outputjson"])
+    # ``--pythonpath`` names the interpreter whose environment resolves imports.
+    # Without it basedpyright auto-detects a ``.venv`` beside the working
+    # directory, so the gate silently reports 25k phantom ``reportMissingImports``
+    # cascades whenever it runs against a tree that has no ``.venv`` of its own --
+    # a source snapshot, for instance. Naming the running interpreter makes the
+    # gate report the same thing wherever it is invoked from.
+    result = _run(
+        [
+            "basedpyright",
+            "--project",
+            "pyproject.toml",
+            "--pythonpath",
+            sys.executable,
+            "--threads",
+            "8",
+            "--outputjson",
+        ]
+    )
     payload = result.stdout.strip()
     if not payload:
         sys.stderr.write(result.stderr)
