@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:ffb4b2973401b1e5619a93a8f927ba74b1458bec581ed2c920d05237b530cdac'
+body_hash: 'sha256:27b33f9959465ca772e2bd6d4ce1040c1ae2e1b974c19c8a6cdcaacfba55ebb4'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -514,6 +514,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S276` - Record the twenty-one attestations a generator refactor left stale; `dev/registry/tests/test_render_check.py dev/registry/pipeline/generated_tree_dispositions.toml`.
 - [x] `W06.P13.S277` - Repoint the TUI coverage table at the interface the flows refactor left it naming; `dev/tui/_coverage.py`.
 - [x] `W06.P13.S278` - Correct the three name-window replacement instructions that named successors themselves stepped for rename; `dev/registry/tests/test_revision_name_window.py`.
+- [x] `W06.P13.S279` - Correct the source-connectivity Step figure against a live collection and record the authority startup cost; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

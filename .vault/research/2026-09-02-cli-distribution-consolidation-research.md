@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#cli-distribution-consolidation'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:971f3a0f9a7d570aa47820e7043f18f50316e9bffd706ced49bbf64be92036fe'
+body_hash: 'sha256:3b961c3db04f9cc21073638c1d0dc712368643f1553d15a3c9968992578539aa'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -574,13 +574,24 @@ carry a breaking marker, and the configuration sets `bump-minor-pre-major`, so b
 `1.0.0` those bump the minor rather than the major - the setting exists for exactly this
 and is doing its job.
 
-An earlier version of this record predicted the changelog would span every commit since
-the bootstrap point: 8,640 of them, roughly 820 KB of subject lines, past what a pull
-request body accepts. That was wrong, and the run disproved it. The changelog added 461
-lines and renders the range as `v0.2.2...v0.3.0`, because release-please takes its base
-from the version in the manifest; the bootstrap commit only bounds where a search may
-begin. The prediction was arithmetic over the commit log rather than a reading of what
-the tool does with it, and it named a decision the operator did not need to make.
+The changelog window itself was never the problem: release-please takes its base from the
+version in the manifest and renders `v0.2.2...v0.3.0`, so the bootstrap commit only bounds
+where a search may begin. An earlier prediction that the notes would span every commit
+since that point - 8,640 of them - was wrong on that count.
+
+But the retraction of that prediction went too far, and a run settled it. The notes are
+too large for a pull request body: the `0.3.0` section measures 78,218 characters against
+the 65,536 limit. The retraction was made on the strength of the changelog diff adding
+only 461 lines, which conflated line count with byte count - 461 lines of dense changelog
+entries is 78 KB. The original concern was right in substance and wrong in its arithmetic,
+and dismissing it took a real defect off the board for several hours.
+
+The weight is concentrated and the fix follows from where it sits. Documentation
+(25,760 characters), Code Refactoring (25,813) and Tests (12,485) are 82% of the notes;
+Features, Bug Fixes and Reverts together are 8,669. Those three, plus performance, are
+what a reader of a release needs, and hiding the rest brings the notes to 8,669 characters
+with 56 KB of headroom. That is also the conventional shape - a product changelog listing
+three thousand documentation commits serves nobody.
 
 The run still failed, at the last step and for a reason unrelated to any of the above:
 the repository does not permit GitHub Actions to create pull requests. Everything the
@@ -671,6 +682,21 @@ Worth stating because the order looks alarming from outside. The first job of th
 path runs `uv sync --frozen`, so a merge of the branch as it stands today would fail
 before any distribution was built. Nothing about that is a reason to fix the lock by
 hand: doing so would repair a symptom on a branch the tool rewrites on every push.
+
+### The permission was the first of two refusals, not the only one
+
+Granting Actions the ability to open pull requests changed the failure rather than
+removing it. The run now reaches further and stops at `Invalid request.`, whose detail
+line is `"sha" wasn't supplied` against the contents API - raised immediately after
+release-please resets a `--release-notes` branch to match the default branch.
+
+That branch is the tell. Release-please creates it only when the notes exceed what a pull
+request body holds, offloading them to a file and linking to it, and the write of that
+file is what fails. So the permission refusal had been masking an overflow the whole time:
+two independent blocks in series, the second invisible until the first cleared.
+
+Both branches now exist on the remote, `release-please--branches--main` carrying the
+correct six-surface bump. Neither is a pull request, and neither cuts a tag.
 
 ### Not investigated
 

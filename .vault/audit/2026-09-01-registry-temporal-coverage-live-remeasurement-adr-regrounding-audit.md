@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:30f09d78e63383ae3f5a1cf740852fa6cf68417212431b7dae081e63dbe0a05d'
+body_hash: 'sha256:db2208e686b9d91e85167e9c5762f7fe343742b3a864fb243b7e86ad82a7fe9c'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -6727,3 +6727,31 @@ command produces, which is a genuine precondition rather than a masked failure.
 This is the argument for the lane Step in concrete terms: the directory was not
 merely uncovered, it was uncovered and red, and the failure it held was a stale
 declaration of exactly the kind this campaign exists to find.
+
+### the-source-connectivity-step-quoted-a-count-nobody-had-recollected | medium | The Step said a hundred and five never-run tests; a live collection reports a hundred and thirty, of which the default lane selection admits a hundred and eight
+
+The Step naming `dev/source_connectivity/tests` for a lane carried a figure from
+an earlier measurement. Collecting the directory today reports a hundred and
+thirty, with the default marker selection admitting a hundred and eight and
+deselecting twenty-two. The Step now carries both numbers, because they answer
+different questions: what the directory holds, and what naming it in the lane
+would actually run.
+
+Two hypotheses about that directory were wrong and are recorded because each was
+plausible enough to have been written up unchecked. The first was that its tests
+carry no `unit` marker and so would stay deselected even after the lane named
+them; they carry it, and the selection proves it. The second was that sixteen
+unfixtured `bundled_authority()` calls explain the directory's slowness; a
+profile of the cache-hit path shows a repeat call costs 0.21 seconds and returns
+the identical object, so repeated construction is not the cost. What the timing
+does show is a startup shape worth knowing: the first authority build costs 103
+seconds, a further one-time 18 seconds is spent on the call after it, and every
+call thereafter is 0.21. That is a per-process cost, paid once per test worker,
+not a per-test one.
+
+The per-test cost in this directory is therefore still unexplained, and this
+entry says so rather than offering a third guess. It will be read off a
+durations report from the completed run rather than inferred, and no second
+pytest was started against the directory while the first was still running,
+because two runs over one cache contend and would have made both readings
+untrustworthy.
