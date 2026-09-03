@@ -41,4 +41,3 @@ Five narrowly selected remediation tests passed with the integration lane explic
 ## Final recommendation
 
 CLOSE. All three recorded blockers are remediated and re-proved. No high, medium, or remediation-introduced regression remains open; S378 may close.
-

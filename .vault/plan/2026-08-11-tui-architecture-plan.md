@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-03'
-body_hash: 'sha256:bbc56892372f8038210bd4e13c3e2b459afdef8f1639cea2cea085a959987075'
+body_hash: 'sha256:1bbdf7355ed0c4f01aa62e28dc79d464e3215b0c6a79a9fb11027ccf96b7eff1'
 ---
 
 <!-- RETIRED: S370 -->
@@ -591,6 +591,7 @@ Compose the production Home projection, destination catalogue, global search and
 - [x] `W08.P28.S381` - Build the responsive Home screen from the selected projection-only candidate with status, next actions, Ledger readiness, resumable declarations, and filing agenda; `src/cadrumo/entrypoints/tui/home.py`.
 - [x] `W08.P28.S382` - Add global workbench search and command-palette providers that route stable result and action identities to admitted destinations; `src/cadrumo/entrypoints/tui/search.py`.
 - [x] `W08.P28.S383` - Compose the root destination stack, account header, semantic focus restoration, session expiry, and post-journey Home refresh; `src/cadrumo/entrypoints/tui/app.py`.
+- [ ] `W08.P28.S398` - Connect cadrumo.application.search to the installed workbench by assembling one immutable redacted document snapshot from the current Ledger, Declarations, filing-history, reconciliation, notification, and Modelo projections, injecting its service into the root host, and rebuilding it after authoritative child returns without implicit I/O; `src/cadrumo/application/search/, src/cadrumo/entrypoints/tui/launcher.py, and focused installed-search tests`.
 - [ ] `W08.P28.S384` - Compose secure profile, overview, Ledger, declaration, evidence, notification, operation, and destination factories for one installed session; `src/cadrumo/entrypoints/tui/launcher.py`.
 - [ ] `W08.P28.S385` - Add complete localized workbench, account, Ledger, Declarations, calendar, AEAT Sync, search, availability, and refusal messages through the canonical locale workflow; `src/cadrumo/locales/`.
 - [ ] `W08.P28.S394` - Generate and enforce an exhaustive visual-review inventory that maps every production TUI page, dialog, and editor factory to a stable review surface identity and fails when a concrete surface is undiscovered or unclassified; `src/cadrumo/entrypoints/tui/devtools/surfaces.py, dev/tui/_inventory.py, dev/tui/_coverage.py, and dev/tui/tests/test_tui_visual_inventory.py`.
@@ -609,7 +610,7 @@ Prove responsive, localized, keyboard, non-colour, secure-storage, explicit-sync
 
 ## Parallelization
 
-The visual-review inventory and fixture matrix in S394-S396 follows completed production-surface and launcher composition through S385 and must close before S386-S390. Operator feedback therefore exercises the actual composed pages and editors rather than prototypes or a partial catalogue.
+S398 connects the application-owned search snapshot and service before S384 finishes installed launcher composition. The visual-review inventory and fixture matrix in S394-S396 then follows completed production-surface and launcher composition through S385 and must close before S386-S390. Operator feedback therefore exercises real cross-domain result routing and the actual composed pages and editors rather than stub search, prototypes, or a partial catalogue.
 
 The discharged `casilla-schema` prerequisite no longer blocks execution. Independent backend contract phases may proceed in parallel when they do not share an authority or write surface, but receipt minting, composition, cutover, and deletion remain serialized. Within W03.P20, commit c94133f29516b12e3529f3d154c31592562f6198 is delivered mechanical registry-relocation history rather than an open dependency. S168-S172 retain their recorded order, then S175 must close with the independently reviewed fixed 78-row matrix, deterministic check, one-to-one bounded disposition Steps, and named final package gate before S173, S174, or any generated registry-family disposition Step begins. Those 78 disposition Steps run only in the dependency order recorded by the matrix, and the final zero-binding, zero-re-export, and zero-unresolved-row gate waits for all 78. S173 begins only after S175 and consumes the authority-family matrix row, S174 follows S173, and S160 follows the corrected pre-S160 prerequisite chain plus S159. S161-S166 require the epoch-v2 native-coordinate contract, S167 waits for every corrected native surface including S173 plus S126 v2, and the registry-dependent portions of S128-S131 wait for S175, S173, and their existing prerequisites. No TUI operation projection begins before the exact C0 receipt. Interface C2 waits for its exact Workspace C2 dependency receipt, interface C3 waits for the exact C2 exit plus financial-operand and Edit Contract dependency receipts, interface C4 waits for the C3 exit plus the enrolled action denominator, and C5 waits for the C4 exit and final structural fixed point. The interface plan consumes these receipts and never redeclares their application contracts.
 
