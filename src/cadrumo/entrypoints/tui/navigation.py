@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Final, Literal, Protocol, Self, get_args, runtime_checkable
+from typing import Final, Literal, Protocol, Self, cast, get_args, runtime_checkable
 
 from pydantic import BaseModel, model_validator
 from textual.screen import Screen
@@ -106,7 +106,7 @@ class TuiDestinationAdmissionV1(BaseModel):
     def from_workbench(cls, admission: WorkbenchDestinationAdmission) -> Self:
         """Adapt the S368 search admission without widening its state set."""
         return cls(
-            destination=admission.destination,
+            destination=cast(TuiDestinationIdV1, admission.destination),
             state=admission.state,
             reason_code=admission.reason_code,
         )
@@ -160,6 +160,7 @@ class TuiScreenFactoryV1(Protocol):
 
     def __call__(self, context: TuiScreenContextV1, /) -> Screen[None]:
         """Return the screen for the already-admitted route."""
+        ...
 
 
 class TuiActionCandidateV1(BaseModel):
@@ -181,6 +182,7 @@ class TuiDestinationRouteV1:
     action_candidates: tuple[TuiActionCandidateV1, ...] = ()
 
     def __post_init__(self) -> None:
+        """Enforce route/admission/factory/action consistency."""
         if self.descriptor.destination != self.admission.destination:
             raise DestinationAdmissionError("route descriptor and admission must name the same destination")
         if self.admission.state is WorkbenchDestinationAdmissionState.AVAILABLE and self.factory is None:
@@ -206,11 +208,7 @@ class TuiDestinationRouteV1:
 
 def declared_destination_ids() -> frozenset[str]:
     """Return the destination set from the closed type alias."""
-    return frozenset(
-        argument
-        for argument in get_args(TuiDestinationIdV1.__value__)
-        if isinstance(argument, str)
-    )
+    return frozenset(argument for argument in get_args(TuiDestinationIdV1.__value__) if isinstance(argument, str))
 
 
 TUI_DESTINATION_CATALOGUE: Final[tuple[TuiDestinationDescriptorV1, ...]] = (
@@ -221,7 +219,9 @@ TUI_DESTINATION_CATALOGUE: Final[tuple[TuiDestinationDescriptorV1, ...]] = (
         label_key="tui.destination.declarations",
         zone="primary",
     ),
-    TuiDestinationDescriptorV1(destination="workbench.aeat_sync", label_key="tui.destination.aeat_sync", zone="primary"),
+    TuiDestinationDescriptorV1(
+        destination="workbench.aeat_sync", label_key="tui.destination.aeat_sync", zone="primary"
+    ),
     TuiDestinationDescriptorV1(destination="workbench.profile", label_key="tui.destination.profile", zone="account"),
 )
 """The static, localized-key-only destination catalogue."""
@@ -245,6 +245,7 @@ class TuiDestinationCatalogueV1:
     __slots__ = ("_routes", "_routes_by_id")
 
     def __init__(self, routes: Iterable[TuiDestinationRouteV1]) -> None:
+        """Bind exactly one route for every static catalogue destination."""
         ordered_routes = tuple(routes)
         expected = declared_destination_ids()
         actual = frozenset(route.descriptor.destination for route in ordered_routes)
@@ -256,9 +257,7 @@ class TuiDestinationCatalogueV1:
         if len(actual) != len(ordered_routes):
             raise NavigationContractError("destination route IDs must be unique")
         self._routes = ordered_routes
-        self._routes_by_id = MappingProxyType(
-            {route.descriptor.destination: route for route in ordered_routes}
-        )
+        self._routes_by_id = MappingProxyType({route.descriptor.destination: route for route in ordered_routes})
 
     @property
     def routes(self) -> tuple[TuiDestinationRouteV1, ...]:
@@ -268,7 +267,7 @@ class TuiDestinationCatalogueV1:
     def resolve(self, destination: str) -> TuiDestinationRouteV1:
         """Resolve one closed destination identity or fail closed."""
         try:
-            return self._routes_by_id[destination]
+            return self._routes_by_id[cast(TuiDestinationIdV1, destination)]
         except KeyError as error:
             raise UnknownDestinationError(f"unknown TUI destination: {destination!r}") from error
 
@@ -361,17 +360,17 @@ def build_destination_catalogue(
 
 
 __all__ = [
+    "TUI_DESTINATION_CATALOGUE",
     "DestinationAdmissionError",
     "DestinationFactoryError",
     "DestinationUnavailableError",
     "NavigationContractError",
-    "TUI_DESTINATION_CATALOGUE",
     "TuiActionCandidateV1",
     "TuiDestinationAdmissionV1",
+    "TuiDestinationCatalogueV1",
     "TuiDestinationDescriptorV1",
     "TuiDestinationIdV1",
     "TuiDestinationLabelKeyV1",
-    "TuiDestinationCatalogueV1",
     "TuiDestinationRouteV1",
     "TuiDestinationZoneV1",
     "TuiFocusIdentityV1",

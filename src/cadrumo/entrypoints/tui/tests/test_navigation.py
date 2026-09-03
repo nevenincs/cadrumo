@@ -24,21 +24,18 @@ from ....core.identifier_grammar import NamespacedId
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ..navigation import (
-    DestinationAdmissionError,
+    TUI_DESTINATION_CATALOGUE,
     DestinationFactoryError,
     DestinationUnavailableError,
-    TUI_DESTINATION_CATALOGUE,
     TuiActionCandidateV1,
     TuiDestinationAdmissionV1,
     TuiDestinationCatalogueV1,
-    TuiDestinationIdV1,
     TuiFocusIdentityV1,
     TuiNavigationTargetV1,
     TuiScreenContextV1,
     TuiScreenFactoryV1,
     UnknownDestinationError,
     UnresolvedActionCandidateError,
-    WorkbenchDestinationAdmissionState,
     build_destination_catalogue,
     declared_destination_ids,
 )
@@ -50,12 +47,9 @@ class MarkerScreen(Screen[None]):
     """Concrete test-only screen supplied through the factory seam."""
 
 
-def _available_admission(destination: str) -> TuiDestinationAdmissionV1:
-    return TuiDestinationAdmissionV1(destination=destination, state=WorkbenchDestinationAdmissionState.AVAILABLE)
-
-
 def _admissions(
-    *, state: WorkbenchDestinationAdmissionState = WorkbenchDestinationAdmissionState.AVAILABLE,
+    *,
+    state: WorkbenchDestinationAdmissionState = WorkbenchDestinationAdmissionState.AVAILABLE,
 ) -> dict[str, TuiDestinationAdmissionV1]:
     return {
         descriptor.destination: TuiDestinationAdmissionV1(
@@ -131,10 +125,10 @@ def test_each_explicit_admission_state_has_truthful_reason_contract(
     TuiDestinationAdmissionV1(**kwargs)
     if state is WorkbenchDestinationAdmissionState.AVAILABLE:
         with pytest.raises(ValidationError):
-            TuiDestinationAdmissionV1(**{**kwargs, "reason_code": "navigation.reason"})
+            TuiDestinationAdmissionV1.model_validate({**kwargs, "reason_code": "navigation.reason"})
     else:
         with pytest.raises(ValidationError):
-            TuiDestinationAdmissionV1(**{**kwargs, "reason_code": None})
+            TuiDestinationAdmissionV1.model_validate({**kwargs, "reason_code": None})
 
 
 def test_catalogue_requires_all_admissions_and_injected_factory_for_available_routes() -> None:
