@@ -15,6 +15,7 @@ from ....application.operations.composition import OperationComposedServices
 from ....application.overview.home import HomeSessionPosture
 from ....application.search.workbench import WorkbenchDestinationAdmissionState, WorkbenchSearchService
 from ....application.user_profile.login_session import ProfileLoginOutcome
+from ....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from ....core.operations import OperationTerminalCondition
 from ..account import AccountFactoriesV1, AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from ..app import CadrumoTuiApp
@@ -161,14 +162,18 @@ class HandoverScreen(Screen[ProfileLoginOutcome | None]):
     """A test door returning the same safe outcome as the existing Login owner."""
 
 
-def _account_factories(change_user: Screen[ProfileLoginOutcome | None]) -> AccountFactoriesV1:
+def _account_factories(
+    change_user: Screen[ProfileLoginOutcome | None],
+    *,
+    password: Screen[ProfilePassphraseRotationOutcome | None] | None = None,
+) -> AccountFactoriesV1:
     """Supply observable account doors without reproducing an account surface."""
     return cast(
         AccountFactoriesV1,
         SimpleNamespace(
             profile=lambda context: MarkerScreen(context),
             change_user=lambda: change_user,
-            password=lambda: Screen(),
+            password=lambda: password or Screen(),
             appearance=lambda _app: "appearance.changed",
             language=lambda _screen: None,
             sign_out=lambda: None,
@@ -221,6 +226,39 @@ async def test_change_user_returns_typed_identity_and_revokes_old_profile_root()
 
 
 @pytest.mark.asyncio
+async def test_password_rotation_recomposes_before_the_old_session_root_can_be_reused() -> None:
+    """A new custody generation cannot leave prior profile-bound doors live."""
+    password = Screen[ProfilePassphraseRotationOutcome | None]()
+    app = CadrumoTuiApp(
+        services=cast(OperationComposedServices, object()),
+        destination_catalogue=_catalogue([]),
+        refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
+        workbench_search_service=WorkbenchSearchService(()),
+        account_factories=_account_factories(HandoverScreen(), password=password),
+    )
+    outcome = ProfilePassphraseRotationOutcome(
+        profile_id="11111111-1111-4111-8111-111111111111",
+        password_generation=2,
+        dek_epoch_preserved=True,
+        recovery_enrollment_retained=True,
+    )
+
+    async with app.run_test(size=(80, 24)) as pilot:
+        app.query_one("#root-password", Button).press()
+        await pilot.pause()
+        assert app.screen is password
+        password.dismiss(outcome)
+        await pilot.pause()
+
+        assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.PASSWORD_CHANGED)
+        assert app._account_factories is None
+        with pytest.raises(RuntimeError, match="no composed destination"):
+            _ = app.destination_catalogue
+        with pytest.raises(RuntimeError, match="no composed workbench search"):
+            _ = app.workbench_search_service
+
+
+@pytest.mark.asyncio
 async def test_successful_sign_out_tears_down_root_but_refusal_does_not_claim_logout() -> None:
     """Only a canonical successful settlement authorizes signed-out recomposition."""
     app = CadrumoTuiApp(
@@ -231,14 +269,10 @@ async def test_successful_sign_out_tears_down_root_but_refusal_does_not_claim_lo
         account_factories=_account_factories(HandoverScreen()),
     )
     refused = OperationModalSettledOutcomeV1.model_construct(
-        view_model=SimpleNamespace(
-            projection=SimpleNamespace(terminal_condition=OperationTerminalCondition.REFUSED)
-        )
+        view_model=SimpleNamespace(projection=SimpleNamespace(terminal_condition=OperationTerminalCondition.REFUSED))
     )
     succeeded = OperationModalSettledOutcomeV1.model_construct(
-        view_model=SimpleNamespace(
-            projection=SimpleNamespace(terminal_condition=OperationTerminalCondition.SUCCEEDED)
-        )
+        view_model=SimpleNamespace(projection=SimpleNamespace(terminal_condition=OperationTerminalCondition.SUCCEEDED))
     )
 
     async with app.run_test() as pilot:
@@ -248,9 +282,7 @@ async def test_successful_sign_out_tears_down_root_but_refusal_does_not_claim_lo
 
         app._on_sign_out_dismissed(succeeded)
         await pilot.pause()
-        assert app.return_value == AccountRecomposeRequiredV1(
-            reason=AccountRecomposeReasonV1.SIGNED_OUT
-        )
+        assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.SIGNED_OUT)
         assert app._account_factories is None
         with pytest.raises(RuntimeError, match="no composed destination"):
             _ = app.destination_catalogue

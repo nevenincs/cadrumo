@@ -156,7 +156,7 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
             case "root-change-user":
                 self.push_screen(factories.change_user(), self._on_change_user_dismissed)
             case "root-password":
-                self.push_screen(factories.password())
+                self.push_screen(factories.password(), self._on_password_dismissed)
             case "root-profile":
                 self.navigate_to(
                     TuiNavigationTargetV1(
@@ -170,9 +170,7 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
             case "root-appearance":
                 factories.appearance(cast("App[None]", self))
             case "root-language":
-                screen = factories.profile(
-                    TuiScreenContextV1(destination="workbench.profile")
-                )
+                screen = factories.profile(TuiScreenContextV1(destination="workbench.profile"))
                 self._replace_destination(screen, return_to_home=True)
                 self.call_after_refresh(factories.language, screen)
             case "root-sign-out":
@@ -194,6 +192,13 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
             )
         )
 
+    def _on_password_dismissed(self, outcome: object | None) -> None:
+        """Discard this root after an authenticated custody-generation change."""
+        from ...application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
+
+        if isinstance(outcome, ProfilePassphraseRotationOutcome):
+            self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.PASSWORD_CHANGED))
+
     async def _open_sign_out(self) -> None:
         """Submit strong close and hand observation to the canonical modal."""
         factories = self._account_factories
@@ -213,9 +218,7 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
             isinstance(outcome, OperationModalSettledOutcomeV1)
             and outcome.view_model.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
         ):
-            self._request_recompose(
-                AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.SIGNED_OUT)
-            )
+            self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.SIGNED_OUT))
             return
         if outcome is not None:
             self._refuse_account_action()

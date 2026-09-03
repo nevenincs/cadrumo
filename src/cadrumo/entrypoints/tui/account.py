@@ -47,6 +47,7 @@ class AccountRecomposeReasonV1(StrEnum):
     """Why the current profile-bound workbench must be discarded."""
 
     CHANGE_USER = "change_user"
+    PASSWORD_CHANGED = "password_changed"  # noqa: S105 - stable non-secret lifecycle token
     SIGNED_OUT = "signed_out"
     EXPIRED = "expired"
 
