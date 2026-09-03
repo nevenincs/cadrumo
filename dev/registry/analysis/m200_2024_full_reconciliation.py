@@ -14,6 +14,7 @@ from dataclasses import asdict, dataclass
 from datetime import date
 from hashlib import sha256
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import rtoml
 
@@ -31,6 +32,9 @@ from ..pipeline._record_design_ir import intermediate_anchor_key, load_record_de
 from ..pipeline._semantic_map import semantic_anchor_key
 from ..pipeline._semantic_map_loader import load_semantic_map
 from .m200_restored_semantic_audit import SemanticPayload, _candidate_payloads, _payload, _template
+
+if TYPE_CHECKING:
+    from .m200_2024_reviewed_promotions import M200ReviewedPromotionSnapshot
 
 TARGET_SOURCE_REF = "aeat-dr-200-2024"
 TARGET_SOURCE_SHA256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
@@ -188,7 +192,9 @@ class M200SourceRebindApplication:
     dry_run: bool
 
 
-def reconcile_bundled_m200_2024() -> M200ReconciliationCensus:
+def reconcile_bundled_m200_2024(
+    *, reviewed_promotions: M200ReviewedPromotionSnapshot | None = None
+) -> M200ReconciliationCensus:
     """Build the complete source-SHA-bound planned-revision reconciliation."""
     registry_root = bundled_path("registry", "aeat")
     modelo = load_modelo_directory(registry_root / "modelos" / "200")
@@ -218,7 +224,10 @@ def reconcile_bundled_m200_2024() -> M200ReconciliationCensus:
     declaration_ids = tuple(str(item.id) for item in revision.casillas)
     _require_unique_identifiers(declaration_ids, label="current declaration")
     current_declarations = {str(item.id): item for item in revision.casillas}
-    _require_reviewed_candidate_promotions(frozenset(declaration_ids) & candidate_ids)
+    _require_reviewed_candidate_promotions(
+        frozenset(declaration_ids) & candidate_ids,
+        reviewed_promotions=reviewed_promotions,
+    )
     current = {identifier: _payload(item) for identifier, item in current_declarations.items()}
     candidates = {identifier: payload for identifier, (_path, payload) in candidate_documents.items()}
     planned_ids = frozenset((*current, *candidates))
@@ -489,7 +498,11 @@ def require_closed_m200_2024_legal_worklist(worklist: M200LegalWorklist) -> None
         )
 
 
-def build_m200_source_rebind_plan(census: M200ReconciliationCensus) -> M200SourceRebindPlan:
+def build_m200_source_rebind_plan(
+    census: M200ReconciliationCensus,
+    *,
+    reviewed_promotions: M200ReviewedPromotionSnapshot | None = None,
+) -> M200SourceRebindPlan:
     """Derive the complete, target-map-owned declaration-source rebind plan.
 
     This deliberately consumes the census rather than walking source files by
@@ -513,7 +526,7 @@ def build_m200_source_rebind_plan(census: M200ReconciliationCensus) -> M200Sourc
     _require_unique_identifiers(tuple(row.casilla_id for row in current), label="source rebind current declaration")
     from .m200_2024_reviewed_promotions import verified_promoted_candidate_ids
 
-    receipted_current_ids = verified_promoted_candidate_ids()
+    receipted_current_ids = verified_promoted_candidate_ids(snapshot=reviewed_promotions)
     rebinds: list[M200SourceRebind] = []
     verified_current_design_ids: list[str] = []
     orphans: list[str] = []
@@ -596,7 +609,13 @@ def build_m200_source_rebind_plan(census: M200ReconciliationCensus) -> M200Sourc
 
 def build_bundled_m200_source_rebind_plan() -> M200SourceRebindPlan:
     """Build the only supported source rebind plan from live pinned authority."""
-    return build_m200_source_rebind_plan(reconcile_bundled_m200_2024())
+    from .m200_2024_reviewed_promotions import build_m200_2024_reviewed_promotion_snapshot
+
+    reviewed_promotions = build_m200_2024_reviewed_promotion_snapshot()
+    return build_m200_source_rebind_plan(
+        reconcile_bundled_m200_2024(reviewed_promotions=reviewed_promotions),
+        reviewed_promotions=reviewed_promotions,
+    )
 
 
 def apply_m200_source_rebind_plan(
@@ -1319,13 +1338,15 @@ def _require_disjoint_ids(current_ids: frozenset[str], candidate_ids: frozenset[
         raise RegistryValidationError(f"current declarations collide with non-authoritative candidates: {collisions!r}")
 
 
-def _require_reviewed_candidate_promotions(collisions: frozenset[str]) -> None:
+def _require_reviewed_candidate_promotions(
+    collisions: frozenset[str], *, reviewed_promotions: M200ReviewedPromotionSnapshot | None = None
+) -> None:
     """Allow collisions only when the reviewed target compiler proves live bytes."""
     if not collisions:
         return
     from .m200_2024_reviewed_promotions import verified_promoted_candidate_ids
 
-    receipted = verified_promoted_candidate_ids()
+    receipted = verified_promoted_candidate_ids(snapshot=reviewed_promotions)
     if collisions != receipted:
         raise RegistryValidationError(
             "current declarations collide with non-authoritative candidates outside reviewed target adjudications: "

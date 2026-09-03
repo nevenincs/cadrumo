@@ -24,7 +24,7 @@ from cadrumo.domain.calculations.registry.schema_references import governed_peri
 from ..pipeline._record_design_ir import intermediate_anchor_key, load_record_design_intermediate
 from ..pipeline._semantic_map import semantic_anchor_key
 from ..pipeline._semantic_map_loader import load_semantic_map
-from .m200_restored_semantic_audit import audit_bundled_restorations
+from .m200_restored_semantic_audit import RestoredSemanticAudit, audit_bundled_restorations
 
 ADJUDICATION_PATH = Path(__file__).with_suffix(".toml")
 TARGET_SOURCE_REF = "aeat-dr-200-2024"
@@ -230,16 +230,20 @@ class CompiledM200UniqueAuthority:
     adjudications: tuple[Adjudication, ...]
 
 
-def compile_m200_2024_unique_authority(path: Path = ADJUDICATION_PATH) -> CompiledM200UniqueAuthority:
+def compile_m200_2024_unique_authority(
+    path: Path = ADJUDICATION_PATH,
+    *,
+    audits: tuple[RestoredSemanticAudit, ...] | None = None,
+) -> CompiledM200UniqueAuthority:
     """Compile only the closed 36-member S13 authority cohort."""
     raw = rtoml.loads(path.read_text(encoding="utf-8"))
     _require_header(raw)
     rows = tuple(_parse_row(value) for value in raw.get("adjudications", ()))
-    _require_closed_membership(rows)
+    _require_closed_membership(rows, audits=audits)
     fields, maps, manual_text = _target_fields_and_map()
     rows = _require_target_evidence(rows, fields, maps, manual_text)
     _require_legal_coverage(rows)
-    _require_withheld_01403()
+    _require_withheld_01403(audits=audits)
     return CompiledM200UniqueAuthority(
         str(raw["reviewed_by"]), str(raw["reviewed_at"]), tuple(sorted(rows, key=lambda row: row.export_field_id))
     )
@@ -344,13 +348,15 @@ def _parse_row(raw: object) -> Adjudication:
     return Adjudication(identifier, export, profile, column, "", section, role, legal, digest)
 
 
-def _require_closed_membership(rows: tuple[Adjudication, ...]) -> None:
+def _require_closed_membership(
+    rows: tuple[Adjudication, ...], *, audits: tuple[RestoredSemanticAudit, ...] | None = None
+) -> None:
     identifiers = frozenset(row.casilla_id for row in rows)
     if identifiers != _CLOSED_IDS or len(rows) != len(_CLOSED_IDS):
         raise RegistryValidationError("M200/2024 S13 unique adjudication membership is not closed")
     observed = frozenset(
         row.casilla_id
-        for row in audit_bundled_restorations()
+        for row in (audit_bundled_restorations() if audits is None else audits)
         if row.cross_revision_status == "unique_non_authoritative"
     )
     if identifiers | {"00942"} != observed:
@@ -435,8 +441,11 @@ def _require_legal_coverage(rows: tuple[Adjudication, ...]) -> None:
                 raise RegistryValidationError(f"M200/2024 unique {row.casilla_id!r} legal authority misses 2024")
 
 
-def _require_withheld_01403() -> None:
-    candidate = next((row for row in audit_bundled_restorations() if row.casilla_id == "01403"), None)
+def _require_withheld_01403(*, audits: tuple[RestoredSemanticAudit, ...] | None = None) -> None:
+    candidate = next(
+        (row for row in (audit_bundled_restorations() if audits is None else audits) if row.casilla_id == "01403"),
+        None,
+    )
     if (
         candidate is None
         or candidate.cross_revision_status == "unique_non_authoritative"

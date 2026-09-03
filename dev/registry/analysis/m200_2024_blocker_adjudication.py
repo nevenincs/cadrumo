@@ -21,7 +21,7 @@ from cadrumo.domain.calculations.registry.loader import load_catalogue_file
 from ..pipeline._record_design_ir import intermediate_anchor_key, load_record_design_intermediate
 from ..pipeline._semantic_map import semantic_anchor_key
 from ..pipeline._semantic_map_loader import load_semantic_map
-from .m200_restored_semantic_audit import audit_bundled_restorations
+from .m200_restored_semantic_audit import RestoredSemanticAudit, audit_bundled_restorations
 
 TARGET_SOURCE_REF = "aeat-dr-200-2024"
 TARGET_SOURCE_SHA256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
@@ -30,7 +30,7 @@ MANUAL_SOURCE_SHA256 = "ad02f914246632dcd7ab30f3e7280daf3501be6ee3938237e2ebfe73
 BLOCKER_STATUSES = frozenset({"conflicting_non_authoritative", "no_applicable_match"})
 
 
-def build_worklist() -> dict[str, object]:
+def build_worklist(*, audits: tuple[RestoredSemanticAudit, ...] | None = None) -> dict[str, object]:
     """Build the closed 119-member worklist from target-year evidence only."""
     registry_root = bundled_path("registry", "aeat")
     catalogues = load_catalogue_file(registry_root / "legal" / "is.toml")
@@ -52,7 +52,10 @@ def build_worklist() -> dict[str, object]:
     manual_units = _manual_units(Path(manual_source.corpus_path))
 
     rows: list[dict[str, object]] = []
-    for audit in audit_bundled_restorations():
+    # A reconciliation invocation shares this immutable audit result among all
+    # three adjudication compilers.  The default remains a fresh audit, so this
+    # diagnostic has no process-global cache or stale-file behaviour.
+    for audit in (audit_bundled_restorations() if audits is None else audits):
         if audit.cross_revision_status not in BLOCKER_STATUSES:
             continue
         entry = entries[audit.export_field_id]

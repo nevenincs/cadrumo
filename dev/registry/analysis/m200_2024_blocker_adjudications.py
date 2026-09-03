@@ -27,8 +27,11 @@ from .m200_2024_blocker_adjudication import (
     TARGET_SOURCE_SHA256,
     build_worklist,
 )
-from .m200_2024_template_adjudications import compile_m200_2024_same_template_authority
-from .m200_restored_semantic_audit import audit_bundled_restorations
+from .m200_2024_template_adjudications import (
+    CompiledM200Same2024TemplateAuthority,
+    compile_m200_2024_same_template_authority,
+)
+from .m200_restored_semantic_audit import RestoredSemanticAudit, audit_bundled_restorations
 
 ADJUDICATION_PATH = Path(__file__).with_suffix(".toml")
 TARGET_WINDOW = (date(2024, 1, 1), date(2024, 12, 31))
@@ -61,14 +64,23 @@ class CompiledM200BlockerAuthority:
     adjudications: tuple[Adjudication, ...]
 
 
-def compile_m200_2024_blocker_authority(path: Path = ADJUDICATION_PATH) -> CompiledM200BlockerAuthority:
+def compile_m200_2024_blocker_authority(
+    path: Path = ADJUDICATION_PATH,
+    *,
+    audits: tuple[RestoredSemanticAudit, ...] | None = None,
+    worklist: dict[str, object] | None = None,
+    same_template_authority: CompiledM200Same2024TemplateAuthority | None = None,
+) -> CompiledM200BlockerAuthority:
     """Compile the closed S14/S15 declarations from target-only evidence."""
     raw = rtoml.loads(path.read_text(encoding="utf-8"))
     _require_header(raw)
     rows = tuple(_parse_row(row) for row in raw.get("adjudications", ()))
-    _require_partition(rows)
-    worklist = {str(row["casilla_id"]): row for row in build_worklist()["member"]}
-    _require_target_evidence(rows, worklist)
+    _require_partition(rows, audits=audits, same_template_authority=same_template_authority)
+    target_worklist = {
+        str(row["casilla_id"]): row
+        for row in (build_worklist(audits=audits) if worklist is None else worklist)["member"]
+    }
+    _require_target_evidence(rows, target_worklist)
     _require_legal_coverage(rows)
     _require_canonical_map(rows)
     return CompiledM200BlockerAuthority(
@@ -170,26 +182,34 @@ def _parse_row(raw: object) -> Adjudication:
     return row
 
 
-def _require_partition(rows: tuple[Adjudication, ...]) -> None:
+def _require_partition(
+    rows: tuple[Adjudication, ...],
+    *,
+    audits: tuple[RestoredSemanticAudit, ...] | None = None,
+    same_template_authority: CompiledM200Same2024TemplateAuthority | None = None,
+) -> None:
     ids = frozenset(row.casilla_id for row in rows)
     if len(ids) != len(rows) or len(rows) != S14_S15_EXPECTED_COUNT or ids & S12_MEMBERS:
         raise RegistryValidationError("M200/2024 S14/S15 adjudication membership is not closed and disjoint")
-    s12 = compile_m200_2024_same_template_authority()
-    if promoted_candidate_ids(s12) != S12_MEMBERS:
+    s12 = compile_m200_2024_same_template_authority(audits=audits) if same_template_authority is None else same_template_authority
+    # This validates the receipt membership here.  Canonical byte verification
+    # is performed once by the invocation-owned promotions snapshot that
+    # supplies this receipt, avoiding a second full compiler replay.
+    if frozenset(item.casilla_id for item in s12.adjudications) != S12_MEMBERS:
         raise RegistryValidationError("M200/2024 S12 receipt is not exact")
-    audits = audit_bundled_restorations()
+    audit_rows = audit_bundled_restorations() if audits is None else audits
     # The S12 template receipt also settles the one candidate that the older
     # diagnostic classifies as cross-revision-unique; S13 therefore owns the
     # remaining 36 unique proposals, not a second overlapping receipt.
     unique = frozenset(
         row.casilla_id
-        for row in audits
+        for row in audit_rows
         if row.cross_revision_status == "unique_non_authoritative" and row.casilla_id not in S12_MEMBERS
     )
-    blockers = frozenset(row.casilla_id for row in audits if row.cross_revision_status in BLOCKER_STATUSES)
+    blockers = frozenset(row.casilla_id for row in audit_rows if row.cross_revision_status in BLOCKER_STATUSES)
     if (
         len(unique) != S13_EXPECTED_COUNT
-        or len(audits) != len(S12_MEMBERS | unique | ids)
+        or len(audit_rows) != len(S12_MEMBERS | unique | ids)
         or blockers != ids | S12_CONFLICT_RECEIPT
     ):
         raise RegistryValidationError("M200/2024 S12/S13/S14/S15 partition is not exhaustive")
