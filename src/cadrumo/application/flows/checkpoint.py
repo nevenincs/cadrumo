@@ -40,15 +40,15 @@ class CheckpointStore(Protocol):
     the same authority.
     """
 
-    def save(self, _flow_id: str, answers: Mapping[str, str]) -> None:
+    def save(self, flow_id: str, answers: Mapping[str, str]) -> None:
         """Persist the canonical answer map for ``flow_id``."""
         ...
 
-    def load(self, _flow_id: str) -> Mapping[str, str] | None:
+    def load(self, flow_id: str) -> Mapping[str, str] | None:
         """Return the persisted answer map, or ``None`` when absent."""
         ...
 
-    def discard(self, _flow_id: str) -> None:
+    def discard(self, flow_id: str) -> None:
         """Erase the persisted in-progress run."""
         ...
 
