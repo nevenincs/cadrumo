@@ -71,9 +71,9 @@
 
 [meta]
 generated_from = "just audit-duplication (jscpd@4.2.0)"
-observed_groups = 37
-reconciled_groups = 37
-duplicated_pct = "0.15"
+observed_groups = 14
+reconciled_groups = 14
+duplicated_pct = "0.06"
 files_analyzed = 1976
 source_root = "src/cadrumo"
 count_is_advisory = true
@@ -87,7 +87,7 @@ reason = "The three recovered PEP 562 lazy-facade locator pairs are absent from 
 # `observed_groups` is jscpd's own inventory size for this scan and equals the
 # sum of `cluster_owned` + `intentional` + `advisory_residue` below.
 [summary]
-cluster_owned = 37
+cluster_owned = 14
 intentional = 0
 advisory_residue = 0
 actionable = 0
@@ -125,7 +125,7 @@ where = [
 ]
 
 # -------------------------------------------------------------------------
-# ledger-command-declarations -- 28 group(s)
+# ledger-command-declarations -- 5 group(s)
 #
 # The dominant CLI family: immutable Ledger CommandSpec declarations whose
 # parameter blocks repeat verbatim across sibling command modules.
@@ -138,119 +138,15 @@ where = [
 classification = "cluster-owned"
 owner = "ledger-command-declarations"
 where = [
-  "- entrypoints/cli/_app_ledger_classification_command_specs.py [103:71 - 119:80]",
-  "  entrypoints/cli/_app_ledger_inventory_analysis_command_specs.py [111:82 - 127:85]",
+  "- entrypoints/cli/_app_ledger_classification_command_specs.py [124:13 - 176:42]",
+  "  entrypoints/cli/_app_ledger_foundation_command_specs.py [122:100 - 174:51]",
 ]
 
 [[group]]
 classification = "cluster-owned"
 owner = "ledger-command-declarations"
 where = [
-  "- entrypoints/cli/_app_ledger_classification_command_specs.py [119:80 - 135:76]",
-  "  entrypoints/cli/_app_ledger_foundation_command_specs.py [210:75 - 226:71]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_classification_command_specs.py [135:76 - 151:78]",
-  "  entrypoints/cli/_app_ledger_foundation_command_specs.py [226:71 - 242:73]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_classification_command_specs.py [151:78 - 167:81]",
-  "  entrypoints/cli/_app_ledger_foundation_command_specs.py [322:77 - 338:76]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_classification_command_specs.py [263:90 - 339:29]",
-  "  entrypoints/cli/_app_ledger_foundation_command_specs.py [242:73 - 318:38]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_classification_command_specs.py [327:101 - 343:68]",
-  "  entrypoints/cli/_app_ledger_counterparty_command_specs.py [100:80 - 116:81]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_classification_command_specs.py [338:13 - 353:15]",
-  "  entrypoints/cli/_app_ledger_command_spec_support.py [242:43 - 258:31]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_classification_command_specs.py [87:80 - 103:71]",
-  "  entrypoints/cli/_app_ledger_rule_command_specs.py [61:82 - 77:79]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_classification_command_specs.py [98:13 - 113:15]",
-  "  entrypoints/cli/_app_ledger_command_spec_support.py [258:53 - 274:86]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_counterparty_command_specs.py [143:72 - 158:36]",
-  "  entrypoints/cli/_app_ledger_counterparty_command_specs.py [33:75 - 48:29]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_counterparty_command_specs.py [152:29 - 174:39]",
-  "  entrypoints/cli/_app_ledger_counterparty_command_specs.py [74:28 - 96:28]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_counterparty_command_specs.py [205:76 - 235:10]",
-  "  entrypoints/cli/_app_ledger_counterparty_command_specs.py [33:75 - 95:23]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_evidence_command_specs.py [107:84 - 123:80]",
-  "  entrypoints/cli/_app_ledger_foundation_command_specs.py [210:75 - 226:71]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_evidence_command_specs.py [123:80 - 139:82]",
-  "  entrypoints/cli/_app_ledger_foundation_command_specs.py [226:71 - 242:73]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_evidence_command_specs.py [243:57 - 263:28]",
+  "- entrypoints/cli/_app_ledger_evidence_command_specs.py [137:57 - 157:28]",
   "  entrypoints/cli/_app_ledger_invoice_intake_command_specs.py [102:52 - 122:31]",
 ]
 
@@ -258,71 +154,15 @@ where = [
 classification = "cluster-owned"
 owner = "ledger-command-declarations"
 where = [
-  "- entrypoints/cli/_app_ledger_evidence_command_specs.py [301:13 - 318:35]",
-  "  entrypoints/cli/_app_ledger_invoice_intake_command_specs.py [105:13 - 122:31]",
+  "- entrypoints/cli/_app_ledger_evidence_command_specs.py [195:13 - 211:34]",
+  "  entrypoints/cli/_app_ledger_invoice_intake_command_specs.py [105:13 - 121:23]",
 ]
 
 [[group]]
 classification = "cluster-owned"
 owner = "ledger-command-declarations"
 where = [
-  "- entrypoints/cli/_app_ledger_evidence_command_specs.py [370:97 - 386:94]",
-  "  entrypoints/cli/_app_ledger_evidence_command_specs.py [59:80 - 75:86]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_evidence_command_specs.py [386:94 - 402:92]",
-  "  entrypoints/cli/_app_ledger_evidence_command_specs.py [75:86 - 91:84]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_evidence_command_specs.py [402:92 - 418:92]",
-  "  entrypoints/cli/_app_ledger_inventory_analysis_command_specs.py [111:82 - 127:85]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_evidence_command_specs.py [418:92 - 434:88]",
-  "  entrypoints/cli/_app_ledger_foundation_command_specs.py [210:75 - 226:71]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_evidence_command_specs.py [546:86 - 573:23]",
-  "  entrypoints/cli/_app_ledger_evidence_command_specs.py [139:82 - 166:10]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_evidence_command_specs.py [622:13 - 655:41]",
-  "  entrypoints/cli/_app_ledger_evidence_command_specs.py [317:13 - 350:40]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_evidence_command_specs.py [778:70 - 793:32]",
-  "  entrypoints/cli/_app_ledger_evidence_command_specs.py [719:70 - 734:27]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_evidence_command_specs.py [874:45 - 904:10]",
+  "- entrypoints/cli/_app_ledger_evidence_command_specs.py [502:45 - 532:10]",
   "  entrypoints/cli/_app_ledger_invoice_lifecycle_command_specs.py [154:55 - 184:41]",
 ]
 
@@ -330,32 +170,8 @@ where = [
 classification = "cluster-owned"
 owner = "ledger-command-declarations"
 where = [
-  "- entrypoints/cli/_app_ledger_evidence_command_specs.py [91:84 - 107:84]",
-  "  entrypoints/cli/_app_ledger_inventory_analysis_command_specs.py [111:82 - 127:85]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/_app_ledger_foundation_command_specs.py [637:91 - 653:76]",
-  "  entrypoints/cli/_app_ledger_foundation_command_specs.py [419:88 - 435:73]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
-  "- entrypoints/cli/app_ledger_invoice_common_command_parameters.py [103:76 - 119:69]",
-  "  entrypoints/cli/_app_ledger_evidence_command_specs.py [530:89 - 546:86]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "ledger-command-declarations"
-where = [
   "- entrypoints/cli/app_ledger_invoice_common_command_parameters.py [87:79 - 103:76]",
-  "  entrypoints/cli/_app_ledger_evidence_command_specs.py [498:93 - 514:93]",
+  "  entrypoints/cli/_app_ledger_evidence_command_specs.py [256:93 - 272:93]",
 ]
 
 # -------------------------------------------------------------------------

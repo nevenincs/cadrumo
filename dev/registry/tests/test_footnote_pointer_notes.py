@@ -128,3 +128,52 @@ def test_a_design_with_no_transcription_yields_nothing_and_is_the_callers_proble
     from ..analysis.footnote_pointer_notes import pointer_evidence_for_design
 
     assert pointer_evidence_for_design(["Nota 1"], pathlib.Path("no/such/design.xlsx.extracted.md"), sheet=_SHEET) == ()
+
+
+def test_one_label_defined_on_several_sheets_stays_several_notes() -> None:
+    """A repeated note label is not one note, and must not be merged into one.
+
+    A workbook design prints one sheet per page and numbers each page's notes
+    from one, so ``Nota 1`` names a different note on every sheet. Modelo 200's
+    2025 design defines it on six, and reading them design-wide returned all six
+    run together - accounting-statement codes, identifier types and a rate
+    filling rule in one entry, handed to any field citing ``Nota 1`` anywhere.
+
+    Asserted on the shipped design rather than a fixture: the merge only appears
+    where a label repeats, and constructing that would prove the parser handles
+    a case the corpus is the reason to care about.
+    """
+    from ..analysis.footnote_pointer_notes import sheet_note_definitions
+
+    design = (
+        pathlib.Path("src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_200/files")
+        / "01-200-ejercicio-2025-10-9-mb-xls.xls.extracted.md"
+    )
+    by_sheet = sheet_note_definitions(design.read_text(encoding="utf-8"))
+    carrying = {sheet: labels["nota 1"] for sheet, labels in by_sheet.items() if "nota 1" in labels}
+    assert len(carrying) > 1, "this design no longer repeats a note label, so pick another that does"
+    # Distinct wording, not merely distinct keys: a parser that scoped the keys
+    # while still accumulating one text would pass a key-count assertion.
+    assert len(set(carrying.values())) == len(carrying)
+    # The rate filling rule belongs to exactly one of them.
+    with_rule = [sheet for sheet, text in carrying.items() if "2500" in text]
+    assert with_rule == ["DP200014"]
+
+
+def test_a_pointer_naming_a_note_its_own_sheet_omits_stays_unresolved() -> None:
+    """A note defined on another page does not answer this page's pointer.
+
+    Before note labels were scoped to their sheet this cell resolved, against a
+    note printed elsewhere in the design. Resolving to the wrong text is worse
+    than not resolving, because an unresolved pointer is reported and a wrong
+    one reads as evidence.
+    """
+    from ..analysis.footnote_pointer_notes import sheet_note_definitions
+
+    design = (
+        pathlib.Path("src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_200/files")
+        / "01-200-ejercicio-2025-10-9-mb-xls.xls.extracted.md"
+    )
+    by_sheet = sheet_note_definitions(design.read_text(encoding="utf-8"))
+    assert "nota 1" not in by_sheet.get("DP200020B", {})
+    assert any("nota 1" in labels for labels in by_sheet.values())
