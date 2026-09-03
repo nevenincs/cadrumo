@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -41,17 +42,19 @@ _OTHER_BUCKET = "22222222-2222-4222-8222-222222222222"
 _T0 = datetime(2026, 1, 2, 9, tzinfo=UTC)
 _T1 = datetime(2026, 1, 3, 10, tzinfo=UTC)
 _T2 = datetime(2026, 1, 4, 11, tzinfo=UTC)
-_SECRET_NAME = "Taxpayer confidential declaration label"
-_SECRET_ACTOR = "private-operator"
-_SECRET_NOTES = "private filing notes"
-_SECRET_REFERENCE = "AEAT-private-reference"
-_SECRET_NIF = "12345678Z"
+_PRIVATE_NAME = "Taxpayer confidential declaration label"
+_PRIVATE_ACTOR = "private-operator"
+_PRIVATE_NOTES = "private filing notes"
+_PRIVATE_REFERENCE = "AEAT-private-reference"
+_PRIVATE_NIF = "12345678Z"
+_PRIVATE_AMOUNT = "987654.32"
+_CASILLA = validated_casilla_id("01")
 
 
 def _revision_id(work_unit_id: str) -> str:
     return derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        input_values_by_casilla_id={},
+        input_values_by_casilla_id={_CASILLA: _PRIVATE_AMOUNT},
         binding_overrides={},
         casilla_values={},
         filing_instance_evidence=None,
@@ -72,8 +75,8 @@ def _filed_snapshot() -> tuple[WorkUnitCatalogue, CalculationRevisionCatalogue, 
     filing_record_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=calculation_revision_id,
-        filed_by=_SECRET_ACTOR,
-        member_nif=_SECRET_NIF,
+        filed_by=_PRIVATE_ACTOR,
+        member_nif=_PRIVATE_NIF,
     )
     unit = WorkUnit(
         work_unit_id=work_unit_id,
@@ -82,7 +85,7 @@ def _filed_snapshot() -> tuple[WorkUnitCatalogue, CalculationRevisionCatalogue, 
         filing_year=2026,
         period=period,
         revision_id="2026",
-        name=_SECRET_NAME,
+        name=_PRIVATE_NAME,
         created_at=_T0,
         updated_at=_T2,
         current_calculation_revision_id=calculation_revision_id,
@@ -93,14 +96,14 @@ def _filed_snapshot() -> tuple[WorkUnitCatalogue, CalculationRevisionCatalogue, 
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
         state=CalculationRevisionState.PRESENTADO,
-        input_values_by_casilla_id={},
+        input_values_by_casilla_id={_CASILLA: _PRIVATE_AMOUNT},
         casilla_values={},
         created_at=_T0,
         updated_at=_T2,
         verified_at=_T1,
-        verified_by=_SECRET_ACTOR,
+        verified_by=_PRIVATE_ACTOR,
         filed_at=_T2,
-        filed_by=_SECRET_ACTOR,
+        filed_by=_PRIVATE_ACTOR,
         filing_instance_evidence=None,
         source_provenance=(),
     )
@@ -112,14 +115,14 @@ def _filed_snapshot() -> tuple[WorkUnitCatalogue, CalculationRevisionCatalogue, 
         modelo="130",
         filing_year=2026,
         period=period,
-        member_nif=_SECRET_NIF,
+        member_nif=_PRIVATE_NIF,
         filed_at=_T2,
-        filed_by=_SECRET_ACTOR,
-        notes=_SECRET_NOTES,
+        filed_by=_PRIVATE_ACTOR,
+        notes=_PRIVATE_NOTES,
         aeat_accepted=True,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-            reference_id=_SECRET_REFERENCE,
+            reference_id=_PRIVATE_REFERENCE,
             imported_at=_T2,
         ),
     )
@@ -219,11 +222,12 @@ def test_sensitive_payload_and_protected_identities_never_serialize_or_repr() ->
         unit.work_unit_id,
         revision.calculation_revision_id,
         filing.filing_record_id,
-        _SECRET_NAME,
-        _SECRET_ACTOR,
-        _SECRET_NOTES,
-        _SECRET_REFERENCE,
-        _SECRET_NIF,
+        _PRIVATE_NAME,
+        _PRIVATE_ACTOR,
+        _PRIVATE_NOTES,
+        _PRIVATE_REFERENCE,
+        _PRIVATE_NIF,
+        _PRIVATE_AMOUNT,
         "private-event-id",
     ):
         assert secret not in exposed
@@ -252,7 +256,7 @@ def test_unavailable_never_captured_and_stale_are_not_false_empty() -> None:
 
 
 def test_available_empty_is_measured_zero_and_deterministic() -> None:
-    arguments = dict(
+    first = project_declarations_workspace(
         bucket_id=_BUCKET,
         work_units=WorkUnitCatalogue(),
         calculation_revisions=CalculationRevisionCatalogue(),
@@ -260,11 +264,62 @@ def test_available_empty_is_measured_zero_and_deterministic() -> None:
         lifecycle_facts=(),
         zone_observations=_observations(),
     )
-    first = project_declarations_workspace(**arguments)
-    second = project_declarations_workspace(**arguments)
+    second = project_declarations_workspace(
+        bucket_id=_BUCKET,
+        work_units=WorkUnitCatalogue(),
+        calculation_revisions=CalculationRevisionCatalogue(),
+        filing_records=ModeloRecordCatalogue(),
+        lifecycle_facts=(),
+        zone_observations=_observations(),
+    )
     assert tuple(zone.item_count for zone in first.zones) == (0, 0, 0)
     assert first == second
     assert first.model_dump_json() == second.model_dump_json()
+
+
+def test_reordered_multirow_inputs_project_in_semantic_chronological_order() -> None:
+    work, revisions, filings = _filed_snapshot()
+    first_unit = next(iter(work.values()))
+    second_period = Period.from_year_and_code(2025, "4T")
+    second_id = derive_work_unit_id(
+        bucket_id=_BUCKET,
+        modelo="303",
+        filing_year=2025,
+        period=second_period,
+        revision_id="2025",
+    )
+    second_unit = WorkUnit(
+        work_unit_id=second_id,
+        bucket_id=_BUCKET,
+        modelo="303",
+        filing_year=2025,
+        period=second_period,
+        revision_id="2025",
+        name="Synthetic second declaration",
+        created_at=_T0,
+        updated_at=_T0,
+    )
+    later = _fact(first_unit.work_unit_id, fact_id="fact-later")
+    earlier = DeclarationsSanitizedLifecycleFactV1(
+        fact_id="fact-earlier",
+        work_unit_id=second_id,
+        occurred_at=_T1,
+        kind=DeclarationsLifecycleKind.CREATED,
+    )
+    projection = project_declarations_workspace(
+        bucket_id=_BUCKET,
+        work_units=WorkUnitCatalogue(work_units={second_id: second_unit, first_unit.work_unit_id: first_unit}),
+        calculation_revisions=revisions,
+        filing_records=filings,
+        lifecycle_facts=(later, earlier),
+        zone_observations=_observations(),
+    )
+    assert tuple(str(row.modelo) for row in projection.declarations) == ("130", "303")
+    assert tuple(row.kind for row in projection.lifecycle) == (
+        DeclarationsLifecycleKind.CREATED,
+        DeclarationsLifecycleKind.FILED,
+    )
+    assert tuple(zone.item_count for zone in projection.zones) == (2, 1, 3)
 
 
 def test_foreign_bucket_refuses_before_any_projection() -> None:

@@ -52,6 +52,14 @@ Identical arity is why nothing surfaced this: the cheapest signal that two
 same-named functions differ was unavailable here. Neither definition is dead
 and neither is a copy. This needs a decision about which contract is correct
 before either name can be settled.
+
+Partly resolved since. The `assert` is gone: the actions version now calls
+`require_concrete_repository`, which raises rather than disappearing under
+`python -O`, so the annotation no longer promises something an optimised run
+stops checking. The two contracts still differ - one returns the protocol and
+accepts any implementation, the other still requires the concrete class - so
+the conflict this row records stands and only its most dangerous property was
+removed.
 """
 
 [export_profile_recovery_artifact]
