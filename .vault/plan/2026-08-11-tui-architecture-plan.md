@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-03'
-body_hash: 'sha256:8318387c9b93cc3fd768ad849a15687f496157781079314bb031fac932eb3a26'
+body_hash: 'sha256:fc3504b320b972d66fcee4c8f0e8c15cb95d37c6106921cb6c65643eaa3a41eb'
 ---
 
 <!-- RETIRED: S370 -->
@@ -577,7 +577,7 @@ Build host-neutral Ledger, Declarations with full calendar and history, AEAT Syn
 - [x] `W08.P27.S375` - Build the Ledger overview, entries, review, import, classification, evidence, and reconciliation screens over canonical application doors; `src/cadrumo/entrypoints/tui/ledger/`.
 - [x] `W08.P27.S376` - Remove concrete-host narrowing and whole-application exits from the declaration picker, review, workspace, and editor route chain; `src/cadrumo/entrypoints/tui/modelo/`.
 - [x] `W08.P27.S392` - Define an immutable Declarations workspace projection from preloaded work, calculation-revision, filing-record, and sanitized lifecycle authorities; `src/cadrumo/application/modelo/declarations_workspace.py`.
-- [ ] `W08.P27.S377` - Build the Declarations landing, revision and filing-history routes around existing Modelo workspace destinations; `src/cadrumo/entrypoints/tui/declarations/`.
+- [x] `W08.P27.S377` - Build the Declarations landing, revision and filing-history routes around existing Modelo workspace destinations; `src/cadrumo/entrypoints/tui/declarations/`.
 - [ ] `W08.P27.S378` - Build the full declaration calendar as an agenda-first searchable and filterable workbench with past, upcoming, overdue, filed, and evidence-unknown scopes; `src/cadrumo/entrypoints/tui/declarations/calendar.py`.
 - [ ] `W08.P27.S379` - Build AEAT Sync overview, profile-census, filed-declaration, notification, evidence-comparison, and reconciliation screens with explicit pull and supported push actions; `src/cadrumo/entrypoints/tui/aeat_sync/`.
 - [ ] `W08.P27.S380` - Compose production Profile, change-user, password, appearance, language, and sign-out factories without duplicating their existing screens; `src/cadrumo/entrypoints/tui/account.py`.

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import ClassVar, Final, cast
 
 from textual.binding import Binding
@@ -74,6 +75,11 @@ def natural_address(modelo: object, year: object, period: object) -> str:
     """Render the public Modelo/year/period coordinate."""
     token = getattr(period, "registry_token", str(period))
     return f"Modelo {modelo} · {year} · {token}"
+
+
+def timestamp_label(value: datetime) -> str:
+    """Render a deterministic minute-bearing UTC timestamp without locale ambiguity."""
+    return value.strftime("%d/%m/%Y %H:%M UTC")
 
 
 def availability_label(value: DeclarationsWorkspaceAvailability) -> str:
@@ -235,5 +241,6 @@ __all__ = [
     "filing_state_label",
     "natural_address",
     "revision_state_label",
+    "timestamp_label",
     "work_state_label",
 ]

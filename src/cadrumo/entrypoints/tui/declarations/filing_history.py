@@ -19,6 +19,7 @@ from .controller import (
     evidence_label,
     filing_state_label,
     natural_address,
+    timestamp_label,
 )
 
 
@@ -50,9 +51,9 @@ class DeclarationsFilingHistoryScreen(DeclarationsWorkspaceScreen):
         self.populate_navigation()
         table = cast("DataTable[str]", self.query_one("#declarations-filings", DataTable))
         table.add_column(
-            declarations_copy("tui.declarations.column.declaration"), key="declaration", width=22
+            declarations_copy("tui.declarations.column.declaration"), key="declaration", width=16
         )
-        table.add_column(declarations_copy("tui.declarations.column.when"), key="when", width=10)
+        table.add_column(declarations_copy("tui.declarations.column.when"), key="when", width=20)
         table.add_column(
             declarations_copy("tui.declarations.column.local_filing"), key="local", width=13
         )
@@ -74,7 +75,7 @@ class DeclarationsFilingHistoryScreen(DeclarationsWorkspaceScreen):
                 lifecycle = cast("DeclarationsWorkspaceLifecycleRefV1", source)
                 table.add_row(
                     natural_address(lifecycle.modelo, lifecycle.filing_year, lifecycle.period),
-                    occurred_at.date().isoformat(),
+                    timestamp_label(occurred_at),
                     _lifecycle_label(lifecycle),
                     declarations_copy("tui.declarations.value.not_applicable"),
                     declarations_copy("tui.declarations.value.not_applicable"),
@@ -84,7 +85,7 @@ class DeclarationsFilingHistoryScreen(DeclarationsWorkspaceScreen):
             filing = cast("DeclarationsWorkspaceFilingRefV1", source)
             table.add_row(
                 natural_address(filing.modelo, filing.filing_year, filing.period),
-                occurred_at.date().isoformat(),
+                timestamp_label(occurred_at),
                 filing_state_label(filing.local_status),
                 declarations_copy(
                     "tui.declarations.value.yes"
