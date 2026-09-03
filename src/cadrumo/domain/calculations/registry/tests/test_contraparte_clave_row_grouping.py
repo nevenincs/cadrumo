@@ -52,7 +52,7 @@ def _synthetic_contraparte_binding(binding_id: str, row_field: str) -> DataBindi
     )
 
 
-def _synthetic_revision() -> ModeloRevision:
+def _synthetic_revision(*, include_legal_name: bool = False) -> ModeloRevision:
     """A real modelo 347 revision with its bindings swapped for synthetic ones.
 
     Borrows a genuinely committed 347 revision for every OTHER attribute
@@ -61,18 +61,28 @@ def _synthetic_revision() -> ModeloRevision:
     """
     modelo, _catalogues = _committed_modelo("347")
     revision = modelo.revisions["2025-y-siguientes"]
+    bindings = [
+        _synthetic_contraparte_binding("m347-contraparte-row-nif", "party_tax_id"),
+        _synthetic_contraparte_binding("m347-contraparte-row-clave", "clave"),
+        _synthetic_contraparte_binding("m347-contraparte-row-importe", "importe_total"),
+    ]
+    if include_legal_name:
+        bindings.append(_synthetic_contraparte_binding("m347-contraparte-row-name", "party_legal_name"))
     return revision.model_copy(
         update={
-            "bindings": (
-                _synthetic_contraparte_binding("m347-contraparte-row-nif", "party_tax_id"),
-                _synthetic_contraparte_binding("m347-contraparte-row-clave", "clave"),
-                _synthetic_contraparte_binding("m347-contraparte-row-importe", "importe_total"),
-            ),
+            "bindings": tuple(bindings),
         },
     )
 
 
-def _observation(*, party: str, country: str, invoice_total: str, clave: str) -> InvoiceObservation:
+def _observation(
+    *,
+    party: str,
+    country: str,
+    invoice_total: str,
+    clave: str,
+    party_legal_name: str | None = None,
+) -> InvoiceObservation:
     return InvoiceObservation(
         source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
         invoice_id=f"inv-{party}-{invoice_total}",
@@ -82,6 +92,7 @@ def _observation(*, party: str, country: str, invoice_total: str, clave: str) ->
         base_amount=Decimal(invoice_total),
         invoice_total_amount=Decimal(invoice_total),
         operation_clave=clave,
+        party_legal_name=party_legal_name,
     )
 
 
@@ -139,3 +150,22 @@ def test_contraparte_clave_ignores_observations_without_an_operation_clave() -> 
         ("m347-contraparte-row-clave", 1): "B",
         ("m347-contraparte-row-importe", 1): Decimal("4200.00"),
     }
+
+
+def test_contraparte_clave_materialization_backfills_a_later_legal_name() -> None:
+    revision = _synthetic_revision(include_legal_name=True)
+    observations = (
+        _observation(party="B12345674", country="ES", invoice_total="4000.00", clave="B"),
+        _observation(
+            party="B12345674",
+            country="ES",
+            invoice_total="500.00",
+            clave="B",
+            party_legal_name="SOCIEDAD EJEMPLO SL",
+        ),
+    )
+
+    resolved = resolve_invoice_binding_row_values(revision, observations)
+
+    assert resolved[("m347-contraparte-row-importe", 1)] == Decimal("4500.00")
+    assert resolved[("m347-contraparte-row-name", 1)] == "SOCIEDAD EJEMPLO SL"
