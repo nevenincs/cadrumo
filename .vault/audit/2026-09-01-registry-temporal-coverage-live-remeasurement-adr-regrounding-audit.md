@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f86e04b13a1fc18166ad8b325891f3a33cb9e9f187ae6b0a6a723063031fae1e'
+body_hash: 'sha256:fccaa6d5f22b15ee39b9327de9ef7d0a9d70cdf376f0bf82e5d2bac29456d784'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7053,3 +7053,34 @@ population is seventy-six sites in one file, where a data field names a plan
 phase pair as its `owning_authority` - a declaration whose stated authority is a
 row in a plan rather than anything a reader can resolve. It belongs to another
 campaign's surface and is recorded, not edited.
+
+### the-largest-marker-population-is-a-provenance-field-nothing-reads | high | Seventy-six rows name a plan phase pair as their owning authority, validated only for being non-empty and consumed by nothing
+
+The workspace action denominator classifies each action into a closed
+hand-reviewed row, and every row records an `owning_authority`. Seventy-six of
+them read `tui-interface W05.P10/W05.P11` or a sibling phase pair. Nothing in
+`dev/`, `src/`, or any tracked configuration reads that field: eighty-four
+occurrences all sit inside the declaring module, there is no `model_dump`, no
+serialization and no report, and the field carries no assertion.
+
+The model's own docstring is what makes the reading precise, and it argues
+against the easy conclusion. It names four fields as the recorded mechanical
+signature the row was classified against, and says the validator re-observes
+the live signature and reds on drift. `owning_authority` is deliberately not
+among those four. It sits with `reason`, `evidence_reference` and
+`reopening_condition` in the group written for a human, and its only constraint
+is a minimum length of one, so any non-empty string satisfies it.
+
+So this is not a dead field to delete. It is a provenance field doing its job
+badly: the authority it records is a row in a plan, which is unresolvable to
+anyone outside the campaign that wrote it and becomes meaningless the day that
+plan is archived, and nothing in the type system can notice because
+non-emptiness is the whole contract. The remedy is to name a durable authority -
+the interface, the ruling, or the owner - not to remove the field, and it needs
+the writer of that surface rather than a drive-by edit from this work: the file
+belongs to another campaign that is actively committing, and seventy-six values
+are a review, not a substitution.
+
+It is recorded here as the largest single population the marker scan found, and
+as the clearest example in the tree of the difference between a declaration that
+is absent and one that is present, validated, and empty of meaning.
