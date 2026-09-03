@@ -6,7 +6,10 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel
 
-from ....application.aeat_sync.workspace import AeatSyncWorkspaceZone
+from ....application.aeat_sync.workspace import (
+    AeatSyncWorkspaceNotificationRowV1,
+    AeatSyncWorkspaceZone,
+)
 from ....application.operations.models import OperationDefinitionId
 from ....application.operator_actions.models import ActionReference
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -47,8 +50,23 @@ class AeatSyncOperationHandoffV1(Protocol):
         ...
 
 
+class AeatSyncNotificationDocumentHandoffV1(Protocol):
+    """Host-owned door for one already-read, safe notification row.
+
+    The row intentionally carries no private notification identity or document
+    payload.  A host may use its own already-admitted context to open the
+    existing operation surface, but this workspace never retrieves or renders
+    a document itself.
+    """
+
+    async def __call__(self, row: AeatSyncWorkspaceNotificationRowV1, /) -> None:
+        """Present the document through the owning host boundary."""
+        ...
+
+
 __all__ = [
     "AeatSyncDestinationIdV1",
+    "AeatSyncNotificationDocumentHandoffV1",
     "AeatSyncOperationHandoffV1",
     "AeatSyncOperationRequestV1",
     "AeatSyncRouteTargetV1",

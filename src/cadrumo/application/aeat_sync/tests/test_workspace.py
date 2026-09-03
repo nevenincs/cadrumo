@@ -313,9 +313,21 @@ def test_actions_require_catalogue_admission_and_area_state_closure() -> None:
     assert _projection(overview=(_fact(admitted_operation),)).overview[0].supported_operations == (
         "user-profile.censo-review",
     )
-    for row_without_actions in (_census(), _filed(), _notification()):
-        assert not hasattr(row_without_actions, "supported_actions")
-        assert not hasattr(row_without_actions, "supported_operations")
+    for row in (_overview(), _census(), _filed(), _notification(), _comparison(), _reconciliation()):
+        assert row.supported_actions == () or row.supported_actions
+        assert row.supported_operations == ()
+        assert "supported_actions" in row.model_dump()
+        assert "supported_operations" in row.model_dump()
+
+
+def test_real_public_rows_retain_admitted_capability_provenance() -> None:
+    action = _action("operator.live.notifications.list")
+    notification = _notification().model_copy(update={"supported_actions": (action,), "supported_operations": ()})
+    projection = _projection(notifications=(_fact(notification, private_identity="notification-private"),))
+    projected = projection.notifications[0]
+    assert projected.supported_actions == (action,)
+    assert projected.supported_operations == ()
+    assert projected.model_dump()["supported_actions"] == ({"action_id": action.action_id},)
 
 
 def test_row_subclass_protected_fields_are_reconstructed_away() -> None:

@@ -11,13 +11,18 @@ from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Static
 
-from ....application.aeat_sync.workspace import AeatSyncWorkspaceZone
+from ....application.aeat_sync.workspace import (
+    AeatSyncNotificationReadState,
+    AeatSyncWorkspaceNotificationRowV1,
+    AeatSyncWorkspaceZone,
+)
 from ....application.operations.models import OperationDefinitionId
 from ....application.operator_actions.models import ActionReference
 from ....core.filing_year import FilingYear
 from ....core.i18n.render import tr
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
+from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import AeatSyncWorkspaceController
 from .models import AeatSyncOperationRequestV1, AeatSyncRouteTargetV1
@@ -54,6 +59,31 @@ def _label(value: Enum | None) -> str:
     if prefix is None:
         raise ValueError("unsupported AEAT Sync operator label")
     return aeat_sync_copy(f"{prefix}.{value.value}")
+
+
+def _compact(value: str, width: int) -> str:
+    """Keep safe labels inside the fixed terminal content column."""
+    if len(value) <= width:
+        return value
+    return f"{value[: width - 1]}…"
+
+
+def _census_identity(path: str) -> str:
+    """Derive a stable key from the safe canonical census path only."""
+    return f"census:{' '.join(path.split()).casefold()}"
+
+
+def _natural_identity(row: _NaturalRow, *, prefix: str) -> str:
+    """Derive a stable key from a public declaration coordinate."""
+    return f"{prefix}:{row.modelo}|{row.filing_year}|{row.period.registry_token}"
+
+
+def _notification_identity(row: AeatSyncWorkspaceNotificationRowV1, index: int) -> str:
+    """Derive a safe deterministic key without retaining private identity."""
+    return (
+        f"notification:{row.issued_on}|{row.read_on}|{row.read_state.value}|"
+        f"{row.category.value}|{row.document_custody_state.value}|{index}"
+    )
 
 
 class _OperationRow(Protocol):

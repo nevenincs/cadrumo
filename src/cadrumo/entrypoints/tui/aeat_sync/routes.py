@@ -11,7 +11,12 @@ from textual.screen import Screen
 from ....application.aeat_sync.workspace import AeatSyncWorkspaceProjectionV1, AeatSyncWorkspaceZone
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
 from .controller import AeatSyncWorkspaceController
-from .models import AeatSyncDestinationIdV1, AeatSyncOperationHandoffV1, AeatSyncRouteTargetV1
+from .models import (
+    AeatSyncDestinationIdV1,
+    AeatSyncNotificationDocumentHandoffV1,
+    AeatSyncOperationHandoffV1,
+    AeatSyncRouteTargetV1,
+)
 from .screens import (
     AeatSyncCensusScreen,
     AeatSyncEvidenceComparisonScreen,
@@ -74,11 +79,17 @@ def aeat_sync_screen_factory(
     projection: AeatSyncWorkspaceProjectionV1,
     *,
     operation_handoff: AeatSyncOperationHandoffV1 | None = None,
+    notification_document_handoff: AeatSyncNotificationDocumentHandoffV1 | None = None,
 ) -> TuiScreenFactoryV1:
     """Bind only a preloaded safe projection and an optional typed host handoff."""
 
     def create(context: TuiScreenContextV1) -> Screen[None]:
-        controller = AeatSyncWorkspaceController(context, projection, operation_handoff=operation_handoff)
+        controller = AeatSyncWorkspaceController(
+            context,
+            projection,
+            operation_handoff=operation_handoff,
+            notification_document_handoff=notification_document_handoff,
+        )
         return resolve_aeat_sync_screen(controller, controller.target(AeatSyncWorkspaceZone.OVERVIEW))
 
     return create

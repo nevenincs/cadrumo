@@ -229,13 +229,15 @@ class AeatSyncWorkspaceZoneStateV1(BaseModel):
         return self.item_count
 
 
-class _ActionRow(BaseModel):
+class AeatSyncWorkspaceActionRowV1(BaseModel):
+    """Public immutable capability provenance shared by every workspace row."""
+
     model_config = STRICT_FROZEN_CONFIG
     supported_actions: tuple[ActionReference, ...] = ()
     supported_operations: tuple[OperationDefinitionId, ...] = ()
 
 
-class AeatSyncWorkspaceOverviewRowV1(_ActionRow):
+class AeatSyncWorkspaceOverviewRowV1(AeatSyncWorkspaceActionRowV1):
     """Safe public overview row."""
 
     area: AeatSyncOverviewArea
@@ -252,19 +254,17 @@ class AeatSyncWorkspaceOverviewRowV1(_ActionRow):
         return self
 
 
-class AeatSyncWorkspaceCensusRowV1(BaseModel):
+class AeatSyncWorkspaceCensusRowV1(AeatSyncWorkspaceActionRowV1):
     """Safe public census row without values."""
 
-    model_config = STRICT_FROZEN_CONFIG
     path: str = Field(min_length=1, max_length=256)
     category: AeatSyncCensusCategory
     status: AeatSyncCensusStatus
 
 
-class AeatSyncWorkspaceFiledDeclarationRowV1(BaseModel):
+class AeatSyncWorkspaceFiledDeclarationRowV1(AeatSyncWorkspaceActionRowV1):
     """Safe public filed-declaration comparison."""
 
-    model_config = STRICT_FROZEN_CONFIG
     modelo: ModeloCode
     filing_year: FilingYear
     period: Period
@@ -295,10 +295,9 @@ class AeatSyncWorkspaceFiledDeclarationRowV1(BaseModel):
         return self
 
 
-class AeatSyncWorkspaceNotificationRowV1(BaseModel):
+class AeatSyncWorkspaceNotificationRowV1(AeatSyncWorkspaceActionRowV1):
     """Safe public notification metadata."""
 
-    model_config = STRICT_FROZEN_CONFIG
     issued_on: date
     read_on: date | None = None
     read_state: AeatSyncNotificationReadState
@@ -330,7 +329,7 @@ class AeatSyncWorkspaceNotificationRowV1(BaseModel):
         return self
 
 
-class _DualRow(_ActionRow):
+class _DualRow(AeatSyncWorkspaceActionRowV1):
     modelo: ModeloCode
     filing_year: FilingYear
     period: Period
@@ -607,8 +606,8 @@ def _actions(
     contract_by_id = {contract.definition_id: contract for contract in contracts.definitions}
     for zone, facts in groups.items():
         for fact in facts:
-            action_row = fact.row if isinstance(fact.row, _ActionRow) else None
-            actions = action_row.supported_actions if action_row is not None else ()
+            action_row = fact.row
+            actions = action_row.supported_actions
             ids = tuple(str(item.action_id) for item in actions)
             _unique(ids, "row actions")
             if zone is AeatSyncWorkspaceZone.OVERVIEW:
@@ -624,7 +623,7 @@ def _actions(
                     raise AeatSyncWorkspaceProjectionError("action is not admitted by catalogue") from error
             if not set(ids) <= _ALLOWED[key]:
                 raise AeatSyncWorkspaceProjectionError("action is not allowed for row area/state")
-            operation_ids = action_row.supported_operations if action_row is not None else ()
+            operation_ids = action_row.supported_operations
             operation_id_values: set[str] = {str(item) for item in operation_ids}
             _unique(operation_ids, "row operations")
             allowed_operations = _ALLOWED_OPERATIONS[key]
@@ -638,8 +637,7 @@ def _actions(
                 joined = tuple(
                     contract
                     for contract in contracts.definitions
-                    if contract.action_reference == action
-                    and str(contract.definition_id) in operation_id_values
+                    if contract.action_reference == action and str(contract.definition_id) in operation_id_values
                 )
                 if not joined and str(action.action_id) in {
                     "operator.live.filed.pull",
