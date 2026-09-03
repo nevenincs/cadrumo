@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:5161335a23a45cb18a7c7c362fadb220427c8ed9413891f59033236c25e8eec6'
+body_hash: 'sha256:a758673d7415d7030dde096c540df9e0f6f6975abc8d557b68c12e6b8f1599db'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -427,6 +427,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S402` - Widen the enrolment and README gates to discover a screen by either entry point, since two screens reading the design corpus present screen_corpus and the gate looking only for screen_authority passed while they sat unenrolled, and enrol them in a corpus table whose signature does not force arguments they ignore; `dev/registry/tests/test_declaration_invariant_gates.py dev/registry/analysis/screens.py dev/registry/README.md`.
 - [x] `W04.P07.S403` - Declare the screen entry points once and route all six gates through it, since five carried their own copy of the narrow test and three never checked a corpus screens kinds counts or identity, and carry the modelo on the corpus findings the widened identity gate then found in breach; `dev/registry/analysis/screens.py dev/registry/tests/test_declaration_invariant_gates.py dev/registry/analysis/note_label_scope.py dev/registry/analysis/unnumbered_note_scope.py`.
 - [x] `W04.P07.S404` - Name the encoding constant in the six modules this work added that passed a raw literal, and record that the convention one module describes as required by the tree holds at 44 sites against 138 that do not, so it is an aspiration rather than an established rule; `dev/registry`.
+- [x] `W04.P07.S405` - Finish the pass over which screen population each gate sees: run both runners in the whole-corpus and no-mutation gates, and give the population gate the design transcriptions and their parsed notes plus a docstring saying it checks named populations rather than every screen; `dev/registry/tests/test_declaration_invariant_gates.py`.
 
 ### Phase `W04.P08` - grade earned gate
 

@@ -10609,3 +10609,41 @@ four test modules, against four analysis modules that followed the convention -
 so the same author was on both sides of it within one campaign, which is a fair
 measure of how much an unenforced convention travels. Those six are corrected;
 the tree now stands at 138 raw sites in 42 modules against 44 named.
+
+
+## Finishing the audit of which gates see which screens
+
+Six gates were widened when the entry-point declaration landed. Three more had
+not been looked at, and two of them were narrow in the same way.
+
+**The whole-corpus gate ran only the authority runner.** Its docstring says a
+screen that crashed on one revision would otherwise surface only when somebody
+ran the runner by hand - and the corpus screens were in exactly that position,
+since the gate called `run_screens` and asserted the result length against
+`SCREENS`. It now runs both runners and asserts against both table lengths, so
+the count itself proves the corpus screens ran.
+
+**The no-mutation gate fingerprinted the shipped tree and then ran half the
+suite.** The design transcriptions the corpus screens read live inside that same
+tree, so the half of the suite that touches those files was never checked for
+writes. Both runners now run between the two fingerprints.
+
+**The non-empty-population gate makes a claim wider than its evidence.** It is
+named for every screen and checks four named populations. That is a defensible
+design - several screens share a population and a few have none separable from
+the authority - but the docstring did not say so, and an unstated narrowing is
+the same defect this campaign has recorded twice in screens' own docstrings. It
+now says what it covers and why.
+
+Two populations were added to it, and the first is the one most easily lost: the
+design transcriptions are found by a filesystem walk, so a corpus moved or
+renamed would return an empty tuple and leave both corpus screens silent and
+healthy. The second asserts that those files parse into notes, because a
+transcription set that loaded and yielded no note at all would produce the same
+silence for a different reason.
+
+That completes the pass. Every gate in the suite has now been checked for which
+screen population it actually sees, and the three that were narrow are recorded
+here rather than quietly fixed - the pattern across all nine is one worth naming:
+a check written when the world had one shape keeps passing after the world grows
+a second, and passing is exactly how it hides.
