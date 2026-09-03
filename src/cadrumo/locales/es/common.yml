@@ -1010,18 +1010,18 @@ transactions:
 tui:
   aeat_sync:
     action:
-      pull_comparison: Pull comparison evidence
-      pull_filed: Pull filed declarations
-      review_census: Review census
+      pull_comparison: Obtener evidencia comparativa
+      pull_filed: Obtener declaraciones presentadas
+      review_census: Revisar el censo
     address:
       declaration: Modelo %{modelo} · %{filing_year} · %{period}
     aeat_observation_state:
-      accepted: Accepted
-      not_observed: Not observed
-      rejected: Rejected
-      submitted: Submitted
+      accepted: Aceptada
+      not_observed: No observada
+      rejected: Rechazada
+      submitted: Presentada
     area:
-      census: Census
+      census: Censo
       evidence_comparison: Evidence comparison
       filed_declarations: Filed declarations
       notifications: Notifications
