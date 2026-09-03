@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import sys
 from collections.abc import AsyncGenerator, Callable, Generator, Iterable, Mapping, Sequence
 from contextlib import ExitStack, asynccontextmanager, contextmanager
 from dataclasses import dataclass
@@ -724,10 +723,17 @@ def main(
     neither imports the CLI. ``headless`` and ``auto_pilot`` are Textual's
     own run parameters, carried so a caller can drive a real session to
     completion without a terminal rather than assert against an import.
+
+    Without an injected provider this composes the production installed
+    session: adapters, one truthful profile-inventory observation, whichever
+    existing credential journey that observation names, and the authenticated
+    generation the root shell consumes. A caller that injects a provider has
+    already made those choices, so its session is run exactly as given.
     """
     if workbench_root_inputs_provider is None:
-        sys.stderr.write("workbench.root.composition_required\n")
-        return 2
+        from .installed_session import run_installed_workbench_session
+
+        return run_installed_workbench_session(headless=headless, auto_pilot=auto_pilot)
     asyncio.run(
         run_authenticated_workbench_sessions(
             headless=headless,

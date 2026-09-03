@@ -72,6 +72,7 @@ __all__ = [
     "RegistrationAttempt",
     "RegistrationRefusal",
     "RegistrationScreen",
+    "build_profile_registration_attempt",
     "run_registration_tui",
 ]
 
@@ -612,6 +613,48 @@ class RecoveryWordsScreen(Screen[None]):
         self._resolved = True
         self._enrollment.recovery_key.wipe()
         self._on_cancel()
+
+
+def build_profile_registration_attempt(
+    label: str,
+    candidate_passphrase: str,
+    output_language: str,
+    recovery_handover: Callable[[ProfileRecoveryEnrollment], str],
+) -> RegistrationAttempt:
+    """Adapt the public registration door into this screen's result contract.
+
+    This is the production ``register`` door. It classifies nothing itself:
+    the application owns which refusals are expected, and this only carries
+    the localized message key and its context forward as data. No passphrase,
+    recovery phrase, or enrollment record is retained beyond the call.
+    """
+    from ....application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
+    from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+    from ....domain.user_profile.values import UserProfileFact
+
+    try:
+        outcome = register_profile_with_credentials(
+            label=label,
+            passphrase=candidate_passphrase,
+            facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=output_language),),
+            recovery_handover=recovery_handover,
+        )
+    except RecoveryHandoverCancelledError:
+        return RegistrationAttempt(
+            expected_refusal=RegistrationRefusal(
+                message_key="cli.config.profile.create_recovery_verification_cancelled",
+            )
+        )
+    except ProfileRegistrationError as refusal:
+        if refusal.translated_message is None:
+            raise
+        return RegistrationAttempt(
+            expected_refusal=RegistrationRefusal(
+                message_key=refusal.translated_message,
+                context=tuple((refusal.context or {}).items()),
+            )
+        )
+    return RegistrationAttempt(outcome=outcome)
 
 
 def run_registration_tui(
