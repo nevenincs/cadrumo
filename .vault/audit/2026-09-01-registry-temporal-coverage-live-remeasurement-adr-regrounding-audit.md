@@ -5983,3 +5983,49 @@ partly through contention with this campaign's own measurements, and a serial re
 directories is a longer job than an iteration - so the honest state is that the CI-facing figure
 remains unmeasured, and the earlier registry-subset figures remain the only ones this campaign
 has.
+
+### ci-selection-retry-launched-with-a-piped-exit-status | low | The retry captures tail's status, not pytest's, which is the first trap this campaign documented
+
+The CI selection is being retried at two workers rather than automatic, on the reasoning that
+the forty-seven-minute run lost 263 tests to worker deaths under contention this campaign's own
+measurements were contributing to.
+
+The retry was launched with the run piped through `tail`, so the `PYTEST_EXIT` it records is
+tail's status and not pytest's. That is the first measurement trap this audit documented, in a
+finding about reading a wrapper's exit code instead of the tool's, and it was reproduced by the
+author of that finding roughly forty iterations later.
+
+It is not worth killing the run to fix. A second heavy run competing with the first is what
+produced the crashed workers in the first place, and the two numbers that matter - the collected
+count and the pass/fail tally - are both in the captured output regardless of the exit line.
+When the result is read, that exit line will be ignored and the reconciliation done from the
+summary, which is what the eleventh criterion actually requires.
+
+Recording it rather than quietly working around it, because the point of the criterion is that a
+measurement states how it was taken. A run whose exit status is meaningless is usable if the
+reader knows that, and misleading if they do not.
+
+Separately confirmed while waiting: `dev/quality/tests` is named by two recipes, so its
+appearance in this campaign's lane path was not measuring an unwired directory. The conformance
+directory remains the only one in that path that no recipe names.
+
+### empty-test-package-outlived-its-only-test | low | A test package survives with a docstring describing tests deleted in 2026-08
+
+The fourth uncovered test directory holds no tests, which is why no recipe names it. What it
+holds is an `__init__.py` whose entire content is `"""Tests for the live CLI baseline
+generator."""`, and the test that docstring describes was deleted by a commit closing a
+private-to-public module promotion, taking 213 lines with it.
+
+So a package declares itself to be tests for a generator, and has declared that with no tests in
+it since August. It is the smallest instance in this audit of the shape the whole campaign is
+about, and it is worth one paragraph precisely because it is small: an export list naming a
+retired surface and a package docstring naming deleted tests are the same defect at different
+scales, and neither is caught by anything that runs.
+
+No removal is proposed. An empty test package is harmless where a stale export list is not, the
+deletion belongs to whoever made it, and the campaign has spent enough findings on the
+difference between a gap worth reporting and a change worth making unilaterally.
+
+What this closes is the accounting on the four uncovered directories. One is empty for a
+traceable reason, and the other three hold 163 tests that no lane runs, of which two were
+examined and both reported real defects on first contact.
