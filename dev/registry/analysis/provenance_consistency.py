@@ -28,6 +28,7 @@ reference, and the ids that fall outside; it does not gate. Exit 0 always.
 
 from __future__ import annotations
 
+import collections
 import sys
 from dataclasses import dataclass
 from typing import Literal, Protocol
@@ -38,7 +39,14 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from .corpus import bundled_modelo_ids
 
-__all__ = ["ProvenanceFinding", "outside_reference_index", "provenance_findings", "screen_authority"]
+__all__ = [
+    "OutsideReferenceScope",
+    "ProvenanceFinding",
+    "outside_reference_index",
+    "outside_reference_scope",
+    "provenance_findings",
+    "screen_authority",
+]
 
 type ProvenanceChildKind = Literal[
     "casilla",
@@ -152,6 +160,59 @@ def outside_reference_index(
             key = (finding.modelo, finding.revision, str(finding.ref_kind), reference)
             index[key] = index.get(key, 0) + 1
     return index
+
+
+@dataclass(frozen=True, slots=True)
+class OutsideReferenceScope:
+    """One reference outside its manifests, and how far the absence reaches."""
+
+    modelo: str
+    ref_kind: str
+    reference: str
+    #: The revisions of this modelo whose manifest omits the reference.
+    revisions: tuple[str, ...]
+    #: Whether that is every revision the modelo declares.
+    spans_every_revision: bool
+    #: Citing children across those revisions, which is how much depends on it.
+    sites: int
+
+
+def outside_reference_scope(
+    index: dict[tuple[str, str, str, str], int],
+    revision_counts: dict[str, int],
+) -> tuple[OutsideReferenceScope, ...]:
+    """Report whether a reference is absent from every revision or only some.
+
+    Built on the index rather than on the findings, so there is one collapse
+    from sites to references and this asks a further question of its result
+    instead of repeating the reduction.
+
+    The distinction is the remedy. A reference absent from every revision of its
+    modelo is one omission - the modelo never declares it anywhere - and is
+    plausibly fixed once. A reference present in some revisions and absent from
+    others is drift between manifests that were meant to agree, and each gap is
+    its own correction. The index alone cannot tell them apart: it is keyed per
+    revision, so both shapes appear as several rows that look identical.
+
+    ``revision_counts`` is passed in rather than read from an authority here,
+    because this is arithmetic over an already-measured index and taking the
+    authority would make it a second traversal of the registry.
+    """
+    grouped: dict[tuple[str, str, str], list[tuple[str, int]]] = collections.defaultdict(list)
+    for (modelo, revision, ref_kind, reference), sites in index.items():
+        grouped[(modelo, ref_kind, reference)].append((revision, sites))
+    scopes = [
+        OutsideReferenceScope(
+            modelo=modelo,
+            ref_kind=ref_kind,
+            reference=reference,
+            revisions=tuple(sorted(revision for revision, _ in members)),
+            spans_every_revision=len(members) == revision_counts.get(modelo, -1),
+            sites=sum(sites for _, sites in members),
+        )
+        for (modelo, ref_kind, reference), members in grouped.items()
+    ]
+    return tuple(sorted(scopes, key=lambda item: (-item.sites, item.modelo, item.reference)))
 
 
 def main() -> int:

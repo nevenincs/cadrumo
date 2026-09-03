@@ -121,3 +121,65 @@ def test_resolved_export_field_citing_outside_source_is_reported() -> None:
         "source",
     )
     assert finding.outside == (_EXTRA_SOURCE_REF,)
+
+
+def test_a_reference_absent_from_every_revision_is_distinguished_from_partial_drift() -> None:
+    """The two shapes look identical in the per-revision index and are not.
+
+    A reference the modelo never declares anywhere is one omission. A reference
+    present in some revisions and absent from others is drift between manifests
+    that were meant to agree, and each gap is its own correction. Both appear in
+    the index as several rows carrying the same reference.
+    """
+    from ..analysis.provenance_consistency import outside_reference_scope
+
+    index = {
+        ("100", "2023", "legal", "ley-1:art-1"): 5,
+        ("100", "2024", "legal", "ley-1:art-1"): 7,
+        ("100", "2023", "legal", "ley-2:art-2"): 3,
+    }
+    scopes = {item.reference: item for item in outside_reference_scope(index, {"100": 2})}
+    assert scopes["ley-1:art-1"].spans_every_revision is True
+    assert scopes["ley-1:art-1"].revisions == ("2023", "2024")
+    assert scopes["ley-1:art-1"].sites == 12
+    assert scopes["ley-2:art-2"].spans_every_revision is False
+
+
+def test_a_modelo_absent_from_the_revision_counts_is_never_called_systemic() -> None:
+    """An unknown denominator produces no claim rather than a false one.
+
+    Reporting "absent from every revision" requires knowing how many revisions
+    there are. Defaulting a missing count to zero would make any single row
+    match and mark it systemic, which is a claim built out of ignorance.
+    """
+    from ..analysis.provenance_consistency import outside_reference_scope
+
+    scopes = outside_reference_scope({("999", "r", "legal", "ley-1:art-1"): 1}, {})
+    assert [item.spans_every_revision for item in scopes] == [False]
+
+
+def test_the_scope_projection_agrees_with_the_index_it_reduces() -> None:
+    """No site is lost or invented between the index and its reduction.
+
+    The two are separate collapses of the same measurement, so they can drift.
+    Total sites must be equal and the reference set must be the index's own.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+    from ..analysis.corpus import bundled_modelo_ids
+    from ..analysis.provenance_consistency import (
+        outside_reference_index,
+        outside_reference_scope,
+        screen_authority,
+    )
+
+    authority = bundled_authority()
+    modelo_ids = bundled_modelo_ids()
+    index = outside_reference_index(screen_authority(authority, modelo_ids))
+    assert index, "the index is empty, so this proves nothing"
+    counts = {modelo: len(authority.modelo(modelo).revisions) for modelo in modelo_ids}
+    scopes = outside_reference_scope(index, counts)
+    assert sum(item.sites for item in scopes) == sum(index.values())
+    assert {(item.modelo, item.ref_kind, item.reference) for item in scopes} == {
+        (modelo, ref_kind, reference) for modelo, _, ref_kind, reference in index
+    }
