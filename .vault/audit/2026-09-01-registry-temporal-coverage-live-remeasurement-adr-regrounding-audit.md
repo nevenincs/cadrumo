@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:3044be7054ff92031122869c9ec80ef5dbba49059aff068ca3627a6849e8f34b'
+body_hash: 'sha256:e677abe8b87dc805d7b31764e916485dc40b8f4034b150a7d8d09f8b18fbf573'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7885,3 +7885,29 @@ wrong - this tree deliberately requires each module to declare its own encoding
 constant, so the pattern is sanctioned in one place and a defect in others - but
 the distinction is worth stating rather than leaving as an omission the next
 sweep rediscovers.
+
+### the-registry-tooling-now-states-each-of-those-values-once | high | Three more restatements collapsed, and the digest one is the reason the class matters
+
+The remaining one-value-many-names instances inside this work's scope are
+closed. The registry package path was declared in both load-census modules and
+is now stated by the census and imported by its classification. The serializer
+convention token was declared by the tree renderer and restated by the render
+check; the renderer's is now public and the check reads it. The lowercase-hex
+digest shape was declared identically in the provenance module and the
+publication module, and now lives where digests are validated.
+
+The digest is the one that justifies the effort. The other two would produce a
+mismatch if they drifted - a comparison failing, a census missing a module -
+which is noisy and self-announcing. Two modules deciding separately what a
+sha256 looks like is different in kind: a relaxation applied to one leaves the
+other still refusing, so the tree gains a route that accepts a digest another
+route rejects, and nothing fails until something is published that should not
+have been. A duplicated validator is a duplicated decision about what is
+acceptable, and those do not announce their disagreement.
+
+Forty-three tests pass across the four affected modules with three failures,
+each of which predates this change and appears in the pre-change suite run: the
+two publication refusals already recorded, and a census classification whose
+rules name seven members no longer in its universe. That third one is this
+campaign's own subject in another module - a declaration outliving what it
+describes - and belongs to the load-census work rather than to constants.

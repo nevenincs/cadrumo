@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:03138933a65cdcb09f4e02c7cc180148460037a51b58db4b3c7e962162776623'
+body_hash: 'sha256:f266647be85dca9984199c99a42f4bdea98aeba237eda5b4e3fa9bfd9f3c3c68'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -539,6 +539,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S309` - Collapse the modelo-id helper repeated in all ten screen modules into one canonical defining module; `dev/registry/analysis/corpus.py dev/registry/analysis`.
 - [x] `W06.P13.S310` - Give the pipeline's two duplicated path guards one home and leave the generic duplicate-finder where it is; `dev/registry/pipeline/_tree_paths.py`.
 - [x] `W06.P13.S311` - Collapse the provenance filename restatement and give the legacy filename one name instead of two; `dev/registry/pipeline/render_check.py dev/registry/pipeline/_provenance_manifest.py dev/registry/pipeline/_tree_publication.py`.
+- [x] `W06.P13.S312` - Collapse the three remaining one-value-many-names constants in the registry tooling; `dev/registry/analysis/load_census_classification.py dev/registry/pipeline/render_check.py dev/registry/pipeline/_export_tree.py dev/registry/pipeline/_provenance_manifest.py dev/registry/pipeline/_tree_publication.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
