@@ -146,9 +146,7 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         help_key=TranslationKey("cli.app.ledger.ratios.validate_help"),
         short_help_key=None,
         invocation=_LEDGER_RULE_RATIO_LEAF_INVOCATION,
-        parameters=(
-            _RATIOS_OUTPUT_LANGUAGE_OPTION,
-        ),
+        parameters=(_RATIOS_OUTPUT_LANGUAGE_OPTION,),
         policy=_POLICY_6,
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_ratios_cli", "ratios_validate")),
         result_schema=ResultSchemaSpec(
