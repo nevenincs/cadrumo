@@ -20,7 +20,8 @@ would hold vacuously forever.
 from __future__ import annotations
 
 import pytest
-from textual.widgets import Static
+from textual.app import App, ComposeResult
+from textual.widgets import Button, Static
 
 from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from .....application.modelo.workspace_models import ModeloWorkspaceCapabilityName
@@ -94,6 +95,35 @@ def test_the_selection_outcome_names_a_routed_destination() -> None:
     """The C1 picker's landing destination must be one this table can build."""
     assert WORKSPACE_SELECTION_OUTCOME in MODELO_WORKSPACE_DESTINATIONS
     assert WORKSPACE_SELECTION_OUTCOME == "modelo.workspace.overview"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("destination", _DESTINATION_IDS)
+async def test_destination_quit_dismisses_only_the_child_and_restores_root_focus(
+    destination: ModeloWorkspaceDestinationIdV1,
+    bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """A mounted workspace view returns to its generic root without exiting it."""
+
+    class _RootApp(App[None]):
+        def compose(self) -> ComposeResult:
+            yield Button("Root", id="root-focus")
+
+    bucket_id, repository = bucket_and_repository
+    outcomes: list[None] = []
+    app = _RootApp()
+    async with app.run_test(size=(100, 30)) as pilot:
+        root_focus = app.query_one("#root-focus", Button)
+        root_focus.focus()
+        await pilot.pause()
+        app.push_screen(resolve_destination(destination)(_session(bucket_id, repository)), callback=outcomes.append)
+        await pilot.pause()
+        await pilot.press("q")
+        await pilot.pause()
+
+        assert outcomes == [None]
+        assert app.screen is app.screen_stack[0]
+        assert app.focused is root_focus
 
 
 @pytest.mark.asyncio
