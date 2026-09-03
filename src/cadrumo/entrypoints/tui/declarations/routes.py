@@ -21,13 +21,13 @@ from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
 from .controller import DeclarationsWorkspaceController, DeclarationsWorkspaceScreen, declarations_copy
 from .filing_history import DeclarationsFilingHistoryScreen
 from .models import (
-    DeclarationHandoffV1,
     DeclarationsDestinationIdV1,
     DeclarationsRouteTargetV1,
     FilingHandoffV1,
+    ModeloWorkspaceScreenFactoryV1,
     RevisionHandoffV1,
 )
-from .overview import DeclarationsOverviewScreen
+from .overview import DeclarationsModeloWorkspaceLauncherScreen, DeclarationsOverviewScreen
 from .revisions import DeclarationsRevisionsScreen
 
 type DeclarationsInternalScreenFactoryV1 = Callable[[DeclarationsWorkspaceController], DeclarationsWorkspaceScreen]
@@ -112,10 +112,10 @@ def resolve_declarations_screen(
         DeclarationsWorkspaceAvailability.AVAILABLE,
         DeclarationsWorkspaceAvailability.STALE,
     }
-    if not observable or (route.factory is None and controller.declaration_handoff is None):
+    if not observable or (route.factory is None and controller.modelo_workspace_factory is None):
         return DeclarationsUnavailableScreen(controller, target)
     if route.factory is None:
-        return DeclarationsOverviewScreen(controller)
+        return DeclarationsModeloWorkspaceLauncherScreen(controller)
     return route.factory(controller)
 
 
@@ -125,7 +125,7 @@ def declarations_screen_factory(
     work_action: ActionReference,
     revisions_action: ActionReference,
     filing_action: ActionReference,
-    declaration_handoff: DeclarationHandoffV1 | None = None,
+    modelo_workspace_factory: ModeloWorkspaceScreenFactoryV1 | None = None,
     revision_handoff: RevisionHandoffV1 | None = None,
     filing_handoff: FilingHandoffV1 | None = None,
 ) -> TuiScreenFactoryV1:
@@ -146,7 +146,7 @@ def declarations_screen_factory(
             work_action=work_action,
             revisions_action=revisions_action,
             filing_action=filing_action,
-            declaration_handoff=declaration_handoff,
+            modelo_workspace_factory=modelo_workspace_factory,
             revision_handoff=revision_handoff,
             filing_handoff=filing_handoff,
         )

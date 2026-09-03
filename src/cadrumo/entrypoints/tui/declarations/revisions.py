@@ -39,13 +39,17 @@ class DeclarationsRevisionsScreen(DeclarationsWorkspaceScreen):
         self.populate_navigation()
         table = cast("DataTable[str]", self.query_one("#declarations-revisions", DataTable))
         table.add_column(declarations_copy("tui.declarations.column.declaration"), key="declaration")
-        table.add_column(declarations_copy("tui.declarations.column.calculation_revision"), key="revision")
+        table.add_column(declarations_copy("tui.declarations.column.updated"), key="updated", width=10)
         table.add_column(declarations_copy("tui.declarations.column.local_state"), key="state")
+        table.add_column(declarations_copy("tui.declarations.column.current"), key="current", width=7)
+        table.add_column(declarations_copy("tui.declarations.column.filed"), key="filed", width=7)
         for row in self.controller.projection.calculation_revisions:
             table.add_row(
                 natural_address(row.modelo, row.filing_year, row.period),
-                row.created_at.date().isoformat(),
+                row.updated_at.date().isoformat(),
                 revision_state_label(row.state),
+                declarations_copy("tui.declarations.value.yes" if row.is_current else "tui.declarations.value.no"),
+                declarations_copy("tui.declarations.value.yes" if row.is_filed else "tui.declarations.value.no"),
                 key=row.calculation_revision_id,
             )
         if not table.row_count:

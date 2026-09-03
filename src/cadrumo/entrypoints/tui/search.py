@@ -10,7 +10,7 @@ navigate and cannot invoke a business action.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, Protocol, cast, runtime_checkable
+from typing import Protocol, override, runtime_checkable
 
 from textual.command import DiscoveryHit, Hit, Hits, Provider
 
@@ -72,8 +72,7 @@ def _result_text(result: WorkbenchSearchResult) -> str:
     address = ""
     if result.address is not None:
         address = (
-            f" · Modelo {result.address.modelo} · {result.address.filing_year}"
-            f" · {result.address.period.registry_token}"
+            f" · Modelo {result.address.modelo} · {result.address.filing_year} · {result.address.period.registry_token}"
         )
     return f"{result.label_key.value} · {result.source.value} · {result.status.value}{address}"
 
@@ -86,6 +85,7 @@ def _destination_text(destination: str) -> str:
 class WorkbenchSearchProviderV1(Provider):
     """Expose application-ranked workbench results in the command palette."""
 
+    @override
     async def search(self, query: str) -> Hits:
         """Yield only results that still resolve through the current catalogue."""
         try:
@@ -112,6 +112,7 @@ class WorkbenchSearchProviderV1(Provider):
 class WorkbenchCommandProviderV1(Provider):
     """Expose admitted destinations and registered action identities as commands."""
 
+    @override
     async def search(self, query: str) -> Hits:
         """Fuzzy-match the current catalogue's admitted routes and actions."""
         matcher = self.matcher(query)
@@ -125,6 +126,7 @@ class WorkbenchCommandProviderV1(Provider):
                     help=identity,
                 )
 
+    @override
     async def discover(self) -> Hits:
         """List the current admitted destinations and actions before typing."""
         host = _require_host(self.app)

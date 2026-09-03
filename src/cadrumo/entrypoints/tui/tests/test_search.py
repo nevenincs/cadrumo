@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import ast
-from collections.abc import AsyncIterator
 from pathlib import Path
+from typing import override
 
 import pytest
 from textual.app import App, ComposeResult
@@ -29,6 +29,7 @@ from ..navigation import (
     TUI_DESTINATION_CATALOGUE,
     TuiActionCandidateV1,
     TuiDestinationAdmissionV1,
+    TuiDestinationCatalogueV1,
     TuiNavigationTargetV1,
     TuiScreenContextV1,
     TuiScreenFactoryV1,
@@ -48,16 +49,18 @@ def _factory(_context: TuiScreenContextV1) -> Screen[None]:
     return MarkerScreen()
 
 
-def _catalogue(*, actions: tuple[TuiActionCandidateV1, ...] = ()):
+def _catalogue(*, actions: tuple[TuiActionCandidateV1, ...] = ()) -> TuiDestinationCatalogueV1:
     """Build the complete admitted catalogue used by the real provider tests."""
-    admissions = {
+    admissions: dict[str, TuiDestinationAdmissionV1 | WorkbenchDestinationAdmission] = {
         descriptor.destination: TuiDestinationAdmissionV1(
             destination=descriptor.destination,
             state=WorkbenchDestinationAdmissionState.AVAILABLE,
         )
         for descriptor in TUI_DESTINATION_CATALOGUE
     }
-    factories: dict[str, TuiScreenFactoryV1] = {descriptor.destination: _factory for descriptor in TUI_DESTINATION_CATALOGUE}
+    factories: dict[str, TuiScreenFactoryV1] = {
+        descriptor.destination: _factory for descriptor in TUI_DESTINATION_CATALOGUE
+    }
     return build_destination_catalogue(admissions=admissions, factories=factories, action_candidates=actions)
 
 
@@ -89,7 +92,7 @@ def _document(
 class SearchHostApp(App[None]):
     """Minimal root seam that receives palette targets for assertion."""
 
-    def __init__(self, *, service: WorkbenchSearchService, catalogue: object) -> None:
+    def __init__(self, *, service: WorkbenchSearchService, catalogue: TuiDestinationCatalogueV1) -> None:
         """Bind the real application search service and current catalogue."""
         super().__init__()
         self._service = service
@@ -102,7 +105,7 @@ class SearchHostApp(App[None]):
         return self._service
 
     @property
-    def destination_catalogue(self):
+    def destination_catalogue(self) -> TuiDestinationCatalogueV1:
         """Return the already-admitted route catalogue."""
         return self._catalogue
 
@@ -110,6 +113,7 @@ class SearchHostApp(App[None]):
         """Record the target instead of invoking an action or mounting a screen."""
         self.targets.append(target)
 
+    @override
     def compose(self) -> ComposeResult:
         """Mount a concrete root screen so Textual can initialize providers."""
         yield Static("workbench")
@@ -117,12 +121,20 @@ class SearchHostApp(App[None]):
 
 async def _hits(provider: WorkbenchSearchProviderV1 | WorkbenchCommandProviderV1, query: str) -> list[Hit]:
     """Collect a provider's conventional query hits."""
-    return [hit async for hit in provider.search(query)]
+    hits: list[Hit] = []
+    async for hit in provider.search(query):
+        if isinstance(hit, Hit):
+            hits.append(hit)
+    return hits
 
 
 async def _discover(provider: WorkbenchCommandProviderV1) -> list[DiscoveryHit]:
     """Collect a command provider's empty-query discovery hits."""
-    return [hit async for hit in provider.discover()]
+    hits: list[DiscoveryHit] = []
+    async for hit in provider.discover():
+        if isinstance(hit, DiscoveryHit):
+            hits.append(hit)
+    return hits
 
 
 @pytest.mark.asyncio
@@ -192,13 +204,9 @@ def test_search_provider_has_no_network_or_application_search_reimplementation()
     """The TUI projects injected authorities and does not become a second search owner."""
     source = ast.parse((Path(__file__).parent.parent / "search.py").read_text(encoding="utf-8"))
     imported = {
-        module
-        for node in ast.walk(source)
-        for module in (
-            *((node.module or "",) if isinstance(node, ast.ImportFrom) else ()),
-            *(alias.name for alias in node.names if isinstance(node, ast.Import)),
-        )
+        module for node in ast.walk(source) if isinstance(node, ast.ImportFrom) for module in ((node.module or ""),)
     }
+    imported.update(alias.name for node in ast.walk(source) if isinstance(node, ast.Import) for alias in node.names)
     forbidden = {"httpx", "requests", "socket", "urllib", "pathlib", "sqlite3"}
     assert all(not any(part in forbidden for part in module.split(".")) for module in imported)
     assert "WorkbenchSearchService" not in imported

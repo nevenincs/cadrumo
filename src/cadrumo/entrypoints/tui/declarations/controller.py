@@ -25,10 +25,10 @@ from ....domain.modelos.work_unit import WorkUnitState
 from ..components.theme import BASE_CSS, tokenised
 from ..navigation import TuiScreenContextV1
 from .models import (
-    DeclarationHandoffV1,
     DeclarationsDestinationIdV1,
     DeclarationsRouteTargetV1,
     FilingHandoffV1,
+    ModeloWorkspaceScreenFactoryV1,
     RevisionHandoffV1,
 )
 
@@ -116,7 +116,7 @@ class DeclarationsWorkspaceController:
         work_action: ActionReference,
         revisions_action: ActionReference,
         filing_action: ActionReference,
-        declaration_handoff: DeclarationHandoffV1 | None = None,
+        modelo_workspace_factory: ModeloWorkspaceScreenFactoryV1 | None = None,
         revision_handoff: RevisionHandoffV1 | None = None,
         filing_handoff: FilingHandoffV1 | None = None,
     ) -> None:
@@ -138,7 +138,7 @@ class DeclarationsWorkspaceController:
         self.work_action = work_action
         self.revisions_action = revisions_action
         self.filing_action = filing_action
-        self.declaration_handoff = declaration_handoff
+        self.modelo_workspace_factory = modelo_workspace_factory
         self.revision_handoff = revision_handoff
         self.filing_handoff = filing_handoff
 

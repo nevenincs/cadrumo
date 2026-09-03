@@ -20,9 +20,14 @@ from .controller import (
 class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
     """List local declaration facts without implying filing or AEAT state."""
 
-    def __init__(self, controller: DeclarationsWorkspaceController) -> None:
+    def __init__(
+        self,
+        controller: DeclarationsWorkspaceController,
+        *,
+        id: str = "declarations-overview-screen",
+    ) -> None:
         """Retain injected state and semantic selection."""
-        super().__init__(controller, id="declarations-overview-screen")
+        super().__init__(controller, id=id)
         self.selected_work_unit_id: str | None = None
 
     @override
@@ -68,10 +73,35 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
             return
         row = next(item for item in self.controller.projection.declarations if item.work_unit_id == event.row_key.value)
         self.selected_work_unit_id = row.work_unit_id
-        if self.controller.declaration_handoff is None:
+        factory = self.controller.modelo_workspace_factory
+        if factory is None:
             self.refuse_handoff()
         else:
-            self.controller.declaration_handoff(row)
+            child = factory(row)
+            self.app.push_screen(child, self._restore_declaration_focus)
+
+    def _restore_declaration_focus(self, _: None) -> None:
+        """Restore the semantic declaration table after its child dismisses."""
+        table = cast("DataTable[str]", self.query_one("#declarations-list", DataTable))
+        row_index = next(
+            (
+                index
+                for index, table_row in enumerate(table.ordered_rows)
+                if table_row.key.value == self.selected_work_unit_id
+            ),
+            None,
+        )
+        if row_index is not None:
+            table.move_cursor(row=row_index)
+        table.focus()
 
 
-__all__ = ["DeclarationsOverviewScreen"]
+class DeclarationsModeloWorkspaceLauncherScreen(DeclarationsOverviewScreen):
+    """Select a declaration and open its injected existing Modelo workspace."""
+
+    def __init__(self, controller: DeclarationsWorkspaceController) -> None:
+        """Use the landing selection mechanics under a distinct route identity."""
+        super().__init__(controller, id="declarations-modelo-workspace-launcher-screen")
+
+
+__all__ = ["DeclarationsModeloWorkspaceLauncherScreen", "DeclarationsOverviewScreen"]

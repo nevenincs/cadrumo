@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Literal, Protocol
 
 from pydantic import BaseModel
+from textual.screen import Screen
 
 from ....application.modelo.declarations_workspace import (
     DeclarationsWorkspaceCalculationRevisionRefV1,
@@ -31,11 +32,11 @@ class DeclarationsRouteTargetV1(BaseModel):
     zone: DeclarationsWorkspaceZone | None = None
 
 
-class DeclarationHandoffV1(Protocol):
-    """Injected navigation handoff for an application-projected declaration."""
+class ModeloWorkspaceScreenFactoryV1(Protocol):
+    """Injected factory for the existing host-neutral Modelo workspace."""
 
-    def __call__(self, declaration: DeclarationsWorkspaceDeclarationRefV1, /) -> None:
-        """Open the selected declaration in an injected host target."""
+    def __call__(self, declaration: DeclarationsWorkspaceDeclarationRefV1, /) -> Screen[None]:
+        """Build the child screen for exactly the selected declaration."""
         ...
 
 
@@ -56,9 +57,9 @@ class FilingHandoffV1(Protocol):
 
 
 __all__ = [
-    "DeclarationHandoffV1",
     "DeclarationsDestinationIdV1",
     "DeclarationsRouteTargetV1",
     "FilingHandoffV1",
+    "ModeloWorkspaceScreenFactoryV1",
     "RevisionHandoffV1",
 ]
