@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:913f37e52a326cfd30a2405c22294927126d6b6816755b2012aeb93497eaa93e'
+body_hash: 'sha256:5fa2cf2f10afc1b9a0d23be539c77e2f3b2e5905c63276d4d381c608c19ab9a6'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -127,6 +127,19 @@ Direct wrong-identity and wrong-label probes both fail before screen or
 strong-close factory construction, preventing an account display from targeting
 another profile.
 
+### expiry-refresh-resolved | low | Confirmed live-custody expiry takes the typed teardown path
+
+Resolved on final re-review. The secure generation provider now distinguishes
+only a matching, unsealed live session whose own expiry check is true, raising
+`AccountSessionExpiredError` for that case. The root catches only that exact
+signal while refreshing Home and emits the existing typed `EXPIRED` handoff;
+it clears account factories, destination and search catalogues, refresh doors,
+active target and focus before exit. Missing, sealed or mismatched custody and
+all unrelated refresh failures still propagate as their original failures, so
+they cannot be represented as a false expiry. The focused root test injects
+the precise signal during initial Home refresh and proves the stale
+profile-bound doors are no longer callable.
+
 ## Recommendations
 
 For `production-account-door-composition-unreached`, compose every account
@@ -154,5 +167,5 @@ identity and label inputs.
 
 No further S403 recommendation. Final re-review found no remaining
 S403-owned critical or high finding. Focused lifecycle, account, installed
-generation, launcher and bootstrap verification passed 47 tests; scoped Ruff
+generation, launcher and bootstrap verification passed 48 tests; scoped Ruff
 and ty checks passed; basedpyright reported zero errors, warnings and notes.

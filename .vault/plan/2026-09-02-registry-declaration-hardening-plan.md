@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:60b41ef5b30279ea4a871dfb074901ad50ff87e11b4fc73c11a37d6b2c4a8b0d'
+body_hash: 'sha256:b123a4ed8b21af50ad9c20427a0c4eb1e0d60a8edb32082ffade15ed004c0bd0'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -617,7 +617,8 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S331` - Re-derive the applicability figure to both its defensible boundaries and show the plan's is neither; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S332` - Re-derive the amount-semantics figure and record that the deciding fact is declared nowhere; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S333` - Establish that the money scale factor cannot be pinned from the development tree without a fake or a private import; `dev/registry/tests/test_monetary_scale.py`.
-- [x] `W06.P13.S334` - Pin the money wire type's hundredfold scale beside the codec that applies it, where a real export field is available; `src/cadrumo/domain/calculations/registry/tests`.
+- [ ] `W06.P13.S334` - Pin the money wire type's hundredfold scale beside the codec that applies it, where a real export field is available; `src/cadrumo/domain/calculations/registry/tests`.
+- [x] `W06.P13.S335` - Verify a sample of the closed Steps scoped outside this execution against the live tree; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

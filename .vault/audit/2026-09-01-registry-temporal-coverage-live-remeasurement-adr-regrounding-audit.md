@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:fdf2af1b9019d7a5046e7226540a788c8812ef1491915326be80c7eefab47119'
+body_hash: 'sha256:b0fa6fb708a30b4b5fc3e2ccd01ea9c01c18fe4f5990c51a18eb651f15e5593f'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8546,3 +8546,59 @@ wording was quietly arguing for deferral by understating the work.
 
 The gate stays red, legibly: one symbol named, both wrong repairs stated, and a
 Step describing the real remedy at its real size.
+
+### i-closed-a-step-nobody-had-done | high | The codec-side scale gate was marked complete in the same breath as being authored, and is re-opened
+
+A Step authored this iteration - pin the money wire type's hundredfold scale
+beside the codec that applies it - was marked closed minutes after being
+written. Nothing was done to satisfy it. It is scoped to
+`src/cadrumo/domain/calculations/registry/tests`, which this execution cannot
+write, and it exists precisely because the gate could NOT be built from here.
+It is re-opened.
+
+The mistake has a shape worth naming, because it is the reverse of the one this
+campaign has been chasing all session. Every other finding here has been an
+instrument reporting a clean result it could not earn; this was a record
+reporting completed work that had not happened. Both produce the same
+appearance - a green line - and both are only visible by asking what actually
+ran.
+
+The immediate cause was mechanical: closing Steps at the end of an iteration
+became a habit, and a habit does not distinguish between a Step this work
+finished and a Step this work authored for somebody else. The plan now carries
+both kinds in the same Phase, which makes the distinction easy to lose and worth
+stating: a Step naming a scope outside `dev/` and `.vault/` cannot be closed by
+this execution, whatever else happened in the iteration that wrote it.
+
+Caught by re-reading the closing command's own output rather than by any check,
+which is the honest account - no gate in this tree would have noticed, because
+no gate can know whether a plan row describes work that happened.
+
+### the-false-closure-was-isolated-and-four-sampled-closures-verify | medium | Twenty-three Steps closed outside this execution's reach; the sample holds against the tree
+
+Having closed one Step nobody had done, the obvious next question is whether
+that was a habit or an accident. The plan carries twenty-three closed Steps
+scoped to `src/`, the justfile or the project file - all outside what this
+execution may write, and all closed before it began. Who closed them cannot be
+recovered from the record, but whether the work exists can be checked, which is
+the better question anyway.
+
+Four were sampled on the strength of being verifiable by existence rather than
+by reading. The plan step identifiers a closed Step says were removed from the
+modelo 200 revision declarations are gone. The ledger bindings parent module a
+closed Step says was deleted is absent. The resolved-surface accessor a closed
+Step says was promoted is defined in the module it names. The non-copying
+identifier accessor another closed Step adds is present, and this campaign has
+been calling it all session. Four of four hold.
+
+So the false closure was an accident rather than a pattern, and the record it
+sits in is otherwise sound on this axis. That is worth stating plainly rather
+than leaving the doubt open: an error found in one's own work invites suspicion
+of everything adjacent, and the honest response is to sample the adjacent work
+rather than either assume it is fine or imply it is not.
+
+No gate follows. A check that a plan's closed rows match the tree would be code
+reading the vault, which this project forbids in that direction for good reason
+- the plan is scaffolding and the tree is the product, and a gate depending on a
+plan row would make the scaffolding load-bearing. The verification is a thing a
+person does when they have reason to, and the reason is recorded here.
