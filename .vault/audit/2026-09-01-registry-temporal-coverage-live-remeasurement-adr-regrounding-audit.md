@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7a408cee51e8bdc9f8c909fa4cbbe89e6a45c3bb44caf221884b39ac7a7035dc'
+body_hash: 'sha256:fe8400f3b914b6ec43bd21134a673b53f762e6d59df45c3dd1765a2d69f0e6f2'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -9182,3 +9182,26 @@ The Step now asks for the slot before the sentences and names that analogue. A
 Step that assumes a place to write is the same defect as a constraint that
 assumes a limb is unreachable: both describe the tree as it was imagined rather
 than as it is, and both are cheap to check and expensive to inherit.
+
+### the-714-envelope-offsets-are-not-gaps-in-a-record-they-are-past-its-end | high | The footer declares one field over offsets 1 to 18 and no length at all
+
+The Step naming modelo 714's envelope fields at offsets 93 to 96 and 101 to 109
+holds, and holds differently than it reads. Those offsets are uncovered - but so
+is everything from 19 onward, because the envelope-footer record declares a
+single field, `modelo-714-envelope-close`, spanning offsets 1 to 18, and nothing
+else. The ten page records of the same revision cover 90 to 111 completely, so
+the two spans are absent only from the footer.
+
+"No field covers them today" therefore describes a record that stops long before
+them rather than a record with holes in it. Whoever authors those fields is
+extending a declaration, not filling gaps, and the two are different jobs: a gap
+has neighbours on both sides that fix its meaning, and an extension has to
+establish where the record ends.
+
+Which is the second half of what this check found. The footer declares no
+length. A record without one cannot be measured for coverage at all - the gap
+arithmetic that produced this finding had to bound itself artificially, and any
+completeness gate over that record is measuring against nothing. The Step now
+asks for the length alongside the fields, because authoring nine characters of
+developer identity into a record whose extent is undeclared leaves the next
+reader exactly where this one started.
