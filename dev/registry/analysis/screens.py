@@ -153,13 +153,13 @@ SCREENS: tuple[ScreenEntry, ...] = (
     ScreenEntry(
         "grade_earned",
         grade_screen,
-        "declared grades that do not match what their prerequisites support, in either direction",
+        "disagreements between a declared grade and what its prerequisites support, in either direction",
     ),
     ScreenEntry("provenance_consistency", _outside_references, "references cited from outside their revision manifest"),
     ScreenEntry(
         "modelo_capability",
         modelo_capability_screen,
-        "revisions whose declared filing rung and the machinery behind it disagree",
+        "disagreements between a revision's declared filing rung and the machinery behind it",
     ),
 )
 
