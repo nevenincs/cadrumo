@@ -240,6 +240,7 @@ def test_the_worklist_groups_fields_by_the_note_that_grounds_them() -> None:
             modelo="200",
             revision="r",
             cell=cell,
+            design="d.extracted.md",
             aeat_type="Num",
             length=length,
             kind="grounded_by_own_note",
@@ -269,6 +270,7 @@ def test_a_note_cited_at_two_widths_shows_both() -> None:
             modelo="200",
             revision="r",
             cell=cell,
+            design="d.extracted.md",
             aeat_type="Num",
             length=length,
             kind="grounded_by_design_note",
@@ -281,13 +283,8 @@ def test_a_note_cited_at_two_widths_shows_both() -> None:
     assert work[0].widths == (1, 17)
 
 
-def test_a_revision_sharing_a_design_is_one_reading_not_two() -> None:
-    """A note common to two revisions of one design is read once.
-
-    The census counted the reading load by revision before this, reporting
-    thirteen readings for eleven notes - one concept measured two ways inside a
-    single summary line.
-    """
+def test_two_revisions_sharing_one_design_are_one_reading() -> None:
+    """A note read once serves every revision whose design carries it."""
     from ..analysis.rule_grounding_coverage import GroundingFinding, grounding_worklist
 
     def _found(revision: str) -> GroundingFinding:
@@ -295,6 +292,7 @@ def test_a_revision_sharing_a_design_is_one_reading_not_two() -> None:
             modelo="200",
             revision=revision,
             cell="S!A1",
+            design="one.extracted.md",
             aeat_type="Num",
             length=17,
             kind="grounded_by_own_note",
@@ -303,3 +301,35 @@ def test_a_revision_sharing_a_design_is_one_reading_not_two() -> None:
         )
 
     assert len(grounding_worklist((_found("2024"), _found("2025")))) == 1
+
+
+def test_one_label_in_two_designs_is_two_readings() -> None:
+    """The same sheet and label in two designs is not one note.
+
+    Grouping by modelo and label alone reported eleven work items where the
+    corpus has thirteen, and the merge was not harmless: modelo 303's
+    `DP30302:nota 5` carries three hundred and thirty characters in one design
+    and two hundred and nine in another. A reader handed one row would have read
+    one of the two texts and applied it to fields governed by the other.
+
+    This is the sheet-merge defect one level up. A label identifies a note only
+    together with the sheet that prints it AND the design that sheet belongs to.
+    """
+    from ..analysis.rule_grounding_coverage import GroundingFinding, grounding_worklist
+
+    def _found(design: str) -> GroundingFinding:
+        return GroundingFinding(
+            modelo="303",
+            revision="r",
+            cell="DP30302!A1",
+            design=design,
+            aeat_type="Num",
+            length=1,
+            kind="grounded_by_own_note",
+            notes=("DP30302:nota 5",),
+            detail="",
+        )
+
+    work = grounding_worklist((_found("2023.extracted.md"), _found("2024.extracted.md")))
+    assert len(work) == 2
+    assert {item.design for item in work} == {"2023.extracted.md", "2024.extracted.md"}
