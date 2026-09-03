@@ -276,6 +276,30 @@ def _copy_snapshot(
     *,
     guarded_paths: frozenset[str] | None = None,
 ) -> None:
+    head = subprocess.run(  # noqa: S603
+        ("git", "-C", str(source_root), "rev-parse", "HEAD"),
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+    if head.returncode == 0:
+        captured_head = head.stdout.strip()
+        clone = subprocess.run(  # noqa: S603
+            ("git", "clone", "--shared", "--no-checkout", "--quiet", str(source_root), str(target_root)),
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+        if clone.returncode != 0:
+            raise ObjectNameRehearsalError(f"cannot create isolated Git metadata: {clone.stderr.strip()}")
+        pin = subprocess.run(  # noqa: S603
+            ("git", "-C", str(target_root), "update-ref", "--no-deref", "HEAD", captured_head),
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+        if pin.returncode != 0:
+            raise ObjectNameRehearsalError(f"cannot pin isolated Git metadata: {pin.stderr.strip()}")
     exact_paths = frozenset(path for path, _digest in files) if guarded_paths is None else guarded_paths
     for source_root_name in ("src", "dev"):
         (target_root / source_root_name).mkdir(parents=True, exist_ok=True)
