@@ -222,8 +222,7 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
 
     def _refuse_account_action(self) -> None:
         """Expose one localized fail-closed message without exception details."""
-        if self.is_mounted():
-            self.query_one("#root-account-refusal", Static).update(tr("tui.root.account.unavailable"))
+        self.query_one("#root-account-refusal", Static).update(tr("tui.root.account.unavailable"))
 
     def navigate_to(self, target: TuiNavigationTargetV1, /) -> None:
         """Mount only the current admitted destination with its semantic focus."""
