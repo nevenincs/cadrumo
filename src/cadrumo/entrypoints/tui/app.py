@@ -1,23 +1,10 @@
-"""The root navigation join for one dedicated TUI session.
+"""The projection-only navigation join for one dedicated TUI session.
 
-An area is mounted here only once it exposes a host-agnostic screen and its
-cohort is green. BOTH CONDITIONS NOW HOLD FOR EVERY AREA, and this docstring
-previously said otherwise -- it recorded that profile, secret and flow expose
-a Textual application rather than a mountable screen, and that Modelo was held
-back by its own cohort gate. Neither is true any more: every area exposes
-Screen subclasses, and the application forms that remain are launch wrappers
-over those screens for callers arriving from the command line, not the areas'
-shape. A caller that already has a running application mounts the screen.
-
-What is still missing is not a precondition but a DESIGN: this root has no
-navigation model. Mounting one area would make it the whole product, and
-mounting several without a way to move between them offers destinations an
-operator cannot reach. So it mounts no area and says so on screen, rather
-than composing a join that has not been decided.
-
-The session's composed operation services are held here so that an area
-receives them at mount time without reaching for a global; nothing in this
-module constructs them, and nothing here wires a concrete adapter.
+The root receives an immutable Home projection refresh door and a closed,
+already-admitted destination catalogue.  It mounts one destination at a time,
+returns from real child dismissals to refreshed Home, and preserves the Home
+row's semantic identity without taking on business, persistence, or network
+authority.
 """
 
 from __future__ import annotations
@@ -31,10 +18,18 @@ from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Footer, Static
 
+from ...application.overview.home import HomeSessionPosture
+from ...application.search.workbench import WorkbenchDestinationAdmissionState
 from ...core.i18n.render import tr
 from .components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
-from .home import HomeBackRequested, HomeScreen
-from .navigation import TuiDestinationCatalogueV1, TuiFocusIdentityV1, TuiNavigationTargetV1
+from .home import HomeBackRequested, HomeScreen, HomeTarget, HomeTargetSelected
+from .navigation import (
+    TuiDestinationAdmissionV1,
+    TuiDestinationCatalogueV1,
+    TuiDestinationRouteV1,
+    TuiFocusIdentityV1,
+    TuiNavigationTargetV1,
+)
 from .search import WorkbenchCommandProviderV1, WorkbenchSearchDoorV1, WorkbenchSearchProviderV1
 
 if TYPE_CHECKING:
@@ -43,6 +38,26 @@ if TYPE_CHECKING:
 
 
 type HomeRefreshDoorV1 = Callable[[], HomeProjectionV1]
+
+
+def _expired_session_catalogue(catalogue: TuiDestinationCatalogueV1) -> TuiDestinationCatalogueV1:
+    """Disable every non-Home route in the catalogue after session expiry."""
+    routes: list[TuiDestinationRouteV1] = []
+    for route in catalogue.routes:
+        if route.descriptor.destination == "workbench.home":
+            routes.append(route)
+            continue
+        routes.append(
+            TuiDestinationRouteV1(
+                descriptor=route.descriptor,
+                admission=TuiDestinationAdmissionV1(
+                    destination=route.descriptor.destination,
+                    state=WorkbenchDestinationAdmissionState.LOCKED,
+                    reason_code="session.expired",
+                ),
+            )
+        )
+    return TuiDestinationCatalogueV1(routes)
 
 
 class CadrumoTuiApp(App[None]):
@@ -68,9 +83,11 @@ class CadrumoTuiApp(App[None]):
         super().__init__()
         self._services = services
         self._destination_catalogue = destination_catalogue
+        self._active_destination_catalogue = destination_catalogue
         self._refresh_home = refresh_home
         self._workbench_search_service = workbench_search_service
         self._active_target: TuiNavigationTargetV1 | None = None
+        self._home_semantic_focus: HomeTarget | None = None
 
     @property
     def services(self) -> OperationComposedServices:
@@ -80,9 +97,9 @@ class CadrumoTuiApp(App[None]):
     @property
     def destination_catalogue(self) -> TuiDestinationCatalogueV1:
         """Return the caller-composed closed catalogue for palette navigation."""
-        if self._destination_catalogue is None:
+        if self._active_destination_catalogue is None:
             raise RuntimeError("the root has no composed destination catalogue")
-        return self._destination_catalogue
+        return self._active_destination_catalogue
 
     @property
     def workbench_search_service(self) -> WorkbenchSearchDoorV1:
@@ -103,12 +120,7 @@ class CadrumoTuiApp(App[None]):
         """Install the shared appearance for this session."""
         install_cadrumo_themes(self)
         if self._destination_catalogue is not None and self._refresh_home is not None:
-            self.navigate_to(
-                TuiNavigationTargetV1(
-                    destination="workbench.home",
-                    focus=TuiFocusIdentityV1(destination="workbench.home", semantic_key="navigation.home"),
-                )
-            )
+            self._show_home(None)
 
     def action_toggle_appearance(self) -> None:
         """Flip between the light and dark appearance."""
@@ -118,36 +130,46 @@ class CadrumoTuiApp(App[None]):
         """Mount only the current admitted destination with its semantic focus."""
         catalogue = self.destination_catalogue
         if target.destination == "workbench.home":
-            self._show_home(target.focus)
+            self._show_home(self._home_semantic_focus)
             return
         self._active_target = target
-        self._replace_destination(catalogue.create_screen(target))
+        self._replace_destination(catalogue.create_screen(target), return_to_home=True)
+
+    def on_home_target_selected(self, event: HomeTargetSelected) -> None:
+        """Remember the Home row by its domain identity, never a row position."""
+        self._home_semantic_focus = event.target
 
     def on_home_back_requested(self, _: HomeBackRequested) -> None:
         """Refresh Home after a completed or dismissed journey."""
         if self._refresh_home is not None:
-            self._show_home(None)
+            self._show_home(self._home_semantic_focus)
 
-    def _show_home(self, focus: TuiFocusIdentityV1 | None) -> None:
-        """Rebuild the projection-only Home screen after every return."""
+    def _show_home(self, semantic_focus: HomeTarget | None) -> None:
+        """Rebuild Home and restore its actual semantic row after every return."""
         refresh_home = self._refresh_home
         if refresh_home is None:
             return
         projection = refresh_home()
         self.query_one("#root-account", Static).update(projection.account.profile_label or "Account")
         self.query_one("#root-no-areas", Static).display = False
-        if projection.account.posture.value == "expired":
-            self._active_target = None
-            self._replace_destination(HomeScreen(projection))
-            return
+        if self._destination_catalogue is not None:
+            self._active_destination_catalogue = (
+                _expired_session_catalogue(self._destination_catalogue)
+                if projection.account.posture is HomeSessionPosture.EXPIRED
+                else self._destination_catalogue
+            )
         self._active_target = None
-        self._replace_destination(HomeScreen(projection))
+        self._replace_destination(HomeScreen(projection, restore_target=semantic_focus))
 
-    def _replace_destination(self, screen: Screen[None]) -> None:
+    def _on_destination_dismissed(self, _: None) -> None:
+        """Return from a real child dismissal through the projection refresh door."""
+        self._show_home(self._home_semantic_focus)
+
+    def _replace_destination(self, screen: Screen[None], *, return_to_home: bool = False) -> None:
         """Discard the inactive destination before mounting exactly one replacement."""
         while len(self.screen_stack) > 1:
             self.pop_screen()
-        self.push_screen(screen)
+        self.push_screen(screen, self._on_destination_dismissed if return_to_home else None)
 
 
 __all__ = ["CadrumoTuiApp", "HomeRefreshDoorV1"]
