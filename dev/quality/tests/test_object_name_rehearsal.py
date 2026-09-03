@@ -148,9 +148,7 @@ def _fixture(
     return inventory, manifest, component
 
 
-def test_rehearsal_receipt_binds_only_declared_component_paths(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_rehearsal_receipt_binds_only_declared_component_paths(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     repo = tmp_path / "repo"
     inventory, manifest, component = _fixture(repo)
     before = _live_bytes(repo)
@@ -501,10 +499,16 @@ def test_shared_hard_edge_makes_two_operations_indivisible(tmp_path: Path) -> No
     widget_declaration = next(item for item in inventory.declarations if item.name == "Widgets")
     report_declaration = next(item for item in inventory.declarations if item.name == "Reports")
     report_finding = next(item for item in inventory.findings if item.name == "Reports")
+    consumer_precondition = (
+        manifest.operations[0]
+        .preconditions[0]
+        .model_copy(update={"path": consumer_path, "sha256": _digest((repo / consumer_path).read_bytes())})
+    )
     widget_operation = manifest.operations[0].model_copy(
         update={
             "expected_reference_classes": ("definition", "shared-consumer", "static-import"),
             "changed_paths": (widget_declaration.path, consumer_path),
+            "preconditions": (*manifest.operations[0].preconditions, consumer_precondition),
         }
     )
     report_operation = widget_operation.model_copy(
@@ -519,6 +523,7 @@ def test_shared_hard_edge_makes_two_operations_indivisible(tmp_path: Path) -> No
                 widget_operation.preconditions[0].model_copy(
                     update={"path": report_declaration.path, "sha256": report_declaration.source_hash}
                 ),
+                consumer_precondition,
             ),
             "changed_paths": (report_declaration.path, consumer_path),
         }
@@ -609,9 +614,7 @@ def test_unrelated_live_tree_mutation_does_not_stale_selected_component(tmp_path
         live_path.write_bytes(original)
 
 
-def test_copy_race_that_adds_selected_reference_is_refused(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_copy_race_that_adds_selected_reference_is_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     repo = tmp_path / "repo"
     inventory, manifest, component = _fixture(repo)
     consumer = repo / "src/example/consumer.py"

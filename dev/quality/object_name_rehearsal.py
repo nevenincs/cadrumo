@@ -256,9 +256,7 @@ def _inventory_after_allowed_changes(
         and not any(site in changed_python for site in finding.qualified_sites)
     )
     changed_errors = tuple(
-        finding
-        for finding in refreshed_errors
-        if any(site in changed_python for site in finding.qualified_sites)
+        finding for finding in refreshed_errors if any(site in changed_python for site in finding.qualified_sites)
     )
     return analyse(
         tuple(sorted(declarations, key=lambda item: (item.path, item.line, item.kind, item.name))),
