@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:a1796ca3bc2aba6df9b634ed3d4083c866e75249fc8958e57b7d7ebc74b2123e'
+body_hash: 'sha256:3442a34ff40f3517a0a392eff749748303d74f280647e055c944240b62371f88'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -508,6 +508,8 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S458` - Publish the reference worklist measured on the complete walk with its date and command: 520 pairs, 256 systemic, 38 single-child where the single-child count fell as the walk widened because references thought to have one citer turned out to have several; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W04.P09.S459` - Read the seven filing-grade revision-name findings and record that modelo 322s misnamed revision hides a fourteen-year coverage gap, since no revision of that modelo serves any year before 2022 and only the directory name claims 2008 to 2021; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W04.P09.S460` - Measure whether any modelo has a year inside its span that no revision serves and record none does across 33 modelos and 199 served years, so modelo 322s unserved years are outside its coverage rather than a hole in it and the rename loses nothing; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W04.P09.S461` - Gate that no modelo leaves a year inside its own span unserved, measuring the interior from the modelos earliest coverage rather than a fixed year, with the computation separated so a constructed gap proves the gate detects one the corpus does not contain; `dev/registry/tests/test_declaration_invariant_gates.py dev/registry/analysis/temporal_site_agreement.py`.
+- [x] `W04.P09.S462` - Measure the overlap failure mode beside the gap one: five modelos overlap at year granularity through mid-year splits, none overlaps at year and period across 837 keys, and the 27 revisions declaring no deadline window are outside what the finer check can see; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 

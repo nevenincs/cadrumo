@@ -12604,3 +12604,62 @@ name to preserve.
 The check was proved non-vacuous before its zero was believed: thirty-three
 modelos examined, all multi-revision, 199 served years between them. A continuity
 check that quietly examined nothing would report exactly the same zero.
+
+
+## Coverage continuity is now a gate
+
+The no-interior-gap result meets the three tests this campaign has been applying
+before gating anything, which is why it is gated where several other measurements
+were not. It is an invariant rather than a count - zero is the contract, not a
+high-water mark. It holds across the corpus today. And a break is fixable by
+whoever causes it: a revision added or retired leaving a year unserved is a
+defect its author can see and correct.
+
+The gate is thirty-fifth in the suite and its computation lives in the temporal
+screen as `unserved_interior_years`, separated so a constructed gap can prove it
+works. That separation matters more here than usual: no modelo in the corpus has
+an interior gap, so a gate reading only the live registry would pass whether or
+not it could detect one. Four cases hold it - a year between two revisions is
+reported, years before the first revision are not, an open-ended revision creates
+no gap to a horizon nobody declared but also cannot paper over a real gap beneath
+it, and a modelo with no closed window yields nothing.
+
+The third of those is the one worth naming. Closing an open-ended revision at the
+latest year any revision mentions is a choice, and the wrong choice in either
+direction produces a plausible answer: close it at the current year and a modelo
+whose newest revision opens in 2026 reports 2027 onwards as unserved; leave it
+open and a real gap beneath an open-ended revision is hidden. The test asserts
+both halves.
+
+
+## Coverage has a second failure mode, and the corpus does not have it
+
+A gap is one way a modelo's revisions can fail to divide its years. The other is
+an overlap: two revisions claiming the same period, so selection is ambiguous and
+the registry cannot say which applies.
+
+Measured at year granularity, **five modelos overlap** - 303, 308, 369, 490 and
+763. Measured at the granularity that decides a filing, **none do**.
+
+The five are not ambiguity; they are a year being too coarse a unit. Modelo 303
+splits 2024 at period 09 into `2024-hasta-08-y-2t` and `2024-desde-09-y-3t`,
+modelo 308 splits 2011 in July, and modelos 490 and 763 split their years by
+quarter. Each pair claims one calendar year and different periods within it,
+which is exactly how a mid-year rule change is declared. The fifth, modelo 369,
+is the non-temporal scheme axis sitting in the revision slot, which the plan
+already tracks.
+
+Asked properly - does any pair of revisions declare a deadline window for the
+same filing year AND period - the answer across 837 year-and-period keys is
+**zero**. Selection is unambiguous wherever a revision declares its periods.
+
+That qualification is the finding's boundary and is worth stating: 101 revisions
+carry deadline windows and **27 do not**, and a revision declaring no window
+cannot clash with anything by this measure. The check is sound for what it
+covers and silent about the rest, and five of those 27 are the filing-grade
+revisions recorded earlier as unable to say when a filing is due - so the same
+gap that leaves a filer without a date also leaves this check without a subject.
+
+The sixteen revisions inside the five year-overlapping modelos all carry windows,
+so the modelos where a clash was most plausible are the ones the finer
+measurement actually covers.
