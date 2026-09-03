@@ -183,3 +183,77 @@ def test_the_scope_projection_agrees_with_the_index_it_reduces() -> None:
     assert {(item.modelo, item.ref_kind, item.reference) for item in scopes} == {
         (modelo, ref_kind, reference) for modelo, _, ref_kind, reference in index
     }
+
+
+def test_a_deadline_window_citing_outside_its_manifest_is_reported() -> None:
+    """A window's citations reach outside like any other child's.
+
+    Eighty-four did while this family was missing from the walk, so the screen
+    reported a revision as consistent whose due-date grounding named an orden
+    the manifest never applies.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+    from ..analysis.corpus import bundled_modelo_ids
+    from ..analysis.provenance_consistency import screen_authority
+
+    findings = screen_authority(bundled_authority(), bundled_modelo_ids())
+    windows = [item for item in findings if item.child_kind == "deadline_window"]
+    assert windows, "no deadline window cites outside its manifest, so this proves nothing"
+    for item in windows:
+        assert item.outside
+        assert item.ref_kind in {"legal", "source"}
+
+
+def test_the_walked_families_and_the_declared_child_kinds_agree() -> None:
+    """Every kind the vocabulary names is walked, except the derived one.
+
+    `ProvenanceChildKind` is the vocabulary and `citing_children` is the walk,
+    and a kind added to one without the other is invisible in exactly the way
+    `deadline_window` was: named nowhere, walked nowhere, and reported as an
+    absence rather than a gap. `export_field` is the one kind deliberately not
+    walked here - it exists only after derivation and its citations are copied
+    from a template - and the screen adds it separately.
+    """
+    import typing
+
+    from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+    from ..analysis.provenance_consistency import ProvenanceChildKind, citing_children
+
+    declared = set(typing.get_args(ProvenanceChildKind.__value__))
+    assert declared, "the child-kind vocabulary is empty, so this proves nothing"
+
+    revision = bundled_authority().modelo("303").revisions["2025"]
+    walked = {kind for kind, _ in citing_children(revision)}
+    assert walked == declared - {"export_field"}
+
+
+def test_both_provenance_screens_walk_the_same_families() -> None:
+    """One declaration, two consumers, and no second copy of the list.
+
+    The list was written longhand in both screens and the omission of a family
+    propagated from one to the other. This asserts they now agree by
+    construction: the mirror's family walk is this module's, so any family added
+    here reaches both screens without a second edit.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+    from ..analysis.manifest_uncited_references import uncited_manifest_references
+    from ..analysis.provenance_consistency import citing_children
+
+    authority = bundled_authority()
+    revision = authority.modelo("303").revisions["2025"]
+    walked = {kind for kind, items in citing_children(revision) if items}
+    assert "deadline_window" in walked, "the family that motivated this is not walked"
+
+    # The mirror consumes the same walk, so a reference cited by any walked
+    # family is not reported as uncited.
+    cited = {
+        str(reference)
+        for _, items in citing_children(revision)
+        for item in items
+        for reference in (*item.legal_refs, *item.source_refs)
+    }
+    reported = {item.reference for item in uncited_manifest_references(revision, modelo_id="303")}
+    assert not (cited & reported)

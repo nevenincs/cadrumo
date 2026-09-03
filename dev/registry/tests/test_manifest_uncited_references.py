@@ -80,3 +80,32 @@ def test_this_screen_and_its_sibling_report_disjoint_populations() -> None:
     assert cited_outside, "the sibling screen reports nothing, so this proves nothing"
     assert uncited, "this screen reports nothing, so this proves nothing"
     assert not (cited_outside & uncited)
+
+
+def test_a_reference_only_a_deadline_window_cites_is_not_uncited() -> None:
+    """Deadline windows cite, and omitting them manufactures findings.
+
+    The taxpayer calendar grounds a revision's due dates and no casilla, formula
+    or binding would ever name it. Reading only those families reported it as a
+    manifest reference nothing cites, in every revision that declares one - a
+    hundred and four findings that were the screen's own blind spot rather than
+    the corpus's state.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+    from ..analysis.corpus import bundled_modelo_ids
+    from ..analysis.manifest_uncited_references import screen_authority as uncited
+
+    authority = bundled_authority()
+    reported = {
+        (item.modelo, item.revision, item.reference)
+        for item in uncited(authority, bundled_modelo_ids())
+    }
+    checked = 0
+    for modelo in bundled_modelo_ids():
+        for revision_id, revision in authority.modelo(modelo).revisions.items():
+            for window in revision.deadline_windows:
+                for reference in (*window.legal_refs, *window.source_refs):
+                    checked += 1
+                    assert (modelo, str(revision_id), str(reference)) not in reported
+    assert checked, "no deadline window cites anything, so this proves nothing"

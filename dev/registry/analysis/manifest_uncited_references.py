@@ -41,7 +41,7 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from .corpus import bundled_modelo_ids
-from .provenance_consistency import ProvenanceRefKind, _CitedChild
+from .provenance_consistency import ProvenanceRefKind, citing_children
 
 #: Named once per module rather than repeated at each read site.
 _UTF_8: Final[str] = "utf-8"
@@ -86,21 +86,8 @@ def uncited_manifest_references(
     """
     cited_legal: set[str] = set()
     cited_source: set[str] = set()
-    families: tuple[tuple[_CitedChild, ...], ...] = (
-        tuple(revision.casillas),
-        tuple(revision.formulas),
-        tuple(revision.bindings),
-        tuple(revision.relations),
-        tuple(revision.parameters),
-        tuple(revision.casilla_continuidad_evolutions),
-        tuple(revision.export_layouts),
-        # Deadline windows cite too, and omitting them reported 104 references as
-        # uncited that a window does cite - the taxpayer calendar above all,
-        # which grounds a revision's due dates and which no casilla or formula
-        # would ever name. A citing family left out of this walk does not
-        # under-report; it manufactures findings.
-        tuple(revision.deadline_windows),
-    )
+    # The family list is the sibling screen's declaration, not a second copy.
+    families = tuple(items for _, items in citing_children(revision))
     for items in families:
         for item in items:
             cited_legal |= {str(ref) for ref in item.legal_refs}

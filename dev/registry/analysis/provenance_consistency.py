@@ -42,6 +42,7 @@ from .corpus import bundled_modelo_ids
 __all__ = [
     "OutsideReferenceScope",
     "ProvenanceFinding",
+    "citing_children",
     "outside_reference_index",
     "outside_reference_scope",
     "provenance_findings",
@@ -87,6 +88,34 @@ class ProvenanceFinding:
     outside: tuple[str, ...]
 
 
+def citing_children(
+    revision: ModeloRevision,
+) -> tuple[tuple[ProvenanceChildKind, tuple[_CitedChild, ...]], ...]:
+    """Return every authored child of a revision that carries its own citations.
+
+    The one declaration of what a revision's citing children ARE. It was written
+    out longhand in two screens, and the second inherited the list from the
+    first - so when `deadline_windows` turned out to be a citing family that
+    neither read, the omission was present twice and had to be corrected twice.
+    One list is wrong once.
+
+    Resolved export fields are deliberately absent. They exist only after
+    derivation and carry citations copied from their template, so a screen
+    asking what a revision's AUTHORS declared must not see them; the screen that
+    needs them adds them itself, and says why.
+    """
+    return (
+        ("casilla", tuple(revision.casillas)),
+        ("formula", tuple(revision.formulas)),
+        ("binding", tuple(revision.bindings)),
+        ("relation", tuple(revision.relations)),
+        ("parameter", tuple(revision.parameters)),
+        ("evolution", tuple(revision.casilla_continuidad_evolutions)),
+        ("export_layout", tuple(revision.export_layouts)),
+        ("deadline_window", tuple(revision.deadline_windows)),
+    )
+
+
 def provenance_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[ProvenanceFinding, ...]:
     """Return every child of ``revision`` citing a legal or source ref the manifest does not."""
     manifest_legal = frozenset(str(ref) for ref in revision.legal_refs)
@@ -107,20 +136,7 @@ def provenance_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[Pr
             tuple(str(ref) for ref in item.source_refs),
         )
 
-    families: tuple[tuple[ProvenanceChildKind, tuple[_CitedChild, ...]], ...] = (
-        ("casilla", tuple(revision.casillas)),
-        ("formula", tuple(revision.formulas)),
-        ("binding", tuple(revision.bindings)),
-        ("relation", tuple(revision.relations)),
-        ("parameter", tuple(revision.parameters)),
-        ("evolution", tuple(revision.casilla_continuidad_evolutions)),
-        ("export_layout", tuple(revision.export_layouts)),
-        # A deadline window carries its own citations - the calendar and the
-        # orden that sets the period - and they can reach outside the manifest
-        # like any other child's. Eighty-four did, unreported, while this family
-        # was missing from the walk.
-        ("deadline_window", tuple(revision.deadline_windows)),
-    )
+    families = citing_children(revision)
     for kind, items in families:
         for item in items:
             legal, source = refs(item)
