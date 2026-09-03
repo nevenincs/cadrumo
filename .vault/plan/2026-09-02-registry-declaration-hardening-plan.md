@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:f8ad1304223f4ccdba8448c70244f3743bf0bb2665353a98cb53993892ad4eaf'
+body_hash: 'sha256:e63311ce12b9d3342d6e3b0f337f3d81676c50c451dca7af5e4ab87f0a3dcbcf'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -35,10 +35,18 @@ returns the project to having a standing regression gate. Wave three makes the f
 real. Wave four adds the missing edge gates. Wave five corrects the data defects that need no
 decision. Wave six applies the general contract.
 
-Measurement has since changed what the later Waves are for, and the Steps record it. Ten screens
-measure the declaration conditions from one entry point over a single loaded registry, each proving
-its own detection against a constructed defect, and sixteen gates stand behind them with two
-detector proofs beside them. Each gate was written after finding the hole it closes rather than in
+Measurement has since changed what the later Waves are for, and the Steps record it. The screens
+that measure the declaration conditions run from one entry point over a single loaded registry -
+the count is whatever `SCREENS` in the analysis package enumerates, ten at the time of writing -
+each proving its own detection against a constructed defect, and sixteen gates stand behind them
+with two detector proofs beside them.
+
+Two later tools sit outside that entry point deliberately, because neither can run over a single
+loaded registry. The selection probe asks a modelo's revisions whether they resolve using the
+period codes each declares, so it takes a coordinate rather than sweeping the corpus. The
+load-claim screen spawns clean subprocesses in both cache regimes, because the question it asks -
+whether a module a rule calls live is one a load actually imports - cannot be answered from
+inside a process that has already imported the tooling. Each gate was written after finding the hole it closes rather than in
 advance, and several caught the author within an iteration of being written - one rejected the very
 correction made to satisfy it, twice.
 
@@ -457,6 +465,8 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S227` - Correct the classification measured in the tooling's own process against a clean load in both regimes; `dev/registry/analysis/load_census_classification.py`.
 - [x] `W06.P13.S228` - Re-verify every live classification against clean cold and warm loads and reclassify the one that differs between regimes; `dev/registry/analysis/load_census_classification.py`.
 - [x] `W06.P13.S229` - Measure every live classification against both regimes and separate the eleven that never load from the twenty-nine that load only cold; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S230` - Screen every live classification against a clean load in both cache regimes so the forty unsupported claims are reproducible; `dev/registry/analysis/load_claim_verification.py,dev/registry/tests/test_load_claim_verification.py`.
+- [x] `W06.P13.S231` - Record why the selection probe and the load-claim screen sit outside the single-registry entry point and confirm both are lane-selected; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

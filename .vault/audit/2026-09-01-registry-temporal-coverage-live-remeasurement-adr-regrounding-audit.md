@@ -5622,3 +5622,57 @@ than a mechanical repair. The measurement is recorded with its own limits: one m
 bundled corpus, one entry point into the authority, and two cache regimes distinguished by
 their directories. A rule claiming a module loads under some other entry point is not
 contradicted by any of it.
+
+### The forty unsupported claims are now reproducible by one command
+
+The census checks that every module is ruled and every ruled member exists. It never checks the
+claim the rule makes, which is how forty live members came to disagree with the interpreter
+without any gate noticing. `load_claim_verification` asks that question and reproduces the
+finding exactly: 378 modules cold, 335 warm, forty unsupported, eleven never loaded and
+twenty-nine cold only.
+
+Two properties of the screen were learned by getting them wrong earlier in this campaign and are
+built in rather than left to whoever runs it. The probe runs in a subprocess importing nothing
+but the authority, because a measurement taken inside the tooling's own process reported a
+module absent that a clean load holds - an error running opposite to the obvious direction of
+contamination. And both cache regimes are measured, because the warm set is a strict subset of
+the cold one, so a claim verified cold alone cannot tell an always-loaded module from a
+cache-dependent one.
+
+The probe raises when it produces no output rather than returning an empty set. That distinction
+is the difference between reporting a failed load and reporting that every live claim in the
+table is unsupported, and the tests pin it from the other side: an empty regime pair does report
+every member, which is the shape a swallowed failure would take.
+
+The comparison is pure and the tests exercise it against constructed sets, so five tests run in
+under two seconds while the screen itself costs two registry loads. Splitting them that way was
+deliberate: a test suite that pays ten minutes to check a set difference gets run less often
+than one that does not.
+
+It is a screen and not a gate. Forty members is not a state to freeze into a baseline, and this
+campaign has refused that twice already; the gate belongs here once the claims are corrected by
+the rules' owner, and the screen is what makes correcting them cheap to verify.
+
+### Two tools that cannot join the entry point, and why that is the right shape
+
+The plan's Description says the screens run from one entry point over a single loaded registry.
+Checked, that entry point still enumerates ten, and the two tools added later are correctly not
+among them.
+
+Neither could be. The selection probe asks a modelo's revisions whether they resolve using the
+period codes each declares, so it takes a coordinate rather than sweeping a corpus. The
+load-claim screen spawns clean subprocesses in both cache regimes, because the question it asks -
+whether a module a rule calls live is one a load actually imports - is unanswerable from inside a
+process that has already imported the tooling. Adding either to a single-registry sweep would
+either break the sweep's guarantee or destroy the tool's own.
+
+The Description now says this, and says the screen count is whatever the entry point enumerates
+rather than stating a number that has to be maintained. That is the same treatment given to the
+Steps count two findings ago, and for the same reason: a count in prose is a declaration whose
+maintenance nobody owns.
+
+Both tools' tests are selected by the default lane, confirmed by collection rather than assumed -
+thirty tests across the four newest modules - and the lane-visibility screen reports no module in
+the tree carrying no execution marker at all. That check has now been run at every point where
+this campaign added tests, because the two occasions it was skipped both produced a green result
+over an empty selection.

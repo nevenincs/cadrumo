@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:92a40cacc0df636457efea917a1cbd5707e7c40e867a8fc3e86f9f69d4e9fc40'
+body_hash: 'sha256:a1df0138b0862881f45f514dffe136ca7438885272527c5e28fe1e9ef9d7228c'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
@@ -135,3 +135,27 @@ rehearsal detector asserts the sole canonical reconstruction is rooted in the re
 The combined graph, rehearsal, and CLI suites passed 85 tests in 69.29 seconds. Ruff lint,
 Ruff format, and ty passed for all six reviewed implementation/test files. Final S25 status
 is no findings at any severity.
+
+## Scoped-copy adjustment
+
+The final implementation deliberately narrows copy-time digest equality to declared inputs
+and reviewed changed paths. This supersedes the preceding statement that every copied Python
+file must remain equal to the earlier live snapshot. With no cross-tree cache, unrelated
+Python metadata is irrelevant: the one disposable graph is built from the bytes actually
+copied, so an unrelated concurrent edit is incorporated into that rehearsal rather than
+mistaken for earlier evidence. A relevant reference appearing in those bytes changes the
+canonical component or violates its changed-path allowlist and is refused. Declared inputs
+and mutation targets remain exactly hash-bound; disappearance or corruption of those paths
+is rejected before transformation.
+
+This tradeoff remains fail-closed at live mutation time. Rehearsal records the outputs,
+finding delta, tools, generators, and gates produced from its copied graph. Replay reconstructs
+a fresh disposable graph and requires exact component and evidence agreement before writing,
+then retains its immediate transaction race checks and rollback. Unrelated copy races may
+therefore coexist without invalidating a leaf operation, while races that affect the selected
+component cannot authorize stale mutation.
+
+Focused detector validation passed the scoped receipt, guarded-copy corruption, and
+copy-race-added reference cases (3 tests in 8.57 seconds). Ruff lint, Ruff format, and ty
+passed for the adjusted rehearsal files. Final S25 status remains no findings at any
+severity.
