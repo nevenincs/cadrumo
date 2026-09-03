@@ -7,6 +7,10 @@ from typing import cast, override
 from textual.app import ComposeResult
 from textual.widgets import DataTable, Static
 
+from ....application.modelo.declarations_workspace import (
+    DeclarationsWorkspaceFilingRefV1,
+    DeclarationsWorkspaceLifecycleRefV1,
+)
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import (
     DeclarationsWorkspaceController,
@@ -15,10 +19,6 @@ from .controller import (
     evidence_label,
     filing_state_label,
     natural_address,
-)
-from ....application.modelo.declarations_workspace import (
-    DeclarationsWorkspaceFilingRefV1,
-    DeclarationsWorkspaceLifecycleRefV1,
 )
 
 
