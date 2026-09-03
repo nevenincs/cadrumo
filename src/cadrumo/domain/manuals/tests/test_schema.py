@@ -265,4 +265,3 @@ class TestStrictSchema:
                 content_length=10,
                 fetched_at=datetime(2026, 4, 12, 0, 0, 0, tzinfo=UTC),
             )
-

@@ -186,15 +186,16 @@ def resolve_replay_cross_reference(
         for decision in revision.live_cross_references
         if decision.id == oracle_id
     ]
-    if not matches:
+    if len(matches) != 1:
+        if not matches:
+            detail = "no declaration matches"
+        elif len({decision.guard_policy_id for decision in matches}) > 1:
+            detail = f"conflicting guard policies {sorted({decision.guard_policy_id for decision in matches})!r}"
+        else:
+            detail = "duplicate declarations name the same guard policy"
         raise RegistryValidationError(
-            f"no registry live_cross_references declaration matches oracle {oracle_id!r}; "
-            "the replay corpus cannot be run without the guard policy it declares",
-        )
-    if len({decision.guard_policy_id for decision in matches}) > 1:
-        raise RegistryValidationError(
-            f"registry declares conflicting guard policies for oracle {oracle_id!r}: "
-            f"{sorted({decision.guard_policy_id for decision in matches})}",
+            f"registry must declare exactly one live_cross_references entry for oracle {oracle_id!r}; "
+            f"found {len(matches)}: {detail}",
         )
     return matches[0]
 

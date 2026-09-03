@@ -53,3 +53,21 @@ def test_malformed_replay_cross_reference_refuses_before_any_payload_report() ->
             payload_paths=(Path("this-payload-must-not-be-read.json"),),
             registry_validated=True,
         )
+
+
+def test_same_policy_cross_revision_replay_duplicates_refuse_before_any_payload_report() -> None:
+    reference = SimpleNamespace(id="modelo-100-renta-web-open", guard_policy_id="replay-guard")
+    modelo = SimpleNamespace(
+        revisions={
+            "first": SimpleNamespace(live_cross_references=(reference,)),
+            "second": SimpleNamespace(live_cross_references=(reference,)),
+        },
+    )
+    modelos = cast(tuple[ModeloDefinition, ...], (modelo,))
+
+    with pytest.raises(RegistryValidationError, match="duplicate declarations name the same guard policy"):
+        build_renta_web_open_replay_parity(
+            modelos,
+            payload_paths=(Path("this-payload-must-not-be-read.json"),),
+            registry_validated=True,
+        )

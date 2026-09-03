@@ -131,9 +131,7 @@ class LegalReferenceKind(StrEnum):
     INSTRUCTION = "instruction"
 
 
-LegalReferenceKindField = Annotated[
-    LegalReferenceKind, BeforeValidator(coerce_enum_member(LegalReferenceKind))
-]
+LegalReferenceKindField = Annotated[LegalReferenceKind, BeforeValidator(coerce_enum_member(LegalReferenceKind))]
 """Registry token hydrated into a LegalReferenceKind member."""
 
 

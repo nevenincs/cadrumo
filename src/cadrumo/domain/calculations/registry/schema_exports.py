@@ -98,9 +98,7 @@ class ExportLineEnding(StrEnum):
     NONE = "none"
 
 
-ExportLineEndingField = Annotated[
-    ExportLineEnding, BeforeValidator(coerce_enum_member(ExportLineEnding))
-]
+ExportLineEndingField = Annotated[ExportLineEnding, BeforeValidator(coerce_enum_member(ExportLineEnding))]
 """Registry token hydrated into a ExportLineEnding member."""
 
 
@@ -111,9 +109,7 @@ class ExportRecordRepeat(StrEnum):
     PROJECTION_ROWS = "projection_rows"
 
 
-ExportRecordRepeatField = Annotated[
-    ExportRecordRepeat, BeforeValidator(coerce_enum_member(ExportRecordRepeat))
-]
+ExportRecordRepeatField = Annotated[ExportRecordRepeat, BeforeValidator(coerce_enum_member(ExportRecordRepeat))]
 """Registry token hydrated into a ExportRecordRepeat member."""
 
 
@@ -943,9 +939,13 @@ class ExportLayoutDefinition(RegistryModel):
         AEAT publishes one wire encoding per modelo-year fichero-BOE
         spec; mixing encodings across records inside a single layout
         is a registry-author error that would produce a payload no
-        single decoder can faithfully re-parse. ``latin-1`` and
-        ``iso-8859-1`` are normalised to the same encoding before
-        comparison (Python codec aliases for the same charset).
+        single decoder can faithfully re-parse.
+
+        No alias normalisation happens here, and none is needed: the
+        encoding field is the closed ``ExportEncoding`` enum, so a
+        declaration spelled ``latin-1`` never reaches this comparison --
+        it is refused at parse. Every value compared here is already a
+        canonical member.
 
         Cross-domain encoding-lock: every record within one layout
         must declare an encoding that normalises to the same value.
