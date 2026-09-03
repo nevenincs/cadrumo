@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:96888f57d57414c23a4d8157c8a151f170a0422e43cab10ccad9ae2dbc10905a'
+body_hash: 'sha256:1572efe78df4a896cfecf3b160fff7f667e2ca866d9e60bec493ba35082861f4'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -461,6 +461,8 @@ Screen and then gate child citations against the source manifest of their owning
 - [ ] `W04.P09.S421` - Resolve the contradiction in modelos 185 and 222 revision 2025-y-siguientes, which ship a provenance-attested published export tree while declaring applicability grade, so the registry says they cannot file and the repository ships their filing bytes; `src/cadrumo/_data/registry/aeat/modelos/185 src/cadrumo/_data/registry/aeat/modelos/222`.
 - [x] `W04.P09.S422` - Retire the capability condition that duplicates the grade screen: its 25 revisions are exactly the grade screens under-declared findings whose prerequisite is export_layout, set-equal both ways, so one stated a symptom the other states as a conclusion naming its cause; `dev/registry/analysis/modelo_capability.py`.
 - [x] `W04.P09.S423` - Sweep every screen condition for a duplicated population and record the negative result: none is identical to another, subset relations at revision granularity are arithmetic rather than meaning, and population identity is a coincidence rather than an invariant so it must not become a gate; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W04.P09.S425` - Report the six filing-grade revisions whose declared window spans years no deadline covers, giving the undated-year computation one home in the temporal screen rather than parsing it back out of that screens finding prose; `dev/registry/analysis/modelo_capability.py dev/registry/analysis/temporal_site_agreement.py dev/registry/tests/test_modelo_capability.py`.
+- [ ] `W04.P09.S426` - Declare deadline windows for the eleven filing-grade revisions that cannot date a filing: five carry none at all and six leave years of their own closed window uncovered, modelo 347 for seven years of fourteen; `src/cadrumo/_data/registry/aeat/modelos`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 

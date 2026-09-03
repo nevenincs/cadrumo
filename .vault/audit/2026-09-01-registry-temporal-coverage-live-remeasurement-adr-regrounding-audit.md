@@ -11348,3 +11348,47 @@ describes it. That the kinds are hidden from the kind-naming gate is a separate
 problem, fixed at the reader rather than by constraining the projections.
 
 The suite now holds thirty-two gates.
+
+
+## Eleven filing-grade revisions cannot say when a filing is due
+
+The temporal screen's 36 findings are `no_deadline_windows` 27 and
+`window_year_without_deadline` 9. The second was unexamined, and it is the more
+interesting: a revision whose CLOSED window spans years its deadline windows do
+not cover.
+
+**Six of those nine are filing grade** - modelos 123, 131, 180, 202, 347 and
+353. Modelo 347's window runs 2011 to 2024 and carries no deadline for seven of
+those years. Together with the five filing-grade revisions that declare no
+deadline window at all, **eleven filing-grade revisions cannot state a due date
+for at least one year they claim to serve.** The other three year-gap revisions
+sit below filing grade, where saying nothing costs nothing.
+
+The capability screen now reports the filing-grade six, as it already reported
+the filing-grade five. It narrows the temporal screen rather than restating it,
+and a test asserts the strict subset - equality would mean one fact under two
+names, which this screen retired a condition for two iterations ago.
+
+### The same duplication, reintroduced by me, caught by measuring
+
+The first version reported eight, and the eight were not a subset of the nine.
+Modelos 151 and 165 declare NO deadline window at all, so the undated-year
+computation returns every year of their window, and both of this screen's
+deadline conditions fired on them. That is the identical defect retired two
+iterations ago, reintroduced within the same file, by the author who retired it.
+
+It was found by checking containment rather than by reading the count. Eight
+looked plausible next to nine. The precedence now mirrors the temporal screen's
+own: a revision with no windows at all is reported once, not once per year.
+
+### And a second implementation in disguise
+
+The first draft obtained the undated years by parsing them back out of the
+temporal screen's finding PROSE - splitting its detail string on a bracket. That
+is the anti-pattern this campaign has refused elsewhere in the same words, and
+it would have returned an empty tuple, silently, the first time that sentence
+was reworded. The computation now lives once, as
+`temporal_site_agreement.undated_window_years`, used by the screen that reports
+it and by the screen that narrows it. A test asserts the census agrees with that
+function for every revision, so a future second implementation fails rather than
+drifts.
