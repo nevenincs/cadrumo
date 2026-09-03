@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e677abe8b87dc805d7b31764e916485dc40b8f4034b150a7d8d09f8b18fbf573'
+body_hash: 'sha256:1ee0855211a6f7c478ece8ee1b8a46e3a21fafbfec17aedacd64c2db88ff0ed0'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7911,3 +7911,37 @@ two publication refusals already recorded, and a census classification whose
 rules name seven members no longer in its universe. That third one is this
 campaign's own subject in another module - a declaration outliving what it
 describes - and belongs to the load-census work rather than to constants.
+
+### the-seven-stale-rules-are-not-stale-the-census-went-blind | high | Six of the seven targets still exist; the resolver stopped following a dynamic import and the symptom surfaced a directory away
+
+The load census fails with seven classification rules said to describe nothing
+in its universe, which reads as a table gone stale - the very defect this
+campaign spends its time removing, in this campaign's own tooling. Checking each
+target before deleting anything: one is genuinely gone, `registry.snapshot`,
+refactored into `_snapshot_internals` and siblings. The other six all still
+exist. Modules that still exist do not leave a census universe on their own.
+
+The renta rule explains why not, and it was written to be read at exactly this
+moment. It records that `_snapshot` imports the cross-domain check modules by
+NAME from a module-level tuple, that no AST import graph can see that edge, and
+that the census recovers it by reading the tuple. Asking the resolver what it
+finds today: it locates the site in `_snapshot_internals` and returns
+`target=None`. The site is now `tuple(dict.fromkeys(REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES.values()))`
+- names derived from another module's mapping rather than written as literals -
+and the static resolver cannot read that shape. `dynamic_reach` skips a site it
+cannot resolve, so renta and its upstream left the universe, and the rules
+describing them began reporting as stale.
+
+The rules are correct. The instrument stopped seeing what they describe. Had the
+seven been deleted as the failure invited, the census would have gone quiet
+while covering less, and the reviewed decisions about a package the snapshot
+path certainly reaches would have been thrown away to silence a symptom.
+
+The census already knew. `unresolved_dynamic_sites` is on the report, the CLI
+prints it, and five sites sit in it today - but nothing asserted on the field,
+so the blindness had no failure of its own and surfaced one directory away as
+somebody else's stale table. A gate now asserts the registry package has no
+unresolved dynamic site, scoped to the registry because a gate failing on all
+five at once would not say which one broke the census. It is red, correctly, and
+its message says what to do and what not to: teach the resolver this shape or
+restore a readable one, and do not delete the rules.
