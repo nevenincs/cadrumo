@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.locks import exclusive_file_lock
@@ -36,6 +37,8 @@ from .m200_2024_reviewed_promotions import (
     _receipt_candidate_ids,
     build_m200_2024_reviewed_promotion_snapshot,
 )
+from .m200_2024_template_adjudications import verify_canonical_declarations as verify_template_canonical_declarations
+from .m200_2024_unique_adjudications import verify_canonical_declarations as verify_unique_canonical_declarations
 
 _LOCK = ".m200-2024-adjudication.lock"
 _JOURNAL = ".m200-2024-adjudication.journal.json"
@@ -62,6 +65,7 @@ def check_m200_2024_s14_s15(*, registry_root: Path | None = None) -> M200Adjudic
     snapshot = build_m200_2024_reviewed_promotion_snapshot()
     if len(_receipt_candidate_ids(snapshot)) != 156:
         raise RegistryValidationError("M200/2024 adjudication receipt union is incomplete")
+    _verify_unaffected_receipts(snapshot, _casillas_root(root))
     rendered = _rendered(snapshot, root)
     before = _tree_fingerprint(_casillas_root(root))
     _verify_candidate(root, rendered, before, snapshot)
@@ -213,7 +217,14 @@ def _verify_staged_tree(
         if name not in expected and fingerprint[name] != digest:
             raise RegistryValidationError(f"M200/2024 adjudication changed a non-cohort declaration: {name}")
     verify_blocker_canonical_declarations(snapshot.blocker_authority, casillas_root=staged)
+    _verify_unaffected_receipts(snapshot, staged)
     _verify_isolated_authority_load(registry_root, staged)
+
+
+def _verify_unaffected_receipts(snapshot: M200ReviewedPromotionSnapshot, casillas_root: Path) -> None:
+    """Byte-verify the reviewed cohorts this publisher is not allowed to repair."""
+    verify_template_canonical_declarations(snapshot.template_authority, casillas_root=casillas_root)
+    verify_unique_canonical_declarations(snapshot.unique_authority, casillas_root=casillas_root)
 
 
 def _verify_isolated_authority_load(registry_root: Path, casillas_root: Path) -> None:
@@ -224,7 +235,13 @@ def _verify_isolated_authority_load(registry_root: Path, casillas_root: Path) ->
         shutil.rmtree(target)
         shutil.copytree(casillas_root, target)
         authority = ValidatedRegistryAuthority.load(copied_root, source_root=bundled_path())
-        authority.snapshot("200", filing_year=2024, period="0A", revision_id="2024")
+        authority.snapshot(
+            "200",
+            filing_year=2024,
+            period="0A",
+            revision_id="2024",
+            grade=RegistryAuthorityGrade.CALCULATION,
+        )
 
 
 def main(argv: list[str] | None = None) -> int:

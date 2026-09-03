@@ -10,6 +10,9 @@ import pytest
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..analysis import m200_2024_adjudication_publication as subject
+from ..analysis.m200_2024_reviewed_promotions import build_m200_2024_reviewed_promotion_snapshot
+from ..analysis.m200_2024_template_adjudications import render_canonical_declaration as render_template
+from ..analysis.m200_2024_unique_adjudications import render_canonical_declaration as render_unique
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -39,3 +42,24 @@ def test_target_receipt_fingerprints_nested_non_toml_members(tmp_path: Path) -> 
     fingerprint = dict(subject._tree_fingerprint(root))
 
     assert set(fingerprint) == {"c00001.toml", "nested/unexpected.bin"}
+
+
+def test_unaffected_receipts_refuse_a_structurally_valid_unique_byte_drift(tmp_path: Path) -> None:
+    snapshot = build_m200_2024_reviewed_promotion_snapshot()
+    root = tmp_path / "casillas"
+    root.mkdir()
+    for row in snapshot.template_authority.adjudications:
+        (root / f"c{row.casilla_id}.toml").write_text(
+            render_template(snapshot.template_authority, row.casilla_id), encoding="utf-8"
+        )
+    for row in snapshot.unique_authority.adjudications:
+        path = root / f"c{row.casilla_id.replace(':', '+')}.toml"
+        path.write_text(render_unique(snapshot.unique_authority, row.casilla_id), encoding="utf-8")
+    target = snapshot.unique_authority.adjudications[0]
+    path = root / f"c{target.casilla_id.replace(':', '+')}.toml"
+    path.write_text(
+        path.read_text(encoding="utf-8").replace("required = false", "required = true", 1), encoding="utf-8"
+    )
+
+    with pytest.raises(RegistryValidationError, match="not compiler-identical"):
+        subject._verify_unaffected_receipts(snapshot, root)
