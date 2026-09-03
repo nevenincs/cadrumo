@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:98da0bd13f00846908628eca7d1162586bcabc614c7d31083e7a0058410a806d'
+body_hash: 'sha256:c8d95d0084290bc7d7b7c2ffe669274307e03393f103cdddd506f50741727b6c'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
@@ -41,3 +41,4 @@ Hold further S375 slices until the remaining narrowed medium in-flight lifecycle
 Positive findings: classification action identity is validated through the real application catalogue and its canonical command key; the classification patch changes only `business_classification`; mutation requires a separate row selection and confirm action; absent submitters and still-deferred destinations resolve to typed refusals; import paths and providers do not appear in current screen copy, custom repr, or generic failure messages; flow modules import no adapters, CLI, file readers, or concrete import mutator; locale strings are authored and genuinely distinct in all four languages; Escape cancels pre-submit confirmation before returning to the parent; and direct eighty-column compositor inspection found no clipping or horizontal scrolling.
 
 Focused gates: 24 Ledger tests passed with all markers enabled; Ruff passed; ty passed; basedpyright reported zero errors and zero warnings. These gates do not discharge the findings because the current tests omit the reproduced adversarial states.
+
