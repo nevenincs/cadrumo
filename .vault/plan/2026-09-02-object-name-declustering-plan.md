@@ -10,7 +10,7 @@ related:
   - '[[2026-09-02-object-name-declustering-reference]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:958c20f55391c1b0f483bfa2cc438014a28ed1626ed2e0ceb7b40271a30495c2'
+body_hash: 'sha256:d39ae027d31d838152421139ca0ea994741818c1db0f99716fd5aef589f9508f'
 ---
 
 <!-- RETIRED: S21, S22 -->
@@ -104,6 +104,7 @@ Demonstrate the workflow on one reviewed leaf component and record evidence befo
 - [x] `W03.P09.S19` - Author one reviewed low-risk leaf-component manifest with exact finding and byte preconditions; `dev/quality/object_name_rename_manifest.toml`.
 - [x] `W03.P09.S25` - Build the sole rehearsal component exactly once from the hash-verified disposable snapshot; `dev/quality/object_name_rehearsal.py, dev/quality/object_name_declustering.py, dev/quality/tests/test_object_name_rehearsal.py, dev/quality/tests/test_object_name_declustering.py`.
 - [x] `W03.P09.S20` - Run the Justfile rehearsal and record scope, receipt, gate results, residual findings, and unchanged-live-tree proof; `.vault/audit/2026-09-02-object-name-declustering-pilot-rehearsal-audit.md`.
+- [ ] `W03.P09.S26` - Apply the reviewed pilot receipt and verify the live finding reduction without compatibility residue; `dev/registry/generate_result_disposition_fragments.py, dev/registry/result_disposition_fragment_generator.py`.
 
 ## Parallelization
 

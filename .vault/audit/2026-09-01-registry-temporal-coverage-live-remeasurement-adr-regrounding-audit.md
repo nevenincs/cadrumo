@@ -4737,7 +4737,7 @@ shape as the export list naming a retired surface and the location note forbiddi
 already made, now in the campaign's own tracking document. It is recorded here before it is
 repaired so that the repair is not mistaken for the discovery.
 
-### The stale-scope finding is withdrawn: the scopes were right and the reading was wrong
+### stale-scope-finding-withdrawal | medium | The check measured file existence and never asked what a scope clause is for
 
 The previous finding reported fifteen Step scopes naming files absent from the tree, called it
 the plan committing the defect the plan exists to remove, and promised a repair. There is no
@@ -4766,7 +4766,7 @@ What the episode leaves is a narrower true statement. Nothing in the plan's scop
 known to be wrong, and a check that would detect a genuinely stale scope has to distinguish a
 path the work will create from one it once touched, which file existence alone cannot do.
 
-### One revision, two instruments, one disagreement - and a design nothing can read
+### modelo-720-opening-year-makes-its-design-unloadable | high | valid_from 2012 against a design applying from 2013 leaves one design no sweep can read
 
 The corpus sweep reported one design refusing to load. Diagnosed, it is
 `720/2013-y-siguientes`, and the refusal is precise: the record-design source `aeat-dr-720`
@@ -4798,7 +4798,7 @@ here: choosing an axis for modelo 720 is a filing-grade decision about what `val
 means across the registry, and this campaign has no authority to make it by guessing which
 reading keeps a loader quiet.
 
-### The four misstated openings are three different defects
+### four-misstated-openings-are-three-defects | medium | Two names to correct, one declaration to author, one axis decision to take
 
 The revision-name screen reports four revisions whose name claims an opening year their
 window does not declare. Read against the declarations themselves, they are not four
@@ -4833,7 +4833,7 @@ where the accessor takes a period code string, and three of the four modelos ret
 `NoRevisionForPeriodError` results that arrived before it were real, but they were sitting
 beside an artefact of the call. Reading the signature took one command and separated them.
 
-### A condition built, measured, and withdrawn inside one iteration
+### selector-window-condition-withdrawn-same-iteration | low | Thirty-five of thirty-six members were correct, so the condition was removed rather than shipped
 
 The previous finding argued that one screen condition covered four defects wanting three
 remedies, so the condition was split. Two of the three splits survive; the third was built,
@@ -4865,7 +4865,7 @@ build. The cost of checking the members was two commands; the cost of shipping i
 been a category of 36 whose 35 correct members hide the one that is wrong - which is the exact
 failure this audit documented in `record_drift` and has argued against four times since.
 
-### The withdrawn condition was right to go, and a narrower one it was hiding is real
+### unselectable-open-ended-window-condition | medium | Five revisions declare an open-ended valid_to their selector does not carry, and all five stop at their year
 
 Scrutinising the single-year category the way the previous iteration scrutinised the last one
 produced a better result than expected, and corrected the reasoning that removed a condition
@@ -4900,7 +4900,7 @@ The lesson is narrower than "check the members", which this audit already says. 
 probe has to ask the question the condition claims to be about. Asking a revision whether it
 serves its own year cannot distinguish a window that ends there from one that should not have.
 
-### Two conditions were contradicting each other on the same five revisions
+### two-conditions-contradicted-each-other | medium | One row said the window does not extend while another said the name omits years it serves
 
 Adding the unselectable-window condition exposed an error in the one beside it. Both fired on
 modelo 131's 2026 and on four others, and they say opposite things. One row states the window
@@ -4925,7 +4925,7 @@ categories that previously mixed accurate and inaccurate members now each contai
 members wanting the same thing done. A count that did not move records none of that, which is
 why this campaign stopped treating finding totals as the measure some findings ago.
 
-### Modelo 369's three schemes are correctly disambiguated, and the probe was wrong twice
+### modelo-369-schemes-disambiguate-by-period-family | medium | Two alarming readings were both artefacts of asking with a period code the scheme does not declare
 
 The last unexamined category is `no_temporal_claim`, whose three members are all modelo 369:
 `esquema-exterior`, `esquema-importacion` and `esquema-union`. These are the one-stop-shop
@@ -4961,7 +4961,7 @@ code earlier in this campaign: an argument shaped wrongly returns a refusal indi
 from a registry that cannot answer. The check that resolved it was reading what the selector
 declares before asking it anything, which took one command and should have been the first.
 
-### A probe that cannot ask the wrong question
+### selection-probe-asks-with-declared-codes-only | medium | The probe reads each revision's own period codes, so a refusal is a refusal of a well-formed question
 
 Three investigations in this campaign reached a wrong conclusion the same way. A revision was
 asked whether it resolves, the question carried a period code that revision does not declare,
@@ -4992,7 +4992,7 @@ what it lacks is `year_from` and `year_to` - a different field on the same selec
 while writing the test. The test is now constructed against the function's contract, which
 holds whatever the corpus does.
 
-### The shared registry did not validate for a window this iteration
+### shared-registry-invalid-for-a-window | high | Modelo 200 casillas referenced absent export fields in committed state, blocking every consumer
 
 Three of the four tests errored mid-iteration with the registry refusing to validate: modelo
 200 revision 2024 carried casillas referencing export fields that did not exist. No registry
@@ -5010,7 +5010,7 @@ worth recording for the same reason: in a shared worktree a red result carries a
 and the question "was the tree valid when I measured" has a different answer at two points in
 one iteration.
 
-### Swept with the probe, the registry has no unreachable revision
+### no-revision-is-unreachable-when-asked-correctly | low | 441 well-formed probes and every one resolves, including the mid-year split once given a date
 
 The declared-code probe was run across every modelo: 441 probes, and exactly one did not
 resolve to itself - modelo 308's `2011-julio-2015`, refused as ambiguous.
@@ -5038,7 +5038,7 @@ So across 441 well-formed questions the registry answers every one correctly. Th
 stronger statement than any of the three false alarms suggested, and it could not have been
 made by the manual probing that produced them.
 
-### A crashed worker, read correctly this time and only just
+### crashed-worker-read-correctly-second-time | low | The word crashed was hidden by terminal escape codes until the log was stripped
 
 The corrected test suite then reported a failure on the modelo 369 test. The instinct was to
 treat it as a regression from the retry change, and the output said otherwise: worker `gw0`
@@ -5055,7 +5055,7 @@ refused probe, and this suite was already slow. A change that makes a test slowe
 timeout-driven crash more likely, and the crash then reads as a failure of the change. The two
 are easy to confuse and were nearly confused here.
 
-### The retry now fires only where a date can change the answer
+### date-retry-narrowed-to-ambiguity | medium | Retrying every refusal doubled the work and made the timeout crash likelier; suite runtime halved
 
 The date retry added last iteration fired on every refusal, which was both wasteful and
 imprecise. A date decides between windows that split inside one year; it decides nothing about
@@ -5077,7 +5077,7 @@ when something about the second attempt could change the answer. Retrying becaus
 attempt failed is how a probe turns a definite refusal into twice as much evidence for the
 same conclusion, and this one did that for an iteration.
 
-### The tracking plan declares three Descriptions and three Verifications
+### plan-declares-each-section-several-times | high | Three Descriptions, two Parallelizations and three Verifications against a template declaring one each
 
 Counting the plan's own headings found `## Description` three times, `## Parallelization`
 twice, and `## Verification` three times. The template declares exactly one of each, so this
@@ -5107,7 +5107,7 @@ sections, on a document the concurrent campaign commits, is focused work rather 
 tidy-up at the end of an iteration - and a hasty merge that drops a paragraph would be
 strictly worse than the duplication, which at least keeps everything.
 
-### The plan now declares each section once, and the merge proved it lost nothing
+### plan-sections-merged-without-loss | medium | 126 paragraphs to 107 with no-loss made structural rather than checked after the first attempt refused
 
 The three Descriptions, two Parallelizations and three Verifications are one of each. The
 document went from 126 prose paragraphs to 107, the nineteen removed being near-duplicates,
@@ -5138,7 +5138,7 @@ real location was resolved. It is the same class as the sweep script that needed
 repository root on its import path, and the same remedy: resolve the path rather than assume
 the two tools mean the same thing by it.
 
-### Every criterion this campaign wrote had been going into the wrong section
+### criteria-were-being-appended-to-parallelization | high | The duplicated structure made the block before a Verification heading look like Verification
 
 Reading the merged Verification section found it opening "beyond that, five criteria" when the
 campaign has written twelve. The twelve-criteria text existed, and it was inside
@@ -5172,7 +5172,7 @@ clean, and reported success - and the section it produced said five where it sho
 twelve. The check answered the question it was asked, which was whether anything was dropped,
 and the thing that was wrong was never in its scope. Reading the output was what found it.
 
-### A gate written here caught this campaign changing a screen without updating what it claims
+### parity-gate-caught-its-own-author | medium | The screen said six conditions while emitting eight, invisible to every check but this one
 
 The full lane reconciles: 1,281 collected, 41 failed plus 1,240 passed, and no lost-worker
 marker. Against the previous run's 35 failures, six are new, and one of them was this
@@ -5202,7 +5202,7 @@ Attribution before repair, as this audit has argued throughout. The one that was
 one-word fix; assuming the other five were also mine would have cost an iteration chasing
 another writer's in-flight work.
 
-### The four paragraphs a similarity threshold could not judge
+### four-paragraphs-no-threshold-could-judge | low | Two subsumed, one carrying a lost clause, one longer than its replacement, one not a duplicate at all
 
 The merge left five older wordings of criteria in the Verification section, below its
 similarity threshold and above the point where a machine could tell them apart. Reading them
@@ -5236,7 +5236,7 @@ was right to keep what it could not judge. A threshold tuned to catch these four
 also caught the fifth, which is not a duplicate, and the campaign would have lost a criterion
 to a number.
 
-### Two Descriptions of the screens, disagreeing on how many there are
+### two-descriptions-disagreed-on-the-screen-count | medium | The longer, later-sounding paragraph carried the stale count; the entry point settled it
 
 The Description carried one near-duplicate pair the merge had left, and it was worth reading
 for a reason the Verification pairs were not: the two paragraphs state different numbers. One
@@ -5265,7 +5265,7 @@ present. It is the third time in this campaign that a literal newline inside a s
 has produced a false result, twice in a check and once in an edit anchor - the same lesson each
 time, and cheap enough to keep relearning only because the checks are run at all.
 
-### The name-window findings were already in the plan, and had been for the whole campaign
+### name-window-findings-were-already-stepped | medium | Eight open Steps named the same revisions; what this work added was consequence, not discovery
 
 Sweeping the plan's numeric claims found one stale and, more usefully, found that several
 iterations of this campaign re-derived work the plan had already recorded.
