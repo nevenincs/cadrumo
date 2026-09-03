@@ -391,8 +391,8 @@ def _declaration_cells(item: HomeDeclarationResume, locale: OutputLanguage) -> t
 
 def _agenda_cells(item: HomeAgendaEntry, locale: OutputLanguage) -> tuple[str, str, str]:
     return (
-        item.due_on.strftime("%d %b %Y"),
-        f"Modelo {item.modelo} · {item.period.registry_token}",
+        item.due_on.strftime("%d/%m"),
+        f"M{item.modelo} {item.period.registry_token}",
         _text(locale, _PERIOD_COPY[item.period_state]),
     )
 
@@ -534,6 +534,7 @@ class DueDrivenHomeCandidateScreen(_ProjectionCandidateScreen):
                     cell_padding=0,
                     classes="candidate-table",
                 )
+                yield Static(id="due-action-contexts", classes="candidate-state", markup=False)
                 yield Static(_text(self._locale, "Declarations"), classes="candidate-heading", markup=False)
                 yield Static(
                     _state_copy(
@@ -585,10 +586,13 @@ class DueDrivenHomeCandidateScreen(_ProjectionCandidateScreen):
         projection = self.projection
         actions = cast("ContentDataTable[str]", self.query_one("#due-actions", ContentDataTable))
         actions.add_column("")
+        action_contexts: list[str] = []
         for item in projection.actions:
             reason, action, context = _action_cells(item, self._locale)
-            actions.add_row(f"{reason} — {action} · {context}", key=self._remember("action", _action_identity(item)))
+            actions.add_row(action, key=self._remember("action", _action_identity(item)))
+            action_contexts.append(f"{action} — {reason} · {context}")
         actions.display = bool(projection.actions)
+        self.query_one("#due-action-contexts", Static).update("\n".join(action_contexts))
 
         declarations = cast("ContentDataTable[str]", self.query_one("#due-declarations", ContentDataTable))
         declarations.add_column("")
@@ -631,10 +635,12 @@ class DueDrivenHomeCandidateScreen(_ProjectionCandidateScreen):
         first = next((table for table in (actions, declarations, agenda) if table.row_count), None)
         if first is not None and not self._restore((actions, declarations, agenda)):
             self.set_focus(first)
+            self._highlight(first.ordered_rows[0].key.value)
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         """Track the semantic target independently of row order."""
-        self._highlight(event.row_key.value)
+        if event.data_table is self.focused:
+            self._highlight(event.row_key.value)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Record Enter against a semantic target without executing it."""
@@ -734,6 +740,7 @@ class TaskLauncherHomeCandidateScreen(_ProjectionCandidateScreen):
             else _text(self._locale, "Use Up/Down to choose and Enter to confirm.")
         )
         chooser.display = bool(chooser.row_count)
+        self.query_one("#launcher-detail-panel", Static).display = bool(chooser.row_count)
         self.query_one("#launcher-signals", Static).update("\n".join(self._signal_lines()))
         if chooser.row_count and not self._restore((chooser,)):
             self.set_focus(chooser)
@@ -783,8 +790,9 @@ class TaskLauncherHomeCandidateScreen(_ProjectionCandidateScreen):
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         """Keep detail synchronized with arrow-key selection."""
-        self._highlight(event.row_key.value)
-        self._show_detail(event.row_key.value)
+        if event.data_table is self.focused:
+            self._highlight(event.row_key.value)
+            self._show_detail(event.row_key.value)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Record Enter against a semantic target without executing it."""

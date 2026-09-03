@@ -54,7 +54,7 @@ _STATE_MARKERS: Final[dict[HomeFixtureScenario, str]] = {
     HomeFixtureScenario.STALE: "Desactualizado",
     HomeFixtureScenario.NEVER_CAPTURED: "Aún no capturado",
     HomeFixtureScenario.UNAVAILABLE: "No disponible",
-    HomeFixtureScenario.EMPTY: "sin acciones sugeridas",
+    HomeFixtureScenario.EMPTY: "No hay tareas rápidas",
     HomeFixtureScenario.BLOCKED: "Resolver bloqueo",
 }
 
