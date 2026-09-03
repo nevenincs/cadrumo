@@ -10,7 +10,7 @@ related:
   - '[[2026-09-02-object-name-declustering-reference]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:61048a9734be91df67d5cbf6b507416ec6656af4f8837dc722ce33d700480a99'
+body_hash: 'sha256:684c94ada4eb8d46373d773420f0133461f6a2a749bbcc76c6620e23af3fc6b1'
 ---
 
 <!-- RETIRED: S21, S22 -->
@@ -102,7 +102,7 @@ Demonstrate the workflow on one reviewed leaf component and record evidence befo
 - [x] `W03.P09.S23` - Bind manifest staleness to selected identities and declared bytes so unrelated concurrent inventory churn cannot invalidate a leaf operation; `dev/quality/object_name_manifest.py, dev/quality/tests/test_object_name_manifest.py`.
 - [x] `W03.P09.S24` - Bind rehearsal receipts and replay drift checks to the reviewed component while preserving unrelated concurrent bytes; `dev/quality/object_name_rehearsal.py, dev/quality/object_name_replay.py, dev/quality/tests/test_object_name_rehearsal.py, dev/quality/tests/test_object_name_replay.py`.
 - [x] `W03.P09.S19` - Author one reviewed low-risk leaf-component manifest with exact finding and byte preconditions; `dev/quality/object_name_rename_manifest.toml`.
-- [ ] `W03.P09.S25` - Reuse a receipt-local verified Grimp cache across live and disposable graph reconstruction; `dev/quality/object_name_graph.py, dev/quality/object_name_rehearsal.py, dev/quality/tests/test_object_name_graph.py, dev/quality/tests/test_object_name_rehearsal.py`.
+- [ ] `W03.P09.S25` - Validate the supplied component once against the canonical graph built from the hash-verified disposable snapshot; `dev/quality/object_name_rehearsal.py, dev/quality/tests/test_object_name_rehearsal.py`.
 - [ ] `W03.P09.S20` - Run the Justfile rehearsal and record scope, receipt, gate results, residual findings, and unchanged-live-tree proof; `.vault/audit/2026-09-02-object-name-declustering-pilot-rehearsal-audit.md`.
 
 ## Parallelization
