@@ -6260,3 +6260,28 @@ the two failing tests cover. They are new, and they are not this campaign's.
 The technique is worth more than the table. A failure's first appearance in a retained log dates
 it without reasoning about causes, and this campaign spent three findings reasoning about a
 corpus that had not changed before running the one command that would have said so.
+
+### inspection-authority-crossed-into-the-application-layer-by-decision | high | Four application modules reach the static inspection API a gate forbids, and a commit message says the crossing was decided
+
+The static-inspection gate asserts that no runtime consumer references the inspection authority
+and finds five files that do: `workspace.py`, `work_addressing.py`, `workspace_manifest.py` and
+`workspace_producers.py` under `src/cadrumo/application/modelo`, plus a test beside them. Every
+one names `RegistryRevisionInspection`.
+
+Dated against the tree rather than reasoned about, the crossings arrive on 26 and 27 August, and
+the commit that introduces the first says what it is doing in its subject line: "decide(tui-
+architecture): S278, root a second field manifest at RegistryRevisionInspection". So this is not
+a drift that nobody noticed. Somebody decided to root a manifest at the inspection authority, and
+the gate forbidding exactly that has been red ever since.
+
+That is a different situation from every other inherited failure this campaign has dated. The
+others are a serialization change nobody intended to be visible, a test landing red, a rename
+half-applied. This one is a deliberate architectural choice and a standing gate that contradicts
+it, and one of the two has to give: either the decision supersedes the gate and the gate should
+say so, or the gate holds and the manifest needs a different root.
+
+Not resolved here. Which one gives is an architecture decision with a recorded rationale behind
+it, belonging to whoever made it, and a campaign about declarations matching what they describe
+should be the last to quietly delete a gate because something newer disagreed with it. What this
+adds is that the disagreement is dated, attributed, and no longer sitting in a failure list as
+an unexplained red.
