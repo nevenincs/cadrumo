@@ -50,6 +50,7 @@ from ._export_tree import RenderedExportTree
 from ._provenance_manifest import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME,
+    SHA256_PATTERN,
     ExportFragmentOutputDigest,
     ExportFragmentProvenanceManifest,
     collect_export_fragment_output_digests,
@@ -76,7 +77,6 @@ __all__ = [
 
 
 _JOURNAL_SCHEMA_VERSION: Final[int] = 1
-_SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
 
 
 class _StrictModel(BaseModel):
@@ -92,7 +92,7 @@ class _PublicationJournal(_StrictModel):
     revision_id: str = Field(min_length=1)
     candidate_export: str = Field(min_length=1)
     backup_export: str = Field(min_length=1)
-    candidate_manifest_sha256: str = Field(pattern=_SHA256_PATTERN)
+    candidate_manifest_sha256: str = Field(pattern=SHA256_PATTERN)
 
 
 @dataclass(frozen=True, slots=True)

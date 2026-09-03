@@ -48,7 +48,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Final, Literal
 
-REGISTRY_PACKAGE: Final[str] = "cadrumo.domain.calculations.registry"
+from .load_census import REGISTRY_PACKAGE
 
 Classification = Literal["live", "conditionally_reachable", "dead"]
 

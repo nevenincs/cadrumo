@@ -22,15 +22,16 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
-from ..pipeline.casilla_tree_transaction import recover_verified_casilla_tree, publish_verified_casilla_tree
+from ..pipeline.casilla_tree_transaction import publish_verified_casilla_tree, recover_verified_casilla_tree
 from .m200_2024_blocker_adjudications import (
     S14_S15_EXPECTED_COUNT,
-    compile_m200_2024_blocker_authority,
     render_canonical_declaration,
-    verify_canonical_declarations,
 )
-from .m200_2024_reviewed_promotions import M200ReviewedPromotionSnapshot, build_m200_2024_reviewed_promotion_snapshot
-from .m200_2024_reviewed_promotions import _verified_promoted_candidate_ids
+from .m200_2024_reviewed_promotions import (
+    M200ReviewedPromotionSnapshot,
+    _verified_promoted_candidate_ids,
+    build_m200_2024_reviewed_promotion_snapshot,
+)
 
 _LOCK = ".m200-2024-adjudication.lock"
 _JOURNAL = ".m200-2024-adjudication.journal.json"
@@ -84,7 +85,9 @@ def publish_m200_2024_s14_s15(
             stage_prefix=_STAGE_PREFIX,
             backup_prefix=_BACKUP_PREFIX,
         ):
-            raise RegistryValidationError("M200/2024 adjudication recovered an interrupted publication; run check again")
+            raise RegistryValidationError(
+                "M200/2024 adjudication recovered an interrupted publication; run check again"
+            )
         live = check_m200_2024_s14_s15(registry_root=root)
         if live.compiler_sha256 != receipt.compiler_sha256:
             raise RegistryValidationError("M200/2024 adjudication compiler receipt changed after check")
@@ -128,8 +131,11 @@ def _rendered(snapshot: M200ReviewedPromotionSnapshot, registry_root: Path) -> d
     if len(authority.adjudications) != S14_S15_EXPECTED_COUNT:
         raise RegistryValidationError("M200/2024 adjudication compiler output count drifted")
     root = _casillas_root(registry_root)
-    rendered = {root / f"c{row.casilla_id}.toml": render_canonical_declaration(authority, row.casilla_id) for row in authority.adjudications}
-    if len(rendered) != S14_S15_EXPECTED_COUNT or not (root / "c00093.toml") in rendered:
+    rendered = {
+        root / f"c{row.casilla_id}.toml": render_canonical_declaration(authority, row.casilla_id)
+        for row in authority.adjudications
+    }
+    if len(rendered) != S14_S15_EXPECTED_COUNT or (root / "c00093.toml") not in rendered:
         raise RegistryValidationError("M200/2024 adjudication compiler membership is not the exact S14/S15 cohort")
     return rendered
 
@@ -195,6 +201,7 @@ def _verify_isolated_authority_load(registry_root: Path, casillas_root: Path) ->
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run the explicit check or publish developer command."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("check", "publish"))
     parser.add_argument("--registry-root", type=Path, default=bundled_path("registry", "aeat"))

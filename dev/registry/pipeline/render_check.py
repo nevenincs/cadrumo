@@ -57,7 +57,7 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncodin
 from cadrumo.domain.calculations.registry.ids import RevisionId, SourceRefId
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource, RegistryRevisionInspection
 
-from ._export_tree import ExportTreeTransportProfile, render_complete_export_tree
+from ._export_tree import SERIALIZER_CONVENTION, ExportTreeTransportProfile, render_complete_export_tree
 from ._provenance_manifest import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ._record_design_ir import load_record_design_intermediate
 from ._render_profile import (
@@ -77,7 +77,10 @@ __all__ = [
     "parsed_tree_file",
 ]
 
-_SERIALIZER_CONVENTION = "rtoml-pretty-v1"
+#: The serializer convention token is the renderer's to state; a second
+#: copy here would let the two drift into disagreeing about what a
+#: rendered tree is.
+_SERIALIZER_CONVENTION = SERIALIZER_CONVENTION
 
 #: The generation manifest attests which inputs produced the tree, so it changes
 #: whenever an input or the generator does. A tree differing ONLY here ships

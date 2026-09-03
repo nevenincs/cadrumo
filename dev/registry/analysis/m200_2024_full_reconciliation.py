@@ -29,9 +29,9 @@ from cadrumo.domain.calculations.registry.loader import load_catalogue_file, loa
 from cadrumo.domain.calculations.registry.schema_references import governed_period_span
 
 from ..pipeline._record_design_ir import intermediate_anchor_key, load_record_design_intermediate
-from ..pipeline.casilla_tree_transaction import publish_verified_casilla_tree
 from ..pipeline._semantic_map import semantic_anchor_key
 from ..pipeline._semantic_map_loader import load_semantic_map
+from ..pipeline.casilla_tree_transaction import publish_verified_casilla_tree
 from .m200_restored_semantic_audit import SemanticPayload, _candidate_payloads, _payload, _template
 
 if TYPE_CHECKING:

@@ -48,6 +48,7 @@ __all__ = [
     "EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION",
     "EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION",
     "LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME",
+    "SHA256_PATTERN",
     "ExportFieldDerivation",
     "ExportFieldDerivationCode",
     "ExportFragmentOutputDigest",
@@ -76,7 +77,11 @@ EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION: Final[int] = 2
 """Reviewed parser-to-wire normalization contract recorded for every field."""
 
 _LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 6
-_SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
+#: The shape of a lowercase hex digest, stated where digests are validated.
+#: The publication module carried an identical copy: two modules deciding
+#: separately what a digest looks like is one relaxation away from one of
+#: them accepting a value the other refuses.
+SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
 EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "_generation.provenance.json"
 """Internal JSON member ignored by the TOML-only registry loader."""
 
@@ -234,7 +239,7 @@ class ExportFragmentOutputDigest(_StrictModel):
     """The SHA-256 of one generated file, addressed below its export root."""
 
     relative_path: str = Field(min_length=1, max_length=4096)
-    sha256: str = Field(pattern=_SHA256_PATTERN)
+    sha256: str = Field(pattern=SHA256_PATTERN)
 
     @field_validator("relative_path")
     @classmethod
@@ -321,16 +326,16 @@ class ExportFragmentProvenanceManifest(_StrictModel):
 
     manifest_schema_version: int = Field(ge=1)
     source_ref: SourceRefId
-    source_sha256: str = Field(pattern=_SHA256_PATTERN)
+    source_sha256: str = Field(pattern=SHA256_PATTERN)
     parser_schema_version: int = Field(ge=1)
     generator_schema_version: int = Field(ge=1)
-    semantic_map_sha256: str = Field(pattern=_SHA256_PATTERN)
+    semantic_map_sha256: str = Field(pattern=SHA256_PATTERN)
     render_profile_schema_version: int = Field(ge=1)
-    render_profile_sha256: str = Field(pattern=_SHA256_PATTERN)
+    render_profile_sha256: str = Field(pattern=SHA256_PATTERN)
     modelo: ModeloId
     revision_id: RevisionId
     design_epoch: str = Field(min_length=1)
-    loader_semantic_sha256: str = Field(pattern=_SHA256_PATTERN)
+    loader_semantic_sha256: str = Field(pattern=SHA256_PATTERN)
     output_files: tuple[ExportFragmentOutputDigest, ...] = Field(min_length=1)
     field_derivations: tuple[ExportFieldDerivation, ...] = Field(min_length=1)
     variable_envelope_contract: FilingEnvelopeProvenance | None = None
