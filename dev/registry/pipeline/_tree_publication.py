@@ -49,6 +49,7 @@ from ._casilla_export_refs import export_refs_by_casilla, write_generated_casill
 from ._export_tree import RenderedExportTree
 from ._provenance_manifest import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
+    LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentOutputDigest,
     ExportFragmentProvenanceManifest,
     collect_export_fragment_output_digests,
@@ -74,7 +75,6 @@ __all__ = [
 ]
 
 
-_LEGACY_SIBLING_MANIFEST: Final[str] = "export.provenance.json"
 _JOURNAL_SCHEMA_VERSION: Final[int] = 1
 _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
 
@@ -381,7 +381,7 @@ def _require_existing_link_free_path(path: Path, *, root: Path, subject: str) ->
 
 
 def _require_no_stale_sibling_manifest(revision_root: Path, *, subject: str) -> None:
-    stale = revision_root / _LEGACY_SIBLING_MANIFEST
+    stale = revision_root / LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME
     if stale.exists() or is_link_like(stale):
         raise RegistryValidationError(f"{subject} refuses stale sibling provenance manifest: {stale}")
 

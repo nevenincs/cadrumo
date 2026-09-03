@@ -47,6 +47,7 @@ __all__ = [
     "EXPORT_FRAGMENT_PROVENANCE_FILENAME",
     "EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION",
     "EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION",
+    "LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME",
     "ExportFieldDerivation",
     "ExportFieldDerivationCode",
     "ExportFragmentOutputDigest",
@@ -79,7 +80,11 @@ _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
 EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "_generation.provenance.json"
 """Internal JSON member ignored by the TOML-only registry loader."""
 
-_LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "export.provenance.json"
+#: The pre-rename filename, kept so both the reader that skips it and the
+#: publisher that removes it name the same string. It was declared twice
+#: under two different names, which is the one shape a reader cannot grep:
+#: searching for either name finds half the uses.
+LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "export.provenance.json"
 
 _SEMANTIC_MAP_KEYS: Final[frozenset[str]] = frozenset(
     {"modelo", "design_epoch", "source_ref", "source_sha256", "records", "entries", "variable_envelopes"},
@@ -461,7 +466,7 @@ def collect_export_fragment_output_digests(export_root: Path) -> tuple[ExportFra
         relative_path = PurePosixPath(*candidate.relative_to(export_root).parts).as_posix()
         if candidate == export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME:
             continue
-        if candidate.name == _LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME:
+        if candidate.name == LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME:
             raise RegistryValidationError(
                 f"export provenance refuses stale sibling-era manifest under generated export root: {relative_path}",
             )
