@@ -5754,3 +5754,29 @@ are real and belong to the tree; most of the rest belongs to the process that fo
 The one thing the conversion changes materially is that all of it is now citable. A finding
 without a slug cannot be referenced by the plan Step that acts on it, and seventy-seven of them
 could not be until now.
+
+### warm-probe-was-not-guaranteed-warm | high | A warm measurement against empty caches is a cold measurement wearing the wrong label
+
+Measuring the module the census still reported unruled returned something that should not have
+been possible: 380 modules cold and 380 warm, where the gap had been forty-three. Running the
+claim screen minutes later returned 380 and 337, the gap intact.
+
+The explanation is the screen's own method. The cold probe points the cache variables at a
+temporary directory, so it is genuinely cold every time. The warm probe uses the real cache
+directories and is warm only if something has already filled them. The first warm run of a
+session against empty caches compiles exactly as a cold one does, reports cold numbers, and
+then leaves the caches populated - so the next run is warm and the discrepancy disappears
+before anyone looks for it.
+
+Every warm figure this campaign has recorded was taken after a warm run had already happened,
+so they stand. What was wrong is the screen's guarantee, not the numbers it produced: it
+promised a regime comparison and delivered one only when the environment happened to cooperate.
+
+The probe now runs the warm case twice and discards the first result. That makes the label
+true by construction rather than by circumstance, which is the same correction applied to the
+no-loss merge earlier - a guarantee the code enforces beats a guarantee the runner has to
+remember.
+
+Separately, `renta_web_open_replay_corpus` is ruled. It loads in neither regime and carries no
+module-level importer, so it joins the conditional rule, and the census returns to zero
+unclassified with the seven stale entries already accounted for.
