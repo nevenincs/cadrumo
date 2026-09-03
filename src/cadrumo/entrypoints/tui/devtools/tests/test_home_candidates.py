@@ -100,9 +100,19 @@ def test_candidate_module_has_no_io_or_application_action_imports() -> None:
     path = Path(__file__).parents[1] / "home_candidates.py"
     tree = ast.parse(path.read_text(encoding="utf-8"))
     imports = {
-        alias.name for node in ast.walk(tree) if isinstance(node, (ast.Import, ast.ImportFrom)) for alias in node.names
+        name
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.Import, ast.ImportFrom))
+        for name in (
+            *((alias.name for alias in node.names) if isinstance(node, ast.Import) else ()),
+            *((node.module,) if isinstance(node, ast.ImportFrom) and node.module is not None else ()),
+        )
     }
-    calls = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+    calls = {
+        node.func.id if isinstance(node.func, ast.Name) else node.func.attr
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, (ast.Name, ast.Attribute))
+    }
 
-    assert not {"open", "read", "write", "Path"} & calls
-    assert not any(name.startswith(("cadrumo.adapters", "cadrumo.entrypoints.cli")) for name in imports)
+    assert not {"open", "read", "write", "read_text", "write_text", "Path"} & calls
+    assert not any("adapters" in name or "entrypoints.cli" in name for name in imports)
