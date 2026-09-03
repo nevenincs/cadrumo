@@ -186,5 +186,6 @@ def test_revision_pressure_excludes_census_screens() -> None:
 
     census = {entry.name for entry in (*SCREENS, *CORPUS_SCREENS) if entry.entry_returns == "census"}
     assert census, "no screen declares a census, so this proves nothing"
-    named = {kind.split(".", 1)[0] for item in revision_pressure(bundled_authority(), bundled_modelo_ids()) for kind in item.conditions}
+    ranked = revision_pressure(bundled_authority(), bundled_modelo_ids())
+    named = {kind.split(".", 1)[0] for item in ranked for kind in item.conditions}
     assert not (named & census)
