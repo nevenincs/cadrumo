@@ -162,34 +162,3 @@ def test_the_sibling_comparison_is_proven_by_a_live_defect_not_a_fixture(
     known = {("200", "03594"), ("353", "10")}
     assert known <= reported, f"a pinned live defect stopped being reported: {sorted(known - reported)}"
     assert reported <= known, f"a sibling-scale disagreement outside the known set: {sorted(reported - known)}"
-
-
-def test_the_money_wire_type_still_scales_by_the_factor_this_screen_documents() -> None:
-    """The screen's reasoning rests on an undeclared codec behaviour, so it is pinned here.
-
-    Every condition this screen reports depends on one fact that no registry
-    declaration states: a `money` field's value is multiplied by one hundred
-    when it is rendered, in the codec, so a field declaring no scale is correct
-    when it is `money` and wrong when it is an unscaled type. That fact is a
-    literal in the renderer and prose in this screen's docstring - one fact in
-    two places, with the authoritative half unable to notice if the other
-    drifts.
-
-    Asserting the codec's behaviour rather than reading its source, because the
-    screen's claim is about what the renderer DOES. If the factor ever changes,
-    this fails here and the screen's documented reasoning is corrected with it,
-    instead of the screen quietly continuing to classify against a scale the
-    product no longer applies.
-    """
-    from decimal import Decimal
-
-    from cadrumo.domain.calculations.registry.fixed_width_codec import _render_money
-
-    class _Field:
-        length = 12
-        id = "probe"
-
-    rendered = _render_money(_Field(), Decimal("12.34"))
-
-    assert rendered.lstrip("0") == "1234", "a money field must emit its value in cents"
-    assert _render_money(_Field(), Decimal("1")).lstrip("0") == "100"

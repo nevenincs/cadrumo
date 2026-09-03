@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import tomllib
 from dataclasses import replace
 from pathlib import Path
 from typing import Final, TypedDict, get_args
@@ -144,6 +145,34 @@ id = "nested-decoy"
             tmp_path,
             export_refs_by_casilla={"nested-decoy": ("generated.decoy",)},
         )
+
+
+def test_generated_casilla_export_refs_follows_the_entire_multiline_source_refs_value(tmp_path: Path) -> None:
+    """Derived refs never split a TOML array while preserving declaration bytes."""
+    casillas = tmp_path / "casillas"
+    casillas.mkdir()
+    path = casillas / "multiline-source-refs.toml"
+    path.write_text(
+        """[[revisions.current.casillas]]
+id = '00067'
+source_refs = [
+    'aeat-dr-200-2024',
+    'aeat-modelo-200-manual-2024',
+]
+""",
+        encoding="utf-8",
+    )
+
+    write_generated_casilla_export_refs(
+        tmp_path,
+        export_refs_by_casilla={"00067": ("m200-2024.record.field",)},
+    )
+
+    rendered = path.read_text(encoding="utf-8")
+    assert "    'aeat-modelo-200-manual-2024',\n]\nexport_refs" in rendered
+    assert tomllib.loads(rendered)["revisions"]["current"]["casillas"][0]["export_refs"] == [
+        "m200-2024.record.field",
+    ]
 
 
 def _intermediate(
