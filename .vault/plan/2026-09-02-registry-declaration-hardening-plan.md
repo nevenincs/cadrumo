@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:703e265833f3e8232cb04049f963538ffb7232177db09e4d63ae0eff549519ee'
+body_hash: 'sha256:88b593ca6b84ed729df8a48956272f9f2bf91fec1e6f3997cecceda4b7531eb2'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -480,6 +480,7 @@ Author the four architectural decision records the contract requires before any 
 - [ ] `W06.P13.S242` - Name dev/source_connectivity/tests in a lane, after establishing what its hundred and five never-run tests report; `justfile`.
 - [ ] `W06.P13.S243` - Name dev/tui/tests in a lane, after establishing what its thirty-nine never-run tests report; `justfile`.
 - [x] `W06.P13.S244` - Establish what the never-run TUI suite reports and confirm its single failure is a coverage table naming absent interfaces; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S245` - Establish what the never-run source connectivity suite reports and separate its environmental errors from its drifted hashes; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

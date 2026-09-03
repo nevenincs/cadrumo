@@ -5886,3 +5886,30 @@ the table's owner should decide whether the entries or the interfaces are wrong.
 established is that one of the three unwired suites reports a real defect on its first run, at a
 cost of fifteen seconds, which answers the question the wiring Step depends on for that
 directory.
+
+### never-run-source-connectivity-suite-splits-three-ways | high | 101 pass, 20 error on absent custody infrastructure, and 8 fail on frozen hashes that drifted while nothing checked them
+
+The largest unwired directory was run to answer what wiring it would cost: 101 passed, 9 failed
+and 20 errored, in under ten minutes. The three groups want three different things and none of
+them is "add a directory to a recipe".
+
+The twenty errors are environmental. Every one fails at setup with `profile custody
+infrastructure has not been composed`, and their names - real live authority, encrypted payload
+round trips - say why: they need the encrypted profile storage that a headless runner cannot
+compose. That is precisely what the `os_keychain` marker exists to declare, and these tests
+carry plain `unit` and `hex_core` instead. Wiring the directory without marking them adds twenty
+errors to CI for a precondition CI cannot satisfy.
+
+Eight of the nine failures are frozen-hash drift. The census asserts a recorded sha256 per
+capability and reports `capability coverage drift for coverage.remaining-calculation-helpers:
+expected sha256:cf1081c0... got sha256:b460f149...`. The tree moved and the recorded state did
+not, which is the failure mode this project's own rules name when they say frozen corpus counts
+and baseline ratchets do not prove completeness. Nothing ran the check, so nothing reported the
+drift, and the drift is now of unknown age.
+
+One failure in `test_campaign_close.py` remains unclassified here.
+
+Together with the TUI suite's single failure, both unwired directories examined report real
+findings on first contact, and neither is a simple wiring job. The Steps naming them stay open
+with this recorded, because the honest sequence is: mark the twenty, refresh or retire the eight
+frozen hashes, understand the one, and only then name the directory in a lane.
