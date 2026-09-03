@@ -202,6 +202,7 @@ class LedgerInvoiceReconciliationReaderProtocol(Protocol):
         self,
         invoices: InvoiceCatalogue,
         transactions: TransactionCatalogue,
+        /,
     ) -> tuple[ReconciliationSuggestion, ...]:
         """Return deterministic local match suggestions."""
         ...
@@ -214,6 +215,7 @@ class LedgerLinkConsistencyReaderProtocol(Protocol):
         self,
         invoices: InvoiceCatalogue,
         transactions: TransactionCatalogue,
+        /,
     ) -> tuple[LinkInconsistency, ...]:
         """Return deterministic one-sided-link findings."""
         ...
@@ -225,7 +227,7 @@ def _canonical_filing_staleness_reader(
     catalogue: TransactionCatalogue,
 ) -> tuple[tuple[CalculationRevision, LedgerFilingStalenessVerdict], ...]:
     """Reach the existing pure implementation behind this public door."""
-    from ..aggregation._ledger_filing_snapshot import stale_filed_revisions
+    from ..aggregation.ledger_filing_snapshot import stale_filed_revisions
 
     return stale_filed_revisions(revisions=revisions, catalogue=catalogue)
 
@@ -260,7 +262,17 @@ def project_affected_declaration_reconciliations(
                 removed_count=len(verdict.removed),
             )
         )
-    return tuple(sorted(rows, key=lambda item: (str(item.modelo), item.filing_year, item.period.registry_token, item.calculation_revision_id)))
+    return tuple(
+        sorted(
+            rows,
+            key=lambda item: (
+                str(item.modelo),
+                item.filing_year,
+                item.period.registry_token,
+                item.calculation_revision_id,
+            ),
+        )
+    )
 
 
 def project_ledger_workspace(
@@ -324,7 +336,11 @@ def project_ledger_workspace(
         LedgerWorkspaceAreaStateV1(
             area=LedgerWorkspaceArea.OVERVIEW,
             sources=(LedgerWorkspaceSource.LOCAL_LEDGER, LedgerWorkspaceSource.LOCAL_DECLARATIONS),
-            status=(LedgerWorkspaceStatus.NEEDS_ATTENTION if pending or readiness_issues or affected else LedgerWorkspaceStatus.READY),
+            status=(
+                LedgerWorkspaceStatus.NEEDS_ATTENTION
+                if pending or readiness_issues or affected
+                else LedgerWorkspaceStatus.READY
+            ),
             item_count=pending + readiness_issues + len(affected),
         ),
         LedgerWorkspaceAreaStateV1(
@@ -364,7 +380,9 @@ def project_ledger_workspace(
                 LedgerWorkspaceSource.LOCAL_INVOICES,
                 LedgerWorkspaceSource.LOCAL_DECLARATIONS,
             ),
-            status=(LedgerWorkspaceStatus.EMPTY if reconciliation_count == 0 else LedgerWorkspaceStatus.NEEDS_ATTENTION),
+            status=(
+                LedgerWorkspaceStatus.EMPTY if reconciliation_count == 0 else LedgerWorkspaceStatus.NEEDS_ATTENTION
+            ),
             item_count=reconciliation_count,
         ),
     )
