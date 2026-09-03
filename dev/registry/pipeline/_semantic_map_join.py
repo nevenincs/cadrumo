@@ -8,6 +8,8 @@ generation boundary; it neither produces nor observes a fragment tree.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.core.casilla_id import CasillaId
@@ -19,6 +21,10 @@ from cadrumo.domain.calculations.registry.ids import (
 from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactInspection
 
+from ..analysis.m200_2024_reviewed_promotions import (
+    M200ReviewedPromotionSnapshot,
+    _receipt_candidate_ids,
+)
 from ._record_design_ir import (
     AnchorKey,
     RecordDesignIntermediate,
@@ -40,7 +46,7 @@ from ._semantic_map import (
 )
 from ._semantic_map_validation import (
     SemanticMapAnomalyException,
-    validate_semantic_map,
+    _validate_semantic_map_with_admissions,
 )
 
 __all__ = [
@@ -109,6 +115,7 @@ class JoinedRecordDesign(_StrictModel):
     source: RecordDesignIntermediateSource
     authored_semantic_map: SemanticMap | None = None
     compiled_semantic_map: SemanticMap | None = None
+    reviewed_promotion_snapshot: M200ReviewedPromotionSnapshot | None = None
     revision_id: RevisionId | None = None
     records: tuple[JoinedRecordDesignRecord, ...] = Field(min_length=1)
     fields: tuple[JoinedRecordDesignField, ...] = Field(min_length=1)
@@ -126,12 +133,18 @@ class JoinedRecordDesign(_StrictModel):
                 self.compiled_semantic_map
             ):
                 raise ValueError("compiled semantic map may change only casilla tokens")
+            admissions = _issued_qualified_identity_admissions(
+                modelo=self.modelo,
+                revision_id=self.revision_id,
+                reviewed_promotion_snapshot=self.reviewed_promotion_snapshot,
+            )
             if any(
                 not _entry_is_exact_or_compiled_token(
                     authored,
                     compiled,
                     modelo=self.modelo,
                     revision_id=self.revision_id,
+                    qualified_identity_admissions=admissions,
                 )
                 for authored, compiled in zip(
                     self.authored_semantic_map.entries,
@@ -180,6 +193,7 @@ def _entry_is_exact_or_compiled_token(
     *,
     modelo: ModeloId,
     revision_id: RevisionId | None,
+    qualified_identity_admissions: Mapping[str, CasillaId],
 ) -> bool:
     """Prove validation changed an authored token only through its admitted form."""
     if authored == compiled:
@@ -209,6 +223,7 @@ def _entry_is_exact_or_compiled_token(
                 revision_id=revision_id,
                 export_field_id=str(authored.export_field_id),
                 casilla_id=resolved,
+                qualified_identity_admissions=qualified_identity_admissions,
             )
         )
     return False
@@ -220,23 +235,33 @@ def _reviewed_qualified_token_admits(
     revision_id: RevisionId | None,
     export_field_id: str,
     casilla_id: CasillaId,
+    qualified_identity_admissions: Mapping[str, CasillaId],
 ) -> bool:
-    """Re-prove the only qualified compiler transformation at the join boundary."""
+    """Use the single receipt proof created at semantic-map validation."""
     if str(modelo) != "200" or str(revision_id) != "2024":
         return False
-    from ..analysis.m200_2024_reviewed_promotions import (
-        _receipt_candidate_ids,
-        build_m200_2024_reviewed_promotion_snapshot,
-    )
-    from ..analysis.m200_2024_unique_adjudications import verify_canonical_declarations
+    return qualified_identity_admissions.get(export_field_id) == casilla_id
 
-    snapshot = build_m200_2024_reviewed_promotion_snapshot()
-    _receipt_candidate_ids(snapshot)
-    verify_canonical_declarations(snapshot.unique_authority)
-    return any(
-        row.export_field_id == export_field_id and row.casilla_id == casilla_id
-        for row in snapshot.unique_authority.adjudications
-    )
+
+def _issued_qualified_identity_admissions(
+    *,
+    modelo: ModeloId,
+    revision_id: RevisionId | None,
+    reviewed_promotion_snapshot: M200ReviewedPromotionSnapshot | None,
+) -> dict[str, CasillaId]:
+    """Derive join admissions from an issuer-bound one-invocation receipt only."""
+    if str(modelo) != "200" or str(revision_id) != "2024":
+        if reviewed_promotion_snapshot is not None:
+            raise ValueError("only M200/2024 may carry a reviewed promotion snapshot")
+        return {}
+    if reviewed_promotion_snapshot is None:
+        return {}
+    _receipt_candidate_ids(reviewed_promotion_snapshot)
+    return {
+        row.export_field_id: row.casilla_id
+        for row in reviewed_promotion_snapshot.unique_authority.adjudications
+        if ":" in row.casilla_id
+    }
 
 
 def join_record_design_semantics(
@@ -247,18 +272,19 @@ def join_record_design_semantics(
     anomaly_exceptions: tuple[SemanticMapAnomalyException, ...] = (),
 ) -> JoinedRecordDesign:
     """Join static parser/map evidence through a non-filing revision inspection."""
-    resolved_map = validate_semantic_map(
+    validated = _validate_semantic_map_with_admissions(
         semantic_map,
         intermediate,
         inspection,
         anomaly_exceptions=anomaly_exceptions,
     )
     return _join_record_design_semantics(
-        resolved_map,
+        validated.semantic_map,
         intermediate,
         authored_semantic_map=semantic_map,
         revision_id=inspection.revision_id,
         projection_endpoints=inspection.projection_endpoints,
+        reviewed_promotion_snapshot=validated.reviewed_promotion_snapshot,
     )
 
 
@@ -267,6 +293,7 @@ def _join_record_design_semantics(
     intermediate: RecordDesignIntermediate,
     *,
     authored_semantic_map: SemanticMap | None = None,
+    reviewed_promotion_snapshot: M200ReviewedPromotionSnapshot | None = None,
     revision_id: RevisionId,
     projection_endpoints: tuple[ProjectionEndpointDeclaration, ...],
 ) -> JoinedRecordDesign:
@@ -291,6 +318,7 @@ def _join_record_design_semantics(
         source=intermediate.source,
         authored_semantic_map=authored_semantic_map,
         compiled_semantic_map=semantic_map,
+        reviewed_promotion_snapshot=reviewed_promotion_snapshot,
         revision_id=revision_id,
         records=joined_records,
         fields=tuple(field for record in joined_records for field in record.fields),

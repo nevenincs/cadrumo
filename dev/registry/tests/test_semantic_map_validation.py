@@ -17,6 +17,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_revision_insp
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..pipeline import _semantic_map_join, _semantic_map_validation
+from ..analysis.m200_2024_reviewed_promotions import build_m200_2024_reviewed_promotion_snapshot
 from ..pipeline._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
 from ..pipeline._semantic_map import SemanticMap
 from ..pipeline._semantic_map_validation import (
@@ -250,24 +251,32 @@ def test_join_qualified_identity_transform_requires_the_closed_reviewed_receipt(
     invented = authored.model_copy(
         update={"casilla_id": validated_casilla_id("DP200018:00589", surface="test")},
     )
+    admissions = _semantic_map_join._issued_qualified_identity_admissions(
+        modelo="200",
+        revision_id="2024",
+        reviewed_promotion_snapshot=build_m200_2024_reviewed_promotion_snapshot(),
+    )
 
     assert _semantic_map_join._entry_is_exact_or_compiled_token(
         authored,
         admitted,
         modelo="200",
         revision_id="2024",
+        qualified_identity_admissions=admissions,
     )
     assert not _semantic_map_join._entry_is_exact_or_compiled_token(
         authored,
         invented,
         modelo="200",
         revision_id="2024",
+        qualified_identity_admissions=admissions,
     )
     assert not _semantic_map_join._entry_is_exact_or_compiled_token(
         authored,
         admitted,
         modelo="130",
         revision_id="2024",
+        qualified_identity_admissions=admissions,
     )
 
 

@@ -66,6 +66,8 @@ def _array_bracket_balance(line: str) -> int:
             continue
         if character in {'"', "'"}:
             quote = character
+        elif character == "#":
+            break
         elif character == "[":
             balance += 1
         elif character == "]":

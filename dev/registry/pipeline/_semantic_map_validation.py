@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -20,6 +21,8 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import SourceRefId
 from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactInspection
+
+from ..analysis.m200_2024_reviewed_promotions import M200ReviewedPromotionSnapshot
 
 from ._record_design_ir import (
     AnchorKey,
@@ -50,6 +53,12 @@ class _StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
 
+@dataclass(frozen=True)
+class _ValidatedSemanticMap:
+    semantic_map: SemanticMap
+    reviewed_promotion_snapshot: M200ReviewedPromotionSnapshot | None
+
+
 class SemanticMapAnomalyException(_StrictModel):
     """A hash-pinned parser or source anomaly noted without changing mapping.
 
@@ -78,16 +87,36 @@ def validate_semantic_map(
     the selected revision's immutable admission facts without constructing a
     snapshot or crossing the filing/legal-review gate.
     """
+    return _validate_semantic_map_with_admissions(
+        semantic_map,
+        intermediate,
+        inspection,
+        anomaly_exceptions=anomaly_exceptions,
+    ).semantic_map
+
+
+def _validate_semantic_map_with_admissions(
+    semantic_map: SemanticMap,
+    intermediate: RecordDesignIntermediate,
+    inspection: GeneratedArtifactInspection,
+    *,
+    anomaly_exceptions: tuple[SemanticMapAnomalyException, ...] = (),
+) -> _ValidatedSemanticMap:
+    """Validate once and retain the receipt proof needed by the semantic join."""
     _validate_scope(semantic_map, intermediate, modelo_id=inspection.modelo_id)
     validate_inspection_source_authority(intermediate, inspection)
     _validate_anomaly_exceptions(anomaly_exceptions, intermediate)
     _validate_exact_bijection(semantic_map, intermediate)
     _validate_exact_record_bijection(semantic_map, intermediate)
     _validate_variable_envelope_boundary(semantic_map, intermediate)
+    qualified_identity_admissions, reviewed_promotion_snapshot = _reviewed_qualified_identity_admissions(
+        semantic_map,
+        inspection,
+    )
     resolved_map = _resolve_semantic_map_casilla_tokens(
         semantic_map,
         casilla_ids=inspection.casilla_ids,
-        qualified_identity_admissions=_reviewed_qualified_identity_admissions(semantic_map, inspection),
+        qualified_identity_admissions=qualified_identity_admissions,
     )
     _validate_entry_references(
         resolved_map,
@@ -97,7 +126,10 @@ def validate_semantic_map(
         legal_ref_ids=inspection.legal_ref_ids,
         source_refs=frozenset(inspection.sources),
     )
-    return resolved_map
+    return _ValidatedSemanticMap(
+        semantic_map=resolved_map,
+        reviewed_promotion_snapshot=reviewed_promotion_snapshot,
+    )
 
 
 def resolve_semantic_map_casilla_tokens(
@@ -166,7 +198,7 @@ def _resolve_semantic_map_casilla_tokens(
 def _reviewed_qualified_identity_admissions(
     semantic_map: SemanticMap,
     inspection: GeneratedArtifactInspection,
-) -> dict[str, CasillaId]:
+) -> tuple[dict[str, CasillaId], M200ReviewedPromotionSnapshot | None]:
     """Admit only M200/2024 unique-receipt identities missing map qualification.
 
     This is deliberately a target-specific compiler boundary, not a generic
@@ -174,7 +206,7 @@ def _reviewed_qualified_identity_admissions(
     the exact export-field-to-qualified-id relation and its canonical bytes.
     """
     if (str(semantic_map.modelo), semantic_map.design_epoch, str(inspection.revision_id)) != ("200", "2024", "2024"):
-        return {}
+        return {}, None
     from ..analysis.m200_2024_reviewed_promotions import (
         _receipt_candidate_ids,
         build_m200_2024_reviewed_promotion_snapshot,
@@ -200,7 +232,7 @@ def _reviewed_qualified_identity_admissions(
                 f"M200/2024 reviewed qualified identity {identifier!r} is absent from the target revision",
             )
         admissions[str(entry.export_field_id)] = identifier
-    return admissions
+    return admissions, snapshot
 
 
 def _is_qualified_token_match(token: CasillaId, identifier: CasillaId) -> bool:

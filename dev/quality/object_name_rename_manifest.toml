@@ -1,34 +1,39 @@
 schema_version = 1
-inventory_digest = "sha256:a7663aadc340ebadeb45417c776f81da7c326b41b727ca86842d24f4f5bfa1e8"
+inventory_digest = "sha256:48ebdd1dfdbc2bac5c19ea4943df067a1fc8cdef8e7338cea06df4173222121e"
 
 [[operations]]
-operation_id = "rename-python-runtime-dependency-status"
-finding_id = "sha256:1c6852fe4af506ddc7cf90de2313d36410b8eb769854fe9d3de48653c9ee18a0"
+operation_id = "rename-terminology-coverage-report"
+finding_id = "sha256:5f55e6902559e73c67bfae62342d40770693b272a608c6433aa9b308be68d1d0"
 operation_kind = "symbol-rename"
 disposition = "rename-distinct"
 lifecycle = "reviewed"
-old_locator = "enum:dev.ci.python_runtime_compatibility.DependencyStatus#binding=1"
-old_path = "dev/ci/python_runtime_compatibility.py"
-new_locator = "enum:dev.ci.python_runtime_compatibility.PythonRuntimeDependencyStatus#binding=1"
-new_path = "dev/ci/python_runtime_compatibility.py"
-owner = "dev-ci"
-rationale = "The enum records dependency installation outcomes inside the Python runtime compatibility probe; the qualified singular name distinguishes it from the application provisioning result."
+old_locator = "class:dev.docs.terminology._coverage.CoverageReport#binding=1"
+old_path = "dev/docs/terminology/_coverage.py"
+new_locator = "class:dev.docs.terminology._coverage.TerminologyCoverageReport#binding=1"
+new_path = "dev/docs/terminology/_coverage.py"
+owner = "dev-docs"
+rationale = "The model is the terminology corpus coverage result; the qualified singular name distinguishes it from registry conformance coverage."
 expected_reference_classes = ["definition", "static-import"]
 changed_paths = [
-  "dev/ci/python_runtime_compatibility.py",
-  "dev/ci/tests/test_python_runtime_compatibility.py",
+  "dev/docs/terminology/_coverage.py",
+  "dev/docs/terminology/coverage.py",
+  "dev/docs/terminology/tests/test_coverage.py",
 ]
 generator_commands = []
 focused_gates = [
-  ["uv", "run", "--no-sync", "pytest", "dev/ci/tests/test_python_runtime_compatibility.py", "-q"],
-  ["uv", "run", "--no-sync", "ruff", "check", "dev/ci/python_runtime_compatibility.py", "dev/ci/tests/test_python_runtime_compatibility.py"],
+  ["uv", "run", "--no-sync", "pytest", "dev/docs/terminology/tests/test_coverage.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "dev/docs/terminology/_coverage.py", "dev/docs/terminology/coverage.py", "dev/docs/terminology/tests/test_coverage.py"],
 ]
 moves = []
 
 [[operations.preconditions]]
-path = "dev/ci/python_runtime_compatibility.py"
-sha256 = "sha256:273d67eeb6abf94366a3eaca98f06c3ea19ac09eb34f0978bcd609cc5786e020"
+path = "dev/docs/terminology/_coverage.py"
+sha256 = "sha256:832a9bf11a5be97bee90164cbc788b1a3fcf284f9868063e8b29ef24a532904a"
 
 [[operations.preconditions]]
-path = "dev/ci/tests/test_python_runtime_compatibility.py"
-sha256 = "sha256:0c38e86a2888f4eed554912988eb27b027f7ca46127fe7b604ae0c2d305f4e15"
+path = "dev/docs/terminology/coverage.py"
+sha256 = "sha256:bff28cf81d442149e39742930fac023053ff00ec054595765b0c69fb48eb810c"
+
+[[operations.preconditions]]
+path = "dev/docs/terminology/tests/test_coverage.py"
+sha256 = "sha256:d36c359c4e891459e36016d2eec3b923397cd143026d4d519c83c61142fdf746"
