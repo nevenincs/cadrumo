@@ -484,7 +484,6 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "cadrumo.core.decimal.coercion",
             "cadrumo.core.errors.error_codes",
             "cadrumo.core.errors.hierarchy",
-            "cadrumo.core.errors.not_found",
             "cadrumo.core.errors.registry",
             "cadrumo.core.errors.registry._adapters",
             "cadrumo.core.errors.registry._adapters_part1",
@@ -525,8 +524,6 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "cadrumo.domain.iva.regimen_simplificado_rows",
             "cadrumo.domain.iva.schema",
             "cadrumo.domain.justificante",
-            "cadrumo.domain.justificante.errors",
-            "cadrumo.domain.justificante._protocols",
             "cadrumo.domain.justificante.schema",
             "cadrumo.domain.manuals.errors",
             "cadrumo.domain.manuals._ids",
@@ -558,7 +555,6 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "traced alongside the registry members of the same trigger."
         ),
         members=("cadrumo.core.i18n._translatable",),
-        prefixes=("cadrumo.domain.categories",),
     ),
     ClassificationRule(
         classification="conditionally_reachable",
