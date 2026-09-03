@@ -11,7 +11,7 @@ related:
   - '[[2026-09-03-duplication-burndown-honest-clone-closure-research]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:344ac9c496d026da1348adfc33128419ce2c43fe1b7e8c68239c0ec4133a6efd'
+body_hash: 'sha256:ebaef6d7de696fe5bc1fe2e28e2fae5ae1fe191d541f70ed8c749588f4a61ac0'
 ---
 
 <!-- RETIRED: W05, W06, W07, P02, P03, P04, P06, P09, P12, P14, P16, P17, P19, P20, P21, P22, P23, P24, P25, P26, P27, S03, S06, S07 -->
@@ -69,7 +69,7 @@ Adjudicate and repair each non-CLI semantic pair independently so shared concept
 
 Resolve each application-local pair at its owning boundary.
 
-- [ ] `W03.P07.S13` - Adjudicate and resolve the three application-local clone pairs with focused invariant tests; `src/cadrumo/application`.
+- [x] `W03.P07.S13` - Adjudicate and resolve the three application-local clone pairs with focused invariant tests; `src/cadrumo/application`.
 
 ### Phase `W03.P11` - resolve AEAT adapter pair
 
