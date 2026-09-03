@@ -36,6 +36,7 @@ from .grade_earned import screen_authority as grade_screen
 from .modelo_capability import screen_authority as modelo_capability_screen
 from .monetary_scale import screen_authority as monetary_scale_screen
 from .note_label_scope import screen_corpus as note_label_scope_screen
+from .note_text_drift import screen_corpus as note_text_drift_screen
 from .provenance_consistency import outside_reference_index
 from .provenance_consistency import screen_authority as provenance_screen
 from .revision_name_window import screen_authority as revision_name_screen
@@ -243,6 +244,11 @@ CORPUS_SCREENS: tuple[CorpusScreenEntry, ...] = (
         "note_label_scope",
         note_label_scope_screen,
         "designs where one note label is defined on more than one sheet",
+    ),
+    CorpusScreenEntry(
+        "note_text_drift",
+        note_text_drift_screen,
+        "note labels whose wording differs between a modelo's designs",
     ),
     CorpusScreenEntry(
         "unnumbered_note_scope",

@@ -88,6 +88,7 @@ says which. What each one owns:
 | `rule_grounding_coverage` | fields needing a reviewed rule for which no official wording was located at all |
 | `note_label_scope` | designs where one note label is defined on more than one sheet |
 | `unnumbered_note_scope` | designs carrying an unnumbered note, by the structure that bears on its scope |
+| `note_text_drift` | note labels whose wording differs between a modelo's designs |
 
 Three rules keep the suite honest.
 
