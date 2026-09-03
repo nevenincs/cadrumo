@@ -39,10 +39,19 @@ Four conditions are reported, and every row names one of them:
   the row exists so that "somewhere else" is a known quantity rather than a gap
   discovered halfway through authoring.
 
-A grounded row is not an authored rule. The note still has to be read, and it
-may turn out to settle less than the field needs. What the row establishes is
-that there is official wording to read, which is exactly what the per-field
-pointer route failed to produce.
+A grounded row is not an authored rule, and the gap is wider than it sounds. The
+note still has to be read, and it may turn out to answer a different question
+entirely: reading the eleven notes behind the forty-one fields, seven state
+representation and cover twelve fields, while four state who must fill a field,
+when it may carry content, or which period it applies to - and those four cover
+twenty-nine. The single largest of them grounds twenty-six fields with a
+sentence about which entities must complete them.
+
+So this screen answers "is there official wording addressed to this field", not
+"does that wording settle it". The second question is a reading of Spanish prose
+and is deliberately left to the reader: a keyword list attempting it is the
+instrument error this package has recorded repeatedly, most sharply when such a
+list reported the plainest wire wording in the corpus as absent.
 
 The screen exits 0 whatever it finds. It reports; it does not gate.
 """
@@ -93,6 +102,12 @@ class GroundingFinding:
     modelo: str
     revision: str
     cell: str
+    #: The transcription the field's notes are defined in. Carried because a
+    #: note is located by DESIGN, not by revision: several revisions share one
+    #: design, and looking a note up in the wrong revision of the right modelo
+    #: returns nothing at all. That mistake was made while reading this screen's
+    #: own output and briefly looked like three notes resolving to empty text.
+    design: str
     aeat_type: str
     #: The field's declared width. Carried because it is what decides whether a
     #: note can settle the field at all: modelo 200's amounts note states a
@@ -109,6 +124,10 @@ class NoteWorkItem:
     """One note to read, and the fields a rule grounded in it would cover."""
 
     modelo: str
+    #: The transcription to open. Without it a reader has the note's sheet and
+    #: label but no file, which is exactly enough information to look in the
+    #: wrong place.
+    design: str
     note: str
     grounding: str
     fields: tuple[str, ...]
@@ -132,22 +151,23 @@ def grounding_worklist(findings: tuple[GroundingFinding, ...]) -> tuple[NoteWork
     Ungrounded fields are absent by construction: they have no note to group
     under, and the census reports them.
     """
-    grouped: dict[tuple[str, str, str], list[GroundingFinding]] = collections.defaultdict(list)
+    grouped: dict[tuple[str, str, str, str], list[GroundingFinding]] = collections.defaultdict(list)
     for finding in findings:
         for note in finding.notes:
-            grouped[(finding.modelo, note, finding.kind)].append(finding)
+            grouped[(finding.modelo, finding.design, note, finding.kind)].append(finding)
     items = [
         NoteWorkItem(
             modelo=modelo,
+            design=design,
             note=note,
             grounding=kind,
             fields=tuple(sorted(item.cell for item in members)),
             widths=tuple(sorted({item.length for item in members})),
             types=tuple(sorted({item.aeat_type for item in members})),
         )
-        for (modelo, note, kind), members in grouped.items()
+        for (modelo, design, note, kind), members in grouped.items()
     ]
-    return tuple(sorted(items, key=lambda item: (-len(item.fields), item.modelo, item.note)))
+    return tuple(sorted(items, key=lambda item: (-len(item.fields), item.modelo, item.design, item.note)))
 
 
 def revision_findings(
@@ -176,7 +196,12 @@ def revision_findings(
     )
 
     return classify_grounding(
-        needed, by_type=dict(by_type), design_notes=tuple(sorted(design_notes)), modelo=modelo, revision=revision
+        needed,
+        by_type=dict(by_type),
+        design_notes=tuple(sorted(design_notes)),
+        modelo=modelo,
+        revision=revision,
+        design=transcription.name,
     )
 
 
@@ -187,6 +212,7 @@ def classify_grounding(
     design_notes: tuple[str, ...],
     modelo: str,
     revision: str,
+    design: str = "",
 ) -> tuple[GroundingFinding, ...]:
     """Classify already-gathered fields and wording, separately from gathering them.
 
@@ -223,6 +249,7 @@ def classify_grounding(
                 modelo=modelo,
                 revision=revision,
                 cell=field.cell,
+                design=design,
                 aeat_type=field.aeat_type,
                 length=field.length,
                 kind=kind,
@@ -272,7 +299,8 @@ def main() -> int:
     ungrounded_types = {(item.modelo, item.aeat_type) for item in findings if item.kind == "ungrounded"}
     for item in work:
         sys.stdout.write(
-            f"rule_grounding_work modelo={item.modelo} note={item.note!r} grounding={item.grounding} "
+            f"rule_grounding_work modelo={item.modelo} design={item.design!r} note={item.note!r} "
+            f"grounding={item.grounding} "
             f"fields={len(item.fields)} widths={','.join(str(width) for width in item.widths)} "
             f"types={','.join(item.types)!r}\n"
         )
