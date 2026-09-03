@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e0acb4410dfb51f310cade26db94850ef0811bdbd7b4c8096ef8aea8115cfc2e'
+body_hash: 'sha256:3044be7054ff92031122869c9ec80ef5dbba49059aff068ca3627a6849e8f34b'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7848,3 +7848,40 @@ two refusals - a journal candidate that is not a staging sibling, and a
 provenance file the fragment loader will not accept without a TOML suffix. They
 appear in the pre-change suite run and are unrelated to the guards; the three
 edited modules import cleanly and twenty-nine tests pass beside them.
+
+### one-filename-three-declarations-and-one-value-under-two-names | high | The inverse of the constant-agreement gate: not one name with two values, but one value with several names
+
+Chasing a publication refusal - a loader rejecting `_generation.provenance.json`
+inside a revision directory - found the filename declared three times: the
+pipeline's provenance module, which nine other modules import from; the shipped
+loader cache, outside this work's scope; and the render-check module, which
+restated the literal privately. The restatement was in a file this campaign has
+been extending all session, which is the honest way to say where it came from.
+
+Measuring the class rather than the instance found five more inside the registry
+tooling. A manual-source sha256 declared in three modelo 200 modules under one
+name. A registry package path in two census modules. A serializer convention
+token in two pipeline modules. A sha256 pattern in two. And the pre-rename
+provenance filename declared twice under two DIFFERENT names -
+`_LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME` in the module that skips the file
+and `_LEGACY_SIBLING_MANIFEST` in the module that removes it.
+
+That last one is the worst shape in the set and the reason it was fixed first.
+One value under one name is greppable: a reader searching for the string finds
+every use. One value under two names is not - searching either name finds half
+the uses, and the half that is missed is invisible rather than merely
+inconvenient. The reader who renames the file will find one of them.
+
+The provenance filename now has a single public declaration that the publisher
+and the reader both import, and render-check imports rather than restates. The
+tests that cover those modules report 31 passing with the same two failures they
+had before the change, reporting the same two refusals, which is how the edit is
+known to be neutral to them.
+
+This class is the inverse of the constant-agreement gate this campaign already
+built. That one refuses a public constant carrying two values; this is one value
+carried by several constants, and no gate sees it. A general gate would be
+wrong - this tree deliberately requires each module to declare its own encoding
+constant, so the pattern is sanctioned in one place and a defect in others - but
+the distinction is worth stating rather than leaving as an omission the next
+sweep rediscovers.
