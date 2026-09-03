@@ -83,6 +83,18 @@ def _semantic_targets(screen: CandidateScreen) -> tuple[str, ...]:
     return tuple(str(row.key.value) for table in _tables(screen) for row in table.ordered_rows)
 
 
+def _cursor_target(table: DataTable[object]) -> str:
+    return str(table.ordered_rows[table.cursor_row].key.value)
+
+
+def _all_rendered_copy(screen: CandidateScreen) -> str:
+    static_copy = [str(widget.render()) for widget in screen.query(Static)]
+    table_copy = [
+        str(cell) for table in _tables(screen) for row in range(table.row_count) for cell in table.get_row_at(row)
+    ]
+    return "\n".join((*static_copy, *table_copy))
+
+
 def _vertical_owners(screen: CandidateScreen) -> tuple[Widget, ...]:
     return tuple(widget for widget in screen.walk_children(Widget) if widget.display and widget.show_vertical_scrollbar)
 
@@ -176,16 +188,33 @@ async def test_all_seven_states_are_legible_at_the_terminal_floor(
 @pytest.mark.asyncio
 async def test_locales_change_copy_without_changing_semantic_targets() -> None:
     projection = build_home_projection_fixture(HomeFixtureScenario.READY)
-    readings: list[tuple[str, tuple[str, ...]]] = []
-    for locale in _LOCALES:
-        screen = TaskLauncherHomeCandidateScreen(projection, locale=locale)
-        app = ScreenHostApp[None](screen)
-        async with app.run_test(size=(100, 30)) as pilot:
-            await pilot.pause()
-            readings.append((screen_text(app, 100, 30), _semantic_targets(screen)))
-    assert len({text for text, _targets in readings}) == len(_LOCALES)
-    assert len({targets for _text, targets in readings}) == 1
-    assert all(marker in text for marker, (text, _targets) in zip(_LOCALE_MARKERS.values(), readings, strict=True))
+    forbidden_english = (
+        "Home ·",
+        "Next actions",
+        "Declarations",
+        "Filing agenda",
+        "Quick tasks",
+        "Available",
+        "Review declaration",
+        "Local declaration status",
+        " entries",
+        "unclassified",
+        "missing evidence",
+    )
+    for screen_type in _CANDIDATES:
+        readings: list[tuple[str, tuple[str, ...]]] = []
+        for locale in _LOCALES:
+            screen = screen_type(projection, locale=locale)
+            app = ScreenHostApp[None](screen)
+            async with app.run_test(size=(100, 30)) as pilot:
+                await pilot.pause()
+                readings.append((_all_rendered_copy(screen), _semantic_targets(screen)))
+        assert len({text for text, _targets in readings}) == len(_LOCALES)
+        assert len({targets for _text, targets in readings}) == 1
+        assert all(marker in text for marker, (text, _targets) in zip(_LOCALE_MARKERS.values(), readings, strict=True))
+        for text, _targets in readings:
+            if "Home ·" not in text:
+                assert not any(phrase in text for phrase in forbidden_english)
 
 
 @pytest.mark.asyncio
@@ -198,14 +227,23 @@ async def test_compact_launcher_reaches_every_preview_and_keeps_detail_visible()
         chooser = app.screen.query_one("#launcher-chooser", DataTable)
         detail = app.screen.query_one("#launcher-detail", Static)
         assert 1 <= chooser.row_count <= 5
-        for row_index in range(chooser.row_count):
-            if row_index:
-                await pilot.press("down")
-                await pilot.pause()
+        expected_targets = tuple(str(row.key.value) for row in chooser.ordered_rows)
+        observed_details: list[str] = []
+        for row_index, expected_target in enumerate(expected_targets):
+            table = cast("DataTable[object]", chooser)
+            assert _cursor_target(table) == expected_target
+            assert screen.highlighted_target is not None
+            assert screen.highlighted_target.identity == expected_target
+            detail_copy = str(detail.render())
+            assert detail_copy
+            observed_details.append(detail_copy)
             assert detail.region.y >= 0 and detail.region.bottom <= 24
             assert detail.region.overlaps(app.screen.region)
-            assert screen.highlighted_target is not None
-            assert row_index + 1 <= 5
+            if row_index + 1 < len(expected_targets):
+                await pilot.press("down")
+                await pilot.pause()
+        assert len(set(observed_details)) == len(expected_targets)
+        assert len(expected_targets) <= 5  # At most four Down presses and Enter.
         await pilot.press("enter")
         await pilot.pause()
     assert screen.selected_target == screen.highlighted_target
@@ -223,17 +261,24 @@ async def test_focus_chain_and_semantic_target_survive_resize_and_reordering(scr
         await pilot.pause()
         before = screen.highlighted_target
         assert before is not None
+        focused_before = cast("DataTable[object]", app.focused)
+        assert _cursor_target(focused_before) == before.identity
         await pilot.resize_terminal(200, 50)
         await pilot.pause()
-        assert screen.highlighted_target == before
-        assert app.focused is not None and app.focused.id in {"due-actions", "launcher-chooser"}
+        focused_after_resize = cast("DataTable[object]", app.focused)
+        assert focused_after_resize.id in {"due-actions", "launcher-chooser"}
+        assert _cursor_target(focused_after_resize) == before.identity
+        assert focused_after_resize.region.overlaps(app.screen.region)
     reordered = projection.model_copy(update={"actions": tuple(reversed(projection.actions))})
     restored = screen_type(reordered, locale=OutputLanguage.EN, restore_target=before)
     restored_app = ScreenHostApp[None](restored)
     async with restored_app.run_test(size=(100, 30)) as pilot:
         await pilot.pause()
-        assert restored.highlighted_target == before
-        assert restored_app.focused is not None
+        focused_restored = cast("DataTable[object]", restored_app.focused)
+        assert focused_restored.id in {"due-actions", "launcher-chooser"}
+        assert _cursor_target(focused_restored) == before.identity
+        assert focused_restored.region.overlaps(restored_app.screen.region)
+        assert focused_restored.region.y >= 0 and focused_restored.region.bottom <= 30
 
 
 @pytest.mark.asyncio
