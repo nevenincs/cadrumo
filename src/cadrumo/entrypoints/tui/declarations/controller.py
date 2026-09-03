@@ -265,9 +265,7 @@ class DeclarationsWorkspaceScreen(Screen[None]):
 
     def refuse_handoff(self) -> None:
         """Show an explicit refusal when the host omitted a target."""
-        self.query_one("#declarations-refusal", Static).update(
-            declarations_copy("tui.declarations.refusal.handoff")
-        )
+        self.query_one("#declarations-refusal", Static).update(declarations_copy("tui.declarations.refusal.handoff"))
 
     def action_back(self) -> None:
         """Dismiss only this child screen."""
@@ -305,9 +303,7 @@ class DeclarationsCalendarController:
         self.recovery_handoff = recovery_handoff
         _validate_calendar_recovery_actions(projection)
 
-    def source(
-        self, source: DeclarationsCalendarSource
-    ) -> DeclarationsCalendarSourceStateV1:
+    def source(self, source: DeclarationsCalendarSource) -> DeclarationsCalendarSourceStateV1:
         """Return one explicit source state."""
         return next(item for item in self.projection.sources if item.source is source)
 
@@ -327,9 +323,7 @@ class DeclarationsCalendarController:
             HomeAvailability.STALE,
         }
         rows = [
-            row
-            for row in self.projection.entries
-            if _scope_matches(row, scope, self.projection.as_of, aeat_observable)
+            row for row in self.projection.entries if _scope_matches(row, scope, self.projection.as_of, aeat_observable)
         ]
         terms = tuple(part for part in _fold(query).split() if part)
         if terms:

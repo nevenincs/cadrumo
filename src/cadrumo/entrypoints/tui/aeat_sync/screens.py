@@ -79,12 +79,11 @@ def _natural_identity(row: _NaturalRow, *, prefix: str) -> str:
     return f"{prefix}:{row.modelo}|{row.filing_year}|{row.period.registry_token}"
 
 
-def _notification_identity(row: AeatSyncWorkspaceNotificationRowV1, index: int) -> str:
-    """Derive a safe deterministic key without retaining private identity."""
-    return (
-        f"notification:{row.issued_on}|{row.read_on}|{row.read_state.value}|"
-        f"{row.category.value}|{row.document_custody_state.value}|{index}"
-    )
+def _notification_identity(row: AeatSyncWorkspaceNotificationRowV1) -> str:
+    """Use the application-projected opaque semantic notification identity."""
+    if row.selection_key is None:
+        raise ValueError("projected notification row requires a selection key")
+    return row.selection_key
 
 
 class _OperationRow(Protocol):
@@ -441,8 +440,8 @@ class AeatSyncNotificationsScreen(AeatSyncWorkspaceScreen):
         table.add_column(aeat_sync_copy("tui.aeat_sync.column.category"), width=18)
         table.add_column(aeat_sync_copy("tui.aeat_sync.column.document_custody"), width=22)
         self._notification_rows.clear()
-        for index, row in enumerate(self.controller.projection.notifications):
-            key = _notification_identity(row, index)
+        for row in self.controller.projection.notifications:
+            key = _notification_identity(row)
             self._notification_rows[key] = row
             table.add_row(
                 str(row.issued_on),

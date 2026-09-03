@@ -190,4 +190,5 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
         self.query_one("#ledger-reconciliation-confirm", Button).disabled = True
         self.query_one("#ledger-reconciliation-cancel", Button).disabled = True
 
+
 __all__ = ["LedgerReconciliationScreen"]

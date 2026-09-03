@@ -48,9 +48,7 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         for row in self.controller.entry_rows():
             table.add_row(str(row.transaction_id)[:12], review_status_label(row.review_status), key=row.transaction_id)
         if not table.row_count:
-            self.query_one("#ledger-refusal", Static).update(
-                ledger_copy("tui.ledger.entries.empty")
-            )
+            self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.entries.empty"))
         navigation = cast("DataTable[str]", self.query_one("#ledger-navigation", DataTable))
         restore_transaction_focus(
             navigation=navigation,

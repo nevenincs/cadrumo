@@ -165,7 +165,9 @@ def test_factory_refuses_undeclared_or_drifted_review_action_through_real_catalo
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("screen_type", (LedgerOverviewScreen, LedgerEntriesScreen, LedgerReviewScreen))
-async def test_screens_show_seven_destinations_have_one_scroll_owner_and_no_horizontal_overflow(screen_type: type) -> None:
+async def test_screens_show_seven_destinations_have_one_scroll_owner_and_no_horizontal_overflow(
+    screen_type: type,
+) -> None:
     screen = screen_type(_controller(_projection()))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
@@ -174,11 +176,7 @@ async def test_screens_show_seven_destinations_have_one_scroll_owner_and_no_hori
         assert navigation.row_count == 7
         assert geometry_band(app, 80) == []
         assert all(table.max_scroll_x == 0 for table in screen.query(DataTable))
-        owners = tuple(
-            widget
-            for widget in screen.walk_children()
-            if widget.display and widget.show_vertical_scrollbar
-        )
+        owners = tuple(widget for widget in screen.walk_children() if widget.display and widget.show_vertical_scrollbar)
         assert len(owners) <= 1
         assert all(isinstance(owner, VerticalScroll) and owner.id == "ledger-page" for owner in owners)
 
@@ -292,9 +290,9 @@ async def test_every_locale_uses_catalogue_calls_without_raw_internal_vocabulary
             assert "needs_attention" not in rendered
             assert "never_captured" not in rendered
             assert "work_unit" not in rendered.lower()
-            assert tuple(row.key.value for row in overview.query_one("#ledger-navigation", DataTable).ordered_rows) == tuple(
-                area.value for area in LedgerWorkspaceArea
-            )
+            assert tuple(
+                row.key.value for row in overview.query_one("#ledger-navigation", DataTable).ordered_rows
+            ) == tuple(area.value for area in LedgerWorkspaceArea)
         review = LedgerReviewScreen(_controller(_projection()))
         review_app = ScreenHostApp[None](review)
         async with review_app.run_test(size=(80, 24)) as pilot:
@@ -317,17 +315,8 @@ def test_ledger_tui_has_no_io_adapter_cli_calculation_or_mutation_imports() -> N
     package = Path(__file__).parents[1]
     production = tuple(path for path in package.glob("*.py") if path.name != "__init__.py")
     trees = tuple(ast.parse(path.read_text(encoding="utf-8")) for path in production)
-    imports = {
-        node.module or ""
-        for tree in trees
-        for node in ast.walk(tree)
-        if isinstance(node, ast.ImportFrom)
-    } | {
-        alias.name
-        for tree in trees
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Import)
-        for alias in node.names
+    imports = {node.module or "" for tree in trees for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)} | {
+        alias.name for tree in trees for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names
     }
     calls = {
         node.func.id if isinstance(node.func, ast.Name) else node.func.attr
@@ -337,4 +326,8 @@ def test_ledger_tui_has_no_io_adapter_cli_calculation_or_mutation_imports() -> N
     }
     assert not any("entrypoints.cli" in name or "adapters" in name or "calculations" in name for name in imports)
     assert not {"open", "read", "write", "read_text", "write_text", "unlink"} & calls
-    assert all("markup=False" in path.read_text(encoding="utf-8") for path in production if path.name in {"entries.py", "review.py"})
+    assert all(
+        "markup=False" in path.read_text(encoding="utf-8")
+        for path in production
+        if path.name in {"entries.py", "review.py"}
+    )

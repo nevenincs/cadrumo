@@ -306,10 +306,12 @@ class LedgerWorkspaceController:
                 or self.classification_submitter is None
             )
         ) or (area is LedgerWorkspaceArea.IMPORT and (not self.prepared_imports or self.import_submitter is None))
-        missing_door = missing_door or (
-            area is LedgerWorkspaceArea.EVIDENCE and (self.evidence_action is None or self.evidence_items is None)
-        ) or (
-            area is LedgerWorkspaceArea.RECONCILIATION and (self.link_action is None or self.link_submitter is None)
+        missing_door = (
+            missing_door
+            or (area is LedgerWorkspaceArea.EVIDENCE and (self.evidence_action is None or self.evidence_items is None))
+            or (
+                area is LedgerWorkspaceArea.RECONCILIATION and (self.link_action is None or self.link_submitter is None)
+            )
         )
         if area not in _IMPLEMENTED_AREAS or missing_door:
             return LedgerRouteRefusalV1(
@@ -360,9 +362,7 @@ class LedgerWorkspaceController:
             )
         return tuple(rows)
 
-    async def submit_classification(
-        self, patch: ManualLedgerTransactionPatch
-    ) -> ManualLedgerTransactionResult:
+    async def submit_classification(self, patch: ManualLedgerTransactionPatch) -> ManualLedgerTransactionResult:
         """Submit an explicit patch through the injected authorized door."""
         if self.classify_action is None or self.classification_target is None or self.classification_submitter is None:
             raise RuntimeError("classification submission is unavailable")
@@ -505,9 +505,7 @@ class LedgerWorkspaceScreen(Screen[None]):
         notice = self.query_one("#ledger-refusal", Static)
         if refusal is not None:
             self.refusal = refusal
-            notice.update(
-                ledger_copy(refusal.reason_key)
-            )
+            notice.update(ledger_copy(refusal.reason_key))
             return True
         target = self.controller.route_target(area)
         self.requested_target = target

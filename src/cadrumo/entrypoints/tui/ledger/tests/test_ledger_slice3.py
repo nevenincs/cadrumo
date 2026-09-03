@@ -237,9 +237,7 @@ async def test_reconciliation_restores_semantic_transaction_and_refuses_escape_i
     door = _SlowLinkDoor()
     context = TuiScreenContextV1(
         destination="workbench.ledger",
-        focus=TuiFocusIdentityV1(
-            destination="workbench.ledger", semantic_key="ledger.transaction", restore_token=_TX
-        ),
+        focus=TuiFocusIdentityV1(destination="workbench.ledger", semantic_key="ledger.transaction", restore_token=_TX),
     )
     controller = LedgerWorkspaceController(
         context,
@@ -317,7 +315,9 @@ async def test_slice3_compositor_has_one_scroll_owner_and_no_80_column_overflow(
         await pilot.pause()
         assert geometry_band(app, 80) == []
         assert all(table.max_scroll_x == 0 for table in screen.query(DataTable))
-        owners = tuple(widget for widget in screen.query(VerticalScroll) if widget.display and widget.show_vertical_scrollbar)
+        owners = tuple(
+            widget for widget in screen.query(VerticalScroll) if widget.display and widget.show_vertical_scrollbar
+        )
         assert len(owners) <= 1
         assert all(owner.id == "ledger-page" for owner in owners)
 
@@ -452,12 +452,7 @@ async def test_reconciliation_copy_pins_local_source_and_canonical_semantics(
 def test_slice3_modules_have_no_io_cli_adapter_or_sensitive_content_access() -> None:
     package = Path(__file__).parents[1]
     trees = [ast.parse((package / name).read_text(encoding="utf-8")) for name in ("evidence.py", "reconciliation.py")]
-    imports = {
-        node.module or ""
-        for tree in trees
-        for node in ast.walk(tree)
-        if isinstance(node, ast.ImportFrom)
-    }
+    imports = {node.module or "" for tree in trees for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)}
     calls = {
         node.func.id if isinstance(node.func, ast.Name) else node.func.attr
         for tree in trees

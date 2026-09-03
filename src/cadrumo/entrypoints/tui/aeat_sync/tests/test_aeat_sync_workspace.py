@@ -6,6 +6,7 @@ from datetime import UTC, date, datetime
 from typing import cast
 
 import pytest
+from textual.screen import Screen
 from textual.widgets import Button, DataTable, Static
 
 from .....application.aeat_sync.workspace import (
@@ -86,8 +87,9 @@ def _projection(
     *,
     unread: bool = False,
     unknown_pair: bool = False,
+    notification_specs: tuple[tuple[str, date], ...] | None = None,
 ) -> AeatSyncWorkspaceProjectionV1:
-    """Build only public S397 output records; no application test helper leaks."""
+    """Build through the public projector from local scoped facts."""
     observations = tuple(
         AeatSyncWorkspaceZoneObservationV1(
             zone=zone,
@@ -149,13 +151,13 @@ def _projection(
                 ),
             ),
         ),
-        notifications=(
+        notifications=tuple(
             AeatSyncWorkspaceFactV1(
                 _BUCKET_ID,
                 _SUBJECT_KEY,
                 AeatSyncWorkspaceNotificationRowV1(
-                    issued_on=date(2026, 1, 2),
-                    read_on=None if unread else date(2026, 1, 3),
+                    issued_on=issued_on,
+                    read_on=None if unread else issued_on,
                     read_state=AeatSyncNotificationReadState.UNREAD if unread else AeatSyncNotificationReadState.READ,
                     category=AeatSyncNotificationCategory.FORMAL,
                     document_custody_state=(
@@ -163,8 +165,9 @@ def _projection(
                     ),
                     document_custody_observed_at=None if unread else _T2,
                 ),
-                private_identity="notification-private",
-            ),
+                private_identity=private_identity,
+            )
+            for private_identity, issued_on in (notification_specs or (("notification-private", date(2026, 1, 2)),))
         ),
         evidence_comparison=(
             AeatSyncWorkspaceFactV1(
@@ -359,6 +362,58 @@ def test_controller_refuses_forged_contract_join_and_catalogue_command() -> None
         operation_contracts=_contracts(),
     )
     assert canonical_guard.admitted_operation((action,), (operation,)) is None
+
+
+@pytest.mark.asyncio
+async def test_notification_focus_restores_by_projected_identity_across_refresh_resize_and_child_return() -> None:
+    first = _projection(
+        notification_specs=(
+            ("notification-alpha", date(2026, 1, 1)),
+            ("notification-beta", date(2026, 1, 2)),
+            ("notification-gamma", date(2026, 1, 3)),
+        )
+    )
+    reordered = _projection(
+        notification_specs=(
+            ("notification-gamma", date(2026, 1, 1)),
+            ("notification-alpha", date(2026, 1, 2)),
+            ("notification-beta", date(2026, 1, 3)),
+        )
+    )
+    screen = AeatSyncNotificationsScreen(
+        AeatSyncWorkspaceController(
+            TuiScreenContextV1(destination="workbench.aeat_sync"),
+            first,
+            operation_contracts=_contracts(),
+        )
+    )
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 18)) as pilot:
+        await pilot.pause()
+        table = screen.query_one("#aeat-sync-rows", DataTable)
+        table.focus()
+        table.move_cursor(row=1)
+        await pilot.pause()
+        chosen = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value
+        assert chosen == first.notifications[1].selection_key
+
+        screen.refresh_projection(reordered)
+        await pilot.pause()
+        assert app.focused is table
+        assert table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value == chosen
+        assert table.scroll_y <= table.cursor_row < table.scroll_y + table.size.height
+
+        await pilot.resize_terminal(100, 22)
+        assert table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value == chosen
+        assert table.scroll_y <= table.cursor_row < table.scroll_y + table.size.height
+
+        child = Screen[None]()
+        app.push_screen(child)
+        await pilot.pause()
+        child.dismiss(None)
+        await pilot.pause()
+        assert app.focused is table
+        assert table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value == chosen
 
 
 def test_aeat_sync_status_keys_are_present_in_every_supported_locale() -> None:

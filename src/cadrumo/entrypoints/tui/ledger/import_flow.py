@@ -115,4 +115,5 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
         self.query_one("#ledger-import-confirm", Button).disabled = True
         self.query_one("#ledger-import-cancel", Button).disabled = True
 
+
 __all__ = ["LedgerImportScreen"]

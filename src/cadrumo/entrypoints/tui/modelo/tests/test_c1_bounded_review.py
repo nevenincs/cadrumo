@@ -47,7 +47,10 @@ def test_host_neutral_modelo_screens_have_no_app_exit_or_concrete_app_narrowing(
     paths = (
         view_root / "work_select.py",
         view_root / "work_review.py",
-        *(view_root / name for name in ("overview.py", "inputs.py", "results.py", "provenance.py", "verification.py", "filing.py")),
+        *(
+            view_root / name
+            for name in ("overview.py", "inputs.py", "results.py", "provenance.py", "verification.py", "filing.py")
+        ),
     )
     forbidden_app_types = {"ModeloWorkSelectApp", "ModeloWorkReviewApp"}
     violations: list[str] = []
