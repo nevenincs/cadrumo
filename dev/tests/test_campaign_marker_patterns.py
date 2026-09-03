@@ -14,13 +14,13 @@ one case added after the deletion to the population that case exists to find.
 from __future__ import annotations
 
 import ast
-import subprocess
 from pathlib import Path
 from typing import Final
 
 import pytest
 
 from .._paths import REPO_ROOT
+from ..ci.lane_reachability import tracked_test_files
 from ._marker_metadata_patterns import (
     CAMPAIGN_METADATA_CASES,
     PROCESS_SYMBOL_METADATA_CASES,
@@ -34,19 +34,14 @@ _STEP_ID_CASE: Final = PROCESS_SYMBOL_METADATA_CASES[-1]
 
 
 def _tracked_test_modules() -> tuple[Path, ...]:
-    """Every tracked test module, from git rather than a filesystem walk.
+    """Every tracked test module, through the reachability gate's own accessor.
 
-    Several sessions work this tree at once, so an untracked file is a peer's
-    scratch and must never enter a measurement.
+    Tracked rather than on-disk, for the reason that accessor states: an
+    untracked file is a peer's uncommitted work, and counting it reds a shared
+    gate on private state. Reused rather than reimplemented -- a second git
+    invocation here would be a parallel declaration of the same population.
     """
-    listed = subprocess.run(
-        ["git", "ls-files", "*.py"],
-        capture_output=True,
-        text=True,
-        check=True,
-        cwd=REPO_ROOT,
-    ).stdout.split()
-    return tuple(REPO_ROOT / item for item in listed if Path(item).name.startswith("test_"))
+    return tuple(REPO_ROOT / path for path in tracked_test_files(REPO_ROOT))
 
 
 def _test_symbol_names(path: Path) -> tuple[str, ...]:
@@ -106,6 +101,8 @@ def test_the_step_id_case_finds_the_development_tree_names_that_carry_one() -> N
         if _STEP_ID_CASE.pattern.search(name)
     }
     assert carrying == {
+        "dev/locales/tests/test_ledger_notice_action_conformance.py",
+        "dev/registry/tests/test_modelo_303_semantic_maps.py",
         "dev/source_connectivity/tests/test_census_completeness.py",
         "dev/tests/test_suggestion_command_conformance.py",
     }, f"the development-tree step-id population moved: {sorted(carrying)}"

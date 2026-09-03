@@ -63,6 +63,7 @@ class M200TargetAnchorDisposition:
     aeat_type: str
     length: int
     source_refs: tuple[str, ...]
+    legal_refs: tuple[str, ...]
     legal_evidence_state: str
     applicable_legal_refs: tuple[str, ...]
     inapplicable_legal_refs: tuple[str, ...]
@@ -86,6 +87,7 @@ class M200ReconciliationRow:
     same_2024_template_state: str
     cross_revision_status: str
     cross_revision_proposal_non_authoritative: SemanticPayload | None
+    legal_refs: tuple[str, ...]
     legal_evidence_state: str
     applicable_legal_refs: tuple[str, ...]
     inapplicable_legal_refs: tuple[str, ...]
@@ -105,6 +107,44 @@ class M200ReconciliationCensus:
     revision_valid_to: date
     rows: tuple[M200ReconciliationRow, ...]
     anchors: tuple[M200TargetAnchorDisposition, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class M200LegalWorklistItem:
+    """One declaration or semantic-map legal-evidence result for the pinned target."""
+
+    evidence_home: str
+    subject_id: str
+    source_ref: str
+    source_sha256: str
+    legal_refs: tuple[str, ...]
+    applicable_legal_refs: tuple[str, ...]
+    unknown_legal_refs: tuple[str, ...]
+    out_of_window_legal_refs: tuple[str, ...]
+    state: str
+
+
+@dataclass(frozen=True, slots=True)
+class M200LegalWorklist:
+    """Complete, source-SHA-bound legal worklist for Modelo 200/2024 authority."""
+
+    source_ref: str
+    source_sha256: str
+    revision_valid_from: date
+    revision_valid_to: date
+    items: tuple[M200LegalWorklistItem, ...]
+
+    @property
+    def missing_provenance_count(self) -> int:
+        return sum(item.state == "missing_provenance" for item in self.items)
+
+    @property
+    def unknown_reference_count(self) -> int:
+        return sum(bool(item.unknown_legal_refs) for item in self.items)
+
+    @property
+    def out_of_window_count(self) -> int:
+        return sum(bool(item.out_of_window_legal_refs) for item in self.items)
 
 
 @dataclass(frozen=True, slots=True)
@@ -276,6 +316,7 @@ def reconcile_bundled_m200_2024() -> M200ReconciliationCensus:
                 cross_revision_proposal_non_authoritative=(
                     next(iter(cross_payloads)) if len(cross_payloads) == 1 else None
                 ),
+                legal_refs=tuple(payload.legal_refs),
                 legal_evidence_state=legal_state,
                 applicable_legal_refs=applicable,
                 inapplicable_legal_refs=inapplicable,
@@ -293,6 +334,97 @@ def reconcile_bundled_m200_2024() -> M200ReconciliationCensus:
         rows=tuple(rows),
         anchors=tuple(sorted(anchors, key=lambda item: item.export_field_id)),
     )
+
+
+def build_m200_2024_legal_worklist(census: M200ReconciliationCensus) -> M200LegalWorklist:
+    """Classify every target declaration and map citation without legal inference.
+
+    The exact 2024 record-design identity is deliberately retained on every
+    row.  A later model design, a legal provision under a different catalogue
+    key, or a provision whose governed period misses 2024 can therefore never
+    become a quiet substitute while preparing the catalogue worklist.
+    """
+    _require_exact_source_identity("legal worklist census", census.source_ref, census.source_sha256)
+    _require_exact_source_identity(
+        "legal worklist semantic map", census.semantic_map_source_ref, census.semantic_map_source_sha256
+    )
+    if (census.revision_valid_from, census.revision_valid_to) != (TARGET_VALID_FROM, TARGET_VALID_TO):
+        raise RegistryValidationError("legal worklist carries a drifted Modelo 200/2024 partition")
+
+    registry_root = bundled_path("registry", "aeat")
+    parts = tuple(load_catalogue_file(path) for path in sorted((registry_root / "legal").glob("*.toml")))
+    legal = _merge_unique_catalogue(parts, attribute="legal")
+    items = tuple(
+        _legal_worklist_item(
+            evidence_home=evidence_home,
+            subject_id=subject_id,
+            legal_refs=legal_refs,
+            legal=legal,
+            source_ref=census.source_ref,
+            source_sha256=census.source_sha256,
+            valid_from=census.revision_valid_from,
+            valid_to=census.revision_valid_to,
+        )
+        for evidence_home, subject_id, legal_refs in (
+            *( ("declaration", row.casilla_id, row.legal_refs) for row in census.rows),
+            *( ("semantic_map", anchor.export_field_id, anchor.legal_refs) for anchor in census.anchors),
+        )
+    )
+    return M200LegalWorklist(
+        source_ref=census.source_ref,
+        source_sha256=census.source_sha256,
+        revision_valid_from=census.revision_valid_from,
+        revision_valid_to=census.revision_valid_to,
+        items=items,
+    )
+
+
+def _legal_worklist_item(
+    *,
+    evidence_home: str,
+    subject_id: str,
+    legal_refs: tuple[str, ...],
+    legal: Mapping[str, object],
+    source_ref: str,
+    source_sha256: str,
+    valid_from: date,
+    valid_to: date,
+) -> M200LegalWorklistItem:
+    applicable, unknown, out_of_window = _legal_worklist_partition(legal_refs, legal, valid_from, valid_to)
+    state = (
+        "missing_provenance"
+        if not legal_refs
+        else "unresolved"
+        if unknown or out_of_window
+        else "applicable"
+    )
+    return M200LegalWorklistItem(
+        evidence_home=evidence_home,
+        subject_id=subject_id,
+        source_ref=source_ref,
+        source_sha256=source_sha256,
+        legal_refs=legal_refs,
+        applicable_legal_refs=applicable,
+        unknown_legal_refs=unknown,
+        out_of_window_legal_refs=out_of_window,
+        state=state,
+    )
+
+
+def require_closed_m200_2024_legal_worklist(worklist: M200LegalWorklist) -> None:
+    """Refuse catalogue authoring or semantic admission while any evidence is open."""
+    _require_exact_source_identity("legal worklist", worklist.source_ref, worklist.source_sha256)
+    if (worklist.revision_valid_from, worklist.revision_valid_to) != (TARGET_VALID_FROM, TARGET_VALID_TO):
+        raise RegistryValidationError("legal worklist carries a drifted Modelo 200/2024 partition")
+    unresolved = tuple(item for item in worklist.items if item.state != "applicable")
+    if unresolved:
+        sample = ", ".join(f"{item.evidence_home}:{item.subject_id}" for item in unresolved[:5])
+        raise RegistryValidationError(
+            "Modelo 200/2024 legal worklist is unresolved: "
+            f"missing={worklist.missing_provenance_count}, "
+            f"unknown={worklist.unknown_reference_count}, "
+            f"out_of_window={worklist.out_of_window_count}; {sample}"
+        )
 
 
 def build_m200_source_rebind_plan(census: M200ReconciliationCensus) -> M200SourceRebindPlan:
@@ -786,6 +918,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.dry_run and not args.apply_source_rebinds:
         parser.error("--dry-run requires --apply-source-rebinds")
     census = reconcile_bundled_m200_2024()
+    legal_worklist = build_m200_2024_legal_worklist(census)
     if args.toml:
         if args.apply_source_rebinds:
             parser.error("--toml cannot be combined with --apply-source-rebinds")
@@ -835,6 +968,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     print(f"declaration_legal_gaps={sum(row.legal_evidence_state != 'applicable' for row in rows)}")
     print(f"map_legal_gaps={sum(anchor.legal_evidence_state != 'applicable' for anchor in anchors)}")
+    print(f"legal_worklist_items={len(legal_worklist.items)}")
+    print(f"legal_worklist_missing_provenance={legal_worklist.missing_provenance_count}")
+    print(f"legal_worklist_unknown_references={legal_worklist.unknown_reference_count}")
+    print(f"legal_worklist_out_of_window={legal_worklist.out_of_window_count}")
     return 0
 
 
@@ -882,6 +1019,7 @@ def _classify_anchor(entry, field, *, planned_ids, legal, valid_from, valid_to) 
         aeat_type=field.aeat_type,
         length=field.length,
         source_refs=tuple(entry.source_refs),
+        legal_refs=tuple(entry.legal_refs),
         legal_evidence_state=legal_state,
         applicable_legal_refs=applicable,
         inapplicable_legal_refs=inapplicable,
@@ -939,6 +1077,33 @@ def _legal_partition(refs, legal, valid_from, valid_to):
         )
         target.append(ref)
     return tuple(applicable), tuple(inapplicable)
+
+
+def _legal_worklist_partition(refs, legal: Mapping[str, object], valid_from: date, valid_to: date):
+    """Separate absent catalogue keys from known provisions outside 2024.
+
+    Checking the catalogue object's embedded id matters: a dictionary key can
+    otherwise make a different provision appear to resolve merely because it
+    shares the requested reference key in an in-memory test or a faulty loader.
+    """
+    applicable, unknown, out_of_window = [], [], []
+    for ref in refs:
+        authority = legal.get(ref)
+        if authority is None:
+            unknown.append(ref)
+            continue
+        if str(getattr(authority, "id", "")) != ref:
+            raise RegistryValidationError(
+                f"legal catalogue provision mismatch for {ref!r}: found {getattr(authority, 'id', None)!r}"
+            )
+        start, end = governed_period_span(authority)
+        if start <= valid_from and end is not None and end < valid_to:
+            out_of_window.append(ref)
+        elif start <= valid_from:
+            applicable.append(ref)
+        else:
+            out_of_window.append(ref)
+    return tuple(applicable), tuple(unknown), tuple(out_of_window)
 
 
 def _legal_evidence(refs, legal, valid_from, valid_to):
