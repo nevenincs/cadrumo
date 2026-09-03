@@ -5,30 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:747abbcf17c8977d042197294a854c0ca87c9ecfa54472adad5ec5dac4cfde88'
+body_hash: 'sha256:bed18a2955cb37b93626e4ece1788528fcd71acfb6b5db6e3b241b4995fa4209'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `tui-architecture` audit: `w08 p25 s369 review`
 
@@ -68,15 +49,6 @@ Route construction now requires its descriptor to equal the static canonical des
 
 The focused suite grew from 13 to 16 tests and now contains direct defect probes for each reproduced authority, descriptor and factory failure. The import-only purity assertion remains narrower than a comprehensive AST I/O detector, but the reviewed module is pure by full inspection, imports in the accepted entrypoint-to-application direction, and carries no repository, network, filesystem, locale catalogue or concrete-screen dependency. That residual test-hardening opportunity does not leave a production defect in S369. `navigation-gate-teeth` is closed for the blocking findings.
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### w08 p25 s369 review | {level} | {summary}
-
-     followed by a paragraph carrying the detail. w08 p25 s369 review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
-
 ## Recommendations
 
 1. Make `create_screen()` resolve every non-null target action through the current route immediately before context construction, so search, command-palette and direct target paths share one fail-closed authority join.
@@ -86,4 +58,3 @@ The focused suite grew from 13 to 16 tests and now contains direct defect probes
 5. Focused Pytest passed 13 tests; Ruff and ty passed; Basedpyright reported 0 errors, warnings or notes. No critical finding exists, but one high and three medium findings remain open. `W08.P25.S369` must not close.
 6. Final remediation probes rejected the undeclared direct action, spoofed descriptor and non-callable factory at their owning boundaries. Focused Pytest passed 16 tests; Ruff and ty passed; Basedpyright reported 0 errors, warnings or notes.
 7. No critical, high or medium finding remains open. `W08.P25.S369` may close.
-

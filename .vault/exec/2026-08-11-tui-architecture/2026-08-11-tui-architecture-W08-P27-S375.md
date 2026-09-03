@@ -5,16 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:086a0ca3fad887155c113702bdffc7adfe5012e414ae2cd4303f8b305a5b74d5'
+body_hash: 'sha256:428ea21fc937a7d442e3be09763984605c3bac76c344d024e827a79116178c00'
 step_id: 'S375'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Build the Ledger overview, entries, review, import, classification, evidence, and reconciliation screens over canonical application doors
 

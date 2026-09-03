@@ -5,16 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:77866678d05804a75ec78876a68ffcf05c435787fde868bacd3db36621f869b4'
+body_hash: 'sha256:cefe8eec29d64bd7437134fcab6848fd58a787bca36844471b6ec42e5122dafe'
 step_id: 'S374'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Record the winning workbench layout and interaction parameters in the amended navigation decision execution evidence
 

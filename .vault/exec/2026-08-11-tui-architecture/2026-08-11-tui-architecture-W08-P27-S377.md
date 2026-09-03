@@ -5,16 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:413abf4e1c72136019c03973cfb67e59defc371fa382bdf662405ffad118959c'
+body_hash: 'sha256:5cb121b346b79b7f6cb70130e639f60e477424539f8ae354601a070dec62a30b'
 step_id: 'S377'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Build the Declarations landing, revision and filing-history routes around existing Modelo workspace destinations
 

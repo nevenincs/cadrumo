@@ -5,16 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ddc4da5a61af9499137b753ae8515d715c56cda14e48d2fdc7d02d6f2c949553'
+body_hash: 'sha256:1f596c01a5b035608771177086767b2bd6563d0d6d109444e1ac80e811a48f01'
 step_id: 'S371'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Build synthetic non-sensitive Home projections covering ready, locked, stale, never-captured, unavailable, empty, and blocked states
 

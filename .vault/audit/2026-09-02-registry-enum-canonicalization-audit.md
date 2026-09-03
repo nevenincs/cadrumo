@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-enum-canonicalization'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e6373a2840c80245acce5b8b461aa2bbc4fe6f1298c55cc9b54ad03943133e32'
+body_hash: 'sha256:b5ce024790d55e5d5d5c5368e62a4fb5bef6060f130155f97bd2c0d5c7fae7c3'
 related: []
 ---
 

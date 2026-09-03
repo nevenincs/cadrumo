@@ -5,6 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v1'
+body_hash: 'sha256:7665a587b014a046d082abf8e2c76ca222a9d22af0d3f5f71e4bbaa17533964b'
 related:
   - '[[2026-08-11-tui-architecture-plan]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'

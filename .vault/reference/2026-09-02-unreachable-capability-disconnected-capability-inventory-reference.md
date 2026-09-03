@@ -960,4 +960,3 @@ Both should be recorded as correctly shaped rather than carried on a wiring
 backlog. If the ratchet adopts a fifth disposition, these two are its first
 members, and their entries there want a rationale rather than a bare
 unreachable comment.
-

@@ -5,16 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:cb98fd5751e7b4448b91f3f485880ecf9ec2e92d709e1b3f7090c57fdf7c24a8'
+body_hash: 'sha256:30d90d3316e4e091e78b9d888ab646ede4a71e3c143693098a3767ae62999c02'
 step_id: 'S372'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Implement due-driven and task-launcher prototype screens over the same immutable projection
 

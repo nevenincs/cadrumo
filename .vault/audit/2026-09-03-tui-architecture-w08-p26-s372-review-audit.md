@@ -5,30 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1c4765e87f71b810af0647a0060cab1f4d6d80985684cdb5e9269155146b1da7'
+body_hash: 'sha256:dfd52f931d02dbd01ef0d8cca96ac7334d1c4dce7096e2b799664489070c2ecf'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `tui-architecture` audit: `W08.P26.S372 independent code review`
 
@@ -59,4 +40,3 @@ The initial action identity omitted both rank and reason, allowing two otherwise
 No open recommendation remains from this review. All three medium findings and the low finding were corrected in scope. The slice is safe to close with no open high or medium issue.
 
 Focused verification completed with all candidate tests passing under the explicit integration marker selection. The review also confirmed two genuinely different candidates over the exact injected immutable projection, a single outer page scroll, compact and wide layout classes, seven synthetic authority states without false zeroes, human-facing reason and status copy, and no repository, network, CLI, adapter, calculation, classification, reconciliation, or action-execution authority in the prototype module.
-

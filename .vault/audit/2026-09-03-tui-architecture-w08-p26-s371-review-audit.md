@@ -5,30 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c6df421fe046ac8222ee552c84fefda50f384b364308d8e54c4b796171285ecf'
+body_hash: 'sha256:697fcf4e268140ce340fb8f1c83725275daf28ea7fc356b43f1a5cec804edb3a'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-09-02-unreachable-capability-tui-homepage-product-design-research]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `tui-architecture` audit: `w08 p26 s371 review`
 
@@ -60,15 +41,6 @@ The suite now serializes every scenario, constrains Hex64 values, checks several
 
 The serialized-fixture detector now recognizes representative DNI, NIE and CIF shapes and explicitly proves the `X2482300W` NIE case is caught. The AST gate covers both import forms, forbids `os` and repository/persistence/reader/client families, and rejects direct and suffix-shaped filesystem, network and repository calls including `os.open`. Freshness checks now prove every populated action, declaration and agenda row, plus Ledger readiness, is reconstructed as a distinct object; a separate test proves the same declaration identities survive fresh builds. The current module remains synthetic and pure by inspection. `sensitive-purity-gate-teeth` and the residual medium finding are closed.
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### w08 p26 s371 review | {level} | {summary}
-
-     followed by a paragraph carrying the detail. w08 p26 s371 review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
-
 ## Recommendations
 
 1. Expand at least one populated scenario to three application-ranked actions, three distinct declarations and three chronological agenda entries, with varied typed statuses and safely synthetic labels/reasons long enough to exercise wrapping. Keep semantic ordering owned by the projection, not the candidate.
@@ -79,4 +51,3 @@ The serialized-fixture detector now recognizes representative DNI, NIE and CIF s
 6. Add an NIE/NIF probe, cover broad filesystem/repository entry points rather than a short denylist, and assert populated nested records are distinct objects across builds while their declaration identities remain equal.
 7. Final focused Pytest passed 16 tests; Ruff and ty passed; Basedpyright reported 0 errors, warnings or notes. The high finding is closed, but one medium test-integrity finding remains open. `W08.P26.S371` must not close yet.
 8. Final remediation verification reports 17 focused tests passing; Ruff and ty pass; Basedpyright reports 0 errors, warnings or notes. No critical, high or medium finding remains open. `W08.P26.S371` may close.
-

@@ -3,33 +3,14 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-09-03'
-modified: '2026-09-02'
+modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:aa6e8789374ea0aff97e363257286a5645641a5ff2dfdc8a1eba73a705c8b373'
+body_hash: 'sha256:72506b5d0d02a2d6773cd5e96d3c4bc815aebc551f11290d67b72d7a12f8b2a1'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
   - "[[2026-09-02-unreachable-capability-tui-homepage-product-design-research]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `tui-architecture` audit: `w08 p25 s368 review`
 
@@ -38,8 +19,6 @@ related:
 Independent review of `W08.P25.S368` across `src/cadrumo/application/search/workbench.py` and `src/cadrumo/application/search/tests/test_workbench.py` against the exact plan row, accepted navigation join, product research, and naming, architecture, localization, quality-gate and sensitive-data rules. The review covered vocabulary, source/kind coverage, natural address, admission/action consistency, determinism, duplicate identity, redaction, ephemeral retention, localization, I/O, and test teeth.
 
 The implementation is frontend-neutral and pure by inspection. Ranking is bounded and deterministic for exact accepted byte strings, and non-available admissions require a reason and reject an action. The focused suite passed with 25 tests; Ruff passed and Basedpyright reported 0 errors, warnings or notes. Those green gates do not close the defects below.
-
-<!-- What was audited and why -->
 
 ## Findings
 
@@ -109,15 +88,6 @@ The identifier also includes mutable `status`, admission state/reason and action
 
 The final suite has useful negative teeth for the two original highs, exact address discrimination, `CalculationRevisionId`, admission, localization boundaries and I/O imports/calls. It proves only duplicate identical projections are refused, however; it never supplies two distinct same-state records from a required multi-record family, and it never asserts that identity survives a status, admission or action-candidate change. Those omissions leave the live high-severity identity/cardinality defect green.
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### w08 p25 s368 review | {level} | {summary}
-
-     followed by a paragraph carrying the detail. w08 p25 s368 review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
-
 ## Recommendations
 
 1. Resolve `sensitive-search-retention` before crediting S368: remove the public raw snapshot, use explicitly safe typed identity/search projections, and prove protected identifiers cannot cross or serialize.
@@ -135,7 +105,3 @@ The final suite has useful negative teeth for the two original highs, exact addr
 13. Introduce an intrinsically safe, source-owned per-record identity (or an approved canonical natural coordinate) for every multi-record family. Derive result identity from that immutable coordinate only; exclude status, admission, reason and action candidate.
 14. Add detector tests that admit two distinct same-status Ledger entries, evidence records, reconciliation findings and notifications without collision, and prove stable identity across status and admission transitions.
 15. Final gates passed: focused Pytest reported 28 passed; Ruff and ty passed; Basedpyright reported 0 errors, warnings or notes. The two prior high findings are closed, but one new high and one supporting medium remain open. No critical finding exists. `W08.P25.S368` must not close.
-
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->

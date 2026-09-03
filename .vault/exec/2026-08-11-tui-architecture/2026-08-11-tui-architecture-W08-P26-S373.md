@@ -5,16 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8681d56fc68a692a2627337325472426e840e11ae8ed30b7112732c3978fe8a3'
+body_hash: 'sha256:72535d637f803cf63b09381c12faf49073454a21ecf1f69ff48dbc05e140a603'
 step_id: 'S373'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Measure both candidates at supported terminal sizes, both themes, and every shipped locale for clipping, scroll ownership, focus reach, and task keystrokes
 

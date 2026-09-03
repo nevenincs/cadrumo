@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-09-01'
-modified: '2026-09-02'
+modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:57bd76b658ce6faa741aad993e1672254a5644cbd4778952fd7d995d4a6b3481'
+body_hash: 'sha256:8dd6e35bf28c4de1ad41d8b9df4c2c4e8c70e630bf2e3c6e724b0b49a76837fe'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"

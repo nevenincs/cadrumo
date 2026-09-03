@@ -5,16 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:88b005b365ccb26e8b1a94b4f6519cf93a6157f41e8fbe5794ddbfc2a0c5bab1'
+body_hash: 'sha256:d0b2266e4025ff16bfc719baa483f29a30004f247827aba25e6eccce4d851265'
 step_id: 'S391'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Define an immutable Ledger workspace projection and public affected-declaration reconciliation provider from canonical Ledger, invoice-link, and filing-staleness authorities
 
