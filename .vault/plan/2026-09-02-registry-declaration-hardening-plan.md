@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:0c396ba3b212b8279218d7b7aef79bac0cb6565c64daba017a7dab652200fec2'
+body_hash: 'sha256:29f726c924438c26c2acab2aba4f9617e926d54ec1413f212217cc2b70e9493a'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -515,6 +515,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S277` - Repoint the TUI coverage table at the interface the flows refactor left it naming; `dev/tui/_coverage.py`.
 - [x] `W06.P13.S278` - Correct the three name-window replacement instructions that named successors themselves stepped for rename; `dev/registry/tests/test_revision_name_window.py`.
 - [x] `W06.P13.S279` - Correct the source-connectivity Step figure against a live collection and record the authority startup cost; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [ ] `W06.P13.S280` - Re-measure the conformance closure test that hit the per-test timeout ceiling on an uncontended host before naming its directory in a lane; `dev/registry/conformance/tests/test_closure.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

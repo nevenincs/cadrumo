@@ -6791,3 +6791,55 @@ already measures it, and prefer the gate's answer to your own: mine was wrong in
 two independent ways, and the gate's worklist is per-test where mine was
 per-directory. A hand analysis that merely agrees with a gate is wasted work; one
 that disagrees is a defect in the analysis until proven otherwise.
+
+### the-source-connectivity-failures-are-a-stale-reviewed-set-not-a-stale-count | high | Nine tests fail on a selector digest that no longer matches the live helper set, and they fail in the default CI lane rather than in silence
+
+The directory completed at nine failed, ninety-nine passed and twenty-two
+deselected, exit 1, in twenty-three minutes. The deselection matters: the run
+inherited the project's default marker expression, so those hundred and eight
+tests are the same ones the default unit lane selects, and the nine have been
+failing in CI rather than out of reach of it. That is a different and better
+state than the plan assumed, and it is the second correction today to the same
+Step's premise.
+
+Eight of the nine sit in the census-completeness module and one in the campaign
+close. The failure is not the frozen count those test names advertise. It is
+`capability coverage drift`: the census entry for the remaining calculation
+helpers declares a sha256 over its reviewed selector set, and the live set now
+hashes to something else, so the helper population moved after the review. The
+count assertion never got the chance to fail.
+
+The remedy is a review, not an edit. The digest exists to make an unreviewed
+change to the helper set visible, so recomputing it to restore green would
+delete the finding rather than resolve it; whoever re-reviews the set republishes
+the digest as the product of that review. An attempt to name which helpers moved
+failed honestly and is recorded as such: the entry's `capability_ids` is empty,
+because the digest and not a list is the stored identity, so a diff against it
+compares against nothing and reports the entire live population as new. The
+figure that reconstruction produced is an artefact and is not repeated here.
+
+One further defect is visible in the failing names themselves. A test is called
+`test_s115_freezes_reviewed_s112_helper_set_by_secondary_count`, embedding two
+plan Step identifiers in a test name. Code does not cite the project's
+development records in either direction, and a Step id in a test name is that
+citation in its most durable form: it outlives the campaign that produced it and
+means nothing to the next reader. The rename is owed, and belongs with whoever
+resolves the digest review rather than as a drive-by edit to a red test.
+
+### the-conformance-directory-timed-out-on-a-host-that-was-already-saturated | medium | A closure test hit the 300-second per-test ceiling while the machine carried a hundred and sixty python processes at full CPU
+
+`dev/registry/conformance/tests` ran five tests green and then
+`test_cli_live_mode_uses_canonical_loaders_but_blocks_without_durable_filing_proof`
+struck the per-test timeout ceiling, with the dump landing inside a deepcopy.
+The run exited 1 with no summary line, because the timeout killed it before
+pytest could print one.
+
+The finding is deliberately not "this test is pathologically slow". The harness
+banner recorded the host at 100% CPU across twenty-four cores with a thousand
+processes and a hundred and sixty of them python, which is this tree being worked
+by several sessions at once. A three hundred second ceiling struck under that
+load is not evidence about the test. A Step now carries the re-measurement on an
+uncontended host, and it is a precondition of naming this directory in a lane:
+adding a path whose first slow test can consume the ceiling would make the lane's
+failure mode a timeout rather than an assertion, which is the least legible
+failure a contributor can be handed.
