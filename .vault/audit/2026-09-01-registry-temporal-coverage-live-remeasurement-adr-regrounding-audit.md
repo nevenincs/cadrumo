@@ -6076,3 +6076,32 @@ and this campaign cannot tell which from inside the worktree.
 Not repaired here. The fixtures need a repository - `git init` in the temp tree, or a screen that
 accepts an injected tracked-path set - and choosing between those is the screen author's call
 about whether the git dependency belongs in the unit boundary at all.
+
+### tui-boundary-proofs-fail-while-the-boundaries-hold | high | Seven tests that prove the import contracts bite are broken, and import-linter itself passes eleven contracts cleanly
+
+The crashed run's second-largest failure group is seven tests in
+`dev/tests/test_importlinter_tui_boundaries.py`. Run directly they fail in about a second, and
+the contracts they guard are fine: `lint-imports` against the real configuration reports eleven
+kept, zero broken, exit zero, over 5,749 files.
+
+So the boundaries hold and the proofs that they bite do not. Those tests write a contract config
+and a synthetic topology into a temp tree, call `lint_imports(no_cache=True)` with the working
+directory moved there, and assert on the result. The call returns 1 where the test expects 0,
+and the captured output carries only import-linter's box-drawing frame with no contract summary
+in it. The installed import-linter is 2.14 and still accepts the `no_cache` keyword, so the
+signature is not the cause; what the temp-tree run is failing on is not established here.
+
+That is the detector-teeth pattern this campaign has argued for throughout, failing from the
+inside. A contract that passes tells you the tree is clean. A proof that the contract would
+catch a violation is what tells you the pass means anything, and seven of those have been
+unable to run to completion.
+
+Two lane observations came out of the diagnosis. These tests are `integration`-marked, so the
+default lane deselects them - the first single-test run reported nothing ran, and the harness
+said so in as many words: a green result there means the selection matched nothing. The suite is
+reached by the dev-tooling recipe under its wider marker expression, so this is a CI-run lane,
+like the vacuity screen and unlike the conformance suite.
+
+Not repaired. Seven tests failing inside another campaign's boundary proofs need their author,
+and the useful contribution is that the contracts and their proofs have been separated: the
+first is verifiably sound, the second verifiably unrun.
