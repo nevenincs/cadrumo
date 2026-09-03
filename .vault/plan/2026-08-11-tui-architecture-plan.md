@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-03'
-body_hash: 'sha256:2a7c2ba437576567fb6a7ff51ff370002dd1765704ca378184c5a7081fb7b91b'
+body_hash: 'sha256:f76fb0885baebaec5d831101ae2e4cabb005794da8bba57b0d55820de1da9fce'
 ---
 
 <!-- RETIRED: S370 -->
@@ -565,7 +565,7 @@ Define frontend-neutral session, Home, destination-admission, search, calendar-e
 Exercise due-driven and task-launcher candidates through the real Textual compositor with synthetic secure fixtures, then retain the measured workbench interaction contract.
 
 - [x] `W08.P26.S371` - Build synthetic non-sensitive Home projections covering ready, locked, stale, never-captured, unavailable, empty, and blocked states; `src/cadrumo/entrypoints/tui/devtools/home_fixtures.py`.
-- [ ] `W08.P26.S372` - Implement due-driven and task-launcher prototype screens over the same immutable projection; `src/cadrumo/entrypoints/tui/devtools/home_candidates.py`.
+- [x] `W08.P26.S372` - Implement due-driven and task-launcher prototype screens over the same immutable projection; `src/cadrumo/entrypoints/tui/devtools/home_candidates.py`.
 - [ ] `W08.P26.S373` - Measure both candidates at supported terminal sizes, both themes, and every shipped locale for clipping, scroll ownership, focus reach, and task keystrokes; `src/cadrumo/entrypoints/tui/devtools/tests/test_home_candidates.py`.
 - [ ] `W08.P26.S374` - Record the winning workbench layout and interaction parameters in the amended navigation decision execution evidence; `.vault/exec/2026-08-11-tui-architecture/`.
 
