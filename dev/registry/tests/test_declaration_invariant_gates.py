@@ -881,3 +881,37 @@ def test_the_import_coverage_gate_sees_a_module_no_test_imports(tmp_path: pathli
     unimported = sorted(path.stem for path in modules if path.stem not in imported)
 
     assert unimported == ["orphan"], "the gate must see the planted module and only that one"
+
+
+def test_every_screen_finding_carries_the_identity_the_contract_promises(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> None:
+    """A caller may key on the modelo and nothing else, and this holds that line.
+
+    The contract is deliberately one field. Eight of the nine finding types also
+    carry a revision, and one does not because a continuity chain spans them; a
+    discriminator is carried only where a screen reports more than one
+    condition. Promising more would be promising a shape two screens correctly
+    do not have.
+
+    Asserted over findings the screens actually emit rather than over their
+    dataclass definitions, because a caller reads rows and a type that declares
+    a field its rows never populate would satisfy a definition check while
+    breaking the reader it was written for.
+    """
+    from ..analysis.screens import FINDING_IDENTITY_CONTRACT, SCREENS
+
+    assert FINDING_IDENTITY_CONTRACT == ("modelo",), "the contract changed; the gate below encodes it"
+
+    checked = 0
+    missing: list[str] = []
+    for entry in SCREENS:
+        for finding in entry.run(authority, modelo_ids):
+            checked += 1
+            for field in FINDING_IDENTITY_CONTRACT:
+                if not getattr(finding, field, None):
+                    missing.append(f"{entry.name} emitted a finding without {field!r}")
+                    break
+
+    assert checked, "no screen emitted a finding, so this gate checked nothing"
+    assert not missing, "\n".join(sorted(set(missing)))

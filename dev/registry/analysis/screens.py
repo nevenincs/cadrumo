@@ -38,7 +38,7 @@ from .revision_name_window import screen_authority as revision_name_screen
 from .temporal_site_agreement import screen_authority as temporal_site_screen
 from .wire_type_compatibility import screen_authority as wire_type_screen
 
-__all__ = ["SCREENS", "ScreenEntry", "run_screens"]
+__all__ = ["FINDING_IDENTITY_CONTRACT", "SCREENS", "ScreenEntry", "run_screens"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,6 +103,23 @@ def _outside_references(authority: ValidatedRegistryAuthority, modelo_ids: tuple
 def _mixing_modelos(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> Sequence[object]:
     """Return only the modelos using more than one identifier grammar."""
     return [use for use in grammar_screen(authority, modelo_ids) if use.mixes]
+
+
+#: What a caller may assume about any screen's finding, and nothing more.
+#:
+#: Every finding identifies the modelo it concerns. That is the whole contract.
+#: A revision coordinate is carried by eight of the nine finding types and is
+#: deliberately absent from the ninth, because a continuity chain spans
+#: revisions and pinning one would name a revision the defect does not belong
+#: to. A condition discriminator is carried only by the screens reporting more
+#: than one condition; on a single-condition screen it would be a constant
+#: column.
+#:
+#: Written down because assuming more than this has misread these screens seven
+#: times in one campaign - a cross-screen key on `kind` reported two screens as
+#: collapsing every row onto one coordinate, which was the absent attribute
+#: reading as None rather than any property of the screens.
+FINDING_IDENTITY_CONTRACT: tuple[str, ...] = ("modelo",)
 
 
 SCREENS: tuple[ScreenEntry, ...] = (
