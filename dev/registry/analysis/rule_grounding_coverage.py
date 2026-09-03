@@ -68,8 +68,10 @@ _UTF_8: Final[str] = "utf-8"
 
 __all__ = [
     "KINDS",
+    "NoteWorkItem",
     "GroundingFinding",
     "classify_grounding",
+    "grounding_worklist",
     "revision_findings",
     "screen_authority",
 ]
@@ -92,9 +94,60 @@ class GroundingFinding:
     revision: str
     cell: str
     aeat_type: str
+    #: The field's declared width. Carried because it is what decides whether a
+    #: note can settle the field at all: modelo 200's amounts note states a
+    #: seventeen-character value and cannot govern a one-character one, which is
+    #: how three fields credited to it turned out to be settled elsewhere.
+    length: int
     kind: str
     notes: tuple[str, ...]
     detail: str
+
+
+@dataclass(frozen=True, slots=True)
+class NoteWorkItem:
+    """One note to read, and the fields a rule grounded in it would cover."""
+
+    modelo: str
+    note: str
+    grounding: str
+    fields: tuple[str, ...]
+    #: The declared widths among those fields, which is what decides whether one
+    #: rule covers them all. A note stating an amount of fifteen integers and two
+    #: decimals settles a seventeen-character field and cannot settle a
+    #: one-character one, so a work item spanning several widths is a signal to
+    #: read before assuming a single rule.
+    widths: tuple[int, ...]
+    types: tuple[str, ...]
+
+
+def grounding_worklist(findings: tuple[GroundingFinding, ...]) -> tuple[NoteWorkItem, ...]:
+    """Group grounded fields by the note that grounds them.
+
+    The field count is not the size of the authoring task. One note read covers
+    every field citing it, so the work is the number of DISTINCT notes, and the
+    order to read them in is how many fields each covers. Grouping is by note
+    rather than by field for that reason.
+
+    Ungrounded fields are absent by construction: they have no note to group
+    under, and the census reports them.
+    """
+    grouped: dict[tuple[str, str, str], list[GroundingFinding]] = collections.defaultdict(list)
+    for finding in findings:
+        for note in finding.notes:
+            grouped[(finding.modelo, note, finding.kind)].append(finding)
+    items = [
+        NoteWorkItem(
+            modelo=modelo,
+            note=note,
+            grounding=kind,
+            fields=tuple(sorted(item.cell for item in members)),
+            widths=tuple(sorted({item.length for item in members})),
+            types=tuple(sorted({item.aeat_type for item in members})),
+        )
+        for (modelo, note, kind), members in grouped.items()
+    ]
+    return tuple(sorted(items, key=lambda item: (-len(item.fields), item.modelo, item.note)))
 
 
 def revision_findings(
@@ -171,6 +224,7 @@ def classify_grounding(
                 revision=revision,
                 cell=field.cell,
                 aeat_type=field.aeat_type,
+                length=field.length,
                 kind=kind,
                 notes=notes,
                 detail=detail,
@@ -211,6 +265,12 @@ def main() -> int:
     # and the field count does not.
     reads = {(item.modelo, item.revision, note) for item in findings for note in item.notes}
     ungrounded_types = {(item.modelo, item.aeat_type) for item in findings if item.kind == "ungrounded"}
+    for item in grounding_worklist(findings):
+        sys.stdout.write(
+            f"rule_grounding_work modelo={item.modelo} note={item.note!r} grounding={item.grounding} "
+            f"fields={len(item.fields)} widths={','.join(str(width) for width in item.widths)} "
+            f"types={','.join(item.types)!r}\n"
+        )
     kinds = " ".join(f"{kind}={tally[kind]}" for kind in KINDS)
     sys.stdout.write(
         f"summary fields={len(findings)} {kinds} distinct_notes_to_read={len(reads)} "
