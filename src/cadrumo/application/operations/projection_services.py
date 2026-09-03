@@ -780,7 +780,7 @@ class OperationResponseControlService:
                 interaction_id=request.interaction_id,
                 revision=request.revision,
                 available=bool(intents),
-                permitted_intents=frozenset(intents),
+                permitted_intents=frozenset(intent.value for intent in intents),
             )
         except Exception:
             return _response_refusal(
@@ -852,7 +852,7 @@ class OperationResponseControlService:
                 operation_id=request.operation_id,
                 interaction_id=request.interaction_id,
                 revision=request.revision,
-                response_action=intent,
+                response_action=request.response_action,
             )
         except Exception:
             return _response_refusal(
