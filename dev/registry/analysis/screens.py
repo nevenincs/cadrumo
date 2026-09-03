@@ -259,11 +259,13 @@ def run_screens(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ..
 
 #: The function names by which a module presents itself as a screen.
 #:
-#: Declared once because five separate gates carried their own copy of it, each
-#: written when only the first name existed, and every one of them silently
-#: stopped covering a whole class of screen the day the second appeared. A gate
-#: that recognises one shape of a thing reports its blind spot as absence, and
-#: five copies means five chances to miss the same widening.
+#: Declared once because nine gates were narrow in this one way, each written
+#: when `screen_authority` was the only entry point, and every one of them
+#: silently stopped covering a whole class of screen the day `screen_corpus`
+#: appeared. Two carried their own copy of this literal, four iterated the
+#: authority table, two ran only the authority runner, and one claimed a scope
+#: its body did not have. A check that recognises one shape of a thing reports
+#: its blind spot as absence.
 SCREEN_ENTRY_POINTS: tuple[str, ...] = ("screen_authority", "screen_corpus")
 
 

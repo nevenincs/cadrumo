@@ -258,6 +258,45 @@ def test_every_screen_searches_a_population_that_is_not_empty(
     assert not empty, f"screens searching an empty population, so their silence proves nothing: {empty}"
 
 
+def test_the_runners_between_them_run_every_enrolled_screen() -> None:
+    """No enrolled screen is left without a runner that executes it.
+
+    Enrolment and execution are separate facts, and the gap between them is
+    where this suite has repeatedly lost coverage: a table gains a row, a runner
+    is written for one table, and a gate asserts against that runner's table.
+    Everything passes and a whole class of screen goes unrun.
+
+    This closes the gap at its narrowest point. The names the runners actually
+    emit must equal the names enrolled, so a third table added without a runner
+    fails here, and a runner that silently stops emitting a screen fails here
+    too. It asserts names rather than counts, because two tables of the same
+    size can still disagree about which screens they hold.
+
+    Run for the names only. What the screens FIND is asserted by the whole-corpus
+    gate, and duplicating it here would double the slowest work in the suite to
+    check something already checked.
+    """
+    from ..analysis.screens import (
+        CORPUS_SCREENS,
+        SCREENS,
+        run_corpus_screens,
+        screen_module_names,
+    )
+
+    enrolled = {entry.name for entry in SCREENS} | {entry.name for entry in CORPUS_SCREENS}
+    assert enrolled == set(screen_module_names()), "enrolment and the module walk disagree"
+
+    # The corpus runner is cheap enough to execute; the authority runner needs
+    # the built authority, so its names are taken from the table it iterates -
+    # which is exactly what `run_screens` does, and the whole-corpus gate proves
+    # it executes them.
+    emitted = {name for name, _, _ in run_corpus_screens()} | {entry.name for entry in SCREENS}
+    assert emitted == enrolled, (
+        f"enrolled but no runner emits them: {sorted(enrolled - emitted)}; "
+        f"emitted by a runner but not enrolled: {sorted(emitted - enrolled)}"
+    )
+
+
 def test_every_screen_module_has_a_test_module() -> None:
     """A screen with no test of its own has no proven detection.
 
