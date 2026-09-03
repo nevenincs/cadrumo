@@ -100,24 +100,13 @@ def test_every_screen_module_is_enrolled_in_the_runner() -> None:
     typo. The cost of an explicit table is that an author can forget to add a
     row, and this gate is what makes forgetting fail rather than pass quietly.
     """
-    import pathlib
+    from ..analysis.screens import CORPUS_SCREENS, SCREENS, screen_module_names
 
-    from ..analysis.screens import CORPUS_SCREENS, SCREENS
-
-    analysis = pathlib.Path(__file__).resolve().parent.parent / "analysis"
-    # BOTH entry points, not only the one the first screens happened to use. A
-    # screen reading the design corpus takes no authority and no modelo set, so
-    # it presents `screen_corpus` instead - and while this gate looked for one
-    # name, two such screens sat unenrolled and it passed. That is the failure
-    # this campaign keeps finding in its own instruments: a check that
-    # recognises one shape of a thing and reports its blind spot as absence.
-    entry_points = ("\ndef screen_authority(", "\ndef screen_corpus(")
-    defining = {
-        path.stem
-        for path in analysis.glob("*.py")
-        if path.name != "screens.py"
-        and any(entry in path.read_text(encoding=_UTF_8) for entry in entry_points)
-    }
+    # The walk is the analysis package's own, not a copy kept here. Five gates
+    # each carried their own, every one written when only `screen_authority`
+    # existed, and every one silently stopped covering a whole class of screen
+    # the day `screen_corpus` appeared. One declaration widens them together.
+    defining = set(screen_module_names())
     # Both tables. A corpus screen is a screen a reader must be able to find,
     # and documenting only the authority ones would leave two undiscoverable.
     enrolled = {entry.name for entry in SCREENS} | {entry.name for entry in CORPUS_SCREENS}
@@ -259,12 +248,13 @@ def test_every_screen_module_has_a_test_module() -> None:
     """
     import pathlib
 
+    from ..analysis.screens import screen_module_names
+
     registry_root = pathlib.Path(__file__).resolve().parent.parent
-    screens = {
-        path.stem
-        for path in (registry_root / "analysis").glob("*.py")
-        if path.name != "screens.py" and "\ndef screen_authority(" in path.read_text(encoding=_UTF_8)
-    }
+    # The shared walk, so a screen presenting either entry point is required to
+    # carry a test. This gate kept its own copy looking for `screen_authority`
+    # alone, and two corpus screens passed it without being seen.
+    screens = set(screen_module_names())
     untested = sorted(name for name in screens if not (registry_root / "tests" / f"test_{name}.py").is_file())
 
     # The discovered set must be proved non-empty before its emptiness means
@@ -443,20 +433,22 @@ def test_every_kind_a_screen_emits_is_named_in_its_own_docstring(
     """
     import importlib
 
-    from ..analysis.screens import SCREENS
+    from ..analysis.screens import enrolled_screen_findings
 
     observed: set[tuple[str, str]] = set()
     undocumented: list[str] = []
-    for entry in SCREENS:
-        module = importlib.import_module(f"dev.registry.analysis.{entry.name}")
+    # Both tables, through the shared traversal. This gate iterated the
+    # authority table alone and so never read a corpus screen's kinds.
+    for name, findings in enrolled_screen_findings(authority, modelo_ids):
+        module = importlib.import_module(f"dev.registry.analysis.{name}")
         doc = module.__doc__ or ""
-        for finding in entry.run(authority, modelo_ids):
+        for finding in findings:
             kind = getattr(finding, "kind", None)
             if not isinstance(kind, str):
                 continue
-            observed.add((entry.name, kind))
+            observed.add((name, kind))
             if kind not in doc:
-                undocumented.append(f"{entry.name} emits {kind!r} but its docstring never names it")
+                undocumented.append(f"{name} emits {kind!r} but its docstring never names it")
 
     assert observed, "no enrolled screen emitted a kind, so this gate checked nothing"
     assert not undocumented, "\n".join(sorted(set(undocumented)))

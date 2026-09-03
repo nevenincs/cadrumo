@@ -22,6 +22,7 @@ from __future__ import annotations
 import sys
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from pathlib import Path
 
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
@@ -43,14 +44,20 @@ from .type_convention_notes import screen_authority as type_convention_screen
 from .unnumbered_note_scope import screen_corpus as unnumbered_note_scope_screen
 from .wire_type_compatibility import screen_authority as wire_type_screen
 
+#: A newline, named so the entry-point search below carries no escape.
+LINE_BREAK = chr(10)
+
 __all__ = [
     "CORPUS_SCREENS",
     "FINDING_IDENTITY_CONTRACT",
     "SCREENS",
+    "SCREEN_ENTRY_POINTS",
     "CorpusScreenEntry",
     "ScreenEntry",
+    "enrolled_screen_findings",
     "run_corpus_screens",
     "run_screens",
+    "screen_module_names",
 ]
 
 
@@ -243,6 +250,45 @@ CORPUS_SCREENS: tuple[CorpusScreenEntry, ...] = (
 def run_screens(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> tuple[tuple[str, int, str], ...]:
     """Run every enrolled screen and return its name, count and what the count means."""
     return tuple((entry.name, len(entry.run(authority, modelo_ids)), entry.counts) for entry in SCREENS)
+
+
+#: The function names by which a module presents itself as a screen.
+#:
+#: Declared once because five separate gates carried their own copy of it, each
+#: written when only the first name existed, and every one of them silently
+#: stopped covering a whole class of screen the day the second appeared. A gate
+#: that recognises one shape of a thing reports its blind spot as absence, and
+#: five copies means five chances to miss the same widening.
+SCREEN_ENTRY_POINTS: tuple[str, ...] = ("screen_authority", "screen_corpus")
+
+
+def screen_module_names() -> frozenset[str]:
+    """Return every analysis module presenting a screen entry point.
+
+    The walk lives here rather than in the gates that need it, so a new entry
+    point is added in one place and every gate widens with it.
+    """
+    analysis = Path(__file__).resolve().parent
+    return frozenset(
+        path.stem
+        for path in analysis.glob("*.py")
+        if path.name != Path(__file__).name
+        and any(f"{LINE_BREAK}def {entry}(" in path.read_text(encoding="utf-8") for entry in SCREEN_ENTRY_POINTS)
+    )
+
+
+def enrolled_screen_findings(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> tuple[tuple[str, tuple[object, ...]], ...]:
+    """Return every enrolled screen's name and findings, from both tables.
+
+    One traversal for the gates that inspect what screens EMIT. Without it each
+    gate chooses a table, and the four that chose the authority table stopped
+    covering the corpus screens without saying so.
+    """
+    from_authority = ((entry.name, tuple(entry.run(authority, modelo_ids))) for entry in SCREENS)
+    from_corpus = ((entry.name, tuple(entry.run())) for entry in CORPUS_SCREENS)
+    return (*from_authority, *from_corpus)
 
 
 def run_corpus_screens() -> tuple[tuple[str, int, str], ...]:
