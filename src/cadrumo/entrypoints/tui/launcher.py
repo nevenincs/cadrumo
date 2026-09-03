@@ -196,7 +196,7 @@ async def _run_root_session(
     *,
     headless: bool,
     auto_pilot: AutopilotCallbackType | None,
-    workbench_search_inputs_provider: InstalledWorkbenchSearchInputsProviderV1,
+    workbench_search_inputs_provider: InstalledWorkbenchSearchInputsProviderV1 | None = None,
 ) -> None:
     """Compose one session's services, run the root application, settle them.
 
@@ -206,16 +206,22 @@ async def _run_root_session(
     """
     from .app import CadrumoTuiApp
 
-    service = compose_installed_workbench_search(workbench_search_inputs_provider())
+    service = (
+        compose_installed_workbench_search(workbench_search_inputs_provider())
+        if workbench_search_inputs_provider is not None
+        else None
+    )
 
     def refresh_search() -> WorkbenchSearchDoorV1:
+        if workbench_search_inputs_provider is None:  # pragma: no cover - callback is not installed
+            raise RuntimeError("workbench search composition is unavailable")
         return compose_installed_workbench_search(workbench_search_inputs_provider())
 
     async with operation_services_scope() as services:
         await CadrumoTuiApp(
             services=services,
             workbench_search_service=service,
-            refresh_workbench_search=refresh_search,
+            refresh_workbench_search=refresh_search if workbench_search_inputs_provider is not None else None,
         ).run_async(headless=headless, auto_pilot=auto_pilot)
 
 
@@ -223,7 +229,7 @@ def main(
     *,
     headless: bool = False,
     auto_pilot: AutopilotCallbackType | None = None,
-    workbench_search_inputs_provider: InstalledWorkbenchSearchInputsProviderV1,
+    workbench_search_inputs_provider: InstalledWorkbenchSearchInputsProviderV1 | None = None,
 ) -> int:
     """Start one dedicated TUI session and report its process exit status.
 

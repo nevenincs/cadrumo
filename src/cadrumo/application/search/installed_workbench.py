@@ -46,6 +46,10 @@ class InstalledWorkbenchSearchSnapshotV1:
         """Build the pure query service over this exact snapshot."""
         return WorkbenchSearchService(self.documents)
 
+    def __reduce_ex__(self, _protocol: int) -> object:
+        """Refuse Python serialization of the ephemeral identity seed set."""
+        raise TypeError("installed workbench search snapshots are memory-only")
+
 
 @dataclass(frozen=True, slots=True)
 class InstalledWorkbenchSearchInputsV1:
