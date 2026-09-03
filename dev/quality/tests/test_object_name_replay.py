@@ -244,6 +244,8 @@ def test_generator_unallowlisted_entries_never_enter_the_live_tree(
 
     def escape_allowlist(*args: Any, cwd: Path, **kwargs: Any) -> Any:
         outcome = original_run(*args, cwd=cwd, **kwargs)
+        if args[0].argv != receipt.generator_outcomes[0].argv:
+            return outcome
         escaped = cwd / escaped_relative
         if as_directory:
             escaped.mkdir(parents=True)

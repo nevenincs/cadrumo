@@ -492,6 +492,13 @@ def replay_object_name_component(
             target.parent.mkdir(parents=True, exist_ok=True)
             created_directories.extend(reversed(missing))
             baseline_payloads.setdefault(relative, _current_payload(root, relative))
+            if payload is None:
+                expected = baseline_payloads[relative]
+                if expected is None:
+                    raise ObjectNameReplayError(f"receipt cannot delete an absent generated path: {relative}")
+                mutation_intents[relative] = None
+                _unlink_regular(root, relative, expected=expected)
+                continue
             staged = _stage_bytes(target, payload, label="generated")
             stages[relative] = staged
             mutation_intents[relative] = payload
