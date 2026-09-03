@@ -13,6 +13,13 @@ from ._app_ledger_command_spec_policies import (
     _POLICY_8,
     _POLICY_9,
 )
+from ._app_ledger_command_spec_support import (
+    _GROUP_INVOCATION,
+    _LEAF_INVOCATION,
+    _NO_RESULT_SCHEMA,
+    _OPTIONAL_PERIOD_OPTION,
+    _OPTIONAL_YEAR_OPTION,
+)
 from .command_spec import (
     ArgumentSpec,
     CommandNodeKind,
@@ -37,11 +44,11 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.ledger.inventory.group_help"),
         short_help_key=None,
-        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=True, context_parameter=None),
+        invocation=_GROUP_INVOCATION,
         parameters=(),
         policy=_POLICY_1,
         handler=None,
-        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
+        result_schema=_NO_RESULT_SCHEMA,
     ),
     CommandSpec(
         key="app_ledger_invoice",
@@ -50,11 +57,11 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.ledger.invoice.group_help"),
         short_help_key=None,
-        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=True, context_parameter=None),
+        invocation=_GROUP_INVOCATION,
         parameters=(),
         policy=_POLICY_1,
         handler=None,
-        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
+        result_schema=_NO_RESULT_SCHEMA,
     ),
     CommandSpec(
         key="app_ledger_link",
@@ -63,7 +70,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.link.help"),
         short_help_key=None,
-        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
+        invocation=_LEAF_INVOCATION,
         parameters=(
             ArgumentSpec(
                 name="transaction_id",
@@ -123,7 +130,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.list.help"),
         short_help_key=None,
-        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
+        invocation=_LEAF_INVOCATION,
         parameters=(
             OptionSpec(
                 name="filters",
@@ -141,38 +148,8 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 show_default=True,
                 hidden=False,
             ),
-            OptionSpec(
-                name="period",
-                declarations=("--period",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.ledger.export.period_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
-            OptionSpec(
-                name="year",
-                declarations=("--year",),
-                value=ValueContract(DeferredTarget("builtins", "int")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.ledger.check.year_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
+            _OPTIONAL_PERIOD_OPTION,
+            _OPTIONAL_YEAR_OPTION,
             OptionSpec(
                 name="limit",
                 declarations=("--limit",),
@@ -301,7 +278,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.llm_diagnostics.help"),
         short_help_key=None,
-        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
+        invocation=_LEAF_INVOCATION,
         parameters=(
             OptionSpec(
                 name="since",
@@ -369,7 +346,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.merge.help"),
         short_help_key=None,
-        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
+        invocation=_LEAF_INVOCATION,
         parameters=(
             OptionSpec(
                 name="child_id",
@@ -486,7 +463,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.preflight.help"),
         short_help_key=None,
-        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
+        invocation=_LEAF_INVOCATION,
         parameters=(
             OptionSpec(
                 name="period",
@@ -536,11 +513,11 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.ledger.prorrata.group_help"),
         short_help_key=None,
-        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=True, context_parameter=None),
+        invocation=_GROUP_INVOCATION,
         parameters=(),
         policy=_POLICY_1,
         handler=None,
-        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
+        result_schema=_NO_RESULT_SCHEMA,
     ),
     CommandSpec(
         key="app_ledger_evidence_pull_all",
@@ -549,7 +526,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.evidence.pull_all_help"),
         short_help_key=None,
-        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
+        invocation=_LEAF_INVOCATION,
         parameters=(
             OptionSpec(
                 name="folder",
@@ -604,11 +581,11 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.ledger.ratios.group_help"),
         short_help_key=None,
-        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=True, context_parameter=None),
+        invocation=_GROUP_INVOCATION,
         parameters=(),
         policy=_POLICY_1,
         handler=None,
-        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
+        result_schema=_NO_RESULT_SCHEMA,
     ),
 )
 
