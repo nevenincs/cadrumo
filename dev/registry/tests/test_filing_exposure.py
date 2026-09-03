@@ -142,3 +142,49 @@ def test_a_census_is_not_added_to_the_filing_defect_total() -> None:
     naive = sum(item.filing_findings for item in exposures)
     honest = sum(item.filing_findings for item in findings)
     assert honest < naive
+
+
+def test_revision_pressure_names_the_conditions_rather_than_only_counting_them() -> None:
+    """A count of conditions is not a severity, so the row carries their names.
+
+    A revision with one filing-correctness defect is worse than one with four
+    declaration untidinesses, and nothing here weighs them. The names are what
+    let a reader see which they are instead of trusting the number.
+    """
+    from ..analysis.filing_exposure import revision_pressure
+
+    ranked = revision_pressure(bundled_authority(), bundled_modelo_ids())
+    assert ranked, "no fileable revision carries a condition, so this proves nothing"
+    assert ranked[0].count >= ranked[-1].count
+    for item in ranked:
+        assert item.count == len(item.conditions) == len(set(item.conditions))
+        assert all("." in kind for kind in item.conditions)
+
+
+def test_revision_pressure_ranks_only_revisions_that_can_be_filed() -> None:
+    """The ranking exists to order repair of filings, so it holds nothing else."""
+    from ..analysis.filing_exposure import filing_grade_revisions, revision_pressure
+
+    authority = bundled_authority()
+    modelo_ids = bundled_modelo_ids()
+    filing = filing_grade_revisions(authority, modelo_ids)
+    ranked = revision_pressure(authority, modelo_ids)
+    assert {(item.modelo, item.revision) for item in ranked} <= filing
+    assert len(ranked) < len(filing) + 1
+
+
+def test_revision_pressure_excludes_census_screens() -> None:
+    """A census would rank a revision by how many fields it has.
+
+    Its rows are transitions examined rather than defects, so including them
+    would put the largest modelo at the top regardless of its declarations -
+    which is the error the entry-point declaration exists to prevent, arriving
+    by a second route.
+    """
+    from ..analysis.filing_exposure import revision_pressure
+    from ..analysis.screens import CORPUS_SCREENS, SCREENS
+
+    census = {entry.name for entry in (*SCREENS, *CORPUS_SCREENS) if entry.entry_returns == "census"}
+    assert census, "no screen declares a census, so this proves nothing"
+    named = {kind.split(".", 1)[0] for item in revision_pressure(bundled_authority(), bundled_modelo_ids()) for kind in item.conditions}
+    assert not (named & census)

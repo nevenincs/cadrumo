@@ -51,8 +51,10 @@ from .screens import screen_findings
 
 __all__ = [
     "ConditionExposure",
+    "RevisionPressure",
     "condition_exposure",
     "filing_grade_revisions",
+    "revision_pressure",
 ]
 
 _FILING = "filing"
@@ -173,6 +175,67 @@ def condition_exposure(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class RevisionPressure:
+    """One fileable revision, and how many distinct conditions it carries."""
+
+    modelo: str
+    revision: str
+    conditions: tuple[str, ...]
+
+    @property
+    def count(self) -> int:
+        """How many distinct screen conditions name this revision."""
+        return len(self.conditions)
+
+
+def revision_pressure(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> tuple[RevisionPressure, ...]:
+    """Rank filing-grade revisions by how many distinct conditions name them.
+
+    The other axis. Exposure asks which CONDITION a filer would meet; this asks
+    which REVISION carries the most of them, and the two disagree about what to
+    do first. Sixty-seven of the sixty-nine fileable revisions carry at least one
+    condition, so choosing by condition means touching almost every revision;
+    choosing by revision clears several conditions at a time.
+
+    A count of conditions is not a severity. A revision carrying one
+    filing-correctness defect is worse than one carrying four declaration
+    untidinesses, and nothing here weighs them - the conditions are named on each
+    row so a reader can see which they are rather than trusting the number.
+
+    Census screens are excluded, for the reason their declaration exists: their
+    rows are transitions examined, and counting them would rank a revision by how
+    many fields it has.
+    """
+    from .screens import CORPUS_SCREENS, SCREENS
+
+    census = {entry.name for entry in (*SCREENS, *CORPUS_SCREENS) if entry.entry_returns == "census"}
+    filing = filing_grade_revisions(authority, modelo_ids)
+    carried: dict[tuple[str, str], set[str]] = collections.defaultdict(set)
+    for name, findings in screen_findings(authority, modelo_ids):
+        if name in census:
+            continue
+        for finding in findings:
+            modelo = getattr(finding, "modelo", None)
+            revision = getattr(finding, "revision", None)
+            if modelo is None or revision is None:
+                continue
+            unit = (str(modelo), str(revision))
+            if unit in filing:
+                carried[unit].add(f"{name}.{getattr(finding, 'kind', name)}")
+    return tuple(
+        sorted(
+            (
+                RevisionPressure(modelo=modelo, revision=revision, conditions=tuple(sorted(kinds)))
+                for (modelo, revision), kinds in carried.items()
+            ),
+            key=lambda item: (-item.count, item.modelo, item.revision),
+        )
+    )
+
+
 def main() -> int:
     """Print one row per condition, most filing-exposed first; always exit 0."""
     authority = bundled_authority()
@@ -189,6 +252,11 @@ def main() -> int:
     # Exposure summed over screens that return findings. A census's rows are
     # examined transitions, and adding them to a defect count is the error this
     # declaration exists to stop.
+    for pressure in revision_pressure(authority, modelo_ids):
+        sys.stdout.write(
+            f"revision_pressure modelo={pressure.modelo} revision={pressure.revision} "
+            f"conditions={pressure.count} kinds={','.join(pressure.conditions)}\n"
+        )
     exposed = [item for item in exposures if item.filing_findings and item.entry_returns == "findings"]
     sys.stdout.write(
         f"summary conditions={len(exposures)} with_filing_exposure={len(exposed)} "
