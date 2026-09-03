@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:839828db2aceaafa600f240078f23eccc9dde4b5ec22326271c89cba83adae3e'
+body_hash: 'sha256:9a1c986aacb14fe32819d65adbf7fab54f5a86aa4fbc00a1e86cd4c93f6352a1'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8745,3 +8745,53 @@ easiest to dismiss: a fourteen-row overstatement in a screen nobody gates on. It
 is worth fixing for the same reason the runner's wording was - the labels are
 where a reader learns what these numbers mean, and a label that names the wrong
 unit teaches the mis-reading that has cost this campaign seven measurements.
+
+### the-readme-taught-the-conflation-too-and-a-gate-for-it-was-declined | medium | One sentence corrected; the label check is left to a person because gating it means parsing prose
+
+The contributor README opens its screens section by saying each one "prints one
+greppable row per finding" - the wording corrected in the runner an iteration
+ago, in the document a contributor reads first. It now says one row per result,
+and names the exception: two screens collapse theirs onto the unit somebody
+fixes, so their rows are a report rather than a finding, and the runner's label
+on each line says which.
+
+The table below it was left alone on purpose. It paraphrases each screen's
+condition in the README's own words rather than repeating the runner's labels,
+which is a duplication that could drift - and it is the right one to keep, since
+the table answers "what does this screen look for" while the label answers "what
+is one row of its output". Two different questions about the same screen deserve
+two sentences, and collapsing them would make the table useless for the question
+it exists to answer.
+
+A gate for the labels was considered and declined. All ten now name the unit
+their rows are, which is exactly the state where a regression guard is
+attractive, but checking it means parsing a prose label for its head noun and
+comparing that against a count - a heuristic over English, and this campaign has
+recorded seven measurements lost to heuristics that recognised one shape of a
+thing. A check whose own correctness cannot be established is not a gate, it is
+a second thing to maintain.
+
+### the-screens-criterion-listed-nine-properties-and-there-are-twelve | medium | Written properties-first this time, because the total has moved twice while the properties have not
+
+The verification criterion holding the screens to account named nine properties
+and opened with the number. Three gates have joined them since it was written -
+that a screen module's public surface is imported by some test, that a finding
+type declares the modelo the identity contract promises, and that a screen
+stating how many facts it reads lists that many - so the sentence undercounted
+its own subject by a third.
+
+The count is now written after the properties rather than before them, which is
+the same repair applied to the gate figures in the description earlier in this
+campaign and for the same reason: a number leading a sentence reads as the
+claim, so a reader who finds twelve where nine is promised suspects the gates
+rather than the sentence. A number trailing the thing it counts reads as an
+observation, and an observation that has aged is easy to correct.
+
+The three additions are each a hole this campaign fell into rather than
+anticipated. The import gate exists because two modules created while collapsing
+duplication had no test and no gate asked for one. The identity gate exists
+because seven cross-screen measurements were mis-read by assuming a field two
+finding types do not carry. The fact-count gate exists because the
+condition-count gate deliberately skipped the fact bullets, and one screen said
+four where it listed five. None was designed; each was the shape of a specific
+mistake, made durable.

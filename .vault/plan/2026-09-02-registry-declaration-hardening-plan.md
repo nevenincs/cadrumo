@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:b29eadf6e6324d8b37f4ea7fe5a1fe9b4141e136b43d0a100669807b852a3e28'
+body_hash: 'sha256:391a1e8a4eeec65fc598db2726fb5e5415d85f287b86993bedac833dd9e27452'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -632,6 +632,8 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S338` - Declare what a caller may assume about a screen finding, and learn from the gate that a runner row is not one; `dev/registry/analysis/screens.py dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W06.P13.S339` - Call the runner's output rows rather than findings, since two of them are reports; `dev/registry/analysis/screens.py`.
 - [x] `W06.P13.S340` - Make two screen labels name the unit their rows are, rather than the entity those rows are about; `dev/registry/analysis/screens.py`.
+- [x] `W06.P13.S341` - Carry the report-versus-finding distinction into the contributor README, and decline to gate the label wording; `dev/registry/README.md`.
+- [x] `W06.P13.S342` - Add the three screen-property gates the criterion had not caught up with, naming properties before totals; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -798,17 +800,25 @@ that rephrasing once broke. The first half cannot be satisfied by engineering un
 reference exists, because a vector whose expected bytes came from this project's own writer
 would prove only that the writer agrees with itself.
 
-Every screen is reachable, exercised and honest about what it measured. Nine gates cover this: a
-screen is enrolled in the runner, listed in the contributor README's table, carries a test module,
+Every screen is reachable, exercised and honest about what it measured. The properties that hold it
+there, twelve of them at the time of writing: a screen is enrolled in the runner, listed in the contributor README's table, carries a test module,
 searches a non-empty population, completes over the whole corpus, leaves the shipped registry
 byte-for-byte untouched, names in its own docstring every finding kind it emits, and states a
 condition count matching both what it documents and what it emits; and every symbol those READMEs
-name still resolves, so the documentation cannot outlive the code it describes. Each was added
+name still resolves, so the documentation cannot outlive the code it describes.
+
+Three more have since joined them, and the count is written this way - the properties named, the
+total second - because it has already moved twice while the properties did not. A screen module's
+public surface must be imported by some test, since a module no test imports is one whose behaviour
+nobody asserts. A screen's finding type must declare the modelo the contract promises, which is the
+only field a caller may assume across screens. And a screen stating how many FACTS it reads must
+list that many, which the condition-count gate deliberately skipped and which one screen had wrong.
+Each was added
 after finding the hole it closes, and two caught the author within one iteration of being written.
-The seventh collects its kinds by running the screens rather than reading their source, because two
+The kind-naming gate collects its kinds by running the screens rather than reading their source, because two
 earlier static extractors were each wrong in a different direction: one under-read a screen to a
 single kind and another to none, and a regex reported function names as undocumented kinds. The
-eighth exists because the seventh was not enough: two screens named every kind they emit while still
+condition-count gate exists because naming was not enough: two screens named every kind they emit while still
 opening with a count from an earlier version of themselves, and one of those went stale in the very
 edit that added the missing name. A wrong count is worse than a missing one, because it tells the
 reader the list is complete.
