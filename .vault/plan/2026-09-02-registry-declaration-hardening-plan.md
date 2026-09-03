@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:6ef74a889264849ded79b8e6d5407353df3215b5ec89e856c0645ad06b6b8152'
+body_hash: 'sha256:d628c6dd5c1f2c19adc347a7e9407238567319ef940609f6148434e3db33f95e'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -302,7 +302,7 @@ Wire a standing regression gate comparing the satisfied filing-coordinate set by
 - [ ] `W02.P04.S123` - Migrate the thirty-one layouts that spell their envelope as a record onto the typed envelope slot, so the export boundary can see it and admit the required product identity; `src/cadrumo/_data/registry/aeat/modelos`.
 - [ ] `W02.P04.S124` - Resolve the twenty-five revisions carrying an export layout or envelope while declaring a grade below filing, twenty-two at applicability and three at calculation, starting with modelos 185 and 222 whose 2025 revisions ship a committed generated tree at applicability; `src/cadrumo/_data/registry/aeat/modelos`.
 - [x] `W02.P04.S129` - Re-ground the capability screen's envelope condition against the official designs, replacing the fifty-two-row count with the thirty-one real record-spelled cases; `dev/registry/analysis/modelo_capability.py`.
-- [ ] `W02.P04.S130` - Author the modelo 714 envelope developer identity at offsets 93 to 96 and 101 to 109, extending a footer record whose only field spans offsets 1 to 18, with the official record design as the authority for where that record ends; `src/cadrumo/_data/registry/aeat/modelos/714/revisions`.
+- [ ] `W02.P04.S130` - Withdraw the modelo 714 envelope authoring: offsets 93 to 96 and 101 to 109 are delegated to the entidad desarrolladora, which the coverage validator classifies omissible because this product holds no EEDD registration and writing one would invent a regulatory identity; `src/cadrumo/_data/registry/aeat/modelos/714/revisions`.
 - [ ] `W02.P04.S131` - Decide modelo 100, which declares filing grade for an XML layout that refuses at render for want of a grounded aux version token; `src/cadrumo/_data/registry/aeat/modelos/100/revisions`.
 - [x] `W02.P04.S132` - Report structurally when a revision ships a committed export tree while declaring a grade below filing; `dev/registry/analysis/modelo_capability.py`.
 - [ ] `W02.P04.S133` - Re-review modelo 222, whose attestation reaches scheduling and applicability only and describes two casillas and no export layout while the revision now ships seventy-six casillas, a typed envelope and a committed tree; `src/cadrumo/_data/registry/aeat/modelos/222/revisions`.
@@ -656,6 +656,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S356` - Establish that the deferral rationale has no revision-level slot and name the analogue it should follow; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S357` - Establish that the 714 envelope offsets lie past the footer's declared extent, which itself has no length; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S358` - Withdraw the declared-length request after counting the corpus, and name the official design as the authority on record extent; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S359` - Resolve why the layout coverage validator accepts modelo 714 while its cited design declares an uncovered developer-identity position; `src/cadrumo/domain/calculations/registry/_validate_export_layout_coverage.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

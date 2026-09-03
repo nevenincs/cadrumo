@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c9b6e1abd43ed9cb3c6c1c10ace35cdb74fb539ec9156c2d58899b48d0f95302'
+body_hash: 'sha256:9ea0b97a6397338c018b334884589def043ca98444ecff060332f94fa0991c10'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -9234,3 +9234,62 @@ The lesson is the one this campaign keeps paying for in a new currency: a
 property observed on one instance is a property of that instance until it is
 counted. One record without a length looked like an omission; 419 without one is
 a schema.
+
+### the-coverage-validator-accepts-modelo-714-while-its-own-design-declares-an-uncovered-required-position | high | Position 93 is "Versión del Programa" in the 2025 design the layout cites, and no authored field covers it
+
+Chasing the modelo 714 envelope Step into the official design produced a
+tension worth resolving rather than a conclusion.
+
+Established by reading: the 2025 layout cites source `aeat-dr-714-2025`, which
+resolves to `DR714_2025.xls` in the bundled corpus. That design declares, at
+position 93 for 4 alphanumeric characters, "Versión del Programa", footnoted as
+completed by the developing entity. The authored footer record covers offsets 1
+to 18 and no authored field covers 93. The layout coverage validator reads that
+same design, defaults every position to required, and admits omissibility only
+where the design marks a position administration-reserved or fill - neither of
+which applies to a developer-completed field. And the registry validates: the
+authority loads, so the validator accepts this layout today.
+
+Those four facts cannot all be right about the same position, and which one
+gives way is not established from here. The validator may match authored records
+to design records by identity and skip a design record with no authored
+counterpart - which would be the exact hole its own docstring cites modelo 714's
+two unauthored records as the motivation for closing. Or the position may belong
+to a design record the page fields do cover, making the footer irrelevant to it.
+Distinguishing those needs the validator's matching logic read properly, and
+that module is outside this execution's scope to change though not to read.
+
+A Step now carries the question. What is recorded here is the evidence and its
+limit: the design says the position exists and is not omissible, the layout does
+not cover it, the validator passes, and the reason has not been read. Stating
+which of those is measured and which is inferred is the whole of what this entry
+can honestly claim.
+
+### the-714-step-asked-for-a-field-the-product-must-not-write | high | The coverage validator classifies it omissible for a reason the Step contradicts, and reading the validator settled it
+
+The tension recorded last iteration is resolved, and it resolves against the
+plan. The coverage validator carries an explicit rule for exactly this position:
+`_eedd_delegated_reason`. A position whose note delegates it to the entidad
+desarrolladora is omissible, and the reason is stated in the module rather than
+implied - this product holds no EEDD registration, so writing one would invent a
+regulatory identity, and writing blank would assert an empty EEDD rather than an
+absent one.
+
+Position 93 in the 2025 design is "Versión del Programa" carrying the footnote
+"A cumplimentar por las entidades desarrolladoras (EEDD)". The validator's rule
+requires two signals to agree - the field cites a note, and that note's printed
+body delegates to the EEDD - and both hold. So the layout is correct to omit it
+and the registry is correct to validate.
+
+The Step asked for those offsets to be authored as "the mandatory developer
+identity". They are mandatory for a developing entity to fill at emission and
+must not be present in this registry's declaration. Authoring them would have
+done the one thing the validator's docstring says must not happen, in a Step
+whose scope named only the registry data directory, and the four facts that
+looked contradictory were three facts and one wrong premise.
+
+Reading the module settled in one pass what three iterations of measuring around
+it could not. The constraint that this execution may not WRITE outside `dev/`
+and `.vault/` says nothing about reading, and the reasoning that resolves a
+registry question is frequently in the module that implements it rather than in
+any record about it. The evidence was one grep away throughout.
