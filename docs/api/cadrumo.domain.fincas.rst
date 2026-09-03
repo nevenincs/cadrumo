@@ -23,3 +23,4 @@ Submodules
    cadrumo.domain.fincas.repository_ports
    cadrumo.domain.fincas.source_readiness
    cadrumo.domain.fincas.tier_resolver
+   cadrumo.domain.fincas.titularidad

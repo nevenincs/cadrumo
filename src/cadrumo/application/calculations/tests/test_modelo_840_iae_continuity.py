@@ -31,18 +31,18 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from enum import StrEnum
 from pathlib import Path
 
 import pytest
+from pydantic import BaseModel, Field
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.external_constants import MODELO_840_IAE_CIFRA_NEGOCIOS_EXEMPTION_THRESHOLD_EUR
+from ....core.filing_year import FilingYear
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.modelos.iae_exemption import (
-    Modelo840IaeExemptionAssessment,
-    Modelo840IaeExemptionStatus,
-    assess_modelo_840_iae_cifra_negocios_exemption,
-)
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
@@ -50,6 +50,56 @@ from ..observations_repository import CalculationObservationRepository
 from ._observation_lookup_support import find_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+class Modelo840IaeExemptionStatus(StrEnum):
+    """Turnover-based IAE exemption status under TRLRHL art. 82.1.c."""
+
+    EXEMPT = "exempt"
+    NOT_EXEMPT = "not_exempt"
+
+
+class Modelo840IaeExemptionAssessment(BaseModel):
+    """One annual Modelo 840 IAE turnover-threshold assessment."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    filing_year: FilingYear
+    importe_neto_cifra_negocios_eur: Decimal = Field(ge=Decimal("0"))
+    threshold_eur: Decimal = Field(
+        default=MODELO_840_IAE_CIFRA_NEGOCIOS_EXEMPTION_THRESHOLD_EUR,
+        gt=Decimal("0"),
+    )
+    status: Modelo840IaeExemptionStatus
+    legal_refs: tuple[str, ...] = ("rdl-2-2004:art-82", "rdl-2-2004:art-90")
+
+    @property
+    def is_exempt(self) -> bool:
+        """Return whether the annual INCN is within the art. 82.1.c exemption."""
+        return self.status is Modelo840IaeExemptionStatus.EXEMPT
+
+
+def assess_modelo_840_iae_cifra_negocios_exemption(
+    *,
+    filing_year: int,
+    importe_neto_cifra_negocios_eur: Decimal,
+) -> Modelo840IaeExemptionAssessment:
+    """Assess the strict Modelo 840 IAE art. 82.1.c turnover exemption.
+
+    TRLRHL art. 82.1.c exempts the covered entities only when their net turnover
+    is below 1,000,000 EUR. Equality is outside the exemption.
+    """
+    status = (
+        Modelo840IaeExemptionStatus.EXEMPT
+        if importe_neto_cifra_negocios_eur < MODELO_840_IAE_CIFRA_NEGOCIOS_EXEMPTION_THRESHOLD_EUR
+        else Modelo840IaeExemptionStatus.NOT_EXEMPT
+    )
+    return Modelo840IaeExemptionAssessment(
+        filing_year=filing_year,
+        importe_neto_cifra_negocios_eur=importe_neto_cifra_negocios_eur,
+        status=status,
+    )
+
 
 #: Modelo id this module enrolls into the multi-year-renta authorization gate.
 _MODELO = "840"

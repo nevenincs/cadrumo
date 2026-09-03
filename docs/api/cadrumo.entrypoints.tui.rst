@@ -31,3 +31,4 @@ Submodules
    cadrumo.entrypoints.tui.app
    cadrumo.entrypoints.tui.destination_session
    cadrumo.entrypoints.tui.launcher
+   cadrumo.entrypoints.tui.navigation

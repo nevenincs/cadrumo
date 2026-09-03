@@ -17,6 +17,5 @@ Submodules
    cadrumo.domain.manuals.errors
    cadrumo.domain.manuals.fetch
    cadrumo.domain.manuals.loader
-   cadrumo.domain.manuals.rule_id
    cadrumo.domain.manuals.schema
    cadrumo.domain.manuals.verify

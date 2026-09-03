@@ -168,8 +168,7 @@ class Rule(_ManualStrictFrozen):
     ``CADRUMO_MANUALS_REVIEW_REQUIRED`` is true.
 
     Attributes:
-        rule_id: Stable kebab-case identifier produced by
-            :func:`~cadrumo.domain.manuals.generate_rule_id`.
+        rule_id: Stable kebab-case identifier persisted in the corpus.
         manual_id: Owning handbook identifier.
         year: Tax year the rule applies to.
         part: Volume split within the year.

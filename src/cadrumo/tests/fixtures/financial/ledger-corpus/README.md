@@ -116,7 +116,7 @@ vehicle (combustible/mantenimiento/seguro/peaje/parking as MIXED 0.40), meals
 (`suministros_cliente_directos`, `subcontratacion`), taxes
 (`tributos_fiscalmente_deducibles`).
 
-**IRPF category** (RentaIncomeType): `actividades_economicas_directa_simplificada`
+**IRPF income category**: `actividades_economicas_directa_simplificada`
 (business income), `trabajo` (salary — rejected from M130),
 `capital_inmobiliario` (rent), `capital_mobiliario_ahorro` (interest).
 

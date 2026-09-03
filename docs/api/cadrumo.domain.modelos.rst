@@ -26,7 +26,6 @@ Submodules
    cadrumo.domain.modelos.filing_record
    cadrumo.domain.modelos.filing_repository
    cadrumo.domain.modelos.filing_text
-   cadrumo.domain.modelos.iae_exemption
    cadrumo.domain.modelos.ledger_filing_snapshot
    cadrumo.domain.modelos.m232_row_materialisation
    cadrumo.domain.modelos.participation_index

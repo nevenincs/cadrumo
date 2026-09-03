@@ -1,4 +1,4 @@
-"""Unit tests for the strict pydantic v2 schema and rule-id generator."""
+"""Unit tests for the strict pydantic v2 manual schema."""
 
 from __future__ import annotations
 
@@ -9,8 +9,6 @@ from pydantic import AnyHttpUrl, ValidationError
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....tests.aeat_literal_fixtures import manual_practicos_url
-from ..errors import ManualValidationError
-from ..rule_id import generate_rule_id
 from ..schema import (
     Chapter,
     FetchedManualPart,
@@ -268,64 +266,3 @@ class TestStrictSchema:
                 fetched_at=datetime(2026, 4, 12, 0, 0, 0, tzinfo=UTC),
             )
 
-
-class TestRuleIds:
-    """Deterministic rule-id generation."""
-
-    def test_deterministic_for_fixed_inputs(self) -> None:
-        """Same inputs always produce the same identifier."""
-        first = generate_rule_id(
-            manual_id=ManualId.RENTA,
-            year=2025,
-            part=ManualPart.PARTE_1,
-            chapter_id="cap5",
-            section_id="sec2",
-            ordinal=7,
-        )
-        second = generate_rule_id(
-            manual_id=ManualId.RENTA,
-            year=2025,
-            part=ManualPart.PARTE_1,
-            chapter_id="cap5",
-            section_id="sec2",
-            ordinal=7,
-        )
-        assert first == second == "renta-2025-part1-cap5-sec2-rule0007"
-
-    def test_single_part_is_collapsed(self) -> None:
-        """IVA (SINGLE) rule IDs omit the part segment."""
-        assert (
-            generate_rule_id(
-                manual_id=ManualId.IVA,
-                year=2025,
-                part=ManualPart.SINGLE,
-                chapter_id="cap3",
-                section_id="sec1",
-                ordinal=1,
-            )
-            == "iva-2025-cap3-sec1-rule0001"
-        )
-
-    def test_ordinal_must_be_positive(self) -> None:
-        """Ordinals below 1 raise ManualValidationError."""
-        with pytest.raises(ManualValidationError, match="ordinal must be >= 1"):
-            generate_rule_id(
-                manual_id=ManualId.IVA,
-                year=2025,
-                part=ManualPart.SINGLE,
-                chapter_id="cap3",
-                section_id="sec1",
-                ordinal=0,
-            )
-
-    def test_empty_chapter_after_slug_rejected(self) -> None:
-        """A chapter id that slugs to the empty string is rejected."""
-        with pytest.raises(ManualValidationError, match="chapter_id"):
-            generate_rule_id(
-                manual_id=ManualId.IVA,
-                year=2025,
-                part=ManualPart.SINGLE,
-                chapter_id="---",
-                section_id="sec1",
-                ordinal=1,
-            )
