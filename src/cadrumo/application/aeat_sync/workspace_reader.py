@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Final
 
+from ..operations.models import OperationDefinitionId
 from ..operations.registry import OperationFrontendProjection
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ..operator_actions.models import ActionReference
@@ -41,7 +42,6 @@ from .workspace import (
 )
 
 if TYPE_CHECKING:
-    from ...core.operations import OperationDefinitionId
     from ...core.time.utc import UtcInstant
     from ..operations.registry import OperationPublicContractSetV1
 
@@ -129,12 +129,14 @@ def _admitted_capabilities(
     operations = tuple(
         definition_id for definition_id in admitted if str(definition_id) in set(_OVERVIEW_OPERATIONS[area])
     )
-    joined_actions = {admitted[definition_id].action_reference for definition_id in operations}
+    joined_actions = tuple(
+        reference for definition_id in operations if (reference := admitted[definition_id].action_reference) is not None
+    )
     actions = tuple(
         ActionReference(action_id=OPERATOR_ACTION_CATALOGUE.lookup(action_id).action_id)
         for action_id in _OVERVIEW_ACTIONS[area]
         if action_id not in {"operator.live.filed.pull", "operator.live.filed.pull_all"}
-        or ActionReference(action_id=action_id) in joined_actions
+        or any(str(joined.action_id) == action_id for joined in joined_actions)
     )
     return actions, operations
 

@@ -26,12 +26,13 @@ from ..launcher import main
 from ..navigation import TUI_DESTINATION_CATALOGUE, TuiScreenContextV1
 from .workbench_session import WORKBENCH_PROFILE_LABEL, installed_workbench_root
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.asyncio]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _CLI_PACKAGE = "cadrumo.entrypoints.cli"
 _PRIMARY_DESTINATIONS = ("workbench.home", "workbench.ledger", "workbench.declarations", "workbench.aeat_sync")
 
 
+@pytest.mark.asyncio
 async def test_the_installed_root_admits_the_whole_closed_destination_catalogue(tmp_path: Path) -> None:
     """Every declared destination is routed, and each carries an explicit state."""
     async with installed_workbench_root(tmp_path) as root:
@@ -42,6 +43,7 @@ async def test_the_installed_root_admits_the_whole_closed_destination_catalogue(
             assert route.admission.state in set(WorkbenchDestinationAdmissionState), route.descriptor.destination
 
 
+@pytest.mark.asyncio
 async def test_a_fresh_profile_admits_home_profile_and_every_principal_workspace(tmp_path: Path) -> None:
     """An empty profile is a usable workbench, not an unavailable one.
 
@@ -56,6 +58,7 @@ async def test_a_fresh_profile_admits_home_profile_and_every_principal_workspace
             assert route.factory is not None, destination
 
 
+@pytest.mark.asyncio
 async def test_every_admitted_destination_builds_its_own_screen(tmp_path: Path) -> None:
     """An admitted destination mounts a real screen, not a placeholder."""
     async with installed_workbench_root(tmp_path) as root:
@@ -68,6 +71,7 @@ async def test_every_admitted_destination_builds_its_own_screen(tmp_path: Path) 
         assert len({id(screen) for screen in built}) == len(built)
 
 
+@pytest.mark.asyncio
 async def test_an_unavailable_destination_never_carries_a_mountable_factory(tmp_path: Path) -> None:
     """Availability and mountability agree, so nothing can look openable and refuse."""
     async with installed_workbench_root(tmp_path) as root:
@@ -76,6 +80,7 @@ async def test_an_unavailable_destination_never_carries_a_mountable_factory(tmp_
             assert available == (route.factory is not None), route.descriptor.destination
 
 
+@pytest.mark.asyncio
 async def test_the_home_refresh_door_rebuilds_the_projection_for_the_live_profile(tmp_path: Path) -> None:
     """Returning from a journey re-reads Home rather than replaying a snapshot."""
     async with installed_workbench_root(tmp_path) as root:
@@ -87,6 +92,7 @@ async def test_the_home_refresh_door_rebuilds_the_projection_for_the_live_profil
         assert second.account.profile_label == WORKBENCH_PROFILE_LABEL
 
 
+@pytest.mark.asyncio
 async def test_search_and_navigation_report_the_same_admissions(tmp_path: Path) -> None:
     """The palette cannot offer a destination the mounted catalogue refuses."""
     async with installed_workbench_root(tmp_path) as root:

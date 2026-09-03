@@ -29,7 +29,7 @@ from ..launcher import InstalledWorkbenchRootCompositionV1, compose_installed_wo
 WORKBENCH_PROFILE_LABEL: Final[str] = "Workbench subject"
 """A synthetic operator label; it identifies nobody and holds no tax data."""
 
-_WORKBENCH_PASSWORD: Final[str] = "correct horse battery staple 42!"
+_WORKBENCH_PASSWORD: Final[str] = "correct horse battery staple 42!"  # noqa: S105 - synthetic test credential
 
 
 @asynccontextmanager
