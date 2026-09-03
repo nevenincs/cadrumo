@@ -31,7 +31,6 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n.render import tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes, tokenised
-from ....entrypoints.tui.components.widgets import ContentScroll
 from .credentials import (
     CREDENTIAL_PANEL_CSS,
     CredentialAttempt,
@@ -125,11 +124,7 @@ class PassphraseScreen(CredentialScreen["ProfilePassphraseRotationOutcome"]):
         """Yield the banner, the three credential fields, and the footer."""
         yield Static(id="passphrase-banner", classes="cadrumo-banner")
         yield PinnedStatusBar(id="credential-status")
-        with (
-            ContentScroll(classes="cadrumo-scroll"),
-            Vertical(classes="cadrumo-column"),
-            Vertical(id="passphrase-body", classes="cadrumo-panel"),
-        ):
+        with self.credential_panel(panel_id="passphrase-body"):
             yield Static(id="passphrase-intro")
 
             yield Label(id="label-current", classes="field-label")
