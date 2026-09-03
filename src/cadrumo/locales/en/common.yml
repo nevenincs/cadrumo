@@ -1009,6 +1009,9 @@ tui:
       empty: No entries are present in this snapshot.
       redacted: Safe entry index; financial details remain protected.
       title: Ledger entries
+    flow:
+      in_flight_refusal: Wait for the current operation to finish before leaving this
+        screen.
     import:
       cancel: Cancel
       confirm: Confirm import

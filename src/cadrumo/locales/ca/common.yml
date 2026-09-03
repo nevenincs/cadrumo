@@ -1038,6 +1038,9 @@ tui:
       empty: Aquesta captura no conté cap apunt.
       redacted: Índex segur d'apunts; els detalls financers continuen protegits.
       title: Apunts del llibre comptable
+    flow:
+      in_flight_refusal: Espera que acabi l'operació actual abans de sortir d'aquesta
+        pantalla.
     import:
       cancel: Cancel·la
       confirm: Confirma la importació

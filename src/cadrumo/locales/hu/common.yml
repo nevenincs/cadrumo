@@ -1033,6 +1033,9 @@ tui:
       empty: Ez a pillanatkép nem tartalmaz tételeket.
       redacted: Biztonságos tételjegyzék; a pénzügyi részletek védettek maradnak.
       title: Főkönyvi tételek
+    flow:
+      in_flight_refusal: A képernyő elhagyása előtt várja meg a jelenlegi művelet
+        befejezését.
     import:
       cancel: Mégse
       confirm: Importálás megerősítése

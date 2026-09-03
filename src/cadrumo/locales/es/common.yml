@@ -1049,6 +1049,9 @@ tui:
       empty: Esta captura no contiene asientos.
       redacted: Índice seguro de asientos; los detalles financieros siguen protegidos.
       title: Asientos del libro contable
+    flow:
+      in_flight_refusal: Espera a que termine la operación actual antes de salir de
+        esta pantalla.
     import:
       cancel: Cancelar
       confirm: Confirmar importación
