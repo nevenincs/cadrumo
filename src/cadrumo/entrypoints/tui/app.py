@@ -35,6 +35,7 @@ from ...core.i18n.render import tr
 from .components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
 from .home import HomeBackRequested, HomeScreen
 from .navigation import TuiDestinationCatalogueV1, TuiFocusIdentityV1, TuiNavigationTargetV1
+from .search import WorkbenchCommandProviderV1, WorkbenchSearchDoorV1, WorkbenchSearchProviderV1
 
 if TYPE_CHECKING:
     from ...application.operations.composition import OperationComposedServices
@@ -53,6 +54,7 @@ class CadrumoTuiApp(App[None]):
         Binding("f3", "toggle_appearance", "", show=False),
         Binding("q", "quit", "", show=False),
     ]
+    COMMANDS = App.COMMANDS | {WorkbenchSearchProviderV1, WorkbenchCommandProviderV1}
 
     def __init__(
         self,
@@ -60,12 +62,14 @@ class CadrumoTuiApp(App[None]):
         services: OperationComposedServices,
         destination_catalogue: TuiDestinationCatalogueV1 | None = None,
         refresh_home: HomeRefreshDoorV1 | None = None,
+        workbench_search_service: WorkbenchSearchDoorV1 | None = None,
     ) -> None:
         """Bind the root to the operation services composed for this session."""
         super().__init__()
         self._services = services
         self._destination_catalogue = destination_catalogue
         self._refresh_home = refresh_home
+        self._workbench_search_service = workbench_search_service
         self._active_target: TuiNavigationTargetV1 | None = None
 
     @property
@@ -79,6 +83,13 @@ class CadrumoTuiApp(App[None]):
         if self._destination_catalogue is None:
             raise RuntimeError("the root has no composed destination catalogue")
         return self._destination_catalogue
+
+    @property
+    def workbench_search_service(self) -> WorkbenchSearchDoorV1:
+        """Return the caller-composed application search door for the palette."""
+        if self._workbench_search_service is None:
+            raise RuntimeError("the root has no composed workbench search service")
+        return self._workbench_search_service
 
     @override
     def compose(self) -> ComposeResult:
