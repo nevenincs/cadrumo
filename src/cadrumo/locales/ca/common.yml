@@ -997,6 +997,41 @@ transactions:
     unreadable: Arxiu il·legible o format no suportat
     verified: Importació verificada amb èxit
 tui:
+  aeat_sync:
+    area:
+      evidence_comparison: Evidence comparison
+      reconciliation: Reconciliation
+    census_category:
+      activity: Activity
+    census_status:
+      adopted: Adopted
+      conflict: Conflict
+    column:
+      document_custody: Document custody
+      read: Read
+    discrepancy:
+      state_mismatch: State mismatch
+    document_custody_state:
+      not_captured: Not captured
+    filed_declarations:
+      title: AEAT Sync filed declarations
+    justificante_state:
+      available: Available
+      unavailable: Unavailable
+    local_filing_state:
+      not_observed: Not observed
+    reconciliation_state:
+      keep_local: Keep local
+    source:
+      aeat:
+        notifications: AEAT notifications
+      local:
+        filings: Local filings
+    sources:
+      entry: '%{source}: %{availability}'
+      joined: '%{entries}'
+    zone:
+      evidence_comparison: Evidence comparison
   declarations:
     availability:
       available: Disponible

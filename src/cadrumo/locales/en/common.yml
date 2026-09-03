@@ -1088,6 +1088,7 @@ tui:
     source_state:
       absent: Absent
       accepted: Accepted
+      conflict: Conflict
       not_observed: Not observed
       present: Present
       rejected: Rejected

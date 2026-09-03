@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import Enum
 from typing import ClassVar, Final, Protocol, cast, override
 
 from textual.app import ComposeResult
@@ -20,7 +21,6 @@ from ....domain.modelos.codes import ModeloCode
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import AeatSyncWorkspaceController
 from .models import AeatSyncOperationRequestV1, AeatSyncRouteTargetV1
-
 
 _LABEL_PREFIXES: Final = {
     "AeatSyncWorkspaceZone": "tui.aeat_sync.zone",
@@ -46,7 +46,7 @@ def aeat_sync_copy(key: str, **values: object) -> str:
     return tr(key, **values)
 
 
-def _label(value: object | None) -> str:
+def _label(value: Enum | None) -> str:
     """Render a public enum through its authored semantic catalogue key."""
     if value is None:
         return aeat_sync_copy("tui.aeat_sync.value.none")
