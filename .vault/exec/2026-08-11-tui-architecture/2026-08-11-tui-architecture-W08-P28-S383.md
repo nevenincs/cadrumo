@@ -28,4 +28,3 @@ related:
 - `verify:` `uv run --no-sync ty check src/cadrumo/entrypoints/tui/app.py src/cadrumo/entrypoints/tui/tests/test_app.py` -> `pass`
 - `verify:` `uv run --no-sync basedpyright src/cadrumo/entrypoints/tui/app.py src/cadrumo/entrypoints/tui/tests/test_app.py` -> `pass`
 - `verify:` `npx --yes jscpd@4.2.0 src/cadrumo/entrypoints/tui/app.py src/cadrumo/entrypoints/tui/tests/test_app.py --format python --min-lines 6 --min-tokens 80 --max-size 250kb --reporters console --noTips` -> `pass`
-

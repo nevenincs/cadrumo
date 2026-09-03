@@ -27,7 +27,6 @@ from .navigation import (
     TuiDestinationAdmissionV1,
     TuiDestinationCatalogueV1,
     TuiDestinationRouteV1,
-    TuiFocusIdentityV1,
     TuiNavigationTargetV1,
 )
 from .search import WorkbenchCommandProviderV1, WorkbenchSearchDoorV1, WorkbenchSearchProviderV1
@@ -132,8 +131,9 @@ class CadrumoTuiApp(App[None]):
         if target.destination == "workbench.home":
             self._show_home(self._home_semantic_focus)
             return
+        screen = catalogue.create_screen(target)
         self._active_target = target
-        self._replace_destination(catalogue.create_screen(target), return_to_home=True)
+        self._replace_destination(screen, return_to_home=True)
 
     def on_home_target_selected(self, event: HomeTargetSelected) -> None:
         """Remember the Home row by its domain identity, never a row position."""

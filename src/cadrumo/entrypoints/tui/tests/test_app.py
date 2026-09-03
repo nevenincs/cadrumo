@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import ClassVar, cast
 
 import pytest
+from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import Static
 
@@ -13,9 +14,10 @@ from ....application.overview.home import HomeSessionPosture
 from ....application.search.workbench import WorkbenchDestinationAdmissionState
 from ..app import CadrumoTuiApp
 from ..devtools.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
-from ..home import HomeBackRequested, HomeScreen
+from ..home import HomeScreen
 from ..navigation import (
     TUI_DESTINATION_CATALOGUE,
+    DestinationUnavailableError,
     TuiDestinationAdmissionV1,
     TuiDestinationCatalogueV1,
     TuiFocusIdentityV1,
@@ -31,9 +33,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 class MarkerScreen(Screen[None]):
     """A destination body whose injected semantic context is observable."""
 
+    BINDINGS: ClassVar = [Binding("escape", "close", "", show=False)]
+
     def __init__(self, context: TuiScreenContextV1) -> None:
         super().__init__()
         self.context = context
+
+    def action_close(self) -> None:
+        """Dismiss through Textual's real child-screen return protocol."""
+        self.dismiss(None)
 
 
 def _catalogue(contexts: list[TuiScreenContextV1]) -> TuiDestinationCatalogueV1:
@@ -57,8 +65,8 @@ def _catalogue(contexts: list[TuiScreenContextV1]) -> TuiDestinationCatalogueV1:
 
 
 @pytest.mark.asyncio
-async def test_root_replaces_the_active_destination_and_preserves_semantic_focus() -> None:
-    """The routed root keeps one destination body and passes stable focus unchanged."""
+async def test_child_dismissal_refreshes_home_and_restores_its_semantic_focus() -> None:
+    """A real child return restores the selected Home identity rather than a row index."""
     contexts: list[TuiScreenContextV1] = []
     projection = build_home_projection_fixture(HomeFixtureScenario.READY)
     app = CadrumoTuiApp(
@@ -76,8 +84,15 @@ async def test_root_replaces_the_active_destination_and_preserves_semantic_focus
     )
 
     async with app.run_test() as pilot:
-        assert isinstance(app.screen, HomeScreen)
+        initial_home = app.screen
+        assert isinstance(initial_home, HomeScreen)
         assert len(app.screen_stack) == 2
+        selected = initial_home.highlighted_target
+        assert selected is not None
+
+        await pilot.press("enter")
+        await pilot.pause()
+        assert initial_home.selected_target == selected
 
         app.navigate_to(target)
         await pilot.pause()
@@ -87,10 +102,18 @@ async def test_root_replaces_the_active_destination_and_preserves_semantic_focus
         assert contexts == [app.screen.context]
         assert len(app.screen_stack) == 2
 
+        await pilot.press("escape")
+        await pilot.pause()
+
+        returned_home = app.screen
+        assert isinstance(returned_home, HomeScreen)
+        assert returned_home.highlighted_target == selected
+        assert len(app.screen_stack) == 2
+
 
 @pytest.mark.asyncio
-async def test_home_return_refreshes_the_account_header_and_clears_an_expired_destination() -> None:
-    """A journey return rebuilds Home from the supplied local projection only."""
+async def test_expired_child_return_locks_non_home_admission_and_refuses_navigation() -> None:
+    """Expiry returns to Home and makes every non-Home route truthfully unavailable."""
     contexts: list[TuiScreenContextV1] = []
     ready = build_home_projection_fixture(HomeFixtureScenario.READY)
     expired = ready.model_copy(
@@ -117,11 +140,30 @@ async def test_home_return_refreshes_the_account_header_and_clears_an_expired_de
         await pilot.pause()
         assert isinstance(app.screen, MarkerScreen)
 
-        app.on_home_back_requested(HomeBackRequested())
+        await pilot.press("escape")
         await pilot.pause()
 
         assert isinstance(app.screen, HomeScreen)
         assert app.screen.projection.account.posture is HomeSessionPosture.EXPIRED
         assert app.query_one("#root-account", Static).render() == "Expired profile"
         assert len(app.screen_stack) == 2
+        assert app._active_target is None
+        assert (
+            app.destination_catalogue.resolve("workbench.home").admission.state
+            is WorkbenchDestinationAdmissionState.AVAILABLE
+        )
+        assert all(
+            route.admission.state is WorkbenchDestinationAdmissionState.LOCKED
+            and route.admission.reason_code == "session.expired"
+            and route.factory is None
+            for route in app.destination_catalogue.routes
+            if route.descriptor.destination != "workbench.home"
+        )
+        with pytest.raises(DestinationUnavailableError):
+            app.navigate_to(
+                TuiNavigationTargetV1(
+                    destination="workbench.ledger",
+                    focus=TuiFocusIdentityV1(destination="workbench.ledger", semantic_key="ledger.entry"),
+                )
+            )
         assert app._active_target is None
