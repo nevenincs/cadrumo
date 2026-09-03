@@ -63,3 +63,12 @@ def test_unaffected_receipts_refuse_a_structurally_valid_unique_byte_drift(tmp_p
 
     with pytest.raises(RegistryValidationError, match="not compiler-identical"):
         subject._verify_unaffected_receipts(snapshot, root)
+
+
+def test_isolated_loader_rejects_a_visible_transaction_artifact(tmp_path: Path) -> None:
+    root = tmp_path / "registry" / "aeat"
+    artifact = root / "modelos" / "200" / "revisions" / "2024" / f"{subject._STAGE_PREFIX}token"
+    artifact.mkdir(parents=True)
+
+    with pytest.raises(RegistryValidationError, match="transaction artifact is loader-visible"):
+        subject._reject_visible_transaction_artifacts(root)

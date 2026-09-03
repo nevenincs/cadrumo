@@ -158,3 +158,26 @@ def test_recovery_refuses_an_invalid_live_candidate_without_backup(tmp_path: Pat
         )
     assert _tree(root) == before
     assert journal.exists()
+
+
+def test_external_workspace_keeps_all_transaction_artifacts_out_of_the_revision(tmp_path: Path) -> None:
+    root = tmp_path / "revision" / "casillas"
+    workspace = tmp_path / "publisher-workspace"
+    root.mkdir(parents=True)
+    workspace.mkdir()
+    (root / "c00001.toml").write_bytes(b"old\n")
+
+    subject.publish_verified_casilla_tree(
+        casillas_root=root,
+        rendered={root / "c00001.toml": "new\n"},
+        verifier=_verify({"c00001.toml": b"new\n"}),
+        journal_name=".journal.json",
+        stage_prefix=".stage-",
+        backup_prefix=".backup-",
+        transaction_root=workspace,
+    )
+
+    assert not tuple(root.parent.glob(".stage-*"))
+    assert not tuple(root.parent.glob(".backup-*"))
+    assert not tuple(root.parent.glob(".journal.json"))
+    assert not tuple(workspace.iterdir())

@@ -485,16 +485,27 @@ def _loop_resolved_targets(
         variable = node.target.id if isinstance(node.target, ast.Name) else None
         if variable is None:
             continue
+        # Find the import sites FIRST. Evaluating a constant costs an
+        # interpreter, and a loop that imports nothing has no target to
+        # recover; resolving before looking would pay that price for every
+        # ordinary loop in the tree.
+        sites = [
+            inner.lineno
+            for inner in ast.walk(node)
+            if _is_import_module_call(inner)
+            and inner.args
+            and isinstance(inner.args[0], ast.Name)
+            and inner.args[0].id == variable
+        ]
+        if not sites:
+            continue
         members = constants.get(node.iter.id)
         if members is None:
             members = evaluated_string_sequence(module, node.iter.id)
         if members is None:
             continue
-        for inner in ast.walk(node):
-            if _is_import_module_call(inner) and inner.args:
-                argument = inner.args[0]
-                if isinstance(argument, ast.Name) and argument.id == variable:
-                    resolved[inner.lineno] = members
+        for lineno in sites:
+            resolved[lineno] = members
     return resolved
 
 

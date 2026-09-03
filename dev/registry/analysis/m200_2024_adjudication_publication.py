@@ -83,6 +83,7 @@ def publish_m200_2024_s14_s15(
 ) -> None:
     """Replay a checked receipt under one exclusive lock and cut over atomically."""
     root = _registry_root(registry_root)
+    transaction_root = _transaction_root(root)
     with exclusive_file_lock(root / _LOCK):
         snapshot = build_m200_2024_reviewed_promotion_snapshot()
         recovered_rendered = _rendered(snapshot, root)
@@ -94,7 +95,7 @@ def publish_m200_2024_s14_s15(
             journal_name=_JOURNAL,
             stage_prefix=_STAGE_PREFIX,
             backup_prefix=_BACKUP_PREFIX,
-            journal_root=root,
+            transaction_root=transaction_root,
         ):
             raise RegistryValidationError(
                 "M200/2024 adjudication recovered an interrupted publication; run check again"
@@ -120,7 +121,7 @@ def publish_m200_2024_s14_s15(
             journal_name=_JOURNAL,
             stage_prefix=_STAGE_PREFIX,
             backup_prefix=_BACKUP_PREFIX,
-            journal_root=root,
+            transaction_root=transaction_root,
         )
 
 
@@ -146,6 +147,20 @@ def _casillas_root(registry_root: Path) -> Path:
     if not resolved.is_dir():
         raise RegistryValidationError(f"M200/2024 adjudication casilla root is not a directory: {target}")
     return resolved
+
+
+def _transaction_root(registry_root: Path) -> Path:
+    """Return the sibling workspace deliberately outside registry discovery."""
+    workspace = registry_root.parent
+    if not workspace.is_dir() or is_link_like(workspace):
+        raise RegistryValidationError(f"M200/2024 adjudication transaction root is unsafe: {workspace}")
+    try:
+        registry_root.relative_to(workspace.resolve())
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"M200/2024 adjudication transaction root does not own registry root: {workspace}"
+        ) from exc
+    return workspace.resolve()
 
 
 def _rendered(snapshot: M200ReviewedPromotionSnapshot, registry_root: Path) -> dict[Path, str]:
@@ -236,6 +251,7 @@ def _verify_isolated_authority_load(registry_root: Path, casillas_root: Path) ->
         target = _casillas_root(copied_root)
         shutil.rmtree(target)
         shutil.copytree(casillas_root, target)
+        _reject_visible_transaction_artifacts(copied_root)
         authority = ValidatedRegistryAuthority.load(copied_root, source_root=bundled_path())
         authority.snapshot(
             "200",
@@ -244,6 +260,13 @@ def _verify_isolated_authority_load(registry_root: Path, casillas_root: Path) ->
             revision_id="2024",
             grade=RegistryAuthorityGrade.CALCULATION,
         )
+
+
+def _reject_visible_transaction_artifacts(registry_root: Path) -> None:
+    """Keep transaction machinery out of every revision loader discovery surface."""
+    for path in scan_directory(registry_root, recursive=True):
+        if path.name.startswith((_STAGE_PREFIX, _BACKUP_PREFIX)) or path.name == _JOURNAL:
+            raise RegistryValidationError(f"M200/2024 adjudication transaction artifact is loader-visible: {path}")
 
 
 def main(argv: list[str] | None = None) -> int:
