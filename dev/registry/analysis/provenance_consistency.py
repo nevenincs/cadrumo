@@ -172,9 +172,16 @@ def outside_reference_index(
 
     The raw finding is per citing child, which is the right measurement and the
     wrong report: one reference missing from a revision manifest is cited by many
-    children, so the site count exceeds the number of things to fix by roughly
-    nineteen to one. The unit someone acts on is the reference; the number of
-    children citing it is how much of the revision depends on that fix.
+    children. The unit someone acts on is the reference; the number of children
+    citing it is how much of the revision depends on that fix.
+
+    The ratio is stated with its definition rather than as a bare number,
+    because three answer to it and this docstring carried a fourth. Summing this
+    index gives 55,065 citing children over 1,459 references, so a reference is
+    cited by about 38 children. The screen's own finding count is 31,851, which
+    is 21.8 per reference and counts a child once per KIND of reference rather
+    than once per reference. The figure written here was nineteen and matched
+    neither, before or after deadline windows joined the walk.
     """
     index: dict[tuple[str, str, str, str], int] = {}
     for finding in findings:
