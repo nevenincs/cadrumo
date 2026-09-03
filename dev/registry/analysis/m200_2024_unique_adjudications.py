@@ -162,9 +162,11 @@ def _require_target_evidence(
     verified: list[Adjudication] = []
     for row in rows:
         entry = maps.get(row.export_field_id)
-        owner = None if entry is None or entry.casilla_id is None else str(entry.casilla_id)
-        owner = owner if owner is not None and ":" in owner else None if owner is None else owner.zfill(5)
-        if entry is None or owner != row.casilla_id:
+        owner = None if entry is None or entry.casilla_id is None else str(entry.casilla_id).zfill(5)
+        # The typed semantic-map owner predates record-qualified casillas; the
+        # design anchor remains the authority for the DP200018-qualified row.
+        expected_owner = row.casilla_id.rsplit(":", 1)[-1].zfill(5)
+        if entry is None or owner != expected_owner:
             raise RegistryValidationError(f"M200/2024 unique {row.casilla_id!r} lacks canonical target-map ownership")
         field = fields.get(semantic_anchor_key(entry.anchor))
         if field is None or TARGET_SOURCE_REF not in entry.source_refs or tuple(entry.legal_refs) != row.legal_refs:
