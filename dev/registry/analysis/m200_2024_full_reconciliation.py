@@ -546,7 +546,9 @@ def _build_m200_source_rebind_plan(
         payload = row.declaration_payload
         if payload is None:
             raise RegistryValidationError(f"current declaration {row.casilla_id!r} omitted its source payload")
-        if row.source_ref_state == "mechanical_rebind":
+        if row.casilla_id in receipted_current_ids:
+            verified_current_design_ids.append(_receipted_current_design_id(row, receipted_current_ids))
+        elif row.source_ref_state == "mechanical_rebind":
             if not row.fields or row.mechanical_source_refs_proposal is None:
                 raise RegistryValidationError(
                     f"source rebind candidate {row.casilla_id!r} lacks exact target-map ownership or a replacement",
@@ -560,7 +562,7 @@ def _build_m200_source_rebind_plan(
                 )
             )
         elif row.source_ref_state == "current_design":
-            verified_current_design_ids.append(_receipted_current_design_id(row, receipted_current_ids))
+            _receipted_current_design_id(row, receipted_current_ids)
         elif row.source_ref_state == "unmapped_no_rebind":
             if row.fields:
                 raise RegistryValidationError(
@@ -855,14 +857,22 @@ def _require_verified_current_design(
 
 
 def _receipted_current_design_id(row: M200ReconciliationRow, receipted_current_ids: frozenset[str]) -> str:
-    """Return a current-design ID only when exact map ownership and receipt agree."""
-    if not row.fields:
-        raise RegistryValidationError(
-            f"source rebind current-design declaration {row.casilla_id!r} lacks exact target-map ownership"
-        )
+    """Return a target-design ID only when its closed compiler receipt agrees.
+
+    Reviewed promotions can deliberately remain behind an identity disposition
+    until the semantic-join gate admits qualified ownership.  Exact map
+    ownership is therefore not a prerequisite for excluding those declarations
+    from a source rebind: the closed receipt has already compiled and verified
+    their canonical bytes against the pinned 2024 authority.
+    """
     if row.casilla_id not in receipted_current_ids:
         raise RegistryValidationError(
             f"source rebind plan refuses unreceipted current-design declaration {row.casilla_id!r}"
+        )
+    payload = row.declaration_payload
+    if payload is None or _source_ref_state(payload)[0] != "current_design":
+        raise RegistryValidationError(
+            f"source rebind receipted declaration {row.casilla_id!r} is not bound to the target design"
         )
     return row.casilla_id
 

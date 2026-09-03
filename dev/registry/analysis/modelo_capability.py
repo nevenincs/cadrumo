@@ -7,7 +7,7 @@ can this product calculate and file, and for which years" should not have to
 reconstruct the answer from grades, layouts and directory listings, and until
 this screen existed that is exactly what it took.
 
-The answer is already declared; it was simply never assembled. Four facts decide
+The answer is already declared; it was simply never assembled. Five facts decide
 it, and each is read from the validated authority rather than a maintained list:
 
 - ``authority_grade`` is the modelo's own claim about the rung it reaches -

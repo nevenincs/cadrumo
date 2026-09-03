@@ -370,11 +370,18 @@ def test_source_rebind_plan_is_complete_target_map_owned_and_refuses_only_true_o
 
 
 def test_source_rebind_excludes_only_receipted_current_design_declarations() -> None:
-    """The closed S12 receipt is the sole current-design exclusion authority."""
+    """The closed receipt admits promotions before later identity-join review."""
     receipted = frozenset({"00942", "01603", "02239", "02412"})
 
     assert tuple(
-        subject._receipted_current_design_id(SimpleNamespace(casilla_id=identifier, fields=(object(),)), receipted)
+        subject._receipted_current_design_id(
+            SimpleNamespace(
+                casilla_id=identifier,
+                fields=(),
+                declaration_payload=SimpleNamespace(source_refs=(subject.TARGET_SOURCE_REF,)),
+            ),
+            receipted,
+        )
         for identifier in sorted(receipted)
     ) == ("00942", "01603", "02239", "02412")
 
@@ -384,8 +391,24 @@ def test_source_rebind_refuses_an_unreceipted_current_design_declaration() -> No
 
     with pytest.raises(RegistryValidationError, match="unreceipted current-design declaration"):
         subject._receipted_current_design_id(
-            SimpleNamespace(casilla_id="99999", fields=(object(),)),
+            SimpleNamespace(
+                casilla_id="99999",
+                fields=(object(),),
+                declaration_payload=SimpleNamespace(source_refs=(subject.TARGET_SOURCE_REF,)),
+            ),
             frozenset({"00942", "01603", "02239", "02412"}),
+        )
+
+
+def test_source_rebind_refuses_a_receipted_declaration_bound_to_a_different_design() -> None:
+    with pytest.raises(RegistryValidationError, match="not bound to the target design"):
+        subject._receipted_current_design_id(
+            SimpleNamespace(
+                casilla_id="00093",
+                fields=(),
+                declaration_payload=SimpleNamespace(source_refs=(subject.SIBLING_SOURCE_REF,)),
+            ),
+            frozenset({"00093"}),
         )
 
 

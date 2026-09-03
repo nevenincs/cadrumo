@@ -720,3 +720,52 @@ def test_the_gate_detects_a_decimal_field_that_declares_no_scale(
     assert str(stripped.data_type) == "decimal"
     assert stripped.decimals is None
     assert getattr(sample, "decimals", None) is not None, "the donor field must still declare its own scale"
+
+
+def test_a_screen_that_counts_the_facts_it_reads_states_the_right_number() -> None:
+    """A docstring claiming "N facts decide it" must agree with the bullets under it.
+
+    The sibling gate above counts the bullets that follow a "N conditions are
+    reported" claim and deliberately stops before the FACT bullets several
+    screens list first - counting those made it fail on a docstring whose stated
+    number was right. That exclusion left the fact claims unchecked entirely,
+    and one was wrong: a screen said four facts decided its answer and listed
+    five.
+
+    The two claims are read the same way and cannot be merged, because they
+    count different bullet runs in one docstring and a gate that conflated them
+    would be wrong in whichever direction it guessed.
+    """
+    import importlib
+    import re
+
+    from ..analysis.screens import SCREENS
+
+    wrong: list[str] = []
+    checked = 0
+    for entry in SCREENS:
+        module = importlib.import_module(f"dev.registry.analysis.{entry.name}")
+        doc = module.__doc__ or ""
+        claim = re.search(r"\b([A-Za-z]+) facts decide\b", doc)
+        if claim is None:
+            continue
+        stated = _NUMBER_WORDS.get(claim.group(1).lower())
+        if stated is None:
+            wrong.append(f"{entry.name} states an unrecognised fact count {claim.group(1)!r}")
+            continue
+        checked += 1
+        # Any bullet, not only one opening with a backticked name. The
+        # conditions gate can use the narrower pattern because every condition
+        # bullet names its kind first; fact bullets are prose, and counting
+        # only the backticked ones reported five facts as one.
+        listed = 0
+        for line in doc[claim.end() :].splitlines():
+            if line.startswith("- "):
+                listed += 1
+            elif line.strip() and not line.startswith(" ") and listed:
+                break
+        if stated != listed:
+            wrong.append(f"{entry.name} says {stated} facts and lists {listed}")
+
+    assert checked, "no screen stated a fact count, so this gate checked nothing"
+    assert not wrong, "\n".join(wrong)
