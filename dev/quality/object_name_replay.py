@@ -491,15 +491,24 @@ def replay_object_name_component(
         raise ObjectNameReplayError(f"live replay failed and was rolled back: {apply_error}") from apply_error
     finally:
         primary_failure_active = sys.exc_info()[0] is not None
+        stage_cleanup_succeeded = False
         try:
             _cleanup(tuple(stages.values()))
+            stage_cleanup_succeeded = True
         except OSError as cleanup_error:
-            if not primary_failure_active:
+            if primary_failure_active:
+                primary_error = sys.exception()
+                if primary_error is not None:
+                    primary_error.add_note(
+                        f"replay stage cleanup also failed; transaction evidence retained: {cleanup_error}"
+                    )
+            else:
                 raise ObjectNameReplayError("replay stage cleanup failed") from cleanup_error
         try:
             if (
                 transaction_root_created_by_this_call
                 and transaction_may_be_removed
+                and stage_cleanup_succeeded
                 and transaction_root.exists()
                 and not is_link_like(transaction_root)
             ):
