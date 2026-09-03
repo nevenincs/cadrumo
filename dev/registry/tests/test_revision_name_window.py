@@ -55,7 +55,19 @@ def test_a_name_later_than_its_window_is_reported_apart_from_one_that_is_earlier
 def test_a_name_earlier_than_its_window_is_the_other_direction(
     authority: ValidatedRegistryAuthority,
 ) -> None:
-    """Modelo 185 names 2025 while declaring a window that opens in 2026."""
+    """Modelo 185 names 2025 while declaring a window that opens in 2026.
+
+    Pinned to a live defect, deliberately, and this note is what the pin owes.
+    The plan carries an open Step to rename this revision; when that happens the
+    window and the name will agree and this test will fail. That failure is the
+    correction landing, not a regression.
+
+    What must replace it: another revision whose name opens before its window,
+    or - if none remains - a constructed one, as the closing-year and
+    open-ended conditions beside it already use. Do not delete the test to make
+    the rename green: the direction it distinguishes is the reason the condition
+    was split from its opposite.
+    """
     revision = authority.modelo("185").revisions["2025-y-siguientes"]
     kinds = {finding.kind for finding in name_window_findings(revision, modelo_id="185")}
 
