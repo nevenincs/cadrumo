@@ -199,6 +199,21 @@ def test_rehearsal_receipt_binds_only_declared_component_paths(tmp_path: Path) -
     assert (retained_root / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
 
 
+def test_incremental_allowed_path_inventory_matches_full_rescan(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    before, _manifest, _component = _fixture(repo)
+    (repo / "src/example/contracts.py").write_bytes(b"class Widget:\n    pass\n")
+
+    incremental = rehearsal_module._inventory_after_allowed_changes(
+        before,
+        repo_root=repo,
+        changed_paths=("src/example/contracts.py",),
+    )
+    full = scan((repo / "src", repo / "dev"), repo)
+
+    assert incremental == full
+
+
 def test_receipt_is_deterministic_after_normalizing_root_and_output_evidence(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     inventory, manifest, component = _fixture(repo)
