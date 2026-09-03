@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:00a1b7ddb30a0bb6a3e4bd8e5cd71d0ca7381b903ab389b712b75267722e6e31'
+body_hash: 'sha256:8fc53aec090a8b1add905b9387e966641ea5f4260878a2abe21d7e1dfa3d140e'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8958,3 +8958,29 @@ This is the third Step premise re-measured this session and the first to have
 moved materially. Two held exactly and one held only under a boundary it never
 stated. That distribution is worth keeping in view: most premises in this plan
 are sound, which is precisely why the one that is not would have been believed.
+
+### the-registry-suite-after-the-session-s-changes-introduced-nothing | high | 35 failed, 1,048 passed, one failure cleared and none new by identity
+
+The registry tooling suite was re-run whole after a session that moved a good
+deal of it: a helper collapsed from ten copies, two path guards into one, four
+constants onto single declarations, a screen's kinds turned into data, a
+per-definition function extracted, a dynamic-import resolver rewritten to
+evaluate rather than parse, three new gates, three new test modules, and a
+vocabulary correction across the runner and the contributor README.
+
+It reports 35 failed and 1,048 passed. Compared with the previous run by
+IDENTITY rather than by count, one failure cleared - a modelo 200 source rebind
+its owning campaign fixed - and none is new. The passing total rose by
+sixty-four, which is this session's tests plus that campaign's.
+
+The comparison method is the point and has been all session. Thirty-six to
+thirty-five says almost nothing: two failures could have been repaired while one
+appeared, and the count would read as progress. The failing SETS say what
+happened, and here they say nothing was broken by work that touched a dozen
+modules.
+
+The duration is deliberately not compared. This run took fifteen and a half
+minutes where the previous took twenty-eight, and the machine has been carrying
+other sessions throughout; a wall-clock measured against contention measures the
+contention, which this campaign has recorded twice and will not record a third
+time as an improvement.
