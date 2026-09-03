@@ -508,8 +508,8 @@ class AeatSyncReconciliationScreen(AeatSyncWorkspaceScreen):
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render source states, discrepancy, and application-set resolution."""
         table.add_column(aeat_sync_copy("tui.aeat_sync.column.declaration"), width=20)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.local"), width=11)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.aeat"), width=11)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.local"), width=10)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.aeat"), width=10)
         table.add_column(aeat_sync_copy("tui.aeat_sync.column.difference"), width=14)
         table.add_column(aeat_sync_copy("tui.aeat_sync.column.resolution"), width=14)
         for row in self.controller.projection.reconciliation:

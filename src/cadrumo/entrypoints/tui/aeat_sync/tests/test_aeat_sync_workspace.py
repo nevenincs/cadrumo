@@ -105,11 +105,7 @@ def _aeat_sync_catalogue(locale: str) -> dict[str, str]:
     """Load the exact shared-file AEAT Sync namespace for one locale."""
     raw = yaml.safe_load((_LOCALES_ROOT / locale / "common.yml").read_text(encoding="utf-8"))
     prefix = "tui.aeat_sync."
-    return {
-        key.removeprefix(prefix): value
-        for key, value in _flatten_locale(raw).items()
-        if key.startswith(prefix)
-    }
+    return {key.removeprefix(prefix): value for key, value in _flatten_locale(raw).items() if key.startswith(prefix)}
 
 
 def _source(
@@ -264,9 +260,7 @@ def _empty_projection(availability: AeatSyncWorkspaceAvailability) -> AeatSyncWo
                     availability=availability,
                     observed_at=_T2 if observed else None,
                     refusal=(
-                        None
-                        if availability is AeatSyncWorkspaceAvailability.AVAILABLE
-                        else "aeat.sync.source.refused"
+                        None if availability is AeatSyncWorkspaceAvailability.AVAILABLE else "aeat.sync.source.refused"
                     ),
                     item_count=0 if observed else None,
                 )
@@ -755,9 +749,7 @@ async def test_every_zone_renders_truthful_empty_or_unobservable_source_state(
         operation_contracts=_contracts(),
     )
     expected_count = (
-        0
-        if availability in {AeatSyncWorkspaceAvailability.AVAILABLE, AeatSyncWorkspaceAvailability.STALE}
-        else None
+        0 if availability in {AeatSyncWorkspaceAvailability.AVAILABLE, AeatSyncWorkspaceAvailability.STALE} else None
     )
     for screen_factory, _heading, _translations, _keys in _SCREEN_CASES:
         screen = screen_factory(controller)
@@ -782,13 +774,16 @@ async def test_all_routes_have_one_scroll_owner_no_horizontal_overflow_and_reach
         screen = screen_factory(_controller())
         async with ScreenHostApp[None](screen).run_test(size=(width, 24)) as pilot:
             await pilot.pause()
-            assert all(table.max_scroll_x == 0 for table in screen.query(DataTable))
-            owners = tuple(
-                widget
-                for widget in screen.query(VerticalScroll)
-                if widget.display and widget.show_vertical_scrollbar
+            overflowing = tuple(
+                (table.id, table.max_scroll_x, table.virtual_size, table.container_size)
+                for table in screen.query(DataTable)
+                if table.max_scroll_x
             )
+            assert not overflowing, (screen_factory, width, overflowing)
+            owners = tuple(screen.query(VerticalScroll))
             assert len(owners) == 1
+            assert owners[0].id == "aeat-sync-page"
+            assert not any(table.show_vertical_scrollbar for table in screen.query(DataTable))
             buttons = tuple(screen.query(Button))
             for button in buttons:
                 reached = False

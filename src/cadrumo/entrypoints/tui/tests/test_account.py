@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable
-from typing import cast
+from collections.abc import Awaitable, Callable, Sequence
+from types import SimpleNamespace
+from typing import NoReturn, cast
 
 import pytest
 from textual.app import App
 
+from ....application.user_profile.acquisition_sources import (
+    AcquisitionSourceCredentialPostureV1,
+    ProfileAcquisitionSourceV1,
+)
 from ....application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
 from ....application.user_profile.overview import ProfileOverview
 from ....core.credentials import ProfilePasswordAssessment
@@ -30,9 +35,21 @@ class _LanguageScreen:
 
 
 def _factories(
-    *, appearance: AccountAppearanceFactoryV1 | None = None, sign_out: AccountSignOutFactoryV1 | None = None
+    *,
+    calls: set[str] | None = None,
+    appearance: AccountAppearanceFactoryV1 | None = None,
+    sign_out: AccountSignOutFactoryV1 | None = None,
+    preselected_profile_id: str | None = None,
+    validate_profile_field: Callable[[str, str], str | None] | None = None,
+    launch_profile_source: Callable[[ProfileAcquisitionSourceV1], Awaitable[None]] | None = None,
+    credential_postures: Sequence[AcquisitionSourceCredentialPostureV1] | None = None,
 ):
     """Compose factories with opaque dependencies; factory construction is pure."""
+    observed_calls = calls if calls is not None else set()
+
+    def _unexpected(name: str) -> NoReturn:
+        observed_calls.add(name)
+        raise AssertionError(f"{name} ran while composing an account screen")
 
     def default_appearance(_app: App[None]) -> str:
         return "appearance.changed"
@@ -40,10 +57,16 @@ def _factories(
     selected_appearance = appearance or default_appearance
 
     def persist_profile_field(_path: str, _value: str) -> ProfileOverview:
-        return cast(ProfileOverview, object())
+        _unexpected("persist")
 
     def assess_password(_candidate: str) -> ProfilePasswordAssessment:
-        return cast(ProfilePasswordAssessment, object())
+        _unexpected("assess")
+
+    def authenticate(_profile_id: str, _passphrase: str) -> ProfileLoginAttempt:
+        _unexpected("authenticate")
+
+    def rotate_password(_current: str, _replacement: str, _confirmation: str) -> PassphraseChangeAttempt:
+        _unexpected("rotate")
 
     async def default_sign_out() -> object:
         return object()
@@ -52,17 +75,22 @@ def _factories(
         profile_overview=cast(ProfileOverview, object()),
         persist_profile_field=persist_profile_field,
         login_choices=(ProfileLoginChoice(profile_id="profile-1", label="Profile one"),),
-        authenticate=lambda _profile_id, _passphrase: ProfileLoginAttempt(),
+        authenticate=authenticate,
         assess_password=assess_password,
-        rotate_password=lambda _current, _replacement, _confirmation: PassphraseChangeAttempt(),
+        rotate_password=rotate_password,
         sign_out=sign_out or cast(AccountSignOutFactoryV1, default_sign_out),
+        preselected_profile_id=preselected_profile_id,
+        validate_profile_field=validate_profile_field,
+        launch_profile_source=launch_profile_source,
+        credential_postures=credential_postures,
         appearance=selected_appearance,
     )
 
 
 def test_account_factories_construct_existing_screens_without_host_effects() -> None:
     """Composition does not read or mutate; each screen remains its prior owner."""
-    factories = _factories()
+    calls: set[str] = set()
+    factories = _factories(calls=calls)
     profile = factories.profile(
         TuiScreenContextV1(
             destination="workbench.profile",
@@ -73,6 +101,38 @@ def test_account_factories_construct_existing_screens_without_host_effects() -> 
     assert isinstance(profile, ProfileManagerScreen)
     assert isinstance(factories.change_user(), LoginScreen)
     assert isinstance(factories.password(), PassphraseScreen)
+    assert calls == set()
+
+
+def test_optional_profile_and_login_doors_reach_their_existing_screen_owner() -> None:
+    """Optional doors retain the same Profile and Login ownership when composed."""
+
+    def validate(path: str, value: str) -> str | None:
+        del path, value
+        return None
+
+    async def launch(source: ProfileAcquisitionSourceV1) -> None:
+        del source
+
+    posture = SimpleNamespace(source="censal-review")
+    factories = _factories(
+        preselected_profile_id="profile-1",
+        validate_profile_field=validate,
+        launch_profile_source=launch,
+        credential_postures=cast(Sequence[AcquisitionSourceCredentialPostureV1], (posture,)),
+    )
+    profile = factories.profile(
+        TuiScreenContextV1(
+            destination="workbench.profile",
+            focus=TuiFocusIdentityV1(destination="workbench.profile", semantic_key="profile.overview"),
+        )
+    )
+    login = factories.change_user()
+
+    assert profile._validate_field is validate
+    assert profile._launch_source is launch
+    assert profile._credential_postures == {"censal-review": posture}
+    assert login._preselected == "profile-1"
 
 
 def test_profile_factory_refuses_another_destination_before_constructing_a_screen() -> None:
