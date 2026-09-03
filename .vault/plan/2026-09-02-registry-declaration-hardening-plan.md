@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:7d430ccd90163670da1f73a8b0454573c10ffdd8bed455e50d67dbb4e04fbda7'
+body_hash: 'sha256:f859037e6dbace11a0cadf8b335c9332704553a94f4177e141fe627f35959984'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -409,6 +409,9 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S148` - Resolve a footnote pointer to the note it names, so the reviewed rules the eligibility correction makes due can be grounded in the design's own wording; `dev/registry/analysis/footnote_pointer_notes.py`.
 - [ ] `W04.P07.S149` - Transcribe the thirteen bundled record designs that ship without an extracted text, which leaves evidence tooling blind to them; `src/cadrumo/_data/corpus/aeat_official/disenos_registro`.
 - [x] `W04.P07.S150` - Make the pointer triage repeatable, deriving each design's transcription from the source reference rather than by searching its directory; `dev/registry/analysis/footnote_pointer_notes.py`.
+- [x] `W04.P07.S387` - Report the fields whose wire fact sits behind a footnote pointer, deciding membership through the shipped eligibility predicate rather than a second copy of its clauses, and resolve each pointer to the note wording a reviewed rule would be grounded in; `dev/registry/analysis/footnote_only_wire_facts.py`.
+- [x] `W04.P07.S388` - Pin the counterexample that stops a vocabulary miss being read as a note stating no wire fact, since modelo 200 nota 1 states a filling rule in full while carrying none of the words the reading aid looks for; `dev/registry/tests/test_footnote_only_wire_facts.py`.
+- [ ] `W04.P07.S389` - Recover or replace the unreproducible field counts the rules-authoring step rests on: the live predicate reports 6,434 already eligible, 41 newly admitted by refusing a bare pointer and 4,184 if any content cell stopped counting, against a step stating 149 across six modelos where seventeen carry a profile; `dev/registry/render_profiles`.
 
 ### Phase `W04.P08` - grade earned gate
 

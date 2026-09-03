@@ -9973,3 +9973,87 @@ cover - a fully restated casilla collapsing to one string with no override at
 all - now asserts the override set is empty as well as the canonical text being
 right. A derivation that picked the correct canonical text and then recorded it
 as an override too would reproduce the corpus perfectly and save nothing.
+
+
+## The fields whose wire fact sits behind a footnote, and what the notes say
+
+`dev/registry/analysis/footnote_only_wire_facts.py` screens every revision that
+can produce render inputs for workbook content cells holding nothing but a
+footnote pointer. The eligibility predicate reads a non-blank content cell as
+the design stating the field's wire fact, so such a cell admits a field to the
+renderer on the strength of a cross-reference nobody followed.
+
+The population is **41 cells across 5 modelos**: modelo 200 carries 32, modelo
+303 carries 6, and modelos 202, 222 and 353 carry one each. Modelo 200's 32 is
+an independent reproduction of the thirty-two footnoted corporate-tax amounts
+measured separately when the monetary-scale screen landed, which is the first
+time those two counts have been produced by different code.
+
+Membership is decided by the shipped predicate rather than by restating its
+clauses: each field is put through `project_render_profile_eligibility` twice,
+once as it stands and once with its content cleared, and only a field rejected
+now and admitted then is reported. A second copy of the numeric,
+absent-naturaleza and reserved clauses would have been the copy that stopped
+agreeing.
+
+## The reading aid under-reads, and it nearly became a finding
+
+The screen classifies a resolved note by whether its wording uses the
+vocabulary of how a value is written. On the first run that returned **0 hits
+against 39 resolved notes**, which reads as the design supplying no wording to
+ground a reviewed rule in - and that reading would have undercut the premise of
+the whole rules-authoring step.
+
+It is wrong. Modelo 200's nota 1, cited by 31 of the 32 fields, states a filling
+rule outright: "En caso de tipo de gravamen unico se rellenaran los dos primeros
+digitos con el tipo, y los dos ultimos con 00. Ej: 25% se rellenara como 2500."
+That is a complete representation rule. The vocabulary list - decimal, signo,
+coma, alinead, ceros, derecha, izquierda - misses it because the note says
+digitos and rellenaran instead. This is the same instrument error this campaign
+has now made repeatedly: a fixed list recognises one wording of a concept and
+reports its own blind spot as an absence.
+
+The list is not this screen's. It belongs to the pointer-note module that landed
+earlier to resolve a pointer to the note it names, where it is documented as a
+reading aid; the defect is that a consumer can read its output as a verdict, and
+this screen's first draft did exactly that. The conditions are now named for
+what they measure - `pointer_resolves_vocabulary_hit` and
+`pointer_resolves_vocabulary_miss` - and the docstring carries the
+counterexample. A test pins nota 1's wording and asserts it contains none of the
+words the aid looks for, so the miss-as-absence reading cannot be reintroduced
+quietly.
+
+The two notes reachable outside modelo 200 were read directly and the miss is
+correct for both: modelo 303's nota 5 is a Lorca value enumeration and modelo
+353's nota 4 says only "Solo para periodos 02 y siguientes." Neither states a
+representation. So the honest position is that of 39 resolved notes, at least
+one states a wire fact in full, two demonstrably do not, and the remaining 36
+are unread - not that none of them ground a rule.
+
+Two further observations came out of the notes themselves. Modelo 200's "nota 1"
+is not one note: its transcribed text runs several unrelated table notes
+together, covering accounting-statement codes, identifier types and the rate
+filling rule in one blob, so a field citing it receives far more text than
+governs it. And two pointers name notes their design never defines, which is a
+transcription gap rather than a rule gap and is reported as its own condition.
+
+## The step figures for the rules this makes due do not reproduce
+
+The plan's rules-authoring step states one hundred and forty-nine newly eligible
+fields across "the six modelos that carry a render profile", with thirty-four
+more falling due when two further modelos gain one. None of the three figures
+reproduces against the live tree.
+
+Measured through the shipped predicate over the 31 revisions that can produce
+render inputs: **6,434 fields are already eligible**, **41 would be newly
+admitted by refusing a bare pointer as a stated fact**, and **4,184 would be
+newly admitted if any content cell stopped counting** - which is the much larger
+change the step is not asking for. `dev/registry/render_profiles` holds
+seventeen modelo directories, not six.
+
+The step is not therefore wrong; its figures are unreproducible, which is a
+different defect and the one this campaign keeps finding. Recorded here rather
+than corrected in the step, because 149 may have been measured against a
+narrower population - width-17 fields, or one epoch - that is worth recovering
+before the number is replaced. Until it is recovered, 41 is the count that a
+reader can reproduce with one command.
