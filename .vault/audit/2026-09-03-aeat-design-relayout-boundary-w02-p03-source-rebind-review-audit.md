@@ -81,6 +81,13 @@ backup if candidate verification fails. No detector persists that journal
 state and exercises either outcome. This is a durable cutover state, not an
 inapplicable branch.
 
+### source-rebind-final-verification | low | All transaction findings are resolved
+
+The final detector suite covers verified and invalid `candidate_live` recovery,
+malformed and non-string journal-state refusal, `BaseException` rollback, and
+persisted `intent` and `backup_staged` recovery. Independent review found no
+remaining critical, high, or medium issue. The focused suite passed 22 tests.
+
 ## Recommendations
 
 Implement a transactional staged-tree or per-file rollback protocol with a

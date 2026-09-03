@@ -10,7 +10,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:e39e13c76d63a2cdf9d4ce38279ce5014c64c433e441daf7492f21ef94f4d871'
+body_hash: 'sha256:1af194e1a4a2215d1cfccd6ba55e3cb43a237146023a65c62fcf072cd894598c'
 ---
 
 # `modelo-200-semantic-crosswalk` plan
@@ -49,15 +49,15 @@ Build deterministic tooling that changes only facts proven by the 2024 design an
 
 Derive exact 2024-anchor rebinds while preserving every non-source authority fact byte-for-byte.
 
-- [ ] `W02.P03.S05` - Implement the source-SHA-bound planner and canonical TOML mutation surface for 3,171 exact map-owned declaration rebinds while refusing two true orphans; `dev/registry/analysis/m200_2024_full_reconciliation.py`.
-- [ ] `W02.P03.S06` - Reject missing anchors, source drift, duplicate output, altered non-source payloads, and partial rebind application; `dev/registry/tests/test_m200_2024_full_reconciliation.py`.
+- [x] `W02.P03.S05` - Implement the source-SHA-bound planner and canonical TOML mutation surface for 3,171 exact map-owned declaration rebinds while refusing two true orphans; `dev/registry/analysis/m200_2024_full_reconciliation.py`.
+- [x] `W02.P03.S06` - Reject missing anchors, source drift, duplicate output, altered non-source payloads, and partial rebind application; `dev/registry/tests/test_m200_2024_full_reconciliation.py`.
 
 ### Phase `W02.P04` - classify mismatched and orphan target identities
 
 Assign identity mismatches and source-map orphans to closed target-first dispositions without sibling fallback.
 
-- [ ] `W02.P04.S07` - Implement target-anchor identity classification and explicit dispositions for every unmapped declaration; `dev/registry/analysis/m200_semantic_casilla_candidates.py`.
-- [ ] `W02.P04.S08` - Prove identity ambiguity, segment qualification, non-casilla ownership, and orphan omission fail closed; `dev/registry/tests/test_m200_semantic_casilla_candidates.py`.
+- [x] `W02.P04.S07` - Implement target-anchor identity classification and explicit dispositions for every unmapped declaration; `dev/registry/analysis/m200_semantic_casilla_candidates.py`.
+- [x] `W02.P04.S08` - Prove identity ambiguity, segment qualification, non-casilla ownership, and orphan omission fail closed; `dev/registry/tests/test_m200_semantic_casilla_candidates.py`.
 
 ## Wave `W03` - adjudicate 2024 meaning and legal authority
 
