@@ -246,7 +246,7 @@ async def test_missing_handoff_refuses_and_escape_dismisses_only_child() -> None
 
 
 @pytest.mark.asyncio
-async def test_recovery_row_has_explicit_verb_and_only_calls_canonical_recovery() -> None:
+async def test_recovery_row_requires_explicit_modal_confirmation_before_host_handoff() -> None:
     base = _projection()
     recovery_row = base.entries[0].model_copy(
         update={
@@ -272,9 +272,24 @@ async def test_recovery_row_has_explicit_verb_and_only_calls_canonical_recovery(
         assert "Crear o recuperar esta declaración" in rendered
         table = screen.query_one("#declarations-calendar-agenda", DataTable)
         table.focus()
+        table.move_cursor(row=0)
+        await pilot.pause()
+        assert ordinary == []
+        assert recovered == []
+
         await pilot.press("enter")
         await pilot.pause()
         assert ordinary == []
+        assert recovered == []
+        assert app.screen.query_one("#confirm-title")
+
+        await pilot.click("#btn-confirm-accept")
+        await pilot.pause()
+        assert ordinary == []
+        assert recovered == [(recovery_row.recovery_action, recovery_row)]
+
+        await pilot.press("y")
+        await pilot.pause()
         assert recovered == [(recovery_row.recovery_action, recovery_row)]
 
     refused = DeclarationsCalendarScreen(_controller(projection, handoff=ordinary.append))
@@ -286,6 +301,62 @@ async def test_recovery_row_has_explicit_verb_and_only_calls_canonical_recovery(
         await pilot.pause()
         assert ordinary == []
         assert str(refused.query_one("#declarations-calendar-notice", Static).render())
+
+
+@pytest.mark.asyncio
+async def test_recovery_confirmation_escape_cancels_without_dismissing_calendar_or_calling_host() -> None:
+    base = _projection()
+    recovery_row = base.entries[0].model_copy(
+        update={
+            "recovery_action": declare_next_action(
+                "operator.modelo.work.create", modelo="130", year=2026, period="1T"
+            )
+        }
+    )
+    projection = base.model_copy(update={"entries": (recovery_row, *base.entries[1:])})
+    recovered: list[object] = []
+    screen = DeclarationsCalendarScreen(
+        _controller(projection, recovery_handoff=lambda action, row: recovered.append((action, row)))
+    )
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await pilot.pause()
+        screen.query_one("#declarations-calendar-agenda", DataTable).focus()
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.press("escape")
+        await pilot.pause()
+        assert app.screen is screen
+        assert recovered == []
+
+
+@pytest.mark.asyncio
+async def test_recovery_handoff_failure_is_displayed_without_exposing_host_error() -> None:
+    base = _projection()
+    recovery_row = base.entries[0].model_copy(
+        update={
+            "recovery_action": declare_next_action(
+                "operator.modelo.work.create", modelo="130", year=2026, period="1T"
+            )
+        }
+    )
+    projection = base.model_copy(update={"entries": (recovery_row, *base.entries[1:])})
+
+    def fail_recovery(*_: object) -> None:
+        raise RuntimeError("host-secret")
+
+    screen = DeclarationsCalendarScreen(_controller(projection, recovery_handoff=fail_recovery))
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await pilot.pause()
+        screen.query_one("#declarations-calendar-agenda", DataTable).focus()
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#btn-confirm-accept")
+        await pilot.pause()
+        notice = str(screen.query_one("#declarations-calendar-notice", Static).render())
+        assert "Recovery request could not be completed." in notice
+        assert "host-secret" not in notice
 
 
 @pytest.mark.asyncio

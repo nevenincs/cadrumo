@@ -15,7 +15,7 @@ from .models import LedgerFlowState
 
 
 @contextmanager
-def ledger_workspace_page() -> Generator[ContentDataTable[str], None, None]:
+def ledger_workspace_page() -> Generator[ContentDataTable[str]]:
     """Compose the one scroll owner and canonical workspace navigation table."""
     with ContentScroll(id="ledger-page", classes="cadrumo-scroll ledger-page"):
         yield ContentDataTable[str](id="ledger-navigation", cursor_type="row", zebra_stripes=True)
