@@ -1,0 +1,24 @@
+[[revisions.2024.casillas]]
+id = '01283'
+number = '01283'
+data_type = "money"
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+required = false
+input_kind = "manual"
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = [
+    'aeat-dr-200-2024',
+    'aeat-modelo-200-manual-2024',
+]
+
+
