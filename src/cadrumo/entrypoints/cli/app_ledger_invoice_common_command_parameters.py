@@ -145,4 +145,85 @@ INVOICE_LIFECYCLE_METADATA_OPTIONS: Final[tuple[OptionSpec, ...]] = (
     ),
 )
 
-__all__ = ["INVOICE_LIFECYCLE_METADATA_OPTIONS", "OPTIONAL_IVA_CATEGORY_OPTION"]
+INVOICE_INTAKE_WIZARD_CORE_OPTIONS: Final[tuple[OptionSpec, ...]] = (
+    OptionSpec(
+        name="kind",
+        declarations=("--kind",),
+        value=ValueContract(DeferredTarget("cadrumo.domain.iva.classification", "InvoiceKind")),
+        default=ParameterDefault.required(),
+        help_key=TranslationKey("cli.app.ledger.invoice.kind_help"),
+    ),
+    OptionSpec(
+        name="counterparty_name",
+        declarations=("--counterparty-name",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.required(),
+        help_key=None,
+    ),
+    OptionSpec(
+        name="invoice_number",
+        declarations=("--invoice-number",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.required(),
+        help_key=None,
+    ),
+    OptionSpec(
+        name="invoice_date",
+        declarations=("--invoice-date",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.required(),
+        help_key=TranslationKey("cli.app.ledger.evidence.invoice_date_help"),
+    ),
+    OptionSpec(
+        name="taxable_base",
+        declarations=("--taxable-base",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.required(),
+        help_key=None,
+    ),
+    OptionSpec(
+        name="country_code",
+        declarations=("--country-code",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.required(),
+        help_key=TranslationKey("cli.app.ledger.invoice.country_code_help"),
+    ),
+    OptionSpec(
+        name="iva_rate",
+        declarations=("--iva-rate",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=None,
+    ),
+    OptionSpec(
+        name="currency",
+        declarations=("--currency",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value("EUR"),
+        help_key=None,
+    ),
+)
+
+INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS: Final[tuple[OptionSpec, ...]] = (
+    OptionSpec(
+        name="recargo",
+        declarations=("--recargo",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.ledger.invoice.recargo_help"),
+    ),
+    OptionSpec(
+        name="notes",
+        declarations=("--notes",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(""),
+        help_key=None,
+    ),
+)
+
+__all__ = [
+    "INVOICE_INTAKE_WIZARD_CORE_OPTIONS",
+    "INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS",
+    "INVOICE_LIFECYCLE_METADATA_OPTIONS",
+    "OPTIONAL_IVA_CATEGORY_OPTION",
+]
