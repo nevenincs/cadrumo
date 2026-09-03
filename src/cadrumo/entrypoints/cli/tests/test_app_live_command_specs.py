@@ -10,6 +10,7 @@ import pytest
 from typer.main import get_command
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
+from .._app_live_borrador_command_specs import LIVE_BORRADOR_COMMAND_SPECS
 from .._app_live_command_spec_support import (
     _ENCRYPTED_LOCAL_READ_POLICY,
     _LEAF_INVOCATION,
@@ -18,8 +19,8 @@ from .._app_live_command_spec_support import (
     _OPTIONAL_MODELOS_OPTION,
     _OPTIONAL_TAXPAYER_NIF_OPTION,
     _OPTIONAL_YEAR_FROM_OPTION,
-    _OPTIONAL_YEAR_TO_OPTION,
     _OPTIONAL_YEAR_OPTION,
+    _OPTIONAL_YEAR_TO_OPTION,
     _OUTPUT_ROOT_OPTION,
     _PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
     _REQUIRED_FILING_YEAR_OPTION,
@@ -31,7 +32,6 @@ from .._app_live_command_spec_support import (
     NO_RESULT_SCHEMA,
 )
 from .._app_live_command_specs import LIVE_COMMAND_SPECS
-from .._app_live_borrador_command_specs import LIVE_BORRADOR_COMMAND_SPECS
 from .._app_live_deudas_command_specs import LIVE_DEUDAS_COMMAND_SPECS
 from .._app_live_expedientes_command_specs import LIVE_EXPEDIENTES_COMMAND_SPECS
 from .._app_live_foundation_command_specs import LIVE_FOUNDATION_COMMAND_SPECS
@@ -156,36 +156,45 @@ def _assert_shared_option_contract(
 
 
 def test_live_shared_support_contracts_are_independently_pinned() -> None:
-    assert _METADATA_GROUP_INVOCATION == InvocationSpec(no_args_is_help=True, context_parameter=None)
-    assert _LEAF_INVOCATION == InvocationSpec(no_args_is_help=False, context_parameter="ctx")
-    assert _METADATA_POLICY == ExecutionPolicySpec(
-        capabilities=frozenset(["state-free"]),
-        side_effects=frozenset(["none"]),
-        performance="metadata",
-        write_route=CommandWriteRoute.NONE,
-        destructive=False,
-        handoff=False,
-        live_write=False,
+    assert InvocationSpec(no_args_is_help=True, context_parameter=None) == _METADATA_GROUP_INVOCATION
+    assert InvocationSpec(no_args_is_help=False, context_parameter="ctx") == _LEAF_INVOCATION
+    assert (
+        ExecutionPolicySpec(
+            capabilities=frozenset(["state-free"]),
+            side_effects=frozenset(["none"]),
+            performance="metadata",
+            write_route=CommandWriteRoute.NONE,
+            destructive=False,
+            handoff=False,
+            live_write=False,
+        )
+        == _METADATA_POLICY
     )
-    assert _ENCRYPTED_LOCAL_READ_POLICY == ExecutionPolicySpec(
-        capabilities=frozenset(["encrypted-facts"]),
-        side_effects=frozenset(["none"]),
-        performance="local-io",
-        write_route=CommandWriteRoute.NONE,
-        destructive=False,
-        handoff=False,
-        live_write=False,
+    assert (
+        ExecutionPolicySpec(
+            capabilities=frozenset(["encrypted-facts"]),
+            side_effects=frozenset(["none"]),
+            performance="local-io",
+            write_route=CommandWriteRoute.NONE,
+            destructive=False,
+            handoff=False,
+            live_write=False,
+        )
+        == _ENCRYPTED_LOCAL_READ_POLICY
     )
-    assert _PROFILE_BOUND_NETWORK_CAPTURE_POLICY == ExecutionPolicySpec(
-        capabilities=frozenset(["encrypted-facts", "network"]),
-        side_effects=frozenset(["local-state", "network"]),
-        performance="external-io",
-        write_route=CommandWriteRoute.PROFILE_BOUND,
-        destructive=False,
-        handoff=False,
-        live_write=False,
+    assert (
+        ExecutionPolicySpec(
+            capabilities=frozenset(["encrypted-facts", "network"]),
+            side_effects=frozenset(["local-state", "network"]),
+            performance="external-io",
+            write_route=CommandWriteRoute.PROFILE_BOUND,
+            destructive=False,
+            handoff=False,
+            live_write=False,
+        )
+        == _PROFILE_BOUND_NETWORK_CAPTURE_POLICY
     )
-    assert NO_RESULT_SCHEMA == ResultSchemaSpec(SchemaState.NOT_SUPPORTED)
+    assert ResultSchemaSpec(SchemaState.NOT_SUPPORTED) == NO_RESULT_SCHEMA
 
     _assert_shared_option_contract(
         _OPTIONAL_MODELOS_OPTION,
