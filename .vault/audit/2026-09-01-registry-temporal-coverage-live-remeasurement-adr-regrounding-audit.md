@@ -10966,3 +10966,46 @@ several findings already in this audit.
 
 The census carries both figures: four notes and seven fields. Neither is
 derivable from the other, since the items cover different numbers of fields.
+
+
+## The eligibility correction cannot land honestly, and the reason is structural
+
+The pointer correction and the rules it makes due have been treated throughout
+as one change waiting on research. They are waiting on something the render
+profile cannot currently express.
+
+A render profile must cover **exactly** the eligible fields: the validator
+compares the governed set with the eligible set and refuses on any difference in
+either direction, naming what is missing and what is unknown. And a rule's
+evidence carries an authority discriminator admitting exactly two values,
+`official_source` and `reviewed_policy` - 196 and 965 uses across the shipped
+profiles, and no third. Nothing in the module expresses an unsupported or
+deferred representation; the one occurrence of the word "unsupported" is prose
+in a docstring.
+
+Put together: making a field eligible obliges an author to assert, for that
+field, either an official source or a reviewed policy. There is no third answer
+available.
+
+For twelve of the forty-one fields that is exactly right - the wording settles
+them and a rule states what it says. For the other twenty-nine the only located
+wording is about who must fill the field, when it may carry content, or which
+period it applies to. An author faced with the gate as it stands has two moves,
+and both are bad. Write a `reviewed_policy` justification anyway, which asserts
+an authority that was not found and buries the gap in exactly the place a reader
+would trust. Or leave the predicate uncorrected, so a bare footnote pointer goes
+on counting as the design stating a wire fact.
+
+That is a conflict with this project's own rule against silent under-declaration,
+which requires unsupported and deferred to stay distinct from a proven value. The
+gate is right to demand exhaustive coverage; what it lacks is a way for coverage
+to include the answer "no wording settles this field". A third authority kind
+carrying that, with the renderer refusing such a field rather than emitting
+padding for it, would let the eligibility correction land with an honest account
+of all forty-one - twelve stated, twenty-nine declared unsupported - instead of
+either forty-one assertions or none.
+
+This is recorded rather than implemented. It changes what a render profile means
+and what the renderer does when it meets a field nothing settles, which is
+filing-affecting behaviour and belongs to a decision rather than to an execution
+step reasoning from a screen's output.

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:1d406c272bf03b5419d3a7ff847a827651d9d2004bf2412be28e118abff1f77d'
+body_hash: 'sha256:e608c9db91d597426f04fc510f5e39899d8f2773965aef53c76c1bdd5d35d753'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -400,7 +400,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S72` - Gate that every monetary field declares a scale or is rendered by a self-scaling wire type; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W04.P07.S74` - Screen sibling amount fields of one record for disagreeing scale representations; `dev/registry/analysis/monetary_scale.py`.
 - [x] `W04.P07.S78` - Measure whether the thirty-two footnoted corporate-tax amounts are also rendered unscaled; `dev/registry/analysis/monetary_scale.py`.
-- [ ] `W04.P07.S76` - Refuse a bare footnote pointer as a stated wire fact, landing with the reviewed rules the correction makes due, since the file is no longer held but the coverage gate demands both halves in one change; `dev/registry/pipeline/_render_profile.py`.
+- [ ] `W04.P07.S76` - Refuse a bare footnote pointer as a stated wire fact, which cannot land until a field may be declared eligible with its representation unsupported: coverage is exact and evidence admits only official_source or reviewed_policy, so today the correction forces either twenty-nine invented policies or none at all; `dev/registry/pipeline/_render_profile.py`.
 - [ ] `W04.P07.S77` - Prove the eligibility predicate treats a footnote-only content cell as stating no wire fact; `dev/registry/tests/test_render_profile.py`.
 - [ ] `W04.P07.S79` - Author reviewed representation rules for the forty-one fields the eligibility correction newly admits, of which reading the eleven grounding notes shows twelve have wording that settles representation and twenty-nine have wording about applicability or cross-field agreement instead, so the latter must be derived from extent and type or stay advisory; `dev/registry/render_profiles`.
 - [x] `W04.P07.S80` - Require a declared scale for every monetary export field in the new-modelo authoring checklist; `dev/registry/newmodelo/checklist.py`.
@@ -435,6 +435,8 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S410` - Identify a grounding note by its design as well as its sheet and label, since grouping by label alone merged modelo 303s DP30302 nota 5 across three transcriptions where it carries 330 characters in one and 209 in another; `dev/registry/analysis/rule_grounding_coverage.py dev/registry/tests/test_rule_grounding_coverage.py`.
 - [x] `W04.P07.S411` - Report note labels whose wording differs between a modelos designs, since 24 of the 111 keys shared across designs carry more than one text and modelo 200s DP200001 nota 1 appears in ten designs with two, so a rule carried forward by name can end up grounded in wording that changed; `dev/registry/analysis/note_text_drift.py dev/registry/tests/test_note_text_drift.py`.
 - [x] `W04.P07.S412` - Flag a work item whose grounding note drifts between designs, since four of thirteen do and cover seven fields whose rules must be authored per design, with the flag passed in so it defaults to no claim rather than to a claim of stability; `dev/registry/analysis/rule_grounding_coverage.py dev/registry/tests/test_rule_grounding_coverage.py`.
+- [ ] `W04.P07.S413` - Let a render profile declare a field eligible with its representation unsupported, since exact coverage plus a two-valued authority discriminator obliges an author to assert official source or reviewed policy for twenty-nine fields whose only located wording is about applicability; `dev/registry/pipeline/_render_profile.py dev/registry/render_profiles`.
+- [x] `W04.P07.S414` - Rewrite the note-evidence criterion to record that zero ungrounded is not readiness: twelve of forty-one fields have wording that settles representation, four of thirteen notes drift between designs, and the correction is blocked on a profile that cannot declare a representation unsupported; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W04.P08` - grade earned gate
 
@@ -992,13 +994,32 @@ amounts beside it in the same record emit cents. The second appeared through a c
 plan was being executed and was caught by the gate that pins the first, which is what a gate
 proven against a live defect is for.
 
-Every field the eligibility correction newly admits has located official wording to ground its
-reviewed rule in, and the strength of that wording is reported rather than assumed. Forty-one fields
-are admitted, not the hundred and forty-nine this plan once claimed and could not reproduce: nine are
-covered by a note stating a convention for the field's own AEAT type, thirty-two by a design-level
-note that must still be read, and none by nothing. The two are counted apart because a type
-convention names the field's class while a design note names nothing, and modelo 200's settles its
-amounts where another design's says only that the NIF is mandatory.
+Every field the eligibility correction newly admits has located official wording addressed to it, the
+strength of that wording is reported rather than assumed, and the wording has been READ. Forty-one
+fields are admitted, not the hundred and forty-nine this plan once claimed and no measurement
+reproduces: thirty-eight are grounded by a note their own content cell cites, two by a convention
+naming their AEAT type, one by a design-level note, and none by nothing. The conditions are counted
+apart because they differ in strength - a cited note is addressed to the field, a type convention to
+its class, a design note to nothing in particular - and collapsing them would credit a field with
+evidence that never mentions it.
+
+Zero ungrounded is not, however, a readiness figure, and the criterion is not met by it. Reading the
+thirteen notes those forty-one fields resolve to: seven state representation and cover twelve fields,
+while four state who must complete a field, when it may carry content, or which period it applies to
+- and those four cover twenty-nine, the largest of them grounding twenty-six fields with a sentence
+about which entities must fill them. Four of the thirteen rest on wording that differs between the
+designs of their modelo, covering seven fields whose rules hold only for the design they were read
+in. What the screens establish is that official wording addressed to each field exists and where to
+open it; whether it settles the field is a reading, and the reading says twelve of forty-one.
+
+That leaves the correction blocked on something structural rather than on research. A render profile
+must cover exactly the eligible fields, and a rule's evidence admits only `official_source` or
+`reviewed_policy`, with no way to say that nothing settles a field. So making these fields eligible
+obliges an author either to assert twenty-nine policies that were not found or to leave the predicate
+wrong, and this plan takes neither. The criterion is met when a field can be declared eligible with
+its representation unsupported, and the forty-one are accounted for as twelve stated and twenty-nine
+declared - which is what this project's rule against silent under-declaration asks for and what the
+gate cannot currently express.
 
 Reaching that took correcting the reader four times, and the corrections are the criterion's real
 evidence. Note labels are scoped to the sheet that prints them, because a workbook numbers each
