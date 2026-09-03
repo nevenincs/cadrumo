@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 from typing import Literal, Protocol, Self
+from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, model_validator
 
@@ -60,7 +61,6 @@ from .overview.home import (
     HomeAvailability,
     HomeProjectionInput,
     HomeProjectionV1,
-    HomeSessionPosture,
     HomeZoneState,
     compose_home_projection,
 )
@@ -233,6 +233,12 @@ class WorkbenchGenerationInputsV1(BaseModel):
             expected_state = WorkbenchDestinationAdmissionState(source.availability.value)
             if admission.state is not expected_state:
                 raise ValueError(f"{destination} admission must match its source availability")
+        if (
+            self.declarations_admission.state
+            in {WorkbenchDestinationAdmissionState.AVAILABLE, WorkbenchDestinationAdmissionState.STALE}
+            and self.declarations_calendar.value is None
+        ):
+            raise ValueError("available Declarations admission requires its calendar projection")
         return self
 
 
@@ -282,23 +288,22 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     """
 
     profile_id: str
-    profile_label: str
-    profile_expires_at: UtcInstant
     profile_repository: ProfileRecordReadRepositoryV1
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol
     filing_repository: ModeloRecordCatalogueRepositoryProtocol
     clock: Callable[[], UtcInstant]
-    today: Callable[[], date]
+    account_session_reader: Callable[[], HomeAccountSession]
 
     def read_workbench_generation_inputs(self) -> WorkbenchGenerationInputsV1:
         """Capture secure local facts once and build installed projections."""
+        self.account_session_reader()
         observed_at = self.clock()
-        as_of = self.today()
+        as_of = observed_at.astimezone(ZoneInfo("Europe/Madrid")).date()
         record = self.profile_repository.load(self.profile_id)
-        work_units = self.work_unit_repository.load()
-        revisions = self.calculation_repository.load()
-        filings = self.filing_repository.load()
+        work_units, work_units_revision = self.work_unit_repository.load_revisioned()
+        revisions, calculations_revision = self.calculation_repository.load_revisioned()
+        filings, filings_revision = self.filing_repository.load_revisioned()
 
         declarations = project_declarations_workspace(
             bucket_id=self.profile_id,
@@ -318,18 +323,6 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         )
         taxpayer = projection_for_taxpayer(record, tax_id_default="00000000T")
         raw_values = record_to_path_values(record)
-        query_range = OverviewCalendarRange(
-            from_date=date(as_of.year, 1, 1),
-            to_date=date(as_of.year, 12, 31),
-        )
-        calendar = build_overview_calendar(
-            taxpayer,
-            query_range,
-            today=as_of,
-            raw_values=raw_values,
-            filing_evidence=(),
-            work_units=tuple(work_units.values()),
-        )
         evidence = build_calendar_evidence_projection(
             local=CalendarEvidenceReadOutcome(
                 state=HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at),
@@ -343,6 +336,18 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             ),
             expected_tax_id=taxpayer.tax_id,
         )
+        query_range = OverviewCalendarRange(
+            from_date=date(as_of.year, 1, 1),
+            to_date=date(as_of.year, 12, 31),
+        )
+        calendar = build_overview_calendar(
+            taxpayer,
+            query_range,
+            today=as_of,
+            raw_values=raw_values,
+            filing_evidence=evidence.evidence,
+            work_units=tuple(work_units.values()),
+        )
         declarations_calendar = project_declarations_calendar(
             calendar=calendar,
             evidence=evidence,
@@ -353,13 +358,24 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 observed_at=observed_at,
             ),
         )
+        account_session = self.account_session_reader()
+        final_record = self.profile_repository.load(self.profile_id)
+        _, final_work_units_revision = self.work_unit_repository.load_revisioned()
+        _, final_calculations_revision = self.calculation_repository.load_revisioned()
+        _, final_filings_revision = self.filing_repository.load_revisioned()
+        if (
+            final_record.content_digest != record.content_digest
+            or final_work_units_revision != work_units_revision
+            or final_calculations_revision != calculations_revision
+            or final_filings_revision != filings_revision
+        ):
+            raise RuntimeError("secure workbench generation changed during capture")
         return WorkbenchGenerationInputsV1(
             assembled_at=observed_at,
             home=WorkbenchGenerationSourceResultV1[HomeProjectionInput].available(
                 _secure_profile_home_input(
                     observed_at=observed_at,
-                    profile_label=self.profile_label,
-                    expires_at=self.profile_expires_at,
+                    account_session=account_session,
                 ),
                 observed_at=observed_at,
             ),
@@ -406,26 +422,19 @@ def _declarations_observation(
     )
 
 
-def _secure_profile_home_input(
-    *, observed_at: UtcInstant, profile_label: str, expires_at: UtcInstant
-) -> HomeProjectionInput:
-    unavailable = HomeZoneState(
-        availability=HomeAvailability.UNAVAILABLE,
-        reason_code="workbench.home.reader_unavailable",
-    )
+def _secure_profile_home_input(*, observed_at: UtcInstant, account_session: HomeAccountSession) -> HomeProjectionInput:
+    def unavailable(reason_code: str) -> HomeZoneState:
+        return HomeZoneState(availability=HomeAvailability.UNAVAILABLE, reason_code=reason_code)
+
     return HomeProjectionInput(
         generated_at=observed_at,
-        account=HomeAccountSession(
-            posture=HomeSessionPosture.ACTIVE,
-            profile_label=profile_label,
-            expires_at=expires_at,
-        ),
-        actions_state=unavailable,
-        declarations_state=unavailable,
-        ledger_state=unavailable,
-        agenda_state=unavailable,
-        agenda_evidence_state=unavailable,
-        messages_state=unavailable,
+        account=account_session,
+        actions_state=unavailable("workbench.home.actions_projector_unavailable"),
+        declarations_state=unavailable("workbench.home.declarations_resume_projector_unavailable"),
+        ledger_state=unavailable("workbench.ledger.snapshot_projector_unavailable"),
+        agenda_state=unavailable("workbench.home.agenda_projector_unavailable"),
+        agenda_evidence_state=unavailable("workbench.calendar.aeat_reader_unavailable"),
+        messages_state=unavailable("workbench.home.messages_reader_unavailable"),
     )
 
 

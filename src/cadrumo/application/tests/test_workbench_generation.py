@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from typing import Any, cast
 
 import pytest
@@ -48,11 +48,17 @@ _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 @dataclass
 class _Repository[ValueT]:
     value: ValueT
+    revisions: tuple[str, ...] = ("revision-1",)
     calls: int = 0
 
     def load(self, *_args: object) -> ValueT:
         self.calls += 1
         return self.value
+
+    def load_revisioned(self) -> tuple[ValueT, str]:
+        self.calls += 1
+        index = min(self.calls - 1, len(self.revisions) - 1)
+        return self.value, self.revisions[index]
 
 
 def _home_input() -> HomeProjectionInput:
@@ -149,10 +155,10 @@ def test_generation_inputs_reject_admission_source_contradictions() -> None:
         WorkbenchGenerationInputsV1.model_validate(payload)
 
 
-def test_secure_profile_provider_reads_repositories_once_and_refuses_missing_loaders(
+def test_secure_profile_provider_brackets_repository_capture_and_refuses_missing_loaders(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The production read door captures real local authorities without fake fixtures."""
+    """The production door verifies real local authorities without fake fixtures."""
 
     profile = _Repository(UserProfileRecord(profile_id=_PROFILE_ID, setup_state=ProfileSetupState.INCOMPLETE))
     work_units = _Repository(WorkUnitCatalogue())
@@ -165,28 +171,61 @@ def test_secure_profile_provider_reads_repositories_once_and_refuses_missing_loa
     monkeypatch.setattr(generation_module, "build_overview_calendar", empty_calendar)
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=_PROFILE_ID,
-        profile_label="Perfil local",
-        profile_expires_at=_NOW,
         profile_repository=cast(Any, profile),
         work_unit_repository=cast(Any, work_units),
         calculation_repository=cast(Any, revisions),
         filing_repository=cast(Any, filings),
         clock=lambda: _NOW,
-        today=lambda: date(2026, 9, 3),
+        account_session_reader=lambda: HomeAccountSession(
+            posture=HomeSessionPosture.ACTIVE,
+            profile_label="Perfil local",
+            expires_at=_NOW,
+        ),
     )
 
     generation = InstalledWorkbenchGenerationProviderV1(door)()
 
-    assert profile.calls == 1
-    assert work_units.calls == 1
-    assert revisions.calls == 1
-    assert filings.calls == 1
+    assert profile.calls == 2
+    assert work_units.calls == 2
+    assert revisions.calls == 2
+    assert filings.calls == 2
     assert generation.declarations.projection is not None
     assert generation.declarations_calendar.projection is not None
     assert generation.ledger.availability is WorkbenchGenerationAvailability.UNAVAILABLE
     assert generation.aeat_sync.availability is WorkbenchGenerationAvailability.UNAVAILABLE
     assert generation.modelo.availability is WorkbenchGenerationAvailability.UNAVAILABLE
     assert generation.search.availability is WorkbenchGenerationAvailability.UNAVAILABLE
+
+
+def test_secure_profile_provider_refuses_a_generation_changed_during_capture(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A cross-repository capture is never published after a revision changes."""
+    profile = _Repository(UserProfileRecord(profile_id=_PROFILE_ID, setup_state=ProfileSetupState.INCOMPLETE))
+    work_units = _Repository(WorkUnitCatalogue(), revisions=("work-1", "work-2"))
+    revisions = _Repository(CalculationRevisionCatalogue())
+    filings = _Repository(ModeloRecordCatalogue())
+
+    def empty_calendar(_profile: object, calendar_range: object, **_kwargs: object) -> OverviewCalendar:
+        return OverviewCalendar(range=calendar_range, entries=(), generated_at=_NOW)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(generation_module, "build_overview_calendar", empty_calendar)
+    door = SecureProfileWorkbenchGenerationReadDoorV1(
+        profile_id=_PROFILE_ID,
+        profile_repository=cast(Any, profile),
+        work_unit_repository=cast(Any, work_units),
+        calculation_repository=cast(Any, revisions),
+        filing_repository=cast(Any, filings),
+        clock=lambda: _NOW,
+        account_session_reader=lambda: HomeAccountSession(
+            posture=HomeSessionPosture.ACTIVE,
+            profile_label="Perfil local",
+            expires_at=_NOW,
+        ),
+    )
+
+    with pytest.raises(RuntimeError, match="changed during capture"):
+        door.read_workbench_generation_inputs()
 
 
 def test_generation_projects_home_and_never_turns_missing_areas_into_empty() -> None:

@@ -226,7 +226,7 @@ class WorkbenchCommandProviderV1(Provider):
     async def search(self, query: str) -> Hits:
         """Fuzzy-match the current catalogue's admitted routes and actions."""
         matcher = self.matcher(query)
-        for text, target, _identity in _command_entries(_require_host(self.app).destination_catalogue):
+        for text, target in _command_entries(_require_host(self.app).destination_catalogue):
             if (score := matcher.match(text)) > 0:
                 yield Hit(
                     score=score,
@@ -240,7 +240,7 @@ class WorkbenchCommandProviderV1(Provider):
     async def discover(self) -> Hits:
         """List the current admitted destinations and actions before typing."""
         host = _require_host(self.app)
-        for text, target, _identity in _command_entries(host.destination_catalogue):
+        for text, target in _command_entries(host.destination_catalogue):
             yield DiscoveryHit(
                 display=text,
                 command=_navigation_command(host.navigate_to, target),
@@ -251,9 +251,9 @@ class WorkbenchCommandProviderV1(Provider):
 
 def _command_entries(
     catalogue: TuiDestinationCatalogueV1,
-) -> tuple[tuple[str, TuiNavigationTargetV1, str], ...]:
+) -> tuple[tuple[str, TuiNavigationTargetV1], ...]:
     """Project every currently admitted destination and registered action once."""
-    entries: list[tuple[str, TuiNavigationTargetV1, str]] = []
+    entries: list[tuple[str, TuiNavigationTargetV1]] = []
     for route in catalogue.routes:
         if route.admission.state.value != "available":
             continue
@@ -265,7 +265,7 @@ def _command_entries(
                 semantic_key=f"navigation.{destination.removeprefix('workbench.')}",
             ),
         )
-        entries.append((_destination_text(destination), destination_target, destination))
+        entries.append((_destination_text(destination), destination_target))
         for candidate in route.action_candidates:
             action_target = TuiNavigationTargetV1(
                 destination=destination,
@@ -275,7 +275,7 @@ def _command_entries(
                 ),
                 action_candidate_id=candidate.action_candidate_id,
             )
-            entries.append((_action_text(candidate.action_candidate_id), action_target, candidate.action_candidate_id))
+            entries.append((_action_text(candidate.action_candidate_id), action_target))
     return tuple(entries)
 
 

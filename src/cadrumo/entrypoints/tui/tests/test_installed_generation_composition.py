@@ -212,6 +212,20 @@ def test_generation_provider_binds_real_declarations_factory_and_calendar_projec
     assert isinstance(resolve_declarations_screen(declarations.controller, target), DeclarationsCalendarScreen)
 
 
+def test_available_declarations_admission_requires_calendar_projection() -> None:
+    """The admitted Declarations route cannot silently omit its calendar child."""
+    payload = _inputs(_NOW).model_dump()
+    payload["declarations"]["value"]["bucket_id"] = _BUCKET
+    payload["declarations_calendar"] = (
+        WorkbenchGenerationSourceResultV1[DeclarationsCalendarProjectionV1]
+        .unavailable(refusal="workbench.calendar.reader_unavailable")
+        .model_dump()
+    )
+
+    with pytest.raises(ValueError, match="requires its calendar projection"):
+        WorkbenchGenerationInputsV1.model_validate(payload)
+
+
 def test_refresh_reuses_one_generation_for_search_then_home_and_keeps_missing_sources_explicit() -> None:
     """A child return captures once; unavailable sources never become empty fixtures."""
     captures = [_inputs(_NOW), _inputs(_NOW + timedelta(minutes=1))]
