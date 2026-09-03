@@ -1301,6 +1301,65 @@ tui:
     work_state:
       borrador: Borrador
       descartado: Descartado
+  home:
+    account_fallback: Cuenta
+    action:
+      context_across_records: En todos los registros
+      label: Abrir la tarea sugerida
+      reason: Sugerida por el resumen local
+    action_context: '%{label} — %{reason} · %{context}'
+    address: Modelo %{modelo} · %{filing_year} · %{period}
+    aeat_evidence: 'Evidencia de la AEAT: %{state}'
+    aeat_state:
+      accepted: aceptada por la AEAT
+      justificante_verified: justificante de la AEAT verificado
+      not_observed: no observada en la AEAT
+      submitted_observed: presentación observada en la AEAT
+    agenda_evidence_row: '%{address} — %{evidence}'
+    availability:
+      available: Disponible
+      available_empty: '%{label} — %{detail}'
+      locked: Bloqueado — desbloquea el perfil seleccionado para ver esta información
+      never_captured: Todavía sin capturar
+      stale: Desactualizado — la última copia local necesita actualizarse
+      stale_observed: '%{label}; última observación %{observed_at}'
+      unavailable: No disponible — esta fuente no puede leerse en la sesión actual
+    declaration_state:
+      discarded: Descartada
+      draft: Borrador
+      filed: Presentada
+      needs_review: Necesita revisión
+      ready: Lista
+    empty:
+      actions: sin acciones sugeridas
+      agenda: sin próximas fechas de presentación
+      declarations: sin declaraciones que retomar
+    evidence: 'Local: %{local} · AEAT: %{aeat}'
+    heading:
+      actions: Próximas acciones
+      agenda: Agenda de presentación
+      declarations: Declaraciones
+      ledger: Preparación del libro
+      messages: Mensajes
+    ledger_summary: Disponible — %{entries} apuntes; %{requiring_review} necesitan
+      revisión; %{unclassified} sin clasificar; %{missing_evidence} sin justificante
+    local_state:
+      external_baseline_imported: base de presentación externa guardada localmente
+      not_ready_to_file: no lista localmente
+      ready_to_file: lista localmente
+    messages_summary: Disponible — %{count} requieren atención
+    period_state:
+      due: Pendiente
+      filed: Presentada
+      late: Fuera de plazo
+      unknown: Calendario desconocido
+    session:
+      active: Sesión local activa
+      expired: Sesión caducada
+      locked: Perfil bloqueado
+      no_profile: Ningún perfil seleccionado
+    session_line: '%{label} · Estado: %{status}'
+    title: Inicio
   ledger:
     area:
       classification: Clasificación

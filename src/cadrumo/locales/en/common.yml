@@ -1259,6 +1259,65 @@ tui:
     work_state:
       borrador: Draft
       descartado: Discarded
+  home:
+    account_fallback: Account
+    action:
+      context_across_records: Across records
+      label: Open suggested task
+      reason: Suggested by the local overview
+    action_context: '%{label} — %{reason} · %{context}'
+    address: Modelo %{modelo} · %{filing_year} · %{period}
+    aeat_evidence: 'AEAT evidence: %{state}'
+    aeat_state:
+      accepted: accepted by AEAT
+      justificante_verified: AEAT receipt verified
+      not_observed: not observed at AEAT
+      submitted_observed: submission observed at AEAT
+    agenda_evidence_row: '%{address} — %{evidence}'
+    availability:
+      available: Available
+      available_empty: '%{label} — %{detail}'
+      locked: Locked — unlock the selected profile to view this information
+      never_captured: Not captured yet
+      stale: Stale — the last local snapshot needs refresh
+      stale_observed: '%{label}; last observed %{observed_at}'
+      unavailable: Unavailable — this source cannot be read in the current session
+    declaration_state:
+      discarded: Discarded
+      draft: Draft
+      filed: Filed
+      needs_review: Needs review
+      ready: Ready
+    empty:
+      actions: no suggested actions
+      agenda: no upcoming filing dates
+      declarations: no resumable declarations
+    evidence: 'Local: %{local} · AEAT: %{aeat}'
+    heading:
+      actions: Next actions
+      agenda: Filing agenda
+      declarations: Declarations
+      ledger: Ledger readiness
+      messages: Messages
+    ledger_summary: Available — %{entries} entries; %{requiring_review} need review;
+      %{unclassified} unclassified; %{missing_evidence} missing evidence
+    local_state:
+      external_baseline_imported: external filing baseline stored locally
+      not_ready_to_file: not ready locally
+      ready_to_file: ready locally
+    messages_summary: Available — %{count} requiring attention
+    period_state:
+      due: Due
+      filed: Filed
+      late: Overdue
+      unknown: Schedule unknown
+    session:
+      active: Active local session
+      expired: Session expired
+      locked: Profile locked
+      no_profile: No profile selected
+    session_line: '%{label} · Status: %{status}'
+    title: Home
   ledger:
     area:
       classification: Classification

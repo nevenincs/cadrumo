@@ -1283,6 +1283,65 @@ tui:
     work_state:
       borrador: Piszkozat
       descartado: Elvetve
+  home:
+    account_fallback: Fiók
+    action:
+      context_across_records: Minden nyilvántartásra
+      label: Javasolt teendő megnyitása
+      reason: A helyi áttekintés javaslata
+    action_context: '%{label} — %{reason} · %{context}'
+    address: Modelo %{modelo} · %{filing_year} · %{period}
+    aeat_evidence: 'AEAT-bizonyíték: %{state}'
+    aeat_state:
+      accepted: az AEAT elfogadta
+      justificante_verified: AEAT-igazolás ellenőrizve
+      not_observed: az AEAT-nál nem megfigyelt
+      submitted_observed: benyújtás megfigyelve az AEAT-nál
+    agenda_evidence_row: '%{address} — %{evidence}'
+    availability:
+      available: Elérhető
+      available_empty: '%{label} — %{detail}'
+      locked: Zárolva — oldd fel a kiválasztott profilt az adatok megtekintéséhez
+      never_captured: Még nincs rögzítve
+      stale: Elavult — a legutóbbi helyi pillanatkép frissítést igényel
+      stale_observed: '%{label}; utolsó megfigyelés: %{observed_at}'
+      unavailable: Nem elérhető — ez a forrás nem olvasható a jelenlegi munkamenetben
+    declaration_state:
+      discarded: Elvetve
+      draft: Piszkozat
+      filed: Benyújtva
+      needs_review: Ellenőrzésre vár
+      ready: Kész
+    empty:
+      actions: nincs javasolt teendő
+      agenda: nincs közelgő benyújtási határidő
+      declarations: nincs folytatható bevallás
+    evidence: 'Helyi: %{local} · AEAT: %{aeat}'
+    heading:
+      actions: Következő teendők
+      agenda: Benyújtási naptár
+      declarations: Bevallások
+      ledger: Főkönyv készültsége
+      messages: Üzenetek
+    ledger_summary: Elérhető — %{entries} tétel; %{requiring_review} ellenőrzésre
+      vár; %{unclassified} besorolatlan; %{missing_evidence} hiányzó bizonylat
+    local_state:
+      external_baseline_imported: külső benyújtási alap helyben tárolva
+      not_ready_to_file: helyben még nem kész
+      ready_to_file: helyben kész
+    messages_summary: Elérhető — %{count} igényel figyelmet
+    period_state:
+      due: Esedékes
+      filed: Benyújtva
+      late: Késedelmes
+      unknown: Ismeretlen határidő
+    session:
+      active: Aktív helyi munkamenet
+      expired: A munkamenet lejárt
+      locked: A profil zárolva van
+      no_profile: Nincs kiválasztott profil
+    session_line: '%{label} · Állapot: %{status}'
+    title: Kezdőlap
   ledger:
     area:
       classification: Besorolás

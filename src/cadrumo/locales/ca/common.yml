@@ -1289,6 +1289,65 @@ tui:
     work_state:
       borrador: Esborrany
       descartado: Descartat
+  home:
+    account_fallback: Compte
+    action:
+      context_across_records: A tots els registres
+      label: Obre la tasca suggerida
+      reason: Suggerida pel resum local
+    action_context: '%{label} — %{reason} · %{context}'
+    address: Model %{modelo} · %{filing_year} · %{period}
+    aeat_evidence: 'Evidència de l''AEAT: %{state}'
+    aeat_state:
+      accepted: acceptada per l'AEAT
+      justificante_verified: justificant de l'AEAT verificat
+      not_observed: no observada a l'AEAT
+      submitted_observed: presentació observada a l'AEAT
+    agenda_evidence_row: '%{address} — %{evidence}'
+    availability:
+      available: Disponible
+      available_empty: '%{label} — %{detail}'
+      locked: Blocat — desbloca el perfil seleccionat per veure aquesta informació
+      never_captured: Encara sense capturar
+      stale: Desactualitzat — la darrera còpia local necessita actualitzar-se
+      stale_observed: '%{label}; darrera observació %{observed_at}'
+      unavailable: No disponible — aquesta font no es pot llegir en la sessió actual
+    declaration_state:
+      discarded: Descartada
+      draft: Esborrany
+      filed: Presentada
+      needs_review: Necessita revisió
+      ready: Llesta
+    empty:
+      actions: sense accions suggerides
+      agenda: sense properes dates de presentació
+      declarations: sense declaracions per reprendre
+    evidence: 'Local: %{local} · AEAT: %{aeat}'
+    heading:
+      actions: Properes accions
+      agenda: Agenda de presentació
+      declarations: Declaracions
+      ledger: Preparació del llibre
+      messages: Missatges
+    ledger_summary: Disponible — %{entries} apunts; %{requiring_review} necessiten
+      revisió; %{unclassified} sense classificar; %{missing_evidence} sense justificant
+    local_state:
+      external_baseline_imported: base de presentació externa desada localment
+      not_ready_to_file: no llesta localment
+      ready_to_file: llesta localment
+    messages_summary: Disponible — %{count} requereixen atenció
+    period_state:
+      due: Pendent
+      filed: Presentada
+      late: Fora de termini
+      unknown: Calendari desconegut
+    session:
+      active: Sessió local activa
+      expired: Sessió caducada
+      locked: Perfil blocat
+      no_profile: Cap perfil seleccionat
+    session_line: '%{label} · Estat: %{status}'
+    title: Inici
   ledger:
     area:
       classification: Classificació
