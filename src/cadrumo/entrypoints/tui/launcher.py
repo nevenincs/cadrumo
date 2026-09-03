@@ -57,11 +57,9 @@ def compose_secure_profile_workbench_generation_provider(
     returned provider is the explicit local-I/O boundary for a fresh session
     generation and never initiates network work.
     """
-    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...application.user_profile.login_session_port import (
         profile_current_bucket_session,
         profile_session_serves_bucket,
@@ -89,8 +87,6 @@ def compose_secure_profile_workbench_generation_provider(
         profile_label=profile_label,
         profile_expires_at=expires_at,
         profile_repository=ProfileRecordRepository.for_current_session(profile_id),
-        transaction_repository=TransactionCatalogueRepository(bucket_id=profile_id),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=profile_id),
         work_unit_repository=WorkUnitCatalogueRepository(bucket_id=profile_id),
         calculation_repository=CalculationRevisionCatalogueRepository(bucket_id=profile_id),
         filing_repository=ModeloRecordCatalogueRepository(bucket_id=profile_id),

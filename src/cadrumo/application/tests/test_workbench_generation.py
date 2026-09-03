@@ -3,16 +3,23 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
+from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
 
+from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
+from ...domain.modelos.filing_record import ModeloRecordCatalogue
+from ...domain.modelos.work_unit import WorkUnitCatalogue
+from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
+from .. import workbench_generation as generation_module
 from ..aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
 from ..ledger.workspace import LedgerWorkspaceProjectionV1
 from ..modelo.declarations_calendar import DeclarationsCalendarProjectionV1
 from ..modelo.declarations_workspace import DeclarationsWorkspaceProjectionV1
 from ..modelo.workspace_models import ModeloWorkspaceProjectionV1
+from ..overview.calendar_models import OverviewCalendar
 from ..overview.home import (
     HomeAccountSession,
     HomeAvailability,
@@ -23,6 +30,8 @@ from ..overview.home import (
 from ..search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
 from ..workbench_generation import (
     CallableWorkbenchGenerationReadDoorV1,
+    InstalledWorkbenchGenerationProviderV1,
+    SecureProfileWorkbenchGenerationReadDoorV1,
     WorkbenchGenerationAvailability,
     WorkbenchGenerationInputsV1,
     WorkbenchGenerationSourceResultV1,
@@ -33,6 +42,17 @@ from ..workbench_generation import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 9, 3, 10, 30, tzinfo=UTC)
+_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
+
+
+@dataclass
+class _Repository[ValueT]:
+    value: ValueT
+    calls: int = 0
+
+    def load(self, *_args: object) -> ValueT:
+        self.calls += 1
+        return self.value
 
 
 def _home_input() -> HomeProjectionInput:
@@ -127,6 +147,46 @@ def test_generation_inputs_reject_admission_source_contradictions() -> None:
     ).model_dump()
     with pytest.raises(ValidationError, match=r"workbench\.ledger admission must match"):
         WorkbenchGenerationInputsV1.model_validate(payload)
+
+
+def test_secure_profile_provider_reads_repositories_once_and_refuses_missing_loaders(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The production read door captures real local authorities without fake fixtures."""
+
+    profile = _Repository(UserProfileRecord(profile_id=_PROFILE_ID, setup_state=ProfileSetupState.INCOMPLETE))
+    work_units = _Repository(WorkUnitCatalogue())
+    revisions = _Repository(CalculationRevisionCatalogue())
+    filings = _Repository(ModeloRecordCatalogue())
+
+    def empty_calendar(_profile: object, calendar_range: object, **_kwargs: object) -> OverviewCalendar:
+        return OverviewCalendar(range=calendar_range, entries=(), generated_at=_NOW)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(generation_module, "build_overview_calendar", empty_calendar)
+    door = SecureProfileWorkbenchGenerationReadDoorV1(
+        profile_id=_PROFILE_ID,
+        profile_label="Perfil local",
+        profile_expires_at=_NOW,
+        profile_repository=cast(Any, profile),
+        work_unit_repository=cast(Any, work_units),
+        calculation_repository=cast(Any, revisions),
+        filing_repository=cast(Any, filings),
+        clock=lambda: _NOW,
+        today=lambda: date(2026, 9, 3),
+    )
+
+    generation = InstalledWorkbenchGenerationProviderV1(door)()
+
+    assert profile.calls == 1
+    assert work_units.calls == 1
+    assert revisions.calls == 1
+    assert filings.calls == 1
+    assert generation.declarations.projection is not None
+    assert generation.declarations_calendar.projection is not None
+    assert generation.ledger.availability is WorkbenchGenerationAvailability.UNAVAILABLE
+    assert generation.aeat_sync.availability is WorkbenchGenerationAvailability.UNAVAILABLE
+    assert generation.modelo.availability is WorkbenchGenerationAvailability.UNAVAILABLE
+    assert generation.search.availability is WorkbenchGenerationAvailability.UNAVAILABLE
 
 
 def test_generation_projects_home_and_never_turns_missing_areas_into_empty() -> None:

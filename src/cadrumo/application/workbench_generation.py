@@ -18,27 +18,21 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
-from typing import Literal, Protocol, Self, cast
+from typing import Literal, Protocol, Self
 
 from pydantic import BaseModel, model_validator
 
 from ..core.identifier_grammar import NamespacedId
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import UtcInstant
-from ..domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ..domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
 )
 from ..domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ..domain.transactions.models import TransactionCatalogue
-from ..domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..domain.user_profile.values import UserProfileRecord
 from .aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
-from .ledger.actions_manual import ledger_transaction_payload, summarize_manual_transactions
-from .ledger.models import LedgerReviewQuery
-from .ledger.review_projection import project_ledger_review_query
-from .ledger.workspace import LedgerWorkspaceProjectionV1, project_ledger_workspace
+from .ledger.workspace import LedgerWorkspaceProjectionV1
 from .modelo.declarations_calendar import (
     DeclarationsCalendarProjectionV1,
     DeclarationsCalendarSource,
@@ -291,8 +285,6 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     profile_label: str
     profile_expires_at: UtcInstant
     profile_repository: ProfileRecordReadRepositoryV1
-    transaction_repository: TransactionCatalogueRepositoryProtocol
-    invoice_repository: InvoiceCatalogueRepositoryProtocol
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol
     filing_repository: ModeloRecordCatalogueRepositoryProtocol
@@ -304,34 +296,10 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         observed_at = self.clock()
         as_of = self.today()
         record = self.profile_repository.load(self.profile_id)
-        transactions = self.transaction_repository.load()
-        invoices = self.invoice_repository.load()
         work_units = self.work_unit_repository.load()
         revisions = self.calculation_repository.load()
         filings = self.filing_repository.load()
 
-        summary = summarize_manual_transactions(
-            bucket_id=self.profile_id,
-            transaction_repository=cast(
-                TransactionCatalogueRepositoryProtocol,
-                _LoadedTransactionCatalogue(self.profile_id, transactions),
-            ),
-        )
-        review = project_ledger_review_query(
-            LedgerReviewQuery(bucket_id=self.profile_id),
-            catalogue=transactions,
-            bucket_event_repository=None,
-            transaction_payload_builder=ledger_transaction_payload,
-        )
-        ledger = project_ledger_workspace(
-            summary=summary,
-            preflight=None,
-            review=review,
-            transactions=transactions,
-            invoices=invoices,
-            revisions=revisions.revisions,
-            work_units=work_units,
-        )
         declarations = project_declarations_workspace(
             bucket_id=self.profile_id,
             work_units=work_units,
@@ -395,8 +363,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 ),
                 observed_at=observed_at,
             ),
-            ledger=WorkbenchGenerationSourceResultV1[LedgerWorkspaceProjectionV1].available(
-                ledger, observed_at=observed_at
+            ledger=WorkbenchGenerationSourceResultV1[LedgerWorkspaceProjectionV1].unavailable(
+                refusal="workbench.ledger.snapshot_projector_unavailable"
             ),
             declarations=WorkbenchGenerationSourceResultV1[DeclarationsWorkspaceProjectionV1].available(
                 declarations, observed_at=observed_at
@@ -411,7 +379,11 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             modelo=WorkbenchGenerationSourceResultV1[tuple[ModeloWorkspaceProjectionV1, ...]].unavailable(
                 refusal="workbench.modelo.bulk_reader_unavailable"
             ),
-            ledger_admission=_generation_admission("workbench.ledger", WorkbenchDestinationAdmissionState.AVAILABLE),
+            ledger_admission=_generation_admission(
+                "workbench.ledger",
+                WorkbenchDestinationAdmissionState.UNAVAILABLE,
+                reason_code="workbench.ledger.snapshot_projector_unavailable",
+            ),
             declarations_admission=_generation_admission(
                 "workbench.declarations", WorkbenchDestinationAdmissionState.AVAILABLE
             ),
@@ -421,18 +393,6 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 reason_code="workbench.aeat_sync.reader_unavailable",
             ),
         )
-
-
-@dataclass(frozen=True, slots=True)
-class _LoadedTransactionCatalogue:
-    """Snapshot reader preventing a second secure read during projection."""
-
-    bucket_id: str
-    catalogue: TransactionCatalogue
-
-    def load(self) -> TransactionCatalogue:
-        """Return the already-loaded immutable catalogue."""
-        return self.catalogue
 
 
 def _declarations_observation(
