@@ -185,7 +185,13 @@ def _action(action_id: str) -> ActionReference:
     return ActionReference(action_id=lookup_action(action_id).action_id)
 
 
-def _dependencies() -> InstalledWorkbenchFactoryDependenciesV1:
+def _account_inputs(
+    *,
+    profile_id: str = _BUCKET,
+    overview_profile_id: str = _BUCKET,
+    label: str = "Synthetic profile",
+    choice_label: str = "Synthetic profile",
+) -> InstalledWorkbenchAccountInputsV1:
     def persist(_path: str, _value: str) -> ProfileOverview:
         raise AssertionError("profile persistence must not run while composing the workbench")
 
@@ -198,16 +204,23 @@ def _dependencies() -> InstalledWorkbenchFactoryDependenciesV1:
     def rotate(_current: str, _replacement: str, _confirmation: str):
         raise AssertionError("password rotation must not run while composing the workbench")
 
-    return InstalledWorkbenchFactoryDependenciesV1(
-        account=InstalledWorkbenchAccountInputsV1(
-            profile_id=_BUCKET,
-            profile_overview=cast("ProfileOverview", object()),
-            persist_profile_field=persist,
-            login_choices=(ProfileLoginChoice(profile_id=_BUCKET, label="Synthetic profile"),),
-            authenticate=authenticate,
-            assess_password=assess,
-            rotate_password=rotate,
+    return InstalledWorkbenchAccountInputsV1(
+        profile_id=profile_id,
+        profile_overview=cast(
+            "ProfileOverview",
+            SimpleNamespace(profile_id=overview_profile_id, label=label),
         ),
+        persist_profile_field=persist,
+        login_choices=(ProfileLoginChoice(profile_id=profile_id, label=choice_label),),
+        authenticate=authenticate,
+        assess_password=assess,
+        rotate_password=rotate,
+    )
+
+
+def _dependencies() -> InstalledWorkbenchFactoryDependenciesV1:
+    return InstalledWorkbenchFactoryDependenciesV1(
+        account=_account_inputs(),
         profile_admission=_admission("workbench.profile", WorkbenchDestinationAdmissionState.AVAILABLE),
         ledger_review_action=_action("operator.ledger.review"),
         declarations_work_action=_action("operator.modelo.work.list"),
@@ -249,6 +262,22 @@ def test_generation_provider_composes_the_real_account_screen_owners_without_eff
     assert isinstance(root_inputs.account_factories.profile(context), ProfileManagerScreen)
     assert isinstance(root_inputs.account_factories.change_user(), LoginScreen)
     assert isinstance(root_inputs.account_factories.password(), PassphraseScreen)
+
+
+@pytest.mark.parametrize(
+    ("overview_profile_id", "choice_label"),
+    [
+        ("22222222-2222-4222-8222-222222222222", "Synthetic profile"),
+        (_BUCKET, "Different profile"),
+    ],
+)
+def test_account_composition_refuses_stale_profile_identity_or_label(
+    overview_profile_id: str,
+    choice_label: str,
+) -> None:
+    """A root cannot render one account while an account door targets another."""
+    with pytest.raises(ValueError, match="authenticated profile"):
+        _account_inputs(overview_profile_id=overview_profile_id, choice_label=choice_label)
 
 
 def test_generation_factory_receives_exact_session_operation_contract_object(

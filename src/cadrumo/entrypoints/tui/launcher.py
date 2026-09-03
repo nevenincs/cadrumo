@@ -18,7 +18,12 @@ from ...application.workbench_generation import (
 )
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnitCatalogue
-from .account import AccountRecomposeRequiredV1, compose_account_factories, compose_profile_sign_out_factory
+from .account import (
+    AccountRecomposeRequiredV1,
+    AccountSessionExpiredError,
+    compose_account_factories,
+    compose_profile_sign_out_factory,
+)
 
 if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
@@ -100,9 +105,10 @@ def compose_secure_profile_workbench_generation_provider(
             current_session is None
             or current_session.sealed
             or not profile_session_serves_bucket(current_session, profile_id)
-            or current_session.is_expired(now())
         ):
             raise RuntimeError("installed workbench requires the live secure session for its selected profile")
+        if current_session.is_expired(now()):
+            raise AccountSessionExpiredError()
         return HomeAccountSession(
             posture=HomeSessionPosture.ACTIVE,
             profile_label=profile_label,
@@ -174,6 +180,14 @@ class InstalledWorkbenchAccountInputsV1:
     authenticate: Callable[[str, str], ProfileLoginAttempt]
     assess_password: Callable[[str], ProfilePasswordAssessment]
     rotate_password: Callable[[str, str, str], PassphraseChangeAttempt]
+
+    def __post_init__(self) -> None:
+        """Bind every account door to one exact authenticated profile identity."""
+        if self.profile_overview.profile_id != self.profile_id:
+            raise ValueError("account overview must name the authenticated profile")
+        matching_choices = tuple(choice for choice in self.login_choices if choice.profile_id == self.profile_id)
+        if len(matching_choices) != 1 or matching_choices[0].label != self.profile_overview.label:
+            raise ValueError("account login choices must contain the authenticated profile and label exactly once")
 
     def factories(self, services: OperationComposedServices) -> AccountFactoriesV1:
         """Compose existing account owners without reading or retaining secrets."""

@@ -17,7 +17,12 @@ from ....application.search.workbench import WorkbenchDestinationAdmissionState,
 from ....application.user_profile.login_session import ProfileLoginOutcome
 from ....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from ....core.operations import OperationTerminalCondition
-from ..account import AccountFactoriesV1, AccountRecomposeReasonV1, AccountRecomposeRequiredV1
+from ..account import (
+    AccountFactoriesV1,
+    AccountRecomposeReasonV1,
+    AccountRecomposeRequiredV1,
+    AccountSessionExpiredError,
+)
 from ..app import CadrumoTuiApp
 from ..devtools.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from ..home import HomeScreen
@@ -152,6 +157,28 @@ async def test_expired_child_return_tears_down_profile_bound_doors_and_recompose
         assert app.query_one("#root-account", Static).render() == "Expired profile"
         assert app._active_target is None
         assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
+        with pytest.raises(RuntimeError, match="no composed destination"):
+            _ = app.destination_catalogue
+        with pytest.raises(RuntimeError, match="no composed workbench search"):
+            _ = app.workbench_search_service
+
+
+@pytest.mark.asyncio
+async def test_expired_custody_refresh_recomposes_without_rendering_a_stale_root() -> None:
+    """A precise custody expiry becomes the same non-secret expiry handoff."""
+    app = CadrumoTuiApp(
+        services=cast(OperationComposedServices, object()),
+        destination_catalogue=_catalogue([]),
+        refresh_home=lambda: (_ for _ in ()).throw(AccountSessionExpiredError()),
+        workbench_search_service=WorkbenchSearchService(()),
+        account_factories=_account_factories(HandoverScreen()),
+    )
+
+    async with app.run_test() as pilot:
+        await pilot.pause()
+
+        assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
+        assert app._account_factories is None
         with pytest.raises(RuntimeError, match="no composed destination"):
             _ = app.destination_catalogue
         with pytest.raises(RuntimeError, match="no composed workbench search"):

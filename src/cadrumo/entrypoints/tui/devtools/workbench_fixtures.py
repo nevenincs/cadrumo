@@ -68,6 +68,7 @@ from ....application.operations.frontend_contracts import (
     OperationObservationSuccessV1,
     OperationPublicEventPageV1,
     OperationPublicProjectionV1,
+    OperationReplayStatus,
 )
 from ....application.operations.models import OperationId
 from ....application.operations.registry import OperationPublicContractSetV1
@@ -112,12 +113,9 @@ from ..aeat_sync.screens import (
 )
 from ..app import CadrumoTuiApp
 from ..components.host import ScreenHostApp
-from ..declarations.calendar import DeclarationsCalendarScreen
-from ..declarations.controller import (
-    DeclarationsCalendarController,
-    DeclarationsWorkspaceController,
-)
+from ..declarations.controller import DeclarationsWorkspaceController
 from ..declarations.filing_history import DeclarationsFilingHistoryScreen
+from ..declarations.models import DeclarationsDestinationIdV1
 from ..declarations.overview import DeclarationsModeloWorkspaceLauncherScreen, DeclarationsOverviewScreen
 from ..declarations.revisions import DeclarationsRevisionsScreen
 from ..declarations.routes import resolve_declarations_screen
@@ -136,7 +134,6 @@ if TYPE_CHECKING:
 
 _BUCKET: Final[str] = "00000000-0000-4000-8000-000000000001"
 _AT: Final[datetime] = datetime(2026, 9, 3, 10, tzinfo=UTC)
-_DAY: Final[date] = date(2026, 9, 3)
 
 
 class WorkbenchFixtureScenario(StrEnum):
@@ -234,7 +231,10 @@ def _aeat_projection(scenario: WorkbenchFixtureScenario) -> AeatSyncWorkspacePro
     observations = tuple(
         AeatSyncWorkspaceZoneObservationV1(
             zone=zone,
-            sources=tuple(_aeat_source(source, availability, count=count) for source in aeat_sync_workspace_sources(zone)),
+            sources=tuple(
+                _aeat_source(source, availability, count=count)
+                for source in aeat_sync_workspace_sources(zone)
+            ),
         )
         for zone in AeatSyncWorkspaceZone
     )
@@ -308,7 +308,8 @@ def _aeat_projection(scenario: WorkbenchFixtureScenario) -> AeatSyncWorkspacePro
         discrepancy_kind=AeatSyncDiscrepancyKind.LOCAL_ONLY,
         reconciliation_state=AeatSyncReconciliationState.KEEP_LOCAL,
     )
-    fact = lambda row: AeatSyncWorkspaceFactV1(_BUCKET, "fixture.subject", row)
+    def fact(row: Any) -> AeatSyncWorkspaceFactV1[Any]:
+        return AeatSyncWorkspaceFactV1(_BUCKET, "fixture.subject", row)
     return project_aeat_sync_workspace(
         bucket_id=_BUCKET,
         subject_key="fixture.subject",
@@ -345,7 +346,9 @@ def _aeat_app(surface_id: str, scenario: WorkbenchFixtureScenario) -> App[Any]:
     return _host(resolve_aeat_sync_screen(controller, controller.target(zone)))
 
 
-_AEAT_ROUTES: Final[tuple[tuple[str, type[Screen[Any]], AeatSyncWorkspaceZone], ...]] = (
+_AEAT_ROUTES: Final[
+    tuple[tuple[str, Callable[[AeatSyncWorkspaceController], Screen[Any]], AeatSyncWorkspaceZone], ...]
+] = (
     ("aeat-sync-overview", AeatSyncOverviewScreen, AeatSyncWorkspaceZone.OVERVIEW),
     ("aeat-sync-census", AeatSyncCensusScreen, AeatSyncWorkspaceZone.CENSUS),
     ("aeat-sync-filed-declarations", AeatSyncFiledDeclarationsScreen, AeatSyncWorkspaceZone.FILED_DECLARATIONS),
@@ -373,7 +376,11 @@ def _declaration_observations(
                 DeclarationsWorkspaceAvailability.AVAILABLE,
                 DeclarationsWorkspaceAvailability.STALE,
             } else None,
-            reason_code=None if availability is DeclarationsWorkspaceAvailability.AVAILABLE else "fixture.declarations.refused",
+            reason_code=(
+                None
+                if availability is DeclarationsWorkspaceAvailability.AVAILABLE
+                else "fixture.declarations.refused"
+            ),
         )
         for zone in DeclarationsWorkspaceZone
     )
@@ -381,14 +388,19 @@ def _declaration_observations(
 
 def _declaration_catalogues(
     scenario: WorkbenchFixtureScenario,
-) -> tuple[WorkUnitCatalogue, CalculationRevisionCatalogue, ModeloRecordCatalogue, tuple[DeclarationsSanitizedLifecycleFactV1, ...]]:
+) -> tuple[
+    WorkUnitCatalogue,
+    CalculationRevisionCatalogue,
+    ModeloRecordCatalogue,
+    tuple[DeclarationsSanitizedLifecycleFactV1, ...],
+]:
     if scenario in {WorkbenchFixtureScenario.EMPTY, WorkbenchFixtureScenario.UNAVAILABLE}:
         return WorkUnitCatalogue(), CalculationRevisionCatalogue(), ModeloRecordCatalogue(), ()
     period = Period.from_year_and_code(2026, "1T")
     casilla = validated_casilla_id("01")
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET,
-        modelo="130",
+        modelo=ModeloCode("130"),
         filing_year=2026,
         period=period,
         revision_id="2026",
@@ -409,7 +421,7 @@ def _declaration_catalogues(
     unit = WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=_BUCKET,
-        modelo="130",
+        modelo=ModeloCode("130"),
         filing_year=2026,
         period=period,
         revision_id="2026",
@@ -440,7 +452,7 @@ def _declaration_catalogues(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
         bucket_id=_BUCKET,
-        modelo="130",
+        modelo=ModeloCode("130"),
         filing_year=2026,
         period=period,
         filed_at=_AT,
@@ -475,7 +487,13 @@ def _declarations_projection(scenario: WorkbenchFixtureScenario) -> Declarations
 def _calendar_projection(scenario: WorkbenchFixtureScenario) -> DeclarationsCalendarProjectionV1:
     unavailable = scenario is WorkbenchFixtureScenario.UNAVAILABLE
     stale = scenario is WorkbenchFixtureScenario.STALE
-    availability = HomeAvailability.STALE if stale else HomeAvailability.UNAVAILABLE if unavailable else HomeAvailability.AVAILABLE
+    availability = (
+        HomeAvailability.STALE
+        if stale
+        else HomeAvailability.UNAVAILABLE
+        if unavailable
+        else HomeAvailability.AVAILABLE
+    )
     state = HomeZoneState(
         availability=availability,
         observed_at=_AT if availability in {HomeAvailability.AVAILABLE, HomeAvailability.STALE} else None,
@@ -517,11 +535,12 @@ def _calendar_projection(scenario: WorkbenchFixtureScenario) -> DeclarationsCale
     )
 
 
-def _declaration_controller(
-    scenario: WorkbenchFixtureScenario,
-) -> DeclarationsWorkspaceController:
+def _declaration_controller(scenario: WorkbenchFixtureScenario) -> DeclarationsWorkspaceController:
     projection = _declarations_projection(scenario)
-    action = lambda action_id: ActionReference(action_id=lookup_action(action_id).action_id)
+
+    def action(action_id: str) -> ActionReference:
+        return ActionReference(action_id=lookup_action(action_id).action_id)
+
     return DeclarationsWorkspaceController(
         TuiScreenContextV1(destination="workbench.declarations"),
         projection,
@@ -546,11 +565,14 @@ def _declaration_app(surface_id: str, scenario: WorkbenchFixtureScenario) -> App
         return _host(resolve_declarations_screen(controller, target))
     if surface_id == "declarations-modelo-launcher":
         return _host(DeclarationsModeloWorkspaceLauncherScreen(controller))
-    destination = {
-        "declarations-overview": "declarations.overview",
-        "declarations-revisions": "declarations.revisions",
-        "declarations-filing-history": "declarations.filing_history",
-    }[surface_id]
+    destination = cast(
+        DeclarationsDestinationIdV1,
+        {
+            "declarations-overview": "declarations.overview",
+            "declarations-revisions": "declarations.revisions",
+            "declarations-filing-history": "declarations.filing_history",
+        }[surface_id],
+    )
     return _host(resolve_declarations_screen(controller, controller.target(destination)))
 
 
@@ -603,7 +625,7 @@ def _operation_modal_app() -> App[Any]:
         operation_id=operation_id,
         anchor_cursor=0,
         requested_cursor=0,
-        status="caught_up",
+        status=OperationReplayStatus.CAUGHT_UP,
         events=(),
         next_cursor=0,
         restart_cursor=None,
@@ -624,16 +646,24 @@ def _root_app(scenario: WorkbenchFixtureScenario) -> App[Any]:
             destination="workbench.home", state=WorkbenchDestinationAdmissionState.AVAILABLE
         ),
         "workbench.ledger": TuiDestinationAdmissionV1(
-            destination="workbench.ledger", state=WorkbenchDestinationAdmissionState.NEVER_CAPTURED, reason_code="fixture.root.unavailable"
+            destination="workbench.ledger",
+            state=WorkbenchDestinationAdmissionState.NEVER_CAPTURED,
+            reason_code="fixture.root.unavailable",
         ),
         "workbench.declarations": TuiDestinationAdmissionV1(
-            destination="workbench.declarations", state=WorkbenchDestinationAdmissionState.NEVER_CAPTURED, reason_code="fixture.root.unavailable"
+            destination="workbench.declarations",
+            state=WorkbenchDestinationAdmissionState.NEVER_CAPTURED,
+            reason_code="fixture.root.unavailable",
         ),
         "workbench.aeat_sync": TuiDestinationAdmissionV1(
-            destination="workbench.aeat_sync", state=WorkbenchDestinationAdmissionState.NEVER_CAPTURED, reason_code="fixture.root.unavailable"
+            destination="workbench.aeat_sync",
+            state=WorkbenchDestinationAdmissionState.NEVER_CAPTURED,
+            reason_code="fixture.root.unavailable",
         ),
         "workbench.profile": TuiDestinationAdmissionV1(
-            destination="workbench.profile", state=WorkbenchDestinationAdmissionState.NEVER_CAPTURED, reason_code="fixture.root.unavailable"
+            destination="workbench.profile",
+            state=WorkbenchDestinationAdmissionState.NEVER_CAPTURED,
+            reason_code="fixture.root.unavailable",
         ),
     }
     catalogue = build_destination_catalogue(admissions=admissions, factories={"workbench.home": home_factory})
@@ -661,7 +691,12 @@ def _home_projection(scenario: WorkbenchFixtureScenario) -> Any:
     return build_home_projection_fixture(mapping[scenario])
 
 
-def _spec(surface_id: str, scenario: WorkbenchFixtureScenario, interfaces: tuple[str, ...], build: FixtureBuilder) -> WorkbenchFixtureSpec:
+def _spec(
+    surface_id: str,
+    scenario: WorkbenchFixtureScenario,
+    interfaces: tuple[str, ...],
+    build: FixtureBuilder,
+) -> WorkbenchFixtureSpec:
     return WorkbenchFixtureSpec(
         surface_id=surface_id,
         scenario=scenario,
@@ -687,7 +722,10 @@ _DECLARATION_INTERFACES = {
         "cadrumo.entrypoints.tui.declarations.overview.DeclarationsModeloWorkspaceLauncherScreen",
     ),
 }
-_AEAT_INTERFACE_BY_SURFACE = {surface: (screen.__module__ + "." + screen.__name__,) for surface, screen, _zone in _AEAT_ROUTES}
+_AEAT_INTERFACE_BY_SURFACE = {
+    surface: (screen.__module__ + "." + screen.__name__,)
+    for surface, screen, _zone in _AEAT_ROUTES
+}
 
 
 def _build_specs() -> tuple[WorkbenchFixtureSpec, ...]:
@@ -701,13 +739,11 @@ def _build_specs() -> tuple[WorkbenchFixtureSpec, ...]:
     ):
         specs.append(_spec("home", scenario, _HOME_INTERFACE, lambda scenario=scenario: _home(scenario)))
     specs.extend(
-        (
-            _spec("workbench-root", scenario, _ROOT_INTERFACE, lambda scenario=scenario: _root_app(scenario))
-            for scenario in (
-                WorkbenchFixtureScenario.READY,
-                WorkbenchFixtureScenario.EMPTY,
-                WorkbenchFixtureScenario.UNAVAILABLE,
-            )
+        _spec("workbench-root", scenario, _ROOT_INTERFACE, lambda scenario=scenario: _root_app(scenario))
+        for scenario in (
+            WorkbenchFixtureScenario.READY,
+            WorkbenchFixtureScenario.EMPTY,
+            WorkbenchFixtureScenario.UNAVAILABLE,
         )
     )
     for surface_id, interfaces in _DECLARATION_INTERFACES.items():
@@ -722,7 +758,12 @@ def _build_specs() -> tuple[WorkbenchFixtureSpec, ...]:
             )
         )
         specs.extend(
-            _spec(surface_id, scenario, interfaces, lambda surface_id=surface_id, scenario=scenario: _declaration_app(surface_id, scenario))
+            _spec(
+                surface_id,
+                scenario,
+                interfaces,
+                lambda surface_id=surface_id, scenario=scenario: _declaration_app(surface_id, scenario),
+            )
             for scenario in scenarios
         )
     for surface_id, interfaces in _AEAT_INTERFACE_BY_SURFACE.items():
@@ -737,7 +778,12 @@ def _build_specs() -> tuple[WorkbenchFixtureSpec, ...]:
         if surface_id == "aeat-sync-notifications":
             scenarios += (WorkbenchFixtureScenario.REFUSAL,)
         specs.extend(
-            _spec(surface_id, scenario, interfaces, lambda surface_id=surface_id, scenario=scenario: _aeat_app(surface_id, scenario))
+            _spec(
+                surface_id,
+                scenario,
+                interfaces,
+                lambda surface_id=surface_id, scenario=scenario: _aeat_app(surface_id, scenario),
+            )
             for scenario in scenarios
         )
     specs.append(
@@ -748,7 +794,7 @@ def _build_specs() -> tuple[WorkbenchFixtureSpec, ...]:
             _operation_modal_app,
         )
     )
-    return tuple(specs)
+    return tuple(sorted(specs, key=lambda spec: spec.fixture_id))
 
 
 WORKBENCH_FIXTURES: Final[tuple[WorkbenchFixtureSpec, ...]] = _build_specs()

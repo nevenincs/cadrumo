@@ -43,6 +43,10 @@ type AccountLanguageFactoryV1 = Callable[[ProfileManagerScreen], None]
 type AccountSignOutFactoryV1 = Callable[[], Awaitable[OperationController]]
 
 
+class AccountSessionExpiredError(Exception):
+    """Signal that the current non-secret account session must be recomposed."""
+
+
 class AccountRecomposeReasonV1(StrEnum):
     """Why the current profile-bound workbench must be discarded."""
 
@@ -179,6 +183,7 @@ __all__ = [
     "AccountProfileFactoryV1",
     "AccountRecomposeReasonV1",
     "AccountRecomposeRequiredV1",
+    "AccountSessionExpiredError",
     "AccountSignOutFactoryV1",
     "compose_account_factories",
     "compose_profile_sign_out_factory",

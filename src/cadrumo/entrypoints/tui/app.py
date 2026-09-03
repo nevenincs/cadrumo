@@ -21,7 +21,12 @@ from textual.widgets import Button, Footer, Static
 from ...application.overview.home import HomeSessionPosture
 from ...core.i18n.render import tr
 from ...core.operations import OperationTerminalCondition
-from .account import AccountFactoriesV1, AccountRecomposeReasonV1, AccountRecomposeRequiredV1
+from .account import (
+    AccountFactoriesV1,
+    AccountRecomposeReasonV1,
+    AccountRecomposeRequiredV1,
+    AccountSessionExpiredError,
+)
 from .components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
 from .home import HomeBackRequested, HomeScreen, HomeTarget, HomeTargetSelected
 from .navigation import (
@@ -251,7 +256,11 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         refresh_home = self._refresh_home
         if refresh_home is None:
             return
-        projection = refresh_home()
+        try:
+            projection = refresh_home()
+        except AccountSessionExpiredError:
+            self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
+            return
         self.query_one("#root-account", Static).update(
             projection.account.profile_label or tr("tui.root.account.default_profile")
         )
