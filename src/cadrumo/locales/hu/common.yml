@@ -1405,3 +1405,72 @@ tui:
   root:
     no_areas: Ebben a munkamenetben még egyetlen terület sem érhető el.
     title: Cadrumo terminálmunkamenet
+  search:
+    action:
+      available: Elérhető munkafelületi művelet
+      classify_ledger: Főkönyv osztályozása
+      edit_profile: Profil szerkesztése
+      explain_overview: Áttekintés magyarázata
+      link_ledger: Főkönyvi rekord összekapcsolása
+      list_filing_records: Benyújtási rekordok megtekintése
+      list_notifications: Értesítések megtekintése
+      open_declaration: Bevallás megnyitása
+      open_ledger: Főkönyv megnyitása
+      review_ledger: Főkönyv áttekintése
+      review_ledger_evidence: Főkönyvi bizonyíték áttekintése
+      review_undeclared: Be nem vallott tevékenység áttekintése
+      validate_ledger: Főkönyv ellenőrzése
+    destination:
+      aeat_sync: AEAT-szinkronizálás megnyitása
+      declarations: Bevallások megnyitása
+      home: Főoldal megnyitása
+      ledger: Főkönyv megnyitása
+      profile: Profil megnyitása
+      unknown: Munkafelület megnyitása
+    result:
+      address: Modelo %{modelo} · %{filing_year} · %{period}
+      label:
+        declaration: Bevallás
+        filing: Benyújtás
+        history: Benyújtási előzmények
+        ledger_entry: Főkönyvi tétel
+        ledger_evidence: Főkönyvi bizonyíték
+        modelo: Modelo
+        notification: Értesítés
+        reconciliation: Egyeztetés
+        revision: Számítási felülvizsgálat
+      source:
+        declaration: Bevallási rekordok
+        filing: Benyújtási rekordok
+        history: Benyújtási előzmények
+        ledger_entry: Helyi főkönyvi rekordok
+        ledger_evidence: Főkönyvi bizonyíték
+        modelo: Modelo-katalógus
+        notification: AEAT-értesítések
+        reconciliation: Egyeztetési eltérések
+        revision: Számítási előzmények
+      status:
+        declaration_draft: Piszkozat
+        declaration_filed: Benyújtva
+        declaration_in_progress: Folyamatban
+        declaration_needs_attention: Figyelmet igényel
+        declaration_ready: Benyújtásra kész
+        filing_accepted: Elfogadva
+        filing_rejected: Elutasítva
+        filing_submitted: Beküldve
+        history_not_observed: Nem figyelték meg
+        history_observed: Megfigyelt
+        ledger_entry_classified: Osztályozva
+        ledger_entry_needs_review: Felülvizsgálat szükséges
+        ledger_entry_ready: Kész
+        ledger_evidence_captured: Rögzítve
+        ledger_evidence_missing: Hiányzik
+        ledger_evidence_stale: Elavult
+        modelo_available: Elérhető
+        modelo_unavailable: Nem érhető el
+        notification_read: Olvasott
+        notification_unread: Olvasatlan
+        reconciliation_open: Nyitott
+        reconciliation_resolved: Rendezett
+        revision_current: Aktuális
+        revision_superseded: Lecserélt

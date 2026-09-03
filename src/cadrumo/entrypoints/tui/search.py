@@ -9,16 +9,20 @@ navigate and cannot invoke a business action.
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Protocol, override, runtime_checkable
+from collections.abc import Callable, Mapping
+from typing import Final, Protocol, override, runtime_checkable
 
 from textual.command import DiscoveryHit, Hit, Hits, Provider
 
 from ...application.search.workbench import (
+    WorkbenchSearchLabelKey,
     WorkbenchSearchRequest,
     WorkbenchSearchResponse,
     WorkbenchSearchResult,
+    WorkbenchSearchSource,
+    WorkbenchSearchStatus,
 )
+from ...core.i18n.render import tr
 from .navigation import (
     DestinationUnavailableError,
     NavigationContractError,
@@ -67,19 +71,125 @@ def _require_host(app: object) -> TuiSearchHostV1:
     return app
 
 
-def _result_text(result: WorkbenchSearchResult) -> str:
-    """Render closed search metadata without inventing a business label."""
-    address = ""
+_RESULT_LABEL_LOCALE_KEYS: Final[Mapping[WorkbenchSearchLabelKey, str]] = {
+    WorkbenchSearchLabelKey.LEDGER_ENTRY: "tui.search.result.label.ledger_entry",
+    WorkbenchSearchLabelKey.LEDGER_EVIDENCE: "tui.search.result.label.ledger_evidence",
+    WorkbenchSearchLabelKey.DECLARATION: "tui.search.result.label.declaration",
+    WorkbenchSearchLabelKey.MODELO: "tui.search.result.label.modelo",
+    WorkbenchSearchLabelKey.REVISION: "tui.search.result.label.revision",
+    WorkbenchSearchLabelKey.FILING: "tui.search.result.label.filing",
+    WorkbenchSearchLabelKey.HISTORY: "tui.search.result.label.history",
+    WorkbenchSearchLabelKey.RECONCILIATION: "tui.search.result.label.reconciliation",
+    WorkbenchSearchLabelKey.NOTIFICATION: "tui.search.result.label.notification",
+}
+_RESULT_SOURCE_LOCALE_KEYS: Final[Mapping[WorkbenchSearchSource, str]] = {
+    WorkbenchSearchSource.LEDGER_ENTRY: "tui.search.result.source.ledger_entry",
+    WorkbenchSearchSource.LEDGER_EVIDENCE: "tui.search.result.source.ledger_evidence",
+    WorkbenchSearchSource.DECLARATION: "tui.search.result.source.declaration",
+    WorkbenchSearchSource.MODELO: "tui.search.result.source.modelo",
+    WorkbenchSearchSource.REVISION: "tui.search.result.source.revision",
+    WorkbenchSearchSource.FILING: "tui.search.result.source.filing",
+    WorkbenchSearchSource.HISTORY: "tui.search.result.source.history",
+    WorkbenchSearchSource.RECONCILIATION: "tui.search.result.source.reconciliation",
+    WorkbenchSearchSource.NOTIFICATION: "tui.search.result.source.notification",
+}
+_RESULT_STATUS_LOCALE_KEYS: Final[Mapping[WorkbenchSearchStatus, str]] = {
+    WorkbenchSearchStatus.LEDGER_ENTRY_READY: "tui.search.result.status.ledger_entry_ready",
+    WorkbenchSearchStatus.LEDGER_ENTRY_NEEDS_REVIEW: "tui.search.result.status.ledger_entry_needs_review",
+    WorkbenchSearchStatus.LEDGER_ENTRY_CLASSIFIED: "tui.search.result.status.ledger_entry_classified",
+    WorkbenchSearchStatus.LEDGER_EVIDENCE_CAPTURED: "tui.search.result.status.ledger_evidence_captured",
+    WorkbenchSearchStatus.LEDGER_EVIDENCE_MISSING: "tui.search.result.status.ledger_evidence_missing",
+    WorkbenchSearchStatus.LEDGER_EVIDENCE_STALE: "tui.search.result.status.ledger_evidence_stale",
+    WorkbenchSearchStatus.DECLARATION_DRAFT: "tui.search.result.status.declaration_draft",
+    WorkbenchSearchStatus.DECLARATION_IN_PROGRESS: "tui.search.result.status.declaration_in_progress",
+    WorkbenchSearchStatus.DECLARATION_NEEDS_ATTENTION: "tui.search.result.status.declaration_needs_attention",
+    WorkbenchSearchStatus.DECLARATION_READY: "tui.search.result.status.declaration_ready",
+    WorkbenchSearchStatus.DECLARATION_FILED: "tui.search.result.status.declaration_filed",
+    WorkbenchSearchStatus.MODELO_AVAILABLE: "tui.search.result.status.modelo_available",
+    WorkbenchSearchStatus.MODELO_UNAVAILABLE: "tui.search.result.status.modelo_unavailable",
+    WorkbenchSearchStatus.REVISION_CURRENT: "tui.search.result.status.revision_current",
+    WorkbenchSearchStatus.REVISION_SUPERSEDED: "tui.search.result.status.revision_superseded",
+    WorkbenchSearchStatus.FILING_SUBMITTED: "tui.search.result.status.filing_submitted",
+    WorkbenchSearchStatus.FILING_ACCEPTED: "tui.search.result.status.filing_accepted",
+    WorkbenchSearchStatus.FILING_REJECTED: "tui.search.result.status.filing_rejected",
+    WorkbenchSearchStatus.HISTORY_OBSERVED: "tui.search.result.status.history_observed",
+    WorkbenchSearchStatus.HISTORY_NOT_OBSERVED: "tui.search.result.status.history_not_observed",
+    WorkbenchSearchStatus.RECONCILIATION_OPEN: "tui.search.result.status.reconciliation_open",
+    WorkbenchSearchStatus.RECONCILIATION_RESOLVED: "tui.search.result.status.reconciliation_resolved",
+    WorkbenchSearchStatus.NOTIFICATION_UNREAD: "tui.search.result.status.notification_unread",
+    WorkbenchSearchStatus.NOTIFICATION_READ: "tui.search.result.status.notification_read",
+}
+_DESTINATION_LOCALE_KEYS: Final[Mapping[str, str]] = {
+    "workbench.home": "tui.search.destination.home",
+    "workbench.ledger": "tui.search.destination.ledger",
+    "workbench.declarations": "tui.search.destination.declarations",
+    "workbench.aeat_sync": "tui.search.destination.aeat_sync",
+    "workbench.profile": "tui.search.destination.profile",
+}
+_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = {
+    "operator.declaration.open": "tui.search.action.open_declaration",
+    "operator.ledger.open": "tui.search.action.open_ledger",
+    "operator.not_declared.open": "tui.search.action.review_undeclared",
+    "operator.profile.edit": "tui.search.action.edit_profile",
+    "operator.ledger.review": "tui.search.action.review_ledger",
+    "operator.ledger.classify": "tui.search.action.classify_ledger",
+    "operator.ledger.evidence.review.list": "tui.search.action.review_ledger_evidence",
+    "operator.ledger.link": "tui.search.action.link_ledger",
+    "operator.ledger.preflight": "tui.search.action.validate_ledger",
+    "operator.live.filed.pull": "tui.aeat_sync.action.pull_filed",
+    "operator.live.filed.pull_all": "tui.aeat_sync.action.pull_filed_all",
+    "operator.live.notifications.list": "tui.search.action.list_notifications",
+    "operator.overview.explain": "tui.search.action.explain_overview",
+    "operator.modelo.filing_record.list": "tui.search.action.list_filing_records",
+}
+_SEARCH_LOCALE_KEYS: Final[tuple[str, ...]] = (
+    *_RESULT_LABEL_LOCALE_KEYS.values(),
+    *_RESULT_SOURCE_LOCALE_KEYS.values(),
+    *_RESULT_STATUS_LOCALE_KEYS.values(),
+    *_DESTINATION_LOCALE_KEYS.values(),
+    *_ACTION_LOCALE_KEYS.values(),
+    "tui.search.result.address",
+    "tui.search.destination.unknown",
+    "tui.search.action.available",
+)
+
+
+def _render_locale(key: str, locale: str | None, **values: object) -> str:
+    """Render one palette label, optionally under a test-selected locale."""
+    if locale is None:
+        return tr(key, **values)
+    return tr(key, locale=locale, **values)
+
+
+def _result_text(result: WorkbenchSearchResult, *, locale: str | None = None) -> str:
+    """Render safe search metadata through localized human-facing labels."""
+    label = _render_locale(_RESULT_LABEL_LOCALE_KEYS[result.label_key], locale)
+    source = _render_locale(_RESULT_SOURCE_LOCALE_KEYS[result.source], locale)
+    status = _render_locale(_RESULT_STATUS_LOCALE_KEYS[result.status], locale)
+    parts = [label, source, status]
     if result.address is not None:
-        address = (
-            f" · Modelo {result.address.modelo} · {result.address.filing_year} · {result.address.period.registry_token}"
+        parts.append(
+            _render_locale(
+                "tui.search.result.address",
+                locale,
+                modelo=result.address.modelo,
+                filing_year=result.address.filing_year,
+                period=result.address.period.registry_token,
+            )
         )
-    return f"{result.label_key.value} · {result.source.value} · {result.status.value}{address}"
+    return " · ".join(parts)
 
 
-def _destination_text(destination: str) -> str:
-    """Produce the fixed palette wording for one admitted destination."""
-    return f"Open {destination.removeprefix('workbench.').replace('_', ' ')}"
+def _destination_text(destination: str, *, locale: str | None = None) -> str:
+    """Produce localized wording for one admitted destination."""
+    key = _DESTINATION_LOCALE_KEYS.get(destination, "tui.search.destination.unknown")
+    return _render_locale(key, locale)
+
+
+def _action_text(action_candidate_id: str, *, locale: str | None = None) -> str:
+    """Render an admitted action without exposing its internal identifier."""
+    key = _ACTION_LOCALE_KEYS.get(action_candidate_id, "tui.search.action.available")
+    return _render_locale(key, locale)
 
 
 class WorkbenchSearchProviderV1(Provider):
@@ -165,7 +275,7 @@ def _command_entries(
                 ),
                 action_candidate_id=candidate.action_candidate_id,
             )
-            entries.append((candidate.action_candidate_id, action_target, candidate.action_candidate_id))
+            entries.append((_action_text(candidate.action_candidate_id), action_target, candidate.action_candidate_id))
     return tuple(entries)
 
 

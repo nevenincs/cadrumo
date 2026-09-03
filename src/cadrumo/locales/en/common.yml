@@ -1381,3 +1381,72 @@ tui:
   root:
     no_areas: No area is available in this session yet.
     title: Cadrumo terminal session
+  search:
+    action:
+      available: Available workbench action
+      classify_ledger: Classify ledger
+      edit_profile: Edit profile
+      explain_overview: Explain overview
+      link_ledger: Link ledger record
+      list_filing_records: View filing records
+      list_notifications: View notifications
+      open_declaration: Open declaration
+      open_ledger: Open ledger
+      review_ledger: Review ledger
+      review_ledger_evidence: Review ledger evidence
+      review_undeclared: Review undeclared activity
+      validate_ledger: Validate ledger
+    destination:
+      aeat_sync: Open AEAT Sync
+      declarations: Open Declarations
+      home: Open Home
+      ledger: Open Ledger
+      profile: Open Profile
+      unknown: Open workbench area
+    result:
+      address: Modelo %{modelo} · %{filing_year} · %{period}
+      label:
+        declaration: Declaration
+        filing: Filing
+        history: Filing history
+        ledger_entry: Ledger entry
+        ledger_evidence: Ledger evidence
+        modelo: Modelo
+        notification: Notification
+        reconciliation: Reconciliation
+        revision: Calculation revision
+      source:
+        declaration: Declaration records
+        filing: Filing records
+        history: Filing history
+        ledger_entry: Local ledger
+        ledger_evidence: Ledger evidence
+        modelo: Modelo catalogue
+        notification: AEAT notifications
+        reconciliation: Reconciliation findings
+        revision: Calculation history
+      status:
+        declaration_draft: Draft
+        declaration_filed: Filed
+        declaration_in_progress: In progress
+        declaration_needs_attention: Needs attention
+        declaration_ready: Ready to file
+        filing_accepted: Accepted
+        filing_rejected: Rejected
+        filing_submitted: Submitted
+        history_not_observed: Not observed
+        history_observed: Observed
+        ledger_entry_classified: Classified
+        ledger_entry_needs_review: Needs review
+        ledger_entry_ready: Ready
+        ledger_evidence_captured: Captured
+        ledger_evidence_missing: Missing
+        ledger_evidence_stale: Stale
+        modelo_available: Available
+        modelo_unavailable: Unavailable
+        notification_read: Read
+        notification_unread: Unread
+        reconciliation_open: Open
+        reconciliation_resolved: Resolved
+        revision_current: Current
+        revision_superseded: Superseded

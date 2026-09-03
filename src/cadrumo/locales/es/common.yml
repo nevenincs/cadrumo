@@ -1426,3 +1426,72 @@ tui:
   root:
     no_areas: Ninguna área está disponible todavía en esta sesión.
     title: 'Cadrumo: sesión de terminal'
+  search:
+    action:
+      available: Acción disponible del área de trabajo
+      classify_ledger: Clasificar libro mayor
+      edit_profile: Editar perfil
+      explain_overview: Explicar el resumen
+      link_ledger: Vincular registro del libro mayor
+      list_filing_records: Ver presentaciones
+      list_notifications: Ver notificaciones
+      open_declaration: Abrir declaración
+      open_ledger: Abrir libro mayor
+      review_ledger: Revisar libro mayor
+      review_ledger_evidence: Revisar evidencia del libro mayor
+      review_undeclared: Revisar actividad no declarada
+      validate_ledger: Validar libro mayor
+    destination:
+      aeat_sync: Abrir sincronización AEAT
+      declarations: Abrir declaraciones
+      home: Abrir inicio
+      ledger: Abrir libro mayor
+      profile: Abrir perfil
+      unknown: Abrir área de trabajo
+    result:
+      address: Modelo %{modelo} · %{filing_year} · %{period}
+      label:
+        declaration: Declaración
+        filing: Presentación
+        history: Historial de presentaciones
+        ledger_entry: Apunte del libro mayor
+        ledger_evidence: Evidencia del libro mayor
+        modelo: Modelo
+        notification: Notificación
+        reconciliation: Conciliación
+        revision: Revisión de cálculo
+      source:
+        declaration: Registros de declaraciones
+        filing: Registros de presentaciones
+        history: Historial de presentaciones
+        ledger_entry: Registros locales
+        ledger_evidence: Evidencia del libro mayor
+        modelo: Catálogo de modelos
+        notification: Notificaciones de la AEAT
+        reconciliation: Hallazgos de conciliación
+        revision: Historial de cálculos
+      status:
+        declaration_draft: Borrador
+        declaration_filed: Presentada
+        declaration_in_progress: En curso
+        declaration_needs_attention: Requiere atención
+        declaration_ready: Lista para presentar
+        filing_accepted: Aceptada
+        filing_rejected: Rechazada
+        filing_submitted: Enviada
+        history_not_observed: No observada
+        history_observed: Observada
+        ledger_entry_classified: Clasificado
+        ledger_entry_needs_review: Requiere revisión
+        ledger_entry_ready: Listo
+        ledger_evidence_captured: Capturada
+        ledger_evidence_missing: Ausente
+        ledger_evidence_stale: Desactualizada
+        modelo_available: Disponible
+        modelo_unavailable: No disponible
+        notification_read: Leída
+        notification_unread: No leída
+        reconciliation_open: Abierta
+        reconciliation_resolved: Resuelta
+        revision_current: Vigente
+        revision_superseded: Sustituida

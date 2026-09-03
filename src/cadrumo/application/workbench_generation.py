@@ -16,25 +16,66 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import date
 from enum import StrEnum
-from typing import Literal, Protocol, Self
+from typing import Literal, Protocol, Self, cast
 
 from pydantic import BaseModel, model_validator
 
 from ..core.identifier_grammar import NamespacedId
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import UtcInstant
+from ..domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
+from ..domain.modelos.protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepositoryProtocol,
+)
+from ..domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ..domain.transactions.models import TransactionCatalogue
+from ..domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..domain.user_profile.values import UserProfileRecord
 from .aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
-from .ledger.workspace import LedgerWorkspaceProjectionV1
-from .modelo.declarations_calendar import DeclarationsCalendarProjectionV1
-from .modelo.declarations_workspace import DeclarationsWorkspaceProjectionV1
+from .ledger.actions_manual import ledger_transaction_payload, summarize_manual_transactions
+from .ledger.models import LedgerReviewQuery
+from .ledger.review_projection import project_ledger_review_query
+from .ledger.workspace import LedgerWorkspaceProjectionV1, project_ledger_workspace
+from .modelo.declarations_calendar import (
+    DeclarationsCalendarProjectionV1,
+    DeclarationsCalendarSource,
+    DeclarationsCalendarSourceObservationV1,
+    project_declarations_calendar,
+)
+from .modelo.declarations_workspace import (
+    DeclarationsWorkspaceAvailability,
+    DeclarationsWorkspaceProjectionV1,
+    DeclarationsWorkspaceZone,
+    DeclarationsWorkspaceZoneObservationV1,
+    project_declarations_workspace,
+)
 from .modelo.workspace_models import ModeloWorkspaceProjectionV1
-from .overview.home import HomeProjectionInput, HomeProjectionV1, compose_home_projection
+from .overview.calendar import build_overview_calendar
+from .overview.calendar_models import OverviewCalendarRange
+from .overview.evidence import (
+    AeatCalendarEvidenceSources,
+    CalendarEvidenceReadOutcome,
+    LocalCalendarEvidenceSources,
+    build_calendar_evidence_projection,
+)
+from .overview.home import (
+    HomeAccountSession,
+    HomeAvailability,
+    HomeProjectionInput,
+    HomeProjectionV1,
+    HomeSessionPosture,
+    HomeZoneState,
+    compose_home_projection,
+)
 from .search.installed_workbench import (
     InstalledWorkbenchSearchSnapshotV1,
     assemble_installed_workbench_search_snapshot,
 )
 from .search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
+from .user_profile.projections import projection_for_taxpayer, record_to_path_values
 
 WORKBENCH_GENERATION_CONTRACT_VERSION: Literal[1] = 1
 
@@ -228,6 +269,215 @@ class WorkbenchGenerationReadDoorV1(Protocol):
         ...
 
 
+class ProfileRecordReadRepositoryV1(Protocol):
+    """Narrow read-only door for the current encrypted profile record."""
+
+    def load(self, profile_id: str) -> UserProfileRecord:
+        """Load the record served by the already-open custody session."""
+        ...
+
+
+@dataclass(frozen=True, slots=True)
+class SecureProfileWorkbenchGenerationReadDoorV1:
+    """Read one generation from explicit secure profile repositories.
+
+    Every repository is session-bound by the child composition root. The door
+    loads each authority once, projects only safe application DTOs, and marks
+    authorities lacking an installed-session reader as unavailable instead of
+    manufacturing empty fixtures.
+    """
+
+    profile_id: str
+    profile_label: str
+    profile_expires_at: UtcInstant
+    profile_repository: ProfileRecordReadRepositoryV1
+    transaction_repository: TransactionCatalogueRepositoryProtocol
+    invoice_repository: InvoiceCatalogueRepositoryProtocol
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol
+    clock: Callable[[], UtcInstant]
+    today: Callable[[], date]
+
+    def read_workbench_generation_inputs(self) -> WorkbenchGenerationInputsV1:
+        """Capture secure local facts once and build installed projections."""
+        observed_at = self.clock()
+        as_of = self.today()
+        record = self.profile_repository.load(self.profile_id)
+        transactions = self.transaction_repository.load()
+        invoices = self.invoice_repository.load()
+        work_units = self.work_unit_repository.load()
+        revisions = self.calculation_repository.load()
+        filings = self.filing_repository.load()
+
+        summary = summarize_manual_transactions(
+            bucket_id=self.profile_id,
+            transaction_repository=cast(
+                TransactionCatalogueRepositoryProtocol,
+                _LoadedTransactionCatalogue(self.profile_id, transactions),
+            ),
+        )
+        review = project_ledger_review_query(
+            LedgerReviewQuery(bucket_id=self.profile_id),
+            catalogue=transactions,
+            bucket_event_repository=None,
+            transaction_payload_builder=ledger_transaction_payload,
+        )
+        ledger = project_ledger_workspace(
+            summary=summary,
+            preflight=None,
+            review=review,
+            transactions=transactions,
+            invoices=invoices,
+            revisions=revisions.revisions,
+            work_units=work_units,
+        )
+        declarations = project_declarations_workspace(
+            bucket_id=self.profile_id,
+            work_units=work_units,
+            calculation_revisions=revisions,
+            filing_records=filings,
+            lifecycle_facts=(),
+            zone_observations=(
+                _declarations_observation(DeclarationsWorkspaceZone.DECLARATIONS, observed_at),
+                _declarations_observation(DeclarationsWorkspaceZone.CALCULATION_REVISIONS, observed_at),
+                DeclarationsWorkspaceZoneObservationV1(
+                    zone=DeclarationsWorkspaceZone.FILING_HISTORY,
+                    availability=DeclarationsWorkspaceAvailability.UNAVAILABLE,
+                    reason_code="workbench.declarations.lifecycle_reader_unavailable",
+                ),
+            ),
+        )
+        taxpayer = projection_for_taxpayer(record, tax_id_default="00000000T")
+        raw_values = record_to_path_values(record)
+        query_range = OverviewCalendarRange(
+            from_date=date(as_of.year, 1, 1),
+            to_date=date(as_of.year, 12, 31),
+        )
+        calendar = build_overview_calendar(
+            taxpayer,
+            query_range,
+            today=as_of,
+            raw_values=raw_values,
+            filing_evidence=(),
+            work_units=tuple(work_units.values()),
+        )
+        evidence = build_calendar_evidence_projection(
+            local=CalendarEvidenceReadOutcome(
+                state=HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at),
+                value=LocalCalendarEvidenceSources(filing_records=tuple(filings.records.values())),
+            ),
+            aeat=CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources](
+                state=HomeZoneState(
+                    availability=HomeAvailability.NEVER_CAPTURED,
+                    reason_code="workbench.calendar.aeat_reader_unavailable",
+                ),
+            ),
+            expected_tax_id=taxpayer.tax_id,
+        )
+        declarations_calendar = project_declarations_calendar(
+            calendar=calendar,
+            evidence=evidence,
+            as_of=as_of,
+            schedule_observation=DeclarationsCalendarSourceObservationV1(
+                source=DeclarationsCalendarSource.SCHEDULE,
+                availability=HomeAvailability.AVAILABLE,
+                observed_at=observed_at,
+            ),
+        )
+        return WorkbenchGenerationInputsV1(
+            assembled_at=observed_at,
+            home=WorkbenchGenerationSourceResultV1[HomeProjectionInput].available(
+                _secure_profile_home_input(
+                    observed_at=observed_at,
+                    profile_label=self.profile_label,
+                    expires_at=self.profile_expires_at,
+                ),
+                observed_at=observed_at,
+            ),
+            ledger=WorkbenchGenerationSourceResultV1[LedgerWorkspaceProjectionV1].available(
+                ledger, observed_at=observed_at
+            ),
+            declarations=WorkbenchGenerationSourceResultV1[DeclarationsWorkspaceProjectionV1].available(
+                declarations, observed_at=observed_at
+            ),
+            declarations_calendar=WorkbenchGenerationSourceResultV1[DeclarationsCalendarProjectionV1].available(
+                declarations_calendar,
+                observed_at=observed_at,
+            ),
+            aeat_sync=WorkbenchGenerationSourceResultV1[AeatSyncWorkspaceProjectionV1].unavailable(
+                refusal="workbench.aeat_sync.reader_unavailable"
+            ),
+            modelo=WorkbenchGenerationSourceResultV1[tuple[ModeloWorkspaceProjectionV1, ...]].unavailable(
+                refusal="workbench.modelo.bulk_reader_unavailable"
+            ),
+            ledger_admission=_generation_admission("workbench.ledger", WorkbenchDestinationAdmissionState.AVAILABLE),
+            declarations_admission=_generation_admission(
+                "workbench.declarations", WorkbenchDestinationAdmissionState.AVAILABLE
+            ),
+            aeat_sync_admission=_generation_admission(
+                "workbench.aeat_sync",
+                WorkbenchDestinationAdmissionState.UNAVAILABLE,
+                reason_code="workbench.aeat_sync.reader_unavailable",
+            ),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class _LoadedTransactionCatalogue:
+    """Snapshot reader preventing a second secure read during projection."""
+
+    bucket_id: str
+    catalogue: TransactionCatalogue
+
+    def load(self) -> TransactionCatalogue:
+        """Return the already-loaded immutable catalogue."""
+        return self.catalogue
+
+
+def _declarations_observation(
+    zone: DeclarationsWorkspaceZone,
+    observed_at: UtcInstant,
+) -> DeclarationsWorkspaceZoneObservationV1:
+    return DeclarationsWorkspaceZoneObservationV1(
+        zone=zone,
+        availability=DeclarationsWorkspaceAvailability.AVAILABLE,
+        observed_at=observed_at,
+    )
+
+
+def _secure_profile_home_input(
+    *, observed_at: UtcInstant, profile_label: str, expires_at: UtcInstant
+) -> HomeProjectionInput:
+    unavailable = HomeZoneState(
+        availability=HomeAvailability.UNAVAILABLE,
+        reason_code="workbench.home.reader_unavailable",
+    )
+    return HomeProjectionInput(
+        generated_at=observed_at,
+        account=HomeAccountSession(
+            posture=HomeSessionPosture.ACTIVE,
+            profile_label=profile_label,
+            expires_at=expires_at,
+        ),
+        actions_state=unavailable,
+        declarations_state=unavailable,
+        ledger_state=unavailable,
+        agenda_state=unavailable,
+        agenda_evidence_state=unavailable,
+        messages_state=unavailable,
+    )
+
+
+def _generation_admission(
+    destination: str,
+    state: WorkbenchDestinationAdmissionState,
+    *,
+    reason_code: str | None = None,
+) -> WorkbenchDestinationAdmission:
+    return WorkbenchDestinationAdmission(destination=destination, state=state, reason_code=reason_code)
+
+
 @dataclass(frozen=True, slots=True)
 class InstalledWorkbenchGenerationProviderV1:
     """Child-owned provider for one immutable installed-session generation.
@@ -413,6 +663,8 @@ def _missing_search(
 __all__ = [
     "CallableWorkbenchGenerationReadDoorV1",
     "InstalledWorkbenchGenerationProviderV1",
+    "ProfileRecordReadRepositoryV1",
+    "SecureProfileWorkbenchGenerationReadDoorV1",
     "WorkbenchGenerationAvailability",
     "WorkbenchGenerationInputsV1",
     "WorkbenchGenerationProjectionResultV1",

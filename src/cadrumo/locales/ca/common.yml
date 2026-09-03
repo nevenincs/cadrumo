@@ -1412,3 +1412,72 @@ tui:
   root:
     no_areas: Cap àrea no està disponible encara en aquesta sessió.
     title: 'Cadrumo: sessió de terminal'
+  search:
+    action:
+      available: Executa una acció disponible de l'espai de treball
+      classify_ledger: Classifica el llibre major
+      edit_profile: Edita el perfil
+      explain_overview: Explica el resum
+      link_ledger: Enllaça el registre del llibre major
+      list_filing_records: Mostra les presentacions
+      list_notifications: Mostra les notificacions
+      open_declaration: Obre la declaració
+      open_ledger: Obre el llibre major
+      review_ledger: Revisa el llibre major
+      review_ledger_evidence: Revisa l'evidència del llibre major
+      review_undeclared: Revisa l'activitat no declarada
+      validate_ledger: Valida el llibre major
+    destination:
+      aeat_sync: Obre la sincronització AEAT
+      declarations: Obre les declaracions
+      home: Obre inici
+      ledger: Obre el llibre major
+      profile: Obre el perfil
+      unknown: Obre l'espai de treball
+    result:
+      address: Model %{modelo} · %{filing_year} · %{period}
+      label:
+        declaration: Declaració
+        filing: Presentació
+        history: Historial de presentacions
+        ledger_entry: Apunt del llibre major
+        ledger_evidence: Evidència del llibre major
+        modelo: Model
+        notification: Notificació
+        reconciliation: Conciliació
+        revision: Revisió de càlcul
+      source:
+        declaration: Registres de declaracions
+        filing: Registres de presentacions
+        history: Historial de presentacions
+        ledger_entry: Registres locals
+        ledger_evidence: Evidència del llibre major
+        modelo: Catàleg de models
+        notification: Notificacions de l'AEAT
+        reconciliation: Incidències de conciliació
+        revision: Historial de càlculs
+      status:
+        declaration_draft: Esborrany
+        declaration_filed: Presentada
+        declaration_in_progress: En curs
+        declaration_needs_attention: Requereix atenció
+        declaration_ready: A punt per presentar
+        filing_accepted: Acceptada
+        filing_rejected: Rebutjada
+        filing_submitted: Enviada
+        history_not_observed: No observada
+        history_observed: Observada
+        ledger_entry_classified: Classificat
+        ledger_entry_needs_review: Requereix revisió
+        ledger_entry_ready: Preparat
+        ledger_evidence_captured: Capturada
+        ledger_evidence_missing: Absent
+        ledger_evidence_stale: Desactualitzada
+        modelo_available: Disponible
+        modelo_unavailable: No disponible
+        notification_read: Llegida
+        notification_unread: No llegida
+        reconciliation_open: Oberta
+        reconciliation_resolved: Resolta
+        revision_current: Vigent
+        revision_superseded: Substituïda
