@@ -1,0 +1,40 @@
+# Duplication dispositions
+#
+# jscpd matches token sequences. Its clone count measures copy/paste residue,
+# not semantic duplication, and remains advisory evidence rather than a licence
+# to merge authorities that only look alike.
+#
+# This registry was recovered from the last trustworthy revision before its
+# deletion (23eadb38842c9b95a809b5df085cf47ef30fbc02^). That revision carried
+# three intentional PEP 562 lazy-facade groups. A live scan on 2026-09-03 found
+# none of those exact locator pairs, so no historical [[group]] entry is
+# carried forward. Resurrecting them would manufacture dispositions for clones
+# the scanner no longer observes.
+#
+# W01.P01.S04 owns the independent adjudication of the live groups below. Until
+# that step closes, `reconciled_groups` truthfully remains zero; it is not an
+# allowlist, baseline, exclusion, or claim that the observed groups are green.
+#
+# `where` values, when present, are paths relative to `src/cadrumo/` with the
+# line spans reported by the same live scan recorded in [meta].
+
+[meta]
+generated_from = "just audit-duplication (jscpd@4.2.0)"
+observed_groups = 52
+reconciled_groups = 0
+duplicated_pct = "0.21"
+files_analyzed = 1971
+source_root = "src/cadrumo"
+count_is_advisory = true
+
+[historical_recovery]
+source_revision = "23eadb38842c9b95a809b5df085cf47ef30fbc02^"
+recovered_groups = 3
+retained_groups = 0
+reason = "The three recovered PEP 562 lazy-facade locator pairs are absent from the live clone inventory."
+
+[summary]
+cluster_owned = 0
+intentional = 0
+advisory_residue = 0
+actionable = 0
