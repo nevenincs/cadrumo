@@ -569,10 +569,17 @@ def summarize_manual_transactions(
     bucket_id: str,
     period: Period | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    catalogue: TransactionCatalogue | None = None,
 ) -> LedgerStatusReport:
-    """Return a read-only :class:`~cadrumo.application.ledger.models.LedgerStatusReport` for one bucket."""
+    """Return a read-only :class:`~cadrumo.application.ledger.models.LedgerStatusReport` for one bucket.
+
+    ``catalogue`` lets a caller that has already loaded this bucket's
+    transactions summarise that exact snapshot. Reloading would cost a second
+    decrypted read and, if a write interleaved, would describe a different
+    instant from the rows the caller is projecting beside it.
+    """
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    transactions = tuple(repository.load().values())
+    transactions = tuple((catalogue if catalogue is not None else repository.load()).values())
     status_counts: dict[LedgerReviewStatus, int] = {
         LedgerReviewStatus.PENDING: 0,
         LedgerReviewStatus.REVIEWED: 0,

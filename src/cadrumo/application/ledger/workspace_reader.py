@@ -52,6 +52,7 @@ def read_ledger_workspace_projection(
         summary=summarize_manual_transactions(
             bucket_id=bucket_id,
             transaction_repository=transaction_repository,
+            catalogue=transactions,
         ),
         preflight=None,
         review=project_ledger_review_query(

@@ -388,7 +388,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         ledger = self._read_ledger(revisions.revisions, work_units)
         modelo = self._read_modelo(work_units)
         aeat_sync = self._read_aeat_sync(
-            taxpayer.tax_id,
+            _declared_tax_id(raw_values),
             observed_at=observed_at,
             filing_count=len(filings.records),
         )
@@ -490,26 +490,39 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         )
 
     def _read_modelo(self, work_units: WorkUnitCatalogue) -> tuple[ModeloWorkspaceProjectionV1, ...] | None:
-        """Project every current work unit, or refuse when no reader was bound.
+        """Project every current work unit, or refuse the whole Modelo source.
 
         A profile holding no work yields an empty tuple, which is a proven
-        empty portfolio rather than an unread one; only an absent reader is
-        the unavailable case.
+        empty portfolio rather than an unread one.
+
+        A unit the bundled registry cannot inspect refuses the SOURCE, not the
+        session: a partial tuple would silently omit a declaration the profile
+        holds, and letting the failure escape would take Home, Ledger,
+        Declarations and AEAT Sync down with it for one unsupported modelo.
         """
         if self.modelo_projection_reader is None:
             return None
         reader = self.modelo_projection_reader
-        return tuple(reader(unit) for unit in work_units.values())
+        try:
+            return tuple(reader(unit) for unit in work_units.values())
+        except (ValueError, LookupError):
+            return None
 
     def _read_aeat_sync(
         self,
-        subject_key: str,
+        subject_key: str | None,
         *,
         observed_at: UtcInstant,
         filing_count: int,
     ) -> AeatSyncWorkspaceProjectionV1 | None:
-        """Project the pre-pull AEAT Sync workspace against composed contracts."""
-        if self.operation_contracts is None:
+        """Project the pre-pull AEAT Sync workspace against composed contracts.
+
+        A profile carrying no NIF has no subject to scope AEAT evidence to.
+        Scoping it to the schema's placeholder would produce a workspace whose
+        rows a later real pull would refuse as a mixed subject, so the source
+        stays unavailable until the profile declares its identity.
+        """
+        if self.operation_contracts is None or subject_key is None:
             return None
         from .aeat_sync.workspace_reader import read_local_aeat_sync_workspace_projection
 
@@ -520,6 +533,14 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             filing_count=filing_count,
             operation_contracts=self.operation_contracts,
         )
+
+
+def _declared_tax_id(raw_values: Mapping[str, object]) -> str | None:
+    """Return the profile's own NIF, never the schema's placeholder default."""
+    declared = raw_values.get("identity.tax_id")
+    if not isinstance(declared, str) or not declared.strip():
+        return None
+    return declared.strip()
 
 
 def _declarations_observation(
