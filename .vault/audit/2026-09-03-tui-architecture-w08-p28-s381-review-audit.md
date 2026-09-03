@@ -5,30 +5,10 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:29d15f0d9af604329152d70d0895408e8e20b4db688c4cf251de0eeb6cb370b7'
+body_hash: 'sha256:bc712d370813fd6ef370e019bbe317232125c3d783a7d4069b035ecd21c75cac'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `tui-architecture` audit: `W08.P28.S381 Review`
 
 ## Scope
@@ -45,9 +25,19 @@ Reviewed the S381 Home implementation in commits `9f10eec356`, `3e8bc1b2da`, and
 
 Focused evidence passed: `test_home.py` (7 tests), Ruff, ty, and basedpyright. The candidate suite is separately in progress elsewhere in the shared worktree, so this audit does not claim a second concurrent result for it.
 
+### agenda-identity-collision-remediation | low | Remediation is implemented; independent review is pending
+
+`HomeProjectionV1` now rejects duplicate agenda addresses using exactly `(modelo, filing_year, period.registry_token)` before the TUI renders a row. The focused contract rejects a repeated address even when its due date differs, while accepting the near neighbours that differ by Modelo, filing year, or period token. The existing TUI identity stays unchanged and no agenda ranking behavior changed.
+
+Focused verification completed: the application Home projection tests and TUI Home tests (23 tests), plus Ruff, ty, and basedpyright on the changed application and Home surfaces. This entry records implementation evidence only; the S381 audit remained pending independent review.
+
+### agenda-identity-collision-independent-review | low | Application-boundary remediation resolves the identity collision
+
+Commit `823479cd0d` rejects duplicate `(modelo, filing_year, period.registry_token)` tuples in `HomeProjectionV1`, exactly matching `home_agenda_identity` before any row is created. The new negative contract proves that a duplicate with a different due date fails, while parameterized near-neighbour cases prove that different Modelo, filing year, or period remain valid. The original selection and focus-restoration identity is therefore again injective for every valid projection.
+
+Independent focused verification passed: `uv run pytest -q -n 0 -m "" src/cadrumo/application/overview/tests/test_home_projection.py src/cadrumo/entrypoints/tui/tests/test_home.py` (23 passed), followed by Ruff, ty, and basedpyright on the affected application and TUI surfaces.
 ## Recommendations
 
-1. Reject duplicate agenda natural addresses at the `HomeProjectionV1` application boundary and add a negative projection test. This restores unique agenda selection and semantic focus restoration.
+1. No remaining S381 corrective action. The independent remediation review is complete.
 
 The planned W08.P29 verification remains the owner of the broader locale, terminal-size, and installed-workbench proof.
-

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:04690945b4b7b83edbde021543aa803ab692bf63930f58094cc6c0b791df99cb'
+body_hash: 'sha256:d23391516df68956930ff03ddc07d7edd1ed22286382be3ec8e46185a00e8132'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -504,6 +504,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S266` - Record that the contract conflict lost its optimiser-erased guard while the two contracts still differ; `dev/quality/name_collision_dispositions.toml`.
 - [x] `W06.P13.S267` - Measure the CI dev tooling selection to a reconciling total and record what the pipe cost the breakdown; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S268` - Correct the lane criterion to name which lane each figure describes; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S269` - Replace the stale failure accounting with a dated one and record that one failure did belong to this plan; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -695,10 +696,18 @@ first figure was down from twenty-six when the inventory was first taken. The se
 twice: the conformance suite went unmeasured entirely until the scope of the measurement was
 questioned, and was then reported as two failures because a single file in it had been run instead of
 the directory. Measuring the directory gives three. Both errors were the same error at different
-sizes, which is why the criterion names paths and not counts. Every one is accounted for - eight generated trees that do not
-reproduce or were never published, four over files another contributor is holding uncommitted, two
-classification modules, and one boundary check naming modules an in-flight rename moved. None belongs
-to this plan, and that was established by name rather than assumed. The three conformance failures are a
+sizes, which is why the criterion names paths and not counts. Every one is accounted for, and the accounting is now
+dated rather than asserted: each failure's first appearance in this plan's retained lane logs
+separates what predates the work from what arrived during it. Eight predate every measurement here,
+including the generated trees that do not reproduce and the boundary check naming modules an
+in-flight rename moved. Five arrived mid-plan, four of them in modules another contributor added or
+changed.
+
+One belonged to this plan and was filed as inherited for six lane runs. A screen written here read
+design prose without enrolling in the channel that governs reading it, and the failure naming four
+undeclared parsers was counted as somebody else's because the label was applied to the failing test
+rather than to its contents. It is enrolled now. The earlier claim that none belonged to this plan
+was established by name, and the names inside the failure were not read. The three conformance failures are a
 closure row driven by a proof authority whose only proof-producing path refuses, a guard whose
 expected refusal message no longer matches what the code raises, and one in the closure suite beside
 them that has not yet been read.

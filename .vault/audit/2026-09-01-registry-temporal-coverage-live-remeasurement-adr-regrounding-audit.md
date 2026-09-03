@@ -6469,3 +6469,28 @@ A criterion is what a reader checks the work against, so a criterion quoting the
 worse than one quoting no lane at all. This is the third acceptance criterion this campaign has
 had to correct after measuring what it asserted: the screen count, the monetary defect count,
 and now this.
+
+### criterion-claimed-no-failure-belonged-to-this-plan | high | The accounting summed to a fifteen-failure state that no longer exists and asserted an ownership that was wrong
+
+Sweeping the Verification section for figures found one paragraph accounting for every lane
+failure by category: eight generated trees, four over uncommitted files, two classification
+modules, one boundary check. That sums to fifteen, which is the state the adjacent sentence
+described before it was corrected, and the lane has since been at forty-two over the registry
+directories and 239 over the selection CI runs.
+
+The stale sum is the smaller problem. The paragraph ended "None belongs to this plan, and that
+was established by name rather than assumed" - and one did. The undeclared-prose-parser failure
+names four modules and one of them is a screen written here, added on 2 September and filed as
+inherited through six lane runs. The claim was established by naming the failing tests and not
+by reading the module lists inside them.
+
+The accounting is replaced with a dated one, which is the only version that stays true as the
+tree moves: eight failures predate every measurement here, five arrived mid-plan, and one
+belonged to this plan and is now enrolled. The correction records the misattribution rather than
+quietly fixing the total, because a criterion that once asserted clean hands is exactly the
+sentence a later reader would cite.
+
+Three of this plan's criteria have now been corrected against measurement and a fourth against
+its own arithmetic. The common cause is not carelessness in any one of them: each was written
+from a figure that was true when taken, in a document that offers no way to notice when its
+figures stop being true.
