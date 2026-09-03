@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:28df3c02c0df4367d55245d7d60e21decf4ed1601aa0f34e65fe1ffd535168c2'
+body_hash: 'sha256:9da4f52156f716e2c94718292415566a905530eabafa1fb31ed36d0f7c0ad2e8'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -9015,3 +9015,60 @@ one in the generated-tree CLI. All four sit on surfaces belonging to the modelo
 200 and 303 work, which has been committing throughout this session. Naming them
 without reading them is the honest position - "attributed" means somebody knows
 what a failure is, and for these four nobody here does yet.
+
+### every-registry-failure-is-now-attributed-and-three-of-the-last-four-are-this-campaign-s-own-anti-patterns | high | Two frozen counts, one refusal pinned by its prose, one manifest-stale tree
+
+The four failures named but unread last iteration are read. All four are in
+other campaigns' modules and three are defects this campaign has spent the
+session documenting elsewhere.
+
+Two are frozen corpus counts drifting. The modelo 200 semantic casilla
+candidates assert `map_owner_mismatches` at 185 where the corpus now yields 181,
+`orphaned_declarations` at 2 where it yields 154, and a zero-padding disposition
+count that has moved with them. These are the ratchet shape exactly: a number
+typed into a test, compared against a live corpus, failing when the corpus moved
+and telling nobody whether the movement was good.
+
+One is a refusal pinned by its wording. The generated-tree CLI test asserts the
+string "does not declare record-design source" and the CLI now says "no source
+'...' exists for bootstrap target selection". The refusal still fires - the
+command still exits 1 and still refuses the undeclared source - and only the
+prose changed. This plan's own verification section records fixing that exact
+defect in the emitted-byte acceptance suite, which now asserts the structured
+refusal and names which channel is empty rather than the sentence a rephrasing
+once broke.
+
+The fourth is the manifest staleness already on record, reaching a second test:
+the modelo 303 envelope proof reports `_generation.provenance.json` as the one
+record whose meaning differs from the shipped tree. Same cause as the twenty-six,
+different assertion.
+
+So the criterion is satisfied for this directory: thirty-five failures, all
+attributed. The distribution is worth noting as the session closes on this
+thread - twenty-seven are one cause, and of the remaining eight, five are
+patterns this campaign named while working on something else.
+
+### the-lane-criterion-now-carries-causes-instead-of-a-range | medium | "Between fifteen and forty-two, dated and attributed" replaced by what the thirty-five actually are
+
+The criterion holding the registry lane said the failure count had moved between
+fifteen and forty-two and that every failure was dated and attributed. Dating a
+failure establishes when it arrived, which was the right instrument when the
+question was whether this plan had caused one. It is a weaker claim than
+attribution and the two were being used interchangeably.
+
+The criterion now says what the thirty-five are. Twenty-seven share one cause -
+manifests a generator refactor left stale - and the remaining eight are four
+undeclared prose parsers, one inspection boundary crossed, two frozen corpus
+counts drifting, and one refusal pinned to wording the command no longer uses.
+
+That reads longer and is shorter to act on. A range plus a promise of
+attribution tells a reader the work was done somewhere; the causes tell them
+there is one repair worth twenty-seven failures and seven smaller ones, three of
+which are patterns with entries already in this record. A criterion that lists
+causes also fails honestly: if a new failure appears it will not fit the list,
+where a range absorbs it silently as long as the total stays under forty-two.
+
+The distinction between dated and attributed is worth keeping from this. Dating
+answers whether a failure is yours. Attribution answers whether anyone can act
+on it, and a lane where every failure is dated but none is attributed is a lane
+nobody is fixing.

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:4a0a8cc909412958716c00ec35968dc726247c0f59984d21e5291ea894a730ce'
+body_hash: 'sha256:f823b6a25f0f6518a660185c1a7257b1599ab6609fbd40c682e327c0bc440298'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -648,6 +648,8 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S348` - Re-measure the multi-axis premise, which moved on both its figures, and surface the below-filing population it excluded; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S349` - Verify the registry suite end to end after the session's changes, comparing failure sets by identity; `dev/registry`.
 - [x] `W06.P13.S350` - Attribute the registry failures the manifest and publication entries do not cover; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S351` - Characterise the last four registry failures so every one in the suite is attributed; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S352` - Record the completed registry attribution in the lane criterion, with its causes rather than its count; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -881,9 +883,14 @@ also cleared the refusal, so the one coordinate this criterion is about was repo
 It is now carried on the probe and counted in its summary.
 
 The development registry lane passes, and until it does every failure in it is named and attributed.
-The lane is red, and which lane is meant now has to be said. Over the registry directories this
-plan has measured throughout, the count has moved between fifteen and forty-two and every failure
-in it is dated and attributed. Over the eighteen-directory selection CI actually invokes, measured
+The lane is red, and which lane is meant now has to be said. Over the registry tests directory this
+plan has measured throughout, the count has moved between fifteen and forty-two, and as of the last
+full run every one of the thirty-five is attributed rather than merely dated: twenty-seven share a
+single cause, the generation manifests that a generator refactor left stale, and the remaining eight
+are four undeclared prose parsers, one inspection boundary crossed, two frozen corpus counts drifting
+and one refusal pinned to wording the command no longer uses. Five of those eight are defects this
+plan named while working on something else, which is the argument for finishing an attribution rather
+than counting a failure list: the same shapes recur across surfaces nobody has connected. Over the eighteen-directory selection CI actually invokes, measured
 once to a reconciling total, it was 167 failures and 72 errors of 3,881 tests. Re-measured on
 2026-09-03 it is 177 failures and 109 errors of 3,941 collected, with 3,653 passing and 2 skipped -
 the four numbers reconcile to the collected total, which is what makes the reading trustworthy rather
