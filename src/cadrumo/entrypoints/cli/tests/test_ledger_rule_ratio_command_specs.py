@@ -14,7 +14,7 @@ from .._app_ledger_rule_ratio_command_spec_support import (
     _RULE_ACTOR_OPTION,
 )
 from .._root_command_specs import ROOT_COMMAND_SPECS
-from ..command_spec import ArgumentSpec, CommandSpec, CommandSpecGraph, OptionSpec
+from ..command_spec import ArgumentSpec, CommandSpec, CommandSpecGraph, InvocationSpec, OptionSpec
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -101,6 +101,19 @@ def _policy_contract(spec: CommandSpec) -> tuple[object, ...]:
     )
 
 
+def _invocation_contract(invocation: InvocationSpec) -> tuple[object, ...]:
+    return (
+        invocation.invoke_without_command,
+        invocation.no_args_is_help,
+        invocation.chain,
+        invocation.add_help_option,
+        invocation.add_completion,
+        invocation.hidden,
+        invocation.context_parameter,
+        invocation.terminal_behavior,
+    )
+
+
 def _leaf_contract(spec: CommandSpec) -> tuple[object, ...]:
     assert spec.handler is not None and spec.handler.target is not None
     assert spec.result_schema.target is not None
@@ -108,6 +121,7 @@ def _leaf_contract(spec: CommandSpec) -> tuple[object, ...]:
         spec.parent_key,
         spec.token,
         spec.kind.value,
+        _invocation_contract(spec.invocation),
         spec.help_key.value,
         spec.short_help_key,
         tuple(_parameter_contract(parameter) for parameter in spec.parameters),
@@ -283,12 +297,15 @@ _POLICY_6_CONTRACT = (
     False,
 )
 
+_LEAF_INVOCATION_CONTRACT = (False, False, False, True, False, False, "ctx", None)
+
 
 _EXPECTED_LEAF_CONTRACTS = {
     "app_ledger_rule_add": (
         "app_ledger_rule",
         "add",
         "leaf",
+        _LEAF_INVOCATION_CONTRACT,
         "cli.app.ledger.rule.add_help",
         None,
         (
@@ -336,6 +353,7 @@ _EXPECTED_LEAF_CONTRACTS = {
         "app_ledger_rule",
         "apply",
         "leaf",
+        _LEAF_INVOCATION_CONTRACT,
         "cli.app.ledger.rule.apply_help",
         None,
         (
@@ -371,6 +389,7 @@ _EXPECTED_LEAF_CONTRACTS = {
         "app_ledger_rule",
         "list",
         "leaf",
+        _LEAF_INVOCATION_CONTRACT,
         "cli.app.ledger.rule.list_help",
         None,
         (),
@@ -384,6 +403,7 @@ _EXPECTED_LEAF_CONTRACTS = {
         "app_ledger_ratios",
         "eligible",
         "leaf",
+        _LEAF_INVOCATION_CONTRACT,
         "cli.app.ledger.ratios.eligible_help",
         None,
         (_OPTIONAL_YEAR, _OPTIONAL_OUTPUT_LANGUAGE),
@@ -397,6 +417,7 @@ _EXPECTED_LEAF_CONTRACTS = {
         "app_ledger_ratios",
         "list",
         "leaf",
+        _LEAF_INVOCATION_CONTRACT,
         "cli.app.ledger.ratios.list_help",
         None,
         (_OPTIONAL_YEAR, _OPTIONAL_OUTPUT_LANGUAGE),
@@ -410,6 +431,7 @@ _EXPECTED_LEAF_CONTRACTS = {
         "app_ledger_ratios",
         "set",
         "leaf",
+        _LEAF_INVOCATION_CONTRACT,
         "cli.app.ledger.ratios.set_help",
         None,
         (
@@ -432,6 +454,7 @@ _EXPECTED_LEAF_CONTRACTS = {
         "app_ledger_ratios",
         "unset",
         "leaf",
+        _LEAF_INVOCATION_CONTRACT,
         "cli.app.ledger.ratios.unset_help",
         None,
         (
@@ -452,6 +475,7 @@ _EXPECTED_LEAF_CONTRACTS = {
         "app_ledger_ratios",
         "validate",
         "leaf",
+        _LEAF_INVOCATION_CONTRACT,
         "cli.app.ledger.ratios.validate_help",
         None,
         (_OPTIONAL_OUTPUT_LANGUAGE,),
