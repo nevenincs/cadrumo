@@ -151,13 +151,24 @@ def compose_authenticated_root_inputs_provider(
         declarations_revisions_action=action(_DECLARATIONS_REVISIONS_ACTION),
         declarations_filing_action=action(_DECLARATIONS_FILING_ACTION),
     )
-    return compose_installed_workbench_generation_provider(
-        compose_secure_profile_workbench_generation_provider(
-            profile_id=profile_id,
-            profile_label=profile_label,
-        ),
-        dependencies,
-    )
+    def provide(operation_runtime: TuiOperationCompositionV1) -> InstalledWorkbenchRootInputsV1:
+        """Bind the generation to the exact contracts this session composed.
+
+        The AEAT Sync workspace offers only registered operations, so its
+        projection cannot be built before the operation platform exists. The
+        generation provider is therefore composed here, per session, rather
+        than ahead of the runtime it has to agree with.
+        """
+        return compose_installed_workbench_generation_provider(
+            compose_secure_profile_workbench_generation_provider(
+                profile_id=profile_id,
+                profile_label=profile_label,
+                operation_contracts=operation_runtime.public_contracts,
+            ),
+            dependencies,
+        )(operation_runtime)
+
+    return provide
 
 
 def observe_installed_bootstrap(*, allow_registration: bool = True) -> InstalledBootstrapObservationV1:

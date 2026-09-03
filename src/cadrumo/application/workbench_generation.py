@@ -14,7 +14,7 @@ assembly boundary accidentally.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
@@ -26,12 +26,17 @@ from pydantic import BaseModel, model_validator
 from ..core.identifier_grammar import NamespacedId
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import UtcInstant
+from ..domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ..domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
+from ..domain.modelos.calculation import CalculationRevision
 from ..domain.modelos.filing_record import ModeloRecord
 from ..domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
 )
+from ..domain.modelos.work_unit import WorkUnitCatalogue
 from ..domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ..domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..domain.user_profile.values import UserProfileRecord
 from .aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
 from .ledger.workspace import LedgerWorkspaceProjectionV1
@@ -49,6 +54,7 @@ from .modelo.declarations_workspace import (
     project_declarations_workspace,
 )
 from .modelo.workspace_models import ModeloWorkspaceProjectionV1
+from .operations.registry import OperationPublicContractSetV1
 from .overview.calendar import build_overview_calendar
 from .overview.calendar_models import OverviewCalendar, OverviewCalendarRange
 from .overview.evidence import (
@@ -295,6 +301,17 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     filing_repository: ModeloRecordCatalogueRepositoryProtocol
     clock: Callable[[], UtcInstant]
     account_session_reader: Callable[[], HomeAccountSession]
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None
+    operation_contracts: OperationPublicContractSetV1 | None = None
+    """An absent reader below is a composition fact, not a data fact.
+
+    A host that did not bind a ledger store or an operation contract set
+    cannot observe those authorities, and the generation says so with an
+    explicit refusal rather than publishing an empty workspace that would be
+    indistinguishable from a profile holding nothing.
+    """
 
     def read_workbench_generation_inputs(self) -> WorkbenchGenerationInputsV1:
         """Capture secure local facts once and build installed projections."""
@@ -367,6 +384,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             as_of=as_of,
             schedule_observation=_schedule_observation(calendar, observed_at),
         )
+        ledger = self._read_ledger(revisions, work_units)
+        aeat_sync = self._read_aeat_sync(taxpayer.tax_id)
         account_session = self.account_session_reader()
         final_record = self.profile_repository.load(self.profile_id)
         _, final_work_units_revision = self.work_unit_repository.load_revisioned()
@@ -388,8 +407,14 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 ),
                 observed_at=observed_at,
             ),
-            ledger=WorkbenchGenerationSourceResultV1[LedgerWorkspaceProjectionV1].unavailable(
-                refusal="workbench.ledger.snapshot_projector_unavailable"
+            ledger=(
+                WorkbenchGenerationSourceResultV1[LedgerWorkspaceProjectionV1].available(
+                    ledger, observed_at=observed_at
+                )
+                if ledger is not None
+                else WorkbenchGenerationSourceResultV1[LedgerWorkspaceProjectionV1].unavailable(
+                    refusal="workbench.ledger.snapshot_projector_unavailable"
+                )
             ),
             declarations=WorkbenchGenerationSourceResultV1[DeclarationsWorkspaceProjectionV1].available(
                 declarations, observed_at=observed_at
@@ -398,25 +423,70 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 declarations_calendar,
                 observed_at=observed_at,
             ),
-            aeat_sync=WorkbenchGenerationSourceResultV1[AeatSyncWorkspaceProjectionV1].unavailable(
-                refusal="workbench.aeat_sync.reader_unavailable"
+            aeat_sync=(
+                WorkbenchGenerationSourceResultV1[AeatSyncWorkspaceProjectionV1].available(
+                    aeat_sync, observed_at=observed_at
+                )
+                if aeat_sync is not None
+                else WorkbenchGenerationSourceResultV1[AeatSyncWorkspaceProjectionV1].unavailable(
+                    refusal="workbench.aeat_sync.reader_unavailable"
+                )
             ),
             modelo=WorkbenchGenerationSourceResultV1[tuple[ModeloWorkspaceProjectionV1, ...]].unavailable(
                 refusal="workbench.modelo.bulk_reader_unavailable"
             ),
-            ledger_admission=_generation_admission(
-                "workbench.ledger",
-                WorkbenchDestinationAdmissionState.UNAVAILABLE,
-                reason_code="workbench.ledger.snapshot_projector_unavailable",
+            ledger_admission=(
+                _generation_admission("workbench.ledger", WorkbenchDestinationAdmissionState.AVAILABLE)
+                if ledger is not None
+                else _generation_admission(
+                    "workbench.ledger",
+                    WorkbenchDestinationAdmissionState.UNAVAILABLE,
+                    reason_code="workbench.ledger.snapshot_projector_unavailable",
+                )
             ),
             declarations_admission=_generation_admission(
                 "workbench.declarations", WorkbenchDestinationAdmissionState.AVAILABLE
             ),
-            aeat_sync_admission=_generation_admission(
-                "workbench.aeat_sync",
-                WorkbenchDestinationAdmissionState.UNAVAILABLE,
-                reason_code="workbench.aeat_sync.reader_unavailable",
+            aeat_sync_admission=(
+                _generation_admission("workbench.aeat_sync", WorkbenchDestinationAdmissionState.AVAILABLE)
+                if aeat_sync is not None
+                else _generation_admission(
+                    "workbench.aeat_sync",
+                    WorkbenchDestinationAdmissionState.UNAVAILABLE,
+                    reason_code="workbench.aeat_sync.reader_unavailable",
+                )
             ),
+        )
+
+    def _read_ledger(
+        self,
+        calculation_revisions: Mapping[str, CalculationRevision],
+        work_units: WorkUnitCatalogue,
+    ) -> LedgerWorkspaceProjectionV1 | None:
+        """Project the Ledger workspace only when its stores were bound."""
+        if self.transaction_repository is None or self.invoice_repository is None:
+            return None
+        from .ledger.workspace_reader import read_ledger_workspace_projection
+
+        return read_ledger_workspace_projection(
+            bucket_id=self.profile_id,
+            transaction_repository=self.transaction_repository,
+            invoice_repository=self.invoice_repository,
+            bucket_event_repository=self.bucket_event_repository,
+            calculation_revisions=calculation_revisions,
+            work_units=work_units,
+        )
+
+    def _read_aeat_sync(self, subject_key: str) -> AeatSyncWorkspaceProjectionV1 | None:
+        """Project the pre-pull AEAT Sync workspace against composed contracts."""
+        if self.operation_contracts is None:
+            return None
+        from .aeat_sync.workspace_reader import read_local_aeat_sync_workspace_projection
+
+        return read_local_aeat_sync_workspace_projection(
+            bucket_id=self.profile_id,
+            subject_key=subject_key,
+            operation_contracts=self.operation_contracts,
         )
 
 

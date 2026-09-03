@@ -72,6 +72,7 @@ def compose_secure_profile_workbench_generation_provider(
     *,
     profile_id: str,
     profile_label: str,
+    operation_contracts: OperationPublicContractSetV1 | None = None,
 ) -> InstalledWorkbenchGenerationProviderV1:
     """Bind the installed provider to the current secure profile session.
 
@@ -80,9 +81,12 @@ def compose_secure_profile_workbench_generation_provider(
     returned provider is the explicit local-I/O boundary for a fresh session
     generation and never initiates network work.
     """
+    from ...adapters.persistence.profile.buckets import build_bucket_event_history_repository
+    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...application.overview.home import HomeAccountSession, HomeSessionPosture
     from ...application.user_profile.login_session_port import (
         profile_current_bucket_session,
@@ -123,6 +127,10 @@ def compose_secure_profile_workbench_generation_provider(
         filing_repository=ModeloRecordCatalogueRepository(bucket_id=profile_id),
         clock=now,
         account_session_reader=account_session,
+        transaction_repository=TransactionCatalogueRepository(bucket_id=profile_id),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=profile_id),
+        bucket_event_repository=build_bucket_event_history_repository(bucket_id=profile_id),
+        operation_contracts=operation_contracts,
     )
     return ApplicationGenerationProviderV1(door)
 
