@@ -13,7 +13,7 @@ Two surfaces are read, and the docstring says which for each:
 
 - the authored fragment families on the revision (``casillas``, ``formulas``,
   ``bindings``, ``relations``, ``parameters``,
-  ``casilla_continuidad_evolutions``, ``export_layouts``) — these carry their
+  ``casilla_continuidad_evolutions``, ``export_layouts``, ``deadline_windows``) — these carry their
   own citations and are the authoring surface for them;
 - the RESOLVED export fields through
   :func:`~cadrumo.domain.calculations.registry.export.resolved_export_endpoints`,
@@ -57,6 +57,7 @@ type ProvenanceChildKind = Literal[
     "evolution",
     "export_layout",
     "export_field",
+    "deadline_window",
 ]
 type ProvenanceRefKind = Literal["legal", "source"]
 
@@ -114,6 +115,11 @@ def provenance_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[Pr
         ("parameter", tuple(revision.parameters)),
         ("evolution", tuple(revision.casilla_continuidad_evolutions)),
         ("export_layout", tuple(revision.export_layouts)),
+        # A deadline window carries its own citations - the calendar and the
+        # orden that sets the period - and they can reach outside the manifest
+        # like any other child's. Eighty-four did, unreported, while this family
+        # was missing from the walk.
+        ("deadline_window", tuple(revision.deadline_windows)),
     )
     for kind, items in families:
         for item in items:

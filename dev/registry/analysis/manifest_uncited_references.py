@@ -94,6 +94,12 @@ def uncited_manifest_references(
         tuple(revision.parameters),
         tuple(revision.casilla_continuidad_evolutions),
         tuple(revision.export_layouts),
+        # Deadline windows cite too, and omitting them reported 104 references as
+        # uncited that a window does cite - the taxpayer calendar above all,
+        # which grounds a revision's due dates and which no casilla or formula
+        # would ever name. A citing family left out of this walk does not
+        # under-report; it manufactures findings.
+        tuple(revision.deadline_windows),
     )
     for items in families:
         for item in items:
