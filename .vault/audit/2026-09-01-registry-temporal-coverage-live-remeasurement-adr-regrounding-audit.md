@@ -11429,3 +11429,49 @@ same property of it, which is the pair of deadline conditions and nothing else.
 That is where the test was put. A screen-wide gate would have failed on four
 screens reporting correctly, which is the second methodological guard this
 campaign has declined after measuring rather than after it broke something.
+
+
+## Which findings a filer would actually meet
+
+The question that has reordered every population examined in this campaign -
+does this sit in a revision that can be filed? - has been asked by hand four
+times, of the deadline conditions, the unscaled monetary fields, the published
+trees and the grade findings. `dev/registry/analysis/filing_exposure.py` asks it
+of every condition at once.
+
+Across **34 conditions**, 23 carry findings in filing-grade revisions and the
+corpus declares **69 filing-grade revisions**. The exposure is dominated by two
+screens: the provenance screen's 31,608 findings include **27,498 in filing-grade
+revisions across 50 of its 65**, and the wire-type screen's 13,624 include
+11,911 across 59 of 84. Below those, the monetary screen's 26 unscaled fields
+and the grounding screen's 38 cited-note fields are wholly filing-exposed.
+
+It is a reading order and not a severity verdict, and the corpus makes the point
+itself: the monetary part-split condition is 132 findings, all 132 in
+filing-grade revisions, and every one is the official design rather than a
+defect. High exposure says read this first, not fix this first.
+
+This is deliberately not a screen. Its unit is a condition rather than a modelo,
+so it declares no screen entry point and joins no runner table - the identity
+contract those tables enforce would not fit it, and forcing it in would have
+meant inventing a modelo for a row that is about a screen.
+
+### The first run reported eight conditions as safe that had never been asked
+
+Eleven conditions came back with no filing exposure, which reads as eleven
+populations a reader can defer. Three of them were measured: the grade screen's
+under-declared findings, which are below filing by definition, the two published
+trees, likewise, and two revision names.
+
+The other **eight carry no revision at all**. The identifier-grammar screen
+reports per modelo, the continuity screen deliberately omits a revision because
+a chain spans several, and the four corpus screens report per design because a
+transcription belongs to no revision. None of them had been graded; all of them
+displayed as though they had.
+
+That is the same defect this audit has recorded against a drift flag and against
+a grounding default: an absent measurement rendering as a measured negative. The
+report now counts unmeasured findings separately and refuses the deferral claim
+where nothing was measurable, so the honest split is **three conditions safe to
+defer, eight not asked, twenty-three exposed** - and the eight are visible as a
+gap rather than as a clean result.

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:1805b8edb4f2d232c9aeb571ce5adbcd4cb890bfcd81f283897b466e3d5ad90d'
+body_hash: 'sha256:23d3809ddb9d2a3432c5ea2e3553205e49ca2d063886607cb4740b48d70b59d6'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -464,6 +464,7 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S423` - Sweep every screen condition for a duplicated population and record the negative result: none is identical to another, subset relations at revision granularity are arithmetic rather than meaning, and population identity is a coincidence rather than an invariant so it must not become a gate; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W04.P09.S425` - Report the six filing-grade revisions whose declared window spans years no deadline covers, giving the undated-year computation one home in the temporal screen rather than parsing it back out of that screens finding prose; `dev/registry/analysis/modelo_capability.py dev/registry/analysis/temporal_site_agreement.py dev/registry/tests/test_modelo_capability.py`.
 - [ ] `W04.P09.S426` - Declare deadline windows for the eleven filing-grade revisions that cannot date a filing: five carry none at all and six leave years of their own closed window uncovered, modelo 347 for seven years of fourteen; `src/cadrumo/_data/registry/aeat/modelos`.
+- [x] `W04.P09.S428` - Report how much of every screen condition sits in a filing-grade revision, counting findings that carry no revision as unmeasured rather than as safe, since eight of eleven conditions that first appeared to have no filing exposure had never been graded at all; `dev/registry/analysis/filing_exposure.py dev/registry/tests/test_filing_exposure.py`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 
