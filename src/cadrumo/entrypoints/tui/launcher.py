@@ -53,6 +53,11 @@ class TuiOperationCompositionV1:
     services: OperationComposedServices
     public_contracts: OperationPublicContractSetV1
 
+    def __post_init__(self) -> None:
+        """Refuse a public inventory detached from the composed service graph."""
+        if self.public_contracts is not self.services.public_contracts:
+            raise ValueError("TUI operation contracts must be the exact composed service contracts")
+
 
 def compose_secure_profile_workbench_generation_provider(
     *,
@@ -146,7 +151,9 @@ class InstalledWorkbenchRootCompositionV1:
     refresh_search_inputs: InstalledWorkbenchSearchInputsProviderV1
 
 
-type InstalledWorkbenchRootInputsProviderV1 = Callable[[], InstalledWorkbenchRootInputsV1]
+type InstalledWorkbenchRootInputsProviderV1 = Callable[
+    [TuiOperationCompositionV1], InstalledWorkbenchRootInputsV1
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -165,7 +172,6 @@ class InstalledWorkbenchFactoryDependenciesV1:
     declarations_work_action: ActionReference
     declarations_revisions_action: ActionReference
     declarations_filing_action: ActionReference
-    operation_contracts: OperationPublicContractSetV1
     modelo_workspace_factory: ModeloWorkspaceScreenFactoryV1 | None = None
 
 
@@ -181,7 +187,7 @@ def compose_installed_workbench_generation_provider(
     wrappers resolve their projection from the same current generation.
     """
 
-    def provide() -> InstalledWorkbenchRootInputsV1:
+    def provide(operation_runtime: TuiOperationCompositionV1) -> InstalledWorkbenchRootInputsV1:
         current = [generation_provider()]
         home_pending: list[WorkbenchGenerationV1 | None] = [current[0]]
 
@@ -225,7 +231,11 @@ def compose_installed_workbench_generation_provider(
             account_factories=dependencies.account_factories,
             ledger_factory=_ledger_generation_factory(current, dependencies),
             declarations_factory=_declarations_generation_factory(current, dependencies),
-            aeat_sync_factory=_aeat_sync_generation_factory(current, dependencies),
+            aeat_sync_factory=_aeat_sync_generation_factory(
+                current,
+                dependencies,
+                operation_runtime.public_contracts,
+            ),
             search_inputs=_search_inputs(generation),
             refresh_search_inputs=refresh_search_inputs,
         )
@@ -316,6 +326,7 @@ def _declarations_generation_factory(
 def _aeat_sync_generation_factory(
     current: list[WorkbenchGenerationV1],
     dependencies: InstalledWorkbenchFactoryDependenciesV1,
+    operation_contracts: OperationPublicContractSetV1,
 ) -> TuiScreenFactoryV1 | None:
     if current[0].aeat_sync.projection is None:
         return None
@@ -324,7 +335,7 @@ def _aeat_sync_generation_factory(
     def create(context: TuiScreenContextV1) -> Screen[None]:
         return aeat_sync_screen_factory(
             _required_projection(current[0].aeat_sync, "AEAT Sync"),
-            operation_contracts=dependencies.operation_contracts,
+            operation_contracts=operation_contracts,
         )(context)
 
     return create
@@ -576,31 +587,30 @@ async def _run_root_session(
     """
     from .app import CadrumoTuiApp
 
-    root = (
-        compose_installed_workbench_root(workbench_root_inputs_provider())
-        if workbench_root_inputs_provider is not None
-        else None
-    )
-    if root is None:
-        async with operation_services_scope() as operation_runtime:
+    async with operation_services_scope() as operation_runtime:
+        root = (
+            compose_installed_workbench_root(workbench_root_inputs_provider(operation_runtime))
+            if workbench_root_inputs_provider is not None
+            else None
+        )
+        if root is None:
             await CadrumoTuiApp(services=operation_runtime.services).run_async(
                 headless=headless,
                 auto_pilot=auto_pilot,
             )
-        return
-    service = None if root.search_inputs is None else compose_installed_workbench_search(root.search_inputs)
+            return
+        service = None if root.search_inputs is None else compose_installed_workbench_search(root.search_inputs)
 
-    def refresh_search() -> WorkbenchSearchDoorV1:
-        refreshed_inputs = root.refresh_search_inputs()
-        if refreshed_inputs is None:
-            raise RuntimeError("installed workbench search is unavailable in the refreshed generation")
-        _require_search_admission_parity(
-            refreshed_inputs,
-            root.admissions,
-        )
-        return compose_installed_workbench_search(refreshed_inputs)
+        def refresh_search() -> WorkbenchSearchDoorV1:
+            refreshed_inputs = root.refresh_search_inputs()
+            if refreshed_inputs is None:
+                raise RuntimeError("installed workbench search is unavailable in the refreshed generation")
+            _require_search_admission_parity(
+                refreshed_inputs,
+                root.admissions,
+            )
+            return compose_installed_workbench_search(refreshed_inputs)
 
-    async with operation_services_scope() as operation_runtime:
         await CadrumoTuiApp(
             services=operation_runtime.services,
             destination_catalogue=root.destination_catalogue,

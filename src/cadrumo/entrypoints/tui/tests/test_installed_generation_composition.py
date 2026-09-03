@@ -63,6 +63,7 @@ from ..declarations.controller import DeclarationsWorkspaceScreen
 from ..declarations.routes import resolve_declarations_screen
 from ..launcher import (
     InstalledWorkbenchFactoryDependenciesV1,
+    TuiOperationCompositionV1,
     compose_installed_workbench_generation_provider,
     compose_installed_workbench_root,
 )
@@ -190,17 +191,22 @@ def _dependencies() -> InstalledWorkbenchFactoryDependenciesV1:
         declarations_work_action=_action("operator.modelo.work.list"),
         declarations_revisions_action=_action("operator.modelo.work.revisions"),
         declarations_filing_action=_action("operator.modelo.filing_record.list"),
-        operation_contracts=OperationPublicContractSetV1.build(
-            (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
-        ),
     )
+
+
+def _operation_runtime() -> TuiOperationCompositionV1:
+    contracts = OperationPublicContractSetV1.build(
+        (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
+    )
+    services = cast("OperationComposedServices", SimpleNamespace(public_contracts=contracts))
+    return TuiOperationCompositionV1(services=services, public_contracts=contracts)
 
 
 def test_generation_provider_binds_real_declarations_factory_and_calendar_projection() -> None:
     """The installed Declarations route reaches the application-built calendar."""
 
     provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(lambda: _inputs(_NOW)))
-    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())()
+    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
     root = compose_installed_workbench_root(root_inputs)
 
     route = root.destination_catalogue.resolve("workbench.declarations")
@@ -238,7 +244,7 @@ def test_refresh_reuses_one_generation_for_search_then_home_and_keeps_missing_so
         return value
 
     provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(read))
-    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())()
+    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
 
     assert calls == 1
     assert root_inputs.search_inputs is None
