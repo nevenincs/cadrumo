@@ -34,7 +34,7 @@ def capture_envelopes() -> Generator[list[dict[str, object]]]:
     """Arm envelope capture for the current context, yielding the sink list.
 
     Nesting-aware: when a sink is already active (e.g. armed by an outer
-    outer capture scope), this reuses it rather than shadowing it, so a
+    capture scope), this reuses it rather than shadowing it, so a
     re-entered command's emitted envelope lands in the outermost armed
     sink. The reused case does not reset the outer sink on exit.
 
