@@ -10153,3 +10153,70 @@ sheets share a label so the surplus is two rather than three. The corpus
 assertion then holds by shape - every row names more than one sheet and its
 surplus equals the sheet count less one - and not by figure, since those move
 whenever a design is added or re-transcribed.
+
+
+## Two reader defects, one of them introduced by the sheet-scoping correction
+
+Measuring how many pointers still fail to resolve turned up two parser defects.
+The first is mine, from the correction recorded above.
+
+**Multi-word sheet names went unrecognised.** The heading pattern captured a
+single non-space token, which holds for `DP200001` and fails for every sheet
+whose name carries a space. Modelo 202 names its sheets `dr M202 (0)`, `(1)`,
+`(2)`, so none of its headings matched, every note in the design landed under an
+empty sheet name, and no field could ever match it. The failure is invisible from
+outside the parser: a design whose headings are unrecognised looks exactly like a
+design whose notes are undefined, which is why the first measurement of this
+reported modelo 202 as simply lacking the notes it cites. The pattern now takes
+the heading to end of line.
+
+**The corpus separates a note label from its wording in three ways, and the
+reader accepted one.** Modelo 200 writes `Nota 1:`; modelo 202 writes `Nota 4.`
+for most of its notes and `Nota 1 |` for one. Requiring the colon made every note
+of modelo 202 invisible - including the three that state, in plain language, how
+each AEAT type is written to the wire. The pattern now accepts a colon, a full
+stop or a table pipe.
+
+The two fixes together change what the corpus is understood to contain:
+
+| measure | before | after |
+| ------- | ------ | ----- |
+| designs repeating a note label across sheets | 38 | 75 |
+| definitions a design-wide read would merge | 225 | 357 |
+| transcriptions defining no note at all | 136 | 114 |
+| pointer cells citing a note their sheet omits | 9 | 7 |
+
+Twenty-two designs whose notes were wholly invisible are now read. The earlier
+figures in this audit for the design-wide merge should be read as measurements of
+a reader that could not see two thirds of the corpus's note formats.
+
+## The wire conventions exist, and no field points at them
+
+The reason no pointer in this corpus resolves to representation wording is not
+that the designs are silent. It is that they state the convention once, by type,
+and never repeat it per field.
+
+Modelo 202's design defines three notes that settle the wire representation
+outright: `nota 3` for alphanumeric fields ("Deberan estar alineados a la
+izquierda, rellenando con blancos por la derecha"), `nota 4` for numeric fields
+("alineados a la derecha rellenando con ceros por la izquierda"), and `nota 5`
+for signed numeric fields. Alignment, padding character and sign handling, in
+full, for every field of the design.
+
+**No field cites any of them.** The only notes cited by a field in that design
+are `nota 12` and `nota 7`, and neither is defined anywhere in it.
+
+This reframes the rules-authoring step. It has been treated as a per-field
+research task - read the pointer, follow it to a note, ground a rule in what the
+note says - and on that route the grounding is empty, which is what the
+vocabulary census kept reporting. The grounding is instead design-level and
+type-keyed: a reviewed representation rule for a numeric field of modelo 202 has
+authoritative wording available to it, in the design's own general notes, reached
+by the field's AEAT type rather than by anything the field's own cell points to.
+
+Whether every design states its conventions this way is not yet measured, and
+that measurement is the next thing worth having: it decides whether the rules for
+the newly eligible fields are authored one by one or derived from a handful of
+per-type conventions. On the evidence of this one design the second is likely,
+which would make the authoring task an order smaller than the field count
+suggests.
