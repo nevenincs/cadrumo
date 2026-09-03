@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:2d72a8bb7d9539955d4a4e3dcae8ff6a89cb90a2f53071f9ecde33285bb35f3e'
+body_hash: 'sha256:ca48f3789dbadbacabeac6550a8351580192e744fc3ce7ae34526a0eb93f7c15'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -455,6 +455,7 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S416` - Rule out a dangling reference in the provenance population and report where to look first: all 414 pairs resolve in catalogues of 1,374 legal and 499 source ids, seventeen references are cited by a single child and ninety-nine by a hundred or more; `dev/registry/analysis/provenance_consistency.py`.
 - [x] `W04.P09.S417` - Screen the mirror direction, 263 manifest references no child cites, since the two surfaces disagree both ways: 59 revisions declare a subset of what their children cite and 69 declare references nothing cites, so the citing-side population measures a contract nobody declared; `dev/registry/analysis/provenance_consistency.py dev/registry/tests/test_provenance_consistency.py`.
 - [ ] `W04.P09.S418` - Decide what a revision manifest declares relative to its childrens citations before correcting either side, since the two disagree in both directions and no rule states which contains which; `src/cadrumo/_data/registry/aeat/modelos`.
+- [x] `W04.P09.S419` - Give the mirror condition its own module so the runner reports it, since it landed reachable only from source and the runner showed the citing side alone, which is the invisibility failure this package had just corrected elsewhere; `dev/registry/analysis/manifest_uncited_references.py dev/registry/tests/test_manifest_uncited_references.py dev/registry/analysis/screens.py dev/registry/README.md`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 

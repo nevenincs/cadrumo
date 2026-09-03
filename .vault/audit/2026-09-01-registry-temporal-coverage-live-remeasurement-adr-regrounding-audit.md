@@ -11149,3 +11149,30 @@ The two populations are disjoint by construction, one cited-not-declared and the
 other declared-not-cited, and a test asserts they do not intersect. Another
 asserts that revisions in which the surfaces agree exist, so the condition is
 discriminating rather than universal.
+
+
+## The mirror condition is now a screen, because a condition nobody runs is invisible
+
+The mirror landed last iteration as a function beside the provenance screen and
+was reachable only by reading that module's source or its CLI output. The runner
+showed `provenance_consistency: 1389` and said nothing about the 263, which is
+the exact failure this package has corrected five times in other places and had
+just reproduced in its own newest code.
+
+The runner enrols one screen per module and the enrolment gate asserts that
+correspondence both ways, so enrolling the mirror meant giving it a module:
+`dev/registry/analysis/manifest_uncited_references.py`, with its own entry
+point, test module and README row. The gates required all three before the suite
+would pass, which is the machinery doing its job on the fifth screen added since
+it was widened. The runner now carries seventeen screens.
+
+Keeping the two in one module would have been defensible on subject - both
+measure manifest against children - and was rejected on visibility. The
+condition that only a reader of the source can find is the one that stops being
+true without anyone noticing.
+
+The split is not a copy: the function was moved, its duplicate deleted from the
+sibling, and the sibling's CLI now calls the new screen rather than a local
+copy of it. Their populations are asserted disjoint - one cited-not-declared,
+the other declared-not-cited - which is also the check that would fail if either
+started reading the other's surface.
