@@ -1,0 +1,107 @@
+"""Explicit, command-backed classification flow for one selected transaction."""
+
+from __future__ import annotations
+
+from typing import cast, override
+
+from textual.app import ComposeResult
+from textual.widgets import Button, DataTable, Static
+
+from ....application.ledger.models import ManualLedgerTransactionPatch
+from ....domain.transactions.enums import BusinessClassification
+from ..components.widgets import ContentDataTable, ContentScroll
+from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
+from .models import LedgerFlowState
+
+_CHOICES = (
+    (BusinessClassification.BUSINESS, "tui.ledger.classification.business"),
+    (BusinessClassification.PERSONAL, "tui.ledger.classification.personal"),
+    (BusinessClassification.REVIEWED_EXCLUDED, "tui.ledger.classification.excluded"),
+)
+
+
+class LedgerClassificationScreen(LedgerWorkspaceScreen):
+    """Let an operator explicitly edit, confirm, or cancel one classification."""
+
+    def __init__(self, controller: LedgerWorkspaceController) -> None:
+        """Retain an injected command-capable workspace controller."""
+        super().__init__(controller, id="ledger-classification-screen")
+        self.flow_state = LedgerFlowState.EDITING
+        self.selected_classification: BusinessClassification | None = None
+
+    @override
+    def compose(self) -> ComposeResult:
+        yield Static(ledger_copy("tui.ledger.classification.title"), classes="cadrumo-banner")
+        with ContentScroll(id="ledger-page", classes="cadrumo-scroll ledger-page"):
+            yield ContentDataTable[str](id="ledger-navigation", cursor_type="row", zebra_stripes=True)
+            yield Static(ledger_copy("tui.ledger.classification.prompt"), markup=False)
+            yield ContentDataTable[str](id="ledger-classifications", cursor_type="row", zebra_stripes=True)
+            yield Static("", id="ledger-flow-status", markup=False)
+            yield Button(
+                ledger_copy("tui.ledger.classification.confirm"),
+                id="ledger-classification-confirm",
+                disabled=True,
+            )
+            yield Button(ledger_copy("tui.ledger.classification.cancel"), id="ledger-classification-cancel")
+            yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
+
+    def on_mount(self) -> None:
+        """Populate explicit authored choices without inferring a classification."""
+        self.populate_navigation()
+        table = cast("DataTable[str]", self.query_one("#ledger-classifications", DataTable))
+        table.add_column(ledger_copy("tui.ledger.column.status"))
+        for classification, key in _CHOICES:
+            table.add_row(ledger_copy(key), key=classification.value)
+        table.focus()
+
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        """Move an explicit choice into confirmation state."""
+        if self.handle_navigation_selection(event):
+            return
+        event_table = cast("DataTable[str]", event.data_table)
+        if event_table.id != "ledger-classifications" or event.row_key.value is None:
+            return
+        self.selected_classification = BusinessClassification(str(event.row_key.value))
+        self.flow_state = LedgerFlowState.CONFIRMING
+        self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.classification.confirming"))
+        confirm = self.query_one("#ledger-classification-confirm", Button)
+        confirm.disabled = False
+        confirm.focus()
+
+    async def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Confirm through the injected door or cancel without mutation."""
+        if event.button.id == "ledger-classification-cancel":
+            self._cancel()
+            return
+        if event.button.id != "ledger-classification-confirm" or self.selected_classification is None:
+            return
+        self.flow_state = LedgerFlowState.SUBMITTING
+        status = self.query_one("#ledger-flow-status", Static)
+        status.update(ledger_copy("tui.ledger.classification.progress"))
+        try:
+            await self.controller.submit_classification(
+                ManualLedgerTransactionPatch(business_classification=self.selected_classification)
+            )
+        except Exception:
+            self.flow_state = LedgerFlowState.FAILED
+            status.update(ledger_copy("tui.ledger.classification.failure"))
+        else:
+            self.flow_state = LedgerFlowState.SUCCEEDED
+            status.update(ledger_copy("tui.ledger.classification.success"))
+
+    def _cancel(self) -> None:
+        self.selected_classification = None
+        self.flow_state = LedgerFlowState.CANCELLED
+        self.query_one("#ledger-flow-status", Static).update("")
+        self.query_one("#ledger-classification-confirm", Button).disabled = True
+        self.query_one("#ledger-classifications", DataTable).focus()
+
+    @override
+    def action_back(self) -> None:
+        if self.flow_state is LedgerFlowState.CONFIRMING:
+            self._cancel()
+            return
+        super().action_back()
+
+
+__all__ = ["LedgerClassificationScreen"]

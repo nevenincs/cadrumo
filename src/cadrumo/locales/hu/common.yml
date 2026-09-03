@@ -1007,6 +1007,18 @@ tui:
       never_captured: Még nincs rögzítve
       stale: Elavult
       unavailable: Nem érhető el
+    classification:
+      business: Üzleti
+      cancel: Mégse
+      confirm: Megerősítés
+      confirming: Erősítse meg a kiválasztott besorolást.
+      excluded: Ellenőrizve és kizárva
+      failure: A besorolás mentése nem sikerült.
+      personal: Személyes
+      progress: Besorolás mentése…
+      prompt: Válasszon besorolást a kijelölt tételhez.
+      success: Besorolás mentve.
+      title: Főkönyvi tétel besorolása
     column:
       area: Terület
       availability: Elérhetőség
@@ -1020,6 +1032,20 @@ tui:
       empty: Ez a pillanatkép nem tartalmaz tételeket.
       redacted: Biztonságos tételjegyzék; a pénzügyi részletek védettek maradnak.
       title: Főkönyvi tételek
+    import:
+      cancel: Mégse
+      confirm: Importálás megerősítése
+      confirming: Erősítse meg az előkészített importálást.
+      empty: Nincs elérhető előkészített importálás.
+      failure: Az importálás nem fejezhető be.
+      progress: Importálás folyamatban…
+      prompt: Válasszon előkészített importálást.
+      provider:
+        bank: Banki export
+      source:
+        prepared: Előkészített forrás
+      success: 'Importálva: {imported}; kihagyva: {skipped}.'
+      title: Főkönyvi tételek importálása
     overview:
       affected_declarations: Érintett bevallások
       quality: Adatminőség és megoldatlan feladatok
@@ -1027,6 +1053,8 @@ tui:
     refusal:
       application_state: Ez a terület a főkönyv jelenlegi állapotában nem érhető el.
       destination_pending: Ez a terület ebben a verzióban még nem érhető el.
+      submission_unavailable: Ez a feladat előkészített művelet nélkül nem érhető
+        el.
     review:
       empty: Jelenleg nincs felülvizsgálandó tétel.
       filter_all: 'Szűrő: minden felülvizsgálati állapot'

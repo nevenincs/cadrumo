@@ -9,6 +9,11 @@ from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
+from ....application.ledger.models import (
+    LedgerSourceImportResult,
+    ManualLedgerTransactionPatch,
+    ManualLedgerTransactionResult,
+)
 from ....application.ledger.workspace import (
     LEDGER_WORKSPACE_CONTRACT_VERSION,
     LedgerWorkspaceArea,
@@ -27,6 +32,8 @@ from .models import (
     LedgerClassificationSubmitterV1,
     LedgerDestinationIdV1,
     LedgerEntryRowV1,
+    LedgerImportSubmitterV1,
+    LedgerPreparedImportV1,
     LedgerReviewRowV1,
     LedgerRouteRefusalV1,
     LedgerRouteTargetV1,
@@ -42,7 +49,15 @@ _DESTINATION_BY_AREA: Final = {
     LedgerWorkspaceArea.RECONCILIATION: "ledger.reconciliation",
 }
 
-_IMPLEMENTED_AREAS: Final = frozenset(LedgerWorkspaceArea)
+_IMPLEMENTED_AREAS: Final = frozenset(
+    {
+        LedgerWorkspaceArea.OVERVIEW,
+        LedgerWorkspaceArea.ENTRIES,
+        LedgerWorkspaceArea.REVIEW,
+        LedgerWorkspaceArea.IMPORT,
+        LedgerWorkspaceArea.CLASSIFICATION,
+    }
+)
 
 _AREA_LOCALE_KEYS: Final = {
     LedgerWorkspaceArea.OVERVIEW: "tui.ledger.area.overview",
@@ -206,7 +221,11 @@ class LedgerWorkspaceController:
             )
         missing_door = (
             area is LedgerWorkspaceArea.CLASSIFICATION
-            and (self.classify_action is None or self.classification_target is None or self.classification_submitter is None)
+            and (
+                self.classify_action is None
+                or self.classification_target is None
+                or self.classification_submitter is None
+            )
         ) or (area is LedgerWorkspaceArea.IMPORT and (not self.prepared_imports or self.import_submitter is None))
         if area not in _IMPLEMENTED_AREAS or missing_door:
             return LedgerRouteRefusalV1(
@@ -277,7 +296,7 @@ class LedgerWorkspaceController:
         """Pass an opaque pre-resolved command to the injected import door."""
         if self.import_submitter is None or prepared not in self.prepared_imports:
             raise RuntimeError("import submission is unavailable")
-        return await self.import_submitter(prepared._command)
+        return await prepared.submit_with(self.import_submitter)
 
 
 class LedgerRouteRequested(Message):
@@ -385,5 +404,3 @@ __all__ = [
     "review_status_label",
     "status_label",
 ]
-    LedgerImportSubmitterV1,
-    LedgerPreparedImportV1,

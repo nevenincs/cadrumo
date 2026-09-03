@@ -983,6 +983,18 @@ tui:
       never_captured: Not captured yet
       stale: Out of date
       unavailable: Unavailable
+    classification:
+      business: Business
+      cancel: Cancel
+      confirm: Confirm
+      confirming: Confirm the selected classification.
+      excluded: Reviewed and excluded
+      failure: The classification could not be saved.
+      personal: Personal
+      progress: Saving classification…
+      prompt: Choose a classification for the selected entry.
+      success: Classification saved.
+      title: Classify ledger entry
     column:
       area: Area
       availability: Availability
@@ -996,6 +1008,20 @@ tui:
       empty: No entries are present in this snapshot.
       redacted: Safe entry index; financial details remain protected.
       title: Ledger entries
+    import:
+      cancel: Cancel
+      confirm: Confirm import
+      confirming: Confirm the prepared import.
+      empty: No prepared import is available.
+      failure: The import could not be completed.
+      progress: Import in progress…
+      prompt: Choose a prepared import.
+      provider:
+        bank: Bank export
+      source:
+        prepared: Prepared source
+      success: Imported {imported}; skipped {skipped}.
+      title: Import ledger entries
     overview:
       affected_declarations: Affected declarations
       quality: Data quality and unresolved work
@@ -1003,6 +1029,8 @@ tui:
     refusal:
       application_state: This area is unavailable in the current Ledger state.
       destination_pending: This area is not available in this version yet.
+      submission_unavailable: This task is unavailable until a prepared operation
+        is supplied.
     review:
       empty: No entries currently need review.
       filter_all: 'Filter: all review statuses'

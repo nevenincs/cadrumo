@@ -1012,6 +1012,18 @@ tui:
       never_captured: Encara no capturat
       stale: Desactualitzat
       unavailable: No disponible
+    classification:
+      business: Professional
+      cancel: Cancel·la
+      confirm: Confirma
+      confirming: Confirma la classificació seleccionada.
+      excluded: Revisat i exclòs
+      failure: No s'ha pogut desar la classificació.
+      personal: Personal
+      progress: S'està desant la classificació…
+      prompt: Tria una classificació per a l'assentament seleccionat.
+      success: Classificació desada.
+      title: Classificar assentament comptable
     column:
       area: Àrea
       availability: Disponibilitat
@@ -1025,6 +1037,20 @@ tui:
       empty: Aquesta captura no conté cap apunt.
       redacted: Índex segur d'apunts; els detalls financers continuen protegits.
       title: Apunts del llibre comptable
+    import:
+      cancel: Cancel·la
+      confirm: Confirma la importació
+      confirming: Confirma la importació preparada.
+      empty: No hi ha cap importació preparada disponible.
+      failure: No s'ha pogut completar la importació.
+      progress: Importació en curs…
+      prompt: Tria una importació preparada.
+      provider:
+        bank: Exportació bancària
+      source:
+        prepared: Font preparada
+      success: 'Importats: {imported}; omesos: {skipped}.'
+      title: Importar assentaments comptables
     overview:
       affected_declarations: Declaracions afectades
       quality: Qualitat de les dades i feina pendent
@@ -1033,6 +1059,8 @@ tui:
       application_state: Aquesta àrea no està disponible en l'estat actual del llibre
         comptable.
       destination_pending: Aquesta àrea encara no està disponible en aquesta versió.
+      submission_unavailable: Aquesta tasca no està disponible fins que es proporcioni
+        una operació preparada.
     review:
       empty: Ara mateix no hi ha cap apunt per revisar.
       filter_all: 'Filtre: tots els estats de revisió'

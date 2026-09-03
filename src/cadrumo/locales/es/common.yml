@@ -1023,6 +1023,18 @@ tui:
       never_captured: Aún no capturado
       stale: Desactualizado
       unavailable: No disponible
+    classification:
+      business: Profesional
+      cancel: Cancelar
+      confirm: Confirmar
+      confirming: Confirma la clasificación seleccionada.
+      excluded: Revisado y excluido
+      failure: No se pudo guardar la clasificación.
+      personal: Personal
+      progress: Guardando clasificación…
+      prompt: Elige una clasificación para el apunte seleccionado.
+      success: Clasificación guardada.
+      title: Clasificar apunte contable
     column:
       area: Área
       availability: Disponibilidad
@@ -1036,6 +1048,20 @@ tui:
       empty: Esta captura no contiene asientos.
       redacted: Índice seguro de asientos; los detalles financieros siguen protegidos.
       title: Asientos del libro contable
+    import:
+      cancel: Cancelar
+      confirm: Confirmar importación
+      confirming: Confirma la importación preparada.
+      empty: No hay ninguna importación preparada disponible.
+      failure: No se pudo completar la importación.
+      progress: Importación en curso…
+      prompt: Elige una importación preparada.
+      provider:
+        bank: Exportación bancaria
+      source:
+        prepared: Fuente preparada
+      success: 'Importados: {imported}; omitidos: {skipped}.'
+      title: Importar apuntes contables
     overview:
       affected_declarations: Declaraciones afectadas
       quality: Calidad de los datos y trabajo pendiente
@@ -1044,6 +1070,8 @@ tui:
       application_state: Esta área no está disponible en el estado actual del libro
         contable.
       destination_pending: Esta área aún no está disponible en esta versión.
+      submission_unavailable: Esta tarea no está disponible hasta que se proporcione
+        una operación preparada.
     review:
       empty: Ahora mismo no hay asientos que revisar.
       filter_all: 'Filtro: todos los estados de revisión'
