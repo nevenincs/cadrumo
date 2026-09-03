@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:747241548f84a56897f87629ce0897a87ca006977937466b69267850d59d2d6d'
+body_hash: 'sha256:39503247fce3f7a2313fa03b4408d73f72f5ce626ff4537f77c433693460a26d'
 related: []
 ---
 
@@ -1711,3 +1711,26 @@ same unresolved question about who owns the inert-namespace rule.
 Nothing imports the package root outside that test, so the facade is reachable-but-unused
 today. The blind-spot count stays at three until the operator decides; the third entry is
 this, not noise, and must not be reported as noise.
+
+## Finding 80 — finding 79 resolved by its author, mid-landing
+
+Finding 79's conclusion is superseded. The blind-spot scope is back to two, and not
+because the operator decided anything: the module's author moved in the same direction
+this session had, from the other end.
+
+`workspace.py` now derives its export list rather than writing it out
+(`[name for name in globals() if name.startswith("AeatSync")]` plus two literals), and
+`application/aeat_sync/__init__.py` has been reduced to a bare docstring with no
+`__all__` and no forwarding imports. Between them the twenty-eight-name list is no longer
+hand-written at two sites, which is what the measure was reporting.
+
+The package is mid-landing, not finished: `tests/test_workspace.py` still does
+`from .. import (...)` and `from .. import __all__ as public_contract_names`, so the
+module now errors at collection with `ImportError: cannot import name
+'AeatSyncAeatObservationState'`. That is the author's own in-flight state -- the rename
+has not yet carried its test -- and it is theirs to complete, not this session's to
+patch. Recorded so a later reader does not mistake it for a campaign regression.
+
+Finding 79's request for an operator decision is withdrawn. The derived-`__all__` form is
+worth a second look on its own merits, since a `globals()` comprehension hides the export
+surface from static tooling, but that is the author's call and not a duplication.

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:015d72a104c756c7927904643a0eeeee34518d900ca505c14b85ea3dab9e2bad'
+body_hash: 'sha256:286d14dcdaf5563305077ee57629fd830bdb81213af2c431d803643b52957894'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -6936,3 +6936,33 @@ figure three separate times. The failure mode is stable enough to state as a
 rule: a measurement whose output is piped through `head` or `tail` is not a
 measurement, because the number that matters is as likely to be in the part that
 was cut as in the part that was read.
+
+### the-development-tree-step-id-names-are-gone-and-the-pin-redeemed-itself | high | Four test symbols renamed, the gate's expectation is now the empty set, and the rename changed no behaviour
+
+The four `dev/` test symbols carrying a plan step id were renamed to describe
+what they assert: a translation-helper guard, a simplified-projection anchor
+set, a capability count guarding its reviewed set beside the digest, and a
+runner observing every live no-recovery outcome. Each name occurred exactly once
+across the justfile, the workflows, `pyproject.toml` and the whole development
+tree, so no lane addressed any of them as a node id and the renames could not
+orphan a selection.
+
+Behaviour is unchanged, which the run shows rather than asserts: eight passed
+and one failed, and the failure is the census digest drift already recorded
+here, reporting the identical expected and observed sha256 values it reported
+before the rename. A rename that leaves a red test red in exactly the same way
+is the evidence that it renamed nothing but the name.
+
+The pin then redeemed itself. The gate written last iteration held the four
+files as its expectation and carried the instruction that when the renames
+landed, the expectation should become the empty set and the assertion should
+stay. That is what happened, one iteration later, and the docstring now says so:
+the value of the assertion afterwards is that the set remains empty, which is
+what a closed gate looks like. It is the first pin in this campaign to complete
+the full cycle it was written for - pinned to a live defect, instructed, and
+then redeemed by the correction it predicted - and the instruction is what made
+the redemption mechanical rather than a judgement call about whether a red test
+still meant anything.
+
+The twelve `src/` files remain, recorded and not asserted. They are not this
+work's to rename, and the gate deliberately does not fail on them.

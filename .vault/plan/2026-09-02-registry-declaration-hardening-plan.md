@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:61510d13a302f71d0e8440ab128ed8f784d09fcfecbc039aec5c0089c92ba999'
+body_hash: 'sha256:5a7a8f8b715322f83735eeb44b4e25c897ecb886697fece0f3351d006b8a7d64'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -518,6 +518,7 @@ Author the four architectural decision records the contract requires before any 
 - [ ] `W06.P13.S280` - Re-measure the conformance closure test that hit the per-test timeout ceiling on an uncontended host before naming its directory in a lane; `dev/registry/conformance/tests/test_closure.py`.
 - [x] `W06.P13.S281` - Establish that the src-to-dev boundary survived the marker-gate deletion, so no coverage hole exists; `dev/tests/_marker_metadata_patterns.py`.
 - [x] `W06.P13.S282` - Restore a marker-integrity gate over test names from the orphaned pattern table its deleted consumer left behind; `dev/tests/_marker_metadata_patterns.py`.
+- [x] `W06.P13.S283` - Rename the four development-tree test symbols that carried a plan step id, and redeem the pin that expected them; `dev/locales/tests/test_ledger_notice_action_conformance.py dev/registry/tests/test_modelo_303_semantic_maps.py dev/source_connectivity/tests/test_census_completeness.py dev/tests/test_suggestion_command_conformance.py dev/tests/test_campaign_marker_patterns.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:bd602cbfd5fc3f0599cacbb51152314820d3eea141916880c606e283ebdfa7a8'
+body_hash: 'sha256:f214328d1b91ce181915701e008c0a5b2534c5b1298dce781e5bb3b54be3a361'
 step_id: 'S09'
 related:
   - "[[2026-09-02-aeat-design-relayout-boundary-plan]]"
