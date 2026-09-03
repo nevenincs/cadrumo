@@ -34,6 +34,7 @@ from ....application.overview.home import (
     HomeZoneState,
 )
 from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import tr
 from ..components.widgets import ContentDataTable, ContentScroll
 from ..home import (
     home_action_identity as _action_identity,
@@ -47,6 +48,7 @@ from ..home import (
 from ..home import (
     home_declaration_identity as _declaration_identity,
 )
+from ..search import workbench_action_label
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,22 +96,6 @@ _AEAT_COPY: Final[dict[OverviewAeatSubmissionState, str]] = {
     OverviewAeatSubmissionState.ACCEPTED: "accepted by AEAT",
     OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED: "AEAT receipt verified",
 }
-_ACTION_COPY: Final[dict[str, str]] = {
-    "fixture.review": "Review declaration",
-    "fixture.classify": "Classify Ledger entries",
-    "fixture.evidence": "Add missing evidence",
-    "fixture.resolve_blocker": "Resolve declaration blocker",
-    "fixture.review_blocker": "Review blocked work",
-    "fixture.evidence_blocker": "Resolve missing evidence",
-}
-_ACTION_REASON_COPY: Final[dict[str, str]] = {
-    "fixture.review_required": "Declaration needs review",
-    "fixture.classification_pending": "Ledger classification is pending",
-    "fixture.evidence_missing": "Supporting evidence is missing",
-    "fixture.blocked_dependency": "A declaration dependency is blocked",
-    "fixture.blocked_review": "Blocked work needs review",
-    "fixture.blocked_evidence": "A blocker needs supporting evidence",
-}
 
 _TRANSLATIONS: Final[dict[OutputLanguage, dict[str, str]]] = {
     OutputLanguage.EN: {},
@@ -138,18 +124,6 @@ _TRANSLATIONS: Final[dict[OutputLanguage, dict[str, str]]] = {
         "Messages": "Mensajes",
         "Quick tasks": "Tareas rápidas",
         "Task detail": "Detalle de la tarea",
-        "Declaration needs review": "La declaración necesita revisión",
-        "Ledger classification is pending": "Hay clasificación pendiente en libros",
-        "Supporting evidence is missing": "Falta documentación justificativa",
-        "A declaration dependency is blocked": "Una dependencia de la declaración está bloqueada",
-        "Blocked work needs review": "El trabajo bloqueado necesita revisión",
-        "A blocker needs supporting evidence": "Un bloqueo necesita documentación",
-        "Review declaration": "Revisar declaración",
-        "Classify Ledger entries": "Clasificar asientos",
-        "Add missing evidence": "Añadir justificante",
-        "Resolve declaration blocker": "Resolver bloqueo",
-        "Review blocked work": "Revisar trabajo bloqueado",
-        "Resolve missing evidence": "Resolver justificante pendiente",
         "Draft": "Borrador",
         "Needs review": "Requiere revisión",
         "Ready": "Preparada",
@@ -220,18 +194,6 @@ _TRANSLATIONS: Final[dict[OutputLanguage, dict[str, str]]] = {
         "Messages": "Missatges",
         "Quick tasks": "Tasques ràpides",
         "Task detail": "Detall de la tasca",
-        "Declaration needs review": "La declaració necessita revisió",
-        "Ledger classification is pending": "Hi ha classificació pendent als llibres",
-        "Supporting evidence is missing": "Falta documentació justificativa",
-        "A declaration dependency is blocked": "Una dependència de la declaració està bloquejada",
-        "Blocked work needs review": "La tasca bloquejada necessita revisió",
-        "A blocker needs supporting evidence": "Un bloqueig necessita documentació",
-        "Review declaration": "Revisar declaració",
-        "Classify Ledger entries": "Classificar assentaments",
-        "Add missing evidence": "Afegir justificant",
-        "Resolve declaration blocker": "Resoldre bloqueig",
-        "Review blocked work": "Revisar tasca bloquejada",
-        "Resolve missing evidence": "Resoldre justificant pendent",
         "Draft": "Esborrany",
         "Needs review": "Requereix revisió",
         "Ready": "Preparada",
@@ -299,18 +261,6 @@ _TRANSLATIONS: Final[dict[OutputLanguage, dict[str, str]]] = {
         "Messages": "Üzenetek",
         "Quick tasks": "Gyors feladatok",
         "Task detail": "Feladat részletei",
-        "Declaration needs review": "A bevallást felül kell vizsgálni",
-        "Ledger classification is pending": "Függő nyilvántartási besorolás",
-        "Supporting evidence is missing": "Hiányzó bizonylat",
-        "A declaration dependency is blocked": "A bevallás egyik függősége blokkolt",
-        "Blocked work needs review": "A blokkolt munkát felül kell vizsgálni",
-        "A blocker needs supporting evidence": "A blokkoláshoz bizonylat szükséges",
-        "Review declaration": "Bevallás áttekintése",
-        "Classify Ledger entries": "Tételek besorolása",
-        "Add missing evidence": "Bizonylat hozzáadása",
-        "Resolve declaration blocker": "Blokkolás feloldása",
-        "Review blocked work": "Blokkolt munka áttekintése",
-        "Resolve missing evidence": "Hiányzó bizonylat rendezése",
         "Draft": "Piszkozat",
         "Needs review": "Felülvizsgálandó",
         "Ready": "Kész",
@@ -377,15 +327,25 @@ def _state_copy(state: HomeZoneState, locale: OutputLanguage, *, empty_copy: str
 
 
 def _action_cells(item: HomeNextAction, locale: OutputLanguage) -> tuple[str, str, str]:
-    label = _ACTION_COPY.get(item.action.action.action_id, "Open suggested task")
-    reason = _ACTION_REASON_COPY.get(item.reason_code, "Suggested by the local overview")
+    """Name the action through the same authority the production Home uses.
+
+    The prototype keeps its own hand-built copy for layout stimulus, but the
+    action verb and reason are catalogue facts: resolving them here means a
+    measurement of this candidate is a measurement of the words an operator
+    will actually read.
+    """
+    label = workbench_action_label(str(item.action.action.action_id), locale=locale.value)
+    reason_key = f"tui.home.reason.{item.reason_code}"
+    reason = tr(reason_key, locale=locale.value)
+    if reason == reason_key:
+        reason = tr("tui.home.action.reason", locale=locale.value)
     if item.period is None:
         context = "Across records"
     elif item.modelo is None or item.filing_year is None:  # pragma: no cover - model validation rejects this
         raise ValueError("an addressed Home action requires Modelo, year, and period")
     else:
         context = _address(item.modelo, item.filing_year, item.period.registry_token)
-    return _text(locale, reason), _text(locale, label), _text(locale, context)
+    return reason, label, _text(locale, context)
 
 
 def _declaration_cells(item: HomeDeclarationResume, locale: OutputLanguage) -> tuple[str, str, str]:

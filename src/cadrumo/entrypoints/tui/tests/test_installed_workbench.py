@@ -130,3 +130,19 @@ def test_an_empty_profile_store_ends_the_headless_session_without_creating_one(t
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         assert main(headless=True) == SESSION_COMPLETED
         assert not list(Path(storage_root).glob("**/*.capsule"))
+
+@pytest.mark.asyncio
+async def test_a_profile_without_a_declared_identity_leaves_aeat_sync_unavailable(tmp_path: Path) -> None:
+    """AEAT evidence is scoped to the filer, so an undeclared filer has none.
+
+    The profile schema supplies a placeholder NIF when none is declared.
+    Scoping the workspace to it would produce rows a later real pull refuses
+    as a mixed subject, so the destination stays explicitly unavailable — with
+    a reason — rather than opening onto evidence that belongs to nobody.
+    """
+    async with installed_workbench_root(tmp_path, tax_id=None) as root:
+        route = root.destination_catalogue.resolve("workbench.aeat_sync")
+
+        assert route.admission.state is WorkbenchDestinationAdmissionState.UNAVAILABLE
+        assert route.admission.reason_code is not None
+        assert route.factory is None

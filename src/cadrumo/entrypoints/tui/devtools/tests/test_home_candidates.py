@@ -49,13 +49,13 @@ _LOCALE_MARKERS: Final[dict[OutputLanguage, str]] = {
     OutputLanguage.HU: "Kezdőlap",
 }
 _STATE_MARKERS: Final[dict[HomeFixtureScenario, str]] = {
-    HomeFixtureScenario.READY: "Revisar declaración",
+    HomeFixtureScenario.READY: "Abrir declaración",
     HomeFixtureScenario.LOCKED: "Bloqueado",
     HomeFixtureScenario.STALE: "Desactualizado",
     HomeFixtureScenario.NEVER_CAPTURED: "Aún no capturado",
     HomeFixtureScenario.UNAVAILABLE: "No disponible",
     HomeFixtureScenario.EMPTY: "No hay tareas rápidas",
-    HomeFixtureScenario.BLOCKED: "Resolver bloqueo",
+    HomeFixtureScenario.BLOCKED: "Explicar el resumen",
 }
 
 

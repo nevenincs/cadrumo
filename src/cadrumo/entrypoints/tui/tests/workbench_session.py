@@ -22,6 +22,7 @@ from ....application.user_profile.login_interaction import profile_login_choices
 from ....application.user_profile.login_session import login_profile
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..installed_session import compose_authenticated_root_inputs_provider
 from ..launcher import InstalledWorkbenchRootCompositionV1, compose_installed_workbench_root, operation_services_scope
@@ -29,16 +30,38 @@ from ..launcher import InstalledWorkbenchRootCompositionV1, compose_installed_wo
 WORKBENCH_PROFILE_LABEL: Final[str] = "Workbench subject"
 """A synthetic operator label; it identifies nobody and holds no tax data."""
 
+WORKBENCH_PROFILE_TAX_ID: Final[str] = "00000001R"
+"""A syntactically valid, deliberately unassigned NIF.
+
+AEAT Sync scopes its evidence to the filer's own identity and refuses to
+scope to the schema's placeholder, so a profile with no NIF has that source
+unavailable. The workbench gates are about the AVAILABLE path, so the session
+declares an identity; the unavailable path is asserted separately.
+"""
+
 _WORKBENCH_PASSWORD: Final[str] = "correct horse battery staple 42!"  # noqa: S105 - synthetic test credential
 
 
 @asynccontextmanager
-async def installed_workbench_root(tmp_path: Path) -> AsyncGenerator[InstalledWorkbenchRootCompositionV1]:
-    """Compose one authenticated installed workbench root over real storage."""
+async def installed_workbench_root(
+    tmp_path: Path,
+    *,
+    tax_id: str | None = WORKBENCH_PROFILE_TAX_ID,
+) -> AsyncGenerator[InstalledWorkbenchRootCompositionV1]:
+    """Compose one authenticated installed workbench root over real storage.
+
+    ``tax_id`` of ``None`` registers a profile that has not declared its
+    identity, which is the state an operator is in before completing setup.
+    """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
             label=WORKBENCH_PROFILE_LABEL,
             passphrase=_WORKBENCH_PASSWORD,
+            facts=(
+                ()
+                if tax_id is None
+                else (UserProfileFact(path="identity.tax_id", value=tax_id),)
+            ),
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         )
         # Registration closes its own session and leaves the capsule sealed, so
@@ -53,4 +76,4 @@ async def installed_workbench_root(tmp_path: Path) -> AsyncGenerator[InstalledWo
             yield compose_installed_workbench_root(provider(operation_runtime))
 
 
-__all__ = ["WORKBENCH_PROFILE_LABEL", "installed_workbench_root"]
+__all__ = ["WORKBENCH_PROFILE_LABEL", "WORKBENCH_PROFILE_TAX_ID", "installed_workbench_root"]
