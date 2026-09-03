@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:73652e15ae494acec33e28f061273d94bd3ab6ec6c6e1b647864d202ab471437'
+body_hash: 'sha256:a9ee974c7d7a42a731a5d88ac958ac229461fe61c311d5cc57131b2b8d7fd7fe'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -55,6 +55,15 @@ reached through one field, not five places that can disagree, so under the bound
 declarations can independently state whether something applies, the answer is three: the revision's
 rules, a deadline window's conditions, and a cross-reference decision's predicates. Three or ten
 depending on the question; seven is neither, so the original counted something else again.
+
+The amount-semantics figure is the only one whose number survives, and the way it survives is worth
+reading. Six declared fields say how an amount is written - two roundings, two units, a decimals and
+a signed - which matches the six on record. Under a stricter boundary, how an amount reaches the
+WIRE, only two of those six qualify. And the fact that decides the scale of a monetary field is in
+neither count, because it is not declared anywhere: the `money` wire type multiplies by one hundred
+in the renderer's codec rather than in any declaration, so the one semantic that has produced a live
+filing-correctness defect in this corpus is the one no declaration states. A count of declared places
+cannot see it, which is why the count matching is not the same as the count being right.
 
 The capability-grade figure could not be re-derived at all: no boundary survives saying what counts
 as an encoding of it, and the schema today carries one optional grade field with a documented reading
@@ -606,6 +615,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S329` - Establish that the capability-grade figure cannot be re-derived and that the grade is declared once today; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S330` - Re-derive the citation breadth figure against the live schema and state its boundary; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S331` - Re-derive the applicability figure to both its defensible boundaries and show the plan's is neither; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S332` - Re-derive the amount-semantics figure and record that the deciding fact is declared nowhere; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:779e0b3d8626a10e3ecd0196e9262ccb320b2bb5255004c62018545afaee77b8'
+body_hash: 'sha256:515ca3e2d7ef1d5c8f0c83597b43a8c324d9ae138ce2daa47cba9770fdf2f5f5'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8459,3 +8459,33 @@ one the boundary was the thing that decided the answer. A restatement count
 without its boundary is not a measurement that later turned out wrong; it is a
 measurement nobody can repeat, which is a different and worse thing to build a
 campaign's opening argument on.
+
+### the-last-figure-matches-and-the-match-is-the-least-informative-thing-about-it | high | Six declared fields, two under a stricter boundary, and the fact that decides a monetary scale is declared in none of them
+
+The fifth breadth figure re-derives to six, which is what the plan says. It is
+the only one of the five whose number survives, and the agreement is the least
+useful part of the result.
+
+Six declared fields state how an amount is written: rounding on a formula and on
+a verification expectation, a unit on each of two parameter types, and decimals
+and signed on an export field. Under a stricter boundary - how an amount reaches
+the WIRE rather than how it is computed - only the last two qualify, because a
+formula's rounding and a parameter's unit describe a value being calculated
+rather than a value being emitted. So this figure has the same two-boundary
+shape as applicability; its broad reading simply happens to land on the number
+already written down.
+
+What neither reading contains is the fact that has actually gone wrong. The
+scale of a monetary field is decided by its wire type, and the `money` wire type
+multiplies by one hundred in the renderer's codec rather than in any
+declaration. It is not a field, so no count of declared places can include it -
+and it is the semantic behind both live filing-correctness defects this campaign
+has pinned, modelo 200's casilla 03594 and modelo 353's casilla 10, each
+emitting unscaled beside siblings emitting cents.
+
+That is the closing argument for this whole re-derivation. Four of the five
+figures could not be reproduced, and the fifth reproduces while omitting the
+only place the defect it describes has actually occurred. A restatement count
+measures declarations, and the thing that hurt here was an undeclared behaviour
+in a codec - which a count of declarations is structurally unable to report,
+however carefully its boundary is written.
