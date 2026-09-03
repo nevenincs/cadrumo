@@ -6154,3 +6154,28 @@ Not corrected here. A monetary field's scale is filing-grade: emitting euros whe
 design expects cents is a hundredfold error in a submitted amount, and the fix is a registry
 data change grounded in the official design for that revision, which is neither this
 iteration's scope nor a change to make from a screen's output alone.
+
+### monetary-criterion-figures-mapped-to-their-screen-conditions | medium | The criterion's two counts are 26 and 2, and the five unexpected-scale fields it does not count are a separate concern
+
+Correcting the monetary criterion meant restating two numbers, and restating a number without
+checking which measurement produces it is how this audit acquired several of its own errors. The
+mapping was verified rather than assumed.
+
+The criterion's first test - a field rendered by a wire type that scales, carrying a declared
+scale, or one half of the official part split - is failed by exactly the screen's
+`money_without_scale`, which the screen defines as a monetary casilla rendered as an integer,
+text or another unscaled type. That count is 26, where the criterion said 24. Its second test,
+that no field disagrees with the amounts beside it in its own record, is `sibling_scale_disagrees`,
+now 2 where it said 1.
+
+The screen also reports 5 `money_unexpected_scale` fields and 132 `money_split_representation`.
+The split representations are the official part split the criterion already admits. The five
+unexpected scales carry a declared scale and are therefore not failures of the criterion as
+worded - they are decimals with a count other than two, which the screen itself says may be
+correct on a unit security value and is simply recorded nowhere as an exception. They are not
+folded into either figure, and the criterion is silent about them, which is a gap worth naming
+rather than papering over with a third number.
+
+Both criterion figures had drifted, not one. The defect count doubling is the finding; the
+unscaled count moving from 24 to 26 arrived alongside it and would have gone unrecorded if the
+restatement had copied the old number and changed only the part that prompted the edit.

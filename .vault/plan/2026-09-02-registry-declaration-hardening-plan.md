@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:150fe3fd38f028b3f54adfcdecd7eabd4d2a294f2dd5de018726df012d430238'
+body_hash: 'sha256:2bbd69ca773ab19cdc43ef3823c93289c0be3e35fcabbac86bc716da366e0c0a'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -491,6 +491,8 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S253` - Establish that the import-linter boundary proofs fail while the contracts themselves pass, and that the default lane deselects them; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S254` - Bound the crashed run's usable lower bound across fifty-two modules and stop mining it rather than drifting off the registry; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S255` - Record the second live sibling-scale disagreement in modelo 353 and correct the criterion asserting there is one; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [ ] `W06.P13.S256` - Correct the modelo 353 casilla 10 declared scale against the official record design for the 2026 revision; `src/cadrumo/_data/registry/aeat/modelos/353`.
+- [x] `W06.P13.S257` - Verify which screen condition each half of the monetary criterion counts before restating its figures; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -655,8 +657,12 @@ once that defect is corrected.
 
 No monetary amount is emitted at a magnitude the registry does not determine. Every monetary field is
 rendered by a wire type that scales, carries a declared scale, or is one half of the official part
-split, and no field disagrees with the amounts beside it in its own record. Twenty-four fields fail
-the first test and one fails the second; that one is the plan's only known filing-correctness defect.
+split, and no field disagrees with the amounts beside it in its own record. Twenty-six fields fail
+the first test and two fail the second, and those two are the plan's known filing-correctness
+defects: modelo 200's casilla 03594 and modelo 353's casilla 10, each emitting unscaled where the
+amounts beside it in the same record emit cents. The second appeared through a commit while this
+plan was being executed and was caught by the gate that pins the first, which is what a gate
+proven against a live defect is for.
 
 Every revision directory name agrees with the window that revision declares, and a gate refuses a name
 that does not. Temporal selection resolves every coordinate the law can decide and refuses only those
