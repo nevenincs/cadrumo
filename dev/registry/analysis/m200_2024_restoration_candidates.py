@@ -257,6 +257,7 @@ def _write_review_output(path: Path, rendered: str) -> Path:
         with os.fdopen(file_descriptor, "r+", encoding="utf-8", newline="") as stream:
             file_descriptor = -1
             stream.seek(0)
+            _assert_review_output_handle(path, output_path, stream.fileno())
             stream.truncate()
             stream.write(rendered)
             stream.flush()
@@ -272,6 +273,8 @@ def _assert_review_output_handle(path: Path, expected_path: Path, file_descripto
     opened_stat = os.fstat(file_descriptor)
     if not stat.S_ISREG(opened_stat.st_mode):
         raise ValueError("--output must identify a regular file")
+    if type(getattr(opened_stat, "st_nlink", None)) is not int or opened_stat.st_nlink != 1:
+        raise ValueError("--output must identify a regular file with exactly one link")
     current_path = _resolve_review_output_path(path)
     if current_path != expected_path:
         raise ValueError("--output destination changed while opening")

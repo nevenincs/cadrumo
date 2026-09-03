@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 from dataclasses import replace
 from datetime import date
@@ -293,6 +294,79 @@ def test_source_rebind_transaction_rolls_back_after_mid_cutover_failure(
     assert not (revision_root / subject._REBIND_JOURNAL).exists()
     assert not tuple(revision_root.glob(f"{subject._REBIND_STAGE_PREFIX}*"))
     assert not tuple(revision_root.glob(f"{subject._REBIND_BACKUP_PREFIX}*"))
+
+
+def test_source_rebind_transaction_rolls_back_after_base_exception(
+    source_rebind_plan, rebind_registry_root: Path, monkeypatch
+) -> None:
+    class InjectedInterrupt(BaseException):
+        pass
+
+    before = _tree_bytes(rebind_registry_root)
+    real_replace = subject._replace_rebind_tree
+    calls = 0
+
+    def interrupt_second_replace(source: Path, destination: Path) -> None:
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise InjectedInterrupt()
+        real_replace(source, destination)
+
+    monkeypatch.setattr(subject, "_replace_rebind_tree", interrupt_second_replace)
+    with pytest.raises(InjectedInterrupt):
+        subject.apply_m200_source_rebind_plan(source_rebind_plan, registry_root=rebind_registry_root)
+    assert _tree_bytes(rebind_registry_root) == before
+
+
+def test_source_rebind_recovery_refuses_unknown_journal_state_without_touching_live_tree(
+    source_rebind_plan, rebind_registry_root: Path
+) -> None:
+    revision_root = rebind_registry_root / "modelos" / "200" / "revisions" / "2024"
+    backup = revision_root / f"{subject._REBIND_BACKUP_PREFIX}unknown"
+    shutil.copytree(revision_root / "casillas", backup)
+    journal = revision_root / subject._REBIND_JOURNAL
+    journal.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "state": "unknown",
+                "stage": f"{subject._REBIND_STAGE_PREFIX}unknown",
+                "backup": backup.name,
+            }
+        ),
+        encoding="utf-8",
+    )
+    live_before = _tree_bytes(revision_root / "casillas")
+    with pytest.raises(RegistryValidationError, match="invalid source rebind recovery journal"):
+        subject.apply_m200_source_rebind_plan(source_rebind_plan, registry_root=rebind_registry_root, dry_run=True)
+    assert _tree_bytes(revision_root / "casillas") == live_before
+    assert backup.exists()
+    assert journal.exists()
+
+
+@pytest.mark.parametrize("state", ("intent", "backup_staged"))
+def test_source_rebind_next_run_recovers_persisted_pre_candidate_journal(
+    source_rebind_plan, rebind_registry_root: Path, state: str
+) -> None:
+    revision_root = rebind_registry_root / "modelos" / "200" / "revisions" / "2024"
+    casillas = revision_root / "casillas"
+    stage = revision_root / f"{subject._REBIND_STAGE_PREFIX}{state}"
+    backup = revision_root / f"{subject._REBIND_BACKUP_PREFIX}{state}"
+    if state == "backup_staged":
+        subject._replace_rebind_tree(casillas, backup)
+    else:
+        shutil.copytree(casillas, stage)
+        shutil.copytree(casillas, backup)
+    (revision_root / subject._REBIND_JOURNAL).write_text(
+        json.dumps({"schema_version": 1, "state": state, "stage": stage.name, "backup": backup.name}), encoding="utf-8"
+    )
+    result = subject.apply_m200_source_rebind_plan(source_rebind_plan, registry_root=rebind_registry_root, dry_run=True)
+    assert result.dry_run
+    assert casillas.is_dir()
+    assert not (revision_root / subject._REBIND_JOURNAL).exists()
+    assert not stage.exists()
+    assert not backup.exists()
 
 
 def _tree_bytes(root: Path) -> dict[Path, bytes]:

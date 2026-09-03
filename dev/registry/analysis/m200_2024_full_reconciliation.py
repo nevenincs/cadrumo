@@ -509,7 +509,12 @@ def _recover_m200_source_rebind(plan: M200SourceRebindPlan, registry_root: Path)
         return
     try:
         journal = json.loads(journal_path.read_text(encoding="utf-8"))
-        if set(journal) != {"schema_version", "state", "stage", "backup"} or journal["schema_version"] != 1:
+        if (
+            set(journal) != {"schema_version", "state", "stage", "backup"}
+            or journal["schema_version"] != 1
+            or not isinstance(journal["state"], str)
+            or journal["state"] not in {"intent", "backup_staged", "candidate_live"}
+        ):
             raise ValueError("invalid schema")
         stage = _rebind_transaction_child(revision_root, journal["stage"], _REBIND_STAGE_PREFIX)
         backup = _rebind_transaction_child(revision_root, journal["backup"], _REBIND_BACKUP_PREFIX)

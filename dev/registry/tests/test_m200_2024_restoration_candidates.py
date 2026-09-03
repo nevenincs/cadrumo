@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -326,6 +327,62 @@ def test_cli_rejects_parent_swap_during_evidence_build(monkeypatch, tmp_path: Pa
     assert error.value.code == 2
     assert canonical_output.read_text(encoding="utf-8") == "authority sentinel\n"
     assert not (tmp_path / "review-output-original" / "review.toml").exists()
+
+
+def test_cli_rejects_hardlink_alias_to_canonical_output(monkeypatch, tmp_path: Path) -> None:
+    canonical_root = tmp_path / "authority"
+    canonical_root.mkdir()
+    canonical_output = canonical_root / "review.toml"
+    canonical_output.write_text("authority sentinel\n", encoding="utf-8")
+    outside_alias = tmp_path / "outside-review.toml"
+    try:
+        os.link(canonical_output, outside_alias)
+    except (OSError, NotImplementedError):
+        pytest.skip("the current platform does not permit test hardlinks")
+
+    monkeypatch.setattr(subject, "_CANONICAL_REGISTRY_ROOT", canonical_root)
+    monkeypatch.setattr(subject, "build_bundled_restoration_proposals", lambda: ((_proposal(),), ()))
+
+    with pytest.raises(SystemExit) as error:
+        subject.main(["--output", str(outside_alias)])
+
+    assert error.value.code == 2
+    assert canonical_output.read_text(encoding="utf-8") == "authority sentinel\n"
+
+
+def test_cli_rejects_hardlink_added_after_initial_handle_check(monkeypatch, tmp_path: Path) -> None:
+    canonical_root = tmp_path / "authority"
+    canonical_root.mkdir()
+    canonical_output = canonical_root / "review.toml"
+    output = tmp_path / "outside-review.toml"
+    output.write_text("outside sentinel\n", encoding="utf-8")
+    try:
+        os.link(output, canonical_output)
+        canonical_output.unlink()
+    except (OSError, NotImplementedError):
+        pytest.skip("the current platform does not permit test hardlinks")
+
+    monkeypatch.setattr(subject, "_CANONICAL_REGISTRY_ROOT", canonical_root)
+    monkeypatch.setattr(subject, "build_bundled_restoration_proposals", lambda: ((_proposal(),), ()))
+    real_assert = subject._assert_review_output_handle
+    assertion_count = 0
+
+    def assert_then_add_hardlink(path: Path, expected_path: Path, file_descriptor: int) -> None:
+        nonlocal assertion_count
+        real_assert(path, expected_path, file_descriptor)
+        assertion_count += 1
+        if assertion_count == 1:
+            os.link(output, canonical_output)
+
+    monkeypatch.setattr(subject, "_assert_review_output_handle", assert_then_add_hardlink)
+
+    with pytest.raises(SystemExit) as error:
+        subject.main(["--output", str(output)])
+
+    assert error.value.code == 2
+    assert assertion_count == 2
+    assert output.read_text(encoding="utf-8") == "outside sentinel\n"
+    assert canonical_output.read_text(encoding="utf-8") == "outside sentinel\n"
 
 
 def test_cli_rejects_retired_patch_switch() -> None:
