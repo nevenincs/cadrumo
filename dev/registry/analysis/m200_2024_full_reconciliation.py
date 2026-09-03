@@ -39,9 +39,13 @@ TARGET_VALID_FROM = date(2024, 1, 1)
 TARGET_VALID_TO = date(2024, 12, 31)
 SIBLING_VALID_FROM = date(2025, 1, 1)
 
-_CASILLA_TABLE = re.compile(r'^\[\[revisions\."2024"\.casillas\]\]\s*$')
-_ID_LINE = re.compile(r'^\s*id\s*=\s*"(?P<id>[^"]+)"\s*$')
+# The historic declaration corpus quotes numeric revision keys; the target
+# compiler emits the equally valid canonical bare numeric spelling.  Both are
+# one Modelo 200/2024 table identity, not a relaxed revision selector.
+_CASILLA_TABLE = re.compile(r'^\[\[revisions\.(?:"2024"|2024)\.casillas\]\]\s*$')
+_ID_LINE = re.compile(r"^\s*id\s*=\s*['\"](?P<id>[^'\"]+)['\"]\s*$")
 _SOURCE_REFS_LINE = re.compile(r"^(?P<prefix>\s*source_refs\s*=\s*)(?P<value>.*?)(?P<ending>\r?\n)?$")
+_SOURCE_REFS_BLOCK = re.compile(r"^\s*source_refs\s*=\s*(?P<value>\[[\s\S]*?\])", re.MULTILINE)
 _REBIND_JOURNAL = ".m200-2024-source-rebind.journal.json"
 _REBIND_STAGE_PREFIX = ".m200-2024-source-rebind-stage-"
 _REBIND_BACKUP_PREFIX = ".m200-2024-source-rebind-backup-"
@@ -921,7 +925,7 @@ def _read_m200_2024_casilla_records_at(casillas_root: Path) -> dict[str, _M200Ca
                     f"{path}: casilla {ids[0]!r} has {len(source_lines)} direct source_refs anchors; expected one",
                 )
             source_line_index = source_lines[0]
-            source_refs = _parse_source_refs(path, lines[source_line_index])
+            source_refs = _parse_source_refs(path, "".join(lines[source_line_index:body_end]))
             record = _M200CasillaSourceRecord(
                 casilla_id=ids[0],
                 path=path,
@@ -940,8 +944,8 @@ def _read_m200_2024_casilla_records_at(casillas_root: Path) -> dict[str, _M200Ca
     return records
 
 
-def _parse_source_refs(path: Path, line: str) -> tuple[str, ...]:
-    match = _SOURCE_REFS_LINE.match(line)
+def _parse_source_refs(path: Path, declaration_tail: str) -> tuple[str, ...]:
+    match = _SOURCE_REFS_BLOCK.search(declaration_tail)
     if match is None:  # pragma: no cover - caller selected this line through the same expression
         raise RegistryValidationError(f"{path}: source_refs line lost its anchor")
     try:
