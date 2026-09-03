@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:3c2c3f3b4a028560273be52aeb49f4f50e4f5a624c00c4157937c1ec0817af8c'
+body_hash: 'sha256:1d406c272bf03b5419d3a7ff847a827651d9d2004bf2412be28e118abff1f77d'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -434,6 +434,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S409` - Read the eleven grounding notes and record which settle representation, since zero ungrounded is not a readiness signal: the largest work item covers twenty-six fields with a note stating who must fill them rather than how they are written; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W04.P07.S410` - Identify a grounding note by its design as well as its sheet and label, since grouping by label alone merged modelo 303s DP30302 nota 5 across three transcriptions where it carries 330 characters in one and 209 in another; `dev/registry/analysis/rule_grounding_coverage.py dev/registry/tests/test_rule_grounding_coverage.py`.
 - [x] `W04.P07.S411` - Report note labels whose wording differs between a modelos designs, since 24 of the 111 keys shared across designs carry more than one text and modelo 200s DP200001 nota 1 appears in ten designs with two, so a rule carried forward by name can end up grounded in wording that changed; `dev/registry/analysis/note_text_drift.py dev/registry/tests/test_note_text_drift.py`.
+- [x] `W04.P07.S412` - Flag a work item whose grounding note drifts between designs, since four of thirteen do and cover seven fields whose rules must be authored per design, with the flag passed in so it defaults to no claim rather than to a claim of stability; `dev/registry/analysis/rule_grounding_coverage.py dev/registry/tests/test_rule_grounding_coverage.py`.
 
 ### Phase `W04.P08` - grade earned gate
 

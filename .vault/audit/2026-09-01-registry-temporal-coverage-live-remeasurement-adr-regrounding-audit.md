@@ -10941,3 +10941,28 @@ that two sheets numbering from one are not one key. Without that last one the
 screen would report most of the corpus as drifting. The live assertion holds by
 presence and by the two populations being different sizes, not by the figures,
 which move whenever a design is re-transcribed.
+
+
+## Four of the thirteen groundings rest on wording that changed
+
+Joining the worklist against the drift screen answers the question the two
+raise together: **four of the thirteen work items are grounded in a note whose
+wording differs between the designs of its modelo, and they cover seven of the
+forty-one fields.** Three are modelo 303's `DP30302:nota 5` in its 2023, early
+2024 and late 2024 designs; the fourth is modelo 202's `dr M202 (1):nota 4`.
+
+For those seven, a rule read once and carried forward is grounded in text that
+no longer says what it said. They have to be authored per design, and the
+worklist now says so on the row rather than leaving it to an author to know
+that a second screen exists and to run it.
+
+The flag is passed into the grouping rather than computed inside it, so the
+function stays one of its arguments and a test can reach both states with input
+it writes. It defaults to false, and the default is documented as meaning "not
+reported as drifting" rather than "checked and found stable" - the two read
+identically in output and only one is evidence. That distinction has its own
+test, because a default that quietly asserts a clean state is the shape of
+several findings already in this audit.
+
+The census carries both figures: four notes and seven fields. Neither is
+derivable from the other, since the items cover different numbers of fields.
