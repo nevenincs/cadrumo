@@ -101,6 +101,51 @@ export_refs = ["generated.displaced"]
     assert 'id = "displaced"\nsource_refs = ["source"]\nexport_refs' not in rendered
 
 
+def test_generated_casilla_export_refs_accepts_toml_literal_and_basic_ids_but_not_nested_decoys(
+    tmp_path: Path,
+) -> None:
+    """Declaration IDs are TOML strings, not a generator-specific quote style."""
+    casillas = tmp_path / "casillas"
+    casillas.mkdir()
+    path = casillas / "quotes-and-decoy.toml"
+    path.write_text(
+        """[[revisions.current.casillas]]
+id = 'literal-id'
+source_refs = ["source"]
+
+[[revisions.current.casillas]]
+id = "basic-id"
+source_refs = ["source"]
+
+[[revisions.current.casillas]]
+source_refs = ["source"]
+[revisions.current.casillas.constraints]
+id = "nested-decoy"
+""",
+        encoding="utf-8",
+    )
+
+    written = write_generated_casilla_export_refs(
+        tmp_path,
+        export_refs_by_casilla={
+            "literal-id": ("generated.literal",),
+            "basic-id": ("generated.basic",),
+        },
+    )
+
+    assert written == (path,)
+    rendered = path.read_text(encoding="utf-8")
+    assert "id = 'literal-id'\nsource_refs = [\"source\"]\nexport_refs = [\"generated.literal\"]" in rendered
+    assert 'id = "basic-id"\nsource_refs = ["source"]\nexport_refs = ["generated.basic"]' in rendered
+    assert "nested-decoy\nexport_refs" not in rendered
+
+    with pytest.raises(RegistryValidationError, match="nested-decoy"):
+        write_generated_casilla_export_refs(
+            tmp_path,
+            export_refs_by_casilla={"nested-decoy": ("generated.decoy",)},
+        )
+
+
 def _intermediate(
     *,
     first_record_declared_total: int | None = 4,

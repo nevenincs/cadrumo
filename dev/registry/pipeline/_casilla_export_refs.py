@@ -32,7 +32,7 @@ from ._export_tree import RenderedExportTree
 __all__ = ["export_refs_by_casilla", "write_generated_casilla_export_refs"]
 
 _BLOCK_START = re.compile(r"^\[\[revisions\.")
-_ID_LINE = re.compile(r'^id = "(?P<id>[^"]*)"\s*$')
+_ID_LINE = re.compile(r"^id = (?P<quote>['\"])(?P<id>[^'\"\\\r\n]*)(?P=quote)\s*$")
 _EXPORT_REFS_LINE = re.compile(r"^export_refs = ")
 _SOURCE_REFS_LINE = re.compile(r"^source_refs = ")
 
@@ -89,8 +89,16 @@ def write_generated_casilla_export_refs(
         lines = original.splitlines(keepends=True)
         changed = False
         for start, end in reversed(_block_bounds(lines)):
+            # Only keys in the casilla table itself identify the casilla.  A
+            # nested constraints/aliases table may legally have an ``id`` of
+            # its own, but that must never make the enclosing declaration look
+            # like a different addressed casilla.
+            body_end = next(
+                (index for index in range(start + 1, end) if lines[index].lstrip().startswith("[")),
+                end,
+            )
             casilla_id = next(
-                (match.group("id") for line in lines[start:end] if (match := _ID_LINE.match(line))),
+                (match.group("id") for line in lines[start:body_end] if (match := _ID_LINE.match(line))),
                 None,
             )
             if casilla_id is None:
@@ -100,10 +108,6 @@ def write_generated_casilla_export_refs(
             # declare their own `source_refs`; anchoring on the last one in the
             # whole block would place export_refs inside the sub-table, where it
             # is a different -- and rejected -- field.
-            body_end = next(
-                (index for index in range(start + 1, end) if lines[index].lstrip().startswith("[")),
-                end,
-            )
             existing = next(
                 (index for index in range(start, body_end) if _EXPORT_REFS_LINE.match(lines[index])),
                 None,
