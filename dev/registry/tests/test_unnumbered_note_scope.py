@@ -21,7 +21,16 @@ LINE_BREAK = chr(10)
 
 
 def _design(tmp_path: pathlib.Path, name: str, *lines: str) -> pathlib.Path:
-    path = tmp_path / f"{name}.xlsx.extracted.md"
+    """Write a constructed design where the corpus really puts one.
+
+    Under a ``modelo_NNN`` directory, because a finding names the modelo whose
+    corpus directory holds it and that is read from the path. A design written
+    outside one is refused rather than given an invented modelo, so the fixture
+    has to be as faithful about location as about content.
+    """
+    directory = tmp_path / "modelo_999" / "files"
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / f"{name}.xlsx.extracted.md"
     path.write_text(LINE_BREAK.join(lines) + LINE_BREAK, encoding="utf-8")
     return path
 

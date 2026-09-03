@@ -18,7 +18,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _write(tmp_path: pathlib.Path, name: str, body: str) -> pathlib.Path:
-    path = tmp_path / name
+    """Write a constructed design under a modelo directory, as the corpus does.
+
+    A finding names the modelo whose corpus directory holds the design, read
+    from the path, and a design written outside one is refused rather than given
+    an invented modelo.
+    """
+    directory = tmp_path / "modelo_999" / "files"
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / name
     path.write_text(body, encoding="utf-8")
     return path
 
