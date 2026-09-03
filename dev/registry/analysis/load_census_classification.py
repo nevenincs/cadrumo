@@ -793,19 +793,24 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "markers carrying no load behaviour of their own, and they are classified live "
             "because a load does hold them, not because they do anything."
         ),
-        members=("cadrumo.domain", "cadrumo.domain.manuals", "cadrumo.domain.modelos"),
+        members=(
+            "cadrumo.domain",
+            "cadrumo.domain.manuals",
+            "cadrumo.domain.modelos",
+            "cadrumo.domain.modelos.calculation_revision_identity",
+        ),
     ),
     ClassificationRule(
         classification="conditionally_reachable",
-        trigger="function-scoped imports only: withholding row building and calculation revision identity",
+        trigger="function-scoped import only: withholding row building",
         reason=(
-            "Neither is in sys.modules after a bundled load, and neither has any module-level "
-            "importer. `_withholding_rows` is imported from inside "
+            "Not in sys.modules after a bundled load in either the cold or the warm regime, and "
+            "carrying no module-level importer. It is imported from inside "
             "resolve_withholding_binding_row_values, which is the standard break for the cycle it "
-            "forms with withholding_bindings and cannot be hoisted without restoring that cycle. "
-            "Both are reached only when the function holding the import runs."
+            "forms with withholding_bindings and cannot be hoisted without restoring that cycle, "
+            "so it is reached only when that function runs."
         ),
-        members=(*_registry("_withholding_rows"), "cadrumo.domain.modelos.calculation_revision_identity"),
+        members=_registry("_withholding_rows"),
     ),
 )
 
