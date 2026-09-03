@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:242a6e9d1565361986ad4c76faed471c6f1deb7fdad4cc411f35bb775d3ff0e2'
+body_hash: 'sha256:de8c040405b479fbf8adfde6fe883ee437810c2183919dc50b99f97182f55a3a'
 step_id: 'S26'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
@@ -22,6 +22,8 @@ related:
 
 - `R` `dev/registry/generate_result_disposition_fragments.py` -> `dev/registry/result_disposition_fragment_generator.py`
 - `M` `.vault/audit/2026-09-02-object-name-declustering-pilot-rehearsal-audit.md`
+- `M` `.vault/audit/2026-09-03-object-name-declustering-final-code-review-audit.md`
+- `A` `.vault/index/object-name-declustering.index.md`
 - `verify:` `just audit-object-names --json` -> `fail`
 
 ## Notes

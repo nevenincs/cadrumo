@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:38e9cc0a5737ed0e8db0deba0fe54a204d879f94ac99e6e8eaf4069abc8c5f26'
+body_hash: 'sha256:6c5a069c087f1bc42060798a7ac78389618755238726465cbba6f95bae78e774'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
@@ -15,6 +15,8 @@ related:
 ## Changes
 
 - `M` `.vault/audit/2026-09-02-object-name-declustering-pilot-rehearsal-audit.md`
+- `M` `.vault/audit/2026-09-03-object-name-declustering-final-code-review-audit.md`
+- `A` `.vault/index/object-name-declustering.index.md`
 - `M` `dev/quality/object_name_declustering.py`
 - `M` `dev/quality/object_name_manifest.py`
 - `M` `dev/quality/object_name_rehearsal.py`

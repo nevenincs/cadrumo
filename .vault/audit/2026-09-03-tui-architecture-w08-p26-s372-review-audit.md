@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7d64a3e8ad66ddf4ffa54c6ee5abd128f6580efb7deddf1417808794c466ff52'
+body_hash: 'sha256:1c4765e87f71b810af0647a0060cab1f4d6d80985684cdb5e9269155146b1da7'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
@@ -59,3 +59,4 @@ The initial action identity omitted both rank and reason, allowing two otherwise
 No open recommendation remains from this review. All three medium findings and the low finding were corrected in scope. The slice is safe to close with no open high or medium issue.
 
 Focused verification completed with all candidate tests passing under the explicit integration marker selection. The review also confirmed two genuinely different candidates over the exact injected immutable projection, a single outer page scroll, compact and wide layout classes, seven synthetic authority states without false zeroes, human-facing reason and status copy, and no repository, network, CLI, adapter, calculation, classification, reconciliation, or action-execution authority in the prototype module.
+

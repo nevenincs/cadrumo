@@ -5860,3 +5860,29 @@ line, and the same class of error this audit has now recorded six times.
 Recommending nothing here. Adding three directories to a recipe is a one-line change and the
 reason to hesitate is not difficulty: 163 tests that have never run in CI will not all pass, and
 whoever wires them needs to be ready for what they say rather than surprised by it.
+
+### never-run-tui-suite-reports-this-campaigns-own-defect | high | A coverage table names two interfaces the tree does not define, in a suite nothing runs
+
+The three uncovered directories cannot be wired into a lane without knowing what they say, so
+the smallest was run: 33 passed, 5 skipped, 1 failed, in fifteen seconds.
+
+The failure is `test_the_coverage_table_only_names_interfaces_that_exist`, and it is this
+campaign's subject exactly. `dev/tui/_coverage.py` names
+`cadrumo.entrypoints.tui.flows.app.FlowTuiApp` and `...app.QuestionScreen`. That module defines
+`FlowPresenter`, `FlowScreen` and `run_flow_tui`, and neither named class exists anywhere in the
+tree. A table declaring what is covered has been naming two things that are not there.
+
+The test that says so has existed for as long as the defect and has never once run.
+
+That is the shape worth sitting with. The campaign spent forty findings on declarations that
+stopped describing what they describe - an export list naming a retired surface, a location note
+forbidding a move already made, a screen claiming six conditions while emitting eight - and
+built gates to catch each. Here the gate already existed, correct and specific, and the defect
+survived anyway because nothing invoked it. A gate nobody runs is not weaker than no gate; it is
+worse, because it also carries the appearance of coverage.
+
+Whether `FlowTuiApp` and `QuestionScreen` were renamed or removed is not established here, and
+the table's owner should decide whether the entries or the interfaces are wrong. What is
+established is that one of the three unwired suites reports a real defect on its first run, at a
+cost of fifteen seconds, which answers the question the wiring Step depends on for that
+directory.

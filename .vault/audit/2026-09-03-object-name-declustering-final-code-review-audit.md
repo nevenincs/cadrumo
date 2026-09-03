@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:9b8ffd96d9315e52a881f5d71d04c1bdd50ebbdf22aa8911130efa9642c1ef93'
+body_hash: 'sha256:e580c5f1c993aaebd13d62721f995ad5c62894f253cff9a26245b1347d9b799a'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
@@ -39,3 +39,25 @@ The combined object-name implementation suite completed with 252 passing tests a
 - For `generator-authority`, execute the declared owning generator during bounded live replay with transactional capture and exact output verification, or obtain an explicit superseding ADR before adopting verified-byte transplantation.
 - For `mandatory-gates`, make required gate families typed and non-omissible in production orchestration, wire semantic and clone evidence into planning/rehearsal, and ensure the pilot receipt records every applicable required gate.
 - For `focused-suite`, update the structural-forgery assertions to the current fail-closed boundary and rerun the complete focused suite before declaring the feature complete.
+
+## Resolution
+
+### rollback-evidence | resolved | cleanup failures retain durable transaction evidence
+
+Replay now treats cleanup as part of transaction completion, retains the marker when cleanup cannot finish, and exercises stage-artifact and marker behavior. The final review found no remaining high-severity rollback issue.
+
+### generator-authority | resolved | owners execute in an isolated verified candidate
+
+Declared generators now run against the exact post-transform candidate in an isolated copy, and only declared receipt-matching generated outputs can enter the live transaction. Generated deletion and drift cases are covered.
+
+### mandatory-gates | resolved | required gate families are typed and non-omissible
+
+Production rehearsal requires parsing/import, architecture, semantic-overlap, clone, type/lint, and focused gate families. Receipt evidence carries the family identity and refuses incomplete coverage.
+
+### focused-suite | resolved | complete focused matrix passes
+
+The structural-forgery assertions now match the canonical fail-closed copied-graph boundary. Independent review completed the eight-file object-name matrix with 260 passing tests.
+
+### post-execution | approved | reviewed pilot is canonical with no compatibility residue
+
+The final S26 review found no critical, high, or medium issue. Commit `0f21eb73b41d092c5200921040f501bdb1a7b225` is an exact `R100` rename with identical parent/source and commit/target blobs. The old production path and imports are absent, the canonical declaration occurs once, the selected finding occurs zero times, and no transaction marker remains. Historical Vault evidence and the reviewed manifest retain the old spelling as intentional provenance.
