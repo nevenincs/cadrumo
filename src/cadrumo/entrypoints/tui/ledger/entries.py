@@ -51,8 +51,9 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
             self.query_one("#ledger-refusal", Static).update(
                 ledger_copy("tui.ledger.entries.empty")
             )
+        navigation = cast("DataTable[str]", self.query_one("#ledger-navigation", DataTable))
         restore_transaction_focus(
-            navigation=self.query_one("#ledger-navigation", DataTable),
+            navigation=navigation,
             table=table,
             transaction_id=self.controller.restored_transaction_id(),
         )

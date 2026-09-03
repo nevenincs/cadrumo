@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from typing import ClassVar, override
 
@@ -15,7 +15,7 @@ from .models import LedgerFlowState
 
 
 @contextmanager
-def ledger_workspace_page() -> Iterator[ContentDataTable[str]]:
+def ledger_workspace_page() -> Generator[ContentDataTable[str], None, None]:
     """Compose the one scroll owner and canonical workspace navigation table."""
     with ContentScroll(id="ledger-page", classes="cadrumo-scroll ledger-page"):
         yield ContentDataTable[str](id="ledger-navigation", cursor_type="row", zebra_stripes=True)

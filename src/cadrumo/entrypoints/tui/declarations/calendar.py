@@ -14,7 +14,9 @@ from ....application.modelo.declarations_calendar import (
     DeclarationsCalendarProjectionV1,
     DeclarationsCalendarSource,
 )
+from ....application.operator_actions.models import DeclaredNextAction
 from ....application.overview.home import HomeAvailability
+from ..components.dialogs import ConfirmScreen
 from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import (
@@ -59,6 +61,7 @@ class DeclarationsCalendarScreen(Screen[None]):
         self._selected_identity: str | None = controller.context_identity()
         self._hidden_restore_identity: str | None = None
         self._rows_by_identity: dict[str, DeclarationsCalendarEntryRefV1] = {}
+        self._pending_recovery: tuple[DeclaredNextAction, DeclarationsCalendarEntryRefV1] | None = None
 
     @override
     def compose(self) -> ComposeResult:
@@ -260,7 +263,7 @@ class DeclarationsCalendarScreen(Screen[None]):
             self._render_detail(row)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Invoke only an injected natural-address or canonical recovery handoff."""
+        """Open a local confirmation before requesting a host-owned recovery."""
         table = cast("DataTable[str]", event.data_table)
         if table.id != "declarations-calendar-agenda":
             return
@@ -268,17 +271,46 @@ class DeclarationsCalendarScreen(Screen[None]):
         if row is None:
             return
         if row.recovery_action is not None:
-            if self.controller.recovery_handoff is not None:
-                self.controller.recovery_handoff(row.recovery_action, row)
-            else:
+            if self.controller.recovery_handoff is None:
                 self.query_one("#declarations-calendar-notice", Static).update(
                     declarations_copy("tui.declarations.refusal.handoff")
+                )
+            elif self._pending_recovery is None:
+                self._pending_recovery = (row.recovery_action, row)
+                self.app.push_screen(
+                    ConfirmScreen(
+                        title=declarations_copy("tui.declarations.calendar.action.create"),
+                        message=natural_address(row.modelo, row.filing_year, row.period),
+                        confirm_label="Y",
+                        cancel_label="Esc",
+                    ),
+                    self._resolve_recovery_confirmation,
                 )
         elif self.controller.entry_handoff is not None:
             self.controller.entry_handoff(row)
         else:
             self.query_one("#declarations-calendar-notice", Static).update(
                 declarations_copy("tui.declarations.refusal.handoff")
+            )
+
+    def _resolve_recovery_confirmation(self, confirmed: bool | None) -> None:
+        """Submit one pending recovery only after the local modal explicitly approves it."""
+        pending = self._pending_recovery
+        self._pending_recovery = None
+        if pending is None or confirmed is not True:
+            return
+        action, row = pending
+        handoff = self.controller.recovery_handoff
+        if handoff is None:
+            self.query_one("#declarations-calendar-notice", Static).update(
+                declarations_copy("tui.declarations.refusal.handoff")
+            )
+            return
+        try:
+            handoff(action, row)
+        except Exception:
+            self.query_one("#declarations-calendar-notice", Static).update(
+                "Recovery request could not be completed."
             )
 
     def replace_projection(self, projection: DeclarationsCalendarProjectionV1) -> None:
