@@ -10,6 +10,8 @@ from textual.app import ComposeResult
 from textual.widgets import DataTable, Static
 
 from ....application.ledger.workspace import LedgerWorkspaceArea, LedgerWorkspaceProjectionV1
+from ....application.operator_actions.catalogue import ActionCatalogueEntry, lookup_action
+from ....application.operator_actions.models import ActionReference
 from ..components.widgets import ContentDataTable, ContentScroll
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
@@ -34,16 +36,13 @@ class LedgerUnavailableScreen(LedgerWorkspaceScreen):
     def compose(self) -> ComposeResult:
         """Render the explicit unavailability and no action affordance."""
         yield Static(
-            ledger_copy("tui.ledger.unavailable.title", default="Ledger destination unavailable"),
+            ledger_copy("tui.ledger.unavailable.title"),
             classes="cadrumo-banner",
         )
         with ContentScroll(id="ledger-page", classes="cadrumo-scroll ledger-page"):
             yield ContentDataTable[str](id="ledger-navigation", cursor_type="row", zebra_stripes=True)
             yield Static(
-                ledger_copy(
-                    self._route_refusal.reason_key,
-                    default="This destination is not available in the current workspace.",
-                ),
+                ledger_copy(self._route_refusal.reason_key),
                 id="ledger-refusal",
                 classes="ledger-refusal",
                 markup=False,
@@ -112,11 +111,19 @@ def resolve_ledger_screen(
     return factory(controller)
 
 
-def ledger_screen_factory(projection: LedgerWorkspaceProjectionV1) -> TuiScreenFactoryV1:
+def ledger_screen_factory(
+    projection: LedgerWorkspaceProjectionV1,
+    *,
+    review_action: ActionReference,
+    action_lookup: Callable[[str], ActionCatalogueEntry] = lookup_action,
+) -> TuiScreenFactoryV1:
     """Bind an injected immutable projection to the outer navigation factory contract."""
+    declaration = action_lookup(review_action.action_id)
+    if declaration.target_command_key != "ledger.review":
+        raise ValueError("injected Ledger review action does not resolve to the canonical review query")
 
     def create(context: TuiScreenContextV1) -> LedgerWorkspaceScreen:
-        controller = LedgerWorkspaceController(context, projection)
+        controller = LedgerWorkspaceController(context, projection, review_action=review_action)
         return resolve_ledger_screen(controller, controller.route_target(LedgerWorkspaceArea.OVERVIEW))
 
     return create

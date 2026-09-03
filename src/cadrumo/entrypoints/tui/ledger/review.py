@@ -28,11 +28,11 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(ledger_copy("tui.ledger.review.title", default="Ledger review"), classes="cadrumo-banner")
+        yield Static(ledger_copy("tui.ledger.review.title"), classes="cadrumo-banner")
         with ContentScroll(id="ledger-page", classes="cadrumo-scroll ledger-page"):
             yield ContentDataTable[str](id="ledger-navigation", cursor_type="row", zebra_stripes=True)
             yield Static(
-                ledger_copy("tui.ledger.review.filter_all", default="Filter: all pending review rows"),
+                ledger_copy("tui.ledger.review.filter_all"),
                 markup=False,
             )
             yield ContentDataTable[str](id="ledger-review", cursor_type="row", zebra_stripes=True)
@@ -42,19 +42,19 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         """Populate the filter disclosure and canonical review rows."""
         self.populate_navigation()
         table = cast("DataTable[str]", self.query_one("#ledger-review", DataTable))
-        table.add_column(ledger_copy("tui.ledger.column.entry", default="Entry"), key="entry")
-        table.add_column(ledger_copy("tui.ledger.column.review_status", default="Review status"), key="review_status")
-        table.add_column(ledger_copy("tui.ledger.column.next", default="Next"), key="next")
+        table.add_column(ledger_copy("tui.ledger.column.entry"), key="entry")
+        table.add_column(ledger_copy("tui.ledger.column.review_status"), key="review_status")
+        table.add_column(ledger_copy("tui.ledger.column.next"), key="next")
         for row in self.controller.review_rows():
             table.add_row(
                 str(row.transaction_id)[:12],
                 review_status_label(row.review_status),
-                ledger_copy("tui.ledger.review.open", default="Open review"),
+                ledger_copy("tui.ledger.review.open"),
                 key=row.transaction_id,
             )
         if not table.row_count:
             self.query_one("#ledger-refusal", Static).update(
-                ledger_copy("tui.ledger.review.empty", default="No entries currently need review.")
+                ledger_copy("tui.ledger.review.empty")
             )
         restored = self.controller.restored_transaction_id()
         if restored is None:

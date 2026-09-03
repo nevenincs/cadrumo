@@ -9,7 +9,7 @@ from textual.widgets import DataTable, Static
 
 from ....application.ledger.workspace import LedgerWorkspaceArea, LedgerWorkspaceStatus
 from ..components.widgets import ContentDataTable, ContentScroll
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, area_label, ledger_copy
+from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, area_label, ledger_copy, status_label
 
 
 class LedgerOverviewScreen(LedgerWorkspaceScreen):
@@ -21,10 +21,10 @@ class LedgerOverviewScreen(LedgerWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(ledger_copy("tui.ledger.overview.title", default="Ledger overview"), classes="cadrumo-banner")
+        yield Static(ledger_copy("tui.ledger.overview.title"), classes="cadrumo-banner")
         with ContentScroll(id="ledger-page", classes="cadrumo-scroll ledger-page"):
             yield ContentDataTable[str](id="ledger-navigation", cursor_type="row", zebra_stripes=True)
-            yield Static(ledger_copy("tui.ledger.overview.quality", default="Data quality and unresolved work"))
+            yield Static(ledger_copy("tui.ledger.overview.quality"))
             yield ContentDataTable[str](id="ledger-quality", cursor_type="row", zebra_stripes=True)
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 
@@ -32,9 +32,9 @@ class LedgerOverviewScreen(LedgerWorkspaceScreen):
         """Populate the complete navigation and quality-first summary."""
         self.populate_navigation()
         table = cast("DataTable[str]", self.query_one("#ledger-quality", DataTable))
-        table.add_column(ledger_copy("tui.ledger.column.area", default="Area"), key="area")
-        table.add_column(ledger_copy("tui.ledger.column.status", default="Status"), key="status")
-        table.add_column(ledger_copy("tui.ledger.column.items", default="Items"), key="items")
+        table.add_column(ledger_copy("tui.ledger.column.area"), key="area")
+        table.add_column(ledger_copy("tui.ledger.column.status"), key="status")
+        table.add_column(ledger_copy("tui.ledger.column.items"), key="items")
         for area in (
             LedgerWorkspaceArea.REVIEW,
             LedgerWorkspaceArea.CLASSIFICATION,
@@ -42,23 +42,15 @@ class LedgerOverviewScreen(LedgerWorkspaceScreen):
             LedgerWorkspaceArea.RECONCILIATION,
         ):
             state = self.controller.state_for(area)
-            status = ledger_copy(
-                f"tui.ledger.status.{state.status.value}",
-                default={
-                    LedgerWorkspaceStatus.READY: "Ready",
-                    LedgerWorkspaceStatus.EMPTY: "Empty",
-                    LedgerWorkspaceStatus.NEEDS_ATTENTION: "Needs attention",
-                    LedgerWorkspaceStatus.UNMEASURED: "Not measured",
-                }[state.status],
-            )
+            status = status_label(state.status)
             table.add_row(area_label(area), status, str(state.item_count), key=area.value)
         affected = len(self.controller.projection.affected_declarations)
         table.add_row(
-            ledger_copy("tui.ledger.overview.affected_declarations", default="Affected declarations"),
+            ledger_copy("tui.ledger.overview.affected_declarations"),
             (
-                ledger_copy("tui.ledger.status.needs_attention", default="Needs attention")
+                ledger_copy("tui.ledger.status.needs_attention")
                 if affected
-                else ledger_copy("tui.ledger.status.empty", default="Empty")
+                else ledger_copy("tui.ledger.status.empty")
             ),
             str(affected),
             key="affected-declarations",

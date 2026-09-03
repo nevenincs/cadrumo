@@ -19,6 +19,8 @@ from .....application.ledger.workspace import (
     LedgerWorkspaceSource,
     LedgerWorkspaceStatus,
 )
+from .....application.operator_actions.catalogue import lookup_action
+from .....application.operator_actions.models import ActionReference
 from .....core.external_constants import OutputLanguage
 from .....core.identity import TransactionId
 from ....tui.components.host import ScreenHostApp
@@ -82,6 +84,18 @@ def _context() -> TuiScreenContextV1:
     return TuiScreenContextV1(destination="workbench.ledger")
 
 
+def _review_action() -> ActionReference:
+    declaration = lookup_action("operator.ledger.review")
+    return ActionReference(action_id=declaration.action_id)
+
+
+def _controller(
+    projection: LedgerWorkspaceProjectionV1,
+    context: TuiScreenContextV1 | None = None,
+) -> LedgerWorkspaceController:
+    return LedgerWorkspaceController(context or _context(), projection, review_action=_review_action())
+
+
 def _all_copy(screen: LedgerOverviewScreen | LedgerEntriesScreen | LedgerReviewScreen) -> str:
     values = [str(widget.render()) for widget in screen.query(Static)]
     values.extend(
@@ -94,7 +108,7 @@ def _all_copy(screen: LedgerOverviewScreen | LedgerEntriesScreen | LedgerReviewS
 
 
 def test_routes_cover_all_seven_areas_and_deferred_bodies_are_typed_placeholders() -> None:
-    controller = LedgerWorkspaceController(_context(), _projection())
+    controller = _controller(_projection())
     assert tuple(route.area for route in LEDGER_ROUTES) == tuple(LedgerWorkspaceArea)
     assert tuple(route.destination for route in LEDGER_ROUTES) == (
         "ledger.overview",
@@ -119,17 +133,30 @@ def test_routes_cover_all_seven_areas_and_deferred_bodies_are_typed_placeholders
 
 def test_factory_requires_real_outer_context_and_keeps_injected_projection() -> None:
     projection = _projection()
-    screen = ledger_screen_factory(projection)(_context())
+    screen = ledger_screen_factory(projection, review_action=_review_action())(_context())
     assert isinstance(screen, LedgerOverviewScreen)
     assert screen.controller.projection is projection
     with pytest.raises(ValueError, match=r"workbench\.ledger"):
-        ledger_screen_factory(projection)(TuiScreenContextV1(destination="workbench.home"))
+        ledger_screen_factory(projection, review_action=_review_action())(
+            TuiScreenContextV1(destination="workbench.home")
+        )
+
+
+def test_factory_refuses_undeclared_or_drifted_review_action_through_real_catalogue() -> None:
+    with pytest.raises(KeyError, match="unknown operator action ID"):
+        ledger_screen_factory(_projection(), review_action=ActionReference(action_id="operator.ledger.absent"))
+    classified = lookup_action("operator.ledger.classify")
+    with pytest.raises(ValueError, match="canonical review query"):
+        ledger_screen_factory(
+            _projection(),
+            review_action=ActionReference(action_id=classified.action_id),
+        )
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("screen_type", (LedgerOverviewScreen, LedgerEntriesScreen, LedgerReviewScreen))
 async def test_screens_show_seven_destinations_have_one_scroll_owner_and_no_horizontal_overflow(screen_type: type) -> None:
-    screen = screen_type(LedgerWorkspaceController(_context(), _projection()))
+    screen = screen_type(_controller(_projection()))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
@@ -149,7 +176,7 @@ async def test_screens_show_seven_destinations_have_one_scroll_owner_and_no_hori
 @pytest.mark.asyncio
 async def test_navigation_refusal_and_review_selection_preserve_semantic_identity() -> None:
     projection = _projection(unavailable=LedgerWorkspaceArea.ENTRIES)
-    screen = LedgerReviewScreen(LedgerWorkspaceController(_context(), projection))
+    screen = LedgerReviewScreen(_controller(projection))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
@@ -172,7 +199,7 @@ async def test_navigation_refusal_and_review_selection_preserve_semantic_identit
 @pytest.mark.asyncio
 async def test_entry_rows_are_redacted_and_tables_are_each_one_tab_stop() -> None:
     projection = _projection()
-    screen = LedgerEntriesScreen(LedgerWorkspaceController(_context(), projection))
+    screen = LedgerEntriesScreen(_controller(projection))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(100, 30)) as pilot:
         await pilot.pause()
@@ -196,7 +223,7 @@ async def test_transaction_focus_restores_by_identity_after_row_reordering() -> 
             restore_token=_TX_A,
         ),
     )
-    screen = LedgerEntriesScreen(LedgerWorkspaceController(context, reordered))
+    screen = LedgerEntriesScreen(_controller(reordered, context))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
@@ -214,7 +241,7 @@ async def test_every_locale_uses_catalogue_calls_without_raw_internal_vocabulary
     from .....core.config import override_settings
 
     with override_settings(cadrumo_output_language=locale.value):
-        screen = LedgerOverviewScreen(LedgerWorkspaceController(_context(), _projection()))
+        screen = LedgerOverviewScreen(_controller(_projection()))
         app = ScreenHostApp[None](screen)
         async with app.run_test(size=(80, 24)) as pilot:
             await pilot.pause()

@@ -15,6 +15,7 @@ from ....application.ledger.workspace import (
     LedgerWorkspaceAreaStateV1,
     LedgerWorkspaceAvailability,
     LedgerWorkspaceProjectionV1,
+    LedgerWorkspaceStatus,
 )
 from ....application.operator_actions.models import ActionReference
 from ....core.i18n.render import tr
@@ -43,39 +44,105 @@ _IMPLEMENTED_AREAS: Final = frozenset(
     {LedgerWorkspaceArea.OVERVIEW, LedgerWorkspaceArea.ENTRIES, LedgerWorkspaceArea.REVIEW}
 )
 
+_AREA_LOCALE_KEYS: Final = {
+    LedgerWorkspaceArea.OVERVIEW: "tui.ledger.area.overview",
+    LedgerWorkspaceArea.ENTRIES: "tui.ledger.area.entries",
+    LedgerWorkspaceArea.REVIEW: "tui.ledger.area.review",
+    LedgerWorkspaceArea.IMPORT: "tui.ledger.area.import",
+    LedgerWorkspaceArea.CLASSIFICATION: "tui.ledger.area.classification",
+    LedgerWorkspaceArea.EVIDENCE: "tui.ledger.area.evidence",
+    LedgerWorkspaceArea.RECONCILIATION: "tui.ledger.area.reconciliation",
+}
+_AVAILABILITY_LOCALE_KEYS: Final = {
+    LedgerWorkspaceAvailability.AVAILABLE: "tui.ledger.availability.available",
+    LedgerWorkspaceAvailability.LOCKED: "tui.ledger.availability.locked",
+    LedgerWorkspaceAvailability.STALE: "tui.ledger.availability.stale",
+    LedgerWorkspaceAvailability.NEVER_CAPTURED: "tui.ledger.availability.never_captured",
+    LedgerWorkspaceAvailability.UNAVAILABLE: "tui.ledger.availability.unavailable",
+}
+_REVIEW_STATUS_LOCALE_KEYS: Final = {
+    "pending": "tui.ledger.review_status.pending",
+    "reviewed": "tui.ledger.review_status.reviewed",
+    "skipped": "tui.ledger.review_status.skipped",
+}
+_STATUS_LOCALE_KEYS: Final = {
+    LedgerWorkspaceStatus.READY: "tui.ledger.status.ready",
+    LedgerWorkspaceStatus.EMPTY: "tui.ledger.status.empty",
+    LedgerWorkspaceStatus.NEEDS_ATTENTION: "tui.ledger.status.needs_attention",
+    LedgerWorkspaceStatus.UNMEASURED: "tui.ledger.status.unmeasured",
+}
+_LEDGER_LOCALE_KEYS: Final = (
+    "tui.ledger.column.destination",
+    "tui.ledger.column.availability",
+    "tui.ledger.column.items",
+    "tui.ledger.column.area",
+    "tui.ledger.column.status",
+    "tui.ledger.column.entry",
+    "tui.ledger.column.review_status",
+    "tui.ledger.column.next",
+    "tui.ledger.refusal.application_state",
+    "tui.ledger.refusal.destination_pending",
+    "tui.ledger.overview.title",
+    "tui.ledger.overview.quality",
+    "tui.ledger.overview.affected_declarations",
+    "tui.ledger.entries.title",
+    "tui.ledger.entries.redacted",
+    "tui.ledger.entries.empty",
+    "tui.ledger.review.title",
+    "tui.ledger.review.filter_all",
+    "tui.ledger.review.open",
+    "tui.ledger.review.empty",
+    "tui.ledger.unavailable.title",
+    *_AREA_LOCALE_KEYS.values(),
+    *_AVAILABILITY_LOCALE_KEYS.values(),
+    *_REVIEW_STATUS_LOCALE_KEYS.values(),
+    *_STATUS_LOCALE_KEYS.values(),
+)
 
-def ledger_copy(key: str, *, default: str, **values: object) -> str:
+
+def ledger_copy(key: str, **values: object) -> str:
     """Resolve all operator copy through the canonical catalogue boundary."""
-    return tr(key, default=default, **values)
+    return tr(key, **values)
 
 
 def area_label(area: LedgerWorkspaceArea) -> str:
     """Return an operator label without displaying an internal enum token."""
-    return ledger_copy(f"tui.ledger.area.{area.value}", default=area.value.replace("_", " ").title())
+    return ledger_copy(_AREA_LOCALE_KEYS[area])
 
 
 def availability_label(availability: LedgerWorkspaceAvailability) -> str:
     """Render availability with a textual cue independent of colour."""
-    defaults = {
-        LedgerWorkspaceAvailability.AVAILABLE: "Available",
-        LedgerWorkspaceAvailability.LOCKED: "Locked",
-        LedgerWorkspaceAvailability.STALE: "Stale",
-        LedgerWorkspaceAvailability.NEVER_CAPTURED: "Not captured",
-        LedgerWorkspaceAvailability.UNAVAILABLE: "Unavailable",
-    }
-    return ledger_copy(f"tui.ledger.availability.{availability.value}", default=defaults[availability])
+    return ledger_copy(_AVAILABILITY_LOCALE_KEYS[availability])
 
 
 def review_status_label(status: str) -> str:
     """Translate a source status without leaking its transport spelling."""
-    defaults = {"pending": "Pending", "reviewed": "Reviewed", "skipped": "Skipped"}
-    return ledger_copy(f"tui.ledger.review_status.{status}", default=defaults.get(status, "Other"))
+    key = _REVIEW_STATUS_LOCALE_KEYS.get(status)
+    if key is None:
+        raise ValueError("unsupported Ledger review status")
+    return ledger_copy(key)
+
+
+def status_label(status: LedgerWorkspaceStatus) -> str:
+    """Render source status through its authored catalogue key."""
+    return ledger_copy(_STATUS_LOCALE_KEYS[status])
+
+
+def item_count_label(state: LedgerWorkspaceAreaStateV1) -> str:
+    """Keep an unmeasured denominator distinct from a measured numeric zero."""
+    return status_label(state.status) if state.status is LedgerWorkspaceStatus.UNMEASURED else str(state.item_count)
 
 
 class LedgerWorkspaceController:
     """Read-only custody of one injected application projection and shell context."""
 
-    def __init__(self, context: TuiScreenContextV1, projection: LedgerWorkspaceProjectionV1) -> None:
+    def __init__(
+        self,
+        context: TuiScreenContextV1,
+        projection: LedgerWorkspaceProjectionV1,
+        *,
+        review_action: ActionReference,
+    ) -> None:
         """Admit an outer Ledger context and retain its immutable snapshot."""
         if context.destination != "workbench.ledger":
             raise ValueError("Ledger workspace requires the workbench.ledger screen context")
@@ -83,6 +150,7 @@ class LedgerWorkspaceController:
             raise ValueError("unsupported Ledger workspace projection contract")
         self.context = context
         self.projection = projection
+        self.review_action = review_action
         self._states = {row.area: row for row in projection.areas}
 
     def state_for(self, area: LedgerWorkspaceArea) -> LedgerWorkspaceAreaStateV1:
@@ -142,7 +210,7 @@ class LedgerWorkspaceController:
                 LedgerReviewRowV1(
                     transaction_id=transaction_id,
                     review_status=source.review_status,
-                    action=ActionReference(action_id="operator.ledger.review"),
+                    action=self.review_action,
                     source=source,
                 )
             )
@@ -205,14 +273,14 @@ class LedgerWorkspaceScreen(Screen[None]):
     def populate_navigation(self) -> None:
         """Populate the complete seven-area catalogue in canonical order."""
         table = cast("DataTable[str]", self.query_one("#ledger-navigation", DataTable))
-        table.add_column(ledger_copy("tui.ledger.column.destination", default="Destination"), key="destination")
-        table.add_column(ledger_copy("tui.ledger.column.availability", default="Availability"), key="availability")
-        table.add_column(ledger_copy("tui.ledger.column.items", default="Items"), key="items")
+        table.add_column(ledger_copy("tui.ledger.column.destination"), key="destination")
+        table.add_column(ledger_copy("tui.ledger.column.availability"), key="availability")
+        table.add_column(ledger_copy("tui.ledger.column.items"), key="items")
         for area in LedgerWorkspaceArea:
             state = self.controller.state_for(area)
             refusal = self.controller.refusal_for(area)
             availability = state.availability if refusal is None else refusal.availability
-            table.add_row(area_label(area), availability_label(availability), str(state.item_count), key=area.value)
+            table.add_row(area_label(area), availability_label(availability), item_count_label(state), key=area.value)
 
     def handle_navigation_selection(self, event: DataTable.RowSelected) -> bool:
         """Handle the common navigation table and expose refusals as visible copy."""
@@ -225,10 +293,7 @@ class LedgerWorkspaceScreen(Screen[None]):
         if refusal is not None:
             self.refusal = refusal
             notice.update(
-                ledger_copy(
-                    refusal.reason_key,
-                    default="This destination is not available in the current workspace.",
-                )
+                ledger_copy(refusal.reason_key)
             )
             return True
         target = self.controller.route_target(area)
@@ -252,6 +317,8 @@ __all__ = [
     "LedgerWorkspaceScreen",
     "area_label",
     "availability_label",
+    "item_count_label",
     "ledger_copy",
     "review_status_label",
+    "status_label",
 ]

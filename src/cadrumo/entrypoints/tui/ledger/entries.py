@@ -28,14 +28,11 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(ledger_copy("tui.ledger.entries.title", default="Ledger entries"), classes="cadrumo-banner")
+        yield Static(ledger_copy("tui.ledger.entries.title"), classes="cadrumo-banner")
         with ContentScroll(id="ledger-page", classes="cadrumo-scroll ledger-page"):
             yield ContentDataTable[str](id="ledger-navigation", cursor_type="row", zebra_stripes=True)
             yield Static(
-                ledger_copy(
-                    "tui.ledger.entries.redacted",
-                    default="Safe entry index; financial details stay protected.",
-                ),
+                ledger_copy("tui.ledger.entries.redacted"),
                 markup=False,
             )
             yield ContentDataTable[str](id="ledger-entries", cursor_type="row", zebra_stripes=True)
@@ -45,13 +42,13 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         """Populate the safe entry index using semantic row identities."""
         self.populate_navigation()
         table = cast("DataTable[str]", self.query_one("#ledger-entries", DataTable))
-        table.add_column(ledger_copy("tui.ledger.column.entry", default="Entry"), key="entry")
-        table.add_column(ledger_copy("tui.ledger.column.review_status", default="Review status"), key="review_status")
+        table.add_column(ledger_copy("tui.ledger.column.entry"), key="entry")
+        table.add_column(ledger_copy("tui.ledger.column.review_status"), key="review_status")
         for row in self.controller.entry_rows():
             table.add_row(str(row.transaction_id)[:12], review_status_label(row.review_status), key=row.transaction_id)
         if not table.row_count:
             self.query_one("#ledger-refusal", Static).update(
-                ledger_copy("tui.ledger.entries.empty", default="No entries are present in this snapshot.")
+                ledger_copy("tui.ledger.entries.empty")
             )
         restored = self.controller.restored_transaction_id()
         if restored is None:

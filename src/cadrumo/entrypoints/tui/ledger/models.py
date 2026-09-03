@@ -75,8 +75,6 @@ class LedgerReviewRowV1(BaseModel):
     def _mirror_source(self) -> LedgerReviewRowV1:
         if self.transaction_id != self.source.transaction_id or self.review_status != self.source.review_status:
             raise ValueError("Ledger review row must mirror its application projection source")
-        if self.action.action_id != "operator.ledger.review":
-            raise ValueError("Ledger review rows must name the canonical review query")
         return self
 
 
