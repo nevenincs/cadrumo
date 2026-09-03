@@ -5,12 +5,12 @@
 from __future__ import annotations
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
+from ._app_ledger_command_spec_policies import (
+    _POLICY_2,
+)
 from .app_ledger_invoice_common_command_parameters import (
     INVOICE_LIFECYCLE_METADATA_OPTIONS,
     OPTIONAL_IVA_CATEGORY_OPTION,
-)
-from ._app_ledger_command_spec_policies import (
-    _POLICY_2,
 )
 from .command_spec import (
     CommandNodeKind,

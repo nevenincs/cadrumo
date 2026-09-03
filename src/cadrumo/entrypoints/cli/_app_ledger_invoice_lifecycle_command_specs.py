@@ -6,15 +6,15 @@ from __future__ import annotations
 
 from typing import Final
 
-from .app_ledger_invoice_common_command_parameters import (
-    INVOICE_LIFECYCLE_METADATA_OPTIONS,
-    OPTIONAL_IVA_CATEGORY_OPTION,
-)
 from ._app_ledger_command_spec_policies import (
     _POLICY_2,
     _POLICY_4,
     _POLICY_5,
     _POLICY_9,
+)
+from .app_ledger_invoice_common_command_parameters import (
+    INVOICE_LIFECYCLE_METADATA_OPTIONS,
+    OPTIONAL_IVA_CATEGORY_OPTION,
 )
 from .command_spec import (
     ArgumentSpec,

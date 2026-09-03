@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import pytest
 
+from .._app_ledger_invoice_intake_command_specs import LEDGER_INVOICE_INTAKE_COMMAND_SPECS
 from .._app_ledger_invoice_lifecycle_command_specs import (
-    _INVOICE_LIFECYCLE_METADATA_OPTIONS,
-    _OPTIONAL_IVA_CATEGORY_OPTION,
     _REQUIRED_INVOICE_ID_ARGUMENT,
     LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS,
+)
+from ..app_ledger_invoice_common_command_parameters import (
+    INVOICE_LIFECYCLE_METADATA_OPTIONS,
+    OPTIONAL_IVA_CATEGORY_OPTION,
 )
 from ..command_spec import ArgumentSpec, OptionSpec
 
@@ -131,6 +134,62 @@ def _option(
 
 
 _EXPECTED_PARAMETERS = {
+    "app_ledger_invoice_add": (
+        _option(
+            "kind",
+            "cadrumo.domain.iva.classification:InvoiceKind",
+            None,
+            "cli.app.ledger.invoice.kind_help",
+            default_kind="required",
+        ),
+        _option("counterparty_name", "builtins:str", None, None, default_kind="required"),
+        _option("invoice_number", "builtins:str", None, None, default_kind="required"),
+        _option(
+            "invoice_date",
+            "builtins:str",
+            None,
+            "cli.app.ledger.evidence.invoice_date_help",
+            default_kind="required",
+        ),
+        _option("taxable_base", "builtins:str", None, None, default_kind="required"),
+        _option(
+            "country_code",
+            "builtins:str",
+            None,
+            "cli.app.ledger.invoice.country_code_help",
+            default_kind="required",
+        ),
+        _option("iva_rate", "builtins:str", None, None),
+        _option("currency", "builtins:str", "EUR", None),
+        _option(
+            "operation_type",
+            "cadrumo.core.aggregation:IntracomOperationType",
+            None,
+            "cli.app.ledger.invoice.operation_type_help",
+        ),
+        _option("operation_date", "builtins:str", None, "cli.app.ledger.invoice.operation_date_help"),
+        _option("retention_rate", "builtins:str", None, "cli.app.ledger.invoice.retention_rate_help"),
+        _option("retention_amount", "builtins:str", None, "cli.app.ledger.invoice.retention_amount_help"),
+        _option(
+            "invoice_class",
+            "cadrumo.domain.invoices.enums:InvoiceClass",
+            None,
+            "cli.app.ledger.invoice.invoice_class_help",
+        ),
+        _option("counterparty_nif", "builtins:str", None, None),
+        _option("series", "builtins:str", None, "cli.app.ledger.invoice.series_help"),
+        _option(
+            "rectifies_invoice_number",
+            "builtins:str",
+            None,
+            "cli.app.ledger.invoice.rectifies_help",
+        ),
+        _option("recargo", "builtins:str", None, "cli.app.ledger.invoice.recargo_help"),
+        _option(
+            "iva_category", "cadrumo.domain.iva.schema:IvaCategory", None, "cli.app.ledger.invoice.iva_category_help"
+        ),
+        _option("notes", "builtins:str", "", None),
+    ),
     "app_ledger_invoice_remove": (
         _argument("invoice_id", "builtins:str", "cli.app.ledger.invoice.invoice_id_help"),
         _option("yes", "builtins:bool", False, "cli.app.ledger.invoice.yes_help", is_flag=True, flag_value=True),
@@ -227,7 +286,7 @@ _EXPECTED_PARAMETERS = {
 
 
 def test_invoice_lifecycle_parameter_contracts_are_complete_and_ordered() -> None:
-    specs = {spec.key: spec for spec in LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS}
+    specs = {spec.key: spec for spec in (*LEDGER_INVOICE_INTAKE_COMMAND_SPECS, *LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS)}
 
     assert {
         key: tuple(_parameter_contract(parameter) for parameter in specs[key].parameters)
@@ -236,26 +295,39 @@ def test_invoice_lifecycle_parameter_contracts_are_complete_and_ordered() -> Non
 
 
 def test_shared_immutable_parameters_preserve_distinct_command_facts() -> None:
-    specs = {spec.key: spec for spec in LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS}
+    specs = {spec.key: spec for spec in (*LEDGER_INVOICE_INTAKE_COMMAND_SPECS, *LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS)}
+    add = specs["app_ledger_invoice_add"]
     remove = specs["app_ledger_invoice_remove"]
     update = specs["app_ledger_invoice_update"]
     view = specs["app_ledger_invoice_view"]
     wizard = specs["app_ledger_invoice_wizard"]
 
-    assert type(_INVOICE_LIFECYCLE_METADATA_OPTIONS) is tuple
+    assert type(INVOICE_LIFECYCLE_METADATA_OPTIONS) is tuple
     assert remove.parameters[0] is update.parameters[0] is view.parameters[0] is _REQUIRED_INVOICE_ID_ARGUMENT
-    assert update.parameters[4] is wizard.parameters[17] is _OPTIONAL_IVA_CATEGORY_OPTION
+    assert update.parameters[4] is wizard.parameters[17] is add.parameters[17] is OPTIONAL_IVA_CATEGORY_OPTION
     assert all(
         actual is expected
-        for actual, expected in zip(update.parameters[5:12], _INVOICE_LIFECYCLE_METADATA_OPTIONS, strict=True)
+        for actual, expected in zip(update.parameters[5:12], INVOICE_LIFECYCLE_METADATA_OPTIONS, strict=True)
     )
     assert all(
         actual is expected
-        for actual, expected in zip(wizard.parameters[9:16], _INVOICE_LIFECYCLE_METADATA_OPTIONS, strict=True)
+        for actual, expected in zip(wizard.parameters[9:16], INVOICE_LIFECYCLE_METADATA_OPTIONS, strict=True)
+    )
+    assert all(
+        actual is expected
+        for actual, expected in zip(add.parameters[8:13], INVOICE_LIFECYCLE_METADATA_OPTIONS[:5], strict=True)
+    )
+    assert all(
+        actual is expected
+        for actual, expected in zip(add.parameters[14:16], INVOICE_LIFECYCLE_METADATA_OPTIONS[5:], strict=True)
     )
 
     update_notes = update.parameters[3]
     wizard_notes = wizard.parameters[-1]
-    assert update_notes is not wizard_notes
+    add_counterparty_nif = add.parameters[13]
+    wizard_counterparty_nif = wizard.parameters[1]
+    assert update_notes is not wizard_notes is not add.parameters[-1]
     assert update_notes.default.literal is None
     assert wizard_notes.default.literal == ""
+    assert add_counterparty_nif.default.literal is None
+    assert wizard_counterparty_nif.default.kind.value == "required"
