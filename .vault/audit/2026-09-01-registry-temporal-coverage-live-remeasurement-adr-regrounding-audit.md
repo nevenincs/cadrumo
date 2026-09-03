@@ -11270,3 +11270,39 @@ list.
 
 That is the third time this gate has caught a stale or broken condition count
 inside the very edit that caused it.
+
+
+## The duplicate was the only one, and the sweep that proved it is not a gate
+
+Retiring one duplicated condition raised the obvious question: are there others?
+Swept across every screen, comparing each condition's population of
+`(modelo, revision)` pairs, the answer is no. **No two comparable conditions
+report identical populations.** The one retired was the only one.
+
+Two things about that sweep are worth keeping, and neither is a gate.
+
+**The first attempt measured its own blind spot.** It read populations from the
+runner, which returns whatever each entry chose to project - two entries collapse
+their screen onto a different unit and return objects that are not findings at
+all. Everything lacking a `modelo` attribute fell to one empty key, and two
+unrelated screens duly appeared as an IDENTICAL pair of population size one.
+That is the same instrument error recorded four times in this audit, and the
+declaration it violated is a comment sitting in the screens module warning
+exactly this: a caller reading the runner gets whatever the entry chose, while a
+caller calling a screen gets a finding. Redone against each screen's own
+findings, restricted to those carrying a revision coordinate, the false pair
+disappeared.
+
+**Subset relationships at revision granularity are not a signal.** The sound
+sweep reports forty-four of them, and they are arithmetic rather than meaning: a
+condition holding five revisions is inside one holding sixty-five whenever the
+five are among them, which says nothing about whether the two describe the same
+thing. `grounded_by_own_note` inside `provenance_consistency` is two unrelated
+facts about overlapping revisions.
+
+So this is not becoming a gate. Population identity between two conditions is
+not an invariant - two genuinely different conditions may legitimately coincide
+on a corpus this size, and a gate asserting they never do would be asserting a
+coincidence. The duplicate that was found was found by reading what two
+conditions MEAN; the set comparison only confirmed it, and confirming is all a
+comparison of populations can do.

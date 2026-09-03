@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:b6685596017e581789538fc9be05d3237553b235852d9bba79fb10668ae7c322'
+body_hash: 'sha256:fb21aedb6e57a4217e2d30c19fb1ccc7c200bf43926f8e16ef653538a9232d30'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -459,6 +459,7 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S420` - Test a published export tree by its generation provenance manifest rather than by the directory that also holds authored layout fragments, and record that modelos 185 and 222 ship published filing bytes for revisions declaring applicability grade; `dev/registry/analysis/modelo_capability.py`.
 - [ ] `W04.P09.S421` - Resolve the contradiction in modelos 185 and 222 revision 2025-y-siguientes, which ship a provenance-attested published export tree while declaring applicability grade, so the registry says they cannot file and the repository ships their filing bytes; `src/cadrumo/_data/registry/aeat/modelos/185 src/cadrumo/_data/registry/aeat/modelos/222`.
 - [x] `W04.P09.S422` - Retire the capability condition that duplicates the grade screen: its 25 revisions are exactly the grade screens under-declared findings whose prerequisite is export_layout, set-equal both ways, so one stated a symptom the other states as a conclusion naming its cause; `dev/registry/analysis/modelo_capability.py`.
+- [x] `W04.P09.S423` - Sweep every screen condition for a duplicated population and record the negative result: none is identical to another, subset relations at revision granularity are arithmetic rather than meaning, and population identity is a coincidence rather than an invariant so it must not become a gate; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 
