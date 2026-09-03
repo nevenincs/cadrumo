@@ -10571,3 +10571,41 @@ empty or invented modelo. That refusal immediately failed three constructed-desi
 tests writing into a bare temporary directory, which is the guard working: the
 fixtures now build `modelo_999/files/` and are as faithful about where a design
 lives as about what it contains.
+
+
+## Repeated literals are not a usable signal, and one stated convention is a minority practice
+
+The five-copy entry-point defect prompted a search for the same shape elsewhere.
+Two measurements, one of which is a dead end worth recording so it is not
+repeated.
+
+**Repeated string literals do not separate duplication from ordinary use.**
+Across `dev/registry`, 235 string literals of eight characters or more appear in
+three or more modules. The top of the list is `registry` in 50, `revisions` in
+38, `__main__` in 34, `source_ref` in 25 - dict keys naming registry fields and
+one Python idiom. These are the same string because they name the same field,
+which is correct, and no rule over literal text separates them from the case
+that matters. A gate here would have a population that is overwhelmingly right,
+which this campaign has already established is not a gate. Abandoned
+deliberately.
+
+**A convention the tree states about itself holds in a minority of its
+modules.** One gate module declares its encoding constant with the comment
+"Named once per module, as this tree requires, rather than repeated at each read
+site where a typo would be a silent decode change". Measured: `dev/registry`
+passed a raw `"utf-8"` at 146 `encoding=` sites across 48 modules, against 35
+sites using a named constant. The convention is real and the reasoning is sound;
+what is not true is "as this tree requires", which describes an aspiration as an
+established rule.
+
+This is not gated, for the same reason as above inverted: a gate would fail 48
+modules, nearly all owned by other campaigns and outside this execution's scope,
+and a gate that cannot be made green by the person who adds it is a gate that
+gets suppressed.
+
+What was in scope was this work's own contribution to the count. Six modules
+written during this thread passed the raw literal - two analysis modules and
+four test modules, against four analysis modules that followed the convention -
+so the same author was on both sides of it within one campaign, which is a fair
+measure of how much an unenforced convention travels. Those six are corrected;
+the tree now stands at 138 raw sites in 42 modules against 44 named.
