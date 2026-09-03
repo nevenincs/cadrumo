@@ -116,18 +116,22 @@ def test_a_revision_without_a_generated_layout_is_refused_by_name(
         compare_revision_against_committed(authority, modelo=modelo, revision=revision_id)
 
 
-def test_every_non_reproducing_tree_is_dispositioned_and_every_disposition_is_live(
+def test_every_record_drifting_tree_is_dispositioned_and_every_disposition_is_live(
     authority: ValidatedRegistryAuthority,
 ) -> None:
-    """No published tree sits in an unexplained state, and no explanation outlives its cause.
+    """No tree unsafe to republish sits unexplained, and no explanation outlives its cause.
 
-    The gate refuses in both directions. A tree that stops reproducing without a
-    row fails, which is the point: an unexplained difference in filing data is
-    exactly what nobody notices. A row whose tree has been repaired fails too,
-    so a disposition cannot linger and quietly excuse a condition that returns.
+    The ledger carries the record-drifting class alone. That is the class where
+    regenerating ships something worse than what is published, so each member
+    owes a written account, and the gate refuses in both directions: a drifting
+    tree with no row fails, and a row whose tree has been repaired fails too.
 
-    It stores no count and no ceiling. Six rows today is not the contract;
-    every tree being accounted for is.
+    Manifest-only staleness is asserted rather than ledgered, in the companion
+    test below. The two classes are separated here because they fail for
+    different reasons and want different work: one is a repair, the other a
+    republication.
+
+    It stores no count and no ceiling. Two rows today is not the contract.
     """
     import tomllib
 
@@ -140,21 +144,59 @@ def test_every_non_reproducing_tree_is_dispositioned_and_every_disposition_is_li
     declared = tomllib.loads(dispositions_path.read_text(encoding="utf-8"))
     dispositioned = {key: value[0] for key, value in declared.items() if key != "schema_version"}
 
-    observed: dict[str, str] = {}
+    assert all(row["class"] == "record_drift" for row in dispositioned.values()), (
+        "this ledger carries the record-drifting class alone; a provenance-only row belongs to the assertion below"
+    )
+
+    drifting: set[str] = set()
     for code in sorted(str(item) for item in registry_modelo_codes()):
         for revision_id in authority.modelo(code).revisions:
             if not bundled_path("registry", "aeat", "modelos", code, "revisions", revision_id, "export").is_dir():
                 continue
             comparison = compare_revision_against_committed(authority, modelo=code, revision=revision_id)
-            state = comparison.disposition_class
-            if state is None:
-                continue
-            observed[f"{code}/{revision_id}"] = state
+            if comparison.disposition_class == "record_drift":
+                drifting.add(f"{code}/{revision_id}")
 
-    assert set(observed) == set(dispositioned), (
-        f"trees that do not reproduce and carry no disposition: {sorted(set(observed) - set(dispositioned))}; "
-        f"dispositions whose tree now reproduces: {sorted(set(dispositioned) - set(observed))}"
+    assert drifting == set(dispositioned), (
+        f"trees whose records drifted and carry no disposition: {sorted(drifting - set(dispositioned))}; "
+        f"dispositions whose tree no longer drifts: {sorted(set(dispositioned) - drifting)}"
     )
-    misclassified = {name: observed[name] for name in observed if dispositioned[name]["class"] != observed[name]}
-    assert not misclassified, f"dispositions whose class no longer matches the observed state: {misclassified}"
     assert all(dispositioned[name]["reason"].strip() for name in dispositioned), "every disposition states a reason"
+
+
+def test_every_manifest_stale_tree_really_does_reproduce_its_records(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """The class that is safe to republish is asserted safe, not individually excused.
+
+    Manifest staleness arrives in bulk - a single generator refactor invalidated
+    twenty-one attestations at once - so demanding a written reason for each
+    would turn the ledger into churn and teach a reader to add rows rather than
+    read them. What actually matters about this class is the claim that makes it
+    safe, and that claim is checkable: the records must reproduce byte-for-byte,
+    with nothing differing but the manifest.
+
+    A tree that reports itself provenance-only while a record differs fails here,
+    which is the same defect the ledger catches from the other side. The
+    population is reported by the screen; only the property is gated.
+    """
+    from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
+    from cadrumo.core.resources.bundled_data import bundled_path
+
+    from ..pipeline.render_check import compare_revision_against_committed
+
+    unsafe: list[str] = []
+    seen = 0
+    for code in sorted(str(item) for item in registry_modelo_codes()):
+        for revision_id in authority.modelo(code).revisions:
+            if not bundled_path("registry", "aeat", "modelos", code, "revisions", revision_id, "export").is_dir():
+                continue
+            comparison = compare_revision_against_committed(authority, modelo=code, revision=revision_id)
+            if comparison.disposition_class != "provenance_only":
+                continue
+            seen += 1
+            if comparison.record_differing or not comparison.semantically_reproduced:
+                unsafe.append(f"{code}/{revision_id}")
+
+    assert seen, "no tree is manifest-stale, so this assertion is exercising nothing"
+    assert not unsafe, f"trees called provenance-only whose records do not in fact reproduce: {unsafe}"
