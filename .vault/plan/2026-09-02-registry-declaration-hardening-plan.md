@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:777fca8f8ef961c6341f8afae0882d980f31951d006a58864d5573aefda881fc'
+body_hash: 'sha256:008090ea32cb850b88e82f98bfcd177e34d8e09f0af93757a431602f6b66fa93'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -484,6 +484,8 @@ Screen and then gate child citations against the source manifest of their owning
 - [ ] `W04.P09.S445` - Decide whether modelo 840s authored semantic map and render profile anticipate an export layout or outlive one, since its only revision declares none and no gate test or render path ever loads the five files; `dev/registry/mappings/modelo_840 dev/registry/render_profiles/modelo_840`.
 - [x] `W04.P09.S446` - Write the verification criterion for what a filer would meet, naming the five filing-correctness findings verified against shipped code and separating the twenty-nine generated trees by the repair each needs; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W04.P09.S447` - Cross-check all four enrolments this package carries and record that the disposition ledgers two rows are exactly the two measured record-drifting trees, and that this works own new screen moved the exposure figure from 27,920 across 34 conditions to 27,922 across 36; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W04.P09.S448` - Read deadline windows as the eighth citing family in both provenance screens, since the taxpayer calendar grounds due dates and no other child names it: 104 of the 263 uncited findings were manufactured by the omission and 243 citing sites outside a manifest were invisible; `dev/registry/analysis/manifest_uncited_references.py dev/registry/analysis/provenance_consistency.py`.
+- [ ] `W04.P09.S449` - Declare a revisions citing children once instead of longhand in each screen, since the family list is written out twice and the deadline window omission propagated from the first screen to the second; `dev/registry/analysis`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 

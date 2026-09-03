@@ -12120,3 +12120,45 @@ Recorded rather than silently left, because an audit that reports a figure and
 then changes the thing measured has the same drift problem it screens the
 registry for - and this campaign has now found that shape in a plan's step, its
 verification prose, its parallelization constraints, and here in its own audit.
+
+
+## Both provenance screens were missing a citing family
+
+Reading the uncited-manifest population rather than counting it found the same
+reference at the top of the list five times over: `aeat-calendario-contribuyente`
+for 2022 through 2026, each reported as uncited by eight or nine revisions.
+
+The taxpayer calendar grounds a revision's DUE DATES. No casilla, formula or
+binding would ever name it - but a deadline window does, and
+`ModeloRevision.deadline_windows` carries `legal_refs` and `source_refs` like any
+other authored child. Both screens read seven families and neither read that one.
+
+The omission cuts both ways and the numbers are not small:
+
+| screen | before | after |
+| ------ | ------ | ----- |
+| manifest references nothing cites | 263 | **159** |
+| citing sites reaching outside a manifest | 31,608 | **31,851** |
+| modelo-and-reference pairs outside | 414 | **472** |
+
+**One hundred and four of the 263 were manufactured by the screen itself** - a
+manifest reference that a deadline window does cite, reported as cited by
+nothing. That is worse than under-reporting: it invented work, and the work
+looked like the tidiest kind, a declared source nobody uses.
+
+**Two hundred and forty-three citing sites were invisible** in the other
+direction, from windows citing an orden or a calendar their manifest does not
+apply. A revision whose due-date grounding reaches outside its own manifest read
+as consistent.
+
+The two screens were built a fortnight apart and inherited the same family list,
+the second from the first. The family list is written out longhand in both, which
+is why the omission propagated: a single declaration of what a revision's citing
+children ARE would have been wrong once rather than twice, and correcting it
+would have been one edit. That is the same finding this campaign has recorded
+against the screen entry points, the note identity and the grade ladder, now in
+the provenance pair.
+
+Both screens now read the eighth family, and each carries a test naming it: one
+asserts no reference a window cites is reported uncited, the other that a
+window's outside citations are reported at all.
