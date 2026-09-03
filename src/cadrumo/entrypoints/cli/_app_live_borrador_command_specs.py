@@ -6,7 +6,15 @@ from __future__ import annotations
 
 from ...core.modelo import Modelo
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
-from ._app_live_command_spec_support import _key
+from ._app_live_command_spec_support import (
+    _ENCRYPTED_LOCAL_READ_POLICY,
+    _LEAF_INVOCATION,
+    _METADATA_GROUP_INVOCATION,
+    _METADATA_POLICY,
+    _REQUIRED_FILING_YEAR_OPTION,
+    NO_RESULT_SCHEMA,
+    _key,
+)
 from .command_spec import (
     ArgumentSpec,
     CommandNodeKind,
@@ -14,7 +22,6 @@ from .command_spec import (
     CommandWriteRoute,
     DeferredTarget,
     ExecutionPolicySpec,
-    InvocationSpec,
     LazyBinding,
     OptionSpec,
     ParameterConstraint,
@@ -32,19 +39,11 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.GROUP,
         help_key=_key("cli.app.live.borrador.app_help"),
         short_help_key=None,
-        invocation=InvocationSpec(no_args_is_help=True, context_parameter=None),
+        invocation=_METADATA_GROUP_INVOCATION,
         parameters=(),
-        policy=ExecutionPolicySpec(
-            capabilities=frozenset(["state-free"]),
-            side_effects=frozenset(["none"]),
-            performance="metadata",
-            write_route=CommandWriteRoute.NONE,
-            destructive=False,
-            handoff=False,
-            live_write=False,
-        ),
+        policy=_METADATA_POLICY,
         handler=None,
-        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
+        result_schema=NO_RESULT_SCHEMA,
     ),
     CommandSpec(
         key="app_live_borrador_100",
@@ -53,19 +52,11 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.GROUP,
         help_key=_key("cli.app.live.borrador.modelo_100_help"),
         short_help_key=None,
-        invocation=InvocationSpec(no_args_is_help=True, context_parameter=None),
+        invocation=_METADATA_GROUP_INVOCATION,
         parameters=(),
-        policy=ExecutionPolicySpec(
-            capabilities=frozenset(["state-free"]),
-            side_effects=frozenset(["none"]),
-            performance="metadata",
-            write_route=CommandWriteRoute.NONE,
-            destructive=False,
-            handoff=False,
-            live_write=False,
-        ),
+        policy=_METADATA_POLICY,
         handler=None,
-        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
+        result_schema=NO_RESULT_SCHEMA,
     ),
     CommandSpec(
         key="app_live_borrador_100_import",
@@ -74,7 +65,7 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.borrador.import_help"),
         short_help_key=None,
-        invocation=InvocationSpec(no_args_is_help=False, context_parameter="ctx"),
+        invocation=_LEAF_INVOCATION,
         parameters=(
             OptionSpec(
                 name="file",
@@ -90,17 +81,7 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 transport_shape=TransportShape.FILE,
                 transport_role=TransportRole.PRIMARY,
             ),
-            OptionSpec(
-                name="filing_year",
-                declarations=("--filing-year",),
-                value=ValueContract(DeferredTarget("builtins", "int")),
-                default=ParameterDefault.required(),
-                help_key=_key("cli.app.live.borrador.filing_year_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(minimum=2000, maximum=2099),
-            ),
+            _REQUIRED_FILING_YEAR_OPTION,
             OptionSpec(
                 name="period",
                 declarations=("--period",),
@@ -138,7 +119,7 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.borrador.list_help"),
         short_help_key=None,
-        invocation=InvocationSpec(no_args_is_help=False, context_parameter="ctx"),
+        invocation=_LEAF_INVOCATION,
         parameters=(
             OptionSpec(
                 name="state",
@@ -152,15 +133,7 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 constraint=ParameterConstraint(minimum=None, maximum=None),
             ),
         ),
-        policy=ExecutionPolicySpec(
-            capabilities=frozenset(["encrypted-facts"]),
-            side_effects=frozenset(["none"]),
-            performance="local-io",
-            write_route=CommandWriteRoute.NONE,
-            destructive=False,
-            handoff=False,
-            live_write=False,
-        ),
+        policy=_ENCRYPTED_LOCAL_READ_POLICY,
         handler=LazyBinding.available(
             DeferredTarget("cadrumo.entrypoints.cli._app_live_borrador_cli", "borrador_100_list")
         ),
@@ -177,7 +150,7 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.borrador.view_help"),
         short_help_key=None,
-        invocation=InvocationSpec(no_args_is_help=False, context_parameter="ctx"),
+        invocation=_LEAF_INVOCATION,
         parameters=(
             ArgumentSpec(
                 name="snapshot_id",
@@ -187,15 +160,7 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 constraint=ParameterConstraint(minimum=None, maximum=None),
             ),
         ),
-        policy=ExecutionPolicySpec(
-            capabilities=frozenset(["encrypted-facts"]),
-            side_effects=frozenset(["none"]),
-            performance="local-io",
-            write_route=CommandWriteRoute.NONE,
-            destructive=False,
-            handoff=False,
-            live_write=False,
-        ),
+        policy=_ENCRYPTED_LOCAL_READ_POLICY,
         handler=LazyBinding.available(
             DeferredTarget("cadrumo.entrypoints.cli._app_live_borrador_cli", "borrador_100_show")
         ),
@@ -212,29 +177,9 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.borrador.latest_help"),
         short_help_key=None,
-        invocation=InvocationSpec(no_args_is_help=False, context_parameter="ctx"),
-        parameters=(
-            OptionSpec(
-                name="filing_year",
-                declarations=("--filing-year",),
-                value=ValueContract(DeferredTarget("builtins", "int")),
-                default=ParameterDefault.required(),
-                help_key=_key("cli.app.live.borrador.filing_year_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(minimum=2000, maximum=2099),
-            ),
-        ),
-        policy=ExecutionPolicySpec(
-            capabilities=frozenset(["encrypted-facts"]),
-            side_effects=frozenset(["none"]),
-            performance="local-io",
-            write_route=CommandWriteRoute.NONE,
-            destructive=False,
-            handoff=False,
-            live_write=False,
-        ),
+        invocation=_LEAF_INVOCATION,
+        parameters=(_REQUIRED_FILING_YEAR_OPTION,),
+        policy=_ENCRYPTED_LOCAL_READ_POLICY,
         handler=LazyBinding.available(
             DeferredTarget("cadrumo.entrypoints.cli._app_live_borrador_cli", "borrador_100_latest")
         ),

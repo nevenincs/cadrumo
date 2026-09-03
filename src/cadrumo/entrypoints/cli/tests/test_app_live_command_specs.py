@@ -9,16 +9,20 @@ from pathlib import Path
 import pytest
 from typer.main import get_command
 
+from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .._app_live_command_spec_support import (
     _ENCRYPTED_LOCAL_READ_POLICY,
     _LEAF_INVOCATION,
     _METADATA_GROUP_INVOCATION,
     _METADATA_POLICY,
+    _OPTIONAL_MODELOS_OPTION,
     _OPTIONAL_TAXPAYER_NIF_OPTION,
     _OPTIONAL_YEAR_FROM_OPTION,
     _OPTIONAL_YEAR_TO_OPTION,
+    _OPTIONAL_YEAR_OPTION,
     _OUTPUT_ROOT_OPTION,
     _PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
+    _REQUIRED_FILING_YEAR_OPTION,
     _REQUIRED_MODELO_OPTION,
     _REQUIRED_PERIOD_OPTION,
     _REQUIRED_YEAR_FROM_OPTION,
@@ -27,6 +31,9 @@ from .._app_live_command_spec_support import (
     NO_RESULT_SCHEMA,
 )
 from .._app_live_command_specs import LIVE_COMMAND_SPECS
+from .._app_live_borrador_command_specs import LIVE_BORRADOR_COMMAND_SPECS
+from .._app_live_deudas_command_specs import LIVE_DEUDAS_COMMAND_SPECS
+from .._app_live_expedientes_command_specs import LIVE_EXPEDIENTES_COMMAND_SPECS
 from .._app_live_foundation_command_specs import LIVE_FOUNDATION_COMMAND_SPECS
 from .._app_live_iva_wallet_command_specs import LIVE_IVA_WALLET_COMMAND_SPECS
 from .._app_live_justificante_command_specs import LIVE_JUSTIFICANTE_COMMAND_SPECS
@@ -38,7 +45,21 @@ from .._app_live_portals_command_specs import LIVE_PORTALS_COMMAND_SPECS
 from .._app_live_verify_command_specs import _VERIFY_EXPECTED_OPTION, LIVE_VERIFY_COMMAND_SPECS
 from .._command_runtime import build_command_subtree
 from .._root_command_specs import ROOT_COMMAND_SPECS
-from ..command_spec import BindingState, CommandSpecGraph, LazyBinding
+from ..command_spec import (
+    BindingState,
+    CommandSpecGraph,
+    CommandWriteRoute,
+    DeferredTarget,
+    ExecutionPolicySpec,
+    InvocationSpec,
+    LazyBinding,
+    OptionSpec,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    ValueContract,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -105,6 +126,181 @@ def _resolve(binding: LazyBinding) -> object:
     return value
 
 
+def _assert_shared_option_contract(
+    option: OptionSpec,
+    *,
+    name: str,
+    declarations: tuple[str, ...],
+    value: DeferredTarget,
+    default: ParameterDefault,
+    help_key: str,
+    constraint: ParameterConstraint,
+    multiple: bool = False,
+    transport_locus: TransportLocus = TransportLocus.NONE,
+    transport_shape: TransportShape = TransportShape.NOT_APPLICABLE,
+    transport_role: TransportRole = TransportRole.NOT_APPLICABLE,
+) -> None:
+    assert option.name == name
+    assert option.declarations == declarations
+    assert option.value == ValueContract(value)
+    assert option.default == default
+    assert option.help_key is not None
+    assert option.help_key.value == help_key
+    assert option.multiple is multiple
+    assert option.is_flag is False
+    assert option.flag_value is None
+    assert option.constraint == constraint
+    assert option.transport_locus is transport_locus
+    assert option.transport_shape is transport_shape
+    assert option.transport_role is transport_role
+
+
+def test_live_shared_support_contracts_are_independently_pinned() -> None:
+    assert _METADATA_GROUP_INVOCATION == InvocationSpec(no_args_is_help=True, context_parameter=None)
+    assert _LEAF_INVOCATION == InvocationSpec(no_args_is_help=False, context_parameter="ctx")
+    assert _METADATA_POLICY == ExecutionPolicySpec(
+        capabilities=frozenset(["state-free"]),
+        side_effects=frozenset(["none"]),
+        performance="metadata",
+        write_route=CommandWriteRoute.NONE,
+        destructive=False,
+        handoff=False,
+        live_write=False,
+    )
+    assert _ENCRYPTED_LOCAL_READ_POLICY == ExecutionPolicySpec(
+        capabilities=frozenset(["encrypted-facts"]),
+        side_effects=frozenset(["none"]),
+        performance="local-io",
+        write_route=CommandWriteRoute.NONE,
+        destructive=False,
+        handoff=False,
+        live_write=False,
+    )
+    assert _PROFILE_BOUND_NETWORK_CAPTURE_POLICY == ExecutionPolicySpec(
+        capabilities=frozenset(["encrypted-facts", "network"]),
+        side_effects=frozenset(["local-state", "network"]),
+        performance="external-io",
+        write_route=CommandWriteRoute.PROFILE_BOUND,
+        destructive=False,
+        handoff=False,
+        live_write=False,
+    )
+    assert NO_RESULT_SCHEMA == ResultSchemaSpec(SchemaState.NOT_SUPPORTED)
+
+    _assert_shared_option_contract(
+        _OPTIONAL_MODELOS_OPTION,
+        name="modelos",
+        declarations=("--modelo",),
+        value=DeferredTarget("builtins", "str"),
+        default=ParameterDefault.value(()),
+        help_key="cli.app.live.filed.pull_modelo_help",
+        constraint=ParameterConstraint(minimum=None, maximum=None),
+        multiple=True,
+    )
+    _assert_shared_option_contract(
+        _OPTIONAL_TAXPAYER_NIF_OPTION,
+        name="taxpayer_nif",
+        declarations=("--taxpayer-nif",),
+        value=DeferredTarget("builtins", "str"),
+        default=ParameterDefault.value(None),
+        help_key="cli.app.live.iva_wallet.taxpayer_nif_help",
+        constraint=ParameterConstraint(minimum=None, maximum=None),
+    )
+    _assert_shared_option_contract(
+        _OPTIONAL_YEAR_FROM_OPTION,
+        name="year_from",
+        declarations=("--from-year",),
+        value=DeferredTarget("builtins", "int"),
+        default=ParameterDefault.value(None),
+        help_key="cli.app.live.from_year_help",
+        constraint=ParameterConstraint(minimum=2000, maximum=2099),
+    )
+    _assert_shared_option_contract(
+        _OPTIONAL_YEAR_TO_OPTION,
+        name="year_to",
+        declarations=("--to-year",),
+        value=DeferredTarget("builtins", "int"),
+        default=ParameterDefault.value(None),
+        help_key="cli.app.live.to_year_help",
+        constraint=ParameterConstraint(minimum=2000, maximum=2099),
+    )
+    _assert_shared_option_contract(
+        _OPTIONAL_YEAR_OPTION,
+        name="year",
+        declarations=("--year",),
+        value=DeferredTarget("builtins", "int"),
+        default=ParameterDefault.value(None),
+        help_key="cli.app.live.year_help",
+        constraint=ParameterConstraint(minimum=2000, maximum=2099),
+    )
+    _assert_shared_option_contract(
+        _OUTPUT_ROOT_OPTION,
+        name="output_root",
+        declarations=("--output-root",),
+        value=DeferredTarget("pathlib", "Path"),
+        default=ParameterDefault.value(None),
+        help_key="cli.app.live.output_root_help",
+        constraint=ParameterConstraint(minimum=None, maximum=None),
+        transport_locus=TransportLocus.LOCAL_OUT,
+        transport_shape=TransportShape.DIRECTORY,
+        transport_role=TransportRole.PRIMARY,
+    )
+    _assert_shared_option_contract(
+        _REQUIRED_FILING_YEAR_OPTION,
+        name="filing_year",
+        declarations=("--filing-year",),
+        value=DeferredTarget("builtins", "int"),
+        default=ParameterDefault.required(),
+        help_key="cli.app.live.borrador.filing_year_help",
+        constraint=ParameterConstraint(minimum=2000, maximum=2099),
+    )
+    _assert_shared_option_contract(
+        _REQUIRED_MODELO_OPTION,
+        name="modelo",
+        declarations=("--modelo",),
+        value=DeferredTarget("builtins", "str"),
+        default=ParameterDefault.required(),
+        help_key="cli.app.live.modelo_help",
+        constraint=ParameterConstraint(minimum=None, maximum=None),
+    )
+    _assert_shared_option_contract(
+        _REQUIRED_PERIOD_OPTION,
+        name="period",
+        declarations=("--period",),
+        value=DeferredTarget("builtins", "str"),
+        default=ParameterDefault.required(),
+        help_key="cli.app.live.period_help",
+        constraint=ParameterConstraint(minimum=None, maximum=None),
+    )
+    _assert_shared_option_contract(
+        _REQUIRED_YEAR_FROM_OPTION,
+        name="year_from",
+        declarations=("--from-year",),
+        value=DeferredTarget("builtins", "int"),
+        default=ParameterDefault.required(),
+        help_key="cli.app.live.from_year_help",
+        constraint=ParameterConstraint(minimum=2000, maximum=2099),
+    )
+    _assert_shared_option_contract(
+        _REQUIRED_YEAR_OPTION,
+        name="year",
+        declarations=("--year",),
+        value=DeferredTarget("builtins", "int"),
+        default=ParameterDefault.required(),
+        help_key="cli.app.live.year_help",
+        constraint=ParameterConstraint(minimum=2000, maximum=2099),
+    )
+    _assert_shared_option_contract(
+        _REQUIRED_YEAR_TO_OPTION,
+        name="year_to",
+        declarations=("--to-year",),
+        value=DeferredTarget("builtins", "int"),
+        default=ParameterDefault.required(),
+        help_key="cli.app.live.to_year_help",
+        constraint=ParameterConstraint(minimum=2000, maximum=2099),
+    )
+
+
 def test_live_specs_are_the_exact_complete_current_surface() -> None:
     graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS))
     live_keys = {spec.key for spec in LIVE_COMMAND_SPECS}
@@ -116,6 +312,9 @@ def test_live_specs_are_the_exact_complete_current_surface() -> None:
 
 def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
     foundation = {spec.key: spec for spec in LIVE_FOUNDATION_COMMAND_SPECS}
+    borrador = {spec.key: spec for spec in LIVE_BORRADOR_COMMAND_SPECS}
+    deudas = {spec.key: spec for spec in LIVE_DEUDAS_COMMAND_SPECS}
+    expedientes = {spec.key: spec for spec in LIVE_EXPEDIENTES_COMMAND_SPECS}
     iva_wallet = {spec.key: spec for spec in LIVE_IVA_WALLET_COMMAND_SPECS}
     justificante = {spec.key: spec for spec in LIVE_JUSTIFICANTE_COMMAND_SPECS}
     verify = {spec.key: spec for spec in LIVE_VERIFY_COMMAND_SPECS}
@@ -131,6 +330,10 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
         portals["app_live_portals"],
         notifications["app_live_notifications"],
         notifications["app_live_notifications_document"],
+        borrador["app_live_borrador"],
+        borrador["app_live_borrador_100"],
+        deudas["app_live_deudas"],
+        expedientes["app_live_expedientes"],
     ):
         assert spec.invocation is _METADATA_GROUP_INVOCATION
         assert spec.policy is _METADATA_POLICY
@@ -143,11 +346,28 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
         *LIVE_VERIFY_COMMAND_SPECS[1:],
         *LIVE_PORTALS_COMMAND_SPECS[1:],
         *(spec for spec in LIVE_NOTIFICATIONS_COMMAND_SPECS[1:] if spec.kind == "leaf"),
+        *LIVE_BORRADOR_COMMAND_SPECS[2:],
+        *LIVE_DEUDAS_COMMAND_SPECS[1:],
+        *LIVE_EXPEDIENTES_COMMAND_SPECS[1:],
     ):
         assert spec.invocation is _LEAF_INVOCATION
 
     for key in ("app_live_filed_list",):
         assert foundation[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
+    for key in (
+        "app_live_borrador_100_list",
+        "app_live_borrador_100_view",
+        "app_live_borrador_100_latest",
+    ):
+        assert borrador[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
+    for key in ("app_live_deudas_list", "app_live_deudas_view", "app_live_deudas_latest"):
+        assert deudas[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
+    for key in (
+        "app_live_expedientes_list",
+        "app_live_expedientes_view",
+        "app_live_expedientes_latest",
+    ):
+        assert expedientes[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
     for key in ("app_live_iva_wallet_history",):
         assert iva_wallet[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
     for key in (
@@ -161,6 +381,7 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
         "app_live_filed_pull_sources",
     ):
         assert foundation[key].policy is _PROFILE_BOUND_NETWORK_CAPTURE_POLICY
+    assert expedientes["app_live_expedientes_pull"].policy is _PROFILE_BOUND_NETWORK_CAPTURE_POLICY
     for key in (
         "app_live_iva_wallet_pull",
         "app_live_iva_wallet_pull_history",
@@ -174,6 +395,16 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
     assert foundation["app_live_filed_list"].parameters[2] is _OPTIONAL_YEAR_TO_OPTION
     assert foundation["app_live_filed_pull"].parameters[2] is _OPTIONAL_YEAR_FROM_OPTION
     assert foundation["app_live_filed_pull"].parameters[3] is _OPTIONAL_YEAR_TO_OPTION
+    assert foundation["app_live_filed_pull"].parameters[0] is _OPTIONAL_MODELOS_OPTION
+    assert foundation["app_live_filed_pull"].parameters[1] is _OPTIONAL_YEAR_OPTION
+    assert expedientes["app_live_expedientes_pull"].parameters == (
+        _OPTIONAL_MODELOS_OPTION,
+        _OPTIONAL_YEAR_OPTION,
+        _OPTIONAL_YEAR_FROM_OPTION,
+        _OPTIONAL_YEAR_TO_OPTION,
+    )
+    assert borrador["app_live_borrador_100_import"].parameters[1] is _REQUIRED_FILING_YEAR_OPTION
+    assert borrador["app_live_borrador_100_latest"].parameters[0] is _REQUIRED_FILING_YEAR_OPTION
     for spec, position in (
         (foundation["app_live_filed_pull_all"], 0),
         (foundation["app_live_filed_pull"], 4),
@@ -253,6 +484,9 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
     graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS))
     for path, spec in (
         (("aeat", "app", "live"), foundation["app_live"]),
+        (("aeat", "app", "live", "borrador", "100", "latest"), borrador["app_live_borrador_100_latest"]),
+        (("aeat", "app", "live", "deudas", "view"), deudas["app_live_deudas_view"]),
+        (("aeat", "app", "live", "expedientes", "pull"), expedientes["app_live_expedientes_pull"]),
         (("aeat", "app", "live", "filed", "pull-sources"), foundation["app_live_filed_pull_sources"]),
         (("aeat", "app", "live", "iva-wallet", "pull-evidence"), iva_wallet["app_live_iva_wallet_pull_evidence"]),
         (("aeat", "app", "live", "justificante", "pull"), justificante["app_live_justificante_pull"]),

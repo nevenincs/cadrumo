@@ -80,6 +80,28 @@ _OPTIONAL_YEAR_TO_OPTION: Final[OptionSpec] = OptionSpec(
     flag_value=None,
     constraint=ParameterConstraint(minimum=2000, maximum=2099),
 )
+_OPTIONAL_MODELOS_OPTION: Final[OptionSpec] = OptionSpec(
+    name="modelos",
+    declarations=("--modelo",),
+    value=ValueContract(DeferredTarget("builtins", "str")),
+    default=ParameterDefault.value(()),
+    help_key=_key("cli.app.live.filed.pull_modelo_help"),
+    multiple=True,
+    is_flag=False,
+    flag_value=None,
+    constraint=ParameterConstraint(minimum=None, maximum=None),
+)
+_OPTIONAL_YEAR_OPTION: Final[OptionSpec] = OptionSpec(
+    name="year",
+    declarations=("--year",),
+    value=ValueContract(DeferredTarget("builtins", "int")),
+    default=ParameterDefault.value(None),
+    help_key=_key("cli.app.live.year_help"),
+    multiple=False,
+    is_flag=False,
+    flag_value=None,
+    constraint=ParameterConstraint(minimum=2000, maximum=2099),
+)
 _OUTPUT_ROOT_OPTION: Final[OptionSpec] = OptionSpec(
     name="output_root",
     declarations=("--output-root",),
@@ -104,6 +126,17 @@ _REQUIRED_MODELO_OPTION: Final[OptionSpec] = OptionSpec(
     is_flag=False,
     flag_value=None,
     constraint=ParameterConstraint(minimum=None, maximum=None),
+)
+_REQUIRED_FILING_YEAR_OPTION: Final[OptionSpec] = OptionSpec(
+    name="filing_year",
+    declarations=("--filing-year",),
+    value=ValueContract(DeferredTarget("builtins", "int")),
+    default=ParameterDefault.required(),
+    help_key=_key("cli.app.live.borrador.filing_year_help"),
+    multiple=False,
+    is_flag=False,
+    flag_value=None,
+    constraint=ParameterConstraint(minimum=2000, maximum=2099),
 )
 _REQUIRED_YEAR_OPTION: Final[OptionSpec] = OptionSpec(
     name="year",
@@ -167,12 +200,15 @@ __all__ = [
     "_LEAF_INVOCATION",
     "_METADATA_GROUP_INVOCATION",
     "_METADATA_POLICY",
+    "_OPTIONAL_MODELOS_OPTION",
     "_OPTIONAL_TAXPAYER_NIF_OPTION",
     "_OPTIONAL_YEAR_FROM_OPTION",
     "_OPTIONAL_YEAR_TO_OPTION",
+    "_OPTIONAL_YEAR_OPTION",
     "_OUTPUT_ROOT_OPTION",
     "_PROFILE_BOUND_NETWORK_CAPTURE_POLICY",
     "_REQUIRED_MODELO_OPTION",
+    "_REQUIRED_FILING_YEAR_OPTION",
     "_REQUIRED_PERIOD_OPTION",
     "_REQUIRED_YEAR_FROM_OPTION",
     "_REQUIRED_YEAR_OPTION",

@@ -4,15 +4,19 @@
 
 from __future__ import annotations
 
-from ._app_live_command_spec_support import _key
+from ._app_live_command_spec_support import (
+    _ENCRYPTED_LOCAL_READ_POLICY,
+    _LEAF_INVOCATION,
+    _METADATA_GROUP_INVOCATION,
+    _METADATA_POLICY,
+    NO_RESULT_SCHEMA,
+    _key,
+)
 from .command_spec import (
     ArgumentSpec,
     CommandNodeKind,
     CommandSpec,
-    CommandWriteRoute,
     DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
     LazyBinding,
     ParameterConstraint,
     ParameterDefault,
@@ -29,19 +33,11 @@ LIVE_DEUDAS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.GROUP,
         help_key=_key("cli.app.live.deudas.app_help"),
         short_help_key=None,
-        invocation=InvocationSpec(no_args_is_help=True, context_parameter=None),
+        invocation=_METADATA_GROUP_INVOCATION,
         parameters=(),
-        policy=ExecutionPolicySpec(
-            capabilities=frozenset(["state-free"]),
-            side_effects=frozenset(["none"]),
-            performance="metadata",
-            write_route=CommandWriteRoute.NONE,
-            destructive=False,
-            handoff=False,
-            live_write=False,
-        ),
+        policy=_METADATA_POLICY,
         handler=None,
-        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
+        result_schema=NO_RESULT_SCHEMA,
     ),
     CommandSpec(
         key="app_live_deudas_list",
@@ -50,17 +46,9 @@ LIVE_DEUDAS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.deudas.list_help"),
         short_help_key=None,
-        invocation=InvocationSpec(no_args_is_help=False, context_parameter="ctx"),
+        invocation=_LEAF_INVOCATION,
         parameters=(),
-        policy=ExecutionPolicySpec(
-            capabilities=frozenset(["encrypted-facts"]),
-            side_effects=frozenset(["none"]),
-            performance="local-io",
-            write_route=CommandWriteRoute.NONE,
-            destructive=False,
-            handoff=False,
-            live_write=False,
-        ),
+        policy=_ENCRYPTED_LOCAL_READ_POLICY,
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live_deudas_cli", "deudas_list")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
@@ -75,7 +63,7 @@ LIVE_DEUDAS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.deudas.view_help"),
         short_help_key=None,
-        invocation=InvocationSpec(no_args_is_help=False, context_parameter="ctx"),
+        invocation=_LEAF_INVOCATION,
         parameters=(
             ArgumentSpec(
                 name="snapshot_id",
@@ -85,15 +73,7 @@ LIVE_DEUDAS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 constraint=ParameterConstraint(minimum=None, maximum=None),
             ),
         ),
-        policy=ExecutionPolicySpec(
-            capabilities=frozenset(["encrypted-facts"]),
-            side_effects=frozenset(["none"]),
-            performance="local-io",
-            write_route=CommandWriteRoute.NONE,
-            destructive=False,
-            handoff=False,
-            live_write=False,
-        ),
+        policy=_ENCRYPTED_LOCAL_READ_POLICY,
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live_deudas_cli", "deudas_view")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
@@ -108,17 +88,9 @@ LIVE_DEUDAS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.deudas.latest_help"),
         short_help_key=None,
-        invocation=InvocationSpec(no_args_is_help=False, context_parameter="ctx"),
+        invocation=_LEAF_INVOCATION,
         parameters=(),
-        policy=ExecutionPolicySpec(
-            capabilities=frozenset(["encrypted-facts"]),
-            side_effects=frozenset(["none"]),
-            performance="local-io",
-            write_route=CommandWriteRoute.NONE,
-            destructive=False,
-            handoff=False,
-            live_write=False,
-        ),
+        policy=_ENCRYPTED_LOCAL_READ_POLICY,
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live_deudas_cli", "deudas_latest")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
