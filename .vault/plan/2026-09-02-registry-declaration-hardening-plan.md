@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:9a3f9b244cfd35a49f54ee7f698e0d77ff36690c25d7d6b802d4d60a4a2ce581'
+body_hash: 'sha256:f9e143a83c95d7aa439a757b1355479f9d05cc0eba8cc751e7498fcde3bd1d42'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -506,6 +506,7 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S456` - Record what the eleven newly walked families cite, led by projection endpoints at 760 findings, and re-test the dangling-reference result on the widened population where all 520 pairs still resolve in their catalogues; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W04.P09.S457` - Re-test the manifest-children relationship with every family walked and correct the earlier reading: 102 of 128 revisions have a manifest contained in their childrens citations and 37 agree exactly, so the corpus was authored to a containment the citing-side screen tests in reverse; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W04.P09.S458` - Publish the reference worklist measured on the complete walk with its date and command: 520 pairs, 256 systemic, 38 single-child where the single-child count fell as the walk widened because references thought to have one citer turned out to have several; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W04.P09.S459` - Read the seven filing-grade revision-name findings and record that modelo 322s misnamed revision hides a fourteen-year coverage gap, since no revision of that modelo serves any year before 2022 and only the directory name claims 2008 to 2021; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 
@@ -533,7 +534,7 @@ Rename the revision directories whose names misstate the window they declare, at
 - [ ] `W05.P12.S35` - Rename the modelo 151 revision whose name claims 2025 while its window opens in 2023; `src/cadrumo/_data/registry/aeat/modelos/151/revisions`.
 - [ ] `W05.P12.S36` - Rename the modelo 185 revision whose name claims 2025 while its window opens in 2026; `src/cadrumo/_data/registry/aeat/modelos/185/revisions`.
 - [ ] `W05.P12.S37` - Rename the modelo 720 revision whose name claims 2013 while its window opens in 2012; `src/cadrumo/_data/registry/aeat/modelos/720/revisions`.
-- [ ] `W05.P12.S38` - Rename the modelo 322 revision whose name claims a 2008 to 2022 span while it declares 2022 only; `src/cadrumo/_data/registry/aeat/modelos/322/revisions`.
+- [ ] `W05.P12.S38` - Rename the modelo 322 revision whose name claims a 2008 to 2022 span while it declares 2022 only, and record what the rename exposes: no revision of that modelo serves any year before 2022, so the name is the only thing in the registry claiming 2008 to 2021; `src/cadrumo/_data/registry/aeat/modelos/322/revisions`.
 - [ ] `W05.P12.S39` - Close or rename the modelo 194 revision named for a single year while declared open-ended; `src/cadrumo/_data/registry/aeat/modelos/194/revisions`.
 - [ ] `W05.P12.S40` - Close or rename the modelo 721 revision named for a single year while declared open-ended; `src/cadrumo/_data/registry/aeat/modelos/721/revisions`.
 - [ ] `W05.P12.S41` - Correct the forward-dated enrolled years on the modelo 202 authorisation entry; `src/cadrumo/_data/registry/aeat/authorization.d/202.toml`.

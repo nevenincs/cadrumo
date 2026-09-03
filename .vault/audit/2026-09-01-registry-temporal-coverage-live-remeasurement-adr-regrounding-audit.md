@@ -12543,3 +12543,35 @@ reason to name it.
 This is the last of the provenance figures to be re-measured on the complete
 walk. Every one of them moved, three of them twice, and none moved because the
 registry changed.
+
+
+## Reading the misnamed revisions: one name hides a fourteen-year gap
+
+The revision-name screen reports seven findings on filing-grade revisions, and
+the plan already carries a rename Step for each of the three that matter -
+modelos 151, 720 and 322. Reading them rather than counting them adds one fact
+those Steps did not have.
+
+**Modelo 322's `2008-2022` serves only 2022.** Its `valid_from` is 2022-01-01
+and its `valid_to` is 2022-12-31. The modelo's other revisions open in 2023,
+2024 and 2026, so its earliest coverage of any kind begins in 2022 - and **no
+revision serves any year from 2008 to 2021.** The name is the only thing in the
+registry claiming those fourteen years.
+
+That changes what the rename is. Correcting the name to `2022` does not lose
+coverage, because there is none to lose; it removes the appearance of coverage.
+Whether those years should be served is a separate question the registry cannot
+answer, but a reader looking for modelo 322 in 2015 currently finds a revision
+directory named for that year and would have to read `valid_from` to learn it
+does not apply.
+
+The other two are narrower and point the opposite way - a revision serving more
+than its name claims. Modelo 151's `2025-y-siguientes` opens in 2023, so 2023 and
+2024 are served by a directory named 2025; modelo 720's `2013-y-siguientes` opens
+in 2012. In both, selecting by name understates reach, which is the safer
+direction and is why the screen's docstring says it attracts less attention.
+
+Three of the seven are modelo 369's `esquema-exterior`, `esquema-importacion` and
+`esquema-union`, which carry no year token because they are not temporal at all -
+the non-temporal scheme axis sitting in the revision slot, which the plan already
+tracks as its own Step.
