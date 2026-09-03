@@ -1,0 +1,6 @@
+{
+  "en": {"tui.ledger.flow.in_flight_refusal":"Wait for the current operation to finish before leaving this screen."},
+  "es": {"tui.ledger.flow.in_flight_refusal":"Espera a que termine la operación actual antes de salir de esta pantalla."},
+  "ca": {"tui.ledger.flow.in_flight_refusal":"Espera que acabi l'operació actual abans de sortir d'aquesta pantalla."},
+  "hu": {"tui.ledger.flow.in_flight_refusal":"A képernyő elhagyása előtt várja meg a jelenlegi művelet befejezését."}
+}
