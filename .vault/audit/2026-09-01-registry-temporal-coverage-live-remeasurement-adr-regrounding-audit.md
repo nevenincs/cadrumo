@@ -10368,3 +10368,47 @@ no label to key it by, so it would need a placeholder - which would then repeat
 on every sheet carrying one and be read by the label-scope screen as a single
 label defined many times, manufacturing exactly the ambiguity that screen exists
 to detect.
+
+
+## The unnumbered note is design-level, and the corpus is unanimous about it
+
+The scope question left open is now answered, by two measurements that agree.
+
+**The direct refutation.** Modelo 200's unnumbered note states how *importes*
+are written - fifteen integers, sign carriage, two decimals, which is a
+seventeen-character amount field. The sheet it is printed on, `DP200001`,
+carries 113 fields and **not one amount field of that width**. The 5,665 fields
+the note describes sit on **74 other sheets**. A note cannot be a statement about
+a sheet that contains nothing it describes, and reading the printing sheet as
+the scope would put this note out of reach of every field it governs.
+
+**The corpus-wide shape.** `dev/registry/analysis/unnumbered_note_scope.py`
+reports the structure around every such note. Of **51 designs carrying one, 47
+print exactly one note across a multi-sheet design and 4 repeat one identical
+text across sheets. None carries differing text on different sheets.** Neither
+observed shape supports reading the printing sheet as the scope: the first
+cannot, by the argument above, and the second is one statement printed by a
+repeating page template.
+
+So the sheet is where these notes are *found*, and the design is what they
+govern. The reader continues to return them keyed by sheet, because that is the
+fact it observes, and this screen is what a consumer reads before keying a rule
+to one.
+
+### An earlier reading here was an artifact of a defect since fixed
+
+A measurement taken before the reader stopped gathering continuation lines
+reported three designs whose unnumbered notes differed across sheets, which
+would have been direct evidence for sheet scope. It was wrong. The differences
+were absorbed neighbours: modelo 220's four "distinct" texts were one note, "El
+NIF es obligatorio", plus varying amounts of a following `NOTA 2:` swept into
+it. With the reader claiming only a note's own line, that design's sheets all
+carry the same text and the differing condition has no instance in the corpus at
+all.
+
+The condition is kept and is proven on a constructed design rather than deleted.
+It is the one shape where a sheet would genuinely distinguish, and a screen whose
+third condition had quietly become unreachable is a screen that would stop
+reporting a real change without anyone noticing. The corpus assertion is paired
+with a check that both observed conditions do occur, so it cannot pass
+vacuously if the reader ever stops reading.
