@@ -375,7 +375,7 @@ def _scope_matches(
 
 def calendar_legal_label(value: ObligationStatus) -> str:
     """Render legal deadline status."""
-    return declarations_copy(f"tui.declarations.calendar.legal.{value.value}")
+    return declarations_copy(f"tui.declarations.calendar.legal.{value.value.lower()}")
 
 
 def calendar_user_label(value: OverviewPeriodState) -> str:

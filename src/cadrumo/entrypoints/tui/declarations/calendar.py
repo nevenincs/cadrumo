@@ -103,10 +103,10 @@ class DeclarationsCalendarScreen(Screen[None]):
             self.query_one("#declarations-calendar-agenda", ContentDataTable),
         )
         table.add_column(declarations_copy("tui.declarations.calendar.column.close"), width=10)
-        table.add_column(declarations_copy("tui.declarations.calendar.column.declaration"), width=19)
-        table.add_column(declarations_copy("tui.declarations.calendar.column.legal"), width=14)
-        table.add_column(declarations_copy("tui.declarations.calendar.column.local"), width=14)
-        table.add_column(declarations_copy("tui.declarations.calendar.column.aeat"), width=14)
+        table.add_column(declarations_copy("tui.declarations.calendar.column.declaration"), width=16)
+        table.add_column(declarations_copy("tui.declarations.calendar.column.legal"), width=13)
+        table.add_column(declarations_copy("tui.declarations.calendar.column.local"), width=13)
+        table.add_column(declarations_copy("tui.declarations.calendar.column.aeat"), width=13)
 
     def _refresh(self) -> None:
         table = cast("DataTable[str]", self.query_one("#declarations-calendar-agenda", DataTable))
@@ -152,7 +152,7 @@ class DeclarationsCalendarScreen(Screen[None]):
                 "tui.declarations.calendar.empty.stale",
                 observed=timestamp_label(observed_at),
             )
-        if query:
+        if query or self.controller.projection.entries:
             return declarations_copy("tui.declarations.calendar.empty.search")
         return declarations_copy("tui.declarations.calendar.empty.known")
 
@@ -220,7 +220,8 @@ class DeclarationsCalendarScreen(Screen[None]):
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         """Render details for the exact semantic row key."""
-        if event.data_table.id != "declarations-calendar-agenda":
+        table = cast("DataTable[str]", event.data_table)
+        if table.id != "declarations-calendar-agenda":
             return
         row = self._rows_by_identity.get(str(event.row_key.value))
         if row is not None:
@@ -229,7 +230,8 @@ class DeclarationsCalendarScreen(Screen[None]):
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Invoke only an injected natural-address or canonical recovery handoff."""
-        if event.data_table.id != "declarations-calendar-agenda":
+        table = cast("DataTable[str]", event.data_table)
+        if table.id != "declarations-calendar-agenda":
             return
         row = self._rows_by_identity.get(str(event.row_key.value))
         if row is None:

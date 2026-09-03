@@ -297,6 +297,7 @@ def test_closed_routes_and_factory_require_exact_catalogue_actions() -> None:
         "declarations.overview",
         "declarations.revisions",
         "declarations.filing_history",
+        "declarations.calendar",
         "declarations.modelo_workspace",
     )
     factory = declarations_screen_factory(
@@ -325,7 +326,7 @@ async def test_each_screen_has_four_targets_one_outer_scroll_and_no_overflow(scr
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
-        assert screen.query_one("#declarations-navigation", DataTable).row_count == 4
+        assert screen.query_one("#declarations-navigation", DataTable).row_count == 5
         assert geometry_band(app, 80) == []
         assert all(table.max_scroll_x == 0 for table in screen.query(DataTable))
         owners = tuple(widget for widget in screen.walk_children() if widget.display and widget.show_vertical_scrollbar)
