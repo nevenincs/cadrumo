@@ -12470,3 +12470,43 @@ this one had grown by a quarter through a route nobody checked it against. The
 top construct citation, `lirpf-cuota-chain-authority`, is a declared authority id
 rather than a law article and resolves like the rest - so even the reference that
 looks least like a legal citation is catalogued.
+
+
+## The manifest is a summary of its children's citations, not a constraint on them
+
+An earlier section concluded that a manifest and its children's citations "relate
+in both directions" and that "the corpus was not authored to [either contract] in
+either direction". That was measured with seven citing families. With all of
+them, the relationship is far more one-sided, and the earlier reading was wrong.
+
+Across 128 revisions the four cases partition cleanly:
+
+| relationship | revisions |
+| ------------ | --------- |
+| manifest is a strict subset of what children cite | 65 |
+| the two agree exactly | 37 |
+| manifest carries references nothing cites, and nothing more | 14 |
+| each side has something the other lacks | 12 |
+
+**One hundred and two of the 128 have a manifest contained in what their children
+cite**, and thirty-seven of those are exact equality. Only twenty-six carry
+anything in the manifest that no child cites, where the earlier figure suggested
+sixty-nine did.
+
+So the corpus was authored to a contract after all, and it is the opposite of the
+one the citing-side screen tests. That screen asks whether a child stays INSIDE
+its manifest, which almost no revision satisfies; the corpus behaves as though
+the manifest is a SUMMARY of what its children cite - a subset, often the whole
+of it, occasionally with a stray addition.
+
+That reframes the open decision. The question is not "which containment did the
+authors intend", which looked unanswerable when both directions had large
+populations. It is whether the manifest is meant to be the complete union of its
+children's citations - which thirty-seven revisions already achieve and
+sixty-five approach from below - or a deliberately shorter statement of the
+authorities that govern the revision as a whole.
+
+The earlier conclusion was reached honestly on the population then visible, and
+it is wrong for the same reason several figures in this campaign were: the walk
+that produced it saw eight families of nineteen. A conclusion drawn from a
+partial walk is not merely imprecise; this one pointed the opposite way.

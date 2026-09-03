@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:6e66f878956eeaf8f8dd983e7b00d77b17e2b007d589e49d04d5ac19d8c58911'
+body_hash: 'sha256:8505d97005658187ed21ef9a75580cbdf47bdb86019c29fc61f29331cb4e4090'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -468,7 +468,7 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S415` - Separate a reference absent from every revision of its modelo from one missing between manifests that agree elsewhere: the 1,389 index rows are 414 references of which 213 are systemic and 201 are drift, and the per-revision index cannot tell the two corrections apart; `dev/registry/analysis/provenance_consistency.py dev/registry/tests/test_provenance_consistency.py`.
 - [x] `W04.P09.S416` - Rule out a dangling reference in the provenance population and report where to look first: all 414 pairs resolve in catalogues of 1,374 legal and 499 source ids, seventeen references are cited by a single child and ninety-nine by a hundred or more; `dev/registry/analysis/provenance_consistency.py`.
 - [x] `W04.P09.S417` - Screen the mirror direction, 263 manifest references no child cites, since the two surfaces disagree both ways: 59 revisions declare a subset of what their children cite and 69 declare references nothing cites, so the citing-side population measures a contract nobody declared; `dev/registry/analysis/provenance_consistency.py dev/registry/tests/test_provenance_consistency.py`.
-- [ ] `W04.P09.S418` - Decide what a revision manifest declares relative to its childrens citations before correcting either side, since the two disagree in both directions and no rule states which contains which; `src/cadrumo/_data/registry/aeat/modelos`.
+- [ ] `W04.P09.S418` - Decide whether a revision manifest is the complete union of its childrens citations or a shorter statement of what governs the revision, since with every family walked 102 of 128 revisions have a manifest contained in what their children cite and 37 agree exactly, where a seven-family walk had suggested the two disagreed in both directions; `src/cadrumo/_data/registry/aeat/modelos`.
 - [x] `W04.P09.S419` - Give the mirror condition its own module so the runner reports it, since it landed reachable only from source and the runner showed the citing side alone, which is the invisibility failure this package had just corrected elsewhere; `dev/registry/analysis/manifest_uncited_references.py dev/registry/tests/test_manifest_uncited_references.py dev/registry/analysis/screens.py dev/registry/README.md`.
 - [x] `W04.P09.S420` - Test a published export tree by its generation provenance manifest rather than by the directory that also holds authored layout fragments, and record that modelos 185 and 222 ship published filing bytes for revisions declaring applicability grade; `dev/registry/analysis/modelo_capability.py`.
 - [ ] `W04.P09.S421` - Resolve the contradiction in modelos 185 and 222 revision 2025-y-siguientes, which ship a provenance-attested published export tree while declaring applicability grade, so the registry says they cannot file and the repository ships their filing bytes; `src/cadrumo/_data/registry/aeat/modelos/185 src/cadrumo/_data/registry/aeat/modelos/222`.
@@ -504,6 +504,7 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S454` - Re-measure the filer-facing criterion after the derived walk: every one of the sixty-nine filing-grade revisions now carries a condition where two were clean, which is the same corpus read more completely rather than a regression; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W04.P09.S455` - Check the packages other hand-written schema list and record it complete: the six year-level temporal sites are exactly what the schema yields, and the one near-miss states a period offset rather than which years a revision serves; `dev/registry/analysis/temporal_site_agreement.py`.
 - [x] `W04.P09.S456` - Record what the eleven newly walked families cite, led by projection endpoints at 760 findings, and re-test the dangling-reference result on the widened population where all 520 pairs still resolve in their catalogues; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W04.P09.S457` - Re-test the manifest-children relationship with every family walked and correct the earlier reading: 102 of 128 revisions have a manifest contained in their childrens citations and 37 agree exactly, so the corpus was authored to a containment the citing-side screen tests in reverse; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 
