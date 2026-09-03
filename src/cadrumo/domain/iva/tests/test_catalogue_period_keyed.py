@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from datetime import date
 from pathlib import Path
+from shutil import copy2, copytree
 
 import pytest
 
 from ....core.resources.bundled_data import bundled_path
+from .._grounding import registry_catalogues
 from ..catalogue import bundled_iva_catalogue, iva_catalogue_years, load_iva_catalogue, resolve_catalogue
 from ..errors import IvaCatalogueError
 
@@ -110,3 +112,31 @@ def test_loader_refuses_a_verified_quotation_absent_from_its_corpus(tmp_path: Pa
 
     with pytest.raises(IvaCatalogueError, match="quotation_absent_from_corpus"):
         load_iva_catalogue(target)
+
+
+def test_loader_cache_invalidates_after_cited_corpus_evidence_changes(tmp_path: Path) -> None:
+    """A green cache entry cannot outlive the corpus bytes it certified."""
+    source_root = tmp_path / "source"
+    registry_root = source_root / "registry" / "aeat"
+    copytree(bundled_path("registry", "aeat", "legal"), registry_root / "legal")
+    target = tmp_path / "catalogues.toml"
+    copy2(bundled_path("registry", "aeat", "iva", "catalogues.toml"), target)
+    legal, _sources, _loaded_root = registry_catalogues(registry_root=registry_root, source_root=source_root)
+    reference = legal["ley-37-1992:art-90"]
+    corpus_path = bundled_path(*reference.corpus_ref.partition("#")[0].split("/"))
+    target_corpus = source_root / reference.corpus_ref.partition("#")[0]
+    target_corpus.parent.mkdir(parents=True)
+    copy2(corpus_path, target_corpus)
+    sidecar = corpus_path.with_name(corpus_path.name + ".extracted.json")
+    target_sidecar = target_corpus.with_name(target_corpus.name + ".extracted.json")
+    copy2(sidecar, target_sidecar)
+
+    assert load_iva_catalogue(target, registry_root=registry_root, source_root=source_root)
+
+    target_sidecar.write_text(
+        target_sidecar.read_text(encoding="utf-8").replace("21 por ciento", "25 por ciento", 1),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(IvaCatalogueError, match="quotation_absent_from_corpus"):
+        load_iva_catalogue(target, registry_root=registry_root, source_root=source_root)

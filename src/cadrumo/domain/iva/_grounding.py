@@ -50,6 +50,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ...core.hashing import content_hash_hex, sha256_file
 from ...core.resources.bundled_data import bundled_path
 from .errors import IvaCatalogueError
 
@@ -60,7 +61,11 @@ if TYPE_CHECKING:
     from ..calculations.registry.schema_references import LegalReference, SourceReference
 
 
-def registry_catalogues() -> tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], Path]:
+def registry_catalogues(
+    *,
+    registry_root: Path | None = None,
+    source_root: Path | None = None,
+) -> tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], Path]:
     """Return the legal and source catalogues, with the root they resolve against.
 
     A tree that cannot be loaded raises the registry loader's own error
@@ -75,11 +80,66 @@ def registry_catalogues() -> tuple[Mapping[str, LegalReference], Mapping[str, So
     # Keep this import local: the registry's binding modules consume the public
     # IVA facade, and these loaders are part of that facade, so a module-level
     # import here would close an import cycle.
-    from ..calculations.registry.loader import load_registry_tree
+    from ..calculations.registry.loader import load_shared_catalogues
 
-    source_root = bundled_path()
-    _, catalogues = load_registry_tree(source_root / "registry" / "aeat")
-    return catalogues.legal, catalogues.sources, source_root
+    resolved_source_root = bundled_path() if source_root is None else source_root.resolve()
+    resolved_registry_root = (
+        resolved_source_root / "registry" / "aeat" if registry_root is None else registry_root.resolve()
+    )
+    catalogues = load_shared_catalogues(resolved_registry_root)
+    return catalogues.legal, catalogues.sources, resolved_source_root
+
+
+def legal_evidence_fingerprints(
+    reference_ids: Iterable[str],
+    *,
+    legal: Mapping[str, LegalReference],
+    source_root: Path,
+) -> tuple[tuple[str, ...], ...]:
+    """Fingerprint cited legal records and the corpus bytes their checks read.
+
+    A catalogue cache can safely reuse a green verification only while both the
+    legal declaration and its cited document plus extracted-corpus sidecar are
+    byte-identical.  Missing or escaping files are represented in the key so
+    their later creation or correction cannot retain a prior cache result; the
+    verifier remains responsible for producing the user-facing refusal.
+    """
+    fingerprints: list[tuple[str, ...]] = []
+    for reference_id in sorted(set(reference_ids)):
+        reference = legal.get(reference_id)
+        if reference is None:
+            fingerprints.append(("legal", reference_id, "unknown"))
+            continue
+        fingerprints.append(
+            ("legal", reference_id, content_hash_hex(reference.model_dump(mode="json"))),
+        )
+        corpus_path = reference.corpus_ref.partition("#")[0]
+        document = source_root / corpus_path
+        fingerprints.extend(_evidence_file_fingerprint(document, source_root=source_root))
+        fingerprints.extend(
+            _evidence_file_fingerprint(
+                document.with_name(document.name + ".extracted.json"),
+                source_root=source_root,
+            ),
+        )
+    return tuple(fingerprints)
+
+
+def _evidence_file_fingerprint(path: Path, *, source_root: Path) -> tuple[tuple[str, ...], ...]:
+    """Describe one cited corpus file without pre-empting verifier diagnostics."""
+    try:
+        resolved_root = source_root.resolve()
+        resolved = path.resolve()
+    except OSError as exc:
+        return (("evidence", str(path), "unresolvable", str(exc)),)
+    if resolved_root not in resolved.parents and resolved != resolved_root:
+        return (("evidence", str(path), "escapes_source_root"),)
+    try:
+        stat = resolved.stat()
+        digest = sha256_file(resolved)
+    except OSError as exc:
+        return (("evidence", str(resolved), "unavailable", str(exc)),)
+    return (("evidence", str(resolved), str(stat.st_size), str(stat.st_mtime_ns), digest),)
 
 
 def legal_ref_failures(
