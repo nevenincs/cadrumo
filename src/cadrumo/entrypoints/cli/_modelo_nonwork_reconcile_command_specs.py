@@ -12,6 +12,11 @@ from ._modelo_nonwork_command_spec_policies import (
     _MODEL_HANDOFF,
     _MODEL_READ,
 )
+from ._modelo_nonwork_common_command_parameters import (
+    _optional_text_argument,
+    _optional_text_option,
+    _optional_whole_number_option,
+)
 from .command_spec import (
     ArgumentSpec,
     CommandNodeKind,
@@ -29,78 +34,13 @@ from .command_spec import (
 )
 
 RECONCILE_TARGET_PARAMETERS: Final[tuple[ArgumentSpec | OptionSpec, ...]] = (
-    ArgumentSpec(
-        name="work_unit_id",
-        value=ValueContract(DeferredTarget("builtins", "str")),
-        default=ParameterDefault.value(None),
-        help_key=TranslationKey("cli.app.modelo.reconcile.work_unit_id_help"),
-    ),
-    OptionSpec(
-        name="modelo",
-        declarations=("--modelo",),
-        value=ValueContract(DeferredTarget("builtins", "str")),
-        default=ParameterDefault.value(None),
-        help_key=TranslationKey("cli.app.modelo.work.modelo_help"),
-        multiple=False,
-        is_flag=False,
-        flag_value=None,
-        constraint=ParameterConstraint(),
-    ),
-    OptionSpec(
-        name="year",
-        declarations=("--year",),
-        value=ValueContract(DeferredTarget("builtins", "int")),
-        default=ParameterDefault.value(None),
-        help_key=TranslationKey("cli.app.modelo.work.year_help"),
-        multiple=False,
-        is_flag=False,
-        flag_value=None,
-        constraint=ParameterConstraint(),
-    ),
-    OptionSpec(
-        name="period",
-        declarations=("--period",),
-        value=ValueContract(DeferredTarget("builtins", "str")),
-        default=ParameterDefault.value(None),
-        help_key=TranslationKey("cli.app.modelo.work.period_help"),
-        multiple=False,
-        is_flag=False,
-        flag_value=None,
-        constraint=ParameterConstraint(),
-    ),
-    OptionSpec(
-        name="revision",
-        declarations=("--revision",),
-        value=ValueContract(DeferredTarget("builtins", "str")),
-        default=ParameterDefault.value(None),
-        help_key=TranslationKey("cli.app.modelo.work.revision_help"),
-        multiple=False,
-        is_flag=False,
-        flag_value=None,
-        constraint=ParameterConstraint(),
-    ),
-    OptionSpec(
-        name="bucket_id",
-        declarations=("--bucket-id",),
-        value=ValueContract(DeferredTarget("builtins", "str")),
-        default=ParameterDefault.value(None),
-        help_key=TranslationKey("cli.app.modelo.work.bucket_id_help"),
-        multiple=False,
-        is_flag=False,
-        flag_value=None,
-        constraint=ParameterConstraint(),
-    ),
-    OptionSpec(
-        name="actor",
-        declarations=("--by",),
-        value=ValueContract(DeferredTarget("builtins", "str")),
-        default=ParameterDefault.value(None),
-        help_key=TranslationKey("cli.app.modelo.work.actor_help"),
-        multiple=False,
-        is_flag=False,
-        flag_value=None,
-        constraint=ParameterConstraint(),
-    ),
+    _optional_text_argument("work_unit_id", "cli.app.modelo.reconcile.work_unit_id_help"),
+    _optional_text_option("modelo", ("--modelo",), "cli.app.modelo.work.modelo_help"),
+    _optional_whole_number_option("year", ("--year",), "cli.app.modelo.work.year_help"),
+    _optional_text_option("period", ("--period",), "cli.app.modelo.work.period_help"),
+    _optional_text_option("revision", ("--revision",), "cli.app.modelo.work.revision_help"),
+    _optional_text_option("bucket_id", ("--bucket-id",), "cli.app.modelo.work.bucket_id_help"),
+    _optional_text_option("actor", ("--by",), "cli.app.modelo.work.actor_help"),
 )
 
 MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
@@ -183,16 +123,8 @@ MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(
-            OptionSpec(
-                name="work_unit_id",
-                declarations=("--work-unit-id",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.reconcile.list_work_unit_id_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
+            _optional_text_option(
+                "work_unit_id", ("--work-unit-id",), "cli.app.modelo.reconcile.list_work_unit_id_help"
             ),
         ),
         policy=_MODEL_READ,
