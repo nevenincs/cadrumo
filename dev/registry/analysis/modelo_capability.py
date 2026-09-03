@@ -48,7 +48,9 @@ Six conditions are reported, and every row names one:
   declared window spans years its deadline windows do not cover. The revision
   can be filed for those years and cannot say by when. Nine revisions have this
   temporal gap and six are filing grade; the other three sit below filing grade,
-  where the gap costs nothing, and are left to the temporal screen.
+  where the gap costs nothing, and are left to the temporal screen. A revision
+  declaring no deadline window at all is reported by the condition above and not
+  here, so the two never both fire on one revision.
 
 - ``claims_calculation_without_formulas`` - a filing-grade revision whose modelo
   declares `calculation_class = filing` while the revision declares no formula.
@@ -261,7 +263,11 @@ def screen_authority(
                     ),
                 )
             )
-        if row.files_here and row.undated_window_years:
+        # A revision with NO deadline window at all is reported by the condition
+        # above, once, rather than once per year of its window. Without this
+        # guard the two conditions both fire on it, which is the duplication
+        # this screen retired a condition for.
+        if row.files_here and row.deadline_windows and row.undated_window_years:
             findings.append(
                 ModeloCapabilityFinding(
                     modelo=row.modelo,

@@ -172,3 +172,79 @@ def test_an_informative_modelo_without_formulas_is_not_reported(authority: Valid
     ]
 
     assert findings == []
+
+
+def test_the_two_deadline_conditions_never_both_fire_on_one_revision() -> None:
+    """A revision missing every deadline window is reported once, not once per year.
+
+    "No deadline window at all" and "no deadline window for some years of the
+    declared window" are the same defect at two scales, and the undated-year
+    computation returns every year when there are none. Without a precedence the
+    two conditions both fire, which is the duplication this screen retired
+    another condition for - and which they did, on modelos 151 and 165, until
+    measured.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+    from ..analysis.corpus import bundled_modelo_ids
+    from ..analysis.modelo_capability import screen_authority
+
+    findings = screen_authority(bundled_authority(), bundled_modelo_ids())
+    none_at_all = {(f.modelo, f.revision) for f in findings if f.kind == "files_here_without_deadline"}
+    some_years = {(f.modelo, f.revision) for f in findings if f.kind == "files_here_for_years_it_cannot_date"}
+    assert none_at_all and some_years, "one of the two conditions is empty, so this proves nothing"
+    assert not (none_at_all & some_years)
+
+
+def test_the_year_gap_condition_is_the_filing_grade_subset_of_the_temporal_screen() -> None:
+    """This screen narrows the temporal screen's finding; it does not restate it.
+
+    The temporal screen reports every revision whose closed window has undated
+    years. This one reports those that can actually be filed, where being unable
+    to date a year is a defect a filer meets. A strict subset is the evidence
+    that it narrows rather than duplicates - a screen reporting the same set
+    would be one fact under two names.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+    from ..analysis.corpus import bundled_modelo_ids
+    from ..analysis.modelo_capability import screen_authority
+    from ..analysis.temporal_site_agreement import screen_authority as temporal_screen
+
+    authority = bundled_authority()
+    modelo_ids = bundled_modelo_ids()
+    theirs = {
+        (f.modelo, f.revision)
+        for f in temporal_screen(authority, modelo_ids)
+        if f.kind == "window_year_without_deadline"
+    }
+    mine = {
+        (f.modelo, f.revision)
+        for f in screen_authority(authority, modelo_ids)
+        if f.kind == "files_here_for_years_it_cannot_date"
+    }
+    assert mine < theirs, "the year-gap condition no longer narrows the temporal screen"
+
+
+def test_the_undated_years_come_from_the_temporal_screen() -> None:
+    """One computation, one home.
+
+    Which years a revision serves is stated in three places the temporal screen
+    reconciles. An earlier draft read the years back out of that screen's
+    finding PROSE, which is a second implementation in disguise and would have
+    returned nothing at all had the wording changed.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+    from ..analysis.corpus import bundled_modelo_ids
+    from ..analysis.modelo_capability import capability_census
+    from ..analysis.temporal_site_agreement import undated_window_years
+
+    authority = bundled_authority()
+    modelo_ids = bundled_modelo_ids()
+    checked = 0
+    for row in capability_census(authority, modelo_ids):
+        revision = authority.modelo(row.modelo).revisions[row.revision]
+        assert row.undated_window_years == undated_window_years(revision)
+        checked += 1
+    assert checked, "the census is empty, so this compared nothing"
