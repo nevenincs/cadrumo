@@ -5676,3 +5676,30 @@ thirty tests across the four newest modules - and the lane-visibility screen rep
 the tree carrying no execution marker at all. That check has now been run at every point where
 this campaign added tests, because the two occasions it was skipped both produced a green result
 over an empty selection.
+
+### campaign-findings-use-a-second-heading-format | high | Eighty findings appended here cannot be cited, because they abandoned the format the preceding hundred and thirty-one use
+
+This audit's headings divide exactly at the point this campaign began writing in it. The 131
+findings before line 3279 carry `slug | severity | summary`. The 80 after line 3390 - every one
+appended by this work - carry a prose sentence and nothing else.
+
+The consequence is not cosmetic. A structured heading gives a finding a stable identifier, and
+the earlier findings are cited by it throughout this document and its siblings: B9, GENREVIEW-003,
+REVIEW-001. Not one of the eighty can be referenced except by quoting a sentence that may be
+rewritten. They also carry no severity, so a reader cannot triage them, and the 131 that do can
+be sorted by one.
+
+This is precisely the defect the campaign exists to remove, committed by the campaign in the
+document recording its removal. A second declaration of one concept - here, of what a finding
+looks like - introduced by an author who did not read the convention before writing eighty
+instances of an alternative. The earlier findings were read constantly for evidence; their
+headings were looked past every time.
+
+The conversion is not attempted in this iteration and the reason is worth stating rather than
+leaving as an omission. Each of the eighty needs a slug and a severity, and severity is a
+judgement about consequence that this campaign has spent forty findings arguing cannot be
+assigned mechanically. Eighty provisional severities would read as authoritative and be worth
+less than none, which is the same argument that refused a baselined gate twice.
+
+This finding uses the correct format, which is the smallest honest start: the convention is
+followed from the moment it is noticed, and the backlog is named rather than absorbed.

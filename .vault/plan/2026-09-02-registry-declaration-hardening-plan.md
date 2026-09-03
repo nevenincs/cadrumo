@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:e63311ce12b9d3342d6e3b0f337f3d81676c50c451dca7af5e4ab87f0a3dcbcf'
+body_hash: 'sha256:88d76e66f4de793c2bce075c3335b45a124b7c7144635e834434a59e49f8b5d4'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -467,6 +467,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S229` - Measure every live classification against both regimes and separate the eleven that never load from the twenty-nine that load only cold; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S230` - Screen every live classification against a clean load in both cache regimes so the forty unsupported claims are reproducible; `dev/registry/analysis/load_claim_verification.py,dev/registry/tests/test_load_claim_verification.py`.
 - [x] `W06.P13.S231` - Record why the selection probe and the load-claim screen sit outside the single-registry entry point and confirm both are lane-selected; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S232` - Record that this campaign's eighty findings use a heading format the audit's preceding hundred and thirty-one do not; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
