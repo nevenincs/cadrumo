@@ -8,6 +8,7 @@ against, so none of them asserts on the symbol's existence or signature.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
 
@@ -27,7 +28,7 @@ from ....core.i18n.render import tr
 from ..__main__ import run
 from ..app import CadrumoTuiApp
 from ..devtools.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
-from ..launcher import InstalledWorkbenchRootInputsV1, main
+from ..launcher import InstalledWorkbenchRootInputsV1, compose_installed_workbench_root, main
 
 if TYPE_CHECKING:
     from textual.pilot import Pilot
@@ -114,6 +115,26 @@ def _root_inputs_provider(service: WorkbenchSearchService | None = None):
     return lambda: _root_inputs(service)
 
 
+def test_root_composition_preserves_existing_area_factories_and_refuses_search_admission_drift() -> None:
+    """One source generation cannot make a palette route disagree with its screen."""
+    inputs = _root_inputs()
+    composition = compose_installed_workbench_root(inputs)
+
+    assert composition.destination_catalogue.resolve("workbench.profile").factory is _screen_factory
+    assert composition.destination_catalogue.resolve("workbench.ledger").factory is _screen_factory
+    assert composition.destination_catalogue.resolve("workbench.declarations").factory is _screen_factory
+    assert composition.destination_catalogue.resolve("workbench.aeat_sync").factory is _screen_factory
+
+    drifted_admissions = dict(inputs.admissions)
+    drifted_admissions["workbench.ledger"] = WorkbenchDestinationAdmission(
+        destination="workbench.ledger",
+        state=WorkbenchDestinationAdmissionState.LOCKED,
+        reason_code="workbench.ledger.locked",
+    )
+    with pytest.raises(ValueError, match="search and root navigation admissions"):
+        compose_installed_workbench_root(replace(inputs, admissions=drifted_admissions))
+
+
 def test_entry_point_starts_a_real_session_and_exits_zero() -> None:
     """Running the entry point composes services, mounts the root, and settles."""
     mounted: list[str] = []
@@ -196,7 +217,14 @@ def test_entry_point_injects_and_rebuilds_the_installed_search_provider() -> Non
     assert len(calls) == 1
 
 
-def test_module_entry_refuses_missing_installed_root_composition(capsys: pytest.CaptureFixture[str]) -> None:
-    """Bare module execution cannot claim a root it was not given."""
-    assert run([]) == 2
-    assert capsys.readouterr().err == "workbench.root.composition_required\n"
+def test_module_entry_routes_missing_root_composition_to_honest_shell(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Bare execution starts without inventing projections or an empty index."""
+    providers: list[object] = []
+
+    def start(**kwargs: object) -> int:
+        providers.append(kwargs["workbench_root_inputs_provider"])
+        return 0
+
+    monkeypatch.setattr("cadrumo.entrypoints.tui.__main__.main", start)
+    assert run([]) == 0
+    assert providers == [None]

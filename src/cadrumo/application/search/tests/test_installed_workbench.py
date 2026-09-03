@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import pickle
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -252,6 +253,8 @@ def test_snapshot_has_one_redacted_document_per_current_searchable_projection() 
     assert _BUCKET not in rendered
     assert "aeat_sync.notification." not in rendered
     assert snapshot.service().search(WorkbenchSearchRequest(query="notification")).total_matches == 1
+    with pytest.raises(TypeError, match="memory-only"):
+        pickle.dumps(snapshot)
 
 
 def test_snapshot_rejects_a_destination_admission_from_another_area() -> None:

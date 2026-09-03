@@ -59,6 +59,7 @@ class InstalledWorkbenchRootCompositionV1:
     """One closed root catalogue and explicit refresh doors for a session."""
 
     destination_catalogue: TuiDestinationCatalogueV1
+    admissions: Mapping[str, WorkbenchDestinationAdmission]
     refresh_home: Callable[[], HomeProjectionV1]
     search_inputs: InstalledWorkbenchSearchInputsV1
     refresh_search_inputs: InstalledWorkbenchSearchInputsProviderV1
@@ -252,14 +253,7 @@ def compose_installed_workbench_root(
             raise ValueError("the Home factory accepts only the Home destination")
         return HomeScreen(inputs.home_projection)
 
-    expected_search_admissions = {
-        "workbench.ledger": inputs.search_inputs.ledger_admission,
-        "workbench.declarations": inputs.search_inputs.declarations_admission,
-        "workbench.aeat_sync": inputs.search_inputs.aeat_sync_admission,
-    }
-    for destination, admission in expected_search_admissions.items():
-        if inputs.admissions.get(destination) != admission:
-            raise ValueError("installed search and root navigation admissions must agree")
+    _require_search_admission_parity(inputs.search_inputs, inputs.admissions)
 
     return InstalledWorkbenchRootCompositionV1(
         destination_catalogue=build_destination_catalogue(
@@ -273,17 +267,33 @@ def compose_installed_workbench_root(
             },
             action_candidates=inputs.action_candidates,
         ),
+        admissions=inputs.admissions,
         refresh_home=inputs.refresh_home,
         search_inputs=inputs.search_inputs,
         refresh_search_inputs=inputs.refresh_search_inputs,
     )
 
 
+def _require_search_admission_parity(
+    search_inputs: InstalledWorkbenchSearchInputsV1,
+    admissions: Mapping[str, WorkbenchDestinationAdmission],
+) -> None:
+    """Refuse a palette generation that disagrees with the mounted catalogue."""
+    expected_search_admissions = {
+        "workbench.ledger": search_inputs.ledger_admission,
+        "workbench.declarations": search_inputs.declarations_admission,
+        "workbench.aeat_sync": search_inputs.aeat_sync_admission,
+    }
+    for destination, admission in expected_search_admissions.items():
+        if admissions.get(destination) != admission:
+            raise ValueError("installed search and root navigation admissions must agree")
+
+
 async def _run_root_session(
     *,
     headless: bool,
     auto_pilot: AutopilotCallbackType | None,
-    workbench_root_inputs_provider: InstalledWorkbenchRootInputsProviderV1,
+    workbench_root_inputs_provider: InstalledWorkbenchRootInputsProviderV1 | None = None,
 ) -> None:
     """Compose one session's services, run the root application, settle them.
 
@@ -293,11 +303,26 @@ async def _run_root_session(
     """
     from .app import CadrumoTuiApp
 
-    root = compose_installed_workbench_root(workbench_root_inputs_provider())
+    root = (
+        compose_installed_workbench_root(workbench_root_inputs_provider())
+        if workbench_root_inputs_provider is not None
+        else None
+    )
+
+    if root is None:
+        async with operation_services_scope() as services:
+            await CadrumoTuiApp(services=services).run_async(headless=headless, auto_pilot=auto_pilot)
+        return
+
     service = compose_installed_workbench_search(root.search_inputs)
 
     def refresh_search() -> WorkbenchSearchDoorV1:
-        return compose_installed_workbench_search(root.refresh_search_inputs())
+        refreshed_inputs = root.refresh_search_inputs()
+        _require_search_admission_parity(
+            refreshed_inputs,
+            root.admissions,
+        )
+        return compose_installed_workbench_search(refreshed_inputs)
 
     async with operation_services_scope() as services:
         await CadrumoTuiApp(
@@ -313,7 +338,7 @@ def main(
     *,
     headless: bool = False,
     auto_pilot: AutopilotCallbackType | None = None,
-    workbench_root_inputs_provider: InstalledWorkbenchRootInputsProviderV1,
+    workbench_root_inputs_provider: InstalledWorkbenchRootInputsProviderV1 | None = None,
 ) -> int:
     """Start one dedicated TUI session and report its process exit status.
 
