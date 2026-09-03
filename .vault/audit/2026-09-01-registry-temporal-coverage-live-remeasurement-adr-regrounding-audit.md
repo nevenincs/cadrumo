@@ -10902,3 +10902,42 @@ written from the case in front of me and generalised without checking the other.
 
 Both halves are now tested: two revisions sharing one design produce one work
 item, and one label in two designs produces two.
+
+
+## Note wording drifts between a modelo's designs, and now that is visible
+
+Modelo 303's one drifting note was found because it happened to ground a field
+in this campaign's population. `dev/registry/analysis/note_text_drift.py` asks
+the question of the whole corpus.
+
+Across the bundled transcriptions there are **194 sheet-and-label keys**, of
+which **111 appear in more than one design of their modelo**. Of those, **87
+carry identical text everywhere and 24 do not**. Modelo 303 accounts for fifteen
+of the twenty-four, modelo 202 for five, and modelos 490, 200 and 322 for the
+rest.
+
+The largest is modelo 200's `DP200001:nota 1`, which appears in ten designs
+carrying two texts - six of 315 characters and four of 459. A rule grounded in
+that note under one design and carried forward by name is, after the rewrite,
+grounded in wording that no longer says what it said.
+
+This is the last level of the identity question this package has worked through,
+and each level was learned the same way - by finding a merge that had already
+happened. A label does not identify a note, because a workbook numbers each
+page's notes from one. A sheet and label do not identify it either, because a
+modelo's designs are separate documents. What identifies a note is the design,
+the sheet and the label together.
+
+The screen reports and does not gate, deliberately. Rewording a note between
+revisions is AEAT's to do and is usually the point: a rule changed, so its note
+changed. Twenty-four findings are not twenty-four defects. What must not happen
+is a reviewed rule carried forward while its grounding moves underneath it, and
+that is what this makes visible.
+
+Its detector separates three states that look alike from a distance - a label
+appearing once, appearing several times with one text, and appearing several
+times with different texts - each on constructed designs, plus a case proving
+that two sheets numbering from one are not one key. Without that last one the
+screen would report most of the corpus as drifting. The live assertion holds by
+presence and by the two populations being different sizes, not by the figures,
+which move whenever a design is re-transcribed.
