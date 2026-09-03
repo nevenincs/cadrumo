@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:bed2c2df7796014f8812d283a84ec0c38df5c0e6708622e83561ae4d2dcbca55'
+body_hash: 'sha256:7d430ccd90163670da1f73a8b0454573c10ffdd8bed455e50d67dbb4e04fbda7'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -721,6 +721,7 @@ Apply the accepted contract across the registry so restatement becomes unconstru
 - [ ] `W06.P14.S380` - Derive casilla labels per modelo with a per-revision override only where the official text genuinely differs: keying per revision does not merely duplicate 28,129 strings across the four locales, it lets the copies disagree, and 931 Hungarian, 807 English and 687 Catalan casillas already carry two renderings of one byte-identical Spanish string; `dev/locales src/cadrumo/locales`.
 - [x] `W06.P14.S384` - Make the cross-revision label restatement measurable: a census module in `dev/locales` reusing the roots, catalogue discovery and flattener the locale tooling already owns, reporting restated surplus, genuine divergence and single-revision labels per locale, with the classification proven on constructed input rather than against whatever the live corpus says; `dev/locales`.
 - [x] `W06.P14.S385` - Measure the divergence the duplication count hides: report the casillas whose Spanish label is byte-identical across revisions while a translation of it differs, since every translation diverges on more casillas than the source text does and the excess is divergence the translations introduced; `dev/locales`.
+- [x] `W06.P14.S386` - Prove the label collapse safe before any key shape changes: derive per-casilla labels with per-revision overrides, expand them back over each casillas revision set, and show the reconstruction reproduces all four shipped catalogues byte-for-byte while removing 30,049 of 87,298 strings - with the round trip shown failing on a dropped override rather than only passing; `dev/locales`.
 
 ## Parallelization
 

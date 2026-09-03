@@ -5,16 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:484f14fd3982eb88086e91e5e79fe8487eb6fed20cbe57f801ec77470bf1af04'
+body_hash: 'sha256:19ccec259742d61145a3b61fcf6490bf53f1045bb232d59239d4b467a01c7ddd'
 step_id: 'S04'
 related:
   - "[[2026-09-03-duplication-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Recover and reconcile one disposition for every currently observed clone group without carrying stale groups or muting findings
 

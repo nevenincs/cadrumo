@@ -5,16 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:fdc12ae8dc1cfe6e16c474ea8e13064cde7ef2a67c1dae6c6f38dc6050f41989'
+body_hash: 'sha256:e4f544b16277021505ea61442ca34bfa84e639af1123db2ef04e06659a8aefd4'
 step_id: 'S05'
 related:
   - "[[2026-09-03-duplication-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove disposition parsing and live-clone reconciliation preserve unavailable and changed-scan failures as non-green evidence
 

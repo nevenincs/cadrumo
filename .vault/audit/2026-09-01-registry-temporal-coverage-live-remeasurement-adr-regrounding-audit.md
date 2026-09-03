@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:4e5a403a181249fdb06e8d8f7691a905a70eb86e8a095dd8ddfb0f1235897a77'
+body_hash: 'sha256:381f7e38e85dce185261b0a3cb7a81886809f921680752fed89e0a9b77e73757'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -9914,3 +9914,62 @@ raises, while a glob for a shape the tree does not carry returns empty, and
 empty reads exactly like a clean corpus. The module was moved into
 `dev/locales`, where those helpers are same-package, before it measured
 anything.
+
+## The derivation is lossless, and it removes 30,049 of 87,298 strings
+
+`dev/locales/casilla_label_derivation.py` builds the form the previous sections
+argued for - a label keyed by casilla with a per-revision override only where
+the text genuinely differs - and expands it back over the revisions each casilla
+is labelled under. The expansion reproduces the shipped mapping byte-for-byte in
+every locale:
+
+| locale | stored | derived | removed | override casillas | lossless |
+| ------ | ------ | ------- | ------- | ----------------- | -------- |
+| es | 27,569 | 15,192 | 12,377 | 1,091 | yes |
+| ca | 19,953 | 13,897 | 6,056 | 1,620 | yes |
+| en | 19,917 | 14,025 | 5,892 | 1,800 | yes |
+| hu | 19,859 | 14,135 | 5,724 | 1,933 | yes |
+
+Across the four locales the derived form stores **57,249 strings where the
+catalogues store 87,298**, removing **30,049**. That exceeds the 28,129
+restatement surplus measured earlier, and the excess is not a contradiction: the
+surplus counts only casillas whose revisions agree completely, while the
+derivation also collapses a partially-divergent casilla onto one canonical text
+plus the smaller set of revisions that differ from it. Spanish shows this most
+clearly - 10,586 of its removals are pure restatement and a further 1,791 come
+out of casillas that do diverge somewhere.
+
+The residual is the override population, and it is the number that matters for
+any future key-shape change: **1,091 Spanish casillas, and 1,620 / 1,800 / 1,933
+in Catalan, English and Hungarian**, must stay expressible per revision. A
+derived key shape that cannot carry them is not an improvement, and the earlier
+finding says why the target figures exceed the source: roughly 2,400 of those
+overrides are translations disagreeing where the official text does not, so a
+key-shape change should not be read as ratifying them.
+
+The collapse cannot land in this campaign. The key shape the runtime reads is
+generated from the registry, which is outside this execution's scope, so what
+lands is the evidence that the collapse is safe to make. That is deliberately
+the more useful half to have first: a derivation that drops a string drops
+taxpayer-facing text, and the loss surfaces as a missing translation rather than
+as a generator bug.
+
+Losslessness holds by construction, which is exactly why the round trip is not
+left to assert itself. The reconstruction is shown failing on a derived form
+with one override removed - the shape a generator bug produces - and the failure
+is asserted to land on the casilla whose override was dropped rather than merely
+somewhere, since an inequality caused by anything else would satisfy a weaker
+test while proving nothing. The canonical choice is separately shown to be
+independent of revision ordering, because a derivation whose output depends on
+the order the catalogue was written in cannot be checked by re-running it, and
+an evenly split casilla is where that dependence would hide. The constructed
+cases travel the same `derived_from` path the corpus does rather than a
+reimplementation of the choice.
+
+One test in the first draft of that suite asserted `derived is None` against a
+probe for an attribute that does not exist, which is a tautology dressed as a
+precondition. It was removed rather than repaired, and the case it was meant to
+cover - a fully restated casilla collapsing to one string with no override at
+all - now asserts the override set is empty as well as the canonical text being
+right. A derivation that picked the correct canonical text and then recorded it
+as an override too would reproduce the corpus perfectly and save nothing.
