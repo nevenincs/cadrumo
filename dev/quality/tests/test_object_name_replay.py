@@ -59,6 +59,16 @@ def _module_case(tmp_path: Path) -> tuple[Path, Any, Any, Any, ObjectNameRehears
     _write(repo, "src/example/widgets.py", b"VALUE = 1\n")
     _write(repo, "src/example/consumer.py", b"import example.widgets\n")
     _git(repo, "add", "src/example/__init__.py", "src/example/widgets.py", "src/example/consumer.py")
+    _git(
+        repo,
+        "-c",
+        "user.name=Test",
+        "-c",
+        "user.email=test@example.invalid",
+        "commit",
+        "-qm",
+        "fixture",
+    )
     inventory = scan((repo / "src", repo / "dev"), repo)
     declaration = next(item for item in inventory.declarations if item.path == "src/example/widgets.py")
     finding = next(item for item in inventory.findings if item.name == "widgets")
@@ -114,9 +124,7 @@ def _module_case(tmp_path: Path) -> tuple[Path, Any, Any, Any, ObjectNameRehears
     return repo, inventory, manifest, component, receipt
 
 
-def _generated_case(
-    tmp_path: Path, *, delete: bool = False
-) -> tuple[Path, Any, Any, Any, ObjectNameRehearsalReceipt]:
+def _generated_case(tmp_path: Path, *, delete: bool = False) -> tuple[Path, Any, Any, Any, ObjectNameRehearsalReceipt]:
     repo = tmp_path / "repo"
     inventory, manifest, _component = _fixture(repo)
     generated_path = "dev/generated.txt"
@@ -269,9 +277,7 @@ def test_generator_unallowlisted_entries_never_enter_the_live_tree(
 
     monkeypatch.setattr(replay_module, "_run_command", escape_allowlist)
 
-    replay_object_name_component(
-        manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
-    )
+    replay_object_name_component(manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo)
 
     assert not (repo / escaped_relative).exists()
     assert (repo / "dev/generated.txt").read_bytes() == b"generated Widget\n"
