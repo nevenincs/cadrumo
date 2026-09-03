@@ -60,8 +60,8 @@ class RunContextInfo(BaseModel):
             (e.g. ``"program workflow run"``).
         started_at: Wall-clock UTC timestamp captured at run-context
             enter.
-        arguments: Tuple of :class:`ArgumentRecord` capturing the CLI
-            flags / positional values for replay.
+        arguments: Tuple of :class:`ArgumentRecord` capturing CLI flags and
+            positional values for diagnostic correlation.
         corpus_sha256: Fingerprint of the effective :class:`Settings`
             configuration at enter time.
         db_sha256: Fingerprint of the canonical application data root
@@ -147,27 +147,6 @@ def _step_payload(step_id: str, label: str) -> RunEventPayload:
     return RunEventPayload(step=StepBoundaryPayload(step_id=step_id, label=label))
 
 
-def _resolve_replay_of() -> str | None:
-    """Return the active replay source run id when it is a valid 16-hex token."""
-    from ..config import load_settings
-
-    try:
-        replay_of_env = load_settings().cadrumo_replay_active or None
-    except (KeyError, ValueError, AttributeError):
-        _log.debug(
-            "run_context: replay marker resolution failed; replay_of omitted",
-            exc_info=True,
-        )
-        return None
-    if not replay_of_env or len(replay_of_env) != 16:
-        return None
-    try:
-        int(replay_of_env, 16)
-    except ValueError:
-        return None
-    return replay_of_env.lower()
-
-
 @contextmanager
 def run_context(
     *,
@@ -194,9 +173,8 @@ def run_context(
         entrypoint: Stable string identifying the CLI entry point
             (e.g. ``"cadrumo workflow run"``).
         arguments: Sequence of :class:`ArgumentRecord` capturing the
-            CLI flags / values for replay.
-        run_id: Optional caller-supplied ``run_id`` (used by
-            :func:`cadrumo.core.observability.replay_run`).
+            CLI flags and values for diagnostics.
+        run_id: Optional caller-supplied ``run_id`` for correlation.
         step_id: Optional initial step identifier; defaults to
             ``"step-0"`` for the outermost enter and a derived nested
             id for inner enters.
@@ -258,11 +236,9 @@ def run_context(
     sink = JsonlRunSink(target / EVENTS_FILENAME, run_id=info.run_id)
 
     # Arm result-envelope capture for the run so the emitted
-    # ``SchemaEnvelope`` is persisted as a golden artifact (closing the
-    # F1 gap: replay can now assert "the same JSON came out"). Nesting-
-    # aware: if an outer scope (e.g. ``replay_run``) already armed a
-    # sink, reuse it and do not persist here — that outer scope owns the
-    # comparison. Capture is a no-op cost when no JSON is emitted.
+    # ``SchemaEnvelope`` is persisted as run evidence. Nesting-aware:
+    # an outer capture scope owns its sink and persistence. Capture is a
+    # no-op cost when no JSON is emitted.
     pre_existing_capture = CAPTURE_SINK.get()
     owns_capture = pre_existing_capture is None
     envelope_sink: list[dict[str, object]] = [] if owns_capture else pre_existing_capture
@@ -303,11 +279,6 @@ def run_context(
                 # exception (if any) nor the outcome we already set.
                 _log.warning("failed to record STEP_END for run %s", info.run_id, exc_info=True)
     finally:
-        # If we were re-entered by ``replay_run``, label the persisted
-        # trace with the original run id so a run-detail view can tell a
-        # replay trace apart from a fresh one. Only a legitimately-shaped
-        # 16-hex run id is propagated; any other value is ignored.
-        replay_of = _resolve_replay_of()
         persistence_error: Exception | None = None
         try:
             trace = RunTrace(
@@ -320,7 +291,6 @@ def run_context(
                 db_sha256=info.db_sha256,
                 cert_fingerprint=info.cert_fingerprint,
                 outcome=outcome,
-                replay_of=replay_of,
             )
             save_trace(trace)
         except Exception as exc:

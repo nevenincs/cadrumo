@@ -188,16 +188,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.observability.errors.AeatCorpusDriftError",
-        ErrorCode(
-            code="INTEGRITY_OBSERVABILITY_AEAT_CORPUS_DRIFT",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.integrity_observability_aeat_corpus_drift",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.core.observability.errors.GoldenCaptureError",
         ErrorCode(
             code="INTEGRITY_OBSERVABILITY_GOLDEN_CAPTURE",

@@ -1,9 +1,7 @@
 """Canonicalise / mask / compare primitive for golden-output determinism.
 
-One substrate, two consumers: the observability
-:func:`core.observability.replay_run` envelope-assertion tier and
-the harness operator golden gate both call this primitive; neither
-re-implements capture or compare.
+The harness operator golden gate calls this primitive rather than
+re-implementing capture or comparison.
 
 The captured payload is the verbatim emitted
 :class:`~core.json_contract.SchemaEnvelope` document. On load it is

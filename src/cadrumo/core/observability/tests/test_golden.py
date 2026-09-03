@@ -10,7 +10,7 @@ residual non-deterministic field set once the clock seam is frozen and
 These exercise the real emit path
 (:func:`cadrumo.core.json_contract.emit_json_success`), the real clock seam
 (:func:`cadrumo.core.time.frozen_clock`), and the real identity helpers, so
-a captured ``--format json`` run genuinely replays byte-identical after
+a captured ``--format json`` run can be compared byte-identical after
 masking.
 """
 

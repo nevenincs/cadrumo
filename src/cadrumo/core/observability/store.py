@@ -254,8 +254,8 @@ def save_envelope(
     :class:`~core.json_contract.SchemaEnvelope` mapping captured by
     :func:`core.observability.capture_envelopes` during the run. It
     is stored key-sorted so the on-disk artifact is byte-stable, and it
-    is the golden expectation a later :func:`replay_run` asserts against.
-    Re-validation into a typed envelope happens on load via
+    is durable evidence for the recorded run. Re-validation into a typed
+    envelope happens on load via
     :func:`core.observability.validate_captured_envelope`; this
     writer stays free of any JSON-contract dependency.
 

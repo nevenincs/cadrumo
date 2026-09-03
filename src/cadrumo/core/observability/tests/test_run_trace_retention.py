@@ -135,7 +135,6 @@ def test_save_trace_write_path_fires_retention_prune(tmp_path: Path) -> None:
         db_sha256="b" * 64,
         cert_fingerprint="",
         outcome=RunOutcome.OK,
-        replay_of=None,
     )
 
     with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):

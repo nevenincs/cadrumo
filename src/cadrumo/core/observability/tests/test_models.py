@@ -7,7 +7,6 @@ Covers:
   variant (zero-variant and two-variant payloads must raise).
 * Timezone-awareness rejection on naive datetimes for both
   :class:`RunEvent` and :class:`RunTrace`.
-* :attr:`RunTrace.replay_of` default + round-trip.
 * End-to-end pydantic round-trip through ``model_dump_json`` /
   ``model_validate_json`` for both :class:`RunEvent` and
   :class:`RunTrace`.
@@ -71,7 +70,6 @@ def _make_trace(
     db_sha256: str = "b" * 64,
     cert_fingerprint: str = "",
     outcome: RunOutcome = RunOutcome.OK,
-    replay_of: str | None = None,
 ) -> RunTrace:
     return RunTrace(
         run_id=run_id,
@@ -83,7 +81,6 @@ def _make_trace(
         db_sha256=db_sha256,
         cert_fingerprint=cert_fingerprint,
         outcome=outcome,
-        replay_of=replay_of,
     )
 
 
@@ -148,19 +145,6 @@ class TestTimezoneAwareness:
         for build_model in cases:
             with pytest.raises(ValidationError, match="timezone-aware"):
                 build_model()
-
-
-class TestReplayOfField:
-    """``replay_of`` defaults to ``None`` and round-trips valid run ids."""
-
-    def test_default_none(self) -> None:
-        trace = _make_trace(finished_at=None)
-        assert trace.replay_of is None
-
-    def test_roundtrip_with_replay_of(self) -> None:
-        trace = _make_trace(finished_at=None, replay_of="fedcba9876543210")
-        rebuilt = RunTrace.model_validate_json(trace.model_dump_json())
-        assert rebuilt.replay_of == "fedcba9876543210"
 
 
 class TestRunEventAndTrace:
@@ -233,13 +217,6 @@ class TestRunIdentity:
                 _make_trace(run_id=bad)
         assert _make_trace(run_id=self._CANONICAL).run_id == self._CANONICAL
 
-    def test_replay_of_carries_the_same_identity(self) -> None:
-        """``replay_of`` names another run, so it is the same identity type."""
-        for bad in self._MALFORMED:
-            with pytest.raises(ValidationError):
-                _make_trace(replay_of=bad)
-        assert _make_trace(replay_of=self._CANONICAL).replay_of == self._CANONICAL
-
     def test_minted_run_ids_satisfy_the_canonical_shape(self) -> None:
         """The declared shape is the shape the minter actually produces.
 
@@ -259,13 +236,12 @@ class TestRunIdentity:
 class TestTraceFingerprints:
     """The three trace fingerprints are content digests, not free-form strings.
 
-    ``corpus_sha256`` and ``db_sha256`` gate :func:`replay_run`, and
-    ``cert_fingerprint`` records which credential signed the run. A malformed
-    value here is a claim about bytes that can never be reproduced: the
-    comparison it exists to support silently never matches. Both the persisted
-    :class:`RunTrace` and the in-memory :class:`RunContextInfo` that precedes
-    it carry the same alias, so a bad digest cannot be smuggled in before
-    persistence either.
+    ``corpus_sha256`` and ``db_sha256`` identify the configuration and state
+    observed at a run, and ``cert_fingerprint`` records which credential signed
+    it. A malformed value here is a claim about bytes that can never be
+    reproduced. Both the persisted :class:`RunTrace` and the in-memory
+    :class:`RunContextInfo` that precedes it carry the same alias, so a bad
+    digest cannot be smuggled in before persistence either.
     """
 
     _MALFORMED = ("not-a-digest", "A" * 64, "z" * 64, "a" * 63, "a" * 65, " " + "a" * 63)
@@ -294,8 +270,8 @@ class TestTraceFingerprints:
         return RunTrace.model_validate(payload)
 
     @pytest.mark.parametrize("field", ["corpus_sha256", "db_sha256"])
-    def test_trace_refuses_malformed_replay_fingerprints(self, field: str) -> None:
-        """A replay gate fingerprint must be lowercase hex-64 or nothing at all."""
+    def test_trace_refuses_malformed_fingerprints(self, field: str) -> None:
+        """A trace fingerprint must be lowercase hex-64 or absent where allowed."""
         for bad in self._MALFORMED:
             with pytest.raises(ValidationError):
                 self._trace_with_fingerprint(field, bad)
