@@ -152,9 +152,7 @@ class InstalledWorkbenchRootCompositionV1:
     account_factories: AccountFactoriesV1
 
 
-type InstalledWorkbenchRootInputsProviderV1 = Callable[
-    [TuiOperationCompositionV1], InstalledWorkbenchRootInputsV1
-]
+type InstalledWorkbenchRootInputsProviderV1 = Callable[[TuiOperationCompositionV1], InstalledWorkbenchRootInputsV1]
 
 
 @dataclass(frozen=True, slots=True)
