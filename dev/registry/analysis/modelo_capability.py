@@ -31,9 +31,6 @@ Six conditions are reported, and every row names one:
 
 - ``claims_filing_without_layout`` - a revision at filing grade that declares no
   export layout. The claim has no renderable form behind it.
-- ``layout_without_filing_grade`` - the mirror: a revision carrying an export
-  layout, or an envelope, while declaring a grade below filing. Either the grade
-  understates what the revision can do, or the layout is unreachable.
 - ``envelope_spelled_as_record`` - a layout carrying its envelope smuggled into
   the record tuple as an ``envelope_header`` pseudo-record instead of the typed
   ``filing_envelope`` slot. The bytes may look right and the transport is
@@ -47,6 +44,14 @@ Six conditions are reported, and every row names one:
   also declare none, and every one of those sits below filing grade, where
   saying nothing about a due date is the correct and complete answer. These five
   claim they can be filed and cannot say by when.
+- ``files_here_for_years_it_cannot_date`` - a filing-grade revision whose
+  declared window spans years its deadline windows do not cover. The revision
+  can be filed for those years and cannot say by when. Nine revisions have this
+  temporal gap and six are filing grade; the other three sit below filing grade,
+  where the gap costs nothing, and are left to the temporal screen. A revision
+  declaring no deadline window at all is reported by the condition above and not
+  here, so the two never both fire on one revision.
+
 - ``claims_calculation_without_formulas`` - a filing-grade revision whose modelo
   declares `calculation_class = filing` while the revision declares no formula.
   Fourteen filing-grade revisions carry no formula and ten of them are right to:
@@ -79,6 +84,15 @@ here SHOULD sit at applicability with nothing behind it, and that state produces
 no row at all. What the screen refuses to do is let a filing claim and the
 machinery behind it drift apart silently.
 
+The mirror of that condition - a revision carrying a layout while declaring a
+grade below filing - is deliberately NOT reported here. The grade screen already
+reports it, as an under-declared grade naming ``export_layout`` as the
+prerequisite that supports a higher one, and the two populations were measured
+identical: the same twenty-five revisions, with nothing on either side. One
+stated the symptom and the other states the conclusion and which prerequisite
+drives it, so keeping both was one fact under two names.
+
+
 The screen exits 0 whatever it finds. It reports; it does not gate.
 """
 
@@ -90,7 +104,9 @@ from dataclasses import dataclass
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
+from ..pipeline._provenance_manifest import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from .corpus import bundled_modelo_ids
+from .temporal_site_agreement import undated_window_years
 
 __all__ = [
     "ModeloCapability",
@@ -115,6 +131,12 @@ class ModeloCapability:
     calculation_class: str
     formulas: int
     committed_tree: bool
+    #: Years inside the revision's own declared window that no deadline window
+    #: covers, as the temporal screen reports them. Taken from that screen
+    #: rather than recomputed: which years a revision serves is stated in three
+    #: places the temporal screen already reconciles, and a second reading here
+    #: would be a second answer to a question it exists to settle.
+    undated_window_years: tuple[int, ...] = ()
 
     @property
     def files_here(self) -> bool:
@@ -159,7 +181,19 @@ def _is_xml_dictionary(layout: object) -> bool:
 
 
 def _committed_tree(modelo: str, revision: str) -> bool:
-    return bundled_path("registry", "aeat", "modelos", modelo, "revisions", revision, "export").is_dir()
+    """Whether a PUBLISHED export tree is committed for this revision.
+
+    Tested by the generation provenance manifest rather than by the directory
+    holding it. The two agree across the whole corpus today - all 28 export
+    directories carry a manifest - but they are different claims: the directory
+    is where a revision's authored layout fragments live, and publication writes
+    the generated tree into the same place. A revision that declared export
+    layouts without ever being published would have the directory and no
+    manifest, and the directory test would report it as shipping filing bytes it
+    has never produced.
+    """
+    export_root = bundled_path("registry", "aeat", "modelos", modelo, "revisions", revision, "export")
+    return (export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME).is_file()
 
 
 def capability_census(
@@ -184,6 +218,7 @@ def capability_census(
                     calculation_class=str(definition.calculation_class).rsplit(".", 1)[-1],
                     formulas=len(revision.formulas),
                     committed_tree=_committed_tree(modelo_id, str(revision_id)),
+                    undated_window_years=undated_window_years(revision),
                 )
             )
     return tuple(rows)
@@ -202,16 +237,6 @@ def screen_authority(
                     revision=row.revision,
                     kind="claims_filing_without_layout",
                     detail="declares filing grade and no export layout to render it from",
-                )
-            )
-        elif row.grade != "filing" and (row.layouts or row.envelopes):
-            findings.append(
-                ModeloCapabilityFinding(
-                    modelo=row.modelo,
-                    revision=row.revision,
-                    kind="layout_without_filing_grade",
-                    detail=f"declares {row.grade} grade while carrying {row.layouts} layout(s)"
-                    f" and {row.envelopes} envelope(s)",
                 )
             )
         if row.files_here and row.calculation_class == "filing" and not row.formulas:
@@ -235,6 +260,23 @@ def screen_authority(
                     detail=(
                         "reaches filing grade with a layout but declares no deadline window, "
                         "so it cannot say when the filing is due"
+                    ),
+                )
+            )
+        # A revision with NO deadline window at all is reported by the condition
+        # above, once, rather than once per year of its window. Without this
+        # guard the two conditions both fire on it, which is the duplication
+        # this screen retired a condition for.
+        if row.files_here and row.deadline_windows and row.undated_window_years:
+            findings.append(
+                ModeloCapabilityFinding(
+                    modelo=row.modelo,
+                    revision=row.revision,
+                    kind="files_here_for_years_it_cannot_date",
+                    detail=(
+                        f"reaches filing grade and declares no deadline window for "
+                        f"{len(row.undated_window_years)} year(s) of its own window: "
+                        f"{list(row.undated_window_years)}"
                     ),
                 )
             )

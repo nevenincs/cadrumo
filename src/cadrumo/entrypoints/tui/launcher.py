@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import sys
 from collections.abc import AsyncGenerator, Callable, Generator, Iterable, Mapping, Sequence
 from contextlib import ExitStack, asynccontextmanager, contextmanager
 from dataclasses import dataclass
@@ -31,7 +30,10 @@ if TYPE_CHECKING:
     from textual.screen import Screen
 
     from ...application.modelo.work_review import ModeloWorkReview
-    from ...application.modelo.workspace_models import ModeloWorkspaceStaticInspectionResultV1
+    from ...application.modelo.workspace_models import (
+        ModeloWorkspaceProjectionV1,
+        ModeloWorkspaceStaticInspectionResultV1,
+    )
     from ...application.operations.composition import OperationComposedServices
     from ...application.operations.registry import OperationPublicContractSetV1
     from ...application.operator_actions.models import ActionReference
@@ -73,6 +75,7 @@ def compose_secure_profile_workbench_generation_provider(
     *,
     profile_id: str,
     profile_label: str,
+    operation_contracts: OperationPublicContractSetV1 | None = None,
 ) -> InstalledWorkbenchGenerationProviderV1:
     """Bind the installed provider to the current secure profile session.
 
@@ -81,9 +84,12 @@ def compose_secure_profile_workbench_generation_provider(
     returned provider is the explicit local-I/O boundary for a fresh session
     generation and never initiates network work.
     """
+    from ...adapters.persistence.profile.buckets import build_bucket_event_history_repository
+    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...application.overview.home import HomeAccountSession, HomeSessionPosture
     from ...application.user_profile.login_session_port import (
         profile_current_bucket_session,
@@ -124,8 +130,35 @@ def compose_secure_profile_workbench_generation_provider(
         filing_repository=ModeloRecordCatalogueRepository(bucket_id=profile_id),
         clock=now,
         account_session_reader=account_session,
+        transaction_repository=TransactionCatalogueRepository(bucket_id=profile_id),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=profile_id),
+        bucket_event_repository=build_bucket_event_history_repository(bucket_id=profile_id),
+        operation_contracts=operation_contracts,
+        modelo_projection_reader=_modelo_projection_reader(),
     )
     return ApplicationGenerationProviderV1(door)
+
+
+def _modelo_projection_reader() -> Callable[[WorkUnit], ModeloWorkspaceProjectionV1]:
+    """Read one work unit's canonical workspace projection for search.
+
+    The read is the same static inspection the Modelo workspace itself is
+    admitted through, so a searchable declaration and an opened one cannot
+    describe different registry state. The output language is resolved per
+    read rather than closed over: a profile language change clears the
+    resolver cache, and a projection captured under the previous language
+    would leave the workbench half-translated until sign-out.
+    """
+    from ...core.external_constants import OutputLanguage as _OutputLanguage
+    from ...core.i18n.render import output_language as resolve_output_language
+
+    def project(unit: WorkUnit) -> ModeloWorkspaceProjectionV1:
+        return resolve_modelo_workspace_static_inspection(
+            unit,
+            output_language=_OutputLanguage(resolve_output_language()),
+        ).projection
+
+    return project
 
 
 @dataclass(frozen=True, slots=True)
@@ -474,23 +507,31 @@ def build_modelo_work_review_for_unit(unit: WorkUnit) -> ModeloWorkReview:
 def resolve_modelo_workspace_static_inspection(
     unit: WorkUnit, *, output_language: OutputLanguage
 ) -> ModeloWorkspaceStaticInspectionResultV1:
-    """Assemble the workspace read result for one resolved unit."""
+    """Assemble the workspace read result for one already-resolved unit.
+
+    The unit is addressed by its exact identity rather than by its visible
+    modelo/year/period coordinates. A profile that discarded a declaration and
+    created a new one at the same address holds two units there, and a
+    coordinate request is ambiguous across them — which would refuse a read
+    the caller had already resolved. The catalogue is opened on the unit's own
+    bucket rather than the active-profile pointer, so the read cannot drift to
+    another profile.
+    """
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...application.modelo.work_addressing import ModeloVisibleFilingTarget
+    from ...application.modelo.work_addressing import ModeloExactWorkUnitTarget
     from ...application.modelo.workspace import resolve_static_inspection_result
-    from ...application.modelo.workspace_models import ModeloWorkspaceVisibleFilingTargetV1
+    from ...application.modelo.workspace_models import ModeloWorkspaceExactWorkUnitTargetV1
     from ...domain.calculations.registry.authority import bundled_authority
 
     return resolve_static_inspection_result(
-        ModeloWorkspaceVisibleFilingTargetV1(
-            target=ModeloVisibleFilingTarget(
-                modelo=unit.modelo,
-                filing_year=unit.filing_year,
-                period=unit.period,
+        ModeloWorkspaceExactWorkUnitTargetV1(
+            target=ModeloExactWorkUnitTarget(
+                work_unit_id=unit.work_unit_id,
+                bucket_id=unit.bucket_id,
             )
         ),
         bucket_id=unit.bucket_id,
-        catalogue_repository=WorkUnitCatalogueRepository(),
+        catalogue_repository=WorkUnitCatalogueRepository(bucket_id=unit.bucket_id),
         authority=bundled_authority(),
         output_language=output_language,
     )
@@ -724,10 +765,17 @@ def main(
     neither imports the CLI. ``headless`` and ``auto_pilot`` are Textual's
     own run parameters, carried so a caller can drive a real session to
     completion without a terminal rather than assert against an import.
+
+    Without an injected provider this composes the production installed
+    session: adapters, one truthful profile-inventory observation, whichever
+    existing credential journey that observation names, and the authenticated
+    generation the root shell consumes. A caller that injects a provider has
+    already made those choices, so its session is run exactly as given.
     """
     if workbench_root_inputs_provider is None:
-        sys.stderr.write("workbench.root.composition_required\n")
-        return 2
+        from .installed_session import run_installed_workbench_session
+
+        return run_installed_workbench_session(headless=headless, auto_pilot=auto_pilot)
     asyncio.run(
         run_authenticated_workbench_sessions(
             headless=headless,

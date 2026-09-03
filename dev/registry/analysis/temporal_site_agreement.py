@@ -43,8 +43,11 @@ from .corpus import bundled_modelo_ids
 __all__ = [
     "YEAR_LEVEL_TEMPORAL_SITES",
     "TemporalSiteFinding",
+    "ambiguously_claimed_periods",
     "screen_authority",
     "site_agreement_findings",
+    "undated_window_years",
+    "unserved_interior_years",
 ]
 
 #: Every declared field that states which YEARS a revision serves, as a dotted
@@ -79,6 +82,91 @@ class TemporalSiteFinding:
     revision: str
     kind: str
     detail: str
+
+
+def unserved_interior_years(spans: tuple[tuple[int, int | None], ...]) -> tuple[int, ...]:
+    """Return years inside a modelo's own span that none of its revisions serves.
+
+    ``spans`` is one ``(first_year, last_year)`` pair per revision, with ``None``
+    for a revision that never closes. The interior is measured from the earliest
+    year any revision serves, never from a fixed year: the corpus's modelos begin
+    anywhere from 2003 to 2026, and years before a modelo's first revision are
+    outside the registry's reach rather than missing from it. Modelo 322 carries
+    a revision directory named `2008-2022` that serves 2022 alone, which reads
+    like a fourteen-year hole and is not one.
+
+    Open-ended revisions are closed at the latest year any revision mentions, so
+    the newest revision running open-ended contributes no gap to a horizon
+    nobody declared.
+
+    Separated from the gate that uses it so a constructed gap can be shown to be
+    caught. A gate over a corpus with no instance of its condition proves the
+    corpus clean and says nothing about the gate.
+    """
+    closed = [(start, end) for start, end in spans if end is not None]
+    if not closed:
+        return ()
+    open_starts = [start for start, end in spans if end is None]
+    horizon = max(max(end for _, end in closed), *(open_starts or [0]))
+    served: set[int] = set()
+    for start, end in closed:
+        served |= set(range(start, end + 1))
+    for start in open_starts:
+        served |= set(range(start, horizon + 1))
+    return tuple(year for year in range(min(served), max(served) + 1) if year not in served)
+
+
+def ambiguously_claimed_periods(
+    claims: tuple[tuple[str, int, str], ...],
+) -> tuple[tuple[int, str, tuple[str, ...]], ...]:
+    """Return every filing year and period claimed by more than one revision.
+
+    ``claims`` is one ``(revision, filing_year, period)`` triple per declared
+    deadline window. Two revisions of one modelo claiming the same year AND
+    period is ambiguity a filer meets: both say they apply, and nothing in the
+    declaration decides between them.
+
+    The year alone is the wrong unit and reports ambiguity where there is none.
+    Five modelos in the corpus have two revisions claiming one calendar year -
+    modelo 303 splits 2024 at period 09, modelo 308 splits 2011 in July, modelos
+    490 and 763 split a year by quarter - and every one of those pairs is how a
+    mid-year rule change is correctly declared. Measured on the pair, the corpus
+    has none.
+
+    Separated from the gate that uses it so a constructed clash can be shown to
+    be caught. Silent about revisions declaring no deadline window: they claim
+    no period, so they cannot clash with anything by this measure, and the gate
+    that calls this says so rather than reading its zero as coverage.
+    """
+    claimants: dict[tuple[int, str], set[str]] = collections.defaultdict(set)
+    for revision, filing_year, period in claims:
+        claimants[(filing_year, period)].add(revision)
+    return tuple(
+        (year, period, tuple(sorted(revisions)))
+        for (year, period), revisions in sorted(claimants.items())
+        if len(revisions) > 1
+    )
+
+
+def undated_window_years(revision: ModeloRevision) -> tuple[int, ...]:
+    """Return years inside a revision's CLOSED window that no deadline window covers.
+
+    The one home for this computation. The capability screen needs the same
+    years to say that a filing-grade revision cannot date some of the years it
+    serves, and its first version read them back out of this screen's finding
+    prose - which is a second implementation wearing a disguise, and one that
+    would return nothing at all if this wording were reworded.
+
+    An open window yields nothing: a revision that never closes has no last year
+    to enumerate to, and demanding a deadline for every year to come would be
+    asking it to predict them.
+    """
+    opening = revision.valid_from.year
+    closing = None if revision.valid_to is None else revision.valid_to.year
+    if closing is None:
+        return ()
+    declared = {window.filing_year for window in revision.deadline_windows}
+    return tuple(year for year in range(opening, closing + 1) if year not in declared)
 
 
 def site_agreement_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[TemporalSiteFinding, ...]:
@@ -122,7 +210,7 @@ def site_agreement_findings(revision: ModeloRevision, *, modelo_id: str) -> tupl
             )
 
     if closing is not None:
-        missing = [year for year in range(opening, closing + 1) if year not in set(deadline_years)]
+        missing = list(undated_window_years(revision))
         if missing:
             findings.append(
                 TemporalSiteFinding(

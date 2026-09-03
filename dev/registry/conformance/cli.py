@@ -11,8 +11,6 @@ Verbs:
 
 * ``report`` -- every conformance axis, one row per modelo revision.
 * ``coverage`` -- per-axis measured counts against their real populations.
-* ``audit [--check]`` -- the shrink-only ratchet against the committed
-  baseline.
 * ``closure [--check]`` -- the derived temporal, source, and filing release
   predicate. ``--check`` blocks a shipped-completeness claim while any limb is
   refused or the three denominators disagree.
@@ -26,9 +24,8 @@ Verbs:
 is currently a bad one — ninety unreviewed revisions, five dead schema axes, an
 independent-check coverage under five per cent — and a screen that refused to
 render would leave that backlog unread while teaching every peer to route
-around the tool. ``audit --check`` protects the monotonic conformance ratchet
-without demanding that the current backlog be clean; ``closure --check``
-instead gates the separate, explicit completeness claim and therefore blocks
+around the tool. ``closure`` renders under the same screen posture and gates
+only under ``--check``, which blocks the separate, explicit completeness claim
 while any release limb remains refused.
 
 Reading the output

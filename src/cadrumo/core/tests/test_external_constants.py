@@ -4,7 +4,7 @@ See Also:
     :func:`~core.external_constants.load_external_constants`
         Runtime loader for the packaged TOML registry validated by this test
         module.
-    :class:`~core.external_constants.ExternalConstants`
+    :class:`~core.external_constants.ExternalConstantRegistry`
         Typed, frozen registry root that keeps remote-mirror constants
         schema-owned.
     :class:`~core.config.Settings`
@@ -117,7 +117,7 @@ def _token_literal_offenders(
 
 
 def test_load_external_constants_returns_cached_model_used_by_settings_facade() -> None:
-    """The loader yields the canonical cached :class:`ExternalConstants`."""
+    """The loader yields the canonical cached :class:`ExternalConstantRegistry`."""
 
     constants = load_external_constants()
 
@@ -447,7 +447,7 @@ def test_portal_registry_modules_do_not_reintroduce_route_or_host_literals(
             if id(node) in docstring_ids:
                 continue
             value = node.value
-            is_entry_root_path = path.parent.name == "_entries" and path.name != "_common.py" and value == "/"
+            is_entry_root_path = path.parent.name == "_entries" and path.name != "common.py" and value == "/"
             if is_entry_root_path or any(token in value for token in volatile_tokens):
                 offenders.append(f"{relative_path}:{node.lineno}: {value!r}")
 

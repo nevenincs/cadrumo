@@ -49,7 +49,7 @@ def _authoritative_citation_origins() -> frozenset[str]:
     """Return the registered domains a category citation may cite.
 
     Derived from the canonical
-    :class:`core.external_constants.AeatDomains` registry, which owns every
+    :class:`core.external_constants.AeatDomainSection` registry, which owns every
     AEAT / BOE hostname, so this module never restates a hostname literal
     and a domain rotation reaches citations automatically.
     """
@@ -194,7 +194,7 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
         deduction rule, so an arbitrary host is not a weaker citation --
         it is an unverifiable one. ``AnyHttpUrl`` alone accepts any host on
         either scheme, so the origin is constrained here against the
-        canonical :class:`core.external_constants.AeatDomains` registry
+        canonical :class:`core.external_constants.AeatDomainSection` registry
         rather than against hostname literals restated in this module.
         """
         accepted = _authoritative_citation_origins()

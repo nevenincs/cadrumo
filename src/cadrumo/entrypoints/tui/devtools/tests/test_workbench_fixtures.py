@@ -108,17 +108,7 @@ async def test_every_production_fixture_mounts_at_supported_width_without_geomet
 def test_fixture_module_has_no_adapter_or_implicit_io_import_boundary() -> None:
     path = Path(__file__).parents[1] / "workbench_fixtures.py"
     tree = ast.parse(path.read_text(encoding="utf-8"))
-    imports = [
-        node.module or ""
-        for node in tree.body
-        if isinstance(node, ast.ImportFrom)
-    ] + [
-        alias.name
-        for node in tree.body
-        if isinstance(node, ast.Import)
-        for alias in node.names
+    imports = [node.module or "" for node in tree.body if isinstance(node, ast.ImportFrom)] + [
+        alias.name for node in tree.body if isinstance(node, ast.Import) for alias in node.names
     ]
-    assert not any(
-        any(part in module.casefold() for part in _FORBIDDEN_IMPORT_PARTS)
-        for module in imports
-    )
+    assert not any(any(part in module.casefold() for part in _FORBIDDEN_IMPORT_PARTS) for module in imports)

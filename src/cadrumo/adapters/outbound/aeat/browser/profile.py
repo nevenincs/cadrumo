@@ -34,7 +34,7 @@ def _browser_locale_default() -> str | None:
     module-import time meant a transient external-constants /
     model disagreement could crash an unrelated command — even
     ``--help`` of a verb that never touches the browser — with a raw
-    ``ExternalConstants`` ``ValidationError``. Deferring the
+    ``ExternalConstantRegistry`` ``ValidationError``. Deferring the
     construction to first use (when a ``Profile`` is actually
     instantiated) confines any settings-data drift to the code path
     that genuinely needs the browser adapter.

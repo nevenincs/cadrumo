@@ -22,23 +22,51 @@ from __future__ import annotations
 import sys
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Final, Literal
 
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
+from .capability_continuity import screen_authority as capability_continuity_screen
 from .casilla_id_grammar import screen_authority as grammar_screen
 from .continuity_integrity import screen_authority as continuity_screen
 from .export_ref_symmetry import screen_authority as export_ref_screen
+from .footnote_only_wire_facts import screen_authority as footnote_only_screen
 from .grade_earned import screen_authority as grade_screen
+from .manifest_uncited_references import screen_authority as manifest_uncited_screen
 from .modelo_capability import screen_authority as modelo_capability_screen
 from .monetary_scale import screen_authority as monetary_scale_screen
+from .note_label_scope import screen_corpus as note_label_scope_screen
+from .note_text_drift import screen_corpus as note_text_drift_screen
 from .provenance_consistency import outside_reference_index
 from .provenance_consistency import screen_authority as provenance_screen
 from .revision_name_window import screen_authority as revision_name_screen
+from .rule_grounding_coverage import screen_authority as rule_grounding_screen
 from .temporal_site_agreement import screen_authority as temporal_site_screen
+from .type_convention_notes import screen_authority as type_convention_screen
+from .unnumbered_note_scope import screen_corpus as unnumbered_note_scope_screen
 from .wire_type_compatibility import screen_authority as wire_type_screen
 
-__all__ = ["FINDING_IDENTITY_CONTRACT", "SCREENS", "ScreenEntry", "run_screens"]
+#: A newline, named so the entry-point search below carries no escape.
+LINE_BREAK = chr(10)
+
+#: Named once per module rather than repeated at each read site, where a typo
+#: would be a silent decode change rather than an error.
+_UTF_8: Final[str] = "utf-8"
+
+__all__ = [
+    "CORPUS_SCREENS",
+    "FINDING_IDENTITY_CONTRACT",
+    "SCREENS",
+    "SCREEN_ENTRY_POINTS",
+    "CorpusScreenEntry",
+    "ScreenEntry",
+    "run_corpus_screens",
+    "run_screens",
+    "screen_findings",
+    "screen_module_names",
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,6 +76,33 @@ class ScreenEntry:
     name: str
     run: Callable[[ValidatedRegistryAuthority, tuple[str, ...]], Sequence[object]]
     counts: str
+    #: What the SCREEN's own entry point returns, which is not always findings.
+    #:
+    #: ``findings`` - every row is a finding.
+    #: ``census`` - the entry returns everything it examined, carrying a flag,
+    #: and only flagged rows are findings.
+    #:
+    #: Declared because it cannot be read from the outside and was guessed
+    #: wrongly: a report counted the wire-type screen's 13,624 examined
+    #: transitions as findings where 29 diverge. Nothing here VERIFIES the
+    #: declaration - no mechanical test distinguishes a census from a finding
+    #: set - so it is an author's statement, and its worth is that a consumer
+    #: reads it instead of inferring one.
+    entry_returns: Literal["findings", "census"] = "findings"
+    #: The screen this one is built ON, when it re-describes another's findings
+    #: rather than measuring its own population.
+    #:
+    #: The grounding screen calls the pointer screen and emits one finding per
+    #: field it returns, so their populations are identical by construction -
+    #: measured, 41 findings over the same 41 cells. A consumer counting
+    #: distinct conditions per revision therefore counts that pair twice and
+    #: reports a revision as more contradictory than it is.
+    #:
+    #: Unlike the entry shape above, half of this IS verifiable: a derived
+    #: screen's population must be contained in its source's, and a gate asserts
+    #: that much. What no test can decide is whether a screen that happens to
+    #: agree today was actually built on the other.
+    derives_from: str | None = None
 
 
 def _divergent_transitions(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> Sequence[object]:
@@ -100,6 +155,22 @@ def _outside_references(authority: ValidatedRegistryAuthority, modelo_ids: tuple
     return sorted(outside_reference_index(tuple(provenance_screen(authority, modelo_ids))))
 
 
+def _fields_without_grounding(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> Sequence[object]:
+    """Return only the fields for which no official wording was located.
+
+    The grounding screen's own total is, by construction, the count of fields
+    needing a rule - which is what the pointer screen beside it already reports.
+    Two rows carrying the same number read as one measurement taken twice. What
+    this screen adds is the RESIDUE: the fields that no type convention and no
+    design note speaks to, and which therefore have nowhere for a reviewed rule
+    to come from. That is nought today and it is the number worth watching,
+    because it rises the moment a design arrives without either.
+    """
+    return [item for item in rule_grounding_screen(authority, modelo_ids) if item.kind == "ungrounded"]
+
+
 def _mixing_modelos(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> Sequence[object]:
     """Return only the modelos using more than one identifier grammar."""
     return [use for use in grammar_screen(authority, modelo_ids) if use.mixes]
@@ -140,7 +211,10 @@ SCREENS: tuple[ScreenEntry, ...] = (
         "temporal_site_agreement", temporal_site_screen, "revisions whose temporal sites fall silent or disagree"
     ),
     ScreenEntry(
-        "wire_type_compatibility", _divergent_transitions, "distinct casilla-to-wire type transitions that diverge"
+        "wire_type_compatibility",
+        _divergent_transitions,
+        "distinct casilla-to-wire type transitions that diverge",
+        entry_returns="census",
     ),
     ScreenEntry(
         "continuity_integrity", continuity_screen, "modelos with no continuity, and chains that do not hold together"
@@ -161,12 +235,148 @@ SCREENS: tuple[ScreenEntry, ...] = (
         modelo_capability_screen,
         "disagreements between a revision's declared filing rung and the machinery behind it",
     ),
+    ScreenEntry(
+        "capability_continuity",
+        capability_continuity_screen,
+        "capabilities a revision stopped declaring after its predecessor had them",
+    ),
+    ScreenEntry(
+        "manifest_uncited_references",
+        manifest_uncited_screen,
+        "manifest references no child of the revision cites",
+    ),
+    ScreenEntry(
+        "footnote_only_wire_facts",
+        footnote_only_screen,
+        "fields whose wire fact sits behind a footnote pointer rather than in their own cell",
+    ),
+    ScreenEntry(
+        "type_convention_notes",
+        type_convention_screen,
+        "design notes stating a wire convention for a whole AEAT type",
+    ),
+    ScreenEntry(
+        "rule_grounding_coverage",
+        _fields_without_grounding,
+        "fields needing a reviewed rule for which no official wording was located at all",
+        derives_from="footnote_only_wire_facts",
+    ),
+)
+
+
+@dataclass(frozen=True, slots=True)
+class CorpusScreenEntry:
+    """One screen that reads the design corpus rather than the loaded authority.
+
+    A separate table because the signature genuinely differs - these take no
+    authority and no modelo set, since a transcription belongs to a design and
+    not to a revision - and forcing them through :class:`ScreenEntry` would mean
+    passing arguments they ignore. They are screens in every other sense, and
+    the enrolment gate treats both tables as one population: a module presenting
+    either entry point must appear in the matching table and in the contributor
+    README.
+    """
+
+    name: str
+    run: Callable[[], Sequence[object]]
+    counts: str
+    #: As on :class:`ScreenEntry`; every corpus screen returns findings today.
+    entry_returns: Literal["findings", "census"] = "findings"
+    #: As on :class:`ScreenEntry`. Carried here too so the two entry types can
+    #: declare the same things: an asymmetry between them is a place where a
+    #: consumer has to know which table a screen sits in before it can ask, and
+    #: this field was briefly absent here for exactly that reason.
+    derives_from: str | None = None
+
+
+CORPUS_SCREENS: tuple[CorpusScreenEntry, ...] = (
+    CorpusScreenEntry(
+        "note_label_scope",
+        note_label_scope_screen,
+        "designs where one note label is defined on more than one sheet",
+    ),
+    CorpusScreenEntry(
+        "note_text_drift",
+        note_text_drift_screen,
+        "note labels whose wording differs between a modelo's designs",
+    ),
+    CorpusScreenEntry(
+        "unnumbered_note_scope",
+        unnumbered_note_scope_screen,
+        "designs carrying an unnumbered note, by the structure that bears on its scope",
+    ),
 )
 
 
 def run_screens(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> tuple[tuple[str, int, str], ...]:
     """Run every enrolled screen and return its name, count and what the count means."""
     return tuple((entry.name, len(entry.run(authority, modelo_ids)), entry.counts) for entry in SCREENS)
+
+
+#: The function names by which a module presents itself as a screen.
+#:
+#: Declared once because nine gates were narrow in this one way, each written
+#: when `screen_authority` was the only entry point, and every one of them
+#: silently stopped covering a whole class of screen the day `screen_corpus`
+#: appeared. Two carried their own copy of this literal, four iterated the
+#: authority table, two ran only the authority runner, and one claimed a scope
+#: its body did not have. A check that recognises one shape of a thing reports
+#: its blind spot as absence.
+SCREEN_ENTRY_POINTS: tuple[str, ...] = ("screen_authority", "screen_corpus")
+
+
+def screen_module_names() -> frozenset[str]:
+    """Return every analysis module presenting a screen entry point.
+
+    The walk lives here rather than in the gates that need it, so a new entry
+    point is added in one place and every gate widens with it.
+    """
+    analysis = Path(__file__).resolve().parent
+    return frozenset(
+        path.stem
+        for path in analysis.glob("*.py")
+        if path.name != Path(__file__).name
+        and any(f"{LINE_BREAK}def {entry}(" in path.read_text(encoding=_UTF_8) for entry in SCREEN_ENTRY_POINTS)
+    )
+
+
+def screen_findings(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> tuple[tuple[str, tuple[object, ...]], ...]:
+    """Return each screen's OWN findings, by name, from both tables.
+
+    Every screen is called through its own entry point rather than through the
+    table's ``run``, and the difference matters. A table entry may project - to
+    the subset needing action, to an index, to the residue - so the runner can
+    report one meaningful number per screen. Those projections drop findings by
+    design, and a gate reading them inspects whatever survived rather than what
+    the screen emits.
+
+    The earlier version of this helper read the table, and four kinds were
+    invisible to the kind-naming gate because of it: the monetary screen's
+    split-representation kind, filtered out by the projection that keeps only
+    findings needing action, and all three grounded kinds of the grounding
+    screen, whose entry projects onto its ungrounded residue - which is empty,
+    so not one of its kinds reached the gate at all. Both projections are right
+    for the runner and wrong for a gate, which is why the two now read different
+    functions.
+    """
+    import importlib
+
+    findings: list[tuple[str, tuple[object, ...]]] = []
+    for name in sorted(screen_module_names()):
+        module = importlib.import_module(f"{__package__}.{name}")
+        authority_entry = getattr(module, "screen_authority", None)
+        if authority_entry is not None:
+            findings.append((name, tuple(authority_entry(authority, modelo_ids))))
+        else:
+            findings.append((name, tuple(module.screen_corpus())))
+    return tuple(findings)
+
+
+def run_corpus_screens() -> tuple[tuple[str, int, str], ...]:
+    """Run every enrolled corpus screen and return its name, count and meaning."""
+    return tuple((entry.name, len(entry.run()), entry.counts) for entry in CORPUS_SCREENS)
 
 
 def main() -> int:

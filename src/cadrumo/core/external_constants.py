@@ -14,7 +14,7 @@ passphrases, bucket ids, and SQL routes do not belong here. Loading the registry
 only reads packaged TOML (or an explicit audit/test path) and never opens
 storage, writes files, or contacts remote providers.
 
-The typed root is :class:`ExternalConstants`, with AEAT-specific subsections
+The typed root is :class:`ExternalConstantRegistry`, with AEAT-specific subsections
 grouped under :class:`AeatSection`; callers normally reach it through
 :meth:`core.config.Settings.external_constants`. The volatile Pre303 and
 IVA-wallet browser surface remains lazily validated as :class:`AeatPre303Surface`
@@ -106,7 +106,7 @@ class AeatSedePaths(_Frozen):
     """Relative path templates against configured AEAT origins.
 
     These values are route fragments and templates only; consumers choose the
-    correct origin from :class:`AeatDomains` or an overrideable
+    correct origin from :class:`AeatDomainSection` or an overrideable
     :class:`core.config.Settings` field before building a full URL.
     """
 
@@ -905,7 +905,7 @@ def load_external_constants(path: Path | None = None) -> ExternalConstants:
         path: Optional TOML file to parse instead of the packaged registry.
 
     Returns:
-        The process-wide cached :class:`ExternalConstants` instance.
+        The process-wide cached :class:`ExternalConstantRegistry` instance.
     """
     if path is not None:
         with path.open("rb") as handle:

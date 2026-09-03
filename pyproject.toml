@@ -267,6 +267,13 @@ exclude = [
   "src/cadrumo/_data/corpus/**/*.xlsm",
   "src/cadrumo/_data/corpus/**/*.xlsx",
   "src/cadrumo/_data/corpus/**/*.zip",
+  # The registry verdict cache is written by a validating load, not by the
+  # repository. Capturing it makes the build depend on whether local tooling
+  # has run: a tree that has validated yields a distribution two files larger
+  # than a clean checkout does, and the digests then disagree with the ones a
+  # release actually promoted.
+  "src/cadrumo/_data/registry/aeat-registry-identity.json",
+  "src/cadrumo/_data/registry/aeat-validation-verdict.json",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -283,6 +290,13 @@ exclude = [
   "src/cadrumo_harness/tests/**",
   "src/cadrumo_harness/**/tests",
   "src/cadrumo_harness/**/tests/**",
+  # The registry verdict cache is written by a validating load, not by the
+  # repository, so capturing it makes the build depend on whether local tooling
+  # has run. A tree that has validated otherwise yields a wheel two files
+  # larger than a clean checkout does, whose digest then disagrees with the one
+  # a release promoted -- which is exactly what an acquisition proof compares.
+  "src/cadrumo/_data/registry/aeat-registry-identity.json",
+  "src/cadrumo/_data/registry/aeat-validation-verdict.json",
   # Corpus source binaries (the AEAT/BOE manuals and workbooks) are 94% of the
   # wheel's compressed weight and serve only the always-on registry integrity
   # hash chain and the opt-in `cadrumo app registry` verification verbs at runtime.

@@ -5,28 +5,22 @@ from __future__ import annotations
 import pytest
 
 from .....core.document_shape import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
+from .....tests.aeat_literal_fixtures import (
+    SII_SUMINISTRO_INFORMACION_NAMESPACE_FIXTURE,
+    SII_SUMINISTRO_LR_NAMESPACE_FIXTURE,
+    VERIFACTU_SUMINISTRO_INFORMACION_NAMESPACE_FIXTURE,
+    VERIFACTU_SUMINISTRO_LR_NAMESPACE_FIXTURE,
+)
 from ..parsers import parse_einvoice_document
 from ..shape import probe_document_shape
 from ..xml import EInvoiceXmlParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
-_SII_LR_NAMESPACE = (
-    "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/"
-    "aplicaciones/es/aeat/ssii/fact/ws/SuministroLR.xsd"
-)
-_SII_INFORMATION_NAMESPACE = (
-    "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/"
-    "aplicaciones/es/aeat/ssii/fact/ws/SuministroInformacion.xsd"
-)
-_VERIFACTU_LR_NAMESPACE = (
-    "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/"
-    "aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd"
-)
-_VERIFACTU_INFORMATION_NAMESPACE = (
-    "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/"
-    "aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd"
-)
+_SII_LR_NAMESPACE = SII_SUMINISTRO_LR_NAMESPACE_FIXTURE
+_SII_INFORMATION_NAMESPACE = SII_SUMINISTRO_INFORMACION_NAMESPACE_FIXTURE
+_VERIFACTU_LR_NAMESPACE = VERIFACTU_SUMINISTRO_LR_NAMESPACE_FIXTURE
+_VERIFACTU_INFORMATION_NAMESPACE = VERIFACTU_SUMINISTRO_INFORMACION_NAMESPACE_FIXTURE
 
 # These are small, schema-shaped submissions rather than malformed markers:
 # each carries the official root, namespaces, header, and one record. They are

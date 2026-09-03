@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Final
 
 from .command_spec import (
+    ArgumentSpec,
     DeferredTarget,
     OptionSpec,
     ParameterConstraint,
@@ -12,6 +13,195 @@ from .command_spec import (
     TranslationKey,
     ValueContract,
 )
+
+_TEXT_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "str"))
+_WHOLE_NUMBER_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "int"))
+_FLAG_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "bool"))
+
+
+def _optional_text_option(name: str, declarations: tuple[str, ...], help_key: str) -> OptionSpec:
+    """Declare an optional free-text option defaulting to absent.
+
+    Args:
+        name: The parameter's identifier.
+        declarations: The CLI tokens that introduce it, aliases included.
+        help_key: The translation key for its help text.
+
+    Returns:
+        The immutable option declaration.
+    """
+    return OptionSpec(
+        name=name,
+        declarations=declarations,
+        value=_TEXT_VALUE,
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey(help_key),
+        multiple=False,
+        is_flag=False,
+        flag_value=None,
+        constraint=ParameterConstraint(),
+    )
+
+
+def _required_text_option(name: str, declarations: tuple[str, ...], help_key: str) -> OptionSpec:
+    """Declare a mandatory free-text option.
+
+    Args:
+        name: The parameter's identifier.
+        declarations: The CLI tokens that introduce it, aliases included.
+        help_key: The translation key for its help text.
+
+    Returns:
+        The immutable option declaration.
+    """
+    return OptionSpec(
+        name=name,
+        declarations=declarations,
+        value=_TEXT_VALUE,
+        default=ParameterDefault.required(),
+        help_key=TranslationKey(help_key),
+        multiple=False,
+        is_flag=False,
+        flag_value=None,
+        constraint=ParameterConstraint(),
+    )
+
+
+def _optional_whole_number_option(name: str, declarations: tuple[str, ...], help_key: str) -> OptionSpec:
+    """Declare an optional whole-number option defaulting to absent.
+
+    Args:
+        name: The parameter's identifier.
+        declarations: The CLI tokens that introduce it, aliases included.
+        help_key: The translation key for its help text.
+
+    Returns:
+        The immutable option declaration.
+    """
+    return OptionSpec(
+        name=name,
+        declarations=declarations,
+        value=_WHOLE_NUMBER_VALUE,
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey(help_key),
+        multiple=False,
+        is_flag=False,
+        flag_value=None,
+        constraint=ParameterConstraint(),
+    )
+
+
+def _required_whole_number_option(name: str, declarations: tuple[str, ...], help_key: str) -> OptionSpec:
+    """Declare a mandatory whole-number option.
+
+    Args:
+        name: The parameter's identifier.
+        declarations: The CLI tokens that introduce it, aliases included.
+        help_key: The translation key for its help text.
+
+    Returns:
+        The immutable option declaration.
+    """
+    return OptionSpec(
+        name=name,
+        declarations=declarations,
+        value=_WHOLE_NUMBER_VALUE,
+        default=ParameterDefault.required(),
+        help_key=TranslationKey(help_key),
+        multiple=False,
+        is_flag=False,
+        flag_value=None,
+        constraint=ParameterConstraint(),
+    )
+
+
+def _repeatable_text_option(name: str, declarations: tuple[str, ...], help_key: str) -> OptionSpec:
+    """Declare a repeatable free-text option collecting into a tuple.
+
+    Args:
+        name: The parameter's identifier.
+        declarations: The CLI tokens that introduce it, aliases included.
+        help_key: The translation key for its help text.
+
+    Returns:
+        The immutable option declaration.
+    """
+    return OptionSpec(
+        name=name,
+        declarations=declarations,
+        value=_TEXT_VALUE,
+        default=ParameterDefault.value(()),
+        help_key=TranslationKey(help_key),
+        multiple=True,
+        is_flag=False,
+        flag_value=None,
+        constraint=ParameterConstraint(),
+    )
+
+
+def _boolean_flag_option(name: str, declarations: tuple[str, ...], help_key: str) -> OptionSpec:
+    """Declare a boolean option that is false unless supplied.
+
+    Note this family declares ``is_flag=False``: the token takes an explicit
+    boolean value rather than being a bare presence switch, which is the
+    non-work Modelo surface's own convention and differs from the ledger's.
+
+    Args:
+        name: The parameter's identifier.
+        declarations: The CLI tokens that introduce it, aliases included.
+        help_key: The translation key for its help text.
+
+    Returns:
+        The immutable option declaration.
+    """
+    return OptionSpec(
+        name=name,
+        declarations=declarations,
+        value=_FLAG_VALUE,
+        default=ParameterDefault.value(False),
+        help_key=TranslationKey(help_key),
+        multiple=False,
+        is_flag=False,
+        flag_value=None,
+        constraint=ParameterConstraint(),
+    )
+
+
+def _required_text_argument(name: str, help_key: str) -> ArgumentSpec:
+    """Declare a mandatory positional free-text argument.
+
+    Args:
+        name: The parameter's identifier.
+        help_key: The translation key for its help text.
+
+    Returns:
+        The immutable argument declaration.
+    """
+    return ArgumentSpec(
+        name=name,
+        value=_TEXT_VALUE,
+        default=ParameterDefault.required(),
+        help_key=TranslationKey(help_key),
+    )
+
+
+def _optional_text_argument(name: str, help_key: str) -> ArgumentSpec:
+    """Declare an optional positional free-text argument defaulting to absent.
+
+    Args:
+        name: The parameter's identifier.
+        help_key: The translation key for its help text.
+
+    Returns:
+        The immutable argument declaration.
+    """
+    return ArgumentSpec(
+        name=name,
+        value=_TEXT_VALUE,
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey(help_key),
+    )
+
 
 _MODELO_OPTION: Final[OptionSpec] = OptionSpec(
     name="modelo",

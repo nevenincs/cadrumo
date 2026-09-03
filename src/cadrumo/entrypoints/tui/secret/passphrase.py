@@ -49,6 +49,7 @@ __all__ = [
     "PassphraseChangeAttempt",
     "PassphraseChangeRefusal",
     "PassphraseScreen",
+    "build_profile_passphrase_change_door",
     "run_passphrase_change_tui",
 ]
 
@@ -258,6 +259,45 @@ class PassphraseScreen(CredentialScreen["ProfilePassphraseRotationOutcome"]):
             self.query_one(f"#{field_id}", Input).disabled = busy
         self.query_one("#btn-change", Button).disabled = busy
         self.query_one("#btn-cancel", Button).disabled = busy
+
+
+def build_profile_passphrase_change_door(profile_id: str) -> Callable[[str, str, str], PassphraseChangeAttempt]:
+    """Bind the canonical rotation door to one already-authenticated profile.
+
+    The identity is closed over here so the screen never carries it, and the
+    returned door mutates nothing until the operator submits. Expected
+    refusals stay data: the application owns which failures are expected and
+    supplies their localized key, and no passphrase reaches the result.
+    """
+    from uuid import UUID
+
+    from ....application.user_profile.passphrase_rotation import (
+        ProfilePassphraseRotationError,
+        rotate_profile_passphrase,
+    )
+
+    parsed_profile_id = UUID(profile_id)
+
+    def rotate(current: str, replacement: str, confirmation: str) -> PassphraseChangeAttempt:
+        try:
+            outcome = rotate_profile_passphrase(
+                profile_id=parsed_profile_id,
+                current_passphrase=current,
+                new_passphrase=replacement,
+                new_passphrase_confirmation=confirmation,
+            )
+        except ProfilePassphraseRotationError as refusal:
+            if refusal.translated_message is None:
+                raise
+            return PassphraseChangeAttempt(
+                expected_refusal=PassphraseChangeRefusal(
+                    message_key=refusal.translated_message,
+                    context=tuple((refusal.context or {}).items()),
+                )
+            )
+        return PassphraseChangeAttempt(outcome=outcome)
+
+    return rotate
 
 
 def run_passphrase_change_tui(

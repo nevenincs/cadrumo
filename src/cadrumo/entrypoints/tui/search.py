@@ -186,9 +186,15 @@ def _destination_text(destination: str, *, locale: str | None = None) -> str:
     return _render_locale(key, locale)
 
 
-def _action_text(action_candidate_id: str, *, locale: str | None = None) -> str:
-    """Render an admitted action without exposing its internal identifier."""
-    key = _ACTION_LOCALE_KEYS.get(action_candidate_id, "tui.search.action.available")
+def workbench_action_label(action_id: str, *, locale: str | None = None) -> str:
+    """Render one catalogue action without exposing its internal identifier.
+
+    This is the single naming authority for an operator action across the
+    workbench: the palette and Home resolve the same identifier to the same
+    words, so a suggested task and the command that performs it cannot be
+    described differently.
+    """
+    key = _ACTION_LOCALE_KEYS.get(action_id, "tui.search.action.available")
     return _render_locale(key, locale)
 
 
@@ -275,7 +281,7 @@ def _command_entries(
                 ),
                 action_candidate_id=candidate.action_candidate_id,
             )
-            entries.append((_action_text(candidate.action_candidate_id), action_target))
+            entries.append((workbench_action_label(candidate.action_candidate_id), action_target))
     return tuple(entries)
 
 
@@ -297,4 +303,5 @@ __all__ = [
     "WorkbenchCommandProviderV1",
     "WorkbenchSearchDoorV1",
     "WorkbenchSearchProviderV1",
+    "workbench_action_label",
 ]

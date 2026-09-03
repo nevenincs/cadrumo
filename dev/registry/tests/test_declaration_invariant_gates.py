@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import collections
 import pathlib
+from collections.abc import Iterable
 from typing import Final
 
 import pytest
@@ -99,18 +100,20 @@ def test_every_screen_module_is_enrolled_in_the_runner() -> None:
     typo. The cost of an explicit table is that an author can forget to add a
     row, and this gate is what makes forgetting fail rather than pass quietly.
     """
-    import pathlib
+    from ..analysis.screens import CORPUS_SCREENS, SCREENS, screen_module_names
 
-    from ..analysis.screens import SCREENS
-
-    analysis = pathlib.Path(__file__).resolve().parent.parent / "analysis"
-    defining = {
-        path.stem
-        for path in analysis.glob("*.py")
-        if path.name != "screens.py" and "\ndef screen_authority(" in path.read_text(encoding=_UTF_8)
-    }
-    enrolled = {entry.name for entry in SCREENS}
-    assert defining == enrolled, f"screens not enrolled in the runner: {sorted(defining - enrolled)}"
+    # The walk is the analysis package's own, not a copy kept here. Five gates
+    # each carried their own, every one written when only `screen_authority`
+    # existed, and every one silently stopped covering a whole class of screen
+    # the day `screen_corpus` appeared. One declaration widens them together.
+    defining = set(screen_module_names())
+    # Both tables. A corpus screen is a screen a reader must be able to find,
+    # and documenting only the authority ones would leave two undiscoverable.
+    enrolled = {entry.name for entry in SCREENS} | {entry.name for entry in CORPUS_SCREENS}
+    assert defining == enrolled, (
+        f"screens not enrolled in a runner table: {sorted(defining - enrolled)}; "
+        f"enrolled but no longer defining a screen: {sorted(enrolled - defining)}"
+    )
 
 
 def test_no_continuity_chain_asserts_identity_across_two_grammars(
@@ -145,11 +148,13 @@ def test_the_readme_screen_table_lists_exactly_the_enrolled_screens() -> None:
     import pathlib
     import re
 
-    from ..analysis.screens import SCREENS
+    from ..analysis.screens import CORPUS_SCREENS, SCREENS
 
     readme = (pathlib.Path(__file__).resolve().parent.parent / "README.md").read_text(encoding=_UTF_8)
     documented = set(re.findall(r"^\| `([a-z_]+)` \| ", readme, re.MULTILINE))
-    enrolled = {entry.name for entry in SCREENS}
+    # Both tables. A corpus screen is a screen a reader must be able to find,
+    # and documenting only the authority ones would leave two undiscoverable.
+    enrolled = {entry.name for entry in SCREENS} | {entry.name for entry in CORPUS_SCREENS}
     assert documented == enrolled, (
         f"README documents screens that do not run: {sorted(documented - enrolled)}; "
         f"screens that run but are undocumented: {sorted(enrolled - documented)}"
@@ -211,12 +216,26 @@ def test_every_screen_searches_a_population_that_is_not_empty(
     Several of these screens SHOULD report nothing, and gating their finding
     count would freeze a defect count as a contract. What must never be empty is
     the set of things they looked at.
+
+    It covers the populations that can be named as a count, listed below, and
+    not one per screen: several screens share a population and a few have none
+    separable from the authority itself. The gate's name says "every screen" and
+    its body checks a handful, which is a claim wider than the evidence - said
+    here rather than left for a reader to discover, because the same overclaim
+    in a screen's own docstring is a finding this campaign has recorded twice.
+    The design-transcription row is the one that matters most for being easy to
+    lose: it is a filesystem walk, and a corpus moved or renamed would return an
+    empty tuple, which reads exactly like a corpus with nothing to report.
     """
     from cadrumo.domain.calculations.registry.export import resolved_export_endpoints
 
     from ..analysis.casilla_id_grammar import screen_authority as grammar
     from ..analysis.continuity_integrity import continuity_census
+    from ..analysis.footnote_pointer_notes import sheet_note_definitions
+    from ..analysis.note_label_scope import transcription_paths
     from ..analysis.wire_type_compatibility import screen_authority as wire_types
+
+    transcriptions = transcription_paths()
 
     populations: dict[str, int] = {
         "identifier grammar": sum(count for use in grammar(authority, modelo_ids) for _, count in use.counts),
@@ -227,9 +246,55 @@ def test_every_screen_searches_a_population_that_is_not_empty(
             for modelo_id in modelo_ids
             for revision in authority.modelo(modelo_id).revisions.values()
         ),
+        "design transcriptions": len(transcriptions),
+        # Not merely that files were found, but that they parse into the notes
+        # the corpus screens read. A transcription set that loaded and yielded
+        # no note at all would leave both corpus screens silent and healthy.
+        "sheets defining a note": sum(
+            len(sheet_note_definitions(path.read_text(encoding=_UTF_8))) for path in transcriptions
+        ),
     }
     empty = sorted(name for name, size in populations.items() if not size)
     assert not empty, f"screens searching an empty population, so their silence proves nothing: {empty}"
+
+
+def test_the_runners_between_them_run_every_enrolled_screen() -> None:
+    """No enrolled screen is left without a runner that executes it.
+
+    Enrolment and execution are separate facts, and the gap between them is
+    where this suite has repeatedly lost coverage: a table gains a row, a runner
+    is written for one table, and a gate asserts against that runner's table.
+    Everything passes and a whole class of screen goes unrun.
+
+    This closes the gap at its narrowest point. The names the runners actually
+    emit must equal the names enrolled, so a third table added without a runner
+    fails here, and a runner that silently stops emitting a screen fails here
+    too. It asserts names rather than counts, because two tables of the same
+    size can still disagree about which screens they hold.
+
+    Run for the names only. What the screens FIND is asserted by the whole-corpus
+    gate, and duplicating it here would double the slowest work in the suite to
+    check something already checked.
+    """
+    from ..analysis.screens import (
+        CORPUS_SCREENS,
+        SCREENS,
+        run_corpus_screens,
+        screen_module_names,
+    )
+
+    enrolled = {entry.name for entry in SCREENS} | {entry.name for entry in CORPUS_SCREENS}
+    assert enrolled == set(screen_module_names()), "enrolment and the module walk disagree"
+
+    # The corpus runner is cheap enough to execute; the authority runner needs
+    # the built authority, so its names are taken from the table it iterates -
+    # which is exactly what `run_screens` does, and the whole-corpus gate proves
+    # it executes them.
+    emitted = {name for name, _, _ in run_corpus_screens()} | {entry.name for entry in SCREENS}
+    assert emitted == enrolled, (
+        f"enrolled but no runner emits them: {sorted(enrolled - emitted)}; "
+        f"emitted by a runner but not enrolled: {sorted(emitted - enrolled)}"
+    )
 
 
 def test_every_screen_module_has_a_test_module() -> None:
@@ -243,12 +308,13 @@ def test_every_screen_module_has_a_test_module() -> None:
     """
     import pathlib
 
+    from ..analysis.screens import screen_module_names
+
     registry_root = pathlib.Path(__file__).resolve().parent.parent
-    screens = {
-        path.stem
-        for path in (registry_root / "analysis").glob("*.py")
-        if path.name != "screens.py" and "\ndef screen_authority(" in path.read_text(encoding=_UTF_8)
-    }
+    # The shared walk, so a screen presenting either entry point is required to
+    # carry a test. This gate kept its own copy looking for `screen_authority`
+    # alone, and two corpus screens passed it without being seen.
+    screens = set(screen_module_names())
     untested = sorted(name for name in screens if not (registry_root / "tests" / f"test_{name}.py").is_file())
 
     # The discovered set must be proved non-empty before its emptiness means
@@ -274,10 +340,13 @@ def test_every_enrolled_screen_runs_over_the_whole_corpus(
     a contract. What is asserted is that each screen completes and describes
     what it counted.
     """
-    from ..analysis.screens import SCREENS, run_screens
+    from ..analysis.screens import CORPUS_SCREENS, SCREENS, run_corpus_screens, run_screens
 
-    results = run_screens(authority, modelo_ids)
-    assert len(results) == len(SCREENS)
+    # Both runners. Asserting against the authority table alone left the corpus
+    # screens unexercised by the gate whose whole purpose is that a screen
+    # crashing on one input should not wait for someone to run it by hand.
+    results = (*run_screens(authority, modelo_ids), *run_corpus_screens())
+    assert len(results) == len(SCREENS) + len(CORPUS_SCREENS)
     for name, count, meaning in results:
         assert count >= 0, f"{name} returned a negative count"
         assert meaning.strip(), f"{name} does not say what its count means"
@@ -384,7 +453,7 @@ def test_running_every_screen_leaves_the_shipped_registry_untouched(
 
     from cadrumo.core.resources.bundled_data import bundled_path
 
-    from ..analysis.screens import run_screens
+    from ..analysis.screens import run_corpus_screens, run_screens
 
     def fingerprint() -> dict[str, tuple[int, int]]:
         root = bundled_path("registry")
@@ -399,6 +468,10 @@ def test_running_every_screen_leaves_the_shipped_registry_untouched(
     before = fingerprint()
     assert before, "the shipped registry must contain files to fingerprint"
     run_screens(authority, modelo_ids)
+    # The corpus screens read the same shipped tree - the design transcriptions
+    # live inside it - so leaving them out of this fingerprint left the half of
+    # the suite that touches those files unchecked for writes.
+    run_corpus_screens()
     after = fingerprint()
 
     changed = sorted(path for path in before if path in after and before[path] != after[path])
@@ -427,23 +500,182 @@ def test_every_kind_a_screen_emits_is_named_in_its_own_docstring(
     """
     import importlib
 
-    from ..analysis.screens import SCREENS
+    from ..analysis.screens import screen_findings
 
     observed: set[tuple[str, str]] = set()
     undocumented: list[str] = []
-    for entry in SCREENS:
-        module = importlib.import_module(f"dev.registry.analysis.{entry.name}")
+    # Both tables, through the shared traversal. This gate iterated the
+    # authority table alone and so never read a corpus screen's kinds.
+    for name, findings in screen_findings(authority, modelo_ids):
+        module = importlib.import_module(f"dev.registry.analysis.{name}")
         doc = module.__doc__ or ""
-        for finding in entry.run(authority, modelo_ids):
+        for finding in findings:
             kind = getattr(finding, "kind", None)
             if not isinstance(kind, str):
                 continue
-            observed.add((entry.name, kind))
+            observed.add((name, kind))
             if kind not in doc:
-                undocumented.append(f"{entry.name} emits {kind!r} but its docstring never names it")
+                undocumented.append(f"{name} emits {kind!r} but its docstring never names it")
 
     assert observed, "no enrolled screen emitted a kind, so this gate checked nothing"
     assert not undocumented, "\n".join(sorted(set(undocumented)))
+
+
+def test_a_runner_projection_never_reports_a_kind_its_screen_does_not_emit(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> None:
+    """A table entry may narrow its screen's findings; it may not invent them.
+
+    Several entries project - onto the subset needing action, an index, or a
+    residue - so the runner reports one meaningful number per screen. Dropping
+    findings is what those projections are FOR, so the containment holds one way
+    only, and an earlier draft of this gate asserted the wrong direction: it
+    demanded the projections expose every kind, which would have forbidden the
+    design they exist to serve. It failed on legitimate code, which is how the
+    direction got corrected.
+
+    What must hold is that a projection reports nothing its screen did not. A
+    projection that added a kind would be deriving a finding in the runner
+    table, where no test looks for it and no docstring describes it.
+
+    That projections hide kinds from the KIND-NAMING gate is a separate problem
+    and is fixed at the reader: those gates call each screen's own entry point
+    rather than the table.
+    """
+    from ..analysis.screens import CORPUS_SCREENS, SCREENS, screen_findings
+
+    def kinds_of(rows: tuple[object, ...]) -> set[str]:
+        return {kind for row in rows if isinstance(kind := getattr(row, "kind", None), str)}
+
+    direct = {name: kinds_of(findings) for name, findings in screen_findings(authority, modelo_ids)}
+    assert any(direct.values()), "no screen emitted a kind, so this gate checked nothing"
+
+    invented: dict[str, list[str]] = {}
+    for name, run in (
+        *((entry.name, lambda entry=entry: entry.run(authority, modelo_ids)) for entry in SCREENS),
+        *((entry.name, lambda entry=entry: entry.run()) for entry in CORPUS_SCREENS),
+    ):
+        extra = kinds_of(tuple(run())) - direct.get(name, set())
+        if extra:
+            invented[name] = sorted(extra)
+    assert not invented, f"runner entries reporting a kind their screen does not emit: {invented}"
+
+
+def test_a_derived_screen_reports_nothing_its_source_does_not(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> None:
+    """A screen declaring a source may re-describe its findings, not exceed them.
+
+    The grounding screen is built on the pointer screen: it calls it and emits
+    one finding per field it returns. That makes its population a re-description
+    rather than independent evidence, which matters to any consumer counting
+    distinct conditions - the revision-pressure ranking reported modelo 200 with
+    nine conditions where seven are independent, until the derivation was
+    declared.
+
+    Half the declaration is verifiable and this is it: whatever the derived
+    screen reports must name a revision its source also reports. What no test
+    can decide is whether a screen that happens to agree today was actually
+    built on the other, which is why the declaration is an author's and not
+    inferred from this containment holding.
+    """
+    from ..analysis.screens import SCREENS, screen_findings
+
+    sources = {entry.name: entry.derives_from for entry in SCREENS if entry.derives_from}
+    assert sources, "no screen declares a source, so this gate checked nothing"
+
+    populations = {
+        name: {(getattr(f, "modelo", None), str(getattr(f, "revision", ""))) for f in findings}
+        for name, findings in screen_findings(authority, modelo_ids)
+    }
+    for derived, source in sources.items():
+        assert source in populations, f"{derived} derives from {source!r}, which is not an enrolled screen"
+        assert populations[derived] <= populations[source], (
+            f"{derived} reports revisions its declared source {source} does not: "
+            f"{sorted(populations[derived] - populations[source])}"
+        )
+
+
+def test_every_committed_export_tree_is_enrolled_in_its_reproduction_test(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> None:
+    """No committed tree ships without a test that would notice it drifting.
+
+    The reproduction test enrols its targets in an explicit table, which is the
+    right design - discovery by convention hides a typo - and its cost is that a
+    row can be forgotten. Two were: `m210-2026-y-siguientes` and `m303-2022`
+    shipped committed bytes with no gate, and a drift in their records would
+    have failed nothing. They were found only because a separate report counted
+    the renderable population independently.
+
+    The containment holds one way only. A target may be enrolled without a
+    committed tree - modelo 390's `2022` is, deliberately, and its failure says
+    to publish it rather than retire the row - so this asserts that every
+    committed tree is enrolled and not that every enrolled target is committed.
+    """
+    from cadrumo.core.resources.bundled_data import bundled_path
+
+    from ..pipeline._provenance_manifest import EXPORT_FRAGMENT_PROVENANCE_FILENAME
+    from .test_generated_export_trees import _GENERATED_TREES
+
+    committed = {
+        (modelo_id, str(revision_id))
+        for modelo_id in modelo_ids
+        for revision_id in authority.modelo(modelo_id).revisions
+        if (
+            bundled_path("registry", "aeat", "modelos", modelo_id, "revisions", str(revision_id), "export")
+            / EXPORT_FRAGMENT_PROVENANCE_FILENAME
+        ).is_file()
+    }
+    assert committed, "no export tree is committed, so this gate checked nothing"
+    enrolled = {(tree.modelo, tree.revision) for tree in _GENERATED_TREES}
+    assert not (committed - enrolled), (
+        "committed export trees with no reproduction target, so a drift in their records would fail "
+        f"nothing: {sorted(committed - enrolled)}"
+    )
+
+
+def test_no_modelo_leaves_a_year_inside_its_span_unserved(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> None:
+    """Where one revision closes, the next opens.
+
+    A modelo's revisions divide the years it covers, and a year falling between
+    two of them is served by nothing while both neighbours suggest it should be.
+    That is a defect an author can fix, unlike the years BEFORE a modelo's first
+    revision, which are outside the registry's reach rather than missing from it
+    - the corpus's earliest coverage runs from 2003 to 2026 by modelo, and
+    nothing says they must agree.
+
+    The distinction is the whole gate. Modelo 322 carries a revision directory
+    named `2008-2022` that serves 2022 alone, which reads like a fourteen-year
+    hole and is not one: the modelo's coverage simply begins in 2022. Gating the
+    span from its own minimum rather than from any fixed year is what keeps that
+    out of the finding set.
+
+    Open-ended revisions are closed at the latest year any revision mentions, so
+    a modelo whose newest revision runs open-ended contributes no spurious gap
+    between that revision and the horizon.
+    """
+    from ..analysis.temporal_site_agreement import unserved_interior_years
+
+    gapped: dict[str, tuple[int, ...]] = {}
+    examined = 0
+    for modelo_id in modelo_ids:
+        revisions = authority.modelo(modelo_id).revisions.values()
+        spans = tuple(
+            (revision.valid_from.year, revision.valid_to.year if revision.valid_to is not None else None)
+            for revision in revisions
+        )
+        if not any(end is not None for _, end in spans):
+            continue
+        examined += 1
+        missing = unserved_interior_years(spans)
+        if missing:
+            gapped[modelo_id] = missing
+
+    assert examined, "no modelo declares a closed window, so this gate checked nothing"
+    assert not gapped, f"years inside a modelo's own span that no revision serves: {gapped}"
 
 
 def test_every_package_initialiser_in_the_development_registry_tree_is_inert() -> None:
@@ -631,12 +863,13 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
     import importlib
     import re
 
-    from ..analysis.screens import SCREENS
-
     wrong: list[str] = []
     checked = 0
-    for entry in SCREENS:
-        module = importlib.import_module(f"dev.registry.analysis.{entry.name}")
+    from ..analysis.screens import screen_findings, screen_module_names
+
+    findings_by_name = dict(screen_findings(authority, modelo_ids))
+    for screen_name in sorted(screen_module_names()):
+        module = importlib.import_module(f"dev.registry.analysis.{screen_name}")
         doc = module.__doc__ or ""
         # Any noun, not just "conditions". The screens say conditions,
         # disagreements, kinds - the claim is "N somethings are reported", and a
@@ -647,10 +880,10 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
             continue
         stated = _NUMBER_WORDS.get(claim.group(1).lower())
         if stated is None:
-            wrong.append(f"{entry.name} states an unrecognised count {claim.group(1)!r}")
+            wrong.append(f"{screen_name} states an unrecognised count {claim.group(1)!r}")
             continue
         checked += 1
-        emitted = len({finding.kind for finding in entry.run(authority, modelo_ids) if hasattr(finding, "kind")})
+        emitted = len({finding.kind for finding in findings_by_name.get(screen_name, ()) if hasattr(finding, "kind")})
         # Count only the bullets belonging to this claim. Several screens also
         # bullet the FACTS they read, in the same backtick form, before naming
         # their conditions; counting those made this gate fail on a docstring
@@ -662,9 +895,9 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
             elif line.strip() and not line.startswith(" ") and named:
                 break
         if stated != named:
-            wrong.append(f"{entry.name} says {stated} conditions and documents {named}")
+            wrong.append(f"{screen_name} says {stated} conditions and documents {named}")
         if emitted > stated:
-            wrong.append(f"{entry.name} says {stated} conditions and emits {emitted} distinct kinds live")
+            wrong.append(f"{screen_name} says {stated} conditions and emits {emitted} distinct kinds live")
 
     assert checked, "no screen stated a condition count, so this gate checked nothing"
     assert not wrong, "\n".join(wrong)
@@ -758,19 +991,19 @@ def test_a_screen_that_counts_the_facts_it_reads_states_the_right_number() -> No
     import importlib
     import re
 
-    from ..analysis.screens import SCREENS
-
     wrong: list[str] = []
     checked = 0
-    for entry in SCREENS:
-        module = importlib.import_module(f"dev.registry.analysis.{entry.name}")
+    from ..analysis.screens import screen_module_names
+
+    for screen_name in sorted(screen_module_names()):
+        module = importlib.import_module(f"dev.registry.analysis.{screen_name}")
         doc = module.__doc__ or ""
         claim = re.search(r"\b([A-Za-z]+) facts decide\b", doc)
         if claim is None:
             continue
         stated = _NUMBER_WORDS.get(claim.group(1).lower())
         if stated is None:
-            wrong.append(f"{entry.name} states an unrecognised fact count {claim.group(1)!r}")
+            wrong.append(f"{screen_name} states an unrecognised fact count {claim.group(1)!r}")
             continue
         checked += 1
         # Any bullet, not only one opening with a backticked name. The
@@ -784,7 +1017,7 @@ def test_a_screen_that_counts_the_facts_it_reads_states_the_right_number() -> No
             elif line.strip() and not line.startswith(" ") and listed:
                 break
         if stated != listed:
-            wrong.append(f"{entry.name} says {stated} facts and lists {listed}")
+            wrong.append(f"{screen_name} says {stated} facts and lists {listed}")
 
     assert checked, "no screen stated a fact count, so this gate checked nothing"
     assert not wrong, "\n".join(wrong)
@@ -824,8 +1057,7 @@ def _public_modules(roots: tuple[pathlib.Path, ...]) -> list[pathlib.Path]:
                 continue
             tree = ast.parse(path.read_text(encoding=_UTF_8))
             if any(
-                isinstance(node, ast.FunctionDef | ast.ClassDef) and not node.name.startswith("_")
-                for node in tree.body
+                isinstance(node, ast.FunctionDef | ast.ClassDef) and not node.name.startswith("_") for node in tree.body
             ):
                 found.append(path)
     return found
@@ -855,8 +1087,7 @@ def test_every_public_module_in_the_registry_tooling_is_imported_by_a_test() -> 
 
     unimported = sorted(path.stem for path in modules if path.stem not in imported)
     assert not unimported, (
-        "these modules declare a public surface that no test imports, so nothing asserts what they do: "
-        f"{unimported}"
+        f"these modules declare a public surface that no test imports, so nothing asserts what they do: {unimported}"
     )
 
 
@@ -902,14 +1133,16 @@ def test_every_screen_finding_type_declares_the_identity_the_contract_promises()
     import dataclasses
     import importlib
 
-    from ..analysis.screens import FINDING_IDENTITY_CONTRACT, SCREENS
+    from ..analysis.screens import FINDING_IDENTITY_CONTRACT
 
     assert FINDING_IDENTITY_CONTRACT == ("modelo",), "the contract changed; this gate encodes it"
 
     checked = 0
     missing: list[str] = []
-    for entry in SCREENS:
-        module = importlib.import_module(f"dev.registry.analysis.{entry.name}")
+    from ..analysis.screens import screen_module_names
+
+    for screen_name in sorted(screen_module_names()):
+        module = importlib.import_module(f"dev.registry.analysis.{screen_name}")
         for name, obj in vars(module).items():
             if not dataclasses.is_dataclass(obj) or getattr(obj, "__module__", None) != module.__name__:
                 continue
@@ -918,10 +1151,215 @@ def test_every_screen_finding_type_declares_the_identity_the_contract_promises()
             checked += 1
             fields = {field.name for field in dataclasses.fields(obj)}
             missing.extend(
-                f"{entry.name}.{name} declares no {required!r}"
+                f"{screen_name}.{name} declares no {required!r}"
                 for required in FINDING_IDENTITY_CONTRACT
                 if required not in fields
             )
 
     assert checked, "no finding type was found, so this gate checked nothing"
     assert not missing, chr(10).join(sorted(missing))
+
+
+def _non_ascii_declarations(field: object) -> list[str]:
+    """Return each string attribute of ``field`` carrying a character outside ASCII.
+
+    Shared with the proof below, so the proof exercises the judgement the gate
+    makes rather than a second copy of it.
+    """
+    found: list[str] = []
+    for name in type(field).model_fields:
+        value = getattr(field, name, None)
+        if isinstance(value, str) and value and not value.isascii():
+            found.append(f"{name} = {value!r}")
+    return found
+
+
+def _mixed_line_endings(records: Iterable[object]) -> set[str]:
+    """Return the distinct line endings a layout's records declare.
+
+    More than one is the defect. An empty set means the layout declares no
+    records, which the caller skips rather than treating as agreement.
+    """
+    return {str(getattr(record, "line_ending", None)) for record in records}
+
+
+def test_no_export_declaration_carries_a_character_outside_ascii(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> None:
+    """A declared literal must not smuggle a byte the codec has to guess at.
+
+    Records declare iso-8859-1, and the accents a filing carries come from
+    taxpayer data at emission. A non-ASCII character in a DECLARATION is
+    different: it is written by an author, encoded on the way to disk, and
+    decoded again by whatever reads the registry, so it survives or does not
+    depending on three assumptions nobody states.
+    """
+    offenders: list[str] = []
+    fields = 0
+    for code in modelo_ids:
+        for revision_id, revision in authority.modelo(code).revisions.items():
+            for layout in revision.export_layouts:
+                for record in layout.records:
+                    for field in record.fields:
+                        fields += 1
+                        offenders.extend(
+                            f"{code}/{revision_id} {field.id}.{found}" for found in _non_ascii_declarations(field)
+                        )
+
+    assert fields, "no export field was read, so this gate checked nothing"
+    assert not offenders, "export declarations carrying non-ASCII characters:\n" + chr(10).join(sorted(offenders))
+
+
+def test_a_modelo_never_declares_two_record_encodings(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> None:
+    """Bytes written under one encoding and read under another are silently wrong.
+
+    Every record in this corpus declares iso-8859-1. The gate is not that value
+    but the agreement: a modelo declaring two encodings emits a file whose
+    records disagree about what its bytes mean, and no single record is wrong.
+    """
+    offenders: list[str] = []
+    checked = 0
+    for code in modelo_ids:
+        declared = set()
+        for revision in authority.modelo(code).revisions.values():
+            for layout in revision.export_layouts:
+                for record in layout.records:
+                    checked += 1
+                    declared.add(str(record.encoding))
+        if len(declared) > 1:
+            offenders.append(f"{code} declares {sorted(declared)}")
+
+    assert checked, "no record was read, so this gate checked nothing"
+    assert not offenders, "modelos declaring more than one record encoding: " + "; ".join(offenders)
+
+
+def test_no_layout_mixes_terminated_and_unterminated_records(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> None:
+    """A file whose records disagree about termination is malformed as a whole.
+
+    Fifty-nine layouts terminate no record and twenty-nine terminate every one;
+    both are valid shapes. A layout doing both emits a file that is neither, and
+    the defect is invisible record by record - each one carries exactly the
+    ending it declares.
+
+    Records-less layouts are skipped rather than counted as agreeing: modelo
+    100's XML dictionary layouts carry their content in a cited dictionary, so
+    they have no termination to disagree about.
+    """
+    offenders: list[str] = []
+    checked = 0
+    for code in modelo_ids:
+        for revision_id, revision in authority.modelo(code).revisions.items():
+            for layout in revision.export_layouts:
+                if not layout.records:
+                    continue
+                checked += 1
+                endings = _mixed_line_endings(layout.records)
+                if len(endings) > 1:
+                    offenders.append(f"{code}/{revision_id} {layout.id} declares {sorted(endings)}")
+
+    assert checked, "no layout with records was read, so this gate checked nothing"
+    assert not offenders, "layouts mixing line endings: " + chr(10).join(sorted(offenders))
+
+
+def test_the_export_declaration_gates_detect_their_defects(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """Each of the three export gates is shown to catch a planted defect.
+
+    Constructed from real declarations by copy, never by mutating the working
+    tree, and asserted through the helpers the gates themselves call - a proof
+    against a second implementation would prove the second implementation.
+    """
+    revision = authority.modelo("303").revisions["2025"]
+    layout = next(item for item in revision.export_layouts if item.records)
+    record = layout.records[0]
+    field = record.fields[0]
+
+    clean = _non_ascii_declarations(field)
+    accented = field.model_copy(update={"id": f"{field.id}-declaración"})
+
+    assert clean == [], "the fixture field must start clean or the planted defect proves nothing"
+    assert _non_ascii_declarations(accented), "an accented declaration must be reported"
+
+    assert len(_mixed_line_endings(layout.records)) == 1, "the fixture layout must agree with itself"
+
+    from cadrumo.domain.calculations.registry.schema_exports import ExportLineEnding
+
+    other = ExportLineEnding.CRLF if record.line_ending is ExportLineEnding.NONE else ExportLineEnding.NONE
+    mixed = (*layout.records, record.model_copy(update={"line_ending": other}))
+
+    assert len(_mixed_line_endings(mixed)) == 2, "a layout carrying both endings must be reported"
+    assert _mixed_line_endings(()) == set(), "a record-less layout declares no ending to disagree about"
+
+
+def test_no_two_revisions_of_a_modelo_claim_the_same_filing_year_and_period(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> None:
+    """Selection must be decidable: at most one revision claims a year and period.
+
+    The gap gate holds that a modelo's revisions leave no year inside its span
+    unserved. This holds the other direction: no year is served twice. Together
+    they say the revisions PARTITION the modelo's years, which is what makes
+    "which revision applies" a question with an answer.
+
+    Measured at year granularity the corpus looks like it violates this in five
+    modelos, and none of them does - 303 splits 2024 at period 09, 308 splits
+    2011 in July, 490 and 763 split a year by quarter, and 369's `esquema-*`
+    revisions are the non-temporal scheme axis. A mid-year rule change is
+    DECLARED as two revisions sharing a calendar year, so the year is the wrong
+    unit and gating on it would refuse correct declarations.
+
+    Boundary, asserted below rather than assumed: a revision declaring no
+    deadline window claims no period and cannot clash. Twenty-seven do, so this
+    gate is silent about them, and its holding is not a claim that every
+    revision is unambiguous - only that no two that speak, contradict.
+    """
+    from ..analysis.temporal_site_agreement import ambiguously_claimed_periods
+
+    offenders: list[str] = []
+    claimed_keys = 0
+    speaking = 0
+    for modelo_id in modelo_ids:
+        claims: list[tuple[str, int, str]] = []
+        for revision_id, revision in authority.modelo(modelo_id).revisions.items():
+            if revision.deadline_windows:
+                speaking += 1
+            for window in revision.deadline_windows:
+                claims.append((str(revision_id), window.filing_year, str(getattr(window, "period", ""))))
+        claimed_keys += len({(year, period) for _, year, period in claims})
+        for year, period, revisions in ambiguously_claimed_periods(tuple(claims)):
+            offenders.append(f"modelo {modelo_id} {year}/{period}: {', '.join(revisions)}")
+
+    assert claimed_keys > 500, f"only {claimed_keys} year-and-period keys examined; the gate is near-vacuous"
+    assert speaking > 50, f"only {speaking} revisions declare a deadline window"
+    assert not offenders, "one filing year and period claimed by two revisions: " + chr(10).join(sorted(offenders))
+
+
+def test_the_period_ambiguity_gate_detects_a_planted_clash() -> None:
+    """The gate is shown to catch a duplicate claim, and to tolerate a year split.
+
+    Both halves matter and the second is the one that took a wrong measurement
+    to find: a gate that fires on two revisions sharing a calendar year would
+    refuse modelo 303's correct 2024 declaration.
+    """
+    from ..analysis.temporal_site_agreement import ambiguously_claimed_periods
+
+    split_year = (
+        ("2024-hasta-08-y-2t", 2024, "2T"),
+        ("2024-desde-09-y-3t", 2024, "3T"),
+    )
+    assert ambiguously_claimed_periods(split_year) == (), "a mid-year split is not ambiguity"
+
+    clash = (*split_year, ("2024-desde-09-y-3t", 2024, "2T"))
+    reported = ambiguously_claimed_periods(clash)
+    assert len(reported) == 1
+    year, period, revisions = reported[0]
+    assert (year, period) == (2024, "2T")
+    assert revisions == ("2024-desde-09-y-3t", "2024-hasta-08-y-2t")
+
+    assert ambiguously_claimed_periods(()) == (), "a revision claiming nothing clashes with nothing"
+    assert ambiguously_claimed_periods((("r", 2024, "2T"),)) == (), "one claimant is not two"

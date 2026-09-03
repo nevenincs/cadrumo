@@ -158,13 +158,13 @@ def _ready() -> HomeProjectionV1:
         actions=(
             _action(
                 rank=0,
-                action_id="fixture.review",
-                reason_code="fixture.review_required",
+                action_id="operator.declaration.open",
+                reason_code="declaration_needs_review",
                 modelo="303",
                 period_code="3T",
             ),
-            _action(rank=1, action_id="fixture.classify", reason_code="fixture.classification_pending"),
-            _action(rank=2, action_id="fixture.evidence", reason_code="fixture.evidence_missing"),
+            _action(rank=1, action_id="operator.ledger.classify", reason_code="ledger_classification_pending"),
+            _action(rank=2, action_id="operator.ledger.evidence.review.list", reason_code="evidence_missing"),
         ),
         declarations_state=_available(),
         declarations=(
@@ -308,13 +308,13 @@ def _blocked() -> HomeProjectionV1:
         actions=(
             _action(
                 rank=0,
-                action_id="fixture.resolve_blocker",
-                reason_code="fixture.blocked_dependency",
+                action_id="operator.overview.explain",
+                reason_code="blocked_dependency",
                 modelo="303",
                 period_code="3T",
             ),
-            _action(rank=1, action_id="fixture.review_blocker", reason_code="fixture.blocked_review"),
-            _action(rank=2, action_id="fixture.evidence_blocker", reason_code="fixture.blocked_evidence"),
+            _action(rank=1, action_id="operator.ledger.review", reason_code="blocked_review"),
+            _action(rank=2, action_id="operator.ledger.preflight", reason_code="blocked_evidence"),
         ),
         declarations_state=_available(),
         declarations=(

@@ -118,38 +118,20 @@ def registration_attempt(
     output_language: str,
     recovery_handover: Callable[[ProfileRecoveryEnrollment], str],
 ):
-    """Adapt public profile registration into the TUI screen's result contract."""
-    from ....application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
-    from ....domain.user_profile.values import UserProfileFact
-    from ....entrypoints.tui.secret.registration import (
-        RecoveryHandoverCancelledError,
-        RegistrationAttempt,
-        RegistrationRefusal,
-    )
+    """Expose the production registration door under the devtool home.
 
-    try:
-        outcome = register_profile_with_credentials(
-            label=label,
-            passphrase=candidate_passphrase,
-            facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=output_language),),
-            recovery_handover=recovery_handover,
-        )
-    except RecoveryHandoverCancelledError:
-        return RegistrationAttempt(
-            expected_refusal=RegistrationRefusal(
-                message_key="cli.config.profile.create_recovery_verification_cancelled",
-            )
-        )
-    except ProfileRegistrationError as refusal:
-        if refusal.translated_message is None:
-            raise
-        return RegistrationAttempt(
-            expected_refusal=RegistrationRefusal(
-                message_key=refusal.translated_message,
-                context=tuple((refusal.context or {}).items()),
-            )
-        )
-    return RegistrationAttempt(outcome=outcome)
+    The adaptation itself belongs to the screen's own package, so the harness
+    drives exactly the door the installed session drives rather than a second
+    implementation that could disagree with it.
+    """
+    from ....entrypoints.tui.secret.registration import build_profile_registration_attempt
+
+    return build_profile_registration_attempt(
+        label,
+        candidate_passphrase,
+        output_language,
+        recovery_handover,
+    )
 
 
 def ensure_session() -> str:

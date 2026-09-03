@@ -83,8 +83,16 @@ says which. What each one owns:
 | `grade_earned` | declared grades not matching what their prerequisites support, either way |
 | `provenance_consistency` | references cited from outside their revision's own manifest |
 | `modelo_capability` | what each modelo declares it can do, and where the filing claim and its machinery disagree |
+| `footnote_only_wire_facts` | fields whose wire fact sits behind a footnote pointer rather than in their own cell |
+| `type_convention_notes` | design notes stating how a whole AEAT type is written to the wire |
+| `rule_grounding_coverage` | fields needing a reviewed rule for which no official wording was located at all |
+| `note_label_scope` | designs where one note label is defined on more than one sheet |
+| `unnumbered_note_scope` | designs carrying an unnumbered note, by the structure that bears on its scope |
+| `note_text_drift` | note labels whose wording differs between a modelo's designs |
+| `manifest_uncited_references` | manifest references no child of the revision cites |
+| `capability_continuity` | capabilities a revision stopped declaring after its predecessor had them |
 
-Two rules keep the suite honest.
+Three rules keep the suite honest.
 
 **Read the resolved surface, never the authored one.** Export fields are
 derived from bindings when a revision loads, and a casilla is reached by three
@@ -92,6 +100,20 @@ different linkage paths. Four separate wrong figures in this campaign came from
 walking the authored fragments instead. `resolved_export_endpoints` in the
 registry export module returns the surface whole; a screen that reassembles it
 is reintroducing the defect.
+
+**Key a measurement on every axis the declaration has.** A coordinate that
+appears to be declared twice usually is not: the declarations differ on an axis
+the key omitted, and that axis is usually named in the identifier. Modelo 210
+carries four deadline windows for one annual period, and their ids say why -
+`arrendamiento-ingreso`, `cuota-cero`, `devolucion`, `renta-imputada` - because
+its deadline depends on what the return produces, which the schema holds in
+`resultado_scope` and `tipo_renta_scope`. Nine measurements in this campaign
+were wrong this way: a key over modelo and revision reported two screens as
+collapsing every row onto one coordinate, a shape pattern read `714-02` as a
+numeric range, and a bucket named for what did not match reported 415 findings
+where six were real. Read a handful of the values or identifiers before
+believing any grouping, and prefer a direct question - `str.isascii()` - to a
+pattern that infers one.
 
 **Gate invariants, never counts.** The conditions that are clean across the
 whole corpus are gated in `tests/test_declaration_invariant_gates.py`, and each

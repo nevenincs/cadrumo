@@ -230,8 +230,7 @@ def _aeat_projection(scenario: WorkbenchFixtureScenario) -> AeatSyncWorkspacePro
         AeatSyncWorkspaceZoneObservationV1(
             zone=zone,
             sources=tuple(
-                _aeat_source(source, availability, count=count)
-                for source in aeat_sync_workspace_sources(zone)
+                _aeat_source(source, availability, count=count) for source in aeat_sync_workspace_sources(zone)
             ),
         )
         for zone in AeatSyncWorkspaceZone
@@ -279,9 +278,7 @@ def _aeat_projection(scenario: WorkbenchFixtureScenario) -> AeatSyncWorkspacePro
         read_state=AeatSyncNotificationReadState.READ if notification_read else AeatSyncNotificationReadState.UNREAD,
         category=AeatSyncNotificationCategory.FORMAL,
         document_custody_state=(
-            AeatSyncDocumentCustodyState.HELD
-            if notification_read
-            else AeatSyncDocumentCustodyState.NOT_CAPTURED
+            AeatSyncDocumentCustodyState.HELD if notification_read else AeatSyncDocumentCustodyState.NOT_CAPTURED
         ),
         document_custody_observed_at=_AT if notification_read else None,
     )
@@ -306,8 +303,10 @@ def _aeat_projection(scenario: WorkbenchFixtureScenario) -> AeatSyncWorkspacePro
         discrepancy_kind=AeatSyncDiscrepancyKind.LOCAL_ONLY,
         reconciliation_state=AeatSyncReconciliationState.KEEP_LOCAL,
     )
+
     def fact(row: Any) -> AeatSyncWorkspaceFactV1[Any]:
         return AeatSyncWorkspaceFactV1(_BUCKET, "fixture.subject", row)
+
     return project_aeat_sync_workspace(
         bucket_id=_BUCKET,
         subject_key="fixture.subject",
@@ -370,14 +369,15 @@ def _declaration_observations(
         DeclarationsWorkspaceZoneObservationV1(
             zone=zone,
             availability=availability,
-            observed_at=_AT if availability in {
+            observed_at=_AT
+            if availability
+            in {
                 DeclarationsWorkspaceAvailability.AVAILABLE,
                 DeclarationsWorkspaceAvailability.STALE,
-            } else None,
+            }
+            else None,
             reason_code=(
-                None
-                if availability is DeclarationsWorkspaceAvailability.AVAILABLE
-                else "fixture.declarations.refused"
+                None if availability is DeclarationsWorkspaceAvailability.AVAILABLE else "fixture.declarations.refused"
             ),
         )
         for zone in DeclarationsWorkspaceZone
@@ -486,11 +486,7 @@ def _calendar_projection(scenario: WorkbenchFixtureScenario) -> DeclarationsCale
     unavailable = scenario is WorkbenchFixtureScenario.UNAVAILABLE
     stale = scenario is WorkbenchFixtureScenario.STALE
     availability = (
-        HomeAvailability.STALE
-        if stale
-        else HomeAvailability.UNAVAILABLE
-        if unavailable
-        else HomeAvailability.AVAILABLE
+        HomeAvailability.STALE if stale else HomeAvailability.UNAVAILABLE if unavailable else HomeAvailability.AVAILABLE
     )
     state = HomeZoneState(
         availability=availability,
@@ -725,8 +721,7 @@ _DECLARATION_INTERFACES = {
     ),
 }
 _AEAT_INTERFACE_BY_SURFACE = {
-    surface: (screen.__module__ + "." + screen.__name__,)
-    for surface, screen, _zone in _AEAT_ROUTES
+    surface: (screen.__module__ + "." + screen.__name__,) for surface, screen, _zone in _AEAT_ROUTES
 }
 
 

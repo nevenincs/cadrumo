@@ -20,6 +20,7 @@ from ....core.auth_provider import AuthProviderKind
 from ....core.config import Settings
 from ....core.identity import nif_check_letter
 from ....core.period import Period
+from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from ....tests.secure_sql import isolated_runtime_profile, isolated_sessionless_storage_root, read_db_at_rest_bytes
 from ...auth.session_types import (
     AeatLoginAssertion,
@@ -78,7 +79,7 @@ def _clave_movil_session(identity_nif: str = "12345678Z") -> AeatSession:
 def _clave_movil_assertion(identity_nif: str = "12345678Z") -> AeatLoginAssertion:
     """Minimal real login assertion, opaque to these tests beyond its provider kind."""
     return AeatLoginAssertion(
-        target_url="https://sede.agenciatributaria.gob.es/",
+        target_url=SEDE_ROOT_URL_FIXTURE,
         is_valid=True,
         identity_nif=identity_nif,
         status_code=200,
