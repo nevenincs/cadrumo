@@ -1,27 +1,40 @@
 schema_version = 1
-inventory_digest = "sha256:97770ca8ad91f5e6608434eadf0648539d35263ab987d37491aa6900d015f5f9"
+inventory_digest = "sha256:c7f4d3432cd739e93c270df6703f4210bf88871cfaca37b6e7f8b190dde44017"
 
 [[operations]]
-operation_id = "rename-result-disposition-fragment-generator"
-finding_id = "sha256:185e22d79ce6fa25f26b4d2086037944c305aa0b206078537c8fb89484b0f026"
+operation_id = "rename-all-extra-smoke"
+finding_id = "sha256:462e90286b0b1d0eaf9a13dde4fa908e22db776df76da1a91faafac78867c7cb"
 operation_kind = "module-rename"
-disposition = "rename-distinct"
+disposition = "lexical-singular"
 lifecycle = "reviewed"
-old_locator = "module:dev.registry.generate_result_disposition_fragments#binding=1"
-old_path = "dev/registry/generate_result_disposition_fragments.py"
-new_locator = "module:dev.registry.result_disposition_fragment_generator#binding=1"
-new_path = "dev/registry/result_disposition_fragment_generator.py"
-owner = "dev-registry"
-rationale = "The module is the single generator responsible for result-disposition fragments; the target names that responsibility rather than plural output instances."
+old_locator = "module:dev.packaging.smoke_extras#binding=1"
+old_path = "dev/packaging/smoke_extras.py"
+new_locator = "module:dev.packaging.all_extra_smoke#binding=1"
+new_path = "dev/packaging/all_extra_smoke.py"
+owner = "dev-packaging"
+rationale = "The module owns the single installed-wheel smoke for the aggregate all-extra capability; the target states that singular responsibility instead of naming plural dependency instances."
 expected_reference_classes = ["definition"]
-changed_paths = ["dev/registry/generate_result_disposition_fragments.py", "dev/registry/result_disposition_fragment_generator.py"]
+changed_paths = [
+  "dev/packaging/all_extra_smoke.py",
+  "dev/packaging/campaign.py",
+  "dev/packaging/smoke_extras.py",
+  "dev/packaging/tests/test_campaign.py",
+]
 generator_commands = []
 focused_gates = [
-  ["uv", "run", "--no-sync", "python", "-m", "dev.registry.result_disposition_fragment_generator"],
-  ["uv", "run", "--no-sync", "ruff", "check", "dev/registry/result_disposition_fragment_generator.py"],
+  ["uv", "run", "--no-sync", "pytest", "dev/packaging/tests/test_campaign.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "dev/packaging/all_extra_smoke.py", "dev/packaging/campaign.py", "dev/packaging/tests/test_campaign.py"],
 ]
-moves = [{ source = "dev/registry/generate_result_disposition_fragments.py", target = "dev/registry/result_disposition_fragment_generator.py" }]
+moves = [{ source = "dev/packaging/smoke_extras.py", target = "dev/packaging/all_extra_smoke.py" }]
 
 [[operations.preconditions]]
-path = "dev/registry/generate_result_disposition_fragments.py"
-sha256 = "sha256:4eed2284f884c35c18242e230e88f45b350f792bccba10ac888741657414c6ad"
+path = "dev/packaging/campaign.py"
+sha256 = "sha256:7380645afe4df7061acfe2b6eb8653e575ab8546b57843b48393a5618ffb0970"
+
+[[operations.preconditions]]
+path = "dev/packaging/smoke_extras.py"
+sha256 = "sha256:1bbe92ee326a1bbd297f77b1e06832a3e8516f70530a83b59435857e150bb398"
+
+[[operations.preconditions]]
+path = "dev/packaging/tests/test_campaign.py"
+sha256 = "sha256:e10f43dddbe178f01626154f8605e1d031e2aa071ba468651d17e93d03496f69"
