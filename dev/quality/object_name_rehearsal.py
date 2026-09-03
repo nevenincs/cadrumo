@@ -69,7 +69,17 @@ _RECEIPT_SCHEMA_VERSION: Final[int] = 1
 _DIGEST_PREFIX: Final[str] = "sha256:"
 _COMMAND_TIMEOUT_SECONDS: Final[int] = 1_800
 _EXCLUDED_DIRECTORY_NAMES: Final[frozenset[str]] = frozenset(
-    {".git", ".mypy_cache", ".pytest_cache", ".ruff_cache", ".tox", ".venv", "__pycache__", "node_modules"}
+    {
+        ".git",
+        ".import_linter_cache",
+        ".mypy_cache",
+        ".pytest_cache",
+        ".ruff_cache",
+        ".tox",
+        ".venv",
+        "__pycache__",
+        "node_modules",
+    }
 )
 _FIRST_PARTY_IMPORT_ROOTS: Final[tuple[str, ...]] = ("cadrumo", "cadrumo_harness", "dev")
 

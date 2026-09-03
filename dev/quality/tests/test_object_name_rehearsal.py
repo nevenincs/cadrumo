@@ -94,7 +94,7 @@ def _fixture(
     _write(
         repo_root,
         ".gitignore",
-        b".pytest_cache/\n__pycache__/\n.mypy_cache/\n.ruff_cache/\n.tox/\n.venv/\nnode_modules/\nignored.log\n",
+        b".import_linter_cache/\n.pytest_cache/\n__pycache__/\n.mypy_cache/\n.ruff_cache/\n.tox/\n.venv/\nnode_modules/\nignored.log\n",
     )
     _git(
         repo_root,
@@ -121,7 +121,7 @@ def _fixture(
     (repo_root / "dev/deleted.txt").unlink()
     _write(repo_root, ".pytest_cache/ignored.bin", b"cache\n")
     _write(repo_root, "dev/__pycache__/ignored.pyc", b"cache\n")
-    for directory in (".mypy_cache", ".ruff_cache", ".tox", ".venv", "node_modules"):
+    for directory in (".import_linter_cache", ".mypy_cache", ".ruff_cache", ".tox", ".venv", "node_modules"):
         _write(repo_root, f"{directory}/ignored.bin", b"cache\n")
     _write(repo_root, "ignored.log", b"ignored\n")
     inventory = scan((repo_root / "src", repo_root / "dev"), repo_root)
