@@ -19,7 +19,7 @@ from ...core.time.utc import UtcInstant
 from ...domain.modelos.codes import ModeloCode
 from ..operations.models import OperationDefinitionId
 from ..operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
-from ..operator_actions.catalogue import ActionCatalogue
+from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue
 from ..operator_actions.models import ActionReference
 
 AEAT_SYNC_WORKSPACE_CONTRACT_VERSION: Final[int] = 1
@@ -252,17 +252,19 @@ class AeatSyncWorkspaceOverviewRowV1(_ActionRow):
         return self
 
 
-class AeatSyncWorkspaceCensusRowV1(_ActionRow):
+class AeatSyncWorkspaceCensusRowV1(BaseModel):
     """Safe public census row without values."""
 
+    model_config = STRICT_FROZEN_CONFIG
     path: str = Field(min_length=1, max_length=256)
     category: AeatSyncCensusCategory
     status: AeatSyncCensusStatus
 
 
-class AeatSyncWorkspaceFiledDeclarationRowV1(_ActionRow):
+class AeatSyncWorkspaceFiledDeclarationRowV1(BaseModel):
     """Safe public filed-declaration comparison."""
 
+    model_config = STRICT_FROZEN_CONFIG
     modelo: ModeloCode
     filing_year: FilingYear
     period: Period
@@ -293,9 +295,10 @@ class AeatSyncWorkspaceFiledDeclarationRowV1(_ActionRow):
         return self
 
 
-class AeatSyncWorkspaceNotificationRowV1(_ActionRow):
+class AeatSyncWorkspaceNotificationRowV1(BaseModel):
     """Safe public notification metadata."""
 
+    model_config = STRICT_FROZEN_CONFIG
     issued_on: date
     read_on: date | None = None
     read_state: AeatSyncNotificationReadState
@@ -506,6 +509,7 @@ def project_aeat_sync_workspace(
     if not subject_key.strip():
         raise AeatSyncWorkspaceProjectionError("subject key cannot be blank")
     obs = _observations(zone_observations)
+    _validate_action_catalogue(action_catalogue)
     groups = {
         AeatSyncWorkspaceZone.OVERVIEW: overview,
         AeatSyncWorkspaceZone.CENSUS: census,
@@ -527,7 +531,10 @@ def project_aeat_sync_workspace(
         sorted((_public_row(f.row, AeatSyncWorkspaceOverviewRowV1) for f in overview), key=lambda row: row.area.value)
     )
     out_census = tuple(
-        sorted((_public_row(f.row, AeatSyncWorkspaceCensusRowV1) for f in census), key=lambda row: row.path.casefold())
+        sorted(
+            (_public_row(f.row, AeatSyncWorkspaceCensusRowV1) for f in census),
+            key=lambda row: _canonical_census_path(row.path),
+        )
     )
     out_filed = tuple(
         sorted((_public_row(f.row, AeatSyncWorkspaceFiledDeclarationRowV1) for f in filed_declarations), key=_natural)
@@ -583,7 +590,7 @@ def _duplicates(
     reconciliation: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceReconciliationRowV1], ...],
 ) -> None:
     _unique((f.row.area for f in overview), "overview areas")
-    _unique((f.row.path.casefold() for f in census), "census paths")
+    _unique((_canonical_census_path(f.row.path) for f in census), "census paths")
     _unique((_natural(f.row) for f in filed), "filed addresses")
     if any(f.private_identity is None for f in notifications):
         raise AeatSyncWorkspaceProjectionError("notification requires private identity")
@@ -600,7 +607,7 @@ def _actions(
     contract_by_id = {contract.definition_id: contract for contract in contracts.definitions}
     for zone, facts in groups.items():
         for fact in facts:
-            ids = tuple(str(item.action_id) for item in fact.row.supported_actions)
+            ids = tuple(str(item.action_id) for item in getattr(fact.row, "supported_actions", ()))
             _unique(ids, "row actions")
             key = f"overview:{fact.row.area.value}" if zone is AeatSyncWorkspaceZone.OVERVIEW else zone.value
             for action_id in ids:
@@ -610,7 +617,7 @@ def _actions(
                     raise AeatSyncWorkspaceProjectionError("action is not admitted by catalogue") from error
             if not set(ids) <= _ALLOWED[key]:
                 raise AeatSyncWorkspaceProjectionError("action is not allowed for row area/state")
-            operation_ids = tuple(fact.row.supported_operations)
+            operation_ids = tuple(getattr(fact.row, "supported_operations", ()))
             _unique(operation_ids, "row operations")
             allowed_operations = _ALLOWED_OPERATIONS[key]
             for operation_id in operation_ids:
@@ -619,7 +626,7 @@ def _actions(
                     raise AeatSyncWorkspaceProjectionError("operation is not admitted by public contracts")
             if not set(operation_ids) <= allowed_operations:
                 raise AeatSyncWorkspaceProjectionError("operation is not allowed for row area/state")
-            for action in fact.row.supported_actions:
+            for action in getattr(fact.row, "supported_actions", ()):
                 joined = tuple(
                     contract
                     for contract in contracts.definitions
@@ -690,8 +697,24 @@ def _source_claims(
 
 
 def _require(unconfident: bool, source: AeatSyncWorkspaceSourceObservationV1, axis: str) -> None:
-    if not unconfident and not _observable(source.availability):
+    if not unconfident and (not _observable(source.availability) or source.item_count == 0):
         raise AeatSyncWorkspaceProjectionError(f"confident {axis} state lacks observable source")
+
+
+def _validate_action_catalogue(catalogue: ActionCatalogue) -> None:
+    """Require every supplied declaration to equal the canonical authority."""
+    for supplied in catalogue.entries:
+        try:
+            canonical = OPERATOR_ACTION_CATALOGUE.lookup(supplied.action_id)
+        except KeyError as error:
+            raise AeatSyncWorkspaceProjectionError("action catalogue contains unknown declaration") from error
+        if supplied != canonical:
+            raise AeatSyncWorkspaceProjectionError("action catalogue declaration differs from canonical authority")
+
+
+def _canonical_census_path(path: str) -> str:
+    """Normalize insignificant whitespace and case for logical identity."""
+    return " ".join(path.split()).casefold()
 
 
 def _zone_state(observation: AeatSyncWorkspaceZoneObservationV1, count: int) -> AeatSyncWorkspaceZoneStateV1:
