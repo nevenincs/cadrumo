@@ -92,6 +92,9 @@ class PointerWireFactFinding:
     cell: str
     offset: int
     length: int
+    #: The AEAT type the design gives this field. Carried because the grounding
+    #: for a reviewed rule is keyed to the type, not to the field.
+    aeat_type: str
     kind: str
     pointer: str
     notes: tuple[str, ...]
@@ -158,6 +161,7 @@ def revision_findings(
                 cell=f"{field.sheet}!{field.source_cell}",
                 offset=field.offset,
                 length=field.length,
+                aeat_type=field.aeat_type.strip(),
                 description=field.normalized_description,
                 kind=kind,
                 pointer=content.strip(),
