@@ -774,6 +774,7 @@ ignore_imports =
     cadrumo.application.live.filed_data_capture -> cadrumo.adapters.outbound.aeat.sede.declarations_capture
     cadrumo.application.live.justificante -> cadrumo.adapters.outbound.aeat.sede.declarations
     cadrumo.application.live.justificante -> cadrumo.adapters.outbound.aeat.sede.walker
+    cadrumo.application.live.justificante -> cadrumo.adapters.outbound.aeat.verify.contract
     # ── live-snapshot family: concrete relocated, construction edge retained ──
     # SecureSnapshotRepository -- the encrypted secure-object backend these
     # services persist through -- now lives in the persistence adapter, as
