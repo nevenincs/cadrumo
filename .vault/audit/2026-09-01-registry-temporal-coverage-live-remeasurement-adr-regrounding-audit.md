@@ -11009,3 +11009,40 @@ This is recorded rather than implemented. It changes what a render profile means
 and what the renderer does when it meets a field nothing settles, which is
 filing-affecting behaviour and belongs to a decision rather than to an execution
 step reasoning from a screen's output.
+
+
+## Half the provenance population is one omission repeated, not drift
+
+The provenance screen carries by far the largest population in the suite -
+31,608 findings, an order above every other screen - and its runner row shows
+1,389 because it is enrolled through an index that collapses per-child sites
+onto the reference actually outside a manifest. That collapse already existed
+and its docstring already stated the insight, which is why no second one was
+built: the reduction from sites to references is done, and doing it again would
+have been this campaign's own target defect.
+
+What the index cannot answer is what kind of correction each row needs, because
+it is keyed per revision and both shapes look the same there. Reduced once more:
+the 1,389 rows are **414 distinct (modelo, kind, reference) triples**, of which
+**213 are absent from every revision of their modelo and 201 from only some**.
+
+Those are different corrections. A reference the modelo never declares anywhere
+is one omission - the manifest convention was never applied to it - and is
+plausibly fixed once for the modelo. A reference present in some revisions and
+missing from others is drift between manifests that were meant to agree, and
+each gap is its own fix. The largest systemic case is modelo 100's
+`ley-35-2006:art-77`, absent from all six revisions and cited by 4,340 children.
+
+The composition is worth recording beside it. The findings divide 23,475 legal
+against 8,133 source references, and by citing child 21,596 casillas against
+2,683 evolutions, 2,638 bindings, 2,101 formulas and 2,014 export fields.
+Modelo 100 accounts for 14,838 and modelo 200 for 7,696, so two modelos carry
+seventy per cent of the population.
+
+The projection is built on the index rather than on the findings, so there is
+one collapse from sites to references and this asks a further question of its
+result. Its agreement with the index is asserted: no site lost, none invented,
+and the reference set identical. And a modelo missing from the revision counts
+yields no claim rather than a false one - defaulting an unknown denominator to
+zero would make any single row match and report it as systemic, which is a claim
+built out of ignorance and has its own test.

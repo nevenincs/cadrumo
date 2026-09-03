@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:e608c9db91d597426f04fc510f5e39899d8f2773965aef53c76c1bdd5d35d753'
+body_hash: 'sha256:7ab982582b27e83af919268ef00d42ae64a03cb601c98ca8dfc84d4713e4d0e2'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -451,6 +451,7 @@ Screen and then gate child citations against the source manifest of their owning
 
 - [x] `W04.P09.S30` - Screen child citations against the source manifest of their owning revision; `dev/registry/analysis/provenance_parent_consistency.py`.
 - [x] `W04.P09.S31` - Prove the provenance screen against a constructed out-of-manifest citation; `dev/registry/tests/test_provenance_parent_consistency.py`.
+- [x] `W04.P09.S415` - Separate a reference absent from every revision of its modelo from one missing between manifests that agree elsewhere: the 1,389 index rows are 414 references of which 213 are systemic and 201 are drift, and the per-revision index cannot tell the two corrections apart; `dev/registry/analysis/provenance_consistency.py dev/registry/tests/test_provenance_consistency.py`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 
