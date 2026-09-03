@@ -11,6 +11,7 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
+from ....core.hashing import content_hash_hex
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ...operations.registry import OperationPublicContractSetV1
@@ -39,6 +40,7 @@ from ..workspace import (
     AeatSyncWorkspaceNotificationRowV1,
     AeatSyncWorkspaceOverviewRowV1,
     AeatSyncWorkspaceProjectionError,
+    AeatSyncWorkspaceProjectionV1,
     AeatSyncWorkspaceReconciliationRowV1,
     AeatSyncWorkspaceSource,
     AeatSyncWorkspaceSourceObservationV1,
@@ -242,11 +244,30 @@ def test_notification_selection_identity_is_stable_opaque_and_order_independent(
     assert all(key is not None for key in keys)
     assert len(set(keys)) == 2
     assert all(key.startswith("aeat_sync.notification.") and len(key) <= 160 for key in keys if key is not None)
+    first_key = first.notifications[0].selection_key
+    assert first_key is not None
+    raw_digest = content_hash_hex(
+        {
+            "namespace": "aeat_sync.notification.selection.v1",
+            "private_identity": "notification-alpha",
+        }
+    )
+    assert first_key.removeprefix("aeat_sync.notification.") != raw_digest
     encoded = first.model_dump_json() + repr(first)
     assert "notification-alpha" not in encoded
     assert "notification-beta" not in encoded
     assert b"notification-alpha" not in pickle.dumps(first)
     assert b"notification-beta" not in pickle.dumps(first)
+
+    invalid = first.model_dump(mode="python")
+    invalid["notifications"] = ({**invalid["notifications"][0], "selection_key": None},)
+    with pytest.raises(ValidationError, match="selection keys"):
+        AeatSyncWorkspaceProjectionV1.model_validate(invalid)
+    duplicate = first.model_dump(mode="python")
+    duplicate_row = first.notifications[0].model_dump(mode="python")
+    duplicate["notifications"] = (duplicate_row, duplicate_row)
+    with pytest.raises(ValidationError, match="selection keys must be unique"):
+        AeatSyncWorkspaceProjectionV1.model_validate(duplicate)
 
 
 def test_notification_selection_identity_collision_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -354,21 +375,28 @@ def test_actions_require_catalogue_admission_and_area_state_closure() -> None:
     assert _projection(overview=(_fact(admitted_operation),)).overview[0].supported_operations == (
         "user-profile.censo-review",
     )
-    for row in (_overview(), _census(), _filed(), _notification(), _comparison(), _reconciliation()):
+    for row in (_overview(), _census(), _filed(), _comparison(), _reconciliation()):
         assert row.supported_actions == () or row.supported_actions
         assert row.supported_operations == ()
         assert "supported_actions" in row.model_dump()
         assert "supported_operations" in row.model_dump()
 
 
-def test_real_public_rows_retain_admitted_capability_provenance() -> None:
-    action = _action("operator.live.notifications.list")
-    notification = _notification().model_copy(update={"supported_actions": (action,), "supported_operations": ()})
-    projection = _projection(notifications=(_fact(notification, private_identity="notification-private"),))
-    projected = projection.notifications[0]
-    assert projected.supported_actions == (action,)
-    assert projected.supported_operations == ()
-    assert projected.model_dump()["supported_actions"] == ({"action_id": action.action_id},)
+def test_notification_rows_have_exact_safe_fields_and_no_capabilities() -> None:
+    assert set(AeatSyncWorkspaceNotificationRowV1.model_fields) == {
+        "issued_on",
+        "read_on",
+        "read_state",
+        "category",
+        "document_custody_state",
+        "document_custody_observed_at",
+        "selection_key",
+    }
+    projected = _projection().notifications[0]
+    assert not hasattr(projected, "supported_actions")
+    assert not hasattr(projected, "supported_operations")
+    assert "supported_actions" not in projected.model_dump()
+    assert "supported_operations" not in projected.model_dump()
 
 
 def test_row_subclass_protected_fields_are_reconstructed_away() -> None:

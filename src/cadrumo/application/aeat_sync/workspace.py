@@ -757,7 +757,7 @@ def _notification_selection_key(private_identity: str) -> AeatSyncNotificationSe
     """Derive a process-stable public focus key without retaining private data."""
     canonical = "\x1f".join((_NOTIFICATION_SELECTION_NAMESPACE, private_identity)).encode("utf-8")
     digest = hmac.digest(_NOTIFICATION_SELECTION_KEY, canonical, hashlib.sha256).hex()
-    return f"aeat_sync.notification.{digest}"
+    return f"aeat_sync.notification.k{digest}"
 
 
 def _project_notification_rows(
