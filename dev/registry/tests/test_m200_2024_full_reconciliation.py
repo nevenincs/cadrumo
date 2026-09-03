@@ -11,6 +11,7 @@ import pytest
 import rtoml
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file
@@ -291,6 +292,50 @@ def test_legal_worklist_refuses_missing_unknown_wrong_and_later_year_authority()
                 items=(missing, unknown, out_of_window),
             )
         )
+
+
+def test_cli_legal_admission_refuses_an_open_worklist_and_pending_authority(census) -> None:
+    missing = subject._legal_worklist_item(
+        evidence_home="declaration",
+        subject_id="missing",
+        legal_refs=(),
+        legal={},
+        source_ref=subject.TARGET_SOURCE_REF,
+        source_sha256=subject.TARGET_SOURCE_SHA256,
+        valid_from=subject.TARGET_VALID_FROM,
+        valid_to=subject.TARGET_VALID_TO,
+    )
+    open_worklist = subject.M200LegalWorklist(
+        source_ref=subject.TARGET_SOURCE_REF,
+        source_sha256=subject.TARGET_SOURCE_SHA256,
+        revision_valid_from=subject.TARGET_VALID_FROM,
+        revision_valid_to=subject.TARGET_VALID_TO,
+        items=(missing,),
+    )
+    with pytest.raises(RegistryValidationError, match="legal worklist is unresolved"):
+        subject._require_closed_m200_2024_legal_worklist(census, worklist=open_worklist)
+
+    reference_id = "orden-hac-657-2025:modelo-200"
+    reviewed = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml")).legal[reference_id]
+    pending = reviewed.model_copy(
+        update={
+            "review_status": RevisionReviewStatus.PENDING_REVIEW,
+            "reviewed_at": None,
+            "reviewed_by": None,
+        }
+    )
+    applicable = subject._legal_worklist_item(
+        evidence_home="revision",
+        subject_id="orden_aplicabilidad",
+        legal_refs=(reference_id,),
+        legal={reference_id: pending},
+        source_ref=subject.TARGET_SOURCE_REF,
+        source_sha256=subject.TARGET_SOURCE_SHA256,
+        valid_from=subject.TARGET_VALID_FROM,
+        valid_to=subject.TARGET_VALID_TO,
+    )
+    with pytest.raises(RegistryValidationError, match="filing-grade authority requires a reviewed status"):
+        subject._verify_m200_2024_worklist_legal_authority((applicable,), {reference_id: pending})
 
 
 def test_source_rebind_plan_is_complete_target_map_owned_and_refuses_only_true_orphans(source_rebind_plan) -> None:

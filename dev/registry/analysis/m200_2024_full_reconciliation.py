@@ -23,6 +23,7 @@ from cadrumo.core.fsync import fsync_parent_dir
 from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
 from cadrumo.domain.calculations.registry.schema_references import governed_period_span
 
@@ -380,6 +381,7 @@ def build_m200_2024_legal_worklist(census: M200ReconciliationCensus) -> M200Lega
             *( ("semantic_map", anchor.export_field_id, anchor.legal_refs) for anchor in census.anchors),
         )
     )
+    _verify_m200_2024_worklist_legal_authority(items, legal)
     return M200LegalWorklist(
         source_ref=census.source_ref,
         source_sha256=census.source_sha256,
@@ -387,6 +389,28 @@ def build_m200_2024_legal_worklist(census: M200ReconciliationCensus) -> M200Lega
         revision_valid_to=census.revision_valid_to,
         items=items,
     )
+
+
+def _verify_m200_2024_worklist_legal_authority(
+    items: Iterable[M200LegalWorklistItem], legal: Mapping[str, object]
+) -> None:
+    """Require every known worklist citation to be reviewed and corpus-grounded."""
+    referenced = {
+        ref: legal[ref]
+        for item in items
+        for ref in item.legal_refs
+        if ref in legal
+    }
+    verify_legal_catalogue(referenced, source_root=bundled_path())
+
+
+def _require_closed_m200_2024_legal_worklist(
+    census: M200ReconciliationCensus, *, worklist: M200LegalWorklist | None = None
+) -> M200LegalWorklist:
+    """Build and admit only closed Modelo 200/2024 legal authority for CLI work."""
+    admitted = build_m200_2024_legal_worklist(census) if worklist is None else worklist
+    require_closed_m200_2024_legal_worklist(admitted)
+    return admitted
 
 
 def _m200_2024_revision_legal_carriers(registry_root: Path) -> tuple[tuple[str, tuple[str, ...]], ...]:
@@ -962,7 +986,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.dry_run and not args.apply_source_rebinds:
         parser.error("--dry-run requires --apply-source-rebinds")
     census = reconcile_bundled_m200_2024()
-    legal_worklist = build_m200_2024_legal_worklist(census)
+    legal_worklist = _require_closed_m200_2024_legal_worklist(census)
     if args.toml:
         if args.apply_source_rebinds:
             parser.error("--toml cannot be combined with --apply-source-rebinds")

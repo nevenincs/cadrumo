@@ -19,5 +19,6 @@ related:
 
 ## Changes
 
+- `M` `dev/registry/analysis/m200_2024_full_reconciliation.py`
 - `M` `dev/registry/tests/test_m200_2024_full_reconciliation.py`
-- `verify:` `uv run pytest -n0 dev/registry/tests/test_m200_2024_full_reconciliation.py::test_legal_worklist_measures_the_complete_2024_population_and_closes_reviewed_authority dev/registry/tests/test_m200_2024_full_reconciliation.py::test_modelo_200_orden_governed_period_is_verified_against_its_bundled_boe_text dev/registry/tests/test_m200_2024_full_reconciliation.py::test_legal_worklist_refuses_missing_unknown_wrong_and_later_year_authority -q` -> `pass`
+- `verify:` `uv run pytest -n0 dev/registry/tests/test_m200_2024_full_reconciliation.py::test_legal_worklist_measures_the_complete_2024_population_and_closes_reviewed_authority dev/registry/tests/test_m200_2024_full_reconciliation.py::test_legal_worklist_refuses_missing_unknown_wrong_and_later_year_authority dev/registry/tests/test_m200_2024_full_reconciliation.py::test_cli_legal_admission_refuses_an_open_worklist_and_pending_authority -q` -> `pass`
