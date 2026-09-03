@@ -33,8 +33,34 @@ def test_every_fixture_is_fresh_frozen_and_valid(scenario: HomeFixtureScenario) 
     assert first == second
     assert first is not second
     assert first.account is not second.account
+    for first_rows, second_rows in (
+        (first.actions, second.actions),
+        (first.declarations, second.declarations),
+        (first.agenda, second.agenda),
+    ):
+        if first_rows:
+            assert first_rows is not second_rows
+            assert all(first_row is not second_row for first_row, second_row in zip(first_rows, second_rows, strict=True))
+    if first.ledger is not None:
+        assert second.ledger is not None
+        assert first.ledger is not second.ledger
     with pytest.raises(ValidationError):
         first.generated_at = second.generated_at
+
+
+def test_populated_declaration_identity_is_stable_across_fresh_builds() -> None:
+    first = build_home_projection_fixture(HomeFixtureScenario.READY)
+    second = build_home_projection_fixture(HomeFixtureScenario.READY)
+
+    first_identity = tuple(
+        (item.work_unit_id, item.modelo, item.filing_year, item.period.registry_token)
+        for item in first.declarations
+    )
+    second_identity = tuple(
+        (item.work_unit_id, item.modelo, item.filing_year, item.period.registry_token)
+        for item in second.declarations
+    )
+    assert first_identity == second_identity
 
 
 def test_ready_empty_and_blocked_projections_keep_distinct_typed_signals() -> None:
@@ -102,11 +128,15 @@ def test_invalid_scenario_fails_closed() -> None:
 
 
 def test_every_serialized_fixture_has_no_pii_or_secret_like_values() -> None:
+    spanish_identifier = re.compile(
+        r"\b(?:\d{8}[A-Z]|[XYZ]\d{7}[A-Z]|[KLM]\d{7}[A-Z]|[ABCDEFGHJNPQRSUVW]\d{7}[0-9A-J])\b",
+        re.IGNORECASE,
+    )
     forbidden = (
         re.compile(r"(?:password|passphrase|secret|bearer|api[_-]?key|private[_-]?key)", re.IGNORECASE),
         re.compile(r"\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b"),
         re.compile(r"\bES\d{22}\b", re.IGNORECASE),
-        re.compile(r"\b\d{8}[A-Z]\b"),
+        spanish_identifier,
         re.compile(r"https?://", re.IGNORECASE),
         re.compile(r"\bwork unit\b", re.IGNORECASE),
     )
@@ -115,6 +145,7 @@ def test_every_serialized_fixture_has_no_pii_or_secret_like_values() -> None:
         serialized = build_home_projection_fixture(scenario).model_dump_json()
         assert all(pattern.search(serialized) is None for pattern in forbidden)
         assert set(re.findall(r"\b[0-9a-f]{64}\b", serialized)) <= allowed_ids
+    assert all(spanish_identifier.fullmatch(value) for value in ("12345678Z", "X2482300W", "B12345678"))
 
 
 def test_fixture_module_ast_has_only_local_record_construction_and_no_io() -> None:
@@ -122,8 +153,19 @@ def test_fixture_module_ast_has_only_local_record_construction_and_no_io() -> No
 
     imported_modules = {alias.name for node in ast.walk(source) if isinstance(node, ast.Import) for alias in node.names}
     imported_modules.update(node.module or "" for node in ast.walk(source) if isinstance(node, ast.ImportFrom))
-    forbidden_modules = {"pathlib", "socket", "httpx", "requests", "secrets", "sqlite3", "subprocess"}
-    assert all(module.split(".")[0] not in forbidden_modules for module in imported_modules)
+    forbidden_module_roots = {
+        "os",
+        "pathlib",
+        "socket",
+        "httpx",
+        "requests",
+        "secrets",
+        "sqlite3",
+        "subprocess",
+    }
+    forbidden_module_segments = {"adapter", "client", "network", "persistence", "reader", "repo", "repository", "secret"}
+    assert all(module.split(".")[0] not in forbidden_module_roots for module in imported_modules)
+    assert all(not forbidden_module_segments.intersection(module.casefold().split(".")) for module in imported_modules)
 
     def call_path(node: ast.expr) -> str:
         if isinstance(node, ast.Name):
@@ -136,7 +178,13 @@ def test_fixture_module_ast_has_only_local_record_construction_and_no_io() -> No
     called = {call_path(node.func) for node in ast.walk(source) if isinstance(node, ast.Call)}
     forbidden_calls = {
         "open",
+        "os.open",
+        "os.system",
+        "os.popen",
         "pathlib.Path",
+        "pathlib.Path.open",
+        "pathlib.Path.read_text",
+        "pathlib.Path.write_text",
         "socket.socket",
         "requests.get",
         "requests.post",
@@ -145,6 +193,8 @@ def test_fixture_module_ast_has_only_local_record_construction_and_no_io() -> No
         "subprocess.run",
         "urlopen",
     }
-    forbidden_suffixes = (".connect", ".request", ".read_text", ".write_text", ".mkdir")
+    forbidden_call_segments = {"adapter", "client", "network", "persistence", "reader", "repo", "repository"}
+    forbidden_suffixes = (".connect", ".mkdir", ".open", ".read", ".read_text", ".request", ".write", ".write_text")
     assert not called & forbidden_calls
+    assert all(not forbidden_call_segments.intersection(path.casefold().split(".")) for path in called)
     assert not any(path.endswith(forbidden) for path in called for forbidden in forbidden_suffixes)
