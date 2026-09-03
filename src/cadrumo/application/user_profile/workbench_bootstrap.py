@@ -119,7 +119,7 @@ def prepare_workbench_bootstrap(
     choices = choice_reader()
     expected = tuple((str(item.profile_id), str(item.label)) for item in inventory.summaries)
     observed = tuple((choice.profile_id, choice.label) for choice in choices)
-    if observed != expected:
+    if len(expected) != len(observed) or dict(expected) != dict(observed):
         return WorkbenchBootstrapV1(
             inventory_state=WorkbenchBootstrapInventoryState.DEGRADED,
             reason_code="workbench.bootstrap.profile_inventory_changed",
