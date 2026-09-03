@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:ae515dec22230197286356772e5419a029aae4d2b32f5c79f2e2d25cbe27bd6e'
+body_hash: 'sha256:c2853cc3a65a4d3e6b3e0777d45a72b6c7c61bd74960c744869a7313e7cfd456'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -566,6 +566,8 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S323` - Prove the two defining modules this session created, which the screen-test gate does not reach; `dev/registry/tests/test_corpus.py dev/registry/tests/test_tree_paths.py`.
 - [x] `W06.P13.S324` - Run the only generator no test invoked, and record that filename convention cannot answer what a test covers; `dev/registry/tests/test_m303_orden_anual.py`.
 - [x] `W06.P13.S325` - Gate that every public module in the registry tooling is imported by a test, proven on a planted root; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W06.P13.S326` - Make the reassembly proof exercise the gate's own walk instead of a copy of it; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W06.P13.S327` - Establish that every constructed screen proof asserts through its own screen, and that the contributor README needs no entry for the new defining modules; `dev/registry/tests dev/registry/README.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

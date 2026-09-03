@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:2a31213840375b8240bf8fa1f1ba3f1eb7a6690f37a9fa362d06121a76590a20'
+body_hash: 'sha256:bb71c27858ac76b298cac06cd7e4c63a22974c13c5dab80d5d64d6a80de6547c'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8288,3 +8288,50 @@ could not read, which is precisely the failure the guard above exists to catch.
 The helpers are shared between the live gate and its proof rather than
 reimplemented for each, so the thing proved is the thing that runs. A detector
 proved against a reimplementation of itself proves the reimplementation.
+
+### the-proof-i-wrote-two-iterations-ago-was-proving-its-own-copy | high | The principle stated last iteration indicted it immediately; one shared walk now serves both
+
+Writing that a detector proved against a reimplementation of itself proves the
+reimplementation was a statement about a proof written in this campaign two
+iterations earlier. The reassembly gate walks each analysis module's syntax tree
+for a reach at the binding derivation; its proof defined a local `reaches()`
+that walked the same three node kinds in the same order. Drop the attribute
+branch from the gate and the proof stays green, because the proof was never
+looking at the gate.
+
+There is one walk now, called by both. The gate passes it each module's source;
+the proof passes it four constructed sources - an import and an attribute call
+that must be caught, a docstring and a comment naming the same symbol that must
+not be. Twenty-five tests pass, exit 0.
+
+Sweeping the module for the same shape flagged one other test, and reading it
+cleared it: the untouched-registry gate defines a local `fingerprint()` and
+calls it twice, before and after the screens run. That is a measurement taken
+twice within one test, not a detector reimplemented beside itself, and the
+distinction is the whole point - a helper that produces the OBSERVATION is fine
+to define locally, a helper that makes the JUDGEMENT the gate makes is not,
+because only the second can silently disagree with what ships.
+
+### every-constructed-screen-proof-asserts-through-its-screen-and-the-readme-needs-nothing | medium | Two negative results, one of which is a decision not to write documentation
+
+Extending last iteration's principle to the ten screen test modules: does any
+proof construct a defect and then assert on something other than the screen it
+proves? None does. Every test that copies a real revision and mutates it calls
+the screen's own entry function on the result. The two that did not were the
+continuity proofs repaired earlier in this campaign, when the screen was given
+the per-unit function its siblings already had, so the sweep confirms a repair
+rather than finding a new gap.
+
+The second result is a decision not to act. The two defining modules created
+this session are absent from the contributor README, and adding them would have
+been the obvious tidy. The README documents this package at directory
+granularity - one line per subdirectory, plus a section naming the declaration
+screens because those are the things a contributor runs - and both new modules
+sit inside directories it already describes. An entry for each would have been
+the first module-level line in a file that has none, which trades a small
+completeness for a documented shape nobody can follow afterwards.
+
+Recording the decision matters more than the decision. A README left unchanged
+looks identical to a README nobody thought about, and the next contributor
+adding a defining module here will face the same question with no record that it
+was asked.
