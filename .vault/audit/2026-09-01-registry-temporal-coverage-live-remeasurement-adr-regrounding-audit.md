@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c4c42c06cd5259099a590df35c7ed9da09c8f620c0626a14d098d26b29b7accf'
+body_hash: 'sha256:6af6be2fd6cfb9d9a461d8f6c19596a5bc4a82f571e3db5edfec071ef1ab1653'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8228,3 +8228,36 @@ symlink is refused THOUGH IT EXISTS, which is the case a guard checking only
 `exists()` would admit and the way a publication writes outside the tree it
 believes it is in. Containment is asserted in both directions, including that a
 parent is not inside its own child. Ten tests across the two modules, exit 0.
+
+### eighteen-twelve-eight-one-and-only-the-last-was-true | high | Three wrong ways of asking which modules lack tests, and the answer was one module
+
+Generalising last iteration's finding - a module outside the population a gate
+was written for reads as covered - produced four answers in succession, and only
+the last was right. The sequence is the finding.
+
+Eighteen, by matching a module against a test file of the same name. Wrong: the
+pipeline's modules carry a leading underscore that their test files drop, so
+every one of them looked untested. Twelve, after stripping the underscore.
+Wrong: the tests here are named for the SUBJECT rather than the module -
+`_tree_check` is covered by `test_generated_tree_check` - and the conformance
+package keeps its tests in its own directory, which the sweep never looked in.
+Eight, by asking which modules no test imports. Wrong again, and more subtly:
+the extractor collected the module of a `from X import Y` but not its names, so
+every module imported as a name rather than a path counted as untested. One,
+after collecting both forms.
+
+The corrected instrument is also the simpler one. Coverage by import is exact
+and convention-free, while every filename rule encoded a naming habit that this
+tree only partly follows. Three of the four attempts failed for the same reason
+the campaign keeps recording - a check for a property that recognises one way of
+expressing it - and here that reason produced a seventeen-module phantom backlog
+before it produced a fact.
+
+The one real case is `m303_orden_anual`, whose public surface is a generator
+with a `--check` mode that refuses a stale or missing artefact. Nothing ran it,
+which makes a current artefact and an unrun generator look identical. It runs
+now, in 9.6 seconds, exit 0, so the committed manifest and census artefact are
+proved to reproduce from their pinned sources. A second test asserts the
+refusing flag rather than the writing default is the one under test, because the
+distinction is one keystroke wide and the wrong side of it regenerates registry
+artefacts from a test run.

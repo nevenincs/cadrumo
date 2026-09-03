@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:5988bc7f4a9f094bc2c132a35fd049c87e2595541166658a7f6968fad298d515'
+body_hash: 'sha256:8cdac0d0b3d4c5fb50e0fcc1810253b334e6b6abd78254e590955c19de14dc5e'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -564,6 +564,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S321` - Give the two absence gates that walk the tree a proof they looked, and record which needed none; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W06.P13.S322` - Say what the decisions Phase actually holds, counted rather than estimated; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S323` - Prove the two defining modules this session created, which the screen-test gate does not reach; `dev/registry/tests/test_corpus.py dev/registry/tests/test_tree_paths.py`.
+- [x] `W06.P13.S324` - Run the only generator no test invoked, and record that filename convention cannot answer what a test covers; `dev/registry/tests/test_m303_orden_anual.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

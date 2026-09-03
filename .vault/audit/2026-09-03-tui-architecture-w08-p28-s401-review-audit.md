@@ -5,49 +5,33 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b335c22792ae5bd03e4e33c3067adaee217ec276ae1e1e8e729e5300d0b72f61'
+body_hash: 'sha256:ef19e52bd0fe4c5ee29585891ba6376673e9f501015b0e723422e223162862e7'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `tui-architecture` audit: `w08 p28 s401 review`
 
 ## Scope
 
-<!-- What was audited and why -->
+Independent review of `W08.P28.S401` against the approved TUI architecture plan, the accepted out-of-process destination protocol ADR, and the resolved S400 review. Reviewed the bootstrap application contract, TUI adapter, their focused tests, and installed child-entry composition for truthful inventory, custody, login, cancellation, registration, secret, authority, and network boundaries.
 
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
+### installed-bootstrap-unwired | high | The coordinator is not reachable from a child-process entry path
 
-       ### w08 p28 s401 review | {level} | {summary}
+`prepare_workbench_bootstrap`, `workbench_login_screen`, `finish_workbench_login`, and `handoff_registration_required` are referenced only by their focused tests and by each other. `launcher.py`, `app.py`, and the TUI module-execution path contain no bootstrap reference. Consequently a real child cannot execute the required recognized-inventory, custody-resume, login, cancellation, degraded-inventory, or zero-profile-registration state machine. The implementation exposes isolated helpers but does not build the installed child-process coordinator required by S401; S400 expressly leaves that ownership to this step.
 
-     followed by a paragraph carrying the detail. w08 p28 s401 review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+### installed-bootstrap-unwired-resolved | low | The S401 coordinator now owns the closed bootstrap state machine
+
+Resolved on re-review. `run_workbench_bootstrap` makes one injected preparation and routes only the immutable degraded, empty-registration, resumed-authenticated, login-authenticated, and login-cancelled states. It does not reopen inventory or custody, retain a passphrase, invent profile data, invoke a CLI or dev fixture, or initiate network work. The new focused paths prove each route and refuse every inappropriate side effect. Installed root and account host composition remain deliberately deferred to their separately scoped S384 and S403 work; they are not a remaining S401 defect.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+Wire one installed child-session owner to invoke `prepare_workbench_bootstrap`, route its closed states to the existing login and registration journeys, and continue to the authenticated root only after a resumed or authenticated result. Add a real child-entry test covering recognized resume, login cancellation, degraded inventory, and empty-inventory registration without CLI or dev-fixture imports.
+
+## Verification
+
+Initial focused result: `uv run --no-sync pytest -q -n0 src/cadrumo/application/user_profile/tests/test_workbench_bootstrap.py src/cadrumo/entrypoints/tui/tests/test_bootstrap.py` passed: 8 tests in 2.31 seconds. Initial scoped Ruff check passed. Re-review after the coordinator addition: the same focused command passed 13 tests in 3.24 seconds and the scoped Ruff check passed. The re-review found the coordinator carries no raw passphrase or custody material, uses the canonical profile-summary authority, imports neither CLI nor dev fixtures, and has no network call. The root's external-provider refusal remains outside S401 because root and account host composition are separately planned in S384 and S403.
+
+Final result: **APPROVE**. The prior HIGH finding is resolved; no S401-owned HIGH or CRITICAL finding remains.
