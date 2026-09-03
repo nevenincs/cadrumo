@@ -98,7 +98,7 @@ class LedgerClassificationScreen(LedgerWorkspaceScreen):
         confirm.disabled = False
         confirm.focus()
 
-    async def on_button_pressed(self, event: Button.Pressed) -> None:
+    def on_button_pressed(self, event: Button.Pressed) -> None:
         """Confirm through the injected door or cancel without mutation."""
         if event.button.id == "ledger-classification-cancel" and self.flow_state in {
             LedgerFlowState.EDITING,
@@ -117,9 +117,17 @@ class LedgerClassificationScreen(LedgerWorkspaceScreen):
         self.query_one("#ledger-classification-cancel", Button).disabled = True
         status = self.query_one("#ledger-flow-status", Static)
         status.update(ledger_copy("tui.ledger.classification.progress"))
+        self.run_worker(self._submit(), exclusive=True)
+
+    async def _submit(self) -> None:
+        """Await the injected door without blocking keyboard message handling."""
+        status = self.query_one("#ledger-flow-status", Static)
+        selected = self.selected_classification
+        if selected is None:  # pragma: no cover - guarded before worker creation
+            raise RuntimeError("classification selection disappeared before submission")
         try:
             await self.controller.submit_classification(
-                ManualLedgerTransactionPatch(business_classification=self.selected_classification)
+                ManualLedgerTransactionPatch(business_classification=selected)
             )
         except Exception:
             self._transition(LedgerFlowState.FAILED)
@@ -139,6 +147,9 @@ class LedgerClassificationScreen(LedgerWorkspaceScreen):
 
     @override
     def action_back(self) -> None:
+        if self.flow_state is LedgerFlowState.SUBMITTING:
+            self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.flow.in_flight_refusal"))
+            return
         if self.flow_state is LedgerFlowState.CONFIRMING:
             self._cancel()
             return

@@ -82,7 +82,7 @@ class LedgerImportScreen(LedgerWorkspaceScreen):
         confirm.disabled = False
         confirm.focus()
 
-    async def on_button_pressed(self, event: Button.Pressed) -> None:
+    def on_button_pressed(self, event: Button.Pressed) -> None:
         """Submit through the injected door or cancel without touching I/O."""
         if event.button.id == "ledger-import-cancel" and self.flow_state in {
             LedgerFlowState.EDITING,
@@ -101,8 +101,16 @@ class LedgerImportScreen(LedgerWorkspaceScreen):
         self.query_one("#ledger-import-cancel", Button).disabled = True
         status = self.query_one("#ledger-flow-status", Static)
         status.update(ledger_copy("tui.ledger.import.progress"))
+        self.run_worker(self._submit(), exclusive=True)
+
+    async def _submit(self) -> None:
+        """Await the injected door without blocking keyboard message handling."""
+        status = self.query_one("#ledger-flow-status", Static)
+        selected = self.selected_choice
+        if selected is None:  # pragma: no cover - guarded before worker creation
+            raise RuntimeError("prepared import selection disappeared before submission")
         try:
-            result = await self.controller.submit_import(self.selected_choice)
+            result = await self.controller.submit_import(selected)
         except Exception:
             self._transition(LedgerFlowState.FAILED)
             status.update(ledger_copy("tui.ledger.import.failure"))
@@ -121,6 +129,9 @@ class LedgerImportScreen(LedgerWorkspaceScreen):
 
     @override
     def action_back(self) -> None:
+        if self.flow_state is LedgerFlowState.SUBMITTING:
+            self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.flow.in_flight_refusal"))
+            return
         if self.flow_state is LedgerFlowState.CONFIRMING:
             self._cancel()
             return

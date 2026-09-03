@@ -22,8 +22,8 @@ from ....application.ledger.workspace import (
     LedgerWorkspaceProjectionV1,
     LedgerWorkspaceStatus,
 )
-from ....application.operator_actions.models import ActionReference
 from ....application.operator_actions.catalogue import lookup_action
+from ....application.operator_actions.models import ActionReference
 from ....core.i18n.render import tr
 from ....core.identity import TransactionId
 from ..components.theme import BASE_CSS, tokenised
@@ -122,6 +122,7 @@ _LEDGER_LOCALE_KEYS: Final = (
     "tui.ledger.classification.progress",
     "tui.ledger.classification.success",
     "tui.ledger.classification.failure",
+    "tui.ledger.flow.in_flight_refusal",
     "tui.ledger.import.title",
     "tui.ledger.import.prompt",
     "tui.ledger.import.provider.bank",
@@ -198,7 +199,10 @@ class LedgerWorkspaceController:
         visible_ids = {row.transaction_id for row in projection.entries}
         if classification_target is not None and classification_target not in visible_ids:
             raise ValueError("classification target is absent from the visible Ledger projection")
-        if classify_action is not None and lookup_action(classify_action.action_id).target_command_key != "ledger.classify":
+        if (
+            classify_action is not None
+            and lookup_action(classify_action.action_id).target_command_key != "ledger.classify"
+        ):
             raise ValueError("injected Ledger classification action does not resolve to the canonical command")
         choice_ids = tuple(choice.choice_id for choice in prepared_imports)
         if len(choice_ids) != len(set(choice_ids)):

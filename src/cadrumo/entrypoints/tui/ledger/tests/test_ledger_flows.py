@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import ast
+import pickle
 from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
 
 import pytest
+from textual.containers import VerticalScroll
 from textual.widgets import DataTable, Static
 
 from .....application.ledger.models import (
@@ -20,13 +22,16 @@ from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
+from .....core.identity import TransactionId
 from .....domain.transactions.enums import BusinessClassification
 from ....tui.components.host import ScreenHostApp
+from ....tui.devtools.frame import geometry_band
 from ..classification import LedgerClassificationScreen
+from ..controller import LedgerWorkspaceController
 from ..import_flow import LedgerImportScreen
 from ..models import LedgerClassificationSubmissionV1, LedgerFlowState, LedgerPreparedImportV1
 from ..routes import ledger_screen_factory, resolve_ledger_screen
-from .test_ledger_workspace import _controller, _projection
+from .test_ledger_workspace import _context, _projection, _review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -75,10 +80,14 @@ def _classify_action() -> ActionReference:
 async def test_classification_is_explicit_confirmable_cancelable_and_catalogue_authorized() -> None:
     projection = _projection()
     door = _ClassificationDoor()
-    controller = _controller(projection)
-    controller.classify_action = _classify_action()
-    controller.classification_target = projection.entries[0].transaction_id
-    controller.classification_submitter = door
+    controller = LedgerWorkspaceController(
+        _context(),
+        projection,
+        review_action=_review_action(),
+        classify_action=_classify_action(),
+        classification_target=projection.entries[0].transaction_id,
+        classification_submitter=door,
+    )
     screen = cast(
         "LedgerClassificationScreen",
         resolve_ledger_screen(controller, controller.route_target(LedgerWorkspaceArea.CLASSIFICATION)),
@@ -88,17 +97,38 @@ async def test_classification_is_explicit_confirmable_cancelable_and_catalogue_a
         await pilot.pause()
         table = screen.query_one("#ledger-classifications", DataTable)
         assert tuple(row.key.value for row in table.ordered_rows) == ("BUSINESS", "PERSONAL", "REVIEWED_EXCLUDED")
+        target_copy = str(screen.query_one("#ledger-classification-target", Static).render())
+        assert "1" in target_copy and "2" in target_copy and "aaaaaaaaaaaa" in target_copy
         await pilot.press("enter")
         assert screen.flow_state is LedgerFlowState.CONFIRMING
         await pilot.press("escape")
         assert screen.flow_state is LedgerFlowState.CANCELLED
         assert not door.calls
-        await pilot.press("enter", "enter")
+        await pilot.press("enter", "enter", "enter")
+        assert not door.calls
+
+    success_door = _ClassificationDoor()
+    success_controller = LedgerWorkspaceController(
+        _context(),
+        projection,
+        review_action=_review_action(),
+        classify_action=_classify_action(),
+        classification_target=projection.entries[0].transaction_id,
+        classification_submitter=success_door,
+    )
+    success_screen = LedgerClassificationScreen(success_controller)
+    success_app = ScreenHostApp[None](success_screen)
+    async with success_app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
-        assert screen.flow_state is LedgerFlowState.SUCCEEDED
-    assert door.calls[0].action == _classify_action()
-    assert door.calls[0].transaction_id == projection.entries[0].transaction_id
-    assert door.calls[0].patch.business_classification is BusinessClassification.BUSINESS
+        await pilot.press("enter", "enter", "enter")
+        await pilot.pause()
+        assert success_screen.flow_state is LedgerFlowState.SUCCEEDED
+        assert len(success_door.calls) == 1
+        with pytest.raises(AttributeError):
+            success_screen.flow_state = LedgerFlowState.EDITING  # type: ignore[misc]
+    assert success_door.calls[0].action == _classify_action()
+    assert success_door.calls[0].transaction_id == projection.entries[0].transaction_id
+    assert success_door.calls[0].patch.business_classification is BusinessClassification.BUSINESS
 
 
 @pytest.mark.asyncio
@@ -113,10 +143,14 @@ async def test_import_only_submits_injected_opaque_prepared_command_and_redacts_
     )
     assert protected_label not in repr(prepared)
     assert "private-provider" not in repr(prepared)
+    with pytest.raises(TypeError, match="cannot be serialized"):
+        pickle.dumps(prepared)
+    with pytest.raises(AttributeError, match="immutable"):
+        LedgerPreparedImportV1.__setattr__(prepared, "choice_id", "swapped")
     door = _ImportDoor()
-    controller = _controller(_projection())
-    controller.prepared_imports = (prepared,)
-    controller.import_submitter = door
+    controller = LedgerWorkspaceController(
+        _context(), _projection(), review_action=_review_action(), prepared_imports=(prepared,), import_submitter=door
+    )
     screen = cast(
         "LedgerImportScreen",
         resolve_ledger_screen(controller, controller.route_target(LedgerWorkspaceArea.IMPORT)),
@@ -132,6 +166,9 @@ async def test_import_only_submits_injected_opaque_prepared_command_and_redacts_
         await pilot.pause()
         assert screen.flow_state is LedgerFlowState.SUCCEEDED
         assert door.calls == [command]
+        await pilot.press("enter", "escape")
+        assert len(door.calls) == 1
+        assert screen.flow_state is LedgerFlowState.SUCCEEDED
 
 
 def test_factory_refuses_undeclared_or_drifted_classification_action() -> None:
@@ -140,6 +177,43 @@ def test_factory_refuses_undeclared_or_drifted_classification_action() -> None:
             _projection(),
             review_action=ActionReference(action_id="operator.ledger.review"),
             classify_action=ActionReference(action_id="operator.ledger.absent"),
+        )
+
+
+def test_controller_refuses_off_projection_classification_and_unsafe_or_duplicate_import_choices() -> None:
+    projection = _projection()
+    door = _ClassificationDoor()
+    with pytest.raises(ValueError, match="absent from the visible Ledger projection"):
+        LedgerWorkspaceController(
+            _context(),
+            projection,
+            review_action=_review_action(),
+            classify_action=_classify_action(),
+            classification_target=cast("TransactionId", "f" * 64),
+            classification_submitter=door,
+        )
+    assert not door.calls
+    command = LedgerSourceImportCommand(path=Path("C:/private/statement.csv"), provider="bank")
+    with pytest.raises(ValueError, match="safe Ledger catalogue identities"):
+        LedgerPreparedImportV1(
+            choice_id="../unsafe",
+            provider_label_key="tui.ledger.import.provider.bank",
+            source_label_key="tui.ledger.import.source.prepared",
+            command=command,
+        )
+    prepared = LedgerPreparedImportV1(
+        choice_id="duplicate",
+        provider_label_key="tui.ledger.import.provider.bank",
+        source_label_key="tui.ledger.import.source.prepared",
+        command=command,
+    )
+    with pytest.raises(ValueError, match="must be unique"):
+        LedgerWorkspaceController(
+            _context(),
+            projection,
+            review_action=_review_action(),
+            prepared_imports=(prepared, prepared),
+            import_submitter=_ImportDoor(),
         )
     with pytest.raises(ValueError, match="canonical command"):
         ledger_screen_factory(
@@ -152,20 +226,24 @@ def test_factory_refuses_undeclared_or_drifted_classification_action() -> None:
 @pytest.mark.asyncio
 @pytest.mark.parametrize("locale", tuple(OutputLanguage))
 async def test_flow_copy_is_localized_while_semantic_choices_are_invariant(locale: OutputLanguage) -> None:
-    controller = _controller(_projection())
-    controller.classify_action = _classify_action()
-    controller.classification_target = controller.projection.entries[0].transaction_id
-    controller.classification_submitter = _ClassificationDoor()
+    projection = _projection()
     command = LedgerSourceImportCommand(path=Path("C:/synthetic/input.csv"), provider="bank")
-    controller.prepared_imports = (
-        LedgerPreparedImportV1(
+    prepared = LedgerPreparedImportV1(
             choice_id="prepared-bank",
             provider_label_key="tui.ledger.import.provider.bank",
             source_label_key="tui.ledger.import.source.prepared",
             command=command,
-        ),
+        )
+    controller = LedgerWorkspaceController(
+        _context(),
+        projection,
+        review_action=_review_action(),
+        classify_action=_classify_action(),
+        classification_target=projection.entries[0].transaction_id,
+        classification_submitter=_ClassificationDoor(),
+        prepared_imports=(prepared,),
+        import_submitter=_ImportDoor(),
     )
-    controller.import_submitter = _ImportDoor()
     with override_settings(cadrumo_output_language=locale.value):
         classification = LedgerClassificationScreen(controller)
         classification_app = ScreenHostApp[None](classification)
@@ -187,6 +265,54 @@ async def test_flow_copy_is_localized_while_semantic_choices_are_invariant(local
             assert tuple(row.key.value for row in import_screen.query_one("#ledger-import-choices", DataTable).ordered_rows) == (
                 "prepared-bank",
             )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("screen_kind", ("classification", "import"))
+async def test_new_flows_have_exact_focus_and_real_compositor_geometry(screen_kind: str) -> None:
+    projection = _projection()
+    command = LedgerSourceImportCommand(path=Path("C:/synthetic/input.csv"), provider="bank")
+    prepared = LedgerPreparedImportV1(
+        choice_id="prepared-bank",
+        provider_label_key="tui.ledger.import.provider.bank",
+        source_label_key="tui.ledger.import.source.prepared",
+        command=command,
+    )
+    controller = LedgerWorkspaceController(
+        _context(),
+        projection,
+        review_action=_review_action(),
+        classify_action=_classify_action(),
+        classification_target=projection.entries[0].transaction_id,
+        classification_submitter=_ClassificationDoor(),
+        prepared_imports=(prepared,),
+        import_submitter=_ImportDoor(),
+    )
+    screen = LedgerClassificationScreen(controller) if screen_kind == "classification" else LedgerImportScreen(controller)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await pilot.pause()
+        table_id = "ledger-classifications" if screen_kind == "classification" else "ledger-import-choices"
+        assert app.focused is screen.query_one(f"#{table_id}", DataTable)
+        assert tuple(widget.id for widget in screen.focus_chain) == (
+            "ledger-navigation",
+            table_id,
+            f"ledger-{screen_kind}-cancel",
+        )
+        await pilot.press("enter")
+        assert app.focused is screen.query_one(f"#ledger-{screen_kind}-confirm")
+        assert tuple(widget.id for widget in screen.focus_chain) == (
+            "ledger-navigation",
+            table_id,
+            f"ledger-{screen_kind}-confirm",
+            f"ledger-{screen_kind}-cancel",
+        )
+        assert geometry_band(app, 80) == []
+        assert all(table.max_scroll_x == 0 for table in screen.query(DataTable))
+        owners = tuple(widget for widget in screen.query(VerticalScroll) if widget.display and widget.show_vertical_scrollbar)
+        assert len(owners) <= 1
+        assert all(isinstance(owner, VerticalScroll) and owner.id == "ledger-page" for owner in owners)
+
 def test_flow_modules_cannot_read_files_detect_providers_or_import_mutators() -> None:
     package = Path(__file__).parents[1]
     trees = {

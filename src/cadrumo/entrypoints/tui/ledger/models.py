@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
 import re
-from typing import Literal, Protocol, override
+from enum import StrEnum
+from typing import Literal, Never, Protocol, SupportsIndex, override
 from weakref import WeakKeyDictionary
 
 from pydantic import BaseModel, model_validator
@@ -130,7 +130,11 @@ class LedgerPreparedImportV1:
     the injected command boundary.
     """
 
-    __slots__ = ("__weakref__", "_choice_id", "_provider_label_key", "_source_label_key", "_sealed")
+    __slots__ = ("__weakref__", "_choice_id", "_provider_label_key", "_sealed", "_source_label_key")
+    _choice_id: str
+    _provider_label_key: str
+    _sealed: bool
+    _source_label_key: str
 
     def __init__(
         self,
@@ -179,7 +183,8 @@ class LedgerPreparedImportV1:
         """Return a path- and provider-free diagnostic representation."""
         return f"LedgerPreparedImportV1(choice_id={self.choice_id!r})"
 
-    def __reduce_ex__(self, protocol: int) -> object:
+    @override
+    def __reduce_ex__(self, protocol: SupportsIndex, /) -> Never:
         """Refuse serialization so the vaulted command cannot be recovered."""
         del protocol
         raise TypeError("prepared import capabilities cannot be serialized")
