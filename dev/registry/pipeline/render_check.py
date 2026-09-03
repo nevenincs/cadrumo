@@ -358,7 +358,7 @@ def revision_render_inputs(
         revision_id=selected.id,
         layout_id=layout_id,
         joined=joined,
-        semantic_map=semantic_map,
+        semantic_map=joined.compiled_semantic_map or semantic_map,
         render_profile=render_profile,
         render_profile_source_evidence=evidence,
         transport_profile=transport,
