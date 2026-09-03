@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:2a0496dd381ee0d9f39f080465aab4c6ea66050aa0c8db2b02067fd556ba8659'
+body_hash: 'sha256:8dc762da0849d5ae4401cefd813d5e6b981dc2efec81f0000151c54b1a7c3a64'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -10369,7 +10369,6 @@ on every sheet carrying one and be read by the label-scope screen as a single
 label defined many times, manufacturing exactly the ambiguity that screen exists
 to detect.
 
-
 ## The unnumbered note is design-level, and the corpus is unanimous about it
 
 The scope question left open is now answered, by two measurements that agree.
@@ -10412,7 +10411,6 @@ third condition had quietly become unreachable is a screen that would stop
 reporting a real change without anyone noticing. The corpus assertion is paired
 with a check that both observed conditions do occur, so it cannot pass
 vacuously if the reader ever stops reading.
-
 
 ## Every field needing a reviewed rule now has official wording to read
 
@@ -10461,3 +10459,31 @@ tests a screen nobody runs. The classification is now a function taking the
 fields, the per-type conventions and the design notes as explicit arguments, so
 every condition - including the precedence between the two grounded ones - is
 reached with input written in the test.
+
+## The enrolment gate caught the screens this work added
+
+Three of the modules built for the note-evidence thread define a
+`screen_authority` and were never enrolled in the runner. The standing gate
+failed on exactly that, naming all three, which is the first time in this
+campaign a gate written earlier has caught the author's own omission before any
+reader saw it. The README-table gate then failed in turn once enrolment was
+fixed, and the two together left no way to enrol a screen and forget to
+document it.
+
+The runner now carries thirteen screens and completes in twenty-three seconds.
+
+### A row that would have read as a second opinion
+
+Enrolled naively, the grounding screen reported forty-one - the same number as
+the pointer screen beside it, because its population is by construction the
+fields that screen finds. Two adjacent rows carrying the same count read as one
+measurement taken twice, and a reader has no way to tell that they agree by
+definition rather than by evidence.
+
+It is enrolled instead on its residue: the fields for which no official wording
+was located at all, through a projection beside the other two the runner already
+uses for this. That number is nought today, and it is the one worth watching,
+because it rises the moment a design arrives carrying neither a type convention
+nor a design note. The screen's full breakdown stays available to anyone running
+it directly; what the runner shows is the part that can change without the
+population changing.

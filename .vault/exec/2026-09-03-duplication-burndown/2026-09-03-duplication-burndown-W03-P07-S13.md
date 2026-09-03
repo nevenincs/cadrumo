@@ -5,16 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:875bf75df5bebf4d162aee0172dc73d7c7f525c23d91e027b37d22ca73674554'
+body_hash: 'sha256:a59da7e52ab11185a136e545a220cc70392e0dd1a4e7fb124d847fd2c20217b4'
 step_id: 'S13'
 related:
   - "[[2026-09-03-duplication-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Adjudicate and resolve the three application-local clone pairs with focused invariant tests
 

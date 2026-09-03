@@ -5,16 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:3f4184dc1b6c95b621048ff3d8e670259fed41c6ddeb850aa87063dc63f6f54d'
+body_hash: 'sha256:9c63e0ec0a02e8a717842e2d790d0c0ee42eeaf83068ae72af49fba7bed8baa4'
 step_id: 'S14'
 related:
   - "[[2026-09-03-duplication-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Adjudicate and resolve the GROI and NIF IVA check pair without merging distinct AEAT protocol authority
 

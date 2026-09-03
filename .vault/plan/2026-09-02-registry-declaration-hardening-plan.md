@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:0decf5f3c1faf8fdfa6c71602dbce92a892ff166b6ac153868392376bc3ca798'
+body_hash: 'sha256:cab753c01f5192c87805715a0b5c84776f81c56b52a1e4e03f1b34acc018df16'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -423,6 +423,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S398` - Settle what an unnumbered NOTA governs: modelo 200 states how amounts are written on a sheet carrying no amount field while the 5,665 fields it describes sit on 74 others, and corpus-wide 47 of 51 designs print one such note while 4 repeat one identical text and none differs by sheet, so the sheet is where these are found and the design is what they govern; `dev/registry/analysis`.
 - [x] `W04.P07.S399` - Admit design-level unnumbered notes as grounding now that their scope is settled, which is what modelo 200s thirty-two ungrounded fields need since its amounts convention states their integer width sign and decimal places; `dev/registry/analysis/rule_grounding_coverage.py`.
 - [x] `W04.P07.S400` - Write the verification criterion for the note-evidence work and replace the unreproducible field counts the rules-authoring and figure-recovery steps carried, with every figure taken from a screen that can be re-run; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W04.P07.S401` - Enrol the three screens the note-evidence work added, which the standing enrolment and README-table gates both refused until done, and project the grounding screen onto its residue so the runner does not carry two adjacent rows agreeing by construction; `dev/registry/analysis/screens.py dev/registry/README.md`.
 
 ### Phase `W04.P08` - grade earned gate
 
