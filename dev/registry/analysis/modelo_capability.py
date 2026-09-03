@@ -90,6 +90,7 @@ from dataclasses import dataclass
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
+from ..pipeline._provenance_manifest import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from .corpus import bundled_modelo_ids
 
 __all__ = [
@@ -159,7 +160,19 @@ def _is_xml_dictionary(layout: object) -> bool:
 
 
 def _committed_tree(modelo: str, revision: str) -> bool:
-    return bundled_path("registry", "aeat", "modelos", modelo, "revisions", revision, "export").is_dir()
+    """Whether a PUBLISHED export tree is committed for this revision.
+
+    Tested by the generation provenance manifest rather than by the directory
+    holding it. The two agree across the whole corpus today - all 28 export
+    directories carry a manifest - but they are different claims: the directory
+    is where a revision's authored layout fragments live, and publication writes
+    the generated tree into the same place. A revision that declared export
+    layouts without ever being published would have the directory and no
+    manifest, and the directory test would report it as shipping filing bytes it
+    has never produced.
+    """
+    export_root = bundled_path("registry", "aeat", "modelos", modelo, "revisions", revision, "export")
+    return (export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME).is_file()
 
 
 def capability_census(
