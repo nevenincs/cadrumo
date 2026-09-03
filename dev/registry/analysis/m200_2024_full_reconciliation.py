@@ -168,18 +168,14 @@ def reconcile_bundled_m200_2024() -> M200ReconciliationCensus:
         is_candidate = identifier in candidates
         payload = candidates[identifier] if is_candidate else current[identifier]
         fields = tuple(sorted(exact_ownership.get(identifier, ()), key=lambda item: item.export_field_id))
-        proposed_fields = tuple(
-            sorted(proposed_ownership.get(identifier, ()), key=lambda item: item.export_field_id)
-        )
+        proposed_fields = tuple(sorted(proposed_ownership.get(identifier, ()), key=lambda item: item.export_field_id))
         if is_candidate:
             source_state, source_proposal = "candidate_non_authoritative", None
         elif not fields:
             source_state, source_proposal = "unmapped_no_rebind", None
         else:
             source_state, source_proposal = _source_ref_state(payload)
-        identity_review_required = any(
-            field.printed_identity_state != "matches_declared_owner" for field in fields
-        )
+        identity_review_required = any(field.printed_identity_state != "matches_declared_owner" for field in fields)
         applicable, inapplicable, legal_state = _legal_evidence(
             payload.legal_refs, legal, revision.valid_from, revision.valid_to
         )
@@ -424,9 +420,7 @@ def _legal_partition(refs, legal, valid_from, valid_to):
             continue
         start, end = governed_period_span(authority)
         target = (
-            applicable
-            if start <= valid_from and (valid_to is None or end is None or end >= valid_to)
-            else inapplicable
+            applicable if start <= valid_from and (valid_to is None or end is None or end >= valid_to) else inapplicable
         )
         target.append(ref)
     return tuple(applicable), tuple(inapplicable)
@@ -435,13 +429,7 @@ def _legal_partition(refs, legal, valid_from, valid_to):
 def _legal_evidence(refs, legal, valid_from, valid_to):
     """Partition refs and distinguish absent proof from applicable authority."""
     applicable, inapplicable = _legal_partition(refs, legal, valid_from, valid_to)
-    state = (
-        "missing_legal_provenance"
-        if not refs
-        else "unresolved_or_inapplicable"
-        if inapplicable
-        else "applicable"
-    )
+    state = "missing_legal_provenance" if not refs else "unresolved_or_inapplicable" if inapplicable else "applicable"
     return applicable, inapplicable, state
 
 

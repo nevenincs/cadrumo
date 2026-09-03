@@ -18,6 +18,7 @@ from pydantic import BaseModel, ConfigDict
 
 from cadrumo.application.wizard.models import WizardChoice, WizardFlow, WizardQuestion, WizardSection, WizardWidget
 from cadrumo.core.i18n import Translatable as tr
+
 from ..wizard_translation_audit import (
     _FIXED_RUNTIME_KEYS,
     _resolves_in,

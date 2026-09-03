@@ -52,14 +52,14 @@ def test_cli_key_extractor_harvests_aliased_translation_calls(tmp_path: Path, mo
     (cli_root / "alias_fixture.py").write_text(
         "from cadrumo.core.i18n import tr as _tr\n"
         "\n"
-        "_tr(\"cli.config.wizard_translation_audit_alias_regression.help\")\n"
-        "NEARBY_LITERAL = \"cli.config.wizard_translation_audit_alias_regression.literal\"\n",
+        '_tr("cli.config.wizard_translation_audit_alias_regression.help")\n'
+        'NEARBY_LITERAL = "cli.config.wizard_translation_audit_alias_regression.literal"\n',
         encoding="utf-8",
     )
     (cli_root / "third_party_alias_fixture.py").write_text(
         "from third_party.i18n import tr as _tr\n"
         "\n"
-        "_tr(\"cli.config.wizard_translation_audit_third_party_alias_regression.help\")\n",
+        '_tr("cli.config.wizard_translation_audit_third_party_alias_regression.help")\n',
         encoding="utf-8",
     )
     monkeypatch.setattr(wizard_translation_audit, "SRC_DIR", tmp_path)

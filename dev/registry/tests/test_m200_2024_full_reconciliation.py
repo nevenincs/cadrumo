@@ -100,9 +100,7 @@ def test_render_refuses_source_sha_map_and_partition_drift(census, field: str, v
 
 
 def test_source_entry_collision_and_anchor_mutations_fail_closed() -> None:
-    subject._require_exact_source_identity(
-        "test", subject.TARGET_SOURCE_REF, subject.TARGET_SOURCE_SHA256
-    )
+    subject._require_exact_source_identity("test", subject.TARGET_SOURCE_REF, subject.TARGET_SOURCE_SHA256)
     with pytest.raises(RegistryValidationError, match="source identity drifted"):
         subject._require_exact_source_identity("test", subject.TARGET_SOURCE_REF, "0" * 64)
     with pytest.raises(RegistryValidationError, match="non-target source refs"):
@@ -136,9 +134,7 @@ def test_partition_and_catalogue_mutations_fail_closed() -> None:
     )
     subject._require_partition(target, sibling)
     with pytest.raises(RegistryValidationError, match="partition drifted"):
-        subject._require_partition(
-            SimpleNamespace(**{**vars(target), "valid_to": date(2025, 12, 31)}), sibling
-        )
+        subject._require_partition(SimpleNamespace(**{**vars(target), "valid_to": date(2025, 12, 31)}), sibling)
     first = SimpleNamespace(sources={"duplicate": object()})
     second = SimpleNamespace(sources={"duplicate": object()})
     with pytest.raises(RegistryValidationError, match="duplicate sources catalogue"):
@@ -151,15 +147,17 @@ def test_missing_map_legal_ref_is_visible_and_unreviewed_candidates_cannot_seed_
     )
     assert applicable == ()
     assert inapplicable == ("missing-legal-ref",)
-    assert subject._legal_evidence(
-        (), {}, subject.TARGET_VALID_FROM, subject.TARGET_VALID_TO
-    ) == ((), (), "missing_legal_provenance")
-    assert subject._legal_evidence(
-        ("missing-legal-ref",), {}, subject.TARGET_VALID_FROM, subject.TARGET_VALID_TO
-    ) == ((), ("missing-legal-ref",), "unresolved_or_inapplicable")
-    assert not subject._legal_refs_support_proposal(
-        (), {}, subject.TARGET_VALID_FROM, subject.TARGET_VALID_TO
+    assert subject._legal_evidence((), {}, subject.TARGET_VALID_FROM, subject.TARGET_VALID_TO) == (
+        (),
+        (),
+        "missing_legal_provenance",
     )
+    assert subject._legal_evidence(("missing-legal-ref",), {}, subject.TARGET_VALID_FROM, subject.TARGET_VALID_TO) == (
+        (),
+        ("missing-legal-ref",),
+        "unresolved_or_inapplicable",
+    )
+    assert not subject._legal_refs_support_proposal((), {}, subject.TARGET_VALID_FROM, subject.TARGET_VALID_TO)
     assert not subject._legal_refs_support_proposal(
         ("missing-legal-ref",), {}, subject.TARGET_VALID_FROM, subject.TARGET_VALID_TO
     )
