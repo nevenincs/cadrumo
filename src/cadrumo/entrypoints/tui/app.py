@@ -10,7 +10,7 @@ authority.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING, ClassVar, override
+from typing import TYPE_CHECKING, ClassVar, cast, override
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -26,6 +26,7 @@ from .components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearanc
 from .home import HomeBackRequested, HomeScreen, HomeTarget, HomeTargetSelected
 from .navigation import (
     TuiDestinationCatalogueV1,
+    TuiFocusIdentityV1,
     TuiNavigationTargetV1,
     TuiScreenContextV1,
 )
@@ -157,9 +158,17 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
             case "root-password":
                 self.push_screen(factories.password())
             case "root-profile":
-                self.navigate_to(TuiNavigationTargetV1(destination="workbench.profile"))
+                self.navigate_to(
+                    TuiNavigationTargetV1(
+                        destination="workbench.profile",
+                        focus=TuiFocusIdentityV1(
+                            destination="workbench.profile",
+                            semantic_key="profile.overview",
+                        ),
+                    )
+                )
             case "root-appearance":
-                factories.appearance(self)  # type: ignore[arg-type]
+                factories.appearance(cast("App[None]", self))
             case "root-language":
                 screen = factories.profile(
                     TuiScreenContextV1(destination="workbench.profile")
@@ -168,6 +177,8 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
                 self.call_after_refresh(factories.language, screen)
             case "root-sign-out":
                 self.run_worker(self._open_sign_out(), name="account-sign-out", exclusive=True)
+            case _:
+                return
 
     def _on_change_user_dismissed(self, outcome: object | None) -> None:
         """Accept only the real Login owner's non-secret authenticated result."""
@@ -211,7 +222,7 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
 
     def _refuse_account_action(self) -> None:
         """Expose one localized fail-closed message without exception details."""
-        if self.is_mounted:
+        if self.is_mounted():
             self.query_one("#root-account-refusal", Static).update(tr("tui.root.account.unavailable"))
 
     def navigate_to(self, target: TuiNavigationTargetV1, /) -> None:

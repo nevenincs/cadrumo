@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     from ...application.overview.home import HomeProjectionV1
     from ...core.external_constants import OutputLanguage
     from ...domain.modelos.work_unit import WorkUnit
-    from .account import AccountFactoriesV1
+    from .account import AccountFactoriesV1, AccountRecomposeRequiredV1
     from .declarations.models import ModeloWorkspaceScreenFactoryV1
     from .navigation import (
         TuiActionCandidateV1,
@@ -152,9 +152,7 @@ class InstalledWorkbenchRootCompositionV1:
     account_factories: AccountFactoriesV1
 
 
-type InstalledWorkbenchRootInputsProviderV1 = Callable[
-    [TuiOperationCompositionV1], InstalledWorkbenchRootInputsV1
-]
+type InstalledWorkbenchRootInputsProviderV1 = Callable[[TuiOperationCompositionV1], InstalledWorkbenchRootInputsV1]
 
 
 @dataclass(frozen=True, slots=True)
@@ -580,7 +578,7 @@ async def _run_root_session(
     headless: bool,
     auto_pilot: AutopilotCallbackType | None,
     workbench_root_inputs_provider: InstalledWorkbenchRootInputsProviderV1 | None = None,
-) -> None:
+) -> AccountRecomposeRequiredV1 | None:
     """Compose one session's services, run the root application, settle them.
 
     The services are composed OUTSIDE the application and handed to it, so
@@ -596,11 +594,10 @@ async def _run_root_session(
             else None
         )
         if root is None:
-            await CadrumoTuiApp(services=operation_runtime.services).run_async(
+            return await CadrumoTuiApp(services=operation_runtime.services).run_async(
                 headless=headless,
                 auto_pilot=auto_pilot,
             )
-            return
         service = None if root.search_inputs is None else compose_installed_workbench_search(root.search_inputs)
 
         def refresh_search() -> WorkbenchSearchDoorV1:
@@ -613,7 +610,7 @@ async def _run_root_session(
             )
             return compose_installed_workbench_search(refreshed_inputs)
 
-        await CadrumoTuiApp(
+        return await CadrumoTuiApp(
             services=operation_runtime.services,
             destination_catalogue=root.destination_catalogue,
             refresh_home=root.refresh_home,

@@ -237,9 +237,7 @@ def test_generation_factory_receives_exact_session_operation_contract_object(
         capture_contracts,
     )
     runtime = _operation_runtime()
-    provider = InstalledWorkbenchGenerationProviderV1(
-        CallableWorkbenchGenerationReadDoorV1(lambda: _inputs(_NOW))
-    )
+    provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(lambda: _inputs(_NOW)))
 
     compose_installed_workbench_generation_provider(provider, _dependencies())(runtime)
 
