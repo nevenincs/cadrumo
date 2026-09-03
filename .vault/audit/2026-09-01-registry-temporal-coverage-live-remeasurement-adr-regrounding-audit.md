@@ -12430,3 +12430,43 @@ boundary it draws and why, and deriving it would mean encoding "states which
 years a revision serves" as a rule over field names - which is the heuristic this
 package has refused repeatedly, and which would be less trustworthy than the six
 names it would replace.
+
+
+## What the nine newly-walked families actually cite
+
+With the walk following the schema, twenty families report a citation reaching
+outside a manifest. The eleven that were invisible until this week contribute
+1,534 findings between them:
+
+| family | findings |
+| ------ | -------- |
+| `projection_endpoints` | 760 |
+| `constructs` | 214 |
+| `application_links` | 184 |
+| `verification_predicates` | 132 |
+| `verification_expectations` | 74 |
+| `dependency_classifications` | 60 |
+| `applicability` | 33 |
+| `filing_schedules` | 32 |
+| `extraction_profiles` | 23 |
+| `live_cross_references` | 15 |
+| `workbook_parity_refs` | 7 |
+
+The eight already walked still dominate - casillas alone carry 21,596 - which is
+why the omission was survivable for as long as it lasted: the shape of the
+population did not change, only its completeness.
+
+### The dangling-reference result survives the population growing
+
+An earlier section established that nothing in the provenance population is a
+dangling reference: every one resolved in its catalogue. That was measured over
+414 modelo-and-reference pairs. The population is now **520**, a quarter larger
+and drawn from eleven families that measurement never saw, and it still holds -
+**zero pairs fail to resolve**.
+
+That is worth re-running rather than assuming, because a negative result is
+exactly the kind that quietly stops being true when its population changes, and
+this one had grown by a quarter through a route nobody checked it against. The
+top construct citation, `lirpf-cuota-chain-authority`, is a declared authority id
+rather than a law article and resolves like the rest - so even the reference that
+looks least like a legal citation is catalogued.
