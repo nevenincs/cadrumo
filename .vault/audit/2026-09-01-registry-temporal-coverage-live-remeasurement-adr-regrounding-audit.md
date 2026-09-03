@@ -10647,3 +10647,41 @@ screen population it actually sees, and the three that were narrow are recorded
 here rather than quietly fixed - the pattern across all nine is one worth naming:
 a check written when the world had one shape keeps passing after the world grows
 a second, and passing is exactly how it hides.
+
+
+## The count of narrow gates was right; the breakdown was not
+
+"Five separate gates carried their own copy" was written into this audit, into
+the declaration's own comment and into the plan's verification prose before it
+was counted. Counting it: **two** gates carried the module-walk literal, **four**
+iterated the authority table, **two** ran only the authority runner, and **one**
+claimed a scope its body did not have. Nine in total, which is the figure the
+prose already used, reached by a breakdown that does not add up to it.
+
+The correction is small and the manner of finding it is not. The number was
+derived from memory of the editing rather than from the tree, and it survived
+three separate writings because each restated the previous one. It was caught by
+asking the file which functions now call each shared traversal - a question that
+takes one command - before letting the sentence stand in a durable document.
+That is the same discipline this campaign has applied to registry figures all
+along, and the gate suite turns out to deserve it too.
+
+## A gate on the gap between enrolment and execution
+
+Enrolment and execution are separate facts, and every narrowing recorded above
+lived in the gap between them: a table gains a row, a runner is written for one
+table, a gate asserts against that runner's table, and everything passes while a
+class of screen goes unrun.
+
+A new gate closes the gap at its narrowest point. The names the runners actually
+emit must equal the names enrolled, so a third table added without a runner
+fails, and a runner that stops emitting a screen fails too. It asserts NAMES
+rather than counts, because two tables of the same size can still disagree about
+which screens they hold - the same reason a set comparison replaced a count
+comparison when this campaign compared failing tests months of iterations ago.
+
+It runs the corpus runner and takes the authority screens from the table they
+are iterated from, rather than running both: what the screens FIND is asserted
+by the whole-corpus gate, and running them twice would double the slowest work
+in the suite to check something already checked. The suite now holds
+thirty-one gates.

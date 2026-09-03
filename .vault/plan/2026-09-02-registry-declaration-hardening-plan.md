@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:a758673d7415d7030dde096c540df9e0f6f6975abc8d557b68c12e6b8f1599db'
+body_hash: 'sha256:7f878c84e78562f20cac8fddb19dc8844a5762a843c34927044557f07b48bced'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -428,6 +428,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S403` - Declare the screen entry points once and route all six gates through it, since five carried their own copy of the narrow test and three never checked a corpus screens kinds counts or identity, and carry the modelo on the corpus findings the widened identity gate then found in breach; `dev/registry/analysis/screens.py dev/registry/tests/test_declaration_invariant_gates.py dev/registry/analysis/note_label_scope.py dev/registry/analysis/unnumbered_note_scope.py`.
 - [x] `W04.P07.S404` - Name the encoding constant in the six modules this work added that passed a raw literal, and record that the convention one module describes as required by the tree holds at 44 sites against 138 that do not, so it is an aspiration rather than an established rule; `dev/registry`.
 - [x] `W04.P07.S405` - Finish the pass over which screen population each gate sees: run both runners in the whole-corpus and no-mutation gates, and give the population gate the design transcriptions and their parsed notes plus a docstring saying it checks named populations rather than every screen; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W04.P07.S406` - Gate the gap between enrolment and execution so a table added without a runner fails by name, write the verification criterion for the nine narrow gates, and correct the breakdown that said five carried the module walk when two did; `dev/registry/tests/test_declaration_invariant_gates.py .vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W04.P08` - grade earned gate
 
@@ -925,6 +926,34 @@ condition-count gate exists because naming was not enough: two screens named eve
 opening with a count from an earlier version of themselves, and one of those went stale in the very
 edit that added the missing name. A wrong count is worse than a missing one, because it tells the
 reader the list is complete.
+
+A screen is a module presenting one of the declared entry points, and which entry point it presents is
+now stated in one place. Nine gates were narrow in this one way, each written when `screen_authority`
+was the only entry point, and when screens arrived reading the design corpus rather than the loaded
+authority - taking no authority and no modelo set, so presenting `screen_corpus` - every one of them
+stopped covering a whole class of screen while continuing to pass. Two carried their own copy of the
+module walk; four iterated the authority table, so a corpus screen's emitted kinds, condition count,
+fact count and finding identity were never read; two ran the authority runner alone, one of them
+inside the fingerprint that proves the screens write nothing; and one claimed a scope its body did not
+have. The entry points and the two traversals over them
+are declared beside the tables, so a third entry point widens every gate at once, and a further gate
+asserts the runners between them emit exactly the enrolled names - by name and not by count, because
+two tables of the same size can still disagree about which screens they hold.
+
+Widening the identity gate found a real breach rather than confirming a clean state: neither corpus
+finding declared the modelo the contract promises every caller. The contract was satisfied rather than
+widened, because a design transcription lives in its modelo's corpus directory and the modelo is a
+fact about the file. It is read by walking up to the first `modelo_` ancestor, not at a fixed depth,
+since one design of two hundred and fifteen sits one level higher than the rest and a fixed count
+would have reported `disenos_registro` as a modelo. A transcription outside any modelo directory
+raises, which immediately failed three constructed-design tests writing into a bare temporary
+directory - the guard working, and the fixtures now build the corpus layout they claim to represent.
+
+The pattern under all nine is worth stating once, because it is this campaign's most repeated finding
+and it has appeared in screens, in readers, in a reading aid and now in the gates themselves: a check
+written when the world had one shape keeps passing after the world grows a second, and passing is
+exactly how it hides. Nothing in a green suite distinguishes a condition that does not occur from one
+nobody is looking for.
 
 Three gates now hold the export surface itself, on properties measured clean and then guarded so they
 stay so: no export declaration carries a character outside ASCII across 25,031 fields, no modelo
