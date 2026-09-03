@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import ExitStack, asynccontextmanager, contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -12,6 +12,8 @@ from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 
 if TYPE_CHECKING:
+    from ...application.search.installed_workbench import InstalledWorkbenchSearchSnapshotV1
+    from .search import WorkbenchSearchDoorV1
     from textual.app import AutopilotCallbackType
 
     from ...application.modelo.work_review import ModeloWorkReview
@@ -175,7 +177,28 @@ async def operation_services_scope() -> AsyncGenerator[OperationComposedServices
         await services.shutdown()
 
 
-async def _run_root_session(*, headless: bool, auto_pilot: AutopilotCallbackType | None) -> None:
+def compose_installed_workbench_search(
+    snapshot: InstalledWorkbenchSearchSnapshotV1 | None = None,
+) -> WorkbenchSearchDoorV1:
+    """Bind one already-assembled immutable snapshot to the installed root.
+
+    Snapshot assembly remains application-owned and happens before this
+    boundary.  An uncomposed session honestly starts with no searchable
+    documents; it never reads storage or contacts a service simply because the
+    command palette opens.
+    """
+    from ...application.search.installed_workbench import InstalledWorkbenchSearchSnapshotV1
+
+    return (snapshot or InstalledWorkbenchSearchSnapshotV1(())).service()
+
+
+async def _run_root_session(
+    *,
+    headless: bool,
+    auto_pilot: AutopilotCallbackType | None,
+    workbench_search_snapshot: InstalledWorkbenchSearchSnapshotV1 | None = None,
+    refresh_workbench_search: Callable[[], WorkbenchSearchDoorV1] | None = None,
+) -> None:
     """Compose one session's services, run the root application, settle them.
 
     The services are composed OUTSIDE the application and handed to it, so
@@ -185,7 +208,11 @@ async def _run_root_session(*, headless: bool, auto_pilot: AutopilotCallbackType
     from .app import CadrumoTuiApp
 
     async with operation_services_scope() as services:
-        await CadrumoTuiApp(services=services).run_async(headless=headless, auto_pilot=auto_pilot)
+        await CadrumoTuiApp(
+            services=services,
+            workbench_search_service=compose_installed_workbench_search(workbench_search_snapshot),
+            refresh_workbench_search=refresh_workbench_search,
+        ).run_async(headless=headless, auto_pilot=auto_pilot)
 
 
 def main(*, headless: bool = False, auto_pilot: AutopilotCallbackType | None = None) -> int:
@@ -203,6 +230,7 @@ def main(*, headless: bool = False, auto_pilot: AutopilotCallbackType | None = N
 
 __all__ = [
     "build_modelo_work_review_for_unit",
+    "compose_installed_workbench_search",
     "load_modelo_work_unit_catalogue",
     "load_modelo_work_units",
     "main",
