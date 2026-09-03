@@ -14,10 +14,22 @@ from .._app_live_command_spec_support import (
     _LEAF_INVOCATION,
     _METADATA_GROUP_INVOCATION,
     _METADATA_POLICY,
+    _OPTIONAL_TAXPAYER_NIF_OPTION,
+    _OPTIONAL_YEAR_FROM_OPTION,
+    _OPTIONAL_YEAR_TO_OPTION,
+    _OUTPUT_ROOT_OPTION,
     _PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
+    _REQUIRED_MODELO_OPTION,
+    _REQUIRED_PERIOD_OPTION,
+    _REQUIRED_YEAR_FROM_OPTION,
+    _REQUIRED_YEAR_OPTION,
+    _REQUIRED_YEAR_TO_OPTION,
     NO_RESULT_SCHEMA,
 )
 from .._app_live_command_specs import LIVE_COMMAND_SPECS
+from .._app_live_foundation_command_specs import LIVE_FOUNDATION_COMMAND_SPECS
+from .._app_live_iva_wallet_command_specs import LIVE_IVA_WALLET_COMMAND_SPECS
+from .._app_live_justificante_command_specs import LIVE_JUSTIFICANTE_COMMAND_SPECS
 from .._app_live_notifications_command_specs import (
     _NOTIFICATION_CERTIFICADO_ID_ARGUMENT,
     LIVE_NOTIFICATIONS_COMMAND_SPECS,
@@ -103,11 +115,18 @@ def test_live_specs_are_the_exact_complete_current_surface() -> None:
 
 
 def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
+    foundation = {spec.key: spec for spec in LIVE_FOUNDATION_COMMAND_SPECS}
+    iva_wallet = {spec.key: spec for spec in LIVE_IVA_WALLET_COMMAND_SPECS}
+    justificante = {spec.key: spec for spec in LIVE_JUSTIFICANTE_COMMAND_SPECS}
     verify = {spec.key: spec for spec in LIVE_VERIFY_COMMAND_SPECS}
     portals = {spec.key: spec for spec in LIVE_PORTALS_COMMAND_SPECS}
     notifications = {spec.key: spec for spec in LIVE_NOTIFICATIONS_COMMAND_SPECS}
 
     for spec in (
+        foundation["app_live"],
+        foundation["app_live_filed"],
+        iva_wallet["app_live_iva_wallet"],
+        justificante["app_live_justificante"],
         verify["app_live_verify"],
         portals["app_live_portals"],
         notifications["app_live_notifications"],
@@ -118,11 +137,78 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
         assert spec.result_schema is NO_RESULT_SCHEMA
 
     for spec in (
+        *LIVE_FOUNDATION_COMMAND_SPECS[2:],
+        *LIVE_IVA_WALLET_COMMAND_SPECS[1:],
+        *LIVE_JUSTIFICANTE_COMMAND_SPECS[1:],
         *LIVE_VERIFY_COMMAND_SPECS[1:],
         *LIVE_PORTALS_COMMAND_SPECS[1:],
         *(spec for spec in LIVE_NOTIFICATIONS_COMMAND_SPECS[1:] if spec.kind == "leaf"),
     ):
         assert spec.invocation is _LEAF_INVOCATION
+
+    for key in (
+        "app_live_filed_list",
+    ):
+        assert foundation[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
+    for key in (
+        "app_live_iva_wallet_history",
+    ):
+        assert iva_wallet[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
+    for key in (
+        "app_live_justificante_list",
+        "app_live_justificante_view",
+    ):
+        assert justificante[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
+    for key in (
+        "app_live_filed_pull_all",
+        "app_live_filed_pull",
+        "app_live_filed_pull_sources",
+    ):
+        assert foundation[key].policy is _PROFILE_BOUND_NETWORK_CAPTURE_POLICY
+    for key in (
+        "app_live_iva_wallet_pull",
+        "app_live_iva_wallet_pull_history",
+    ):
+        assert iva_wallet[key].policy is _PROFILE_BOUND_NETWORK_CAPTURE_POLICY
+    assert justificante["app_live_justificante_pull"].policy is _PROFILE_BOUND_NETWORK_CAPTURE_POLICY
+    assert foundation["app_live_filed_discover"].policy is not _PROFILE_BOUND_NETWORK_CAPTURE_POLICY
+    assert iva_wallet["app_live_iva_wallet_pull_evidence"].policy is not _PROFILE_BOUND_NETWORK_CAPTURE_POLICY
+
+    assert foundation["app_live_filed_list"].parameters[1] is _OPTIONAL_YEAR_FROM_OPTION
+    assert foundation["app_live_filed_list"].parameters[2] is _OPTIONAL_YEAR_TO_OPTION
+    assert foundation["app_live_filed_pull"].parameters[2] is _OPTIONAL_YEAR_FROM_OPTION
+    assert foundation["app_live_filed_pull"].parameters[3] is _OPTIONAL_YEAR_TO_OPTION
+    for spec, position in (
+        (foundation["app_live_filed_pull_all"], 0),
+        (foundation["app_live_filed_pull"], 4),
+        (foundation["app_live_filed_pull_sources"], 3),
+        (iva_wallet["app_live_iva_wallet_pull_history"], 2),
+        (iva_wallet["app_live_iva_wallet_pull_evidence"], 5),
+    ):
+        assert spec.parameters[position] is _OUTPUT_ROOT_OPTION
+    for spec in (
+        foundation["app_live_filed_pull_sources"],
+        justificante["app_live_justificante_pull"],
+    ):
+        assert spec.parameters[0] is _REQUIRED_MODELO_OPTION
+    for spec in (
+        foundation["app_live_filed_pull_sources"],
+        iva_wallet["app_live_iva_wallet_pull"],
+        justificante["app_live_justificante_pull"],
+    ):
+        assert spec.parameters[1] is _REQUIRED_YEAR_OPTION
+        assert spec.parameters[2] is _REQUIRED_PERIOD_OPTION
+    for spec, position in (
+        (iva_wallet["app_live_iva_wallet_pull"], 2),
+        (iva_wallet["app_live_iva_wallet_pull_evidence"], 4),
+    ):
+        assert spec.parameters[position] is _OPTIONAL_TAXPAYER_NIF_OPTION
+    for spec in (
+        iva_wallet["app_live_iva_wallet_pull_history"],
+        iva_wallet["app_live_iva_wallet_pull_evidence"],
+    ):
+        assert spec.parameters[0] is _REQUIRED_YEAR_FROM_OPTION
+        assert spec.parameters[1] is _REQUIRED_YEAR_TO_OPTION
 
     for key in (
         "app_live_verify_list",
@@ -170,6 +256,10 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
 
     graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS))
     for path, spec in (
+        (("aeat", "app", "live"), foundation["app_live"]),
+        (("aeat", "app", "live", "filed", "pull-sources"), foundation["app_live_filed_pull_sources"]),
+        (("aeat", "app", "live", "iva-wallet", "pull-evidence"), iva_wallet["app_live_iva_wallet_pull_evidence"]),
+        (("aeat", "app", "live", "justificante", "pull"), justificante["app_live_justificante_pull"]),
         (("aeat", "app", "live", "verify"), verify["app_live_verify"]),
         (("aeat", "app", "live", "verify", "nif-iva"), verify["app_live_verify_nif_iva"]),
         (("aeat", "app", "live", "verify", "tgvi"), verify["app_live_verify_tgvi"]),
