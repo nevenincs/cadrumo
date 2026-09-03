@@ -1,0 +1,55 @@
+"""Closed routing and operation-handoff contracts for AEAT Sync."""
+
+from __future__ import annotations
+
+from typing import Literal, Protocol
+
+from pydantic import BaseModel
+
+from ....application.aeat_sync.workspace import AeatSyncWorkspaceZone
+from ....application.operations.models import OperationDefinitionId
+from ....application.operator_actions.models import ActionReference
+from ....core.models import STRICT_FROZEN_CONFIG
+
+type AeatSyncDestinationIdV1 = Literal[
+    "aeat_sync.overview",
+    "aeat_sync.census",
+    "aeat_sync.filed_declarations",
+    "aeat_sync.notifications",
+    "aeat_sync.evidence_comparison",
+    "aeat_sync.reconciliation",
+]
+
+
+class AeatSyncRouteTargetV1(BaseModel):
+    """One internal destination selected by its stable zone identity."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    destination: AeatSyncDestinationIdV1
+    zone: AeatSyncWorkspaceZone
+
+
+class AeatSyncOperationRequestV1(BaseModel):
+    """One exact pre-admitted operation/action pair handed to the owning host."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    action: ActionReference
+    operation: OperationDefinitionId
+
+
+class AeatSyncOperationHandoffV1(Protocol):
+    """Host-owned door for a registered operation, never a generic write API."""
+
+    async def __call__(self, request: AeatSyncOperationRequestV1, /) -> None:
+        """Present or submit the exact already-admitted operation request."""
+        ...
+
+
+__all__ = [
+    "AeatSyncDestinationIdV1",
+    "AeatSyncOperationHandoffV1",
+    "AeatSyncOperationRequestV1",
+    "AeatSyncRouteTargetV1",
+]
