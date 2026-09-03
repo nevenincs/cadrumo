@@ -5780,3 +5780,28 @@ remember.
 Separately, `renta_web_open_replay_corpus` is ruled. It loads in neither regime and carries no
 module-level importer, so it joins the conditional rule, and the census returns to zero
 unclassified with the seven stale entries already accounted for.
+
+### third-import-graph-blind-spot-is-a-string-class-path | medium | The last stale member is reached by a dotted class path in a table, which no import edge records
+
+`cadrumo.core.errors.not_found` was the one stale member the ancestor fix could not explain,
+because it is a module rather than a package. Traced, it is a third kind of edge the graph
+cannot see.
+
+Its module-level importer, `cadrumo.core.resources.errors`, is itself absent from the closure,
+so the gap is upstream of both. What reaches them is a string:
+`cadrumo.core.errors.registry._core` carries the literal
+`"cadrumo.core.errors.not_found.CoreNotFoundError"` in an error table, resolved at runtime. A
+real load holds all three modules; the graph records an edge to none of them.
+
+That completes a set. This campaign has now found three distinct disagreements between the
+import graph and the interpreter, each in a different direction. A function-scoped import is an
+edge the graph records and a load may never walk. An ancestor package is a module the load
+always holds and the graph never records. And a dotted class path in a data table is a
+dependency written in neither form, invisible to both a static edge and the dynamic
+`import_module` scan the census already performs.
+
+No fix is attempted. The census could union its universe with what a cold load actually imports,
+which would resolve this and any future blind spot of the same family, at the cost of a
+subprocess on every run - and that trade belongs to whoever owns the census rather than to a
+campaign passing through. What is worth leaving behind is that the remaining stale entry has a
+cause, and the cause is neither a stale rule nor a missing module.

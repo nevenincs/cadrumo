@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:4e6a5b5797a4416c31609b5d5713c7be1f4139532f50b399c56a7e7e4a614f11'
+body_hash: 'sha256:12314cf22903b9901bd3e02718fd086535883f43479223da5dba4df0d9ca1bde'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -474,6 +474,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S236` - Convert nineteen more findings and reconcile the lane against its own collection at 1323; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S237` - Finish converting the seventy-seven findings to the audit's heading format and verify slug uniqueness and severity vocabulary; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S238` - Rule the newly added module by measurement and guarantee the warm probe is actually warm; `dev/registry/analysis/load_census_classification.py,dev/registry/analysis/load_claim_verification.py`.
+- [x] `W06.P13.S239` - Identify the third import-graph blind spot behind the last stale member, a class named by string rather than imported; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
