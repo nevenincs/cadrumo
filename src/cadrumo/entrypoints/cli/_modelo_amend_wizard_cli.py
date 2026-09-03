@@ -93,7 +93,7 @@ from ._modelo_amend_wizard_payloads import AmendWizardCorrectedCasillaPayload, W
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_cli_support import bad_parameter_from_error, resolve_default_actor
 from ._modelo_rendering import filing_record_lines
-from ._modelo_work_wizard_cli import _resolve_modelo_work_unit_for_wizard
+from ._modelo_work_wizard_cli import resolve_modelo_work_unit_for_wizard
 
 if TYPE_CHECKING:
     from ...domain.modelos.calculation_revision import CalculationRevision
@@ -146,6 +146,18 @@ class _AmendWizardDeps:
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
 
 
+@dataclass(frozen=True, slots=True)
+class _AmendWizardTarget:
+    """The target coordinates for the amendment-only workflow."""
+
+    work_unit_id: str | None
+    modelo: str | None
+    year: int | None
+    period: str | None
+    revision: str | None
+    bucket_id: str | None
+
+
 deps = _AmendWizardDeps(
     activate_output_language=activate_subcommand_output_language,
     require_active_profile=require_active_profile,
@@ -159,26 +171,21 @@ def run_modelo_work_amend_wizard(
     *,
     deps: _AmendWizardDeps,
     ctx: typer.Context,
-    work_unit_id: str | None,
-    modelo: str | None,
-    year: int | None,
-    period: str | None,
-    revision: str | None,
-    bucket_id: str | None,
+    target: _AmendWizardTarget,
     actor: str | None,
     output_language_opt: OutputLanguage | None,
 ) -> None:
-    unit = _resolve_modelo_work_unit_for_wizard(
+    unit = resolve_modelo_work_unit_for_wizard(
         activate_output_language=deps.activate_output_language,
         require_active_profile=deps.require_active_profile,
         resolve_work_unit_for_cli=deps.resolve_work_unit_for_cli,
         ctx=ctx,
-        work_unit_id=work_unit_id,
-        modelo=modelo,
-        year=year,
-        period=period,
-        revision=revision,
-        bucket_id=bucket_id,
+        work_unit_id=target.work_unit_id,
+        modelo=target.modelo,
+        year=target.year,
+        period=target.period,
+        revision=target.revision,
+        bucket_id=target.bucket_id,
         output_language_opt=output_language_opt,
     )
     if unit.current_filing_record_id is None:
@@ -712,12 +719,14 @@ def work_amend_wizard(
     run_modelo_work_amend_wizard(
         deps=deps,
         ctx=ctx,
-        work_unit_id=work_unit_id,
-        modelo=modelo,
-        year=year,
-        period=period,
-        revision=revision,
-        bucket_id=bucket_id,
+        target=_AmendWizardTarget(
+            work_unit_id=work_unit_id,
+            modelo=modelo,
+            year=year,
+            period=period,
+            revision=revision,
+            bucket_id=bucket_id,
+        ),
         actor=actor,
         output_language_opt=output_language_opt,
     )
