@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import ClassVar, cast, override
 
-from textual.app import ComposeResult
+from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import DataTable, Input, Select, Static
@@ -90,9 +90,7 @@ class DeclarationsCalendarScreen(Screen[None]):
                 allow_blank=False,
                 id="declarations-calendar-scope",
             )
-            yield ContentDataTable[str](
-                id="declarations-calendar-agenda", cursor_type="row", zebra_stripes=True
-            )
+            yield ContentDataTable[str](id="declarations-calendar-agenda", cursor_type="row", zebra_stripes=True)
             yield Static(id="declarations-calendar-detail", markup=False)
             yield Static(id="declarations-calendar-notice", markup=False)
 
@@ -219,9 +217,7 @@ class DeclarationsCalendarScreen(Screen[None]):
                 declarations_copy(
                     "tui.declarations.calendar.detail.source",
                     source=declarations_copy(f"tui.declarations.calendar.source.{source.value}"),
-                    availability=declarations_copy(
-                        f"tui.declarations.availability.{state.availability.value}"
-                    ),
+                    availability=declarations_copy(f"tui.declarations.availability.{state.availability.value}"),
                     observed=observed,
                 )
             )
@@ -277,7 +273,8 @@ class DeclarationsCalendarScreen(Screen[None]):
                 )
             elif self._pending_recovery is None:
                 self._pending_recovery = (row.recovery_action, row)
-                self.app.push_screen(
+                app = cast("App[None]", self.app)
+                app.push_screen(
                     ConfirmScreen(
                         title=declarations_copy("tui.declarations.calendar.action.create"),
                         message=natural_address(row.modelo, row.filing_year, row.period),
@@ -309,9 +306,7 @@ class DeclarationsCalendarScreen(Screen[None]):
         try:
             handoff(action, row)
         except Exception:
-            self.query_one("#declarations-calendar-notice", Static).update(
-                "Recovery request could not be completed."
-            )
+            self.query_one("#declarations-calendar-notice", Static).update("Recovery request could not be completed.")
 
     def replace_projection(self, projection: DeclarationsCalendarProjectionV1) -> None:
         """Re-render a newly injected projection while preserving semantic focus."""

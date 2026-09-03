@@ -88,7 +88,9 @@ def _projection(*, evidence_unobservable: bool = False) -> DeclarationsCalendarP
         _row("111", "3T", date(2026, 10, 20), ObligationStatus.UPCOMING, OverviewPeriodState.DUE),
     )
     if evidence_unobservable:
-        rows = tuple(row.model_copy(update={"aeat_submission_state": None, "justificante_verified": None}) for row in rows)
+        rows = tuple(
+            row.model_copy(update={"aeat_submission_state": None, "justificante_verified": None}) for row in rows
+        )
     return DeclarationsCalendarProjectionV1(
         as_of=date(2026, 9, 3),
         generated_at=_NOW,
@@ -108,11 +110,7 @@ def _projection(*, evidence_unobservable: bool = False) -> DeclarationsCalendarP
             ),
             DeclarationsCalendarSourceStateV1(
                 source=DeclarationsCalendarSource.AEAT_EVIDENCE,
-                availability=(
-                    HomeAvailability.NEVER_CAPTURED
-                    if evidence_unobservable
-                    else HomeAvailability.AVAILABLE
-                ),
+                availability=(HomeAvailability.NEVER_CAPTURED if evidence_unobservable else HomeAvailability.AVAILABLE),
                 observed_at=None if evidence_unobservable else _NOW,
                 reason_code="calendar.aeat.never" if evidence_unobservable else None,
                 item_count=None if evidence_unobservable else 0,
@@ -170,7 +168,9 @@ def test_exact_scope_overlap_and_evidence_unknown_uses_source_observability() ->
 def test_unicode_and_search_uses_only_safe_localized_fields() -> None:
     controller = _controller(_projection())
     assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.ALL, "VENCIDA 130")] == ["130"]
-    assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.ALL, "20/10/2026 111")] == ["111"]
+    assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.ALL, "20/10/2026 111")] == [
+        "111"
+    ]
     assert controller.visible_entries(DeclarationsCalendarScopeV1.ALL, "private-work-name nif-token") == ()
 
 
@@ -183,9 +183,7 @@ def test_recovery_action_must_match_catalogue_and_natural_address() -> None:
         _controller(base.model_copy(update={"entries": (wrong_action, *base.entries[1:])}))
     wrong_address = base.entries[0].model_copy(
         update={
-            "recovery_action": declare_next_action(
-                "operator.modelo.work.create", modelo="303", year=2026, period="1T"
-            )
+            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="303", year=2026, period="1T")
         }
     )
     with pytest.raises(ValueError, match="natural address"):
@@ -250,9 +248,7 @@ async def test_recovery_row_requires_explicit_modal_confirmation_before_host_han
     base = _projection()
     recovery_row = base.entries[0].model_copy(
         update={
-            "recovery_action": declare_next_action(
-                "operator.modelo.work.create", modelo="130", year=2026, period="1T"
-            )
+            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=2026, period="1T")
         }
     )
     projection = base.model_copy(update={"entries": (recovery_row, *base.entries[1:])})
@@ -308,9 +304,7 @@ async def test_recovery_confirmation_escape_cancels_without_dismissing_calendar_
     base = _projection()
     recovery_row = base.entries[0].model_copy(
         update={
-            "recovery_action": declare_next_action(
-                "operator.modelo.work.create", modelo="130", year=2026, period="1T"
-            )
+            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=2026, period="1T")
         }
     )
     projection = base.model_copy(update={"entries": (recovery_row, *base.entries[1:])})
@@ -335,9 +329,7 @@ async def test_recovery_handoff_failure_is_displayed_without_exposing_host_error
     base = _projection()
     recovery_row = base.entries[0].model_copy(
         update={
-            "recovery_action": declare_next_action(
-                "operator.modelo.work.create", modelo="130", year=2026, period="1T"
-            )
+            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=2026, period="1T")
         }
     )
     projection = base.model_copy(update={"entries": (recovery_row, *base.entries[1:])})
@@ -363,9 +355,7 @@ async def test_recovery_handoff_failure_is_displayed_without_exposing_host_error
 async def test_available_without_timestamp_is_not_rendered_as_never_observed() -> None:
     base = _projection()
     sources = tuple(
-        state.model_copy(update={"observed_at": None})
-        if state.source is DeclarationsCalendarSource.SCHEDULE
-        else state
+        state.model_copy(update={"observed_at": None}) if state.source is DeclarationsCalendarSource.SCHEDULE else state
         for state in base.sources
     )
     screen = DeclarationsCalendarScreen(_controller(base.model_copy(update={"sources": sources})))
@@ -442,10 +432,7 @@ def test_calendar_module_has_no_io_adapter_cli_or_protected_search_fields() -> N
     module = Path(__file__).parents[1] / "calendar.py"
     tree = ast.parse(module.read_text(encoding="utf-8"))
     imports = {
-        alias.name
-        for node in ast.walk(tree)
-        if isinstance(node, (ast.Import, ast.ImportFrom))
-        for alias in node.names
+        alias.name for node in ast.walk(tree) if isinstance(node, (ast.Import, ast.ImportFrom)) for alias in node.names
     }
     assert not {"open", "Path", "repository", "adapter", "cli"}.intersection(imports)
     source = module.read_text(encoding="utf-8").lower()
