@@ -175,10 +175,18 @@ def main() -> int:
         )
     designs = len({item.design for item in findings})
     modelos = len({item.modelo for item in findings})
-    governed = sum(item.fields_governed for item in findings)
+    # Counted over DISTINCT design-and-type pairs, and over the fields those
+    # pairs cover. Summing a per-note field count re-counts every field once
+    # per note naming its type, and one design here carries thirty-five such
+    # notes, so that sum overstates the coverage several times over.
+    covered: dict[tuple[str, str], int] = {}
+    for item in findings:
+        for code, count in item.field_counts:
+            covered[(item.design, code)] = count
     sys.stdout.write(
         f"summary findings={len(findings)} designs={designs} modelos={modelos} "
-        f"field_citations_covered={governed}\n"
+        f"design_type_pairs={len(covered)} "
+        f"fields_of_a_type_with_a_stated_convention={sum(covered.values())}\n"
     )
     return 0
 
