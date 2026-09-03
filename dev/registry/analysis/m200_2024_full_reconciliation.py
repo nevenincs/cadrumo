@@ -522,18 +522,9 @@ def build_m200_source_rebind_plan(census: M200ReconciliationCensus) -> M200Sourc
     current = tuple(row for row in census.rows if row.origin == "current_declaration")
     candidates = tuple(row for row in census.rows if row.origin == "restoration_candidate")
     _require_unique_identifiers(tuple(row.casilla_id for row in current), label="source rebind current declaration")
-    from .m200_2024_template_adjudications import (
-        compile_m200_2024_same_template_authority,
-        promoted_candidate_ids,
-    )
-    from .m200_2024_blocker_adjudications import (
-        compile_m200_2024_blocker_authority,
-        promoted_candidate_ids as promoted_blocker_candidate_ids,
-    )
+    from .m200_2024_reviewed_promotions import verified_promoted_candidate_ids
 
-    compiler_authority = compile_m200_2024_same_template_authority()
-    blocker_authority = compile_m200_2024_blocker_authority()
-    receipted_current_ids = promoted_candidate_ids(compiler_authority) | promoted_blocker_candidate_ids(blocker_authority)
+    receipted_current_ids = verified_promoted_candidate_ids()
     rebinds: list[M200SourceRebind] = []
     verified_current_design_ids: list[str] = []
     orphans: list[str] = []
@@ -575,15 +566,15 @@ def build_m200_source_rebind_plan(census: M200ReconciliationCensus) -> M200Sourc
         _require_rebind_source_refs(item)
     if (
         len(planned) != 3171
-        or len(verified_current_design) != 120
+        or len(verified_current_design) != len(receipted_current_ids)
         or len(orphans) != 2
-        or len(candidates) != 36
+        or len(candidates) != 156 - len(receipted_current_ids)
         or len(census.rows) != 3329
     ):
         raise RegistryValidationError(
             "Modelo 200 source rebind population drifted: "
-            "expected 3171 rebinds, 120 verified current-design declarations, 2 refused orphans, "
-            f"36 remaining candidates, and 3329 rows; found {len(planned)}, {len(verified_current_design)}, "
+            f"expected 3171 rebinds, {len(receipted_current_ids)} verified current-design declarations, 2 refused orphans, "
+            f"{156 - len(receipted_current_ids)} remaining candidates, and 3329 rows; found {len(planned)}, {len(verified_current_design)}, "
             f"{len(orphans)}, {len(candidates)}, and {len(census.rows)}",
         )
     if frozenset(verified_current_design) != receipted_current_ids:
@@ -635,8 +626,9 @@ def apply_m200_source_rebind_plan(
     """
     _require_rebind_plan_identity(plan)
     _require_unique_identifiers(tuple(item.casilla_id for item in plan.rebinds), label="source rebind output")
-    if len(plan.rebinds) != 3171 or len(plan.verified_current_design_ids) != 120 or len(plan.refused_orphan_ids) != 2:
-        raise RegistryValidationError("source rebind plan does not carry the complete 3171/120/2 population")
+    expected_verified = len(plan.expected_current_ids) - 3171 - 2
+    if len(plan.rebinds) != 3171 or len(plan.verified_current_design_ids) != expected_verified or len(plan.refused_orphan_ids) != 2:
+        raise RegistryValidationError("source rebind plan does not carry its complete receipt-bound population")
     partitions = (
         {item.casilla_id for item in plan.rebinds},
         set(plan.verified_current_design_ids),
@@ -800,21 +792,9 @@ def _require_rebound_tree(plan: M200SourceRebindPlan, casillas_root: Path) -> No
 
 def _require_verified_current_design(plan: M200SourceRebindPlan, casillas_root: Path) -> None:
     """Bind every excluded current row to the compiler receipt and exact bytes."""
-    from .m200_2024_template_adjudications import (
-        compile_m200_2024_same_template_authority,
-        promoted_candidate_ids,
-    )
+    from .m200_2024_reviewed_promotions import verified_promoted_candidate_ids
 
-    from .m200_2024_blocker_adjudications import (
-        compile_m200_2024_blocker_authority,
-        promoted_candidate_ids as promoted_blocker_candidate_ids,
-    )
-
-    authority = compile_m200_2024_same_template_authority()
-    blocker_authority = compile_m200_2024_blocker_authority()
-    verified = promoted_candidate_ids(authority, casillas_root=casillas_root) | promoted_blocker_candidate_ids(
-        blocker_authority, casillas_root=casillas_root
-    )
+    verified = verified_promoted_candidate_ids(casillas_root=casillas_root)
     if verified != frozenset(plan.verified_current_design_ids):
         raise RegistryValidationError(
             "source rebind verified current-design declarations drifted from compiler receipt"
@@ -1348,18 +1328,9 @@ def _require_reviewed_candidate_promotions(collisions: frozenset[str]) -> None:
     """Allow collisions only when the reviewed target compiler proves live bytes."""
     if not collisions:
         return
-    from .m200_2024_template_adjudications import (
-        compile_m200_2024_same_template_authority,
-        promoted_candidate_ids,
-    )
-    from .m200_2024_blocker_adjudications import (
-        compile_m200_2024_blocker_authority,
-        promoted_candidate_ids as promoted_blocker_candidate_ids,
-    )
+    from .m200_2024_reviewed_promotions import verified_promoted_candidate_ids
 
-    authority = compile_m200_2024_same_template_authority()
-    blocker_authority = compile_m200_2024_blocker_authority()
-    receipted = promoted_candidate_ids(authority) | promoted_blocker_candidate_ids(blocker_authority)
+    receipted = verified_promoted_candidate_ids()
     if collisions != receipted:
         raise RegistryValidationError(
             "current declarations collide with non-authoritative candidates outside reviewed target adjudications: "

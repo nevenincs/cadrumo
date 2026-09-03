@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -43,3 +45,10 @@ def test_refuses_hand_authored_declaration_drift(monkeypatch: pytest.MonkeyPatch
     monkeypatch.setattr(subject, "bundled_path", lambda *_parts: tmp_path / "registry" / "aeat")
     with pytest.raises(RegistryValidationError, match="not compiler-identical"):
         subject.verify_canonical_declarations(authority)
+
+
+def test_refuses_a_hand_constructed_receipt_even_when_its_ids_are_plausible() -> None:
+    authority = subject.compile_m200_2024_blocker_authority()
+    forged = replace(authority, reviewed_by="forged")
+    with pytest.raises(RegistryValidationError, match="receipt/provenance drifted"):
+        subject.promoted_candidate_ids(forged)

@@ -38,7 +38,13 @@ Eight conditions are reported, and every row names one of them:
   an accurate name misleading. This understates reach rather than overstating it, which is why
   it attracts no attention and is the most common of these.
 - ``name_claims_open_ended`` - the name carries the open-ended suffix while the
-  window closes.
+  window closes. This one reports nothing today and is kept deliberately: the
+  shipped registry refuses that exact shape at build time, so no loaded
+  authority can carry one, and the condition is a canary rather than dead code.
+  A finding here means the refusal upstream stopped happening, which is a
+  larger fact than the finding itself. The other direction - a name closing a
+  window the declarations leave open - is not refused upstream and is why the
+  remaining conditions below exist.
 - ``no_temporal_claim`` - the name carries no year at all. Reported rather than
   skipped: a revision slot holding a non-temporal axis is itself worth seeing,
   and dropping those rows would hide it.

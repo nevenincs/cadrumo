@@ -13,7 +13,7 @@ from pathlib import Path
 
 import rtoml
 
-from cadrumo.core.hashing import content_hash_hex, sha256_hex
+from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file

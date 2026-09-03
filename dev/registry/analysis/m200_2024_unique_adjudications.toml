@@ -1,0 +1,194 @@
+schema_version = 1
+modelo = "200"
+revision = "2024"
+source_ref = "aeat-dr-200-2024"
+source_sha256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
+manual_source_ref = "aeat-modelo-200-manual-2024"
+manual_source_sha256 = "ad02f914246632dcd7ab30f3e7280daf3501be6ee3938237e2ebfe7328ff8179"
+review_status = "agent_reviewed"
+reviewed_at = "2026-09-03"
+reviewed_by = "agent-prepared from independently pinned 2024 design, manual and legal catalogue; pending independent review"
+
+# Cross-revision records selected this closed worklist, but none supplies the
+# semantic payload.  Profile/column are reviewed from the 2024 target label.
+[[adjudications]]
+casilla_id = "00814"
+export_field_id = "m200-2024.dp200019.f0226"
+profile = "idi_limit_information"
+column = "Gastos de investigación y desarrollo"
+[[adjudications]]
+casilla_id = "00831"
+export_field_id = "m200-2024.dp200018.f0171"
+profile = "deduction_total_pending"
+column = "Deducción pendiente/generada"
+[[adjudications]]
+casilla_id = "00832"
+export_field_id = "m200-2024.dp200018.f0173"
+profile = "deduction_total_future"
+column = "Pendiente de aplicación en periodos futuros"
+[[adjudications]]
+casilla_id = "01134"
+export_field_id = "m200-2024.dp200020c.f0138"
+profile = "aid_excess_quota"
+column = "pendiente a principio periodo"
+[[adjudications]]
+casilla_id = "01135"
+export_field_id = "m200-2024.dp200020c.f0139"
+profile = "aid_excess_quota"
+column = "aplicado periodos impositivos 2008 a 2015"
+[[adjudications]]
+casilla_id = "01136"
+export_field_id = "m200-2024.dp200020c.f0140"
+profile = "aid_excess_quota"
+column = "aplicado periodos impositivos iniciados a partir 2016"
+[[adjudications]]
+casilla_id = "01469"
+export_field_id = "m200-2024.dp200020c.f0144"
+profile = "aid_excess_quota"
+column = "pendiente aplicación periodos futuros"
+[[adjudications]]
+casilla_id = "01683"
+export_field_id = "m200-2024.dp200018.f0165"
+profile = "public_interest_generated"
+column = "Deducción pendiente/generada"
+[[adjudications]]
+casilla_id = "01684"
+export_field_id = "m200-2024.dp200018.f0166"
+profile = "public_interest_applied"
+column = "Aplicado en esta liquidación"
+[[adjudications]]
+casilla_id = "01685"
+export_field_id = "m200-2024.dp200018.f0167"
+profile = "public_interest_future"
+column = "Pendiente de aplicación en periodos futuros"
+[[adjudications]]
+casilla_id = "01935"
+export_field_id = "m200-2024.dp200019.f0227"
+profile = "idi_limit_information"
+column = "Importe anual de la deducción"
+[[adjudications]]
+casilla_id = "01964"
+export_field_id = "m200-2024.dp200020b.f0062"
+profile = "nivelacion_dotacion"
+column = "Importe reserva a dotar"
+[[adjudications]]
+casilla_id = "01965"
+export_field_id = "m200-2024.dp200020b.f0063"
+profile = "nivelacion_dotacion"
+column = "Importe reserva dotada"
+[[adjudications]]
+casilla_id = "01966"
+export_field_id = "m200-2024.dp200020b.f0064"
+profile = "nivelacion_pendiente"
+column = "Importe reserva pendiente dotación"
+[[adjudications]]
+casilla_id = "01967"
+export_field_id = "m200-2024.dp200020b.f0065"
+profile = "nivelacion_dispuesta"
+column = "Reserva dispuesta"
+[[adjudications]]
+casilla_id = "02079"
+export_field_id = "m200-2024.dp200016b.f0167"
+profile = "canarias_financier_cinema"
+column = "Financiador"
+[[adjudications]]
+casilla_id = "02080"
+export_field_id = "m200-2024.dp200016b.f0169"
+profile = "canarias_financier_live"
+column = "Financiador"
+[[adjudications]]
+casilla_id = "02287"
+export_field_id = "m200-2024.dp200016b.f0164"
+profile = "canarias_rd"
+column = "investigación y desarrollo"
+[[adjudications]]
+casilla_id = "02288"
+export_field_id = "m200-2024.dp200016b.f0165"
+profile = "canarias_it"
+column = "innovación tecnológica"
+[[adjudications]]
+casilla_id = "02363"
+export_field_id = "m200-2024.dp200022b.f0016"
+profile = "riib_anticipated"
+column = "letras A y B"
+[[adjudications]]
+casilla_id = "02364"
+export_field_id = "m200-2024.dp200022b.f0017"
+profile = "riib_anticipated"
+column = "letra C"
+[[adjudications]]
+casilla_id = "02471"
+export_field_id = "m200-2024.dp200018c.f0062"
+profile = "donation_general"
+column = "Deducción pendiente/generada"
+[[adjudications]]
+casilla_id = "02495"
+export_field_id = "m200-2024.dp200016b.f0166"
+profile = "canarias_producer_cinema"
+column = "Productor"
+[[adjudications]]
+casilla_id = "02496"
+export_field_id = "m200-2024.dp200016b.f0168"
+profile = "canarias_producer_live"
+column = "Productor"
+[[adjudications]]
+[[adjudications]]
+casilla_id = "02576"
+export_field_id = "m200-2024.dp200018c.f0063"
+profile = "donation_general"
+column = "Aplicado en esta liquidación"
+[[adjudications]]
+casilla_id = "02577"
+export_field_id = "m200-2024.dp200018c.f0064"
+profile = "donation_general"
+column = "Pendiente de aplicación en periodos futuros"
+[[adjudications]]
+casilla_id = "02691"
+export_field_id = "m200-2024.dp200018c.f0065"
+profile = "donation_general"
+column = "Deducción pendiente/generada"
+[[adjudications]]
+casilla_id = "02692"
+export_field_id = "m200-2024.dp200018c.f0066"
+profile = "donation_general"
+column = "Aplicado en esta liquidación"
+[[adjudications]]
+casilla_id = "02693"
+export_field_id = "m200-2024.dp200018c.f0067"
+profile = "donation_general"
+column = "Pendiente de aplicación en periodos futuros"
+[[adjudications]]
+casilla_id = "02694"
+export_field_id = "m200-2024.dp200018c.f0141"
+profile = "donation_priority"
+column = "Deducción pendiente/generada"
+[[adjudications]]
+casilla_id = "02695"
+export_field_id = "m200-2024.dp200018c.f0142"
+profile = "donation_priority"
+column = "Aplicado en esta liquidación"
+[[adjudications]]
+casilla_id = "02696"
+export_field_id = "m200-2024.dp200018c.f0143"
+profile = "donation_priority"
+column = "Pendiente de aplicación en periodos futuros"
+[[adjudications]]
+casilla_id = "02697"
+export_field_id = "m200-2024.dp200018c.f0144"
+profile = "donation_priority"
+column = "Deducción pendiente/generada"
+[[adjudications]]
+casilla_id = "02698"
+export_field_id = "m200-2024.dp200018c.f0145"
+profile = "donation_priority"
+column = "Aplicado en esta liquidación"
+[[adjudications]]
+casilla_id = "02700"
+export_field_id = "m200-2024.dp200018c.f0146"
+profile = "donation_priority"
+column = "Pendiente de aplicación en periodos futuros"
+[[adjudications]]
+casilla_id = "DP200018:00588"
+export_field_id = "m200-2024.dp200018.f0172"
+profile = "deduction_total_applied"
+column = "Aplicado en esta liquidación"

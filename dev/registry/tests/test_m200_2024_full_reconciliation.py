@@ -344,9 +344,21 @@ def test_source_rebind_plan_is_complete_target_map_owned_and_refuses_only_true_o
     assert source_rebind_plan.semantic_map_source_ref == subject.TARGET_SOURCE_REF
     assert source_rebind_plan.semantic_map_source_sha256 == subject.TARGET_SOURCE_SHA256
     assert len(source_rebind_plan.rebinds) == 3171
-    assert source_rebind_plan.verified_current_design_ids == ("00942", "01603", "02239", "02412")
+    from ..analysis.m200_2024_blocker_adjudications import (
+        compile_m200_2024_blocker_authority,
+        promoted_candidate_ids as promoted_blocker_candidate_ids,
+    )
+    from ..analysis.m200_2024_template_adjudications import (
+        compile_m200_2024_same_template_authority,
+        promoted_candidate_ids,
+    )
+
+    receipted = promoted_candidate_ids(compile_m200_2024_same_template_authority()) | promoted_blocker_candidate_ids(
+        compile_m200_2024_blocker_authority()
+    )
+    assert source_rebind_plan.verified_current_design_ids == tuple(sorted(receipted))
     assert len(source_rebind_plan.refused_orphan_ids) == 2
-    assert len(source_rebind_plan.expected_current_ids) == 3177
+    assert len(source_rebind_plan.expected_current_ids) == 3293
     assert {
         *(item.casilla_id for item in source_rebind_plan.rebinds),
         *source_rebind_plan.verified_current_design_ids,
@@ -383,7 +395,7 @@ def test_source_rebind_refuses_current_design_bytes_that_do_not_match_the_receip
     """The skipped generated row is rechecked against the same receipt at apply time."""
     casillas_root = tmp_path / "casillas"
     shutil.copytree(bundled_path("registry", "aeat", "modelos", "200", "revisions", "2024", "casillas"), casillas_root)
-    path = casillas_root / "c00942.toml"
+    path = casillas_root / "c00093.toml"
     path.write_text(path.read_text(encoding="utf-8").replace("manual", "drifted", 1), encoding="utf-8", newline="\n")
     plan = subject.M200SourceRebindPlan(
         source_ref=subject.TARGET_SOURCE_REF,
@@ -391,7 +403,9 @@ def test_source_rebind_refuses_current_design_bytes_that_do_not_match_the_receip
         semantic_map_source_ref=subject.TARGET_SOURCE_REF,
         semantic_map_source_sha256=subject.TARGET_SOURCE_SHA256,
         rebinds=(),
-        verified_current_design_ids=("00942", "01603", "02239", "02412"),
+        verified_current_design_ids=subject.build_m200_source_rebind_plan(
+            subject.reconcile_bundled_m200_2024()
+        ).verified_current_design_ids,
         refused_orphan_ids=(),
         expected_current_ids=(),
     )
