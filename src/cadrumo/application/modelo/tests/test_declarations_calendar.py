@@ -186,6 +186,22 @@ def test_exact_source_axis_matrix_and_safe_full_row_are_preserved() -> None:
     assert "operator.modelo.work.create" not in projection.model_dump_json()
 
 
+def test_exact_evidence_join_counts_only_the_matching_scheduled_address() -> None:
+    evidence = _filing_evidence(
+        local=OverviewLocalFilingState.READY_TO_FILE,
+        aeat=OverviewAeatSubmissionState.ACCEPTED,
+    )
+    projection = project_declarations_calendar(
+        calendar=_calendar(_entry(evidence=evidence)),
+        evidence=_provider(evidence),
+        as_of=date(2026, 3, 1),
+        schedule_observation=_schedule(),
+    )
+    assert tuple(source.item_count for source in projection.sources) == (1, 1, 1)
+    assert projection.entries[0].local_filing_state is OverviewLocalFilingState.READY_TO_FILE
+    assert projection.entries[0].aeat_submission_state is OverviewAeatSubmissionState.ACCEPTED
+
+
 def test_projection_strips_every_protected_identity_name_event_and_reference() -> None:
     evidence = _filing_evidence(
         local=OverviewLocalFilingState.READY_TO_FILE,
@@ -264,7 +280,11 @@ def test_known_empty_unavailable_and_stale_are_not_conflated() -> None:
 @pytest.mark.parametrize(
     "case",
     (
+        "calendar_year_disagreement",
         "duplicate_entry",
+        "local_evidence_year_disagreement",
+        "aeat_evidence_year_disagreement",
+        "orphan_evidence_address",
         "partial_evidence_address",
         "local_unobservable_claim",
         "aeat_unobservable_claim",
@@ -283,8 +303,25 @@ def test_contradictory_inputs_fail_closed(case: str) -> None:
     calendar = _calendar(entry)
     provider = _provider(evidence)
     schedule = _schedule()
-    if case == "duplicate_entry":
+    if case == "calendar_year_disagreement":
+        calendar = _calendar(entry.model_copy(update={"filing_year": 2025}))
+    elif case == "duplicate_entry":
         calendar = _calendar(entry, entry)
+    elif case == "local_evidence_year_disagreement":
+        mismatched = _filing_evidence(local=OverviewLocalFilingState.READY_TO_FILE).model_copy(
+            update={"filing_year": 2025}
+        )
+        provider = _provider(mismatched)
+        calendar = _calendar(_entry())
+    elif case == "aeat_evidence_year_disagreement":
+        mismatched = _filing_evidence(aeat=OverviewAeatSubmissionState.ACCEPTED).model_copy(
+            update={"filing_year": 2025}
+        )
+        provider = _provider(mismatched)
+        calendar = _calendar(_entry())
+    elif case == "orphan_evidence_address":
+        provider = _provider(_filing_evidence(modelo="130"))
+        calendar = _calendar(_entry())
     elif case == "partial_evidence_address":
         partial = OverviewCalendarFilingEvidence(modelo="303")
         provider = _provider(partial)

@@ -207,6 +207,15 @@ def project_declarations_calendar(
     ):
         raise DeclarationsCalendarProjectionError("unobservable AEAT evidence carries a confident claim")
 
+    schedule_addresses: set[tuple[str, int, str]] = set()
+    for entry in calendar.entries:
+        if entry.filing_year != entry.period.filing_year:
+            raise DeclarationsCalendarProjectionError("calendar entry filing year contradicts its period")
+        schedule_addresses.add((entry.modelo, entry.period.filing_year, entry.period.registry_token))
+    orphaned_evidence = set(evidence_by_address).difference(schedule_addresses)
+    if orphaned_evidence:
+        raise DeclarationsCalendarProjectionError("calendar evidence has no scheduled natural address")
+
     rows: list[DeclarationsCalendarEntryRefV1] = []
     for entry in calendar.entries:
         key = (entry.modelo, entry.period.filing_year, entry.period.registry_token)
@@ -296,6 +305,8 @@ def _evidence_by_address(
     for row in rows:
         if row.modelo is None or row.filing_year is None or row.period is None:
             raise DeclarationsCalendarProjectionError("calendar evidence requires a complete natural address")
+        if row.filing_year != row.period.filing_year:
+            raise DeclarationsCalendarProjectionError("calendar evidence filing year contradicts its period")
         key = (row.modelo, row.filing_year, row.period.registry_token)
         if key in result:
             raise DeclarationsCalendarProjectionError("calendar evidence contains duplicate natural addresses")
