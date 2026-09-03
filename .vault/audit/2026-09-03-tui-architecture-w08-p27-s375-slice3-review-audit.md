@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:3c89f860cb7fa9c4e5c44b12b53a7d1601102174db227a42a5d519cdd926091a'
+body_hash: 'sha256:486f7de42d1763fa42d46ea83c89ab447ddf0f41ffbc66e7bb32b29883ed617c'
 related:
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
   - '[[2026-08-11-tui-architecture-plan]]'
@@ -18,28 +18,22 @@ Independent review of the live evidence and reconciliation slice, including cont
 
 ## Findings
 
-### reconciliation-selection-is-positional | high | Open: a reordered visible row can submit a different visible pair
+### reconciliation-selection-is-positional | high | Closed: selection now resolves the exact semantic row identity
 
-`LedgerReconciliationScreen.on_data_table_row_selected` reads `event.cursor_row` and indexes `controller.projection.invoice_reconciliations` at that position even though every rendered row already has a semantic transaction/invoice row key. If DataTable presentation order changes, selecting a visible row can therefore prepare another visible pair. Controller admission does not contain this defect because the wrongly indexed pair is also present in the projection. The current single-suggestion test necessarily passes and cannot distinguish selected-row identity from projection position.
+The initial handler indexed the immutable projection with `cursor_row`, so reordered presentation could submit another visible pair. Remediation reads `event.row_key`, resolves that semantic transaction/invoice identity against the injected projection, and rejects a key absent from the visible authority. A two-suggestion compositor test sorts the table into an order different from the projection, selects its first visible row, and proves that the exact selected pair reaches the injected link door once. This finding is closed.
 
-Resolve this by deriving the selected pair from the semantic row key or an immutable row-key-to-pair map, never from cursor position, and add a two-row adversarial test that changes presentation order before selecting a row and asserts the exact visible pair reaches the injected link door.
+### reconciliation-source-facts-are-reclassified-or-dropped | medium | Closed: presentation now formats application-owned score, match facts, and direction
 
-### reconciliation-source-facts-are-reclassified-or-dropped | medium | Open: presentation invents match classes and suppresses canonical reconciliation meaning
+The initial screen invented a frontend Full/Partial category, ignored the canonical score, and omitted inconsistency direction. Remediation removes that classification and renders the injected canonical score plus separate amount-match and counterparty-match facts with localized Yes/No values. It maps the canonical inconsistency direction to explicit localized operator copy and refuses unsupported direction values instead of guessing. Multi-field rendered-copy assertions now pin the application-owned meaning. This finding is closed.
 
-The reconciliation screen synthesizes `Full` when both `amount_match` and `counterparty_match` are true and `Partial` otherwise. That grouping is frontend-owned policy: it collapses materially different states and ignores the application projection's canonical `score`. The inconsistencies table likewise drops the application-owned `direction`, leaving only two opaque reference prefixes and no visible description of which side is missing. This is presentation logic deciding or withholding domain meaning rather than faithfully formatting the injected immutable projection.
+### reconciliation-copy-tests-are-partially-vacuous | low | Closed: all locales and semantic distinctions have exact assertions
 
-Resolve this by rendering application-owned reconciliation facts with localized labels, including enough boolean/score and direction meaning to distinguish the projected states. If a Full/Partial classification is a real product concept, move it into the application projection first. Add exact multi-state tests so the UI cannot silently collapse distinct source rows.
-
-### reconciliation-copy-tests-are-partially-vacuous | low | Open: locale and source-truth assertions do not prove reconciliation meaning
-
-The local-versus-AEAT test merely checks that the rendered page contains `AEAT`, and the all-locale test compares only the evidence title. Those assertions would pass for misleading AEAT copy and do not exercise reconciliation terminology. The single-row fixture also cannot expose positional identity or collapsed match states. The live locale files are genuinely authored and the English banner is explicit, so this is a proof gap rather than a current translation defect.
-
-Add exact assertions for the local-only/AEAT-separation message and representative reconciliation labels in every shipped locale, plus multiple reconciliation states and inconsistency direction.
+The initial tests checked only that `AEAT` appeared and that evidence titles differed. Remediation adds exact expected local-only/AEAT-separation text, canonical score, both match labels, and inconsistency direction for English, Spanish, Catalan, and Hungarian. The separate reordered two-row test also closes the fixture weakness. This finding is closed.
 
 ## Recommendations
 
-Hold final review until the high and medium findings are remediated and their adversarial tests pass. The low proof gap should close in the same test update because it is the durable regression guard for the source-truth fix.
+No open recommendation remains from this review. The high mutation-identity finding, medium source-truth finding, and low proof gap are closed. Slice 3 is safe for final review.
 
 Positive findings: evidence rendering limits itself to safe manifest presentation facts and does not expose provider locators, hashes, linked invoice identities, or full attachment identities; both evidence and link capabilities are validated against the real injected application catalogue; link submission admits only a visible injected transaction/invoice pair and validates returned identity; affected declarations visibly separate Modelo, period, and changed/removed counts; the page explicitly states that it shows local Ledger evidence and that AEAT Sync is separate; absent dependencies, unavailable applications, and still-deferred routes produce typed refusal; workers disable controls, reject in-flight Escape and repeated submission, preserve generic localized errors, and restore semantic focus; all four locales contain real authored strings; eighty-column compositor checks show no horizontal table scroll and one page scroll owner; and the slice imports no adapters, CLI, file readers, action implementations, or concrete services.
 
-Focused gates: 40 Ledger tests passed with all markers enabled; Ruff passed; ty passed; basedpyright reported zero errors and zero warnings. These gates do not discharge the open findings because the current fixtures do not exercise reordered multi-row selection or the missing source distinctions.
+Initial focused gates: 40 Ledger tests passed with all markers enabled; Ruff passed; ty passed; basedpyright reported zero errors and zero warnings. Final remediation probe: all 15 slice-3 tests passed with all markers enabled, including the semantic reorder and all-locale assertions; focused Ruff passed.

@@ -6049,3 +6049,30 @@ That leaves three of 222 headings signalling a correction, which is the honest c
 reassuring one - it is only the corrections this campaign noticed it had made. A finding revised
 by someone else's later work, or by a measurement nobody re-ran, carries no pointer and there is
 no mechanism here that would add one.
+
+### vacuity-screen-tests-broken-since-august-in-a-lane-ci-runs | critical | Sixteen tests fail on git exit 128 because a fix added a repository dependency their fixtures cannot satisfy
+
+The crashed CI-selection run reported sixteen failures in `dev/audit/tests/test_vacuity_screen.py`.
+A crashed run loses tests rather than inventing failures, so anything it reported is real, and
+running that file alone confirms it: sixteen failed in 1.5 seconds, every one on
+`CalledProcessError: git ls-files ... returned non-zero exit status 128`.
+
+The cause is a commit from 27 August titled "screen only tracked test modules for vacuity". It
+added `_tracked_test_paths`, which shells out to `git ls-files` with `cwd=root` and deliberately
+refuses to degrade - the module's own docstring says absence of git is raised rather than
+falling back to a filesystem walk, because a silent fallback restores the defect it was fixing.
+That reasoning is sound.
+
+The tests pass `tmp_path`. They contain no git initialisation at all - zero occurrences of git,
+subprocess or monkeypatch in the file - so every one now runs the screen against a directory
+that is not a repository, and git exits 128. The commit changed the screen and did not touch the
+tests beside it.
+
+What makes this critical rather than merely broken is where it sits. `dev/audit/tests` is named
+by the dev-tooling recipe, so unlike the conformance suite this is a lane CI actually runs. Either
+that lane has been red since August, or it has not been run in that time. Both are worth knowing
+and this campaign cannot tell which from inside the worktree.
+
+Not repaired here. The fixtures need a repository - `git init` in the temp tree, or a screen that
+accepts an injected tracked-path set - and choosing between those is the screen author's call
+about whether the git dependency belongs in the unit boundary at all.
