@@ -133,14 +133,17 @@ remain distinct. Overview authority joins are area-specific. Logical duplicate
 checks use overview area, private admission-only notification identity, natural
 filing address, and a census path normalized by case and collapsed whitespace.
 
-Only overview, evidence-comparison, and reconciliation outputs expose action or
-operation references. Supplied action declarations must equal their complete
-entry in `OPERATOR_ACTION_CATALOGUE`; forged same-ID/different-command entries
-are refused. Row/area/state closure, exact public operation-contract lookup,
-TUI frontend admission, pull-action operation joins, and `NO_ACTION` closure are
+Every concrete public row now inherits the public immutable capability row
+contract, so admitted action and operation provenance is physically retained by
+real overview, census, filed-declaration, notification, evidence-comparison,
+and reconciliation instances and their serialized representations. Supplied
+action declarations must equal their complete entry in
+`OPERATOR_ACTION_CATALOGUE`; forged same-ID/different-command entries are
+refused. Row/area/state closure, exact public operation-contract lookup, TUI
+frontend admission, pull-action operation joins, and `NO_ACTION` closure are
 enforced before projection.
 
-Final focused evidence: 11 tests passed with all lanes enabled; Ruff passed; ty
+Final focused evidence: 12 tests passed with all lanes enabled; Ruff passed; ty
 passed; basedpyright reported zero errors, warnings, and notes.
 
 Final result: **CLOSE**. S397 may close.

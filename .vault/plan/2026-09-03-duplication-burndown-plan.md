@@ -10,7 +10,7 @@ related:
   - '[[2026-07-17-duplication-evidence-repair-plan]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:1918ff7ec1a62bfbeb63156f2131e25004c3ded8e42891101ed013df987f6292'
+body_hash: 'sha256:4e894bce0896057a78f220780fd6f56192e2cc8e650b5ddcb936c59f0b19cb5d'
 ---
 
 <!-- RETIRED: W05, W06, W07, P02, P03, P04, P06, P09, P12, P14, P16, P17, P19, P20, P21, P22, P23, P24, P25, P26, P27, S03, S06, S07 -->
@@ -18,6 +18,8 @@ body_hash: 'sha256:1918ff7ec1a62bfbeb63156f2131e25004c3ded8e42891101ed013df987f6
 # `duplication-burndown` plan
 
 ## Description
+
+Burn down every currently observed production clone from one stable evidence set while preserving semantic ownership and public contracts. Wave W01 restores the disposition authority established by the duplication evidence repair decision. Wave W02 addresses the dominant immutable CLI declaration family through narrow typed reuse. Wave W03 gives each behavior-bearing pair an independent ownership decision. Wave W04 reconciles the final evidence and proves repository-wide health under the honest-all-green constraints.
 
 ## Steps
 
@@ -84,6 +86,7 @@ Remove duplicated controller and route behavior at the owning TUI boundary.
 
 Unify binding declarations only where registry and calculation semantics are identical.
 
+- [ ] `W03.P15.S16` - Adjudicate the Ledger Renta binding declarations against registry authority and consolidate only their shared concept; `src/cadrumo/domain/calculations/registry`.
 
 ## Wave `W04` - prove and reconcile honest green
 
@@ -93,7 +96,18 @@ Run focused and repository-wide gates, reconcile every residual clone, and close
 
 Prove detector teeth and run focused, subsystem, and full repository gates.
 
+- [ ] `W04.P18.S17` - Reconcile final dispositions to the live clone set and remove entries for resolved groups; `dev/audit/duplication_dispositions.toml`.
+- [ ] `W04.P18.S18` - Run duplication, import, semantic, architecture, type, lint, focused, and full quality gates without threshold or exclusion changes; `dev/audit/.runs`.
 
 ## Parallelization
 
+Waves are ordered. Within W02, P08 follows P05; P10 may proceed after P05 when it does not edit the same support module. The four W03 phases may run in parallel because their source ownership does not overlap, but each receives an independent review before landing. W04 begins only after all accepted reductions and intentional dispositions are stable. Executors must check the shared worktree before every step and must not modify peer-owned dirty files.
+
 ## Verification
+
+- One live `just audit-duplication` run is reproducible and every reported clone has exactly one current disposition during the campaign.
+- Focused command-graph snapshots prove that CLI tokens, help keys, policies, handlers, parameter defaults, and result schemas remain unchanged.
+- Each behavior-bearing consolidation has focused invariant tests and an independent code review with no unresolved HIGH or CRITICAL finding.
+- The final duplication report contains zero unexplained clone groups and no threshold, exclusion, baseline, skip, or allowlist weakening.
+- Import, semantic-overlap, architecture, type, lint, focused test, and full repository gates pass from one stable revision.
+- Every Step is closed through the plan CLI and has its required Step Record; Wave summaries record the verified evidence.

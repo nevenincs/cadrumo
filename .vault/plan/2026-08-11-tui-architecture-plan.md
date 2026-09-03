@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-03'
-body_hash: 'sha256:ef541f6ce0788f6a65d221b1629e45b241c61a42afc6278fed72bff0536568f4'
+body_hash: 'sha256:8d00638641c99ddd304f92bbb58661345a7c4a286eeefed2993c3689c65fddb1'
 ---
 
 <!-- RETIRED: S370 -->
@@ -580,7 +580,7 @@ Build host-neutral Ledger, Declarations with full calendar and history, AEAT Syn
 - [x] `W08.P27.S377` - Build the Declarations landing, revision and filing-history routes around existing Modelo workspace destinations; `src/cadrumo/entrypoints/tui/declarations/`.
 - [x] `W08.P27.S393` - Define a safe full Declarations calendar projection that preserves legal schedule, local filing, AEAT evidence, and source availability as independent axes; `src/cadrumo/application/modelo/declarations_calendar.py`.
 - [ ] `W08.P27.S378` - Build the full declaration calendar as an agenda-first searchable and filterable workbench with past, upcoming, overdue, filed, and evidence-unknown scopes; `src/cadrumo/entrypoints/tui/declarations/calendar.py`.
-- [x] `W08.P27.S397` - Define a safe immutable AEAT Sync workspace projection that joins overview, census, filed-declaration, notification, evidence-comparison, and reconciliation facts while excluding protected taxpayer values and preserving source availability, freshness, contradiction, and supported-action axes; `src/cadrumo/application/aeat_sync/workspace.py and focused application tests`.
+- [ ] `W08.P27.S397` - Define a safe immutable AEAT Sync workspace projection that joins overview, census, filed-declaration, notification, evidence-comparison, and reconciliation facts while excluding protected taxpayer values and preserving source availability, freshness, contradiction, and supported-action axes; `src/cadrumo/application/aeat_sync/workspace.py and focused application tests`.
 - [ ] `W08.P27.S379` - Build AEAT Sync overview, profile-census, filed-declaration, notification, evidence-comparison, and reconciliation screens with explicit pull and supported push actions; `src/cadrumo/entrypoints/tui/aeat_sync/`.
 - [ ] `W08.P27.S380` - Compose production Profile, change-user, password, appearance, language, and sign-out factories without duplicating their existing screens; `src/cadrumo/entrypoints/tui/account.py`.
 
