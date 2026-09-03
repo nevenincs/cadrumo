@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Generator
+from collections.abc import AsyncGenerator, Callable, Generator, Iterable, Mapping
 from contextlib import ExitStack, asynccontextmanager, contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -18,12 +19,52 @@ if TYPE_CHECKING:
     from ...application.modelo.work_review import ModeloWorkReview
     from ...application.modelo.workspace_models import ModeloWorkspaceStaticInspectionResultV1
     from ...application.operations.composition import OperationComposedServices
+    from ...application.overview.home import HomeProjectionV1
+    from ...application.search.workbench import WorkbenchDestinationAdmission
     from ...core.external_constants import OutputLanguage
     from ...domain.modelos.work_unit import WorkUnit
+    from .account import AccountFactoriesV1
+    from .navigation import TuiActionCandidateV1, TuiDestinationCatalogueV1, TuiScreenFactoryV1
     from .search import WorkbenchSearchDoorV1
 
 
 type InstalledWorkbenchSearchInputsProviderV1 = Callable[[], InstalledWorkbenchSearchInputsV1]
+
+
+@dataclass(frozen=True, slots=True)
+class InstalledWorkbenchRootInputsV1:
+    """Explicit safe inputs needed to compose one installed workbench root.
+
+    Projection sourcing is deliberately outside this value object: its caller
+    has already loaded the current authoritative generation and supplied the
+    existing area factories.  The launcher may join those facts, but it never
+    reads a repository, opens a notification, acquires credentials, or starts
+    an operation merely to make a screen available.
+    """
+
+    home_projection: HomeProjectionV1
+    refresh_home: Callable[[], HomeProjectionV1]
+    admissions: Mapping[str, WorkbenchDestinationAdmission]
+    account_factories: AccountFactoriesV1
+    ledger_factory: TuiScreenFactoryV1
+    declarations_factory: TuiScreenFactoryV1
+    aeat_sync_factory: TuiScreenFactoryV1
+    search_inputs: InstalledWorkbenchSearchInputsV1
+    refresh_search_inputs: InstalledWorkbenchSearchInputsProviderV1
+    action_candidates: Iterable[TuiActionCandidateV1] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class InstalledWorkbenchRootCompositionV1:
+    """One closed root catalogue and explicit refresh doors for a session."""
+
+    destination_catalogue: TuiDestinationCatalogueV1
+    refresh_home: Callable[[], HomeProjectionV1]
+    search_inputs: InstalledWorkbenchSearchInputsV1
+    refresh_search_inputs: InstalledWorkbenchSearchInputsProviderV1
+
+
+type InstalledWorkbenchRootInputsProviderV1 = Callable[[], InstalledWorkbenchRootInputsV1]
 
 
 def load_modelo_work_unit_catalogue(bucket_id: str) -> WorkUnitCatalogue:
@@ -192,11 +233,57 @@ def compose_installed_workbench_search(
     return inputs.snapshot().service()
 
 
+def compose_installed_workbench_root(
+    inputs: InstalledWorkbenchRootInputsV1,
+) -> InstalledWorkbenchRootCompositionV1:
+    """Join one already-authoritative session generation into the root shell.
+
+    The inputs deliberately carry the application-owned projections, action
+    admissions, and existing area factories.  This boundary only checks that
+    the search and navigation views name the same authoritative admissions,
+    then builds the closed TUI catalogue.  It neither creates a second screen
+    implementation nor performs storage or network I/O.
+    """
+    from .home import HomeScreen
+    from .navigation import TuiScreenContextV1, build_destination_catalogue
+
+    def home_factory(context: TuiScreenContextV1) -> HomeScreen:
+        if context.destination != "workbench.home":
+            raise ValueError("the Home factory accepts only the Home destination")
+        return HomeScreen(inputs.home_projection)
+
+    expected_search_admissions = {
+        "workbench.ledger": inputs.search_inputs.ledger_admission,
+        "workbench.declarations": inputs.search_inputs.declarations_admission,
+        "workbench.aeat_sync": inputs.search_inputs.aeat_sync_admission,
+    }
+    for destination, admission in expected_search_admissions.items():
+        if inputs.admissions.get(destination) != admission:
+            raise ValueError("installed search and root navigation admissions must agree")
+
+    return InstalledWorkbenchRootCompositionV1(
+        destination_catalogue=build_destination_catalogue(
+            admissions=inputs.admissions,
+            factories={
+                "workbench.home": home_factory,
+                "workbench.ledger": inputs.ledger_factory,
+                "workbench.declarations": inputs.declarations_factory,
+                "workbench.aeat_sync": inputs.aeat_sync_factory,
+                "workbench.profile": inputs.account_factories.profile,
+            },
+            action_candidates=inputs.action_candidates,
+        ),
+        refresh_home=inputs.refresh_home,
+        search_inputs=inputs.search_inputs,
+        refresh_search_inputs=inputs.refresh_search_inputs,
+    )
+
+
 async def _run_root_session(
     *,
     headless: bool,
     auto_pilot: AutopilotCallbackType | None,
-    workbench_search_inputs_provider: InstalledWorkbenchSearchInputsProviderV1 | None = None,
+    workbench_root_inputs_provider: InstalledWorkbenchRootInputsProviderV1,
 ) -> None:
     """Compose one session's services, run the root application, settle them.
 
@@ -206,22 +293,19 @@ async def _run_root_session(
     """
     from .app import CadrumoTuiApp
 
-    service = (
-        compose_installed_workbench_search(workbench_search_inputs_provider())
-        if workbench_search_inputs_provider is not None
-        else None
-    )
+    root = compose_installed_workbench_root(workbench_root_inputs_provider())
+    service = compose_installed_workbench_search(root.search_inputs)
 
     def refresh_search() -> WorkbenchSearchDoorV1:
-        if workbench_search_inputs_provider is None:  # pragma: no cover - callback is not installed
-            raise RuntimeError("workbench search composition is unavailable")
-        return compose_installed_workbench_search(workbench_search_inputs_provider())
+        return compose_installed_workbench_search(root.refresh_search_inputs())
 
     async with operation_services_scope() as services:
         await CadrumoTuiApp(
             services=services,
+            destination_catalogue=root.destination_catalogue,
+            refresh_home=root.refresh_home,
             workbench_search_service=service,
-            refresh_workbench_search=refresh_search if workbench_search_inputs_provider is not None else None,
+            refresh_workbench_search=refresh_search,
         ).run_async(headless=headless, auto_pilot=auto_pilot)
 
 
@@ -229,7 +313,7 @@ def main(
     *,
     headless: bool = False,
     auto_pilot: AutopilotCallbackType | None = None,
-    workbench_search_inputs_provider: InstalledWorkbenchSearchInputsProviderV1 | None = None,
+    workbench_root_inputs_provider: InstalledWorkbenchRootInputsProviderV1,
 ) -> int:
     """Start one dedicated TUI session and report its process exit status.
 
@@ -243,15 +327,19 @@ def main(
         _run_root_session(
             headless=headless,
             auto_pilot=auto_pilot,
-            workbench_search_inputs_provider=workbench_search_inputs_provider,
+            workbench_root_inputs_provider=workbench_root_inputs_provider,
         )
     )
     return 0
 
 
 __all__ = [
+    "InstalledWorkbenchRootCompositionV1",
+    "InstalledWorkbenchRootInputsProviderV1",
+    "InstalledWorkbenchRootInputsV1",
     "InstalledWorkbenchSearchInputsProviderV1",
     "build_modelo_work_review_for_unit",
+    "compose_installed_workbench_root",
     "compose_installed_workbench_search",
     "load_modelo_work_unit_catalogue",
     "load_modelo_work_units",

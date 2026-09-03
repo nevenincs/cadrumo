@@ -9,6 +9,7 @@ repository, token, network client, or business authority.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Never, SupportsIndex, override
 
 from pydantic import SecretStr
 
@@ -46,8 +47,10 @@ class InstalledWorkbenchSearchSnapshotV1:
         """Build the pure query service over this exact snapshot."""
         return WorkbenchSearchService(self.documents)
 
-    def __reduce_ex__(self, _protocol: int) -> object:
+    @override
+    def __reduce_ex__(self, protocol: SupportsIndex, /) -> Never:
         """Refuse Python serialization of the ephemeral identity seed set."""
+        del protocol
         raise TypeError("installed workbench search snapshots are memory-only")
 
 

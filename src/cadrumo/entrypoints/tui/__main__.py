@@ -18,21 +18,26 @@ installed artifact proves its full-screen surface starts without a terminal.
 
 from __future__ import annotations
 
+import sys
+
 from ..full_screen_session_protocol import SELF_TEST_FLAG, parse_request_arguments
-from .launcher import InstalledWorkbenchSearchInputsProviderV1, main
+from .launcher import InstalledWorkbenchRootInputsProviderV1, main
 
 
 def run(
     arguments: list[str],
     *,
-    workbench_search_inputs_provider: InstalledWorkbenchSearchInputsProviderV1 | None = None,
+    workbench_root_inputs_provider: InstalledWorkbenchRootInputsProviderV1 | None = None,
 ) -> int:
     """Start whichever session these arguments request, and report its status."""
     request = parse_request_arguments(arguments)
     if request is None:
+        if workbench_root_inputs_provider is None:
+            sys.stderr.write("workbench.root.composition_required\n")
+            return 2
         return main(
             headless=SELF_TEST_FLAG in arguments,
-            workbench_search_inputs_provider=workbench_search_inputs_provider,
+            workbench_root_inputs_provider=workbench_root_inputs_provider,
         )
     from .destination_session import run_requested_destination
 
@@ -40,6 +45,4 @@ def run(
 
 
 if __name__ == "__main__":
-    import sys
-
     raise SystemExit(run(sys.argv[1:]))
