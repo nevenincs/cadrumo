@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:6630d8cf6f5e8f180b3e2762f5d579088c719459a86478252e789a7bdb372cf1'
+body_hash: 'sha256:c39f3046003e66966d3374d4b85cd1ed64fc8619efbb670bc6f5a3f2fa24518d'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -326,7 +326,7 @@ Wire a standing regression gate comparing the satisfied filing-coordinate set by
 - [x] `W02.P04.S105` - Correct the five screen labels that described one kind while counting several, including one that inverted its sense; `dev/registry/analysis/screens.py`.
 - [x] `W02.P04.S106` - Gate that every kind a screen emits live is named in its own docstring; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W02.P04.S122` - State per modelo what the product can actually calculate and file, as a screen reading the declarations rather than a maintained list; `dev/registry/analysis/modelo_capability.py`.
-- [ ] `W02.P04.S123` - Migrate the thirty-one revisions across sixteen modelos that spell their envelope as a record onto the typed envelope slot twenty others already use, so the export boundary can see it and a product-identity requirement can be declared rather than left as uncovered offsets; `src/cadrumo/_data/registry/aeat/modelos`.
+- [ ] `W02.P04.S123` - Migrate the thirty-one revisions across sixteen modelos that spell their envelope as a record onto the typed envelope slot eighteen others already use across seven modelos, since the export boundary sets renders_filing_envelope from that slot alone and skips the product-identity requirement entirely without it, silently, for the twenty of the thirty-one that can be filed; `src/cadrumo/_data/registry/aeat/modelos`.
 - [ ] `W02.P04.S124` - Resolve the twenty-five revisions carrying an export layout or envelope while declaring a grade below filing, twenty-two at applicability and three at calculation, starting with modelos 185 and 222 whose 2025 revisions ship a committed generated tree at applicability; `src/cadrumo/_data/registry/aeat/modelos`.
 - [x] `W02.P04.S129` - Re-ground the capability screen's envelope condition against the official designs, replacing the fifty-two-row count with the thirty-one real record-spelled cases; `dev/registry/analysis/modelo_capability.py`.
 - [ ] `W02.P04.S130` - Withdraw the modelo 714 envelope authoring: offsets 93 to 96 and 101 to 109 are delegated to the entidad desarrolladora, which the coverage validator classifies omissible because this product holds no EEDD registration and writing one would invent a regulatory identity; `src/cadrumo/_data/registry/aeat/modelos/714/revisions`.
@@ -471,6 +471,7 @@ Screen and then gate child citations against the source manifest of their owning
 - [ ] `W04.P09.S432` - Resolve the five revisions declaring filing grade without the completeness manifest their grade requires, in modelos 145, 165 twice, 308 and 360, since every other grade finding under-declares and these five over-declare; `src/cadrumo/_data/registry/aeat/modelos`.
 - [x] `W04.P09.S433` - Declare which screen a screen is built on and exclude derived screens from the revision ranking, since the grounding screen re-describes the pointer screens 41 findings and made modelo 200 look like nine conditions where seven are independent, gating the containment that is verifiable; `dev/registry/analysis/screens.py dev/registry/analysis/filing_exposure.py dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W04.P09.S434` - Sweep for other undeclared screen derivations and record that none exists: the two flags are a CLI-only import and a screen consuming others for attributes rather than population, so import-reach is a prompt not a verdict, and give both entry types the same declarations; `dev/registry/analysis/screens.py`.
+- [ ] `W04.P09.S435` - Verify the record-spelled envelope consequence in the shipped export path rather than from the screens docstring, confirming that renders_filing_envelope is set from the typed slot alone and that all eighteen typed layouts declare a product identity requirement while the thirty-one record-spelled ones cannot; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 

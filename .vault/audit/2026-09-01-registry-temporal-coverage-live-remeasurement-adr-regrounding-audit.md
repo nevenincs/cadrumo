@@ -11671,3 +11671,40 @@ things. An asymmetry between them is a place where a consumer must know which
 table a screen sits in before it can ask a question about it, which is the shape
 of several defects already in this audit and was worth removing rather than
 working around.
+
+
+## Thirty-one filings can carry no product identity, and the export path proves it
+
+The capability screen's largest condition is `envelope_spelled_as_record`: 31
+revisions whose layout smuggles its envelope into the record tuple as an
+`envelope_header` pseudo-record instead of the typed `filing_envelope` slot.
+Twenty of the 31 declare filing grade. The claimed consequence - that the export
+boundary then refuses the product and software identity an enveloped filing must
+carry - was verified rather than taken from the screen's own docstring.
+
+**The declaration side is unanimous.** Eighteen layouts across seven modelos use
+the typed slot, and **all eighteen declare a `product_identity_requirement`**.
+There is no counter-example of a typed envelope that omits it. The 31
+record-spelled layouts cannot declare one, because the pseudo-record carries no
+such field.
+
+**The consumer side confirms the consequence exactly.** In
+`application/filing/export.py`, `renders_filing_envelope` is set from
+`layout.filing_envelope is not None`. Where it is true the export REQUIRES both
+the prior domiciliation election and the product software identity, raising a
+`FilingExportError` if either is absent, and renders the envelope with them.
+Where it is false the branch is skipped entirely: nothing demands the identity
+and nothing stamps it.
+
+So a record-spelled envelope does not fail. It exports, silently, without the
+identity an enveloped filing is supposed to carry, and twenty of the thirty-one
+revisions in that state can be filed today. That is the same failure shape as
+this project's rule against silent under-declaration, expressed in a layout's
+spelling rather than in a value.
+
+### The step's figure for the healthy side is wrong
+
+The migration step describes the typed slot as one "twenty others already use".
+Measured: **eighteen** layouts, in eighteen revisions, across seven modelos -
+151, 200, 202, 222, 303, 322 and 353. Not twenty, and the figure matters because
+it is the population a migration would follow as its worked example.
