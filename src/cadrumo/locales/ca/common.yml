@@ -998,9 +998,13 @@ transactions:
     verified: Importació verificada amb èxit
 tui:
   aeat_sync:
+    aeat_observation_state:
+      accepted: Accepted
     area:
       evidence_comparison: Evidence comparison
       reconciliation: Reconciliation
+    availability:
+      locked: Locked
     census_category:
       activity: Activity
     census_status:
@@ -1020,6 +1024,8 @@ tui:
       unavailable: Unavailable
     local_filing_state:
       not_observed: Not observed
+    operation:
+      handed_off: Operation handed to the host.
     reconciliation_state:
       keep_local: Keep local
     source:
@@ -1032,6 +1038,7 @@ tui:
       joined: '%{entries}'
     zone:
       evidence_comparison: Evidence comparison
+      filed_declarations: Filed declarations
   declarations:
     availability:
       available: Disponible
