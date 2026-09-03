@@ -27,7 +27,6 @@ from .object_name_rehearsal import (
     _receipt_payload,  # pyright: ignore[reportPrivateUsage]
     _run_command,  # pyright: ignore[reportPrivateUsage]
     _snapshot,  # pyright: ignore[reportPrivateUsage]
-    _temporary_paths,  # pyright: ignore[reportPrivateUsage]
     _tree_digest,  # pyright: ignore[reportPrivateUsage]
     rehearse_object_name_component,
 )
@@ -109,6 +108,7 @@ def _command_environment(root: Path) -> dict[str, str]:
     environment["VIRTUAL_ENV"] = sys.prefix
     environment["UV_PROJECT_ENVIRONMENT"] = sys.prefix
     environment["PYTHONPATH"] = os.pathsep.join((str(root / "src"), str(root)))
+    environment["PYTHONDONTWRITEBYTECODE"] = "1"
     return environment
 
 

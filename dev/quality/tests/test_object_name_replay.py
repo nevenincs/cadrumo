@@ -228,6 +228,44 @@ def test_successful_generator_backed_replay_applies_and_reports_exact_owner_outp
     assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
 
 
+@pytest.mark.parametrize(
+    ("escaped_relative", "as_directory"),
+    (("dev/unexpected-empty", True), (".pytest_cache/escaped.bin", False)),
+)
+def test_generator_unallowlisted_entries_are_rolled_back_and_transaction_evidence_is_retained(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    escaped_relative: str,
+    as_directory: bool,
+) -> None:
+    repo, inventory, manifest, component, receipt = _generated_case(tmp_path)
+    transaction = repo.parent / f".{repo.name}.object-name-transaction-{receipt.receipt_id.removeprefix('sha256:')}"
+    original_run = replay_module._run_command
+
+    def escape_allowlist(*args: Any, cwd: Path, **kwargs: Any) -> Any:
+        outcome = original_run(*args, cwd=cwd, **kwargs)
+        if cwd == repo:
+            escaped = cwd / escaped_relative
+            if as_directory:
+                escaped.mkdir(parents=True)
+            else:
+                escaped.parent.mkdir(parents=True, exist_ok=True)
+                escaped.write_bytes(b"escaped")
+        return outcome
+
+    monkeypatch.setattr(replay_module, "_run_command", escape_allowlist)
+
+    with pytest.raises(ObjectNameReplayError, match="outside its reviewed allowlist"):
+        replay_object_name_component(
+            manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
+        )
+
+    assert not (repo / escaped_relative).exists()
+    assert (repo / "dev/generated.txt").read_bytes() == b"generated Widgets\n"
+    assert (repo / "src/example/contracts.py").read_bytes() == b"class Widgets:\n    pass\n"
+    assert transaction.is_dir()
+
+
 def test_successful_module_replay_uses_deterministic_mixed_transaction_order(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
