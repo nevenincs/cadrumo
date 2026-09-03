@@ -33,15 +33,25 @@ from .footnote_only_wire_facts import screen_authority as footnote_only_screen
 from .grade_earned import screen_authority as grade_screen
 from .modelo_capability import screen_authority as modelo_capability_screen
 from .monetary_scale import screen_authority as monetary_scale_screen
+from .note_label_scope import screen_corpus as note_label_scope_screen
 from .provenance_consistency import outside_reference_index
 from .provenance_consistency import screen_authority as provenance_screen
 from .revision_name_window import screen_authority as revision_name_screen
 from .rule_grounding_coverage import screen_authority as rule_grounding_screen
 from .temporal_site_agreement import screen_authority as temporal_site_screen
 from .type_convention_notes import screen_authority as type_convention_screen
+from .unnumbered_note_scope import screen_corpus as unnumbered_note_scope_screen
 from .wire_type_compatibility import screen_authority as wire_type_screen
 
-__all__ = ["FINDING_IDENTITY_CONTRACT", "SCREENS", "ScreenEntry", "run_screens"]
+__all__ = [
+    "CORPUS_SCREENS",
+    "FINDING_IDENTITY_CONTRACT",
+    "SCREENS",
+    "CorpusScreenEntry",
+    "ScreenEntry",
+    "run_corpus_screens",
+    "run_screens",
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -198,9 +208,46 @@ SCREENS: tuple[ScreenEntry, ...] = (
 )
 
 
+@dataclass(frozen=True, slots=True)
+class CorpusScreenEntry:
+    """One screen that reads the design corpus rather than the loaded authority.
+
+    A separate table because the signature genuinely differs - these take no
+    authority and no modelo set, since a transcription belongs to a design and
+    not to a revision - and forcing them through :class:`ScreenEntry` would mean
+    passing arguments they ignore. They are screens in every other sense, and
+    the enrolment gate treats both tables as one population: a module presenting
+    either entry point must appear in the matching table and in the contributor
+    README.
+    """
+
+    name: str
+    run: Callable[[], Sequence[object]]
+    counts: str
+
+
+CORPUS_SCREENS: tuple[CorpusScreenEntry, ...] = (
+    CorpusScreenEntry(
+        "note_label_scope",
+        note_label_scope_screen,
+        "designs where one note label is defined on more than one sheet",
+    ),
+    CorpusScreenEntry(
+        "unnumbered_note_scope",
+        unnumbered_note_scope_screen,
+        "designs carrying an unnumbered note, by the structure that bears on its scope",
+    ),
+)
+
+
 def run_screens(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> tuple[tuple[str, int, str], ...]:
     """Run every enrolled screen and return its name, count and what the count means."""
     return tuple((entry.name, len(entry.run(authority, modelo_ids)), entry.counts) for entry in SCREENS)
+
+
+def run_corpus_screens() -> tuple[tuple[str, int, str], ...]:
+    """Run every enrolled corpus screen and return its name, count and meaning."""
+    return tuple((entry.name, len(entry.run()), entry.counts) for entry in CORPUS_SCREENS)
 
 
 def main() -> int:

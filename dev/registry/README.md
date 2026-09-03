@@ -86,6 +86,8 @@ says which. What each one owns:
 | `footnote_only_wire_facts` | fields whose wire fact sits behind a footnote pointer rather than in their own cell |
 | `type_convention_notes` | design notes stating how a whole AEAT type is written to the wire |
 | `rule_grounding_coverage` | fields needing a reviewed rule for which no official wording was located at all |
+| `note_label_scope` | designs where one note label is defined on more than one sheet |
+| `unnumbered_note_scope` | designs carrying an unnumbered note, by the structure that bears on its scope |
 
 Three rules keep the suite honest.
 

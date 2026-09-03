@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import replace
+from pathlib import Path
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
 
@@ -26,6 +27,7 @@ from ....application.search.workbench import (
     WorkbenchSearchService,
 )
 from ....core.i18n.render import tr
+from ...full_screen_session_protocol import SELF_TEST_FLAG
 from ..__main__ import run
 from ..account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from ..app import CadrumoTuiApp
@@ -257,9 +259,22 @@ def test_entry_point_injects_and_rebuilds_the_installed_search_provider() -> Non
     assert len(calls) == 1
 
 
-def test_module_entry_refuses_missing_installed_root_composition(
+def test_module_entry_composes_the_production_session_rather_than_refusing(
     capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
 ) -> None:
-    """Bare execution fails closed instead of mounting an invented empty root."""
-    assert run([]) == 2
-    assert "workbench.root.composition_required" in capsys.readouterr().err
+    """Bare execution composes the installed session; it no longer fails closed.
+
+    The refusal this once asserted was the gap, not the contract: the module
+    is how ``aeat --tui`` starts, so an entry that printed
+    ``workbench.root.composition_required`` and exited meant the product had
+    no reachable workbench at all. What remains fail-closed is narrower and
+    still proven here: against an empty profile store the self-test completes
+    without inventing a profile to serve.
+    """
+    from ....tests.secure_sql import isolated_profile_storage_root
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        assert run([SELF_TEST_FLAG]) == 0
+
+    assert "workbench.root.composition_required" not in capsys.readouterr().err

@@ -102,7 +102,7 @@ def test_every_screen_module_is_enrolled_in_the_runner() -> None:
     """
     import pathlib
 
-    from ..analysis.screens import SCREENS
+    from ..analysis.screens import CORPUS_SCREENS, SCREENS
 
     analysis = pathlib.Path(__file__).resolve().parent.parent / "analysis"
     defining = {
@@ -110,7 +110,9 @@ def test_every_screen_module_is_enrolled_in_the_runner() -> None:
         for path in analysis.glob("*.py")
         if path.name != "screens.py" and "\ndef screen_authority(" in path.read_text(encoding=_UTF_8)
     }
-    enrolled = {entry.name for entry in SCREENS}
+    # Both tables. A corpus screen is a screen a reader must be able to find,
+    # and documenting only the authority ones would leave two undiscoverable.
+    enrolled = {entry.name for entry in SCREENS} | {entry.name for entry in CORPUS_SCREENS}
     assert defining == enrolled, f"screens not enrolled in the runner: {sorted(defining - enrolled)}"
 
 
@@ -146,11 +148,13 @@ def test_the_readme_screen_table_lists_exactly_the_enrolled_screens() -> None:
     import pathlib
     import re
 
-    from ..analysis.screens import SCREENS
+    from ..analysis.screens import CORPUS_SCREENS, SCREENS
 
     readme = (pathlib.Path(__file__).resolve().parent.parent / "README.md").read_text(encoding=_UTF_8)
     documented = set(re.findall(r"^\| `([a-z_]+)` \| ", readme, re.MULTILINE))
-    enrolled = {entry.name for entry in SCREENS}
+    # Both tables. A corpus screen is a screen a reader must be able to find,
+    # and documenting only the authority ones would leave two undiscoverable.
+    enrolled = {entry.name for entry in SCREENS} | {entry.name for entry in CORPUS_SCREENS}
     assert documented == enrolled, (
         f"README documents screens that do not run: {sorted(documented - enrolled)}; "
         f"screens that run but are undocumented: {sorted(enrolled - documented)}"
