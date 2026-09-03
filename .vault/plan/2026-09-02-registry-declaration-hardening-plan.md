@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:391a1e8a4eeec65fc598db2726fb5e5415d85f287b86993bedac833dd9e27452'
+body_hash: 'sha256:038a28a22af40bbca6c894236b0887325bde70e70f6c9218a17691774b55ef1c'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -105,8 +105,10 @@ audit first recorded, and two claims the audit made were withdrawn outright when
 screens are the evidence the Wave six decisions are written from, which is why they precede those
 decisions rather than waiting on them.
 
-The tenth screen answers the question that opened this work directly, because it turned out to be
-answerable from the declarations rather than needing judgement. Of 58 modelos, 22 declare
+The capability screen answers the question that opened this work directly, because it turned out to
+be answerable from the declarations rather than needing judgement. It is named rather than numbered:
+it was the tenth when this was written, and an eleventh would have silently re-pointed the sentence
+at a screen that answers something else. Of 58 modelos, 22 declare
 applicability only - the censal and informational ones, correctly carrying no filing machinery - and
 5 declare calculation only. Sixty-eight revisions reach filing grade with a layout. What that claim
 rests on is thinner than the number suggests: 31 layouts spell their envelope as a record where the
@@ -634,6 +636,8 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S340` - Make two screen labels name the unit their rows are, rather than the entity those rows are about; `dev/registry/analysis/screens.py`.
 - [x] `W06.P13.S341` - Carry the report-versus-finding distinction into the contributor README, and decline to gate the label wording; `dev/registry/README.md`.
 - [x] `W06.P13.S342` - Add the three screen-property gates the criterion had not caught up with, naming properties before totals; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S343` - Replace the criterion's leading count and its ordinal back-references, which pointed at positions in a list that grew; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S344` - Name the screen the description referred to by position, and sweep for the same shape elsewhere; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md dev/registry`.
 
 ### Phase `W06.P14` - declaration contract migration
 

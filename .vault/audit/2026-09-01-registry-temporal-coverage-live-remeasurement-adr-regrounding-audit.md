@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:9a1c986aacb14fe32819d65adbf7fab54f5a86aa4fbc00a1e86cd4c93f6352a1'
+body_hash: 'sha256:3c4e688753ecf074effd973625e119333281c769c7a26e555cc28d0dfaf5901b'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8795,3 +8795,55 @@ finding types do not carry. The fact-count gate exists because the
 condition-count gate deliberately skipped the fact bullets, and one screen said
 four where it listed five. None was designed; each was the shape of a specific
 mistake, made durable.
+
+### i-added-three-properties-and-left-the-nine-in-front-of-them | high | The same stale-count defect, committed inside the edit correcting it, plus two ordinals pointing at positions that had moved
+
+Updating the screens criterion to name three gates it had not caught up with, I
+appended the properties and left the sentence opening "Nine gates cover this".
+The paragraph then listed twelve things behind a promise of nine, which is worse
+than the understatement it replaced: an undercount invites a recount, while a
+number contradicted by the list beneath it tells the reader one of the two is
+lying and does not say which.
+
+Two further references were broken by the same edit and are the reason this is
+worth recording rather than quietly fixing. The paragraph explained why "the
+seventh" gate reads by running rather than parsing, and why "the eighth" exists
+because the seventh was not enough. Those ordinals addressed positions in a
+list, so appending to the list silently re-pointed them - the seventh became a
+different gate than the sentence describes. They now name the gates: the
+kind-naming gate and the condition-count gate.
+
+Positional references into a list that can grow are the same defect as a frozen
+count, in a form that fails more quietly. A stale number is visibly wrong to
+anyone who counts; a stale ordinal still resolves, to the wrong thing, and reads
+as correct. The criterion now names properties and puts its total behind them,
+and refers to gates by what they do.
+
+### one-more-positional-reference-into-a-list-that-can-grow-and-the-rest-are-safe | medium | "The tenth screen" now names itself; the other ordinals are local pairs and stay
+
+Having broken two ordinal references by appending to the list they indexed, the
+plan was swept for the same shape. Seven ordinal phrases appear in it and six
+are safe: they are local pairs - the first half and the second half of a
+criterion stated in the same sentence, the first and second of two defects named
+in the line above - where the referent is fixed by the sentence rather than by a
+position in a list somebody can extend.
+
+One was not. The description opened a paragraph with "the tenth screen answers
+the question that opened this work", indexing into an enumeration that grows
+whenever a screen is enrolled. It now names the capability screen, and says why:
+it was the tenth when written, and an eleventh would have re-pointed the sentence
+at a screen answering something else, silently and while still reading as
+correct.
+
+The development tooling carries none of this shape - no docstring in the
+registry package refers to a screen, gate, condition or rule by position. That
+is worth recording as a negative result, because the sweep was cheap and the
+absence is not obvious: prose describing a numbered list naturally reaches for
+ordinals, and this package's docstrings consistently name their subjects
+instead.
+
+The distinction that makes six of seven safe is worth keeping: an ordinal is
+fine when its list is in the same sentence and cannot grow, and dangerous when
+it indexes something enumerable elsewhere. The test is not whether the phrase
+looks positional but whether anything outside the sentence can change what it
+points at.
