@@ -39,10 +39,34 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 __all__ = [
+    "YEAR_LEVEL_TEMPORAL_SITES",
     "TemporalSiteFinding",
     "screen_authority",
     "site_agreement_findings",
 ]
+
+#: Every declared field that states which YEARS a revision serves, as a dotted
+#: path from the revision. Data rather than prose, because the number of places
+#: one temporal fact is restated is the measurement this whole package exists to
+#: support, and a figure carried only in a sentence cannot be re-derived.
+#:
+#: The boundary is year-level claims. A deadline window also carries `opens_on`,
+#: `closes_on` and `payment_cutoff_on`, which say WHEN within a year a filing is
+#: due rather than WHICH years the revision serves; they are dates, not another
+#: statement of the window, and folding them in would inflate the count with
+#: facts that cannot disagree with it.
+#:
+#: The revision's directory name is a further site and is deliberately absent:
+#: it is not a declared field, and the name-against-window comparison is owned
+#: by the sibling screen. Counting it here would give one condition two owners.
+YEAR_LEVEL_TEMPORAL_SITES: tuple[str, ...] = (
+    "valid_from",
+    "valid_to",
+    "period_selector.year_from",
+    "period_selector.year_to",
+    "period_selector.years",
+    "deadline_windows.filing_year",
+)
 
 
 @dataclass(frozen=True, slots=True)

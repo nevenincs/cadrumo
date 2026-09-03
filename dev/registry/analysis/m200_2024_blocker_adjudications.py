@@ -102,12 +102,28 @@ def render_canonical_declaration(authority: CompiledM200BlockerAuthority, casill
     return "\n".join(lines)
 
 
-def verify_canonical_declarations(authority: CompiledM200BlockerAuthority) -> None:
-    root = bundled_path("registry", "aeat", "modelos", "200", "revisions", "2024", "casillas")
+def verify_canonical_declarations(
+    authority: CompiledM200BlockerAuthority, *, casillas_root: Path | None = None
+) -> None:
+    root = (
+        bundled_path("registry", "aeat", "modelos", "200", "revisions", "2024", "casillas")
+        if casillas_root is None
+        else casillas_root
+    )
     for row in authority.adjudications:
         path = root / f"c{row.casilla_id}.toml"
         if not path.is_file() or path.read_text(encoding="utf-8") != render_canonical_declaration(authority, row.casilla_id):
             raise RegistryValidationError(f"M200/2024 blocker declaration {row.casilla_id!r} is not compiler-identical")
+
+
+def promoted_candidate_ids(
+    authority: CompiledM200BlockerAuthority, *, casillas_root: Path | None = None
+) -> frozenset[str]:
+    """Return candidates only after a fresh equal receipt and byte check."""
+    if authority != compile_m200_2024_blocker_authority():
+        raise RegistryValidationError("M200/2024 blocker compiler receipt/provenance drifted")
+    verify_canonical_declarations(authority, casillas_root=casillas_root)
+    return frozenset(row.casilla_id for row in authority.adjudications)
 
 
 def _require_header(raw: dict[str, object]) -> None:
@@ -150,7 +166,14 @@ def _require_partition(rows: tuple[Adjudication, ...]) -> None:
     if promoted_candidate_ids(s12) != S12_MEMBERS:
         raise RegistryValidationError("M200/2024 S12 receipt is not exact")
     audits = audit_bundled_restorations()
-    unique = frozenset(row.casilla_id for row in audits if row.cross_revision_status == "unique_non_authoritative")
+    # The S12 template receipt also settles the one candidate that the older
+    # diagnostic classifies as cross-revision-unique; S13 therefore owns the
+    # remaining 36 unique proposals, not a second overlapping receipt.
+    unique = frozenset(
+        row.casilla_id
+        for row in audits
+        if row.cross_revision_status == "unique_non_authoritative" and row.casilla_id not in S12_MEMBERS
+    )
     blockers = frozenset(row.casilla_id for row in audits if row.cross_revision_status in BLOCKER_STATUSES)
     if len(unique) != S13_EXPECTED_COUNT or len(audits) != len(S12_MEMBERS | unique | ids) or blockers != ids | S12_CONFLICT_RECEIPT:
         raise RegistryValidationError("M200/2024 S12/S13/S14/S15 partition is not exhaustive")

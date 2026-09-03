@@ -526,9 +526,14 @@ def build_m200_source_rebind_plan(census: M200ReconciliationCensus) -> M200Sourc
         compile_m200_2024_same_template_authority,
         promoted_candidate_ids,
     )
+    from .m200_2024_blocker_adjudications import (
+        compile_m200_2024_blocker_authority,
+        promoted_candidate_ids as promoted_blocker_candidate_ids,
+    )
 
     compiler_authority = compile_m200_2024_same_template_authority()
-    receipted_current_ids = promoted_candidate_ids(compiler_authority)
+    blocker_authority = compile_m200_2024_blocker_authority()
+    receipted_current_ids = promoted_candidate_ids(compiler_authority) | promoted_blocker_candidate_ids(blocker_authority)
     rebinds: list[M200SourceRebind] = []
     verified_current_design_ids: list[str] = []
     orphans: list[str] = []
@@ -550,15 +555,7 @@ def build_m200_source_rebind_plan(census: M200ReconciliationCensus) -> M200Sourc
                 )
             )
         elif row.source_ref_state == "current_design":
-            if not row.fields:
-                raise RegistryValidationError(
-                    f"source rebind current-design declaration {row.casilla_id!r} lacks exact target-map ownership"
-                )
-            if row.casilla_id not in receipted_current_ids:
-                raise RegistryValidationError(
-                    f"source rebind plan refuses unreceipted current-design declaration {row.casilla_id!r}"
-                )
-            verified_current_design_ids.append(row.casilla_id)
+            verified_current_design_ids.append(_receipted_current_design_id(row, receipted_current_ids))
         elif row.source_ref_state == "unmapped_no_rebind":
             if row.fields:
                 raise RegistryValidationError(
@@ -578,15 +575,15 @@ def build_m200_source_rebind_plan(census: M200ReconciliationCensus) -> M200Sourc
         _require_rebind_source_refs(item)
     if (
         len(planned) != 3171
-        or len(verified_current_design) != 4
+        or len(verified_current_design) != 120
         or len(orphans) != 2
-        or len(candidates) != 152
+        or len(candidates) != 36
         or len(census.rows) != 3329
     ):
         raise RegistryValidationError(
             "Modelo 200 source rebind population drifted: "
-            "expected 3171 rebinds, 4 verified current-design declarations, 2 refused orphans, "
-            f"152 remaining candidates, and 3329 rows; found {len(planned)}, {len(verified_current_design)}, "
+            "expected 3171 rebinds, 120 verified current-design declarations, 2 refused orphans, "
+            f"36 remaining candidates, and 3329 rows; found {len(planned)}, {len(verified_current_design)}, "
             f"{len(orphans)}, {len(candidates)}, and {len(census.rows)}",
         )
     if frozenset(verified_current_design) != receipted_current_ids:
@@ -638,8 +635,8 @@ def apply_m200_source_rebind_plan(
     """
     _require_rebind_plan_identity(plan)
     _require_unique_identifiers(tuple(item.casilla_id for item in plan.rebinds), label="source rebind output")
-    if len(plan.rebinds) != 3171 or len(plan.verified_current_design_ids) != 4 or len(plan.refused_orphan_ids) != 2:
-        raise RegistryValidationError("source rebind plan does not carry the complete 3171/4/2 population")
+    if len(plan.rebinds) != 3171 or len(plan.verified_current_design_ids) != 120 or len(plan.refused_orphan_ids) != 2:
+        raise RegistryValidationError("source rebind plan does not carry the complete 3171/120/2 population")
     partitions = (
         {item.casilla_id for item in plan.rebinds},
         set(plan.verified_current_design_ids),
@@ -808,12 +805,33 @@ def _require_verified_current_design(plan: M200SourceRebindPlan, casillas_root: 
         promoted_candidate_ids,
     )
 
+    from .m200_2024_blocker_adjudications import (
+        compile_m200_2024_blocker_authority,
+        promoted_candidate_ids as promoted_blocker_candidate_ids,
+    )
+
     authority = compile_m200_2024_same_template_authority()
-    verified = promoted_candidate_ids(authority, casillas_root=casillas_root)
+    blocker_authority = compile_m200_2024_blocker_authority()
+    verified = promoted_candidate_ids(authority, casillas_root=casillas_root) | promoted_blocker_candidate_ids(
+        blocker_authority, casillas_root=casillas_root
+    )
     if verified != frozenset(plan.verified_current_design_ids):
         raise RegistryValidationError(
             "source rebind verified current-design declarations drifted from compiler receipt"
         )
+
+
+def _receipted_current_design_id(row: M200ReconciliationRow, receipted_current_ids: frozenset[str]) -> str:
+    """Return a current-design ID only when exact map ownership and receipt agree."""
+    if not row.fields:
+        raise RegistryValidationError(
+            f"source rebind current-design declaration {row.casilla_id!r} lacks exact target-map ownership"
+        )
+    if row.casilla_id not in receipted_current_ids:
+        raise RegistryValidationError(
+            f"source rebind plan refuses unreceipted current-design declaration {row.casilla_id!r}"
+        )
+    return row.casilla_id
 
 
 def _replace_rebind_tree(source: Path, destination: Path) -> None:
@@ -1334,9 +1352,15 @@ def _require_reviewed_candidate_promotions(collisions: frozenset[str]) -> None:
         compile_m200_2024_same_template_authority,
         promoted_candidate_ids,
     )
+    from .m200_2024_blocker_adjudications import (
+        compile_m200_2024_blocker_authority,
+        promoted_candidate_ids as promoted_blocker_candidate_ids,
+    )
 
     authority = compile_m200_2024_same_template_authority()
-    if collisions != promoted_candidate_ids(authority):
+    blocker_authority = compile_m200_2024_blocker_authority()
+    receipted = promoted_candidate_ids(authority) | promoted_blocker_candidate_ids(blocker_authority)
+    if collisions != receipted:
         raise RegistryValidationError(
             "current declarations collide with non-authoritative candidates outside reviewed target adjudications: "
             f"{sorted(collisions)!r}"

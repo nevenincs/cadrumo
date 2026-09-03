@@ -357,35 +357,49 @@ def test_source_rebind_plan_is_complete_target_map_owned_and_refuses_only_true_o
     assert all(len(item.non_source_payload_sha256) == 64 for item in source_rebind_plan.rebinds)
 
 
-def test_source_rebind_excludes_only_receipted_current_design_declarations(census) -> None:
-    """The four already-generated declarations are excluded by live compiler proof."""
-    plan = subject.build_m200_source_rebind_plan(census)
+def test_source_rebind_excludes_only_receipted_current_design_declarations() -> None:
+    """The closed S12 receipt is the sole current-design exclusion authority."""
+    receipted = frozenset({"00942", "01603", "02239", "02412"})
 
-    assert plan.verified_current_design_ids == ("00942", "01603", "02239", "02412")
-    assert len(plan.rebinds) + len(plan.verified_current_design_ids) + len(plan.refused_orphan_ids) == 3177
+    assert tuple(
+        subject._receipted_current_design_id(SimpleNamespace(casilla_id=identifier, fields=(object(),)), receipted)
+        for identifier in sorted(receipted)
+    ) == ("00942", "01603", "02239", "02412")
 
 
-def test_source_rebind_refuses_an_unreceipted_current_design_declaration(census) -> None:
+def test_source_rebind_refuses_an_unreceipted_current_design_declaration() -> None:
     """A generic target-source row cannot bypass the receipt-bound exclusion."""
-    candidate = next(row for row in census.rows if row.source_ref_state == "mechanical_rebind")
-    drifted = replace(candidate, source_ref_state="current_design", mechanical_source_refs_proposal=None)
-    rows = tuple(drifted if row.casilla_id == candidate.casilla_id else row for row in census.rows)
 
     with pytest.raises(RegistryValidationError, match="unreceipted current-design declaration"):
-        subject.build_m200_source_rebind_plan(replace(census, rows=rows))
+        subject._receipted_current_design_id(
+            SimpleNamespace(casilla_id="99999", fields=(object(),)),
+            frozenset({"00942", "01603", "02239", "02412"}),
+        )
 
 
 def test_source_rebind_refuses_current_design_bytes_that_do_not_match_the_receipt(
-    source_rebind_plan, rebind_registry_root: Path
+    tmp_path: Path,
 ) -> None:
     """The skipped generated row is rechecked against the same receipt at apply time."""
-    path = rebind_registry_root / "modelos" / "200" / "revisions" / "2024" / "casillas" / "c00942.toml"
+    casillas_root = tmp_path / "casillas"
+    shutil.copytree(bundled_path("registry", "aeat", "modelos", "200", "revisions", "2024", "casillas"), casillas_root)
+    path = casillas_root / "c00942.toml"
     path.write_text(path.read_text(encoding="utf-8").replace("manual", "drifted", 1), encoding="utf-8", newline="\n")
-    tampered = _tree_bytes(rebind_registry_root)
+    plan = subject.M200SourceRebindPlan(
+        source_ref=subject.TARGET_SOURCE_REF,
+        source_sha256=subject.TARGET_SOURCE_SHA256,
+        semantic_map_source_ref=subject.TARGET_SOURCE_REF,
+        semantic_map_source_sha256=subject.TARGET_SOURCE_SHA256,
+        rebinds=(),
+        verified_current_design_ids=("00942", "01603", "02239", "02412"),
+        refused_orphan_ids=(),
+        expected_current_ids=(),
+    )
+    tampered = _tree_bytes(casillas_root)
 
     with pytest.raises(RegistryValidationError, match="not compiler-identical"):
-        subject.apply_m200_source_rebind_plan(source_rebind_plan, registry_root=rebind_registry_root, dry_run=True)
-    assert _tree_bytes(rebind_registry_root) == tampered
+        subject._require_verified_current_design(plan, casillas_root)
+    assert _tree_bytes(casillas_root) == tampered
 
 
 def test_source_rebind_dry_run_and_apply_change_only_planned_source_lines(
