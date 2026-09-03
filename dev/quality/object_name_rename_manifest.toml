@@ -1,5 +1,5 @@
 schema_version = 1
-inventory_digest = "sha256:9dcf780d584f30a0ce529d7950a9d85911fc7cd512b7713a6ee70257580539c3"
+inventory_digest = "sha256:fd103369a838929743f2741bef18294727242d7cb923c3d2be71bee7743871ee"
 
 [[operations]]
 operation_id = "rename-aeat-domain-section"
@@ -135,43 +135,6 @@ moves = []
 [[operations.preconditions]]
 path = "src/cadrumo/core/external_constants.py"
 sha256 = "sha256:903a1ec379e4754426fc9cab19abb1321b0ca1111bdd603afbd31b66b99d0db2"
-
-[[operations]]
-operation_id = "rename-external-constant-registry"
-finding_id = "sha256:d60e9eb59b24868c3123edcdcdf42d69cb0bbbf572c554d0b725032aa8b160cd"
-operation_kind = "symbol-rename"
-disposition = "lexical-singular"
-lifecycle = "reviewed"
-old_locator = "class:cadrumo.core.external_constants.ExternalConstants#binding=1"
-old_path = "src/cadrumo/core/external_constants.py"
-new_locator = "class:cadrumo.core.external_constants.ExternalConstantRegistry#binding=1"
-new_path = "src/cadrumo/core/external_constants.py"
-owner = "core"
-rationale = "The module docstring already describes the root model as the external constants registry; ExternalConstants collides in spirit with the module's own name and reads like a plural collection rather than the single typed registry root."
-expected_reference_classes = ["definition", "static-import", "type-only-import"]
-changed_paths = [
-  "src/cadrumo/core/config.py",
-  "src/cadrumo/core/external_constants.py",
-  "src/cadrumo/core/tests/test_external_constants.py",
-]
-generator_commands = []
-focused_gates = [
-  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/core/tests/test_external_constants.py", "-q"],
-  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/core/config.py", "src/cadrumo/core/external_constants.py", "src/cadrumo/core/tests/test_external_constants.py"],
-]
-moves = []
-
-[[operations.preconditions]]
-path = "src/cadrumo/core/config.py"
-sha256 = "sha256:344054b76cc545421db876e152f8ed2a0f0504f255c58dd020bc78da9af6fae1"
-
-[[operations.preconditions]]
-path = "src/cadrumo/core/external_constants.py"
-sha256 = "sha256:903a1ec379e4754426fc9cab19abb1321b0ca1111bdd603afbd31b66b99d0db2"
-
-[[operations.preconditions]]
-path = "src/cadrumo/core/tests/test_external_constants.py"
-sha256 = "sha256:e3e9f64674c96fa2989de7c4c28bf24be4f636158c6069ecc6fa468ab4ae980c"
 
 [[operations]]
 operation_id = "rename-google-oauth-scope-section"

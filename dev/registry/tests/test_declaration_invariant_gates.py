@@ -105,15 +105,26 @@ def test_every_screen_module_is_enrolled_in_the_runner() -> None:
     from ..analysis.screens import CORPUS_SCREENS, SCREENS
 
     analysis = pathlib.Path(__file__).resolve().parent.parent / "analysis"
+    # BOTH entry points, not only the one the first screens happened to use. A
+    # screen reading the design corpus takes no authority and no modelo set, so
+    # it presents `screen_corpus` instead - and while this gate looked for one
+    # name, two such screens sat unenrolled and it passed. That is the failure
+    # this campaign keeps finding in its own instruments: a check that
+    # recognises one shape of a thing and reports its blind spot as absence.
+    entry_points = ("\ndef screen_authority(", "\ndef screen_corpus(")
     defining = {
         path.stem
         for path in analysis.glob("*.py")
-        if path.name != "screens.py" and "\ndef screen_authority(" in path.read_text(encoding=_UTF_8)
+        if path.name != "screens.py"
+        and any(entry in path.read_text(encoding=_UTF_8) for entry in entry_points)
     }
     # Both tables. A corpus screen is a screen a reader must be able to find,
     # and documenting only the authority ones would leave two undiscoverable.
     enrolled = {entry.name for entry in SCREENS} | {entry.name for entry in CORPUS_SCREENS}
-    assert defining == enrolled, f"screens not enrolled in the runner: {sorted(defining - enrolled)}"
+    assert defining == enrolled, (
+        f"screens not enrolled in a runner table: {sorted(defining - enrolled)}; "
+        f"enrolled but no longer defining a screen: {sorted(enrolled - defining)}"
+    )
 
 
 def test_no_continuity_chain_asserts_identity_across_two_grammars(
