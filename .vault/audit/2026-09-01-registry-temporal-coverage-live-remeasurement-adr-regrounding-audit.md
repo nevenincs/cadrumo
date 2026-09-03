@@ -12510,3 +12510,36 @@ The earlier conclusion was reached honestly on the population then visible, and
 it is wrong for the same reason several figures in this campaign were: the walk
 that produced it saw eight families of nineteen. A conclusion drawn from a
 partial walk is not merely imprecise; this one pointed the opposite way.
+
+
+## The reference worklist, measured on the complete walk
+
+This worklist has been published three times on three different populations. The
+figures below are the first measured with every family the schema declares, taken
+on 2026-09-04 from `python -m dev.registry.analysis.provenance_consistency`:
+
+| figure | 8 families | + deadline windows | complete walk |
+| ------ | ---------- | ------------------ | ------------- |
+| modelo-and-reference pairs | 414 | 472 | **520** |
+| absent from every revision of their modelo | 213 | 224 | **256** |
+| absent from only some | 201 | 248 | **264** |
+| cited by exactly one child | 17 | 55 | **38** |
+| cited by a hundred children or more | 99 | - | **104** |
+
+**The single-child population moved in both directions and ended below its
+middle value**, which is the figure worth understanding. Widening a walk adds
+references - families that cite something their manifest omits - and
+simultaneously removes references from the single-child bucket, because a
+reference thought to have one citer turns out to have several once the families
+citing it are read. The first widening added more than it moved; the second moved
+more than it added.
+
+The 38 divide by citing family as 14 deadline windows, 7 constructs, 6
+applicability rules, 3 casillas, 2 parameters and the remainder singly. That the
+deadline windows still lead is consistent with the two annual series read
+earlier: a window cites the orden governing its own year, and no other child has
+reason to name it.
+
+This is the last of the provenance figures to be re-measured on the complete
+walk. Every one of them moved, three of them twice, and none moved because the
+registry changed.

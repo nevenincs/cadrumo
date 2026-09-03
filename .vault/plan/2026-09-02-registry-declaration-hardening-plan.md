@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:8505d97005658187ed21ef9a75580cbdf47bdb86019c29fc61f29331cb4e4090'
+body_hash: 'sha256:9a3f9b244cfd35a49f54ee7f698e0d77ff36690c25d7d6b802d4d60a4a2ce581'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -505,6 +505,7 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S455` - Check the packages other hand-written schema list and record it complete: the six year-level temporal sites are exactly what the schema yields, and the one near-miss states a period offset rather than which years a revision serves; `dev/registry/analysis/temporal_site_agreement.py`.
 - [x] `W04.P09.S456` - Record what the eleven newly walked families cite, led by projection endpoints at 760 findings, and re-test the dangling-reference result on the widened population where all 520 pairs still resolve in their catalogues; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W04.P09.S457` - Re-test the manifest-children relationship with every family walked and correct the earlier reading: 102 of 128 revisions have a manifest contained in their childrens citations and 37 agree exactly, so the corpus was authored to a containment the citing-side screen tests in reverse; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W04.P09.S458` - Publish the reference worklist measured on the complete walk with its date and command: 520 pairs, 256 systemic, 38 single-child where the single-child count fell as the walk widened because references thought to have one citer turned out to have several; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 
