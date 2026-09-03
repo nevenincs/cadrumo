@@ -3,18 +3,120 @@
 from __future__ import annotations
 
 import ast
+from dataclasses import asdict, dataclass
 from datetime import timedelta
 from pathlib import Path
+from typing import Final
 
 import pytest
 from textual.containers import VerticalScroll
 from textual.widgets import DataTable, Static
 
+from .....core.external_constants import OutputLanguage
 from ...components.host import ScreenHostApp
+from ...components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
 from ..home_candidates import DueDrivenHomeCandidateScreen, TaskLauncherHomeCandidateScreen
 from ..home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+_MEASUREMENT_SIZES: Final[tuple[tuple[int, int], ...]] = (
+    (80, 24),
+    (100, 30),
+    (120, 40),
+    (200, 50),
+)
+_MEASUREMENT_THEMES: Final[tuple[tuple[str, str], ...]] = (
+    ("light", CADRUMO_LIGHT_THEME_NAME),
+    ("dark", CADRUMO_DARK_THEME_NAME),
+)
+_MEASUREMENT_LOCALES: Final[tuple[OutputLanguage, ...]] = tuple(OutputLanguage)
+_MEASUREMENT_SCENARIOS: Final[tuple[HomeFixtureScenario, ...]] = (
+    HomeFixtureScenario.READY,
+    HomeFixtureScenario.LOCKED,
+    HomeFixtureScenario.STALE,
+    HomeFixtureScenario.NEVER_CAPTURED,
+    HomeFixtureScenario.EMPTY,
+    HomeFixtureScenario.BLOCKED,
+)
+
+
+@dataclass(frozen=True, slots=True)
+class CandidateFrameMetric:
+    """Machine-readable compositor reading retained for the next comparison wave."""
+
+    candidate: str
+    scenario: str
+    width: int
+    height: int
+    theme: str
+    locale: str
+    rendered_line_count: int
+    maximum_rendered_line_width: int
+    horizontal_overflow: bool
+    unscrollable_overflow: bool
+    geometry_findings: tuple[str, ...]
+    visible_vertical_scroll_owner_ids: tuple[str, ...]
+    page_scroll_owner_id: str | None
+    nested_scroll_owner_ids: tuple[str, ...]
+    screen_scrolls: bool
+    focus_chain: tuple[str | None, ...]
+    focused_id: str | None
+    semantic_target_ids: tuple[str, ...]
+    nearest_deadline_visible: bool
+
+
+@dataclass(frozen=True, slots=True)
+class CandidateKeyboardMetric:
+    """Machine-readable pilot readings for the named operator keystrokes."""
+
+    candidate: str
+    scenario: str
+    width: int
+    height: int
+    theme: str
+    locale: str
+    top_action_target: str | None
+    second_declaration_target: str | None
+    ledger_or_destination_target: str | None
+    nearest_deadline_visible_before_navigation: bool
+    nearest_deadline_visible_after_navigation: bool
+    ctrl_p_effect: str
+    f3_effect: str
+    escape_closed: bool
+    focus_chain: tuple[str | None, ...]
+    tab_reached_ids: tuple[str | None, ...]
+    offered_keys: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class CandidateRestorationMetric:
+    """Machine-readable semantic-selection reading across resize and reorder."""
+
+    candidate: str
+    selected_before_resize: str | None
+    selected_after_resize: str | None
+    selected_after_reorder: str | None
+    original_focus_chain: tuple[str | None, ...]
+    reordered_focus_chain: tuple[str | None, ...]
+
+
+# These are deliberately module-level test records.  S374 can import this
+# module after the measurement lane and serialise them without scraping a
+# terminal screenshot or depending on pytest's human output.
+CANDIDATE_FRAME_METRICS: list[CandidateFrameMetric] = []
+CANDIDATE_KEYBOARD_METRICS: list[CandidateKeyboardMetric] = []
+CANDIDATE_RESTORATION_METRICS: list[CandidateRestorationMetric] = []
+
+
+def candidate_metrics_payload() -> dict[str, tuple[dict[str, object], ...]]:
+    """Return the captured readings in a JSON-compatible, stable shape."""
+    return {
+        "frames": tuple(asdict(metric) for metric in CANDIDATE_FRAME_METRICS),
+        "keyboard": tuple(asdict(metric) for metric in CANDIDATE_KEYBOARD_METRICS),
+        "restoration": tuple(asdict(metric) for metric in CANDIDATE_RESTORATION_METRICS),
+    }
 
 
 @pytest.mark.asyncio

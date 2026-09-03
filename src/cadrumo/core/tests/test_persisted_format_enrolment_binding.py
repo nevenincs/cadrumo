@@ -111,6 +111,17 @@ CONSTANTS_OUTSIDE_THE_INVENTORY: Final[Mapping[str, str]] = {
         "does, which was measured rather than assumed. The inventory governs bytes an operator's "
         "use produces and the product promises to keep reading."
     ),
+    "SUPPORTED_PROFILE_SCHEMA_VERSION": (
+        "Defaults schema_version on the contribuyente domain models (RentaFamilyProfile, "
+        "TaxResidence), which are DERIVED in memory at calculation time and never stored: "
+        "profile_binding builds one from the fact mapping per calculation, no persistence "
+        "adapter references either model, and neither appears as a field on a model that is "
+        "persisted -- all three checked rather than assumed. The taxpayer facts these are "
+        "derived FROM are the persisted record, and that format is enrolled separately under "
+        "profile_record via PROFILE_RECORD_SCHEMA_VERSION. Note the two names are close enough "
+        'to mislead and hold different values (2 there, "1" here) because they version '
+        "different things: the stored record, and this derived view of it."
+    ),
     "SIDECAR_SCHEMA_VERSION": "Bundled registry source sidecar; ships with the code, same grounds as the corpus.",
     "ENVELOPE_SCHEMA_VERSION": "The CLI JSON wire envelope. A transport contract, never written to disk as a record.",
     "SECURE_REPLAY_PROOF_SCHEMA_VERSION": (

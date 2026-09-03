@@ -436,7 +436,10 @@ class WorkbenchSearchResponse(BaseModel):
 
 
 def _safe_search_terms(document: WorkbenchSearchDocument) -> tuple[str, ...]:
-    terms = [document.kind.value.replace("_", " "), document.label_key.value.removeprefix("search.").replace("_", " ")]
+    terms: list[str] = [
+        document.kind.value.replace("_", " "),
+        document.label_key.value.removeprefix("search.").replace("_", " "),
+    ]
     terms.extend(document.status.value.split("."))
     if document.address is not None:
         terms.extend(
