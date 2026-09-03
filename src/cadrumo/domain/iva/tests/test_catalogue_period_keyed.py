@@ -8,8 +8,9 @@ from shutil import copy2, copytree
 
 import pytest
 
+from ....core.hashing import sha256_file
 from ....core.resources.bundled_data import bundled_path
-from .._grounding import registry_catalogues
+from .._grounding import legal_evidence_fingerprints, registry_catalogues
 from ..catalogue import bundled_iva_catalogue, iva_catalogue_years, load_iva_catalogue, resolve_catalogue
 from ..errors import IvaCatalogueError
 
@@ -112,6 +113,29 @@ def test_loader_refuses_a_verified_quotation_absent_from_its_corpus(tmp_path: Pa
 
     with pytest.raises(IvaCatalogueError, match="quotation_absent_from_corpus"):
         load_iva_catalogue(target)
+
+
+def test_evidence_key_hashes_each_shared_document_and_sidecar_once() -> None:
+    """Repeated LIVA citations retain distinct legal records, not repeat I/O."""
+    catalogue = bundled_iva_catalogue()
+    legal, _sources, source_root = registry_catalogues()
+    hashed_paths: list[Path] = []
+
+    fingerprints = legal_evidence_fingerprints(
+        (citation.legal_reference for regulation in catalogue for citation in regulation.citations),
+        legal=legal,
+        source_root=source_root,
+        file_hasher=lambda path: _counted_hash(path, hashed_paths),
+    )
+
+    evidence_paths = {fingerprint[1] for fingerprint in fingerprints if fingerprint[0] == "evidence"}
+    assert len(hashed_paths) == len(set(hashed_paths)) == len(evidence_paths)
+    assert hashed_paths.count(bundled_path("corpus", "normatives", "html", "ley-37-1992.html").resolve()) == 1
+
+
+def _counted_hash(path: Path, hashed_paths: list[Path]) -> str:
+    hashed_paths.append(path)
+    return sha256_file(path)
 
 
 def test_loader_cache_invalidates_after_cited_corpus_evidence_changes(tmp_path: Path) -> None:

@@ -46,7 +46,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -95,6 +95,7 @@ def legal_evidence_fingerprints(
     *,
     legal: Mapping[str, LegalReference],
     source_root: Path,
+    file_hasher: Callable[[Path], str] = sha256_file,
 ) -> tuple[tuple[str, ...], ...]:
     """Fingerprint cited legal records and the corpus bytes their checks read.
 
@@ -105,6 +106,7 @@ def legal_evidence_fingerprints(
     verifier remains responsible for producing the user-facing refusal.
     """
     fingerprints: list[tuple[str, ...]] = []
+    fingerprinted_evidence_paths: set[Path] = set()
     for reference_id in sorted(set(reference_ids)):
         reference = legal.get(reference_id)
         if reference is None:
@@ -113,19 +115,36 @@ def legal_evidence_fingerprints(
         fingerprints.append(
             ("legal", reference_id, content_hash_hex(reference.model_dump(mode="json"))),
         )
-        corpus_path = reference.corpus_ref.partition("#")[0]
-        document = source_root / corpus_path
-        fingerprints.extend(_evidence_file_fingerprint(document, source_root=source_root))
-        fingerprints.extend(
-            _evidence_file_fingerprint(
-                document.with_name(document.name + ".extracted.json"),
-                source_root=source_root,
-            ),
-        )
+        document = source_root / reference.corpus_ref.partition("#")[0]
+        for evidence_path in (document, document.with_name(document.name + ".extracted.json")):
+            resolved_evidence_path = _resolved_evidence_path(evidence_path)
+            if resolved_evidence_path in fingerprinted_evidence_paths:
+                continue
+            fingerprinted_evidence_paths.add(resolved_evidence_path)
+            fingerprints.extend(
+                _evidence_file_fingerprint(
+                    evidence_path,
+                    source_root=source_root,
+                    file_hasher=file_hasher,
+                ),
+            )
     return tuple(fingerprints)
 
 
-def _evidence_file_fingerprint(path: Path, *, source_root: Path) -> tuple[tuple[str, ...], ...]:
+def _resolved_evidence_path(path: Path) -> Path:
+    """Return a canonical deduplication key without masking later diagnostics."""
+    try:
+        return path.resolve()
+    except OSError:
+        return path.absolute()
+
+
+def _evidence_file_fingerprint(
+    path: Path,
+    *,
+    source_root: Path,
+    file_hasher: Callable[[Path], str],
+) -> tuple[tuple[str, ...], ...]:
     """Describe one cited corpus file without pre-empting verifier diagnostics."""
     try:
         resolved_root = source_root.resolve()
@@ -136,7 +155,7 @@ def _evidence_file_fingerprint(path: Path, *, source_root: Path) -> tuple[tuple[
         return (("evidence", str(path), "escapes_source_root"),)
     try:
         stat = resolved.stat()
-        digest = sha256_file(resolved)
+        digest = file_hasher(resolved)
     except OSError as exc:
         return (("evidence", str(resolved), "unavailable", str(exc)),)
     return (("evidence", str(resolved), str(stat.st_size), str(stat.st_mtime_ns), digest),)
