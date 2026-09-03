@@ -167,6 +167,7 @@ _LEDGER_LOCALE_KEYS: Final = (
     "tui.ledger.reconciliation.progress",
     "tui.ledger.reconciliation.success",
     "tui.ledger.reconciliation.failure",
+    "tui.ledger.reconciliation.empty",
     *_AREA_LOCALE_KEYS.values(),
     *_AVAILABILITY_LOCALE_KEYS.values(),
     *_REVIEW_STATUS_LOCALE_KEYS.values(),

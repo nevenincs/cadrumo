@@ -102,6 +102,12 @@ class LedgerReconciliationScreen(LedgerWorkspaceScreen):
                 f"{row.changed_count}/{row.removed_count}",
                 key=str(row.calculation_revision_id),
             )
+        if not (
+            self.controller.projection.invoice_reconciliations
+            or self.controller.projection.link_inconsistencies
+            or self.controller.projection.affected_declarations
+        ):
+            self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.reconciliation.empty"))
         restored = self.controller.restored_transaction_id()
         if restored is not None:
             index = next(
@@ -138,8 +144,7 @@ class LedgerReconciliationScreen(LedgerWorkspaceScreen):
             LedgerFlowState.EDITING,
             LedgerFlowState.CONFIRMING,
         }:
-            self._transition(LedgerFlowState.CANCELLED)
-            event.button.disabled = True
+            self._cancel()
             return
         if (
             self.flow_state is not LedgerFlowState.CONFIRMING
@@ -167,10 +172,22 @@ class LedgerReconciliationScreen(LedgerWorkspaceScreen):
             self._transition(LedgerFlowState.SUCCEEDED)
             status.update(ledger_copy("tui.ledger.reconciliation.success"))
 
+    def _cancel(self) -> None:
+        """Cancel only before the injected mutation begins."""
+        if self.flow_state not in {LedgerFlowState.EDITING, LedgerFlowState.CONFIRMING}:
+            return
+        self._transition(LedgerFlowState.CANCELLED)
+        self.selected_pair = None
+        self.query_one("#ledger-reconciliation-confirm", Button).disabled = True
+        self.query_one("#ledger-reconciliation-cancel", Button).disabled = True
+
     @override
     def action_back(self) -> None:
         if self.flow_state is LedgerFlowState.SUBMITTING:
             self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.flow.in_flight_refusal"))
+            return
+        if self.flow_state is LedgerFlowState.CONFIRMING:
+            self._cancel()
             return
         super().action_back()
 

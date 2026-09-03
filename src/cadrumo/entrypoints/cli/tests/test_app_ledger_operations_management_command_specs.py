@@ -11,10 +11,13 @@ from .._app_ledger_command_spec_support import (
     _EVIDENCE_TRANSACTION_ID_ARGUMENT,
     _GROUP_INVOCATION,
     _LEAF_INVOCATION,
+    _LEDGER_ACTOR_OPTION,
+    _MERGE_REASON_OPTION,
     _NO_RESULT_SCHEMA,
     _OPTIONAL_PERIOD_OPTION,
     _OPTIONAL_YEAR_OPTION,
 )
+from .._app_ledger_lifecycle_command_specs import LEDGER_LIFECYCLE_COMMAND_SPECS
 from .._app_ledger_management_command_specs import LEDGER_MANAGEMENT_COMMAND_SPECS
 from .._app_ledger_operations_command_specs import LEDGER_OPERATIONS_COMMAND_SPECS
 from .._command_target import resolve_deferred_target
@@ -257,6 +260,14 @@ _EXPECTED_SHARED_PARAMETERS: Final[tuple[tuple[str, tuple[object, ...]], ...]] =
         ("option", "actor", ("--actor",), "builtins:str", "LITERAL", None, "cli.app.ledger.evidence.pull_actor_help"),
     ),
     (
+        "ledger_actor",
+        ("option", "actor", ("--actor",), "builtins:str", "LITERAL", None, "cli.ledger.add.actor_help"),
+    ),
+    (
+        "merge_reason",
+        ("option", "reason", ("--reason",), "builtins:str", "LITERAL", "", "cli.ledger.merge.reason_help"),
+    ),
+    (
         "optional_period",
         ("option", "period", ("--period",), "builtins:str", "LITERAL", None, "cli.ledger.export.period_help"),
     ),
@@ -264,6 +275,89 @@ _EXPECTED_SHARED_PARAMETERS: Final[tuple[tuple[str, tuple[object, ...]], ...]] =
         "optional_year",
         ("option", "year", ("--year",), "builtins:int", "LITERAL", None, "cli.ledger.check.year_help"),
     ),
+)
+
+_EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[tuple[object, ...], ...]] = (
+    (
+        "app_ledger_remove",
+        "remove",
+        "cli.ledger.remove.help",
+        "profile-bound",
+        "ledger.remove",
+        ("transaction_id", "reason", "dry_run", "yes", "actor"),
+    ),
+    (
+        "app_ledger_reset",
+        "reset",
+        "cli.ledger.reset.help",
+        "profile-bound",
+        "ledger.reset",
+        ("reason", "dry_run", "yes", "actor"),
+    ),
+    (
+        "app_ledger_restore",
+        "restore",
+        "cli.ledger.restore.help",
+        "profile-bound",
+        "ledger.restore",
+        ("transaction_id", "reason", "yes", "actor"),
+    ),
+    ("app_ledger_review", "review", "cli.ledger.review.help", "none", "ledger.review", ("filters", "verbose")),
+    ("app_ledger_rule", "rule", "cli.app.ledger.rule.group_help", "none", None, ()),
+    (
+        "app_ledger_split",
+        "split",
+        "cli.ledger.split.help",
+        "profile-bound",
+        "ledger.split",
+        (
+            "transaction_id",
+            "child_amount",
+            "child_description",
+            "llm",
+            "apply",
+            "read_evidence",
+            "vision_model",
+            "reason",
+            "yes",
+            "actor",
+        ),
+    ),
+    (
+        "app_ledger_stash",
+        "stash",
+        "cli.ledger.stash.help",
+        "profile-bound",
+        "ledger.stash",
+        ("transaction_id", "reason", "yes", "actor"),
+    ),
+    ("app_ledger_status", "status", "cli.ledger.status.help", "none", "ledger.status", ("period", "year")),
+    ("app_ledger_track", "track", "cli.ledger.track.help", "none", "ledger.track", ("transaction_id",)),
+    (
+        "app_ledger_update",
+        "update",
+        "cli.ledger.update.help",
+        "profile-bound",
+        "ledger.update",
+        (
+            "transaction_id",
+            "booked_date",
+            "value_date",
+            "amount",
+            "direction",
+            "currency",
+            "counterparty",
+            "description",
+            "taxable_base",
+            "iva_rate",
+            "iva_amount",
+            "irpf_category",
+            "notes",
+            "group",
+            "actor",
+        ),
+    ),
+    ("app_ledger_view", "view", "cli.ledger.view.help", "none", "ledger.view", ("transaction_id",)),
 )
 
 
@@ -303,6 +397,24 @@ def test_ledger_operations_and_management_keep_their_literal_contract_matrix() -
     assert tuple(_literal_contract(spec) for spec in specs) == _EXPECTED_COMMANDS
 
 
+def test_ledger_lifecycle_keeps_its_literal_contract_matrix() -> None:
+    """Lifecycle command identities and parameter order remain independently literal."""
+    assert (
+        tuple(
+            (
+                spec.key,
+                spec.token,
+                spec.help_key.value,
+                spec.policy.write_route.value,
+                spec.result_schema.identity,
+                tuple(parameter.name for parameter in spec.parameters),
+            )
+            for spec in LEDGER_LIFECYCLE_COMMAND_SPECS
+        )
+        == _EXPECTED_LIFECYCLE_COMMANDS
+    )
+
+
 def test_shared_ledger_construction_contracts_are_exact_and_reused() -> None:
     """Only complete immutable contracts are shared between authored fragments."""
     operations = {spec.key: spec for spec in LEDGER_OPERATIONS_COMMAND_SPECS}
@@ -334,6 +446,13 @@ def test_shared_ledger_construction_contracts_are_exact_and_reused() -> None:
     assert operations["app_ledger_exclude"].parameters[0] is _EVIDENCE_TRANSACTION_ID_ARGUMENT
     assert operations["app_ledger_evidence_pull"].parameters[-1] is _EVIDENCE_ACTOR_OPTION
     assert operations["app_ledger_exclude"].parameters[-1] is _EVIDENCE_ACTOR_OPTION
+    assert operations["app_ledger_export"].parameters[-1] is _LEDGER_ACTOR_OPTION
+    for key in ("app_ledger_remove", "app_ledger_reset", "app_ledger_restore", "app_ledger_stash", "app_ledger_update"):
+        assert {spec.key: spec for spec in LEDGER_LIFECYCLE_COMMAND_SPECS}[key].parameters[-1] is _LEDGER_ACTOR_OPTION
+    assert management["app_ledger_merge"].parameters[1] is _MERGE_REASON_OPTION
+    assert {spec.key: spec for spec in LEDGER_LIFECYCLE_COMMAND_SPECS}["app_ledger_split"].parameters[
+        7
+    ] is _MERGE_REASON_OPTION
     for spec, positions in (
         (operations["app_ledger_export"], (3, 4)),
         (operations["app_ledger_import"], (6, 7)),
@@ -348,6 +467,8 @@ def test_shared_ledger_construction_contracts_are_exact_and_reused() -> None:
             for name, parameter in (
                 ("evidence_transaction_id", _EVIDENCE_TRANSACTION_ID_ARGUMENT),
                 ("evidence_actor", _EVIDENCE_ACTOR_OPTION),
+                ("ledger_actor", _LEDGER_ACTOR_OPTION),
+                ("merge_reason", _MERGE_REASON_OPTION),
                 ("optional_period", _OPTIONAL_PERIOD_OPTION),
                 ("optional_year", _OPTIONAL_YEAR_OPTION),
             )
@@ -363,6 +484,17 @@ def test_ledger_operations_and_management_resolve_through_the_live_graph() -> No
         if spec.parent_key == "app_ledger_evidence":
             path = ("aeat", "app", "ledger", "evidence", spec.token)
         assert COMMAND_GRAPH.resolve_path(path) is spec
+        if spec.handler is not None:
+            assert spec.handler.target is not None
+            assert callable(resolve_deferred_target(spec.handler.target))
+        if spec.result_schema.target is not None:
+            assert resolve_deferred_target(spec.result_schema.target) is not None
+
+
+def test_ledger_lifecycle_resolves_through_the_live_graph() -> None:
+    """Every lifecycle command continues to resolve its graph path and deferred targets."""
+    for spec in LEDGER_LIFECYCLE_COMMAND_SPECS:
+        assert COMMAND_GRAPH.resolve_path(("aeat", "app", "ledger", spec.token)) is spec
         if spec.handler is not None:
             assert spec.handler.target is not None
             assert callable(resolve_deferred_target(spec.handler.target))
