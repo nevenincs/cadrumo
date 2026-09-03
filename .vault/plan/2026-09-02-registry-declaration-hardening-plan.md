@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:270d36486489bef7a0109a8ce87410faa584a595e869b6458171a24e4dda4812'
+body_hash: 'sha256:2d72a8bb7d9539955d4a4e3dcae8ff6a89cb90a2f53071f9ecde33285bb35f3e'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -453,6 +453,8 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S31` - Prove the provenance screen against a constructed out-of-manifest citation; `dev/registry/tests/test_provenance_parent_consistency.py`.
 - [x] `W04.P09.S415` - Separate a reference absent from every revision of its modelo from one missing between manifests that agree elsewhere: the 1,389 index rows are 414 references of which 213 are systemic and 201 are drift, and the per-revision index cannot tell the two corrections apart; `dev/registry/analysis/provenance_consistency.py dev/registry/tests/test_provenance_consistency.py`.
 - [x] `W04.P09.S416` - Rule out a dangling reference in the provenance population and report where to look first: all 414 pairs resolve in catalogues of 1,374 legal and 499 source ids, seventeen references are cited by a single child and ninety-nine by a hundred or more; `dev/registry/analysis/provenance_consistency.py`.
+- [x] `W04.P09.S417` - Screen the mirror direction, 263 manifest references no child cites, since the two surfaces disagree both ways: 59 revisions declare a subset of what their children cite and 69 declare references nothing cites, so the citing-side population measures a contract nobody declared; `dev/registry/analysis/provenance_consistency.py dev/registry/tests/test_provenance_consistency.py`.
+- [ ] `W04.P09.S418` - Decide what a revision manifest declares relative to its childrens citations before correcting either side, since the two disagree in both directions and no rule states which contains which; `src/cadrumo/_data/registry/aeat/modelos`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 

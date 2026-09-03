@@ -11095,3 +11095,57 @@ That is the third time in this campaign one output line has carried two figures
 for what looked like one concept. The previous two were the same concept
 measured twice and were resolved by deleting one; this one is two concepts
 sharing a name and is resolved by naming them.
+
+
+## Reading the seventeen reverses the hypothesis, and the screen measured half a disagreement
+
+The seventeen single-child references were separated as the set where a child
+might be citing outside its revision's scope. Reading them says otherwise, and
+decisively.
+
+Six of them are one series: modelo 100's estimacion objetiva agraria formula
+citing, in each year, the orden that sets that year's indices - 2020 to
+`orden-hac-1164-2019:art-4`, 2021 to `orden-hac-1155-2020:art-4`, and so on
+through 2025 to `orden-hac-1347-2024`. Six consecutive years, each formula
+citing its own year's authority. That is not a citation reaching outside its
+scope; it is the most precise grounding in the population. The rest read the
+same way: a binding named `renta-2025-modelo-184-atribucion` citing modelo 184's
+design, a modelo 100 casilla citing the corporate-tax articles it computes from.
+
+So the direction hypothesis recorded last iteration - that a low site count
+suggests over-citation - is wrong, and it was reasoning from the shape of the
+number rather than from the content. On reading, every one of the seventeen
+points the same way as the heavy cases.
+
+### The manifest is not a smaller version of the citations
+
+Chasing why the manifest omits these found the real relationship. Modelo 100's
+2020 manifest declares **fifteen** legal references, all `ley-35-2006:art-N`,
+and contains neither the orden nor `ley-27-2014` in any form - so this is not a
+granularity mismatch between `orden:art-4` and `orden` either.
+
+Across the corpus a manifest declares a median of four legal references while
+its children cite a median of six, and the two sets relate in both directions:
+**59 of 128 revisions declare a manifest that is a subset of what their children
+cite, and 69 declare references that no child cites at all.**
+
+That matters more than the finding count. The screen asks whether children stay
+inside the manifest, which is one possible contract, and the corpus was not
+authored to it in either direction. Before anyone corrects 414 references, what
+a manifest is FOR relative to its children's citations has to be decided; until
+then the population measures a disagreement between two surfaces rather than a
+defect in one.
+
+### The mirror condition now exists
+
+The unscreened direction is now screened: **263 manifest references that no
+child cites, 121 legal and 142 source**, concentrated in modelos 308, 184, 763
+and 194. It reads the authored families only and not resolved export fields,
+because a derived field's citations are copied from its template and would make
+a manifest reference look cited by a child that never declares it - which would
+hide exactly the disagreement being measured.
+
+The two populations are disjoint by construction, one cited-not-declared and the
+other declared-not-cited, and a test asserts they do not intersect. Another
+asserts that revisions in which the surfaces agree exist, so the condition is
+discriminating rather than universal.
