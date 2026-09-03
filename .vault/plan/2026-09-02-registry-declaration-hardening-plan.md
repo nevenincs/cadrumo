@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:64b62fe5988380e4f2b6fa0f41d883e3b4ac62af34590a3da8c4260536d57472'
+body_hash: 'sha256:77bb98b997d87f09b3800d4e41c0f6fdabca1bcc39b86f44f229936de1c123d0'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -300,7 +300,7 @@ Wire a standing regression gate comparing the satisfied filing-coordinate set by
 - [x] `W02.P04.S106` - Gate that every kind a screen emits live is named in its own docstring; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W02.P04.S122` - State per modelo what the product can actually calculate and file, as a screen reading the declarations rather than a maintained list; `dev/registry/analysis/modelo_capability.py`.
 - [ ] `W02.P04.S123` - Migrate the thirty-one layouts that spell their envelope as a record onto the typed envelope slot, so the export boundary can see it and admit the required product identity; `src/cadrumo/_data/registry/aeat/modelos`.
-- [ ] `W02.P04.S124` - Resolve the twenty-five revisions carrying export layouts while declaring a grade below filing, including modelo 222 which ships a generated tree at applicability grade; `src/cadrumo/_data/registry/aeat/modelos`.
+- [ ] `W02.P04.S124` - Resolve the twenty-five revisions carrying an export layout or envelope while declaring a grade below filing, twenty-two at applicability and three at calculation, starting with modelos 185 and 222 whose 2025 revisions ship a committed generated tree at applicability; `src/cadrumo/_data/registry/aeat/modelos`.
 - [x] `W02.P04.S129` - Re-ground the capability screen's envelope condition against the official designs, replacing the fifty-two-row count with the thirty-one real record-spelled cases; `dev/registry/analysis/modelo_capability.py`.
 - [ ] `W02.P04.S130` - Author the modelo 714 envelope fields at offsets 93 to 96 and 101 to 109, which no field covers today and which carry the mandatory developer identity; `src/cadrumo/_data/registry/aeat/modelos/714/revisions`.
 - [ ] `W02.P04.S131` - Decide modelo 100, which declares filing grade for an XML layout that refuses at render for want of a grounded aux version token; `src/cadrumo/_data/registry/aeat/modelos/100/revisions`.
@@ -642,7 +642,8 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S342` - Add the three screen-property gates the criterion had not caught up with, naming properties before totals; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S343` - Replace the criterion's leading count and its ordinal back-references, which pointed at positions in a list that grew; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S344` - Name the screen the description referred to by position, and sweep for the same shape elsewhere; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md dev/registry`.
-- [ ] `W06.P13.S345` - Re-derive the capability paragraph's figures from the census and note the qualifier that has become vacuous; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S345` - Re-derive the capability paragraph's figures from the census and note the qualifier that has become vacuous; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S346` - Re-measure the below-filing layout population and name the two revisions whose bytes are already committed; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

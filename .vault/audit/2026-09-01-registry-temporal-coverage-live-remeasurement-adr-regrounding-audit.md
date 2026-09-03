@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:3c4e688753ecf074effd973625e119333281c769c7a26e555cc28d0dfaf5901b'
+body_hash: 'sha256:240f50957fa7b3a4cf8d20172fa7f245eb4df59c1f0a362f8468e3bc878ee64c'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8847,3 +8847,58 @@ fine when its list is in the same sentence and cannot grow, and dangerous when
 it indexes something enumerable elsewhere. The test is not whether the phrase
 looks positional but whether anything outside the sentence can change what it
 points at.
+
+### three-capability-figures-drifted-by-one-each-and-a-qualifier-went-vacuous | medium | 23 not 22, 4 not 5, 69 not 68, and every filing-grade revision now carries a layout
+
+The description's capability paragraph quotes five figures from the capability
+census. Re-derived by running it: 58 modelos holds, 31 layouts spelling an
+envelope as a record holds, and three have moved by exactly one each - 23
+modelos declaring applicability only where the plan said 22, 4 declaring
+calculation only where it said 5, and 69 revisions at filing grade where it said
+68.
+
+The applicability and calculation moves cancel, which is what one modelo
+changing its declared rung looks like from outside. The filing move is a
+revision that reached filing grade since. None of the three changes the
+paragraph's argument, and that is the point of recording them as movement rather
+than as errors: a figure quoted from a live census is a reading, and a reading
+taken twice at different times differs without either being wrong.
+
+The fifth is more interesting than a number. The plan said sixty-eight revisions
+"reach filing grade with a layout", a phrasing that implies some reach filing
+grade without one. None do: all 69 carry a layout. The qualifier was load-bearing
+when written and is vacuous now, which is a better fact than the count - there is
+no filing-grade revision today with nowhere to put its answer - and a sentence
+that keeps a qualifier after it stops distinguishing anything quietly tells the
+reader a distinction still exists.
+
+The paragraph now names the census as its source before quoting it, records what
+the figures were, and says plainly that they move. The alternative - restating
+them each time they drift - is the maintenance this campaign has been removing
+everywhere else.
+
+### the-step-s-population-holds-at-twenty-five-and-two-of-them-have-shipped-bytes | high | Modelos 185 and 222 carry a committed export tree while declaring applicability
+
+An open Step proposes resolving twenty-five revisions that carry an export
+layout while declaring a grade below filing. Re-measured from the capability
+census: twenty-five, exactly, which is the first premise this campaign has
+checked and found unmoved.
+
+The breakdown the Step lacked is where the work is. Twenty-two sit at
+applicability and three at calculation, so the contradiction is not one shape
+but two - a revision saying it can only tell you whether the modelo applies, and
+a revision saying it can compute but not file, both carrying the machinery for
+rendering a fichero.
+
+Two are sharper than the rest and are now named in the Step. Modelo 185's and
+modelo 222's 2025 revisions each carry a COMMITTED generated tree while declaring
+applicability. For those two the contradiction is not a declaration disagreeing
+with a capability, it is bytes that exist for a revision whose own declaration
+says it cannot produce them. Whatever the resolution is - raise the grade or
+withdraw the tree - it cannot be "the layout is aspirational", which is available
+for the other twenty-three.
+
+That is the value of measuring a premise rather than confirming it. The count
+was right and told nobody what to do first; the census answers that in the same
+query, and the Step now names the two coordinates where the evidence is already
+on disk.
