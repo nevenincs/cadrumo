@@ -124,13 +124,19 @@ class GoogleSheetsExportOperationRequest(CredentialFreeOperationRequest):
         return Period.from_year_and_code(self.filing_year, self.period)
 
 
-class GoogleSheetsExportRemoteResult(BaseModel):
-    """Safe normalized facts returned by the injected remote export port.
+class GoogleSheetsWorkbookWriteFacts(BaseModel):
+    """What one Google Sheets workbook write did, previewed or applied.
 
-    This is the sole application-side translation boundary for concrete Google
-    preview and apply records. The port must return ``dry_run`` exactly as it
-    received it, so an accidentally inverted composition cannot be settled as
-    a successful operation.
+    One concept with two carriers: the port returns these facts, and the
+    operation retains them in encrypted custody alongside the provenance
+    identifying which calculation produced them. Declaring them once keeps the
+    carriers from drifting field by field -- a counter added to the port's
+    return and not to the retained record would read as a silent zero
+    downstream.
+
+    ``dry_run`` belongs here rather than to either carrier because the port
+    must return it exactly as received, so a preview can never be settled as an
+    applied write.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -151,7 +157,19 @@ class GoogleSheetsExportRemoteResult(BaseModel):
     formula_cells_to_write: int | None = Field(default=None, ge=0)
 
 
-class GoogleSheetsExportOperationResult(BaseModel):
+class GoogleSheetsExportRemoteResult(GoogleSheetsWorkbookWriteFacts):
+    """Safe normalized facts returned by the injected remote export port.
+
+    This is the sole application-side translation boundary for concrete Google
+    preview and apply records. The port must return ``dry_run`` exactly as it
+    received it, so an accidentally inverted composition cannot be settled as
+    a successful operation.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+
+class GoogleSheetsExportOperationResult(GoogleSheetsWorkbookWriteFacts):
     """Safe completed or previewed workbook facts retained in encrypted custody."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -162,20 +180,6 @@ class GoogleSheetsExportOperationResult(BaseModel):
     period: Period
     engine_version: str = Field(min_length=1, max_length=128)
     registry_sha: str = Field(min_length=1, max_length=128)
-    dry_run: bool
-    root_folder_id: str | None = None
-    spreadsheet_exists: bool | None = None
-    folder_id: str | None = None
-    spreadsheet_id: str | None = None
-    spreadsheet_url: str | None = None
-    value_cells_written: NonNegativeInt
-    formula_cells_written: NonNegativeInt
-    protected_ranges_written: NonNegativeInt
-    tab_count: int = Field(ge=1)
-    ranges_to_clear: tuple[str, ...] = ()
-    value_cells_changed: int | None = Field(default=None, ge=0)
-    value_cells_unchanged: int | None = Field(default=None, ge=0)
-    formula_cells_to_write: int | None = Field(default=None, ge=0)
 
 
 def _require_active_profile(profile_id: UUID) -> str:

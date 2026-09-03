@@ -45,6 +45,8 @@ from .launcher import (
     InstalledWorkbenchAccountInputsV1,
     InstalledWorkbenchFactoryDependenciesV1,
     InstalledWorkbenchRootInputsProviderV1,
+    InstalledWorkbenchRootInputsV1,
+    TuiOperationCompositionV1,
     compose_installed_workbench_generation_provider,
     compose_secure_profile_workbench_generation_provider,
     run_authenticated_workbench_sessions,
@@ -151,6 +153,7 @@ def compose_authenticated_root_inputs_provider(
         declarations_revisions_action=action(_DECLARATIONS_REVISIONS_ACTION),
         declarations_filing_action=action(_DECLARATIONS_FILING_ACTION),
     )
+
     def provide(operation_runtime: TuiOperationCompositionV1) -> InstalledWorkbenchRootInputsV1:
         """Bind the generation to the exact contracts this session composed.
 

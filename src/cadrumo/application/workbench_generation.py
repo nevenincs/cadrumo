@@ -28,7 +28,7 @@ from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import UtcInstant
 from ..domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ..domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
-from ..domain.modelos.calculation import CalculationRevision
+from ..domain.modelos.calculation_revision import CalculationRevision
 from ..domain.modelos.filing_record import ModeloRecord
 from ..domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -384,7 +384,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             as_of=as_of,
             schedule_observation=_schedule_observation(calendar, observed_at),
         )
-        ledger = self._read_ledger(revisions, work_units)
+        ledger = self._read_ledger(revisions.revisions, work_units)
         aeat_sync = self._read_aeat_sync(taxpayer.tax_id)
         account_session = self.account_session_reader()
         final_record = self.profile_repository.load(self.profile_id)

@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
     from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
     from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
-    from ...domain.modelos.calculation import CalculationRevision
+    from ...domain.modelos.calculation_revision import CalculationRevision
     from ...domain.modelos.work_unit import WorkUnitCatalogue
     from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
