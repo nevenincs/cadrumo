@@ -23,7 +23,6 @@ from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpoi
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactInspection
 
 from ..analysis.m200_2024_reviewed_promotions import M200ReviewedPromotionSnapshot
-
 from ._record_design_ir import (
     AnchorKey,
     RecordDesignIntermediate,

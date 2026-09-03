@@ -16,8 +16,8 @@ from cadrumo.core.filing_projection_ref import (
 from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
-from ..pipeline import _semantic_map_join, _semantic_map_validation
 from ..analysis.m200_2024_reviewed_promotions import build_m200_2024_reviewed_promotion_snapshot
+from ..pipeline import _semantic_map_join, _semantic_map_validation
 from ..pipeline._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
 from ..pipeline._semantic_map import SemanticMap
 from ..pipeline._semantic_map_validation import (
