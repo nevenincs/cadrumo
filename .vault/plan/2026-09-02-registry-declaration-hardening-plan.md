@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:c0ee1e90c5dc584aae6a001f312640ed8d8b138d3b3193cbf00fec6285bf90f2'
+body_hash: 'sha256:c9003fce238594ba90d8b7a369370d2e4ef1d0f0630a447340461d8596bd4035'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -501,6 +501,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S263` - Enrol this campaign's own footnote pointer screen in the regulatory prose parser channel it had been failing; `dev/registry/analysis/regulatory_prose_parser_channel.toml`.
 - [x] `W06.P13.S264` - Restore the adjudication deleted while its collision remained and adjudicate the new destination-id collision; `dev/quality/name_collision_dispositions.toml`.
 - [x] `W06.P13.S265` - Watch the newly collapsed marker verdict extractor in the canonical definitions gate and correct the claim that it was merely removed; `dev/tests/test_canonical_definitions_stay_singular.py`.
+- [x] `W06.P13.S266` - Record that the contract conflict lost its optimiser-erased guard while the two contracts still differ; `dev/quality/name_collision_dispositions.toml`.
 
 ### Phase `W06.P14` - declaration contract migration
 

@@ -6394,3 +6394,29 @@ watches can be undone the same way.
 Also confirmed this iteration: all eight gate modules written here pass, fifty-three tests, exit
 zero - checked after finding that the sweep which dated the registry failures had excluded this
 campaign's own directory from its filter.
+
+### second-adjudication-acted-on-and-the-vanishing-guard-is-gone | medium | The contract conflict's most dangerous property was removed; the conflict itself remains and the row now says so
+
+Measuring how widespread the optimiser-erased type guard is returned zero `assert isinstance`
+in production code, which contradicted a finding written here days ago. Reading the file
+rather than trusting the count showed why: the guard is gone.
+
+`resolve_bucket_event_repository` in the actions module now calls
+`require_concrete_repository(repository, BucketEventHistoryRepository, reason=...)`, a helper
+that raises rather than asserting. Under `python -O` an assert disappears and the return
+annotation goes on promising a concrete class nothing checks; a raising helper does not. That
+was the sharpest half of the contract-conflict adjudication and it has been fixed.
+
+The conflict itself stands. The projection version still returns the protocol and accepts any
+implementation of it; the actions version still requires the concrete class. Two contracts under
+one name in one package, as recorded - only now the disagreement fails loudly in every build
+rather than silently in optimised ones.
+
+The disposition row is updated rather than closed, because the row exists to say a decision is
+owed about which contract is right, and that decision has not been taken. Closing it on the
+strength of a partial repair would be the ledger claiming a resolution nobody made.
+
+That is the second of this campaign's nine adjudications to be acted on by another writer, after
+the verdict extractor's merge. Neither was requested; both were named in a file anyone can read
+and both were addressed within a day. A ledger that states a remedy and its reason turns out to
+be actionable in a way a finding buried in prose is not.
