@@ -14,12 +14,18 @@ A page whose ``domain_key`` is absent from BOTH sources carries no legal
 zone (nothing is invented); a UI-only page with no ``domain_key`` never
 participates.
 
-Render-slot note: the substrate :class:`FlowPage` / :class:`PageCopy`
-copy family exposes no legal-provenance slot today (prompt, help,
-format_hint, failure_modes, choices only). This module therefore produces
-the typed per-page mapping as data a frontend can render; wiring it into a
-concrete render slot is a substrate-contract decision left to the flow
-frontend, not hacked into the copy family here.
+Render-slot note: the substrate render slot now EXISTS. ``FlowPage`` and
+``PageCopy`` both carry a ``legal_zone`` member, and the line frontend --
+the one production drives -- emits every citation it finds there. What is
+still missing is the stamp between the two: nothing calls this projection,
+so every page's zone is the empty default and the frontend renders no
+citation.
+
+Closing that gap is not a substrate question but a cost one. This
+projection needs a :class:`ValidatedRegistryAuthority` to resolve the
+reverse-grounding index, and the setup flow is compiled without one, so
+stamping the zone would make profile setup pay a registry load it does not
+pay today. That tradeoff is the open decision, not the render slot.
 """
 
 from __future__ import annotations
