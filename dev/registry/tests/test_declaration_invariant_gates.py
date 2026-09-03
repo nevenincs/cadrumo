@@ -29,6 +29,7 @@ what makes it evidence.
 from __future__ import annotations
 
 import collections
+from typing import Final
 
 import pytest
 
@@ -42,6 +43,10 @@ from ..analysis.export_ref_symmetry import screen_authority as export_ref_screen
 _BINDING_DERIVATION = "derive_export_layouts_from_bindings"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+#: Named once per module, as this tree requires, rather than repeated at each
+#: read site where a typo would be a silent decode change.
+_UTF_8: Final[str] = "utf-8"
 
 
 @pytest.fixture(scope="module")
@@ -101,7 +106,7 @@ def test_every_screen_module_is_enrolled_in_the_runner() -> None:
     defining = {
         path.stem
         for path in analysis.glob("*.py")
-        if path.name != "screens.py" and "\ndef screen_authority(" in path.read_text(encoding="utf-8")
+        if path.name != "screens.py" and "\ndef screen_authority(" in path.read_text(encoding=_UTF_8)
     }
     enrolled = {entry.name for entry in SCREENS}
     assert defining == enrolled, f"screens not enrolled in the runner: {sorted(defining - enrolled)}"
@@ -141,7 +146,7 @@ def test_the_readme_screen_table_lists_exactly_the_enrolled_screens() -> None:
 
     from ..analysis.screens import SCREENS
 
-    readme = (pathlib.Path(__file__).resolve().parent.parent / "README.md").read_text(encoding="utf-8")
+    readme = (pathlib.Path(__file__).resolve().parent.parent / "README.md").read_text(encoding=_UTF_8)
     documented = set(re.findall(r"^\| `([a-z_]+)` \| ", readme, re.MULTILINE))
     enrolled = {entry.name for entry in SCREENS}
     assert documented == enrolled, (
@@ -171,7 +176,7 @@ def test_every_symbol_the_contributor_readmes_name_still_resolves() -> None:
     documented: set[str] = set()
     for readme in readmes:
         if readme.is_file():
-            documented.update(re.findall(r"`((?:cadrumo|dev)\.[A-Za-z0-9_.]+)`", readme.read_text(encoding="utf-8")))
+            documented.update(re.findall(r"`((?:cadrumo|dev)\.[A-Za-z0-9_.]+)`", readme.read_text(encoding=_UTF_8)))
     assert documented, "the contributor READMEs must name at least one symbol"
 
     unresolved: list[str] = []
@@ -241,7 +246,7 @@ def test_every_screen_module_has_a_test_module() -> None:
     screens = {
         path.stem
         for path in (registry_root / "analysis").glob("*.py")
-        if path.name != "screens.py" and "\ndef screen_authority(" in path.read_text(encoding="utf-8")
+        if path.name != "screens.py" and "\ndef screen_authority(" in path.read_text(encoding=_UTF_8)
     }
     untested = sorted(name for name in screens if not (registry_root / "tests" / f"test_{name}.py").is_file())
     assert not untested, f"screens carrying no test module, so their detection is unproven: {untested}"
@@ -299,7 +304,7 @@ def test_no_screen_reassembles_the_resolved_export_surface() -> None:
     analysis = pathlib.Path(__file__).resolve().parent.parent / "analysis"
     offenders: list[str] = []
     for path in sorted(analysis.rglob("*.py")):
-        tree = ast.parse(path.read_text(encoding="utf-8"))
+        tree = ast.parse(path.read_text(encoding=_UTF_8))
         reached = False
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
@@ -448,7 +453,7 @@ def test_every_package_initialiser_in_the_development_registry_tree_is_inert() -
     checked = 0
     for path in sorted(root.rglob("__init__.py")):
         checked += 1
-        tree = ast.parse(path.read_text(encoding="utf-8"))
+        tree = ast.parse(path.read_text(encoding=_UTF_8))
         offending = [
             type(node).__name__
             for node in tree.body
@@ -545,7 +550,7 @@ def test_no_registry_source_or_declaration_cites_a_vault_record() -> None:
                 # and removing the examples would leave the patterns unproven.
                 continue
             scanned += 1
-            citations = _vault_citations(path.read_text(encoding="utf-8", errors="ignore"))
+            citations = _vault_citations(path.read_text(encoding=_UTF_8, errors="ignore"))
             if citations:
                 offenders[str(path)] = sorted(set(citations))
 

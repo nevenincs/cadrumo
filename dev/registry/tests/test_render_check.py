@@ -9,6 +9,7 @@ provenance attestation, and two differ in a record file.
 from __future__ import annotations
 
 import pathlib
+from typing import Final
 
 import pytest
 
@@ -17,6 +18,10 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from ..pipeline.render_check import compare_revision_against_committed
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+#: Named once per module, as this tree requires, rather than repeated at each
+#: read site where a typo would be a silent decode change.
+_UTF_8: Final[str] = "utf-8"
 
 
 @pytest.fixture(scope="module")
@@ -141,7 +146,7 @@ def test_every_record_drifting_tree_is_dispositioned_and_every_disposition_is_li
     from ..pipeline.render_check import compare_revision_against_committed
 
     dispositions_path = pathlib.Path(__file__).resolve().parent.parent / "pipeline" / "generated_tree_dispositions.toml"
-    declared = tomllib.loads(dispositions_path.read_text(encoding="utf-8"))
+    declared = tomllib.loads(dispositions_path.read_text(encoding=_UTF_8))
     dispositioned = {key: value[0] for key, value in declared.items() if key != "schema_version"}
 
     assert all(row["class"] == "record_drift" for row in dispositioned.values()), (
