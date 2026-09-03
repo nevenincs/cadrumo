@@ -66,8 +66,8 @@ __all__ = [
     "CasillaCoverageKind",
     "CasillaSurfaceCoverage",
     "CoverageKind",
-    "CoverageReport",
     "KindCoverage",
+    "TerminologyCoverageReport",
     "compute_casilla_coverage_census",
     "compute_coverage_report",
     "coverage_report_path",
@@ -188,7 +188,7 @@ class CasillaSurfaceCoverage(BaseModel):
 class CasillaCoverageCensus(BaseModel):
     """Deterministic coverage census for the projected casilla surface.
 
-    This is deliberately separate from :class:`CoverageReport`: the latter's
+    This is deliberately separate from :class:`TerminologyCoverageReport`: the latter's
     relevance fields remain the widening report over all four enumerable
     target surfaces. This census adds the casilla-only contract axes needed by
     later parity work without changing that report's meaning.
@@ -221,7 +221,7 @@ class CasillaCoverageCensus(BaseModel):
         raise KeyError(surface)
 
 
-class CoverageReport(BaseModel):
+class TerminologyCoverageReport(BaseModel):
     """Corpus coverage of the committed relevance mapping.
 
     ``kinds`` carries one :class:`KindCoverage` per surface in the canonical
@@ -355,7 +355,7 @@ def compute_coverage_report(
     cli_option_records: tuple[CliOptionRecord, ...] | None = None,
     legal_ids: tuple[str, ...] | None = None,
     authority: ValidatedRegistryAuthority | None = None,
-) -> CoverageReport:
+) -> TerminologyCoverageReport:
     """Compute the corpus coverage report.
 
     Materialises the four derivable target surfaces (approved concept cards,
@@ -386,7 +386,7 @@ def compute_coverage_report(
             surfaces read through; defaults to the bundled authority.
 
     Returns:
-        A deterministic :class:`CoverageReport`.
+        A deterministic :class:`TerminologyCoverageReport`.
     """
     resolved_authority = authority if authority is not None else bundled_authority()
     resolved_relevance = relevance if relevance is not None else load_committed_relevance()
@@ -425,7 +425,7 @@ def compute_coverage_report(
     )
     orphans = tuple(sorted(referenced - derivable))
 
-    return CoverageReport(
+    return TerminologyCoverageReport(
         kinds=kinds,
         orphan_mapping_target_ids=orphans,
         referenced_target_count=len(referenced),
