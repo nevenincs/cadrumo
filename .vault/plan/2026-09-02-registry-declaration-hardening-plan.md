@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:7f878c84e78562f20cac8fddb19dc8844a5762a843c34927044557f07b48bced'
+body_hash: 'sha256:c78e2043ce28448a6d1105010b3ddad20317d180bfd28829e34c2caf6b266044'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -411,7 +411,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S150` - Make the pointer triage repeatable, deriving each design's transcription from the source reference rather than by searching its directory; `dev/registry/analysis/footnote_pointer_notes.py`.
 - [x] `W04.P07.S387` - Report the fields whose wire fact sits behind a footnote pointer, deciding membership through the shipped eligibility predicate rather than a second copy of its clauses, and resolve each pointer to the note wording a reviewed rule would be grounded in; `dev/registry/analysis/footnote_only_wire_facts.py`.
 - [x] `W04.P07.S388` - Pin the counterexample that stops a vocabulary miss being read as a note stating no wire fact, since modelo 200 nota 1 states a filling rule in full while carrying none of the words the reading aid looks for; `dev/registry/tests/test_footnote_only_wire_facts.py`.
-- [ ] `W04.P07.S389` - Recover where the unreproducible one hundred and forty-nine came from, or retire the figure: the live predicate admits forty-one fields when a bare pointer stops counting as a stated fact and 4,184 if any content cell does, and seventeen modelo directories carry a render profile where the step says six; `dev/registry/render_profiles`.
+- [x] `W04.P07.S389` - Retire the unreproducible one hundred and forty-nine: five bases measured through the live predicate give 41, 30, 80, 4,184 and 95, none of them 149 or 183, and the absent-naturaleza population that looked like a plausible provenance is already eligible so was never pending authoring; `dev/registry/render_profiles`.
 - [x] `W04.P07.S390` - Scope note definitions to the sheet that prints them, since a workbook numbers each pages notes from one and modelo 200 defines Nota 1 on six of seventy-seven sheets, which the design-wide reader concatenated into one entry and used to resolve a pointer on a sheet defining no such note; `dev/registry/analysis/footnote_pointer_notes.py dev/registry/tests/test_footnote_pointer_notes.py`.
 - [x] `W04.P07.S391` - Measure how far the design-wide note reading reached: 38 of 215 transcriptions repeat a note label across sheets, accounting for 225 definitions a design-wide reader absorbed, with modelo 303 carrying the condition in every revision and modelo 220 defining one label on twelve of thirteen sheets; `dev/registry/analysis/note_label_scope.py dev/registry/tests/test_note_label_scope.py`.
 - [x] `W04.P07.S392` - Recognise a sheet heading that carries spaces, since capturing a single token matched DP200001 but failed on every sheet named like dr M202 (1), which sent an entire designs notes to an empty sheet name where no field could match them and read exactly like a design with no notes; `dev/registry/analysis/footnote_pointer_notes.py`.

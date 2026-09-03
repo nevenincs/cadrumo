@@ -10685,3 +10685,41 @@ are iterated from, rather than running both: what the screens FIND is asserted
 by the whole-corpus gate, and running them twice would double the slowest work
 in the suite to check something already checked. The suite now holds
 thirty-one gates.
+
+
+## The hundred and forty-nine is retired, and here is what was tried
+
+The rules-authoring step rested on a figure of one hundred and forty-nine newly
+eligible fields "in the six modelos that carry a render profile", with
+thirty-four more falling due when two further modelos gained one. The step asked
+to recover the figure or retire it. Five bases were measured through the live
+predicate, and none produces it:
+
+| basis | count |
+| ----- | ----- |
+| newly eligible when a bare pointer stops counting as a stated fact | 41 |
+| the same, restricted to width-17 amount fields | 30 |
+| content cells holding only a pointer, whatever their eligibility | 80 |
+| newly eligible if any content cell stopped counting | 4,184 |
+| fields carrying an absent naturaleza | 95 |
+
+The last was the most promising hypothesis and is the one worth writing down as
+refuted, because it is the kind of near-miss that invites a second guess. The
+absent-naturaleza admission is a real earlier widening of this same predicate,
+so a figure from that era would have been a plausible provenance for a number
+this one inherited. It is 95, across four modelos, and those fields are ALREADY
+eligible - the predicate admits them today - so they were never a pending
+authoring population at all.
+
+Neither 149 nor 183 is reachable from any of these, and the step's other two
+figures are refuted directly: seventeen modelo directories carry a render
+profile, not six, and the two modelos named as lacking one are not distinguished
+from the rest by anything the live tree shows.
+
+The figure is therefore retired rather than corrected. Its provenance cannot be
+recovered from the tree as it stands, and a number whose basis nobody can state
+is worse than no number: it sizes work, it survives restatement, and it cannot
+be checked. What replaces it is 41, which any reader can reproduce with one
+command, together with the grounding split that actually decides the effort -
+nine fields covered by a convention naming their type and thirty-two by modelo
+200's design-level amounts note.
