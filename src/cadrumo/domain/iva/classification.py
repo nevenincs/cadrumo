@@ -54,7 +54,6 @@ from pydantic import Field, model_validator
 from ...core.logging import get_logger
 from .errors import IvaRateNotFoundError, IvaValidationError
 from .lookup import lookup_rate
-from .place_of_supply import IvaPlaceOfSupplyRule, place_of_supply_rule
 from .schema import (
     EUMemberState,
     IvaArt69DosService,
@@ -478,24 +477,6 @@ class IvaClassificationResult(IvaStrictFrozen):
             to declare demands everything — the fail-toward-asking direction,
             and the one where forgetting costs a question rather than a silent
             classification on a fact nobody supplied.
-        place_of_supply: The registry row that grounds the matched rule's
-            placement in the operation's filing year — which provision locates
-            the operation, and whether that provision fixes the nature of the
-            supply. :func:`classify_iva` always stamps it; ``None`` survives
-            only on a result assembled by hand, and therefore means "no
-            placement was resolved", never "the resolution failed". A lookup
-            that fails raises out of :func:`classify_iva` instead of arriving
-            here as an absence.
-
-            Read the nature off
-            :attr:`~cadrumo.domain.iva.place_of_supply.IvaPlaceOfSupplyRule.supply_nature`:
-            a ``None`` there is the third state, and it is a statement about
-            the statute — the cited provisions are silent on whether goods or
-            services were supplied. It is never an unfilled row.
-
-            What this carries is registry-declared authority for the rule the
-            table matched. It is not an AEAT ruling on the specific operation,
-            and a consumer must not present it as one.
     """
 
     category: IvaCategory = Field(description="Resolved IVA category.")
@@ -515,19 +496,6 @@ class IvaClassificationResult(IvaStrictFrozen):
             " and the classification chain (or operator) has determined the"
             " specific sub-article. It adds classification context without"
             " creating a separate Modelo 303 route."
-        ),
-    )
-    place_of_supply: IvaPlaceOfSupplyRule | None = Field(
-        default=None,
-        description=(
-            "Registry-declared grounding of the matched rule's placement:"
-            " which provision locates the operation, and whether that"
-            " provision fixes the supply's nature. Stamped by"
-            " :func:`classify_iva`; ``None`` means no placement was resolved,"
-            " not that resolving one failed. A ``supply_nature`` of ``None``"
-            " inside the row means the cited articles are silent on the"
-            " nature. Registry authority, not an AEAT ruling on the"
-            " operation."
         ),
     )
 
@@ -910,22 +878,8 @@ def classify_iva(criteria: IvaInvoiceClassificationCriteria) -> IvaClassificatio
 
     Returns:
         A :class:`IvaClassificationResult` with the resolved category, rate,
-        reverse-charge flag, matched rule identifier, the registry grounding
-        of its placement, and any explanatory note.
-
-    Raises:
-        cadrumo.domain.iva.errors.IvaCatalogueError: When the place-of-supply
-            table grounds no row for the matched rule in the filing year of
-            :attr:`IvaInvoiceClassificationCriteria.transaction_date`. The
-            refusal is deliberate. A placement is filing-affecting, and the
-            three states this result must keep apart — a provision resolved, a
-            provision deliberately silent on the supply's nature, and a
-            resolution that could not be performed — collapse to two the moment
-            a failed lookup is allowed to arrive as ``place_of_supply=None``,
-            because that is the same value a hand-built result carries. Raising
-            keeps the failure loud at the boundary that caused it rather than
-            handing a caller a classification whose governing article nobody
-            established.
+        reverse-charge flag, matched rule identifier, and any explanatory
+        note.
     """
     for rule in _CLASSIFICATION_RULES:
         if not rule.predicate(criteria):
@@ -966,11 +920,6 @@ def classify_iva(criteria: IvaInvoiceClassificationCriteria) -> IvaClassificatio
             matched_rule_id=rule.rule_id,
             notes=rule.description,
             consumes_party_facts=rule.consumes,
-            # Keyed by the rule, never by the category: arts. 68, 69 and 70
-            # fork on goods versus services, and several rules share one
-            # category while resting on different provisions, so a category
-            # cannot say which article placed this operation.
-            place_of_supply=place_of_supply_rule(rule.rule_id, on=criteria.transaction_date),
         )
 
     _logger.debug(
@@ -993,11 +942,6 @@ def classify_iva(criteria: IvaInvoiceClassificationCriteria) -> IvaClassificatio
         # indifference from the fact that nothing was decided. Demanding both is
         # the only honest reading of a branch that does not exist.
         consumes_party_facts=frozenset(PartyFact),
-        # The sentinel carries its row like every other rule. That row is
-        # legal-basis-exempt and cites nothing, which is the table SAYING the
-        # fallthrough codifies no treatment -- a different fact from the field
-        # being absent, and one a consumer can read.
-        place_of_supply=place_of_supply_rule(_R99_FALLTHROUGH_ID, on=criteria.transaction_date),
     )
 
 
