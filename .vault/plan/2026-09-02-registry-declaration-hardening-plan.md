@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:c03bfba55c8c09c6bf648a9895ef39dcd402da847b803eb029af896214136626'
+body_hash: 'sha256:f7bd33af6578a52ec089be55b5b88eb27bc8dcf33fef91919ad62c96aab62b35'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -478,6 +478,8 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S439` - Re-measure all three parallelization constraints: the generator verb is registered and its lifted status holds, the conformance vector tuple is still empty so that constraint binds, and the unpublished renderable trees are three not two in modelos 308, 360 and 390; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W04.P09.S440` - Re-measure the registry directorys failure figures: 1,152 passing and 36 failing with 30 in the four generated-tree modules, against the twenty-seven of thirty-five written in the constraint, and confirm the single conformance failure the third constraint rests on; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W04.P09.S441` - Split the single repair the constraint names into the three it actually is: twenty-three manifest-only trees to republish, two modelo 347 revisions the disposition ledger forbids republishing, and modelo 390 2022 which needs publication instead; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W04.P09.S442` - Classify every renderable export tree by the repair it needs, subtracting serialisation-only differences before deciding, since the raw comparison reports reformatted records as differing and a naive reading called twenty-five safe trees record drift; `dev/registry/analysis/generated_tree_state.py`.
+- [x] `W04.P09.S443` - Enrol the two committed export trees the reproduction test omitted, m210 2026-y-siguientes and m303 2022, deriving their source ref epoch year and period from the registry and checking the derivation reproduces an existing row, which takes the directory to 38 failures where both new ones are the manifest staleness their twenty-five peers already carry; `dev/registry/tests/test_generated_export_trees.py`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 

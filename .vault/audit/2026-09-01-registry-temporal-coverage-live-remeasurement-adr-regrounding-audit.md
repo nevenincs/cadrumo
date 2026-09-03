@@ -11958,3 +11958,72 @@ So the constraint's proportion is right and its unit is wrong. Twenty-three of
 thirty-six failures share one repair; two share a refusal to apply it; one needs
 a different verb. Naming them apart matters because the ledger already exists to
 stop exactly the mistake the merged figure invites.
+
+
+## Two committed export trees have no reproduction gate
+
+`dev/registry/analysis/generated_tree_state.py` classifies every renderable
+revision by what repairing it would take, so the three-class split found by
+reading a test log stays available without reading one. Across **29 renderable
+trees**: 1 reproduces exactly, **25 are manifest-only stale**, 2 carry record
+drift, and 1 has never been committed.
+
+The reproduction test reports 26 failures over **27 enrolled targets**. The
+difference is the finding: **`m210-2026-y-siguientes` and `m303-2022` are
+committed trees that the test does not enrol at all.** Both carry a stale
+manifest today, and neither has a gate that would notice if their records drifted
+instead.
+
+That is this campaign's most repeated defect, arriving in the generated-tree
+tests: an explicit enrolment table is the right design - discovery by convention
+hides a typo - and its cost is that a row can be forgotten, which is
+indistinguishable from a clean result until something else counts the population
+independently.
+
+### The classifier's first version inverted its own advice
+
+Written naively it reported **27 trees as record drift and none as
+manifest-only** - the exact opposite of the truth, and advice that would have
+blocked the republication of twenty-five safe trees.
+
+The comparison reports a file as differing when its bytes differ, including when
+only its serialisation form changed, and carries those separately in
+`serialization_only`. Modelo 322's 2023 tree lists six differing files of which
+five are reformattings and one is the manifest. Subtracting the serialisation
+differences first is what the reproduction test does and what the classifier now
+does; without it, every reformatted record reads as drifted filing data.
+
+It was caught by the numbers disagreeing with the test log measured an hour
+earlier - 27 against 23 - which is the only reason a plausible-looking census
+did not go into this audit as fact.
+
+
+## The two unenrolled trees now have a gate, and it fails as predicted
+
+`m210-2026-y-siguientes` and `m303-2022` are enrolled in the reproduction test.
+Their fields were derived from the registry rather than guessed: the source
+reference and design epoch come from the revision's own render inputs, the filing
+year from its window, and the period from the convention its siblings use - full
+year revisions of modelo 303 carry `4T` and modelo 210 carries `0A`. The
+derivation was checked against an existing row first: run against `210/2025` it
+reproduces that row's four values exactly, which is what makes it a derivation
+rather than a plausible guess.
+
+Both new targets fail, with `['_generation.provenance.json']` and nothing else -
+**the manifest-only staleness the classifier predicted for them before they were
+enrolled**. That is the report and the test agreeing from opposite directions
+about two trees neither had jointly examined.
+
+### On deliberately raising the failure count
+
+This takes the directory from 36 failures to 38, and the two are not new defects.
+They were true before and unreported, and they now fail in exactly the way
+twenty-five of their peers already fail - the manifest staleness a single
+republication clears for all of them at once. The alternative was leaving two
+committed trees with no gate at all, where a drift in their RECORDS would have
+been silent, which is the condition this whole section exists to remove.
+
+The count is worth stating plainly rather than leaving a reader to discover that
+a campaign about declaration integrity added two failing tests. A suite that
+reports 38 true failures is in better repair than one reporting 36 while two
+trees go unwatched.
