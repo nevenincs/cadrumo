@@ -22,7 +22,10 @@ from cadrumo.core.toml import freeze_toml, read_toml
 from ..audit.object_names import ObjectNameAuditResult, ObjectNameDeclaration, ObjectNameKind
 
 __all__ = [
+    "MANDATORY_OBJECT_NAME_GATES",
     "ObjectNameFilePrecondition",
+    "ObjectNameGateCommand",
+    "ObjectNameGateFamily",
     "ObjectNameManifestError",
     "ObjectNamePathMove",
     "ObjectNameRenameManifest",
@@ -52,6 +55,14 @@ ReferenceClass = Literal[
     "shared-consumer",
     "generated-artifact",
 ]
+ObjectNameGateFamily = Literal[
+    "parsing-import",
+    "architecture",
+    "semantic-overlap",
+    "clone",
+    "type-lint",
+    "focused",
+]
 
 
 class ObjectNameManifestError(ValueError):
@@ -62,6 +73,30 @@ class _StrictModel(BaseModel):
     """Immutable authored contract with no ignored fields or coercion."""
 
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+
+class ObjectNameGateCommand(_StrictModel):
+    """One production-owned gate command with a closed evidence family."""
+
+    family: ObjectNameGateFamily
+    argv: tuple[str, ...] = Field(min_length=1)
+
+    @field_validator("argv")
+    @classmethod
+    def _validate_argv(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if any(not token for token in value):
+            raise ValueError("gate argv must contain only non-empty tokens")
+        return value
+
+
+MANDATORY_OBJECT_NAME_GATES: Final[tuple[ObjectNameGateCommand, ...]] = (
+    ObjectNameGateCommand(family="parsing-import", argv=("just", "check-imports")),
+    ObjectNameGateCommand(family="architecture", argv=("just", "check-architecture")),
+    ObjectNameGateCommand(family="semantic-overlap", argv=("just", "check-semantic")),
+    ObjectNameGateCommand(family="clone", argv=("just", "audit-duplication")),
+    ObjectNameGateCommand(family="type-lint", argv=("just", "check-types")),
+    ObjectNameGateCommand(family="type-lint", argv=("just", "check-style")),
+)
 
 
 def _safe_repo_path(value: str) -> str:

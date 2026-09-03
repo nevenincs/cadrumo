@@ -71,7 +71,6 @@ allowed = [
   "cadrumo.core.observability.replay",  # unreachable
   "cadrumo.domain.calculations.registry.record_spec",  # unreachable
   "cadrumo.domain.fincas",  # unreachable
-  "cadrumo.domain.iva.place_of_supply",  # unreachable
   "cadrumo.domain.iva.verify",  # unreachable
   "cadrumo.domain.portals.drift",  # type-only
 ]

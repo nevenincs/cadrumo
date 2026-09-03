@@ -20,10 +20,15 @@ from ...audit.object_names import ObjectNameAuditResult, scan, to_json
 from .. import object_name_graph as graph_module
 from .. import object_name_rehearsal as rehearsal_module
 from ..object_name_graph import HardEdge, ReferenceKind, build_manifest_components
-from ..object_name_manifest import ObjectNameRenameManifest, object_name_manifest_digest
+from ..object_name_manifest import ObjectNameGateCommand, ObjectNameRenameManifest, object_name_manifest_digest
 from ..object_name_rehearsal import ObjectNameRehearsalError, rehearse_object_name_component
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_TEST_MANDATORY_GATES = tuple(
+    ObjectNameGateCommand(family=family, argv=(sys.executable, "-c", "pass"))
+    for family in ("parsing-import", "architecture", "semantic-overlap", "clone", "type-lint")
+)
 
 
 def test_snapshot_records_a_file_deleted_between_stat_and_hash_as_absent(
@@ -47,6 +52,7 @@ def _unbind_host_worktree_packages(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delitem(sys.modules, "cadrumo", raising=False)
     monkeypatch.delitem(sys.modules, "dev", raising=False)
     monkeypatch.setattr(graph_module, "_FIRST_PARTY_ROOTS", ("example",))
+    monkeypatch.setattr(rehearsal_module, "MANDATORY_OBJECT_NAME_GATES", _TEST_MANDATORY_GATES)
 
 
 def _git(repo_root: Path, *args: str) -> None:
@@ -186,10 +192,19 @@ def test_rehearsal_receipt_binds_only_declared_component_paths(tmp_path: Path, m
         "uv",
     }
     assert all(value for _name, value in receipt.tool_versions)
-    assert receipt.gate_outcomes[0].argv == manifest.operations[0].focused_gates[0]
-    assert receipt.gate_outcomes[0].return_code == 0
-    assert receipt.gate_outcomes[0].stdout_sha256 == _digest(b"")
-    assert receipt.gate_outcomes[0].stderr_sha256 == _digest(b"")
+    assert {outcome.family for outcome in receipt.gate_outcomes} == {
+        "parsing-import",
+        "architecture",
+        "semantic-overlap",
+        "clone",
+        "type-lint",
+        "focused",
+    }
+    focused_outcome = next(outcome for outcome in receipt.gate_outcomes if outcome.family == "focused")
+    assert focused_outcome.argv == manifest.operations[0].focused_gates[0]
+    assert focused_outcome.return_code == 0
+    assert focused_outcome.stdout_sha256 == _digest(b"")
+    assert focused_outcome.stderr_sha256 == _digest(b"")
     assert receipt.generator_outcomes == ()
     assert receipt.finding_delta.before_count == len(inventory.enforced_findings)
     assert receipt.finding_delta.after_count == len(inventory.enforced_findings) - 1
@@ -267,7 +282,10 @@ def test_receipt_identity_binds_stable_fields_but_only_evidence_binds_command_ou
         replace(receipt, tool_versions=(*receipt.tool_versions, ("probe", "1"))),
         replace(
             receipt,
-            gate_outcomes=(replace(receipt.gate_outcomes[0], argv=(sys.executable, "--version")),),
+            gate_outcomes=(
+                replace(receipt.gate_outcomes[0], argv=(sys.executable, "--version")),
+                *receipt.gate_outcomes[1:],
+            ),
         ),
         replace(receipt, source_tree_unchanged=False),
     )
@@ -281,6 +299,7 @@ def test_receipt_identity_binds_stable_fields_but_only_evidence_binds_command_ou
                 stdout_sha256=_digest(b"volatile output"),
                 stdout_bytes=len(b"volatile output"),
             ),
+            *receipt.gate_outcomes[1:],
         ),
     )
     volatile_receipt_id, volatile_evidence_digest = recompute(volatile)
@@ -323,8 +342,9 @@ def test_gate_runs_in_isolated_copy_with_bound_runtime_environment(tmp_path: Pat
 
     receipt = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
 
-    assert receipt.gate_outcomes[0].argv == gate
-    assert receipt.gate_outcomes[0].return_code == 0
+    focused = next(outcome for outcome in receipt.gate_outcomes if outcome.family == "focused")
+    assert focused.argv == gate
+    assert focused.return_code == 0
 
 
 def test_gate_argv_metacharacters_are_passed_literally_without_shell_interpretation(tmp_path: Path) -> None:
@@ -342,7 +362,7 @@ def test_gate_argv_metacharacters_are_passed_literally_without_shell_interpretat
 
     receipt = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
 
-    assert receipt.gate_outcomes[0].argv == gate
+    assert next(outcome for outcome in receipt.gate_outcomes if outcome.family == "focused").argv == gate
     assert not sentinel.exists()
 
 

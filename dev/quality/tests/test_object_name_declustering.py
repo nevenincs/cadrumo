@@ -15,9 +15,10 @@ import pytest
 from ...audit.object_names import scan
 from .. import object_name_declustering as cli
 from .. import object_name_graph as graph_module
+from .. import object_name_rehearsal as rehearsal_module
 from ..object_name_rehearsal import ObjectNameRehearsalReceipt
 from ..object_name_replay import ObjectNameReplayResult
-from .test_object_name_rehearsal import _fixture, _live_bytes
+from .test_object_name_rehearsal import _TEST_MANDATORY_GATES, _fixture, _live_bytes
 from .test_object_name_replay import _case, _generated_case
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -28,6 +29,7 @@ def _bind_disposable_package(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delitem(sys.modules, "cadrumo", raising=False)
     monkeypatch.delitem(sys.modules, "dev", raising=False)
     monkeypatch.setattr(graph_module, "_FIRST_PARTY_ROOTS", ("example",))
+    monkeypatch.setattr(rehearsal_module, "MANDATORY_OBJECT_NAME_GATES", _TEST_MANDATORY_GATES)
 
 
 def _repository(tmp_path: Path) -> Path:
