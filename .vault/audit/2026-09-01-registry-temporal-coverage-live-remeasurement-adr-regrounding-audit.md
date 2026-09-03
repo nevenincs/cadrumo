@@ -6285,3 +6285,29 @@ it, belonging to whoever made it, and a campaign about declarations matching wha
 should be the last to quietly delete a gate because something newer disagreed with it. What this
 adds is that the disagreement is dated, attributed, and no longer sitting in a failure list as
 an unexplained red.
+
+### embed-classification-failure-is-three-conditions-not-one | medium | Twenty-one reconciliation failures split into seven unclassified modules, nine stale dispositions and three undispositioned literals
+
+The modelo-embed classification gate reports twenty-one reconciliation failures against
+forty-seven derived modelo-specific modules, and the pytest output truncates after the first,
+which reads as twenty-one modules carrying no classification. Run directly, the screen says
+otherwise.
+
+Seven modules carry no classification: `_invoice_row_materialization` for modelos 347 and 349,
+`_withholding_rows` for 190 and 193, `formula_runtime_m100`, three ledger binding families for
+100, 130 and 131, and the modelo 303 annual summary bindings. Every one is a module the same
+refactor split out - the identical set this campaign classified in the load census, arriving at
+a second ledger that also needs them and was not updated either.
+
+Nine are the reverse: a disposition naming evidence the screen no longer detects, mostly decimal
+literals in the invoice and withholding binding families. Three are the third shape, a module
+claiming to be machinery while leaving a regulatory literal undispositioned.
+
+So one count covers a ledger missing entries, a ledger holding entries for things that are gone,
+and a claim that does not cover what it claims about - the same three-way split found in the
+load census's stale rules, in the four misstated revision openings, and in the generated trees'
+drift classes. Four times now a single number has hidden three remedies.
+
+Not adjudicated. The load-census rulings were derivable by measurement because loading is
+observable; this ledger asks whether a Python literal encodes a value the law fixes, which is a
+reading of intent against the official source and belongs to whoever authored the modules.

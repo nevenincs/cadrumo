@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:4d08cf430b29aa4e3c09ab1d80a57f34ed33a0a6554052b0b20700285e4b370d'
+body_hash: 'sha256:99acf81bbb24b4d9bcf55bbfac7f11b3c59436787ea4c1c4bddc93fee59426cf'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -497,6 +497,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S259` - Establish that the sibling-count assertion was already false when its module entered this campaign's measurements; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S260` - Date every current registry failure against this campaign's own lane logs and correct the publication attribution; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S261` - Diagnose the static inspection boundary failure as four application modules reaching the inspection authority since late August; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S262` - Break the embed classification failure into its three conditions and name the seven modules the refactor left unclassified; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
