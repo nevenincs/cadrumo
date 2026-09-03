@@ -136,14 +136,17 @@ class M200LegalWorklist:
 
     @property
     def missing_provenance_count(self) -> int:
+        """Count carriers with no legal reference at all."""
         return sum(item.state == "missing_provenance" for item in self.items)
 
     @property
     def unknown_reference_count(self) -> int:
+        """Count carriers whose catalogue key cannot resolve."""
         return sum(bool(item.unknown_legal_refs) for item in self.items)
 
     @property
     def out_of_window_count(self) -> int:
+        """Count carriers whose known authority misses the target period."""
         return sum(bool(item.out_of_window_legal_refs) for item in self.items)
 
 
@@ -377,6 +380,13 @@ def build_m200_2024_legal_worklist(census: M200ReconciliationCensus) -> M200Lega
             *( ("semantic_map", anchor.export_field_id, anchor.legal_refs) for anchor in census.anchors),
         )
     )
+    return M200LegalWorklist(
+        source_ref=census.source_ref,
+        source_sha256=census.source_sha256,
+        revision_valid_from=census.revision_valid_from,
+        revision_valid_to=census.revision_valid_to,
+        items=items,
+    )
 
 
 def _m200_2024_revision_legal_carriers(registry_root: Path) -> tuple[tuple[str, tuple[str, ...]], ...]:
@@ -411,13 +421,6 @@ def _m200_2024_revision_legal_carriers(registry_root: Path) -> tuple[tuple[str, 
 
     visit(revision, ())
     return tuple(carriers)
-    return M200LegalWorklist(
-        source_ref=census.source_ref,
-        source_sha256=census.source_sha256,
-        revision_valid_from=census.revision_valid_from,
-        revision_valid_to=census.revision_valid_to,
-        items=items,
-    )
 
 
 def _legal_worklist_item(

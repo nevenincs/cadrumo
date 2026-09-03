@@ -198,14 +198,14 @@ def test_legal_worklist_measures_the_complete_2024_population_and_exposes_open_a
 
     assert worklist.source_ref == subject.TARGET_SOURCE_REF
     assert worklist.source_sha256 == subject.TARGET_SOURCE_SHA256
-    assert len(worklist.items) == len(census.rows) + len(census.anchors) + 3 == 10041
+    assert len(worklist.items) == len(census.rows) + len(census.anchors) + 4 == 10042
     assert {item.evidence_home for item in worklist.items} == {"declaration", "revision", "semantic_map"}
     assert all(item.source_ref == subject.TARGET_SOURCE_REF for item in worklist.items)
     assert all(item.source_sha256 == subject.TARGET_SOURCE_SHA256 for item in worklist.items)
     assert worklist.missing_provenance_count == 0
     assert worklist.unknown_reference_count == 0
     assert worklist.out_of_window_count == 3
-    open_items = tuple(item for item in worklist.items if item.evidence_home == "revision")
+    open_items = tuple(item for item in worklist.items if item.out_of_window_legal_refs)
     assert tuple(item.subject_id for item in open_items) == (
         "legal_refs",
         "orden_aplicabilidad",
