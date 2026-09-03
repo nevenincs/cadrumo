@@ -105,6 +105,16 @@ def _fixture(
         "dev/tracked.txt",
         "dev/deleted.txt",
     )
+    _git(
+        repo_root,
+        "-c",
+        "user.name=Test",
+        "-c",
+        "user.email=test@example.invalid",
+        "commit",
+        "-qm",
+        "fixture",
+    )
     _write(repo_root, "src/example/contracts.py", b"class Widgets:\n    pass\n")
     _write(repo_root, "dev/tracked.txt", b"dirty tracked bytes\n")
     _write(repo_root, "dev/untracked.txt", b"untracked bytes\n")
@@ -152,6 +162,44 @@ def _fixture(
     )
     component = build_manifest_components(manifest, inventory=inventory)[0]  # ty: ignore[invalid-argument-type]
     return inventory, manifest, component
+
+
+def test_snapshot_git_metadata_is_self_contained_and_detached(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    _fixture(repo)
+    target = tmp_path / "copy"
+    target.mkdir()
+    paths = rehearsal_module._git_snapshot_paths(repo)
+    files = rehearsal_module._snapshot(repo, paths)
+    git_executable = shutil.which("git")
+    assert git_executable is not None
+    source_head = subprocess.run(  # noqa: S603
+        (git_executable, "rev-parse", "HEAD"), cwd=repo, check=True, capture_output=True, text=True
+    ).stdout.strip()
+
+    rehearsal_module._copy_snapshot(repo, target, files)
+
+    copied_head = subprocess.run(  # noqa: S603
+        (git_executable, "rev-parse", "HEAD"), cwd=target, check=True, capture_output=True, text=True
+    ).stdout.strip()
+    remotes = subprocess.run(  # noqa: S603
+        (git_executable, "remote"), cwd=target, check=True, capture_output=True, text=True
+    ).stdout.strip()
+    assert copied_head == source_head
+    assert remotes == ""
+    assert not (target / ".git/objects/info/alternates").exists()
+    _git(target, "cat-file", "-e", f"{source_head}^{{commit}}")
+
+
+def test_snapshot_refuses_repository_without_head(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    target = tmp_path / "copy"
+    target.mkdir()
+
+    with pytest.raises(ObjectNameRehearsalError, match="cannot resolve source HEAD"):
+        rehearsal_module._copy_snapshot(repo, target, ())
 
 
 def test_rehearsal_receipt_binds_only_declared_component_paths(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

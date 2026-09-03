@@ -285,13 +285,15 @@ def _copy_snapshot(
         check=False,
         text=True,
     )
-    if head.returncode == 0:
-        captured_head = head.stdout.strip()
+    if head.returncode != 0 or not head.stdout.strip():
+        raise ObjectNameRehearsalError(f"cannot resolve source HEAD for isolated Git metadata: {head.stderr.strip()}")
+    captured_head = head.stdout.strip()
+    if captured_head:
         clone = subprocess.run(  # noqa: S603
             (
                 git_executable,
                 "clone",
-                "--shared",
+                "--no-hardlinks",
                 "--no-checkout",
                 "--quiet",
                 str(source_root),
@@ -303,6 +305,16 @@ def _copy_snapshot(
         )
         if clone.returncode != 0:
             raise ObjectNameRehearsalError(f"cannot create isolated Git metadata: {clone.stderr.strip()}")
+        remove_origin = subprocess.run(  # noqa: S603
+            (git_executable, "-C", str(target_root), "remote", "remove", "origin"),
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+        if remove_origin.returncode != 0:
+            raise ObjectNameRehearsalError(
+                f"cannot detach isolated Git metadata from its source: {remove_origin.stderr.strip()}"
+            )
         pin = subprocess.run(  # noqa: S603
             (git_executable, "-C", str(target_root), "update-ref", "--no-deref", "HEAD", captured_head),
             capture_output=True,
