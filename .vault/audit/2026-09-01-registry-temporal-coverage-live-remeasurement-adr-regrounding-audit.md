@@ -11306,3 +11306,45 @@ on a corpus this size, and a gate asserting they never do would be asserting a
 coincidence. The duplicate that was found was found by reading what two
 conditions MEAN; the set comparison only confirmed it, and confirming is all a
 comparison of populations can do.
+
+
+## A helper added to widen the gates was narrowing one of them
+
+The instrument error in the duplicate sweep - reading the runner's projections
+as though they were findings - was not only a mistake in a throwaway query. The
+helper that made it available, `enrolled_screen_findings`, was added three
+iterations ago to widen six gates onto the corpus screens, and its name and
+docstring promised findings while it returned whatever each table entry
+projected.
+
+The kind-naming gate reads it. Measured: **four kinds a screen emits never
+reached that gate.** The monetary screen's `money_split_representation` is
+filtered out by the projection that keeps only findings needing action. And all
+three grounded kinds of the grounding screen were invisible, because its entry
+projects onto the ungrounded residue - a population that is empty, so not one of
+that screen's four kinds was ever checked against its docstring. That projection
+is mine, added deliberately two iterations ago so the runner would not carry two
+adjacent rows agreeing by construction. It was right for the runner and wrong
+for a gate.
+
+The helper is replaced by `screen_findings`, which calls each screen's own entry
+point. Thirty `(screen, kind)` pairs now reach the gates, and the four
+previously hidden are among them - verified by name rather than by the count
+going up.
+
+### A gate that asserted the wrong direction, and said so by failing
+
+The first guard written against recurrence demanded that no projection hide a
+kind. It failed immediately on the two legitimate projections, which is the
+correct outcome for an incorrect invariant: dropping findings is what a
+projection is FOR, and a gate forbidding it would forbid the design it exists to
+serve.
+
+The invariant that does hold is the other direction. A projection may narrow its
+screen's findings and may never invent one, so the gate now asserts that no
+runner entry reports a kind its screen does not emit - which would mean a
+finding derived in the table, where no test looks for it and no docstring
+describes it. That the kinds are hidden from the kind-naming gate is a separate
+problem, fixed at the reader rather than by constraining the projections.
+
+The suite now holds thirty-two gates.

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:fb21aedb6e57a4217e2d30c19fb1ccc7c200bf43926f8e16ef653538a9232d30'
+body_hash: 'sha256:96888f57d57414c23a4d8157c8a151f170a0422e43cab10ccad9ae2dbc10905a'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -437,6 +437,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S412` - Flag a work item whose grounding note drifts between designs, since four of thirteen do and cover seven fields whose rules must be authored per design, with the flag passed in so it defaults to no claim rather than to a claim of stability; `dev/registry/analysis/rule_grounding_coverage.py dev/registry/tests/test_rule_grounding_coverage.py`.
 - [ ] `W04.P07.S413` - Let a render profile declare a field eligible with its representation unsupported, since exact coverage plus a two-valued authority discriminator obliges an author to assert official source or reviewed policy for twenty-nine fields whose only located wording is about applicability; `dev/registry/pipeline/_render_profile.py dev/registry/render_profiles`.
 - [x] `W04.P07.S414` - Rewrite the note-evidence criterion to record that zero ungrounded is not readiness: twelve of forty-one fields have wording that settles representation, four of thirteen notes drift between designs, and the correction is blocked on a profile that cannot declare a representation unsupported; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W04.P07.S424` - Read gates from each screens own entry point rather than the runner table, since projections hid four emitted kinds from the kind-naming gate including all three grounded kinds behind an empty residue, and guard the direction that holds by refusing a projection that reports a kind its screen never emits; `dev/registry/analysis/screens.py dev/registry/tests/test_declaration_invariant_gates.py`.
 
 ### Phase `W04.P08` - grade earned gate
 
