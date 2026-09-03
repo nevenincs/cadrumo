@@ -2,7 +2,7 @@
 
 The deterministic-output substrate captures the verbatim emitted
 :class:`~core.json_contract.SchemaEnvelope` document so a recorded
-run can be replayed and asserted byte-identical after masking. The sink
+run output can be compared byte-identically after masking. The sink
 is a context variable holding a list; it is unset (``None``) in production,
 so :func:`record_emitted_envelope` is a no-op unless a
 :func:`capture_envelopes` scope has armed it — the emit path pays only a
@@ -34,7 +34,7 @@ def capture_envelopes() -> Generator[list[dict[str, object]]]:
     """Arm envelope capture for the current context, yielding the sink list.
 
     Nesting-aware: when a sink is already active (e.g. armed by an outer
-    replay scope), this reuses it rather than shadowing it, so a
+    outer capture scope), this reuses it rather than shadowing it, so a
     re-entered command's emitted envelope lands in the outermost armed
     sink. The reused case does not reset the outer sink on exit.
 

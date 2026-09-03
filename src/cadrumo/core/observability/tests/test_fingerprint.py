@@ -91,7 +91,7 @@ class TestDataRootCacheExclusions:
             assert settings.cadrumo_llm_run_telemetry_dir.resolve() in excluded
             assert settings.cadrumo_corpus_text_cache_dir.resolve() in excluded
             assert settings.cadrumo_validation_verdict_cache_dir.resolve() in excluded
-            # Real, replay-relevant state must never be excluded.
+            # Real application state must never be excluded.
             assert settings.cadrumo_workflow_runs_dir.resolve() not in excluded
             assert settings.cadrumo_drafts_dir.resolve() not in excluded
             assert settings.cadrumo_filing_history_dir.resolve() not in excluded

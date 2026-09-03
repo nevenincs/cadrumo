@@ -156,7 +156,6 @@ value already present in your shell always wins.
 | `CADRUMO_RATE_LIMIT_DELAY_SECONDS` | float | `2.0` | Minimum delay between AEAT requests in seconds |
 | `CADRUMO_REGISTRY_DISK_CACHE_DIR` | Path | unset | Override for the cross-process registry disk-pickle directory. When unset, production derives <cadrumo_local_storage_root>/cache/registry and pytest runs share the host temp directory for the immutable bundled-root pickle. Set only by test isolation to redirect the cache onto a test-owned directory, so a test asserting exclusive pickle state never races sibling pytest-xdist workers. |
 | `CADRUMO_REGISTRY_DISK_CACHE_MAX_ENTRIES` | int | `8` | Maximum number of registry disk-cache pickles retained per cache directory; after each write the oldest excess pickles are pruned (best-effort) so accumulated per-fingerprint pickles cannot grow without bound. |
-| `CADRUMO_REPLAY_ACTIVE` | str | empty | Subprocess-IPC marker carrying the original run_id when a CLI invocation is a replay re-entry |
 | `CADRUMO_RUNS_DIR` | Path | (derived) | Directory where run traces and JSONL event logs are persisted (one subdirectory per run_id, containing trace.json + events.jsonl) |
 | `CADRUMO_RUNS_MAX_TOTAL_BYTES` | int | `268435456` | Trace-store byte cap; after age pruning, remove oldest runs but always retain the newest |
 | `CADRUMO_RUNS_RETENTION_DAYS` | int | `30` | Retention window in days for per-run trace directories; older run directories are pruned |

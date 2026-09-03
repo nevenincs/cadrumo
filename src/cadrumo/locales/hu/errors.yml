@@ -541,8 +541,6 @@ errors:
     integrity_justificante_verification: Az AEAT-tal való bizonylat-ellenőrzést nem
       sikerült elvégezni.
     integrity_manuals_manifest: A kézikönyv-manifeszt nem ment át a séma- vagy hash-ellenőrzésen.
-    integrity_observability_aeat_corpus_drift: A visszajátszás kimutatta, hogy az
-      AEAT-referencia corpus eltért a rögzített állapottól.
     integrity_observability_run_trace_validation: A tárolt futási nyomkövetés nem
       ment át a szigorú érvényesítésen.
     integrity_outbound_storage: A letöltött tartalom nem ment át az integritás-ellenőrzésen

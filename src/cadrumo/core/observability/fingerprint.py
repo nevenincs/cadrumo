@@ -1,12 +1,8 @@
 """Deterministic SHA-256 fingerprints of corpus, db, and certificate state.
 
-Used by :func:`run_context` to stamp a recorded :class:`RunTrace` and
-by :func:`replay_run` to gate read-only replay. A replay refuses when
-any recorded hash has drifted relative to the current on-disk state.
-
-Auditability is prioritised over time-travel: a drift refusal forces
-the operator to acknowledge the change rather than silently re-running
-a recorded command against a moved-on environment.
+Used by :func:`run_context` to stamp a recorded :class:`RunTrace` with the
+configuration, application-state, and certificate identity observed at the
+time of the run.
 
 ``db_sha256`` fingerprints :attr:`~cadrumo.core.config.Settings.cadrumo_local_storage_root`
 — the single canonical application data root every persisted category
@@ -180,7 +176,7 @@ def data_root_cache_exclusions(settings: Settings) -> frozenset[Path]:
     What stays *in* matters as much as what comes out. Core state — the
     encrypted profile and bucket database, the filing artefacts, the financial
     catalogues — is deliberately fingerprinted, because a change there is real
-    state drift a replay must refuse on. Excluding too much walks the digest
+    state drift. Excluding too much walks the digest
     toward the empty-tree constant that once defeated drift detection for every
     installed operator; excluding too little churns it on each cache write
     until the refusal stops being believed.
@@ -232,7 +228,7 @@ def read_cert_fingerprint() -> str:
     """Return the SHA-256 fingerprint of the active certificate, or ``""``.
 
     The empty string is the canonical "no certificate bound" sentinel —
-    most CLI paths run without a cert (lookups, planning, replay) and
+    most CLI paths run without a cert (lookups and planning) and
     must still produce a valid :class:`RunTrace`.
 
     Reading the certificate without unlocking it is intentional: the

@@ -586,8 +586,6 @@ errors:
       no s'ha pogut completar.
     integrity_manuals_manifest: El manifest del manual no ha superat les comprovacions
       d'esquema o de resum.
-    integrity_observability_aeat_corpus_drift: La reproducció ha detectat que el corpus
-      de referència de l'AEAT ha canviat respecte al registrat.
     integrity_observability_run_trace_validation: La traça d'execució desada no ha
       superat la validació estricta.
     integrity_outbound_storage: El contingut descarregat no ha superat les comprovacions

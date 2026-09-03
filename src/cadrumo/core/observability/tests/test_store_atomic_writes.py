@@ -1,8 +1,8 @@
-"""Atomic-replacement contract for the persisted replay artifacts.
+"""Atomic-replacement contract for persisted run artifacts.
 
 :func:`~core.observability.save_trace` and
 :func:`~core.observability.save_envelope` are durable run evidence that a
-later validation or replay reads back, so neither may overwrite its
+later diagnostics read back, so neither may overwrite its
 destination in place: a crash, kill, or raise part-way through the write
 would leave a torn artifact behind a name that a reader trusts.
 

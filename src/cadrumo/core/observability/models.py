@@ -67,13 +67,12 @@ class ArgumentSource(StrEnum):
     """Provenance label for a CLI argument captured on a :class:`RunTrace`.
 
     ``ENV``, ``CONFIG`` and ``DEFAULT`` values are recorded for audit
-    completeness but are not re-emitted on argv during replay.
+    completeness.
 
     Attributes:
         FLAG: Option-style flag (e.g. ``--since 2026-01-01``).
-        POSITIONAL: Positional argument that must be re-emitted in the
-            original order with no ``--`` prefix during replay
-            (e.g. ``notificacion_id`` on a notification-read command).
+        POSITIONAL: Bare positional argument (e.g. ``notificacion_id`` on a
+            notification-read command).
         ENV: Value sourced from a process environment variable.
         CONFIG: Value sourced from a configuration file.
         DEFAULT: Value sourced from the option's declared default.
@@ -128,21 +127,13 @@ class RunOutcome(StrEnum):
 
 
 class ArgumentRecord(BaseModel):
-    """A single CLI argument captured for replay.
+    """A single CLI argument captured for run diagnostics.
 
     Attributes:
         name: Python parameter name as bound by the wrapped command
             (e.g. ``"as_json"``).
         value: Stringified argument value.
         source: Where the value originated; see :class:`ArgumentSource`.
-        cli_flag: Optional override carrying the actual Typer option
-            spelling (e.g. ``"--json"``) when the Python parameter name
-            differs from the user-facing flag. Without the override,
-            :func:`cadrumo.core.observability.replay._argv_from_arguments`
-            derives the flag by replacing underscores with dashes —
-            which is wrong for renamed options like
-            ``typer.Option(False, "--json")`` bound to parameter
-            ``as_json``.
     """
 
     model_config = _STRICT_FROZEN
@@ -150,7 +141,6 @@ class ArgumentRecord(BaseModel):
     name: str
     value: str
     source: ArgumentSource
-    cli_flag: str | None = None
 
 
 class NavigationPayload(BaseModel):
@@ -385,23 +375,16 @@ class RunTrace(BaseModel):
         finished_at: UTC exit time, or ``None`` if persistence happens
             before exit.
         entrypoint: Stable CLI entrypoint string.
-        arguments: Tuple of :class:`ArgumentRecord` captured for replay.
+        arguments: Tuple of :class:`ArgumentRecord` captured for diagnostics.
         corpus_sha256: Fingerprint of the effective
             :class:`cadrumo.core.config.Settings` configuration at enter
-            time; gates :func:`replay_run`. Production reads no dotenv, so
-            the Settings snapshot is the whole configuration surface.
+            time. Production reads no dotenv, so the Settings snapshot is
+            the whole configuration surface.
         db_sha256: Fingerprint of the canonical application data root
             (``Settings.cadrumo_local_storage_root``) at enter time.
         cert_fingerprint: SHA-256 of the configured PKCS#12 cert, or
             ``""`` when no cert is configured.
         outcome: Terminal run outcome; see :class:`RunOutcome`.
-        replay_of: Run id of the *immediate* original trace when this
-            trace was produced by a replay re-entry, otherwise ``None``.
-            Replaying a replay produces a new trace whose ``replay_of``
-            points at the second-level trace, NOT at the chain root —
-            walk the chain by following each ``replay_of`` link until
-            you reach ``None``. Each link is a supervised replay in its
-            own right.
     """
 
     model_config = _STRICT_FROZEN
@@ -415,7 +398,6 @@ class RunTrace(BaseModel):
     db_sha256: ContentDigest
     cert_fingerprint: ContentDigestOrAbsent
     outcome: RunOutcome
-    replay_of: RunId | None = None
 
     @model_validator(mode="after")
     def _require_tz_aware_timestamps(self) -> RunTrace:

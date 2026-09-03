@@ -7,14 +7,26 @@ from dataclasses import dataclass
 from typing import Final, get_args, override
 
 from textual.app import ComposeResult
-from textual.widgets import Static
+from textual.widgets import DataTable, Static
 
 from ....application.ledger.workspace import LedgerWorkspaceArea, LedgerWorkspaceProjectionV1
-from ..components.widgets import ContentScroll
+from ....application.operator_actions.catalogue import lookup_action
+from ....application.operator_actions.models import ActionReference
+from ....core.identity import TransactionId
+from ..components.widgets import ContentDataTable, ContentScroll
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
+from .classification import LedgerClassificationScreen
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
 from .entries import LedgerEntriesScreen
-from .models import LedgerDestinationIdV1, LedgerRouteRefusalV1, LedgerRouteTargetV1
+from .import_flow import LedgerImportScreen
+from .models import (
+    LedgerClassificationSubmitterV1,
+    LedgerDestinationIdV1,
+    LedgerImportSubmitterV1,
+    LedgerPreparedImportV1,
+    LedgerRouteRefusalV1,
+    LedgerRouteTargetV1,
+)
 from .overview import LedgerOverviewScreen
 from .review import LedgerReviewScreen
 
@@ -34,19 +46,26 @@ class LedgerUnavailableScreen(LedgerWorkspaceScreen):
     def compose(self) -> ComposeResult:
         """Render the explicit unavailability and no action affordance."""
         yield Static(
-            ledger_copy("tui.ledger.unavailable.title", default="Ledger destination unavailable"),
+            ledger_copy("tui.ledger.unavailable.title"),
             classes="cadrumo-banner",
         )
         with ContentScroll(id="ledger-page", classes="cadrumo-scroll ledger-page"):
+            yield ContentDataTable[str](id="ledger-navigation", cursor_type="row", zebra_stripes=True)
             yield Static(
-                ledger_copy(
-                    self._route_refusal.reason_key,
-                    default="This destination is not available in the current workspace.",
-                ),
+                ledger_copy(self._route_refusal.reason_key),
                 id="ledger-refusal",
                 classes="ledger-refusal",
                 markup=False,
             )
+
+    def on_mount(self) -> None:
+        """Keep the entire workspace vocabulary reachable beside the refusal."""
+        self.populate_navigation()
+        self.query_one("#ledger-navigation", DataTable).focus()
+
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        """Allow movement away from a placeholder while preserving refusals."""
+        self.handle_navigation_selection(event)
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,8 +81,8 @@ LEDGER_ROUTES: Final[tuple[LedgerRouteV1, ...]] = (
     LedgerRouteV1("ledger.overview", LedgerWorkspaceArea.OVERVIEW, LedgerOverviewScreen),
     LedgerRouteV1("ledger.entries", LedgerWorkspaceArea.ENTRIES, LedgerEntriesScreen),
     LedgerRouteV1("ledger.review", LedgerWorkspaceArea.REVIEW, LedgerReviewScreen),
-    LedgerRouteV1("ledger.import", LedgerWorkspaceArea.IMPORT, None),
-    LedgerRouteV1("ledger.classification", LedgerWorkspaceArea.CLASSIFICATION, None),
+    LedgerRouteV1("ledger.import", LedgerWorkspaceArea.IMPORT, LedgerImportScreen),
+    LedgerRouteV1("ledger.classification", LedgerWorkspaceArea.CLASSIFICATION, LedgerClassificationScreen),
     LedgerRouteV1("ledger.evidence", LedgerWorkspaceArea.EVIDENCE, None),
     LedgerRouteV1("ledger.reconciliation", LedgerWorkspaceArea.RECONCILIATION, None),
 )
@@ -102,11 +121,36 @@ def resolve_ledger_screen(
     return factory(controller)
 
 
-def ledger_screen_factory(projection: LedgerWorkspaceProjectionV1) -> TuiScreenFactoryV1:
+def ledger_screen_factory(
+    projection: LedgerWorkspaceProjectionV1,
+    *,
+    review_action: ActionReference,
+    classify_action: ActionReference | None = None,
+    classification_target: TransactionId | None = None,
+    classification_submitter: LedgerClassificationSubmitterV1 | None = None,
+    prepared_imports: tuple[LedgerPreparedImportV1, ...] = (),
+    import_submitter: LedgerImportSubmitterV1 | None = None,
+) -> TuiScreenFactoryV1:
     """Bind an injected immutable projection to the outer navigation factory contract."""
+    declaration = lookup_action(review_action.action_id)
+    if declaration.target_command_key != "ledger.review":
+        raise ValueError("injected Ledger review action does not resolve to the canonical review query")
+    if classify_action is not None:
+        classification_declaration = lookup_action(classify_action.action_id)
+        if classification_declaration.target_command_key != "ledger.classify":
+            raise ValueError("injected Ledger classification action does not resolve to the canonical command")
 
     def create(context: TuiScreenContextV1) -> LedgerWorkspaceScreen:
-        controller = LedgerWorkspaceController(context, projection)
+        controller = LedgerWorkspaceController(
+            context,
+            projection,
+            review_action=review_action,
+            classify_action=classify_action,
+            classification_target=classification_target,
+            classification_submitter=classification_submitter,
+            prepared_imports=prepared_imports,
+            import_submitter=import_submitter,
+        )
         return resolve_ledger_screen(controller, controller.route_target(LedgerWorkspaceArea.OVERVIEW))
 
     return create

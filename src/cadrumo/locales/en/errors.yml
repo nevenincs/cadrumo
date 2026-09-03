@@ -528,8 +528,6 @@ errors:
     integrity_justificante_verification: The receipt verification with the AEAT could
       not be completed.
     integrity_manuals_manifest: The manual manifest failed its schema or hash checks.
-    integrity_observability_aeat_corpus_drift: Replay detected that the AEAT reference
-      corpus has drifted from the recorded state.
     integrity_observability_run_trace_validation: The persisted run trace failed strict
       validation.
     integrity_outbound_storage: The fetched payload failed integrity checks (hash,

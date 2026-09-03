@@ -9,21 +9,32 @@ from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
+from ....application.ledger.models import (
+    LedgerSourceImportResult,
+    ManualLedgerTransactionPatch,
+    ManualLedgerTransactionResult,
+)
 from ....application.ledger.workspace import (
     LEDGER_WORKSPACE_CONTRACT_VERSION,
     LedgerWorkspaceArea,
     LedgerWorkspaceAreaStateV1,
     LedgerWorkspaceAvailability,
     LedgerWorkspaceProjectionV1,
+    LedgerWorkspaceStatus,
 )
+from ....application.operator_actions.catalogue import lookup_action
 from ....application.operator_actions.models import ActionReference
 from ....core.i18n.render import tr
 from ....core.identity import TransactionId
 from ..components.theme import BASE_CSS, tokenised
 from ..navigation import TuiScreenContextV1
 from .models import (
+    LedgerClassificationSubmissionV1,
+    LedgerClassificationSubmitterV1,
     LedgerDestinationIdV1,
     LedgerEntryRowV1,
+    LedgerImportSubmitterV1,
+    LedgerPreparedImportV1,
     LedgerReviewRowV1,
     LedgerRouteRefusalV1,
     LedgerRouteTargetV1,
@@ -40,42 +51,144 @@ _DESTINATION_BY_AREA: Final = {
 }
 
 _IMPLEMENTED_AREAS: Final = frozenset(
-    {LedgerWorkspaceArea.OVERVIEW, LedgerWorkspaceArea.ENTRIES, LedgerWorkspaceArea.REVIEW}
+    {
+        LedgerWorkspaceArea.OVERVIEW,
+        LedgerWorkspaceArea.ENTRIES,
+        LedgerWorkspaceArea.REVIEW,
+        LedgerWorkspaceArea.IMPORT,
+        LedgerWorkspaceArea.CLASSIFICATION,
+    }
+)
+
+_AREA_LOCALE_KEYS: Final = {
+    LedgerWorkspaceArea.OVERVIEW: "tui.ledger.area.overview",
+    LedgerWorkspaceArea.ENTRIES: "tui.ledger.area.entries",
+    LedgerWorkspaceArea.REVIEW: "tui.ledger.area.review",
+    LedgerWorkspaceArea.IMPORT: "tui.ledger.area.import",
+    LedgerWorkspaceArea.CLASSIFICATION: "tui.ledger.area.classification",
+    LedgerWorkspaceArea.EVIDENCE: "tui.ledger.area.evidence",
+    LedgerWorkspaceArea.RECONCILIATION: "tui.ledger.area.reconciliation",
+}
+_AVAILABILITY_LOCALE_KEYS: Final = {
+    LedgerWorkspaceAvailability.AVAILABLE: "tui.ledger.availability.available",
+    LedgerWorkspaceAvailability.LOCKED: "tui.ledger.availability.locked",
+    LedgerWorkspaceAvailability.STALE: "tui.ledger.availability.stale",
+    LedgerWorkspaceAvailability.NEVER_CAPTURED: "tui.ledger.availability.never_captured",
+    LedgerWorkspaceAvailability.UNAVAILABLE: "tui.ledger.availability.unavailable",
+}
+_REVIEW_STATUS_LOCALE_KEYS: Final = {
+    "pending": "tui.ledger.review_status.pending",
+    "reviewed": "tui.ledger.review_status.reviewed",
+    "skipped": "tui.ledger.review_status.skipped",
+}
+_STATUS_LOCALE_KEYS: Final = {
+    LedgerWorkspaceStatus.READY: "tui.ledger.status.ready",
+    LedgerWorkspaceStatus.EMPTY: "tui.ledger.status.empty",
+    LedgerWorkspaceStatus.NEEDS_ATTENTION: "tui.ledger.status.needs_attention",
+    LedgerWorkspaceStatus.UNMEASURED: "tui.ledger.status.unmeasured",
+}
+_LEDGER_LOCALE_KEYS: Final = (
+    "tui.ledger.column.destination",
+    "tui.ledger.column.availability",
+    "tui.ledger.column.items",
+    "tui.ledger.column.area",
+    "tui.ledger.column.status",
+    "tui.ledger.column.entry",
+    "tui.ledger.column.review_status",
+    "tui.ledger.column.next",
+    "tui.ledger.refusal.application_state",
+    "tui.ledger.refusal.destination_pending",
+    "tui.ledger.overview.title",
+    "tui.ledger.overview.quality",
+    "tui.ledger.overview.affected_declarations",
+    "tui.ledger.entries.title",
+    "tui.ledger.entries.redacted",
+    "tui.ledger.entries.empty",
+    "tui.ledger.review.title",
+    "tui.ledger.review.filter_all",
+    "tui.ledger.review.open",
+    "tui.ledger.review.empty",
+    "tui.ledger.unavailable.title",
+    "tui.ledger.refusal.submission_unavailable",
+    "tui.ledger.classification.title",
+    "tui.ledger.classification.prompt",
+    "tui.ledger.classification.target",
+    "tui.ledger.classification.business",
+    "tui.ledger.classification.personal",
+    "tui.ledger.classification.excluded",
+    "tui.ledger.classification.confirm",
+    "tui.ledger.classification.cancel",
+    "tui.ledger.classification.confirming",
+    "tui.ledger.classification.progress",
+    "tui.ledger.classification.success",
+    "tui.ledger.classification.failure",
+    "tui.ledger.flow.in_flight_refusal",
+    "tui.ledger.import.title",
+    "tui.ledger.import.prompt",
+    "tui.ledger.import.provider.bank",
+    "tui.ledger.import.source.prepared",
+    "tui.ledger.import.confirm",
+    "tui.ledger.import.cancel",
+    "tui.ledger.import.confirming",
+    "tui.ledger.import.progress",
+    "tui.ledger.import.success",
+    "tui.ledger.import.failure",
+    "tui.ledger.import.empty",
+    *_AREA_LOCALE_KEYS.values(),
+    *_AVAILABILITY_LOCALE_KEYS.values(),
+    *_REVIEW_STATUS_LOCALE_KEYS.values(),
+    *_STATUS_LOCALE_KEYS.values(),
 )
 
 
-def ledger_copy(key: str, *, default: str, **values: object) -> str:
+def ledger_copy(key: str, **values: object) -> str:
     """Resolve all operator copy through the canonical catalogue boundary."""
-    return tr(key, default=default, **values)
+    return tr(key, **values)
 
 
 def area_label(area: LedgerWorkspaceArea) -> str:
     """Return an operator label without displaying an internal enum token."""
-    return ledger_copy(f"tui.ledger.area.{area.value}", default=area.value.replace("_", " ").title())
+    return ledger_copy(_AREA_LOCALE_KEYS[area])
 
 
 def availability_label(availability: LedgerWorkspaceAvailability) -> str:
     """Render availability with a textual cue independent of colour."""
-    defaults = {
-        LedgerWorkspaceAvailability.AVAILABLE: "Available",
-        LedgerWorkspaceAvailability.LOCKED: "Locked",
-        LedgerWorkspaceAvailability.STALE: "Stale",
-        LedgerWorkspaceAvailability.NEVER_CAPTURED: "Not captured",
-        LedgerWorkspaceAvailability.UNAVAILABLE: "Unavailable",
-    }
-    return ledger_copy(f"tui.ledger.availability.{availability.value}", default=defaults[availability])
+    return ledger_copy(_AVAILABILITY_LOCALE_KEYS[availability])
 
 
 def review_status_label(status: str) -> str:
     """Translate a source status without leaking its transport spelling."""
-    defaults = {"pending": "Pending", "reviewed": "Reviewed", "skipped": "Skipped"}
-    return ledger_copy(f"tui.ledger.review_status.{status}", default=defaults.get(status, "Other"))
+    key = _REVIEW_STATUS_LOCALE_KEYS.get(status)
+    if key is None:
+        raise ValueError("unsupported Ledger review status")
+    return ledger_copy(key)
+
+
+def status_label(status: LedgerWorkspaceStatus) -> str:
+    """Render source status through its authored catalogue key."""
+    return ledger_copy(_STATUS_LOCALE_KEYS[status])
+
+
+def item_count_label(state: LedgerWorkspaceAreaStateV1) -> str:
+    """Keep an unmeasured denominator distinct from a measured numeric zero."""
+    return status_label(state.status) if state.status is LedgerWorkspaceStatus.UNMEASURED else str(state.item_count)
 
 
 class LedgerWorkspaceController:
     """Read-only custody of one injected application projection and shell context."""
 
-    def __init__(self, context: TuiScreenContextV1, projection: LedgerWorkspaceProjectionV1) -> None:
+    def __init__(
+        self,
+        context: TuiScreenContextV1,
+        projection: LedgerWorkspaceProjectionV1,
+        *,
+        review_action: ActionReference,
+        classify_action: ActionReference | None = None,
+        classification_target: TransactionId | None = None,
+        classification_submitter: LedgerClassificationSubmitterV1 | None = None,
+        prepared_imports: tuple[LedgerPreparedImportV1, ...] = (),
+        import_submitter: LedgerImportSubmitterV1 | None = None,
+    ) -> None:
         """Admit an outer Ledger context and retain its immutable snapshot."""
         if context.destination != "workbench.ledger":
             raise ValueError("Ledger workspace requires the workbench.ledger screen context")
@@ -83,7 +196,34 @@ class LedgerWorkspaceController:
             raise ValueError("unsupported Ledger workspace projection contract")
         self.context = context
         self.projection = projection
+        visible_ids = {row.transaction_id for row in projection.entries}
+        if classification_target is not None and classification_target not in visible_ids:
+            raise ValueError("classification target is absent from the visible Ledger projection")
+        if (
+            classify_action is not None
+            and lookup_action(classify_action.action_id).target_command_key != "ledger.classify"
+        ):
+            raise ValueError("injected Ledger classification action does not resolve to the canonical command")
+        choice_ids = tuple(choice.choice_id for choice in prepared_imports)
+        if len(choice_ids) != len(set(choice_ids)):
+            raise ValueError("prepared import choice identities must be unique")
+        self.review_action = review_action
+        self.classify_action = classify_action
+        self.classification_target = classification_target
+        self.classification_submitter = classification_submitter
+        self.prepared_imports = prepared_imports
+        self.import_submitter = import_submitter
         self._states = {row.area: row for row in projection.areas}
+
+    def classification_target_coordinate(self) -> tuple[int, int, str]:
+        """Return a safe position and redacted identifier from the visible projection."""
+        target = self.classification_target
+        if target is None:
+            raise RuntimeError("classification target is unavailable")
+        position = next(
+            index for index, row in enumerate(self.projection.entries, start=1) if row.transaction_id == target
+        )
+        return position, len(self.projection.entries), str(target)[:12]
 
     def state_for(self, area: LedgerWorkspaceArea) -> LedgerWorkspaceAreaStateV1:
         """Return the application-owned area state."""
@@ -103,11 +243,23 @@ class LedgerWorkspaceController:
                 availability=state.availability,
                 reason_key="tui.ledger.refusal.application_state",
             )
-        if area not in _IMPLEMENTED_AREAS:
+        missing_door = (
+            area is LedgerWorkspaceArea.CLASSIFICATION
+            and (
+                self.classify_action is None
+                or self.classification_target is None
+                or self.classification_submitter is None
+            )
+        ) or (area is LedgerWorkspaceArea.IMPORT and (not self.prepared_imports or self.import_submitter is None))
+        if area not in _IMPLEMENTED_AREAS or missing_door:
             return LedgerRouteRefusalV1(
                 target=target,
                 availability=LedgerWorkspaceAvailability.UNAVAILABLE,
-                reason_key="tui.ledger.refusal.destination_pending",
+                reason_key=(
+                    "tui.ledger.refusal.submission_unavailable"
+                    if missing_door
+                    else "tui.ledger.refusal.destination_pending"
+                ),
             )
         return None
 
@@ -122,6 +274,14 @@ class LedgerWorkspaceController:
             for row in self.projection.entries
         )
 
+    def restored_transaction_id(self) -> TransactionId | None:
+        """Resolve a transaction focus by semantic identity, never by row position."""
+        focus = self.context.focus
+        if focus is None or focus.semantic_key != "ledger.transaction" or focus.restore_token is None:
+            return None
+        candidate = focus.restore_token
+        return candidate if any(row.transaction_id == candidate for row in self.projection.entries) else None
+
     def review_rows(self) -> tuple[LedgerReviewRowV1, ...]:
         """Join review identities to safe entry references, refusing contradictions."""
         by_id = {row.transaction_id: row for row in self.projection.entries}
@@ -134,11 +294,33 @@ class LedgerWorkspaceController:
                 LedgerReviewRowV1(
                     transaction_id=transaction_id,
                     review_status=source.review_status,
-                    action=ActionReference(action_id="operator.ledger.review"),
+                    action=self.review_action,
                     source=source,
                 )
             )
         return tuple(rows)
+
+    async def submit_classification(
+        self, patch: ManualLedgerTransactionPatch
+    ) -> ManualLedgerTransactionResult:
+        """Submit an explicit patch through the injected authorized door."""
+        if self.classify_action is None or self.classification_target is None or self.classification_submitter is None:
+            raise RuntimeError("classification submission is unavailable")
+        submission = LedgerClassificationSubmissionV1(
+            action=self.classify_action,
+            transaction_id=self.classification_target,
+            patch=patch,
+        )
+        result = await self.classification_submitter(submission)
+        if result.ref.transaction_id != self.classification_target:
+            raise ValueError("classification result transaction identity disagrees")
+        return result
+
+    async def submit_import(self, prepared: LedgerPreparedImportV1) -> LedgerSourceImportResult:
+        """Pass an opaque pre-resolved command to the injected import door."""
+        if self.import_submitter is None or prepared not in self.prepared_imports:
+            raise RuntimeError("import submission is unavailable")
+        return await prepared.submit_with(self.import_submitter)
 
 
 class LedgerRouteRequested(Message):
@@ -158,6 +340,15 @@ class LedgerReviewRequested(Message):
         super().__init__()
         self.transaction_id = transaction_id
         self.action = action
+
+
+class LedgerEntrySelected(Message):
+    """Host-facing semantic selection of one safe Ledger entry reference."""
+
+    def __init__(self, transaction_id: TransactionId) -> None:
+        """Store only the application projection's safe transaction identity."""
+        super().__init__()
+        self.transaction_id = transaction_id
 
 
 class LedgerBackRequested(Message):
@@ -188,14 +379,14 @@ class LedgerWorkspaceScreen(Screen[None]):
     def populate_navigation(self) -> None:
         """Populate the complete seven-area catalogue in canonical order."""
         table = cast("DataTable[str]", self.query_one("#ledger-navigation", DataTable))
-        table.add_column(ledger_copy("tui.ledger.column.destination", default="Destination"), key="destination")
-        table.add_column(ledger_copy("tui.ledger.column.availability", default="Availability"), key="availability")
-        table.add_column(ledger_copy("tui.ledger.column.items", default="Items"), key="items")
+        table.add_column(ledger_copy("tui.ledger.column.destination"), key="destination")
+        table.add_column(ledger_copy("tui.ledger.column.availability"), key="availability")
+        table.add_column(ledger_copy("tui.ledger.column.items"), key="items")
         for area in LedgerWorkspaceArea:
             state = self.controller.state_for(area)
             refusal = self.controller.refusal_for(area)
             availability = state.availability if refusal is None else refusal.availability
-            table.add_row(area_label(area), availability_label(availability), str(state.item_count), key=area.value)
+            table.add_row(area_label(area), availability_label(availability), item_count_label(state), key=area.value)
 
     def handle_navigation_selection(self, event: DataTable.RowSelected) -> bool:
         """Handle the common navigation table and expose refusals as visible copy."""
@@ -208,10 +399,7 @@ class LedgerWorkspaceScreen(Screen[None]):
         if refusal is not None:
             self.refusal = refusal
             notice.update(
-                ledger_copy(
-                    refusal.reason_key,
-                    default="This destination is not available in the current workspace.",
-                )
+                ledger_copy(refusal.reason_key)
             )
             return True
         target = self.controller.route_target(area)
@@ -228,12 +416,15 @@ class LedgerWorkspaceScreen(Screen[None]):
 
 __all__ = [
     "LedgerBackRequested",
+    "LedgerEntrySelected",
     "LedgerReviewRequested",
     "LedgerRouteRequested",
     "LedgerWorkspaceController",
     "LedgerWorkspaceScreen",
     "area_label",
     "availability_label",
+    "item_count_label",
     "ledger_copy",
     "review_status_label",
+    "status_label",
 ]

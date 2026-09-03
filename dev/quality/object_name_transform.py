@@ -47,7 +47,7 @@ __all__ = [
 
 
 _SHA256_PREFIX: Final[str] = "sha256:"
-_UNSUPPORTED_REFERENCE_CLASSES: Final[frozenset[str]] = frozenset({"dynamic-target", "generated-artifact"})
+_UNSUPPORTED_REFERENCE_CLASSES: Final[frozenset[str]] = frozenset({"generated-artifact"})
 
 
 class ObjectNameTransformError(RuntimeError):
@@ -237,6 +237,22 @@ class _RenameTransformer(cst.CSTTransformer):
             reference_class = "static-import"
         self.evidence[operation.operation_id].add(reference_class)
 
+    def _is_form_module_literal(self, node: cst.SimpleString) -> bool:
+        argument = self.get_metadata(ParentNodeProvider, node, None)
+        if not isinstance(argument, cst.Arg):
+            return False
+        call = self.get_metadata(ParentNodeProvider, argument, None)
+        if (
+            not isinstance(call, cst.Call)
+            or self.module_name != "dev.packaging.campaign"
+            or _dotted_name(call.func) != "Form"
+        ):
+            return False
+        if argument.keyword is not None:
+            return argument.keyword.value == "module"
+        positional = tuple(item for item in call.args if item.keyword is None)
+        return len(positional) > 1 and positional[1] is argument
+
     @override
     def visit_ClassDef(self, node: cst.ClassDef) -> bool | None:
         self._declaration_name_nodes.add(id(node.name))
@@ -255,8 +271,33 @@ class _RenameTransformer(cst.CSTTransformer):
             raise ObjectNameTransformError(f"cannot evaluate a string literal in {self.module_name}") from exc
         if not isinstance(value, str):
             return True
+        if self._is_form_module_literal(node) and any(
+            operation.operation_kind == "module-rename" and value == self._operation_names(operation)[0]
+            for operation in self.operations
+        ):
+            return True
         self._refuse_opaque_spelling(value)
         return True
+
+    @override
+    def leave_SimpleString(self, original_node: cst.SimpleString, updated_node: cst.SimpleString) -> cst.SimpleString:
+        value = original_node.evaluated_value
+        if not isinstance(value, str):
+            return updated_node
+        for operation in self.operations:
+            old_module, _old_name, new_module, _new_name = self._operation_names(operation)
+            if (
+                operation.operation_kind != "module-rename"
+                or value != old_module
+                or not self._is_form_module_literal(original_node)
+            ):
+                continue
+            self.evidence[operation.operation_id].add("dynamic-target")
+            replacement = cst.parse_expression(repr(new_module))
+            if not isinstance(replacement, cst.SimpleString):
+                raise ObjectNameTransformError("module string target did not parse as a simple string")
+            return replacement
+        return updated_node
 
     @override
     def visit_FormattedStringText(self, node: cst.FormattedStringText) -> bool | None:

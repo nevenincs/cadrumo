@@ -297,7 +297,7 @@ class TestStorePersistenceErrors:
         assert isinstance(error.__cause__, OSError)
 
     def test_load_trace_refuses_an_embedded_identity_from_another_run(self, tmp_path: Path) -> None:
-        """A valid trace copied from run B cannot be replayed through run A."""
+        """A valid trace copied from run B cannot be loaded as run A."""
         run_a = "0123456789abcdef"
         run_b = "abcdef0123456789"
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
