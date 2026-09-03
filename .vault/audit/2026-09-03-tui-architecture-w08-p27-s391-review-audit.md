@@ -33,9 +33,22 @@ Only bucket labels are compared. `review_transaction_ids` is copied from the rev
 
 The focused test proves canonical enum order, that every source string begins with `local.`, and one Review status. It does not assert the exact source tuple, availability, status and item count for each of the seven areas. Swapping the Evidence and Reconciliation authorities, marking Import ready, or deriving a wrong Classification count would remain green. The availability test constructs one area record directly and proves a missing reason is rejected; it does not prove the workspace builder's complete area projection. A positive affected-declaration test is also absent, so natural Modelo/year/period projection, changed/removed counts and canonical ordering are not acceptance evidence even though the implementation appears correct by inspection.
 
+### final-foreign-invoice-disposition | low | Invoice bucket identity is checked before every reconciliation reader
+
+The workspace validator now examines every supplied invoice before any suggestion, link-consistency or filing-staleness reader runs and refuses a missing or foreign bucket identity. The focused detector supplies a foreign-bucket invoice, injects one recording callable into all three reader doors, observes the typed refusal and proves the callable was never reached. `foreign-invoice-bucket-admission` is closed.
+
+### final-snapshot-coherence-disposition | low | Summary, preflight and review facts are reconciled with the transaction catalogue
+
+The validator reconstructs lifecycle and active-review counts from the supplied transaction catalogue and compares every relevant summary count. It rejects preflight claims without a supplied report, mismatched period/readiness/count facts, duplicate or absent review identities, review statuses that disagree with canonical transaction meaning, and preflight issues naming absent transactions. Focused contradiction cases exercise both summary-count and review-status refusal. `contradictory-input-snapshot` is closed.
+
+### final-area-and-affected-disposition | low | Exact area semantics and affected declarations now have direct witnesses
+
+The projection test now asserts one literal seven-row matrix covering canonical area order, exact ordered source tuples, availability, status and item count. A positive affected-declaration test supplies two results in reverse order and checks their exact Modelo/year/Period addresses, changed and removed counts, calculation-revision identities and canonical output order. `area-contract-test-coverage` is closed.
+
 ## Recommendations
 
 1. Before invoking either invoice reconciliation reader, reject every invoice whose non-null `bucket_id` differs from the Ledger summary bucket. Add a detector using a fully validated foreign-bucket invoice and prove neither suggestions nor inconsistencies can cross the boundary.
 2. Require every review identifier to resolve in the supplied transaction catalogue and reconcile snapshot counts at the boundary, or replace the independently supplied summary/review facts with one canonical snapshot input that makes disagreement unrepresentable.
 3. Assert a literal seven-row expectation covering area, exact ordered sources, availability, reason absence/presence, status and item count. Add positive affected-declaration cases with multiple deliberately unordered stale revisions and exact natural-address/count expectations.
 4. Focused Pytest passed 30 tests across the Ledger workspace and canonical filing-snapshot/evidence authorities. Ruff and ty passed; Basedpyright reported zero errors, warnings or notes. The public-module promotion and caller updates are clean, but one high and two medium findings remain open. `W08.P27.S391` must not close.
+5. Final remediation evidence reports 10 focused workspace tests passing; Ruff and ty pass; Basedpyright reports zero errors, warnings or notes. Bounded source and detector inspection confirms all three findings are closed. No critical, high or medium finding remains open, and `W08.P27.S391` may close.
