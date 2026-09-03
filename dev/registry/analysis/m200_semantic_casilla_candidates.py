@@ -11,7 +11,6 @@ import argparse
 import os
 import re
 import stat
-from collections import Counter
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from enum import StrEnum
