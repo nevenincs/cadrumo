@@ -12400,3 +12400,33 @@ family the walk had been skipping.
 Both movements say the same thing about the figures this campaign has been
 publishing. They measured what the tooling looked at, not what the registry
 declares, and the gap between those was nine families wide until this week.
+
+
+## The other hand-written list is complete
+
+Having found one hand-written list of schema fields to be eight of nineteen, the
+obvious question is whether the package's other one is any better.
+`YEAR_LEVEL_TEMPORAL_SITES` names six dotted paths that state which years a
+revision serves. Enumerated from the schema instead - every field on a revision
+or one level below it whose name carries "year", plus `valid_from` and
+`valid_to` - the answer is **exactly those six**. No gap.
+
+A second pass looked for year-stating fields under other names, since the first
+check and the hand-list could share a blind spot by both keying on the word
+"year". The only near-miss is `relations.source_period_offset_from_target`,
+which states how many periods separate a relation's source from its target
+rather than which years the revision serves. It is a temporal declaration and it
+is correctly outside this screen's stated boundary, which the docstring already
+draws at year-level claims.
+
+This is the result that makes the citing-families finding worth trusting. A
+campaign that suspects every hand-written list and then finds one incomplete has
+demonstrated a prior, not a defect. Applying the same check to the other list and
+finding it sound is what separates the two - and it took one command, which is
+the argument for asking rather than assuming in either direction.
+
+The list keeps its hand-written form. It is complete, its docstring states the
+boundary it draws and why, and deriving it would mean encoding "states which
+years a revision serves" as a rule over field names - which is the heuristic this
+package has refused repeatedly, and which would be less trustworthy than the six
+names it would replace.

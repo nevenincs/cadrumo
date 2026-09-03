@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:6aa6a105b12faa53795c03aa8c2e68553856da13489589878cb81cf85c991b09'
+body_hash: 'sha256:c5235229cda1b96c51f51a4cf569b47f25ab211c269850f59bbacc7d91b5d73f'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -502,6 +502,7 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S452` - Derive the citing-family walk from the schemas own SCHEMA_FAMILY annotation rather than naming eight of nineteen by hand, since nine unwalked families carry citations that would clear 141 of the 159 uncited findings and add 1,684 outside-manifest citations; `dev/registry/analysis/provenance_consistency.py dev/registry/analysis/manifest_uncited_references.py`.
 - [x] `W04.P09.S453` - Write the provenance ratio with its definition date and command in both places, since it has been corrected three times as the screen learned to read more families and a bare nineteen survived every correction; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md dev/registry/analysis/provenance_consistency.py`.
 - [x] `W04.P09.S454` - Re-measure the filer-facing criterion after the derived walk: every one of the sixty-nine filing-grade revisions now carries a condition where two were clean, which is the same corpus read more completely rather than a regression; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W04.P09.S455` - Check the packages other hand-written schema list and record it complete: the six year-level temporal sites are exactly what the schema yields, and the one near-miss states a period offset rather than which years a revision serves; `dev/registry/analysis/temporal_site_agreement.py`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 
