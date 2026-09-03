@@ -1428,7 +1428,7 @@ tui:
       profile: Profil megnyitása
       unknown: Munkafelület megnyitása
     result:
-      address: Modelo %{modelo} · %{filing_year} · %{period}
+      address: Modelo %{modelo} · %{filing_year}. év · %{period} időszak
       label:
         declaration: Bevallás
         filing: Benyújtás

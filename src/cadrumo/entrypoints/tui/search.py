@@ -215,7 +215,7 @@ class WorkbenchSearchProviderV1(Provider):
                 match_display=text,
                 command=_navigation_command(host.navigate_to, target),
                 text=text,
-                help=result.stable_id,
+                help=_destination_text(result.admission.destination),
             )
 
 
@@ -226,26 +226,26 @@ class WorkbenchCommandProviderV1(Provider):
     async def search(self, query: str) -> Hits:
         """Fuzzy-match the current catalogue's admitted routes and actions."""
         matcher = self.matcher(query)
-        for text, target, identity in _command_entries(_require_host(self.app).destination_catalogue):
+        for text, target, _identity in _command_entries(_require_host(self.app).destination_catalogue):
             if (score := matcher.match(text)) > 0:
                 yield Hit(
                     score=score,
                     match_display=matcher.highlight(text),
                     command=_navigation_command(_require_host(self.app).navigate_to, target),
                     text=text,
-                    help=identity,
+                    help=_destination_text(target.destination),
                 )
 
     @override
     async def discover(self) -> Hits:
         """List the current admitted destinations and actions before typing."""
         host = _require_host(self.app)
-        for text, target, identity in _command_entries(host.destination_catalogue):
+        for text, target, _identity in _command_entries(host.destination_catalogue):
             yield DiscoveryHit(
                 display=text,
                 command=_navigation_command(host.navigate_to, target),
                 text=text,
-                help=identity,
+                help=_destination_text(target.destination),
             )
 
 
