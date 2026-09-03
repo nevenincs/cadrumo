@@ -326,7 +326,7 @@ def main() -> int:
         f"distinct_reference_ids={len({key[3] for key in index})} citing_sites={len(findings)} "
         f"modelo_reference_pairs={len(scopes)} "
         f"spanning_every_revision={sum(s.spans_every_revision for s in scopes)} "
-        f"cited_by_one_child={single} {census}\n"
+        f"cited_by_one_child={single} uncited_manifest_refs={len(uncited)} {census}\n"
     )
     return 0
 
