@@ -521,22 +521,26 @@ def test_every_kind_a_screen_emits_is_named_in_its_own_docstring(
     assert not undocumented, "\n".join(sorted(set(undocumented)))
 
 
-def test_no_screen_kind_is_hidden_from_the_gates_by_a_runner_projection(
+def test_a_runner_projection_never_reports_a_kind_its_screen_does_not_emit(
     authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
 ) -> None:
-    """Every kind a screen emits reaches the gates that inspect kinds.
+    """A table entry may narrow its screen's findings; it may not invent them.
 
-    A table entry may project - onto the subset needing action, an index, or a
-    residue - so the runner can report one meaningful number per screen. Those
-    projections drop findings by design, and a gate reading the table inspects
-    what survived rather than what the screen emits. Four kinds were invisible
-    that way: one filtered out of the monetary screen, and all three grounded
-    kinds of the grounding screen, whose entry projects onto an empty residue.
+    Several entries project - onto the subset needing action, an index, or a
+    residue - so the runner reports one meaningful number per screen. Dropping
+    findings is what those projections are FOR, so the containment holds one way
+    only, and an earlier draft of this gate asserted the wrong direction: it
+    demanded the projections expose every kind, which would have forbidden the
+    design they exist to serve. It failed on legitimate code, which is how the
+    direction got corrected.
 
-    This asserts the two views agree on kinds, so a projection added later
-    cannot quietly narrow what the gates see. It compares SETS and not counts,
-    because a projection that dropped one kind and a screen that gained one
-    would leave a count unchanged.
+    What must hold is that a projection reports nothing its screen did not. A
+    projection that added a kind would be deriving a finding in the runner
+    table, where no test looks for it and no docstring describes it.
+
+    That projections hide kinds from the KIND-NAMING gate is a separate problem
+    and is fixed at the reader: those gates call each screen's own entry point
+    rather than the table.
     """
     from ..analysis.screens import CORPUS_SCREENS, SCREENS, screen_findings
 
@@ -546,20 +550,15 @@ def test_no_screen_kind_is_hidden_from_the_gates_by_a_runner_projection(
     direct = {name: kinds_of(findings) for name, findings in screen_findings(authority, modelo_ids)}
     assert any(direct.values()), "no screen emitted a kind, so this gate checked nothing"
 
-    projected: dict[str, set[str]] = {}
-    for entry in SCREENS:
-        projected[entry.name] = kinds_of(tuple(entry.run(authority, modelo_ids)))
-    for entry in CORPUS_SCREENS:
-        projected[entry.name] = kinds_of(tuple(entry.run()))
-
-    hidden = {
-        name: sorted(direct[name] - projected.get(name, set()))
-        for name in direct
-        if direct[name] - projected.get(name, set())
-    }
-    assert not hidden, (
-        "kinds a screen emits that its runner entry hides, so the gates never read them: " f"{hidden}"
-    )
+    invented: dict[str, list[str]] = {}
+    for name, run in (
+        *((entry.name, lambda entry=entry: entry.run(authority, modelo_ids)) for entry in SCREENS),
+        *((entry.name, lambda entry=entry: entry.run()) for entry in CORPUS_SCREENS),
+    ):
+        extra = kinds_of(tuple(run())) - direct.get(name, set())
+        if extra:
+            invented[name] = sorted(extra)
+    assert not invented, f"runner entries reporting a kind their screen does not emit: {invented}"
 
 
 def test_every_package_initialiser_in_the_development_registry_tree_is_inert() -> None:
