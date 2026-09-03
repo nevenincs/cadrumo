@@ -8,9 +8,9 @@ related:
   - '[[2026-08-08-aeat-design-relayout-boundary-modelo-200-partition-adr]]'
   - '[[2026-09-02-modelo-200-semantic-crosswalk-research]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
-modified: '2026-09-02'
+modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:cee97186e823a124f2e944cb84c37f7e18c9d740526f21106260bf1afa30a57d'
+body_hash: 'sha256:5605dfb5464e5b4078aaff57c83a5b986b58f36e8628b2e9607d0791566c05ea'
 ---
 
 # `modelo-200-semantic-crosswalk` plan
@@ -38,8 +38,8 @@ Separate current declarations from semantic adjudications and bind every result 
 
 Prevent historical fragments, adjacent designs, and description similarity from becoming 2024 semantic or legal authority.
 
-- [x] `W01.P02.S03` - Retire historic-payload restoration as authority-producing behavior while retaining proposal-only diagnostics; `dev/registry/analysis/m200_2024_restoration_candidates.py`.
-- [x] `W01.P02.S04` - Detect target-description, semantic-role, legal-reference, and source-SHA mutations at the historic-restoration boundary; `dev/registry/tests/test_m200_2024_restoration_candidates.py`.
+- [ ] `W01.P02.S03` - Retire historic-payload restoration as authority-producing behavior while retaining proposal-only diagnostics; `dev/registry/analysis/m200_2024_restoration_candidates.py`.
+- [ ] `W01.P02.S04` - Detect target-description, semantic-role, legal-reference, and source-SHA mutations at the historic-restoration boundary; `dev/registry/tests/test_m200_2024_restoration_candidates.py`.
 
 ## Wave `W02` - derive physical reconciliation from the pinned design
 
@@ -49,7 +49,7 @@ Build deterministic tooling that changes only facts proven by the 2024 design an
 
 Derive exact 2024-anchor rebinds while preserving every non-source authority fact byte-for-byte.
 
-- [ ] `W02.P03.S05` - Implement the source-SHA-bound planner and canonical TOML mutation surface for 3,158 exact declaration rebinds; `dev/registry/analysis/m200_2024_full_reconciliation.py`.
+- [ ] `W02.P03.S05` - Implement the source-SHA-bound planner and canonical TOML mutation surface for 3,171 exact map-owned declaration rebinds while refusing two true orphans; `dev/registry/analysis/m200_2024_full_reconciliation.py`.
 - [ ] `W02.P03.S06` - Reject missing anchors, source drift, duplicate output, altered non-source payloads, and partial rebind application; `dev/registry/tests/test_m200_2024_full_reconciliation.py`.
 
 ### Phase `W02.P04` - classify mismatched and orphan target identities
@@ -126,6 +126,6 @@ Waves are sequential. Within `W01`, census verification and the historic-restora
 
 ## Verification
 
-The plan is complete only when the frozen census accounts for all 3,173 current declarations and 156 reconstructed candidates; all 3,158 eligible source rebinds are exact and reproducible; all 15 unmapped calculation-only records have closed typed dispositions; all 185 identity mismatches have source-bound outcomes; every semantic case has reviewed 2024 authority; and every legal reference resolves and covers the target window.
+The plan is complete only when the frozen census accounts for all 3,173 current declarations and 156 reconstructed candidates; all 3,171 exact map-owned source rebinds are reproducible; both true orphans have closed typed dispositions; all 15 printed-identity diagnostics remain visible; all 185 map-owner mismatches have source-bound outcomes; every semantic case has reviewed 2024 authority; and every legal reference resolves and covers the target window.
 
 The canonical pipeline must independently regenerate and validate the full 2024 export package in a fresh temporary root, reject representative malformed and stale inputs, publish atomically through its receipt and lock path, and reproduce the committed tree in check mode. `ValidatedRegistryAuthority` must load the 2024 filing context as filing-grade with its generated layout. Focused suites, separately attributed long-suite results, and independent formal review must report no unresolved high or critical authority findings.

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8dd6e35bf28c4de1ad41d8b9df4c2c4e8c70e630bf2e3c6e724b0b49a76837fe'
+body_hash: 'sha256:c6fcebe646c89894c1f29110ebc4cf2768b10198d9c01d4c0f8147ea55abb805'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -6618,3 +6618,63 @@ reader a red test and no account of why it is red, which is how a correct fix
 gets reverted or a gate gets deleted to make a suite green. Fourteen tests pass
 in the module, exit 0, and the count of pins carrying an instruction equals the
 count of pins.
+
+### a-generator-refactor-left-twenty-one-attestations-stale | high | Twenty-one published export trees stopped reproducing on 2026-09-03; all sampled differ only in the manifest, so the records are correct and the attestations are not
+
+The corpus gate went red against a tree that had been green the day before. The
+newly non-reproducing trees are `151`, `202`, `210`, `222`, `232`, `303`, `322`
+and `353` - twenty-one revisions in all. Eleven were classified directly: every
+one reproduces its record bytes exactly and differs only in its generation
+manifest. Cleared bytecode first, because stale `__pycache__` has twice produced
+a false registry finding in this campaign; the state survived the clear, so it
+is real.
+
+The cause is visible in the intervening commits, which move the generator's
+surfaces - the decimal separator and export repeat named at their call sites,
+the invoice row materialization surface followed, the loader and schema surfaces
+split. None of them changed what the records say. They changed what produced the
+records, which is what the manifest attests, so every manifest in the corpus
+went stale at once while the shipped filing data stayed correct.
+
+The finding for the register is that the shipped attestations now claim inputs
+that no longer exist. Republication is the remedy and it is safe for this class,
+but it lands in generated trees under `src/` and is outside this work's scope;
+the population is named here so the republication is a decision somebody takes
+rather than a state nobody noticed.
+
+### a-ledger-of-a-mechanical-mass-state-is-churn-not-explanation | high | The generated-tree gate demanded a written reason per tree for a condition that arrives twenty-one at a time, so it was split by class
+
+The gate as written required every non-reproducing tree to carry a disposition
+row, without distinguishing the class that is unsafe to republish from the class
+that is merely stale. That was tolerable while both classes were small. The
+refactor above showed what it costs when they are not: the honest response to
+twenty-one manifest-stale trees would have been twenty-one rows all saying "a
+refactor moved the generator", and the next refactor would ask for the corpus.
+A file that grows by bulk on every refactor stops being read, and a reader who
+learns to add rows to make a gate green has learned the opposite of what the
+gate was for.
+
+The two classes were separated on the ground that they fail for different
+reasons and want different work. Record drift keeps the ledger: regenerating one
+of those trees ships something worse than what is published, so each member owes
+a written account, and the gate still refuses in both directions - a drifting
+tree with no row fails, and a row whose tree has been repaired fails too.
+Manifest staleness is now asserted rather than excused: the claim that makes the
+class safe is that the records reproduce byte-for-byte, and that claim is
+checkable on every member, so a tree calling itself provenance-only while a
+record differs fails. The population is reported by the screen, which is the
+reporting channel, not the gating one.
+
+Both directions were demonstrated against constructed ledgers rather than by
+mutating the file: dropping a row from the ledger is caught, adding a row for a
+tree that does not drift is caught, and a provenance-only row placed in the
+record-drift ledger is caught. The ledger fell from six rows to two, and that is
+not the measure of anything - the two remaining rows are the two trees where
+republishing would do harm.
+
+The general lesson is about gate granularity rather than this gate. A per-item
+explanation is the right instrument for a condition that arrives one at a time
+and has a per-item cause. For a condition that arrives in bulk from a single
+cause, the per-item ledger records the cause once per victim and calls it
+accounting; what belongs there instead is the property that makes the bulk state
+tolerable, asserted over every member.
