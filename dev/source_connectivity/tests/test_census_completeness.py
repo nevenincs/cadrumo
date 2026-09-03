@@ -228,13 +228,7 @@ def test_inventory_repository_ownership_uses_its_live_discovery_locator() -> Non
         movement_locator,
     }
     stale = entry.model_copy(
-        update={
-            "capability_locators": tuple(
-                item
-                for item in entry.capability_locators
-                if item not in stale_locators
-            )
-        }
+        update={"capability_locators": tuple(item for item in entry.capability_locators if item not in stale_locators)}
     )
     with pytest.raises(SourceConnectivityCheckError, match="census capability locator drift"):
         check_capability_locators(

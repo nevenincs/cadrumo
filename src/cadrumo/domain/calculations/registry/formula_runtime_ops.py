@@ -198,7 +198,7 @@ def _bracket_candidates(
     if parameter.bracket_axis not in date_context:
         raise RegistryValidationError(f"parameter {parameter.id!r} requires date axis {parameter.bracket_axis!r}")
     selected = date_context[parameter.bracket_axis]
-    candidates = [
+    candidates: list[BracketEntry] = [
         bracket
         for bracket in parameter.brackets
         if bracket.valid_from <= selected and (bracket.valid_to is None or selected <= bracket.valid_to)

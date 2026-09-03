@@ -132,9 +132,7 @@ class ProfilePredicateOp(StrEnum):
     NOT_EQUALS = "not_equals"
 
 
-ProfilePredicateOpField = Annotated[
-    ProfilePredicateOp, BeforeValidator(coerce_enum_member(ProfilePredicateOp))
-]
+ProfilePredicateOpField = Annotated[ProfilePredicateOp, BeforeValidator(coerce_enum_member(ProfilePredicateOp))]
 """Registry token hydrated into a ProfilePredicateOp member."""
 
 
@@ -221,8 +219,6 @@ LiveVerificationSurfaceField = Annotated[
 declared token needs the coercion hop to arrive as a member. The bare enum stays the
 form this module's own comparisons use, and the two subsets stay derived from it.
 """
-
-
 
 
 def _validate_open_or_public_authentication(

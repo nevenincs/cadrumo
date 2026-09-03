@@ -1,83 +1,57 @@
-"""Frontend-neutral, redacted search contracts for the operator workbench.
+"""Frontend-neutral, intrinsically safe search projections for the workbench.
 
-The service searches an ephemeral in-memory snapshot injected by an application
-composition root. It owns no repository, persistence, network, or frontend
-dependency. Providers supply redacted display labels and SHA-256 token digests;
-raw filing references, taxpayer identifiers, ledger descriptions, and other
-source terms are therefore never retained in the snapshot or returned in a
-result.
+The service searches a private, ephemeral snapshot containing only closed
+semantic codes and canonical natural addresses. Providers cannot attach free
+text, raw search terms, token indexes, or an asserted result identity. The
+service derives each result identity from the safe projection itself and owns
+no repository, persistence, network, localization, or frontend dependency.
 """
 
 from __future__ import annotations
 
 import hashlib
+import hmac
 import re
+import secrets
 import unicodedata
 from collections.abc import Sequence
 from enum import StrEnum
-from typing import Annotated, Self
+from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, SecretStr, StringConstraints, field_validator, model_validator
 
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
 from ...core.identifier_grammar import NamespacedId
-from ...core.identity import FilingRecordId
+from ...core.identity import CalculationRevisionId, FilingRecordId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.text_fold import fold_printed_phrase
-from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos.codes import ModeloCode
 
-_MAX_LABEL_LENGTH = 200
-_MAX_OPERATOR_TERM_LENGTH = 200
+_MAX_QUERY_LENGTH = 200
 _MAX_SEARCH_RESULTS = 100
 _WORD_PATTERN = re.compile(r"\w+", re.UNICODE)
+_OPAQUE_IDENTITY_KEY = secrets.token_bytes(32)
 
-_RedactedLabel = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=_MAX_LABEL_LENGTH),
-]
 _TransientQuery = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=_MAX_OPERATOR_TERM_LENGTH),
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=_MAX_QUERY_LENGTH),
 ]
 
 
 def _reject_control_characters(value: str) -> str:
-    """Refuse every Unicode control character on a human-readable boundary."""
     if any(unicodedata.category(character) == "Cc" for character in value):
-        raise ValueError("workbench search text cannot contain control characters")
+        raise ValueError("workbench search query cannot contain control characters")
     return value
 
 
 def _normalize_text(value: str) -> str:
-    """Use the canonical case-before-accent printed-phrase normalization."""
     return fold_printed_phrase(value)
 
 
 def _tokens(value: str) -> tuple[str, ...]:
     return tuple(match.group(0) for match in _WORD_PATTERN.finditer(_normalize_text(value)))
-
-
-def digest_operator_safe_tokens(*values: str) -> tuple[Hex64Str, ...]:
-    """Hash caller-declared operator-safe terms into canonical search tokens.
-
-    The helper normalizes case, accents, and whitespace with the canonical core
-    printed-phrase primitive, then hashes individual word tokens. Callers must
-    pass only terms approved for operator search. The returned tuple is sorted
-    and deduplicated and retains none of the supplied plaintext.
-    """
-    digests: set[Hex64Str] = set()
-    for value in values:
-        if not isinstance(value, str):
-            raise TypeError("operator-safe search terms must be strings")
-        if len(value) > _MAX_OPERATOR_TERM_LENGTH:
-            raise ValueError(f"operator-safe search terms cannot exceed {_MAX_OPERATOR_TERM_LENGTH} characters")
-        _reject_control_characters(value)
-        for token in _tokens(value):
-            digests.add(hashlib.sha256(token.encode("utf-8")).hexdigest())
-    return tuple(sorted(digests))
 
 
 class WorkbenchSearchKind(StrEnum):
@@ -94,24 +68,134 @@ class WorkbenchSearchKind(StrEnum):
     NOTIFICATION = "notification"
 
 
-_STATUS_PREFIX_BY_KIND: dict[WorkbenchSearchKind, str] = {
-    WorkbenchSearchKind.LEDGER_ENTRY: "ledger.entry.",
-    WorkbenchSearchKind.LEDGER_EVIDENCE: "ledger.evidence.",
-    WorkbenchSearchKind.DECLARATION: "declaration.",
-    WorkbenchSearchKind.MODELO: "modelo.",
-    WorkbenchSearchKind.REVISION: "revision.",
-    WorkbenchSearchKind.FILING: "filing.",
-    WorkbenchSearchKind.HISTORY: "history.",
-    WorkbenchSearchKind.RECONCILIATION: "reconciliation.",
-    WorkbenchSearchKind.NOTIFICATION: "notification.",
+class WorkbenchSearchSource(StrEnum):
+    """Closed application projection that supplied a search record."""
+
+    LEDGER_ENTRY = "ledger.entry_projection"
+    LEDGER_EVIDENCE = "ledger.evidence_projection"
+    DECLARATION = "modelo.declaration_projection"
+    MODELO = "modelo.catalogue_projection"
+    REVISION = "modelo.calculation_history_projection"
+    FILING = "filing.record_projection"
+    HISTORY = "filing.history_projection"
+    RECONCILIATION = "reconciliation.finding_projection"
+    NOTIFICATION = "notification.aeat_projection"
+
+
+class WorkbenchSearchStatus(StrEnum):
+    """Closed source-native statuses admitted by the search boundary."""
+
+    LEDGER_ENTRY_READY = "ledger.entry.ready"
+    LEDGER_ENTRY_NEEDS_REVIEW = "ledger.entry.needs_review"
+    LEDGER_ENTRY_CLASSIFIED = "ledger.entry.classified"
+    LEDGER_EVIDENCE_CAPTURED = "ledger.evidence.captured"
+    LEDGER_EVIDENCE_MISSING = "ledger.evidence.missing"
+    LEDGER_EVIDENCE_STALE = "ledger.evidence.stale"
+    DECLARATION_DRAFT = "declaration.draft"
+    DECLARATION_IN_PROGRESS = "declaration.in_progress"
+    DECLARATION_NEEDS_ATTENTION = "declaration.needs_attention"
+    DECLARATION_READY = "declaration.ready"
+    DECLARATION_FILED = "declaration.filed"
+    MODELO_AVAILABLE = "modelo.available"
+    MODELO_UNAVAILABLE = "modelo.unavailable"
+    REVISION_CURRENT = "revision.current"
+    REVISION_SUPERSEDED = "revision.superseded"
+    FILING_SUBMITTED = "filing.submitted"
+    FILING_ACCEPTED = "filing.accepted"
+    FILING_REJECTED = "filing.rejected"
+    HISTORY_OBSERVED = "history.observed"
+    HISTORY_NOT_OBSERVED = "history.not_observed"
+    RECONCILIATION_OPEN = "reconciliation.open"
+    RECONCILIATION_RESOLVED = "reconciliation.resolved"
+    NOTIFICATION_UNREAD = "notification.unread"
+    NOTIFICATION_READ = "notification.read"
+
+
+class WorkbenchSearchLabelKey(StrEnum):
+    """Closed localization key; never provider-authored display text."""
+
+    LEDGER_ENTRY = "search.ledger_entry"
+    LEDGER_EVIDENCE = "search.ledger_evidence"
+    DECLARATION = "search.declaration"
+    MODELO = "search.modelo"
+    REVISION = "search.revision"
+    FILING = "search.filing"
+    HISTORY = "search.history"
+    RECONCILIATION = "search.reconciliation"
+    NOTIFICATION = "search.notification"
+
+
+_SOURCE_BY_KIND: dict[WorkbenchSearchKind, WorkbenchSearchSource] = {
+    kind: WorkbenchSearchSource(kind_source)
+    for kind, kind_source in (
+        (WorkbenchSearchKind.LEDGER_ENTRY, WorkbenchSearchSource.LEDGER_ENTRY),
+        (WorkbenchSearchKind.LEDGER_EVIDENCE, WorkbenchSearchSource.LEDGER_EVIDENCE),
+        (WorkbenchSearchKind.DECLARATION, WorkbenchSearchSource.DECLARATION),
+        (WorkbenchSearchKind.MODELO, WorkbenchSearchSource.MODELO),
+        (WorkbenchSearchKind.REVISION, WorkbenchSearchSource.REVISION),
+        (WorkbenchSearchKind.FILING, WorkbenchSearchSource.FILING),
+        (WorkbenchSearchKind.HISTORY, WorkbenchSearchSource.HISTORY),
+        (WorkbenchSearchKind.RECONCILIATION, WorkbenchSearchSource.RECONCILIATION),
+        (WorkbenchSearchKind.NOTIFICATION, WorkbenchSearchSource.NOTIFICATION),
+    )
 }
-_ADDRESS_REQUIRED_KINDS = frozenset(
+_LABEL_BY_KIND: dict[WorkbenchSearchKind, WorkbenchSearchLabelKey] = {
+    kind: WorkbenchSearchLabelKey(f"search.{kind.value}") for kind in WorkbenchSearchKind
+}
+_STATUSES_BY_SOURCE: dict[WorkbenchSearchSource, frozenset[WorkbenchSearchStatus]] = {
+    WorkbenchSearchSource.LEDGER_ENTRY: frozenset(
+        {
+            WorkbenchSearchStatus.LEDGER_ENTRY_READY,
+            WorkbenchSearchStatus.LEDGER_ENTRY_NEEDS_REVIEW,
+            WorkbenchSearchStatus.LEDGER_ENTRY_CLASSIFIED,
+        }
+    ),
+    WorkbenchSearchSource.LEDGER_EVIDENCE: frozenset(
+        {
+            WorkbenchSearchStatus.LEDGER_EVIDENCE_CAPTURED,
+            WorkbenchSearchStatus.LEDGER_EVIDENCE_MISSING,
+            WorkbenchSearchStatus.LEDGER_EVIDENCE_STALE,
+        }
+    ),
+    WorkbenchSearchSource.DECLARATION: frozenset(
+        {
+            WorkbenchSearchStatus.DECLARATION_DRAFT,
+            WorkbenchSearchStatus.DECLARATION_IN_PROGRESS,
+            WorkbenchSearchStatus.DECLARATION_NEEDS_ATTENTION,
+            WorkbenchSearchStatus.DECLARATION_READY,
+            WorkbenchSearchStatus.DECLARATION_FILED,
+        }
+    ),
+    WorkbenchSearchSource.MODELO: frozenset(
+        {WorkbenchSearchStatus.MODELO_AVAILABLE, WorkbenchSearchStatus.MODELO_UNAVAILABLE}
+    ),
+    WorkbenchSearchSource.REVISION: frozenset(
+        {WorkbenchSearchStatus.REVISION_CURRENT, WorkbenchSearchStatus.REVISION_SUPERSEDED}
+    ),
+    WorkbenchSearchSource.FILING: frozenset(
+        {
+            WorkbenchSearchStatus.FILING_SUBMITTED,
+            WorkbenchSearchStatus.FILING_ACCEPTED,
+            WorkbenchSearchStatus.FILING_REJECTED,
+        }
+    ),
+    WorkbenchSearchSource.HISTORY: frozenset(
+        {WorkbenchSearchStatus.HISTORY_OBSERVED, WorkbenchSearchStatus.HISTORY_NOT_OBSERVED}
+    ),
+    WorkbenchSearchSource.RECONCILIATION: frozenset(
+        {WorkbenchSearchStatus.RECONCILIATION_OPEN, WorkbenchSearchStatus.RECONCILIATION_RESOLVED}
+    ),
+    WorkbenchSearchSource.NOTIFICATION: frozenset(
+        {WorkbenchSearchStatus.NOTIFICATION_UNREAD, WorkbenchSearchStatus.NOTIFICATION_READ}
+    ),
+}
+_OPAQUE_IDENTITY_KINDS = frozenset(
     {
-        WorkbenchSearchKind.DECLARATION,
-        WorkbenchSearchKind.MODELO,
-        WorkbenchSearchKind.REVISION,
-        WorkbenchSearchKind.FILING,
+        WorkbenchSearchKind.LEDGER_ENTRY,
+        WorkbenchSearchKind.LEDGER_EVIDENCE,
         WorkbenchSearchKind.HISTORY,
+        WorkbenchSearchKind.RECONCILIATION,
+        WorkbenchSearchKind.NOTIFICATION,
     }
 )
 
@@ -127,21 +211,62 @@ class WorkbenchDestinationAdmissionState(StrEnum):
 
 
 class WorkbenchModeloAddress(BaseModel):
-    """Canonical natural address for one Modelo-related search result."""
+    """Exact Modelo/year/period case address without a record identity."""
 
     model_config = STRICT_FROZEN_CONFIG
 
+    address_kind: Literal["modelo_case"] = "modelo_case"
     modelo: ModeloCode
     filing_year: FilingYear
     period: Period
-    revision_id: RevisionId | None = None
-    filing_record_id: FilingRecordId | None = None
 
     @model_validator(mode="after")
     def _period_year_matches_address(self) -> Self:
         if self.period.filing_year != self.filing_year:
             raise ValueError("Modelo address filing_year must match period.filing_year")
         return self
+
+
+class WorkbenchRevisionAddress(BaseModel):
+    """Exact calculation-history revision address."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    address_kind: Literal["calculation_revision"] = "calculation_revision"
+    modelo: ModeloCode
+    filing_year: FilingYear
+    period: Period
+    calculation_revision_id: CalculationRevisionId
+
+    @model_validator(mode="after")
+    def _period_year_matches_address(self) -> Self:
+        if self.period.filing_year != self.filing_year:
+            raise ValueError("revision address filing_year must match period.filing_year")
+        return self
+
+
+class WorkbenchFilingAddress(BaseModel):
+    """Exact filing-record address."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    address_kind: Literal["filing_record"] = "filing_record"
+    modelo: ModeloCode
+    filing_year: FilingYear
+    period: Period
+    filing_record_id: FilingRecordId
+
+    @model_validator(mode="after")
+    def _period_year_matches_address(self) -> Self:
+        if self.period.filing_year != self.filing_year:
+            raise ValueError("filing address filing_year must match period.filing_year")
+        return self
+
+
+type WorkbenchNaturalAddress = Annotated[
+    WorkbenchModeloAddress | WorkbenchRevisionAddress | WorkbenchFilingAddress,
+    Field(discriminator="address_kind"),
+]
 
 
 class WorkbenchDestinationAdmission(BaseModel):
@@ -162,69 +287,86 @@ class WorkbenchDestinationAdmission(BaseModel):
         return self
 
 
-def _validate_kind_contract(
+def _validate_projection(
     *,
     kind: WorkbenchSearchKind,
-    status_code: str,
-    address: WorkbenchModeloAddress | None,
+    source: WorkbenchSearchSource,
+    status: WorkbenchSearchStatus,
+    label_key: WorkbenchSearchLabelKey,
+    address: WorkbenchNaturalAddress | None,
     admission: WorkbenchDestinationAdmission,
     action_candidate_id: str | None,
-    noun: str,
+    identity_basis: SecretStr | None = None,
+    validate_identity_basis: bool = False,
 ) -> None:
-    expected_prefix = _STATUS_PREFIX_BY_KIND[kind]
-    if not status_code.startswith(expected_prefix):
-        raise ValueError(f"{kind.value} status_code must start with {expected_prefix!r}")
-    if kind in _ADDRESS_REQUIRED_KINDS and address is None:
-        raise ValueError(f"{kind.value} search {noun} require a Modelo address")
-    if kind is WorkbenchSearchKind.REVISION and (address is None or address.revision_id is None):
-        raise ValueError(f"revision search {noun} require a revision_id")
-    if kind is WorkbenchSearchKind.FILING and (address is None or address.filing_record_id is None):
-        raise ValueError(f"filing search {noun} require a filing_record_id")
+    if source is not _SOURCE_BY_KIND[kind]:
+        raise ValueError(f"{kind.value} requires source {_SOURCE_BY_KIND[kind].value!r}")
+    if status not in _STATUSES_BY_SOURCE[source]:
+        raise ValueError(f"status {status.value!r} is not declared by source {source.value!r}")
+    if label_key is not _LABEL_BY_KIND[kind]:
+        raise ValueError(f"{kind.value} requires label_key {_LABEL_BY_KIND[kind].value!r}")
+    expected_address_type: type[BaseModel] | None = {
+        WorkbenchSearchKind.DECLARATION: WorkbenchModeloAddress,
+        WorkbenchSearchKind.MODELO: WorkbenchModeloAddress,
+        WorkbenchSearchKind.REVISION: WorkbenchRevisionAddress,
+        WorkbenchSearchKind.FILING: WorkbenchFilingAddress,
+        WorkbenchSearchKind.HISTORY: WorkbenchModeloAddress,
+    }.get(kind)
+    if expected_address_type is None and address is not None:
+        raise ValueError(f"{kind.value} cannot carry a Modelo natural address")
+    if expected_address_type is not None and type(address) is not expected_address_type:
+        raise ValueError(f"{kind.value} requires exact {expected_address_type.__name__}")
     if admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE and action_candidate_id is not None:
         raise ValueError("a non-available destination cannot carry an action candidate")
+    if validate_identity_basis:
+        if kind in _OPAQUE_IDENTITY_KINDS and identity_basis is None:
+            raise ValueError(f"{kind.value} requires a private opaque identity basis")
+        if kind not in _OPAQUE_IDENTITY_KINDS and identity_basis is not None:
+            raise ValueError(f"{kind.value} derives identity from its natural address")
 
 
 class WorkbenchSearchDocument(BaseModel):
-    """Safe provider projection accepted by the pure query service.
+    """Intrinsically safe source projection accepted by the query service.
 
-    ``label`` is explicitly redacted display text. ``token_digests`` are
-    caller-produced with :func:`digest_operator_safe_tokens`; the document
-    cannot serialize the source terms from which they were derived.
-    ``action_candidate_id`` is only an unresolved catalogue candidate. S369's
-    destination catalogue remains the authority that admits and resolves it.
+    Every serializable field is a closed enum, canonical natural address, or
+    technical namespaced action/admission token. Multi-record families carry a
+    private source identity basis that is retained only in memory, excluded from
+    serialization and representation, and converted to a process-keyed opaque
+    result identity. There is no provider-authored label, raw search term, token
+    index, caller-visible source identifier, or asserted stable identity.
+    ``action_candidate_id`` remains unresolved until S369's catalogue admits it.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
-    stable_id: Hex64Str
     kind: WorkbenchSearchKind
-    source: NamespacedId
-    label: _RedactedLabel
-    token_digests: tuple[Hex64Str, ...] = ()
-    address: WorkbenchModeloAddress | None = None
-    status_code: NamespacedId
+    source: WorkbenchSearchSource
+    status: WorkbenchSearchStatus
+    label_key: WorkbenchSearchLabelKey
+    address: WorkbenchNaturalAddress | None = None
     admission: WorkbenchDestinationAdmission
     action_candidate_id: NamespacedId | None = None
+    identity_basis: SecretStr | None = Field(default=None, exclude=True, repr=False, min_length=1, max_length=512)
 
-    @field_validator("label")
+    @field_validator("identity_basis")
     @classmethod
-    def _label_has_no_control_characters(cls, value: str) -> str:
-        return _reject_control_characters(value)
-
-    @field_validator("token_digests")
-    @classmethod
-    def _canonicalize_token_digests(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        return tuple(sorted(set(value)))
+    def _identity_basis_has_no_control_characters(cls, value: SecretStr | None) -> SecretStr | None:
+        if value is not None:
+            _reject_control_characters(value.get_secret_value())
+        return value
 
     @model_validator(mode="after")
-    def _document_contract_is_consistent(self) -> Self:
-        _validate_kind_contract(
+    def _projection_is_consistent(self) -> Self:
+        _validate_projection(
             kind=self.kind,
-            status_code=self.status_code,
+            source=self.source,
+            status=self.status,
+            label_key=self.label_key,
             address=self.address,
             admission=self.admission,
             action_candidate_id=self.action_candidate_id,
-            noun="documents",
+            identity_basis=self.identity_basis,
+            validate_identity_basis=True,
         )
         return self
 
@@ -247,156 +389,168 @@ class WorkbenchSearchRequest(BaseModel):
 
 
 class WorkbenchSearchResult(BaseModel):
-    """One ranked result containing only redacted cross-domain metadata."""
+    """One ranked result containing only intrinsically safe metadata."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     stable_id: Hex64Str
     kind: WorkbenchSearchKind
-    source: NamespacedId
-    label: _RedactedLabel
-    address: WorkbenchModeloAddress | None = None
-    status_code: NamespacedId
+    source: WorkbenchSearchSource
+    status: WorkbenchSearchStatus
+    label_key: WorkbenchSearchLabelKey
+    address: WorkbenchNaturalAddress | None = None
     admission: WorkbenchDestinationAdmission
     action_candidate_id: NamespacedId | None = None
     rank: NonNegativeInt
     score: float = Field(gt=0.0, allow_inf_nan=False)
 
-    @field_validator("label")
-    @classmethod
-    def _label_has_no_control_characters(cls, value: str) -> str:
-        return _reject_control_characters(value)
-
     @model_validator(mode="after")
-    def _result_contract_is_consistent(self) -> Self:
-        _validate_kind_contract(
+    def _projection_is_consistent(self) -> Self:
+        _validate_projection(
             kind=self.kind,
-            status_code=self.status_code,
+            source=self.source,
+            status=self.status,
+            label_key=self.label_key,
             address=self.address,
             admission=self.admission,
             action_candidate_id=self.action_candidate_id,
-            noun="results",
         )
         return self
 
 
 class WorkbenchSearchResponse(BaseModel):
-    """Bounded response that identifies its query only by token digests."""
+    """Bounded response carrying neither plaintext nor hashed query terms."""
 
     model_config = STRICT_FROZEN_CONFIG
 
-    query_token_digests: tuple[Hex64Str, ...] = ()
     results: tuple[WorkbenchSearchResult, ...] = Field(default=(), max_length=_MAX_SEARCH_RESULTS)
     total_matches: NonNegativeInt = 0
-
-    @field_validator("query_token_digests")
-    @classmethod
-    def _canonicalize_query_token_digests(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        return tuple(sorted(set(value)))
 
     @model_validator(mode="after")
     def _result_page_is_canonical(self) -> Self:
         if self.total_matches < len(self.results):
             raise ValueError("total_matches cannot be smaller than the returned result count")
-        ranks = tuple(result.rank for result in self.results)
-        if ranks != tuple(range(len(self.results))):
+        if tuple(result.rank for result in self.results) != tuple(range(len(self.results))):
             raise ValueError("search result ranks must be contiguous and zero-based")
         return self
 
 
-def _document_token_digests(document: WorkbenchSearchDocument) -> frozenset[str]:
-    safe_terms = [document.label]
+def _safe_search_terms(document: WorkbenchSearchDocument) -> tuple[str, ...]:
+    terms: list[str] = [
+        document.kind.value.replace("_", " "),
+        document.label_key.value.removeprefix("search.").replace("_", " "),
+    ]
+    terms.extend(document.status.value.split("."))
     if document.address is not None:
-        safe_terms.extend(
+        terms.extend(
             (
+                "modelo",
                 str(document.address.modelo),
                 str(document.address.filing_year),
                 document.address.period.registry_token,
             )
         )
-    return frozenset((*document.token_digests, *digest_operator_safe_tokens(*safe_terms)))
+        if isinstance(document.address, WorkbenchRevisionAddress):
+            terms.append(document.address.calculation_revision_id)
+        elif isinstance(document.address, WorkbenchFilingAddress):
+            terms.append(document.address.filing_record_id)
+    return tuple(terms)
+
+
+def _immutable_identity_coordinate(document: WorkbenchSearchDocument) -> tuple[str, ...]:
+    if document.identity_basis is not None:
+        return ("opaque", document.identity_basis.get_secret_value())
+    if document.address is None:  # pragma: no cover - guarded by projection validation
+        raise ValueError("a search projection requires an immutable identity coordinate")
+    coordinate = (
+        document.address.address_kind,
+        str(document.address.modelo),
+        str(document.address.filing_year),
+        document.address.period.registry_token,
+    )
+    if isinstance(document.address, WorkbenchRevisionAddress):
+        return (*coordinate, document.address.calculation_revision_id)
+    if isinstance(document.address, WorkbenchFilingAddress):
+        return (*coordinate, document.address.filing_record_id)
+    return coordinate
+
+
+def _derived_stable_id(document: WorkbenchSearchDocument) -> Hex64Str:
+    canonical = "\x1f".join(
+        (document.kind.value, document.source.value, *_immutable_identity_coordinate(document))
+    ).encode("utf-8")
+    return hmac.digest(_OPAQUE_IDENTITY_KEY, canonical, hashlib.sha256).hex()
 
 
 def _score_document(document: WorkbenchSearchDocument, query: str) -> float | None:
-    """Return a deterministic relevance score, or ``None`` when unmatched."""
-    normalized_query = _normalize_text(query)
     query_tokens = _tokens(query)
-    query_digests = digest_operator_safe_tokens(query)
-    document_digests = _document_token_digests(document)
-    title = _normalize_text(document.label)
-    title_tokens = _tokens(document.label)
-    if normalized_query not in title and not all(digest in document_digests for digest in query_digests):
+    safe_terms = _safe_search_terms(document)
+    document_tokens = _tokens(" ".join(safe_terms))
+    normalized_query = _normalize_text(query)
+    title = _normalize_text(document.label_key.value.removeprefix("search.").replace("_", " "))
+    if normalized_query not in title and not all(token in document_tokens for token in query_tokens):
         return None
-
-    score = 0.0
-    if normalized_query == title:
-        score += 200.0
-    elif normalized_query in title:
-        score += 100.0
-    for token in query_tokens:
-        if token in title_tokens:
-            score += 20.0
-        elif any(candidate.startswith(token) for candidate in title_tokens):
-            score += 10.0
-        elif digest_operator_safe_tokens(token)[0] in document_digests:
-            score += 5.0
+    score = 200.0 if normalized_query == title else 100.0 if normalized_query in title else 0.0
+    score += sum(20.0 if token in _tokens(title) else 5.0 for token in query_tokens)
     return score
 
 
 class WorkbenchSearchService:
-    """Pure search over one private, ephemeral in-memory projection snapshot."""
+    """Pure search over one private, ephemeral, intrinsically safe snapshot."""
 
     def __init__(self, documents: Sequence[WorkbenchSearchDocument]) -> None:
-        """Capture a private immutable snapshot and refuse duplicate identities."""
+        """Capture a private snapshot and refuse duplicate derived identities."""
         snapshot = tuple(documents)
         if any(not isinstance(document, WorkbenchSearchDocument) for document in snapshot):
             raise TypeError("workbench search requires WorkbenchSearchDocument projections")
-        stable_ids = tuple(document.stable_id for document in snapshot)
-        if len(set(stable_ids)) != len(stable_ids):
-            raise ValueError("workbench search projections require unique stable identities")
-        self._documents = tuple(sorted(snapshot, key=lambda document: document.stable_id))
+        derived = tuple((_derived_stable_id(document), document) for document in snapshot)
+        identities = tuple(identity for identity, _ in derived)
+        if len(set(identities)) != len(identities):
+            raise ValueError("workbench search projections require unique derived identities")
+        self._documents = tuple(sorted(derived, key=lambda item: item[0]))
 
     def search(self, request: WorkbenchSearchRequest) -> WorkbenchSearchResponse:
-        """Return deterministic ranked results capped by ``request.limit``."""
+        """Return deterministic matches capped by the request's result limit."""
         if not isinstance(request, WorkbenchSearchRequest):
             raise TypeError("workbench search requires WorkbenchSearchRequest")
-        ranked: list[tuple[float, WorkbenchSearchDocument]] = []
-        for document in self._documents:
+        ranked: list[tuple[float, Hex64Str, WorkbenchSearchDocument]] = []
+        for identity, document in self._documents:
             score = _score_document(document, request.query)
             if score is not None:
-                ranked.append((score, document))
-        ranked.sort(key=lambda item: (-item[0], item[1].stable_id))
+                ranked.append((score, identity, document))
+        ranked.sort(key=lambda item: (-item[0], item[1]))
         results = tuple(
             WorkbenchSearchResult(
-                stable_id=document.stable_id,
+                stable_id=identity,
                 kind=document.kind,
                 source=document.source,
-                label=document.label,
+                status=document.status,
+                label_key=document.label_key,
                 address=document.address,
-                status_code=document.status_code,
                 admission=document.admission,
                 action_candidate_id=document.action_candidate_id,
                 rank=rank,
                 score=score,
             )
-            for rank, (score, document) in enumerate(ranked[: request.limit])
+            for rank, (score, identity, document) in enumerate(ranked[: request.limit])
         )
-        return WorkbenchSearchResponse(
-            query_token_digests=digest_operator_safe_tokens(request.query),
-            results=results,
-            total_matches=len(ranked),
-        )
+        return WorkbenchSearchResponse(results=results, total_matches=len(ranked))
 
 
 __all__ = [
     "WorkbenchDestinationAdmission",
     "WorkbenchDestinationAdmissionState",
+    "WorkbenchFilingAddress",
     "WorkbenchModeloAddress",
+    "WorkbenchNaturalAddress",
+    "WorkbenchRevisionAddress",
     "WorkbenchSearchDocument",
     "WorkbenchSearchKind",
+    "WorkbenchSearchLabelKey",
     "WorkbenchSearchRequest",
     "WorkbenchSearchResponse",
     "WorkbenchSearchResult",
     "WorkbenchSearchService",
-    "digest_operator_safe_tokens",
+    "WorkbenchSearchSource",
+    "WorkbenchSearchStatus",
 ]

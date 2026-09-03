@@ -53,7 +53,8 @@ def _absolute_target(node: ast.ImportFrom, here: str, is_package: bool) -> str |
     anchor = parts[: len(parts) - node.level + (1 if is_package else 0)]
     if not anchor:
         return None
-    return ".".join(anchor + ([node.module] if node.module else []))
+    tail: list[str] = [node.module] if node.module else []
+    return ".".join(anchor + tail)
 
 
 def _scanned_sources() -> dict[Path, str]:

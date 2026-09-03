@@ -1,9 +1,8 @@
 """Public facade for the Renta (IRPF / Modelo 100) substrate.
 
-This package re-exports closed IRPF classifiers such as
-:class:`EstimacionDirectaModalidad` and :class:`RentaIncomeType`, the
-first-slice Modelo 100 ledger-expense observation surface, and the maritime
-worker exemption selectors used by application calculation previews.
+This package owns the first-slice Modelo 100 ledger-expense observation
+surface and the maritime worker exemption selectors used by application
+calculation previews.
 
 The first-slice expense path evaluates :class:`RentaDeductibleExpenseFact`
 values with :class:`RentaDeductibilityContext` and category-profile evidence

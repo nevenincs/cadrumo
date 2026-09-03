@@ -9,7 +9,7 @@ from typing import cast
 
 import pytest
 
-from cadrumo.entrypoints.cli import (
+from cadrumo.entrypoints.cli.command_api import (
     command_schema_refs,
     command_schema_type,
     command_schema_types,

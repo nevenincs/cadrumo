@@ -106,7 +106,8 @@ class EnrollmentEvidenceClass(StrEnum):
     - ``DATA_FIDELITY`` — informativa year-over-year fidelity plus
       provenance, with no numeric oracle (347, 184, 721, 232, 349, …).
     - ``THRESHOLD_CONTINUITY`` — structural exemption / obligation logic
-      across two years (720, 840, 036).
+      across two years (720, 036). Modelo 840 retains applicability evidence,
+      but does not establish an authorization enrollment.
     """
 
     CALCULATION = "calculation"

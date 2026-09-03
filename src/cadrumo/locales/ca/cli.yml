@@ -506,13 +506,19 @@ cli:
       borrador:
         app_help: Snapshots d'esborrany del model 100
         filing_year_help: Exercici fiscal (p. ex. 2024)
-        import_coverage_absent: L'analitzador no ha retornat cobertura d'extracció per al perfil del registre; no s'ha importat res.
-        import_ejercicio_mismatch: L'exercici imprès al PDF no coincideix amb l'exercici sol·licitat; no s'ha importat res.
+        import_coverage_absent: L'analitzador no ha retornat cobertura d'extracció
+          per al perfil del registre; no s'ha importat res.
+        import_ejercicio_mismatch: L'exercici imprès al PDF no coincideix amb l'exercici
+          sol·licitat; no s'ha importat res.
         import_file_help: Camí al PDF de l'esborrany del model 100 que s'ha d'importar
-        import_help: Importar un PDF local de l'esborrany del model 100 al magatzem de snapshots
-        import_period_help: Codi de període (per defecte 0A, el període anual del model 100)
-        import_period_invalid: El codi de període no és vàlid per a aquest exercici fiscal.
-        import_profile_unresolved: El registre no declara un únic perfil d'extracció d'esborrany per a aquest exercici i període.
+        import_help: Importar un PDF local de l'esborrany del model 100 al magatzem
+          de snapshots
+        import_period_help: Codi de període (per defecte 0A, el període anual del
+          model 100)
+        import_period_invalid: El codi de període no és vàlid per a aquest exercici
+          fiscal.
+        import_profile_unresolved: El registre no declara un únic perfil d'extracció
+          d'esborrany per a aquest exercici i període.
         latest_help: Mostrar el snapshot actiu més recent d'un exercici fiscal
         list_help: Llistar snapshots persistits de l'esborrany del model 100
         modelo_100_help: Ordres de snapshots de l'esborrany del model 100
@@ -3775,6 +3781,17 @@ cli:
       modelo_count: models
       modelos: models
       observation_paths: rutes d'observació
+      replay_blocked_payload_count: captures bloquejades
+      replay_compared_field_count: caselles comparades
+      replay_cross_reference_id: referència creuada de la reproducció
+      replay_guard_policy_id: política de guarda de la reproducció
+      replay_matched_payload_count: captures coincidents
+      replay_mismatched_payload_count: captures discrepants
+      replay_oracle_id: oracle de la reproducció
+      replay_payload_count: captures reproduïdes
+      replay_registry_validated: registre validat en la reproducció
+      replay_unverifiable_payload_count: captures no verificables
+      replay_verdict: veredicte de paritat de la reproducció
       revision: revisió
       revision_count: revisions
       row_count: files
@@ -3787,6 +3804,8 @@ cli:
       workbook_parity_ref_count: refs de paritat del llibre
     observation_help: Manifest xifrat d'observació de declaració presentada que cal
       verificar
+    replay_parity_help: Reproduir sense connexió les captures de Renda WEB Open incloses
+      davant l'oracle de paritat
     source_observation_help: Manifest xifrat d'observació font requerit per vinculacions
       de declaracions prèvies o relacions
     verify_filed_state_help: Comparar el càlcul local del registre amb l'estat presentat

@@ -57,9 +57,7 @@ class ExtractionSurface(StrEnum):
     OFFICIAL_WORKBOOK = "official_workbook"
 
 
-ExtractionSurfaceField = Annotated[
-    ExtractionSurface, BeforeValidator(coerce_enum_member(ExtractionSurface))
-]
+ExtractionSurfaceField = Annotated[ExtractionSurface, BeforeValidator(coerce_enum_member(ExtractionSurface))]
 """Registry ``surface`` token hydrated into a member."""
 
 
@@ -106,9 +104,7 @@ class ExtractionValueKind(StrEnum):
     ENUM = "enum"
 
 
-ExtractionValueKindField = Annotated[
-    ExtractionValueKind, BeforeValidator(coerce_enum_member(ExtractionValueKind))
-]
+ExtractionValueKindField = Annotated[ExtractionValueKind, BeforeValidator(coerce_enum_member(ExtractionValueKind))]
 """Registry ``value_kind`` token hydrated into a member."""
 
 
@@ -120,9 +116,7 @@ class BboxValueOffset(StrEnum):
     RIGHT_OF_NUMBER = "right_of_number"
 
 
-BboxValueOffsetField = Annotated[
-    BboxValueOffset, BeforeValidator(coerce_enum_member(BboxValueOffset))
-]
+BboxValueOffsetField = Annotated[BboxValueOffset, BeforeValidator(coerce_enum_member(BboxValueOffset))]
 """Registry ``value_offset`` token hydrated into a member."""
 
 
@@ -133,9 +127,7 @@ class ExtractionConfidence(StrEnum):
     REVIEW_REQUIRED = "review_required"
 
 
-ExtractionConfidenceField = Annotated[
-    ExtractionConfidence, BeforeValidator(coerce_enum_member(ExtractionConfidence))
-]
+ExtractionConfidenceField = Annotated[ExtractionConfidence, BeforeValidator(coerce_enum_member(ExtractionConfidence))]
 """Registry ``confidence`` token hydrated into a member."""
 
 

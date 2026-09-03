@@ -22,9 +22,15 @@ counterparty, so an empty name is not a cosmetic gap.
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
-from ..confirmed_field_resolution import confirmed_counterparty_name
+from ..confirmed_field_resolution import (
+    confirmed_counterparty_name,
+    operator_value_or_reading,
+    refuse_an_absent_confirmed_field,
+)
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..preconditions import LedgerPreconditionCondition
 
@@ -103,3 +109,61 @@ def test_a_surrounding_whitespace_name_is_kept_but_trimmed() -> None:
     an operator to correct a name the document states perfectly well.
     """
     assert confirmed_counterparty_name(None, "  Acme Suministros SL  ") == "Acme Suministros SL"
+
+
+@pytest.mark.parametrize("field", ["invoice_number", "taxable_base", "counterparty_tax_id"])
+def test_an_absent_required_field_refuses_and_names_itself(field: str) -> None:
+    """Absence is refused, and the refusal states WHICH field was absent.
+
+    The field name is asserted rather than only the condition id, because a
+    refusal that reports an unnamed missing field sends the operator back to
+    a document with nothing to correct. The three parametrised names are the
+    fields the confirm path guards this way.
+    """
+    with pytest.raises(PurchaseInvoiceEvidenceInputError) as refusal:
+        refuse_an_absent_confirmed_field(field=field)
+
+    verdict = refusal.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == LedgerPreconditionCondition.EVIDENCE_REQUIRED_FIELD_AVAILABLE.value
+    recorded = [evidence.values for evidence in verdict.evidence]
+    assert any(values.get("required_field_available") is False for values in recorded)
+    assert any(values.get("required_field") == field for values in recorded), (
+        f"the verdict does not name the absent field: {recorded}"
+    )
+
+
+def test_a_field_neither_side_states_stays_absent_rather_than_defaulting() -> None:
+    """The layering must not manufacture the value the guard then accepts.
+
+    This is the half of the refusal that a guard test cannot see about itself:
+    were the layering to substitute an empty string or a zero for a field
+    neither the operator nor the document states, the guard would be handed a
+    present value and the refusal would never fire -- putting a fabricated
+    number into a filing-bound record.
+    """
+    assert operator_value_or_reading(None, None) is None
+
+
+def test_a_proven_zero_base_is_not_absence_and_layers_through() -> None:
+    """A zero the document actually printed is a fact, not a missing field.
+
+    The distinction the guard exists to keep: ``None`` refuses, ``0`` passes,
+    and it passes at the exact scale it was read at, since the base carries
+    its own precision into the record.
+    """
+    read_zero = operator_value_or_reading(None, Decimal("0.00"))
+    assert read_zero == Decimal("0.00")
+    assert read_zero is not None
+    assert str(read_zero) == "0.00"
+
+
+def test_an_operator_base_outranks_the_reading_at_its_own_scale() -> None:
+    """The layering direction, on the amount where getting it backwards mis-files.
+
+    Asserted on the string form as well as equality, because a base restated
+    by the operator reaches the record with the scale they stated it at.
+    """
+    resolved = operator_value_or_reading(Decimal("1200.50"), Decimal("999.00"))
+    assert resolved == Decimal("1200.50")
+    assert str(resolved) == "1200.50"

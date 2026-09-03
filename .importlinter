@@ -600,7 +600,6 @@ ignore_imports =
     # only the layer direction, not a private reach. Production
     # application -> llm coupling stays individually pinned above and a NEW
     # production edge still fails loudly.
-    cadrumo.application.**.tests.** -> cadrumo.llm
     cadrumo.application.**.tests.** -> cadrumo.llm.**
     cadrumo.application.evidence.service -> cadrumo.adapters.persistence.**
     # The confirmation record is the third of that same family and is pinned for
@@ -775,6 +774,7 @@ ignore_imports =
     cadrumo.application.live.filed_data_capture -> cadrumo.adapters.outbound.aeat.sede.declarations_capture
     cadrumo.application.live.justificante -> cadrumo.adapters.outbound.aeat.sede.declarations
     cadrumo.application.live.justificante -> cadrumo.adapters.outbound.aeat.sede.walker
+    cadrumo.application.live.justificante -> cadrumo.adapters.outbound.aeat.verify.contract
     # ── live-snapshot family: concrete relocated, construction edge retained ──
     # SecureSnapshotRepository -- the encrypted secure-object backend these
     # services persist through -- now lives in the persistence adapter, as

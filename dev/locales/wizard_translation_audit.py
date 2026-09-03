@@ -100,6 +100,10 @@ def audit_wizard_translations() -> tuple[str, ...]:
 
 _CLI_KEY_PATTERN = re.compile(r"cli\.\w+(?:\.\w+)+", re.UNICODE)
 
+#: Only these modules define the project translation function. An arbitrary
+#: third-party module named ``i18n`` is not evidence of a Cadrumo catalogue key.
+_CANONICAL_TRANSLATION_MODULES = frozenset({"cadrumo.core.i18n", "cadrumo.core.i18n.render"})
+
 
 def _cli_entrypoints_root() -> Path:
     return SRC_DIR / "entrypoints" / "cli"
@@ -142,7 +146,8 @@ def _translation_call_names(tree: ast.AST) -> frozenset[str]:
     for node in ast.walk(tree):
         if not isinstance(node, ast.ImportFrom) or node.module is None:
             continue
-        if "i18n" not in node.module.split("."):
+        imported_module = f"cadrumo.{node.module}" if node.level else node.module
+        if imported_module not in _CANONICAL_TRANSLATION_MODULES:
             continue
         names.update(alias.asname or alias.name for alias in node.names if alias.name == "tr")
     return frozenset(names)

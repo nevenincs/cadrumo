@@ -21,8 +21,9 @@ from ....adapters.persistence.storage.sql.engine import get_engine
 from ....adapters.persistence.storage.sql.session import session_scope
 from ....tests.secure_sql import isolated_runtime_profile
 from ..aggregates import compute_finca_aggregates
-from ..enums import ExpenseCategory, ReduccionTier, UseType
+from ..enums import ExpenseCategory, ReduccionTier, TitularContribuyente, TitularidadRegime, UseType
 from ..models import Arrendamiento, Finca, FincaGasto, FincaRendimientoRecord
+from ..titularidad import Titularidad
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -52,6 +53,11 @@ def test_rental_aggregates_are_derived_from_persisted_register(engine: Engine) -
                 coste_adquisicion_construccion=Decimal("166666.67"),
                 acquisition_date=date(2010, 5, 14),
                 use_type=UseType.VIVIENDA_ARRENDADA,
+                titularidad=Titularidad(
+                    regime=TitularidadRegime.PLENO_DOMINIO,
+                    contribuyente=TitularContribuyente.PRIMER_DECLARANTE,
+                    porcentaje_propiedad=Decimal("100.00"),
+                ),
                 is_stressed_area=True,
             ),
         )
@@ -66,6 +72,11 @@ def test_rental_aggregates_are_derived_from_persisted_register(engine: Engine) -
                 coste_adquisicion_construccion=Decimal("91000.00"),
                 acquisition_date=date(2016, 1, 1),
                 use_type=UseType.VIVIENDA_DESOCUPADA,
+                titularidad=Titularidad(
+                    regime=TitularidadRegime.PLENO_DOMINIO,
+                    contribuyente=TitularContribuyente.PRIMER_DECLARANTE,
+                    porcentaje_propiedad=Decimal("100.00"),
+                ),
             ),
         )
         assert let_finca.id is not None
@@ -183,6 +194,11 @@ def test_rental_aggregates_non_reduccion_use_types_earn_income_with_zero_reducti
                 coste_adquisicion_construccion=Decimal("210000.00"),
                 acquisition_date=date(2015, 1, 1),
                 use_type=use_type,
+                titularidad=Titularidad(
+                    regime=TitularidadRegime.PLENO_DOMINIO,
+                    contribuyente=TitularContribuyente.PRIMER_DECLARANTE,
+                    porcentaje_propiedad=Decimal("100.00"),
+                ),
             ),
         )
         assert finca.id is not None

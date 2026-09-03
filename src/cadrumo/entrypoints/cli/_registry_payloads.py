@@ -22,6 +22,7 @@ from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr
 from ...domain.calculations.registry.filed_state import RegistryFiledStateComparison
 from ...domain.calculations.registry.ids import ExportLayoutId, LegalRefId, RelationId, SourceRefId, WorkbookParityRefId
+from ...domain.calculations.registry.live_parity import ParityFieldVerdict, ParityVerdict
 
 
 class RegistryWorkbookParityDetailPayload(OutputSchema):
@@ -115,3 +116,51 @@ class RegistryVerifyFiledStateResult(OutputSchema):
     observation_path: str
     source_observation_paths: list[str] = []
     comparison: RegistryFiledStateComparison
+
+
+class RegistryReplayParityFieldPayload(OutputSchema):
+    """One casilla comparison inside a replayed capture, mirroring :class:`ParityFieldComparison`.
+
+    ``verdict`` carries the three field-level outcomes verbatim -- ``match``,
+    ``mismatch``, ``unverifiable`` -- rather than a boolean, so an expected
+    casilla the capture never observed stays distinguishable from agreement.
+    """
+
+    name: NonEmptyStr
+    expected: str
+    observed: str
+    verdict: ParityFieldVerdict
+
+
+class RegistryReplayParityPayloadResult(OutputSchema):
+    """One bundled Renta WEB Open capture's parity outcome."""
+
+    payload_name: NonEmptyStr
+    scenario_id: str | None = None
+    verdict: ParityVerdict
+    narrative: NonEmptyStr
+    raw_evidence_locator: str | None = None
+    fields: list[RegistryReplayParityFieldPayload] = []
+
+
+class RegistryReplayParityResult(OutputSchema):
+    """JSON envelope for ``aeat app registry replay-parity``.
+
+    Mirrors :class:`RentaWebOpenReplayParityReport`. ``registry_validated``
+    records whether the guard-policy declaration came from a validated
+    authority or a governance-grade tree read, so the envelope is never read as
+    validated authority it does not carry.
+    """
+
+    corpus: str
+    oracle_id: NonEmptyStr
+    cross_reference_id: NonEmptyStr
+    guard_policy_id: NonEmptyStr
+    registry_validated: bool
+    verdict: ParityVerdict
+    compared_field_count: int
+    matched_payload_count: int
+    mismatched_payload_count: int
+    unverifiable_payload_count: int
+    blocked_payload_count: int
+    payloads: list[RegistryReplayParityPayloadResult] = []

@@ -33,7 +33,7 @@ from ....core.flows import (
     FlowWidgetKind,
     PageStatus,
 )
-from ..checkpoint import checkpoint_available, save_checkpoint
+from ..checkpoint import CheckpointStore, checkpoint_available, save_checkpoint
 from ..definition import CopyRef, FlowChoice, FlowCondition, FlowDefinition, FlowPage, FlowRepeatingGroup, FlowSection
 from ..engine import answer, page_status, start_flow
 from ..errors import FlowCheckpointError
@@ -57,14 +57,14 @@ class _MemoryCheckpointStore:
     def __init__(self) -> None:
         self._data: dict[str, dict[str, str]] = {}
 
-    def save(self, flow_id: str, answers: Mapping[str, str]) -> None:
-        self._data[flow_id] = dict(answers)
+    def save(self, _flow_id: str, answers: Mapping[str, str]) -> None:
+        self._data[_flow_id] = dict(answers)
 
-    def load(self, flow_id: str) -> Mapping[str, str] | None:
-        return self._data.get(flow_id)
+    def load(self, _flow_id: str) -> Mapping[str, str] | None:
+        return self._data.get(_flow_id)
 
-    def discard(self, flow_id: str) -> None:
-        self._data.pop(flow_id, None)
+    def discard(self, _flow_id: str) -> None:
+        self._data.pop(_flow_id, None)
 
 
 def _copy(ref: str = "wizard.setup.title") -> CopyRef:
@@ -125,6 +125,7 @@ def _gated_flow() -> FlowDefinition:
 def test_save_checkpoint_round_trips_through_the_store() -> None:
     definition = _gated_flow()
     store = _MemoryCheckpointStore()
+    assert isinstance(store, CheckpointStore)
     state = start_flow(definition, mode=FlowMode.CREATE)
     state = answer(definition, state, "p_gate", "alpha")
     state = answer(definition, state, "p_dep", "detail")

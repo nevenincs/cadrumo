@@ -72,9 +72,7 @@ class CasillaEvolutionKind(StrEnum):
     RETIRED = "retired"
 
 
-CasillaEvolutionKindField = Annotated[
-    CasillaEvolutionKind, BeforeValidator(coerce_enum_member(CasillaEvolutionKind))
-]
+CasillaEvolutionKindField = Annotated[CasillaEvolutionKind, BeforeValidator(coerce_enum_member(CasillaEvolutionKind))]
 """Registry token hydrated into a CasillaEvolutionKind member."""
 
 

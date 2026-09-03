@@ -773,12 +773,14 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
         members=_registry("condition_mode", "schema_deadlines", "schema_revision_members"),
     ),
     ClassificationRule(
-        classification="live",
-        trigger="formula runtime dispatch for modelo 100",
+        classification="conditionally_reachable",
+        trigger="formula runtime dispatch for modelo 100 (cold regime only)",
         reason=(
-            "Imported at module level by the formula runtime, which the load reaches. The modelo "
-            "split is a division of that runtime rather than a per-modelo gate, so it loads "
-            "whether or not a modelo 100 formula is evaluated."
+            "Imported at module level by the formula runtime, and reached on a cold load but not "
+            "on a warm one: measured in clean subprocesses, it is in sys.modules with empty cache "
+            "directories and absent with populated ones. Forty-three modules differ between the "
+            "two regimes and this is one of them, so it is classified by the regime that does not "
+            "load it rather than the one that does."
         ),
         members=_registry("formula_runtime_m100"),
     ),
@@ -793,19 +795,24 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "markers carrying no load behaviour of their own, and they are classified live "
             "because a load does hold them, not because they do anything."
         ),
-        members=("cadrumo.domain", "cadrumo.domain.manuals", "cadrumo.domain.modelos"),
+        members=(
+            "cadrumo.domain",
+            "cadrumo.domain.manuals",
+            "cadrumo.domain.modelos",
+            "cadrumo.domain.modelos.calculation_revision_identity",
+        ),
     ),
     ClassificationRule(
         classification="conditionally_reachable",
-        trigger="function-scoped imports only: withholding row building and calculation revision identity",
+        trigger="function-scoped import only: withholding row building",
         reason=(
-            "Neither is in sys.modules after a bundled load, and neither has any module-level "
-            "importer. `_withholding_rows` is imported from inside "
+            "Not in sys.modules after a bundled load in either the cold or the warm regime, and "
+            "carrying no module-level importer. It is imported from inside "
             "resolve_withholding_binding_row_values, which is the standard break for the cycle it "
-            "forms with withholding_bindings and cannot be hoisted without restoring that cycle. "
-            "Both are reached only when the function holding the import runs."
+            "forms with withholding_bindings and cannot be hoisted without restoring that cycle, "
+            "so it is reached only when that function runs."
         ),
-        members=(*_registry("_withholding_rows"), "cadrumo.domain.modelos.calculation_revision_identity"),
+        members=_registry("_withholding_rows"),
     ),
 )
 

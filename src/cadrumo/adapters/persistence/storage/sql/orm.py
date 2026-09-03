@@ -84,6 +84,9 @@ _datetime_tz_opt = Annotated[datetime | None, mapped_column(DateTime(timezone=Tr
 _decimal_15_2 = Annotated[Decimal, mapped_column(Numeric(15, 2), nullable=False)]
 _decimal_15_2_opt = Annotated[Decimal | None, mapped_column(Numeric(15, 2), nullable=True)]
 _decimal_8_4_opt = Annotated[Decimal | None, mapped_column(Numeric(8, 4), nullable=True)]
+#: A declared percentage in 0-100 with the two decimals casillas [0063]
+#: and [0064] accept — not a monetary amount, so not _decimal_15_2.
+_decimal_5_2 = Annotated[Decimal, mapped_column(Numeric(5, 2), nullable=False)]
 
 _bool_default_false = Annotated[bool, mapped_column(Boolean, nullable=False, default=False)]
 _bool_default_true = Annotated[bool, mapped_column(Boolean, nullable=False, default=True)]
@@ -324,6 +327,21 @@ _RENTAL_USE_TYPE_VALUES = (
     "VIVIENDA_DESOCUPADA",
 )
 
+_RENTAL_TITULARIDAD_REGIME_VALUES = (
+    "NO_DECLARADA",
+    "PLENO_DOMINIO",
+    "NUDA_PROPIEDAD",
+    "USUFRUCTO",
+    "PLENO_DOMINIO_Y_USUFRUCTO",
+)
+
+_RENTAL_TITULAR_CONTRIBUYENTE_VALUES = (
+    "COMUN",
+    "PRIMER_DECLARANTE",
+    "CONYUGE",
+    "HIJO",
+)
+
 _RENTAL_EXPENSE_CATEGORY_VALUES = (
     "FINANCIACION_INTERESES",
     "CONSERVACION_REPARACION",
@@ -371,6 +389,19 @@ class FincaRow(Base):
             ``LOCAL_COMERCIAL`` / ``VIVIENDA_TURISTICA`` / ``VIVIENDA_DESOCUPADA``.
         is_stressed_area: Whether the finca sits in a declared
             stressed-rent area for LIRPF art. 23.2 tier resolution.
+        titularidad_regime: Which right the contribuyente holds over
+            the finca, and therefore which of the two percentages
+            attributes its figures. Closed enum, including the explicit
+            ``NO_DECLARADA`` state.
+        titularidad_contribuyente: Casilla [0062] — the member of the
+            unidad familiar holding the title, as a closed role
+            vocabulary. Carries no name and no NIF, so unlike
+            ``address`` it identifies nobody and is not encrypted.
+            ``None`` only when the regime is ``NO_DECLARADA``.
+        titularidad_hijo_ordinal: The ordinal in "Hijo 1º", "Hijo 2º" …;
+            ``None`` for every other titular.
+        porcentaje_propiedad: Casilla [0063], 0-100 with two decimals.
+        porcentaje_usufructo: Casilla [0064], on the same scale.
         schema_version: Per-row schema version, always copied from the
             domain record; this column declares no default of its own.
     """
@@ -380,6 +411,15 @@ class FincaRow(Base):
         CheckConstraint(
             f"use_type IN {_enum_check(_RENTAL_USE_TYPE_VALUES)}",
             name="ck_rental_fincas_use_type",
+        ),
+        CheckConstraint(
+            f"titularidad_regime IN {_enum_check(_RENTAL_TITULARIDAD_REGIME_VALUES)}",
+            name="ck_rental_fincas_titularidad_regime",
+        ),
+        CheckConstraint(
+            "titularidad_contribuyente IS NULL OR titularidad_contribuyente IN "
+            f"{_enum_check(_RENTAL_TITULAR_CONTRIBUYENTE_VALUES)}",
+            name="ck_rental_fincas_titularidad_contribuyente",
         ),
     )
 
@@ -395,6 +435,11 @@ class FincaRow(Base):
     disposal_date: Mapped[_date_opt]
     use_type: Mapped[_str32]
     is_stressed_area: Mapped[_bool_default_false]
+    titularidad_regime: Mapped[_str32]
+    titularidad_contribuyente: Mapped[_str32_opt]
+    titularidad_hijo_ordinal: Mapped[_int_opt]
+    porcentaje_propiedad: Mapped[_decimal_5_2]
+    porcentaje_usufructo: Mapped[_decimal_5_2]
     schema_version: Mapped[_str8]
 
 

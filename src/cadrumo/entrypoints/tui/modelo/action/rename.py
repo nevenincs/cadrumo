@@ -10,7 +10,7 @@ succeed, rename the unit, and produce the same visible outcome, while the run
 held no lease, entered no journal, could not be cancelled, could not be resumed
 after a crash, and published no observation any surface could watch. A live
 operator path executing outside the platform that governs it is the defect
-W07.P16.S340 records against the spreadsheet export; this module exists so the
+already recorded against the spreadsheet export; this module exists so the
 rename action does not repeat it.
 
 NOTHING HERE PRESENTS A MODAL OR OWNS A SCREEN. Presentation is

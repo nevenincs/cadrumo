@@ -50,9 +50,10 @@ from ..contribuyente.descendant import DescendantInfo
 from ..contribuyente.family_profile import RentaFamilyProfile
 from ..contribuyente.family_types import MinimoDescendientesThresholds
 from ..fincas.amortization_ledger import compute_amortization_for_year
-from ..fincas.enums import ExpenseCategory, UseType
+from ..fincas.enums import ExpenseCategory, TitularContribuyente, TitularidadRegime, UseType
 from ..fincas.expense_rollup import CarryForwardEntry, compute_gastos_for_year
 from ..fincas.models import Finca, FincaGasto, FincaRendimientoRecord
+from ..fincas.titularidad import Titularidad
 from ..renta.ledger_expenses import RentaDeductibilityContext, RentaDeductibleExpenseFact, evaluate_renta_deductibility
 from ..renta.maritime_exemption import MaritimeWorkerFacts, calculate_art_7p_exemption
 
@@ -127,6 +128,11 @@ def _witness_amortizacion_remaining_cap() -> tuple[object, object]:
         coste_adquisicion_construccion=Decimal("100000.00"),
         acquisition_date=date(2020, 1, 1),
         use_type=UseType.VIVIENDA_ARRENDADA,
+        titularidad=Titularidad(
+            regime=TitularidadRegime.PLENO_DOMINIO,
+            contribuyente=TitularContribuyente.PRIMER_DECLARANTE,
+            porcentaje_propiedad=Decimal("100.00"),
+        ),
     )
     income = FincaRendimientoRecord(
         contract_id=1,

@@ -17,9 +17,9 @@ def _graph() -> CommandSpecGraph:
     return CommandSpecGraph((*ROOT_COMMAND_SPECS, *REGISTRY_COMMAND_SPECS))
 
 
-def test_registry_specs_are_the_exact_fourteen_node_surface() -> None:
+def test_registry_specs_are_the_exact_fifteen_node_surface() -> None:
     nodes = [node for node in _graph().nodes() if node.path[1:3] == ("app", "registry")]
-    assert len(nodes) == 14
+    assert len(nodes) == 15
     assert {node.path[-1] for node in nodes if node.spec.kind == "group"} == {
         "registry",
         "citations",

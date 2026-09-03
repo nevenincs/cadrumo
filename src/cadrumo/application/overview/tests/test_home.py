@@ -5,8 +5,12 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.operator_actions.models import ActionArgumentBinding, ActionReference, DeclaredNextAction
-from cadrumo.application.overview.calendar_models import (
+from ....core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
+from ....core.period import Period
+from ....domain.deadlines.models import ObligationStatus
+from ...operator_actions.models import ActionArgumentBinding, ActionReference, DeclaredNextAction
+from ..agenda import OverviewAgenda
+from ..calendar_models import (
     CalendarCompleteness,
     OverviewAeatSubmissionState,
     OverviewCalendarEntry,
@@ -14,11 +18,6 @@ from cadrumo.application.overview.calendar_models import (
     OverviewLocalFilingState,
     OverviewPeriodState,
 )
-from cadrumo.core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
-from cadrumo.core.period import Period
-from cadrumo.domain.deadlines.models import ObligationStatus
-
-from ..agenda import OverviewAgenda
 from ..home import (
     HomeAccountSession,
     HomeAvailability,

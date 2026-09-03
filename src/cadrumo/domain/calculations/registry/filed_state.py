@@ -177,8 +177,10 @@ def compare_calculation_to_filed_observation(
         for casilla_id in comparable
         if abs(local_values[casilla_id] - filed_values[casilla_id]) > tolerance
     )
-    status: Literal["satisfied", "failed"] = (
-        "satisfied" if not missing_local and not missing_filed and not drifts else "failed"
+    status: RegistryFiledStateStatusValue = (
+        RegistryFiledStateStatus.SATISFIED
+        if not missing_local and not missing_filed and not drifts
+        else RegistryFiledStateStatus.FAILED
     )
     return RegistryFiledStateComparison(
         modelo=calculation.modelo,

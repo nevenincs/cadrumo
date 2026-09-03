@@ -321,7 +321,7 @@ class ShippedTreeSpec:
                 module_name_for(path, src_root=src_root)
                 for path in (src_root / package).rglob("__main__.py")
                 if _SKIPPED_DIRS.isdisjoint(path.parts)
-                and not _is_test_path(path, src_root)
+                and not is_test_path(path, src_root)
                 and is_shipped_module(path, src_root=src_root, exclude_globs=tuple(excludes))
             ),
         )
@@ -548,19 +548,23 @@ class UnreachableCodeResult:
 
 
 @dataclass(frozen=True, eq=False)
-class _ShippedModule:
+class ShippedModule:
+    """One parsed module of the shipped tree, with the facts the walks need."""
+
     name: str
     path: Path
     is_package: bool
     tree: ast.Module
 
 
-def _is_test_path(path: Path, root: Path) -> bool:
+def is_test_path(path: Path, root: Path) -> bool:
+    """Whether ``path`` is a test module rather than shipped code."""
     relative = path.relative_to(root)
     return "tests" in relative.parts[:-1] or path.name.startswith("test_") or path.name == "conftest.py"
 
 
-def _iter_python_files(root: Path) -> Iterator[Path]:
+def iter_python_files(root: Path) -> Iterator[Path]:
+    """Yield every ``*.py`` file under ``root``, or ``root`` itself when it is one."""
     if root.is_file():
         if root.suffix == ".py":
             yield root
@@ -572,7 +576,8 @@ def _iter_python_files(root: Path) -> Iterator[Path]:
             yield path
 
 
-def _parse(path: Path) -> ast.Module:
+def parse_module(path: Path) -> ast.Module:
+    """Parse one source file into a module tree."""
     return ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
 
 
@@ -586,26 +591,26 @@ def _is_resource_anchor(path: Path, tree: ast.Module, src_root: Path) -> bool:
     if path.name != "__init__.py" or tree.body:
         return False
     return not any(
-        sibling.name != "__init__.py" and not _is_test_path(sibling, src_root) for sibling in path.parent.rglob("*.py")
+        sibling.name != "__init__.py" and not is_test_path(sibling, src_root) for sibling in path.parent.rglob("*.py")
     )
 
 
-def _load_package(root: Path, src_root: Path, *, exclude_globs: tuple[str, ...]) -> dict[str, _ShippedModule]:
-    modules: dict[str, _ShippedModule] = {}
-    for path in _iter_python_files(root):
-        if _is_test_path(path, src_root):
+def _load_package(root: Path, src_root: Path, *, exclude_globs: tuple[str, ...]) -> dict[str, ShippedModule]:
+    modules: dict[str, ShippedModule] = {}
+    for path in iter_python_files(root):
+        if is_test_path(path, src_root):
             continue
         if exclude_globs and not is_shipped_module(path, src_root=src_root, exclude_globs=exclude_globs):
             continue
-        tree = _parse(path)
+        tree = parse_module(path)
         if _is_resource_anchor(path, tree, src_root):
             continue
         name = module_name_for(path, src_root=src_root)
-        modules[name] = _ShippedModule(name=name, path=path, is_package=path.name == "__init__.py", tree=tree)
+        modules[name] = ShippedModule(name=name, path=path, is_package=path.name == "__init__.py", tree=tree)
     return modules
 
 
-def _shipped_modules(spec: ShippedTreeSpec) -> dict[str, _ShippedModule]:
+def shipped_modules(spec: ShippedTreeSpec) -> dict[str, ShippedModule]:
     """Every module in the audited package, plus the companion distributions that consume it."""
     modules = _load_package(spec.src_root / spec.package, spec.src_root, exclude_globs=spec.exclude_globs)
     for companion in spec.companions:
@@ -630,7 +635,7 @@ def _known_prefixes(name: str, known: frozenset[str]) -> Iterator[str]:
     yield from (candidate for candidate in _ancestors(name) if candidate in known)
 
 
-def _string_module_target(value: str, module: _ShippedModule, known: frozenset[str]) -> str | None:
+def _string_module_target(value: str, module: ShippedModule, known: frozenset[str]) -> str | None:
     """Resolve a string literal to the shipped module it names, if any.
 
     Accepts ``pkg.mod``, ``pkg.mod:attr``, and package-relative ``.mod``
@@ -650,7 +655,7 @@ def _string_module_target(value: str, module: _ShippedModule, known: frozenset[s
 _MODULE_EXEC_FLAG: Final[str] = "-m"
 
 
-def _spawn_edges(module: _ShippedModule, known: frozenset[str]) -> frozenset[str]:
+def _spawn_edges(module: ShippedModule, known: frozenset[str]) -> frozenset[str]:
     """Return the modules ``module`` starts as a ``python -m`` child interpreter.
 
     A console script that spawns another shipped package as a child process
@@ -677,7 +682,7 @@ def _spawn_edges(module: _ShippedModule, known: frozenset[str]) -> frozenset[str
     return frozenset(targets)
 
 
-def _module_edges(module: _ShippedModule, known: frozenset[str]) -> tuple[frozenset[str], frozenset[str]]:
+def module_edges(module: ShippedModule, known: frozenset[str]) -> tuple[frozenset[str], frozenset[str]]:
     """Return ``(runtime_edges, type_only_edges)`` from ``module`` to shipped modules."""
     guarded = type_checking_guarded_nodes(module.tree)
     runtime: set[str] = set()
@@ -703,9 +708,9 @@ def _module_edges(module: _ShippedModule, known: frozenset[str]) -> tuple[frozen
     return frozenset(runtime), frozenset(type_only - runtime)
 
 
-def _reachable(
+def reachable_closure(
     roots: Iterable[str],
-    modules: dict[str, _ShippedModule],
+    modules: dict[str, ShippedModule],
     edges: dict[str, frozenset[str]],
 ) -> frozenset[str]:
     """Breadth-first closure over ``edges``; importing a module imports its ancestors."""
@@ -720,7 +725,7 @@ def _reachable(
     return frozenset(seen)
 
 
-def _collapse_packages(unreachable: frozenset[str], modules: dict[str, _ShippedModule]) -> list[tuple[str, int]]:
+def _collapse_packages(unreachable: frozenset[str], modules: dict[str, ShippedModule]) -> list[tuple[str, int]]:
     """Report a folder once when every module under it is unreachable.
 
     Returns ``(module_name, spanned_count)`` pairs: packages first, then the
@@ -745,7 +750,7 @@ def _collapse_packages(unreachable: frozenset[str], modules: dict[str, _ShippedM
 # ---------------------------------------------------------------------------
 
 
-def _non_reference_nodes(tree: ast.Module) -> set[int]:
+def non_reference_nodes(tree: ast.Module) -> set[int]:
     """Nodes whose strings name nothing: ``__all__`` entries and prose.
 
     A docstring that happens to contain a symbol's name is describing it, not
@@ -767,7 +772,7 @@ def _non_reference_nodes(tree: ast.Module) -> set[int]:
     return skipped
 
 
-def _string_reference_names(value: str) -> Iterator[str]:
+def string_reference_names(value: str) -> Iterator[str]:
     """Identifiers a string literal may address dynamically (``"mod:attr"``, ``"a.b"``)."""
     if _DOTTED_SPEC.match(value):
         yield from (part for part in re.split(r"[.:]", value) if part)
@@ -775,7 +780,7 @@ def _string_reference_names(value: str) -> Iterator[str]:
 
 def _references(tree: ast.Module) -> set[str]:
     """Every bare identifier the module loads, accesses, keywords, imports, or spells."""
-    skipped = _non_reference_nodes(tree)
+    skipped = non_reference_nodes(tree)
     names: set[str] = set()
     for node in ast.walk(tree):
         if id(node) in skipped:
@@ -789,7 +794,7 @@ def _references(tree: ast.Module) -> set[str]:
         elif isinstance(node, ast.ImportFrom):
             names.update(alias.name for alias in node.names)
         elif isinstance(node, ast.Constant) and isinstance(node.value, str):
-            names.update(_string_reference_names(node.value))
+            names.update(string_reference_names(node.value))
     return names
 
 
@@ -934,7 +939,7 @@ class _OutsideUse:
         return tuple(sorted(self.modules.get(name, ())))
 
 
-def _import_aliases(module: _ShippedModule, known: frozenset[str]) -> dict[str, str]:
+def _import_aliases(module: ShippedModule, known: frozenset[str]) -> dict[str, str]:
     """Map every local binding that names a shipped module to that module.
 
     Both spellings bind a module to a name: ``import a.b as c`` and
@@ -958,7 +963,7 @@ def _import_aliases(module: _ShippedModule, known: frozenset[str]) -> dict[str, 
     return aliases
 
 
-def _resolved_symbol_uses(module: _ShippedModule, known: frozenset[str]) -> set[tuple[str, str]]:
+def resolved_symbol_uses(module: ShippedModule, known: frozenset[str]) -> set[tuple[str, str]]:
     """Return every ``(defining module, symbol)`` pair this module actually reaches.
 
     Only two syntaxes can reach a top-level symbol across a module boundary:
@@ -986,15 +991,15 @@ def _string_tokens(tree: ast.Module) -> set[str]:
     """Identifiers spelled inside string literals, the only dynamic reach left.
 
     Docstrings and ``__all__`` are excluded for the reason
-    :func:`_non_reference_nodes` gives: prose about a symbol is not a use of it.
+    :func:`non_reference_nodes` gives: prose about a symbol is not a use of it.
     """
-    skipped = _non_reference_nodes(tree)
+    skipped = non_reference_nodes(tree)
     tokens: set[str] = set()
     for node in ast.walk(tree):
         if id(node) in skipped:
             continue
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
-            tokens.update(_string_reference_names(node.value))
+            tokens.update(string_reference_names(node.value))
     return tokens
 
 
@@ -1034,24 +1039,24 @@ def _outside_module_name(path: Path, spec: ShippedTreeSpec) -> str:
 def _outside_use(spec: ShippedTreeSpec, known: frozenset[str]) -> _OutsideUse:
     use = _OutsideUse()
     for corpus in spec.outside:
-        for path in _iter_python_files(corpus.root):
-            if corpus.test_modules_only and not _is_test_path(path, spec.src_root):
+        for path in iter_python_files(corpus.root):
+            if corpus.test_modules_only and not is_test_path(path, spec.src_root):
                 continue
             try:
-                tree = _parse(path)
+                tree = parse_module(path)
             except (OSError, SyntaxError, UnicodeDecodeError):
                 # The tree can move under a long scan; a file that is gone or
                 # unreadable is skipped rather than crashing the audit.
                 continue
             for name in _references(tree):
                 use.names.setdefault(name, set()).add(corpus.label)
-            probe = _ShippedModule(
+            probe = ShippedModule(
                 name=_outside_module_name(path, spec),
                 path=path,
                 is_package=path.name == "__init__.py",
                 tree=tree,
             )
-            runtime, type_only = _module_edges(probe, known)
+            runtime, type_only = module_edges(probe, known)
             for target in runtime | type_only:
                 use.modules.setdefault(target, set()).add(corpus.label)
     return use
@@ -1062,13 +1067,14 @@ def _outside_use(spec: ShippedTreeSpec, known: frozenset[str]) -> _OutsideUse:
 # ---------------------------------------------------------------------------
 
 
-def _relative(path: Path, spec: ShippedTreeSpec) -> str:
+def relative_to_repo(path: Path, spec: ShippedTreeSpec) -> str:
+    """Render ``path`` the way a finding reports it, relative to the repository root."""
     return path.relative_to(spec.repo_root).as_posix()
 
 
 def _module_findings(
     spec: ShippedTreeSpec,
-    modules: dict[str, _ShippedModule],
+    modules: dict[str, ShippedModule],
     script_reach: frozenset[str],
     runtime_reach: frozenset[str],
     full_reach: frozenset[str],
@@ -1079,7 +1085,7 @@ def _module_findings(
     unreachable = audited - full_reach
     for name, spanned in _collapse_packages(unreachable, modules):
         module = modules[name]
-        rendered = _relative(module.path.parent if module.is_package else module.path, spec)
+        rendered = relative_to_repo(module.path.parent if module.is_package else module.path, spec)
         if module.is_package:
             rendered += "/"
         used_by: set[str] = set()
@@ -1091,7 +1097,7 @@ def _module_findings(
         module = modules[name]
         findings.append(
             ModuleFinding(
-                _relative(module.path, spec),
+                relative_to_repo(module.path, spec),
                 name,
                 ModuleReach.MODULE_EXEC_ONLY,
                 1,
@@ -1102,7 +1108,7 @@ def _module_findings(
         module = modules[name]
         findings.append(
             ModuleFinding(
-                _relative(module.path, spec), name, ModuleReach.TYPE_ONLY, 1, outside.labels_for_module(name)
+                relative_to_repo(module.path, spec), name, ModuleReach.TYPE_ONLY, 1, outside.labels_for_module(name)
             ),
         )
     return tuple(findings)
@@ -1110,7 +1116,7 @@ def _module_findings(
 
 def _symbol_findings(
     spec: ShippedTreeSpec,
-    modules: dict[str, _ShippedModule],
+    modules: dict[str, ShippedModule],
     runtime_reach: frozenset[str],
     full_reach: frozenset[str],
     outside: _OutsideUse,
@@ -1127,7 +1133,7 @@ def _symbol_findings(
         tree = modules[name].tree
         member_names |= _references(tree)
         literal_tokens |= _string_tokens(tree)
-        resolved_uses |= _resolved_symbol_uses(modules[name], frozenset(modules))
+        resolved_uses |= resolved_symbol_uses(modules[name], frozenset(modules))
         self_uses[name] = _references(tree)
         whole_use |= _collection_uses(tree)
 
@@ -1155,7 +1161,7 @@ def _symbol_findings(
                 continue
             findings.append(
                 SymbolFinding(
-                    path=_relative(module.path, spec),
+                    path=relative_to_repo(module.path, spec),
                     line=definition.line,
                     kind=definition.kind,
                     name=definition.name,
@@ -1168,7 +1174,7 @@ def _symbol_findings(
     return tuple({finding.id: finding for finding in findings}.values()), data_cleared
 
 
-def _test_subjects(test: _ShippedModule, known: frozenset[str]) -> tuple[frozenset[str], frozenset[tuple[str, str]]]:
+def _test_subjects(test: ShippedModule, known: frozenset[str]) -> tuple[frozenset[str], frozenset[tuple[str, str]]]:
     """Return ``(module subjects, (module, name) symbol subjects)`` a test imports from the shipped tree."""
     modules: set[str] = set()
     symbols: set[tuple[str, str]] = set()
@@ -1201,14 +1207,14 @@ def _test_findings(
         return any(name == root or name.startswith(root + ".") for root in dead_roots)
 
     findings: list[TestFinding] = []
-    for path in _iter_python_files(spec.src_root / spec.package):
-        if not _is_test_path(path, spec.src_root) or not path.name.startswith("test_"):
+    for path in iter_python_files(spec.src_root / spec.package):
+        if not is_test_path(path, spec.src_root) or not path.name.startswith("test_"):
             continue
         try:
-            tree = _parse(path)
+            tree = parse_module(path)
         except (OSError, SyntaxError, UnicodeDecodeError):
             continue
-        test = _ShippedModule(module_name_for(path, src_root=spec.src_root), path, False, tree)
+        test = ShippedModule(module_name_for(path, src_root=spec.src_root), path, False, tree)
         modules, symbols = _test_subjects(test, known)
         if not modules and not symbols:
             continue
@@ -1222,14 +1228,14 @@ def _test_findings(
                 default=_CONFIDENCE_ORDER[Confidence.EXACT],
             )
             confidence = _CONFIDENCE_BY_ORDER[weakest]
-            findings.append(TestFinding(_relative(path, spec), test.name, subjects, confidence))
+            findings.append(TestFinding(relative_to_repo(path, spec), test.name, subjects, confidence))
     return tuple(findings)
 
 
 def scan_unreachable_code(spec: ShippedTreeSpec) -> UnreachableCodeResult:
     """Run the two-layer reachability scan over the tree ``spec`` describes."""
     try:
-        modules = _shipped_modules(spec)
+        modules = shipped_modules(spec)
     except SyntaxError as exc:
         return UnreachableCodeResult.error(f"shipped module does not parse: {exc.filename}:{exc.lineno}: {exc.msg}")
     except OSError as exc:
@@ -1253,17 +1259,17 @@ def scan_unreachable_code(spec: ShippedTreeSpec) -> UnreachableCodeResult:
         return UnreachableCodeResult.error(f"root module(s) absent from the shipped tree: {', '.join(missing)}")
 
     known = frozenset(modules)
-    edges = {name: _module_edges(module, known) for name, module in modules.items()}
+    edges = {name: module_edges(module, known) for name, module in modules.items()}
     spawned = {name: _spawn_edges(module, known) for name, module in modules.items()}
     runtime_edges = {name: runtime | spawned[name] for name, (runtime, _) in edges.items()}
     full_edges = {name: runtime | type_only | spawned[name] for name, (runtime, type_only) in edges.items()}
-    script_reach = _reachable(
+    script_reach = reachable_closure(
         [entry.module for entry in spec.entry_points] + [entry.module for entry in companion_entries],
         modules,
         runtime_edges,
     )
-    runtime_reach = _reachable(root_modules, modules, runtime_edges)
-    full_reach = _reachable(root_modules, modules, full_edges)
+    runtime_reach = reachable_closure(root_modules, modules, runtime_edges)
+    full_reach = reachable_closure(root_modules, modules, full_edges)
 
     audited_names = frozenset(name for name in modules if name == spec.package or name.startswith(spec.package + "."))
     audited_total = len(audited_names)

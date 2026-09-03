@@ -100,9 +100,7 @@ class DonativoRowField(StrEnum):
     IS_RECURRENT = "is_recurrent"
 
 
-_DonativoRowField = Annotated[
-    DonativoRowField, BeforeValidator(coerce_enum_member(DonativoRowField))
-]
+_DonativoRowField = Annotated[DonativoRowField, BeforeValidator(coerce_enum_member(DonativoRowField))]
 """Registry token hydrated into a DonativoRowField member."""
 
 

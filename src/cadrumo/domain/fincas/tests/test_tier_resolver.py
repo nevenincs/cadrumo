@@ -13,10 +13,11 @@ from decimal import Decimal
 
 import pytest
 
-from ..enums import ReduccionTier, UseType
+from ..enums import ReduccionTier, TitularContribuyente, TitularidadRegime, UseType
 from ..errors import TierResolutionError
 from ..models import Arrendamiento, Finca
 from ..tier_resolver import LEY_12_2023_IN_FORCE_DATE, resolve_reduccion
+from ..titularidad import Titularidad
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -31,6 +32,11 @@ def _finca(*, is_stressed_area: bool = False) -> Finca:
         coste_adquisicion_construccion=Decimal("140000.00"),
         acquisition_date=date(2010, 1, 1),
         use_type=UseType.VIVIENDA_ARRENDADA,
+        titularidad=Titularidad(
+            regime=TitularidadRegime.PLENO_DOMINIO,
+            contribuyente=TitularContribuyente.PRIMER_DECLARANTE,
+            porcentaje_propiedad=Decimal("100.00"),
+        ),
         is_stressed_area=is_stressed_area,
     )
 
@@ -433,6 +439,11 @@ def _finca_with_use_type(use_type: UseType) -> Finca:
         coste_adquisicion_construccion=Decimal("140000.00"),
         acquisition_date=date(2010, 1, 1),
         use_type=use_type,
+        titularidad=Titularidad(
+            regime=TitularidadRegime.PLENO_DOMINIO,
+            contribuyente=TitularContribuyente.PRIMER_DECLARANTE,
+            porcentaje_propiedad=Decimal("100.00"),
+        ),
         is_stressed_area=False,
     )
 

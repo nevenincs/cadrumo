@@ -26,13 +26,6 @@ from ...application.modelo.export import (
 from ...application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ...application.modelo.selectors import (
     ModeloCalculationRevisionSelector,
-    ModeloCalculationRevisionSelectorAmbiguousError,
-    ModeloCalculationRevisionSelectorNotFoundError,
-    ModeloCalculationRevisionSelectorStateError,
-)
-from ...application.modelo.work_addressing import (
-    ModeloWorkAddressNotFoundError,
-    ModeloWorkPeriodTokenError,
 )
 from ...application.workflow.persistence import workflow_state_repository
 from ...core.i18n.render import tr
@@ -41,14 +34,10 @@ from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ._common import emit_envelope, filing_taxpayer_or_refuse
-from ._modelo_behavior_support import resolve_optional_cli_period, resolve_revision_for_cli
+from ._modelo_behavior_support import resolve_exportable_revision_for_cli
 from ._modelo_cli_support import (
     bad_parameter_from_error,
-    parse_revision_selector,
     resolve_default_actor,
-    selector_bad_parameter,
-    validate_calculation_revision_id,
-    validate_work_unit_id,
 )
 from ._modelo_payloads import ModeloExportPayload
 
@@ -136,31 +125,16 @@ def modelo_export_verb(
                 default="Supply --output PATH for the fichero-BOE artefact.",
             )
         )
-    try:
-        typed_period = resolve_optional_cli_period(year=year, period=period, modelo=modelo)
-        selected_revision = resolve_revision_for_cli(
-            calculation_revision_id=validate_calculation_revision_id(revision) if revision is not None else None,
-            work_unit_id=validate_work_unit_id(work_unit_id) if work_unit_id is not None else None,
-            modelo=modelo,
-            year=year,
-            period=typed_period,
-            registry_revision=registry_revision,
-            bucket_id=bucket_id,
-            selector=parse_revision_selector(select),
-            default_for="export",
-        )
-    except CalculationRevisionNotFoundError as exc:
-        if revision is not None:
-            raise bad_parameter_from_error(exc) from exc
-        raise selector_bad_parameter(exc) from exc
-    except (
-        ModeloWorkAddressNotFoundError,
-        ModeloCalculationRevisionSelectorNotFoundError,
-        ModeloCalculationRevisionSelectorStateError,
-        ModeloCalculationRevisionSelectorAmbiguousError,
-        ModeloWorkPeriodTokenError,
-    ) as exc:
-        raise selector_bad_parameter(exc) from exc
+    selected_revision = resolve_exportable_revision_for_cli(
+        revision=revision,
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        registry_revision=registry_revision,
+        bucket_id=bucket_id,
+        select=select,
+    )
     target_revision_id = selected_revision.calculation_revision_id
     try:
         from ...adapters.persistence.profile.justificante import JustificanteRepository

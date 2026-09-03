@@ -180,8 +180,11 @@ class CensoModeloFoundationResult(BaseModel):
         Returns:
             A :class:`CensoModeloFoundationLogFields` record with all structured log fields.
         """
-        decision: Literal["active_work_unit_allowed", "historical_metadata_only"]
-        decision = "active_work_unit_allowed" if self.active_work_unit_allowed else "historical_metadata_only"
+        decision: CensoModeloFoundationDecisionValue = (
+            CensoModeloFoundationDecision.ACTIVE_WORK_UNIT_ALLOWED
+            if self.active_work_unit_allowed
+            else CensoModeloFoundationDecision.HISTORICAL_METADATA_ONLY
+        )
         return CensoModeloFoundationLogFields(
             service_owner=self.service_owner,
             modelo=self.modelo,

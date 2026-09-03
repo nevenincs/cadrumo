@@ -477,6 +477,46 @@ def test_export_modelo_202_2024_emilio_uses_verified_revision_snapshot(
     assert out.stat().st_size > 0
 
 
+def test_export_keeps_raw_revision_and_selector_refusals_distinct(tmp_path: Path) -> None:
+    """The handler preserves the shared resolver's address-versus-selector errors."""
+    _set_export_profile_name()
+    raw_revision = _invoke(
+        ["app", "modelo", "export", "--output", str(tmp_path / "raw.boe"), "--revision", "not-a-revision-id"]
+    )
+    selector = _invoke(
+        ["app", "modelo", "export", "--output", str(tmp_path / "selector.boe"), "--select", "not-a-selector"]
+    )
+
+    assert raw_revision.exit_code != 0, raw_revision.output
+    assert selector.exit_code != 0, selector.output
+    assert "not-a-revision-id" in raw_revision.output
+    assert "not-a-selector" in selector.output
+
+
+def test_export_invalid_period_names_the_selected_modelo_tokens(tmp_path: Path) -> None:
+    """An annual modelo rejects a quarterly token with its declared annual token."""
+    _set_export_profile_name()
+
+    result = _invoke(
+        [
+            "app",
+            "modelo",
+            "export",
+            "--modelo",
+            "100",
+            "--year",
+            "2024",
+            "--period",
+            "1T",
+            "--output",
+            str(tmp_path / "invalid-period.boe"),
+        ]
+    )
+
+    assert result.exit_code != 0, result.output
+    assert "0A" in result.output
+
+
 def test_export_resolves_visible_target_to_current_verified_revision(
     tmp_path: Path,
 ) -> None:

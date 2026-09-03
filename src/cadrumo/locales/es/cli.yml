@@ -507,13 +507,19 @@ cli:
       borrador:
         app_help: Snapshots de borrador del modelo 100
         filing_year_help: Ejercicio fiscal (p. ej. 2024)
-        import_coverage_absent: El analizador no devolvió cobertura de extracción para el perfil del registro; no se importó nada.
-        import_ejercicio_mismatch: El ejercicio impreso en el PDF no coincide con el ejercicio solicitado; no se importó nada.
+        import_coverage_absent: El analizador no devolvió cobertura de extracción
+          para el perfil del registro; no se importó nada.
+        import_ejercicio_mismatch: El ejercicio impreso en el PDF no coincide con
+          el ejercicio solicitado; no se importó nada.
         import_file_help: Ruta al PDF del borrador del modelo 100 que se va a importar
-        import_help: Importar un PDF local del borrador del modelo 100 al almacén de snapshots
-        import_period_help: Código de periodo (por defecto 0A, el periodo anual del modelo 100)
-        import_period_invalid: El código de periodo no es válido para ese ejercicio fiscal.
-        import_profile_unresolved: El registro no declara un único perfil de extracción de borrador para ese ejercicio y periodo.
+        import_help: Importar un PDF local del borrador del modelo 100 al almacén
+          de snapshots
+        import_period_help: Código de periodo (por defecto 0A, el periodo anual del
+          modelo 100)
+        import_period_invalid: El código de periodo no es válido para ese ejercicio
+          fiscal.
+        import_profile_unresolved: El registro no declara un único perfil de extracción
+          de borrador para ese ejercicio y periodo.
         latest_help: Mostrar el snapshot activo más reciente de un ejercicio fiscal
         list_help: Listar snapshots persistidos del borrador del modelo 100
         modelo_100_help: Comandos de snapshots del borrador del modelo 100
@@ -3813,6 +3819,17 @@ cli:
       modelo_count: Nº modelos
       modelos: Modelos
       observation_paths: Rutas de observación
+      replay_blocked_payload_count: N.º de capturas bloqueadas
+      replay_compared_field_count: N.º de casillas comparadas
+      replay_cross_reference_id: Referencia cruzada de la reproducción
+      replay_guard_policy_id: Política de guarda de la reproducción
+      replay_matched_payload_count: N.º de capturas coincidentes
+      replay_mismatched_payload_count: N.º de capturas discrepantes
+      replay_oracle_id: Oráculo de la reproducción
+      replay_payload_count: N.º de capturas reproducidas
+      replay_registry_validated: Registro validado en la reproducción
+      replay_unverifiable_payload_count: N.º de capturas no verificables
+      replay_verdict: Veredicto de paridad de la reproducción
       revision: Revisión
       revision_count: Nº revisiones
       row_count: Nº filas
@@ -3825,6 +3842,8 @@ cli:
       workbook_parity_ref_count: Nº referencias de paridad de libro
     observation_help: Manifiesto cifrado de observación de declaración presentada
       que se va a verificar
+    replay_parity_help: Reproducir sin conexión las capturas de Renta WEB Open incluidas
+      frente al oráculo de paridad
     source_observation_help: Manifiesto cifrado de observación fuente requerido por
       vínculos de declaraciones previas o relaciones
     verify_filed_state_help: Comparar el cálculo local del registro con el estado

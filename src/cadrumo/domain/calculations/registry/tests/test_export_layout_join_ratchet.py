@@ -51,7 +51,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: ``(modelo, revision_id, design_sheet_name)`` for every design sheet whose
 #: record join cannot currently be established, so its byte-coverage verdict
 #: comes from the weaker any-record fallback. Shrink this; never grow it.
-_UNJOINED_DESIGN_SHEETS: frozenset[tuple[str, str, str]] = frozenset()
+_UNJOINED_DESIGN_SHEETS: frozenset[tuple[str, str, str]] = frozenset[tuple[str, str, str]]()
 
 #: A scan resolving almost nothing would satisfy the equality assertion
 #: perfectly. This floor sits far below the real figure so ordinary authoring

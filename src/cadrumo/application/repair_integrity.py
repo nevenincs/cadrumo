@@ -70,7 +70,7 @@ from ..core.operator_action_enums import (
     ActionConditionality,
     ActionEvidenceProvenance,
 )
-from .diagnostic_models import DiagnosticCheck
+from .diagnostic_models import DiagnosticCheck, DiagnosticStatus
 from .operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 
 _log = get_logger(__name__)
@@ -205,7 +205,7 @@ def _aggregate_integrity(
     if unreadable == 0:
         return DiagnosticCheck(
             name="secure_objects.integrity",
-            status="ok",
+            status=DiagnosticStatus.OK,
             summary=(f"{readable} row(s) decryptable across {len(integrity)} namespace(s)"),
         )
     impacted = ", ".join(
@@ -215,7 +215,7 @@ def _aggregate_integrity(
     )
     return DiagnosticCheck(
         name="secure_objects.integrity",
-        status="fail",
+        status=DiagnosticStatus.FAIL,
         summary=f"{unreadable} undecryptable row(s) in: {impacted}",
         precondition_verdict=PreconditionVerdict(
             failed_condition_id="diagnostics.secure_objects.integrity.readable",

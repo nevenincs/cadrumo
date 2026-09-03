@@ -98,9 +98,7 @@ class ExportLineEnding(StrEnum):
     NONE = "none"
 
 
-ExportLineEndingField = Annotated[
-    ExportLineEnding, BeforeValidator(coerce_enum_member(ExportLineEnding))
-]
+ExportLineEndingField = Annotated[ExportLineEnding, BeforeValidator(coerce_enum_member(ExportLineEnding))]
 """Registry token hydrated into a ExportLineEnding member."""
 
 
@@ -111,9 +109,7 @@ class ExportRecordRepeat(StrEnum):
     PROJECTION_ROWS = "projection_rows"
 
 
-ExportRecordRepeatField = Annotated[
-    ExportRecordRepeat, BeforeValidator(coerce_enum_member(ExportRecordRepeat))
-]
+ExportRecordRepeatField = Annotated[ExportRecordRepeat, BeforeValidator(coerce_enum_member(ExportRecordRepeat))]
 """Registry token hydrated into a ExportRecordRepeat member."""
 
 
@@ -733,7 +729,7 @@ class ExportRecordDefinition(RegistryModel):
 
 def _repeat_field_family_failure(
     *,
-    repeat: Literal["binding_rows", "projection_rows"] | None,
+    repeat: ExportRecordRepeat | None,
     binding_record_declared: bool,
     has_binding: bool,
     has_projection: bool,
@@ -742,9 +738,11 @@ def _repeat_field_family_failure(
     claims_binding = has_binding or binding_record_declared
     if claims_binding and has_projection:
         return "export record cannot mix binding and projection fields"
-    if repeat == "projection_rows":
+    # ``==`` not ``is``: ``model_copy(update=...)`` can smuggle the raw token past
+    # validation, and this guard must still recognise it as that family.
+    if repeat == ExportRecordRepeat.PROJECTION_ROWS:
         return _projection_repeat_failure(claims_binding, has_projection)
-    if repeat == "binding_rows":
+    if repeat == ExportRecordRepeat.BINDING_ROWS:
         return _binding_repeat_failure(
             has_binding, has_projection, binding_record_declared, allow_unresolved_binding_record
         )
@@ -941,9 +939,13 @@ class ExportLayoutDefinition(RegistryModel):
         AEAT publishes one wire encoding per modelo-year fichero-BOE
         spec; mixing encodings across records inside a single layout
         is a registry-author error that would produce a payload no
-        single decoder can faithfully re-parse. ``latin-1`` and
-        ``iso-8859-1`` are normalised to the same encoding before
-        comparison (Python codec aliases for the same charset).
+        single decoder can faithfully re-parse.
+
+        No alias normalisation happens here, and none is needed: the
+        encoding field is the closed ``ExportEncoding`` enum, so a
+        declaration spelled ``latin-1`` never reaches this comparison --
+        it is refused at parse. Every value compared here is already a
+        canonical member.
 
         Cross-domain encoding-lock: every record within one layout
         must declare an encoding that normalises to the same value.

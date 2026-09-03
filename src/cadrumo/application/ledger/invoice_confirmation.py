@@ -90,7 +90,7 @@ from .confirmed_field_resolution import (
     operator_restated_the_amounts,
     operator_value_or_reading,
     rate_tier_the_document_charged,
-    require_confirmed_field,
+    refuse_an_absent_confirmed_field,
     resolve_confirmed_invoice_date,
     resolve_invoice_class,
 )
@@ -590,28 +590,25 @@ def _build_confirmed_invoice_candidate(
     """Resolve operator/document fields and build the exact catalogue candidate."""
     draft = preparation.draft
     counterparty_side = counterparty_draft_side(draft, kind=kind)
-    resolved_counterparty_tax_id = require_confirmed_field(
-        agreed_counterparty_tax_id(
-            supplied=counterparty_tax_id,
-            extracted=counterparty_side.tax_id,
-            counterparty_country=counterparty_country,
-        ),
-        field="counterparty_tax_id",
+    resolved_counterparty_tax_id = agreed_counterparty_tax_id(
+        supplied=counterparty_tax_id,
+        extracted=counterparty_side.tax_id,
+        counterparty_country=counterparty_country,
     )
+    if resolved_counterparty_tax_id is None:
+        refuse_an_absent_confirmed_field(field="counterparty_tax_id")
     refuse_an_issued_document_the_filer_did_not_issue(
         kind=kind,
         extracted_supplier_tax_id=draft.supplier_tax_id,
     )
     refuse_a_counterparty_that_is_the_filer(resolved_counterparty_tax_id)
-    resolved_invoice_number = require_confirmed_field(
-        operator_value_or_reading(invoice_number, draft.invoice_number),
-        field="invoice_number",
-    )
+    resolved_invoice_number = operator_value_or_reading(invoice_number, draft.invoice_number)
+    if resolved_invoice_number is None:
+        refuse_an_absent_confirmed_field(field="invoice_number")
     resolved_invoice_date = resolve_confirmed_invoice_date(invoice_date, draft)
-    resolved_taxable_base = require_confirmed_field(
-        operator_value_or_reading(taxable_base, draft.taxable_base),
-        field="taxable_base",
-    )
+    resolved_taxable_base = operator_value_or_reading(taxable_base, draft.taxable_base)
+    if resolved_taxable_base is None:
+        refuse_an_absent_confirmed_field(field="taxable_base")
     resolved_iva_rate = operator_value_or_reading(iva_rate, draft.iva_rate)
     resolved_currency = confirmed_currency(currency, draft.currency)
     resolved_counterparty_name = confirmed_counterparty_name(counterparty_name, counterparty_side.name)

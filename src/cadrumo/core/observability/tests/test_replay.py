@@ -259,7 +259,7 @@ class TestArgvReconstruction:
             ),
             (
                 "true-bool-bare",
-                "aeat workflow show",
+                "aeat workflow view",
                 (ArgumentRecord(name="json", value="True", source=ArgumentSource.FLAG),),
                 ("workflow", "view", "--json"),
             ),
@@ -274,7 +274,7 @@ class TestArgvReconstruction:
             ),
             (
                 "env-default-skipped",
-                "aeat run show",
+                "aeat run view",
                 (
                     ArgumentRecord(name="run_id", value="abc", source=ArgumentSource.POSITIONAL),
                     ArgumentRecord(name="cadrumo_runs_dir", value="var/runs", source=ArgumentSource.ENV),
@@ -304,7 +304,7 @@ class TestArgvReconstruction:
                 cli_flag="--json",
             ),
         )
-        argv = _argv_from_arguments("aeat workflow show", args)
+        argv = _argv_from_arguments("aeat workflow view", args)
         assert argv == ["workflow", "view", "--json"]
         # Also exercises the False path with override.
         args_false = (
@@ -315,7 +315,7 @@ class TestArgvReconstruction:
                 cli_flag="--json",
             ),
         )
-        argv_false = _argv_from_arguments("aeat workflow show", args_false)
+        argv_false = _argv_from_arguments("aeat workflow view", args_false)
         # False-bool override still gets skipped, not re-emitted.
         assert argv_false == ["workflow", "view"]
 

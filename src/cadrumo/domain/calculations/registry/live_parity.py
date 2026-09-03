@@ -488,7 +488,7 @@ def evaluate_planned_operations(
         return ParityResult(
             oracle_id=oracle.oracle_id,
             cross_reference_id=policy.id,
-            verdict="blocked",
+            verdict=ParityVerdictKind.BLOCKED,
             narrative="; ".join(blocked_reasons),
         )
     return operations

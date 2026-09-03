@@ -88,7 +88,7 @@ the grid collapses back to a single row wherever the body is wide enough.
 """
 
 
-class OperationModal(ModalScreen[OperationModalOutcomeV1]):
+class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
     """Generic modal presenting one supervised operation until it settles."""
 
     DEFAULT_CSS = tokenised("""

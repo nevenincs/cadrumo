@@ -297,7 +297,7 @@ def test_every_replacement_password_refusal_is_typed_safe_and_changes_nothing(
             expected_context["maximum_utf8_bytes"] = 1024
         assert dict(payload.context) == expected_context
         with pytest.raises(TypeError):
-            payload.context["candidate"] = candidate  # type: ignore[index]
+            payload.context["candidate"] = candidate  # type: ignore[index]  # ty: ignore[invalid-assignment]  # reason: writing to the immutable context IS the refusal under test
 
 
 @pytest.mark.parametrize(

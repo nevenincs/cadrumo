@@ -40,6 +40,7 @@ from ....domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
+from ....domain.calculations.registry.schema_formula import LegalParameterDataType
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_rounding import RegistryRoundingCode
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -65,6 +66,7 @@ from .records import (
     SheetNumberFormat,
     SheetProtectedRange,
     SheetProvenanceRow,
+    SheetRelationProvenance,
     SheetRoundingRule,
     SheetRoundingRuleValue,
     SheetRowSet,
@@ -82,6 +84,17 @@ from .records import (
 # input, relation, or tariff coordinate.
 CALC_SHEETS_ENGINE_VERSION: Final[str] = "calc-sheets/0.2.0"
 _ACQUISITION_MIRROR_BINDING_SUFFIX: Final[str] = "-adquisicion"
+
+# The scalar parameter shapes a tariff anchor can materialise, mapped to the
+# workbook token the tariff record declares. A parameter shape absent here
+# (a bracket table, or the Modelo 303 keyed coefficients) has no single scalar
+# value and is skipped before scalar resolution.
+_SCALAR_TARIFF_DATA_TYPES: Final[Mapping[LegalParameterDataType, Literal["decimal", "money", "integer", "ratio"]]] = {
+    LegalParameterDataType.DECIMAL: "decimal",
+    LegalParameterDataType.MONEY: "money",
+    LegalParameterDataType.INTEGER: "integer",
+    LegalParameterDataType.RATIO: "ratio",
+}
 
 
 def _rounding_rule_for(
@@ -408,8 +421,8 @@ def _tariff_tables(
                 ),
             )
         else:
-            raw_dt = definition.data_type
-            if raw_dt not in ("decimal", "money", "integer", "ratio"):
+            scalar_data_type = _SCALAR_TARIFF_DATA_TYPES.get(definition.data_type)
+            if scalar_data_type is None:
                 # Non-scalar parameter types that reach the tariff-anchor loop
                 # without being a ``bracket_table`` (e.g. ``keyed_bracket_table`` --
                 # the Modelo 303 módulos-IVA coefficients keyed by epígrafe:módulo)
@@ -425,7 +438,6 @@ def _tariff_tables(
                     context={"parameter_id": definition.id, "valid_on": filing_date.isoformat()},
                     translated_message="application.storage.calc_sheets.engine.errors.parameter_no_dated_value",
                 ) from exc
-            scalar_data_type: Literal["decimal", "money", "integer", "ratio"] = raw_dt
             tables.append(
                 SheetTariffTable(
                     parameter=parameter_id,
@@ -748,7 +760,7 @@ def _relation_values_with_registry_grounding(
             RelationValue(
                 relation=relation_id,
                 value=supplied.value if supplied is not None else None,
-                provenance=supplied.provenance if supplied is not None else "operator_manual",
+                provenance=(supplied.provenance if supplied is not None else SheetRelationProvenance.OPERATOR_MANUAL),
                 source_modelo=source_modelo,
                 source_filing_year=source_filing_year,
                 source_periods=source_periods,

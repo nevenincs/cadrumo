@@ -94,7 +94,7 @@ def _graph() -> CommandSpecGraph:
     return CommandSpecGraph((root, leaf))
 
 
-def test_runtime_compiles_help_and_invokes_public_behavior_from_specs() -> None:
+def test_runtime_preflights_and_invokes_a_synthetic_graph_behavior() -> None:
     _SEEN.clear()
     result = CliRunner().invoke(build_command_app(_graph()), ["greet", "--name", "Ada"])
 

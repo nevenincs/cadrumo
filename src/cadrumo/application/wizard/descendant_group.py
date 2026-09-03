@@ -53,11 +53,11 @@ from ..flows.definition import (
 from ..flows.definition import locale_copy_ref as _locale_ref
 from ..flows.validators import ValidationVerdict, register_answer_validator, register_cross_field_validator
 from ._format_hints import (
-    _FORMAT_AMOUNT_LOCALE_KEY,
-    _FORMAT_DATE_LOCALE_KEY,
-    _FORMAT_TAX_ID_LOCALE_KEY,
-    _FORMAT_UNITS_LOCALE_KEY,
-    _NIF_INVALID_LOCALE_KEY,
+    FORMAT_AMOUNT_LOCALE_KEY,
+    FORMAT_DATE_LOCALE_KEY,
+    FORMAT_TAX_ID_LOCALE_KEY,
+    FORMAT_UNITS_LOCALE_KEY,
+    NIF_INVALID_LOCALE_KEY,
 )
 from .catalogue import FAMILIA_SECTION_ID as _FAMILIA_SECTION_ID
 
@@ -332,7 +332,7 @@ def _validate_descendant_nif(page: FlowPage, canonical: str) -> ValidationVerdic
     try:
         validate_identity(canonical)
     except IdentityError:
-        return ValidationVerdict.failed(_NIF_INVALID_LOCALE_KEY, page_id=page.id)
+        return ValidationVerdict.failed(NIF_INVALID_LOCALE_KEY, page_id=page.id)
     return ValidationVerdict.passed()
 
 
@@ -605,7 +605,7 @@ DESCENDANTS_COUNT_PAGE: FlowPage = FlowPage(
     widget=FlowWidgetKind.INTEGER,
     prompt=_locale_ref(_COUNT_PROMPT_LOCALE_KEY),
     help=_locale_ref(_COUNT_HELP_LOCALE_KEY),
-    format_hint=_locale_ref(_FORMAT_UNITS_LOCALE_KEY),
+    format_hint=_locale_ref(FORMAT_UNITS_LOCALE_KEY),
     # Optional with an explicit zero default: a natural-person walk that never
     # mentions descendants declares zero (the correct tax semantics and the
     # interactive prefill), and the scripted driver fills the page from this
@@ -694,7 +694,7 @@ _DESCENDANT_PAGES: tuple[FlowPage, ...] = (
         id=_BIRTH_DATE_PAGE_ID,
         widget=FlowWidgetKind.DATE,
         prompt=_locale_ref(_BIRTH_DATE_PROMPT_LOCALE_KEY),
-        format_hint=_locale_ref(_FORMAT_DATE_LOCALE_KEY),
+        format_hint=_locale_ref(FORMAT_DATE_LOCALE_KEY),
         required=True,
         answer_type=str,
     ),
@@ -723,7 +723,7 @@ _DESCENDANT_PAGES: tuple[FlowPage, ...] = (
         widget=FlowWidgetKind.DATE,
         prompt=_locale_ref(_INSCRIPCION_PROMPT_LOCALE_KEY),
         help=_locale_ref(_INSCRIPCION_HELP_LOCALE_KEY),
-        format_hint=_locale_ref(_FORMAT_DATE_LOCALE_KEY),
+        format_hint=_locale_ref(FORMAT_DATE_LOCALE_KEY),
         required=False,
         answer_type=str,
         visible_when=FlowCondition(
@@ -736,7 +736,7 @@ _DESCENDANT_PAGES: tuple[FlowPage, ...] = (
         widget=FlowWidgetKind.DATE,
         prompt=_locale_ref(_ACOGIMIENTO_PROMPT_LOCALE_KEY),
         help=_locale_ref(_ACOGIMIENTO_HELP_LOCALE_KEY),
-        format_hint=_locale_ref(_FORMAT_DATE_LOCALE_KEY),
+        format_hint=_locale_ref(FORMAT_DATE_LOCALE_KEY),
         required=False,
         answer_type=str,
         # Shown for an adoptado record too, and that is the cap-not-restart rule
@@ -759,7 +759,7 @@ _DESCENDANT_PAGES: tuple[FlowPage, ...] = (
         widget=FlowWidgetKind.DATE,
         prompt=_locale_ref(_FALLECIMIENTO_PROMPT_LOCALE_KEY),
         help=_locale_ref(_FALLECIMIENTO_HELP_LOCALE_KEY),
-        format_hint=_locale_ref(_FORMAT_DATE_LOCALE_KEY),
+        format_hint=_locale_ref(FORMAT_DATE_LOCALE_KEY),
         required=False,
         answer_type=str,
     ),
@@ -808,7 +808,7 @@ _DESCENDANT_PAGES: tuple[FlowPage, ...] = (
         widget=FlowWidgetKind.DECIMAL,
         prompt=_locale_ref(_RENTAS_ANUALES_PROMPT_LOCALE_KEY),
         help=_locale_ref(_RENTAS_ANUALES_HELP_LOCALE_KEY),
-        format_hint=_locale_ref(_FORMAT_AMOUNT_LOCALE_KEY),
+        format_hint=_locale_ref(FORMAT_AMOUNT_LOCALE_KEY),
         required=False,
         answer_type=str,
         answer_validator_ids=(DESCENDANT_RENTAS_VALIDATOR_ID,),
@@ -847,7 +847,7 @@ _DESCENDANT_PAGES: tuple[FlowPage, ...] = (
         widget=FlowWidgetKind.INTEGER,
         prompt=_locale_ref(_ALTA_POSTERIOR_PROMPT_LOCALE_KEY),
         help=_locale_ref(_ALTA_POSTERIOR_HELP_LOCALE_KEY),
-        format_hint=_locale_ref(_FORMAT_UNITS_LOCALE_KEY),
+        format_hint=_locale_ref(FORMAT_UNITS_LOCALE_KEY),
         required=False,
         answer_type=int,
         answer_validator_ids=(DESCENDANT_ALTA_POSTERIOR_VALIDATOR_ID,),
@@ -857,7 +857,7 @@ _DESCENDANT_PAGES: tuple[FlowPage, ...] = (
         widget=FlowWidgetKind.INTEGER,
         prompt=_locale_ref(_GASTOS_GUARDERIA_PROMPT_LOCALE_KEY),
         help=_locale_ref(_GASTOS_GUARDERIA_HELP_LOCALE_KEY),
-        format_hint=_locale_ref(_FORMAT_AMOUNT_LOCALE_KEY),
+        format_hint=_locale_ref(FORMAT_AMOUNT_LOCALE_KEY),
         required=False,
         answer_type=int,
         answer_validator_ids=(DESCENDANT_GASTOS_VALIDATOR_ID,),
@@ -889,7 +889,7 @@ _DESCENDANT_PAGES: tuple[FlowPage, ...] = (
         id=_NIF_PAGE_ID,
         widget=FlowWidgetKind.TEXT,
         prompt=_locale_ref(_NIF_PROMPT_LOCALE_KEY),
-        format_hint=_locale_ref(_FORMAT_TAX_ID_LOCALE_KEY),
+        format_hint=_locale_ref(FORMAT_TAX_ID_LOCALE_KEY),
         required=False,
         answer_type=str,
         answer_validator_ids=(DESCENDANT_NIF_VALIDATOR_ID,),

@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from dev.locales import wizard_translation_audit
-from dev.locales.wizard_translation_audit import (
+from .. import wizard_translation_audit
+from ..wizard_translation_audit import (
     audit_cli_translations,
     audit_wizard_translations,
     cli_keys_referenced_in_source,
@@ -46,14 +46,20 @@ def test_cli_keys_extracted_from_source_are_non_empty() -> None:
 
 
 def test_cli_key_extractor_harvests_aliased_translation_calls(tmp_path: Path, monkeypatch) -> None:
-    """An aliased ``tr`` call is live, while a nearby key-shaped literal is not."""
+    """Only aliases of the canonical Cadrumo translation function are live."""
     cli_root = tmp_path / "entrypoints" / "cli"
     cli_root.mkdir(parents=True)
     (cli_root / "alias_fixture.py").write_text(
         "from cadrumo.core.i18n import tr as _tr\n"
         "\n"
-        "_tr(\"cli.config.wizard_translation_audit_alias_regression.help\")\n"
-        "NEARBY_LITERAL = \"cli.config.wizard_translation_audit_alias_regression.literal\"\n",
+        '_tr("cli.config.wizard_translation_audit_alias_regression.help")\n'
+        'NEARBY_LITERAL = "cli.config.wizard_translation_audit_alias_regression.literal"\n',
+        encoding="utf-8",
+    )
+    (cli_root / "third_party_alias_fixture.py").write_text(
+        "from third_party.i18n import tr as _tr\n"
+        "\n"
+        '_tr("cli.config.wizard_translation_audit_third_party_alias_regression.help")\n',
         encoding="utf-8",
     )
     monkeypatch.setattr(wizard_translation_audit, "SRC_DIR", tmp_path)
@@ -62,3 +68,4 @@ def test_cli_key_extractor_harvests_aliased_translation_calls(tmp_path: Path, mo
 
     assert "cli.config.wizard_translation_audit_alias_regression.help" in keys
     assert "cli.config.wizard_translation_audit_alias_regression.literal" not in keys
+    assert "cli.config.wizard_translation_audit_third_party_alias_regression.help" not in keys

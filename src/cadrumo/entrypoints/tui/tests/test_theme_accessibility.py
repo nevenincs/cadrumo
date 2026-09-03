@@ -105,7 +105,14 @@ async def _observe(
         await app.push_screen(MODELO_WORKSPACE_DESTINATIONS[destination_id](session))
         await pilot.pause()
         glyphs: tuple[str, ...] = tuple(str(match.group(1)) for match in _TEXT_NODE.finditer(app.export_screenshot()))
-        order: tuple[str | None, ...] = tuple(widget.id for widget in app.screen.focus_chain)
+        focus_ids: list[str | None] = []
+        for widget in app.screen.focus_chain:
+            widget_id = widget.id
+            assert widget_id is None or isinstance(widget_id, str), (
+                f"a focusable widget reported a non-string id: {widget_id!r}"
+            )
+            focus_ids.append(widget_id)
+        order: tuple[str | None, ...] = tuple(focus_ids)
         app.exit(None)
     return glyphs, order
 

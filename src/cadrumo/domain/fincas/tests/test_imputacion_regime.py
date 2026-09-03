@@ -13,8 +13,9 @@ from decimal import Decimal
 
 import pytest
 
-from ..enums import UseType
+from ..enums import TitularContribuyente, TitularidadRegime, UseType
 from ..models import Finca
+from ..titularidad import Titularidad
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -30,6 +31,11 @@ def _finca(use_type: UseType) -> Finca:
         coste_adquisicion_construccion=Decimal("72000.00"),
         acquisition_date=date(2018, 1, 1),
         use_type=use_type,
+        titularidad=Titularidad(
+            regime=TitularidadRegime.PLENO_DOMINIO,
+            contribuyente=TitularContribuyente.PRIMER_DECLARANTE,
+            porcentaje_propiedad=Decimal("100.00"),
+        ),
     )
 
 

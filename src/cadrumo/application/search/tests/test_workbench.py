@@ -1,4 +1,4 @@
-"""Bite tests for the redacted frontend-neutral workbench search contract."""
+"""Adversarial tests for the intrinsically safe workbench search projection."""
 
 from __future__ import annotations
 
@@ -7,123 +7,167 @@ import hashlib
 import inspect
 import math
 from collections.abc import Sequence
+from importlib import import_module
 from itertools import permutations
 from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
 
-import cadrumo.application.search.workbench as workbench_module
-from cadrumo.application.search.workbench import (
+from ....core.period import Period
+from ....domain.modelos.codes import ModeloCode
+from ..workbench import (
     WorkbenchDestinationAdmission,
     WorkbenchDestinationAdmissionState,
+    WorkbenchFilingAddress,
     WorkbenchModeloAddress,
+    WorkbenchRevisionAddress,
     WorkbenchSearchDocument,
     WorkbenchSearchKind,
+    WorkbenchSearchLabelKey,
     WorkbenchSearchRequest,
     WorkbenchSearchResponse,
     WorkbenchSearchResult,
     WorkbenchSearchService,
-    digest_operator_safe_tokens,
+    WorkbenchSearchSource,
+    WorkbenchSearchStatus,
 )
-from cadrumo.core.period import Period
-from cadrumo.domain.modelos.codes import ModeloCode
 
+#: The defining module itself, for the attribute scoping below. Named through
+#: `import_module` rather than an absolute self-import, which the gate forbids.
+workbench_module = import_module("cadrumo.application.search.workbench")
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_FILING_ID = "f" * 64
+_CALCULATION_REVISION_ID = "c" * 64
+_FILING_RECORD_ID = "f" * 64
+_PRIVATE_IDENTITY_BASIS = "synthetic-private-record-basis"
+_ADDRESS_UNSET = object()
 
-
-def _id(seed: str) -> str:
-    return hashlib.sha256(seed.encode()).hexdigest()
-
-
-def _address(
-    *,
-    modelo: str = "303",
-    revision_id: str | None = None,
-    filing_record_id: str | None = None,
-) -> WorkbenchModeloAddress:
-    return WorkbenchModeloAddress(
-        modelo=modelo,
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "1T"),
-        revision_id=revision_id,
-        filing_record_id=filing_record_id,
-    )
+_SOURCE_BY_KIND = {
+    WorkbenchSearchKind.LEDGER_ENTRY: WorkbenchSearchSource.LEDGER_ENTRY,
+    WorkbenchSearchKind.LEDGER_EVIDENCE: WorkbenchSearchSource.LEDGER_EVIDENCE,
+    WorkbenchSearchKind.DECLARATION: WorkbenchSearchSource.DECLARATION,
+    WorkbenchSearchKind.MODELO: WorkbenchSearchSource.MODELO,
+    WorkbenchSearchKind.REVISION: WorkbenchSearchSource.REVISION,
+    WorkbenchSearchKind.FILING: WorkbenchSearchSource.FILING,
+    WorkbenchSearchKind.HISTORY: WorkbenchSearchSource.HISTORY,
+    WorkbenchSearchKind.RECONCILIATION: WorkbenchSearchSource.RECONCILIATION,
+    WorkbenchSearchKind.NOTIFICATION: WorkbenchSearchSource.NOTIFICATION,
+}
+_STATUS_BY_KIND = {
+    WorkbenchSearchKind.LEDGER_ENTRY: WorkbenchSearchStatus.LEDGER_ENTRY_READY,
+    WorkbenchSearchKind.LEDGER_EVIDENCE: WorkbenchSearchStatus.LEDGER_EVIDENCE_CAPTURED,
+    WorkbenchSearchKind.DECLARATION: WorkbenchSearchStatus.DECLARATION_READY,
+    WorkbenchSearchKind.MODELO: WorkbenchSearchStatus.MODELO_AVAILABLE,
+    WorkbenchSearchKind.REVISION: WorkbenchSearchStatus.REVISION_CURRENT,
+    WorkbenchSearchKind.FILING: WorkbenchSearchStatus.FILING_ACCEPTED,
+    WorkbenchSearchKind.HISTORY: WorkbenchSearchStatus.HISTORY_OBSERVED,
+    WorkbenchSearchKind.RECONCILIATION: WorkbenchSearchStatus.RECONCILIATION_OPEN,
+    WorkbenchSearchKind.NOTIFICATION: WorkbenchSearchStatus.NOTIFICATION_UNREAD,
+}
+_LABEL_BY_KIND = {kind: WorkbenchSearchLabelKey(f"search.{kind.value}") for kind in WorkbenchSearchKind}
 
 
 def _admission(
     state: WorkbenchDestinationAdmissionState = WorkbenchDestinationAdmissionState.AVAILABLE,
 ) -> WorkbenchDestinationAdmission:
     return WorkbenchDestinationAdmission(
-        destination="workbench.declarations",
+        destination="workbench.destination",
         state=state,
         reason_code=None if state is WorkbenchDestinationAdmissionState.AVAILABLE else "admission.profile_locked",
     )
 
 
-def _status(kind: WorkbenchSearchKind) -> str:
-    return {
-        WorkbenchSearchKind.LEDGER_ENTRY: "ledger.entry.ready",
-        WorkbenchSearchKind.LEDGER_EVIDENCE: "ledger.evidence.captured",
-        WorkbenchSearchKind.DECLARATION: "declaration.ready",
-        WorkbenchSearchKind.MODELO: "modelo.available",
-        WorkbenchSearchKind.REVISION: "revision.current",
-        WorkbenchSearchKind.FILING: "filing.accepted",
-        WorkbenchSearchKind.HISTORY: "history.observed",
-        WorkbenchSearchKind.RECONCILIATION: "reconciliation.needs_review",
-        WorkbenchSearchKind.NOTIFICATION: "notification.unread",
-    }[kind]
+def _modelo_address() -> WorkbenchModeloAddress:
+    return WorkbenchModeloAddress(
+        modelo=ModeloCode("303"),
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "1T"),
+    )
 
 
-def _kind_address(kind: WorkbenchSearchKind) -> WorkbenchModeloAddress | None:
+def _revision_address() -> WorkbenchRevisionAddress:
+    return WorkbenchRevisionAddress(
+        modelo=ModeloCode("303"),
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "1T"),
+        calculation_revision_id=_CALCULATION_REVISION_ID,
+    )
+
+
+def _filing_address() -> WorkbenchFilingAddress:
+    return WorkbenchFilingAddress(
+        modelo=ModeloCode("303"),
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "1T"),
+        filing_record_id=_FILING_RECORD_ID,
+    )
+
+
+def _address(
+    kind: WorkbenchSearchKind,
+) -> WorkbenchModeloAddress | WorkbenchRevisionAddress | WorkbenchFilingAddress | None:
     if kind is WorkbenchSearchKind.REVISION:
-        return _address(revision_id="m303-2025-r1")
+        return _revision_address()
     if kind is WorkbenchSearchKind.FILING:
-        return _address(filing_record_id=_FILING_ID)
+        return _filing_address()
     if kind in {
         WorkbenchSearchKind.DECLARATION,
         WorkbenchSearchKind.MODELO,
         WorkbenchSearchKind.HISTORY,
     }:
-        return _address()
+        return _modelo_address()
     return None
 
 
 def _document(
-    seed: str,
-    label: str,
-    *,
     kind: WorkbenchSearchKind = WorkbenchSearchKind.DECLARATION,
-    token_digests: tuple[str, ...] = (),
+    *,
+    source: WorkbenchSearchSource | None = None,
+    status: WorkbenchSearchStatus | None = None,
+    address: object = _ADDRESS_UNSET,
     admission: WorkbenchDestinationAdmission | None = None,
     action_candidate_id: str | None = None,
-    stable_id: str | None = None,
+    identity_basis: str | None = None,
 ) -> WorkbenchSearchDocument:
+    natural_address = (
+        _address(kind)
+        if address is _ADDRESS_UNSET
+        else cast(
+            WorkbenchModeloAddress | WorkbenchRevisionAddress | WorkbenchFilingAddress | None,
+            address,
+        )
+    )
     return WorkbenchSearchDocument(
-        stable_id=stable_id or _id(seed),
         kind=kind,
-        source="modelo.local_projection",
-        label=label,
-        token_digests=token_digests,
-        address=_kind_address(kind),
-        status_code=_status(kind),
+        source=source or _SOURCE_BY_KIND[kind],
+        status=status or _STATUS_BY_KIND[kind],
+        label_key=_LABEL_BY_KIND[kind],
+        address=natural_address,
         admission=admission or _admission(),
         action_candidate_id=action_candidate_id,
+        identity_basis=(
+            identity_basis
+            if identity_basis is not None
+            else _PRIVATE_IDENTITY_BASIS
+            if kind
+            in {
+                WorkbenchSearchKind.LEDGER_ENTRY,
+                WorkbenchSearchKind.LEDGER_EVIDENCE,
+                WorkbenchSearchKind.HISTORY,
+                WorkbenchSearchKind.RECONCILIATION,
+                WorkbenchSearchKind.NOTIFICATION,
+            }
+            else None
+        ),
     )
 
 
 def _result_data(**changes: Any) -> dict[str, Any]:
+    document = _document()
     data: dict[str, Any] = {
-        "stable_id": _id("result"),
-        "kind": WorkbenchSearchKind.DECLARATION,
-        "source": "modelo.local_projection",
-        "label": "Modelo 303",
-        "address": _address(),
-        "status_code": "declaration.ready",
-        "admission": _admission(),
-        "action_candidate_id": None,
+        "stable_id": "a" * 64,
+        **document.model_dump(),
         "rank": 0,
         "score": 1.0,
     }
@@ -131,100 +175,130 @@ def _result_data(**changes: Any) -> dict[str, Any]:
     return data
 
 
-def test_complete_human_facing_kind_vocabulary_has_no_work_unit_or_flattened_message_kind() -> None:
-    assert {kind.value for kind in WorkbenchSearchKind} == {
-        "ledger_entry",
-        "ledger_evidence",
-        "declaration",
-        "modelo",
-        "revision",
-        "filing",
-        "history",
-        "reconciliation",
-        "notification",
-    }
+def test_provider_authored_labels_terms_hashes_and_stable_ids_are_not_fields() -> None:
+    fields = set(WorkbenchSearchDocument.model_fields)
+    assert fields.isdisjoint({"label", "search_terms", "token_digests", "stable_id"})
+    assert "digest_operator_safe_tokens" not in workbench_module.__all__
+
+
+def test_nif_iban_label_raw_hex_identity_and_search_terms_fail_closed() -> None:
+    base = _document().model_dump()
+    attacks = (
+        {"label": "X2482300W · ES91 2100 0418 4502 0005 1332"},
+        {"stable_id": "1" * 64},
+        {"search_terms": ("X2482300W",)},
+        {"token_digests": (hashlib.sha256(b"x2482300w").hexdigest(),)},
+    )
+    for attack in attacks:
+        with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+            WorkbenchSearchDocument.model_validate({**base, **attack})
+
+
+def test_serialized_document_and_response_contain_no_plaintext_or_dictionary_token_hash() -> None:
+    sensitive_tokens = ("x2482300w", "es9121000418450200051332", _PRIVATE_IDENTITY_BASIS)
+    dictionary_hashes = tuple(hashlib.sha256(token.encode()).hexdigest() for token in sensitive_tokens)
+    document = _document(WorkbenchSearchKind.LEDGER_ENTRY)
+    request = WorkbenchSearchRequest(query="ledger entry")
+    response = WorkbenchSearchService([document]).search(request)
+
+    serialized = " ".join(
+        (document.model_dump_json(), request.model_dump_json(), response.model_dump_json(), repr(document))
+    ).casefold()
+    assert all(token not in serialized for token in sensitive_tokens)
+    assert all(token_hash not in serialized for token_hash in dictionary_hashes)
+    assert "query" not in WorkbenchSearchResponse.model_fields
 
 
 @pytest.mark.parametrize("kind", list(WorkbenchSearchKind))
-def test_each_kind_accepts_only_its_source_native_status_prefix(kind: WorkbenchSearchKind) -> None:
-    assert _document(kind.value, kind.value, kind=kind).status_code == _status(kind)
-    with pytest.raises(ValidationError, match="status_code must start"):
+def test_each_kind_accepts_its_exact_source_status_and_label_key(kind: WorkbenchSearchKind) -> None:
+    document = _document(kind)
+    assert document.source is _SOURCE_BY_KIND[kind]
+    assert document.status is _STATUS_BY_KIND[kind]
+    assert document.label_key is _LABEL_BY_KIND[kind]
+
+
+def test_valid_status_under_wrong_source_and_kind_is_rejected() -> None:
+    with pytest.raises(ValidationError, match="requires source"):
+        _document(WorkbenchSearchKind.LEDGER_ENTRY, source=WorkbenchSearchSource.REVISION)
+    with pytest.raises(ValidationError, match="is not declared by source"):
+        _document(WorkbenchSearchKind.REVISION, status=WorkbenchSearchStatus.NOTIFICATION_UNREAD)
+    with pytest.raises(ValidationError, match="requires label_key"):
         WorkbenchSearchDocument(
-            stable_id=_id(f"wrong-{kind.value}"),
-            kind=kind,
-            source="search.provider",
-            label="Redacted label",
-            address=_kind_address(kind),
-            status_code="nonsense.ready",
+            kind=WorkbenchSearchKind.REVISION,
+            source=WorkbenchSearchSource.REVISION,
+            status=WorkbenchSearchStatus.REVISION_CURRENT,
+            label_key=WorkbenchSearchLabelKey.NOTIFICATION,
+            address=_revision_address(),
             admission=_admission(),
         )
 
 
-def test_ledger_evidence_and_notification_are_first_class_unaddressed_results() -> None:
-    documents = (
-        _document("evidence", "Captured invoice evidence", kind=WorkbenchSearchKind.LEDGER_EVIDENCE),
-        _document("notice", "Unread AEAT notification", kind=WorkbenchSearchKind.NOTIFICATION),
-    )
-    service = WorkbenchSearchService(documents)
-
-    assert (
-        service.search(WorkbenchSearchRequest(query="evidence")).results[0].kind is WorkbenchSearchKind.LEDGER_EVIDENCE
-    )
-    assert (
-        service.search(WorkbenchSearchRequest(query="notification")).results[0].kind is WorkbenchSearchKind.NOTIFICATION
-    )
-
-
-def test_stable_identity_is_canonical_hex64_and_canonical_duplicates_are_refused() -> None:
-    canonical = _id("same")
+def test_arbitrary_valid_looking_source_and_status_suffixes_are_rejected() -> None:
+    data = _document(WorkbenchSearchKind.LEDGER_ENTRY).model_dump()
     with pytest.raises(ValidationError):
-        _document("bad", "Bad", stable_id="raw-database-id")
-    first = _document("first", "First", stable_id=f" {canonical} ")
-    second = _document("second", "Second", stable_id=canonical)
-    with pytest.raises(ValueError, match="unique stable identities"):
-        WorkbenchSearchService((first, second))
+        WorkbenchSearchDocument.model_validate({**data, "source": "ledger.other_projection"})
+    with pytest.raises(ValidationError):
+        WorkbenchSearchDocument.model_validate({**data, "status": "ledger.entry.filed"})
+    with pytest.raises(ValidationError):
+        WorkbenchSearchDocument.model_validate({**data, "status": "ledger.entry.nif_exposed"})
 
 
-def test_token_digest_folds_case_accents_unicode_composition_and_whitespace_canonically() -> None:
-    composed = digest_operator_safe_tokens("  DECLARACIÓN   ÍVA ")
-    decomposed = digest_operator_safe_tokens("declaracio\u0301n iva")
-
-    assert composed == decomposed
-    assert composed == tuple(sorted(set(composed)))
-    assert all(len(digest) == 64 for digest in composed)
-
-
-def test_filing_reference_plaintext_is_never_retained_or_serialized() -> None:
-    raw_reference = "CSV-ÁBC-123-SECRET"
-    document = _document(
-        "filing",
-        "Filed Modelo 303",
-        kind=WorkbenchSearchKind.FILING,
-        token_digests=digest_operator_safe_tokens(raw_reference),
-    )
-    request = WorkbenchSearchRequest(query=raw_reference)
-    response = WorkbenchSearchService([document]).search(request)
-
-    assert response.results[0].stable_id == document.stable_id
-    for serialized in (document.model_dump_json(), request.model_dump_json(), response.model_dump_json()):
-        assert raw_reference.casefold() not in serialized.casefold()
-        assert "secret" not in serialized.casefold()
-    assert "token_digests" not in WorkbenchSearchResult.model_fields
+def test_every_declared_status_is_accepted_only_by_its_source_family() -> None:
+    for status in WorkbenchSearchStatus:
+        matching_kinds = [
+            kind
+            for kind, source_status in _STATUS_BY_KIND.items()
+            if status.value.rsplit(".", 1)[0] == source_status.value.rsplit(".", 1)[0]
+        ]
+        assert len(matching_kinds) == 1
+        kind = matching_kinds[0]
+        assert _document(kind, status=status).status is status
 
 
-def test_modelo_year_and_period_are_searchable_from_the_canonical_natural_address() -> None:
-    document = _document("modelo", "Modelo 303 IVA", kind=WorkbenchSearchKind.MODELO)
+def test_revision_address_uses_calculation_revision_id_not_registry_revision_id() -> None:
+    assert set(WorkbenchRevisionAddress.model_fields) == {
+        "address_kind",
+        "modelo",
+        "filing_year",
+        "period",
+        "calculation_revision_id",
+    }
+    assert "revision_id" not in WorkbenchRevisionAddress.model_fields
+    assert _revision_address().calculation_revision_id == _CALCULATION_REVISION_ID
 
-    result = WorkbenchSearchService([document]).search(WorkbenchSearchRequest(query="MODELO 303 2025 1t")).results[0]
 
-    assert result.address is not None
-    assert isinstance(result.address.modelo, ModeloCode)
+def test_kind_requires_its_exact_discriminated_address_variant() -> None:
+    with pytest.raises(ValidationError, match="exact WorkbenchRevisionAddress"):
+        _document(WorkbenchSearchKind.REVISION, address=_modelo_address())
+    with pytest.raises(ValidationError, match="exact WorkbenchFilingAddress"):
+        _document(WorkbenchSearchKind.FILING, address=_revision_address())
+    with pytest.raises(ValidationError, match="exact WorkbenchModeloAddress"):
+        _document(WorkbenchSearchKind.DECLARATION, address=_filing_address())
+    with pytest.raises(ValidationError, match="cannot carry"):
+        _document(WorkbenchSearchKind.LEDGER_EVIDENCE, address=_modelo_address())
 
 
-def test_modelo_address_uses_canonical_modelo_code_and_matching_year() -> None:
-    assert _address().modelo == ModeloCode("303")
+def test_address_variants_reject_irrelevant_or_simultaneous_exact_ids() -> None:
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        WorkbenchModeloAddress.model_validate({**_modelo_address().model_dump(), "filing_record_id": _FILING_RECORD_ID})
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        WorkbenchRevisionAddress.model_validate(
+            {**_revision_address().model_dump(), "filing_record_id": _FILING_RECORD_ID}
+        )
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        WorkbenchFilingAddress.model_validate(
+            {**_filing_address().model_dump(), "calculation_revision_id": _CALCULATION_REVISION_ID}
+        )
+
+
+def test_address_uses_canonical_modelo_and_matches_period_year() -> None:
+    assert isinstance(_modelo_address().modelo, ModeloCode)
     with pytest.raises((ValidationError, ValueError)):
-        _address(modelo="30A")
+        WorkbenchModeloAddress(
+            modelo="30A",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "1T"),
+        )
     with pytest.raises(ValidationError, match="filing_year must match"):
         WorkbenchModeloAddress(
             modelo=ModeloCode("303"),
@@ -233,131 +307,124 @@ def test_modelo_address_uses_canonical_modelo_code_and_matching_year() -> None:
         )
 
 
-def test_revision_and_filing_kinds_require_their_canonical_specific_identity() -> None:
-    revision = _document("revision", "Revision", kind=WorkbenchSearchKind.REVISION)
-    with pytest.raises(ValidationError, match="revision_id"):
-        WorkbenchSearchDocument(
-            stable_id=revision.stable_id,
-            kind=revision.kind,
-            source=revision.source,
-            label=revision.label,
-            token_digests=revision.token_digests,
-            address=_address(),
-            status_code=revision.status_code,
-            admission=revision.admission,
-        )
-    filing = _document("filing", "Filing", kind=WorkbenchSearchKind.FILING)
-    with pytest.raises(ValidationError, match="filing_record_id"):
-        WorkbenchSearchDocument(
-            stable_id=filing.stable_id,
-            kind=filing.kind,
-            source=filing.source,
-            label=filing.label,
-            token_digests=filing.token_digests,
-            address=_address(),
-            status_code=filing.status_code,
-            admission=filing.admission,
-        )
-    with pytest.raises(ValidationError):
-        _address(revision_id="UPPERCASE INVALID")
-    with pytest.raises(ValidationError):
-        _address(filing_record_id="f" * 63)
+def test_stable_identity_is_derived_and_duplicate_safe_projections_are_refused() -> None:
+    response = WorkbenchSearchService([_document()]).search(WorkbenchSearchRequest(query="declaration"))
+    assert len(response.results[0].stable_id) == 64
+    with pytest.raises(ValueError, match="unique derived identities"):
+        WorkbenchSearchService([_document(), _document()])
 
 
-def test_action_candidate_is_unresolved_metadata_and_only_available_results_carry_it() -> None:
-    candidate = _document(
-        "candidate",
-        "Open declaration",
-        action_candidate_id="operator.declaration.open",
+@pytest.mark.parametrize(
+    "kind",
+    [
+        WorkbenchSearchKind.LEDGER_ENTRY,
+        WorkbenchSearchKind.LEDGER_EVIDENCE,
+        WorkbenchSearchKind.HISTORY,
+        WorkbenchSearchKind.RECONCILIATION,
+        WorkbenchSearchKind.NOTIFICATION,
+    ],
+)
+def test_distinct_same_state_multi_record_families_coexist_with_opaque_ids(
+    kind: WorkbenchSearchKind,
+) -> None:
+    documents = (
+        _document(kind, identity_basis="synthetic-record-a"),
+        _document(kind, identity_basis="synthetic-record-b"),
     )
-    result = WorkbenchSearchService([candidate]).search(WorkbenchSearchRequest(query="open")).results[0]
-    assert result.action_candidate_id == "operator.declaration.open"
-    assert "action" not in WorkbenchSearchDocument.model_fields
+    response = WorkbenchSearchService(documents).search(WorkbenchSearchRequest(query=kind.value.replace("_", " ")))
+    identities = tuple(result.stable_id for result in response.results)
 
+    assert response.total_matches == 2
+    assert len(set(identities)) == 2
+    assert all(
+        identity
+        not in {
+            hashlib.sha256(basis.encode()).hexdigest()
+            for basis in (
+                "synthetic-record-a",
+                "synthetic-record-b",
+            )
+        }
+        for identity in identities
+    )
+
+
+def test_opaque_identity_is_stable_across_mutable_projection_state() -> None:
+    identity_basis = "synthetic-stable-ledger-record"
+    documents = (
+        _document(WorkbenchSearchKind.LEDGER_ENTRY, identity_basis=identity_basis),
+        _document(
+            WorkbenchSearchKind.LEDGER_ENTRY,
+            status=WorkbenchSearchStatus.LEDGER_ENTRY_CLASSIFIED,
+            identity_basis=identity_basis,
+        ),
+        _document(
+            WorkbenchSearchKind.LEDGER_ENTRY,
+            admission=_admission(WorkbenchDestinationAdmissionState.LOCKED),
+            identity_basis=identity_basis,
+        ),
+        _document(
+            WorkbenchSearchKind.LEDGER_ENTRY,
+            action_candidate_id="operator.ledger.open",
+            identity_basis=identity_basis,
+        ),
+    )
+    identities = {
+        WorkbenchSearchService([document]).search(WorkbenchSearchRequest(query="ledger entry")).results[0].stable_id
+        for document in documents
+    }
+
+    assert len(identities) == 1
+
+
+def test_opaque_identity_basis_is_required_only_for_multi_record_families() -> None:
+    with pytest.raises(ValidationError, match="requires a private opaque identity basis"):
+        WorkbenchSearchDocument.model_validate(_document(WorkbenchSearchKind.NOTIFICATION).model_dump())
+    with pytest.raises(ValidationError, match="derives identity from its natural address"):
+        _document(WorkbenchSearchKind.REVISION, identity_basis="synthetic-unexpected-basis")
+
+
+def test_unicode_case_accent_and_address_search_are_normalized() -> None:
+    service = WorkbenchSearchService([_document()])
+    assert service.search(WorkbenchSearchRequest(query="  DÉCLARATION  ")).total_matches == 1
+    assert service.search(WorkbenchSearchRequest(query="modelo 303 2025 1t")).total_matches == 1
+
+
+def test_permutation_determinism_and_bounded_total() -> None:
+    documents = (
+        _document(WorkbenchSearchKind.DECLARATION),
+        _document(WorkbenchSearchKind.MODELO),
+        _document(WorkbenchSearchKind.HISTORY),
+    )
+    orders = {
+        tuple(
+            result.stable_id
+            for result in WorkbenchSearchService(order).search(WorkbenchSearchRequest(query="modelo")).results
+        )
+        for order in permutations(documents)
+    }
+    assert len(orders) == 1
+    limited = WorkbenchSearchService(documents).search(WorkbenchSearchRequest(query="modelo", limit=2))
+    assert len(limited.results) == 2
+    assert limited.total_matches == 3
+
+
+def test_locked_admission_requires_reason_and_rejects_action_candidate() -> None:
+    with pytest.raises(ValidationError, match="requires an admission reason"):
+        WorkbenchDestinationAdmission(
+            destination="workbench.destination",
+            state=WorkbenchDestinationAdmissionState.LOCKED,
+        )
     with pytest.raises(ValidationError, match="cannot carry an action candidate"):
         _document(
-            "locked",
-            "Locked declaration",
             admission=_admission(WorkbenchDestinationAdmissionState.LOCKED),
             action_candidate_id="operator.declaration.open",
         )
 
 
-def test_service_exposes_no_document_snapshot_accessor() -> None:
-    service = WorkbenchSearchService([_document("private", "Private snapshot")])
+def test_private_service_and_module_have_no_io_or_authority_resolution_dependency() -> None:
+    service = WorkbenchSearchService([_document()])
     assert not hasattr(service, "documents")
-    assert tuple(name for name, _ in inspect.getmembers(WorkbenchSearchService, inspect.isfunction)) == (
-        "__init__",
-        "search",
-    )
-
-
-def test_exact_title_then_title_match_then_digest_match_define_ranking() -> None:
-    documents = (
-        _document("metadata", "Annual declaration", token_digests=digest_operator_safe_tokens("IVA")),
-        _document("contains", "IVA quarterly"),
-        _document("exact", "IVA"),
-    )
-    response = WorkbenchSearchService(documents).search(WorkbenchSearchRequest(query="iva"))
-    assert [result.label for result in response.results] == ["IVA", "IVA quarterly", "Annual declaration"]
-    assert response.results[0].score > response.results[1].score > response.results[2].score
-
-
-def test_input_permutations_produce_identical_ranked_results() -> None:
-    documents = tuple(_document(seed, "IVA quarterly") for seed in ("c", "a", "b"))
-    orders = {
-        tuple(
-            result.stable_id
-            for result in WorkbenchSearchService(order).search(WorkbenchSearchRequest(query="iva")).results
-        )
-        for order in permutations(documents)
-    }
-    assert len(orders) == 1
-
-
-def test_bounded_page_preserves_full_total_and_only_query_digests() -> None:
-    documents = tuple(_document(str(index), f"IVA declaration {index}") for index in range(105))
-    response = WorkbenchSearchService(documents).search(WorkbenchSearchRequest(query="iva", limit=100))
-    assert len(response.results) == 100
-    assert response.total_matches == 105
-    assert response.query_token_digests == digest_operator_safe_tokens("iva")
-    assert "query" not in WorkbenchSearchResponse.model_fields
-
-
-def test_locked_admission_requires_and_preserves_a_reason() -> None:
-    with pytest.raises(ValidationError, match="requires an admission reason"):
-        WorkbenchDestinationAdmission(
-            destination="workbench.declarations",
-            state=WorkbenchDestinationAdmissionState.LOCKED,
-        )
-    locked = _admission(WorkbenchDestinationAdmissionState.LOCKED)
-    result = (
-        WorkbenchSearchService([_document("locked", "Locked declaration", admission=locked)])
-        .search(WorkbenchSearchRequest(query="locked"))
-        .results[0]
-    )
-    assert result.admission == locked
-
-
-def test_public_result_schema_excludes_raw_or_sensitive_fields() -> None:
-    forbidden = {
-        "account",
-        "amount",
-        "counterparty",
-        "currency",
-        "name",
-        "nif",
-        "payload",
-        "query",
-        "raw_id",
-        "secret",
-        "token_digests",
-        "url",
-    }
-    assert forbidden.isdisjoint(WorkbenchSearchResult.model_json_schema()["properties"])
-
-
-def test_module_dependencies_and_service_bytecode_have_no_io_or_authority_resolution() -> None:
     tree = ast.parse(inspect.getsource(workbench_module))
     imported_modules = {
         module
@@ -368,10 +435,15 @@ def test_module_dependencies_and_service_bytecode_have_no_io_or_authority_resolu
             *(alias.name for alias in node.names if isinstance(node, ast.Import)),
         )
     }
-    forbidden_modules = {"pathlib", "socket", "urllib", "requests", "httpx", "sqlite3"}
-    assert all(module.split(".")[0] not in forbidden_modules for module in imported_modules)
-    assert "operator_actions" not in inspect.getsource(workbench_module)
-    assert {"open", "read", "write", "connect", "request"}.isdisjoint(WorkbenchSearchService.search.__code__.co_names)
+    forbidden = {"pathlib", "socket", "urllib", "requests", "httpx", "sqlite3", "operator_actions"}
+    assert all(not any(part in forbidden for part in module.split(".")) for module in imported_modules)
+    called_attributes = {
+        node.func.attr for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+    }
+    called_names = {
+        node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    }
+    assert {"open", "read", "write", "connect", "request", "Path"}.isdisjoint(called_attributes | called_names)
 
 
 @pytest.mark.parametrize("score", [math.nan, math.inf, -math.inf])
@@ -380,21 +452,15 @@ def test_result_refuses_non_finite_scores(score: float) -> None:
         WorkbenchSearchResult(**_result_data(score=score))
 
 
-@pytest.mark.parametrize("control", ["\u0000", "\u000a", "\u0085"])
-def test_human_readable_text_boundaries_refuse_control_characters(control: str) -> None:
-    with pytest.raises(ValidationError, match="control characters"):
-        _document("control", f"Bad{control}label")
-    with pytest.raises(ValidationError, match="control characters"):
-        WorkbenchSearchRequest(query=f"bad{control}query")
-    with pytest.raises(ValueError, match="control characters"):
-        digest_operator_safe_tokens(f"bad{control}term")
-
-
-def test_service_and_models_refuse_wrong_boundary_types() -> None:
-    with pytest.raises(TypeError, match="WorkbenchSearchDocument"):
-        WorkbenchSearchService(cast(Sequence[WorkbenchSearchDocument], [object()]))
-    service = WorkbenchSearchService([_document("safe", "Safe")])
-    with pytest.raises(TypeError, match="WorkbenchSearchRequest"):
-        service.search(cast(WorkbenchSearchRequest, object()))
+def test_query_is_transient_and_type_checked() -> None:
+    request = WorkbenchSearchRequest(query="declaration")
+    assert request.model_dump() == {"limit": 20}
     with pytest.raises(ValidationError):
         WorkbenchSearchRequest(query=cast(str, 123))
+    with pytest.raises(ValidationError, match="control characters"):
+        WorkbenchSearchRequest(query="bad\nquery")
+    service = WorkbenchSearchService([_document()])
+    with pytest.raises(TypeError, match="WorkbenchSearchRequest"):
+        service.search(cast(WorkbenchSearchRequest, object()))
+    with pytest.raises(TypeError, match="WorkbenchSearchDocument"):
+        WorkbenchSearchService(cast(Sequence[WorkbenchSearchDocument], [object()]))

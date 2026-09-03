@@ -269,11 +269,10 @@ def test_renta_typed_binding_candidates_declare_substrate_enum_class() -> None:
 
     The CCAA binding declares ``typed_enum = "CCAA"`` (the canonical enum in
     :mod:`cadrumo.domain.contribuyente.ccaa`).  The estimacion-directa binding
-    declares ``typed_enum = "EstimacionDirectaModalidad"`` (from
-    :mod:`cadrumo.domain.renta`).  Each binding whose id suffix matches a
-    known typed-bridge anchor MUST declare the correct ``typed_enum`` so
-    consumers can route through the closed-set contract instead of parsing
-    free-form strings at runtime.
+    declares ``typed_enum = "EstimacionDirectaModalidad"``.  Each binding
+    whose id suffix matches a known typed-bridge anchor MUST declare the
+    correct ``typed_enum`` so consumers can route through the closed-set
+    contract instead of parsing free-form strings at runtime.
     """
 
     modelos = _all_modelos()

@@ -239,6 +239,16 @@ def test_authorization_coverage_report_and_validity(capsys: pytest.CaptureFixtur
         )
 
 
+def test_modelo_840_applicability_evidence_does_not_authorize_its_backend() -> None:
+    """M840's threshold evidence is applicability-grade, not enrollment evidence."""
+    authority = _authority()
+
+    assert "840" not in authority.authorization_manifest.authorized_modelos
+    capability = authority.authorization("840")
+    assert capability.state is AuthorizationState.UNAUTHORIZED
+    assert capability.entry is None
+
+
 def test_ast_call_detection_rejects_substring_and_accepts_real_call() -> None:
     """Anti-tautology: ``_ast_has_call_to`` is genuinely call-based, not substring-based.
 

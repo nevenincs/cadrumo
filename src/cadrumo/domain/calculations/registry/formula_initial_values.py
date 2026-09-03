@@ -28,7 +28,7 @@ from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, Bindin
 from ....core.casilla_id import CasillaId
 from .binding_selector_utils import selector_as_dict as _binding_selector_as_dict
 from .binding_targets import bound_casilla_binding_ids
-from .bindings import CasillaObservation, resolve_bound_casilla_binding_value
+from .bindings import CasillaObservation, CasillaObservationValueKind, resolve_bound_casilla_binding_value
 from .bindings_previous_filing import PreviousModeloSelector
 from .casilla_membership import casillas_by_id
 from .errors import RegistryValidationError
@@ -79,7 +79,11 @@ def materialise_observations(
         materialised.append(
             CasillaObservation(
                 casilla_id=casilla_id,
-                value_kind="text" if casilla_id in resolved_text_values else "decimal",
+                value_kind=(
+                    CasillaObservationValueKind.TEXT
+                    if casilla_id in resolved_text_values
+                    else CasillaObservationValueKind.DECIMAL
+                ),
                 value=(resolved_text_values[casilla_id] if casilla_id in resolved_text_values else values[casilla_id]),
                 legal_refs=legal_refs,
                 source_refs=source_refs,

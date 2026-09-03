@@ -94,7 +94,7 @@ def _valid_command_paths() -> frozenset[str]:
 def _command_schema_refs_via_cli() -> tuple[CommandSchemaRef, ...]:
     # Reuse the CLI's own payload-discovery + projection so the gate sees exactly
     # the registered command surface the capability manifest reports.
-    from cadrumo.entrypoints.cli import command_schema_refs
+    from cadrumo.entrypoints.cli.command_api import command_schema_refs
 
     return command_schema_refs()
 

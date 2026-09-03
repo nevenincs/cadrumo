@@ -48,6 +48,37 @@ def test_optional_cli_period_requires_year() -> None:
     assert "1T" in str(raised.value)
 
 
+def test_exportable_revision_resolution_keeps_raw_revision_and_selector_errors_distinct() -> None:
+    """Raw revision ids fail their own validation before selector parsing."""
+    from .._modelo_behavior_support import resolve_exportable_revision_for_cli
+
+    with pytest.raises(typer.BadParameter) as raw_revision:
+        resolve_exportable_revision_for_cli(
+            revision="not-a-revision-id",
+            work_unit_id=None,
+            modelo=None,
+            year=None,
+            period=None,
+            registry_revision=None,
+            bucket_id=None,
+            select="not-a-selector",
+        )
+    with pytest.raises(typer.BadParameter) as selector:
+        resolve_exportable_revision_for_cli(
+            revision=None,
+            work_unit_id=None,
+            modelo=None,
+            year=None,
+            period=None,
+            registry_revision=None,
+            bucket_id=None,
+            select="not-a-selector",
+        )
+
+    assert "not-a-revision-id" in str(raw_revision.value)
+    assert "not-a-selector" in str(selector.value)
+
+
 # --- Period-token confusion: --year and --period are composed ---
 
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import typer
 
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...application.modelo.action_errors import CalculationRevisionNotFoundError
 from ...application.modelo.registry_discovery import declared_modelo_period_tokens
 from ...application.modelo.selectors import (
     ModeloCalculationRevisionDefault,
@@ -33,6 +34,7 @@ from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ._common import no_active_profile_refusal
 from ._modelo_cli_support import (
+    bad_parameter_from_error,
     bad_parameter_from_localized_context,
     parse_revision_selector,
     selector_bad_parameter,
@@ -156,6 +158,41 @@ def resolve_revision_for_cli(
         ModeloCalculationRevisionSelectorAmbiguousError,
         ModeloWorkPeriodTokenError,
     ) as exc:
+        raise selector_bad_parameter(exc) from exc
+
+
+def resolve_exportable_revision_for_cli(
+    *,
+    revision: str | None,
+    work_unit_id: str | None,
+    modelo: str | None,
+    year: int | None,
+    period: str | None,
+    registry_revision: str | None,
+    bucket_id: str | None,
+    select: str,
+) -> CalculationRevision:
+    """Resolve one exportable revision from raw CLI target options.
+
+    An explicitly supplied revision id is an address, while ``--select`` is a
+    selector. Keep their error surfaces distinct: a missing address is a
+    direct parameter error and an unresolved selector is a selector error.
+    """
+    try:
+        return resolve_revision_for_cli(
+            calculation_revision_id=validate_calculation_revision_id(revision) if revision is not None else None,
+            work_unit_id=validate_work_unit_id(work_unit_id) if work_unit_id is not None else None,
+            modelo=modelo,
+            year=year,
+            period=resolve_optional_cli_period(year=year, period=period, modelo=modelo),
+            registry_revision=registry_revision,
+            bucket_id=bucket_id,
+            selector=parse_revision_selector(select),
+            default_for="export",
+        )
+    except CalculationRevisionNotFoundError as exc:
+        if revision is not None:
+            raise bad_parameter_from_error(exc) from exc
         raise selector_bad_parameter(exc) from exc
 
 
@@ -327,6 +364,7 @@ def date_binding_profile_requirements(unit: WorkUnit | None, binding_id: str) ->
 __all__ = [
     "bare_period_error",
     "require_active_profile",
+    "resolve_exportable_revision_for_cli",
     "resolve_optional_cli_period",
     "resolve_revision_for_cli",
     "resolve_work_unit_for_cli",

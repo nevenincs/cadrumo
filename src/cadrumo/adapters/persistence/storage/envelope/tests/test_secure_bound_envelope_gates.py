@@ -99,7 +99,7 @@ def test_the_gate_is_reachable_from_every_production_subclass() -> None:
     bringing its own checks back -- rather than proving the extraction.
     """
     subclasses: list[type] = []
-    pending = [SecureBoundRepository]
+    pending: list[type] = [SecureBoundRepository]
     while pending:
         current = pending.pop()
         for child in current.__subclasses__():

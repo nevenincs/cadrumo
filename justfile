@@ -285,6 +285,13 @@ check-architecture:
 check-unreachable-ratchet:
     @uv run --no-sync python -m dev.quality.unreachable_module_ratchet
 
+# Verify every persistence surface a product command READS still has a
+# production writer. The baseline in dev/quality/write_path_backlog.toml may
+# only shrink; a newly writerless store fails rather than being absorbed.
+[group('static-checks')]
+check-write-path-backlog:
+    @uv run --no-sync python -m dev.quality.write_path_backlog
+
 # Verify dependency declarations for drift or unused packages. Silent on success.
 [group('static-checks')]
 check-dependencies:
@@ -997,6 +1004,22 @@ audit-dead-code:
 [group('audits')]
 audit-unreachable-code *ARGS:
     @uv run --no-sync python -m dev.audit.unreachable_code {{ARGS}}
+
+# Audit the DATA path the reachability audit cannot see: a snapshot service
+# whose list/show/latest side a console script reaches, while its capture side
+# has no production caller anywhere. The store still imports and still tests;
+# it is simply never filled again, so the product ships a view onto nothing.
+#
+# Surfaces are found structurally, through the subclass closure of the live
+# snapshot lifecycle bases, and a caller counts only when it both imports the
+# service and spells one of its verbs outside a docstring.
+#
+# Exits 3 on findings. `--json` emits machine output with a stable id per
+# finding.
+[doc('Audit persistence surfaces a product command reads but no production code writes.')]
+[group('audits')]
+audit-write-paths *ARGS:
+    @uv run --no-sync python -m dev.audit.write_path_coverage {{ARGS}}
 
 # Scan for copy-paste code duplication. Aggregate line + capped clone list.
 # The runner owns the jscpd invocation AND its parsing, so this recipe and the

@@ -261,9 +261,7 @@ class ModeloCadence(StrEnum):
     PROFILE_BASED = "profile_based"
 
 
-ModeloCadenceField = Annotated[
-    ModeloCadence, BeforeValidator(coerce_enum_member(ModeloCadence))
-]
+ModeloCadenceField = Annotated[ModeloCadence, BeforeValidator(coerce_enum_member(ModeloCadence))]
 """Registry token hydrated into a ModeloCadence member."""
 
 

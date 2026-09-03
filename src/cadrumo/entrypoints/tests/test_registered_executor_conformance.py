@@ -594,6 +594,7 @@ def _seeded_modelo_edit_submission(profile_id: UUID) -> tuple[str, object]:
         ModeloEditScalarAddressV1,
         ModeloEditScalarIntentKind,
         ModeloEditSubmissionV1,
+        ModeloEditWritableScalarSurfaceEntryV1,
         ModeloScalarEditIntentV1,
     )
     from ...application.modelo.edit_services import (
@@ -642,7 +643,9 @@ def _seeded_modelo_edit_submission(profile_id: UUID) -> tuple[str, object]:
     if not isinstance(admitted, ModeloEditAdmittedV1):
         raise AssertionError(f"edit admission refused for the conformance fixture: {admitted}")
     writable = [
-        entry for entry in admitted.baseline.permitted_surface if getattr(entry, "kind", None) == "writable_scalar"
+        entry
+        for entry in admitted.baseline.permitted_surface
+        if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1)
     ]
     if not writable:
         raise AssertionError("the admitted revision permits no writable scalar; this fixture would be vacuous")

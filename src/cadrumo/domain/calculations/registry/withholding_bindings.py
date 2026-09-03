@@ -783,7 +783,7 @@ def resolve_withholding_binding_row_values(
             raise RegistryValidationError(
                 f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key",
             )
-        cohort_key = (grouping, tuple(sorted(selector.claves)))
+        cohort_key: tuple[WithholdingGrouping, tuple[str, ...]] = (grouping, tuple(sorted(selector.claves)))
         cohorts.setdefault(cohort_key, []).append((binding, selector))
     for cohort_key, members in cohorts.items():
         grouping = cohort_key[0]

@@ -255,7 +255,7 @@ def test_every_prospective_password_refusal_is_typed_safe_and_creates_nothing(
         assert payload.translated_message == translated_message
         assert refused.value.translated_message == translated_message
         with pytest.raises(TypeError):
-            payload.context["candidate"] = candidate  # type: ignore[index]
+            payload.context["candidate"] = candidate  # type: ignore[index]  # ty: ignore[invalid-assignment]  # reason: writing to the immutable context IS the refusal under test
 
 
 @pytest.mark.parametrize(

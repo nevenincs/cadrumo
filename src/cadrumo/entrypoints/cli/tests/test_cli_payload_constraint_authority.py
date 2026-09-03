@@ -216,7 +216,10 @@ def _validator_decorators(statement: ast.AST) -> list[str]:
         name: str | None = None
         if isinstance(decorator, ast.Call):
             func = decorator.func
-            name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)
+            if isinstance(func, ast.Name):
+                name = func.id
+            elif isinstance(func, ast.Attribute):
+                name = func.attr
         elif isinstance(decorator, ast.Name):
             name = decorator.id
         elif isinstance(decorator, ast.Attribute):

@@ -148,10 +148,18 @@ def _fixture(
     return inventory, manifest, component
 
 
-def test_rehearsal_receipt_binds_only_declared_component_paths(tmp_path: Path) -> None:
+def test_rehearsal_receipt_binds_only_declared_component_paths(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     repo = tmp_path / "repo"
     inventory, manifest, component = _fixture(repo)
     before = _live_bytes(repo)
+    original_components = rehearsal_module.canonical_object_name_component_set
+    canonical_roots: list[Path] = []
+
+    def observe_canonical_root(*args: Any, repo_root: Path, **kwargs: Any) -> Any:
+        canonical_roots.append(repo_root)
+        return original_components(*args, repo_root=repo_root, **kwargs)
+
+    monkeypatch.setattr(rehearsal_module, "canonical_object_name_component_set", observe_canonical_root)
 
     receipt = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
 
@@ -162,6 +170,7 @@ def test_rehearsal_receipt_binds_only_declared_component_paths(tmp_path: Path) -
     assert receipt.component_id == component.component_id
     assert receipt.operation_ids == component.operation_ids
     assert receipt.changed_paths == ("src/example/contracts.py",)
+    assert canonical_roots == [Path(receipt.rehearsal_root)]
     assert receipt.baseline_tree_digest == _digest(
         canonical_json_bytes({"schema_version": 1, "files": list(receipt.baseline_files)})
     )
@@ -197,6 +206,21 @@ def test_rehearsal_receipt_binds_only_declared_component_paths(tmp_path: Path) -
     assert (retained_root / "dev/untracked.txt").read_bytes() == b"untracked bytes\n"
     assert not (retained_root / "dev/deleted.txt").exists()
     assert (retained_root / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
+
+
+def test_incremental_allowed_path_inventory_matches_full_rescan(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    before, _manifest, _component = _fixture(repo)
+    (repo / "src/example/contracts.py").write_bytes(b"class Widget:\n    pass\n")
+
+    incremental = rehearsal_module._inventory_after_allowed_changes(
+        before,
+        repo_root=repo,
+        changed_paths=("src/example/contracts.py",),
+    )
+    full = scan((repo / "src", repo / "dev"), repo)
+
+    assert incremental == full
 
 
 def test_receipt_is_deterministic_after_normalizing_root_and_output_evidence(tmp_path: Path) -> None:
@@ -443,9 +467,7 @@ def test_selected_component_cannot_be_replaced_by_an_otherwise_valid_component(t
     selected = next(item for item in components if item.operation_ids == ("rename-widgets",))
     other = next(item for item in components if item.operation_ids == ("rename-reports",))
 
-    with pytest.raises(
-        ObjectNameRehearsalError, match="supplied component differs from the canonical repository graph"
-    ):
+    with pytest.raises(ObjectNameRehearsalError, match="copied repository graph differs from the reviewed component"):
         rehearse_object_name_component(
             manifest,
             inventory=inventory,
@@ -473,10 +495,16 @@ def test_shared_hard_edge_makes_two_operations_indivisible(tmp_path: Path) -> No
     widget_declaration = next(item for item in inventory.declarations if item.name == "Widgets")
     report_declaration = next(item for item in inventory.declarations if item.name == "Reports")
     report_finding = next(item for item in inventory.findings if item.name == "Reports")
+    consumer_precondition = (
+        manifest.operations[0]
+        .preconditions[0]
+        .model_copy(update={"path": consumer_path, "sha256": _digest((repo / consumer_path).read_bytes())})
+    )
     widget_operation = manifest.operations[0].model_copy(
         update={
             "expected_reference_classes": ("definition", "shared-consumer", "static-import"),
             "changed_paths": (widget_declaration.path, consumer_path),
+            "preconditions": (*manifest.operations[0].preconditions, consumer_precondition),
         }
     )
     report_operation = widget_operation.model_copy(
@@ -491,6 +519,7 @@ def test_shared_hard_edge_makes_two_operations_indivisible(tmp_path: Path) -> No
                 widget_operation.preconditions[0].model_copy(
                     update={"path": report_declaration.path, "sha256": report_declaration.source_hash}
                 ),
+                consumer_precondition,
             ),
             "changed_paths": (report_declaration.path, consumer_path),
         }
@@ -510,9 +539,7 @@ def test_shared_hard_edge_makes_two_operations_indivisible(tmp_path: Path) -> No
     assert component.affected_paths.count(consumer_path) == 1
 
     partial = replace(component, operation_ids=("rename-widgets",))
-    with pytest.raises(
-        ObjectNameRehearsalError, match="supplied component differs from the canonical repository graph"
-    ):
+    with pytest.raises(ObjectNameRehearsalError, match="copied repository graph differs from the reviewed component"):
         rehearse_object_name_component(manifest, inventory=inventory, component=partial, repo_root=repo)
 
 
@@ -581,9 +608,7 @@ def test_unrelated_live_tree_mutation_does_not_stale_selected_component(tmp_path
         live_path.write_bytes(original)
 
 
-def test_copy_race_that_adds_selected_reference_is_refused(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_copy_race_that_adds_selected_reference_is_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     repo = tmp_path / "repo"
     inventory, manifest, component = _fixture(repo)
     consumer = repo / "src/example/consumer.py"
@@ -751,9 +776,7 @@ def test_generated_owner_runs_and_forged_generated_edge_is_refused(tmp_path: Pat
     forged_edge = replace(edge, generator_owner='[["forged-generator"]]')
     forged = build_manifest_components(manifest, inventory=inventory, hard_edges=(forged_edge,))[0]  # ty: ignore[invalid-argument-type]
 
-    with pytest.raises(
-        ObjectNameRehearsalError, match="supplied component differs from the canonical repository graph"
-    ):
+    with pytest.raises(ObjectNameRehearsalError, match="copied repository graph differs from the reviewed component"):
         rehearse_object_name_component(manifest, inventory=inventory, component=forged, repo_root=repo)
 
     receipt = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)

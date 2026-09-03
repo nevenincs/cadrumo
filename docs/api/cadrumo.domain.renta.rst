@@ -14,7 +14,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.domain.renta._first_slice_routing
-   cadrumo.domain.renta._substrate
    cadrumo.domain.renta.errors
    cadrumo.domain.renta.first_slice_routing_integrity
    cadrumo.domain.renta.ledger_expenses

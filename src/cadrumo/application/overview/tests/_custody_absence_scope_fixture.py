@@ -44,7 +44,7 @@ def _never_called() -> object:
     """
     from ....adapters.persistence import storage
 
-    return storage.get_master_key_provider
+    return storage.get_master_key_provider  # ty: ignore[unresolved-attribute]  # reason: reaching a removed name IS the evidence this file exists to carry
 
 
 def _annotated(session: BucketSession | None) -> object:

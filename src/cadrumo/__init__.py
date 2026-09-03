@@ -24,4 +24,4 @@ See Also:
         Backend-owned capability contract for operator and automation surfaces.
 """
 
-__version__ = "0.2.2"
+__version__ = "0.3.0"

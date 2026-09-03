@@ -23,7 +23,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.storage_taxonomy import StorageCategory
 from ...core.storage_taxonomy_locations import storage_location
 from ...core.time.utc import validate_utc_aware
-from ..profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
+from ..profile_deletion_hold_contract import ProfileDeletionHoldOwner, ProfileDeletionHoldOwnerProjection
 from ..user_profile.custody_ports import (
     ProfileCustodyLocalRecordStore,
     canonical_snapshot_bytes,
@@ -181,7 +181,7 @@ class LegalHoldCaseAuthority:
         if snapshot.profile_id != profile_id or snapshot.canonical_json_bytes() != payload:
             raise ValueError("canonical legal case snapshot identity or bytes differ from its path")
         return ProfileDeletionHoldOwnerProjection(
-            owner="legal",
+            owner=ProfileDeletionHoldOwner.LEGAL,
             profile_id=profile_id,
             blocks_local_deletion=bool(snapshot.open_case_ids),
             source_record_id=f"legal-case-snapshot-{profile_id}",

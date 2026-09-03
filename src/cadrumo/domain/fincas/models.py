@@ -20,6 +20,7 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.text_bounds import PositiveCount
 from .enums import ExpenseCategory, UseType
 from .errors import FincaValidationError
+from .titularidad import Titularidad
 
 #: Current write version for each rental-register record shape.
 #:
@@ -32,7 +33,7 @@ from .errors import FincaValidationError
 #: Five constants rather than one shared value: these are five record shapes
 #: that can version independently, and a single constant would force them to
 #: bump together for no reason the data supports.
-FINCA_SCHEMA_VERSION = "1"
+FINCA_SCHEMA_VERSION = "2"
 ARRENDAMIENTO_SCHEMA_VERSION = "1"
 FINCA_RENDIMIENTO_RECORD_SCHEMA_VERSION = "1"
 FINCA_GASTO_SCHEMA_VERSION = "1"
@@ -93,6 +94,15 @@ class Finca(_FincaRecord):
             consultation date. Set by the operator at finca
             registration; future CCAA-driven enrichment supersedes
             this flag automatically.
+        titularidad: Who declares this finca's figures and in what
+            proportion — the titular in casilla [0062] and the two
+            percentages in casillas [0063] and [0064]. Required, with no
+            default: every other figure on this record is a
+            whole-property figure, and the share of it that this
+            contribuyente declares cannot be inferred from the property.
+            Call :func:`domain.fincas.titularidad.not_declared` to state
+            explicitly that the facts are unknown; the aggregation then
+            refuses rather than attributing the whole property.
         schema_version: Rental record schema version, defaulted from this
             record's own module-level constant.
     """
@@ -109,6 +119,7 @@ class Finca(_FincaRecord):
     disposal_date: date | None = None
     use_type: UseType
     is_stressed_area: bool = False
+    titularidad: Titularidad
     schema_version: str = FINCA_SCHEMA_VERSION
 
     @model_validator(mode="after")

@@ -1,6 +1,6 @@
 [project]
 name = "cadrumo"
-version = "0.2.2"
+version = "0.3.0"
 description = "Cadrumo is a deterministic Spanish tax calculation CLI that turns local financial records into checked, exportable modelo filing artifacts. Independent software; not affiliated with AEAT."
 readme = "README.md"
 requires-python = ">=3.13"
@@ -28,8 +28,8 @@ dependencies = [
   # per-file cap; they are exact-version runtime dependencies because the CLI
   # cannot perform grounded tax work without both corpus slices.
   "anyio>=4.5,<5",
-  "cadrumo-data-manuals==0.2.2", # x-release-please-version
-  "cadrumo-data-official==0.2.2", # x-release-please-version
+  "cadrumo-data-manuals==0.3.0", # x-release-please-version
+  "cadrumo-data-official==0.3.0", # x-release-please-version
   "mcp>=2,<3",
   # Capability-gated integrations live in [project.optional-dependencies].
   # `anthropic` (Anthropic-API LLM provider), the `google-*` stack

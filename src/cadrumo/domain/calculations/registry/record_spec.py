@@ -36,9 +36,14 @@ ENCODING_ALIAS_MAP: Mapping[str, str] = {
 AEAT treats Windows-1252 and ISO-8859-1 as equivalent for fichero-BOE
 purposes; Python codec aliases (``latin-1`` ↔ ``iso-8859-1``,
 ``windows-1252`` ↔ ``cp1252``, ``latin-9`` ↔ ``iso-8859-15``) resolve
-to the same wire encoding.  The encoding-consistency validator in
-:class:`~cadrumo.domain.calculations.registry.schema.ExportLayoutDefinition`
-compares declared encodings through this map so a layout that mixes
-``latin-1`` and ``iso-8859-1`` is treated as consistent rather than
-flagged as a layout error.
+to the same wire encoding.
+
+WHO ACTUALLY READS THIS. The dev export-tree renderer, and nothing under
+``src/``. The registry's own encoding-consistency validator does NOT
+consult this map and does not need to: ``ExportLayoutDefinition`` types
+its records' encoding as the closed ``ExportEncoding`` enum, whose members
+are already the canonical spellings, and the coercion in front of it
+resolves exact member values only. A layout declaring ``latin-1`` is
+therefore REFUSED at parse rather than normalised, so the validator never
+sees two spellings of one encoding to reconcile.
 """

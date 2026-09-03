@@ -20,6 +20,7 @@ from __future__ import annotations
 import asyncio
 import threading
 import time
+from collections.abc import Awaitable
 from pathlib import Path
 
 import pytest
@@ -68,7 +69,7 @@ class _Holder:
         threading.Timer(seconds, self._release.set).start()
 
 
-async def _count_ticks_during(work: object) -> tuple[int, object]:
+async def _count_ticks_during[ResultT](work: Awaitable[ResultT]) -> tuple[int, ResultT]:
     """Run ``work`` while a ticker turns, returning ticks observed and its result.
 
     The tick count is the responsiveness measurement: it can only advance
@@ -87,7 +88,7 @@ async def _count_ticks_during(work: object) -> tuple[int, object]:
     await asyncio.sleep(0)
     baseline = ticks
     try:
-        outcome = await work  # type: ignore[misc]
+        outcome = await work
     finally:
         stop = True
         spinner.cancel()

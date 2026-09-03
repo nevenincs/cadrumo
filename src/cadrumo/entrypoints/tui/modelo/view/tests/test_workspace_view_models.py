@@ -206,7 +206,9 @@ def test_a_domain_refusal_view_carries_the_owner_and_condition_verbatim() -> Non
         code=ModeloWorkspaceRefusalCode.CALCULATION_UNAVAILABLE,
         boundary="capability",
         requested_target=ModeloWorkspaceVisibleFilingTargetV1(
-            target=ModeloVisibleFilingTarget(modelo="303", filing_year=2026, period="1T")
+            target=ModeloVisibleFilingTarget(
+                modelo="303", filing_year=2026, period=Period.from_year_and_code(2026, "1T")
+            )
         ),
         responsible_owner="application.modelo.workspace",
         reconsideration_condition="calculate this work unit first",

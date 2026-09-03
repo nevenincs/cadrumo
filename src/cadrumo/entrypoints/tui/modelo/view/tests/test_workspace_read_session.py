@@ -122,8 +122,14 @@ def test_a_session_is_frozen_so_a_refresh_cannot_mutate_it_underneath_a_renderer
     bucket_id, repository = bucket_and_repository
     session = _session(bucket_id, repository, OutputLanguage.ES)
 
+    # Reached through setattr rather than written as an assignment statement:
+    # the two are identical at runtime, and the refusal under test is exactly
+    # what a direct assignment would make a static error, which would put the
+    # checker's complaint on the line whose purpose is to provoke it.
+    frozen_facet: str = "projection"
+
     with pytest.raises(AttributeError):
-        session.projection = session.projection  # type: ignore[misc]
+        setattr(session, frozen_facet, session.projection)
 
 
 def test_the_session_discloses_boundedness_as_a_two_arm_answer_not_a_flag(
