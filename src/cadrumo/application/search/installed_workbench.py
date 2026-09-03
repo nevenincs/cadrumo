@@ -9,8 +9,10 @@ repository, token, network client, or business authority.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import assert_never
 
+from pydantic import SecretStr
+
+from ...domain.modelos.work_unit import WorkUnitState
 from ..aeat_sync.workspace import (
     AeatSyncNotificationReadState,
     AeatSyncReconciliationState,
@@ -20,10 +22,8 @@ from ..ledger.workspace import LedgerWorkspaceProjectionV1
 from ..modelo.declarations_workspace import DeclarationsWorkspaceProjectionV1
 from ..modelo.workspace_models import ModeloWorkspaceCapabilityDisposition, ModeloWorkspaceProjectionV1
 from ..review.filter import LedgerReviewStatus
-from ...domain.modelos.work_unit import WorkUnitState
 from .workbench import (
     WorkbenchDestinationAdmission,
-    WorkbenchDestinationAdmissionState,
     WorkbenchFilingAddress,
     WorkbenchModeloAddress,
     WorkbenchRevisionAddress,
@@ -93,7 +93,7 @@ def _ledger_documents(
             status=_ledger_status(row.review_status),
             label_key=WorkbenchSearchLabelKey.LEDGER_ENTRY,
             admission=admission,
-            identity_basis=str(row.transaction_id),
+            identity_basis=SecretStr(str(row.transaction_id)),
         )
         for row in projection.entries
     )
@@ -102,13 +102,9 @@ def _ledger_documents(
 def _ledger_status(value: str) -> WorkbenchSearchStatus:
     """Translate the Ledger's closed review state without inferring content."""
     status = LedgerReviewStatus(value)
-    match status:
-        case LedgerReviewStatus.PENDING:
-            return WorkbenchSearchStatus.LEDGER_ENTRY_NEEDS_REVIEW
-        case LedgerReviewStatus.REVIEWED | LedgerReviewStatus.SKIPPED | LedgerReviewStatus.EXCLUDED:
-            return WorkbenchSearchStatus.LEDGER_ENTRY_CLASSIFIED
-        case _ as unreachable:
-            assert_never(unreachable)
+    if status is LedgerReviewStatus.PENDING:
+        return WorkbenchSearchStatus.LEDGER_ENTRY_NEEDS_REVIEW
+    return WorkbenchSearchStatus.LEDGER_ENTRY_CLASSIFIED
 
 
 def _declarations_documents(
@@ -177,7 +173,7 @@ def _declarations_documents(
                 label_key=WorkbenchSearchLabelKey.HISTORY,
                 address=WorkbenchModeloAddress(modelo=row.modelo, filing_year=row.filing_year, period=row.period),
                 admission=admission,
-                identity_basis=row.fact_id,
+                identity_basis=SecretStr(row.fact_id),
             )
         )
     return tuple(documents)
@@ -193,13 +189,9 @@ def _declaration_status(
         return WorkbenchSearchStatus.DECLARATION_FILED
     if has_current_calculation:
         return WorkbenchSearchStatus.DECLARATION_READY
-    match state:
-        case WorkUnitState.BORRADOR:
-            return WorkbenchSearchStatus.DECLARATION_DRAFT
-        case WorkUnitState.DESCARTADO:
-            return WorkbenchSearchStatus.DECLARATION_NEEDS_ATTENTION
-        case _ as unreachable:
-            assert_never(unreachable)
+    if state is WorkUnitState.BORRADOR:
+        return WorkbenchSearchStatus.DECLARATION_DRAFT
+    return WorkbenchSearchStatus.DECLARATION_NEEDS_ATTENTION
 
 
 def _aeat_sync_documents(
@@ -220,7 +212,7 @@ def _aeat_sync_documents(
                 ),
                 label_key=WorkbenchSearchLabelKey.RECONCILIATION,
                 admission=admission,
-                identity_basis="\x1f".join((str(row.modelo), str(row.filing_year), row.period.registry_token)),
+                identity_basis=SecretStr("|".join((str(row.modelo), str(row.filing_year), row.period.registry_token))),
             )
         )
     for row in projection.notifications:
@@ -238,7 +230,7 @@ def _aeat_sync_documents(
                 ),
                 label_key=WorkbenchSearchLabelKey.NOTIFICATION,
                 admission=admission,
-                identity_basis=selection_key,
+                identity_basis=SecretStr(selection_key),
             )
         )
     return tuple(documents)
