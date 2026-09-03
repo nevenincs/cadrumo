@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:f1780337aedbaefdbd88b8c60a1e4a9f7a6e57f103afae732b787681356f8fa2'
+body_hash: 'sha256:650ec153dadbba5fd2468beef410d862cffe3d5836cc3840c6f556b2cf61de34'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -418,6 +418,8 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S393` - Accept the three separators the corpus uses between a note label and its wording, since requiring the colon made every note of modelo 202 invisible including the three that state how each AEAT type is aligned padded and signed; `dev/registry/analysis/footnote_pointer_notes.py`.
 - [x] `W04.P07.S394` - Measure whether designs state their wire conventions once per AEAT type rather than per field, since modelo 202 settles alignment padding and sign for An Num and N in three general notes that no field cites, which would make the reviewed rules derivable from a handful of per-type conventions instead of authored one field at a time; `dev/registry/analysis`.
 - [x] `W04.P07.S395` - Report the design notes that state a wire convention for a whole AEAT type, matching only codes the designs own fields carry: seventeen of thirty-one designs carry fifty-eight such notes resolving to forty-nine design-and-type pairs that govern 5,232 fields, which is the grounding the per-field pointer route does not have; `dev/registry/analysis/type_convention_notes.py dev/registry/tests/test_type_convention_notes.py`.
+- [x] `W04.P07.S396` - Join the fields needing a reviewed rule against the type conventions their design states: of 41 fields, 9 are grounded and the 32 that are not collapse to two modelo-and-type pairs, both in modelo 200, which is the size the rules-authoring step should carry; `dev/registry/analysis/rule_grounding_coverage.py dev/registry/tests/test_rule_grounding_coverage.py`.
+- [ ] `W04.P07.S397` - Settle whether an unnumbered NOTA governs its sheet its design or only the table beneath it, then read them: 52 of 215 transcriptions carry one and modelo 200 states the integer width sign and decimal places of its amounts in exactly that shape, which is the grounding its thirty-two ungrounded fields need; `dev/registry/analysis/footnote_pointer_notes.py`.
 
 ### Phase `W04.P08` - grade earned gate
 

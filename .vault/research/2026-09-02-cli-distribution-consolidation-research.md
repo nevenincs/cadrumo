@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:66293854be131da980ec605dc60b24f2304260402e5b9f9b88dc4854612346ae'
+body_hash: 'sha256:6b07f32cb389821d92516b4609001862f11da7e04fa00e11f3035598ed0b308c'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"

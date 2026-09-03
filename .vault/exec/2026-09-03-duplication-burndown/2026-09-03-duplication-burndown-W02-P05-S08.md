@@ -5,12 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b5b7d2869b2274ed2f0285f8fb9846ab9614806bf1f1df19c78a4f17a3e30c7d'
+body_hash: 'sha256:a6992f07555fedc9d74004142c738872f60c4a96df6e5fb88a462834901ee862'
 step_id: 'S08'
 related:
   - "[[2026-09-03-duplication-burndown-plan]]"
 ---
-
 
 # Define narrowly typed reusable Ledger parameter declarations and prove immutable CommandSpec equality
 

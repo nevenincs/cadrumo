@@ -5,12 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d133ca879e0006062d75fca787f2928d2c67c322a03b01387b94be3b1cccdcf6'
+body_hash: 'sha256:d7f81da9e00819577a72dc4d34b22fb018a13eeca67b12769e3564a03a674a82'
 step_id: 'S11'
 related:
   - "[[2026-09-03-duplication-burndown-plan]]"
 ---
-
 
 # Resolve the Modelo nonwork CommandSpec pairs through their narrow shared declaration authority
 

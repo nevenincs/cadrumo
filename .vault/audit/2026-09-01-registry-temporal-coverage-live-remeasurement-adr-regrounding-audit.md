@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f65b019179e85631b89be6ab2227e5c79d1b6d83bd6a2b358fbebb05fde2693d'
+body_hash: 'sha256:8ea057c87303b77c8a981ad7c0f80a0fbe94077c0fa3558eda8e9340079cf4ec'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -9974,7 +9974,6 @@ all - now asserts the override set is empty as well as the canonical text being
 right. A derivation that picked the correct canonical text and then recorded it
 as an override too would reproduce the corpus perfectly and save nothing.
 
-
 ## The fields whose wire fact sits behind a footnote, and what the notes say
 
 `dev/registry/analysis/footnote_only_wire_facts.py` screens every revision that
@@ -10058,7 +10057,6 @@ narrower population - width-17 fields, or one epoch - that is worth recovering
 before the number is replaced. Until it is recovered, 41 is the count that a
 reader can reproduce with one command.
 
-
 ## A note label is scoped to its sheet, and the reader made it global
 
 The blob observed in the previous section is not a transcription defect. It is a
@@ -10112,7 +10110,6 @@ shipped design rather than a fixture: the merge only appears where a label
 repeats, and constructing that would prove the parser handles a case the corpus
 is the reason to care about.
 
-
 ## The blast radius of the design-wide note reading
 
 The sheet-scoping correction was found through one modelo. Screening the whole
@@ -10153,7 +10150,6 @@ sheets share a label so the surplus is two rather than three. The corpus
 assertion then holds by shape - every row names more than one sheet and its
 surplus equals the sheet count less one - and not by figure, since those move
 whenever a design is added or re-transcribed.
-
 
 ## Two reader defects, one of them introduced by the sheet-scoping correction
 
@@ -10221,7 +10217,6 @@ per-type conventions. On the evidence of this one design the second is likely,
 which would make the authoring task an order smaller than the field count
 suggests.
 
-
 ## The conventions are stated once per type, across most of the corpus
 
 The question left open by the previous section - whether modelo 202's per-type
@@ -10271,3 +10266,55 @@ figure is now computed over distinct design-and-type pairs and is **5,232**, fou
 times smaller. The per-note count is kept on the finding, but decomposed per
 type, so a consumer can count a type once per design rather than once per
 mention - which is the only reason the corrected figure is computable at all.
+
+
+## The residual authoring task is two conventions, not thirty-two fields
+
+`dev/registry/analysis/rule_grounding_coverage.py` joins the two halves: the
+fields whose content cell states no wire fact, and the design notes that state a
+convention for a whole AEAT type. The join is by type, because that is how the
+designs key these conventions - a field does not cite the note governing its
+class; the note names the class and the field belongs to it.
+
+Of the **41 fields needing a reviewed rule, 9 are grounded by a type convention
+and 32 are not**. Every grounded field belongs to modelo 202, 222, 303 or 353.
+Every ungrounded field belongs to **modelo 200**, and they resolve to just **two
+modelo-and-type pairs**: thirty fields of type `Num` and two of type `N`.
+
+That is the number the rules-authoring step should have been sized by. The
+residual is not thirty-two field-by-field research tasks; it is two conventions
+to establish for one modelo. The step's own figure of one hundred and forty-nine
+does not reproduce, as recorded earlier, and neither does any reading of this
+work as thousands of fields.
+
+One caution against reading the grounded side as free: the nine grounded fields
+name **twenty-one distinct notes** between them, because modelo 303 carries
+thirty-five type-naming notes and several name `Num`. More notes than fields is
+not a saving on the reading, and the honest claim is about the ungrounded side -
+that it collapses to two conventions - rather than about the grounded side being
+cheap.
+
+## Modelo 200 does state its convention, in a shape the reader cannot see
+
+The two ungrounded pairs are not a silence in the design. Modelo 200's 2025
+design carries the line
+
+    NOTA: Los importes son de 15 enteros (o N + 14) y 2 decimales
+
+which settles integer width, sign carriage and decimal places for its amounts -
+precisely the wire fact its thirty `Num` fields need. The reader cannot see it,
+because the definition pattern requires a digit after `Nota` and this note has
+none.
+
+That is the third note shape this corpus uses that the reader was not built for,
+after the separator and the multi-word sheet heading. Unnumbered notes are not
+rare: **52 of the 215 transcriptions carry one, 103 lines in total**.
+
+They differ from numbered notes in a way that matters for where the fix belongs.
+An unnumbered note cannot be cited by a pointer - there is no label to point at -
+so it is not evidence for pointer resolution. It is a design-level or
+sheet-level statement, which is the same shape as the per-type conventions, and
+that is where reading it belongs. Recorded rather than implemented here, because
+the retrieval question - whether such a note governs its sheet, its design, or
+only the table beneath it - has to be settled from the corpus before a reader
+can key it to anything.
