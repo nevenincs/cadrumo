@@ -999,147 +999,147 @@ transactions:
 tui:
   aeat_sync:
     action:
-      pull_comparison: Pull comparison evidence
-      pull_filed: Pull filed declarations
-      review_census: Review census
+      pull_comparison: Recupera l'evidència de comparació
+      pull_filed: Recupera les declaracions presentades
+      review_census: Revisa el cens
     address:
       declaration: Modelo %{modelo} · %{filing_year} · %{period}
     aeat_observation_state:
-      accepted: Accepted
-      not_observed: Not observed
-      rejected: Rejected
-      submitted: Submitted
+      accepted: Acceptada
+      not_observed: No observada
+      rejected: Rebutjada
+      submitted: Presentada
     area:
-      census: Census
-      evidence_comparison: Evidence comparison
-      filed_declarations: Filed declarations
-      notifications: Notifications
-      reconciliation: Reconciliation
+      census: Cens
+      evidence_comparison: Comparació d'evidències
+      filed_declarations: Declaracions presentades
+      notifications: Notificacions
+      reconciliation: Conciliació
     availability:
-      available: Available
-      locked: Locked
-      never_captured: Never captured
-      stale: Stale
-      unavailable: Unavailable
+      available: Disponible
+      locked: Bloquejat
+      never_captured: Mai capturat
+      stale: Desactualitzat
+      unavailable: No disponible
     census:
-      title: AEAT Sync census
+      title: Cens de sincronització de l'AEAT
     census_category:
-      activity: Activity
-      address: Address
-      contact: Contact
-      obligation: Obligation
-      other: Other
+      activity: Activitat
+      address: Adreça
+      contact: Contacte
+      obligation: Obligació
+      other: Altres
     census_status:
-      adopted: Adopted
-      conflict: Conflict
-      unchanged: Unchanged
-      unset: Unset
+      adopted: Adoptat
+      conflict: Conflicte
+      unchanged: Sense canvis
+      unset: No establert
     column:
       aeat: AEAT
-      area: Area
-      availability: Availability
-      category: Category
-      declaration: Declaration
-      difference: Difference
-      document_custody: Document custody
-      field: Field
-      issued: Issued
+      area: Àrea
+      availability: Disponibilitat
+      category: Categoria
+      declaration: Declaració
+      difference: Diferència
+      document_custody: Custòdia del document
+      field: Camp
+      issued: Emesa
       local: Local
-      local_filing: Local filing
-      read: Read
-      receipt: Receipt
-      resolution: Resolution
-      sources: Sources
-      status: Status
+      local_filing: Presentació local
+      read: Llegida
+      receipt: Justificant
+      resolution: Resolució
+      sources: Fonts
+      status: Estat
     discrepancy:
-      aeat_only: AEAT only
-      contradictory_source: Contradictory source
-      local_only: Local only
-      none: No difference
-      state_mismatch: State mismatch
-      unobserved: Not observed
+      aeat_only: Només AEAT
+      contradictory_source: Font contradictòria
+      local_only: Només local
+      none: Cap diferència
+      state_mismatch: Estat no coincident
+      unobserved: No observat
     document_custody_state:
-      held: Held
-      not_captured: Not captured
-      refused: Refused
-      unavailable: Unavailable
+      held: En custòdia
+      not_captured: No capturat
+      refused: Rebutjat
+      unavailable: No disponible
     evidence_comparison:
-      title: AEAT Sync evidence comparison
+      title: Comparació d'evidències de l'AEAT
     filed_declarations:
-      title: AEAT Sync filed declarations
+      title: Declaracions presentades a l'AEAT
     justificante_state:
-      available: Available
-      not_observed: Not observed
-      unavailable: Unavailable
-      verified: Verified
+      available: Disponible
+      not_observed: No observat
+      unavailable: No disponible
+      verified: Verificat
     local_filing_state:
-      draft: Draft
-      filed: Filed
-      not_observed: Not observed
-      ready: Ready
+      draft: Esborrany
+      filed: Presentada
+      not_observed: No observada
+      ready: Preparada
     notification:
       already_handled: Aquesta notificació ja s'ha obert.
       document_handed_off: Document de notificació lliurat a l'amfitrió.
     notification_category:
-      communication: Communication
+      communication: Comunicació
       formal: Formal
-      other: Other
-      pending: Pending
+      other: Altres
+      pending: Pendent
     notification_read_state:
-      read: Read
-      unknown: Unknown
-      unread: Unread
+      read: Llegida
+      unknown: Desconeguda
+      unread: No llegida
     notifications:
-      title: AEAT Sync notifications
+      title: Notificacions de l'AEAT
     operation:
       already_handled: Aquesta operació ja s'ha lliurat a l'amfitrió.
-      failed: Operation could not be started.
-      handed_off: Operation handed to the host.
+      failed: No s'ha pogut iniciar l'operació.
+      handed_off: Operació lliurada a l'amfitrió.
       in_flight: Ja hi ha una operació en curs.
     overview:
-      title: AEAT Sync overview
+      title: Resum de sincronització de l'AEAT
     reconciliation:
-      title: AEAT Sync reconciliation
+      title: Conciliació de l'AEAT
     reconciliation_state:
-      accept_aeat: Accept AEAT
-      dismissed: Dismissed
-      keep_local: Keep local
-      no_action: No action
-      unresolved: Unresolved
+      accept_aeat: Accepta l'AEAT
+      dismissed: Descartada
+      keep_local: Mantén les dades locals
+      no_action: Cap acció
+      unresolved: No resolta
     refusal:
       notification_handoff: La recuperació del document de notificació no està disponible.
-      operation_handoff: Operation handoff is unavailable.
-      source: This source is unavailable for viewing.
+      operation_handoff: El lliurament de l'operació no està disponible.
+      source: Aquesta font no està disponible per consultar-la.
       unread_notification: Les notificacions no llegides no poden obrir documents.
     source:
       aeat:
-        census: AEAT census
-        filed_declarations: AEAT filed declarations
-        notifications: AEAT notifications
+        census: Cens de l'AEAT
+        filed_declarations: Declaracions presentades a l'AEAT
+        notifications: Notificacions de l'AEAT
       local:
-        filings: Local filings
-        notification_custody: Local notification custody
-        profile: Local profile
-        reconciliation: Local reconciliation
+        filings: Presentacions locals
+        notification_custody: Custòdia local de notificacions
+        profile: Perfil local
+        reconciliation: Conciliació local
     source_state:
       absent: Absent
-      accepted: Accepted
-      conflict: Conflict
-      not_observed: Not observed
+      accepted: Acceptat
+      conflict: Conflicte
+      not_observed: No observat
       present: Present
-      rejected: Rejected
+      rejected: Rebutjat
     sources:
       entry: '%{source}: %{availability}'
       joined: '%{entries}'
     value:
       none: —
     zone:
-      census: Census
-      evidence_comparison: Evidence comparison
-      filed_declarations: Filed declarations
-      notifications: Notifications
-      overview: Overview
-      reconciliation: Reconciliation
+      census: Cens
+      evidence_comparison: Comparació d'evidències
+      filed_declarations: Declaracions presentades
+      notifications: Notificacions
+      overview: Resum
+      reconciliation: Conciliació
   declarations:
     availability:
       available: Disponible

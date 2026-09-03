@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
+import hmac
+import secrets
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
@@ -11,7 +14,6 @@ from typing import Any, Final, Protocol, Self, override
 from pydantic import BaseModel, Field, NonNegativeInt, TypeAdapter, model_validator
 
 from ...core.filing_year import FilingYear
-from ...core.hashing import content_hash_hex
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -24,6 +26,8 @@ from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalo
 from ..operator_actions.models import ActionReference
 
 AEAT_SYNC_WORKSPACE_CONTRACT_VERSION: Final[int] = 1
+
+_NOTIFICATION_SELECTION_KEY: Final[bytes] = secrets.token_bytes(32)
 
 type AeatSyncNotificationSelectionKey = NamespacedId
 """Opaque, bounded identity for one projected notification row.
@@ -305,13 +309,15 @@ class AeatSyncWorkspaceFiledDeclarationRowV1(AeatSyncWorkspaceActionRowV1):
         return self
 
 
-class AeatSyncWorkspaceNotificationRowV1(AeatSyncWorkspaceActionRowV1):
+class AeatSyncWorkspaceNotificationRowV1(BaseModel):
     """Safe public notification metadata.
 
     ``selection_key`` is populated only by :func:`project_aeat_sync_workspace`.
     An admission row may leave it absent; the projector always replaces it
     from the fact's private coordinate before exposing the row publicly.
     """
+
+    model_config = STRICT_FROZEN_CONFIG
 
     issued_on: date
     read_on: date | None = None
@@ -427,6 +433,11 @@ class AeatSyncWorkspaceProjectionV1(BaseModel):
     def _six_zones(self) -> Self:
         if tuple(item.zone for item in self.zones) != tuple(AeatSyncWorkspaceZone):
             raise ValueError("zones must cover the closed catalogue")
+        selection_keys = tuple(row.selection_key for row in self.notifications)
+        if any(key is None for key in selection_keys):
+            raise ValueError("projected notifications require selection keys")
+        if len(selection_keys) != len(set(selection_keys)):
+            raise ValueError("projected notification selection keys must be unique")
         return self
 
 
@@ -741,13 +752,9 @@ _NOTIFICATION_SELECTION_NAMESPACE: Final[str] = "aeat_sync.notification.selectio
 
 
 def _notification_selection_key(private_identity: str) -> AeatSyncNotificationSelectionKey:
-    """Derive a stable public focus key without retaining the private identity."""
-    digest = content_hash_hex(
-        {
-            "namespace": _NOTIFICATION_SELECTION_NAMESPACE,
-            "private_identity": private_identity,
-        }
-    )
+    """Derive a process-stable public focus key without retaining private data."""
+    canonical = "\x1f".join((_NOTIFICATION_SELECTION_NAMESPACE, private_identity)).encode("utf-8")
+    digest = hmac.digest(_NOTIFICATION_SELECTION_KEY, canonical, hashlib.sha256).hex()
     return f"aeat_sync.notification.{digest}"
 
 
