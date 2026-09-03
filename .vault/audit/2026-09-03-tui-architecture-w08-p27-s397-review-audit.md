@@ -132,14 +132,16 @@ fact requires bucket and subject provenance, notifications additionally require
 a private logical identity, and overview, census, notification, and natural
 filing-address duplicates fail closed.
 
-Supported actions are canonical `ActionReference` values admitted only through
-caller-supplied live `ActionCatalogueEntry` declarations and a closed per-zone,
-per-area, and reconciliation-state allow-list. Source observations retain local
+Supported actions are canonical `ActionReference` values resolved against the
+canonical action catalogue and a closed per-zone, per-area, and
+reconciliation-state allow-list. Public operations are resolved against the
+public TUI contract set, and pull actions require the exact contract action
+join. Source observations retain local
 and AEAT availability, observation time, refusal, and measured count
 independently, and confident rows are refused when their required source is not
 observable. The package initializer is inert and focused tests import the
 defining module directly.
 
-Verification: 8 focused tests passed; Ruff passed; ty passed; basedpyright
+Verification: 10 focused tests passed; Ruff passed; ty passed; basedpyright
 reported zero errors and warnings; targeted duplicate detection reported zero
 clones.

@@ -8,7 +8,7 @@ from datetime import date
 from enum import StrEnum
 from typing import Any, Final, Protocol, Self, override
 
-from pydantic import BaseModel, Field, NonNegativeInt, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, TypeAdapter, model_validator
 
 from ...core.filing_year import FilingYear
 from ...core.identifier_grammar import NamespacedId
@@ -385,6 +385,7 @@ class AeatSyncWorkspaceFactV1[RowT: BaseModel]:
 
     def __post_init__(self) -> None:
         """Reject absent or blank provenance coordinates."""
+        TypeAdapter(BucketId).validate_python(self.bucket_id)
         if not self.subject_key.strip():
             raise ValueError("subject key cannot be blank")
         if self.private_identity is not None and not self.private_identity.strip():
@@ -445,7 +446,7 @@ _ALLOWED: Final = {
     "evidence_comparison": frozenset({"operator.overview.explain"}),
     "reconciliation": frozenset({"operator.overview.explain"}),
 }
-_ALLOWED_OPERATIONS: Final = {
+_ALLOWED_OPERATIONS: Final[dict[str, frozenset[str]]] = {
     "overview:census": frozenset({"user-profile.censo-review"}),
     "overview:filed_declarations": frozenset({"live.filed-history.pull"}),
     "overview:notifications": frozenset(),
@@ -501,6 +502,7 @@ def project_aeat_sync_workspace(
     reconciliation: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceReconciliationRowV1], ...] = (),
 ) -> AeatSyncWorkspaceProjectionV1:
     """Project already-loaded, scoped facts without retaining their scope."""
+    TypeAdapter(BucketId).validate_python(bucket_id)
     if not subject_key.strip():
         raise AeatSyncWorkspaceProjectionError("subject key cannot be blank")
     obs = _observations(zone_observations)
@@ -521,14 +523,27 @@ def project_aeat_sync_workspace(
     _duplicates(overview, census, filed_declarations, notifications, evidence_comparison, reconciliation)
     _actions(groups, action_catalogue, operation_contracts)
     _source_claims(groups, obs)
-    out_overview = tuple(sorted((f.row for f in overview), key=lambda row: row.area.value))
-    out_census = tuple(sorted((f.row for f in census), key=lambda row: row.path.casefold()))
-    out_filed = tuple(sorted((f.row for f in filed_declarations), key=_natural))
-    out_notifications = tuple(
-        f.row for f in sorted(notifications, key=lambda f: (f.row.issued_on, f.private_identity or ""))
+    out_overview = tuple(
+        sorted((_public_row(f.row, AeatSyncWorkspaceOverviewRowV1) for f in overview), key=lambda row: row.area.value)
     )
-    out_comparison = tuple(sorted((f.row for f in evidence_comparison), key=_natural))
-    out_reconciliation = tuple(sorted((f.row for f in reconciliation), key=_natural))
+    out_census = tuple(
+        sorted((_public_row(f.row, AeatSyncWorkspaceCensusRowV1) for f in census), key=lambda row: row.path.casefold())
+    )
+    out_filed = tuple(
+        sorted((_public_row(f.row, AeatSyncWorkspaceFiledDeclarationRowV1) for f in filed_declarations), key=_natural)
+    )
+    out_notifications = tuple(
+        _public_row(f.row, AeatSyncWorkspaceNotificationRowV1)
+        for f in sorted(notifications, key=lambda f: (f.row.issued_on, f.private_identity or ""))
+    )
+    out_comparison = tuple(
+        sorted(
+            (_public_row(f.row, AeatSyncWorkspaceEvidenceComparisonRowV1) for f in evidence_comparison), key=_natural
+        )
+    )
+    out_reconciliation = tuple(
+        sorted((_public_row(f.row, AeatSyncWorkspaceReconciliationRowV1) for f in reconciliation), key=_natural)
+    )
     public = dict(
         zip(
             AeatSyncWorkspaceZone,
@@ -604,6 +619,22 @@ def _actions(
                     raise AeatSyncWorkspaceProjectionError("operation is not admitted by public contracts")
             if not set(operation_ids) <= allowed_operations:
                 raise AeatSyncWorkspaceProjectionError("operation is not allowed for row area/state")
+            for action in fact.row.supported_actions:
+                joined = tuple(
+                    contract
+                    for contract in contracts.definitions
+                    if contract.action_reference == action and contract.definition_id in operation_ids
+                )
+                if not joined and action.action_id in {
+                    "operator.live.filed.pull",
+                    "operator.live.filed.pull_all",
+                }:
+                    raise AeatSyncWorkspaceProjectionError("pull action lacks its exact public operation join")
+
+
+def _public_row[RowT: BaseModel](row: BaseModel, row_type: type[RowT]) -> RowT:
+    """Strip subclass and extra state by rebuilding the exact public class."""
+    return row_type.model_validate(row.model_dump(include=set(row_type.model_fields)))
 
 
 def _source_claims(
@@ -624,8 +655,16 @@ def _source_claims(
                 _require(False, sources[AeatSyncWorkspaceSource.LOCAL_PROFILE], "local census")
                 _require(False, sources[AeatSyncWorkspaceSource.AEAT_CENSUS], "AEAT census")
             if isinstance(row, _DualRow):
-                _require(row.local_state is AeatSyncSourceState.NOT_OBSERVED, sources[AeatSyncWorkspaceSource.LOCAL_FILINGS], "local")
-                _require(row.aeat_state is AeatSyncSourceState.NOT_OBSERVED, sources[AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS], "AEAT")
+                _require(
+                    row.local_state is AeatSyncSourceState.NOT_OBSERVED,
+                    sources[AeatSyncWorkspaceSource.LOCAL_FILINGS],
+                    "local",
+                )
+                _require(
+                    row.aeat_state is AeatSyncSourceState.NOT_OBSERVED,
+                    sources[AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS],
+                    "AEAT",
+                )
             if isinstance(row, AeatSyncWorkspaceFiledDeclarationRowV1):
                 _require(
                     row.local_filing_state is AeatSyncLocalFilingState.NOT_OBSERVED,

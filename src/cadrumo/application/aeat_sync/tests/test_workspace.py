@@ -268,6 +268,18 @@ def test_scope_is_mandatory_and_projected_away() -> None:
         _projection(census=(_fact(_census(), subject="other"),))
     with pytest.raises(TypeError):
         cast(Any, AeatSyncWorkspaceFactV1)(row=_census())
+    with pytest.raises((TypeError, ValueError)):
+        cast(Any, AeatSyncWorkspaceFactV1)(bucket_id=None, subject_key=SUBJECT, row=_census())
+    with pytest.raises((TypeError, ValueError)):
+        cast(Any, project_aeat_sync_workspace)(
+            bucket_id=None,
+            subject_key=SUBJECT,
+            zone_observations=_observations(),
+            action_catalogue=OPERATOR_ACTION_CATALOGUE,
+            operation_contracts=OperationPublicContractSetV1.build(
+                (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
+            ),
+        )
 
 
 def test_logical_duplicates_refuse_disagreement() -> None:
@@ -285,7 +297,7 @@ def test_logical_duplicates_refuse_disagreement() -> None:
 
 
 def test_actions_require_catalogue_admission_and_area_state_closure() -> None:
-    census_action = _action("operator.profile.edit")
+    census_action = _action("operator.not.in.catalogue")
     with pytest.raises(AeatSyncWorkspaceProjectionError, match="not admitted"):
         _projection(census=(_fact(_census().model_copy(update={"supported_actions": (census_action,)})),))
     with pytest.raises(AeatSyncWorkspaceProjectionError, match="not allowed"):
@@ -295,6 +307,30 @@ def test_actions_require_catalogue_admission_and_area_state_closure() -> None:
         AeatSyncWorkspaceReconciliationRowV1.model_validate(
             {**row.model_dump(), "supported_actions": (_action("operator.overview.explain"),)}
         )
+    admitted_operation = _overview().model_copy(update={"supported_operations": ("user-profile.censo-review",)})
+    assert _projection(overview=(_fact(admitted_operation),)).overview[0].supported_operations == (
+        "user-profile.censo-review",
+    )
+    pull_without_join = _filed().model_copy(update={"supported_actions": (_action("operator.live.filed.pull"),)})
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="operation join"):
+        _projection(filed_declarations=(_fact(pull_without_join),))
+
+
+def test_row_subclass_protected_fields_are_reconstructed_away() -> None:
+    class UnsafeCensusRow(AeatSyncWorkspaceCensusRowV1):
+        nif: str
+
+    unsafe = UnsafeCensusRow(
+        path="address",
+        category=AeatSyncCensusCategory.ADDRESS,
+        status=AeatSyncCensusStatus.CONFLICT,
+        nif="12345678Z",
+    )
+    projection = _projection(census=(_fact(unsafe),))
+    assert type(projection.census[0]) is AeatSyncWorkspaceCensusRowV1
+    assert "12345678Z" not in repr(projection)
+    assert b"12345678Z" not in pickle.dumps(projection)
+    assert "nif" not in projection.census[0].__dict__
 
 
 def test_independent_source_axes_keep_known_empty_and_unknown_distinct() -> None:
@@ -312,6 +348,20 @@ def test_independent_source_axes_keep_known_empty_and_unknown_distinct() -> None
         _projection(zone_observations=observations, filed_declarations=(_fact(_filed()),))
     empty = _projection(filed_declarations=())
     assert empty.zones[2].item_count == 0
+
+
+def test_unrelated_observable_sources_cannot_back_area_or_census_claims() -> None:
+    locked = {
+        (AeatSyncWorkspaceZone.OVERVIEW, AeatSyncWorkspaceSource.LOCAL_PROFILE): (AeatSyncWorkspaceAvailability.LOCKED),
+        (AeatSyncWorkspaceZone.OVERVIEW, AeatSyncWorkspaceSource.AEAT_CENSUS): (AeatSyncWorkspaceAvailability.LOCKED),
+        (AeatSyncWorkspaceZone.CENSUS, AeatSyncWorkspaceSource.LOCAL_PROFILE): (AeatSyncWorkspaceAvailability.LOCKED),
+        (AeatSyncWorkspaceZone.CENSUS, AeatSyncWorkspaceSource.AEAT_CENSUS): (AeatSyncWorkspaceAvailability.LOCKED),
+    }
+    observations = _observations(overrides=locked)
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="local"):
+        _projection(zone_observations=observations, overview=(_fact(_overview()),))
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match=r"unobservable|local census"):
+        _projection(zone_observations=observations, overview=(), census=(_fact(_census()),))
 
 
 def test_unavailable_sources_cannot_carry_confident_rows() -> None:
