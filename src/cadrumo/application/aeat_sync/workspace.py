@@ -114,6 +114,16 @@ class AeatSyncSupportedAction(StrEnum):
     OPEN_LOCAL_FILING = "open_local_filing"
 
 
+class AeatSyncOverviewArea(StrEnum):
+    """Closed set of safe areas represented by an overview row."""
+
+    CENSUS = "census"
+    FILED_DECLARATIONS = "filed_declarations"
+    NOTIFICATIONS = "notifications"
+    EVIDENCE_COMPARISON = "evidence_comparison"
+    RECONCILIATION = "reconciliation"
+
+
 class AeatSyncCensusCategory(StrEnum):
     """Safe categories for censal paths; no observed value crosses the seam."""
 
@@ -209,7 +219,6 @@ class AeatSyncWorkspaceZoneObservationV1(BaseModel):
     @property
     def reason_code(self) -> NamespacedId | None:
         """Return the refusal under the common application vocabulary."""
-
         return self.refusal
 
     @model_validator(mode="after")
@@ -238,7 +247,6 @@ class AeatSyncWorkspaceZoneStateV1(AeatSyncWorkspaceZoneObservationV1):
     @property
     def measured_count(self) -> NonNegativeInt | None:
         """Return the measured count under the descriptive vocabulary."""
-
         return self.item_count
 
     @model_validator(mode="after")
@@ -259,7 +267,7 @@ class AeatSyncWorkspaceOverviewRowV1(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    subject: str = Field(min_length=1, max_length=64)
+    area: AeatSyncOverviewArea
     local_state: AeatSyncSourceState
     aeat_state: AeatSyncSourceState
     local_observed_at: UtcInstant | None = None
@@ -344,7 +352,6 @@ class AeatSyncWorkspaceFiledDeclarationRowV1(BaseModel):
     @property
     def aeat_submission_state(self) -> AeatSyncAeatObservationState:
         """Return the AEAT axis under the filing-calendar vocabulary."""
-
         return self.aeat_observation_state
 
     @model_validator(mode="after")
@@ -399,13 +406,11 @@ class AeatSyncWorkspaceNotificationRowV1(BaseModel):
     @property
     def issue_date(self) -> date:
         """Return the authority's issue date under an English display name."""
-
         return self.issued_on
 
     @property
     def read_date(self) -> date | None:
         """Return the optional authority read date."""
-
         return self.read_on
 
     @model_validator(mode="after")
@@ -417,7 +422,10 @@ class AeatSyncWorkspaceNotificationRowV1(BaseModel):
             raise ValueError("only a read notification may carry a read date")
         if self.read_on is not None and self.read_on < self.issued_on:
             raise ValueError("notification read date cannot precede its issue date")
-        if self.category is AeatSyncNotificationCategory.PENDING and self.read_state is not AeatSyncNotificationReadState.UNKNOWN:
+        if (
+            self.category is AeatSyncNotificationCategory.PENDING
+            and self.read_state is not AeatSyncNotificationReadState.UNKNOWN
+        ):
             raise ValueError("a pending notification must retain an unknown read state")
         if self.document_custody_state is AeatSyncDocumentCustodyState.HELD:
             if self.read_state is not AeatSyncNotificationReadState.READ:
@@ -604,42 +612,50 @@ def project_aeat_sync_workspace(
     observable private subject coordinates must still agree with each other.
     It is never retained in the serialized projection.
     """
-
     observations = _validate_zone_observations(zone_observations)
-    rows = {
-        AeatSyncWorkspaceZone.OVERVIEW: tuple(overview),
-        AeatSyncWorkspaceZone.CENSUS: tuple(census),
-        AeatSyncWorkspaceZone.FILED_DECLARATIONS: tuple(filed_declarations),
-        AeatSyncWorkspaceZone.NOTIFICATIONS: tuple(notifications),
-        AeatSyncWorkspaceZone.EVIDENCE_COMPARISON: tuple(evidence_comparison),
-        AeatSyncWorkspaceZone.RECONCILIATION: tuple(reconciliation),
+    # The zones carry different row types, so the by-zone map is deliberately
+    # widened for the scope and observability passes that read only the shared
+    # coordinates.  Everything that reaches into a row's own fields takes the
+    # concrete tuple instead.
+    rows: dict[AeatSyncWorkspaceZone, tuple[object, ...]] = {
+        AeatSyncWorkspaceZone.OVERVIEW: overview,
+        AeatSyncWorkspaceZone.CENSUS: census,
+        AeatSyncWorkspaceZone.FILED_DECLARATIONS: filed_declarations,
+        AeatSyncWorkspaceZone.NOTIFICATIONS: notifications,
+        AeatSyncWorkspaceZone.EVIDENCE_COMPARISON: evidence_comparison,
+        AeatSyncWorkspaceZone.RECONCILIATION: reconciliation,
     }
     all_rows = tuple(row for group in rows.values() for row in group)
     _validate_scope(bucket_id=bucket_id, expected_subject=subject_key, rows=all_rows)
-    _validate_duplicate_identities(rows)
+    _validate_duplicate_identities(
+        overview=overview,
+        census=census,
+        filed_declarations=filed_declarations,
+        notifications=notifications,
+        evidence_comparison=evidence_comparison,
+        reconciliation=reconciliation,
+    )
 
     for zone, values in rows.items():
-        if observations[zone].availability not in {
-            AeatSyncWorkspaceAvailability.AVAILABLE,
-            AeatSyncWorkspaceAvailability.STALE,
-        } and values:
+        if (
+            observations[zone].availability
+            not in {
+                AeatSyncWorkspaceAvailability.AVAILABLE,
+                AeatSyncWorkspaceAvailability.STALE,
+            }
+            and values
+        ):
             raise AeatSyncWorkspaceProjectionError(
                 f"non-observable AEAT Sync {zone.value} carries confident rows",
             )
 
     projected = {
-        AeatSyncWorkspaceZone.OVERVIEW: _ordered_overview(rows[AeatSyncWorkspaceZone.OVERVIEW]),
-        AeatSyncWorkspaceZone.CENSUS: _ordered_census(rows[AeatSyncWorkspaceZone.CENSUS]),
-        AeatSyncWorkspaceZone.FILED_DECLARATIONS: _ordered_filed_declarations(
-            rows[AeatSyncWorkspaceZone.FILED_DECLARATIONS],
-        ),
-        AeatSyncWorkspaceZone.NOTIFICATIONS: _ordered_notifications(rows[AeatSyncWorkspaceZone.NOTIFICATIONS]),
-        AeatSyncWorkspaceZone.EVIDENCE_COMPARISON: _ordered_comparisons(
-            rows[AeatSyncWorkspaceZone.EVIDENCE_COMPARISON],
-        ),
-        AeatSyncWorkspaceZone.RECONCILIATION: _ordered_reconciliations(
-            rows[AeatSyncWorkspaceZone.RECONCILIATION],
-        ),
+        AeatSyncWorkspaceZone.OVERVIEW: _ordered_overview(overview),
+        AeatSyncWorkspaceZone.CENSUS: _ordered_census(census),
+        AeatSyncWorkspaceZone.FILED_DECLARATIONS: _ordered_filed_declarations(filed_declarations),
+        AeatSyncWorkspaceZone.NOTIFICATIONS: _ordered_notifications(notifications),
+        AeatSyncWorkspaceZone.EVIDENCE_COMPARISON: _ordered_comparisons(evidence_comparison),
+        AeatSyncWorkspaceZone.RECONCILIATION: _ordered_reconciliations(reconciliation),
     }
     zones = tuple(
         AeatSyncWorkspaceZoneStateV1(
@@ -698,55 +714,42 @@ def _validate_scope(
         raise AeatSyncWorkspaceProjectionError("AEAT Sync facts mix subjects")
 
 
-def _validate_duplicate_identities(rows: dict[AeatSyncWorkspaceZone, tuple[object, ...]]) -> None:
+def _validate_duplicate_identities(
+    *,
+    overview: tuple[AeatSyncWorkspaceOverviewRowV1, ...],
+    census: tuple[AeatSyncWorkspaceCensusRowV1, ...],
+    filed_declarations: tuple[AeatSyncWorkspaceFiledDeclarationRowV1, ...],
+    notifications: tuple[AeatSyncWorkspaceNotificationRowV1, ...],
+    evidence_comparison: tuple[AeatSyncWorkspaceEvidenceComparisonRowV1, ...],
+    reconciliation: tuple[AeatSyncWorkspaceReconciliationRowV1, ...],
+) -> None:
     # Every identity is checked independently at the source boundary.  Safe
     # natural addresses remain the fallback when a source intentionally does
     # not carry a private identity coordinate.
     _assert_unique(
-        (getattr(row, "semantic_identity", None) for row in rows[AeatSyncWorkspaceZone.OVERVIEW]),
+        (identity for row in overview if (identity := row.semantic_identity) is not None),
         "overview semantic identities",
     )
     _assert_unique(
-        (
-            (row.path, row.category)
-            for row in rows[AeatSyncWorkspaceZone.CENSUS]
-        ),
+        ((row.path, row.category) for row in census),
         "census paths",
     )
     _assert_unique(
-        (
-            (str(row.modelo), row.filing_year, row.period.registry_token)
-            for row in rows[AeatSyncWorkspaceZone.FILED_DECLARATIONS]
-        ),
+        (_natural_key(row) for row in filed_declarations),
         "filed declaration natural addresses",
     )
     _assert_unique(
-        (row.semantic_identity for row in rows[AeatSyncWorkspaceZone.NOTIFICATIONS]),
+        (row.semantic_identity for row in notifications),
         "notification semantic identities",
     )
     _assert_unique(
-        (
-            (str(row.modelo), row.filing_year, row.period.registry_token)
-            for row in rows[AeatSyncWorkspaceZone.EVIDENCE_COMPARISON]
-        ),
+        (_natural_key(row) for row in evidence_comparison),
         "evidence comparison natural addresses",
     )
     _assert_unique(
-        (
-            (str(row.modelo), row.filing_year, row.period.registry_token)
-            for row in rows[AeatSyncWorkspaceZone.RECONCILIATION]
-        ),
+        (_natural_key(row) for row in reconciliation),
         "reconciliation natural addresses",
     )
-    for zone, values in rows.items():
-        _assert_unique(
-            (
-                identity
-                for row in values
-                if (identity := getattr(row, "semantic_identity", None)) is not None
-            ),
-            f"{zone.value} private identities",
-        )
 
 
 def _assert_unique(values: Iterable[object], label: str) -> None:
@@ -756,6 +759,8 @@ def _assert_unique(values: Iterable[object], label: str) -> None:
 
 
 def _ordered_actions(actions: tuple[AeatSyncSupportedAction, ...]) -> tuple[AeatSyncSupportedAction, ...]:
+    if len(actions) != len(set(actions)):
+        raise AeatSyncWorkspaceProjectionError("AEAT Sync rows contain duplicate supported actions")
     return tuple(sorted(set(actions), key=lambda action: action.value))
 
 
@@ -767,7 +772,7 @@ def _ordered_overview(
         for row in sorted(
             rows,
             key=lambda row: (
-                row.subject,
+                row.area.value,
                 row.discrepancy_kind.value,
                 row.semantic_identity or "",
             ),
@@ -779,12 +784,15 @@ def _ordered_census(rows: tuple[AeatSyncWorkspaceCensusRowV1, ...]) -> tuple[Aea
     return tuple(sorted(rows, key=lambda row: (row.path, row.category.value, row.status.value)))
 
 
-def _natural_key(row: object) -> tuple[str, int, str]:
-    return (
-        str(getattr(row, "modelo")),
-        getattr(row, "filing_year"),
-        getattr(row, "period").registry_token,
-    )
+type _NaturalAddressRow = (
+    AeatSyncWorkspaceFiledDeclarationRowV1
+    | AeatSyncWorkspaceEvidenceComparisonRowV1
+    | AeatSyncWorkspaceReconciliationRowV1
+)
+
+
+def _natural_key(row: _NaturalAddressRow) -> tuple[str, int, str]:
+    return (str(row.modelo), row.filing_year, row.period.registry_token)
 
 
 def _ordered_filed_declarations(
@@ -876,7 +884,10 @@ def _validate_justificante_axis(
             raise ValueError("a justificante cannot be confident before AEAT filing observation")
     elif observed_at is not None:
         raise ValueError("an unheld justificante state cannot carry an observation time")
-    if aeat_state is AeatSyncAeatObservationState.NOT_OBSERVED and justificante_state is not AeatSyncJustificanteState.NOT_OBSERVED:
+    if (
+        aeat_state is AeatSyncAeatObservationState.NOT_OBSERVED
+        and justificante_state is not AeatSyncJustificanteState.NOT_OBSERVED
+    ):
         raise ValueError("an unobserved AEAT filing cannot carry a justificante state")
     if aeat_state is AeatSyncAeatObservationState.REJECTED and justificante_state in {
         AeatSyncJustificanteState.AVAILABLE,
@@ -927,6 +938,7 @@ __all__ = [
     "AeatSyncLocalFilingState",
     "AeatSyncNotificationCategory",
     "AeatSyncNotificationReadState",
+    "AeatSyncOverviewArea",
     "AeatSyncReconciliationState",
     "AeatSyncSourceState",
     "AeatSyncSupportedAction",
