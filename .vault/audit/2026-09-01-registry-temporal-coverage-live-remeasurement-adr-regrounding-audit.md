@@ -12663,3 +12663,35 @@ gap that leaves a filer without a date also leaves this check without a subject.
 The sixteen revisions inside the five year-overlapping modelos all carry windows,
 so the modelos where a clash was most plausible are the ones the finer
 measurement actually covers.
+
+
+## The two coverage gates say together what neither says alone
+
+The overlap result was gateable, and it is now gate thirty-six:
+`no_two_revisions_of_a_modelo_claim_the_same_filing_year_and_period`, holding
+across 837 year-and-period keys drawn from 101 window-carrying revisions.
+
+Its value is in the pairing. Gate thirty-five holds that a modelo's revisions
+leave no year inside its own span unserved; thirty-six holds that no year is
+served twice. Neither alone says much - a single revision claiming every year
+satisfies the first, and a corpus of empty revisions satisfies the second.
+Together they say the revisions PARTITION the modelo's years, which is the
+property that makes "which revision applies" a question with an answer.
+
+The computation lives at `ambiguously_claimed_periods` in the temporal screen
+that owns the other year-level derivations, beside `unserved_interior_years`
+and `undated_window_years`. Three temporal computations, one home, which is the
+arrangement this campaign keeps arriving at.
+
+Its teeth prove both directions, and the second is the one the wrong
+measurement bought: a planted duplicate claim on 2024/2T is reported, and modelo
+303's genuine `2T`/`3T` split of the same calendar year is not. A gate written
+from the year-granularity figure would have refused a correct declaration in
+five modelos - it would have been a gate against declaring a mid-year rule
+change at all.
+
+Both non-vacuity assertions are written into the gate rather than left to a
+reader: it refuses to pass on fewer than 500 keys or fewer than 50 speaking
+revisions. And it states what it does not cover - the 27 revisions declaring no
+deadline window claim no period, so they cannot clash, and the gate's silence
+about them is not coverage of them.
