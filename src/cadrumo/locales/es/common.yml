@@ -1049,6 +1049,17 @@ tui:
       empty: Esta captura no contiene asientos.
       redacted: Índice seguro de asientos; los detalles financieros siguen protegidos.
       title: Asientos del libro contable
+    evidence:
+      column:
+        status: Revisión
+        type: Tipo
+      detail: 'Tamaño: {size} bytes · capturado {captured}'
+      empty: No hay justificantes pendientes de revisión.
+      pending: Pendiente
+      reviewed: Revisado
+      safe_metadata: Solo metadatos seguros; el contenido del documento permanece
+        protegido.
+      title: Revisión de justificantes
     flow:
       in_flight_refusal: Espera a que termine la operación actual antes de salir de
         esta pantalla.
@@ -1070,6 +1081,26 @@ tui:
       affected_declarations: Declaraciones afectadas
       quality: Calidad de los datos y trabajo pendiente
       title: Resumen del libro contable
+    reconciliation:
+      affected: Declaraciones afectadas
+      cancel: Cancelar
+      changes: Cambiados / eliminados
+      confirm: Confirmar enlace
+      confirming: Confirma este enlace local.
+      entry: Apunte
+      failure: No se pudo guardar el enlace.
+      inconsistencies: Incoherencias de enlaces
+      invoice: Factura
+      local_only: Solo datos locales del libro. Sincronización AEAT es un espacio
+        distinto.
+      match:
+        full: Completa
+        partial: Parcial
+      modelo: Modelo
+      period: Periodo
+      progress: Enlazando…
+      success: Enlace guardado.
+      title: Conciliación local del libro
     refusal:
       application_state: Esta área no está disponible en el estado actual del libro
         contable.

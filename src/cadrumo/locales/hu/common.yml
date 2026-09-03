@@ -1033,6 +1033,16 @@ tui:
       empty: Ez a pillanatkép nem tartalmaz tételeket.
       redacted: Biztonságos tételjegyzék; a pénzügyi részletek védettek maradnak.
       title: Főkönyvi tételek
+    evidence:
+      column:
+        status: Ellenőrzés
+        type: Típus
+      detail: 'Méret: {size} bájt · rögzítve: {captured}'
+      empty: Nincs ellenőrzésre váró bizonylat.
+      pending: Függőben
+      reviewed: Ellenőrizve
+      safe_metadata: Csak biztonságos metaadatok; a dokumentum tartalma védett marad.
+      title: Bizonylatok ellenőrzése
     flow:
       in_flight_refusal: A képernyő elhagyása előtt várja meg a jelenlegi művelet
         befejezését.
@@ -1054,6 +1064,25 @@ tui:
       affected_declarations: Érintett bevallások
       quality: Adatminőség és megoldatlan feladatok
       title: Főkönyvi áttekintés
+    reconciliation:
+      affected: Érintett bevallások
+      cancel: Mégse
+      changes: Módosított / eltávolított
+      confirm: Kapcsolat megerősítése
+      confirming: Erősítse meg ezt a helyi kapcsolatot.
+      entry: Tétel
+      failure: A kapcsolat nem menthető.
+      inconsistencies: Hivatkozási eltérések
+      invoice: Számla
+      local_only: Csak helyi főkönyvi adatok. Az AEAT-szinkron külön munkaterület.
+      match:
+        full: Teljes
+        partial: Részleges
+      modelo: Nyomtatvány
+      period: Időszak
+      progress: Kapcsolás…
+      success: Kapcsolat mentve.
+      title: Helyi főkönyvi egyeztetés
     refusal:
       application_state: Ez a terület a főkönyv jelenlegi állapotában nem érhető el.
       destination_pending: Ez a terület ebben a verzióban még nem érhető el.

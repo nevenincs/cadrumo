@@ -9,6 +9,7 @@ from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
+from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.models import (
     LedgerSourceImportResult,
     ManualLedgerTransactionPatch,
@@ -25,7 +26,7 @@ from ....application.ledger.workspace import (
 from ....application.operator_actions.catalogue import lookup_action
 from ....application.operator_actions.models import ActionReference
 from ....core.i18n.render import tr
-from ....core.identity import TransactionId
+from ....core.identity import InvoiceId, TransactionId
 from ..components.theme import BASE_CSS, tokenised
 from ..navigation import TuiScreenContextV1
 from .models import (
@@ -33,7 +34,11 @@ from .models import (
     LedgerClassificationSubmitterV1,
     LedgerDestinationIdV1,
     LedgerEntryRowV1,
+    LedgerEvidenceRowV1,
     LedgerImportSubmitterV1,
+    LedgerLinkResultV1,
+    LedgerLinkSubmissionV1,
+    LedgerLinkSubmitterV1,
     LedgerPreparedImportV1,
     LedgerReviewRowV1,
     LedgerRouteRefusalV1,
@@ -57,6 +62,8 @@ _IMPLEMENTED_AREAS: Final = frozenset(
         LedgerWorkspaceArea.REVIEW,
         LedgerWorkspaceArea.IMPORT,
         LedgerWorkspaceArea.CLASSIFICATION,
+        LedgerWorkspaceArea.EVIDENCE,
+        LedgerWorkspaceArea.RECONCILIATION,
     }
 )
 
@@ -134,6 +141,32 @@ _LEDGER_LOCALE_KEYS: Final = (
     "tui.ledger.import.success",
     "tui.ledger.import.failure",
     "tui.ledger.import.empty",
+    "tui.ledger.evidence.title",
+    "tui.ledger.evidence.safe_metadata",
+    "tui.ledger.evidence.column.type",
+    "tui.ledger.evidence.column.status",
+    "tui.ledger.evidence.pending",
+    "tui.ledger.evidence.reviewed",
+    "tui.ledger.evidence.empty",
+    "tui.ledger.evidence.detail",
+    "tui.ledger.reconciliation.title",
+    "tui.ledger.reconciliation.local_only",
+    "tui.ledger.reconciliation.inconsistencies",
+    "tui.ledger.reconciliation.affected",
+    "tui.ledger.reconciliation.entry",
+    "tui.ledger.reconciliation.invoice",
+    "tui.ledger.reconciliation.match",
+    "tui.ledger.reconciliation.match.full",
+    "tui.ledger.reconciliation.match.partial",
+    "tui.ledger.reconciliation.modelo",
+    "tui.ledger.reconciliation.period",
+    "tui.ledger.reconciliation.changes",
+    "tui.ledger.reconciliation.confirm",
+    "tui.ledger.reconciliation.cancel",
+    "tui.ledger.reconciliation.confirming",
+    "tui.ledger.reconciliation.progress",
+    "tui.ledger.reconciliation.success",
+    "tui.ledger.reconciliation.failure",
     *_AREA_LOCALE_KEYS.values(),
     *_AVAILABILITY_LOCALE_KEYS.values(),
     *_REVIEW_STATUS_LOCALE_KEYS.values(),
@@ -188,6 +221,10 @@ class LedgerWorkspaceController:
         classification_submitter: LedgerClassificationSubmitterV1 | None = None,
         prepared_imports: tuple[LedgerPreparedImportV1, ...] = (),
         import_submitter: LedgerImportSubmitterV1 | None = None,
+        evidence_action: ActionReference | None = None,
+        evidence_items: tuple[AttachmentReviewItem, ...] | None = None,
+        link_action: ActionReference | None = None,
+        link_submitter: LedgerLinkSubmitterV1 | None = None,
     ) -> None:
         """Admit an outer Ledger context and retain its immutable snapshot."""
         if context.destination != "workbench.ledger":
@@ -204,6 +241,13 @@ class LedgerWorkspaceController:
             and lookup_action(classify_action.action_id).target_command_key != "ledger.classify"
         ):
             raise ValueError("injected Ledger classification action does not resolve to the canonical command")
+        if (
+            evidence_action is not None
+            and lookup_action(evidence_action.action_id).target_command_key != "ledger.evidence.review.list"
+        ):
+            raise ValueError("injected Ledger evidence action does not resolve to the canonical review query")
+        if link_action is not None and lookup_action(link_action.action_id).target_command_key != "ledger.link":
+            raise ValueError("injected Ledger link action does not resolve to the canonical command")
         choice_ids = tuple(choice.choice_id for choice in prepared_imports)
         if len(choice_ids) != len(set(choice_ids)):
             raise ValueError("prepared import choice identities must be unique")
@@ -213,6 +257,10 @@ class LedgerWorkspaceController:
         self.classification_submitter = classification_submitter
         self.prepared_imports = prepared_imports
         self.import_submitter = import_submitter
+        self.evidence_action = evidence_action
+        self.evidence_items = evidence_items
+        self.link_action = link_action
+        self.link_submitter = link_submitter
         self._states = {row.area: row for row in projection.areas}
 
     def classification_target_coordinate(self) -> tuple[int, int, str]:
@@ -251,6 +299,11 @@ class LedgerWorkspaceController:
                 or self.classification_submitter is None
             )
         ) or (area is LedgerWorkspaceArea.IMPORT and (not self.prepared_imports or self.import_submitter is None))
+        missing_door = missing_door or (
+            area is LedgerWorkspaceArea.EVIDENCE and (self.evidence_action is None or self.evidence_items is None)
+        ) or (
+            area is LedgerWorkspaceArea.RECONCILIATION and (self.link_action is None or self.link_submitter is None)
+        )
         if area not in _IMPLEMENTED_AREAS or missing_door:
             return LedgerRouteRefusalV1(
                 target=target,
@@ -321,6 +374,53 @@ class LedgerWorkspaceController:
         if self.import_submitter is None or prepared not in self.prepared_imports:
             raise RuntimeError("import submission is unavailable")
         return await prepared.submit_with(self.import_submitter)
+
+    def evidence_rows(self) -> tuple[LedgerEvidenceRowV1, ...]:
+        """Project only canonical review-safe metadata from the injected result."""
+        if self.evidence_action is None or self.evidence_items is None:
+            raise RuntimeError("evidence review is unavailable")
+        return tuple(
+            LedgerEvidenceRowV1(
+                attachment_id=item.attachment_id,
+                mime_type=item.mime_type,
+                bytes_size=item.bytes_size,
+                captured_at=item.captured_at,
+                pending_review=item.pending_review,
+                action=self.evidence_action,
+                source=item,
+            )
+            for item in self.evidence_items
+        )
+
+    def restored_evidence_id(self) -> str | None:
+        """Restore evidence focus by semantic application identity."""
+        focus = self.context.focus
+        if focus is None or focus.semantic_key != "ledger.evidence" or focus.restore_token is None:
+            return None
+        return (
+            focus.restore_token
+            if any(row.attachment_id == focus.restore_token for row in self.evidence_rows())
+            else None
+        )
+
+    async def submit_link(self, transaction_id: TransactionId, invoice_id: InvoiceId) -> LedgerLinkResultV1:
+        """Admit a visible suggestion and submit it through the authorized door."""
+        if self.link_action is None or self.link_submitter is None:
+            raise RuntimeError("Ledger reconciliation is unavailable")
+        if not any(
+            row.transaction_id == transaction_id and row.invoice_id == invoice_id
+            for row in self.projection.invoice_reconciliations
+        ) or not any(row.transaction_id == transaction_id for row in self.projection.entries):
+            raise ValueError("link target is absent from the visible reconciliation projection")
+        submission = LedgerLinkSubmissionV1(
+            action=self.link_action,
+            transaction_id=transaction_id,
+            invoice_id=invoice_id,
+        )
+        result = await self.link_submitter(submission)
+        if result.transaction_id != transaction_id or result.invoice_id != invoice_id:
+            raise ValueError("link result identities disagree with the admitted suggestion")
+        return result
 
 
 class LedgerRouteRequested(Message):

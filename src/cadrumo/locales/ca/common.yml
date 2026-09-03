@@ -1038,6 +1038,16 @@ tui:
       empty: Aquesta captura no conté cap apunt.
       redacted: Índex segur d'apunts; els detalls financers continuen protegits.
       title: Apunts del llibre comptable
+    evidence:
+      column:
+        status: Revisió
+        type: Tipus
+      detail: 'Mida: {size} bytes · capturat {captured}'
+      empty: No hi ha justificants pendents de revisió.
+      pending: Pendent
+      reviewed: Revisat
+      safe_metadata: Només metadades segures; el contingut del document continua protegit.
+      title: Revisió de justificants
     flow:
       in_flight_refusal: Espera que acabi l'operació actual abans de sortir d'aquesta
         pantalla.
@@ -1059,6 +1069,25 @@ tui:
       affected_declarations: Declaracions afectades
       quality: Qualitat de les dades i feina pendent
       title: Resum del llibre comptable
+    reconciliation:
+      affected: Declaracions afectades
+      cancel: Cancel·la
+      changes: Canviats / eliminats
+      confirm: Confirma l'enllaç
+      confirming: Confirma aquest enllaç local.
+      entry: Assentament
+      failure: No s'ha pogut desar l'enllaç.
+      inconsistencies: Incoherències d'enllaços
+      invoice: Factura
+      local_only: Només dades locals del llibre. Sincronització AEAT és un espai diferent.
+      match:
+        full: Completa
+        partial: Parcial
+      modelo: Model
+      period: Període
+      progress: S'està enllaçant…
+      success: Enllaç desat.
+      title: Conciliació local del llibre
     refusal:
       application_state: Aquesta àrea no està disponible en l'estat actual del llibre
         comptable.

@@ -1009,6 +1009,16 @@ tui:
       empty: No entries are present in this snapshot.
       redacted: Safe entry index; financial details remain protected.
       title: Ledger entries
+    evidence:
+      column:
+        status: Review
+        type: Type
+      detail: 'Size: {size} bytes · captured {captured}'
+      empty: No evidence awaits review.
+      pending: Pending
+      reviewed: Reviewed
+      safe_metadata: Safe metadata only; document contents stay protected.
+      title: Evidence review
     flow:
       in_flight_refusal: Wait for the current operation to finish before leaving this
         screen.
@@ -1030,6 +1040,25 @@ tui:
       affected_declarations: Affected declarations
       quality: Data quality and unresolved work
       title: Ledger overview
+    reconciliation:
+      affected: Affected declarations
+      cancel: Cancel
+      changes: Changed / removed
+      confirm: Confirm link
+      confirming: Confirm this local link.
+      entry: Entry
+      failure: The link could not be saved.
+      inconsistencies: Link inconsistencies
+      invoice: Invoice
+      local_only: Local Ledger evidence only. AEAT Sync is a separate workspace.
+      match:
+        full: Full
+        partial: Partial
+      modelo: Form
+      period: Period
+      progress: Linking…
+      success: Link saved.
+      title: Local Ledger reconciliation
     refusal:
       application_state: This area is unavailable in the current Ledger state.
       destination_pending: This area is not available in this version yet.
