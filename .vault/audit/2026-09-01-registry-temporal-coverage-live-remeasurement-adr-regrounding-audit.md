@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:eb626b1bd99fcd9860dcbb9b8ddee121f183a48a19eb548b858085ff319c0aca'
+body_hash: 'sha256:5e4f842bd9632dcd4f8e44cfdce241175b288e06f43e879643d8bb9b60b31fd5'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8087,3 +8087,32 @@ declarations, still produces the same findings. It does not prove the findings
 are right, and no census total ever will. A refactor that changed the number
 would have needed an explanation; one that does not is simply a refactor, which
 is the whole of what was intended.
+
+### the-gate-that-excluded-fact-bullets-left-a-miscount-standing-in-them | high | A screen said four facts decided its answer and listed five; twenty-three gates pass now
+
+The condition-count gate counts the bullets following a screen's "N conditions
+are reported" claim, and its implementation carries a comment explaining that
+it deliberately stops before the FACT bullets several screens list first -
+counting those had made it fail on a docstring whose stated number was right.
+That exclusion was correct for the claim it checks and left a second claim
+unchecked entirely. One of them was wrong: the capability screen opened with
+"Four facts decide it" and listed five.
+
+The miscount matters for the same reason the sibling gate exists. A wrong count
+tells a reader the list is complete, so the item they never find is the one they
+conclude does not exist - and here the fifth fact is the deadline window, the
+one that decides whether a revision can say WHEN a filing is due. A reader
+counting four would have taken the capability answer as settled without it.
+
+Both claims are now gated, separately, because they count different bullet runs
+in one docstring and a gate conflating them would be wrong in whichever
+direction it guessed.
+
+The new gate was wrong on its first run and the failure was mine to read. It
+counted bullets opening with a backticked name, which is how the conditions gate
+does it and how every condition bullet is written; fact bullets are prose, so it
+reported five facts as one. The pattern was copied from a sibling without asking
+whether the thing being counted had the same shape - which is the fourth time
+this campaign has carried an assumption across from a neighbouring case, and the
+first where the gate I had just written caught me inside a minute. Twenty-three
+tests pass in that module, exit 0.
