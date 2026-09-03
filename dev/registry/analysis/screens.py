@@ -103,6 +103,22 @@ def _outside_references(authority: ValidatedRegistryAuthority, modelo_ids: tuple
     return sorted(outside_reference_index(tuple(provenance_screen(authority, modelo_ids))))
 
 
+def _fields_without_grounding(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> Sequence[object]:
+    """Return only the fields for which no official wording was located.
+
+    The grounding screen's own total is, by construction, the count of fields
+    needing a rule - which is what the pointer screen beside it already reports.
+    Two rows carrying the same number read as one measurement taken twice. What
+    this screen adds is the RESIDUE: the fields that no type convention and no
+    design note speaks to, and which therefore have nowhere for a reviewed rule
+    to come from. That is nought today and it is the number worth watching,
+    because it rises the moment a design arrives without either.
+    """
+    return [item for item in rule_grounding_screen(authority, modelo_ids) if item.kind == "ungrounded"]
+
+
 def _mixing_modelos(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> Sequence[object]:
     """Return only the modelos using more than one identifier grammar."""
     return [use for use in grammar_screen(authority, modelo_ids) if use.mixes]
@@ -176,8 +192,8 @@ SCREENS: tuple[ScreenEntry, ...] = (
     ),
     ScreenEntry(
         "rule_grounding_coverage",
-        rule_grounding_screen,
-        "fields needing a reviewed rule, counted by the strength of the wording available to them",
+        _fields_without_grounding,
+        "fields needing a reviewed rule for which no official wording was located at all",
     ),
 )
 

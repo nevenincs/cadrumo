@@ -61,31 +61,34 @@ async def test_every_focusable_control_on_a_destination_is_reachable_by_tab(tmp_
 
 
 @pytest.mark.asyncio
-async def test_home_restores_focus_by_domain_identity_rather_than_row_position(tmp_path: Path) -> None:
-    """A refreshed Home must return the operator to the same THING, not the same row.
+async def test_home_restores_focus_by_domain_identity_rather_than_row_position() -> None:
+    """A refreshed Home returns the operator to the same THING, not the same row.
 
     Ranking is the application's, and it changes: restoring by ordinal silently
-    moves the operator onto a different declaration whenever it does.
+    moves the operator onto a different declaration whenever it does. The proof
+    needs populated rows, so it runs over the synthetic ready projection rather
+    than a fresh profile that legitimately has none — and it REORDERS them, which
+    is the case an ordinal restore passes by accident and this one does not.
     """
-    async with installed_workbench_root(tmp_path) as root:
-        projection = root.refresh_home()
-        screen = HomeScreen(projection)
-        app = ScreenHostApp(screen)
-        async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
-            await pilot.pause()
-            targets = tuple(screen.home_targets)
-            app.exit(None)
+    from ..devtools.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 
-        if not targets:
-            pytest.skip("a profile with no ranked Home rows cannot exercise restoration")
+    projection = build_home_projection_fixture(HomeFixtureScenario.READY)
+    screen = HomeScreen(projection)
+    app = ScreenHostApp(screen)
+    async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
+        await pilot.pause()
+        targets = tuple(screen.home_targets)
+        app.exit(None)
 
-        chosen = targets[-1]
-        restored = HomeScreen(root.refresh_home(), restore_target=chosen)
-        app = ScreenHostApp(restored)
-        async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
-            await pilot.pause()
-            assert restored.highlighted_target == HomeTarget(kind=chosen.kind, identity=chosen.identity)
-            app.exit(None)
+    assert len(targets) > 1, "the ready fixture must offer more than one row to restore between"
+    chosen = targets[-1]
+    reordered = projection.model_copy(update={"declarations": tuple(reversed(projection.declarations))})
+    restored = HomeScreen(reordered, restore_target=chosen)
+    app = ScreenHostApp(restored)
+    async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
+        await pilot.pause()
+        assert restored.highlighted_target == HomeTarget(kind=chosen.kind, identity=chosen.identity)
+        app.exit(None)
 
 
 @pytest.mark.asyncio

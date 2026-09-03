@@ -85,7 +85,7 @@ says which. What each one owns:
 | `modelo_capability` | what each modelo declares it can do, and where the filing claim and its machinery disagree |
 | `footnote_only_wire_facts` | fields whose wire fact sits behind a footnote pointer rather than in their own cell |
 | `type_convention_notes` | design notes stating how a whole AEAT type is written to the wire |
-| `rule_grounding_coverage` | fields needing a reviewed rule, counted by the strength of the wording available to them |
+| `rule_grounding_coverage` | fields needing a reviewed rule for which no official wording was located at all |
 
 Three rules keep the suite honest.
 
