@@ -1,0 +1,123 @@
+"""Closed internal Ledger route catalogue and injected root factory."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Final, get_args, override
+
+from textual.app import ComposeResult
+from textual.widgets import Static
+
+from ....application.ledger.workspace import LedgerWorkspaceArea, LedgerWorkspaceProjectionV1
+from ..components.widgets import ContentScroll
+from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
+from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
+from .entries import LedgerEntriesScreen
+from .models import LedgerDestinationIdV1, LedgerRouteRefusalV1, LedgerRouteTargetV1
+from .overview import LedgerOverviewScreen
+from .review import LedgerReviewScreen
+
+type LedgerInternalScreenFactoryV1 = Callable[[LedgerWorkspaceController], LedgerWorkspaceScreen]
+
+
+class LedgerUnavailableScreen(LedgerWorkspaceScreen):
+    """Typed placeholder for an unavailable application area or deferred body."""
+
+    def __init__(self, controller: LedgerWorkspaceController, refusal: LedgerRouteRefusalV1) -> None:
+        """Retain the typed refusal without resolving its protected reason code."""
+        super().__init__(controller, id="ledger-unavailable-screen")
+        self.refusal = refusal
+        self._route_refusal = refusal
+
+    @override
+    def compose(self) -> ComposeResult:
+        """Render the explicit unavailability and no action affordance."""
+        yield Static(
+            ledger_copy("tui.ledger.unavailable.title", default="Ledger destination unavailable"),
+            classes="cadrumo-banner",
+        )
+        with ContentScroll(id="ledger-page", classes="cadrumo-scroll ledger-page"):
+            yield Static(
+                ledger_copy(
+                    self._route_refusal.reason_key,
+                    default="This destination is not available in the current workspace.",
+                ),
+                id="ledger-refusal",
+                classes="ledger-refusal",
+                markup=False,
+            )
+
+
+@dataclass(frozen=True, slots=True)
+class LedgerRouteV1:
+    """One internal destination and its optional implemented read body."""
+
+    destination: LedgerDestinationIdV1
+    area: LedgerWorkspaceArea
+    factory: LedgerInternalScreenFactoryV1 | None
+
+
+LEDGER_ROUTES: Final[tuple[LedgerRouteV1, ...]] = (
+    LedgerRouteV1("ledger.overview", LedgerWorkspaceArea.OVERVIEW, LedgerOverviewScreen),
+    LedgerRouteV1("ledger.entries", LedgerWorkspaceArea.ENTRIES, LedgerEntriesScreen),
+    LedgerRouteV1("ledger.review", LedgerWorkspaceArea.REVIEW, LedgerReviewScreen),
+    LedgerRouteV1("ledger.import", LedgerWorkspaceArea.IMPORT, None),
+    LedgerRouteV1("ledger.classification", LedgerWorkspaceArea.CLASSIFICATION, None),
+    LedgerRouteV1("ledger.evidence", LedgerWorkspaceArea.EVIDENCE, None),
+    LedgerRouteV1("ledger.reconciliation", LedgerWorkspaceArea.RECONCILIATION, None),
+)
+_ROUTES_BY_ID: Final = {route.destination: route for route in LEDGER_ROUTES}
+
+
+def declared_ledger_destination_ids() -> frozenset[str]:
+    """Read the internal closed destination set from its defining type alias."""
+    return frozenset(item for item in get_args(LedgerDestinationIdV1.__value__) if isinstance(item, str))
+
+
+def _require_total_routes() -> None:
+    if frozenset(_ROUTES_BY_ID) != declared_ledger_destination_ids() or len(_ROUTES_BY_ID) != len(LEDGER_ROUTES):
+        raise ValueError("Ledger routes must cover the internal destination catalogue exactly once")
+    if tuple(route.area for route in LEDGER_ROUTES) != tuple(LedgerWorkspaceArea):
+        raise ValueError("Ledger routes must preserve canonical workspace area order")
+
+
+_require_total_routes()
+
+
+def resolve_ledger_screen(
+    controller: LedgerWorkspaceController,
+    target: LedgerRouteTargetV1,
+) -> LedgerWorkspaceScreen:
+    """Resolve one internal route without reading state or invoking an action."""
+    route = _ROUTES_BY_ID[target.destination]
+    if route.area is not target.area:
+        raise ValueError("Ledger target destination and area disagree")
+    refusal = controller.refusal_for(route.area)
+    if refusal is not None:
+        return LedgerUnavailableScreen(controller, refusal)
+    factory = route.factory
+    if factory is None:  # pragma: no cover - controller refuses every deferred area
+        raise ValueError("Ledger route has no implemented screen")
+    return factory(controller)
+
+
+def ledger_screen_factory(projection: LedgerWorkspaceProjectionV1) -> TuiScreenFactoryV1:
+    """Bind an injected immutable projection to the outer navigation factory contract."""
+
+    def create(context: TuiScreenContextV1) -> LedgerWorkspaceScreen:
+        controller = LedgerWorkspaceController(context, projection)
+        return resolve_ledger_screen(controller, controller.route_target(LedgerWorkspaceArea.OVERVIEW))
+
+    return create
+
+
+__all__ = [
+    "LEDGER_ROUTES",
+    "LedgerInternalScreenFactoryV1",
+    "LedgerRouteV1",
+    "LedgerUnavailableScreen",
+    "declared_ledger_destination_ids",
+    "ledger_screen_factory",
+    "resolve_ledger_screen",
+]
