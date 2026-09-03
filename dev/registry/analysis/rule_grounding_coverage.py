@@ -14,6 +14,15 @@ the class and the field belongs to it.
 
 Three conditions are reported, and every row names one of them:
 
+- ``grounded_by_own_note`` - the field's content cell cites a note, and that
+  note is defined on the field's own sheet. The strongest grounding there is:
+  the design pointed at this wording FOR THIS FIELD, so no argument is needed
+  that the field falls under it. This condition was missing from the first
+  version of this screen, which asked only what governed a field's class and
+  never what the field itself cited - and every one of modelo 200's three
+  oddly-sized fields turned out to be settled by exactly this, each by its own
+  sheet's note: an accounting-statement code table at width one, a document-type
+  enumeration at width one, and the rate filling rule at width four.
 - ``grounded_by_type_convention`` - the field's design states a convention for
   the field's own type. The rule's author reads one note and it covers every
   field of that type in that design.
@@ -68,6 +77,7 @@ __all__ = [
 #: Every condition this screen can report, declared once and used at each
 #: emission site so the set cannot be recovered by reading the source wrong.
 KINDS: tuple[str, ...] = (
+    "grounded_by_own_note",
     "grounded_by_type_convention",
     "grounded_by_design_note",
     "ungrounded",
@@ -136,8 +146,13 @@ def classify_grounding(
     """
     findings: list[GroundingFinding] = []
     for field in needed:
+        own = tuple(field.notes) if field.kind != "pointer_unresolved" else ()
         notes = tuple(by_type.get(field.aeat_type, ()))
-        if notes:
+        if own:
+            kind = "grounded_by_own_note"
+            notes = tuple(f"{field.cell.split('!', 1)[0]}:{note}" for note in own)
+            detail = f"the field's own cell cites {', '.join(own)}, defined on its sheet"
+        elif notes:
             kind = "grounded_by_type_convention"
             detail = f"{len(notes)} note(s) state a convention for type {field.aeat_type}"
         elif design_notes:
