@@ -11519,3 +11519,43 @@ This is the third instrument error in this report's short life: it counted rows
 that carry no revision as measured-safe, it counted a census as findings, and
 both were found by reading its output against the thing it claimed to describe
 rather than by the report failing.
+
+
+## What a screen's entry point returns is now declared rather than inferred
+
+Three instrument errors in one report, all from one root: nothing said what a
+screen's entry point returns, so a consumer had to infer it, and inferring it
+wrongly counted 13,624 examined transitions as defects.
+
+The runner table now declares it. `ScreenEntry.entry_returns` is either
+`findings` - every row is one - or `census`, meaning the entry returns everything
+it examined with a flag and only flagged rows are findings. One screen declares
+`census` today; the rest declare findings, which is also the default, so the
+declaration is only written where it is not the ordinary case.
+
+**Nothing verifies it, and the docstring says so.** No mechanical test
+distinguishes a census from a finding set: both are sequences of dataclasses, and
+the ratio between the entry point and the runner row cannot decide it, because
+several findings screens project onto small subsets too - the grounding screen
+projects 41 findings onto an empty residue, a larger ratio than the census's. So
+this is an author's statement, and its value is that a consumer reads it instead
+of guessing. A gate asserting it would be asserting the guess this replaces.
+
+With the declaration read, the exposure figures correct:
+
+| figure | before | after |
+| ------ | ------ | ----- |
+| filing-exposed findings | 39,831 | 27,920 |
+| conditions with filing exposure | 23 | 22 |
+| census rows examined, reported apart | - | 13,624 |
+
+The 27,920 is the honest total: findings, in filing-grade revisions, from screens
+whose entry points return findings. The census's 11,911 filing-grade rows are
+still reported, on their own row, as transitions examined.
+
+The declaration is also the smaller lesson of this campaign restated. Every time
+a consumer has had to infer a producer's contract - which entry point a module
+presents, whether a note label identifies a note, whether a finding carries a
+revision, what an unnumbered note governs - the inference has been wrong at least
+once, and the fix has been to declare the thing once and read it. This is the
+same shape at the level of the tooling's own interfaces.
