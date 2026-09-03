@@ -126,7 +126,7 @@ _LANES: Final[dict[str, Lane]] = {
             Form("uv-venv", "dev.packaging.smoke_core"),
             Form("plain-pip", "dev.packaging.smoke_pip_core"),
             Form("sdist", "dev.packaging.smoke_sdist_core"),
-            Form("extras", "dev.packaging.smoke_extras"),
+            Form("extras", "dev.packaging.all_extra_smoke"),
             Form("joined-cohort", "dev.packaging.smoke_split_install"),
         ),
         behavioural_proof="installed grounded Modelo 200 tax-work oracle",
