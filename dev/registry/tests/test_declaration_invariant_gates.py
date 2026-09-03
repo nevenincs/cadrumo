@@ -29,6 +29,7 @@ what makes it evidence.
 from __future__ import annotations
 
 import collections
+import pathlib
 from typing import Final
 
 import pytest
@@ -784,3 +785,96 @@ def test_a_screen_that_counts_the_facts_it_reads_states_the_right_number() -> No
 
     assert checked, "no screen stated a fact count, so this gate checked nothing"
     assert not wrong, "\n".join(wrong)
+
+
+def _names_imported_by_tests(root: pathlib.Path) -> set[str]:
+    """Return every module name the test modules under ``root`` import, either form.
+
+    Both forms matter and missing one is not a small error. A module reached as
+    ``from package import module`` appears in the import's NAMES, not in its
+    module path, and an extractor reading only the path reported seven modules
+    as untested that four separate tests import.
+    """
+    import ast
+
+    names: set[str] = set()
+    for path in sorted(root.rglob("test_*.py")):
+        tree = ast.parse(path.read_text(encoding=_UTF_8))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom):
+                if node.module:
+                    names.add(node.module.rsplit(".", 1)[-1])
+                names.update(alias.name.rsplit(".", 1)[-1] for alias in node.names)
+            elif isinstance(node, ast.Import):
+                names.update(alias.name.rsplit(".", 1)[-1] for alias in node.names)
+    return names
+
+
+def _public_modules(roots: tuple[pathlib.Path, ...]) -> list[pathlib.Path]:
+    """Return modules declaring at least one public function or class."""
+    import ast
+
+    found: list[pathlib.Path] = []
+    for root in roots:
+        for path in sorted(root.glob("*.py")):
+            if path.name in {"__init__.py", "__main__.py"}:
+                continue
+            tree = ast.parse(path.read_text(encoding=_UTF_8))
+            if any(
+                isinstance(node, ast.FunctionDef | ast.ClassDef) and not node.name.startswith("_")
+                for node in tree.body
+            ):
+                found.append(path)
+    return found
+
+
+def test_every_public_module_in_the_registry_tooling_is_imported_by_a_test() -> None:
+    """A module no test imports is a module whose behaviour nobody asserts.
+
+    Asked by import rather than by filename, because the naming here follows no
+    single rule: pipeline modules carry a leading underscore their tests drop,
+    tests are named for the subject rather than the module, and the conformance
+    package keeps its own tests directory. Three filename rules were tried and
+    each reported a backlog that did not exist - eighteen modules, then twelve,
+    then eight, against a true answer of one.
+
+    The one real case was a generator whose `--check` mode refuses a stale
+    artefact and which nothing invoked, so a current artefact and an unrun
+    generator looked identical from outside.
+    """
+    registry = pathlib.Path(__file__).resolve().parent.parent
+    roots = (registry / "analysis", registry / "pipeline", registry / "conformance")
+    imported = _names_imported_by_tests(registry)
+    modules = _public_modules(roots)
+
+    assert modules, "no public module was found, so this gate checked nothing"
+    assert imported, "no test imports were read, so every module would look untested"
+
+    unimported = sorted(path.stem for path in modules if path.stem not in imported)
+    assert not unimported, (
+        "these modules declare a public surface that no test imports, so nothing asserts what they do: "
+        f"{unimported}"
+    )
+
+
+def test_the_import_coverage_gate_sees_a_module_no_test_imports(tmp_path: pathlib.Path) -> None:
+    """Planted under an injectable root, so the proof never touches the tree.
+
+    Both directions are asserted. Without the first the gate protects nothing;
+    without the second it would fail on every module reached through the import
+    form the earlier extractor could not read, which is exactly how the phantom
+    backlog was produced.
+    """
+    package = tmp_path / "analysis"
+    package.mkdir()
+    (package / "covered.py").write_text("def public() -> int:\n    return 1\n", encoding=_UTF_8)
+    (package / "orphan.py").write_text("def public() -> int:\n    return 2\n", encoding=_UTF_8)
+    tests = tmp_path / "tests"
+    tests.mkdir()
+    (tests / "test_covered.py").write_text("from ..analysis import covered\n", encoding=_UTF_8)
+
+    imported = _names_imported_by_tests(tmp_path)
+    modules = _public_modules((package,))
+    unimported = sorted(path.stem for path in modules if path.stem not in imported)
+
+    assert unimported == ["orphan"], "the gate must see the planted module and only that one"
