@@ -122,7 +122,12 @@ def test_kernel_is_immutable_import_light_and_derives_paths_from_edges() -> None
             sys.executable,
             "-c",
             (
-                f"import runpy, sys; runpy.run_path({str(module_path)!r}); "
+                "import importlib.util, sys; "
+                f"spec = importlib.util.spec_from_file_location('cadrumo.entrypoints.cli.command_spec', {str(module_path)!r}); "
+                "assert spec is not None and spec.loader is not None; "
+                "module = importlib.util.module_from_spec(spec); "
+                "sys.modules[spec.name] = module; "
+                "spec.loader.exec_module(module); "
                 "print(int('typer' in sys.modules), int('click' in sys.modules), "
                 "int('json' in sys.modules), int('pydantic' in sys.modules))"
             ),
