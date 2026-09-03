@@ -6367,3 +6367,30 @@ as owed a rename.
 
 The gate passes at five tests. What it demonstrated is worth more than its green: it caught a
 correct removal, an incorrect removal, and an arrival, in a ledger nobody was watching.
+
+### adjudication-was-acted-on-and-the-collapse-is-now-watched | medium | The duplicate this campaign named as owed a merge was merged into the home it named, and the result is held at one definition
+
+The previous finding said the byte-identical verdict extractor had been collapsed. Checking what
+survived found no function of that name anywhere in `src`, which reads as a deletion rather than
+a merge - and would have been recorded as one had the commit not been read.
+
+It was a merge. `refactor(sede): share the marker verdict extraction across the identity checks`
+removes seventeen lines from each of the two check modules and gives both
+`from .._adapter_utils import extract_marker_verdict`. The pair is now one function in
+`_adapter_utils`, which is precisely the home this campaign's disposition named: both copies
+already depended on that module's shared negative-marker table, so that is where the single
+definition belonged.
+
+That is the first adjudication written here to be acted on by another writer. The disposition
+named a remedy, someone applied it, and the disposition ledger's second direction then required
+the row's removal - which is why the row was correctly deleted and the gate correctly demanded
+it.
+
+The collapsed concept is now watched by the canonical-definitions gate at one definition,
+alongside the sixteen this campaign collapsed itself. That gate exists because a whole-tree
+commit had already restored a set of collapsed duplicates once, silently, and a merge nobody
+watches can be undone the same way.
+
+Also confirmed this iteration: all eight gate modules written here pass, fifty-three tests, exit
+zero - checked after finding that the sweep which dated the registry failures had excluded this
+campaign's own directory from its filter.
