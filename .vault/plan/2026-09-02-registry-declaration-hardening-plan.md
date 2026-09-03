@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:a9ee974c7d7a42a731a5d88ac958ac229461fe61c311d5cc57131b2b8d7fd7fe'
+body_hash: 'sha256:60b41ef5b30279ea4a871dfb074901ad50ff87e11b4fc73c11a37d6b2c4a8b0d'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -589,7 +589,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S303` - Adjudicate the availability_label collision the census surfaced and record the three-fold promoted_candidate_ids restatement; `dev/quality/name_collision_dispositions.toml`.
 - [x] `W06.P13.S304` - Scrub the two operator home paths that reddened the documentation privacy gate and return the quality directory to green; `.vault/audit/2026-08-27-calculation-correctness-campaign-restrictive-default-sweep-audit.md .vault/audit/2026-09-02-object-name-declustering-pilot-rehearsal-audit.md`.
 - [x] `W06.P13.S305` - Name the returned step-id symbol in the marker gate's failure and refuse the cosmetic repair; `dev/tests/test_campaign_marker_patterns.py`.
-- [ ] `W06.P13.S306` - Rename the M200 2024 blocker cohort vocabulary off its plan step ids, with the owning campaign; `dev/registry/analysis/m200_2024_blocker_adjudications.py dev/registry/tests/test_m200_2024_blocker_adjudications.py`.
+- [ ] `W06.P13.S306` - Migrate the M200 2024 cohort vocabulary off its plan step ids across five files, two public function names, five refusal messages, seven docstrings and one test name, with the owning campaign; `dev/registry/analysis/m200_2024_blocker_adjudications.py dev/registry/tests/test_m200_2024_blocker_adjudications.py`.
 - [x] `W06.P13.S307` - Name the encoding once in the three modules this campaign gave bare UTF-8 literals; `dev/tests/test_campaign_marker_patterns.py dev/registry/tests/test_declaration_invariant_gates.py dev/registry/tests/test_render_check.py`.
 - [x] `W06.P13.S308` - Re-check the held-file constraint against the live worktree and separate it from this execution's scope limit; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S309` - Collapse the modelo-id helper repeated in all ten screen modules into one canonical defining module; `dev/registry/analysis/corpus.py dev/registry/analysis`.
@@ -616,6 +616,8 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S330` - Re-derive the citation breadth figure against the live schema and state its boundary; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S331` - Re-derive the applicability figure to both its defensible boundaries and show the plan's is neither; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S332` - Re-derive the amount-semantics figure and record that the deciding fact is declared nowhere; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S333` - Establish that the money scale factor cannot be pinned from the development tree without a fake or a private import; `dev/registry/tests/test_monetary_scale.py`.
+- [x] `W06.P13.S334` - Pin the money wire type's hundredfold scale beside the codec that applies it, where a real export field is available; `src/cadrumo/domain/calculations/registry/tests`.
 
 ### Phase `W06.P14` - declaration contract migration
 

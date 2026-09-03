@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:515ca3e2d7ef1d5c8f0c83597b43a8c324d9ae138ce2daa47cba9770fdf2f5f5'
+body_hash: 'sha256:fdf2af1b9019d7a5046e7226540a788c8812ef1491915326be80c7eefab47119'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8489,3 +8489,60 @@ only place the defect it describes has actually occurred. A restatement count
 measures declarations, and the thing that hurt here was an undeclared behaviour
 in a codec - which a count of declarations is structurally unable to report,
 however carefully its boundary is written.
+
+### the-undeclared-scale-cannot-be-pinned-from-here-either-and-the-attempt-is-the-finding | high | A gate for it needs a hand-built field stub or a private renderer import, both of which this project refuses
+
+The previous entry ended by noting that the fact behind both live
+filing-correctness defects - a `money` field's value being multiplied by one
+hundred in the renderer's codec - is stated in no declaration, so no count of
+declared places can see it. The obvious next move was to pin it with a gate, so
+that the screen's documented reasoning fails loudly if the factor ever changes.
+The attempt failed, and the way it failed says more than the gate would have.
+
+Reaching the behaviour means calling `_render_money`, a private function taking
+a private field protocol. A test can only do that by importing the private name
+and handing it a hand-built object carrying whatever attributes the renderer
+happens to touch - the first attempt supplied a length and an id and was told it
+also needed `signed`. That object is a fake standing in for a real export field,
+and discovering its shape by reading failures is exactly how a fake drifts from
+what it imitates. This project's own rules refuse both halves: no private
+cross-package imports, and no stubs standing in for the thing under test. The
+attempt was withdrawn rather than completed; nine tests pass in that module,
+exit 0, and no partial gate was left behind.
+
+So the fact stays unpinned, and the reason is now precise rather than assumed.
+It is not that nobody has written the gate. It is that the scale is reachable
+only through a private renderer, so a development-side gate would have to fake
+the input, and a faked input proves the fake. The gate belongs beside the codec,
+where a real export field is available and the factor is a fact of the module
+being tested rather than an assumption about somebody else's.
+
+That is a better outcome than a stub-backed green test, which would have
+reported the factor as guarded while proving only that a hand-made object
+behaves as it was hand-made to.
+
+### the-step-id-leak-is-a-public-api-migration-not-a-test-rename | high | Five files, two exported function names, five refusal messages, seven docstrings and one test name
+
+The gate refusing a plan step id in a development test name has been red for
+several iterations on one symbol, and the owning campaign has committed twice
+since without addressing it. With its files now clean rather than mid-edit, the
+question of whether this work should simply do the rename was worth asking
+again. The answer is still no, and now for a measured reason rather than a
+cautious one.
+
+The vocabulary is not a test name. `S14/S15` names the cohort across five files:
+two exported function names - `check_m200_2024_s14_s15` and
+`publish_m200_2024_s14_s15` - five refusal messages, seven docstrings, and the
+one test name the gate can see. Renaming the symbol the gate reports would leave
+every other site standing, which is precisely the repair the gate's own message
+forbids, and renaming all of them is a public-API migration across another
+campaign's surface with its CLI and tests attached.
+
+The Step now carries that scope instead of the word "rename", because a Step
+saying "rename the vocabulary" reads as an afternoon and a Step naming two
+exported functions and five refusals reads as what it is. That difference
+decides whether the owner picks it up or defers it again, and the previous
+wording was quietly arguing for deferral by understating the work.
+
+The gate stays red, legibly: one symbol named, both wrong repairs stated, and a
+Step describing the real remedy at its real size.
