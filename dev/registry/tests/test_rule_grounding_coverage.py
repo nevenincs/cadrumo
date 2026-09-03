@@ -333,3 +333,48 @@ def test_one_label_in_two_designs_is_two_readings() -> None:
     work = grounding_worklist((_found("2023.extracted.md"), _found("2024.extracted.md")))
     assert len(work) == 2
     assert {item.design for item in work} == {"2023.extracted.md", "2024.extracted.md"}
+
+
+def test_a_work_item_is_flagged_when_its_note_drifts() -> None:
+    """The flag comes from the drift set the caller passes, not from a guess."""
+    from ..analysis.rule_grounding_coverage import GroundingFinding, grounding_worklist
+
+    finding = GroundingFinding(
+        modelo="303",
+        revision="2023",
+        cell="DP30302!A1",
+        design="d.extracted.md",
+        aeat_type="Num",
+        length=1,
+        kind="grounded_by_own_note",
+        notes=("DP30302:nota 5",),
+        detail="",
+    )
+    drifting = frozenset({("303", "DP30302", "nota 5")})
+    assert grounding_worklist((finding,), drifting=drifting)[0].grounding_drifts is True
+    other = frozenset({("303", "DP30302", "nota 9")})
+    assert grounding_worklist((finding,), drifting=other)[0].grounding_drifts is False
+
+
+def test_an_unmeasured_caller_gets_no_claim_about_drift() -> None:
+    """The default is no claim, not a claim of stability.
+
+    A caller that has not measured drift must not be told a note is stable, so
+    the flag defaults false and means "not reported as drifting" rather than
+    "checked and found stable". The distinction matters because the two read the
+    same in output and only one is evidence.
+    """
+    from ..analysis.rule_grounding_coverage import GroundingFinding, grounding_worklist
+
+    finding = GroundingFinding(
+        modelo="303",
+        revision="2023",
+        cell="DP30302!A1",
+        design="d.extracted.md",
+        aeat_type="Num",
+        length=1,
+        kind="grounded_by_own_note",
+        notes=("DP30302:nota 5",),
+        detail="",
+    )
+    assert grounding_worklist((finding,))[0].grounding_drifts is False

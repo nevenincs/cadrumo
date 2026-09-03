@@ -327,6 +327,8 @@ def main() -> int:
     kinds = " ".join(f"{kind}={tally[kind]}" for kind in KINDS)
     sys.stdout.write(
         f"summary fields={len(findings)} {kinds} distinct_notes_to_read={len(work)} "
+        f"notes_whose_wording_drifts={sum(1 for item in work if item.grounding_drifts)} "
+        f"fields_on_drifting_wording={sum(len(item.fields) for item in work if item.grounding_drifts)} "
         f"ungrounded_modelo_type_pairs={len(ungrounded_types)}\n"
     )
     return 0
