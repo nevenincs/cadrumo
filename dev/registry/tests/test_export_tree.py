@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import tomllib
 from dataclasses import replace
 from pathlib import Path
 from typing import Final, TypedDict, get_args
@@ -99,6 +100,126 @@ export_refs = ["generated.displaced"]
     rendered = path.read_text(encoding="utf-8")
     assert 'id = "addressed"\nsource_refs = ["source"]\nexport_refs = ["generated.addressed"]' in rendered
     assert 'id = "displaced"\nsource_refs = ["source"]\nexport_refs' not in rendered
+
+
+def test_generated_casilla_export_refs_accepts_toml_literal_and_basic_ids_but_not_nested_decoys(
+    tmp_path: Path,
+) -> None:
+    """Declaration IDs are TOML strings, not a generator-specific quote style."""
+    casillas = tmp_path / "casillas"
+    casillas.mkdir()
+    path = casillas / "quotes-and-decoy.toml"
+    path.write_text(
+        """[[revisions.current.casillas]]
+id = 'literal-id'
+source_refs = ["source"]
+
+[[revisions.current.casillas]]
+id = "basic-id"
+source_refs = ["source"]
+
+[[revisions.current.casillas]]
+source_refs = ["source"]
+[revisions.current.casillas.constraints]
+id = "nested-decoy"
+""",
+        encoding="utf-8",
+    )
+
+    written = write_generated_casilla_export_refs(
+        tmp_path,
+        export_refs_by_casilla={
+            "literal-id": ("generated.literal",),
+            "basic-id": ("generated.basic",),
+        },
+    )
+
+    assert written == (path,)
+    rendered = path.read_text(encoding="utf-8")
+    assert "id = 'literal-id'\nsource_refs = [\"source\"]\nexport_refs = [\"generated.literal\"]" in rendered
+    assert 'id = "basic-id"\nsource_refs = ["source"]\nexport_refs = ["generated.basic"]' in rendered
+    assert "nested-decoy\nexport_refs" not in rendered
+
+    with pytest.raises(RegistryValidationError, match="nested-decoy"):
+        write_generated_casilla_export_refs(
+            tmp_path,
+            export_refs_by_casilla={"nested-decoy": ("generated.decoy",)},
+        )
+
+
+def test_generated_casilla_export_refs_follows_the_entire_multiline_source_refs_value(tmp_path: Path) -> None:
+    """Derived refs never split a TOML array while preserving declaration bytes."""
+    casillas = tmp_path / "casillas"
+    casillas.mkdir()
+    path = casillas / "multiline-source-refs.toml"
+    path.write_text(
+        """[[revisions.current.casillas]]
+id = '00067'
+source_refs = [
+    'aeat-dr-200-2024',
+    'aeat-modelo-200-manual-2024',
+]
+""",
+        encoding="utf-8",
+    )
+
+    write_generated_casilla_export_refs(
+        tmp_path,
+        export_refs_by_casilla={"00067": ("m200-2024.record.field",)},
+    )
+
+    rendered = path.read_text(encoding="utf-8")
+    assert "    'aeat-modelo-200-manual-2024',\n]\nexport_refs" in rendered
+    assert tomllib.loads(rendered)["revisions"]["current"]["casillas"][0]["export_refs"] == [
+        "m200-2024.record.field",
+    ]
+
+
+def test_generated_casilla_export_refs_ignores_array_brackets_inside_toml_comments(tmp_path: Path) -> None:
+    """A comment cannot make the textual writer terminate a real array early."""
+    casillas = tmp_path / "casillas"
+    casillas.mkdir()
+    path = casillas / "commented-source-refs.toml"
+    path.write_text(
+        """[[revisions.current.casillas]]
+id = '00067'
+source_refs = [
+    'aeat-dr-200-2024', # ] a comment is not TOML structure
+    'aeat-modelo-200-manual-2024',
+]
+""",
+        encoding="utf-8",
+    )
+
+    write_generated_casilla_export_refs(
+        tmp_path,
+        export_refs_by_casilla={"00067": ("m200-2024.record.field",)},
+    )
+
+    rendered = path.read_text(encoding="utf-8")
+    assert "'aeat-modelo-200-manual-2024',\n]\nexport_refs" in rendered
+    assert tomllib.loads(rendered)["revisions"]["current"]["casillas"][0]["export_refs"] == [
+        "m200-2024.record.field",
+    ]
+
+
+def test_generated_casilla_export_refs_refuses_an_unterminated_multiline_source_refs_array(tmp_path: Path) -> None:
+    casillas = tmp_path / "casillas"
+    casillas.mkdir()
+    (casillas / "unterminated-source-refs.toml").write_text(
+        """[[revisions.current.casillas]]
+id = '00067'
+source_refs = [
+    'aeat-dr-200-2024',
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RegistryValidationError, match="unterminated source_refs array"):
+        write_generated_casilla_export_refs(
+            tmp_path,
+            export_refs_by_casilla={"00067": ("m200-2024.record.field",)},
+        )
 
 
 def _intermediate(

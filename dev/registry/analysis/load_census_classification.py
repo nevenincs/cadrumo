@@ -53,7 +53,7 @@ from .load_census import REGISTRY_PACKAGE
 Classification = Literal["live", "conditionally_reachable", "dead"]
 
 
-class ClassificationError(RuntimeError):
+class LoadCensusClassificationError(RuntimeError):
     """Raised when the reviewed table cannot resolve a module to one classification."""
 
 
@@ -70,9 +70,9 @@ class ClassificationRule:
     def __post_init__(self) -> None:
         """Refuse a rule that covers nothing, or a conditional decision with no named trigger."""
         if not self.members and not self.prefixes:
-            raise ClassificationError(f"rule {self.trigger!r} matches nothing")
+            raise LoadCensusClassificationError(f"rule {self.trigger!r} matches nothing")
         if self.classification == "conditionally_reachable" and not self.trigger.strip():
-            raise ClassificationError("a conditionally reachable rule must name its trigger")
+            raise LoadCensusClassificationError("a conditionally reachable rule must name its trigger")
 
 
 def _registry(*names: str) -> tuple[str, ...]:
@@ -810,7 +810,7 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
 def _resolve(module: str) -> ClassificationRule | None:
     exact = [rule for rule in RULES if module in rule.members]
     if len(exact) > 1:
-        raise ClassificationError(f"{module} is claimed by {len(exact)} rules; a module carries exactly one")
+        raise LoadCensusClassificationError(f"{module} is claimed by {len(exact)} rules; a module carries exactly one")
     if exact:
         return exact[0]
     best: ClassificationRule | None = None
@@ -819,7 +819,7 @@ def _resolve(module: str) -> ClassificationRule | None:
         for prefix in rule.prefixes:
             if module == prefix or module.startswith(prefix + "."):
                 if len(prefix) == best_length:
-                    raise ClassificationError(f"{module} matches two rules at prefix depth {len(prefix)}")
+                    raise LoadCensusClassificationError(f"{module} matches two rules at prefix depth {len(prefix)}")
                 if len(prefix) > best_length:
                     best, best_length = rule, len(prefix)
     return best

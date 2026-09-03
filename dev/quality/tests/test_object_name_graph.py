@@ -164,7 +164,7 @@ def test_manifest_projection_expands_inventory_collision_paths_and_reconciles_re
         finding_id="finding-alpha",
         old_locator=locator,
         old_path="src/cadrumo/alpha.py",
-        changed_paths=("src/cadrumo/alpha.py", "src/cadrumo/beta.py"),
+        changed_paths=("src/cadrumo/alpha.py",),
         expected_reference_classes=("definition",),
     )
     manifest = cast(RenameManifestLike, _Manifest((operation,)))

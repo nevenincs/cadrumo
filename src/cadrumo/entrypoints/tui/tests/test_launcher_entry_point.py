@@ -8,6 +8,7 @@ against, so none of them asserts on the symbol's existence or signature.
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import replace
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
@@ -26,9 +27,15 @@ from ....application.search.workbench import (
 )
 from ....core.i18n.render import tr
 from ..__main__ import run
+from ..account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from ..app import CadrumoTuiApp
 from ..devtools.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
-from ..launcher import InstalledWorkbenchRootInputsV1, compose_installed_workbench_root, main
+from ..launcher import (
+    InstalledWorkbenchRootInputsV1,
+    compose_installed_workbench_root,
+    main,
+    run_authenticated_workbench_sessions,
+)
 
 if TYPE_CHECKING:
     from textual.pilot import Pilot
@@ -112,7 +119,7 @@ def _root_inputs(
 
 def _root_inputs_provider(service: WorkbenchSearchService | None = None):
     """Return an explicit root generation provider without storage reads."""
-    return lambda: _root_inputs(service)
+    return lambda _operation_runtime: _root_inputs(service)
 
 
 def test_root_composition_preserves_existing_area_factories_and_refuses_search_admission_drift() -> None:
@@ -190,6 +197,39 @@ def test_entry_point_hands_the_session_its_composed_services() -> None:
     assert services and services[0] is not None
 
 
+def test_launcher_recomposes_with_a_fresh_provider_after_the_root_settles() -> None:
+    """The outer owner receives no secret and never reuses the previous root."""
+    mounted = 0
+    requests: list[AccountRecomposeRequiredV1] = []
+
+    async def request_recomposition(pilot: Pilot[object]) -> None:
+        nonlocal mounted
+        await pilot.pause()
+        mounted += 1
+        if mounted == 1:
+            pilot.app.exit(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.PASSWORD_CHANGED))
+        else:
+            pilot.app.exit()
+
+    def recompose(outcome: AccountRecomposeRequiredV1):
+        requests.append(outcome)
+        return _root_inputs_provider()
+
+    assert (
+        asyncio.run(
+            run_authenticated_workbench_sessions(
+                headless=True,
+                auto_pilot=request_recomposition,
+                workbench_root_inputs_provider=_root_inputs_provider(),
+                recompose_authenticated_session=recompose,
+            )
+        )
+        is None
+    )
+    assert mounted == 2
+    assert requests == [AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.PASSWORD_CHANGED)]
+
+
 def test_entry_point_injects_and_rebuilds_the_installed_search_provider() -> None:
     """A real session installs one current generation and replaces it on return."""
     initial = WorkbenchSearchService(())
@@ -198,7 +238,7 @@ def test_entry_point_injects_and_rebuilds_the_installed_search_provider() -> Non
     supplied = [_root_inputs(initial, refresh_search=refreshed_inputs)]
     calls: list[InstalledWorkbenchRootInputsV1] = []
 
-    def provider() -> InstalledWorkbenchRootInputsV1:
+    def provider(_operation_runtime: object) -> InstalledWorkbenchRootInputsV1:
         current = supplied.pop(0)
         calls.append(current)
         return current

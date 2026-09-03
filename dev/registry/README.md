@@ -64,8 +64,12 @@ Run them all against one loaded registry:
 uv run --no-sync python -m dev.registry.analysis.screens
 ```
 
-Each screen also runs on its own, prints one greppable row per finding, and
-always exits 0. A screen reports; it never gates. What each one owns:
+Each screen also runs on its own, prints one greppable row per result, and
+always exits 0. A screen reports; it never gates. Most results are findings, one
+per thing measured; two screens collapse theirs onto the unit somebody fixes -
+a reference sitting outside a manifest, a wire-type transition - so their rows
+are a report rather than a finding, and the runner's `counts` label on each line
+says which. What each one owns:
 
 | Screen | Condition it measures |
 | --- | --- |

@@ -7,7 +7,6 @@ from types import SimpleNamespace
 from typing import cast
 
 import pytest
-from textual.screen import Screen
 
 from ....application.aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
 from ....application.ledger.models import LedgerReviewQueryResult, LedgerStatusReport
@@ -26,6 +25,7 @@ from ....application.modelo.declarations_workspace import (
     project_declarations_workspace,
 )
 from ....application.modelo.workspace_models import ModeloWorkspaceProjectionV1
+from ....application.operations.composition import OperationComposedServices
 from ....application.operations.registry import OperationPublicContractSetV1
 from ....application.operator_actions.catalogue import lookup_action
 from ....application.operator_actions.models import ActionReference
@@ -46,6 +46,8 @@ from ....application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION,
     build_censal_operation_registration,
 )
+from ....application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
+from ....application.user_profile.overview import ProfileOverview
 from ....application.workbench_generation import (
     CallableWorkbenchGenerationReadDoorV1,
     InstalledWorkbenchGenerationProviderV1,
@@ -57,16 +59,20 @@ from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.filing_record import ModeloRecordCatalogue
 from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ....domain.transactions.models import TransactionCatalogue
-from ..account import AccountFactoriesV1
 from ..declarations.calendar import DeclarationsCalendarScreen
 from ..declarations.controller import DeclarationsWorkspaceScreen
 from ..declarations.routes import resolve_declarations_screen
 from ..launcher import (
+    InstalledWorkbenchAccountInputsV1,
     InstalledWorkbenchFactoryDependenciesV1,
+    TuiOperationCompositionV1,
     compose_installed_workbench_generation_provider,
     compose_installed_workbench_root,
 )
 from ..navigation import TuiScreenContextV1
+from ..profile.overview import ProfileManagerScreen
+from ..secret.login import LoginScreen
+from ..secret.passphrase import PassphraseScreen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -179,28 +185,63 @@ def _action(action_id: str) -> ActionReference:
     return ActionReference(action_id=lookup_action(action_id).action_id)
 
 
-def _dependencies() -> InstalledWorkbenchFactoryDependenciesV1:
-    def profile(_: TuiScreenContextV1) -> Screen[None]:
-        return Screen()
+def _account_inputs(
+    *,
+    profile_id: str = _BUCKET,
+    overview_profile_id: str = _BUCKET,
+    label: str = "Synthetic profile",
+    choice_label: str = "Synthetic profile",
+) -> InstalledWorkbenchAccountInputsV1:
+    def persist(_path: str, _value: str) -> ProfileOverview:
+        raise AssertionError("profile persistence must not run while composing the workbench")
 
+    def authenticate(_profile_id: str, _password: str) -> ProfileLoginAttempt:
+        raise AssertionError("authentication must not run while composing the workbench")
+
+    def assess(_password: str):
+        raise AssertionError("password assessment must not run while composing the workbench")
+
+    def rotate(_current: str, _replacement: str, _confirmation: str):
+        raise AssertionError("password rotation must not run while composing the workbench")
+
+    return InstalledWorkbenchAccountInputsV1(
+        profile_id=profile_id,
+        profile_overview=cast(
+            "ProfileOverview",
+            SimpleNamespace(profile_id=overview_profile_id, label=label),
+        ),
+        persist_profile_field=persist,
+        login_choices=(ProfileLoginChoice(profile_id=profile_id, label=choice_label),),
+        authenticate=authenticate,
+        assess_password=assess,
+        rotate_password=rotate,
+    )
+
+
+def _dependencies() -> InstalledWorkbenchFactoryDependenciesV1:
     return InstalledWorkbenchFactoryDependenciesV1(
-        account_factories=cast("AccountFactoriesV1", SimpleNamespace(profile=profile)),
+        account=_account_inputs(),
         profile_admission=_admission("workbench.profile", WorkbenchDestinationAdmissionState.AVAILABLE),
         ledger_review_action=_action("operator.ledger.review"),
         declarations_work_action=_action("operator.modelo.work.list"),
         declarations_revisions_action=_action("operator.modelo.work.revisions"),
         declarations_filing_action=_action("operator.modelo.filing_record.list"),
-        operation_contracts=OperationPublicContractSetV1.build(
-            (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
-        ),
     )
+
+
+def _operation_runtime() -> TuiOperationCompositionV1:
+    contracts = OperationPublicContractSetV1.build(
+        (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
+    )
+    services = cast("OperationComposedServices", SimpleNamespace(public_contracts=contracts))
+    return TuiOperationCompositionV1(services=services, public_contracts=contracts)
 
 
 def test_generation_provider_binds_real_declarations_factory_and_calendar_projection() -> None:
     """The installed Declarations route reaches the application-built calendar."""
 
     provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(lambda: _inputs(_NOW)))
-    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())()
+    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
     root = compose_installed_workbench_root(root_inputs)
 
     route = root.destination_catalogue.resolve("workbench.declarations")
@@ -210,6 +251,73 @@ def test_generation_provider_binds_real_declarations_factory_and_calendar_projec
     assert declarations.controller.calendar_projection is not None
     target = declarations.controller.target("declarations.calendar")
     assert isinstance(resolve_declarations_screen(declarations.controller, target), DeclarationsCalendarScreen)
+
+
+def test_generation_provider_keeps_modelo_navigation_unavailable_without_a_captured_workspace_projection() -> None:
+    """The installed factory never creates a second read or treats no capture as empty work."""
+    provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(lambda: _inputs(_NOW)))
+    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
+    root = compose_installed_workbench_root(root_inputs)
+    route = root.destination_catalogue.resolve("workbench.declarations")
+    assert route.factory is not None
+
+    declarations = route.factory(TuiScreenContextV1(destination="workbench.declarations"))
+
+    assert isinstance(declarations, DeclarationsWorkspaceScreen)
+    assert declarations.controller.modelo_workspace_factory is None
+
+
+def test_generation_provider_composes_the_real_account_screen_owners_without_effects() -> None:
+    """The installed root receives real account doors, not a test-only placeholder."""
+    provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(lambda: _inputs(_NOW)))
+    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
+    context = TuiScreenContextV1(destination="workbench.profile")
+
+    assert isinstance(root_inputs.account_factories.profile(context), ProfileManagerScreen)
+    assert isinstance(root_inputs.account_factories.change_user(), LoginScreen)
+    assert isinstance(root_inputs.account_factories.password(), PassphraseScreen)
+
+
+@pytest.mark.parametrize(
+    ("overview_profile_id", "choice_label"),
+    [
+        ("22222222-2222-4222-8222-222222222222", "Synthetic profile"),
+        (_BUCKET, "Different profile"),
+    ],
+)
+def test_account_composition_refuses_stale_profile_identity_or_label(
+    overview_profile_id: str,
+    choice_label: str,
+) -> None:
+    """A root cannot render one account while an account door targets another."""
+    with pytest.raises(ValueError, match="authenticated profile"):
+        _account_inputs(overview_profile_id=overview_profile_id, choice_label=choice_label)
+
+
+def test_generation_factory_receives_exact_session_operation_contract_object(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """AEAT Sync authority comes from the active service graph, not dependencies."""
+    captured: list[OperationPublicContractSetV1] = []
+
+    def capture_contracts(
+        _current: list[object],
+        _dependencies: InstalledWorkbenchFactoryDependenciesV1,
+        contracts: OperationPublicContractSetV1,
+    ) -> None:
+        captured.append(contracts)
+
+    monkeypatch.setattr(
+        "cadrumo.entrypoints.tui.launcher._aeat_sync_generation_factory",
+        capture_contracts,
+    )
+    runtime = _operation_runtime()
+    provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(lambda: _inputs(_NOW)))
+
+    compose_installed_workbench_generation_provider(provider, _dependencies())(runtime)
+
+    assert captured == [runtime.public_contracts]
+    assert captured[0] is runtime.services.public_contracts
 
 
 def test_available_declarations_admission_requires_calendar_projection() -> None:
@@ -238,7 +346,7 @@ def test_refresh_reuses_one_generation_for_search_then_home_and_keeps_missing_so
         return value
 
     provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(read))
-    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())()
+    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
 
     assert calls == 1
     assert root_inputs.search_inputs is None

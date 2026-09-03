@@ -29,6 +29,7 @@ what makes it evidence.
 from __future__ import annotations
 
 import collections
+import pathlib
 from typing import Final
 
 import pytest
@@ -249,6 +250,11 @@ def test_every_screen_module_has_a_test_module() -> None:
         if path.name != "screens.py" and "\ndef screen_authority(" in path.read_text(encoding=_UTF_8)
     }
     untested = sorted(name for name in screens if not (registry_root / "tests" / f"test_{name}.py").is_file())
+
+    # The discovered set must be proved non-empty before its emptiness means
+    # anything: a moved analysis package would leave `screens` empty and this
+    # assertion would pass having checked no screen at all.
+    assert screens, "the analysis package walk found no screen module, so this gate checked nothing"
     assert not untested, f"screens carrying no test module, so their detection is unproven: {untested}"
 
 
@@ -277,6 +283,30 @@ def test_every_enrolled_screen_runs_over_the_whole_corpus(
         assert meaning.strip(), f"{name} does not say what its count means"
 
 
+def _reaches_binding_derivation(source: str) -> bool:
+    """Whether ``source`` REACHES the binding derivation, rather than naming it.
+
+    An import, a bare name or an attribute access is a reach; the same
+    characters inside a docstring, a comment or a string literal are not, which
+    is what lets a module explain the rule it obeys.
+
+    Defined once and used by both the gate below and its proof. Written twice,
+    the proof exercises its own copy: a branch dropped from the gate would leave
+    the proof green, and the detector would be proved against a
+    reimplementation of itself.
+    """
+    import ast
+
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.ImportFrom) and any(alias.name == _BINDING_DERIVATION for alias in node.names):
+            return True
+        if isinstance(node, ast.Name) and node.id == _BINDING_DERIVATION:
+            return True
+        if isinstance(node, ast.Attribute) and node.attr == _BINDING_DERIVATION:
+            return True
+    return False
+
+
 def test_no_screen_reassembles_the_resolved_export_surface() -> None:
     """A screen asks for the resolved surface; it never rebuilds one.
 
@@ -298,7 +328,6 @@ def test_no_screen_reassembles_the_resolved_export_surface() -> None:
     encourage. Names in comments, docstrings and string literals are not
     reaches; imports and attribute access are.
     """
-    import ast
     import pathlib
 
     analysis = pathlib.Path(__file__).resolve().parent.parent / "analysis"
@@ -306,16 +335,7 @@ def test_no_screen_reassembles_the_resolved_export_surface() -> None:
     scanned = 0
     for path in sorted(analysis.rglob("*.py")):
         scanned += 1
-        tree = ast.parse(path.read_text(encoding=_UTF_8))
-        reached = False
-        for node in ast.walk(tree):
-            if isinstance(node, ast.ImportFrom):
-                reached |= any(alias.name == _BINDING_DERIVATION for alias in node.names)
-            elif isinstance(node, ast.Name):
-                reached |= node.id == _BINDING_DERIVATION
-            elif isinstance(node, ast.Attribute):
-                reached |= node.attr == _BINDING_DERIVATION
-        if reached:
+        if _reaches_binding_derivation(path.read_text(encoding=_UTF_8)):
             offenders.append(path.stem)
 
     # A gate asserting an absence must first prove it looked. Without this a
@@ -335,24 +355,13 @@ def test_the_reassembly_gate_reads_syntax_not_text() -> None:
     second it makes the rule undocumentable, and a rule nobody may explain is
     one the next author re-breaks.
     """
-    import ast
-
-    def reaches(source: str) -> bool:
-        tree = ast.parse(source)
-        for node in ast.walk(tree):
-            if isinstance(node, ast.ImportFrom) and any(a.name == _BINDING_DERIVATION for a in node.names):
-                return True
-            if isinstance(node, ast.Name) and node.id == _BINDING_DERIVATION:
-                return True
-            if isinstance(node, ast.Attribute) and node.attr == _BINDING_DERIVATION:
-                return True
-        return False
 
     newline = chr(10)
-    assert reaches(f"from x.y import {_BINDING_DERIVATION}{newline}")
-    assert reaches(f"import x.y{newline}rows = x.y.{_BINDING_DERIVATION}(revision){newline}")
-    assert not reaches(f'"""A screen must not call {_BINDING_DERIVATION}; it asks the accessor."""{newline}')
-    assert not reaches(f"# never {_BINDING_DERIVATION}{newline}value = 1{newline}")
+    assert _reaches_binding_derivation(f"from x.y import {_BINDING_DERIVATION}{newline}")
+    assert _reaches_binding_derivation(f"import x.y{newline}rows = x.y.{_BINDING_DERIVATION}(revision){newline}")
+    docstring_only = f'"""A screen must not call {_BINDING_DERIVATION}; it asks the accessor."""{newline}'
+    assert not _reaches_binding_derivation(docstring_only)
+    assert not _reaches_binding_derivation(f"# never {_BINDING_DERIVATION}{newline}value = 1{newline}")
 
 
 def test_running_every_screen_leaves_the_shipped_registry_untouched(
@@ -779,3 +788,140 @@ def test_a_screen_that_counts_the_facts_it_reads_states_the_right_number() -> No
 
     assert checked, "no screen stated a fact count, so this gate checked nothing"
     assert not wrong, "\n".join(wrong)
+
+
+def _names_imported_by_tests(root: pathlib.Path) -> set[str]:
+    """Return every module name the test modules under ``root`` import, either form.
+
+    Both forms matter and missing one is not a small error. A module reached as
+    ``from package import module`` appears in the import's NAMES, not in its
+    module path, and an extractor reading only the path reported seven modules
+    as untested that four separate tests import.
+    """
+    import ast
+
+    names: set[str] = set()
+    for path in sorted(root.rglob("test_*.py")):
+        tree = ast.parse(path.read_text(encoding=_UTF_8))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom):
+                if node.module:
+                    names.add(node.module.rsplit(".", 1)[-1])
+                names.update(alias.name.rsplit(".", 1)[-1] for alias in node.names)
+            elif isinstance(node, ast.Import):
+                names.update(alias.name.rsplit(".", 1)[-1] for alias in node.names)
+    return names
+
+
+def _public_modules(roots: tuple[pathlib.Path, ...]) -> list[pathlib.Path]:
+    """Return modules declaring at least one public function or class."""
+    import ast
+
+    found: list[pathlib.Path] = []
+    for root in roots:
+        for path in sorted(root.glob("*.py")):
+            if path.name in {"__init__.py", "__main__.py"}:
+                continue
+            tree = ast.parse(path.read_text(encoding=_UTF_8))
+            if any(
+                isinstance(node, ast.FunctionDef | ast.ClassDef) and not node.name.startswith("_")
+                for node in tree.body
+            ):
+                found.append(path)
+    return found
+
+
+def test_every_public_module_in_the_registry_tooling_is_imported_by_a_test() -> None:
+    """A module no test imports is a module whose behaviour nobody asserts.
+
+    Asked by import rather than by filename, because the naming here follows no
+    single rule: pipeline modules carry a leading underscore their tests drop,
+    tests are named for the subject rather than the module, and the conformance
+    package keeps its own tests directory. Three filename rules were tried and
+    each reported a backlog that did not exist - eighteen modules, then twelve,
+    then eight, against a true answer of one.
+
+    The one real case was a generator whose `--check` mode refuses a stale
+    artefact and which nothing invoked, so a current artefact and an unrun
+    generator looked identical from outside.
+    """
+    registry = pathlib.Path(__file__).resolve().parent.parent
+    roots = (registry / "analysis", registry / "pipeline", registry / "conformance")
+    imported = _names_imported_by_tests(registry)
+    modules = _public_modules(roots)
+
+    assert modules, "no public module was found, so this gate checked nothing"
+    assert imported, "no test imports were read, so every module would look untested"
+
+    unimported = sorted(path.stem for path in modules if path.stem not in imported)
+    assert not unimported, (
+        "these modules declare a public surface that no test imports, so nothing asserts what they do: "
+        f"{unimported}"
+    )
+
+
+def test_the_import_coverage_gate_sees_a_module_no_test_imports(tmp_path: pathlib.Path) -> None:
+    """Planted under an injectable root, so the proof never touches the tree.
+
+    Both directions are asserted. Without the first the gate protects nothing;
+    without the second it would fail on every module reached through the import
+    form the earlier extractor could not read, which is exactly how the phantom
+    backlog was produced.
+    """
+    package = tmp_path / "analysis"
+    package.mkdir()
+    (package / "covered.py").write_text("def public() -> int:\n    return 1\n", encoding=_UTF_8)
+    (package / "orphan.py").write_text("def public() -> int:\n    return 2\n", encoding=_UTF_8)
+    tests = tmp_path / "tests"
+    tests.mkdir()
+    (tests / "test_covered.py").write_text("from ..analysis import covered\n", encoding=_UTF_8)
+
+    imported = _names_imported_by_tests(tmp_path)
+    modules = _public_modules((package,))
+    unimported = sorted(path.stem for path in modules if path.stem not in imported)
+
+    assert unimported == ["orphan"], "the gate must see the planted module and only that one"
+
+
+def test_every_screen_finding_type_declares_the_identity_the_contract_promises() -> None:
+    """A caller may key a FINDING on its modelo, and this holds that line.
+
+    Asserted over the finding types each screen defines, not over the rows this
+    runner reports, because two entries deliberately collapse their screen onto
+    a different unit - a reference outside a manifest, a wire-type transition -
+    and those rows are a report rather than a finding. Running the gate over the
+    runner's output found exactly that and was wrong to call it a violation: the
+    contract had been written as though a report and a finding were the same
+    thing.
+
+    One field, deliberately. Eight of the nine types also carry a revision and
+    one does not, because a continuity chain spans revisions and pinning one
+    would name a revision the defect does not belong to. A discriminator appears
+    only where a screen reports more than one condition.
+    """
+    import dataclasses
+    import importlib
+
+    from ..analysis.screens import FINDING_IDENTITY_CONTRACT, SCREENS
+
+    assert FINDING_IDENTITY_CONTRACT == ("modelo",), "the contract changed; this gate encodes it"
+
+    checked = 0
+    missing: list[str] = []
+    for entry in SCREENS:
+        module = importlib.import_module(f"dev.registry.analysis.{entry.name}")
+        for name, obj in vars(module).items():
+            if not dataclasses.is_dataclass(obj) or getattr(obj, "__module__", None) != module.__name__:
+                continue
+            if not name.endswith(("Finding", "Transition")):
+                continue
+            checked += 1
+            fields = {field.name for field in dataclasses.fields(obj)}
+            missing.extend(
+                f"{entry.name}.{name} declares no {required!r}"
+                for required in FINDING_IDENTITY_CONTRACT
+                if required not in fields
+            )
+
+    assert checked, "no finding type was found, so this gate checked nothing"
+    assert not missing, chr(10).join(sorted(missing))

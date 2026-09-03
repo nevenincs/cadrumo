@@ -5,6 +5,7 @@ from __future__ import annotations
 import inspect
 from collections.abc import Callable
 from enum import StrEnum
+from functools import cached_property
 from typing import Annotated, Literal, Protocol, TypedDict, cast, runtime_checkable
 
 from pydantic import (
@@ -762,7 +763,7 @@ class OperationRegistry(BaseModel):
         if expected != contract:
             raise ValueError("public operation definition contract is not a live-registry fixed point")
 
-    @property
+    @cached_property
     def public_contract_set(self) -> OperationPublicContractSetV1:
         """Return the validated public set; refuse an uncomposed internal registry."""
         if not self.public_registrations:

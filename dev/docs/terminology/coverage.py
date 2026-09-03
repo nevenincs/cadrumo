@@ -20,7 +20,7 @@ from typing import Annotated, Final
 import typer
 
 from ..._paths import UTF_8
-from ._coverage import CoverageReport, compute_coverage_report, coverage_report_path
+from ._coverage import TerminologyCoverageReport, compute_coverage_report, coverage_report_path
 
 _UTF_8: Final[str] = UTF_8
 
@@ -51,7 +51,7 @@ def report(
     typer.echo(f"wrote coverage report -> {destination}")
 
 
-def _print_summary(result: CoverageReport) -> None:
+def _print_summary(result: TerminologyCoverageReport) -> None:
     for entry in result.kinds:
         percentage = entry.coverage_fraction * 100.0
         typer.echo(

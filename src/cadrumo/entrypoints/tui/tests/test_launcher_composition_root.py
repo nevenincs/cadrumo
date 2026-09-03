@@ -10,7 +10,7 @@ import pytest
 
 from ....application.operations.composition import OperationComposedServices
 from ....application.operations.registry import OperationPublicContractSetV1
-from ..launcher import operation_services_scope
+from ..launcher import TuiOperationCompositionV1, operation_services_scope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -92,3 +92,17 @@ async def test_operation_scope_exposes_same_graph_contracts_and_settles_once(
         assert services.shutdown_calls == 0
 
     assert services.shutdown_calls == 1
+
+
+def test_operation_composition_refuses_a_detached_public_contract_set() -> None:
+    """A stale or fabricated set cannot be paired with otherwise live services."""
+    composed = cast(OperationPublicContractSetV1, object())
+    detached = cast(OperationPublicContractSetV1, object())
+
+    class _Services:
+        public_contracts = composed
+
+    services = cast(OperationComposedServices, _Services())
+
+    with pytest.raises(ValueError, match="exact composed service contracts"):
+        TuiOperationCompositionV1(services=services, public_contracts=detached)

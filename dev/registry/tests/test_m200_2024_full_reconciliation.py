@@ -69,8 +69,10 @@ def test_rebind_census_preserves_exact_map_ownership_and_withholds_identity_anom
     by_id = {row.casilla_id: row for row in census.rows}
 
     assert sum(row.source_ref_state == "mechanical_rebind" for row in current) == 3171
-    assert sum(row.source_ref_state == "unmapped_no_rebind" for row in current) == 2
-    assert sum(bool(row.fields) for row in current) == 3327
+    # Receipt-backed promotions remain map-unowned until W04 admits their
+    # qualified identities; the source-rebind planner verifies them separately.
+    assert sum(row.source_ref_state == "unmapped_no_rebind" for row in current) == 154
+    assert sum(bool(row.fields) for row in current) == 3175
     assert sum(row.identity_review_required for row in current) == 15
     assert all(
         row.source_ref_state != "candidate_non_authoritative"

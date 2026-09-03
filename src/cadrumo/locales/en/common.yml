@@ -1379,6 +1379,15 @@ tui:
     unavailable:
       title: Ledger area unavailable
   root:
+    account:
+      appearance: Appearance
+      change_user: Change user
+      default_profile: Account
+      language: Language
+      password: Password
+      profile: Profile
+      sign_out: Sign out
+      unavailable: Account controls are unavailable for this session.
     no_areas: No area is available in this session yet.
     title: Cadrumo terminal session
   search:

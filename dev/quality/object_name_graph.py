@@ -388,7 +388,7 @@ def build_operation_components(
     edges = tuple(sorted(collected, key=_edge_key))
 
     for edge in edges:
-        if edge.path not in allowlists[edge.operation_id]:
+        if edge.kind is not ReferenceKind.COLLISION_MEMBER and edge.path not in allowlists[edge.operation_id]:
             raise ObjectNameGraphError(
                 f"hard reference {edge.path!r} ({edge.kind}) is outside the changed-path allowlist "
                 f"for {edge.operation_id!r}"

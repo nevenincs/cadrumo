@@ -1424,6 +1424,15 @@ tui:
     unavailable:
       title: Área del libro contable no disponible
   root:
+    account:
+      appearance: Apariencia
+      change_user: Cambiar usuario
+      default_profile: Cuenta
+      language: Idioma
+      password: Contraseña
+      profile: Perfil
+      sign_out: Cerrar sesión
+      unavailable: Los controles de la cuenta no están disponibles en esta sesión.
     no_areas: Ninguna área está disponible todavía en esta sesión.
     title: 'Cadrumo: sesión de terminal'
   search:

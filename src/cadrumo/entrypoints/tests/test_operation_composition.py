@@ -46,7 +46,7 @@ def test_production_composition_reaches_the_owner_registry_fixed_point(tmp_path:
             item.definition_id for item in expected_registry.definitions
         )
         assert registry.public_contract_set == expected_registry.public_contract_set
-        assert dependencies.public_contracts == registry.public_contract_set
+        assert dependencies.public_contracts is registry.public_contract_set
         assert len(registry.public_contract_set.contract_set_digest) == 64
         assert isinstance(dependencies.observation, OperationObservationService)
         assert isinstance(dependencies.submission, OperationSubmissionService)

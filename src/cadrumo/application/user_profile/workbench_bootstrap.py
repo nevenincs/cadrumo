@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Protocol
 
+from ...core.profile_discovery import ProfileSummaryOutcome
 from .login_interaction import (
     ProfileLoginChoice,
     preselected_profile_login_id,
@@ -20,6 +21,7 @@ class WorkbenchBootstrapInventoryState(StrEnum):
     """Truthful result of the non-authenticating profile inventory read."""
 
     RECOGNIZED = "recognized"
+    CONCURRENT_CHANGE = "concurrent_change"
     DEGRADED = "degraded"
     EMPTY = "empty"
 
@@ -46,7 +48,7 @@ class WorkbenchBootstrapV1:
 
     inventory_state: WorkbenchBootstrapInventoryState
     session_state: WorkbenchBootstrapSessionState | None = None
-    choices: tuple[ProfileLoginChoice, ...] = ()
+    choices: tuple[ProfileLoginChoice, ...] = field(default=(), repr=False)
     preselected_profile_id: str | None = field(default=None, repr=False)
     selected_profile_id: str | None = field(default=None, repr=False)
     selected_profile_label: str | None = None
@@ -61,9 +63,16 @@ class WorkbenchBootstrapV1:
             if not self.choices or self.session_state is None or self.reason_code is not None:
                 raise ValueError("recognized workbench bootstrap requires choices and a session state")
         elif self.choices or self.session_state is not None or self.preselected_profile_id is not None:
-            raise ValueError("empty or degraded workbench bootstrap cannot carry login choices")
-        if self.inventory_state is WorkbenchBootstrapInventoryState.DEGRADED and self.reason_code is None:
-            raise ValueError("degraded workbench bootstrap requires a safe reason code")
+            raise ValueError("empty, concurrent, or degraded workbench bootstrap cannot carry login choices")
+        if (
+            self.inventory_state
+            in {
+                WorkbenchBootstrapInventoryState.CONCURRENT_CHANGE,
+                WorkbenchBootstrapInventoryState.DEGRADED,
+            }
+            and self.reason_code is None
+        ):
+            raise ValueError("unavailable workbench bootstrap requires a safe reason code")
         if self.inventory_state is WorkbenchBootstrapInventoryState.EMPTY and self.reason_code is not None:
             raise ValueError("empty workbench bootstrap is not a degraded inventory")
         if self.preselected_profile_id is not None and self.preselected_profile_id not in choice_ids:
@@ -108,6 +117,11 @@ def prepare_workbench_bootstrap(
 ) -> WorkbenchBootstrapV1:
     """Inspect profile availability and resume only the exact recognized selection."""
     inventory = inventory_reader()
+    if inventory.outcome is ProfileSummaryOutcome.CONCURRENT_CHANGE:
+        return WorkbenchBootstrapV1(
+            inventory_state=WorkbenchBootstrapInventoryState.CONCURRENT_CHANGE,
+            reason_code="workbench.bootstrap.profile_inventory_concurrent_change",
+        )
     if not inventory.recognized:
         return WorkbenchBootstrapV1(
             inventory_state=WorkbenchBootstrapInventoryState.DEGRADED,
@@ -119,7 +133,7 @@ def prepare_workbench_bootstrap(
     choices = choice_reader()
     expected = tuple((str(item.profile_id), str(item.label)) for item in inventory.summaries)
     observed = tuple((choice.profile_id, choice.label) for choice in choices)
-    if observed != expected:
+    if len(expected) != len(observed) or dict(expected) != dict(observed):
         return WorkbenchBootstrapV1(
             inventory_state=WorkbenchBootstrapInventoryState.DEGRADED,
             reason_code="workbench.bootstrap.profile_inventory_changed",
@@ -159,15 +173,19 @@ def complete_workbench_login(
             choices=preparation.choices,
             preselected_profile_id=preparation.preselected_profile_id,
         )
-    if outcome.bucket_id not in {choice.profile_id for choice in preparation.choices}:
+    choice_by_profile_id = {choice.profile_id: choice for choice in preparation.choices}
+    choice = choice_by_profile_id.get(outcome.bucket_id)
+    if choice is None:
         raise ValueError("authenticated profile is absent from the recognized bootstrap inventory")
+    if outcome.label != choice.label:
+        raise ValueError("authenticated profile label disagrees with the recognized bootstrap inventory")
     return WorkbenchBootstrapV1(
         inventory_state=WorkbenchBootstrapInventoryState.RECOGNIZED,
         session_state=WorkbenchBootstrapSessionState.AUTHENTICATED,
         choices=preparation.choices,
         preselected_profile_id=preparation.preselected_profile_id,
         selected_profile_id=outcome.bucket_id,
-        selected_profile_label=outcome.label,
+        selected_profile_label=choice.label,
     )
 
 

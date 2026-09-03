@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from collections.abc import AsyncGenerator, Callable, Generator, Iterable, Mapping
+from collections.abc import AsyncGenerator, Callable, Generator, Iterable, Mapping, Sequence
 from contextlib import ExitStack, asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -13,11 +13,18 @@ from typing import TYPE_CHECKING
 from ...application.search.installed_workbench import InstalledWorkbenchSearchInputsV1
 from ...application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
 from ...application.workbench_generation import (
+    WorkbenchGenerationAvailability,
     WorkbenchGenerationProjectionResultV1,
     WorkbenchGenerationV1,
 )
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnitCatalogue
+from .account import (
+    AccountRecomposeRequiredV1,
+    AccountSessionExpiredError,
+    compose_account_factories,
+    compose_profile_sign_out_factory,
+)
 
 if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
@@ -29,10 +36,12 @@ if TYPE_CHECKING:
     from ...application.operations.registry import OperationPublicContractSetV1
     from ...application.operator_actions.models import ActionReference
     from ...application.overview.home import HomeProjectionV1
+    from ...application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
+    from ...application.user_profile.overview import ProfileOverview
+    from ...core.credentials import ProfilePasswordAssessment
     from ...core.external_constants import OutputLanguage
     from ...domain.modelos.work_unit import WorkUnit
     from .account import AccountFactoriesV1
-    from .declarations.models import ModeloWorkspaceScreenFactoryV1
     from .navigation import (
         TuiActionCandidateV1,
         TuiDestinationCatalogueV1,
@@ -40,6 +49,7 @@ if TYPE_CHECKING:
         TuiScreenFactoryV1,
     )
     from .search import WorkbenchSearchDoorV1
+    from .secret.passphrase import PassphraseChangeAttempt
 
 
 type InstalledWorkbenchSearchInputsProviderV1 = Callable[[], InstalledWorkbenchSearchInputsV1 | None]
@@ -52,6 +62,11 @@ class TuiOperationCompositionV1:
 
     services: OperationComposedServices
     public_contracts: OperationPublicContractSetV1
+
+    def __post_init__(self) -> None:
+        """Refuse a public inventory detached from the composed service graph."""
+        if self.public_contracts is not self.services.public_contracts:
+            raise ValueError("TUI operation contracts must be the exact composed service contracts")
 
 
 def compose_secure_profile_workbench_generation_provider(
@@ -90,9 +105,10 @@ def compose_secure_profile_workbench_generation_provider(
             current_session is None
             or current_session.sealed
             or not profile_session_serves_bucket(current_session, profile_id)
-            or current_session.is_expired(now())
         ):
             raise RuntimeError("installed workbench requires the live secure session for its selected profile")
+        if current_session.is_expired(now()):
+            raise AccountSessionExpiredError()
         return HomeAccountSession(
             posture=HomeSessionPosture.ACTIVE,
             profile_label=profile_label,
@@ -144,9 +160,46 @@ class InstalledWorkbenchRootCompositionV1:
     refresh_home: Callable[[], HomeProjectionV1]
     search_inputs: InstalledWorkbenchSearchInputsV1 | None
     refresh_search_inputs: InstalledWorkbenchSearchInputsProviderV1
+    account_factories: AccountFactoriesV1
 
 
-type InstalledWorkbenchRootInputsProviderV1 = Callable[[], InstalledWorkbenchRootInputsV1]
+type InstalledWorkbenchRootInputsProviderV1 = Callable[[TuiOperationCompositionV1], InstalledWorkbenchRootInputsV1]
+type AuthenticatedSessionRecomposeDoorV1 = Callable[
+    [AccountRecomposeRequiredV1], InstalledWorkbenchRootInputsProviderV1 | None
+]
+
+
+@dataclass(frozen=True, slots=True)
+class InstalledWorkbenchAccountInputsV1:
+    """Non-secret account doors the launcher binds to the current session."""
+
+    profile_id: str
+    profile_overview: ProfileOverview
+    persist_profile_field: Callable[[str, str], ProfileOverview]
+    login_choices: Sequence[ProfileLoginChoice]
+    authenticate: Callable[[str, str], ProfileLoginAttempt]
+    assess_password: Callable[[str], ProfilePasswordAssessment]
+    rotate_password: Callable[[str, str, str], PassphraseChangeAttempt]
+
+    def __post_init__(self) -> None:
+        """Bind every account door to one exact authenticated profile identity."""
+        if self.profile_overview.profile_id != self.profile_id:
+            raise ValueError("account overview must name the authenticated profile")
+        matching_choices = tuple(choice for choice in self.login_choices if choice.profile_id == self.profile_id)
+        if len(matching_choices) != 1 or matching_choices[0].label != self.profile_overview.label:
+            raise ValueError("account login choices must contain the authenticated profile and label exactly once")
+
+    def factories(self, services: OperationComposedServices) -> AccountFactoriesV1:
+        """Compose existing account owners without reading or retaining secrets."""
+        return compose_account_factories(
+            profile_overview=self.profile_overview,
+            persist_profile_field=self.persist_profile_field,
+            login_choices=self.login_choices,
+            authenticate=self.authenticate,
+            assess_password=self.assess_password,
+            rotate_password=self.rotate_password,
+            sign_out=compose_profile_sign_out_factory(services, profile_id=self.profile_id),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -159,14 +212,12 @@ class InstalledWorkbenchFactoryDependenciesV1:
     screen owners.
     """
 
-    account_factories: AccountFactoriesV1
+    account: InstalledWorkbenchAccountInputsV1
     profile_admission: WorkbenchDestinationAdmission
     ledger_review_action: ActionReference
     declarations_work_action: ActionReference
     declarations_revisions_action: ActionReference
     declarations_filing_action: ActionReference
-    operation_contracts: OperationPublicContractSetV1
-    modelo_workspace_factory: ModeloWorkspaceScreenFactoryV1 | None = None
 
 
 def compose_installed_workbench_generation_provider(
@@ -181,7 +232,8 @@ def compose_installed_workbench_generation_provider(
     wrappers resolve their projection from the same current generation.
     """
 
-    def provide() -> InstalledWorkbenchRootInputsV1:
+    def provide(operation_runtime: TuiOperationCompositionV1) -> InstalledWorkbenchRootInputsV1:
+        account_factories = dependencies.account.factories(operation_runtime.services)
         current = [generation_provider()]
         home_pending: list[WorkbenchGenerationV1 | None] = [current[0]]
 
@@ -222,10 +274,14 @@ def compose_installed_workbench_generation_provider(
             home_projection=_required_projection(generation.home, "Home"),
             refresh_home=refresh_home,
             admissions=admissions,
-            account_factories=dependencies.account_factories,
+            account_factories=account_factories,
             ledger_factory=_ledger_generation_factory(current, dependencies),
             declarations_factory=_declarations_generation_factory(current, dependencies),
-            aeat_sync_factory=_aeat_sync_generation_factory(current, dependencies),
+            aeat_sync_factory=_aeat_sync_generation_factory(
+                current,
+                dependencies,
+                operation_runtime.public_contracts,
+            ),
             search_inputs=_search_inputs(generation),
             refresh_search_inputs=refresh_search_inputs,
         )
@@ -300,13 +356,25 @@ def _declarations_generation_factory(
     from .declarations.routes import declarations_screen_factory
 
     def create(context: TuiScreenContextV1) -> Screen[None]:
+        from .modelo.installed_workspace import compose_installed_modelo_workspace_factory
+
+        modelo = current[0].modelo
+        modelo_workspace_factory = (
+            compose_installed_modelo_workspace_factory(
+                bucket_id=_required_projection(current[0].declarations, "Declarations").bucket_id,
+                declarations=_required_projection(current[0].declarations, "Declarations").declarations,
+                projections=_required_projection(modelo, "Modelo"),
+            )
+            if modelo.availability is WorkbenchGenerationAvailability.AVAILABLE and modelo.projection is not None
+            else None
+        )
         calendar = current[0].declarations_calendar.projection
         return declarations_screen_factory(
             _required_projection(current[0].declarations, "Declarations"),
             work_action=dependencies.declarations_work_action,
             revisions_action=dependencies.declarations_revisions_action,
             filing_action=dependencies.declarations_filing_action,
-            modelo_workspace_factory=dependencies.modelo_workspace_factory,
+            modelo_workspace_factory=modelo_workspace_factory,
             calendar_projection=calendar,
         )(context)
 
@@ -316,6 +384,7 @@ def _declarations_generation_factory(
 def _aeat_sync_generation_factory(
     current: list[WorkbenchGenerationV1],
     dependencies: InstalledWorkbenchFactoryDependenciesV1,
+    operation_contracts: OperationPublicContractSetV1,
 ) -> TuiScreenFactoryV1 | None:
     if current[0].aeat_sync.projection is None:
         return None
@@ -324,7 +393,7 @@ def _aeat_sync_generation_factory(
     def create(context: TuiScreenContextV1) -> Screen[None]:
         return aeat_sync_screen_factory(
             _required_projection(current[0].aeat_sync, "AEAT Sync"),
-            operation_contracts=dependencies.operation_contracts,
+            operation_contracts=operation_contracts,
         )(context)
 
     return create
@@ -544,6 +613,7 @@ def compose_installed_workbench_root(
         refresh_home=inputs.refresh_home,
         search_inputs=inputs.search_inputs,
         refresh_search_inputs=inputs.refresh_search_inputs,
+        account_factories=inputs.account_factories,
     )
 
 
@@ -567,7 +637,7 @@ async def _run_root_session(
     headless: bool,
     auto_pilot: AutopilotCallbackType | None,
     workbench_root_inputs_provider: InstalledWorkbenchRootInputsProviderV1 | None = None,
-) -> None:
+) -> AccountRecomposeRequiredV1 | None:
     """Compose one session's services, run the root application, settle them.
 
     The services are composed OUTSIDE the application and handed to it, so
@@ -576,38 +646,68 @@ async def _run_root_session(
     """
     from .app import CadrumoTuiApp
 
-    root = (
-        compose_installed_workbench_root(workbench_root_inputs_provider())
-        if workbench_root_inputs_provider is not None
-        else None
-    )
-    if root is None:
-        async with operation_services_scope() as operation_runtime:
-            await CadrumoTuiApp(services=operation_runtime.services).run_async(
+    async with operation_services_scope() as operation_runtime:
+        root = (
+            compose_installed_workbench_root(workbench_root_inputs_provider(operation_runtime))
+            if workbench_root_inputs_provider is not None
+            else None
+        )
+        if root is None:
+            return await CadrumoTuiApp(services=operation_runtime.services).run_async(
                 headless=headless,
                 auto_pilot=auto_pilot,
             )
-        return
-    service = None if root.search_inputs is None else compose_installed_workbench_search(root.search_inputs)
+        service = None if root.search_inputs is None else compose_installed_workbench_search(root.search_inputs)
 
-    def refresh_search() -> WorkbenchSearchDoorV1:
-        refreshed_inputs = root.refresh_search_inputs()
-        if refreshed_inputs is None:
-            raise RuntimeError("installed workbench search is unavailable in the refreshed generation")
-        _require_search_admission_parity(
-            refreshed_inputs,
-            root.admissions,
-        )
-        return compose_installed_workbench_search(refreshed_inputs)
+        def refresh_search() -> WorkbenchSearchDoorV1:
+            refreshed_inputs = root.refresh_search_inputs()
+            if refreshed_inputs is None:
+                raise RuntimeError("installed workbench search is unavailable in the refreshed generation")
+            _require_search_admission_parity(
+                refreshed_inputs,
+                root.admissions,
+            )
+            return compose_installed_workbench_search(refreshed_inputs)
 
-    async with operation_services_scope() as operation_runtime:
-        await CadrumoTuiApp(
+        return await CadrumoTuiApp(
             services=operation_runtime.services,
             destination_catalogue=root.destination_catalogue,
             refresh_home=root.refresh_home,
             workbench_search_service=service,
             refresh_workbench_search=refresh_search,
+            account_factories=root.account_factories,
         ).run_async(headless=headless, auto_pilot=auto_pilot)
+
+
+async def run_authenticated_workbench_sessions(
+    *,
+    headless: bool,
+    auto_pilot: AutopilotCallbackType | None,
+    workbench_root_inputs_provider: InstalledWorkbenchRootInputsProviderV1,
+    recompose_authenticated_session: AuthenticatedSessionRecomposeDoorV1 | None = None,
+) -> AccountRecomposeRequiredV1 | None:
+    """Run fresh roots until the outer authenticated-session owner declines one.
+
+    Each root has its own operation-service scope. A handover, password
+    rotation, sign-out, or expiry first settles and discards that scope, then
+    gives only its non-secret recompose result to the injected outer owner.
+    The owner must select a new bootstrap/session generation and return a new
+    provider; returning ``None`` fails closed rather than reusing the former
+    profile-bound root.
+    """
+    provider = workbench_root_inputs_provider
+    while True:
+        outcome = await _run_root_session(
+            headless=headless,
+            auto_pilot=auto_pilot,
+            workbench_root_inputs_provider=provider,
+        )
+        if outcome is None or recompose_authenticated_session is None:
+            return outcome
+        next_provider = recompose_authenticated_session(outcome)
+        if next_provider is None:
+            return outcome
+        provider = next_provider
 
 
 def main(
@@ -615,6 +715,7 @@ def main(
     headless: bool = False,
     auto_pilot: AutopilotCallbackType | None = None,
     workbench_root_inputs_provider: InstalledWorkbenchRootInputsProviderV1 | None = None,
+    recompose_authenticated_session: AuthenticatedSessionRecomposeDoorV1 | None = None,
 ) -> int:
     """Start one dedicated TUI session and report its process exit status.
 
@@ -628,16 +729,19 @@ def main(
         sys.stderr.write("workbench.root.composition_required\n")
         return 2
     asyncio.run(
-        _run_root_session(
+        run_authenticated_workbench_sessions(
             headless=headless,
             auto_pilot=auto_pilot,
             workbench_root_inputs_provider=workbench_root_inputs_provider,
+            recompose_authenticated_session=recompose_authenticated_session,
         )
     )
     return 0
 
 
 __all__ = [
+    "AuthenticatedSessionRecomposeDoorV1",
+    "InstalledWorkbenchAccountInputsV1",
     "InstalledWorkbenchFactoryDependenciesV1",
     "InstalledWorkbenchGenerationProviderV1",
     "InstalledWorkbenchRootCompositionV1",
@@ -657,4 +761,5 @@ __all__ = [
     "profile_storage_scope",
     "resolve_modelo_work_unit",
     "resolve_modelo_workspace_static_inspection",
+    "run_authenticated_workbench_sessions",
 ]

@@ -86,7 +86,7 @@ class ProbeStatus(StrEnum):
     FAILED = "failed"
 
 
-class DependencyStatus(StrEnum):
+class PythonRuntimeDependencyStatus(StrEnum):
     """Dependency-resolution outcomes retained in the compatibility record."""
 
     RESOLVED = "resolved"
@@ -592,7 +592,7 @@ def _install(
     wheelhouse_dir: Path | None = None,
     wheelhouse_manifest: Mapping[str, Any] | None = None,
     wheelhouse_platform: str | None = None,
-) -> tuple[list[CommandEvidence], DependencyStatus, str | None]:
+) -> tuple[list[CommandEvidence], PythonRuntimeDependencyStatus, str | None]:
     """Install exact artifacts, closing binary dependency resolution to the cohort.
 
     Source mode deliberately keeps its normal resolver behavior while binary
@@ -646,7 +646,9 @@ def _install(
     if result.returncode != 0:
         text = f"{result.stdout}\n{result.stderr}".lower()
         missing_wheel = mode is ProbeMode.BINARY and any(pattern.search(text) for pattern in _MISSING_WHEEL_PATTERNS)
-        category = DependencyStatus.MISSING_WHEEL if missing_wheel else DependencyStatus.FAILED
+        category = (
+            PythonRuntimeDependencyStatus.MISSING_WHEEL if missing_wheel else PythonRuntimeDependencyStatus.FAILED
+        )
         return command, category, result.stderr.strip()[-500:] or result.stdout.strip()[-500:] or "install failed"
     check = run_command(
         (uv, "pip", "check", "--python", str(python)),
@@ -655,8 +657,8 @@ def _install(
     )
     command.append(CommandEvidence.from_result(check))
     if check.returncode != 0:
-        return command, DependencyStatus.FAILED, check.stderr.strip()[-500:] or "dependency check failed"
-    return command, DependencyStatus.RESOLVED, None
+        return command, PythonRuntimeDependencyStatus.FAILED, check.stderr.strip()[-500:] or "dependency check failed"
+    return command, PythonRuntimeDependencyStatus.RESOLVED, None
 
 
 def _installed_probe(venv: Path, *, work_dir: Path) -> tuple[list[CommandEvidence], dict[str, bool]]:
@@ -906,7 +908,10 @@ def run_probe(
     cohort_manifest_sha256: str | None = None
     builder_python: str | None = None
     artifact_sha256 = _digest_bytes(b"unavailable")
-    dependency = {"status": DependencyStatus.FAILED.value, "detail": "probe did not reach installation"}
+    dependency = {
+        "status": PythonRuntimeDependencyStatus.FAILED.value,
+        "detail": "probe did not reach installation",
+    }
     if selected_mode is ProbeMode.BINARY:
         dependency.update(
             {
@@ -1011,7 +1016,7 @@ def run_probe(
             "status": dependency_status.value,
             "detail": dependency_detail or "resolved",
         }
-        if dependency_status is not DependencyStatus.RESOLVED:
+        if dependency_status is not PythonRuntimeDependencyStatus.RESOLVED:
             raise CompatibilityProbeError(
                 dependency_detail or "dependency installation failed",
                 category=dependency_status.value,
@@ -1024,8 +1029,8 @@ def run_probe(
             raise CompatibilityProbeError(focused_failure, category="focused-test-failed")
     except (CompatibilityProbeError, OSError, ValueError, SystemExit) as exc:
         category = exc.category if isinstance(exc, CompatibilityProbeError) else "probe-failure"
-        if category == DependencyStatus.MISSING_WHEEL.value:
-            dependency["status"] = DependencyStatus.MISSING_WHEEL.value
+        if category == PythonRuntimeDependencyStatus.MISSING_WHEEL.value:
+            dependency["status"] = PythonRuntimeDependencyStatus.MISSING_WHEEL.value
             dependency["detail"] = str(exc)
         failure = {"category": category, "detail": str(exc)}
     status = ProbeStatus.FAILED.value if failure is not None else ProbeStatus.PASSED.value
@@ -1123,12 +1128,12 @@ def main(argv: Sequence[str] | None = None) -> int:
 __all__ = [
     "CommandEvidence",
     "CompatibilityProbeError",
-    "DependencyStatus",
     "FocusedTestEvidence",
     "FocusedTestStatus",
     "ProbeEvidence",
     "ProbeMode",
     "ProbeStatus",
+    "PythonRuntimeDependencyStatus",
     "main",
     "run_probe",
     "write_probe_evidence",

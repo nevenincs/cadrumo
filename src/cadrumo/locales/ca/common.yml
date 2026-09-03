@@ -1410,6 +1410,15 @@ tui:
     unavailable:
       title: Àrea del llibre comptable no disponible
   root:
+    account:
+      appearance: Aparença
+      change_user: Canvia d'usuari
+      default_profile: Compte
+      language: Idioma
+      password: Contrasenya
+      profile: Perfil
+      sign_out: Tanca la sessió
+      unavailable: Els controls del compte no estan disponibles en aquesta sessió.
     no_areas: Cap àrea no està disponible encara en aquesta sessió.
     title: 'Cadrumo: sessió de terminal'
   search:

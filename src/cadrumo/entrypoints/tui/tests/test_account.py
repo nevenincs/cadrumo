@@ -9,6 +9,7 @@ from typing import NoReturn, cast
 import pytest
 from textual.app import App
 
+from ....application.operations.composition import OperationComposedServices
 from ....application.user_profile.acquisition_sources import (
     AcquisitionSourceCredentialPostureV1,
     ProfileAcquisitionSourceV1,
@@ -16,7 +17,12 @@ from ....application.user_profile.acquisition_sources import (
 from ....application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
 from ....application.user_profile.overview import ProfileOverview
 from ....core.credentials import ProfilePasswordAssessment
-from ..account import AccountAppearanceFactoryV1, AccountSignOutFactoryV1, compose_account_factories
+from ..account import (
+    AccountAppearanceFactoryV1,
+    AccountSignOutFactoryV1,
+    compose_account_factories,
+    compose_profile_sign_out_factory,
+)
 from ..navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ..profile.overview import ProfileManagerScreen
 from ..secret.login import LoginScreen
@@ -202,3 +208,33 @@ async def test_sign_out_is_deferred_to_the_injected_operation_factory() -> None:
     actual = await cast(Awaitable[object], factories.sign_out())
     assert actual is expected
     assert sign_out_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_profile_sign_out_factory_submits_the_canonical_request_only_when_opened() -> None:
+    """The production door shares S402 services and leaves start ownership to the modal."""
+    calls: list[tuple[object, str]] = []
+    submission = SimpleNamespace(receipt=SimpleNamespace(operation_id="operation-1"))
+
+    class _Submission:
+        async def submit(self, request: object, *, actor_ref: str) -> object:
+            calls.append((request, actor_ref))
+            return submission
+
+    services = SimpleNamespace(submission=_Submission())
+    factory = compose_profile_sign_out_factory(
+        cast(OperationComposedServices, services),
+        profile_id="11111111-1111-4111-8111-111111111111",
+    )
+
+    assert calls == []
+    controller = await factory()
+
+    assert controller.services is services
+    assert controller.submission is submission
+    assert controller.actor_ref == "operator:tui-account"
+    assert len(calls) == 1
+    request, actor_ref = calls[0]
+    assert actor_ref == "operator:tui-account"
+    assert request.definition_id == "user-profile.logout"  # type: ignore[attr-defined]
+    assert str(request.payload.profile_id) == "11111111-1111-4111-8111-111111111111"  # type: ignore[attr-defined]

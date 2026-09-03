@@ -26,8 +26,8 @@ from .._casilla_projection import project_casilla_search_records
 from .._concept_cards import ConceptCardRecord, project_concept_cards
 from .._coverage import (
     CoverageKind,
-    CoverageReport,
     KindCoverage,
+    TerminologyCoverageReport,
     compute_coverage_report,
     coverage_report_path,
     legal_provision_ids,
@@ -107,7 +107,7 @@ def test_report_is_deterministic_byte_for_byte(
     """
     relevance = _sweep_from(("concept:prorrata", "page:how-to/choose-modelo"))
 
-    def report() -> CoverageReport:
+    def report() -> TerminologyCoverageReport:
         return compute_coverage_report(
             relevance=relevance,
             concept_cards=concept_cards,
@@ -229,7 +229,7 @@ def test_coverage_report_pydantic_roundtrip(
         **_EMPTY_CLI,
     )
 
-    restored = CoverageReport.model_validate_json(report.model_dump_json())
+    restored = TerminologyCoverageReport.model_validate_json(report.model_dump_json())
 
     assert restored == report
     assert isinstance(restored.kinds[0], KindCoverage)
