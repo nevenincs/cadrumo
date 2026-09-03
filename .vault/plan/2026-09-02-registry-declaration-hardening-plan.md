@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:111d6440ce356cdfe7f01e33188610592899d984a2abde3e014f1b4b01c4c096'
+body_hash: 'sha256:6ce9472318de8500b6eb6cac888d58669a0597be153aba659abe7afae3efe131'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -473,7 +473,7 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S433` - Declare which screen a screen is built on and exclude derived screens from the revision ranking, since the grounding screen re-describes the pointer screens 41 findings and made modelo 200 look like nine conditions where seven are independent, gating the containment that is verifiable; `dev/registry/analysis/screens.py dev/registry/analysis/filing_exposure.py dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W04.P09.S434` - Sweep for other undeclared screen derivations and record that none exists: the two flags are a CLI-only import and a screen consuming others for attributes rather than population, so import-reach is a prompt not a verdict, and give both entry types the same declarations; `dev/registry/analysis/screens.py`.
 - [x] `W04.P09.S435` - Verify the record-spelled envelope consequence in the shipped export path rather than from the screens docstring, confirming that renders_filing_envelope is set from the typed slot alone and that all eighteen typed layouts declare a product identity requirement while the thirty-one record-spelled ones cannot; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
-- [ ] `W04.P09.S437` - Compare a revisions declared capability with its predecessors in the same modelo, since nothing does: modelo 322 lost its typed envelope and product identity requirement between two consecutive filing-grade revisions and the capability screen reports each revision alone; `dev/registry/analysis`.
+- [x] `W04.P09.S437` - Compare a revisions declared capability with its predecessors in the same modelo, since nothing does: modelo 322 lost its typed envelope and product identity requirement between two consecutive filing-grade revisions and the capability screen reports each revision alone; `dev/registry/analysis`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 

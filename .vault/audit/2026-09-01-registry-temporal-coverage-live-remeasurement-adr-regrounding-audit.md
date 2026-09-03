@@ -11752,3 +11752,47 @@ after three revisions of the same modelo that did it correctly. Continuity
 between revisions is not this screen's unit, and nothing else compares a
 revision's capability with its predecessor's. That is a gap worth naming even
 though this instance was found by hand.
+
+
+## The gap that hid modelo 322 is now a screen, and it found one more thing
+
+Every other screen judges a revision alone. None compared a revision with the one
+it succeeds, which is why modelo 322's regression - a typed filing envelope
+present in three consecutive revisions and absent from the fourth - reported as an
+ordinary row about the fourth and had to be found by hand.
+
+`dev/registry/analysis/capability_continuity.py` compares consecutive revisions,
+ordered by `valid_from`. It reports three findings across two modelos, and the
+two conditions it separates are the reason it is worth having.
+
+**Modelo 322 is a regression.** Its `2026-y-siguientes` lost the typed envelope
+and the product-identity requirement while staying at filing grade. Nothing about
+the claim got smaller, so the capability was dropped rather than renounced. The
+screen rediscovers this independently of the hand analysis that prompted it.
+
+**Modelo 165 is not.** Its `2023-2025` loses an export layout, and the grade goes
+from filing to applicability at the same time: two casillas, no layout, sitting
+between two filing revisions. That is what a deliberate placeholder looks like,
+and collapsing the two conditions would have filed an intention beside an
+oversight under one name. The distinction is `capability_lost_at_same_grade`
+against `capability_lost_with_grade`, and each has a test naming the modelo it
+holds.
+
+Three choices in the screen are worth stating because each excludes a larger and
+worse population:
+
+- **Capabilities are directional and never counts.** A revision with fewer
+  casillas than its predecessor is not weaker, and reporting count decreases
+  would bury the cases where something stopped being expressible at all.
+- **Consecutive pairs, not comparison against the newest.** A capability dropped
+  and restored two revisions later is still a gap in the years between, and those
+  years are filed.
+- **The grade ladder is taken from the shipped enum at import**, not respelled.
+  Comparing grades needs an order that a string enum does not carry, and a second
+  spelling of its members is the drift this package exists to find. A test
+  asserts the tuple equals the enum's own member order.
+
+The screen reports and does not gate. A modelo may lose a capability because the
+law removed what it served, and nothing here can tell that from an oversight -
+what it can do is stop the difference being invisible, which for modelo 322 it
+was.
