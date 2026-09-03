@@ -56,7 +56,17 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
             self.query_one("#ledger-refusal", Static).update(
                 ledger_copy("tui.ledger.review.empty", default="No entries currently need review.")
             )
-        self.query_one("#ledger-navigation", DataTable).focus()
+        restored = self.controller.restored_transaction_id()
+        if restored is None:
+            self.query_one("#ledger-navigation", DataTable).focus()
+            return
+        row_index = next(
+            (index for index, row in enumerate(table.ordered_rows) if row.key.value == restored),
+            None,
+        )
+        if row_index is not None:
+            table.move_cursor(row=row_index)
+            table.focus()
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Route navigation rows or emit the canonical review query request."""
@@ -66,6 +76,8 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         if event_table.id != "ledger-review":
             return
         transaction_id = event.row_key.value
+        if transaction_id is None:
+            return
         row = next(item for item in self.controller.review_rows() if item.transaction_id == transaction_id)
         self.requested_transaction_id = transaction_id
         self.post_message(LedgerReviewRequested(transaction_id=transaction_id, action=row.action))

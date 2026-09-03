@@ -7,10 +7,10 @@ from dataclasses import dataclass
 from typing import Final, get_args, override
 
 from textual.app import ComposeResult
-from textual.widgets import Static
+from textual.widgets import DataTable, Static
 
 from ....application.ledger.workspace import LedgerWorkspaceArea, LedgerWorkspaceProjectionV1
-from ..components.widgets import ContentScroll
+from ..components.widgets import ContentDataTable, ContentScroll
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
 from .entries import LedgerEntriesScreen
@@ -38,6 +38,7 @@ class LedgerUnavailableScreen(LedgerWorkspaceScreen):
             classes="cadrumo-banner",
         )
         with ContentScroll(id="ledger-page", classes="cadrumo-scroll ledger-page"):
+            yield ContentDataTable[str](id="ledger-navigation", cursor_type="row", zebra_stripes=True)
             yield Static(
                 ledger_copy(
                     self._route_refusal.reason_key,
@@ -47,6 +48,15 @@ class LedgerUnavailableScreen(LedgerWorkspaceScreen):
                 classes="ledger-refusal",
                 markup=False,
             )
+
+    def on_mount(self) -> None:
+        """Keep the entire workspace vocabulary reachable beside the refusal."""
+        self.populate_navigation()
+        self.query_one("#ledger-navigation", DataTable).focus()
+
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        """Allow movement away from a placeholder while preserving refusals."""
+        self.handle_navigation_selection(event)
 
 
 @dataclass(frozen=True, slots=True)

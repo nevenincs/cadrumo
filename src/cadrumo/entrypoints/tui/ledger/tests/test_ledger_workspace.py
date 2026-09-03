@@ -23,7 +23,7 @@ from .....core.external_constants import OutputLanguage
 from .....core.identity import TransactionId
 from ....tui.components.host import ScreenHostApp
 from ....tui.devtools.frame import geometry_band
-from ....tui.navigation import TuiScreenContextV1
+from ....tui.navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ..controller import LedgerWorkspaceController
 from ..entries import LedgerEntriesScreen
 from ..overview import LedgerOverviewScreen
@@ -182,6 +182,30 @@ async def test_entry_rows_are_redacted_and_tables_are_each_one_tab_stop() -> Non
         assert "b" * 64 not in copy
         assert "aaaaaaaaaaaa" in copy
         assert "SENSITIVE" not in copy
+
+
+@pytest.mark.asyncio
+async def test_transaction_focus_restores_by_identity_after_row_reordering() -> None:
+    projection = _projection()
+    reordered = projection.model_copy(update={"entries": tuple(reversed(projection.entries))})
+    context = TuiScreenContextV1(
+        destination="workbench.ledger",
+        focus=TuiFocusIdentityV1(
+            destination="workbench.ledger",
+            semantic_key="ledger.transaction",
+            restore_token=_TX_A,
+        ),
+    )
+    screen = LedgerEntriesScreen(LedgerWorkspaceController(context, reordered))
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await pilot.pause()
+        table = screen.query_one("#ledger-entries", DataTable)
+        assert app.focused is table
+        assert table.ordered_rows[table.cursor_row].key.value == _TX_A
+        await pilot.press("enter")
+        await pilot.pause()
+        assert screen.selected_transaction_id == _TX_A
 
 
 @pytest.mark.asyncio

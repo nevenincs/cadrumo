@@ -122,6 +122,14 @@ class LedgerWorkspaceController:
             for row in self.projection.entries
         )
 
+    def restored_transaction_id(self) -> TransactionId | None:
+        """Resolve a transaction focus by semantic identity, never by row position."""
+        focus = self.context.focus
+        if focus is None or focus.semantic_key != "ledger.transaction" or focus.restore_token is None:
+            return None
+        candidate = focus.restore_token
+        return candidate if any(row.transaction_id == candidate for row in self.projection.entries) else None
+
     def review_rows(self) -> tuple[LedgerReviewRowV1, ...]:
         """Join review identities to safe entry references, refusing contradictions."""
         by_id = {row.transaction_id: row for row in self.projection.entries}
@@ -158,6 +166,15 @@ class LedgerReviewRequested(Message):
         super().__init__()
         self.transaction_id = transaction_id
         self.action = action
+
+
+class LedgerEntrySelected(Message):
+    """Host-facing semantic selection of one safe Ledger entry reference."""
+
+    def __init__(self, transaction_id: TransactionId) -> None:
+        """Store only the application projection's safe transaction identity."""
+        super().__init__()
+        self.transaction_id = transaction_id
 
 
 class LedgerBackRequested(Message):
@@ -228,6 +245,7 @@ class LedgerWorkspaceScreen(Screen[None]):
 
 __all__ = [
     "LedgerBackRequested",
+    "LedgerEntrySelected",
     "LedgerReviewRequested",
     "LedgerRouteRequested",
     "LedgerWorkspaceController",
