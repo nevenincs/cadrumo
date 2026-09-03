@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:5d7257f98c9d790d1fe3dcbc0e6b49b05bc46823fff9ff3eb427b6ff70359fc6'
+body_hash: 'sha256:b1e470d73a537460965e252f286fb8b8b9ffd0b459d51acfb239c41e4bd5931d'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -536,6 +536,7 @@ Author the four architectural decision records the contract requires before any 
 - [ ] `W06.P13.S306` - Rename the M200 2024 blocker cohort vocabulary off its plan step ids, with the owning campaign; `dev/registry/analysis/m200_2024_blocker_adjudications.py dev/registry/tests/test_m200_2024_blocker_adjudications.py`.
 - [x] `W06.P13.S307` - Name the encoding once in the three modules this campaign gave bare UTF-8 literals; `dev/tests/test_campaign_marker_patterns.py dev/registry/tests/test_declaration_invariant_gates.py dev/registry/tests/test_render_check.py`.
 - [x] `W06.P13.S308` - Re-check the held-file constraint against the live worktree and separate it from this execution's scope limit; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S309` - Collapse the modelo-id helper repeated in all ten screen modules into one canonical defining module; `dev/registry/analysis/corpus.py dev/registry/analysis`.
 
 ### Phase `W06.P14` - declaration contract migration
 

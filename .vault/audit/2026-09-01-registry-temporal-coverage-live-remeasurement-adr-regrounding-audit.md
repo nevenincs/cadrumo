@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8125752918fe70b67115c121f74b36cfed2c6217efbe8cd57e8fbd60637f6c0a'
+body_hash: 'sha256:89ec88a18ff649bc437522fe43a27917a5d92862b2c0ac8810ca8db12b08478f'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7785,3 +7785,35 @@ inside a comparison - so that work is in hand, and the Step this plan raised for
 it should stay with its owner rather than be taken up here. And the single
 `src/` path is one casilla file, which is a measure of how quiet this tree has
 become compared with the state the constraint was written against.
+
+### the-screens-package-declared-one-helper-ten-times | high | Byte-identical copies in all ten screen modules, now one defining module, census unchanged at 1,651
+
+This plan opens by counting how many places the registry states one fact. The
+same count was never taken of the tooling written to make that argument. Taken
+now, the screens package declares `_bundled_modelo_ids` - three lines returning
+every bundled modelo code as a sorted tuple - in all ten screen modules. The
+bodies hash identically: one implementation, ten copies.
+
+They are replaced by `corpus.py`, a defining module named for what it holds
+rather than for being shared, since the architecture rule this campaign works
+under forbids a generic bucket as much as it forbids the duplication. The
+function is public because ten consumers reach it; the copies were private, and
+a private symbol imported by nobody and rewritten ten times is the shape a
+missing home takes. The lazy application import is kept and the reason written
+down: a screen module should cost nothing to import until it is asked for the
+corpus.
+
+The evidence that the collapse is safe is that nothing moved. The runner reports
+the same 1,651 findings across the same ten screens, and the twenty-two
+declaration invariant gates pass, exit 0 - including the ones that discover
+screens by signature, list them against the contributor README, and require each
+to carry a test module, none of which mistake the new module for a screen.
+
+A measurement artefact from the same iteration is worth recording beside it. A
+tree-wide parse gate ran while these ten files were being rewritten and reported
+a file it could not parse; re-run afterwards it passes. The failure was real at
+the instant it was taken and meaningless a second later, because the thing being
+measured was being written by the same session doing the measuring. Comparing
+the two runs by identity rather than by count is what made it legible - the
+failing set was otherwise unchanged, so the single new entry stood out as an
+event rather than a regression.
