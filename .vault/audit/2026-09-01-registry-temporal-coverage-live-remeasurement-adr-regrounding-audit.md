@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7fa9918076e865c48ce0247b08318c1657afbcb80609f922e74e0b93ba7c1a0b'
+body_hash: 'sha256:354d6e2a5d770b4ec2759b3d6c17f2434e3c85599349bfc2270295a14c3145e2'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7553,3 +7553,42 @@ eight kinds are therefore pinned by something that would fail if a literal
 drifted from the declaration, and the eighth is pinned by a validator in another
 package. That is a complete account, which is more useful than a claim of full
 coverage would have been.
+
+### the-central-invariant-was-guarded-by-a-substring-that-punished-documentation | high | A module explaining why it must not call the binding derivation would have failed the gate protecting that rule
+
+The gate holding this campaign's central invariant - no screen rebuilds the
+resolved export surface - detected a reach by searching each module's text for
+the derivation's name. Two consequences, and the second is the serious one. It
+would miss nothing it was built to catch, but it fires on any mention: a screen
+whose docstring said "this must not call `derive_export_layouts_from_bindings`;
+it asks the accessor" would be reported as an offender. The gate that exists to
+teach a rule made stating the rule an offence.
+
+It now reads the syntax tree. An import naming the derivation, a bare name, or
+an attribute access is a reach; the same characters inside a docstring, a
+comment or a string literal are not. The walk also moved from a flat glob to a
+recursive one, so a screen in a subpackage is no longer outside the rule.
+
+A paired proof sits beside it, because each half fails differently. Without the
+first the gate protects nothing; without the second it makes the rule
+undocumentable, and a rule nobody may explain is one the next author re-breaks.
+The proof asserts both directions on constructed sources: an import and an
+attribute call are caught, a docstring and a comment naming the same symbol are
+not. Twenty-two tests pass in that module, exit 0.
+
+### the-ci-lane-selection-re-measured-to-a-reconciling-total | high | 177 failures and 109 errors of 3,941 collected, and the duration is not comparable
+
+The criterion quoting 167 failures and 72 errors of 3,881 tests was re-run over
+the same eighteen directories. It reports 177 failed, 3,653 passed, 2 skipped
+and 109 errors, which sum to the 3,941 collected - the reconciliation being the
+point, since a headline that does not add up to its own collection is the defect
+this campaign opened with.
+
+The duration is deliberately excluded from the comparison. The earlier reading
+took six and a half minutes; this one took forty. The host carried a hundred and
+eighty-nine python processes at full CPU throughout, and several of this plan's
+own suites ran beside it - by my own hand, which is the honest way to say it.
+Reporting six-to-forty as a regression would repeat the error already made once
+here with a per-test timeout, where a ceiling struck under saturation was nearly
+recorded as a property of the test. A wall-clock measured against contention
+measures the contention.

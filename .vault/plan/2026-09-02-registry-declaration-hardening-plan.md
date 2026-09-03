@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:52ae6d16cb0f6217a828ec37c63ec214ad9b9e0f89fab90aec347084c76ad05a'
+body_hash: 'sha256:89e27a18f7a5286730346c1dedcc57a106e77c5d13ebda21e837072f0c74f5c3'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -528,6 +528,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S298` - Prove the one declared screen condition that was silent and unexercised, and pair it with its live-corpus silence; `dev/registry/tests/test_temporal_site_agreement.py`.
 - [x] `W06.P13.S299` - Give the continuity screen a per-definition function so its two detector proofs assert the reported kind rather than the index beneath it; `dev/registry/analysis/continuity_integrity.py dev/registry/tests/test_continuity_integrity.py`.
 - [x] `W06.P13.S300` - Declare the name-window screen's kinds and retire the four-regex source extraction that recovered them; `dev/registry/analysis/revision_name_window.py dev/registry/tests/test_revision_name_window.py`.
+- [x] `W06.P13.S301` - Re-measure the CI lane selection to a reconciling total and move the reassembly gate onto the syntax tree; `dev/registry/tests/test_declaration_invariant_gates.py .vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -734,11 +735,18 @@ The development registry lane passes, and until it does every failure in it is n
 The lane is red, and which lane is meant now has to be said. Over the registry directories this
 plan has measured throughout, the count has moved between fifteen and forty-two and every failure
 in it is dated and attributed. Over the eighteen-directory selection CI actually invokes, measured
-once to a reconciling total, it is 167 failures and 72 errors of 3,881 tests. Those are not two
-readings of one number: the registry path shares a single directory with the CI selection, so the
-smaller figure was never a subset of the larger one and the criterion had been quoting a lane
-nobody runs. It also completes in six and a half minutes
-rather than fifteen, which is the performance work above showing up where a contributor feels it. The passing count is deliberately not recorded. It rises
+once to a reconciling total, it was 167 failures and 72 errors of 3,881 tests. Re-measured on
+2026-09-03 it is 177 failures and 109 errors of 3,941 collected, with 3,653 passing and 2 skipped -
+the four numbers reconcile to the collected total, which is what makes the reading trustworthy rather
+than a headline. Those are not two readings of one number: the registry path shares a single
+directory with the CI selection, so the smaller figure was never a subset of the larger one and the
+criterion had been quoting a lane nobody runs.
+
+The re-measurement's duration is deliberately not compared. The earlier reading completed in six and
+a half minutes; this one took forty, on a host carrying a hundred and eighty-nine python processes
+at full CPU while this plan's own suites ran beside it. That is a measurement of the machine, not of
+the lane, and reporting it as a regression would have been the same error this campaign has already
+made once with a timeout. The passing count is deliberately not recorded. It rises
 whenever this plan adds a gate - it moved by two within a day of being written down - so a criterion
 carrying it goes stale for the best possible reason, and a number that changes when nothing is wrong
 teaches a reader to ignore it. The
