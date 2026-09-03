@@ -5959,3 +5959,27 @@ attributed, and it was also concealing a real defect in the file being measured.
 that explains a failure is not the same as a transient that causes it, and the only way to tell
 them apart is to re-run once the transient is gone - which cost three minutes and changed the
 answer.
+
+### ci-selection-run-rejected-by-its-own-reconciliation | high | 3,881 collected against 3,618 reported: 263 tests vanished and the result is unusable
+
+The CI dev-tooling selection was run under the reconciling method, and the method rejected it.
+Collection reported 3,881 tests. The run reported 142 failed, 3,416 passed and 60 errors, which
+is 3,618. Two hundred and sixty-three tests are unaccounted for, and the log carries five
+lost-worker markers.
+
+No figure from that run is recorded here. The tempting one - 142 failures across the selection
+CI actually invokes - would have been the campaign's first measurement of the right population
+and is exactly the number to be most careful with. It describes 3,618 of 3,881 tests, and which
+263 are missing is not knowable from the log.
+
+This is the first time the reconciliation added by the eleventh criterion has caught anything.
+Every previous run reconciled exactly, which made the check look like ceremony; twelve findings
+quoted figures that were correct and the check that confirmed them cost a `--collect-only`. Here
+it is the only thing standing between a crashed run and a headline number, because the summary
+line reads as a complete result and says nothing about the gap.
+
+Re-running is not attempted this iteration. Forty-seven minutes under xdist became unusable
+partly through contention with this campaign's own measurements, and a serial re-run of eighteen
+directories is a longer job than an iteration - so the honest state is that the CI-facing figure
+remains unmeasured, and the earlier registry-subset figures remain the only ones this campaign
+has.

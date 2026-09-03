@@ -18,27 +18,26 @@ Independent review of the live classification and prepared-import slice, includi
 
 ## Findings
 
-### invisible-classification-target | high | The operator confirms a mutation without seeing or validating its transaction target
+### invisible-classification-target | high | Closed: classification target is visible and admitted from the projection
 
-`LedgerClassificationScreen` renders only a generic selected-entry prompt and classification choices. It never renders even the safe transaction prefix used by Entries and Review, while the factory accepts any syntactically valid `TransactionId` as `classification_target` without proving that it belongs to the injected projection. Confirmation therefore gives the operator no way to verify which entry will be mutated, and the controller will submit an off-projection target unchanged. The existing test verifies the hidden target only after submission, which proves plumbing rather than informed confirmation. Admission must reject a target absent from the projected entry catalogue, and the confirmation surface must display a safe semantic target coordinate.
+The initial screen hid its target and accepted an off-projection identity. Remediation rejects a classification target absent from the injected entry catalogue and renders its projection position, total, and safe twelve-character reference before confirmation. Exact admission and rendered-coordinate tests close this finding.
 
-### prepared-import-is-not-opaque-or-stable | medium | The prepared command can be read, replaced, and serialized after admission
+### prepared-import-is-not-opaque-or-stable | medium | Closed: prepared import is immutable, vaulted, non-serializable, and safely identified
 
-`LedgerPreparedImportV1` claims an opaque pre-resolved command with no serialization surface, but `_command` is directly accessible and assignable. Its default pickle representation contains the protected filename and provider, and replacing `_command` after display causes the same identity-approved object to submit a different path and provider because controller membership is object identity. `choice_id` is only checked for non-emptiness, is emitted by `repr`, and can itself contain sensitive text; duplicate ids can also collide in `DataTable`. The focused test checks only the custom `repr` and rendered Static copy. Make the prepared capability immutable, constrain safe identities, reject duplicates, and either prevent serialization or define an explicitly redacted serialization contract.
+The initial object exposed and permitted replacement of its command, serialized protected path and provider values, and admitted unsafe or duplicate display identities. Remediation moves the command into a module-private weak vault, makes instance metadata immutable, refuses pickle serialization, constrains label keys and choice grammar, and rejects duplicate ids before mounting. Exact adversarial tests close this finding.
 
-### terminal-flow-state-can-be-rewritten-as-cancelled | medium | Cancel remains live after a successful persisted operation
+### terminal-flow-state-can-be-rewritten-as-cancelled | medium | Open: terminal states are fixed but Escape can orphan an in-flight submission
 
-Both flows leave their controls and selection live after terminal success or failure. In a real compositor probe, selecting Cancel after a successful import changed `flow_state` from `SUCCEEDED` to `CANCELLED` while the import door retained its completed call. This is a false lifecycle claim: cancellation cannot undo the persisted mutation. Submission controls should be disabled or guarded outside the confirming state, terminal results must remain terminal, and in-flight cancellation/back behavior must have an explicit policy. Tests cover only one happy submit and pre-submit cancellation, not post-success cancel, repeated confirm, slow in-flight submission, screen teardown, or cancellation exceptions.
+Remediation makes flow transitions monotonic, accepts Confirm only from `CONFIRMING`, disables both controls during submission, and prevents post-success Cancel or repeated submission. The reproduced terminal-state rewrite is closed. A narrowed lifecycle defect remains: `action_back` handles only `CONFIRMING`; in `SUBMITTING` it delegates to the base action and posts `LedgerBackRequested` while the screen itself owns and awaits the submit coroutine. The host may therefore navigate away or unmount the only result owner during an in-flight mutation. No slow-door Escape, teardown, or generic failure test covers that state. This finding remains medium until in-flight Escape has an explicit refusal or lifecycle owner and an exact test.
 
-### new-screen-geometry-tests-are-proxy-only | low | Flow tests use 80 columns without asserting geometry, scroll ownership, or focus order
+### new-screen-geometry-tests-are-proxy-only | low | Closed: both new screens have exact compositor and focus assertions
 
-The slice tests mount both new screens at 80 columns but do not call the established geometry probe, inspect horizontal scroll, assert one vertical scroll owner, or assert the focus chain. Independent compositor inspection currently found no overflow, zero horizontal table scroll, and sensible semantic focus order for both screens, so this is a proof gap rather than a reproduced layout defect. Enroll Classification and Import in the same non-vacuous geometry, scroll, and focus assertions used by the existing Ledger surfaces.
+The new parameterized compositor test now asserts initial and confirming focus chains, `geometry_band`, zero horizontal table scroll, and the sole permitted vertical scroll owner for both Classification and Import at eighty columns. This proof gap is closed.
 
 ## Recommendations
 
-Hold further S375 slices until the high target-confirmation defect and the two medium secrecy/lifecycle defects are corrected with independent tests. The low proof gap should close in the same follow-up because the shared geometry primitives already exist.
+Hold further S375 slices until the remaining narrowed medium in-flight lifecycle defect is corrected and independently tested. The high target-confirmation finding, prepared-import secrecy finding, terminal-state rewrite, and low geometry proof gap are otherwise closed.
 
 Positive findings: classification action identity is validated through the real application catalogue and its canonical command key; the classification patch changes only `business_classification`; mutation requires a separate row selection and confirm action; absent submitters and still-deferred destinations resolve to typed refusals; import paths and providers do not appear in current screen copy, custom repr, or generic failure messages; flow modules import no adapters, CLI, file readers, or concrete import mutator; locale strings are authored and genuinely distinct in all four languages; Escape cancels pre-submit confirmation before returning to the parent; and direct eighty-column compositor inspection found no clipping or horizontal scrolling.
 
 Focused gates: 24 Ledger tests passed with all markers enabled; Ruff passed; ty passed; basedpyright reported zero errors and zero warnings. These gates do not discharge the findings because the current tests omit the reproduced adversarial states.
-
