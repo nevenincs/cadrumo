@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:3601df6108df3a771824975c795daee6bd9036a93cf705c6aed5a9ec3b8910cd'
+body_hash: 'sha256:6aa6a105b12faa53795c03aa8c2e68553856da13489589878cb81cf85c991b09'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -501,6 +501,7 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S451` - Re-measure the reference worklist after the deadline window family joined the walk: 472 pairs, 224 systemic and 55 single-child of which 38 are deadline windows citing their years campaign orden at article 8, a second annual series confirming the manifest is the under-declared side; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W04.P09.S452` - Derive the citing-family walk from the schemas own SCHEMA_FAMILY annotation rather than naming eight of nineteen by hand, since nine unwalked families carry citations that would clear 141 of the 159 uncited findings and add 1,684 outside-manifest citations; `dev/registry/analysis/provenance_consistency.py dev/registry/analysis/manifest_uncited_references.py`.
 - [x] `W04.P09.S453` - Write the provenance ratio with its definition date and command in both places, since it has been corrected three times as the screen learned to read more families and a bare nineteen survived every correction; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md dev/registry/analysis/provenance_consistency.py`.
+- [x] `W04.P09.S454` - Re-measure the filer-facing criterion after the derived walk: every one of the sixty-nine filing-grade revisions now carries a condition where two were clean, which is the same corpus read more completely rather than a regression; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 
@@ -1059,10 +1060,13 @@ entirely, the honest instruction is to construct the case from a copy of a real 
 what the sibling conditions in the same module already do.
 
 Every declaration defect a filer would actually meet is named, counted, and separated from the ones
-that cost nothing. The corpus declares sixty-nine filing-grade revisions and **sixty-seven of them
-carry at least one condition**, so the useful unit of repair is the revision rather than the
-condition: choosing work by condition means touching almost every fileable revision, while modelo
-200's `2025-y-siguientes` alone carries seven independent ones and modelo 347's `2011-2024` six.
+that cost nothing. Measured by `python -m dev.registry.analysis.filing_exposure` on 2026-09-04: the
+corpus declares sixty-nine filing-grade revisions and **every one of them carries at least one
+condition**. It was sixty-seven of sixty-nine until the provenance walk began following the schema's
+own family annotation rather than a hand-written list of eight, which is a change in what was being
+looked at rather than in the registry. So the useful unit of repair is the revision rather than the
+condition - choosing by condition means touching every fileable revision without exception - and
+modelo 200's `2025-y-siguientes` carries seven independent conditions, the most of any.
 
 Five findings in that set are filing-correctness rather than untidiness, and each was verified against
 the shipped code or the official design rather than taken from a screen's own description.

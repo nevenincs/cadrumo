@@ -12374,3 +12374,29 @@ still held from one that had been overtaken. This audit has now recorded that
 same failure in a step, a verification criterion, three parallelization
 constraints, a screen's docstring and its own pages; the remedy has been the
 same every time, and applying it to prose costs a sentence.
+
+
+## Every filing-grade revision carries a declaration contradiction
+
+Re-measuring after the walk began following the schema, on 2026-09-04:
+
+| figure | eight families | derived |
+| ------ | -------------- | ------- |
+| filing-exposed findings | 27,922 | **29,502** |
+| filing-grade revisions carrying at least one condition | 67 of 69 | **69 of 69** |
+| conditions on the worst revision, modelo 200 `2025-y-siguientes` | 7 | 7 |
+| conditions on modelo 347 `2011-2024` | 6 | 5 |
+
+The two revisions that had been clean are clean no longer, and nothing about
+them changed: the walk that judges them widened. That is worth stating carefully,
+because "every fileable revision now carries a contradiction" sounds like a
+regression and is not one - it is the same corpus, more completely read.
+
+Modelo 347's count fell while the population grew, which is the other direction
+and equally uninteresting on its own: one of its conditions cleared because a
+manifest reference it was reported as failing to cite turned out to be cited by a
+family the walk had been skipping.
+
+Both movements say the same thing about the figures this campaign has been
+publishing. They measured what the tooling looked at, not what the registry
+declares, and the gap between those was nine families wide until this week.
