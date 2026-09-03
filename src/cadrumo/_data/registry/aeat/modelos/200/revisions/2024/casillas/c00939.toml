@@ -1,10 +1,10 @@
 [[revisions.2024.casillas]]
 id = '00939'
 number = '00939'
-data_type = "money"
+data_type = 'money'
 semantic_role = 'is_balance_activo_importe'
 required = false
-input_kind = "manual"
+input_kind = 'manual'
 section = [
     'balance_activo_i',
     'activo',
@@ -20,5 +20,3 @@ source_refs = [
     'aeat-dr-200-2024',
     'aeat-modelo-200-manual-2024',
 ]
-
-

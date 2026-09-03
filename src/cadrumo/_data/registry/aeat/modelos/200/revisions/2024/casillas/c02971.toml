@@ -1,10 +1,10 @@
 [[revisions.2024.casillas]]
 id = '02971'
 number = '02971'
-data_type = "money"
+data_type = 'money'
 semantic_role = 'is_correcciones_aumentos'
 required = false
-input_kind = "manual"
+input_kind = 'manual'
 section = [
     'liquidacion_i',
     'detalle_correcciones_resultado_cta_perdidas_y_gana',
@@ -20,5 +20,3 @@ source_refs = [
     'aeat-dr-200-2024',
     'aeat-modelo-200-manual-2024',
 ]
-
-

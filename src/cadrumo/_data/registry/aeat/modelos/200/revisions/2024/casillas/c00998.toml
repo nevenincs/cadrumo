@@ -1,10 +1,10 @@
 [[revisions.2024.casillas]]
 id = '00998'
 number = '00998'
-data_type = "money"
+data_type = 'money'
 semantic_role = 'is_deduccion_donativos_general'
 required = false
-input_kind = "manual"
+input_kind = 'manual'
 section = [
     'deduccion_donativos_entidades_sin_fines_lucro',
     'donaciones_de_caracter_general',
@@ -20,5 +20,3 @@ source_refs = [
     'aeat-dr-200-2024',
     'aeat-modelo-200-manual-2024',
 ]
-
-

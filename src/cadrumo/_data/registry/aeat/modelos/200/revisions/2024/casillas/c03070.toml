@@ -1,10 +1,10 @@
 [[revisions.2024.casillas]]
 id = '03070'
 number = '03070'
-data_type = "money"
+data_type = 'money'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 required = false
-input_kind = "manual"
+input_kind = 'manual'
 section = [
     'agrupacion_interes_economico_y_utes_datos_economicos',
     '6_deduc_evitar_doble_imposicion_base_de_la_deduc',
@@ -20,5 +20,3 @@ source_refs = [
     'aeat-dr-200-2024',
     'aeat-modelo-200-manual-2024',
 ]
-
-
