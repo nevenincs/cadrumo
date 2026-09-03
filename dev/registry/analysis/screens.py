@@ -33,6 +33,7 @@ from .continuity_integrity import screen_authority as continuity_screen
 from .export_ref_symmetry import screen_authority as export_ref_screen
 from .footnote_only_wire_facts import screen_authority as footnote_only_screen
 from .grade_earned import screen_authority as grade_screen
+from .manifest_uncited_references import screen_authority as manifest_uncited_screen
 from .modelo_capability import screen_authority as modelo_capability_screen
 from .monetary_scale import screen_authority as monetary_scale_screen
 from .note_label_scope import screen_corpus as note_label_scope_screen
@@ -202,6 +203,11 @@ SCREENS: tuple[ScreenEntry, ...] = (
         "modelo_capability",
         modelo_capability_screen,
         "disagreements between a revision's declared filing rung and the machinery behind it",
+    ),
+    ScreenEntry(
+        "manifest_uncited_references",
+        manifest_uncited_screen,
+        "manifest references no child of the revision cites",
     ),
     ScreenEntry(
         "footnote_only_wire_facts",

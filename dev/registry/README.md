@@ -89,6 +89,7 @@ says which. What each one owns:
 | `note_label_scope` | designs where one note label is defined on more than one sheet |
 | `unnumbered_note_scope` | designs carrying an unnumbered note, by the structure that bears on its scope |
 | `note_text_drift` | note labels whose wording differs between a modelo's designs |
+| `manifest_uncited_references` | manifest references no child of the revision cites |
 
 Three rules keep the suite honest.
 
