@@ -6105,3 +6105,26 @@ like the vacuity screen and unlike the conformance suite.
 Not repaired. Seven tests failing inside another campaign's boundary proofs need their author,
 and the useful contribution is that the contracts and their proofs have been separated: the
 first is verifiably sound, the second verifiably unrun.
+
+### crashed-run-lower-bound-is-fifty-two-modules | medium | 142 reported failures across 52 modules, three examined and the rest left named rather than mined
+
+The rejected CI-selection run remains unusable as a total and usable as a lower bound: every
+failure it reported is real, and 263 tests it never reached may hold more. Reported, it names
+142 failures across 52 modules - 37 under `dev/registry`, 27 directly under `dev`, 20 under
+`dev/docs`, 17 under `dev/audit`.
+
+Three of the 52 were examined here and each yielded a distinct finding: the vacuity screen's
+sixteen failures on a git dependency added without updating its fixtures, the seven import-linter
+boundary proofs failing while the contracts they guard pass cleanly, and the twenty-six generated
+export tree failures already attributed to the serialization change.
+
+The remaining forty-nine are named and not mined, deliberately. The plan this work serves is
+registry declaration hardening, and the last two findings were about documentation runners and
+import-linter fixtures - real, worth recording, and progressively further from the registry. A
+campaign that follows every failing module in a shared tree stops being the campaign it was
+chartered as, and the discovery chain that reached them was a qualification of this campaign's
+own lane figures rather than an intent to audit the tooling at large.
+
+What is left behind is the list and the method: run the module directly, read the first error
+rather than the tally, check whether the file it blames carries a pending diff, and re-run once
+any transient clears. Three modules took roughly one iteration each at that rate.
