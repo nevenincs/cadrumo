@@ -198,13 +198,18 @@ def outside_reference_index(
     children. The unit someone acts on is the reference; the number of children
     citing it is how much of the revision depends on that fix.
 
-    The ratio is stated with its definition rather than as a bare number,
-    because three answer to it and this docstring carried a fourth. Summing this
-    index gives 55,065 citing children over 1,459 references, so a reference is
-    cited by about 38 children. The screen's own finding count is 31,851, which
-    is 21.8 per reference and counts a child once per KIND of reference rather
-    than once per reference. The figure written here was nineteen and matched
-    neither, before or after deadline windows joined the walk.
+    The ratio is stated with its definition and its date rather than as a bare
+    number, because three answer to it and this docstring carried a fourth. On
+    2026-09-04, summing this index gives 59,184 citing children over 1,555
+    references, so a reference is cited by about 38 children; the screen's own
+    finding count is 33,385, which counts a child once per KIND of reference
+    rather than once per reference.
+
+    The figure here was nineteen for a long time and matched no reading of the
+    corpus. It has since moved twice more, not because the registry changed but
+    because this screen twice learned to read families it had been skipping -
+    which is the argument for carrying the date: a number without one cannot be
+    told from a number that is still true.
     """
     index: dict[tuple[str, str, str, str], int] = {}
     for finding in findings:
