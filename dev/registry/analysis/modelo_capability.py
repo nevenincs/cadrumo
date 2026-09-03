@@ -27,13 +27,10 @@ it, and each is read from the validated authority rather than a maintained list:
   render a fichero but cannot say when it must be presented has answered half
   the question a filer asks.
 
-Six conditions are reported, and every row names one:
+Five conditions are reported, and every row names one:
 
 - ``claims_filing_without_layout`` - a revision at filing grade that declares no
   export layout. The claim has no renderable form behind it.
-- ``layout_without_filing_grade`` - the mirror: a revision carrying an export
-  layout, or an envelope, while declaring a grade below filing. Either the grade
-  understates what the revision can do, or the layout is unreachable.
 - ``envelope_spelled_as_record`` - a layout carrying its envelope smuggled into
   the record tuple as an ``envelope_header`` pseudo-record instead of the typed
   ``filing_envelope`` slot. The bytes may look right and the transport is
@@ -78,6 +75,15 @@ None of these is automatically a defect. A modelo that is genuinely not filed
 here SHOULD sit at applicability with nothing behind it, and that state produces
 no row at all. What the screen refuses to do is let a filing claim and the
 machinery behind it drift apart silently.
+
+The mirror of that condition - a revision carrying a layout while declaring a
+grade below filing - is deliberately NOT reported here. The grade screen already
+reports it, as an under-declared grade naming ``export_layout`` as the
+prerequisite that supports a higher one, and the two populations were measured
+identical: the same twenty-five revisions, with nothing on either side. One
+stated the symptom and the other states the conclusion and which prerequisite
+drives it, so keeping both was one fact under two names.
+
 
 The screen exits 0 whatever it finds. It reports; it does not gate.
 """
@@ -215,16 +221,6 @@ def screen_authority(
                     revision=row.revision,
                     kind="claims_filing_without_layout",
                     detail="declares filing grade and no export layout to render it from",
-                )
-            )
-        elif row.grade != "filing" and (row.layouts or row.envelopes):
-            findings.append(
-                ModeloCapabilityFinding(
-                    modelo=row.modelo,
-                    revision=row.revision,
-                    kind="layout_without_filing_grade",
-                    detail=f"declares {row.grade} grade while carrying {row.layouts} layout(s)"
-                    f" and {row.envelopes} envelope(s)",
                 )
             )
         if row.files_here and row.calculation_class == "filing" and not row.formulas:
