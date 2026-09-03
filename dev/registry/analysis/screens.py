@@ -61,9 +61,9 @@ __all__ = [
     "SCREEN_ENTRY_POINTS",
     "CorpusScreenEntry",
     "ScreenEntry",
-    "enrolled_screen_findings",
     "run_corpus_screens",
     "run_screens",
+    "screen_findings",
     "screen_module_names",
 ]
 
@@ -296,18 +296,38 @@ def screen_module_names() -> frozenset[str]:
     )
 
 
-def enrolled_screen_findings(
+def screen_findings(
     authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
 ) -> tuple[tuple[str, tuple[object, ...]], ...]:
-    """Return every enrolled screen's name and findings, from both tables.
+    """Return each screen's OWN findings, by name, from both tables.
 
-    One traversal for the gates that inspect what screens EMIT. Without it each
-    gate chooses a table, and the four that chose the authority table stopped
-    covering the corpus screens without saying so.
+    Every screen is called through its own entry point rather than through the
+    table's ``run``, and the difference matters. A table entry may project - to
+    the subset needing action, to an index, to the residue - so the runner can
+    report one meaningful number per screen. Those projections drop findings by
+    design, and a gate reading them inspects whatever survived rather than what
+    the screen emits.
+
+    The earlier version of this helper read the table, and four kinds were
+    invisible to the kind-naming gate because of it: the monetary screen's
+    split-representation kind, filtered out by the projection that keeps only
+    findings needing action, and all three grounded kinds of the grounding
+    screen, whose entry projects onto its ungrounded residue - which is empty,
+    so not one of its kinds reached the gate at all. Both projections are right
+    for the runner and wrong for a gate, which is why the two now read different
+    functions.
     """
-    from_authority = ((entry.name, tuple(entry.run(authority, modelo_ids))) for entry in SCREENS)
-    from_corpus = ((entry.name, tuple(entry.run())) for entry in CORPUS_SCREENS)
-    return (*from_authority, *from_corpus)
+    import importlib
+
+    findings: list[tuple[str, tuple[object, ...]]] = []
+    for name in sorted(screen_module_names()):
+        module = importlib.import_module(f"{__package__}.{name}")
+        authority_entry = getattr(module, "screen_authority", None)
+        if authority_entry is not None:
+            findings.append((name, tuple(authority_entry(authority, modelo_ids))))
+        else:
+            findings.append((name, tuple(module.screen_corpus())))
+    return tuple(findings)
 
 
 def run_corpus_screens() -> tuple[tuple[str, int, str], ...]:

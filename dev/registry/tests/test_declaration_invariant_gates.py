@@ -500,13 +500,13 @@ def test_every_kind_a_screen_emits_is_named_in_its_own_docstring(
     """
     import importlib
 
-    from ..analysis.screens import enrolled_screen_findings
+    from ..analysis.screens import screen_findings
 
     observed: set[tuple[str, str]] = set()
     undocumented: list[str] = []
     # Both tables, through the shared traversal. This gate iterated the
     # authority table alone and so never read a corpus screen's kinds.
-    for name, findings in enrolled_screen_findings(authority, modelo_ids):
+    for name, findings in screen_findings(authority, modelo_ids):
         module = importlib.import_module(f"dev.registry.analysis.{name}")
         doc = module.__doc__ or ""
         for finding in findings:
@@ -519,6 +519,47 @@ def test_every_kind_a_screen_emits_is_named_in_its_own_docstring(
 
     assert observed, "no enrolled screen emitted a kind, so this gate checked nothing"
     assert not undocumented, "\n".join(sorted(set(undocumented)))
+
+
+def test_no_screen_kind_is_hidden_from_the_gates_by_a_runner_projection(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> None:
+    """Every kind a screen emits reaches the gates that inspect kinds.
+
+    A table entry may project - onto the subset needing action, an index, or a
+    residue - so the runner can report one meaningful number per screen. Those
+    projections drop findings by design, and a gate reading the table inspects
+    what survived rather than what the screen emits. Four kinds were invisible
+    that way: one filtered out of the monetary screen, and all three grounded
+    kinds of the grounding screen, whose entry projects onto an empty residue.
+
+    This asserts the two views agree on kinds, so a projection added later
+    cannot quietly narrow what the gates see. It compares SETS and not counts,
+    because a projection that dropped one kind and a screen that gained one
+    would leave a count unchanged.
+    """
+    from ..analysis.screens import CORPUS_SCREENS, SCREENS, screen_findings
+
+    def kinds_of(rows: tuple[object, ...]) -> set[str]:
+        return {kind for row in rows if isinstance(kind := getattr(row, "kind", None), str)}
+
+    direct = {name: kinds_of(findings) for name, findings in screen_findings(authority, modelo_ids)}
+    assert any(direct.values()), "no screen emitted a kind, so this gate checked nothing"
+
+    projected: dict[str, set[str]] = {}
+    for entry in SCREENS:
+        projected[entry.name] = kinds_of(tuple(entry.run(authority, modelo_ids)))
+    for entry in CORPUS_SCREENS:
+        projected[entry.name] = kinds_of(tuple(entry.run()))
+
+    hidden = {
+        name: sorted(direct[name] - projected.get(name, set()))
+        for name in direct
+        if direct[name] - projected.get(name, set())
+    }
+    assert not hidden, (
+        "kinds a screen emits that its runner entry hides, so the gates never read them: " f"{hidden}"
+    )
 
 
 def test_every_package_initialiser_in_the_development_registry_tree_is_inert() -> None:
@@ -709,9 +750,9 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
 
     wrong: list[str] = []
     checked = 0
-    from ..analysis.screens import enrolled_screen_findings, screen_module_names
+    from ..analysis.screens import screen_findings, screen_module_names
 
-    findings_by_name = dict(enrolled_screen_findings(authority, modelo_ids))
+    findings_by_name = dict(screen_findings(authority, modelo_ids))
     for screen_name in sorted(screen_module_names()):
         module = importlib.import_module(f"dev.registry.analysis.{screen_name}")
         doc = module.__doc__ or ""
