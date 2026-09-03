@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:58bf4a1c3f28dc96922ed9b8d93ec630af4f9317a82aa66b333587f491704d0e'
+body_hash: 'sha256:7a408cee51e8bdc9f8c909fa4cbbe89e6a45c3bb44caf221884b39ac7a7035dc'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -9127,3 +9127,30 @@ just performed; an absence stated beside the neighbouring evidence tells them
 where not to look. That is the difference between the two absence claims checked
 today: one was carried a day past its truth, and this one was true but silent
 about its own neighbourhood.
+
+### three-absence-claims-checked-two-stale-and-the-pattern-is-the-same-each-time | high | A blocker recorded once outlives the condition that made it true
+
+Three claims in this plan assert that something cannot be done. All three were
+re-checked against the tree today rather than carried.
+
+The publication limb was said to exist unreachably. It became reachable on
+2026-09-02 and the claim survived a day past its truth, blocking the repair
+behind twenty-seven of this directory's thirty-five failures.
+
+The release-eligibility criterion said the predicate lives in contributor
+tooling "behind a held file". The predicate is still there - that half holds -
+but the file carries no pending diff and neither does its destination in the
+shipped application. What blocks the move is this execution's scope, not another
+contributor's work in progress, and those want opposite responses: a held file
+means wait and re-check, a scope limit means hand off. The criterion now says
+which it is.
+
+The official emitted-byte reference is genuinely absent, and the corpus around
+it is now listed so the next reader knows where not to look.
+
+Two of three were stale and both went stale the same way: a blocker true when
+observed, recorded as a property, and then not observed again. A count that
+drifts is visibly a count and invites re-measurement. A blocker reads as a fact
+about the world, and nothing about the sentence suggests it has a shelf life -
+which is why the two found stale here had each been carried through every
+iteration of this campaign without anyone, including me, thinking to look.

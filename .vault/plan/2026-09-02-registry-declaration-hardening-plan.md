@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:07e2c7673d48a4c50272ba505133da6baf8a56cfae18041b83fb9ccedaeba9d2'
+body_hash: 'sha256:332ba02b7e2abec0bc06e15227547af68c1386253afdf559a8af49ee81c94339'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -652,6 +652,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S352` - Record the completed registry attribution in the lane criterion, with its causes rather than its count; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S353` - Lift the unreachable-publication constraint, which a September second commit had already made false; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S354` - Verify the official-reference absence and record what the corpus does hold beside it; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S355` - Correct the release-predicate criterion, whose held-file blocker has lifted; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -810,8 +811,12 @@ plausible number and only the method of reaching it differs.
 
 The release-eligibility predicate is evaluable from the shipped application, and a coordinate-identity
 gate runs in the repository gate lane, comparing the satisfied filing coordinate set by identity and
-naming the limb that regressed. It asserts no count, no ceiling and no floor. Neither half holds yet:
-the predicate still lives in contributor tooling behind a held file.
+naming the limb that regressed. It asserts no count, no ceiling and no floor. Neither half holds yet, and the reason has changed: the
+predicate still lives in contributor tooling, in `dev/registry/conformance/closure.py`, but that file
+is no longer held. It carries no pending diff and neither does its destination in the shipped
+application, so what blocks the move is scope rather than another contributor's work in progress -
+the same distinction the parallelization section draws, and the third absence claim in this plan
+found stale on re-check.
 
 At least one generated export tree carries an enrolled conformance vector proving its emitted bytes
 against the official record design, and a tree carrying no vector refuses as missing evidence rather
