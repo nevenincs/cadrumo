@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import cast
-from datetime import UTC, date, datetime
 
 import pytest
 import yaml
+from textual.containers import VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Static
 
@@ -128,6 +130,7 @@ def _projection(
     *,
     unread: bool = False,
     unknown_pair: bool = False,
+    census_status: AeatSyncCensusStatus = AeatSyncCensusStatus.CONFLICT,
     notification_specs: tuple[tuple[str, date], ...] | None = None,
 ) -> AeatSyncWorkspaceProjectionV1:
     """Build through the public projector from local scoped facts."""
@@ -171,7 +174,7 @@ def _projection(
                 _BUCKET_ID,
                 _SUBJECT_KEY,
                 AeatSyncWorkspaceCensusRowV1(
-                    path="tax address", category=AeatSyncCensusCategory.ADDRESS, status=AeatSyncCensusStatus.CONFLICT
+                    path="tax address", category=AeatSyncCensusCategory.ADDRESS, status=census_status
                 ),
             ),
         ),
@@ -246,6 +249,41 @@ def _projection(
     )
 
 
+def _empty_projection(availability: AeatSyncWorkspaceAvailability) -> AeatSyncWorkspaceProjectionV1:
+    """Build one valid six-zone empty/unknown source-state snapshot."""
+    observed = availability in {
+        AeatSyncWorkspaceAvailability.AVAILABLE,
+        AeatSyncWorkspaceAvailability.STALE,
+    }
+    observations = tuple(
+        AeatSyncWorkspaceZoneObservationV1(
+            zone=zone,
+            sources=tuple(
+                AeatSyncWorkspaceSourceObservationV1(
+                    source=source,
+                    availability=availability,
+                    observed_at=_T2 if observed else None,
+                    refusal=(
+                        None
+                        if availability is AeatSyncWorkspaceAvailability.AVAILABLE
+                        else "aeat.sync.source.refused"
+                    ),
+                    item_count=0 if observed else None,
+                )
+                for source in aeat_sync_workspace_sources(zone)
+            ),
+        )
+        for zone in AeatSyncWorkspaceZone
+    )
+    return project_aeat_sync_workspace(
+        bucket_id=_BUCKET_ID,
+        subject_key=_SUBJECT_KEY,
+        zone_observations=observations,
+        action_catalogue=OPERATOR_ACTION_CATALOGUE,
+        operation_contracts=_contracts(),
+    )
+
+
 def _contracts(action_id: str = "operator.profile.edit") -> OperationPublicContractSetV1:
     """Build a public contract whose operation/action join is explicit."""
     definition = CENSAL_OPERATION_DEFINITION.model_copy(
@@ -269,7 +307,10 @@ def _controller(
     )
 
 
-_SCREEN_CASES: tuple[tuple[type[AeatSyncWorkspaceScreen], str, dict[str, str], tuple[str, ...]], ...] = (
+type _ScreenFactory = Callable[[AeatSyncWorkspaceController], AeatSyncWorkspaceScreen]
+
+
+_SCREEN_CASES: tuple[tuple[_ScreenFactory, str, dict[str, str], tuple[str, ...]], ...] = (
     (
         AeatSyncOverviewScreen,
         "tui.aeat_sync.overview.title",
@@ -337,6 +378,45 @@ _SCREEN_CASES: tuple[tuple[type[AeatSyncWorkspaceScreen], str, dict[str, str], t
         ("reconciliation:130|2026|1T",),
     ),
 )
+
+_REPRESENTATIVE_KEYS: dict[_ScreenFactory, tuple[str, ...]] = {
+    AeatSyncOverviewScreen: (
+        "tui.aeat_sync.area.census",
+        "tui.aeat_sync.source_state.present",
+        "tui.aeat_sync.discrepancy.none",
+    ),
+    AeatSyncCensusScreen: (
+        "tui.aeat_sync.census_category.address",
+        "tui.aeat_sync.census_status.conflict",
+    ),
+    AeatSyncFiledDeclarationsScreen: (
+        "tui.aeat_sync.local_filing_state.filed",
+        "tui.aeat_sync.aeat_observation_state.accepted",
+        "tui.aeat_sync.justificante_state.verified",
+    ),
+    AeatSyncNotificationsScreen: (
+        "tui.aeat_sync.notification_read_state.read",
+        "tui.aeat_sync.notification_category.formal",
+        "tui.aeat_sync.document_custody_state.held",
+    ),
+    AeatSyncEvidenceComparisonScreen: (
+        "tui.aeat_sync.source_state.present",
+        "tui.aeat_sync.source_state.absent",
+        "tui.aeat_sync.discrepancy.local_only",
+    ),
+    AeatSyncReconciliationScreen: (
+        "tui.aeat_sync.source_state.present",
+        "tui.aeat_sync.source_state.absent",
+        "tui.aeat_sync.reconciliation_state.keep_local",
+    ),
+}
+
+
+def _table_text(table: DataTable[str]) -> str:
+    """Collect actual compositor table labels and cells, not proxy DTO values."""
+    labels = [str(column.label) for column in table.columns.values()]
+    cells = [str(cell) for index in range(table.row_count) for cell in table.get_row_at(index)]
+    return "\n".join((*labels, *cells))
 
 
 @pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
@@ -564,7 +644,7 @@ def test_aeat_sync_status_keys_are_present_in_every_supported_locale() -> None:
 @pytest.mark.parametrize("screen_type, heading_key, headings, expected_keys", _SCREEN_CASES)
 async def test_every_aeat_sync_screen_is_localized_and_keeps_route_and_row_identities(
     locale: str,
-    screen_type: type[AeatSyncWorkspaceScreen],
+    screen_type: _ScreenFactory,
     heading_key: str,
     headings: dict[str, str],
     expected_keys: tuple[str, ...],
@@ -582,6 +662,18 @@ async def test_every_aeat_sync_screen_is_localized_and_keeps_route_and_row_ident
                 if locale != "en":
                     assert headings[locale] != headings["en"]
                 table = screen.query_one("#aeat-sync-rows", DataTable)
+                navigation = screen.query_one("#aeat-sync-navigation", DataTable)
+                visible = "\n".join((rendered, _table_text(navigation), _table_text(table)))
+                assert tr("tui.aeat_sync.column.area", locale=locale) in visible
+                assert tr("tui.aeat_sync.availability.available", locale=locale) in visible
+                for key in _REPRESENTATIVE_KEYS[screen_type]:
+                    translated = tr(key, locale=locale)
+                    assert translated != key
+                    assert translated in visible
+                assert "tui.aeat_sync." not in visible
+                assert "AeatSync" not in visible
+                for raw_token in ("filed_declarations", "evidence_comparison", "never_captured"):
+                    assert raw_token not in visible
                 keys = tuple(str(item.key.value) for item in table.ordered_rows)
                 if screen_type is AeatSyncNotificationsScreen:
                     assert keys == (str(screen.controller.projection.notifications[0].selection_key),)
@@ -626,7 +718,7 @@ async def test_operation_failure_and_refusal_copy_is_localized(
     """Host failure and absent-door refusal are both translated operator states."""
 
     async def fail(_request: AeatSyncOperationRequestV1) -> None:
-        raise RuntimeError("sentinel host failure")
+        raise RuntimeError("sentinel host failure C:\\protected\\taxpayer.txt 12345678Z")
 
     token = I18N_STRICT_MISSING_KEYS.set(True)
     try:
@@ -636,7 +728,10 @@ async def test_operation_failure_and_refusal_copy_is_localized(
                 await pilot.pause()
                 await pilot.click("#aeat-sync-operation-0")
                 await pilot.pause()
-                assert failure_copy in str(failed.query_one("#aeat-sync-status", Static).render())
+                rendered = str(failed.query_one("#aeat-sync-status", Static).render())
+                assert failure_copy in rendered
+                assert "protected" not in rendered
+                assert "12345678Z" not in rendered
 
             refused = AeatSyncOverviewScreen(_controller())
             async with ScreenHostApp[None](refused).run_test(size=(100, 30)) as pilot:
@@ -645,3 +740,82 @@ async def test_operation_failure_and_refusal_copy_is_localized(
                 assert refusal_copy in str(refused.query_one("#aeat-sync-status", Static).render())
     finally:
         I18N_STRICT_MISSING_KEYS.reset(token)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("availability", tuple(AeatSyncWorkspaceAvailability))
+async def test_every_zone_renders_truthful_empty_or_unobservable_source_state(
+    availability: AeatSyncWorkspaceAvailability,
+) -> None:
+    """Known-empty and unknown source states remain visibly distinct in all zones."""
+    projection = _empty_projection(availability)
+    controller = AeatSyncWorkspaceController(
+        TuiScreenContextV1(destination="workbench.aeat_sync"),
+        projection,
+        operation_contracts=_contracts(),
+    )
+    expected_count = (
+        0
+        if availability in {AeatSyncWorkspaceAvailability.AVAILABLE, AeatSyncWorkspaceAvailability.STALE}
+        else None
+    )
+    for screen_factory, _heading, _translations, _keys in _SCREEN_CASES:
+        screen = screen_factory(controller)
+        async with ScreenHostApp[None](screen).run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            state = controller.state_for(screen.zone)
+            assert state.item_count == expected_count
+            assert screen.query_one("#aeat-sync-rows", DataTable).row_count == 0
+            rendered_status = str(screen.query_one("#aeat-sync-status", Static).render())
+            assert tr(f"tui.aeat_sync.availability.{availability.value}") in rendered_status
+            if expected_count == 0:
+                assert "0" in rendered_status
+            else:
+                assert tr("tui.aeat_sync.value.none") in rendered_status
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("width", (80, 100, 120))
+async def test_all_routes_have_one_scroll_owner_no_horizontal_overflow_and_reachable_actions(width: int) -> None:
+    """The supported widths expose every action through keyboard focus."""
+    for screen_factory, _heading, _translations, _keys in _SCREEN_CASES:
+        screen = screen_factory(_controller())
+        async with ScreenHostApp[None](screen).run_test(size=(width, 24)) as pilot:
+            await pilot.pause()
+            assert all(table.max_scroll_x == 0 for table in screen.query(DataTable))
+            owners = tuple(
+                widget
+                for widget in screen.query(VerticalScroll)
+                if widget.display and widget.show_vertical_scrollbar
+            )
+            assert len(owners) == 1
+            buttons = tuple(screen.query(Button))
+            for button in buttons:
+                reached = False
+                for _ in range(8):
+                    await pilot.press("tab")
+                    if screen.app.focused is button:
+                        reached = True
+                        break
+                assert reached
+            nav_text = _table_text(screen.query_one("#aeat-sync-navigation", DataTable))
+            assert tr("tui.aeat_sync.availability.available") in nav_text
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
+async def test_census_adoption_is_local_wording_and_no_remote_push_control(locale: str) -> None:
+    """Census comparison is local review state, never an invented remote push UI."""
+    with override_settings(cadrumo_output_language=locale):
+        projection = _projection(census_status=AeatSyncCensusStatus.ADOPTED)
+        controller = AeatSyncWorkspaceController(
+            TuiScreenContextV1(destination="workbench.aeat_sync"),
+            projection,
+            operation_contracts=_contracts(),
+        )
+        census = AeatSyncCensusScreen(controller)
+        async with ScreenHostApp[None](census).run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            visible = _table_text(census.query_one("#aeat-sync-rows", DataTable))
+            assert tr("tui.aeat_sync.census_status.adopted", locale=locale) in visible
+            assert not tuple(census.query(Button))

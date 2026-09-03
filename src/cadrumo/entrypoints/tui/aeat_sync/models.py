@@ -43,10 +43,17 @@ class AeatSyncOperationRequestV1(BaseModel):
 
 
 class AeatSyncOperationHandoffV1(Protocol):
-    """Host-owned door for a registered operation, never a generic write API."""
+    """Host-owned supervisor handoff for a registered operation.
+
+    The workspace only selects and admits the exact public action/operation
+    pair.  The installed host must resolve that request to the canonical
+    ``OperationController`` and present it through ``present_operation_modal``;
+    that existing modal owns progress, partial/failure outcomes, detach and
+    cancellation.  Implementations must not execute the operation inline.
+    """
 
     async def __call__(self, request: AeatSyncOperationRequestV1, /) -> None:
-        """Present or submit the exact already-admitted operation request."""
+        """Present the exact request through the host's operation supervisor."""
         ...
 
 

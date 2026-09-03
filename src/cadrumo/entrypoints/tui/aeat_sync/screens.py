@@ -158,15 +158,29 @@ class AeatSyncWorkspaceScreen(Screen[None]):
     def on_mount(self) -> None:
         """Render all six independent source states and this screen's safe rows."""
         navigation = cast("DataTable[str]", self.query_one("#aeat-sync-navigation", DataTable))
-        navigation.add_column(aeat_sync_copy("tui.aeat_sync.column.area"), width=18)
-        navigation.add_column(aeat_sync_copy("tui.aeat_sync.column.availability"), width=14)
-        navigation.add_column(aeat_sync_copy("tui.aeat_sync.column.sources"), width=44)
+        navigation.add_column(aeat_sync_copy("tui.aeat_sync.column.area"), width=16)
+        navigation.add_column(aeat_sync_copy("tui.aeat_sync.column.availability"), width=12)
+        navigation.add_column(aeat_sync_copy("tui.aeat_sync.column.sources"), width=38)
         self._render_navigation(navigation)
-        self.populate_rows(cast("DataTable[str]", self.query_one("#aeat-sync-rows", DataTable)))
+        rows = cast("DataTable[str]", self.query_one("#aeat-sync-rows", DataTable))
+        self.populate_rows(rows)
+        self._render_zone_status(rows)
         self._restore_focus(
             navigation,
-            cast("DataTable[str]", self.query_one("#aeat-sync-rows", DataTable)),
+            rows,
         )
+
+    def _render_zone_status(self, rows: DataTable[str]) -> None:
+        """State known-empty and unobservable zones in non-colour text."""
+        state = self.controller.state_for(self.zone)
+        count = state.item_count
+        if count is not None and count != rows.row_count:
+            raise ValueError("AEAT Sync zone count and rendered rows disagree")
+        status = self.query_one("#aeat-sync-status", Static)
+        if str(status.render()).strip():
+            return
+        rendered_count = str(count) if count is not None else aeat_sync_copy("tui.aeat_sync.value.none")
+        status.update(f"{_label(self.zone)} · {_label(state.availability)} · {rendered_count}")
 
     def _render_navigation(self, navigation: DataTable[str]) -> None:
         """Render every zone with its independent source axes."""
@@ -220,6 +234,7 @@ class AeatSyncWorkspaceScreen(Screen[None]):
         rows.clear(columns=True)
         self._render_navigation(navigation)
         self.populate_rows(rows)
+        self._render_zone_status(rows)
         self._restore_focus(navigation, rows)
 
     def populate_rows(self, table: DataTable[str]) -> None:
@@ -351,10 +366,10 @@ class AeatSyncOverviewScreen(AeatSyncWorkspaceScreen):
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render public overview states without collapsing either source."""
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.area"), width=18)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.local"), width=15)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.aeat"), width=15)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.difference"), width=18)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.area"), width=15)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.local"), width=13)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.aeat"), width=13)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.difference"), width=16)
         for row in self.controller.projection.overview:
             table.add_row(
                 _label(row.area),
@@ -382,9 +397,9 @@ class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render safe census path/category/status metadata only."""
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.field"), width=34)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.category"), width=18)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.status"), width=18)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.field"), width=30)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.category"), width=16)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.status"), width=16)
         for row in self.controller.projection.census:
             table.add_row(
                 _compact(row.path, 32),
@@ -392,7 +407,6 @@ class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
                 _label(row.status),
                 key=_census_identity(row.path),
             )
-            self.add_operation(cast("_OperationRow", row), label=aeat_sync_copy("tui.aeat_sync.action.review_census"))
 
 
 class AeatSyncFiledDeclarationsScreen(AeatSyncWorkspaceScreen):
@@ -408,10 +422,10 @@ class AeatSyncFiledDeclarationsScreen(AeatSyncWorkspaceScreen):
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render only public filing and receipt state."""
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.declaration"), width=26)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.local_filing"), width=16)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.aeat"), width=16)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.receipt"), width=16)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.declaration"), width=22)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.local_filing"), width=14)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.aeat"), width=14)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.receipt"), width=14)
         for row in self.controller.projection.filed_declarations:
             table.add_row(
                 _address(row),
@@ -435,10 +449,10 @@ class AeatSyncNotificationsScreen(AeatSyncWorkspaceScreen):
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render dates and public read/custody metadata only."""
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.issued"), width=14)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.read"), width=14)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.category"), width=18)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.document_custody"), width=22)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.issued"), width=12)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.read"), width=12)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.category"), width=16)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.document_custody"), width=18)
         self._notification_rows.clear()
         for row in self.controller.projection.notifications:
             key = _notification_identity(row)
@@ -465,10 +479,10 @@ class AeatSyncEvidenceComparisonScreen(AeatSyncWorkspaceScreen):
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render a safe public comparison coordinate and discrepancy."""
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.declaration"), width=26)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.local"), width=15)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.aeat"), width=15)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.difference"), width=18)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.declaration"), width=22)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.local"), width=13)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.aeat"), width=13)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.difference"), width=16)
         for row in self.controller.projection.evidence_comparison:
             table.add_row(
                 _address(row),
@@ -493,11 +507,11 @@ class AeatSyncReconciliationScreen(AeatSyncWorkspaceScreen):
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render source states, discrepancy, and application-set resolution."""
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.declaration"), width=24)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.local"), width=13)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.aeat"), width=13)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.difference"), width=16)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.resolution"), width=16)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.declaration"), width=20)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.local"), width=11)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.aeat"), width=11)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.difference"), width=14)
+        table.add_column(aeat_sync_copy("tui.aeat_sync.column.resolution"), width=14)
         for row in self.controller.projection.reconciliation:
             table.add_row(
                 _address(row),
