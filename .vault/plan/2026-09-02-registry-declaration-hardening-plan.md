@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:b2f0ae94b1137416c6277a3b9b8df67f2eff2ac14d17ce6dd4b119acb2826f5f'
+body_hash: 'sha256:139b8de1cd52ffa513a765cdb214425496ecbf7731f4e9259f8204994349a7e9'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -31,8 +31,11 @@ that can prove it.
 Measurement has since changed what the later Waves are for, and the Steps record it. The screens
 that measure the declaration conditions run from one entry point over a single loaded registry -
 the count is whatever `SCREENS` in the analysis package enumerates, ten at the time of writing -
-each proving its own detection against a constructed defect, and sixteen gates stand behind them
-with two detector proofs beside them.
+each proving its own detection against a constructed defect, and the gates behind them are whatever
+the declaration-invariant module holds - twenty-one at the time of writing, of which three are
+detector proofs showing a gate bites rather than gates themselves. Both figures are written the way
+the screen count above is, because both moved while this plan was being executed: the gates were
+recorded as sixteen with two proofs beside them, and neither number was wrong when written.
 
 Two later tools sit outside that entry point deliberately, because neither can run over a single
 loaded registry. The selection probe asks a modelo's revisions whether they resolve using the
@@ -515,6 +518,8 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S290` - Hold the sibling-scale pin by coordinate identity instead of a count that failed when the screen detected a second defect; `dev/registry/tests/test_monetary_scale.py`.
 - [x] `W06.P13.S291` - Sweep the screen tests for frozen live-corpus counts and hold the two survivors by identity; `dev/registry/tests/test_continuity_integrity.py`.
 - [x] `W06.P13.S292` - Replace the drifted proportion in the screen census and state that the eligibility figure has no reproducer in this tree; `dev/registry/analysis/screens.py dev/registry/analysis/footnote_pointer_notes.py`.
+- [x] `W06.P13.S293` - Re-ground the gate and detector-proof figures on the live module and verify the nine screen-property gates exist; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S294` - Correct the accessor criterion to the two drop proofs that exist and say which paths they cover; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -644,11 +649,17 @@ The plan is complete when every Step is closed. Beyond that, the criteria below 
 work achieved what it was for. Each names the evidence that settles it, because a criterion whose proof is
 a reading rather than a command is one nobody can check later.
 
-No gate, screen or audit reassembles the resolved export surface. Proven by two gates in the
-declaration invariant module: one asserts the accessor fails if any of its three linkage paths is
-dropped, the other asserts no analysis module reaches for the binding derivation at all. The second
-checks the import rather than the result, because a partial walk produces a plausible number and only
-the method of reaching it differs.
+No gate, screen or audit reassembles the resolved export surface. Proven from two sides. Beside the
+accessor, one test asserts it returns all three linkage paths - direct field, projection reference and
+row-field mapping - and two more drop a path and assert the casilla it carried disappears. Those two
+cover the projection and row-field paths deliberately: they are the ones every hand-walk in this
+campaign actually missed, while a walk omitting the direct field path fails visibly at once. The
+criterion once claimed a drop proof for any of the three; it has two, and naming which two is worth
+more than the rounder sentence.
+
+In the declaration invariant module, a second gate asserts no analysis module reaches for the binding
+derivation at all. It checks the import rather than the result, because a partial walk produces a
+plausible number and only the method of reaching it differs.
 
 The release-eligibility predicate is evaluable from the shipped application, and a coordinate-identity
 gate runs in the repository gate lane, comparing the satisfied filing coordinate set by identity and

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:70718b9665fb319b54bdcf6c0792a41cd79da922d2e5356aeda213284ec74b14'
+body_hash: 'sha256:3b08d0ffad967f4bb58a1230f6e031a06c09c9fc8ecbc1a4052718fa65dab2d2'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7326,3 +7326,55 @@ once, is not reproducible from here, and must be re-measured as part of the
 correction rather than trusted afterwards. A figure whose reproducer does not
 exist should say so where it is quoted, not be discovered to be unverifiable by
 the next person who needs it.
+
+### the-nine-screen-property-gates-exist-and-the-gate-total-had-moved | medium | The named criterion verifies function by function; the figure beside it was three behind
+
+The verification criterion listing nine properties every screen must hold was
+checked against the module rather than read: enrolment in the runner, presence
+in the contributor README table, a test module, a non-empty population, a run
+over the whole corpus, leaving the shipped registry untouched, naming every
+emitted kind in its own docstring, stating a condition count that matches, and
+every symbol those READMEs name still resolving. All nine exist as separate test
+functions. The criterion is accurate, and it is accurate in the way that matters:
+each property is one function a reader can run, not a claim about the module's
+character.
+
+The figure in the plan's description had drifted. It recorded sixteen gates with
+two detector proofs; the module holds twenty-one functions, of which three are
+detector proofs showing a gate bites. Twenty-one pass, exit 0, in two minutes
+fifteen.
+
+The correction is not the new number. The same sentence already handles the
+screen count properly - "whatever `SCREENS` in the analysis package enumerates,
+ten at the time of writing" - naming the source first and the figure second, so
+a reader who finds eleven knows where to look and knows nothing is wrong. The
+gate figures were written the other way round, as bare totals, and so went quietly
+stale beside a count that could not. Both now name their source, and the sentence
+says both moved during execution and neither was wrong when written, because a
+figure that drifts is not evidence of an error - it is evidence that the work
+continued after the sentence was finished.
+
+### the-accessor-criterion-claimed-three-drop-proofs-and-two-exist | medium | Both are the right two, and naming them is stronger than the sentence that rounded up
+
+The criterion protecting the resolved export surface said the accessor is proven
+by a test asserting it fails if any of its three linkage paths is dropped.
+Checking the module rather than the sentence: four tests sit beside the
+accessor, one asserting all three paths are returned and two dropping a path and
+asserting the casilla it carried disappears. Four pass, exit 0. The third drop
+proof does not exist.
+
+Its absence is defensible and is now written down rather than papered over. The
+two that exist cover the projection reference and the row-field mapping, which
+are precisely the paths every hand-walk in this campaign actually missed - four
+published figures were wrong for that reason, each correction restoring one of
+them. A walk omitting the direct field path does not produce a plausible
+under-count; it fails visibly at once, which is why nobody wrote a proof for it
+and why the surface it protects is not at risk.
+
+The criterion now names which two paths are proven and why those two. That is a
+longer sentence than "any of its three", and better: a reader who trusts the
+round claim and later needs the direct-path proof would find it missing and
+conclude the gate had rotted, when in fact it was never there and did not need
+to be. An overstated proof costs more than an honest gap, because the gap can be
+filled by whoever finds it and the overstatement sends them looking for a defect
+that does not exist.
