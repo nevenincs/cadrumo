@@ -120,9 +120,11 @@ class AeatSyncWorkspaceController:
         if operation_id not in _CANONICAL_OPERATION_IDS:
             return None
         if self.operation_contracts is not None:
-            try:
-                contract = self.operation_contracts.lookup_public_contract(operation_id)
-            except KeyError:
+            contract = next(
+                (item for item in self.operation_contracts.definitions if str(item.definition_id) == operation_id),
+                None,
+            )
+            if contract is None:
                 return None
             if OperationFrontendProjection.TUI not in contract.permitted_frontends:
                 return None
