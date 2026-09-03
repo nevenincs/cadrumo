@@ -9,20 +9,27 @@ to the renderer on the strength of a cross-reference nobody followed.
 
 This screen reports that population and follows the reference. For each cell it
 names the modelo, the revision, the record, the exact source cell, the field's
-offset and length, the pointer as written, the
-notes it resolves to, and whether the resolved wording uses the vocabulary of
-how a value is written. That last is a reading aid and not a verdict: a note
-mentioning decimals may still not settle the field. It exists so an author
-facing many fields can see which notes are worth opening first.
+offset and length, the pointer as written, the notes it resolves to, and
+whether the resolved wording uses the vocabulary of how a value is written.
+
+That last is a reading aid and not a verdict, in BOTH directions. It is a fixed
+keyword list, so it recognises one wording of the concept and misses others: it
+misses modelo 200's nota 1, which states a filling rule outright. A vocabulary
+miss therefore orders the reading queue and settles nothing, and no count of
+misses may be reported as a count of notes that state no wire fact.
 
 Three conditions are reported, and every row names one of them:
 
-- ``pointer_resolves_to_wire_wording`` - the note the cell points at does use
-  that vocabulary, so there is authored wording to ground a reviewed rule in.
-- ``pointer_resolves_without_wire_wording`` - the note is defined and says
-  nothing about representation. The field still needs a rule; the design just
-  does not supply its text, which is a different research task and must not be
-  mistaken for the case above.
+- ``pointer_resolves_vocabulary_hit`` - the note the cell points at is defined
+  and uses the reading aid's vocabulary, so it is worth opening first.
+- ``pointer_resolves_vocabulary_miss`` - the note is defined and does not use
+  that vocabulary. This is NOT a finding that the note states no wire fact, and
+  must not be read as one. Modelo 200's nota 1 is the standing counterexample:
+  it says "se rellenaran los dos primeros digitos con el tipo, y los dos
+  ultimos con 00. Ej: 25% se rellenara como 2500", which is a filling rule in
+  full, and the vocabulary misses it because the note says digitos and
+  rellenaran rather than decimal or ceros. Every row in this condition still
+  has to be read by the rule's author.
 - ``pointer_unresolved`` - the pointer names a note the design never defines.
   Reported separately because the remedy is a transcription, not a rule: the
   evidence is missing rather than silent.
@@ -67,8 +74,8 @@ __all__ = [
 #: Every condition this screen can report, declared once and used at each
 #: emission site, so the set cannot be recovered by reading the source wrong.
 KINDS: tuple[str, ...] = (
-    "pointer_resolves_to_wire_wording",
-    "pointer_resolves_without_wire_wording",
+    "pointer_resolves_vocabulary_hit",
+    "pointer_resolves_vocabulary_miss",
     "pointer_unresolved",
 )
 
@@ -134,11 +141,11 @@ def revision_findings(
             kind = "pointer_unresolved"
             detail = f"design defines no {', '.join(evidence.unresolved)}"
         elif evidence.mentions_wire_vocabulary:
-            kind = "pointer_resolves_to_wire_wording"
-            detail = f"{len(resolved)} note(s) resolved, wire vocabulary present"
+            kind = "pointer_resolves_vocabulary_hit"
+            detail = f"{len(resolved)} note(s) resolved, read these first"
         else:
-            kind = "pointer_resolves_without_wire_wording"
-            detail = f"{len(resolved)} note(s) resolved, wire vocabulary absent"
+            kind = "pointer_resolves_vocabulary_miss"
+            detail = f"{len(resolved)} note(s) resolved, still to be read"
         findings.append(
             PointerWireFactFinding(
                 modelo=modelo,
