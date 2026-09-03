@@ -1006,10 +1006,10 @@ tui:
       submitted: Benyújtva
     area:
       census: Nyilvántartás
-      evidence_comparison: Evidence comparison
+      evidence_comparison: Bizonyítékok összehasonlítása
       filed_declarations: Benyújtott bevallások
       notifications: Értesítések
-      reconciliation: Reconciliation
+      reconciliation: Egyeztetés
     availability:
       available: Elérhető
       locked: Zárolva
@@ -1019,14 +1019,14 @@ tui:
     census:
       title: AEAT-szinkronizálási nyilvántartás
     census_category:
-      activity: Activity
+      activity: Tevékenység
       address: Cím
       contact: Kapcsolat
       obligation: Kötelezettség
       other: Egyéb
     census_status:
-      adopted: Adopted
-      conflict: Conflict
+      adopted: Átvéve
+      conflict: Konfliktus
       unchanged: Változatlan
       unset: Nincs beállítva
     column:
@@ -1036,12 +1036,12 @@ tui:
       category: Kategória
       declaration: Bevallás
       difference: Eltérés
-      document_custody: Document custody
+      document_custody: Dokumentummegőrzés
       field: Mező
       issued: Kiállítva
       local: Helyi
       local_filing: Helyi benyújtás
-      read: Read
+      read: Olvasottság
       receipt: Igazolás
       resolution: Rendezés
       sources: Források
@@ -1051,26 +1051,26 @@ tui:
       contradictory_source: Ellentmondó forrás
       local_only: Csak helyi
       none: Nincs eltérés
-      state_mismatch: State mismatch
+      state_mismatch: Állapoteltérés
       unobserved: Nem figyelték meg
     document_custody_state:
       held: Megőrzött
-      not_captured: Not captured
+      not_captured: Nincs rögzítve
       refused: Elutasítva
       unavailable: Nem érhető el
     evidence_comparison:
       title: Az AEAT-szinkron bizonyítékainak összehasonlítása
     filed_declarations:
-      title: AEAT Sync filed declarations
+      title: Az AEAT-szinkron benyújtott bevallásai
     justificante_state:
-      available: Available
+      available: Elérhető
       not_observed: Nem figyelték meg
-      unavailable: Unavailable
+      unavailable: Nem érhető el
       verified: Ellenőrizve
     local_filing_state:
       draft: Piszkozat
       filed: Benyújtva
-      not_observed: Not observed
+      not_observed: Nem figyelték meg
       ready: Benyújtható
     notification:
       already_handled: Ezt az értesítést már megnyitották.
@@ -1098,7 +1098,7 @@ tui:
     reconciliation_state:
       accept_aeat: AEAT elfogadása
       dismissed: Elvetve
-      keep_local: Keep local
+      keep_local: Helyi adatok megtartása
       no_action: Nincs teendő
       unresolved: Megoldatlan
     refusal:
@@ -1110,7 +1110,7 @@ tui:
       aeat:
         census: AEAT-nyilvántartás
         filed_declarations: AEAT-benyújtott bevallások
-        notifications: AEAT notifications
+        notifications: AEAT-értesítések
       local:
         filings: Helyi benyújtások
         notification_custody: Helyi értesítési megőrzés
@@ -1130,7 +1130,7 @@ tui:
       none: —
     zone:
       census: Nyilvántartás
-      evidence_comparison: Evidence comparison
+      evidence_comparison: Bizonyítékok összehasonlítása
       filed_declarations: Benyújtott bevallások
       notifications: Értesítések
       overview: Áttekintés
