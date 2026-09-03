@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:833c1719237245db96b134f91caa456539d0fd9bd05ddfba27e86bd5d6f8039d'
+body_hash: 'sha256:dcf6c7dd30d5642c8d5fb913650e32ea07e8c533557a90da3aab71716c26c81e'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -493,6 +493,7 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S449` - Declare a revisions citing children once instead of longhand in each screen, since the family list is written out twice and the deadline window omission propagated from the first screen to the second; `dev/registry/analysis`.
 - [x] `W04.P09.S450` - State the provenance repetition ratio with its definition in both places that carry it, since three ratios answer to it and the plan the index docstring and the first correction each gave a different bare number; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md dev/registry/analysis/provenance_consistency.py`.
 - [x] `W04.P09.S451` - Re-measure the reference worklist after the deadline window family joined the walk: 472 pairs, 224 systemic and 55 single-child of which 38 are deadline windows citing their years campaign orden at article 8, a second annual series confirming the manifest is the under-declared side; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [ ] `W04.P09.S452` - Derive the citing-family walk from the schemas own SCHEMA_FAMILY annotation rather than naming eight of nineteen by hand, since nine unwalked families carry citations that would clear 141 of the 159 uncited findings and add 1,684 outside-manifest citations; `dev/registry/analysis/provenance_consistency.py dev/registry/analysis/manifest_uncited_references.py`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 

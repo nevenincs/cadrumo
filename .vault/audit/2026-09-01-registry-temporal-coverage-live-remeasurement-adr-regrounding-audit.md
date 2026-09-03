@@ -12255,3 +12255,53 @@ largest contributor. Seventeen single-child references were read and found
 sound; thirty-eight more existed and were invisible because a citing family was
 not walked. The conclusion survived the population more than tripling, which is
 worth more than the original reading was.
+
+
+## The schema declares nineteen authored families; the provenance walk covers eight
+
+The deadline-window omission was found by reading a population. Asking the
+question systematically - which of a revision's attributes carry citations at
+all - answers it far more broadly, and the answer is not one missing family.
+
+`ModeloRevision` annotates **nineteen** fields with `SCHEMA_FAMILY`, which is the
+registry's own declaration of what an authored family is. The shared
+`citing_children` walk names **eight** of them. Nine of the eleven unwalked
+families carry citations in the corpus today:
+
+| family | outside-manifest citations it would add |
+| ------ | --------------------------------------- |
+| `constructs` | 969 |
+| `extraction_profiles` | 191 |
+| `dependency_classifications` | 169 |
+| `verification_expectations` | 164 |
+| `verification_predicates` | 105 |
+| `filing_schedules` | 57 |
+| `projection_endpoints` | 12 |
+| `live_cross_references` | 10 |
+| `workbook_parity_refs` | 7 |
+
+**They would also clear 141 of the 159 remaining uncited findings** - eighty-nine
+per cent of that population is a manifest reference some unwalked family cites.
+
+These are authored, not derived. `projection_endpoints` has its own authored TOML
+files under each revision directory, and it carries the same `SCHEMA_FAMILY`
+annotation the walked eight carry; so does `constructs`. The distinction the walk
+already draws - authored families in, resolved export fields out - puts all nine
+firmly on the authored side.
+
+### The fix is to derive the walk, not to extend the list
+
+Adding nine names would leave the same defect in place: a list of families
+restated in the tooling, one edit behind a schema that declares them. The
+correction is to enumerate the `SCHEMA_FAMILY` annotation, so a family added to
+the registry is walked without anyone remembering to add it - which is the
+remedy this campaign has applied to the screen entry points, the note identity,
+the grade ladder and the citing families themselves, each time after the restated
+copy drifted.
+
+Recorded rather than done. The change moves both screens substantially - the
+mirror's population falls by nearly nine tenths and the citing screen gains
+sixteen hundred citations - and a change of that size wants its own verification
+rather than the tail of an iteration. It is the largest tooling finding this
+campaign has made, and the four preceding corrections to these two screens were
+each a smaller instance of it.
