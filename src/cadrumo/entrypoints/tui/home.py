@@ -122,22 +122,26 @@ def _state_copy(state: HomeZoneState, *, empty_copy: str | None = None) -> str:
     return label
 
 
-def _address(modelo: object, filing_year: int, period_token: str) -> str:
+def home_address(modelo: object, filing_year: int, period_token: str) -> str:
+    """Format the shared non-sensitive natural address for a Home row."""
     return f"Modelo {modelo} · {filing_year} · {period_token}"
 
 
-def _action_identity(item: HomeNextAction) -> str:
+def home_action_identity(item: HomeNextAction) -> str:
+    """Return a stable Home action identity independent of row order."""
     action_id = item.action.action.action_id
     if item.period is None:
         return f"action:{action_id}:{item.reason_code}:cross-cutting"
     return f"action:{action_id}:{item.reason_code}:{item.modelo}:{item.filing_year}:{item.period.registry_token}"
 
 
-def _declaration_identity(item: HomeDeclarationResume) -> str:
+def home_declaration_identity(item: HomeDeclarationResume) -> str:
+    """Return the canonical declaration-resumption identity."""
     return f"declaration:{item.work_unit_id}"
 
 
-def _agenda_identity(item: HomeAgendaEntry) -> str:
+def home_agenda_identity(item: HomeAgendaEntry) -> str:
+    """Return the natural address used to restore an agenda row."""
     return f"agenda:{item.modelo}:{item.filing_year}:{item.period.registry_token}"
 
 
@@ -149,13 +153,13 @@ def _action_cells(item: HomeNextAction) -> tuple[str, str, str]:
     elif item.modelo is None or item.filing_year is None:  # pragma: no cover - projection rejects this shape
         raise ValueError("an addressed Home action requires Modelo, year, and period")
     else:
-        context = _address(item.modelo, item.filing_year, item.period.registry_token)
+        context = home_address(item.modelo, item.filing_year, item.period.registry_token)
     return reason, label, context
 
 
 def _declaration_cells(item: HomeDeclarationResume) -> tuple[str, str, str]:
     return (
-        _address(item.modelo, item.filing_year, item.period.registry_token),
+        home_address(item.modelo, item.filing_year, item.period.registry_token),
         item.name,
         _DECLARATION_COPY[item.state],
     )
@@ -296,7 +300,7 @@ class HomeScreen(Screen[None]):
         contexts: list[str] = []
         for item in projection.actions:
             reason, label, context = _action_cells(item)
-            actions.add_row(label, key=self._remember(HomeTargetKind.ACTION, _action_identity(item)))
+            actions.add_row(label, key=self._remember(HomeTargetKind.ACTION, home_action_identity(item)))
             contexts.append(f"{label} — {reason} · {context}")
         actions.display = bool(projection.actions)
         self.query_one("#home-action-contexts", Static).update("\n".join(contexts))
@@ -307,7 +311,7 @@ class HomeScreen(Screen[None]):
             address, name, state = _declaration_cells(item)
             declarations.add_row(
                 f"{address} · {name} · {state}",
-                key=self._remember(HomeTargetKind.DECLARATION, _declaration_identity(item)),
+                key=self._remember(HomeTargetKind.DECLARATION, home_declaration_identity(item)),
             )
         declarations.display = bool(projection.declarations)
 
@@ -318,7 +322,7 @@ class HomeScreen(Screen[None]):
             due, address, state = _agenda_cells(item)
             agenda.add_row(
                 f"{due} · {address} · {state}",
-                key=self._remember(HomeTargetKind.AGENDA, _agenda_identity(item)),
+                key=self._remember(HomeTargetKind.AGENDA, home_agenda_identity(item)),
             )
             evidence_rows.append(f"{address} — {_evidence_copy(item)}")
         agenda.display = bool(projection.agenda)
@@ -385,4 +389,13 @@ class HomeScreen(Screen[None]):
         self.post_message(HomeBackRequested())
 
 
-__all__ = ["HomeBackRequested", "HomeScreen", "HomeTarget", "HomeTargetSelected"]
+__all__ = [
+    "HomeBackRequested",
+    "HomeScreen",
+    "HomeTarget",
+    "HomeTargetSelected",
+    "home_action_identity",
+    "home_address",
+    "home_agenda_identity",
+    "home_declaration_identity",
+]

@@ -35,6 +35,18 @@ from ....application.overview.home import (
 )
 from ....core.external_constants import OutputLanguage
 from ..components.widgets import ContentDataTable, ContentScroll
+from ..home import (
+    home_action_identity as _action_identity,
+)
+from ..home import (
+    home_address as _address,
+)
+from ..home import (
+    home_agenda_identity as _agenda_identity,
+)
+from ..home import (
+    home_declaration_identity as _declaration_identity,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -362,25 +374,6 @@ def _state_copy(state: HomeZoneState, locale: OutputLanguage, *, empty_copy: str
     if state.availability is HomeAvailability.AVAILABLE and empty_copy is not None:
         return f"{label} — {_text(locale, empty_copy)}"
     return label
-
-
-def _address(modelo: object, filing_year: int, period_token: str) -> str:
-    return f"Modelo {modelo} · {filing_year} · {period_token}"
-
-
-def _action_identity(item: HomeNextAction) -> str:
-    action_id = item.action.action.action_id
-    if item.period is None:
-        return f"action:{action_id}:{item.reason_code}:cross-cutting"
-    return f"action:{action_id}:{item.reason_code}:{item.modelo}:{item.filing_year}:{item.period.registry_token}"
-
-
-def _declaration_identity(item: HomeDeclarationResume) -> str:
-    return f"declaration:{item.work_unit_id}"
-
-
-def _agenda_identity(item: HomeAgendaEntry) -> str:
-    return f"agenda:{item.modelo}:{item.filing_year}:{item.period.registry_token}"
 
 
 def _action_cells(item: HomeNextAction, locale: OutputLanguage) -> tuple[str, str, str]:
