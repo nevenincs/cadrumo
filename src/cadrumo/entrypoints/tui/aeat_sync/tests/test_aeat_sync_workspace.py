@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from pathlib import Path
 from typing import cast
+from datetime import UTC, date, datetime
 
 import pytest
+import yaml
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Static
 
@@ -46,6 +48,7 @@ from .....application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION,
     build_censal_operation_registration,
 )
+from .....core.config import override_settings
 from .....core.i18n.render import I18N_STRICT_MISSING_KEYS, tr
 from .....core.identity import BucketId
 from .....core.period import Period
@@ -59,7 +62,15 @@ from ..models import (
     AeatSyncOperationRequestV1,
 )
 from ..routes import AEAT_SYNC_ROUTES, declared_aeat_sync_destination_ids, resolve_aeat_sync_screen
-from ..screens import AeatSyncNotificationsScreen, AeatSyncOverviewScreen
+from ..screens import (
+    AeatSyncCensusScreen,
+    AeatSyncEvidenceComparisonScreen,
+    AeatSyncFiledDeclarationsScreen,
+    AeatSyncNotificationsScreen,
+    AeatSyncOverviewScreen,
+    AeatSyncReconciliationScreen,
+    AeatSyncWorkspaceScreen,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -67,6 +78,36 @@ _T1 = datetime(2026, 1, 3, 10, tzinfo=UTC)
 _T2 = datetime(2026, 1, 4, 11, tzinfo=UTC)
 _BUCKET_ID = cast(BucketId, "11111111-1111-4111-8111-111111111111")
 _SUBJECT_KEY = "private-subject"
+_LOCALES_ROOT = Path(__file__).parents[4] / "locales"
+_AEAT_SYNC_INTENTIONAL_IDENTICAL_HU = frozenset(
+    {
+        "column.aeat",
+        "sources.entry",
+        "sources.joined",
+        "value.none",
+    }
+)
+
+
+def _flatten_locale(node: object, prefix: str = "") -> dict[str, str]:
+    """Flatten a locale tree while ignoring non-scalar structural nodes."""
+    if isinstance(node, dict):
+        values: dict[str, str] = {}
+        for key, child in node.items():
+            values.update(_flatten_locale(child, f"{prefix}.{key}" if prefix else str(key)))
+        return values
+    return {prefix: node} if isinstance(node, str) else {}
+
+
+def _aeat_sync_catalogue(locale: str) -> dict[str, str]:
+    """Load the exact shared-file AEAT Sync namespace for one locale."""
+    raw = yaml.safe_load((_LOCALES_ROOT / locale / "common.yml").read_text(encoding="utf-8"))
+    prefix = "tui.aeat_sync."
+    return {
+        key.removeprefix(prefix): value
+        for key, value in _flatten_locale(raw).items()
+        if key.startswith(prefix)
+    }
 
 
 def _source(
@@ -226,6 +267,88 @@ def _controller(
         operation_handoff=operation_handoff,
         notification_document_handoff=notification_document_handoff,
     )
+
+
+_SCREEN_CASES: tuple[tuple[type[AeatSyncWorkspaceScreen], str, dict[str, str], tuple[str, ...]], ...] = (
+    (
+        AeatSyncOverviewScreen,
+        "tui.aeat_sync.overview.title",
+        {
+            "en": "AEAT Sync overview",
+            "es": "Resumen de sincronización AEAT",
+            "ca": "Resum de sincronització de l'AEAT",
+            "hu": "Az AEAT-szinkron áttekintése",
+        },
+        ("overview:census",),
+    ),
+    (
+        AeatSyncCensusScreen,
+        "tui.aeat_sync.census.title",
+        {
+            "en": "AEAT Sync census",
+            "es": "Censo de sincronización AEAT",
+            "ca": "Cens de sincronització de l'AEAT",
+            "hu": "AEAT-szinkronizálási nyilvántartás",
+        },
+        ("census:tax address",),
+    ),
+    (
+        AeatSyncFiledDeclarationsScreen,
+        "tui.aeat_sync.filed_declarations.title",
+        {
+            "en": "AEAT Sync filed declarations",
+            "es": "Declaraciones presentadas en sincronización AEAT",
+            "ca": "Declaracions presentades a l'AEAT",
+            "hu": "Az AEAT-szinkron benyújtott bevallásai",
+        },
+        ("filed:130|2026|1T",),
+    ),
+    (
+        AeatSyncNotificationsScreen,
+        "tui.aeat_sync.notifications.title",
+        {
+            "en": "AEAT Sync notifications",
+            "es": "Notificaciones de sincronización AEAT",
+            "ca": "Notificacions de l'AEAT",
+            "hu": "Az AEAT-szinkron értesítései",
+        },
+        (),
+    ),
+    (
+        AeatSyncEvidenceComparisonScreen,
+        "tui.aeat_sync.evidence_comparison.title",
+        {
+            "en": "AEAT Sync evidence comparison",
+            "es": "Comparación de evidencias de sincronización AEAT",
+            "ca": "Comparació d'evidències de l'AEAT",
+            "hu": "Az AEAT-szinkron bizonyítékainak összehasonlítása",
+        },
+        ("comparison:130|2026|1T",),
+    ),
+    (
+        AeatSyncReconciliationScreen,
+        "tui.aeat_sync.reconciliation.title",
+        {
+            "en": "AEAT Sync reconciliation",
+            "es": "Conciliación de sincronización AEAT",
+            "ca": "Conciliació de l'AEAT",
+            "hu": "Az AEAT-szinkron egyeztetése",
+        },
+        ("reconciliation:130|2026|1T",),
+    ),
+)
+
+
+@pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
+def test_aeat_sync_namespace_matches_all_locales_and_hu_has_only_explicit_invariants(locale: str) -> None:
+    """Keep the complete 111-key surface translated, with a tiny HU allowlist."""
+    english = _aeat_sync_catalogue("en")
+    translated = _aeat_sync_catalogue(locale)
+    assert len(english) == 111
+    assert set(translated) == set(english)
+    if locale == "hu":
+        identical = {key for key, value in translated.items() if value == english[key]}
+        assert identical == _AEAT_SYNC_INTENTIONAL_IDENTICAL_HU
 
 
 def test_six_routes_are_total_and_locked_projection_refuses_body() -> None:
@@ -432,5 +555,93 @@ def test_aeat_sync_status_keys_are_present_in_every_supported_locale() -> None:
             for key in keys:
                 rendered = tr(key, locale=locale)
                 assert rendered != key
+    finally:
+        I18N_STRICT_MISSING_KEYS.reset(token)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
+@pytest.mark.parametrize("screen_type, heading_key, headings, expected_keys", _SCREEN_CASES)
+async def test_every_aeat_sync_screen_is_localized_and_keeps_route_and_row_identities(
+    locale: str,
+    screen_type: type[AeatSyncWorkspaceScreen],
+    heading_key: str,
+    headings: dict[str, str],
+    expected_keys: tuple[str, ...],
+) -> None:
+    """Mount all six routes in all four locales without identity drift."""
+    token = I18N_STRICT_MISSING_KEYS.set(True)
+    try:
+        with override_settings(cadrumo_output_language=locale):
+            screen = screen_type(_controller())
+            async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
+                await pilot.pause()
+                rendered = "\n".join(str(widget.render()) for widget in screen.query(Static))
+                assert headings[locale] in rendered
+                assert headings[locale] == tr(heading_key, locale=locale)
+                if locale != "en":
+                    assert headings[locale] != headings["en"]
+                table = screen.query_one("#aeat-sync-rows", DataTable)
+                keys = tuple(str(item.key.value) for item in table.ordered_rows)
+                if screen_type is AeatSyncNotificationsScreen:
+                    assert keys == (str(screen.controller.projection.notifications[0].selection_key),)
+                else:
+                    assert keys == expected_keys
+                assert screen.id == f"aeat-sync-{screen.zone.value.replace('_', '-')}-screen"
+    finally:
+        I18N_STRICT_MISSING_KEYS.reset(token)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("locale", "failure_copy", "refusal_copy"),
+    (
+        (
+            "en",
+            "Operation could not be started.",
+            "Operation handoff is unavailable.",
+        ),
+        (
+            "es",
+            "No se pudo iniciar la operación.",
+            "La entrega de la operación no está disponible.",
+        ),
+        (
+            "ca",
+            "No s'ha pogut iniciar l'operació.",
+            "El lliurament de l'operació no està disponible.",
+        ),
+        (
+            "hu",
+            "A műveletet nem sikerült elindítani.",
+            "A művelet átadása nem érhető el.",
+        ),
+    ),
+)
+async def test_operation_failure_and_refusal_copy_is_localized(
+    locale: str,
+    failure_copy: str,
+    refusal_copy: str,
+) -> None:
+    """Host failure and absent-door refusal are both translated operator states."""
+
+    async def fail(_request: AeatSyncOperationRequestV1) -> None:
+        raise RuntimeError("sentinel host failure")
+
+    token = I18N_STRICT_MISSING_KEYS.set(True)
+    try:
+        with override_settings(cadrumo_output_language=locale):
+            failed = AeatSyncOverviewScreen(_controller(operation_handoff=fail))
+            async with ScreenHostApp[None](failed).run_test(size=(100, 30)) as pilot:
+                await pilot.pause()
+                await pilot.click("#aeat-sync-operation-0")
+                await pilot.pause()
+                assert failure_copy in str(failed.query_one("#aeat-sync-status", Static).render())
+
+            refused = AeatSyncOverviewScreen(_controller())
+            async with ScreenHostApp[None](refused).run_test(size=(100, 30)) as pilot:
+                await pilot.pause()
+                await pilot.click("#aeat-sync-operation-0")
+                assert refusal_copy in str(refused.query_one("#aeat-sync-status", Static).render())
     finally:
         I18N_STRICT_MISSING_KEYS.reset(token)
