@@ -1,0 +1,19 @@
+[[revisions.2024.casillas]]
+id = '00942'
+number = '00942'
+data_type = 'money'
+semantic_role = 'is_deduccion_donativos_prioritarias'
+required = false
+input_kind = 'manual'
+section = [
+    'deduccion_donativos_entidades_sin_fines_lucro',
+    'donaciones_para_actividades_prioritarias_de_mecena',
+]
+legal_refs = [
+    'ley-49-2002:art-20',
+    'ley-49-2002:art-22',
+]
+source_refs = [
+    'aeat-dr-200-2024',
+    'aeat-modelo-200-manual-2024',
+]
