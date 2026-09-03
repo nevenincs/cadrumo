@@ -12162,3 +12162,29 @@ the provenance pair.
 Both screens now read the eighth family, and each carries a test naming it: one
 asserts no reference a window cites is reported uncited, the other that a
 window's outside citations are reported at all.
+
+
+## The citing families are declared once
+
+`provenance_consistency.citing_children` is now the one statement of what a
+revision's citing children are, and the mirror screen consumes it rather than
+keeping a second list. Only those two modules walk the families, so the
+consolidation is complete rather than partial - checked before doing it, since a
+third walker would have made this a rename with a straggler.
+
+The refactor is behaviour-preserving and that is the evidence it was a
+consolidation and not a change: both screens report exactly what they reported
+before it - 159 uncited references and 31,851 citing sites. A refactor of a
+measurement that moves the measurement has done something else as well.
+
+Two properties are asserted rather than assumed. The walked families must equal
+the declared `ProvenanceChildKind` vocabulary less `export_field`, which is the
+one kind deliberately not walked here because it exists only after derivation
+and carries citations copied from a template. And a reference cited by any
+walked family must not be reported as uncited by the mirror, which is the
+propagated defect stated as an invariant rather than as a fixed instance.
+
+Resolved export fields stay out of the shared declaration and are added by the
+screen that needs them, with its reason attached. Folding them in would have
+made the list shorter and the mirror wrong: a manifest reference cited only by a
+derived field would read as cited when no author ever wrote it.
