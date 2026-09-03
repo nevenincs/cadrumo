@@ -104,3 +104,57 @@ def test_recovery_restores_an_incomplete_candidate(tmp_path: Path) -> None:
     assert _tree(root) == {"c00001.toml": b"original\n"}
     assert not backup.exists()
     assert not journal.exists()
+
+
+def test_recovery_refuses_a_file_disguised_as_a_backup_without_touching_the_tree(tmp_path: Path) -> None:
+    root = tmp_path / "revision" / "casillas"
+    root.mkdir(parents=True)
+    (root / "c00001.toml").write_bytes(b"original\n")
+    backup = root.parent / ".backup-token"
+    backup.write_bytes(b"not-a-tree\n")
+    journal = root.parent / ".journal.json"
+    journal.write_text(
+        json.dumps({"schema_version": 1, "state": "backup_staged", "stage": ".stage-token", "backup": backup.name}),
+        encoding="utf-8",
+    )
+    before = _tree(root)
+
+    with pytest.raises(RegistryValidationError, match="recovery backup tree must be a non-linked directory"):
+        subject.recover_verified_casilla_tree(
+            casillas_root=root,
+            verifier=lambda _root: None,
+            journal_name=".journal.json",
+            stage_prefix=".stage-",
+            backup_prefix=".backup-",
+        )
+    assert _tree(root) == before
+    assert backup.read_bytes() == b"not-a-tree\n"
+    assert journal.exists()
+
+
+def test_recovery_refuses_an_invalid_live_candidate_without_backup(tmp_path: Path) -> None:
+    root = tmp_path / "revision" / "casillas"
+    root.mkdir(parents=True)
+    (root / "c00001.toml").write_bytes(b"candidate\n")
+    journal = root.parent / ".journal.json"
+    journal.write_text(
+        json.dumps(
+            {"schema_version": 1, "state": "candidate_live", "stage": ".stage-token", "backup": ".backup-token"}
+        ),
+        encoding="utf-8",
+    )
+    before = _tree(root)
+
+    def refuse(_root: Path) -> None:
+        raise RegistryValidationError("candidate invalid")
+
+    with pytest.raises(RegistryValidationError, match="invalid candidate without backup"):
+        subject.recover_verified_casilla_tree(
+            casillas_root=root,
+            verifier=refuse,
+            journal_name=".journal.json",
+            stage_prefix=".stage-",
+            backup_prefix=".backup-",
+        )
+    assert _tree(root) == before
+    assert journal.exists()

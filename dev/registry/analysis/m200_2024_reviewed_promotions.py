@@ -97,15 +97,27 @@ def _verified_promoted_candidate_ids(
     casillas_root: Path | None = None,
 ) -> frozenset[str]:
     """Verify an issuer-bound snapshot created within the active invocation."""
+    candidates = _receipt_candidate_ids(evidence)
+    verify_template_canonical_declarations(evidence.template_authority, casillas_root=casillas_root)
+    verify_blocker_canonical_declarations(evidence.blocker_authority, casillas_root=casillas_root)
+    verify_unique_canonical_declarations(evidence.unique_authority, casillas_root=casillas_root)
+    return candidates
+
+
+def _receipt_candidate_ids(evidence: M200ReviewedPromotionSnapshot) -> frozenset[str]:
+    """Return the closed receipt union before its caller selects a byte tree.
+
+    A transaction that is repairing one reviewed cohort cannot demand that the
+    live bytes already equal that cohort.  It still needs all three compiler
+    receipts to be issuer-bound, exhaustive, and disjoint before staging, and
+    then verifies each cohort against the appropriate candidate tree.
+    """
     _require_issued_snapshot(evidence)
     template = frozenset(item.casilla_id for item in evidence.template_authority.adjudications)
     blocker = frozenset(item.casilla_id for item in evidence.blocker_authority.adjudications)
     unique = frozenset(item.casilla_id for item in evidence.unique_authority.adjudications)
     if template & blocker or template & unique or blocker & unique:
         raise RegistryValidationError("M200/2024 reviewed promotion cohorts overlap")
-    verify_template_canonical_declarations(evidence.template_authority, casillas_root=casillas_root)
-    verify_blocker_canonical_declarations(evidence.blocker_authority, casillas_root=casillas_root)
-    verify_unique_canonical_declarations(evidence.unique_authority, casillas_root=casillas_root)
     return template | blocker | unique
 
 

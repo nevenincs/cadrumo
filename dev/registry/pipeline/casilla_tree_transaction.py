@@ -111,13 +111,26 @@ def recover_verified_casilla_tree(
         backup = _transaction_child(revision_root, journal["backup"], backup_prefix)
     except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
         raise RegistryValidationError(f"casilla publication journal is invalid: {journal_path}") from exc
-    if journal["state"] == "candidate_live" and casillas_root.exists() and backup.exists():
+    if casillas_root.exists():
+        _require_regular_tree(casillas_root, subject="casilla publication recovery canonical tree")
+    if stage.exists():
+        _require_regular_tree(stage, subject="casilla publication recovery staged tree")
+    if backup.exists():
+        _require_regular_tree(backup, subject="casilla publication recovery backup tree")
+    if journal["state"] == "backup_staged" and not backup.exists():
+        raise RegistryValidationError(f"casilla publication recovery backup is missing: {journal_path}")
+    if journal["state"] == "candidate_live" and casillas_root.exists():
         try:
             verifier(casillas_root)
-        except RegistryValidationError:
+        except RegistryValidationError as candidate_error:
+            if not backup.exists():
+                raise RegistryValidationError(
+                    f"casilla publication cannot recover an invalid candidate without backup: {journal_path}"
+                ) from candidate_error
             _restore_backup(casillas_root, backup, stage_prefix=stage_prefix, replace_tree=_replace_tree)
         else:
-            _remove_transaction_tree(backup, revision_root, (stage_prefix, backup_prefix))
+            if backup.exists():
+                _remove_transaction_tree(backup, revision_root, (stage_prefix, backup_prefix))
     elif backup.exists():
         _restore_backup(casillas_root, backup, stage_prefix=stage_prefix, replace_tree=_replace_tree)
     elif journal["state"] != "intent" and not casillas_root.exists():

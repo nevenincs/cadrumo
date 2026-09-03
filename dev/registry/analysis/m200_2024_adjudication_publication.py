@@ -17,6 +17,7 @@ from hashlib import sha256
 from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
@@ -27,9 +28,12 @@ from .m200_2024_blocker_adjudications import (
     S14_S15_EXPECTED_COUNT,
     render_canonical_declaration,
 )
+from .m200_2024_blocker_adjudications import (
+    verify_canonical_declarations as verify_blocker_canonical_declarations,
+)
 from .m200_2024_reviewed_promotions import (
     M200ReviewedPromotionSnapshot,
-    _verified_promoted_candidate_ids,
+    _receipt_candidate_ids,
     build_m200_2024_reviewed_promotion_snapshot,
 )
 
@@ -56,11 +60,11 @@ def check_m200_2024_s14_s15(*, registry_root: Path | None = None) -> M200Adjudic
     """
     root = _registry_root(registry_root)
     snapshot = build_m200_2024_reviewed_promotion_snapshot()
-    if len(_verified_promoted_candidate_ids(snapshot)) != 156:
+    if len(_receipt_candidate_ids(snapshot)) != 156:
         raise RegistryValidationError("M200/2024 adjudication receipt union is incomplete")
     rendered = _rendered(snapshot, root)
     before = _tree_fingerprint(_casillas_root(root))
-    _verify_candidate(root, rendered, before)
+    _verify_candidate(root, rendered, before, snapshot)
     return M200AdjudicationPublicationReceipt(
         compiler_sha256=_compiler_digest(snapshot, rendered),
         target_tree=before,
@@ -80,7 +84,9 @@ def publish_m200_2024_s14_s15(
         recovered_rendered = _rendered(snapshot, root)
         if recover_verified_casilla_tree(
             casillas_root=_casillas_root(root),
-            verifier=lambda staged: _verify_staged_tree(root, staged, recovered_rendered, dict(receipt.target_tree)),
+            verifier=lambda staged: _verify_staged_tree(
+                root, staged, recovered_rendered, dict(receipt.target_tree), snapshot
+            ),
             journal_name=_JOURNAL,
             stage_prefix=_STAGE_PREFIX,
             backup_prefix=_BACKUP_PREFIX,
@@ -105,7 +111,7 @@ def publish_m200_2024_s14_s15(
         publish_verified_casilla_tree(
             casillas_root=_casillas_root(root),
             rendered=rendered,
-            verifier=lambda staged: _verify_staged_tree(root, staged, rendered, original),
+            verifier=lambda staged: _verify_staged_tree(root, staged, rendered, original, snapshot),
             journal_name=_JOURNAL,
             stage_prefix=_STAGE_PREFIX,
             backup_prefix=_BACKUP_PREFIX,
@@ -114,16 +120,26 @@ def publish_m200_2024_s14_s15(
 
 def _registry_root(registry_root: Path | None) -> Path:
     root = bundled_path("registry", "aeat") if registry_root is None else registry_root
-    if not root.is_dir() or root.is_symlink():
+    if not root.is_dir() or is_link_like(root):
         raise RegistryValidationError(f"M200/2024 adjudication registry root is unsafe: {root}")
     return root.resolve()
 
 
 def _casillas_root(registry_root: Path) -> Path:
-    root = registry_root / "modelos" / "200" / "revisions" / "2024" / "casillas"
-    if not root.is_dir() or root.is_symlink():
-        raise RegistryValidationError(f"M200/2024 adjudication casilla root is unsafe: {root}")
-    return root
+    root = registry_root.resolve()
+    target = root
+    for component in ("modelos", "200", "revisions", "2024", "casillas"):
+        target = target / component
+        if not target.exists() or is_link_like(target):
+            raise RegistryValidationError(f"M200/2024 adjudication casilla path is unsafe: {target}")
+    resolved = target.resolve()
+    try:
+        resolved.relative_to(root)
+    except ValueError as exc:
+        raise RegistryValidationError(f"M200/2024 adjudication casilla root escaped registry root: {target}") from exc
+    if not resolved.is_dir():
+        raise RegistryValidationError(f"M200/2024 adjudication casilla root is not a directory: {target}")
+    return resolved
 
 
 def _rendered(snapshot: M200ReviewedPromotionSnapshot, registry_root: Path) -> dict[Path, str]:
@@ -150,8 +166,12 @@ def _compiler_digest(snapshot: M200ReviewedPromotionSnapshot, rendered: Mapping[
 
 def _tree_fingerprint(root: Path) -> tuple[tuple[str, str], ...]:
     rows: list[tuple[str, str]] = []
-    for path in scan_directory(root, pattern="*.toml"):
-        if path.is_symlink() or path.stat().st_nlink != 1:
+    for path in scan_directory(root, recursive=True):
+        if path.is_dir():
+            if is_link_like(path):
+                raise RegistryValidationError(f"M200/2024 adjudication refuses linked input: {path}")
+            continue
+        if is_link_like(path) or not path.is_file() or path.stat().st_nlink != 1:
             raise RegistryValidationError(f"M200/2024 adjudication refuses linked input: {path}")
         rows.append((path.relative_to(root).as_posix(), sha256(path.read_bytes()).hexdigest()))
     if not rows:
@@ -159,7 +179,12 @@ def _tree_fingerprint(root: Path) -> tuple[tuple[str, str], ...]:
     return tuple(sorted(rows))
 
 
-def _verify_candidate(registry_root: Path, rendered: Mapping[Path, str], original: tuple[tuple[str, str], ...]) -> None:
+def _verify_candidate(
+    registry_root: Path,
+    rendered: Mapping[Path, str],
+    original: tuple[tuple[str, str], ...],
+    snapshot: M200ReviewedPromotionSnapshot,
+) -> None:
     with tempfile.TemporaryDirectory(prefix="cadrumo-m200-2024-adjudication-") as temporary:
         copied_root = Path(temporary) / "registry" / "aeat"
         shutil.copytree(registry_root, copied_root)
@@ -167,7 +192,7 @@ def _verify_candidate(registry_root: Path, rendered: Mapping[Path, str], origina
         for source, payload in rendered.items():
             target = copied_casillas / source.name
             target.write_bytes(payload.encode("utf-8"))
-        _verify_staged_tree(registry_root, copied_casillas, rendered, dict(original))
+        _verify_staged_tree(registry_root, copied_casillas, rendered, dict(original), snapshot)
 
 
 def _verify_staged_tree(
@@ -175,6 +200,7 @@ def _verify_staged_tree(
     staged: Path,
     rendered: Mapping[Path, str],
     original: Mapping[str, str],
+    snapshot: M200ReviewedPromotionSnapshot,
 ) -> None:
     expected = {path.name: payload.encode("utf-8") for path, payload in rendered.items()}
     fingerprint = dict(_tree_fingerprint(staged))
@@ -186,6 +212,7 @@ def _verify_staged_tree(
     for name, digest in original.items():
         if name not in expected and fingerprint[name] != digest:
             raise RegistryValidationError(f"M200/2024 adjudication changed a non-cohort declaration: {name}")
+    verify_blocker_canonical_declarations(snapshot.blocker_authority, casillas_root=staged)
     _verify_isolated_authority_load(registry_root, staged)
 
 
