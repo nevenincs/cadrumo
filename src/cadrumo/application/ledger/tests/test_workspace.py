@@ -14,9 +14,9 @@ import pytest
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
-from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.ledger_filing_snapshot import LedgerFilingStalenessVerdict
+from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -24,7 +24,10 @@ from ..models import LedgerReviewQueryResult, LedgerReviewRow, LedgerStatusRepor
 from ..workspace import (
     LEDGER_WORKSPACE_CONTRACT_VERSION,
     LedgerWorkspaceArea,
+    LedgerWorkspaceAreaStateV1,
+    LedgerWorkspaceAvailability,
     LedgerWorkspaceProjectionError,
+    LedgerWorkspaceSource,
     LedgerWorkspaceStatus,
     project_affected_declaration_reconciliations,
     project_ledger_workspace,
@@ -194,6 +197,25 @@ def test_each_injected_reader_runs_once_and_no_hidden_reader_is_needed() -> None
 
     assert calls == ["suggestions", "consistency", "staleness"]
     assert projection.areas[-1].status is LedgerWorkspaceStatus.EMPTY
+
+
+def test_availability_is_not_inferred_from_empty_or_unmeasured_status() -> None:
+    empty = LedgerWorkspaceAreaStateV1(
+        area=LedgerWorkspaceArea.ENTRIES,
+        sources=(LedgerWorkspaceSource.LOCAL_LEDGER,),
+        status=LedgerWorkspaceStatus.EMPTY,
+        item_count=0,
+    )
+    assert empty.availability is LedgerWorkspaceAvailability.AVAILABLE
+
+    with pytest.raises(ValueError, match="requires an availability reason"):
+        LedgerWorkspaceAreaStateV1(
+            area=LedgerWorkspaceArea.IMPORT,
+            sources=(LedgerWorkspaceSource.LOCAL_LEDGER,),
+            availability=LedgerWorkspaceAvailability.UNAVAILABLE,
+            status=LedgerWorkspaceStatus.UNMEASURED,
+            item_count=0,
+        )
 
 
 def test_bucket_sources_cannot_be_mixed() -> None:
