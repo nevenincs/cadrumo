@@ -23,7 +23,7 @@ import sys
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Final, Literal
 
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
@@ -75,6 +75,19 @@ class ScreenEntry:
     name: str
     run: Callable[[ValidatedRegistryAuthority, tuple[str, ...]], Sequence[object]]
     counts: str
+    #: What the SCREEN's own entry point returns, which is not always findings.
+    #:
+    #: ``findings`` - every row is a finding.
+    #: ``census`` - the entry returns everything it examined, carrying a flag,
+    #: and only flagged rows are findings.
+    #:
+    #: Declared because it cannot be read from the outside and was guessed
+    #: wrongly: a report counted the wire-type screen's 13,624 examined
+    #: transitions as findings where 29 diverge. Nothing here VERIFIES the
+    #: declaration - no mechanical test distinguishes a census from a finding
+    #: set - so it is an author's statement, and its worth is that a consumer
+    #: reads it instead of inferring one.
+    entry_returns: Literal["findings", "census"] = "findings"
 
 
 def _divergent_transitions(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> Sequence[object]:
@@ -183,7 +196,10 @@ SCREENS: tuple[ScreenEntry, ...] = (
         "temporal_site_agreement", temporal_site_screen, "revisions whose temporal sites fall silent or disagree"
     ),
     ScreenEntry(
-        "wire_type_compatibility", _divergent_transitions, "distinct casilla-to-wire type transitions that diverge"
+        "wire_type_compatibility",
+        _divergent_transitions,
+        "distinct casilla-to-wire type transitions that diverge",
+        entry_returns="census",
     ),
     ScreenEntry(
         "continuity_integrity", continuity_screen, "modelos with no continuity, and chains that do not hold together"
@@ -243,6 +259,8 @@ class CorpusScreenEntry:
     name: str
     run: Callable[[], Sequence[object]]
     counts: str
+    #: As on :class:`ScreenEntry`; every corpus screen returns findings today.
+    entry_returns: Literal["findings", "census"] = "findings"
 
 
 CORPUS_SCREENS: tuple[CorpusScreenEntry, ...] = (

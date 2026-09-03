@@ -106,3 +106,39 @@ def test_a_census_entry_point_is_visible_beside_its_runner_count() -> None:
     # available for all of them and not only the one that motivated it.
     assert all(item.runner_findings >= 0 for item in exposures)
     assert any(item.findings == item.runner_findings for item in exposures)
+
+
+def test_the_report_reads_the_declared_shape_rather_than_inferring_it() -> None:
+    """Census or findings comes from the table's declaration, not from a ratio.
+
+    Inferring it from the gap between the two counts would work today and fail
+    the moment a findings screen gained a projection that dropped most of its
+    rows - which several already have. The declaration is an author's statement
+    and this asserts the report is reading it.
+    """
+    from ..analysis.screens import CORPUS_SCREENS, SCREENS
+
+    declared = {entry.name: entry.entry_returns for entry in SCREENS}
+    declared.update({entry.name: entry.entry_returns for entry in CORPUS_SCREENS})
+    assert "census" in declared.values(), "no screen declares a census, so this proves nothing"
+
+    for item in condition_exposure(bundled_authority(), bundled_modelo_ids()):
+        assert item.entry_returns == declared[item.screen]
+
+
+def test_a_census_is_not_added_to_the_filing_defect_total() -> None:
+    """Rows examined are counted apart from defects met.
+
+    A census's rows are transitions the screen looked at, and most are fine.
+    Summing them into the filing-exposure figure is the error the declaration
+    exists to prevent, and it inflated that figure by eleven thousand.
+    """
+    exposures = condition_exposure(bundled_authority(), bundled_modelo_ids())
+    census = [item for item in exposures if item.entry_returns == "census"]
+    findings = [item for item in exposures if item.entry_returns == "findings"]
+    assert census and findings, "both shapes must occur or this proves nothing"
+    assert sum(item.filing_findings for item in census) > 0
+    # The defect total excludes them, so it is strictly smaller than the naive sum.
+    naive = sum(item.filing_findings for item in exposures)
+    honest = sum(item.filing_findings for item in findings)
+    assert honest < naive

@@ -20,10 +20,12 @@ casilla-to-wire transition it examined, carrying a ``divergent`` flag, of which
 screen by a factor of nearly five hundred, which the first version of this
 report did.
 
-There is no declaration to read the difference from, so both counts are carried:
-the population the entry point returned, and what the runner reports for the
-same screen. Where they diverge sharply the entry point is a census and the
-exposure figure describes rows examined rather than defects met.
+The runner table now declares which shape each screen has, on
+:attr:`ScreenEntry.entry_returns`, because it cannot be read from the outside and
+guessing it produced the error above. A row from a screen declared ``census``
+says so, and its exposure figure describes rows EXAMINED rather than defects met.
+The runner's own count is carried beside the population either way, so the two
+can be compared without trusting the declaration.
 
 This is not a screen. It reports about the screens rather than about the
 registry, its unit is a condition rather than a modelo, and it therefore
@@ -83,6 +85,10 @@ class ConditionExposure:
     #: population far larger than this one means the entry point returned a
     #: census rather than findings, and the exposure above counts rows examined.
     runner_findings: int = 0
+    #: What the screen's table entry declares its entry point returns, either
+    #: ``findings`` or ``census``. Carried so a consumer reads the declaration
+    #: rather than inferring one from the ratio between the two counts.
+    entry_returns: str = "findings"
     #: Findings carrying no revision, which were never measured against grade.
     #: Kept separate from a measured zero: several screens report per modelo or
     #: per design because that is their unit - a continuity chain spans
@@ -119,6 +125,8 @@ def condition_exposure(
 
     runner: dict[str, int] = {entry.name: len(tuple(entry.run(authority, modelo_ids))) for entry in SCREENS}
     runner.update({entry.name: len(tuple(entry.run())) for entry in CORPUS_SCREENS})
+    declared: dict[str, str] = {entry.name: entry.entry_returns for entry in SCREENS}
+    declared.update({entry.name: entry.entry_returns for entry in CORPUS_SCREENS})
     filing = filing_grade_revisions(authority, modelo_ids)
     totals: collections.Counter[tuple[str, str]] = collections.Counter()
     filing_totals: collections.Counter[tuple[str, str]] = collections.Counter()
@@ -156,6 +164,7 @@ def condition_exposure(
                     filing_revisions=len(filing_units[(screen, kind)]),
                     unmeasured=unmeasured[(screen, kind)],
                     runner_findings=runner.get(screen, 0),
+                    entry_returns=declared.get(screen, "findings"),
                 )
                 for (screen, kind), count in totals.items()
             ),
@@ -174,13 +183,17 @@ def main() -> int:
             f"filing_exposure screen={item.screen} kind={item.kind} findings={item.findings} "
             f"filing_findings={item.filing_findings} revisions={item.revisions} "
             f"filing_revisions={item.filing_revisions} unmeasured={item.unmeasured} "
-            f"runner_findings={item.runner_findings} "
+            f"runner_findings={item.runner_findings} entry_returns={item.entry_returns} "
             f"wholly_below_filing={str(item.wholly_below_filing).lower()}\n"
         )
-    exposed = [item for item in exposures if item.filing_findings]
+    # Exposure summed over screens that return findings. A census's rows are
+    # examined transitions, and adding them to a defect count is the error this
+    # declaration exists to stop.
+    exposed = [item for item in exposures if item.filing_findings and item.entry_returns == "findings"]
     sys.stdout.write(
         f"summary conditions={len(exposures)} with_filing_exposure={len(exposed)} "
-        f"filing_findings={sum(item.filing_findings for item in exposures)} "
+        f"filing_findings={sum(item.filing_findings for item in exposed)} "
+        f"census_rows_examined={sum(item.findings for item in exposures if item.entry_returns == 'census')} "
         f"wholly_below_filing={sum(1 for item in exposures if item.wholly_below_filing)} "
         f"unmeasurable={sum(1 for item in exposures if item.findings == item.unmeasured)} "
         f"filing_grade_revisions={len(filing_grade_revisions(authority, modelo_ids))}\n"
