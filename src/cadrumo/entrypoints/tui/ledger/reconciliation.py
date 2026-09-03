@@ -180,6 +180,7 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
             self._transition(LedgerFlowState.SUCCEEDED)
             status.update(ledger_copy("tui.ledger.reconciliation.success"))
 
+    @override
     def _cancel_flow(self) -> None:
         """Cancel only before the injected mutation begins."""
         if self.flow_state not in {LedgerFlowState.EDITING, LedgerFlowState.CONFIRMING}:

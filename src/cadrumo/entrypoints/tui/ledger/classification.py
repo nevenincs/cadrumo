@@ -123,6 +123,7 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
             self._transition(LedgerFlowState.SUCCEEDED)
             status.update(ledger_copy("tui.ledger.classification.success"))
 
+    @override
     def _cancel_flow(self) -> None:
         if self.flow_state not in {LedgerFlowState.EDITING, LedgerFlowState.CONFIRMING}:
             return

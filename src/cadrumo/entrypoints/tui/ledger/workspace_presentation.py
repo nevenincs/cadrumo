@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import ClassVar
+from typing import ClassVar, override
 
 from textual.widgets import DataTable, Static
 
@@ -65,6 +65,7 @@ class LedgerConfirmationFlowScreen(LedgerWorkspaceScreen):
     def _cancel_flow(self) -> None:
         raise NotImplementedError
 
+    @override
     def action_back(self) -> None:
         """Refuse abandonment after submission; otherwise unwind confirmation."""
         if self.flow_state is LedgerFlowState.SUBMITTING:

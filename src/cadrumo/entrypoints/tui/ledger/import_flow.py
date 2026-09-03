@@ -105,6 +105,7 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
             self._transition(LedgerFlowState.SUCCEEDED)
             status.update(ledger_copy("tui.ledger.import.success", imported=result.imported, skipped=result.skipped))
 
+    @override
     def _cancel_flow(self) -> None:
         if self.flow_state not in {LedgerFlowState.EDITING, LedgerFlowState.CONFIRMING}:
             return
