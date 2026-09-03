@@ -77,18 +77,29 @@ def _inputs(
     modelo: WorkbenchGenerationSourceResultV1[tuple[ModeloWorkspaceProjectionV1, ...]] | None = None,
 ) -> WorkbenchGenerationInputsV1:
     """Build the typed input bundle using only explicit missing source results."""
+    ledger_result = ledger or WorkbenchGenerationSourceResultV1.never_captured(refusal="source.ledger")
+    declarations_result = declarations or WorkbenchGenerationSourceResultV1.never_captured(
+        refusal="source.declarations"
+    )
+    aeat_sync_result = aeat_sync or WorkbenchGenerationSourceResultV1.never_captured(refusal="source.aeat_sync")
     return WorkbenchGenerationInputsV1(
         assembled_at=_NOW,
         home=WorkbenchGenerationSourceResultV1.available(_home_input(), observed_at=_NOW),
-        ledger=ledger or WorkbenchGenerationSourceResultV1.never_captured(refusal="source.ledger"),
-        declarations=declarations or WorkbenchGenerationSourceResultV1.never_captured(refusal="source.declarations"),
+        ledger=ledger_result,
+        declarations=declarations_result,
         declarations_calendar=declarations_calendar
         or WorkbenchGenerationSourceResultV1.never_captured(refusal="source.declarations_calendar"),
-        aeat_sync=aeat_sync or WorkbenchGenerationSourceResultV1.never_captured(refusal="source.aeat_sync"),
+        aeat_sync=aeat_sync_result,
         modelo=modelo or WorkbenchGenerationSourceResultV1.never_captured(refusal="source.modelo"),
-        ledger_admission=_admission("workbench.ledger"),
-        declarations_admission=_admission("workbench.declarations"),
-        aeat_sync_admission=_admission("workbench.aeat_sync"),
+        ledger_admission=_admission(
+            "workbench.ledger", WorkbenchDestinationAdmissionState(ledger_result.availability.value)
+        ),
+        declarations_admission=_admission(
+            "workbench.declarations", WorkbenchDestinationAdmissionState(declarations_result.availability.value)
+        ),
+        aeat_sync_admission=_admission(
+            "workbench.aeat_sync", WorkbenchDestinationAdmissionState(aeat_sync_result.availability.value)
+        ),
     )
 
 
@@ -114,7 +125,7 @@ def test_generation_inputs_reject_admission_source_contradictions() -> None:
     payload["ledger_admission"] = _admission(
         "workbench.ledger", WorkbenchDestinationAdmissionState.AVAILABLE
     ).model_dump()
-    with pytest.raises(ValidationError, match="workbench.ledger admission must match"):
+    with pytest.raises(ValidationError, match=r"workbench\.ledger admission must match"):
         WorkbenchGenerationInputsV1.model_validate(payload)
 
 
