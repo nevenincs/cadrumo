@@ -447,7 +447,7 @@ def test_portal_registry_modules_do_not_reintroduce_route_or_host_literals(
             if id(node) in docstring_ids:
                 continue
             value = node.value
-            is_entry_root_path = path.parent.name == "_entries" and path.name != "_common.py" and value == "/"
+            is_entry_root_path = path.parent.name == "_entries" and path.name != "common.py" and value == "/"
             if is_entry_root_path or any(token in value for token in volatile_tokens):
                 offenders.append(f"{relative_path}:{node.lineno}: {value!r}")
 

@@ -382,3 +382,15 @@ __all__ = [
     "portal_path",
     "sede_pdf_url",
 ]
+
+# ── SII / VeriFactu schema namespaces used as sample-payload identifiers ─────
+#
+# ``adapters.inbound.einvoice.shape`` classifies by local element name and
+# ignores the namespace prefix on purpose, so production owns no constant for
+# these. They are still AEAT-hosted URLs, so the payload builders that need
+# realistic envelopes declare them here rather than inline.
+_SSII_SCHEMA_BASE = f"{_AEAT.domains.www2}/static_files/common/internet/dep/aplicaciones/es/aeat"
+SII_SUMINISTRO_LR_NAMESPACE_FIXTURE = f"{_SSII_SCHEMA_BASE}/ssii/fact/ws/SuministroLR.xsd"
+SII_SUMINISTRO_INFORMACION_NAMESPACE_FIXTURE = f"{_SSII_SCHEMA_BASE}/ssii/fact/ws/SuministroInformacion.xsd"
+VERIFACTU_SUMINISTRO_LR_NAMESPACE_FIXTURE = f"{_SSII_SCHEMA_BASE}/tike/cont/ws/SuministroLR.xsd"
+VERIFACTU_SUMINISTRO_INFORMACION_NAMESPACE_FIXTURE = f"{_SSII_SCHEMA_BASE}/tike/cont/ws/SuministroInformacion.xsd"
