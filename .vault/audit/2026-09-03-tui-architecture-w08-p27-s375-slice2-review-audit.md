@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c8d95d0084290bc7d7b7c2ffe669274307e03393f103cdddd506f50741727b6c'
+body_hash: 'sha256:b0e544b054460dbcad6f5312b75680e0896a9207b3bb7f30ce8a09c996c10273'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
@@ -26,9 +26,9 @@ The initial screen hid its target and accepted an off-projection identity. Remed
 
 The initial object exposed and permitted replacement of its command, serialized protected path and provider values, and admitted unsafe or duplicate display identities. Remediation moves the command into a module-private weak vault, makes instance metadata immutable, refuses pickle serialization, constrains label keys and choice grammar, and rejects duplicate ids before mounting. Exact adversarial tests close this finding.
 
-### terminal-flow-state-can-be-rewritten-as-cancelled | medium | Open: terminal states are fixed but Escape can orphan an in-flight submission
+### terminal-flow-state-can-be-rewritten-as-cancelled | medium | Closed: terminal and in-flight lifecycle states are guarded explicitly
 
-Remediation makes flow transitions monotonic, accepts Confirm only from `CONFIRMING`, disables both controls during submission, and prevents post-success Cancel or repeated submission. The reproduced terminal-state rewrite is closed. A narrowed lifecycle defect remains: `action_back` handles only `CONFIRMING`; in `SUBMITTING` it delegates to the base action and posts `LedgerBackRequested` while the screen itself owns and awaits the submit coroutine. The host may therefore navigate away or unmount the only result owner during an in-flight mutation. No slow-door Escape, teardown, or generic failure test covers that state. This finding remains medium until in-flight Escape has an explicit refusal or lifecycle owner and an exact test.
+Remediation makes flow transitions monotonic, accepts Confirm only from `CONFIRMING`, disables both controls during submission, and prevents post-success Cancel or repeated submission. Submission now runs in an owned worker so keyboard messages remain responsive, and `action_back` explicitly refuses Escape while `SUBMITTING` without posting a back request or unmounting the screen. Slow-door compositor tests prove that behavior for both classification and import through successful settlement. A failing import door carrying a protected path and provider also proves that only localized generic failure copy is rendered. This finding is closed.
 
 ### new-screen-geometry-tests-are-proxy-only | low | Closed: both new screens have exact compositor and focus assertions
 
@@ -36,7 +36,7 @@ The new parameterized compositor test now asserts initial and confirming focus c
 
 ## Recommendations
 
-Hold further S375 slices until the remaining narrowed medium in-flight lifecycle defect is corrected and independently tested. The high target-confirmation finding, prepared-import secrecy finding, terminal-state rewrite, and low geometry proof gap are otherwise closed.
+No open recommendation remains from this review. The high target-confirmation finding, both medium findings, and the low geometry proof gap are closed. Slice 2 is safe to proceed.
 
 Positive findings: classification action identity is validated through the real application catalogue and its canonical command key; the classification patch changes only `business_classification`; mutation requires a separate row selection and confirm action; absent submitters and still-deferred destinations resolve to typed refusals; import paths and providers do not appear in current screen copy, custom repr, or generic failure messages; flow modules import no adapters, CLI, file readers, or concrete import mutator; locale strings are authored and genuinely distinct in all four languages; Escape cancels pre-submit confirmation before returning to the parent; and direct eighty-column compositor inspection found no clipping or horizontal scrolling.
 

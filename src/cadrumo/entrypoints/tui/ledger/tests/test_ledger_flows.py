@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import ast
+import asyncio
 import pickle
 from pathlib import Path
 from types import SimpleNamespace
-from typing import cast
+from typing import cast, override
 
 import pytest
 from textual.containers import VerticalScroll
@@ -70,6 +71,51 @@ class _ImportDoor:
             validations=(),
             sources=(),
         )
+
+
+class _SlowClassificationDoor(_ClassificationDoor):
+    def __init__(self) -> None:
+        super().__init__()
+        self.started = asyncio.Event()
+        self.release = asyncio.Event()
+
+    @override
+    async def __call__(self, submission: LedgerClassificationSubmissionV1) -> ManualLedgerTransactionResult:
+        self.calls.append(submission)
+        self.started.set()
+        await self.release.wait()
+        return cast(
+            "ManualLedgerTransactionResult",
+            SimpleNamespace(ref=SimpleNamespace(transaction_id=submission.transaction_id)),
+        )
+
+
+class _SlowImportDoor(_ImportDoor):
+    def __init__(self) -> None:
+        super().__init__()
+        self.started = asyncio.Event()
+        self.release = asyncio.Event()
+
+    @override
+    async def __call__(self, command: LedgerSourceImportCommand) -> LedgerSourceImportResult:
+        self.calls.append(command)
+        self.started.set()
+        await self.release.wait()
+        return LedgerSourceImportResult(
+            rows=1,
+            imported=1,
+            skipped=0,
+            dry_run=False,
+            verify=False,
+            validations=(),
+            sources=(),
+        )
+
+
+class _FailingImportDoor:
+    async def __call__(self, command: LedgerSourceImportCommand) -> LedgerSourceImportResult:
+        del command
+        raise RuntimeError("private-provider C:/private/customer-sensitive-statement.csv")
 
 
 def _classify_action() -> ActionReference:
@@ -171,6 +217,96 @@ async def test_import_only_submits_injected_opaque_prepared_command_and_redacts_
         assert screen.flow_state is LedgerFlowState.SUCCEEDED
 
 
+@pytest.mark.asyncio
+async def test_escape_is_refused_while_classification_submission_is_in_flight() -> None:
+    projection = _projection()
+    door = _SlowClassificationDoor()
+    controller = LedgerWorkspaceController(
+        _context(),
+        projection,
+        review_action=_review_action(),
+        classify_action=_classify_action(),
+        classification_target=projection.entries[0].transaction_id,
+        classification_submitter=door,
+    )
+    screen = LedgerClassificationScreen(controller)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await pilot.pause()
+        await pilot.press("enter", "enter")
+        await asyncio.wait_for(door.started.wait(), timeout=1)
+        assert screen.flow_state is LedgerFlowState.SUBMITTING
+        await pilot.press("escape")
+        await pilot.pause()
+        assert not screen.back_requested
+        assert screen.is_mounted
+        assert str(screen.query_one("#ledger-flow-status", Static).render())
+        door.release.set()
+        await app.workers.wait_for_complete()
+        assert screen.flow_state is LedgerFlowState.SUCCEEDED
+        assert not screen.back_requested
+
+
+@pytest.mark.asyncio
+async def test_escape_is_refused_while_import_submission_is_in_flight() -> None:
+    command = LedgerSourceImportCommand(path=Path("C:/synthetic/input.csv"), provider="bank")
+    prepared = LedgerPreparedImportV1(
+        choice_id="prepared-bank",
+        provider_label_key="tui.ledger.import.provider.bank",
+        source_label_key="tui.ledger.import.source.prepared",
+        command=command,
+    )
+    door = _SlowImportDoor()
+    controller = LedgerWorkspaceController(
+        _context(), _projection(), review_action=_review_action(), prepared_imports=(prepared,), import_submitter=door
+    )
+    screen = LedgerImportScreen(controller)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await pilot.pause()
+        await pilot.press("enter", "enter")
+        await asyncio.wait_for(door.started.wait(), timeout=1)
+        assert screen.flow_state is LedgerFlowState.SUBMITTING
+        await pilot.press("escape")
+        await pilot.pause()
+        assert not screen.back_requested
+        assert screen.is_mounted
+        door.release.set()
+        await app.workers.wait_for_complete()
+        assert screen.flow_state is LedgerFlowState.SUCCEEDED
+        assert len(door.calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_import_failure_is_localized_and_never_leaks_exception_path_or_provider() -> None:
+    protected_path = "C:/private/customer-sensitive-statement.csv"
+    protected_provider = "private-provider"
+    prepared = LedgerPreparedImportV1(
+        choice_id="prepared-bank",
+        provider_label_key="tui.ledger.import.provider.bank",
+        source_label_key="tui.ledger.import.source.prepared",
+        command=LedgerSourceImportCommand(path=Path(protected_path), provider=protected_provider),
+    )
+    controller = LedgerWorkspaceController(
+        _context(),
+        _projection(),
+        review_action=_review_action(),
+        prepared_imports=(prepared,),
+        import_submitter=_FailingImportDoor(),
+    )
+    with override_settings(cadrumo_output_language="en"):
+        screen = LedgerImportScreen(controller)
+        app = ScreenHostApp[None](screen)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            await pilot.press("enter", "enter")
+            await app.workers.wait_for_complete()
+            assert screen.flow_state is LedgerFlowState.FAILED
+            rendered = "\n".join(str(widget.render()) for widget in screen.query(Static))
+            assert "The import could not be completed." in rendered
+            assert protected_path not in rendered
+            assert protected_provider not in rendered
+            assert "RuntimeError" not in rendered
 def test_factory_refuses_undeclared_or_drifted_classification_action() -> None:
     with pytest.raises(KeyError, match="unknown operator action ID"):
         ledger_screen_factory(
