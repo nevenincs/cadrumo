@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8081c65c76c1a6acc46f3d87ad2421740460a609eb21c9ec948475b8f2337b36'
+body_hash: 'sha256:014b251169c647c39ac2065a7314cd278f071c18363ea3bc654b911cdfb940dc'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-09-02-unreachable-capability-tui-homepage-product-design-research]]"
@@ -48,6 +48,14 @@ Both populated scenarios contain exactly one next action, one declaration and on
 
 The fixture is non-sensitive and pure by inspection, but the security test examines only `ImportFrom` roots against six names. It misses direct `Import`, filesystem or repository imports under other names, and I/O calls. No test serializes every scenario and rejects representative NIF, IBAN, email, credential, filing-reference or secret-shaped content, so a protected literal inserted into profile/declaration labels or reason fields would remain green. The freshness test proves only top-level projection/account replacement and top-level frozen assignment; it does not assert fresh nested populated records or stable declaration identities across builds. These gaps weaken the security and isolation claims carried by the fixture module.
 
+### final-density-disposition | low | Populated fixtures now exercise full preview density and varied typed states
+
+Ready and blocked now each carry three uniquely ranked actions, three distinct declaration identities and three chronological agenda entries. The declarations vary lifecycle state and Modelo/period coordinates; agenda rows vary period, local-filing and AEAT-observation state. Direct inspection confirms the populated builders reconstruct these nested records on every call while preserving their semantic declaration identities. The corpus can now drive second/third-row arrows, non-first declaration focus restoration, maximum preview height and floor scrolling. `measurement-corpus-density` is closed.
+
+### final-sensitive-purity-disposition | medium | Security and I/O detectors improved, but sensitive and nested-freshness teeth remain incomplete
+
+The suite now serializes every scenario, constrains Hex64 values, checks several credential/email/IBAN/DNI patterns, and scans both import forms plus a wider call denylist. Current fixtures remain synthetic, deterministic, fresh and pure by inspection. The detector does not recognize NIE-shaped NIFs such as `X2482300W`, despite claiming PII coverage, and the I/O scan still permits paths such as `os.open` and arbitrary repository imports. The freshness test still asserts object replacement only for the projection and account, so caching populated action, declaration or agenda records would stay green; stable declaration identity across rebuilt projections is likewise unasserted. `sensitive-purity-gate-teeth` therefore remains open at medium severity even though no live sensitive literal, retention or I/O defect was found.
+
 <!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
      severity, using the heading form
 
@@ -64,4 +72,6 @@ The fixture is non-sensitive and pure by inspection, but the security test exami
 3. Serialize all scenarios and reject representative synthetic sensitive patterns and plaintext secret markers. Expand the no-I/O gate across `Import`, `ImportFrom` and relevant filesystem, repository, network and secret-access calls.
 4. Keep `work_unit_id` as an internal application-contract field only. Candidate IDs, accessibility labels, copy and tests must call it declaration identity and must never render WorkUnit vocabulary.
 5. Focused Pytest passed 15 tests; Ruff and ty passed; Basedpyright reported 0 errors, warnings or notes. No critical finding exists, but one high and one medium remain open. `W08.P26.S371` must not close.
+6. Add an NIE/NIF probe, cover broad filesystem/repository entry points rather than a short denylist, and assert populated nested records are distinct objects across builds while their declaration identities remain equal.
+7. Final focused Pytest passed 16 tests; Ruff and ty passed; Basedpyright reported 0 errors, warnings or notes. The high finding is closed, but one medium test-integrity finding remains open. `W08.P26.S371` must not close yet.
 
