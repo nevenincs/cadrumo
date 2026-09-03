@@ -12,10 +12,16 @@ from ...application.registry.tree import RegistryTreeReport, inspect_registry_tr
 from ...core.i18n.render import tr
 from ...core.json_contract import strict_round_trip
 from ...core.resources.bundled_data import bundled_path
+from ...domain.calculations.registry.live_parity import ParityVerdictKind
+from ...domain.calculations.registry.renta_web_open_replay_corpus import (
+    RentaWebOpenReplayParityReport,
+    verify_bundled_renta_web_open_replays,
+)
 from ._common import emit_envelope, resolve_optional_root
 from ._registry_diff_payloads import RegistryDiffRevisionsResult
 from ._registry_payloads import (
     RegistryInspectResult,
+    RegistryReplayParityResult,
     RegistryVerifyFiledStateResult,
 )
 
@@ -218,9 +224,81 @@ def _diff_revisions_lines(report: RegistryRevisionDiffReport) -> list[str]:
     return lines
 
 
+def _replay_parity_lines(report: RentaWebOpenReplayParityReport) -> list[str]:
+    """Project the replay report as metric rows plus one detail row per comparison.
+
+    Every field-level comparison is emitted, matches included: a reader must be
+    able to see WHICH casillas were checked, not only that nothing disagreed.
+    """
+    lines = [
+        metric_line("replay_verdict", report.verdict),
+        metric_line("replay_oracle_id", report.oracle_id),
+        metric_line("replay_cross_reference_id", report.cross_reference_id),
+        metric_line("replay_guard_policy_id", report.guard_policy_id),
+        metric_line("replay_registry_validated", report.registry_validated),
+        metric_line("replay_payload_count", len(report.payloads)),
+        metric_line("replay_compared_field_count", report.compared_field_count()),
+        metric_line("replay_matched_payload_count", report.payload_count_of(ParityVerdictKind.MATCH)),
+        metric_line("replay_mismatched_payload_count", report.payload_count_of(ParityVerdictKind.MISMATCH)),
+        metric_line("replay_unverifiable_payload_count", report.payload_count_of(ParityVerdictKind.UNVERIFIABLE)),
+        metric_line("replay_blocked_payload_count", report.payload_count_of(ParityVerdictKind.BLOCKED)),
+    ]
+    for payload in report.payloads:
+        lines.append("	".join(("replay_payload", payload.payload_name, payload.verdict)))
+        for field in payload.fields:
+            lines.append(
+                "	".join(
+                    (
+                        "replay_field",
+                        payload.payload_name,
+                        field.name,
+                        f"expected={field.expected}",
+                        f"observed={field.observed}",
+                        field.verdict,
+                    ),
+                ),
+            )
+    return lines
+
+
+def verify_replay_parity_cmd(ctx: typer.Context) -> None:
+    """Replay the bundled AEAT Renta WEB Open captures through the parity oracle.
+
+    Offline by construction: the replay driver's only planned operation is a
+    local parse, and the remote-state guard authorises that plan before any
+    comparison runs. No AEAT contact occurs on this path.
+    """
+    report = verify_bundled_renta_web_open_replays()
+    emit_envelope(
+        ctx,
+        command="registry.replay.parity",
+        result=strict_round_trip(
+            RegistryReplayParityResult,
+            {
+                "corpus": report.corpus.value,
+                "oracle_id": report.oracle_id,
+                "cross_reference_id": report.cross_reference_id,
+                "guard_policy_id": report.guard_policy_id,
+                "registry_validated": report.registry_validated,
+                "verdict": report.verdict,
+                "compared_field_count": report.compared_field_count(),
+                "matched_payload_count": report.payload_count_of(ParityVerdictKind.MATCH),
+                "mismatched_payload_count": report.payload_count_of(ParityVerdictKind.MISMATCH),
+                "unverifiable_payload_count": report.payload_count_of(ParityVerdictKind.UNVERIFIABLE),
+                "blocked_payload_count": report.payload_count_of(ParityVerdictKind.BLOCKED),
+                "payloads": [payload.model_dump(mode="json") for payload in report.payloads],
+            },
+        ),
+        lines=_replay_parity_lines(report),
+    )
+    if report.verdict != ParityVerdictKind.MATCH:
+        raise typer.Exit(code=1)
+
+
 __all__ = [
     "diff_revisions_cmd",
     "inspect_registry_cmd",
     "verify_filed_state_cmd",
     "verify_registry_cmd",
+    "verify_replay_parity_cmd",
 ]

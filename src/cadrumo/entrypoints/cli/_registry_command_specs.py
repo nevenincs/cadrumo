@@ -210,6 +210,16 @@ REGISTRY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     _leaf(
+        "app_registry_replay_parity",
+        "app_registry",
+        "replay-parity",
+        "cli.registry.replay_parity_help",
+        _ROOT_MODULE,
+        "verify_replay_parity_cmd",
+        _ROOT_PAYLOADS,
+        "RegistryReplayParityResult",
+    ),
+    _leaf(
         "app_registry_citations_list",
         "app_registry_citations",
         "list",
