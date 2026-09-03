@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
+from typing import Protocol
 
 from .login_interaction import (
     ProfileLoginChoice,
@@ -88,7 +89,14 @@ class WorkbenchBootstrapV1:
 type ProfileInventoryReaderV1 = Callable[[], ProfileSummaryInventory]
 type ProfileChoiceReaderV1 = Callable[[], tuple[ProfileLoginChoice, ...]]
 type ProfilePreselectionReaderV1 = Callable[[str | None], str | None]
-type ProfileSessionResumeDoorV1 = Callable[[str], object | None]
+
+
+class ProfileSessionResumeDoorV1(Protocol):
+    """Keyword-only boundary for attempting a persisted-session resume."""
+
+    def __call__(self, *, bucket_id: str) -> object | None:
+        """Return ``None`` only when the persisted session resumes."""
+        ...
 
 
 def prepare_workbench_bootstrap(
@@ -119,7 +127,7 @@ def prepare_workbench_bootstrap(
     preselected = preselection_reader(None)
     if preselected not in {choice.profile_id for choice in choices}:
         preselected = None
-    if preselected is not None and resume_session(preselected) is None:
+    if preselected is not None and resume_session(bucket_id=preselected) is None:
         selected = next(choice for choice in choices if choice.profile_id == preselected)
         return WorkbenchBootstrapV1(
             inventory_state=WorkbenchBootstrapInventoryState.RECOGNIZED,
