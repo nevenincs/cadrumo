@@ -6206,3 +6206,29 @@ The check that would have caught the over-claim before it was written is the one
 established for exactly this and did not run: search the audit for the subject before reporting
 it as new. It found the eight already-stepped name-window revisions that way and then failed to
 apply it four findings later.
+
+### sibling-count-assertion-was-false-before-this-campaign-measured-it | medium | Nothing changed in modelo 353; the test asserting one disagreement has failed in every lane run since the module appeared
+
+Chasing what changed about modelo 353's siblings found that nothing did. The 2026 export's
+recent history is an encoding spelling corrected from `latin-1` to `iso-8859-1` in three lines,
+a provenance refresh and a design-epoch bounding - no `data_type` touched. The field itself
+still declares `data_type = 'integer'` at width 17, which is the unscaled rendering the audit
+already recorded.
+
+The answer is in this campaign's own lane logs. `test_monetary_scale.py` appears zero times in
+the failure lists of two consecutive full-lane runs and twice in the two after them. The module
+entered the tree between those runs and has failed in every run since it arrived.
+
+So the assertion of exactly one sibling disagreement was already false when it was written, or
+became so before it was first executed here. Nothing degraded; a test landed red and stayed
+red, and this campaign noticed the failure four lane runs later while looking for something
+else.
+
+That also settles the previous two findings. The criterion correction stands - two fields fail
+the sibling test - but the framing of both, first that a defect had appeared and then that a
+field had moved between conditions, attributed change to a corpus that did not change. The real
+event is a test arriving with an expectation the corpus did not meet.
+
+The check that would have answered this in one command was available from the first: this
+campaign keeps its lane logs, and asking when a failure first appears in them is cheaper than
+reasoning about what might have caused it. Three findings were spent reasoning.
