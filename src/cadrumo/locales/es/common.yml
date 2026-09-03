@@ -1022,110 +1022,110 @@ tui:
       submitted: Presentada
     area:
       census: Censo
-      evidence_comparison: Evidence comparison
-      filed_declarations: Filed declarations
-      notifications: Notifications
-      reconciliation: Reconciliation
+      evidence_comparison: Comparación de evidencias
+      filed_declarations: Declaraciones presentadas
+      notifications: Notificaciones
+      reconciliation: Conciliación
     availability:
-      available: Available
-      locked: Locked
-      never_captured: Never captured
-      stale: Stale
-      unavailable: Unavailable
+      available: Disponible
+      locked: Bloqueada
+      never_captured: Nunca capturada
+      stale: Desactualizada
+      unavailable: No disponible
     census:
-      title: AEAT Sync census
+      title: Censo de sincronización AEAT
     census_category:
-      activity: Activity
-      address: Address
-      contact: Contact
-      obligation: Obligation
-      other: Other
+      activity: Actividad
+      address: Dirección
+      contact: Contacto
+      obligation: Obligación
+      other: Otro
     census_status:
-      adopted: Adopted
-      conflict: Conflict
-      unchanged: Unchanged
-      unset: Unset
+      adopted: Adoptado
+      conflict: Conflicto
+      unchanged: Sin cambios
+      unset: Sin establecer
     column:
       aeat: AEAT
-      area: Area
-      availability: Availability
-      category: Category
-      declaration: Declaration
-      difference: Difference
-      document_custody: Document custody
-      field: Field
-      issued: Issued
-      local: Local
-      local_filing: Local filing
-      read: Read
-      receipt: Receipt
-      resolution: Resolution
-      sources: Sources
-      status: Status
+      area: Área
+      availability: Disponibilidad
+      category: Categoría
+      declaration: Declaración
+      difference: Diferencia
+      document_custody: Custodia del documento
+      field: Campo
+      issued: Emisión
+      local: Estado local
+      local_filing: Estado de presentación local
+      read: Lectura
+      receipt: Justificante
+      resolution: Resolución
+      sources: Fuentes
+      status: Estado
     discrepancy:
-      aeat_only: AEAT only
-      contradictory_source: Contradictory source
-      local_only: Local only
-      none: No difference
-      state_mismatch: State mismatch
-      unobserved: Not observed
+      aeat_only: Solo AEAT
+      contradictory_source: Fuente contradictoria
+      local_only: Solo datos locales
+      none: Sin diferencia
+      state_mismatch: Estados no coincidentes
+      unobserved: No observada
     document_custody_state:
-      held: Held
-      not_captured: Not captured
-      refused: Refused
-      unavailable: Unavailable
+      held: En custodia
+      not_captured: No capturado
+      refused: Rechazado
+      unavailable: No disponible
     evidence_comparison:
-      title: AEAT Sync evidence comparison
+      title: Comparación de evidencias de sincronización AEAT
     filed_declarations:
-      title: AEAT Sync filed declarations
+      title: Declaraciones presentadas en sincronización AEAT
     justificante_state:
-      available: Available
-      not_observed: Not observed
-      unavailable: Unavailable
-      verified: Verified
+      available: Disponible
+      not_observed: No observado
+      unavailable: No disponible
+      verified: Verificado
     local_filing_state:
-      draft: Draft
-      filed: Filed
-      not_observed: Not observed
-      ready: Ready
+      draft: Borrador
+      filed: Presentada
+      not_observed: No observada
+      ready: Lista
     notification:
       already_handled: Esta notificación ya se ha abierto.
       document_handed_off: Documento de notificación entregado al anfitrión.
     notification_category:
-      communication: Communication
-      formal: Formal
-      other: Other
-      pending: Pending
+      communication: Comunicación
+      formal: De carácter formal
+      other: Otro
+      pending: Pendiente
     notification_read_state:
-      read: Read
-      unknown: Unknown
-      unread: Unread
+      read: Leída
+      unknown: Desconocido
+      unread: No leída
     notifications:
-      title: AEAT Sync notifications
+      title: Notificaciones de sincronización AEAT
     operation:
       already_handled: Esta operación ya se ha entregado al anfitrión.
-      failed: Operation could not be started.
-      handed_off: Operation handed to the host.
+      failed: No se pudo iniciar la operación.
+      handed_off: Operación entregada al anfitrión.
       in_flight: Ya hay una operación en curso.
     overview:
-      title: AEAT Sync overview
+      title: Resumen de sincronización AEAT
     reconciliation:
-      title: AEAT Sync reconciliation
+      title: Conciliación de sincronización AEAT
     reconciliation_state:
-      accept_aeat: Accept AEAT
-      dismissed: Dismissed
-      keep_local: Keep local
-      no_action: No action
-      unresolved: Unresolved
+      accept_aeat: Aceptar AEAT
+      dismissed: Descartada
+      keep_local: Conservar lo local
+      no_action: Sin acción
+      unresolved: Sin resolver
     refusal:
       notification_handoff: La recuperación del documento de notificación no está
         disponible.
-      operation_handoff: Operation handoff is unavailable.
-      source: This source is unavailable for viewing.
+      operation_handoff: La entrega de la operación no está disponible.
+      source: Esta fuente no está disponible para su consulta.
       unread_notification: Las notificaciones no leídas no pueden abrir documentos.
     source:
       aeat:
-        census: AEAT census
+        census: Censo de la AEAT
         filed_declarations: AEAT filed declarations
         notifications: AEAT notifications
       local:

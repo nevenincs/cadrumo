@@ -6,7 +6,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
-from typing import Any, Final, Protocol, Self, cast, override
+from typing import Any, Final, Protocol, Self, override
 
 from pydantic import BaseModel, Field, NonNegativeInt, TypeAdapter, model_validator
 
@@ -748,7 +748,7 @@ def _notification_selection_key(private_identity: str) -> AeatSyncNotificationSe
             "private_identity": private_identity,
         }
     )
-    return cast("AeatSyncNotificationSelectionKey", f"aeat_sync.notification.{digest}")
+    return f"aeat_sync.notification.{digest}"
 
 
 def _project_notification_rows(
