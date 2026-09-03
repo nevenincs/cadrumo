@@ -253,7 +253,6 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
         members=_registry(
             "errors",
             "period_selector_match",
-            "snapshot",
             "temporal",
             "validate_cross_domain_snapshot",
             "_validate_reference_checker",
@@ -656,12 +655,6 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "It consumes the loaded authority; it does not participate in loading it."
         ),
         prefixes=("cadrumo.domain.deadlines",),
-    ),
-    ClassificationRule(
-        classification="conditionally_reachable",
-        trigger="authenticated AEAT session establishment",
-        reason="Auth domain types are resolved when a session is opened against the sede.",
-        prefixes=("cadrumo.domain.auth",),
     ),
     ClassificationRule(
         classification="conditionally_reachable",
