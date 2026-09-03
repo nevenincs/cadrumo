@@ -120,17 +120,8 @@ def test_every_serialized_fixture_has_no_pii_or_secret_like_values() -> None:
 def test_fixture_module_ast_has_only_local_record_construction_and_no_io() -> None:
     source = ast.parse((Path(__file__).parent.parent / "home_fixtures.py").read_text(encoding="utf-8"))
 
-    imported_modules = {
-        alias.name
-        for node in ast.walk(source)
-        if isinstance(node, ast.Import)
-        for alias in node.names
-    }
-    imported_modules.update(
-        node.module or ""
-        for node in ast.walk(source)
-        if isinstance(node, ast.ImportFrom)
-    )
+    imported_modules = {alias.name for node in ast.walk(source) if isinstance(node, ast.Import) for alias in node.names}
+    imported_modules.update(node.module or "" for node in ast.walk(source) if isinstance(node, ast.ImportFrom))
     forbidden_modules = {"pathlib", "socket", "httpx", "requests", "secrets", "sqlite3", "subprocess"}
     assert all(module.split(".")[0] not in forbidden_modules for module in imported_modules)
 
@@ -142,11 +133,7 @@ def test_fixture_module_ast_has_only_local_record_construction_and_no_io() -> No
             return f"{parent}.{node.attr}"
         return ""
 
-    called = {
-        call_path(node.func)
-        for node in ast.walk(source)
-        if isinstance(node, ast.Call)
-    }
+    called = {call_path(node.func) for node in ast.walk(source) if isinstance(node, ast.Call)}
     forbidden_calls = {
         "open",
         "pathlib.Path",
