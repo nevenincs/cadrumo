@@ -5,12 +5,11 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e8c8cad730a600c57c9d335169e53dfbdc4f193ab0e199a8c6ebbd779d0bfcc4'
+body_hash: 'sha256:63272609fe1e21524bc39bbeb8f553ac28b980dee69bd430b21c0dbfb01710eb'
 step_id: 'S04'
 related:
   - "[[2026-09-02-aeat-design-relayout-boundary-plan]]"
 ---
-
 # Detect target-description, semantic-role, legal-reference, and source-SHA mutations at the historic-restoration boundary
 
 ## Scope
@@ -24,6 +23,7 @@ related:
 
 ## Notes
 
-- Added detectors for direct, traversal, and symlink-based containment in the canonical registry root, and asserted that the retired candidate aliases are absent from the module surface.
-- Added real `SemanticMap`/official-design joining and coordinated map-plus-gap source-drift refusal coverage, including a parent-swap race proving canonical output is unchanged.
-- Added outside-hardlink refusal and post-precheck hardlink-race coverage; the canonical sentinel remains byte-identical.
+- The CLI parser rejects filesystem destination options, and captured stdout is deterministic proposal-only TOML without a `revisions` table.
+- Runtime coverage forbids filesystem write calls and asserts that no destination-path writer surface or retired aliases is exported.
+- Real `SemanticMap`/official-design joining and coordinated map-plus-gap source-drift refusal remain covered.
+- Mutation detectors cover target description, semantic role, legal references, and source SHA; source identity is checked against the parsed pinned design.

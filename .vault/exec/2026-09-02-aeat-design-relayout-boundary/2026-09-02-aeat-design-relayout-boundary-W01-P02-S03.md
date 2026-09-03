@@ -5,12 +5,11 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:a79f251b029feda793df63a93073fe84a550e4dc4900f461aec289e74e2e7b16'
+body_hash: 'sha256:f2b65199e155125d4d5d334363969d71c39fb8151d70b95bd9d326013b6ec1e1'
 step_id: 'S03'
 related:
   - "[[2026-09-02-aeat-design-relayout-boundary-plan]]"
 ---
-
 # Retire historic-payload restoration as authority-producing behavior while retaining proposal-only diagnostics
 
 ## Scope
@@ -24,8 +23,6 @@ related:
 
 ## Notes
 
-- Remediation rejects every review destination whose lexical or resolved path is within the canonical registry root, including traversal and symlink containment.
+- Historic restoration remains proposal-only: the renderer emits TOML to stdout and the module has no destination-path argument or filesystem-writing helper.
 - Removed the unused historic-candidate compatibility alias and builder; the proposal-only API is now the sole exported surface.
 - The semantic-map source reference and SHA-256 must exactly match the parsed pinned design source before historic evidence is joined.
-- Review output is revalidated at write time and written through a validated file handle, so a parent-directory swap during evidence generation cannot redirect bytes into registry authority.
-- The opened output handle must be a regular file with exactly one link, with that link count rechecked immediately before truncation; new outputs use exclusive creation.

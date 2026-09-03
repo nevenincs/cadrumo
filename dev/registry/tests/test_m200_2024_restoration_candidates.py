@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import os
+import builtins
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -243,146 +243,67 @@ def test_render_review_toml_is_deterministic_and_cannot_be_registry_toml() -> No
     assert "*** Begin Patch" not in rendered
 
 
-def test_cli_writes_then_checks_explicit_review_path(monkeypatch, tmp_path: Path) -> None:
+def test_cli_emits_proposal_only_toml_to_stdout(monkeypatch, capsys) -> None:
     monkeypatch.setattr(subject, "build_bundled_restoration_proposals", lambda: ((_proposal(),), ()))
-    output = tmp_path / "review.toml"
 
-    assert subject.main(["--output", str(output)]) == 0
-    assert subject.main(["--output", str(output), "--check"]) == 0
+    assert subject.main([]) == 0
+
+    captured = capsys.readouterr()
+    parsed = rtoml.loads(captured.out)
+    assert parsed["authority_status"] == "proposal_only"
+    assert parsed["historic_commit"] == subject.HISTORIC_COMMIT
+    assert "revisions" not in parsed
+    assert "proposals=" not in captured.out
+    assert "refused=" not in captured.out
 
 
-def test_cli_rejects_output_inside_canonical_registry_root(monkeypatch, tmp_path: Path) -> None:
-    canonical_root = tmp_path / "src" / "cadrumo" / "_data" / "registry" / "aeat"
-    canonical_root.mkdir(parents=True)
-    monkeypatch.setattr(subject, "_CANONICAL_REGISTRY_ROOT", canonical_root)
+def test_cli_stdout_has_no_filesystem_write_calls(monkeypatch, capsys) -> None:
+    monkeypatch.setattr(subject, "build_bundled_restoration_proposals", lambda: ((_proposal(),), ()))
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("proposal diagnostics must not write to a filesystem path")
+
+    for method in (
+        "open",
+        "write_text",
+        "write_bytes",
+        "touch",
+        "mkdir",
+        "unlink",
+        "rename",
+        "replace",
+        "symlink_to",
+        "hardlink_to",
+    ):
+        monkeypatch.setattr(Path, method, forbidden)
+    monkeypatch.setattr(builtins, "open", forbidden)
+
+    assert subject.main([]) == 0
+    assert rtoml.loads(capsys.readouterr().out)["authority_status"] == "proposal_only"
+
+
+@pytest.mark.parametrize("argv", (("--output", "review.toml"), ("--check",)))
+def test_cli_rejects_filesystem_destination_options(monkeypatch, argv) -> None:
     monkeypatch.setattr(
         subject,
         "build_bundled_restoration_proposals",
-        lambda: pytest.fail("authority-root output must be rejected before loading evidence"),
+        lambda: pytest.fail("removed filesystem destination options must be rejected by the parser"),
     )
 
-    for output in (
-        canonical_root / "review.toml",
-        canonical_root / "nested" / ".." / "review.toml",
-    ):
-        with pytest.raises(SystemExit) as error:
-            subject.main(["--output", str(output)])
-        assert error.value.code == 2
-
-
-def test_cli_rejects_output_symlink_containment(monkeypatch, tmp_path: Path) -> None:
-    canonical_root = tmp_path / "authority"
-    canonical_root.mkdir()
-    monkeypatch.setattr(subject, "_CANONICAL_REGISTRY_ROOT", canonical_root)
-    monkeypatch.setattr(
-        subject,
-        "build_bundled_restoration_proposals",
-        lambda: pytest.fail("authority-root output must be rejected before loading evidence"),
-    )
-
-    try:
-        authority_alias = tmp_path / "authority-alias"
-        authority_alias.symlink_to(canonical_root, target_is_directory=True)
-        outside_link = tmp_path / "outside-link.toml"
-        outside_link.symlink_to(canonical_root / "review.toml")
-        authority_escape = canonical_root / "escape"
-        authority_escape.symlink_to(tmp_path / "outside", target_is_directory=True)
-    except (OSError, NotImplementedError):
-        pytest.skip("the current platform does not permit test symlinks")
-
-    for output in (
-        authority_alias / "review.toml",
-        outside_link,
-        authority_escape / "review.toml",
-    ):
-        with pytest.raises(SystemExit) as error:
-            subject.main(["--output", str(output)])
-        assert error.value.code == 2
-
-
-def test_cli_rejects_parent_swap_during_evidence_build(monkeypatch, tmp_path: Path) -> None:
-    canonical_root = tmp_path / "authority"
-    canonical_root.mkdir()
-    canonical_output = canonical_root / "review.toml"
-    canonical_output.write_text("authority sentinel\n", encoding="utf-8")
-    output_parent = tmp_path / "review-output"
-    output_parent.mkdir()
-    output = output_parent / "review.toml"
-    monkeypatch.setattr(subject, "_CANONICAL_REGISTRY_ROOT", canonical_root)
-
-    def build_and_swap_parent():
-        original_parent = tmp_path / "review-output-original"
-        output_parent.rename(original_parent)
-        output_parent.symlink_to(canonical_root, target_is_directory=True)
-        return ((_proposal(),), ())
-
-    monkeypatch.setattr(subject, "build_bundled_restoration_proposals", build_and_swap_parent)
-
-    try:
-        with pytest.raises(SystemExit) as error:
-            subject.main(["--output", str(output)])
-    except (OSError, NotImplementedError):
-        pytest.skip("the current platform does not permit test symlinks")
-
-    assert error.value.code == 2
-    assert canonical_output.read_text(encoding="utf-8") == "authority sentinel\n"
-    assert not (tmp_path / "review-output-original" / "review.toml").exists()
-
-
-def test_cli_rejects_hardlink_alias_to_canonical_output(monkeypatch, tmp_path: Path) -> None:
-    canonical_root = tmp_path / "authority"
-    canonical_root.mkdir()
-    canonical_output = canonical_root / "review.toml"
-    canonical_output.write_text("authority sentinel\n", encoding="utf-8")
-    outside_alias = tmp_path / "outside-review.toml"
-    try:
-        os.link(canonical_output, outside_alias)
-    except (OSError, NotImplementedError):
-        pytest.skip("the current platform does not permit test hardlinks")
-
-    monkeypatch.setattr(subject, "_CANONICAL_REGISTRY_ROOT", canonical_root)
-    monkeypatch.setattr(subject, "build_bundled_restoration_proposals", lambda: ((_proposal(),), ()))
-
     with pytest.raises(SystemExit) as error:
-        subject.main(["--output", str(outside_alias)])
-
+        subject.main(list(argv))
     assert error.value.code == 2
-    assert canonical_output.read_text(encoding="utf-8") == "authority sentinel\n"
 
 
-def test_cli_rejects_hardlink_added_after_initial_handle_check(monkeypatch, tmp_path: Path) -> None:
-    canonical_root = tmp_path / "authority"
-    canonical_root.mkdir()
-    canonical_output = canonical_root / "review.toml"
-    output = tmp_path / "outside-review.toml"
-    output.write_text("outside sentinel\n", encoding="utf-8")
-    try:
-        os.link(output, canonical_output)
-        canonical_output.unlink()
-    except (OSError, NotImplementedError):
-        pytest.skip("the current platform does not permit test hardlinks")
-
-    monkeypatch.setattr(subject, "_CANONICAL_REGISTRY_ROOT", canonical_root)
-    monkeypatch.setattr(subject, "build_bundled_restoration_proposals", lambda: ((_proposal(),), ()))
-    real_assert = subject._assert_review_output_handle
-    assertion_count = 0
-
-    def assert_then_add_hardlink(path: Path, expected_path: Path, file_descriptor: int) -> None:
-        nonlocal assertion_count
-        assertion_count += 1
-        real_assert(path, expected_path, file_descriptor)
-        if assertion_count == 1:
-            os.link(output, canonical_output)
-
-    monkeypatch.setattr(subject, "_assert_review_output_handle", assert_then_add_hardlink)
-
-    with pytest.raises(SystemExit) as error:
-        subject.main(["--output", str(output)])
-
-    assert error.value.code == 2
-    assert assertion_count == 2
-    assert output.read_text(encoding="utf-8") == "outside sentinel\n"
-    assert canonical_output.read_text(encoding="utf-8") == "outside sentinel\n"
+def test_module_exposes_no_filesystem_destination_writer_surface() -> None:
+    for name in (
+        "_CANONICAL_REGISTRY_ROOT",
+        "_resolve_review_output_path",
+        "_path_is_within",
+        "_write_review_output",
+        "_assert_review_output_handle",
+    ):
+        assert not hasattr(subject, name)
 
 
 def test_cli_rejects_retired_patch_switch() -> None:
