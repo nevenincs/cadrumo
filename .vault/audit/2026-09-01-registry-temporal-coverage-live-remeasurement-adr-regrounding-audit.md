@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8ea057c87303b77c8a981ad7c0f80a0fbe94077c0fa3558eda8e9340079cf4ec'
+body_hash: 'sha256:8b967647fe654a9bda479d9a92780c5b18becdeed7d99e80f12e573dc6ffd9d1'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -10267,7 +10267,6 @@ times smaller. The per-note count is kept on the finding, but decomposed per
 type, so a consumer can count a type once per design rather than once per
 mention - which is the only reason the corrected figure is computable at all.
 
-
 ## The residual authoring task is two conventions, not thirty-two fields
 
 `dev/registry/analysis/rule_grounding_coverage.py` joins the two halves: the
@@ -10318,3 +10317,54 @@ that is where reading it belongs. Recorded rather than implemented here, because
 the retrieval question - whether such a note governs its sheet, its design, or
 only the table beneath it - has to be settled from the corpus before a reader
 can key it to anything.
+
+## Unnumbered notes are readable; their scope is not settled, and is not claimed
+
+The step opened for this asked what an unnumbered `NOTA` governs - its sheet,
+its design, or only the table beneath it - before reading one. The measurement
+does not answer it, and the reader now says so rather than picking.
+
+The evidence that looked decisive is not. Every design carrying these carries at
+most one per sheet, which appeared to rule out the table-level reading. But
+**forty-seven of the fifty-two designs carry exactly one note in total**, so
+"at most one per sheet" is satisfied trivially and distinguishes nothing. Of the
+five carrying several, two repeat identical text across sheets and three differ.
+Modelo 200 is the case that matters and it cuts the other way: it prints its
+amounts convention once, on the first of seventy-seven sheets, while the
+thirty-two fields that convention would govern sit on other sheets. Keying that
+note to the sheet it appears on would put it out of their reach.
+
+So the mapping is returned by sheet because that is where the note was FOUND,
+which is a fact. What it governs is a judgement this evidence does not support,
+and the docstring states that rather than letting the return type imply an
+answer.
+
+### The reader claims only the plainest shape
+
+Reading these turned up that the corpus marks a note at least seven ways:
+`Nota N:`, `Nota N.`, `Nota N |`, `NOTA:`, `NOTA*`, `(*) NOTA.` inside a table
+cell, and `(NOTA1)` as a bare pointer with no space. Three widenings of the
+pattern were tried and each absorbed a neighbour somewhere: the first pulled a
+`NOTA*` line and two table rows into modelo 200's amounts note, and the second
+pulled `NOTA 2:` into modelo 220's, producing "El NIF es obligatorio NOTA 2: El
+valor de esta casilla..." as if it were one statement.
+
+The reader therefore gathers nothing after the note's own line. That
+under-reads a note that wraps - four of the hundred and three lines found this
+way have their text only in a continuation and are now dropped, leaving
+ninety-nine - and it is the right trade. A clause missing from a note is
+visible to whoever reads it; another note's words presented as this one's are
+not, and read as authority.
+
+The invariant is asserted over the whole corpus: **no unnumbered note text
+contains another note marker**. Over a sample it would have passed while the
+absorption sat in one design out of fifty-two.
+
+Unnumbered notes are kept in their own mapping rather than merged with the
+labelled definitions, for two reasons that both matter. A pointer names a
+number, so an unnumbered note can never answer one, and offering it in the same
+mapping would offer it as an answer to a question it cannot answer. And it has
+no label to key it by, so it would need a placeholder - which would then repeat
+on every sheet carrying one and be read by the label-scope screen as a single
+label defined many times, manufacturing exactly the ambiguity that screen exists
+to detect.

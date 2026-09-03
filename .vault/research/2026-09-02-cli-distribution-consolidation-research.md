@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6b07f32cb389821d92516b4609001862f11da7e04fa00e11f3035598ed0b308c'
+body_hash: 'sha256:42c189990e160b6f23fc5b16b132c0fbc6df75cd262512e1d254d67878fccc3c'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -796,6 +796,12 @@ source tree now, so they are produced during the build and captured by it.
 The build is therefore reproducible in everything except its own cache: a tree where
 registry validation has run yields a wheel two files larger than a clean one. The
 published artifact is the clean build, which is the right one to have shipped.
+
+Both build targets now exclude the two paths, and a rebuild with the files planted in the
+tree confirms neither reaches the wheel. A gate reads the filenames from the modules that
+write them rather than repeating the strings, so a rename cannot leave it asserting a path
+nothing produces, and it covers the sdist as well as the wheel because the release path
+builds the wheel from the sdist.
 
 The consequence for the evidence set is structural rather than a matter of scheduling. An
 acquisition row proves the installed bytes match the cohort that was promoted, so it can
