@@ -6232,3 +6232,31 @@ event is a test arriving with an expectation the corpus did not meet.
 The check that would have answered this in one command was available from the first: this
 campaign keeps its lane logs, and asking when a failure first appears in them is cheaper than
 reasoning about what might have caused it. Three findings were spent reasoning.
+
+### registry-failures-dated-against-the-lane-logs | medium | Eight failures predate every measurement here and five arrived mid-campaign, two of them from commits to the module they test
+
+Asking when each failure first appears in this campaign's six retained lane logs sorts the
+current registry failures cleanly, and costs one pass over files already on disk.
+
+Eight appear in all six runs: the generated export trees, the load census classification, the
+real closure outcomes, the render check, the m303 envelope proof, the static inspection, the
+modelo-specific embed classification and the regulatory prose parser channel. Those predate
+every measurement this campaign has taken, which is what "inherited" has meant throughout and
+is now dated rather than assumed.
+
+Five appear first at the fifth run. Four are modules the concurrent campaign added or changed in
+that window, including the monetary scale test already established as red on arrival. The fifth
+was this campaign's own condition-count parity failure, which appears in exactly one run and
+never again - the dating confirms the repair held rather than the failure merely moving.
+
+One correction falls out. The two publication failures were reported here as "tests that predate
+this work", on the reasoning that this campaign's additions to that module were signature checks
+which pass in isolation. The first half was right and the second was not: those two tests appear
+in no run before the fifth, and `_tree_publication.py` carries two commits from the concurrent
+campaign that evening - one verifying the recovery package against the current authority, one
+retiring a completed legacy orphan journal - which is exactly the recovery and journal behaviour
+the two failing tests cover. They are new, and they are not this campaign's.
+
+The technique is worth more than the table. A failure's first appearance in a retained log dates
+it without reasoning about causes, and this campaign spent three findings reasoning about a
+corpus that had not changed before running the one command that would have said so.

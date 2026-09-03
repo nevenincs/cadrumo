@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:49a8971939db78037d4ad4da06864b53695d095fb81def40b75c7bbe31af3b29'
+body_hash: 'sha256:97d2c85d324942406a2ca9f2f1e359df25dd3ddd54a6ac7fef608b599051023c'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -495,6 +495,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S257` - Verify which screen condition each half of the monetary criterion counts before restating its figures; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S258` - Correct the claim that the modelo 353 defect is new, since the audit already records that field as unscaled; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S259` - Establish that the sibling-count assertion was already false when its module entered this campaign's measurements; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S260` - Date every current registry failure against this campaign's own lane logs and correct the publication attribution; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
