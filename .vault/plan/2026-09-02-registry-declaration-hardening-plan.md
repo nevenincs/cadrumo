@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:9420eed6548a1b35f6a765a0752ef21b44836f6ccf364f021d1d1af91bc15408'
+body_hash: 'sha256:2de15a1248b27d8405511f0975e0c9da3ed66f517b7f51c4711b52f981022da4'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -520,6 +520,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S282` - Restore a marker-integrity gate over test names from the orphaned pattern table its deleted consumer left behind; `dev/tests/_marker_metadata_patterns.py`.
 - [x] `W06.P13.S283` - Rename the four development-tree test symbols that carried a plan step id, and redeem the pin that expected them; `dev/locales/tests/test_ledger_notice_action_conformance.py dev/registry/tests/test_modelo_303_semantic_maps.py dev/source_connectivity/tests/test_census_completeness.py dev/tests/test_suggestion_command_conformance.py dev/tests/test_campaign_marker_patterns.py`.
 - [x] `W06.P13.S284` - Remove the plan-step citations from the registry tooling prose, leaving only the detector fixtures that must carry them; `dev/registry/pipeline/_tree_check.py dev/registry/pipeline/_tree_publication.py dev/registry/pipeline/_tree_validation.py dev/registry/analysis/m303_semantic_census.py dev/registry/tests/test_record_design_intermediate_source_boundary.py`.
+- [x] `W06.P13.S285` - Give the marker scan module-scoped lint discrimination so an explained suppression is not read as campaign metadata; `dev/tests/_marker_metadata_patterns.py dev/tests/test_campaign_marker_patterns.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

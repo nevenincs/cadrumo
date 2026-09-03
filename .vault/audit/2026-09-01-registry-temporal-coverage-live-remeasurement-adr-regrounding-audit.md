@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:50785b6acda7df319d0ca3ba4ff9ad008d09581835186ca39466e7f56c2b421e'
+body_hash: 'sha256:f86e04b13a1fc18166ad8b325891f3a33cb9e9f187ae6b0a6a723063031fae1e'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7024,3 +7024,32 @@ the test, and they would have been a confident nonsense had the wall-clock not
 answered the question on its own. A timing technique needs its own sanity check
 - a measurement reporting fifteen milliseconds for a three-minute run is
 reporting nothing.
+
+### the-marker-scan-now-tells-a-suppression-from-a-step-id | medium | A module's own lint vocabulary excuses prose naming it, and the exemption is keyed per module so it cannot be borrowed
+
+The prose measurement recorded a limitation rather than working around it: a
+comment explaining a lint suppression carries the code without the directive, so
+the token-level scrub removes the `noqa` and leaves the sentence, and the
+sentence wraps across lines in both live cases so no line-scoped check can see
+it whole. That limitation is now closed rather than noted.
+
+The rule is per module and stated as such: a module that suppresses a code has
+established what that token means inside it, so prose naming the same code is
+explaining the suppression. Nothing else changes - the token-level scrub still
+does its own job, and the new judgement is separate because it needs the whole
+text rather than one line.
+
+Three tests hold it, and the second and third exist because the first alone
+would be satisfied by a helper that reports nothing. A module suppressing a code
+and explaining it yields no finding; a step id the module does not suppress is
+still reported; and a code suppressed in one module buys no exemption in
+another, which is what keeps the exemption from becoming a global allowlist
+grown one file at a time. Six tests pass in that module, exit 0.
+
+The corrected measurement over the development tree is seventeen files, down
+from twenty-four, and the two files that left are exactly the two whose only
+marker was a wrapped explanation of a bandit suppression. The largest remaining
+population is seventy-six sites in one file, where a data field names a plan
+phase pair as its `owning_authority` - a declaration whose stated authority is a
+row in a plan rather than anything a reader can resolve. It belongs to another
+campaign's surface and is recorded, not edited.

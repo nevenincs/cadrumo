@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:3dee585a75b48f5e5e644abb86d1312d68abb99f42ccd38da1d2d669035f3cc4'
+body_hash: 'sha256:ddd38429eacba1a1d2a685480095a5c763bdd7f2a0564f055c7fad96c3dc32f4'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -120,3 +120,26 @@ and security findings.
 ### inert-facade-stale-consumer | high | Current focused tests still import the retired package facade
 
 94f373ddc4 correctly makes the package initializer inert, but the focused test module continues to import all workspace symbols from the package root. Focused pytest therefore fails during collection, and ty reports 26 unresolved imports. Move every test import to the public defining module before claiming the facade refactor is complete.
+
+## Remediation verification
+
+The replacement implementation resolves the blocking findings. Protected and
+scope-bearing inputs terminate in the non-model `AeatSyncWorkspaceFactV1`
+admission wrapper, while the returned projection contains only independently
+constructed strict frozen public rows; repr, pickle, JSON, object-state, and
+model-field probes retain none of the sentinels or private coordinates. Every
+fact requires bucket and subject provenance, notifications additionally require
+a private logical identity, and overview, census, notification, and natural
+filing-address duplicates fail closed.
+
+Supported actions are canonical `ActionReference` values admitted only through
+caller-supplied live `ActionCatalogueEntry` declarations and a closed per-zone,
+per-area, and reconciliation-state allow-list. Source observations retain local
+and AEAT availability, observation time, refusal, and measured count
+independently, and confident rows are refused when their required source is not
+observable. The package initializer is inert and focused tests import the
+defining module directly.
+
+Verification: 8 focused tests passed; Ruff passed; ty passed; basedpyright
+reported zero errors and warnings; targeted duplicate detection reported zero
+clones.

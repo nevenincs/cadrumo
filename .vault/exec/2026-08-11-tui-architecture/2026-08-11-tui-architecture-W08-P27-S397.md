@@ -24,6 +24,7 @@ related:
 - `A` `src/cadrumo/application/aeat_sync/tests/__init__.py`
 - `M` `src/cadrumo/application/aeat_sync/tests/test_workspace.py`
 - `M` `.vault/plan/2026-08-11-tui-architecture-plan.md`
+- `M` `.vault/audit/2026-09-03-tui-architecture-w08-p27-s397-review-audit.md`
 - `A` `.vault/exec/2026-08-11-tui-architecture/2026-08-11-tui-architecture-W08-P27-S397.md`
 - `verify:` `uv run --no-sync pytest -q src/cadrumo/application/aeat_sync/tests/test_workspace.py` -> `pass`
 - `verify:` `uv run --no-sync ruff check src/cadrumo/application/aeat_sync/__init__.py src/cadrumo/application/aeat_sync/workspace.py src/cadrumo/application/aeat_sync/tests/test_workspace.py` -> `pass`
