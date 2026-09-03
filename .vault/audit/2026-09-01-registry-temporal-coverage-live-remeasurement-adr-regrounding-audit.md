@@ -3513,7 +3513,7 @@ because its attestation reaches scheduling and applicability only while the revi
 since tripled. The twenty-four filing tests demanding grades three modelos no longer declare are
 resolved; the grades themselves were correct and it was the consumers that were owed the change.
 
-### A one-character serialization change reclassified 141 correct export records as drifted
+### serializer-change-filled-the-drift-class-with-correct-records | high | A quote-style change put 141 semantically unchanged records into the class that means unsafe to republish
 
 The closed-vocabulary enum conversion turned the export record `encoding` field from a
 plain string into `ExportEncoding`. The value did not change and the encoding did not
@@ -3547,7 +3547,7 @@ because they are dev-owned and the spelling was never canonical: `latin-1` and
 `ExportEncoding` admits only the second. Those six failures are gone. The remaining
 twenty-four are the quote flip and are reported, not patched.
 
-### Duplication and ambiguity are different defects and only one of them was being counted
+### ambiguity-was-never-measured-only-duplication | medium | Every duplication measure counted things said twice; none counted one word meaning two things
 
 Every duplication measurement in this campaign counted things said twice. None counted
 things that say two things under one word, which is the harder defect: a duplicated body
@@ -3587,7 +3587,7 @@ The screen exits 0 whatever it finds. A gate belongs here once the nine same-lay
 collisions have been adjudicated, and not before: refusing a condition the corpus still
 contains would only teach the next contributor to route around it.
 
-### The drift screen now separates a changed serializer from a changed value
+### drift-screen-separates-serializer-from-value | medium | record_drift now means a record whose meaning moved, proven at 25 provenance-only against 2 real
 
 The previous finding recorded that a one-character quote flip had reclassified 141
 semantically unchanged export records as drifted. The screen has been taught the
@@ -3620,7 +3620,7 @@ longer does. Before this change that real pair sat among roughly twenty-three fa
 verdicts of the same class. A gate whose alarming category is mostly false is worse than
 no gate, because the one member that matters is indistinguishable from the noise.
 
-### The disposition gate now fails accurately, and that failure is the finding
+### disposition-gate-fails-accurately | medium | Re-keyed onto the explained state, the gate names 21 stale attestations instead of an undifferentiated diff
 
 The gate that requires every non-reproducing tree to carry a written disposition was
 keyed on byte equality. It has been re-keyed onto a `disposition_class` that returns
@@ -3647,7 +3647,7 @@ A note on what was not claimed: no type checker is installed in this environment
 change carries lint and format verification and real-behaviour test evidence, and no
 type-check evidence. Saying so is cheaper than the reader discovering it.
 
-### One definition of what makes two records the same
+### one-definition-of-record-sameness | medium | The generated-tree suite carried a second byte comparison; both now call the same parse helper
 
 The generated-tree suite carried its own byte comparison, a `filecmp.cmp` over every
 fragment, entirely separate from the render comparison. Two surfaces were deciding what
@@ -3673,7 +3673,7 @@ What was fixed here is precision, not the underlying condition. A failure naming
 file and one cause is actionable; a failure naming sixteen files, fourteen of which
 differ only in how a string is quoted, teaches the reader to skim it.
 
-### A signature that already declared the enum was returning strings
+### signature-declared-the-enum-and-returned-strings | medium | An annotation had been wrong since it was written, hidden because a StrEnum compares equal to its value
 
 `_evidence_for_workbook_kind` is annotated to return `EvidenceTier | None` and a tuple of
 `EvidenceTier`, and it returned bare strings such as `"executable_parity_evidence"`. The
@@ -3691,7 +3691,7 @@ Both sites now construct the enum. The failure this fixes is real rather than co
 because the value crosses into a strictly-validating registry model, and the annotation
 now describes what the function does.
 
-### A green run that selected nothing
+### green-run-selected-nothing | high | A change was verified against a run that deselected all 24 tests exercising it, and exited zero
 
 Verifying that change first produced "3 passed" over two test modules, and the number was
 the finding. `test_workbook_parity.py` carries the `external_tool` marker and the default
@@ -3706,7 +3706,7 @@ the remedy both times was to read the collection count rather than the exit code
 that is lower than the file obviously contains is the cheapest available signal, and it
 costs one `--collect-only`.
 
-### Determinism and shipped-tree equality were one assertion
+### determinism-and-shipped-equality-conflated | medium | One assertion carried two claims; rendering twice stays byte-exact while shipped-tree equality is semantic
 
 The m303 envelope proof asserted `first == second == committed` in a single chain. Two
 different claims sat inside it. That rendering twice yields identical bytes is
@@ -3719,7 +3719,7 @@ They are now separate assertions with separate comparisons, and the failure mess
 which claim failed. The residue is the same stale manifest as everywhere else, and it is
 left failing for the same reason.
 
-### The invisible-test condition is now reported rather than noticed
+### invisible-test-condition-now-reported | medium | Lane visibility is a screen rather than a reader noticing a low collected count
 
 Twice in this campaign a change was verified against a run that selected none of the
 tests exercising it, and both times the exit code was 0. Relying on a reader to notice
@@ -3756,7 +3756,7 @@ than the test: the path is now anchored to the repository when it sits inside on
 the scanned root otherwise. A screen that can only be run over the repository cannot be
 shown to detect anything the repository does not already contain.
 
-### The nine same-layer collisions are adjudicated, and four of them are defects
+### same-layer-collisions-adjudicated | medium | Three are correct, four want a rename or merge, one is a contract conflict no rename settles
 
 Reporting nine shared names was the easy half. Each was read, and they do not divide the
 way a count would suggest: three are fine, four want a rename or a merge, one is a defect
@@ -3803,7 +3803,7 @@ vocabulary is what the boundary is for, and demanding a written reason for each 
 twelve would bury these nine - which is the same mistake, in a different costume, as the
 141 false drift verdicts recorded earlier in this audit.
 
-### The dangerous form of constant duplication never crosses a public boundary
+### constant-value-conflicts-are-all-private | low | Sixteen constants carry two values under one name and none of them is public, so the underscore holds
 
 Earlier passes counted constants sharing a name and a value. That is the harmless form.
 The dangerous one is a name carrying two *different* values, because a reader who greps
@@ -3832,7 +3832,7 @@ skipped rather than approximated, because a guessed value would report agreement
 conflict the source does not support. And a boolean is not a shared value: `True` under
 one name in two modules is evidence of nothing.
 
-### The size baseline caught a growth that was mine
+### size-baseline-caught-this-campaigns-growth | low | A four-line growth was shrunk to fit rather than raising another contributor's reviewed ceiling
 
 The evidence-tier repair grew `_workbook_parity.py` from 1399 to 1403 lines and tripped a
 reviewed-size baseline. The failure was correctly attributed to this campaign rather than
@@ -3846,7 +3846,7 @@ members to locals once at the top of the function removed the wrap and brought t
 to 1396, three lines below where it started. The gate passes, the 24 marker-held parity
 tests still pass, and the function reads better than either previous version.
 
-### The load census cannot survive a rename, and the residue is not this campaign's to clear
+### load-census-does-not-survive-a-rename | medium | A classification keyed on a module path follows neither side of a rename, and nothing reports the drift
 
 `run_census` reports 21 registry modules carrying no classification and 14 rules naming
 modules that are no longer in the universe. The two numbers are one condition seen from
@@ -3876,7 +3876,7 @@ leave the remedy where the knowledge is. The distinction this audit keeps return
 between work that is blocked and work that belongs to somebody else; only the second kind
 is finished by reporting it.
 
-### Shape identity is not concept identity, so this screen was measured and not built
+### shape-identity-is-not-concept-identity | low | Eighty-one type declarations share a field shape and every one of the seven sharpest is correct
 
 The obvious next sweep after names, values and bodies is shapes: type declarations whose
 field names and annotations match exactly under different class names. Across the shipped
@@ -3911,7 +3911,7 @@ The measurement is kept because it is cheap to re-run and answers a question som
 ask again. What it does not support is a rule, and inventing one anyway would have been
 the easier and worse outcome.
 
-### The conformance closure tests sit outside every lane, and one of them holds a failure this campaign has been carrying
+### conformance-closure-tests-are-outside-every-lane | critical | Sixteen tests proving real filing outcomes are named by no lane, and one of them fails
 
 This campaign built a lane-visibility screen after a marker deselection twice turned a
 change's own test suite into an empty selection reported as success. The tree already had
@@ -3953,7 +3953,7 @@ that carried its lane and justfile consumers with it. The instruction now forbid
 the tree is in, which is the same class of defect as an annotation that promises what the
 function stopped doing.
 
-### The campaign removed its own duplicate rather than arguing for it
+### campaign-removed-its-own-duplicate-check | low | A reachability assertion duplicating a stronger per-test gate was deleted rather than defended
 
 The previous finding established that the lane-visibility screen written here overlaps a
 stronger gate. Acting on that was the test of whether this campaign's rule applies to its
@@ -3981,7 +3981,7 @@ at all, and it records that dropping the weaker check would be "a regression wea
 consolidation's clothes". Overlap is justified by distinct detection value and by nothing
 else. Here there was none, so the overlap went.
 
-### An instruction that forbade the state the tree was already in
+### location-note-forbade-the-move-already-made | medium | A load-bearing docstring insisted on a directory the module had deliberately been moved out of
 
 That gate's docstring stated its location was load-bearing, that it lived under
 `src/cadrumo/tests`, and that it must not be moved back under `dev/`. It sits under
@@ -3999,7 +3999,7 @@ reasoning that made the original worth writing is preserved; only the claim that
 false was replaced. Twenty-six tests pass and three fail exactly as before the edit, so the
 change is behaviour-neutral and was shown to be.
 
-### No CI lane runs the conformance closure suite, and the omission is one path
+### conformance-suite-omitted-from-every-recipe | critical | Three sibling registry directories are named by the dev tooling lane and the conformance one is not
 
 The previous finding reported two conformance files sitting outside every lane's path
 scope. Measured precisely, the situation is worse than a path-scope curiosity and simpler
@@ -4040,7 +4040,7 @@ refuses it: the only accepted excuse is a precondition genuinely absent from a r
 "nobody wired a lane" is explicitly not on the list. Marking these tests CI-incapable would
 convert a wiring omission into a permanent exemption and lose the finding entirely.
 
-### What the sixteen unrun tests actually do, and one measurement that had to be thrown away
+### the-unrun-conformance-suite-is-fifteen-green-one-red | high | Run by hand: fifteen pass and one fails, and a later collection error was another writer's mid-edit state
 
 Running the two conformance files by hand, so that whoever wires the lane knows the red in
 advance: 15 pass and 1 fails, the failure being
@@ -4073,7 +4073,7 @@ collection was to add one import line to `_spec_policies.py`, which would have w
 the middle of another writer's unfinished edit and, at best, produced a conflict they would
 have had to unpick.
 
-### The static closure and a real load were answering different questions
+### static-closure-and-real-load-answer-different-questions | high | A closure states what a load can reach and sys.modules what it did; the test demanded they be equal
 
 The load census asserted that every registry module its import graph says a load imports is
 present in `sys.modules` after the authority has loaded. It failed on exactly one module,
@@ -4109,7 +4109,7 @@ module's failures fell from two to one, and the survivor is the twenty-one uncla
 modules belonging to the concurrent rename, left where they are for the reason already
 recorded.
 
-### Every monetary field declares its scale, and the gate now says so before emission
+### monetary-scale-gated-before-emission | medium | 3,385 decimal fields all declare a scale, pinned by a gate that refuses at declaration not at render
 
 Two wire types carry money through the export boundary. `money` is self-scaling: the codec
 renders and parses it at two decimal places without consulting the declaration. `decimal`
@@ -4137,7 +4137,7 @@ nothing.
 The Step that authors missing scales stays open and is registry data. Nothing needs
 authoring today, which is what the measurement established.
 
-### An operator path is committed in a sibling campaign's audit
+### operator-path-committed-in-a-sibling-audit | high | A committed vault document carries an absolute path under a named user's home directory
 
 The full lane surfaced a privacy gate failing on
 `2026-08-27-calculation-correctness-campaign-restrictive-default-sweep-audit.md`, which
@@ -4150,7 +4150,7 @@ is the obligation this campaign owns: the audit and plan for this feature carry 
 operator-identifying tokens, verified by search rather than assumed. A finding about leaked
 paths written in a document that leaks paths would be worth very little.
 
-### The retired audit command's models are gone, and the only thing still naming them was prose
+### retired-audit-command-models-removed | medium | 279 lines of ratchet apparatus with no importer, whose only external reference was a docstring bullet
 
 The conformance manager carried a ratchet apparatus for a command that no longer exists:
 `ConformanceRatchetCeilings`, `ConformanceProgressFloors`, `ConformanceVacuityFloors`,
@@ -4186,7 +4186,7 @@ clean, and the conformance suite runs 18 tests with 17 passing. The single failu
 pre-existing one in `test_real_closure_outcomes.py` that no CI lane executes, unchanged by
 this deletion.
 
-### The development closure module restated the application's entire refusal vocabulary
+### development-vocabulary-restated-the-applications | medium | All seven application refusal reasons were copied rather than composed, so an eighth would never arrive
 
 The development closure module already imports from the application's closure module, and
 then declared its own refusal-reason alias listing twelve values. Compared against the
@@ -4217,7 +4217,7 @@ the vocabulary, not the four predicate functions, and those belong on the applic
 work this iteration's scope does not reach. Recording the difference matters more than the
 tidier claim: the duplication is gone, the relocation is not done.
 
-### Constants orphaned by the previous deletion
+### constants-orphaned-by-this-campaigns-deletion | low | A deletion left three module-private constants referenced by nothing, found by a sweep that should have run first
 
 Removing the retired audit command's models left `_BASELINE_FILENAME`,
 `_DEFAULT_REVIEW_CADENCE` and `_RECORD_COMMAND` referenced by nothing, each with a comment
@@ -4231,7 +4231,7 @@ have run before the first edit was reported rather than after. No committed base
 artefact exists on disk and nothing else references one, so there is no data residue behind
 the constants.
 
-### A gate for the composed vocabulary, and a claim in it that had to be withdrawn
+### composed-vocabulary-gate-overclaimed-its-teeth | medium | The gate detects staleness, not the act of copying, and its first docstring claimed otherwise
 
 Composing the development refusal vocabulary from the application's removes today's
 duplication; it does not stop someone re-listing the values tomorrow. Three tests now hold
