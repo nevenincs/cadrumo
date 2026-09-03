@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from collections.abc import AsyncGenerator, Callable, Generator, Iterable, Mapping
+from collections.abc import AsyncGenerator, Callable, Generator, Iterable, Mapping, Sequence
 from contextlib import ExitStack, asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -18,7 +18,7 @@ from ...application.workbench_generation import (
 )
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnitCatalogue
-from .account import AccountRecomposeRequiredV1
+from .account import AccountRecomposeRequiredV1, compose_account_factories, compose_profile_sign_out_factory
 
 if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
@@ -30,6 +30,9 @@ if TYPE_CHECKING:
     from ...application.operations.registry import OperationPublicContractSetV1
     from ...application.operator_actions.models import ActionReference
     from ...application.overview.home import HomeProjectionV1
+    from ...application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
+    from ...application.user_profile.overview import ProfileOverview
+    from ...core.credentials import ProfilePasswordAssessment
     from ...core.external_constants import OutputLanguage
     from ...domain.modelos.work_unit import WorkUnit
     from .account import AccountFactoriesV1
@@ -41,6 +44,7 @@ if TYPE_CHECKING:
         TuiScreenFactoryV1,
     )
     from .search import WorkbenchSearchDoorV1
+    from .secret.passphrase import PassphraseChangeAttempt
 
 
 type InstalledWorkbenchSearchInputsProviderV1 = Callable[[], InstalledWorkbenchSearchInputsV1 | None]
@@ -160,6 +164,31 @@ type AuthenticatedSessionRecomposeDoorV1 = Callable[
 
 
 @dataclass(frozen=True, slots=True)
+class InstalledWorkbenchAccountInputsV1:
+    """Non-secret account doors the launcher binds to the current session."""
+
+    profile_id: str
+    profile_overview: ProfileOverview
+    persist_profile_field: Callable[[str, str], ProfileOverview]
+    login_choices: Sequence[ProfileLoginChoice]
+    authenticate: Callable[[str, str], ProfileLoginAttempt]
+    assess_password: Callable[[str], ProfilePasswordAssessment]
+    rotate_password: Callable[[str, str, str], PassphraseChangeAttempt]
+
+    def factories(self, services: OperationComposedServices) -> AccountFactoriesV1:
+        """Compose existing account owners without reading or retaining secrets."""
+        return compose_account_factories(
+            profile_overview=self.profile_overview,
+            persist_profile_field=self.persist_profile_field,
+            login_choices=self.login_choices,
+            authenticate=self.authenticate,
+            assess_password=self.assess_password,
+            rotate_password=self.rotate_password,
+            sign_out=compose_profile_sign_out_factory(services, profile_id=self.profile_id),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class InstalledWorkbenchFactoryDependenciesV1:
     """TUI-owned factories and public action contracts for one session.
 
@@ -169,7 +198,7 @@ class InstalledWorkbenchFactoryDependenciesV1:
     screen owners.
     """
 
-    account_factories: AccountFactoriesV1
+    account: InstalledWorkbenchAccountInputsV1
     profile_admission: WorkbenchDestinationAdmission
     ledger_review_action: ActionReference
     declarations_work_action: ActionReference
@@ -191,6 +220,7 @@ def compose_installed_workbench_generation_provider(
     """
 
     def provide(operation_runtime: TuiOperationCompositionV1) -> InstalledWorkbenchRootInputsV1:
+        account_factories = dependencies.account.factories(operation_runtime.services)
         current = [generation_provider()]
         home_pending: list[WorkbenchGenerationV1 | None] = [current[0]]
 
@@ -231,7 +261,7 @@ def compose_installed_workbench_generation_provider(
             home_projection=_required_projection(generation.home, "Home"),
             refresh_home=refresh_home,
             admissions=admissions,
-            account_factories=dependencies.account_factories,
+            account_factories=account_factories,
             ledger_factory=_ledger_generation_factory(current, dependencies),
             declarations_factory=_declarations_generation_factory(current, dependencies),
             aeat_sync_factory=_aeat_sync_generation_factory(
@@ -686,6 +716,7 @@ def main(
 
 __all__ = [
     "AuthenticatedSessionRecomposeDoorV1",
+    "InstalledWorkbenchAccountInputsV1",
     "InstalledWorkbenchFactoryDependenciesV1",
     "InstalledWorkbenchGenerationProviderV1",
     "InstalledWorkbenchRootCompositionV1",

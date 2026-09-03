@@ -7,7 +7,6 @@ from types import SimpleNamespace
 from typing import cast
 
 import pytest
-from textual.screen import Screen
 
 from ....application.aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
 from ....application.ledger.models import LedgerReviewQueryResult, LedgerStatusReport
@@ -47,6 +46,8 @@ from ....application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION,
     build_censal_operation_registration,
 )
+from ....application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
+from ....application.user_profile.overview import ProfileOverview
 from ....application.workbench_generation import (
     CallableWorkbenchGenerationReadDoorV1,
     InstalledWorkbenchGenerationProviderV1,
@@ -58,17 +59,20 @@ from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.filing_record import ModeloRecordCatalogue
 from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ....domain.transactions.models import TransactionCatalogue
-from ..account import AccountFactoriesV1
 from ..declarations.calendar import DeclarationsCalendarScreen
 from ..declarations.controller import DeclarationsWorkspaceScreen
 from ..declarations.routes import resolve_declarations_screen
 from ..launcher import (
+    InstalledWorkbenchAccountInputsV1,
     InstalledWorkbenchFactoryDependenciesV1,
     TuiOperationCompositionV1,
     compose_installed_workbench_generation_provider,
     compose_installed_workbench_root,
 )
 from ..navigation import TuiScreenContextV1
+from ..profile.overview import ProfileManagerScreen
+from ..secret.login import LoginScreen
+from ..secret.passphrase import PassphraseScreen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -182,11 +186,28 @@ def _action(action_id: str) -> ActionReference:
 
 
 def _dependencies() -> InstalledWorkbenchFactoryDependenciesV1:
-    def profile(_: TuiScreenContextV1) -> Screen[None]:
-        return Screen()
+    def persist(_path: str, _value: str) -> ProfileOverview:
+        raise AssertionError("profile persistence must not run while composing the workbench")
+
+    def authenticate(_profile_id: str, _password: str) -> ProfileLoginAttempt:
+        raise AssertionError("authentication must not run while composing the workbench")
+
+    def assess(_password: str):
+        raise AssertionError("password assessment must not run while composing the workbench")
+
+    def rotate(_current: str, _replacement: str, _confirmation: str):
+        raise AssertionError("password rotation must not run while composing the workbench")
 
     return InstalledWorkbenchFactoryDependenciesV1(
-        account_factories=cast("AccountFactoriesV1", SimpleNamespace(profile=profile)),
+        account=InstalledWorkbenchAccountInputsV1(
+            profile_id=_BUCKET,
+            profile_overview=cast("ProfileOverview", object()),
+            persist_profile_field=persist,
+            login_choices=(ProfileLoginChoice(profile_id=_BUCKET, label="Synthetic profile"),),
+            authenticate=authenticate,
+            assess_password=assess,
+            rotate_password=rotate,
+        ),
         profile_admission=_admission("workbench.profile", WorkbenchDestinationAdmissionState.AVAILABLE),
         ledger_review_action=_action("operator.ledger.review"),
         declarations_work_action=_action("operator.modelo.work.list"),
@@ -217,6 +238,17 @@ def test_generation_provider_binds_real_declarations_factory_and_calendar_projec
     assert declarations.controller.calendar_projection is not None
     target = declarations.controller.target("declarations.calendar")
     assert isinstance(resolve_declarations_screen(declarations.controller, target), DeclarationsCalendarScreen)
+
+
+def test_generation_provider_composes_the_real_account_screen_owners_without_effects() -> None:
+    """The installed root receives real account doors, not a test-only placeholder."""
+    provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(lambda: _inputs(_NOW)))
+    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
+    context = TuiScreenContextV1(destination="workbench.profile")
+
+    assert isinstance(root_inputs.account_factories.profile(context), ProfileManagerScreen)
+    assert isinstance(root_inputs.account_factories.change_user(), LoginScreen)
+    assert isinstance(root_inputs.account_factories.password(), PassphraseScreen)
 
 
 def test_generation_factory_receives_exact_session_operation_contract_object(

@@ -32,9 +32,9 @@ from ..app import CadrumoTuiApp
 from ..devtools.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from ..launcher import (
     InstalledWorkbenchRootInputsV1,
-    _run_root_session,
     compose_installed_workbench_root,
     main,
+    run_authenticated_workbench_sessions,
 )
 
 if TYPE_CHECKING:
@@ -197,20 +197,37 @@ def test_entry_point_hands_the_session_its_composed_services() -> None:
     assert services and services[0] is not None
 
 
-def test_launcher_returns_a_non_secret_recomposition_request_after_the_root_settles() -> None:
-    """The next authenticated root is selected by its outer bootstrap owner."""
+def test_launcher_recomposes_with_a_fresh_provider_after_the_root_settles() -> None:
+    """The outer owner receives no secret and never reuses the previous root."""
+    mounted = 0
+    requests: list[AccountRecomposeRequiredV1] = []
 
     async def request_recomposition(pilot: Pilot[object]) -> None:
+        nonlocal mounted
         await pilot.pause()
-        pilot.app.exit(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.PASSWORD_CHANGED))
+        mounted += 1
+        if mounted == 1:
+            pilot.app.exit(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.PASSWORD_CHANGED))
+        else:
+            pilot.app.exit()
 
-    assert asyncio.run(
-        _run_root_session(
-            headless=True,
-            auto_pilot=request_recomposition,
-            workbench_root_inputs_provider=_root_inputs_provider(),
+    def recompose(outcome: AccountRecomposeRequiredV1):
+        requests.append(outcome)
+        return _root_inputs_provider()
+
+    assert (
+        asyncio.run(
+            run_authenticated_workbench_sessions(
+                headless=True,
+                auto_pilot=request_recomposition,
+                workbench_root_inputs_provider=_root_inputs_provider(),
+                recompose_authenticated_session=recompose,
+            )
         )
-    ) == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.PASSWORD_CHANGED)
+        is None
+    )
+    assert mounted == 2
+    assert requests == [AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.PASSWORD_CHANGED)]
 
 
 def test_entry_point_injects_and_rebuilds_the_installed_search_provider() -> None:
