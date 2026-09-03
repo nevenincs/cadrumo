@@ -20,18 +20,24 @@ from ...domain.modelos.work_unit import WorkUnitCatalogue
 
 if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
+    from textual.screen import Screen
 
     from ...application.modelo.work_review import ModeloWorkReview
-    from ...application.operator_actions.models import ActionReference
-    from ...application.operations.registry import OperationPublicContractSetV1
     from ...application.modelo.workspace_models import ModeloWorkspaceStaticInspectionResultV1
     from ...application.operations.composition import OperationComposedServices
+    from ...application.operations.registry import OperationPublicContractSetV1
+    from ...application.operator_actions.models import ActionReference
     from ...application.overview.home import HomeProjectionV1
     from ...core.external_constants import OutputLanguage
     from ...domain.modelos.work_unit import WorkUnit
     from .account import AccountFactoriesV1
     from .declarations.models import ModeloWorkspaceScreenFactoryV1
-    from .navigation import TuiActionCandidateV1, TuiDestinationCatalogueV1, TuiScreenFactoryV1
+    from .navigation import (
+        TuiActionCandidateV1,
+        TuiDestinationCatalogueV1,
+        TuiScreenContextV1,
+        TuiScreenFactoryV1,
+    )
     from .search import WorkbenchSearchDoorV1
 
 
@@ -177,8 +183,8 @@ def _required_projection[ProjectionT](
     return projection
 
 
-def _require_generation_admission(
-    result: WorkbenchGenerationProjectionResultV1[object],
+def _require_generation_admission[ProjectionT](
+    result: WorkbenchGenerationProjectionResultV1[ProjectionT],
     admission: WorkbenchDestinationAdmission,
     label: str,
 ) -> None:
@@ -209,7 +215,7 @@ def _ledger_generation_factory(
         return None
     from .ledger.routes import ledger_screen_factory
 
-    def create(context: TuiScreenContextV1):
+    def create(context: TuiScreenContextV1) -> Screen[None]:
         return ledger_screen_factory(
             _required_projection(current[0].ledger, "Ledger"),
             review_action=dependencies.ledger_review_action,
@@ -226,7 +232,7 @@ def _declarations_generation_factory(
         return None
     from .declarations.routes import declarations_screen_factory
 
-    def create(context: TuiScreenContextV1):
+    def create(context: TuiScreenContextV1) -> Screen[None]:
         calendar = current[0].declarations_calendar.projection
         return declarations_screen_factory(
             _required_projection(current[0].declarations, "Declarations"),
@@ -248,7 +254,7 @@ def _aeat_sync_generation_factory(
         return None
     from .aeat_sync.routes import aeat_sync_screen_factory
 
-    def create(context: TuiScreenContextV1):
+    def create(context: TuiScreenContextV1) -> Screen[None]:
         return aeat_sync_screen_factory(
             _required_projection(current[0].aeat_sync, "AEAT Sync"),
             operation_contracts=dependencies.operation_contracts,
@@ -435,7 +441,7 @@ def compose_installed_workbench_root(
     implementation nor performs storage or network I/O.
     """
     from .home import HomeScreen
-    from .navigation import TuiScreenContextV1, build_destination_catalogue
+    from .navigation import build_destination_catalogue
 
     def home_factory(context: TuiScreenContextV1) -> HomeScreen:
         if context.destination != "workbench.home":
@@ -555,15 +561,15 @@ def main(
 
 
 __all__ = [
-    "InstalledWorkbenchRootCompositionV1",
     "InstalledWorkbenchFactoryDependenciesV1",
     "InstalledWorkbenchGenerationProviderV1",
+    "InstalledWorkbenchRootCompositionV1",
     "InstalledWorkbenchRootInputsProviderV1",
     "InstalledWorkbenchRootInputsV1",
     "InstalledWorkbenchSearchInputsProviderV1",
     "build_modelo_work_review_for_unit",
-    "compose_installed_workbench_root",
     "compose_installed_workbench_generation_provider",
+    "compose_installed_workbench_root",
     "compose_installed_workbench_search",
     "load_modelo_work_unit_catalogue",
     "load_modelo_work_units",

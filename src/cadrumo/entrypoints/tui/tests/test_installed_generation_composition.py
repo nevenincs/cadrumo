@@ -198,6 +198,7 @@ def _dependencies() -> InstalledWorkbenchFactoryDependenciesV1:
 
 def test_generation_provider_binds_real_declarations_factory_and_calendar_projection() -> None:
     """The installed Declarations route reaches the application-built calendar."""
+
     provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(lambda: _inputs(_NOW)))
     root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())()
     root = compose_installed_workbench_root(root_inputs)
