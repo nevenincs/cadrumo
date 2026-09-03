@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7f8b01427817bd479f7289928610e81ab2dd27b2072edd571af4cb326cc305bb'
+body_hash: 'sha256:8b8f5c1eae0b28af4d82b7ca092b4d4cd670bfb6de0aee87439d1ef3bd188d1a'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7657,3 +7657,33 @@ rows, which would have meant the gate had been emptied; it holds them under
 single-bracket table headers rather than the double-bracket form I grepped for.
 The gate's own failure message showed a populated set and corrected me before
 the mistake reached this record.
+
+### the-documentation-privacy-gate-was-red-on-two-operator-home-paths | high | Committed audit prose carried the operator's home directory; the quality directory is green again at 335 tests
+
+Running this campaign's quality gates as a directory - the discipline that
+caught a live collision last iteration - found one failure across 335 tests. The
+documentation privacy gate refuses operator-identifying tokens in tracked text,
+and two audit files carried absolute paths under the operator's home directory:
+a scratch script path in the restrictive-default sweep audit, and a temporary
+repository copy path in the object-name rehearsal audit.
+
+Both belong to other campaigns, and the first thing checked was whether this
+campaign's own records were among them. They are not: neither this audit nor
+its plan contains the pattern. That check came first because the honest order is
+to establish whether you are a contributor to a defect before deciding what to
+do about someone else's.
+
+They were scrubbed rather than allowlisted. The gate offers both routes, and the
+allowlist is for a genuine functional survivor - a token the text needs. Neither
+of these is: one names a temporary agent job directory and the other a temporary
+copy of the repository, and both sentences say what they meant to say once the
+machine-specific prefix is replaced by what it was. Machine-specific paths in
+committed examples are forbidden by the project's own documentation rule, so
+this is a correction rather than a preference, and it was applied to records
+that carried no pending diff.
+
+The directory now passes at 335, exit 0. The general point is small and worth
+keeping: a gate that has been red for a while stops being read as a gate. This
+one was refusing exactly what it was written to refuse, on files nobody in this
+campaign had touched, and it would have gone on doing so unnoticed because the
+failure belonged to no one who was looking.

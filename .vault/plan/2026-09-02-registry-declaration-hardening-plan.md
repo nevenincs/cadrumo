@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:ce279284c81475857891eccc72ba1c33e2d3819e05147dd8a570f851df28d815'
+body_hash: 'sha256:7d00dfd46a1e74ddced7543a49a88406938983ef582c92019754291cb446b482'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -531,6 +531,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S301` - Re-measure the CI lane selection to a reconciling total and move the reassembly gate onto the syntax tree; `dev/registry/tests/test_declaration_invariant_gates.py .vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S302` - Attribute the fourteen registry lane errors to a blocker-authority compile that does not finish, and name the recompilation-inside-comparison shape; `dev/registry/analysis/m200_2024_blocker_adjudications.py`.
 - [x] `W06.P13.S303` - Adjudicate the availability_label collision the census surfaced and record the three-fold promoted_candidate_ids restatement; `dev/quality/name_collision_dispositions.toml`.
+- [x] `W06.P13.S304` - Scrub the two operator home paths that reddened the documentation privacy gate and return the quality directory to green; `.vault/audit/2026-08-27-calculation-correctness-campaign-restrictive-default-sweep-audit.md .vault/audit/2026-09-02-object-name-declustering-pilot-rehearsal-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

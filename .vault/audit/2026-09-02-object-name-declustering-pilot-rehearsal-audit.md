@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f1b1b336049a8feabd94a1e54d1ee79c23d40c5e962d66c2255e6307833ae151'
+body_hash: 'sha256:adb274dfeeb35b6aa70a29bceafbbf6de2f1ad29a5d57a7b0ed2d81a5cc7da2a'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
@@ -14,7 +14,7 @@ related:
 
 ## Scope
 
-The no-argument `just fix-object-names` contract was exercised against the reviewed leaf operation `rename-result-disposition-fragment-generator`. The live repository was treated as read-only; transformation and gates ran only below `C:\Users\hello\AppData\Local\Temp\cadrumo-object-name-k9fhovd_\repository`.
+The no-argument `just fix-object-names` contract was exercised against the reviewed leaf operation `rename-result-disposition-fragment-generator`. The live repository was treated as read-only; transformation and gates ran only below a temporary copy of the repository under the system temporary directory.
 
 ## Findings
 

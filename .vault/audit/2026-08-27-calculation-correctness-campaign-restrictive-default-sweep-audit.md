@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-08-27'
-modified: '2026-08-30'
+modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:009ebfa2d85e67bfdf37dec3c6ce5cc40d5afdfbab036829019845d9902345b8'
+body_hash: 'sha256:42dc18294055aeef51c7d3555ab72ab48efebf01cdd7285a2f56cc2e56ee12b9'
 related: []
 ---
 
@@ -28,7 +28,7 @@ Every zero fallback in `domain/` and `application/` was derived by AST -- the
 `or 0`, `x if cond else 0` and `.get(key, 0)` forms -- and classified by
 DIRECTION: does the name it resolves reduce what is owed (relief) or increase
 it (liability)? The probe is at
-`C:/Users/hello/.claude/jobs/94d17a45/tmp/restrictive_defaults.py`.
+a scratch script under the agent's temporary job directory, outside the repository.
 
 Result: 10 relief-side, 9 liability-side. Every relief-side site was read.
 
