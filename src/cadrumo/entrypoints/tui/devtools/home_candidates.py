@@ -13,6 +13,7 @@ from typing import ClassVar, Final, Literal, cast, override
 
 from textual import events
 from textual.app import ComposeResult
+from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
@@ -116,8 +117,8 @@ def _address(modelo: object, filing_year: int, period_token: str) -> str:
 def _action_identity(item: HomeNextAction) -> str:
     action_id = item.action.action.action_id
     if item.period is None:
-        return f"action:{action_id}:cross-cutting"
-    return f"action:{action_id}:{item.modelo}:{item.filing_year}:{item.period.registry_token}"
+        return f"action:{action_id}:{item.reason_code}:cross-cutting"
+    return f"action:{action_id}:{item.reason_code}:{item.modelo}:{item.filing_year}:{item.period.registry_token}"
 
 
 def _declaration_identity(item: HomeDeclarationResume) -> str:
@@ -125,7 +126,7 @@ def _declaration_identity(item: HomeDeclarationResume) -> str:
 
 
 def _agenda_identity(item: HomeAgendaEntry) -> str:
-    return f"agenda:{item.modelo}:{item.filing_year}:{item.period.registry_token}:{item.due_on.isoformat()}"
+    return f"agenda:{item.modelo}:{item.filing_year}:{item.period.registry_token}"
 
 
 def _action_cells(item: HomeNextAction) -> tuple[str, str, str]:
@@ -148,11 +149,13 @@ def _declaration_cells(item: HomeDeclarationResume) -> tuple[str, str, str]:
     )
 
 
-def _agenda_cells(item: HomeAgendaEntry) -> tuple[str, str, str]:
+def _agenda_cells(item: HomeAgendaEntry) -> tuple[str, str, str, str, str]:
     return (
         item.due_on.strftime("%d %b %Y"),
-        _address(item.modelo, item.filing_year, item.period.registry_token),
+        f"Modelo {item.modelo} · {item.period.registry_token}",
         _PERIOD_COPY[item.period_state],
+        _LOCAL_COPY[item.local_filing_state],
+        _AEAT_COPY[item.aeat_submission_state],
     )
 
 
@@ -164,12 +167,14 @@ class _ProjectionCandidateScreen(Screen[None]):
     """Shared projection binding and responsive-class behavior only."""
 
     WIDE_MINIMUM: ClassVar[int] = 120
+    BINDINGS: ClassVar = [Binding("escape", "close_candidate", "", show=False)]
 
     def __init__(self, projection: HomeProjectionV1) -> None:
         super().__init__()
         self._projection = projection
         self._selected_target: HomeCandidateTarget | None = None
         self._targets: dict[str, HomeCandidateTarget] = {}
+        self._was_closed = False
 
     @property
     def projection(self) -> HomeProjectionV1:
@@ -180,6 +185,11 @@ class _ProjectionCandidateScreen(Screen[None]):
     def selected_target(self) -> HomeCandidateTarget | None:
         """Return the last keyboard-confirmed prototype target."""
         return self._selected_target
+
+    @property
+    def was_closed(self) -> bool:
+        """Report whether the operator invoked the prototype return binding."""
+        return self._was_closed
 
     def on_resize(self, event: events.Resize) -> None:
         """Switch layout classes without changing content or selection."""
@@ -195,6 +205,11 @@ class _ProjectionCandidateScreen(Screen[None]):
         if target is not None:
             self._selected_target = target
         return target
+
+    def action_close_candidate(self) -> None:
+        """Return from the prototype without executing the selected target."""
+        self._was_closed = True
+        self.dismiss(None)
 
 
 class DueDrivenHomeCandidateScreen(_ProjectionCandidateScreen):
@@ -289,7 +304,7 @@ class DueDrivenHomeCandidateScreen(_ProjectionCandidateScreen):
         declarations.display = bool(projection.declarations)
 
         agenda = cast("ContentDataTable[str]", self.query_one("#due-agenda", ContentDataTable))
-        agenda.add_columns("Date", "Declaration", "Status")
+        agenda.add_columns("Date", "Declaration", "Deadline", "Local", "AEAT")
         for item in projection.agenda:
             agenda.add_row(*_agenda_cells(item), key=self._remember("agenda", _agenda_identity(item)))
         agenda.display = bool(projection.agenda)
@@ -383,7 +398,7 @@ class TaskLauncherHomeCandidateScreen(_ProjectionCandidateScreen):
             self._details[identity] = f"{name}. Local declaration status: {state}."
         for item in projection.agenda:
             identity = self._remember("agenda", _agenda_identity(item))
-            due, address, state = _agenda_cells(item)
+            due, address, state, _local, _aeat = _agenda_cells(item)
             chooser.add_row(f"Inspect {address}", state, key=identity)
             self._details[identity] = f"Due {due}. {_evidence_copy(item)}."
 

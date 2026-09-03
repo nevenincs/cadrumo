@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
@@ -94,6 +95,69 @@ async def test_agenda_detail_names_local_and_aeat_evidence_separately() -> None:
     assert "AEAT:" in detail
     assert projection.agenda[0].local_filing_state.value not in detail
     assert projection.agenda[0].aeat_submission_state.value not in detail
+
+
+@pytest.mark.asyncio
+async def test_due_agenda_keeps_local_and_aeat_evidence_on_every_row() -> None:
+    projection = build_home_projection_fixture(HomeFixtureScenario.READY)
+    screen = DueDrivenHomeCandidateScreen(projection)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(120, 40)) as pilot:
+        await pilot.pause()
+        agenda = app.screen.query_one("#due-agenda", DataTable)
+        first_row = tuple(str(cell) for cell in agenda.get_row_at(0))
+
+    assert first_row[-2:] == ("not ready locally", "submission observed at AEAT")
+    assert projection.agenda[0].local_filing_state.value not in first_row
+    assert projection.agenda[0].aeat_submission_state.value not in first_row
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("screen_type", (DueDrivenHomeCandidateScreen, TaskLauncherHomeCandidateScreen))
+async def test_escape_returns_from_each_candidate(screen_type: type) -> None:
+    screen = screen_type(build_home_projection_fixture(HomeFixtureScenario.READY))
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await pilot.pause()
+        await pilot.press("escape")
+        await pilot.pause()
+
+    assert screen.was_closed
+
+
+@pytest.mark.asyncio
+async def test_semantic_row_keys_ignore_mutable_order_and_deadline_facts() -> None:
+    projection = build_home_projection_fixture(HomeFixtureScenario.READY)
+    changed_action = projection.actions[1].model_copy(
+        update={
+            "action": projection.actions[0].action,
+            "modelo": projection.actions[0].modelo,
+            "filing_year": projection.actions[0].filing_year,
+            "period": projection.actions[0].period,
+        }
+    )
+    changed_agenda = projection.agenda[0].model_copy(update={"due_on": projection.agenda[0].due_on + timedelta(days=1)})
+    changed = projection.model_copy(
+        update={
+            "actions": (projection.actions[0], changed_action, projection.actions[2]),
+            "agenda": (changed_agenda, *projection.agenda[1:]),
+        }
+    )
+    original_screen = DueDrivenHomeCandidateScreen(projection)
+    changed_screen = DueDrivenHomeCandidateScreen(changed)
+    original_app = ScreenHostApp[None](original_screen)
+    changed_app = ScreenHostApp[None](changed_screen)
+    async with original_app.run_test(size=(100, 30)) as pilot:
+        await pilot.pause()
+        original_agenda_key = original_app.screen.query_one("#due-agenda", DataTable).ordered_rows[0].key.value
+    async with changed_app.run_test(size=(100, 30)) as pilot:
+        await pilot.pause()
+        actions = changed_app.screen.query_one("#due-actions", DataTable)
+        changed_agenda_key = changed_app.screen.query_one("#due-agenda", DataTable).ordered_rows[0].key.value
+        action_keys = tuple(row.key.value for row in actions.ordered_rows)
+
+    assert changed_agenda_key == original_agenda_key
+    assert len(action_keys) == len(set(action_keys))
 
 
 def test_candidate_module_has_no_io_or_application_action_imports() -> None:
