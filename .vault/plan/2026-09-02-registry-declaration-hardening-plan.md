@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:44fe9adf09507f46b55c3368f92ad4e809d4893f125c3590e326ec4a9447be33'
+body_hash: 'sha256:ed597fe4f587f2af3a02a2b8aaf3c224227a247bced0665642f194207d187f78'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -382,6 +382,19 @@ Decide and then apply the general declaration contract that makes restatement un
 
 Author the four architectural decision records the contract requires before any migration can begin.
 
+The Phase holds more than that heading says, and it is left standing rather than quietly widened
+because the Steps carry its identifier and a rename would orphan every reference to them. Counted
+rather than estimated: of its 168 Steps, 80 name a decision or a record under `.vault`, 83 name
+development tooling, two name `src` and three name something else. So the heading describes about
+half of what is here, not a corner of it - and the other half is the tooling those decisions turned
+out to need, the screens that measure each declaration condition and the gates that hold them.
+
+Inside that tooling half a third strand grew unplanned, and it is worth naming because no heading
+anywhere covers it: the work of proving an instrument can still see what it measures. It exists
+because a figure this plan quoted was wrong four separate times, and each correction found the same
+shape - a screen, a probe or a gate reporting a clean result it was no longer able to earn. A future
+plan should give that its own Phase from the start; this one records where it actually happened.
+
 - [x] `W06.P13.S43` - Decide the declaration-kind contract of owned, derived and attesting fields; `.vault/adr`.
 - [x] `W06.P13.S44` - Decide the temporal identity contract, its coverage evidence record and the non-temporal axis slot; `.vault/adr`.
 - [x] `W06.P13.S58` - Screen every casilla identifier into a named grammar and report which modelos mix grammars; `dev/registry/analysis/casilla_id_grammar.py`.
@@ -549,6 +562,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S319` - Correct the miscounted fact list and gate the fact claims the conditions gate deliberately skips; `dev/registry/analysis/modelo_capability.py dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W06.P13.S320` - Read the count claim rather than one spelling of it, so the fifth screen's census stops going unchecked; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W06.P13.S321` - Give the two absence gates that walk the tree a proof they looked, and record which needed none; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W06.P13.S322` - Say what the decisions Phase actually holds, counted rather than estimated; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

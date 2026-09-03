@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f7039249c47159ab41d841c1d6280563e0b3f1dedeb7bdddbd0edaf5a7c459b4'
+body_hash: 'sha256:546dd3b5a71f94b5a2abfc662ba22b6d3c9ee71f6ee11b69a0b6a35f159cd880'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8171,3 +8171,31 @@ property can be expressed. Three spellings of "this gate looked" were in use
 here - a truthiness assert, a minimum count, and an equality whose other side is
 known non-empty - and any sweep recognising fewer than all three reports gaps
 that are not there.
+
+### the-phase-heading-described-half-its-contents-and-my-first-correction-said-a-tenth | medium | Counted: 80 records, 83 tooling Steps, two source, three other
+
+The decisions Phase is named for authoring four architectural decision records
+and holds 168 Steps. That mismatch is this campaign's own subject in its own
+plan - a declaration that stopped describing what it names - so the description
+under the heading now says what the Phase actually contains.
+
+The first version of that correction was wrong in the direction this campaign
+warns about constantly. It said the heading described a corner of the Phase, on
+no measurement at all, because 168 Steps under a four-record heading feels like
+a heading describing almost nothing. Counting them says otherwise: 80 name a
+decision or record under `.vault`, 83 name development tooling, two name `src`
+and three name something else. The heading describes about half of what is
+there, and the honest correction is smaller and duller than the one I reached
+for first.
+
+The heading itself is left alone. The Steps carry its identifier, and renaming a
+container whose children are addressed by that name would orphan every reference
+to them - the same reasoning that kept the plan from renaming Steps whose ids
+appear in other campaigns' records. A container that has outgrown its name is
+repaired by describing it accurately, not by renaming it after the fact.
+
+One strand inside the tooling half has no heading anywhere and is now named in
+that description: proving an instrument can still see what it measures. It was
+never planned. It exists because a figure this plan quoted was wrong four
+separate times, and each correction found a screen, a probe or a gate reporting
+a clean result it was no longer able to earn.
