@@ -11230,3 +11230,43 @@ without ever being published would have the directory and no manifest, and would
 be reported as shipping bytes it had never produced. The predicate now tests the
 manifest. The census is unchanged at 67, which is the evidence that the tightening
 altered nothing about the corpus and only about what the code claims.
+
+
+## Two screens were reporting one fact under two names
+
+The capability screen's second-largest condition, `layout_without_filing_grade`
+at 25 findings, turned out to be a duplicate.
+
+Every one of its 25 revisions is also reported by the grade screen as
+`under_declared`, and the grade screen names the prerequisite that drives each
+finding. Split by prerequisite, its 31 under-declared findings are
+`export_layout` 25 and `completeness_manifest` 6 - and the 25 export-layout
+findings are **exactly** the 25 capability findings. Set equality both ways,
+nothing on either side.
+
+They are the same fact: a revision carrying an export layout while declaring a
+grade below filing. The capability screen stated it as a symptom; the grade
+screen states it as a conclusion - the declared grade is lower than its
+prerequisites support - and says which prerequisite. The second contains
+everything the first said and generalises past it, so the first was retired.
+The capability screen now reports 42 findings across four conditions, and the
+25 revisions are unchanged in the suite because the sibling reports them.
+
+This is the project's own rule applied to its own tooling: overlapping gates are
+justified when they catch distinct failure modes, and these did not. It is also
+the second consolidation this campaign has made after measuring rather than
+assuming - the first, a suspected duplicate between the pointer screen and the
+grounding screen, turned out on measurement to be two genuinely different claims
+and was kept.
+
+### The condition-count gate caught the retirement mid-edit
+
+Removing the condition left the docstring's replacement prose sitting between
+two bullets, which split the list. The gate reported "says 5 conditions and
+documents 1" - not five, one - because the list it could parse ended at the
+paragraph. That is a better failure than a count off by one: it named a
+structural break rather than an arithmetic slip. The prose now sits after the
+list.
+
+That is the third time this gate has caught a stale or broken condition count
+inside the very edit that caused it.
