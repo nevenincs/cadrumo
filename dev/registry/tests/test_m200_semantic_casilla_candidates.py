@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-import os
+import ast
+import inspect
 from collections import Counter
 from pathlib import Path
 from types import SimpleNamespace
@@ -79,47 +80,6 @@ def _candidate() -> subject.M200CasillaCandidate:
     )
 
 
-def _worklist() -> subject.M200TargetIdentityWorklist:
-    return subject.M200TargetIdentityWorklist(
-        source_ref=subject.TARGET_SOURCE_REF,
-        source_sha256=subject.TARGET_SOURCE_SHA256,
-        semantic_map_source_ref=subject.TARGET_SOURCE_REF,
-        semantic_map_source_sha256=subject.TARGET_SOURCE_SHA256,
-        map_owner_mismatches=(
-            subject.M200MapOwnerIdentity(
-                export_field_id="m200-2024.dp200012.f0013",
-                anchor=("DP200012", 18, "A18", "13", "DP200012"),
-                declared_map_owner="93",
-                disposition=subject.M200MapOwnerIdentityDisposition.ZERO_PADDING_PROPOSAL,
-                proposed_target_identity_non_authoritative="00093",
-                proposed_identity_origin="candidate_non_authoritative",
-                printed_number="00093",
-                printed_identity_state=subject.M200PrintedIdentityState.MATCHES_IDENTITY_PROPOSAL,
-                source_ref=subject.TARGET_SOURCE_REF,
-                source_sha256=subject.TARGET_SOURCE_SHA256,
-            ),
-        ),
-        orphaned_declarations=(
-            subject.M200OrphanedDeclaration(
-                casilla_id="DP200014:SAL_RESERVA_DOTACION",
-                disposition=subject.M200OrphanDisposition.UNMAPPED_DECLARATION,
-                source_refs=(subject.TARGET_SOURCE_REF,),
-            ),
-        ),
-        printed_identity_diagnostics=(
-            subject.M200PrintedIdentityDiagnostic(
-                export_field_id="m200-2024.dp200002.f0090",
-                anchor=("DP200002", 90, "A90", "90", "DP200002"),
-                declared_map_owner="1501",
-                printed_number=None,
-                state=subject.M200PrintedIdentityState.MISSING_OFFICIAL_PRINTED_IDENTITY,
-                source_ref=subject.TARGET_SOURCE_REF,
-                source_sha256=subject.TARGET_SOURCE_SHA256,
-            ),
-        ),
-    )
-
-
 def test_review_toml_is_deterministic_and_serializes_disposition() -> None:
     rendered = subject.render_m200_casilla_candidates_toml((_candidate(),))
 
@@ -129,105 +89,60 @@ def test_review_toml_is_deterministic_and_serializes_disposition() -> None:
     assert "legal_refs" not in rendered
 
 
-def test_cli_writes_then_checks_explicit_review_path(monkeypatch, tmp_path: Path) -> None:
-    monkeypatch.setattr(subject, "load_bundled_m200_target_identity_worklist", _worklist)
-    output = tmp_path / "review.toml"
-
-    assert subject.main(["--output", str(output)]) == 0
-    assert subject.main(["--output", str(output), "--check"]) == 0
-
-
-def test_cli_check_refuses_stale_review_without_writing(monkeypatch, tmp_path: Path) -> None:
-    monkeypatch.setattr(subject, "load_bundled_m200_target_identity_worklist", _worklist)
-    output = tmp_path / "review.toml"
-    output.write_text("stale", encoding="utf-8")
-
-    assert subject.main(["--output", str(output), "--check"]) == 1
-    assert output.read_text(encoding="utf-8") == "stale"
-
-
-def test_cli_output_exports_the_complete_proposal_only_target_identity_worklist(
+def test_cli_stdout_exports_the_complete_proposal_only_target_identity_worklist(
+    capsys,
     monkeypatch,
-    tmp_path: Path,
     target_identity_worklist,
 ) -> None:
     monkeypatch.setattr(subject, "load_bundled_m200_target_identity_worklist", lambda: target_identity_worklist)
-    output = tmp_path / "target-identity.toml"
 
-    assert subject.main(["--output", str(output)]) == 0
-    document = rtoml.loads(output.read_text(encoding="utf-8"))
+    assert subject.main([]) == 0
+    document = rtoml.loads(capsys.readouterr().out)
 
     assert document["authority_status"] == "proposal_only"
-    assert len(document["map_owner_mismatch"]) == 185
-    assert len(document["orphaned_declaration"]) == 2
-    assert len(document["printed_identity_diagnostic"]) == 15
+    assert document["counts"] == {
+        "map_owner_mismatches": 185,
+        "orphaned_declarations": 2,
+        "printed_identity_diagnostics": 15,
+    }
+    assert len(document["map_owner_mismatch"]) == document["counts"]["map_owner_mismatches"]
+    assert len(document["orphaned_declaration"]) == document["counts"]["orphaned_declarations"]
+    assert len(document["printed_identity_diagnostic"]) == document["counts"]["printed_identity_diagnostics"]
     assert "candidate" not in document
-    assert subject.main(["--output", str(output), "--check"]) == 0
 
 
-def test_cli_refuses_canonical_root_traversal_and_symlink_destinations(monkeypatch, tmp_path: Path) -> None:
-    canonical_root = tmp_path / "authority"
-    canonical_root.mkdir()
-    monkeypatch.setattr(subject, "_CANONICAL_REGISTRY_ROOT", canonical_root)
+def test_cli_rejects_retired_output_arguments_before_loading_worklist(monkeypatch) -> None:
     monkeypatch.setattr(
         subject,
         "load_bundled_m200_target_identity_worklist",
-        lambda: pytest.fail("canonical output must be refused before loading the worklist"),
+        lambda: pytest.fail("retired output arguments must fail during parsing"),
     )
 
-    outputs = [canonical_root / "review.toml", canonical_root / "nested" / ".." / "review.toml"]
-    try:
-        alias = tmp_path / "authority-alias"
-        alias.symlink_to(canonical_root, target_is_directory=True)
-        escape = canonical_root / "escape"
-        escape.symlink_to(tmp_path / "outside", target_is_directory=True)
-        outputs.extend((alias / "review.toml", escape / "review.toml"))
-    except (OSError, NotImplementedError):
-        pass
-
-    for output in outputs:
+    for arguments in (("--output", "review.toml"), ("--check",)):
         with pytest.raises(SystemExit) as error:
-            subject.main(["--output", str(output)])
+            subject.main(list(arguments))
         assert error.value.code == 2
 
 
-def test_cli_refuses_hardlink_and_parent_swap_races(monkeypatch, tmp_path: Path) -> None:
-    canonical_root = tmp_path / "authority"
-    canonical_root.mkdir()
-    canonical_output = canonical_root / "review.toml"
-    canonical_output.write_text("authority sentinel\n", encoding="utf-8")
-    outside = tmp_path / "outside.toml"
-    outside.write_text("outside sentinel\n", encoding="utf-8")
-    monkeypatch.setattr(subject, "_CANONICAL_REGISTRY_ROOT", canonical_root)
-    monkeypatch.setattr(subject, "load_bundled_m200_target_identity_worklist", _worklist)
+def test_identity_cli_has_no_filesystem_write_surface() -> None:
+    tree = ast.parse(inspect.getsource(subject))
+    filesystem_writes = {
+        "mkdir",
+        "open",
+        "replace",
+        "truncate",
+        "write_bytes",
+        "write_text",
+    }
+    called_attributes = {
+        node.func.attr
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+    }
 
-    try:
-        os.link(canonical_output, tmp_path / "hardlink.toml")
-    except (OSError, NotImplementedError):
-        pytest.skip("the current platform does not permit test hardlinks")
-    with pytest.raises(SystemExit) as error:
-        subject.main(["--output", str(tmp_path / "hardlink.toml")])
-    assert error.value.code == 2
-    assert canonical_output.read_text(encoding="utf-8") == "authority sentinel\n"
-    canonical_output.unlink()
-
-    real_assert = subject._assert_review_output_handle
-    assertion_count = 0
-
-    def assert_then_link(path: Path, expected_path: Path, descriptor: int) -> None:
-        nonlocal assertion_count
-        assertion_count += 1
-        real_assert(path, expected_path, descriptor)
-        if assertion_count == 1:
-            os.link(outside, canonical_output)
-
-    monkeypatch.setattr(subject, "_assert_review_output_handle", assert_then_link)
-    with pytest.raises(SystemExit) as error:
-        subject.main(["--output", str(outside)])
-    assert error.value.code == 2
-    assert assertion_count == 2
-    assert outside.read_text(encoding="utf-8") == "outside sentinel\n"
-    assert canonical_output.read_text(encoding="utf-8") == "outside sentinel\n"
+    assert filesystem_writes.isdisjoint(called_attributes)
+    assert not hasattr(subject, "_write_review_output")
+    assert not hasattr(subject, "_resolve_review_output_path")
 
 
 def test_current_printed_identity_beats_sibling_casilla_identity() -> None:

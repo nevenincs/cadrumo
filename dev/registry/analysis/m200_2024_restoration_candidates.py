@@ -9,11 +9,10 @@ document only; it has no registry-fragment or patch writer.
 from __future__ import annotations
 
 import argparse
-import os
 import re
 import shutil
-import stat
 import subprocess
+import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -34,7 +33,6 @@ from .m200_semantic_casilla_candidates import M200CasillaDisposition, _load_bund
 
 HISTORIC_COMMIT = "17eb283313"
 HISTORIC_ROOT = "src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas"
-_CANONICAL_REGISTRY_ROOT = Path("src/cadrumo/_data/registry/aeat")
 
 __all__ = [
     "HISTORIC_COMMIT",
@@ -179,111 +177,13 @@ def render_review_toml(
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Report proposal/refusal diagnostics and optionally write review TOML."""
+    """Emit proposal-only review TOML to stdout."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, help="write review-only TOML to this explicit path")
-    parser.add_argument("--check", action="store_true", help="compare --output without writing")
-    args = parser.parse_args(argv)
-    if args.check and args.output is None:
-        parser.error("--check requires --output")
-    output_path: Path | None = None
-    if args.output is not None:
-        try:
-            output_path = _resolve_review_output_path(args.output)
-        except ValueError as exc:
-            parser.error(str(exc))
+    parser.parse_args(argv)
 
     proposals, refusals = build_bundled_restoration_proposals()
-    print(f"proposals={len(proposals)}")
-    print(f"refused={len(refusals)}")
-    for item in refusals[:10]:
-        print(f"refusal[{item.export_field_id}]={item.reason}")
-    if output_path is not None:
-        rendered = render_review_toml(proposals, refusals)
-        if args.check:
-            try:
-                checked_path = _resolve_review_output_path(output_path)
-            except ValueError as exc:
-                parser.error(str(exc))
-            if checked_path != output_path:
-                parser.error("--output destination changed while checking")
-            if not checked_path.is_file() or checked_path.read_text(encoding="utf-8") != rendered:
-                print(f"stale={checked_path}")
-                return 1
-            print(f"current={checked_path}")
-        else:
-            try:
-                written_path = _write_review_output(output_path, rendered)
-            except (OSError, ValueError) as exc:
-                parser.error(str(exc))
-            print(f"wrote={written_path}")
+    sys.stdout.write(render_review_toml(proposals, refusals))
     return 1 if refusals else 0
-
-
-def _resolve_review_output_path(path: Path) -> Path:
-    """Resolve a review destination and reject the canonical registry root."""
-    configured_root = _CANONICAL_REGISTRY_ROOT
-    if not configured_root.is_absolute():
-        configured_root = Path(__file__).resolve().parents[3] / configured_root
-    canonical_root = configured_root.resolve(strict=False)
-    lexical_root = Path(os.path.abspath(os.fspath(configured_root)))
-    lexical_path = Path(os.path.abspath(os.fspath(path)))
-    resolved_path = path.resolve(strict=False)
-    if _path_is_within(lexical_path, lexical_root) or _path_is_within(resolved_path, canonical_root):
-        raise ValueError("--output must resolve outside the canonical registry root")
-    return resolved_path
-
-
-def _path_is_within(path: Path, root: Path) -> bool:
-    try:
-        path.relative_to(root)
-    except ValueError:
-        return False
-    return True
-
-
-def _write_review_output(path: Path, rendered: str) -> Path:
-    """Write through a validated handle so a swapped parent cannot redirect bytes."""
-    output_path = _resolve_review_output_path(path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path = _resolve_review_output_path(output_path)
-    flags = os.O_RDWR | getattr(os, "O_NOFOLLOW", 0)
-    try:
-        file_descriptor = os.open(output_path, flags)
-    except FileNotFoundError:
-        file_descriptor = os.open(output_path, flags | os.O_CREAT | os.O_EXCL, 0o600)
-    try:
-        _assert_review_output_handle(path, output_path, file_descriptor)
-        with os.fdopen(file_descriptor, "r+", encoding="utf-8", newline="") as stream:
-            file_descriptor = -1
-            stream.seek(0)
-            _assert_review_output_handle(path, output_path, stream.fileno())
-            stream.truncate()
-            stream.write(rendered)
-            stream.flush()
-            os.fsync(stream.fileno())
-    finally:
-        if file_descriptor >= 0:
-            os.close(file_descriptor)
-    return output_path
-
-
-def _assert_review_output_handle(path: Path, expected_path: Path, file_descriptor: int) -> None:
-    """Prove the opened regular file is still the resolved, non-authoritative target."""
-    opened_stat = os.fstat(file_descriptor)
-    if not stat.S_ISREG(opened_stat.st_mode):
-        raise ValueError("--output must identify a regular file")
-    if type(getattr(opened_stat, "st_nlink", None)) is not int or opened_stat.st_nlink != 1:
-        raise ValueError("--output must identify a regular file with exactly one link")
-    current_path = _resolve_review_output_path(path)
-    if current_path != expected_path:
-        raise ValueError("--output destination changed while opening")
-    try:
-        current_stat = current_path.stat()
-    except OSError as exc:
-        raise ValueError("--output destination changed while opening") from exc
-    if (opened_stat.st_dev, opened_stat.st_ino) != (current_stat.st_dev, current_stat.st_ino):
-        raise ValueError("--output destination changed while opening")
 
 
 def _historic_index() -> dict[str, tuple[tuple[str, dict[str, Any]], ...]]:
