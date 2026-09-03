@@ -20,6 +20,7 @@ See Also:
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import override
 
 import pytest
 from textual.app import App, ComposeResult
@@ -302,6 +303,7 @@ async def test_generic_root_is_not_exited_when_editor_refuses_unsaved_escape() -
     """The unsaved gate retains the child and never invokes its caller."""
 
     class _RootApp(App[None]):
+        @override
         def compose(self) -> ComposeResult:
             yield Button("Root", id="root-focus")
 

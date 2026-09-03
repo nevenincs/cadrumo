@@ -21,6 +21,7 @@ from __future__ import annotations
 import ast
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import override
 
 import pytest
 from textual.app import App, ComposeResult
@@ -225,6 +226,7 @@ async def test_select_screen_is_host_neutral_and_returns_to_the_exact_caller() -
     """A generic root receives the semantic result and regains its focus."""
 
     class _RootApp(App[None]):
+        @override
         def compose(self) -> ComposeResult:
             yield Button("Root", id="root-focus")
 
