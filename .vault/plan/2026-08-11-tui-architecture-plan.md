@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-03'
-body_hash: 'sha256:bd2d98db58801916044975398926e076b355c2669e350698fe872c6409d8f9e6'
+body_hash: 'sha256:8318387c9b93cc3fd768ad849a15687f496157781079314bb031fac932eb3a26'
 ---
 
 <!-- RETIRED: S370 -->
@@ -587,7 +587,7 @@ Build host-neutral Ledger, Declarations with full calendar and history, AEAT Syn
 Compose the production Home projection, destination catalogue, global search and command palette, session refresh, and launcher lifecycle into aeat --tui.
 
 - [x] `W08.P28.S381` - Build the responsive Home screen from the selected projection-only candidate with status, next actions, Ledger readiness, resumable declarations, and filing agenda; `src/cadrumo/entrypoints/tui/home.py`.
-- [ ] `W08.P28.S382` - Add global workbench search and command-palette providers that route stable result and action identities to admitted destinations; `src/cadrumo/entrypoints/tui/search.py`.
+- [x] `W08.P28.S382` - Add global workbench search and command-palette providers that route stable result and action identities to admitted destinations; `src/cadrumo/entrypoints/tui/search.py`.
 - [ ] `W08.P28.S383` - Compose the root destination stack, account header, semantic focus restoration, session expiry, and post-journey Home refresh; `src/cadrumo/entrypoints/tui/app.py`.
 - [ ] `W08.P28.S384` - Compose secure profile, overview, Ledger, declaration, evidence, notification, operation, and destination factories for one installed session; `src/cadrumo/entrypoints/tui/launcher.py`.
 - [ ] `W08.P28.S385` - Add complete localized workbench, account, Ledger, Declarations, calendar, AEAT Sync, search, availability, and refusal messages through the canonical locale workflow; `src/cadrumo/locales/`.
