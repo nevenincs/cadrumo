@@ -276,6 +276,11 @@ class CorpusScreenEntry:
     counts: str
     #: As on :class:`ScreenEntry`; every corpus screen returns findings today.
     entry_returns: Literal["findings", "census"] = "findings"
+    #: As on :class:`ScreenEntry`. Carried here too so the two entry types can
+    #: declare the same things: an asymmetry between them is a place where a
+    #: consumer has to know which table a screen sits in before it can ask, and
+    #: this field was briefly absent here for exactly that reason.
+    derives_from: str | None = None
 
 
 CORPUS_SCREENS: tuple[CorpusScreenEntry, ...] = (
