@@ -11,7 +11,7 @@ from textual.widgets import Static
 
 from ....application.operations.composition import OperationComposedServices
 from ....application.overview.home import HomeSessionPosture
-from ....application.search.workbench import WorkbenchDestinationAdmissionState
+from ....application.search.workbench import WorkbenchDestinationAdmissionState, WorkbenchSearchService
 from ..app import CadrumoTuiApp
 from ..devtools.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from ..home import HomeScreen
@@ -167,3 +167,36 @@ async def test_expired_child_return_locks_non_home_admission_and_refuses_navigat
                 )
             )
         assert app._active_target is None
+
+
+@pytest.mark.asyncio
+async def test_authoritative_child_return_rebuilds_the_injected_search_snapshot_once() -> None:
+    """Search changes only at the explicit child-return lifecycle boundary."""
+    contexts: list[TuiScreenContextV1] = []
+    initial_search = WorkbenchSearchService(())
+    refreshed_search = WorkbenchSearchService(())
+    refreshes: list[WorkbenchSearchService] = []
+    app = CadrumoTuiApp(
+        services=cast(OperationComposedServices, object()),
+        destination_catalogue=_catalogue(contexts),
+        refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
+        workbench_search_service=initial_search,
+        refresh_workbench_search=lambda: (refreshes.append(refreshed_search), refreshed_search)[1],
+    )
+
+    async with app.run_test() as pilot:
+        assert app.workbench_search_service is initial_search
+        app.navigate_to(
+            TuiNavigationTargetV1(
+                destination="workbench.ledger",
+                focus=TuiFocusIdentityV1(destination="workbench.ledger", semantic_key="ledger.entry"),
+            )
+        )
+        await pilot.pause()
+        assert app.workbench_search_service is initial_search
+
+        await pilot.press("escape")
+        await pilot.pause()
+
+    assert refreshes == [refreshed_search]
+    assert app.workbench_search_service is refreshed_search

@@ -12,15 +12,15 @@ from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 
 if TYPE_CHECKING:
-    from ...application.search.installed_workbench import InstalledWorkbenchSearchSnapshotV1
-    from .search import WorkbenchSearchDoorV1
     from textual.app import AutopilotCallbackType
 
     from ...application.modelo.work_review import ModeloWorkReview
     from ...application.modelo.workspace_models import ModeloWorkspaceStaticInspectionResultV1
     from ...application.operations.composition import OperationComposedServices
+    from ...application.search.installed_workbench import InstalledWorkbenchSearchSnapshotV1
     from ...core.external_constants import OutputLanguage
     from ...domain.modelos.work_unit import WorkUnit
+    from .search import WorkbenchSearchDoorV1
 
 
 def load_modelo_work_unit_catalogue(bucket_id: str) -> WorkUnitCatalogue:
