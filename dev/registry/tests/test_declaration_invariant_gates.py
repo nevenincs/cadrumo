@@ -216,12 +216,26 @@ def test_every_screen_searches_a_population_that_is_not_empty(
     Several of these screens SHOULD report nothing, and gating their finding
     count would freeze a defect count as a contract. What must never be empty is
     the set of things they looked at.
+
+    It covers the populations that can be named as a count, listed below, and
+    not one per screen: several screens share a population and a few have none
+    separable from the authority itself. The gate's name says "every screen" and
+    its body checks a handful, which is a claim wider than the evidence - said
+    here rather than left for a reader to discover, because the same overclaim
+    in a screen's own docstring is a finding this campaign has recorded twice.
+    The design-transcription row is the one that matters most for being easy to
+    lose: it is a filesystem walk, and a corpus moved or renamed would return an
+    empty tuple, which reads exactly like a corpus with nothing to report.
     """
     from cadrumo.domain.calculations.registry.export import resolved_export_endpoints
 
     from ..analysis.casilla_id_grammar import screen_authority as grammar
     from ..analysis.continuity_integrity import continuity_census
+    from ..analysis.footnote_pointer_notes import sheet_note_definitions
+    from ..analysis.note_label_scope import transcription_paths
     from ..analysis.wire_type_compatibility import screen_authority as wire_types
+
+    transcriptions = transcription_paths()
 
     populations: dict[str, int] = {
         "identifier grammar": sum(count for use in grammar(authority, modelo_ids) for _, count in use.counts),
@@ -231,6 +245,13 @@ def test_every_screen_searches_a_population_that_is_not_empty(
             len(resolved_export_endpoints(revision))
             for modelo_id in modelo_ids
             for revision in authority.modelo(modelo_id).revisions.values()
+        ),
+        "design transcriptions": len(transcriptions),
+        # Not merely that files were found, but that they parse into the notes
+        # the corpus screens read. A transcription set that loaded and yielded
+        # no note at all would leave both corpus screens silent and healthy.
+        "sheets defining a note": sum(
+            len(sheet_note_definitions(path.read_text(encoding=_UTF_8))) for path in transcriptions
         ),
     }
     empty = sorted(name for name, size in populations.items() if not size)
