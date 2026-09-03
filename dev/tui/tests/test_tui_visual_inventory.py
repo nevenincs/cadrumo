@@ -190,7 +190,7 @@ def test_every_derived_base_is_explicitly_classified_as_a_base() -> None:
         for qualname, classification in _coverage.CLASSIFICATIONS.items()
         if classification.disposition is _coverage.InventoryDisposition.ABSTRACT_BASE
     }
-    assert len(abstract_bases) == 8
+    assert len(abstract_bases) == 9
     assert all(by_name[qualname].is_base for qualname in abstract_bases)
 
 

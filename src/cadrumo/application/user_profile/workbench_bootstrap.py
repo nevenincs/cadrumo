@@ -46,7 +46,7 @@ class WorkbenchBootstrapV1:
 
     inventory_state: WorkbenchBootstrapInventoryState
     session_state: WorkbenchBootstrapSessionState | None = None
-    choices: tuple[ProfileLoginChoice, ...] = ()
+    choices: tuple[ProfileLoginChoice, ...] = field(default=(), repr=False)
     preselected_profile_id: str | None = field(default=None, repr=False)
     selected_profile_id: str | None = field(default=None, repr=False)
     selected_profile_label: str | None = None
