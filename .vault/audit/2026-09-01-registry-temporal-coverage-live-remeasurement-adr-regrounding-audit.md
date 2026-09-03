@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0a55fe4ccae494f5bf1b8866ca7d00cdaa4caebf138806e97de0f333ae8e5d10'
+body_hash: 'sha256:93c83d5b38ea2f6068e84d7372d93193875f06842df533c635ecce3acd037e03'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7450,3 +7450,37 @@ that the upstream refusal stopped happening, which is a larger fact than the
 finding. A condition reporting zero for a reason nobody wrote down is
 indistinguishable from a condition that no longer works, which is the state this
 campaign has now found twice in its own tooling.
+
+### one-declared-condition-was-silent-and-unexercised-and-is-now-proven | high | Four of the five silent conditions already had constructed proofs; the fifth had none, and it works
+
+Every screen was measured for conditions it declares but never emits, on the
+reasoning that a condition reporting zero is either a canary or dead and a
+reader cannot tell which. The sweep needed two corrections before it meant
+anything. `casilla_id_grammar`'s apparent silences - `dotted`, `kebab`,
+`numeric`, `page_qualified`, `token` - are grammar names, matched because the
+docstring lists them in the same shape as finding kinds. `money_split_representation`
+appeared silent because the measurement ran through the census wrapper, which
+filters that kind deliberately; the screen emits 132 of them.
+
+Five genuine cases remained. Four already carry constructed proofs, each moving
+a real revision's field and asserting the kind appears: `name_misstates_closing`,
+`window_sources_disagree`, `deadline_year_outside_window`, and
+`claims_filing_without_layout`. Their zeros are the corpus being clean, and that
+is checkable rather than assumed.
+
+`selector_dual_form` had none. It is declared, emits nothing, and its name did
+not appear anywhere in its test module - the state where a condition and a
+broken condition look identical from outside. It works: constructing a selector
+that carries both an explicit `years` tuple and a `year_from` bound makes it
+fire with the detail naming both. That shape is this package's whole subject in
+one field, two statements of which years a revision serves with no rule for
+which wins, and no shipped revision does it.
+
+It now has two tests rather than one, and the pair is the point. The constructed
+case says the condition can fire; the unmodified revision says it does not. Each
+alone leaves a reader unable to distinguish a clean registry from a dead check,
+which is exactly the position this sweep started from. The count assertion in
+the constructed case is over a fixture with one planted disagreement, not over
+the corpus, which is the distinction this campaign drew two iterations ago and
+is worth keeping straight: a count of what a fixture produces is a proof, a
+count of what the tree contains is a ratchet. Nine tests pass, exit 0.
