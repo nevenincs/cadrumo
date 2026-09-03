@@ -292,13 +292,14 @@ def test_concurrent_live_write_during_isolated_generator_is_preserved(
 
     monkeypatch.setattr(replay_module, "_run_command", write_live_concurrently)
 
-    replay_object_name_component(
-        manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
-    )
+    with pytest.raises(ObjectNameReplayError, match="live tree drifted during isolated generator"):
+        replay_object_name_component(
+            manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
+        )
 
     assert concurrent.read_bytes() == b"third-party bytes"
-    assert (repo / "dev/generated.txt").read_bytes() == b"generated Widget\n"
-    assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
+    assert (repo / "dev/generated.txt").read_bytes() == b"generated Widgets\n"
+    assert (repo / "src/example/contracts.py").read_bytes() == b"class Widgets:\n    pass\n"
 
 
 def test_successful_module_replay_uses_deterministic_mixed_transaction_order(

@@ -132,10 +132,7 @@ def _run_exact_commands(
 
 
 def _run_gates_in_verified_copy(
-    *,
-    root: Path,
-    expected: tuple[ObjectNameGateOutcome, ...],
-    guarded_paths: frozenset[str],
+    *, root: Path, expected: tuple[ObjectNameGateOutcome, ...]
 ) -> tuple[ObjectNameGateOutcome, ...]:
     paths = _git_snapshot_paths(root)
     files = _snapshot(root, paths)
@@ -155,13 +152,12 @@ def _run_gates_in_verified_copy(
     try:
         if temporary_root.parent != system_temporary_root or is_link_like(temporary_root):
             raise ObjectNameReplayError(f"allocated post-apply verification root is unsafe: {temporary_root}")
-        _copy_snapshot(root, temporary_root, files, guarded_paths=guarded_paths)
-        guarded_files = _snapshot(root, tuple(sorted(guarded_paths)))
-        if _snapshot(temporary_root, tuple(sorted(guarded_paths))) != guarded_files:
-            raise ObjectNameReplayError("post-apply verification copy differs on a guarded path")
+        _copy_snapshot(root, temporary_root, files)
+        if _snapshot(temporary_root, paths) != files:
+            raise ObjectNameReplayError("post-apply verification copy differs from the live candidate")
         outcomes = _run_exact_commands(expected, root=temporary_root)
-        if _snapshot(root, tuple(sorted(guarded_paths))) != guarded_files:
-            raise ObjectNameReplayError("guarded live path drifted during post-apply gate verification")
+        if _git_snapshot_paths(root) != paths or _snapshot(root, paths) != files:
+            raise ObjectNameReplayError("live tree drifted during post-apply gate verification")
         return outcomes
     finally:
         if temporary_root.exists() and not is_link_like(temporary_root):
@@ -231,7 +227,6 @@ def _run_generators_in_verified_copy(
     root: Path,
     expected: tuple[ObjectNameGateOutcome, ...],
     generated_paths: frozenset[str],
-    guarded_paths: frozenset[str],
 ) -> tuple[tuple[ObjectNameGateOutcome, ...], dict[str, bytes]]:
     """Run owners against exact post-transform bytes without granting live-tree writes."""
     paths = _git_snapshot_paths(root)
@@ -252,18 +247,17 @@ def _run_generators_in_verified_copy(
     try:
         if temporary_root.parent != system_temporary_root or is_link_like(temporary_root):
             raise ObjectNameReplayError(f"allocated generator root is unsafe: {temporary_root}")
-        _copy_snapshot(root, temporary_root, files, guarded_paths=guarded_paths)
-        guarded_files = _snapshot(root, tuple(sorted(guarded_paths)))
-        if _snapshot(temporary_root, tuple(sorted(guarded_paths))) != guarded_files:
-            raise ObjectNameReplayError("generator copy differs on a guarded path")
+        _copy_snapshot(root, temporary_root, files)
+        if _snapshot(temporary_root, paths) != files:
+            raise ObjectNameReplayError("generator copy differs from the post-transform live candidate")
         outcomes = _run_exact_commands(expected, root=temporary_root)
         payloads = {
             relative: payload
             for relative in sorted(generated_paths)
             if (payload := _current_payload(temporary_root, relative)) is not None
         }
-        if _snapshot(root, tuple(sorted(guarded_paths))) != guarded_files:
-            raise ObjectNameReplayError("guarded live path drifted during isolated generator execution")
+        if _git_snapshot_paths(root) != paths or _snapshot(root, paths) != files:
+            raise ObjectNameReplayError("live tree drifted during isolated generator execution")
         return outcomes, payloads
     finally:
         if temporary_root.exists() and not is_link_like(temporary_root):
@@ -482,7 +476,6 @@ def replay_object_name_component(
             root=root,
             expected=receipt.generator_outcomes,
             generated_paths=frozenset(generated_paths),
-            guarded_paths=frozenset(receipt.changed_paths),
         )
         if generator_outcomes != receipt.generator_outcomes:
             raise ObjectNameReplayError("live generator outcome evidence differs from the receipt")
@@ -511,11 +504,7 @@ def replay_object_name_component(
             mutation_intents[relative] = payload
             _replace_staged(root, relative, staged, expected=baseline_payloads[relative])
             stages.pop(relative)
-        gate_outcomes = _run_gates_in_verified_copy(
-            root=root,
-            expected=receipt.gate_outcomes,
-            guarded_paths=frozenset(receipt.changed_paths),
-        )
+        gate_outcomes = _run_gates_in_verified_copy(root=root, expected=receipt.gate_outcomes)
         after_inventory = scan((root / "src", root / "dev"), root)
         if _finding_delta(inventory, after_inventory) != receipt.finding_delta:
             raise ObjectNameReplayError("post-apply object-name finding delta differs from the receipt")
