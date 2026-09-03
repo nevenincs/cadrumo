@@ -11,7 +11,6 @@ related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
 
-
 # Build the sole rehearsal component once from the verified disposable snapshot
 
 ## Scope

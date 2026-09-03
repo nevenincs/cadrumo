@@ -5,16 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:25f3cc567011660110b874c49faa2425995f9f3d3d9b1bb8d5ae5db4a56a425f'
+body_hash: 'sha256:242a6e9d1565361986ad4c76faed471c6f1deb7fdad4cc411f35bb775d3ff0e2'
 step_id: 'S26'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Apply the reviewed pilot receipt and verify live reduction
 
@@ -25,19 +20,10 @@ related:
 
 ## Changes
 
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
+- `R` `dev/registry/generate_result_disposition_fragments.py` -> `dev/registry/result_disposition_fragment_generator.py`
+- `M` `.vault/audit/2026-09-02-object-name-declustering-pilot-rehearsal-audit.md`
+- `verify:` `just audit-object-names --json` -> `fail`
 
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
+## Notes
 
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
+The audit target exits 1 because 793 unrelated enforced findings remain. The selected finding `sha256:185e22d79ce6fa25f26b4d2086037944c305aa0b206078537c8fb89484b0f026` is absent, and the canonical module declaration exists exactly once with the rehearsed source hash. Receipt replay detected concurrent Git drift after mutation and rolled back the worktree; commit `0f21eb73b41d092c5200921040f501bdb1a7b225` had already captured the exact byte-preserving rename. The rollback residue was reconciled to that committed state after confirming identical Git object hashes and an absent transaction marker.

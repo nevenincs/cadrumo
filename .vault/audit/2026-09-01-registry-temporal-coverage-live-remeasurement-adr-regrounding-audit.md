@@ -5805,3 +5805,58 @@ which would resolve this and any future blind spot of the same family, at the co
 subprocess on every run - and that trade belongs to whoever owns the census rather than to a
 campaign passing through. What is worth leaving behind is that the remaining stale entry has a
 cause, and the cause is neither a stale rule nor a missing module.
+
+### lane-figures-describe-a-selection-ci-does-not-run | high | Every lane number in this audit comes from a path overlapping the CI recipe in one directory of eighteen
+
+This campaign has quoted a "development registry lane" figure in a dozen findings - 46 failures,
+then 36, then 41, then 42 - and treated the movement as the tree's state. The path producing
+those numbers is `dev/registry/tests`, `dev/registry/conformance/tests`, `dev/quality/tests` and
+one file, chosen early and reused since.
+
+The recipe CI actually invokes names eighteen directories. It shares exactly one with that path:
+`dev/registry/tests`. Seventeen directories that CI runs on every push have never appeared in a
+measurement here, and two directories measured here are not in that recipe - one of them covered
+by a different recipe, the other by none, which is the conformance omission already recorded as
+critical.
+
+The figures are not wrong, and that is the trap in them. Every one was correctly measured,
+correctly reconciled against its own collection, and correctly swept for lost workers. What was
+never checked is whether the thing being measured is the thing that matters, and the answer is
+that it substantially is not. A campaign can execute a measurement discipline perfectly against
+the wrong population, and this one did for the length of the work.
+
+The lane the recipe defines is now running under the same reconciling method. Whatever it
+reports, the previous figures should be read as describing a registry-focused subset chosen by
+this campaign, not the gate CI applies.
+
+This is the same defect as the plan's criteria going into the wrong section, and as the
+footnote sizing reading an attribute the object does not carry: the method was sound and pointed
+at the wrong thing. It is the third instance, and the cheapest check in all three cases would
+have been to ask, once, what the thing being measured is called by someone else.
+
+### three-dev-test-directories-are-named-by-nothing | critical | 163 tests sit in directories no recipe and no workflow names, and the conformance suite is only the smallest of them
+
+The conformance omission recorded earlier is not a single oversight. Of twenty-nine test
+directories under `dev/`, twenty-five are named by a justfile recipe or a workflow and four are
+named by neither. One of those four is empty.
+
+The other three hold tests: `dev/source_connectivity/tests` carries 105 across sixteen files,
+`dev/tui/tests` carries 39 in one, and `dev/registry/conformance/tests` carries 19 in two. One
+hundred and sixty-three tests that nothing runs, of which this campaign had found only the
+nineteen it happened to be standing next to.
+
+The conformance suite was reported as critical because it proves real filing outcomes. On
+volume it is the smallest of the three, and source connectivity - the surface that decides
+whether a registry source is reachable and current - is more than five times its size. Whether
+that suite matters as much is not something this campaign can judge from outside it, and the
+point is that nobody has had to judge it, because nothing surfaced the question.
+
+The measurement took two attempts and the first was wrong in the usual way. A pattern requiring
+an intermediate path segment did not match `dev/tests`, which the recipe names plainly, so the
+first run reported five uncovered directories including one that is covered. The sanity check
+that caught it was asking the pattern whether it matched a directory known to be named - one
+line, and the same class of error this audit has now recorded six times.
+
+Recommending nothing here. Adding three directories to a recipe is a one-line change and the
+reason to hesitate is not difficulty: 163 tests that have never run in CI will not all pass, and
+whoever wires them needs to be ready for what they say rather than surprised by it.

@@ -5,12 +5,10 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:3e539aa4950cc10e4401b88c07f167fc103de135d8d6132d80efc03df0f22d85'
+body_hash: 'sha256:623abb7e0e89e827e582c0f6adc39ae6a48055cf385ab37f9621c54d4252a9ef'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
-
-
 
 # `object-name-declustering` audit: `pilot rehearsal`
 
@@ -33,3 +31,17 @@ Both focused gates passed: the renamed generator module completed with exit code
 ## Recommendations
 
 Retain the rehearsal root and receipt evidence for review. Any later live rename must use explicit apply mode with this exact receipt identity and must independently pass replay preflight; this audit does not authorize application.
+
+## Live application follow-up
+
+### transaction-concurrency | medium | replay refused concurrent Git drift after applying the reviewed bytes
+
+Explicit apply used receipt `sha256:87b27c11bccb24e8da701ab61fec5df5936d6ab9606e3ee19f06e0f970b1ddbe` and crossed the mutation boundary. While its post-apply gates were running, commit `0f21eb73b41d092c5200921040f501bdb1a7b225` captured the exact `R100` rename. Replay subsequently detected the changed repository state and rolled the worktree back, demonstrating the fail-closed concurrency boundary. The resulting rollback residue was reconciled only after the restored old-path payload and the committed new-path payload both resolved to Git object `2aaa32a6f3c39606a18c12f506920e5a64a0ad99`, and no transaction marker remained.
+
+### live-finding | low | reviewed finding is absent from the current audit inventory
+
+The live `just audit-object-names --json` run scanned 62,585 declarations and reported 2,330 findings: 793 enforced and 1,537 advisory. Its expected exit code was 1 because the wider backlog remains. The selected finding `sha256:185e22d79ce6fa25f26b4d2086037944c305aa0b206078537c8fb89484b0f026` was absent. The canonical declaration `module:dev.registry.result_disposition_fragment_generator#binding=1` occurred once at `dev/registry/result_disposition_fragment_generator.py` with the rehearsed source hash `sha256:4eed2284f884c35c18242e230e88f45b350f792bccba10ac888741657414c6ad`; the retired source path and production references were absent.
+
+### live-application-recommendation
+
+Do not run Git commits or other repository-wide writers while an object-name transaction is active. Treat the transaction marker and the apply process handle as an exclusive operational window even though replay independently detects and refuses guarded-path drift.

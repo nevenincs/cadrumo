@@ -11,7 +11,6 @@ related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
 
-
 # Run the Justfile rehearsal and record scope, receipt, gate results, residual findings, and unchanged-live-tree proof
 
 ## Scope

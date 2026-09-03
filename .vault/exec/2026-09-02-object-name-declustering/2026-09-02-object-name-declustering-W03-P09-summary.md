@@ -5,11 +5,10 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:479b34a85e4879a0603f6c6a8a73882fd600e4883188529bcb1dd0808afeb816'
+body_hash: 'sha256:38e9cc0a5737ed0e8db0deba0fe54a204d879f94ac99e6e8eaf4069abc8c5f26'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
-
 
 # `object-name-declustering` `W03.P09` summary
 
@@ -25,4 +24,10 @@ related:
 - `M` `dev/quality/tests/test_object_name_manifest.py`
 - `M` `dev/quality/tests/test_object_name_rehearsal.py`
 - `M` `dev/quality/tests/test_object_name_replay.py`
+- `R` `dev/registry/generate_result_disposition_fragments.py` -> `dev/registry/result_disposition_fragment_generator.py`
 - `verify:` `just fix-object-names` -> `pass`
+- `verify:` `just audit-object-names --json` -> `fail`
+
+## Notes
+
+The live audit target exits 1 for the remaining repository-wide backlog; the reviewed pilot finding is absent from its result.
