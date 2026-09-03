@@ -90,8 +90,9 @@ def uncited_manifest_references(
     families = tuple(items for _, items in citing_children(revision))
     for items in families:
         for item in items:
-            cited_legal |= {str(ref) for ref in item.legal_refs}
-            cited_source |= {str(ref) for ref in item.source_refs}
+            # A family may carry one reference kind and not the other.
+            cited_legal |= {str(ref) for ref in getattr(item, "legal_refs", ())}
+            cited_source |= {str(ref) for ref in getattr(item, "source_refs", ())}
     found: list[UncitedManifestReference] = []
     for kind, declared, cited in (
         ("legal", revision.legal_refs, cited_legal),

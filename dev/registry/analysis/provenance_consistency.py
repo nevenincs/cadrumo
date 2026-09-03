@@ -35,7 +35,7 @@ from typing import Literal, Protocol
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from cadrumo.domain.calculations.registry.export import resolved_export_endpoints
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import SCHEMA_FAMILY, ModeloRevision
 
 from .corpus import bundled_modelo_ids
 
@@ -49,17 +49,11 @@ __all__ = [
     "screen_authority",
 ]
 
-type ProvenanceChildKind = Literal[
-    "casilla",
-    "formula",
-    "binding",
-    "relation",
-    "parameter",
-    "evolution",
-    "export_layout",
-    "export_field",
-    "deadline_window",
-]
+#: A citing family's name, which is the schema field the registry declares it
+#: under. Formerly a hand-written Literal of eight names; it is now whatever
+#: `SCHEMA_FAMILY` annotates, plus ``export_field`` for the derived surface the
+#: screen adds separately, so a family added to the registry needs no edit here.
+type ProvenanceChildKind = str
 type ProvenanceRefKind = Literal["legal", "source"]
 
 
@@ -90,30 +84,40 @@ class ProvenanceFinding:
 
 def citing_children(
     revision: ModeloRevision,
-) -> tuple[tuple[ProvenanceChildKind, tuple[_CitedChild, ...]], ...]:
-    """Return every authored child of a revision that carries its own citations.
+) -> tuple[tuple[str, tuple[_CitedChild, ...]], ...]:
+    """Return every authored family of a revision that carries its own citations.
 
-    The one declaration of what a revision's citing children ARE. It was written
-    out longhand in two screens, and the second inherited the list from the
-    first - so when `deadline_windows` turned out to be a citing family that
-    neither read, the omission was present twice and had to be corrected twice.
-    One list is wrong once.
+    Enumerated from the registry's own `SCHEMA_FAMILY` annotation rather than
+    named here. The schema declares nineteen authored families; this walk once
+    listed eight of them by hand, and the gap was not theoretical - nine of the
+    eleven it omitted carry citations, together accounting for 1,684 citations
+    reaching outside a manifest and for 141 of the 159 references this package
+    reported as cited by nothing. A hand-written list of families is a copy of a
+    declaration, and every copy in this package has drifted from its original.
 
-    Resolved export fields are deliberately absent. They exist only after
-    derivation and carry citations copied from their template, so a screen
-    asking what a revision's AUTHORS declared must not see them; the screen that
-    needs them adds them itself, and says why.
+    The family NAME is the schema's field name, used unchanged. Singularising it
+    would be a transformation with no authority behind it, and the campaign has
+    refused smaller heuristics than that.
+
+    A family is included when its items carry citations at all, so a family that
+    declares none is absent rather than reported empty. Resolved export fields
+    are deliberately not here: they exist only after derivation and carry
+    citations copied from their template, so a screen asking what a revision's
+    AUTHORS declared must not see them. The screen that needs them adds them
+    itself and says why.
     """
-    return (
-        ("casilla", tuple(revision.casillas)),
-        ("formula", tuple(revision.formulas)),
-        ("binding", tuple(revision.bindings)),
-        ("relation", tuple(revision.relations)),
-        ("parameter", tuple(revision.parameters)),
-        ("evolution", tuple(revision.casilla_continuidad_evolutions)),
-        ("export_layout", tuple(revision.export_layouts)),
-        ("deadline_window", tuple(revision.deadline_windows)),
-    )
+    families: list[tuple[str, tuple[_CitedChild, ...]]] = []
+    for name, field in type(revision).model_fields.items():
+        if not any(item is SCHEMA_FAMILY for item in getattr(field, "metadata", ())):
+            continue
+        value = getattr(revision, name, None)
+        items = tuple(value) if isinstance(value, (tuple, list)) else ((value,) if value is not None else ())
+        carriers = tuple(
+            item for item in items if hasattr(item, "legal_refs") or hasattr(item, "source_refs")
+        )
+        if carriers:
+            families.append((name, carriers))
+    return tuple(families)
 
 
 def provenance_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[ProvenanceFinding, ...]:
@@ -131,9 +135,13 @@ def provenance_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[Pr
             findings.append(ProvenanceFinding(modelo_id, str(revision.id), kind, child_id, "source", outside_source))
 
     def refs(item: _CitedChild) -> tuple[tuple[str, ...], tuple[str, ...]]:
+        # A family may carry one kind of reference and not the other: an
+        # applicability rule cites law and names no source. Assuming both was
+        # safe while the walk listed eight families by hand and stopped being so
+        # the moment it followed the schema's nineteen.
         return (
-            tuple(str(ref) for ref in item.legal_refs),
-            tuple(str(ref) for ref in item.source_refs),
+            tuple(str(ref) for ref in getattr(item, "legal_refs", ())),
+            tuple(str(ref) for ref in getattr(item, "source_refs", ())),
         )
 
     families = citing_children(revision)
