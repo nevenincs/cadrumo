@@ -146,6 +146,69 @@ def test_the_coverage_table_only_names_interfaces_that_exist() -> None:
     assert set(_coverage.NOTES) <= known
 
 
+def test_every_discovered_interface_has_one_stable_explicit_classification() -> None:
+    """New interfaces and stale registrations both make the inventory fail."""
+    interfaces = _inventory.scan()
+    discovered = {interface.qualname for interface in interfaces}
+    assert discovered == set(_coverage.CLASSIFICATIONS)
+    assert len(interfaces) == 60
+
+    counts = {
+        disposition: sum(
+            classification.disposition is disposition for classification in _coverage.CLASSIFICATIONS.values()
+        )
+        for disposition in _coverage.InventoryDisposition
+    }
+    assert counts == {
+        _coverage.InventoryDisposition.COVERED: 5,
+        _coverage.InventoryDisposition.FIXTURE_NEEDED: 45,
+        _coverage.InventoryDisposition.ABSTRACT_BASE: 8,
+        _coverage.InventoryDisposition.DEVELOPMENT_ONLY: 2,
+    }
+
+
+def test_every_concrete_review_surface_has_a_stable_fixture_identity() -> None:
+    interfaces = _inventory.scan()
+    needed = _coverage.fixture_needed(interfaces)
+    assert len(needed) == 45
+    for interface in interfaces:
+        classification = _coverage.CLASSIFICATIONS[interface.qualname]
+        if classification.disposition in {
+            _coverage.InventoryDisposition.COVERED,
+            _coverage.InventoryDisposition.FIXTURE_NEEDED,
+        }:
+            assert classification.surface_id is not None
+            assert re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", classification.surface_id)
+        else:
+            assert classification.surface_id is None
+
+
+def test_every_derived_base_is_explicitly_classified_as_a_base() -> None:
+    for interface in _inventory.scan():
+        if interface.is_base:
+            assert (
+                _coverage.CLASSIFICATIONS[interface.qualname].disposition
+                is _coverage.InventoryDisposition.ABSTRACT_BASE
+            )
+
+
+def test_coverage_check_bites_on_unclassified_and_stale_classifications() -> None:
+    interfaces = _inventory.scan()
+    surfaces = tuple(_coverage.RENDERED_BY)
+    missing = dict(_coverage.CLASSIFICATIONS)
+    missing.pop(interfaces[0].qualname)
+    with pytest.raises(_coverage.CoverageError, match="unclassified interface"):
+        _coverage.check(interfaces, surfaces, classifications=missing)
+
+    stale = dict(_coverage.CLASSIFICATIONS)
+    stale["cadrumo.entrypoints.tui.removed.StaleScreen"] = _coverage.InterfaceClassification(
+        _coverage.InventoryDisposition.FIXTURE_NEEDED,
+        "removed-stale",
+    )
+    with pytest.raises(_coverage.CoverageError, match="stale classification"):
+        _coverage.check(interfaces, surfaces, classifications=stale)
+
+
 def test_coverage_check_refuses_a_surface_the_harness_does_not_offer() -> None:
     interfaces = _inventory.scan()
     with pytest.raises(_coverage.CoverageError) as refusal:

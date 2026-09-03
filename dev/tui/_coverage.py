@@ -53,6 +53,7 @@ field-edit modal -- is genuinely not rendered by this run, and claiming it
 here would make the coverage report lie in the one direction that matters.
 """
 
+
 class InventoryDisposition(StrEnum):
     """Exhaustive review disposition for one discovered interface."""
 
@@ -95,13 +96,9 @@ CLASSIFICATIONS: Final[dict[str, InterfaceClassification]] = {
     "cadrumo.entrypoints.tui.aeat_sync.screens.AeatSyncFiledDeclarationsScreen": _needed(
         "aeat-sync-filed-declarations"
     ),
-    "cadrumo.entrypoints.tui.aeat_sync.screens.AeatSyncNotificationsScreen": _needed(
-        "aeat-sync-notifications"
-    ),
+    "cadrumo.entrypoints.tui.aeat_sync.screens.AeatSyncNotificationsScreen": _needed("aeat-sync-notifications"),
     "cadrumo.entrypoints.tui.aeat_sync.screens.AeatSyncOverviewScreen": _needed("aeat-sync-overview"),
-    "cadrumo.entrypoints.tui.aeat_sync.screens.AeatSyncReconciliationScreen": _needed(
-        "aeat-sync-reconciliation"
-    ),
+    "cadrumo.entrypoints.tui.aeat_sync.screens.AeatSyncReconciliationScreen": _needed("aeat-sync-reconciliation"),
     "cadrumo.entrypoints.tui.aeat_sync.screens.AeatSyncWorkspaceScreen": _base(
         "shared AEAT Sync navigation and action shell"
     ),
@@ -114,9 +111,7 @@ CLASSIFICATIONS: Final[dict[str, InterfaceClassification]] = {
     "cadrumo.entrypoints.tui.components.form_screen.FormApp": _needed("form-production-caller"),
     "cadrumo.entrypoints.tui.components.form_screen.FormScreen": _needed("form-production-caller"),
     "cadrumo.entrypoints.tui.components.host.ScreenHostApp": _base("generic single-screen test and dev host"),
-    "cadrumo.entrypoints.tui.declarations.calendar.DeclarationsCalendarScreen": _needed(
-        "declarations-calendar"
-    ),
+    "cadrumo.entrypoints.tui.declarations.calendar.DeclarationsCalendarScreen": _needed("declarations-calendar"),
     "cadrumo.entrypoints.tui.declarations.controller.DeclarationsWorkspaceScreen": _base(
         "shared Declarations workspace shell"
     ),
@@ -126,15 +121,11 @@ CLASSIFICATIONS: Final[dict[str, InterfaceClassification]] = {
     "cadrumo.entrypoints.tui.declarations.overview.DeclarationsModeloWorkspaceLauncherScreen": _needed(
         "declarations-modelo-launcher"
     ),
-    "cadrumo.entrypoints.tui.declarations.overview.DeclarationsOverviewScreen": _needed(
-        "declarations-overview"
+    "cadrumo.entrypoints.tui.declarations.overview.DeclarationsOverviewScreen": _base(
+        "abstract declarations overview host"
     ),
-    "cadrumo.entrypoints.tui.declarations.revisions.DeclarationsRevisionsScreen": _needed(
-        "declarations-revisions"
-    ),
-    "cadrumo.entrypoints.tui.declarations.routes.DeclarationsUnavailableScreen": _needed(
-        "declarations-unavailable"
-    ),
+    "cadrumo.entrypoints.tui.declarations.revisions.DeclarationsRevisionsScreen": _needed("declarations-revisions"),
+    "cadrumo.entrypoints.tui.declarations.routes.DeclarationsUnavailableScreen": _needed("declarations-unavailable"),
     "cadrumo.entrypoints.tui.devtools.home_candidates.DueDrivenHomeCandidateScreen": _development(
         "retained design candidate, not the production Home factory"
     ),
@@ -146,17 +137,13 @@ CLASSIFICATIONS: Final[dict[str, InterfaceClassification]] = {
     ),
     "cadrumo.entrypoints.tui.flows.app.FlowScreen": _covered("modelo-work-wizard"),
     "cadrumo.entrypoints.tui.home.HomeScreen": _needed("home"),
-    "cadrumo.entrypoints.tui.ledger.classification.LedgerClassificationScreen": _needed(
-        "ledger-classification"
-    ),
+    "cadrumo.entrypoints.tui.ledger.classification.LedgerClassificationScreen": _needed("ledger-classification"),
     "cadrumo.entrypoints.tui.ledger.controller.LedgerWorkspaceScreen": _base("shared Ledger navigation shell"),
     "cadrumo.entrypoints.tui.ledger.entries.LedgerEntriesScreen": _needed("ledger-entries"),
     "cadrumo.entrypoints.tui.ledger.evidence.LedgerEvidenceScreen": _needed("ledger-evidence"),
     "cadrumo.entrypoints.tui.ledger.import_flow.LedgerImportScreen": _needed("ledger-import"),
     "cadrumo.entrypoints.tui.ledger.overview.LedgerOverviewScreen": _needed("ledger-overview"),
-    "cadrumo.entrypoints.tui.ledger.reconciliation.LedgerReconciliationScreen": _needed(
-        "ledger-reconciliation"
-    ),
+    "cadrumo.entrypoints.tui.ledger.reconciliation.LedgerReconciliationScreen": _needed("ledger-reconciliation"),
     "cadrumo.entrypoints.tui.ledger.review.LedgerReviewScreen": _needed("ledger-review"),
     "cadrumo.entrypoints.tui.ledger.routes.LedgerUnavailableScreen": _needed("ledger-unavailable"),
     "cadrumo.entrypoints.tui.ledger.workspace_presentation.LedgerConfirmationFlowScreen": _base(
@@ -166,9 +153,7 @@ CLASSIFICATIONS: Final[dict[str, InterfaceClassification]] = {
     "cadrumo.entrypoints.tui.modelo.view.filing.ModeloWorkspaceFilingScreen": _needed("modelo-filing"),
     "cadrumo.entrypoints.tui.modelo.view.inputs.ModeloWorkspaceInputsScreen": _needed("modelo-inputs"),
     "cadrumo.entrypoints.tui.modelo.view.overview.ModeloWorkspaceOverviewScreen": _needed("modelo-overview"),
-    "cadrumo.entrypoints.tui.modelo.view.provenance.ModeloWorkspaceProvenanceScreen": _needed(
-        "modelo-provenance"
-    ),
+    "cadrumo.entrypoints.tui.modelo.view.provenance.ModeloWorkspaceProvenanceScreen": _needed("modelo-provenance"),
     "cadrumo.entrypoints.tui.modelo.view.results.ModeloWorkspaceResultsScreen": _needed("modelo-results"),
     "cadrumo.entrypoints.tui.modelo.view.verification.ModeloWorkspaceVerificationScreen": _needed(
         "modelo-verification"
@@ -219,8 +204,12 @@ def check(
     known = {interface.qualname for interface in interfaces}
     classified = set(classifications)
     problems = [f"unclassified interface {qualname!r}" for qualname in sorted(known - classified)]
-    problems.extend(f"stale classification for unknown interface {qualname!r}" for qualname in sorted(classified - known))
-    problems.extend(f"coverage names unknown surface {surface!r}" for surface in rendered_table if surface not in surfaces)
+    problems.extend(
+        f"stale classification for unknown interface {qualname!r}" for qualname in sorted(classified - known)
+    )
+    problems.extend(
+        f"coverage names unknown surface {surface!r}" for surface in rendered_table if surface not in surfaces
+    )
     problems.extend(
         f"coverage maps {surface!r} to unknown interface {qualname!r}"
         for surface, qualnames in rendered_table.items()
