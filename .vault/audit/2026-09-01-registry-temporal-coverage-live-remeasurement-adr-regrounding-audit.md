@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8b8f5c1eae0b28af4d82b7ca092b4d4cd670bfb6de0aee87439d1ef3bd188d1a'
+body_hash: 'sha256:6c0fd9ab48d103aba17a979768d4df654faa208da691c98a58323d5bbaf47e9b'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7687,3 +7687,38 @@ keeping: a gate that has been red for a while stops being read as a gate. This
 one was refusing exactly what it was written to refuse, on files nobody in this
 campaign had touched, and it would have gone on doing so unnoticed because the
 failure belonged to no one who was looking.
+
+### the-step-id-gate-fired-on-a-name-that-arrived-hours-after-it-was-written | high | It is red, correctly, and the right repair is not the one that makes it green
+
+Running `dev/tests` as a directory reports 33 failures across 610 passing. One
+of them is this campaign's own gate, and it is the reason the gate exists. The
+step-id assertion - redeemed to an empty expectation two iterations ago after
+four renames - is red again on
+`test_compiles_the_closed_disjoint_s14_s15_cohort_and_live_bytes`, which arrived
+in a commit after the gate was written. The gate caught a regression within
+hours, which is the only real evidence that a gate works.
+
+The repair is deliberately not the obvious one. Renaming that test would make
+the gate green and remove nothing: the owning module calls the same thing "the
+reviewed, disjoint M200/2024 S14/S15 compiler" in its module docstring, "the
+closed S14/S15 declarations" in a function docstring, and names the cohort by
+those ids in two refusal messages. The step ids have become that campaign's
+vocabulary for the cohort, so the test name is the visible end of a leak that
+runs through the module. Renaming only what the gate can see is the move that
+teaches the next author to satisfy detectors rather than remove defects, and a
+gate whose stated purpose is preventing that must not be repaired that way.
+
+What this work owns is making the failure act on the reader. The assertion now
+names the offending symbol rather than only its file, and says both wrong
+repairs explicitly: do not add the coordinate to an exemption, and do not rename
+only the test when its module carries the same id in its prose. A Step records
+the real remedy, which belongs to the owning campaign because renaming a cohort
+requires knowing what distinguishes it - here, target-only evidence, closed and
+disjoint, which are properties the ids do not carry.
+
+That leaves a gate red on purpose, against the lesson recorded last iteration
+that a long-red gate stops being read. The two do not conflict as long as the
+red is legible: the privacy gate had been red on a defect nobody owned, and this
+one is red on a defect with a named owner, a written remedy and a Step. The
+difference is not the redness, it is whether anyone can tell from the failure
+what to do.
