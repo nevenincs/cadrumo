@@ -24,8 +24,10 @@ from ..ci.lane_reachability import tracked_test_files
 from ._marker_metadata_patterns import (
     CAMPAIGN_METADATA_CASES,
     PROCESS_SYMBOL_METADATA_CASES,
+    PRODUCTION_SCOPED_CAMPAIGN_METADATA_CASES,
     RETIRED_SCRAMBLED_PLAN_PATTERN,
     assert_cases_discriminate,
+    campaign_metadata_findings,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -102,3 +104,37 @@ def test_no_development_tree_test_name_carries_a_step_id() -> None:
         if _STEP_ID_CASE.pattern.search(name)
     }
     assert carrying == set(), f"a step id returned to a development-tree test name: {sorted(carrying)}"
+
+
+def test_a_module_explaining_its_own_lint_suppression_is_not_campaign_metadata() -> None:
+    """The explanation beside a suppression carries the code without the directive.
+
+    The scrub removes the directive, so a line-scoped check reports the prose
+    that explains it. The sentence also wraps in the two live cases, which is
+    why the judgement has to see the whole module rather than one line.
+    """
+    module = (
+        "# the only variable is the integer port rendered via str() - hence\n"
+        "# the S603 suppression.\n"
+        "result = subprocess.run(  # noqa: S603\n"
+    )
+    assert campaign_metadata_findings(module, PRODUCTION_SCOPED_CAMPAIGN_METADATA_CASES) == ()
+
+
+def test_a_step_id_the_module_does_not_suppress_is_still_reported() -> None:
+    """Discrimination, not silence: the exemption is keyed to this module's own codes.
+
+    Without this the previous test would be satisfied by a helper that reports
+    nothing at all, which is the failure mode the retired transposed pattern
+    exists to name.
+    """
+    module = "# carried in S42, which nothing here suppresses.\n"
+    assert campaign_metadata_findings(module, PRODUCTION_SCOPED_CAMPAIGN_METADATA_CASES) == ("S42",)
+
+
+def test_the_suppression_exemption_does_not_leak_between_modules() -> None:
+    """A code suppressed in one module buys no exemption in another."""
+    suppressing = "x = run()  # noqa: S603\n# hence the S603 suppression.\n"
+    borrowing = "# carried in S603 of the campaign.\n"
+    assert campaign_metadata_findings(suppressing, PRODUCTION_SCOPED_CAMPAIGN_METADATA_CASES) == ()
+    assert campaign_metadata_findings(borrowing, PRODUCTION_SCOPED_CAMPAIGN_METADATA_CASES) == ("S603",)
