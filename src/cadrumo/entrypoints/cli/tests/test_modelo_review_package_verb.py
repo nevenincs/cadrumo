@@ -191,6 +191,65 @@ def test_review_package_build_requires_output_flag() -> None:
     assert result.exit_code != 0, result.output
 
 
+def test_review_package_keeps_raw_revision_and_selector_refusals_distinct(tmp_path: Path) -> None:
+    """The review builder preserves the shared resolver's address-versus-selector errors."""
+    _set_export_profile_name()
+    raw_revision = _invoke(
+        [
+            "app",
+            "modelo",
+            "review-package",
+            "build",
+            "--output",
+            str(tmp_path / "raw.zip"),
+            "--revision",
+            "not-a-revision-id",
+        ]
+    )
+    selector = _invoke(
+        [
+            "app",
+            "modelo",
+            "review-package",
+            "build",
+            "--output",
+            str(tmp_path / "selector.zip"),
+            "--select",
+            "not-a-selector",
+        ]
+    )
+
+    assert raw_revision.exit_code != 0, raw_revision.output
+    assert selector.exit_code != 0, selector.output
+    assert "not-a-revision-id" in raw_revision.output
+    assert "not-a-selector" in selector.output
+
+
+def test_review_package_invalid_period_names_the_selected_modelo_tokens(tmp_path: Path) -> None:
+    """An annual modelo rejects a quarterly token with its declared annual token."""
+    _set_export_profile_name()
+
+    result = _invoke(
+        [
+            "app",
+            "modelo",
+            "review-package",
+            "build",
+            "--modelo",
+            "100",
+            "--year",
+            "2024",
+            "--period",
+            "1T",
+            "--output",
+            str(tmp_path / "invalid-period.zip"),
+        ]
+    )
+
+    assert result.exit_code != 0, result.output
+    assert "0A" in result.output
+
+
 def test_review_package_help_advertises_local_only() -> None:
     result = _invoke(["app", "modelo", "review-package", "build", "--help"])
     assert result.exit_code == 0, result.output

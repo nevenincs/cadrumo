@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from .....application.overview.calendar_models import OverviewPeriodState
 from .....application.overview.home import HomeAvailability, HomeDeclarationState, HomeSessionPosture
+from .....core.period import Period
 from ..home_fixtures import (
     HOME_FIXTURE_SCENARIOS,
     HomeFixtureScenario,
@@ -79,7 +80,7 @@ def test_populated_actions_cover_declaration_addressed_and_cross_cutting_tasks(
     addressed = projection.actions[0]
     assert addressed.modelo == "303"
     assert addressed.filing_year == 2026
-    assert addressed.period is not None and addressed.period.registry_token == "3T"
+    assert addressed.period == Period.from_year_and_code(2026, "3T")
     addressless = next(item for item in projection.actions if item.action.action.action_id == addressless_action_id)
     assert (addressless.modelo, addressless.filing_year, addressless.period) == (None, None, None)
 
