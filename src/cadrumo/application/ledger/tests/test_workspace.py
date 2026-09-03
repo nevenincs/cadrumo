@@ -11,12 +11,13 @@ from typing import cast
 
 import pytest
 
+from ....core.period import Period
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.ledger_filing_snapshot import LedgerFilingStalenessVerdict
-from ....domain.modelos.work_unit import WorkUnitCatalogue
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -144,7 +145,64 @@ def test_projection_is_deterministic_total_local_and_intrinsically_safe() -> Non
     assert first.contract_version == LEDGER_WORKSPACE_CONTRACT_VERSION
     assert tuple(row.area for row in first.areas) == tuple(LedgerWorkspaceArea)
     assert all(source.value.startswith("local.") for row in first.areas for source in row.sources)
-    assert first.areas[2].status is LedgerWorkspaceStatus.NEEDS_ATTENTION
+    assert tuple(
+        (row.area, row.sources, row.availability, row.status, row.item_count)
+        for row in first.areas
+    ) == (
+        (
+            LedgerWorkspaceArea.OVERVIEW,
+            (LedgerWorkspaceSource.LOCAL_LEDGER, LedgerWorkspaceSource.LOCAL_DECLARATIONS),
+            LedgerWorkspaceAvailability.AVAILABLE,
+            LedgerWorkspaceStatus.NEEDS_ATTENTION,
+            1,
+        ),
+        (
+            LedgerWorkspaceArea.ENTRIES,
+            (LedgerWorkspaceSource.LOCAL_LEDGER,),
+            LedgerWorkspaceAvailability.AVAILABLE,
+            LedgerWorkspaceStatus.READY,
+            1,
+        ),
+        (
+            LedgerWorkspaceArea.REVIEW,
+            (LedgerWorkspaceSource.LOCAL_LEDGER,),
+            LedgerWorkspaceAvailability.AVAILABLE,
+            LedgerWorkspaceStatus.NEEDS_ATTENTION,
+            1,
+        ),
+        (
+            LedgerWorkspaceArea.IMPORT,
+            (LedgerWorkspaceSource.LOCAL_LEDGER,),
+            LedgerWorkspaceAvailability.AVAILABLE,
+            LedgerWorkspaceStatus.UNMEASURED,
+            0,
+        ),
+        (
+            LedgerWorkspaceArea.CLASSIFICATION,
+            (LedgerWorkspaceSource.LOCAL_LEDGER,),
+            LedgerWorkspaceAvailability.AVAILABLE,
+            LedgerWorkspaceStatus.NEEDS_ATTENTION,
+            1,
+        ),
+        (
+            LedgerWorkspaceArea.EVIDENCE,
+            (LedgerWorkspaceSource.LOCAL_LEDGER, LedgerWorkspaceSource.LOCAL_INVOICES),
+            LedgerWorkspaceAvailability.AVAILABLE,
+            LedgerWorkspaceStatus.UNMEASURED,
+            0,
+        ),
+        (
+            LedgerWorkspaceArea.RECONCILIATION,
+            (
+                LedgerWorkspaceSource.LOCAL_LEDGER,
+                LedgerWorkspaceSource.LOCAL_INVOICES,
+                LedgerWorkspaceSource.LOCAL_DECLARATIONS,
+            ),
+            LedgerWorkspaceAvailability.AVAILABLE,
+            LedgerWorkspaceStatus.NEEDS_ATTENTION,
+            1,
+        ),
+    )
     payload = first.model_dump_json()
     for canary in (
         "SENSITIVE-COUNTERPARTY-CANARY",
@@ -234,6 +292,60 @@ def test_bucket_sources_cannot_be_mixed() -> None:
         )
 
 
+def test_foreign_invoice_is_refused_before_any_reconciliation_reader() -> None:
+    transaction = _transaction()
+    foreign = _invoice().model_copy(update={"bucket_id": "41414141-4141-4141-8141-414141414141"})
+    calls: list[str] = []
+
+    def reader(*_args: object, **_kwargs: object) -> tuple[()]:
+        calls.append("called")
+        return ()
+
+    with pytest.raises(LedgerWorkspaceProjectionError, match="foreign Ledger bucket"):
+        project_ledger_workspace(
+            summary=_summary(),
+            preflight=None,
+            review=_review(transaction),
+            transactions=TransactionCatalogue.from_transactions((transaction,)),
+            invoices=InvoiceCatalogue.from_invoices((foreign,)),
+            revisions={},
+            work_units=WorkUnitCatalogue(),
+            invoice_reconciliation_reader=reader,
+            link_consistency_reader=reader,
+            filing_staleness_reader=reader,
+        )
+    assert calls == []
+
+
+@pytest.mark.parametrize(
+    ("summary_delta", "review_status", "message"),
+    [
+        ({"total_count": 2}, "pending", "summary counts"),
+        ({}, "reviewed", "review status"),
+    ],
+)
+def test_contradictory_summary_or_review_facts_are_refused(
+    summary_delta: dict[str, int],
+    review_status: str,
+    message: str,
+) -> None:
+    transaction = _transaction()
+    resolved_review = _review(transaction).model_copy(
+        update={"rows": (_review(transaction).rows[0].model_copy(update={"status": review_status}),)}
+    )
+    with pytest.raises(LedgerWorkspaceProjectionError, match=message):
+        project_ledger_workspace(
+            summary=_summary().model_copy(update=summary_delta),
+            preflight=None,
+            review=resolved_review,
+            transactions=TransactionCatalogue.from_transactions((transaction,)),
+            invoices=InvoiceCatalogue(),
+            revisions={},
+            work_units=WorkUnitCatalogue(),
+            filing_staleness_reader=lambda **_kwargs: (),
+        )
+
+
 def test_affected_revision_without_declaration_identity_is_never_silently_dropped() -> None:
     revision = cast(
         CalculationRevision,
@@ -249,6 +361,62 @@ def test_affected_revision_without_declaration_identity_is_never_silently_droppe
             work_units=WorkUnitCatalogue(),
             staleness_reader=lambda **_kwargs: ((revision, verdict),),
         )
+
+
+def test_affected_declarations_keep_natural_addresses_counts_and_deterministic_order() -> None:
+    periods = (Period.from_year_and_code(2026, "1T"), Period.from_year_and_code(2026, "2T"))
+    units: list[WorkUnit] = []
+    revisions: list[CalculationRevision] = []
+    verdicts: list[LedgerFilingStalenessVerdict] = []
+    for index, period in enumerate(periods, start=1):
+        work_unit_id = derive_work_unit_id(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=2026,
+            period=period,
+            revision_id=f"revision-{index}",
+        )
+        units.append(
+            WorkUnit(
+                work_unit_id=work_unit_id,
+                bucket_id=_BUCKET_ID,
+                modelo="303",
+                filing_year=2026,
+                period=period,
+                revision_id=f"revision-{index}",
+                name=f"Synthetic {index}",
+                created_at=_NOW,
+                updated_at=_NOW,
+            )
+        )
+        revisions.append(
+            cast(
+                CalculationRevision,
+                SimpleNamespace(work_unit_id=work_unit_id, calculation_revision_id=f"{index}" * 64),
+            )
+        )
+        verdicts.append(
+            LedgerFilingStalenessVerdict(
+                is_stale=True,
+                changed=tuple("c" * 64 for _ in range(index)),
+                removed=tuple("d" * 64 for _ in range(3 - index)),
+            )
+        )
+
+    rows = project_affected_declaration_reconciliations(
+        bucket_id=_BUCKET_ID,
+        revisions={revision.calculation_revision_id: revision for revision in revisions},
+        transactions=TransactionCatalogue(),
+        work_units=WorkUnitCatalogue.from_work_units(tuple(units)),
+        staleness_reader=lambda **_kwargs: tuple(reversed(tuple(zip(revisions, verdicts, strict=True)))),
+    )
+
+    assert tuple((row.modelo, row.filing_year, row.period) for row in rows) == (
+        ("303", 2026, periods[0]),
+        ("303", 2026, periods[1]),
+    )
+    assert tuple((row.changed_count, row.removed_count) for row in rows) == ((1, 2), (2, 1))
+    assert tuple(row.calculation_revision_id for row in rows) == ("1" * 64, "2" * 64)
 
 
 def test_workspace_module_has_no_adapter_entrypoint_or_io_imports() -> None:
