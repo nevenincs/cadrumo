@@ -182,8 +182,7 @@ def main(argv: list[str] | None = None) -> int:
         )
     ambiguous = sum(1 for probe in probes if probe.year_alone_ambiguous)
     sys.stdout.write(
-        f"summary probes={len(probes)} not_resolving_to_themselves={surprising} "
-        f"year_alone_ambiguous={ambiguous}\n"
+        f"summary probes={len(probes)} not_resolving_to_themselves={surprising} year_alone_ambiguous={ambiguous}\n"
     )
     return 0
 

@@ -80,7 +80,7 @@ def test_a_name_earlier_than_its_window_is_the_other_direction(
     Modelo 322's 2008-2022 is the only other revision in this state and it is
     stepped for rename as well, so no live successor survives the cluster; the
     replacement is constructed.
-"""
+    """
     revision = authority.modelo("185").revisions["2025-y-siguientes"]
     kinds = {finding.kind for finding in name_window_findings(revision, modelo_id="185")}
 

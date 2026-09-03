@@ -336,9 +336,7 @@ def lint_codes_suppressed_in(module_text: str) -> frozenset[str]:
     the whole text, which is why this is separate from the token-level scrub.
     """
     return frozenset(
-        code.strip()
-        for match in _NOQA_LINT_CODE_PATTERN.finditer(module_text)
-        for code in match.group(2).split(",")
+        code.strip() for match in _NOQA_LINT_CODE_PATTERN.finditer(module_text) for code in match.group(2).split(",")
     )
 
 

@@ -117,8 +117,7 @@ def _run_exact_commands(
 ) -> tuple[ObjectNameGateOutcome, ...]:
     environment = _command_environment(root)
     outcomes = tuple(
-        _run_command(cast("ObjectNameGateCommand", item), cwd=root, environment=environment)
-        for item in expected
+        _run_command(cast("ObjectNameGateCommand", item), cwd=root, environment=environment) for item in expected
     )
     for outcome in outcomes:
         if outcome.return_code != 0:

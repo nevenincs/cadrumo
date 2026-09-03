@@ -27,10 +27,7 @@ from .m200_2024_blocker_adjudication import (
     TARGET_SOURCE_SHA256,
     build_worklist,
 )
-from .m200_2024_template_adjudications import (
-    compile_m200_2024_same_template_authority,
-    promoted_candidate_ids,
-)
+from .m200_2024_template_adjudications import compile_m200_2024_same_template_authority
 from .m200_restored_semantic_audit import audit_bundled_restorations
 
 ADJUDICATION_PATH = Path(__file__).with_suffix(".toml")
@@ -43,6 +40,8 @@ S14_S15_EXPECTED_COUNT = 116
 
 @dataclass(frozen=True, slots=True)
 class Adjudication:
+    """One reviewed blocker casilla, bound to the official label it was adjudicated against."""
+
     casilla_id: str
     export_field_id: str
     source_cohort: str
@@ -55,6 +54,8 @@ class Adjudication:
 
 @dataclass(frozen=True, slots=True)
 class CompiledM200BlockerAuthority:
+    """The reviewed blocker adjudications with the review that admitted them."""
+
     reviewed_by: str
     reviewed_at: str
     adjudications: tuple[Adjudication, ...]
@@ -91,20 +92,23 @@ def render_canonical_declaration(authority: CompiledM200BlockerAuthority, casill
     ]
     if row.semantic_role is not None:
         lines.append(f"semantic_role = {_literal(row.semantic_role)}")
-    lines.extend((
-        "required = false",
-        "input_kind = 'manual'",
-        f"section = {_array(row.section)}",
-        f"legal_refs = {_array(row.legal_refs)}",
-        f"source_refs = {_array((TARGET_SOURCE_REF, MANUAL_SOURCE_REF))}",
-        "",
-    ))
+    lines.extend(
+        (
+            "required = false",
+            "input_kind = 'manual'",
+            f"section = {_array(row.section)}",
+            f"legal_refs = {_array(row.legal_refs)}",
+            f"source_refs = {_array((TARGET_SOURCE_REF, MANUAL_SOURCE_REF))}",
+            "",
+        )
+    )
     return "\n".join(lines)
 
 
 def verify_canonical_declarations(
     authority: CompiledM200BlockerAuthority, *, casillas_root: Path | None = None
 ) -> None:
+    """Refuse unless every adjudicated casilla matches its declared canonical record."""
     root = (
         bundled_path("registry", "aeat", "modelos", "200", "revisions", "2024", "casillas")
         if casillas_root is None
@@ -112,7 +116,9 @@ def verify_canonical_declarations(
     )
     for row in authority.adjudications:
         path = root / f"c{row.casilla_id}.toml"
-        if not path.is_file() or path.read_text(encoding="utf-8") != render_canonical_declaration(authority, row.casilla_id):
+        if not path.is_file() or path.read_text(encoding="utf-8") != render_canonical_declaration(
+            authority, row.casilla_id
+        ):
             raise RegistryValidationError(f"M200/2024 blocker declaration {row.casilla_id!r} is not compiler-identical")
 
 
@@ -128,9 +134,13 @@ def promoted_candidate_ids(
 
 def _require_header(raw: dict[str, object]) -> None:
     expected = {
-        "schema_version": 1, "modelo": "200", "revision": "2024",
-        "source_ref": TARGET_SOURCE_REF, "source_sha256": TARGET_SOURCE_SHA256,
-        "manual_source_ref": MANUAL_SOURCE_REF, "manual_source_sha256": MANUAL_SOURCE_SHA256,
+        "schema_version": 1,
+        "modelo": "200",
+        "revision": "2024",
+        "source_ref": TARGET_SOURCE_REF,
+        "source_sha256": TARGET_SOURCE_SHA256,
+        "manual_source_ref": MANUAL_SOURCE_REF,
+        "manual_source_sha256": MANUAL_SOURCE_SHA256,
         "review_status": "agent_reviewed",
     }
     if any(raw.get(key) != value for key, value in expected.items()):
@@ -144,8 +154,10 @@ def _parse_row(raw: object) -> Adjudication:
         raise RegistryValidationError("M200/2024 blocker adjudication entry is malformed")
     try:
         row = Adjudication(
-            casilla_id=str(raw["casilla_id"]), export_field_id=str(raw["export_field_id"]),
-            source_cohort=str(raw["source_cohort"]), official_label_sha256=str(raw["official_label_sha256"]),
+            casilla_id=str(raw["casilla_id"]),
+            export_field_id=str(raw["export_field_id"]),
+            source_cohort=str(raw["source_cohort"]),
+            official_label_sha256=str(raw["official_label_sha256"]),
             manual_pages=tuple(int(page) for page in raw["manual_pages"]),
             section=tuple(str(item) for item in raw["section"]),
             semantic_role=None if raw.get("semantic_role") is None else str(raw["semantic_role"]),
@@ -175,7 +187,11 @@ def _require_partition(rows: tuple[Adjudication, ...]) -> None:
         if row.cross_revision_status == "unique_non_authoritative" and row.casilla_id not in S12_MEMBERS
     )
     blockers = frozenset(row.casilla_id for row in audits if row.cross_revision_status in BLOCKER_STATUSES)
-    if len(unique) != S13_EXPECTED_COUNT or len(audits) != len(S12_MEMBERS | unique | ids) or blockers != ids | S12_CONFLICT_RECEIPT:
+    if (
+        len(unique) != S13_EXPECTED_COUNT
+        or len(audits) != len(S12_MEMBERS | unique | ids)
+        or blockers != ids | S12_CONFLICT_RECEIPT
+    ):
         raise RegistryValidationError("M200/2024 S12/S13/S14/S15 partition is not exhaustive")
 
 
@@ -191,12 +207,17 @@ def _require_target_evidence(rows: tuple[Adjudication, ...], worklist: dict[str,
         if sha256_hex(str(target["official_description"]).encode("utf-8")) != row.official_label_sha256:
             raise RegistryValidationError(f"M200/2024 blocker {row.casilla_id!r} official label drifted")
         manual = target["manual_locator"]
-        if tuple(manual["pages"]) != row.manual_pages or manual["source_ref"] != MANUAL_SOURCE_REF or manual["sha256"] != MANUAL_SOURCE_SHA256:
+        if (
+            tuple(manual["pages"]) != row.manual_pages
+            or manual["source_ref"] != MANUAL_SOURCE_REF
+            or manual["sha256"] != MANUAL_SOURCE_SHA256
+        ):
             raise RegistryValidationError(f"M200/2024 blocker {row.casilla_id!r} manual evidence drifted")
 
 
 def _require_canonical_map(rows: tuple[Adjudication, ...]) -> None:
     from ..pipeline._semantic_map_loader import load_semantic_map
+
     semantic_map = load_semantic_map(Path(__file__).parents[1] / "mappings" / "modelo_200" / "2024")
     entries = {str(entry.export_field_id): entry for entry in semantic_map.entries}
     for row in rows:
@@ -210,7 +231,11 @@ def _require_canonical_map(rows: tuple[Adjudication, ...]) -> None:
 
 
 def _require_legal_coverage(rows: tuple[Adjudication, ...]) -> None:
-    legal = {key: value for part in (load_catalogue_file(path) for path in bundled_path("registry", "aeat", "legal").glob("*.toml")) for key, value in part.legal.items()}
+    legal = {
+        key: value
+        for part in (load_catalogue_file(path) for path in bundled_path("registry", "aeat", "legal").glob("*.toml"))
+        for key, value in part.legal.items()
+    }
     for row in rows:
         for ref in row.legal_refs:
             provision = legal.get(ref)

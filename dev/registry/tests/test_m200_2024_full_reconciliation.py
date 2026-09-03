@@ -346,6 +346,8 @@ def test_source_rebind_plan_is_complete_target_map_owned_and_refuses_only_true_o
     assert len(source_rebind_plan.rebinds) == 3171
     from ..analysis.m200_2024_blocker_adjudications import (
         compile_m200_2024_blocker_authority,
+    )
+    from ..analysis.m200_2024_blocker_adjudications import (
         promoted_candidate_ids as promoted_blocker_candidate_ids,
     )
     from ..analysis.m200_2024_template_adjudications import (

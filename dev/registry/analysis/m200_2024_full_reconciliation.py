@@ -382,8 +382,8 @@ def build_m200_2024_legal_worklist(census: M200ReconciliationCensus) -> M200Lega
                 ("revision", subject_id, legal_refs)
                 for subject_id, legal_refs in _m200_2024_revision_legal_carriers(registry_root)
             ),
-            *( ("declaration", row.casilla_id, row.legal_refs) for row in census.rows),
-            *( ("semantic_map", anchor.export_field_id, anchor.legal_refs) for anchor in census.anchors),
+            *(("declaration", row.casilla_id, row.legal_refs) for row in census.rows),
+            *(("semantic_map", anchor.export_field_id, anchor.legal_refs) for anchor in census.anchors),
         )
     )
     _verify_m200_2024_worklist_legal_authority(items, legal)
@@ -400,12 +400,7 @@ def _verify_m200_2024_worklist_legal_authority(
     items: Iterable[M200LegalWorklistItem], legal: Mapping[str, object]
 ) -> None:
     """Require every known worklist citation to be reviewed and corpus-grounded."""
-    referenced = {
-        ref: legal[ref]
-        for item in items
-        for ref in item.legal_refs
-        if ref in legal
-    }
+    referenced = {ref: legal[ref] for item in items for ref in item.legal_refs if ref in legal}
     verify_legal_catalogue(referenced, source_root=bundled_path())
 
 
@@ -464,13 +459,7 @@ def _legal_worklist_item(
     valid_to: date,
 ) -> M200LegalWorklistItem:
     applicable, unknown, out_of_window = _legal_worklist_partition(legal_refs, legal, valid_from, valid_to)
-    state = (
-        "missing_provenance"
-        if not legal_refs
-        else "unresolved"
-        if unknown or out_of_window
-        else "applicable"
-    )
+    state = "missing_provenance" if not legal_refs else "unresolved" if unknown or out_of_window else "applicable"
     return M200LegalWorklistItem(
         evidence_home=evidence_home,
         subject_id=subject_id,
@@ -573,8 +562,10 @@ def build_m200_source_rebind_plan(census: M200ReconciliationCensus) -> M200Sourc
     ):
         raise RegistryValidationError(
             "Modelo 200 source rebind population drifted: "
-            f"expected 3171 rebinds, {len(receipted_current_ids)} verified current-design declarations, 2 refused orphans, "
-            f"{156 - len(receipted_current_ids)} remaining candidates, and 3329 rows; found {len(planned)}, {len(verified_current_design)}, "
+            f"expected 3171 rebinds, {len(receipted_current_ids)} verified current-design "
+            "declarations, 2 refused orphans, "
+            f"{156 - len(receipted_current_ids)} remaining candidates, and 3329 rows; "
+            f"found {len(planned)}, {len(verified_current_design)}, "
             f"{len(orphans)}, {len(candidates)}, and {len(census.rows)}",
         )
     if frozenset(verified_current_design) != receipted_current_ids:
@@ -627,7 +618,11 @@ def apply_m200_source_rebind_plan(
     _require_rebind_plan_identity(plan)
     _require_unique_identifiers(tuple(item.casilla_id for item in plan.rebinds), label="source rebind output")
     expected_verified = len(plan.expected_current_ids) - 3171 - 2
-    if len(plan.rebinds) != 3171 or len(plan.verified_current_design_ids) != expected_verified or len(plan.refused_orphan_ids) != 2:
+    if (
+        len(plan.rebinds) != 3171
+        or len(plan.verified_current_design_ids) != expected_verified
+        or len(plan.refused_orphan_ids) != 2
+    ):
         raise RegistryValidationError("source rebind plan does not carry its complete receipt-bound population")
     partitions = (
         {item.casilla_id for item in plan.rebinds},
