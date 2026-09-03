@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:32925a388fcc36689eeee4f76aefa9a2a84aef5e7fce63d61d4cdddbe938ddd0'
+body_hash: 'sha256:efdd8516e158359584f097dcaacc7c05018d19d97e20cdd761e93936c0fbb121'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7226,3 +7226,69 @@ rather than a check. This is the second screen in this campaign found reporting
 a clean result because it could not see its own subject, and both were found the
 same way: by asking whether a zero was the tree being clean or the instrument
 being blind.
+
+### a-pin-held-by-count-failed-when-its-screen-succeeded | high | The sibling-scale gate went red because it found a second defect, which is the one outcome a detector proof must not punish
+
+Running the registry tooling directory whole reports 37 failed, 964 passed and
+22 errors in twelve minutes. Twenty-six of the failures are one parametrised
+reproducibility test over the manifest-stale trees already recorded here. One is
+this campaign's own gate, and it failed for the best possible reason.
+
+The sibling-scale comparison is proven against a live defect rather than a
+fixture, and its test asserted that exactly one field in the corpus disagreed
+with its siblings. Two now do: modelo 200's casilla 03594 and modelo 353's
+casilla 10, each emitting unscaled beside siblings emitting cents. The screen
+detected the second exactly as intended and the test reported that as a failure
+of the screen.
+
+A count over a live corpus is a ratchet wearing a proof's clothing. It fails on
+the arrival of the very condition it exists to detect, and the obvious repair -
+bump the number - teaches the reader that the way to handle a new filing-
+correctness defect is to edit the test that found it. This one had already been
+edited once that way: it originally named modelo 200 and now named modelo 353,
+which means the count survived a substitution that should have made it a set.
+
+It is now held by identity. Each known coordinate is named, a subset assertion
+says every one is still reported, and a superset assertion says nothing outside
+the named pair is - which still catches an over-firing comparison without
+freezing the population. The docstring says what each half means when it breaks:
+a name that stops being reported is a correction landing and should be dropped
+from the set; a coordinate arriving from outside it is a new defect and belongs
+in the record before it belongs in the test. Nine tests pass, exit 0.
+
+The general rule this campaign keeps arriving at from different directions: a
+gate may assert what it knows by name, and may assert that nothing else appears,
+but it must not assert how many things there are. The first two survive the
+corpus changing. The third is the corpus, restated in a place nobody thinks to
+update.
+
+### the-count-rule-applied-to-this-campaign-s-own-screen-tests | medium | Two more frozen live-corpus counts found and replaced by identity; the other three were relational and already correct
+
+The rule that a gate may name what it knows but must not assert how many things
+exist was applied to the tests this campaign wrote, rather than left as a lesson
+in the record. Ten screen test modules were swept. Two carried the defect and
+three carried its correct form.
+
+The continuity module asserted that exactly one singleton chain exists and that
+modelo 714's absent-continuity detail says "5 revisions". Both are live figures.
+The first fails the day a second singleton appears - the screen succeeding - and
+the second fails the day modelo 714 gains a revision, though nothing about its
+absent continuity would have changed. The chain is now named (`dr303-112`) with
+the instruction its pin owes, and the revision-count assertion is replaced by
+the part of the detail that carries the claim: that no casilla carries a chain.
+Six tests pass, exit 0.
+
+The three others were already right and are worth naming as the pattern to copy:
+`len(grammars_seen) > 1`, `len(transitions) <= len(typed_endpoints)`, and
+`len(census) > len(modelo_ids)`. Each states a relationship the corpus cannot
+violate without something being genuinely wrong, and none of them changes when
+the corpus grows. That is the difference between a count and an invariant: an
+invariant compares two things the tree produces, a frozen count compares the
+tree to a number somebody typed.
+
+One class was deliberately left alone. The modelo 200 reconciliation tests
+assert figures in the thousands, and those run over a tree copied into a
+temporary directory rather than the live registry - a frozen snapshot being
+described, not a live population being fenced. Applying the rule there would
+have been the same error as the heuristics this campaign has already got wrong
+twice: taking one shape of a concept for the whole of it.

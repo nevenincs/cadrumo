@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:3b961c3db04f9cc21073638c1d0dc712368643f1553d15a3c9968992578539aa'
+body_hash: 'sha256:f1fba07d51ae8d60bbd87ec6ae24e09a50e0dc73b479c369c3ccee66217e4c5f'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -561,9 +561,14 @@ pinned and a check that only rejected a leading `v` would pass it.
 Pinning is the whole of the constraint: the repository allows all actions and requires
 SHA pinning, so no allowlist stands behind the refusal and nothing else about these two
 workflows was rejected. Every other workflow in the repository was already pinned and is
-green across recent runs; the release path was the only failing workflow in the tree, and
-the publish workflow has no runs at all, which is what never being dispatched looks
-like.
+green across recent runs; the release path was the only failing workflow in the tree.
+
+An earlier version of this record added that the publish workflow had no runs at all. It
+has several, from early July, some of them successful. They belong to a different
+workflow that occupied the same filename: the current one was added on 2026-09-02, and
+run history is keyed to the path rather than to the file. The claim was read off a run
+list without checking whether those runs predated the file, and the correct statement is
+narrower - the publish workflow as it now stands has never been dispatched.
 
 ### What the first release pull request actually carries
 

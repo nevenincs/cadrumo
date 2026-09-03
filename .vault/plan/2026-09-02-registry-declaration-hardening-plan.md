@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:abcf6a9a795e3c2078557574253f4d17fa94b324e85cc2400ef531adebcb93f4'
+body_hash: 'sha256:5fa85f0cb7ad00347f39ac881c6db95dde50757095de32b548695447e8edf941'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -512,6 +512,8 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S287` - Remove three restatements from the plan prose and record the cross-Wave evidence dependency once; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S288` - Give the two superseded consolidated positions the forward pointers their precedence claims required; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S289` - Make the selection probe record the ambiguity its own retry was erasing, and re-ground the temporal criterion on the measured figure; `dev/registry/analysis/revision_selection_probe.py dev/registry/tests/test_revision_selection_probe.py`.
+- [x] `W06.P13.S290` - Hold the sibling-scale pin by coordinate identity instead of a count that failed when the screen detected a second defect; `dev/registry/tests/test_monetary_scale.py`.
+- [x] `W06.P13.S291` - Sweep the screen tests for frozen live-corpus counts and hold the two survivors by identity; `dev/registry/tests/test_continuity_integrity.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
