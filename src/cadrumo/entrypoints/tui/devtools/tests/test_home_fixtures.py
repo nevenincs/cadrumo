@@ -40,7 +40,9 @@ def test_every_fixture_is_fresh_frozen_and_valid(scenario: HomeFixtureScenario) 
     ):
         if first_rows:
             assert first_rows is not second_rows
-            assert all(first_row is not second_row for first_row, second_row in zip(first_rows, second_rows, strict=True))
+            assert all(
+                first_row is not second_row for first_row, second_row in zip(first_rows, second_rows, strict=True)
+            )
     if first.ledger is not None:
         assert second.ledger is not None
         assert first.ledger is not second.ledger
@@ -53,12 +55,10 @@ def test_populated_declaration_identity_is_stable_across_fresh_builds() -> None:
     second = build_home_projection_fixture(HomeFixtureScenario.READY)
 
     first_identity = tuple(
-        (item.work_unit_id, item.modelo, item.filing_year, item.period.registry_token)
-        for item in first.declarations
+        (item.work_unit_id, item.modelo, item.filing_year, item.period.registry_token) for item in first.declarations
     )
     second_identity = tuple(
-        (item.work_unit_id, item.modelo, item.filing_year, item.period.registry_token)
-        for item in second.declarations
+        (item.work_unit_id, item.modelo, item.filing_year, item.period.registry_token) for item in second.declarations
     )
     assert first_identity == second_identity
 
@@ -163,7 +163,16 @@ def test_fixture_module_ast_has_only_local_record_construction_and_no_io() -> No
         "sqlite3",
         "subprocess",
     }
-    forbidden_module_segments = {"adapter", "client", "network", "persistence", "reader", "repo", "repository", "secret"}
+    forbidden_module_segments = {
+        "adapter",
+        "client",
+        "network",
+        "persistence",
+        "reader",
+        "repo",
+        "repository",
+        "secret",
+    }
     assert all(module.split(".")[0] not in forbidden_module_roots for module in imported_modules)
     assert all(not forbidden_module_segments.intersection(module.casefold().split(".")) for module in imported_modules)
 

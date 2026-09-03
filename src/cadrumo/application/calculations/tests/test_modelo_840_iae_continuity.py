@@ -4,13 +4,13 @@ Modelo 840 (Impuesto sobre Actividades Economicas - declaracion censal) is an
 ad_hoc IAE declaration and communication surface (Orden HAC/2572/2003; TRLRHL
 RDL 2/2004 arts. 82 and 90). The cross-year verification is the turnover-based
 exemption: each annual context independently classifies the
-``importe neto de la cifra de negocios`` independently against the strict
+``importe neto de la cifra de negocios`` against the strict
 1,000,000 EUR art. 82.1.c threshold.
 
 The test builds applicability-grade registry observations for two distinct
 ``filing_year`` values, persists them through encrypted SQLite, and verifies
 the local threshold classifications survive in the source metadata. It is
-storage and registry evidence, not an enrollment in a calculation backend.
+storage and registry evidence; it does not establish authorization.
 
 Cross-year invariants tested:
 - Year N records INCN below 1,000,000 EUR and classifies exempt.
