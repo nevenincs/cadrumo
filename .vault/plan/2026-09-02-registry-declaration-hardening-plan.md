@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:f7bd33af6578a52ec089be55b5b88eb27bc8dcf33fef91919ad62c96aab62b35'
+body_hash: 'sha256:b5bbd68461392a2d34154bc625c683ac1890ed95d7f448da87173be8eb083c9a'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -480,6 +480,8 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S441` - Split the single repair the constraint names into the three it actually is: twenty-three manifest-only trees to republish, two modelo 347 revisions the disposition ledger forbids republishing, and modelo 390 2022 which needs publication instead; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W04.P09.S442` - Classify every renderable export tree by the repair it needs, subtracting serialisation-only differences before deciding, since the raw comparison reports reformatted records as differing and a naive reading called twenty-five safe trees record drift; `dev/registry/analysis/generated_tree_state.py`.
 - [x] `W04.P09.S443` - Enrol the two committed export trees the reproduction test omitted, m210 2026-y-siguientes and m303 2022, deriving their source ref epoch year and period from the registry and checking the derivation reproduces an existing row, which takes the directory to 38 failures where both new ones are the manifest staleness their twenty-five peers already carry; `dev/registry/tests/test_generated_export_trees.py`.
+- [x] `W04.P09.S444` - Gate that every committed export tree has a reproduction target, asserting the containment one way only since modelo 390 2022 is enrolled without a committed tree deliberately so its absence keeps failing; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [ ] `W04.P09.S445` - Decide whether modelo 840s authored semantic map and render profile anticipate an export layout or outlive one, since its only revision declares none and no gate test or render path ever loads the five files; `dev/registry/mappings/modelo_840 dev/registry/render_profiles/modelo_840`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 

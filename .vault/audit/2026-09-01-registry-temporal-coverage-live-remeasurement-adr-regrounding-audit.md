@@ -12027,3 +12027,59 @@ The count is worth stating plainly rather than leaving a reader to discover that
 a campaign about declaration integrity added two failing tests. A suite that
 reports 38 true failures is in better repair than one reporting 36 while two
 trees go unwatched.
+
+
+## The enrolment gap is now an invariant
+
+With both trees enrolled the populations reconcile: **28 committed trees, all
+enrolled; 29 enrolled targets**, the extra being modelo 390's `2022`, which is
+enrolled deliberately without a committed tree so that its absence keeps failing
+until somebody publishes it.
+
+A gate now holds the direction that matters: every committed export tree has a
+reproduction target. It asserts that containment one way only, because the other
+direction has a legitimate exception in modelo 390 and a symmetric gate would
+have to special-case it - which is how a gate acquires an exemption list and
+stops meaning anything.
+
+The suite holds thirty-four gates. This one exists because the gap it closes was
+found by accident: a report written for another purpose counted the renderable
+population and disagreed with the test's target count by two. Nothing was
+watching for that, and nothing would have been.
+
+
+## One modelo's authored render content is validated by nothing
+
+Applying the technique that found the tree gap - count an enrolment
+independently and see whether the numbers agree - to the two directory-based
+enrolments in this package.
+
+`dev/registry/render_profiles` and `dev/registry/mappings` each hold seventeen
+modelo directories and the two sets are **identical**: no mapping without a
+profile, no profile without a mapping. That symmetry is worth recording as a
+clean result, since neither is gated and nothing would have reported a
+divergence.
+
+Sixteen of the seventeen modelos produce render inputs. The seventeenth is
+**modelo 840**, whose single revision `2003-y-siguientes` sits at applicability
+grade and declares **no export layout at all** - so the render path raises rather
+than loading anything. It nonetheless carries an authored semantic map of four
+files (records, two paginas and an anexo) and a numeric-representation profile.
+
+**Nothing validates that content.** A render profile is checked against the
+eligible field set of a layout it renders; with no layout there is no check, and
+the eligibility and coverage gates never see it. No test names the modelo either
+- the three files matching "840" in the test tree match offsets, not a modelo id.
+Its correctness is therefore unknown and unknowable from the suite as it stands.
+
+This is the mirror of what this campaign usually finds. The common defect is a
+declaration with no authored support behind it; this is authored support with no
+declaration in front of it, and it is invisible for the same reason - the gate
+that would judge it is only reached through the thing that is missing.
+
+No gate is added. The population is one, and the two available repairs are to
+author the export layout the content anticipates or to retire the content, both
+of which are decisions about a modelo rather than defects in tooling. A gate
+asserting every authored directory belongs to a modelo declaring a layout would
+fail on landing with no correction available inside this execution's scope,
+which is the shape this campaign has refused twice already.
