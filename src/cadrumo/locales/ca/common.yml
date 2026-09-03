@@ -1075,6 +1075,7 @@ tui:
       changes: Canviats / eliminats
       confirm: Confirma l'enllaç
       confirming: Confirma aquest enllaç local.
+      empty: No hi ha tasques locals de conciliació disponibles.
       entry: Assentament
       failure: No s'ha pogut desar l'enllaç.
       inconsistencies: Incoherències d'enllaços

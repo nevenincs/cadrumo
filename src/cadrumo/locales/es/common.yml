@@ -1087,6 +1087,7 @@ tui:
       changes: Cambiados / eliminados
       confirm: Confirmar enlace
       confirming: Confirma este enlace local.
+      empty: No hay tareas locales de conciliación disponibles.
       entry: Apunte
       failure: No se pudo guardar el enlace.
       inconsistencies: Incoherencias de enlaces

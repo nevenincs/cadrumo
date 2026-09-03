@@ -1046,6 +1046,7 @@ tui:
       changes: Changed / removed
       confirm: Confirm link
       confirming: Confirm this local link.
+      empty: No local reconciliation work is available.
       entry: Entry
       failure: The link could not be saved.
       inconsistencies: Link inconsistencies

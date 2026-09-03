@@ -1070,6 +1070,7 @@ tui:
       changes: Módosított / eltávolított
       confirm: Kapcsolat megerősítése
       confirming: Erősítse meg ezt a helyi kapcsolatot.
+      empty: Nincs elérhető helyi egyeztetési feladat.
       entry: Tétel
       failure: A kapcsolat nem menthető.
       inconsistencies: Hivatkozási eltérések
