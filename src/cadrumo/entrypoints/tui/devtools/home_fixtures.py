@@ -68,9 +68,9 @@ def _available() -> HomeZoneState:
     return _zone(HomeAvailability.AVAILABLE, observed_at=_GENERATED_AT)
 
 
-def _period() -> Period:
+def _period(code: str = "3T") -> Period:
     """Build a fresh typed period coordinate for one nested record."""
-    return Period.from_year_and_code(2026, "3T")
+    return Period.from_year_and_code(2026, code)
 
 
 def _account(posture: HomeSessionPosture = HomeSessionPosture.ACTIVE) -> HomeAccountSession:
@@ -80,23 +80,31 @@ def _account(posture: HomeSessionPosture = HomeSessionPosture.ACTIVE) -> HomeAcc
     )
 
 
-def _action(*, action_id: str, reason_code: str) -> HomeNextAction:
+def _action(*, rank: int, action_id: str, reason_code: str) -> HomeNextAction:
     return HomeNextAction(
-        rank=0,
+        rank=rank,
         action=DeclaredNextAction(action=ActionReference(action_id=action_id)),
         reason_code=reason_code,
     )
 
 
-def _declaration(*, state: HomeDeclarationState = HomeDeclarationState.NEEDS_REVIEW) -> HomeDeclarationResume:
+def _declaration(
+    *,
+    work_unit_id: str,
+    modelo: str,
+    period_code: str,
+    name: str,
+    state: HomeDeclarationState,
+    revision_id: str,
+) -> HomeDeclarationResume:
     return HomeDeclarationResume(
-        work_unit_id="a" * 64,
-        modelo="303",
+        work_unit_id=work_unit_id,
+        modelo=modelo,
         filing_year=2026,
-        period=_period(),
-        name="Fixture declaration",
+        period=_period(period_code),
+        name=name,
         state=state,
-        revision_id="fixture-revision",
+        revision_id=revision_id,
     )
 
 
@@ -109,14 +117,22 @@ def _ledger(*, requiring_review: int = 1) -> HomeLedgerReadiness:
     )
 
 
-def _agenda(*, aeat_state: OverviewAeatSubmissionState) -> HomeAgendaEntry:
+def _agenda(
+    *,
+    modelo: str,
+    period_code: str,
+    due_on: date,
+    period_state: OverviewPeriodState,
+    local_state: OverviewLocalFilingState,
+    aeat_state: OverviewAeatSubmissionState,
+) -> HomeAgendaEntry:
     return HomeAgendaEntry(
-        modelo="303",
+        modelo=modelo,
         filing_year=2026,
-        period=_period(),
-        due_on=_DUE_ON,
-        period_state=OverviewPeriodState.DUE,
-        local_filing_state=OverviewLocalFilingState.READY_TO_FILE,
+        period=_period(period_code),
+        due_on=due_on,
+        period_state=period_state,
+        local_filing_state=local_state,
         aeat_submission_state=aeat_state,
     )
 
@@ -126,14 +142,68 @@ def _ready() -> HomeProjectionV1:
         generated_at=_GENERATED_AT,
         account=_account(),
         actions_state=_available(),
-        actions=(_action(action_id="fixture.review", reason_code="fixture.review"),),
+        actions=(
+            _action(rank=0, action_id="fixture.review", reason_code="fixture.review_required"),
+            _action(rank=1, action_id="fixture.classify", reason_code="fixture.classification_pending"),
+            _action(rank=2, action_id="fixture.evidence", reason_code="fixture.evidence_missing"),
+        ),
         declarations_state=_available(),
-        declarations=(_declaration(state=HomeDeclarationState.READY),),
+        declarations=(
+            _declaration(
+                work_unit_id="a" * 64,
+                modelo="303",
+                period_code="3T",
+                name="Fixture declaration A",
+                state=HomeDeclarationState.READY,
+                revision_id="fixture-revision-a",
+            ),
+            _declaration(
+                work_unit_id="b" * 64,
+                modelo="130",
+                period_code="2T",
+                name="Fixture declaration B",
+                state=HomeDeclarationState.DRAFT,
+                revision_id="fixture-revision-b",
+            ),
+            _declaration(
+                work_unit_id="c" * 64,
+                modelo="390",
+                period_code="0A",
+                name="Fixture declaration C",
+                state=HomeDeclarationState.FILED,
+                revision_id="fixture-revision-c",
+            ),
+        ),
         ledger_state=_available(),
         ledger=_ledger(requiring_review=0),
         agenda_state=_available(),
         agenda_evidence_state=_available(),
-        agenda=(_agenda(aeat_state=OverviewAeatSubmissionState.ACCEPTED),),
+        agenda=(
+            _agenda(
+                modelo="303",
+                period_code="3T",
+                due_on=_DUE_ON,
+                period_state=OverviewPeriodState.DUE,
+                local_state=OverviewLocalFilingState.READY_TO_FILE,
+                aeat_state=OverviewAeatSubmissionState.NOT_OBSERVED,
+            ),
+            _agenda(
+                modelo="130",
+                period_code="2T",
+                due_on=date(2026, 10, 21),
+                period_state=OverviewPeriodState.LATE,
+                local_state=OverviewLocalFilingState.NOT_READY_TO_FILE,
+                aeat_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
+            ),
+            _agenda(
+                modelo="390",
+                period_code="0A",
+                due_on=date(2026, 10, 22),
+                period_state=OverviewPeriodState.FILED,
+                local_state=OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED,
+                aeat_state=OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
+            ),
+        ),
         messages_state=_available(),
         messages_requiring_attention=0,
     )
@@ -216,14 +286,68 @@ def _blocked() -> HomeProjectionV1:
         generated_at=_GENERATED_AT,
         account=_account(),
         actions_state=_available(),
-        actions=(_action(action_id="fixture.resolve_blocker", reason_code="fixture.blocked"),),
+        actions=(
+            _action(rank=0, action_id="fixture.resolve_blocker", reason_code="fixture.blocked_dependency"),
+            _action(rank=1, action_id="fixture.review_blocker", reason_code="fixture.blocked_review"),
+            _action(rank=2, action_id="fixture.evidence_blocker", reason_code="fixture.blocked_evidence"),
+        ),
         declarations_state=_available(),
-        declarations=(_declaration(),),
+        declarations=(
+            _declaration(
+                work_unit_id="a" * 64,
+                modelo="303",
+                period_code="3T",
+                name="Fixture blocked A",
+                state=HomeDeclarationState.NEEDS_REVIEW,
+                revision_id="fixture-blocked-a",
+            ),
+            _declaration(
+                work_unit_id="b" * 64,
+                modelo="130",
+                period_code="2T",
+                name="Fixture blocked B",
+                state=HomeDeclarationState.DRAFT,
+                revision_id="fixture-blocked-b",
+            ),
+            _declaration(
+                work_unit_id="c" * 64,
+                modelo="390",
+                period_code="0A",
+                name="Fixture blocked C",
+                state=HomeDeclarationState.FILED,
+                revision_id="fixture-blocked-c",
+            ),
+        ),
         ledger_state=_available(),
         ledger=_ledger(requiring_review=3),
         agenda_state=_available(),
         agenda_evidence_state=_available(),
-        agenda=(_agenda(aeat_state=OverviewAeatSubmissionState.NOT_OBSERVED),),
+        agenda=(
+            _agenda(
+                modelo="303",
+                period_code="3T",
+                due_on=_DUE_ON,
+                period_state=OverviewPeriodState.LATE,
+                local_state=OverviewLocalFilingState.NOT_READY_TO_FILE,
+                aeat_state=OverviewAeatSubmissionState.NOT_OBSERVED,
+            ),
+            _agenda(
+                modelo="130",
+                period_code="2T",
+                due_on=date(2026, 10, 21),
+                period_state=OverviewPeriodState.DUE,
+                local_state=OverviewLocalFilingState.READY_TO_FILE,
+                aeat_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
+            ),
+            _agenda(
+                modelo="390",
+                period_code="0A",
+                due_on=date(2026, 10, 22),
+                period_state=OverviewPeriodState.FILED,
+                local_state=OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED,
+                aeat_state=OverviewAeatSubmissionState.ACCEPTED,
+            ),
+        ),
         messages_state=_available(),
         messages_requiring_attention=1,
     )
