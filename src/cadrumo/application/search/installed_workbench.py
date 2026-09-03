@@ -47,6 +47,31 @@ class InstalledWorkbenchSearchSnapshotV1:
         return WorkbenchSearchService(self.documents)
 
 
+@dataclass(frozen=True, slots=True)
+class InstalledWorkbenchSearchInputsV1:
+    """One already-loaded, coherent input set owned by the session root."""
+
+    ledger: LedgerWorkspaceProjectionV1
+    declarations: DeclarationsWorkspaceProjectionV1
+    aeat_sync: AeatSyncWorkspaceProjectionV1
+    modelo: tuple[ModeloWorkspaceProjectionV1, ...]
+    ledger_admission: WorkbenchDestinationAdmission
+    declarations_admission: WorkbenchDestinationAdmission
+    aeat_sync_admission: WorkbenchDestinationAdmission
+
+    def snapshot(self) -> InstalledWorkbenchSearchSnapshotV1:
+        """Assemble this exact preloaded generation through the application door."""
+        return assemble_installed_workbench_search_snapshot(
+            ledger=self.ledger,
+            declarations=self.declarations,
+            aeat_sync=self.aeat_sync,
+            modelo=self.modelo,
+            ledger_admission=self.ledger_admission,
+            declarations_admission=self.declarations_admission,
+            aeat_sync_admission=self.aeat_sync_admission,
+        )
+
+
 def assemble_installed_workbench_search_snapshot(
     *,
     ledger: LedgerWorkspaceProjectionV1,
@@ -69,6 +94,7 @@ def assemble_installed_workbench_search_snapshot(
 
     documents: list[WorkbenchSearchDocument] = []
     documents.extend(_ledger_documents(ledger, ledger_admission))
+    documents.extend(_ledger_evidence_documents(ledger, ledger_admission))
     documents.extend(_declarations_documents(declarations, declarations_admission))
     documents.extend(_aeat_sync_documents(aeat_sync, aeat_sync_admission))
     documents.extend(_modelo_documents(modelo, declarations_admission))
@@ -101,10 +127,30 @@ def _ledger_documents(
 
 def _ledger_status(value: str) -> WorkbenchSearchStatus:
     """Translate the Ledger's closed review state without inferring content."""
-    status = LedgerReviewStatus(value)
-    if status is LedgerReviewStatus.PENDING:
-        return WorkbenchSearchStatus.LEDGER_ENTRY_NEEDS_REVIEW
-    return WorkbenchSearchStatus.LEDGER_ENTRY_CLASSIFIED
+    return {
+        LedgerReviewStatus.PENDING: WorkbenchSearchStatus.LEDGER_ENTRY_NEEDS_REVIEW,
+        LedgerReviewStatus.REVIEWED: WorkbenchSearchStatus.LEDGER_ENTRY_CLASSIFIED,
+        LedgerReviewStatus.SKIPPED: WorkbenchSearchStatus.LEDGER_ENTRY_CLASSIFIED,
+        LedgerReviewStatus.EXCLUDED: WorkbenchSearchStatus.LEDGER_ENTRY_CLASSIFIED,
+    }[LedgerReviewStatus(value)]
+
+
+def _ledger_evidence_documents(
+    projection: LedgerWorkspaceProjectionV1,
+    admission: WorkbenchDestinationAdmission,
+) -> tuple[WorkbenchSearchDocument, ...]:
+    """Project authoritative sealed-revision drift as stale Ledger evidence."""
+    return tuple(
+        WorkbenchSearchDocument(
+            kind=WorkbenchSearchKind.LEDGER_EVIDENCE,
+            source=WorkbenchSearchSource.LEDGER_EVIDENCE,
+            status=WorkbenchSearchStatus.LEDGER_EVIDENCE_STALE,
+            label_key=WorkbenchSearchLabelKey.LEDGER_EVIDENCE,
+            admission=admission,
+            identity_basis=SecretStr(str(row.calculation_revision_id)),
+        )
+        for row in projection.affected_declarations
+    )
 
 
 def _declarations_documents(
@@ -189,9 +235,10 @@ def _declaration_status(
         return WorkbenchSearchStatus.DECLARATION_FILED
     if has_current_calculation:
         return WorkbenchSearchStatus.DECLARATION_READY
-    if state is WorkUnitState.BORRADOR:
-        return WorkbenchSearchStatus.DECLARATION_DRAFT
-    return WorkbenchSearchStatus.DECLARATION_NEEDS_ATTENTION
+    return {
+        WorkUnitState.BORRADOR: WorkbenchSearchStatus.DECLARATION_DRAFT,
+        WorkUnitState.DESCARTADO: WorkbenchSearchStatus.DECLARATION_NEEDS_ATTENTION,
+    }[state]
 
 
 def _aeat_sync_documents(
@@ -266,6 +313,7 @@ def _modelo_documents(
 
 
 __all__ = [
+    "InstalledWorkbenchSearchInputsV1",
     "InstalledWorkbenchSearchSnapshotV1",
     "assemble_installed_workbench_search_snapshot",
 ]

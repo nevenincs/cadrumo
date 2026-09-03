@@ -28,6 +28,7 @@ from ...aeat_sync.workspace import (
     AeatSyncWorkspaceZoneStateV1,
 )
 from ...ledger.workspace import (
+    LedgerAffectedDeclarationRefV1,
     LedgerWorkspaceArea,
     LedgerWorkspaceAreaStateV1,
     LedgerWorkspaceAvailability,
@@ -54,7 +55,7 @@ from ...modelo.workspace_models import (
     ModeloWorkspaceProjectionV1,
     ModeloWorkspaceResolvedTargetV1,
 )
-from ..installed_workbench import assemble_installed_workbench_search_snapshot
+from ..installed_workbench import InstalledWorkbenchSearchInputsV1, assemble_installed_workbench_search_snapshot
 from ..workbench import (
     WorkbenchDestinationAdmission,
     WorkbenchDestinationAdmissionState,
@@ -98,7 +99,16 @@ def _ledger() -> LedgerWorkspaceProjectionV1:
         review_transaction_ids=("a" * 64,),
         invoice_reconciliations=(),
         link_inconsistencies=(),
-        affected_declarations=(),
+        affected_declarations=(
+            LedgerAffectedDeclarationRefV1(
+                modelo=ModeloCode("130"),
+                filing_year=2026,
+                period=_PERIOD,
+                calculation_revision_id=_REVISION_ID,
+                changed_count=1,
+                removed_count=0,
+            ),
+        ),
     )
 
 
@@ -201,26 +211,41 @@ def _aeat_sync() -> AeatSyncWorkspaceProjectionV1:
     )
 
 
+def _modelo() -> ModeloWorkspaceProjectionV1:
+    """Return one preloaded Modelo workspace target without resolving readers."""
+    return ModeloWorkspaceProjectionV1.model_construct(
+        target=ModeloWorkspaceResolvedTargetV1.model_construct(
+            modelo=ModeloCode("130"), filing_year=2026, period=_PERIOD
+        ),
+        capabilities=(
+            ModeloWorkspaceCapabilityV1.model_construct(disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE),
+        ),
+    )
+
+
 def test_snapshot_has_one_redacted_document_per_current_searchable_projection() -> None:
     """Current workspace rows become safe documents without retaining private IDs."""
-    snapshot = assemble_installed_workbench_search_snapshot(
+    inputs = InstalledWorkbenchSearchInputsV1(
         ledger=_ledger(),
         declarations=_declarations(),
         aeat_sync=_aeat_sync(),
-        modelo=(),
+        modelo=(_modelo(),),
         ledger_admission=_admission("workbench.ledger"),
         declarations_admission=_admission("workbench.declarations"),
         aeat_sync_admission=_admission("workbench.aeat_sync"),
     )
+    snapshot = inputs.snapshot()
 
     assert tuple(document.kind for document in snapshot.documents) == (
         WorkbenchSearchKind.LEDGER_ENTRY,
+        WorkbenchSearchKind.LEDGER_EVIDENCE,
         WorkbenchSearchKind.DECLARATION,
         WorkbenchSearchKind.REVISION,
         WorkbenchSearchKind.FILING,
         WorkbenchSearchKind.HISTORY,
         WorkbenchSearchKind.RECONCILIATION,
         WorkbenchSearchKind.NOTIFICATION,
+        WorkbenchSearchKind.MODELO,
     )
     rendered = " ".join(document.model_dump_json() for document in snapshot.documents)
     assert "private-lifecycle-fact" not in rendered
@@ -245,19 +270,11 @@ def test_snapshot_rejects_a_destination_admission_from_another_area() -> None:
 
 def test_snapshot_projects_modelo_availability_from_the_existing_capability_answer() -> None:
     """Modelo search preserves the workspace's declared capability disposition."""
-    modelo = ModeloWorkspaceProjectionV1.model_construct(
-        target=ModeloWorkspaceResolvedTargetV1.model_construct(
-            modelo=ModeloCode("130"), filing_year=2026, period=_PERIOD
-        ),
-        capabilities=(
-            ModeloWorkspaceCapabilityV1.model_construct(disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE),
-        ),
-    )
     snapshot = assemble_installed_workbench_search_snapshot(
         ledger=_ledger(),
         declarations=_declarations(),
         aeat_sync=_aeat_sync(),
-        modelo=(modelo,),
+        modelo=(_modelo(),),
         ledger_admission=_admission("workbench.ledger"),
         declarations_admission=_admission("workbench.declarations"),
         aeat_sync_admission=_admission("workbench.aeat_sync"),
