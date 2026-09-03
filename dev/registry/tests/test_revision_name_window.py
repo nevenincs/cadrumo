@@ -41,6 +41,13 @@ def test_a_name_later_than_its_window_is_reported_apart_from_one_that_is_earlier
     window understates the revision's reach - 151 serves filing years 2023 and
     2024 under a name claiming 2025 - while a name earlier than its window claims
     years the revision does not serve.
+
+    Pinned to a live defect. The plan carries an open Step to rename this
+    revision, and this test fails when that lands: the failure is the rename, not
+    a regression. Replace the coordinate with another revision whose name opens
+    after its window, or construct one as the sibling conditions do. Do not
+    delete it - the direction is the reason this condition exists apart from its
+    opposite.
     """
     revision = authority.modelo("151").revisions["2025-y-siguientes"]
     findings = name_window_findings(revision, modelo_id="151")
@@ -187,6 +194,11 @@ def test_a_selectable_open_end_still_reports_the_name_understating_its_reach(
     Modelo 721's 2024 is named for one year, runs open-ended, and admits filing
     year 2026. It must keep its finding, or the exclusion above would have
     silenced the condition rather than narrowed it.
+
+    Pinned to a live defect with an open Step to close or rename it. When that
+    lands this test fails, and the replacement is modelo 194's 2024, which is in
+    the same state for the same reason - or a constructed revision once neither
+    remains.
     """
     revision = authority.modelo("721").revisions["2024"]
     kinds = {finding.kind for finding in name_window_findings(revision, modelo_id="721")}
