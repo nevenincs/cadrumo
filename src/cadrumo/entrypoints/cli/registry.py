@@ -21,6 +21,7 @@ from ._common import emit_envelope, resolve_optional_root
 from ._registry_diff_payloads import RegistryDiffRevisionsResult
 from ._registry_payloads import (
     RegistryInspectResult,
+    RegistryReplayParityPayloadResult,
     RegistryReplayParityResult,
     RegistryVerifyFiledStateResult,
 )
@@ -272,22 +273,22 @@ def verify_replay_parity_cmd(ctx: typer.Context) -> None:
     emit_envelope(
         ctx,
         command="registry.replay.parity",
-        result=strict_round_trip(
-            RegistryReplayParityResult,
-            {
-                "corpus": report.corpus.value,
-                "oracle_id": report.oracle_id,
-                "cross_reference_id": report.cross_reference_id,
-                "guard_policy_id": report.guard_policy_id,
-                "registry_validated": report.registry_validated,
-                "verdict": report.verdict,
-                "compared_field_count": report.compared_field_count(),
-                "matched_payload_count": report.payload_count_of(ParityVerdictKind.MATCH),
-                "mismatched_payload_count": report.payload_count_of(ParityVerdictKind.MISMATCH),
-                "unverifiable_payload_count": report.payload_count_of(ParityVerdictKind.UNVERIFIABLE),
-                "blocked_payload_count": report.payload_count_of(ParityVerdictKind.BLOCKED),
-                "payloads": [payload.model_dump(mode="json") for payload in report.payloads],
-            },
+        result=RegistryReplayParityResult(
+            corpus=report.corpus.value,
+            oracle_id=report.oracle_id,
+            cross_reference_id=report.cross_reference_id,
+            guard_policy_id=report.guard_policy_id,
+            registry_validated=report.registry_validated,
+            verdict=report.verdict,
+            compared_field_count=report.compared_field_count(),
+            matched_payload_count=report.payload_count_of(ParityVerdictKind.MATCH),
+            mismatched_payload_count=report.payload_count_of(ParityVerdictKind.MISMATCH),
+            unverifiable_payload_count=report.payload_count_of(ParityVerdictKind.UNVERIFIABLE),
+            blocked_payload_count=report.payload_count_of(ParityVerdictKind.BLOCKED),
+            # The outer envelope carries derived counts the report has no field
+            # for, so it is built directly; each payload IS a plain cross-model
+            # projection and goes through the round trip the contract requires.
+            payloads=[strict_round_trip(RegistryReplayParityPayloadResult, payload) for payload in report.payloads],
         ),
         lines=_replay_parity_lines(report),
     )

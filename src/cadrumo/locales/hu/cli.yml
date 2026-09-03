@@ -499,13 +499,16 @@ cli:
       borrador:
         app_help: Modelo 100 borrador pillanatképek.
         filing_year_help: Benyújtási év (pl. 2024).
-        import_coverage_absent: Az elemző nem adott vissza kinyerési lefedettséget a nyilvántartási profilhoz; semmi sem lett importálva.
-        import_ejercicio_mismatch: A PDF-en szereplő adóév nem egyezik a kért benyújtási évvel; semmi sem lett importálva.
+        import_coverage_absent: Az elemző nem adott vissza kinyerési lefedettséget
+          a nyilvántartási profilhoz; semmi sem lett importálva.
+        import_ejercicio_mismatch: A PDF-en szereplő adóév nem egyezik a kért benyújtási
+          évvel; semmi sem lett importálva.
         import_file_help: Az importálandó Modelo 100 borrador PDF elérési útja.
         import_help: Helyi Modelo 100 borrador PDF importálása a pillanatkép-tárolóba.
         import_period_help: Időszakkód (alapértelmezés 0A, a Modelo 100 éves időszaka).
         import_period_invalid: Az időszakkód nem érvényes ehhez a benyújtási évhez.
-        import_profile_unresolved: A nyilvántartás nem deklarál egyetlen borrador kinyerési profilt sem ehhez a benyújtási évhez és időszakhoz.
+        import_profile_unresolved: A nyilvántartás nem deklarál egyetlen borrador
+          kinyerési profilt sem ehhez a benyújtási évhez és időszakhoz.
         latest_help: A legfrissebb aktív pillanatkép megjelenítése egy benyújtási
           évre.
         list_help: Mentett Modelo 100 borrador pillanatképek listázása.
@@ -3763,6 +3766,17 @@ cli:
       modelo_count: Nyomtatványok száma
       modelos: Nyomtatványok
       observation_paths: Megfigyelési útvonalak
+      replay_blocked_payload_count: Blokkolt felvételek száma
+      replay_compared_field_count: Összehasonlított rovatok száma
+      replay_cross_reference_id: Visszajátszási kereszthivatkozás
+      replay_guard_policy_id: Visszajátszási védelmi szabály
+      replay_matched_payload_count: Egyező felvételek száma
+      replay_mismatched_payload_count: Eltérő felvételek száma
+      replay_oracle_id: Visszajátszási orákulum
+      replay_payload_count: Visszajátszott felvételek száma
+      replay_registry_validated: Visszajátszáskor validált nyilvántartás
+      replay_unverifiable_payload_count: Nem ellenőrizhető felvételek száma
+      replay_verdict: Visszajátszási paritás eredménye
       revision: Revízió
       revision_count: Revíziók száma
       row_count: Sorok száma
@@ -3775,6 +3789,8 @@ cli:
       workbook_parity_ref_count: Munkafüzet paritás-hivatkozások száma
     observation_help: A titkosított benyújtott bevallás megfigyelési manifesztje az
       ellenőrzéshez.
+    replay_parity_help: A csomagolt AEAT Renta WEB Open felvételek offline visszajátszása
+      a paritásorákulumon keresztül.
     source_observation_help: A korábbi benyújtási kötések vagy kapcsolatok által megkövetelt
       titkosított forrásmegfigyelési manifeszt.
     verify_filed_state_help: A helyi nyilvántartási számítás kimenetének összehasonlítása
