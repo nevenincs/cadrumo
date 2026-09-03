@@ -253,6 +253,20 @@ def test_generation_provider_binds_real_declarations_factory_and_calendar_projec
     assert isinstance(resolve_declarations_screen(declarations.controller, target), DeclarationsCalendarScreen)
 
 
+def test_generation_provider_keeps_modelo_navigation_unavailable_without_a_captured_workspace_projection() -> None:
+    """The installed factory never creates a second read or treats no capture as empty work."""
+    provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(lambda: _inputs(_NOW)))
+    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
+    root = compose_installed_workbench_root(root_inputs)
+    route = root.destination_catalogue.resolve("workbench.declarations")
+    assert route.factory is not None
+
+    declarations = route.factory(TuiScreenContextV1(destination="workbench.declarations"))
+
+    assert isinstance(declarations, DeclarationsWorkspaceScreen)
+    assert declarations.controller.modelo_workspace_factory is None
+
+
 def test_generation_provider_composes_the_real_account_screen_owners_without_effects() -> None:
     """The installed root receives real account doors, not a test-only placeholder."""
     provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(lambda: _inputs(_NOW)))
