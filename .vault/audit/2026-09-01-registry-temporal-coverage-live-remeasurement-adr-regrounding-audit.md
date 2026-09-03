@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b89e4d177b3ae7d9361665d5dfc98f913884e30b45bdf0d32c3710ba79c432dc'
+body_hash: 'sha256:779e0b3d8626a10e3ecd0196e9262ccb320b2bb5255004c62018545afaee77b8'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8429,3 +8429,33 @@ under a written boundary, citation re-derived and widened under another, grade
 not re-derivable because no boundary survives. What separates the two that
 worked from the one that did not is only that a boundary could be written down -
 and in every case the boundary, not the number, is what a later reader needs.
+
+### applicability-is-three-or-ten-and-the-plan-said-seven | high | The clearest of the four re-derivations, because both defensible answers are defensible and neither is the one on record
+
+Ten declared fields in the registry schema name applicability: one on the
+revision, five inside the rule definition that field holds, two on a deadline
+window and two on a live cross-reference decision. That is the count a
+name-based sweep returns, and it is wrong for the question this plan asks.
+
+The revision's `applicability` field holds a tuple of rule definitions, so the
+rule's five `applicable_*` fields are the CONTENTS of one declaration rather
+than five places a fact is restated. They cannot disagree with each other about
+whether a modelo applies; they compose one answer. Under the boundary that asks
+which declarations can independently state that a thing applies, the answer is
+three: the revision's rules, a deadline window's conditions, and a
+cross-reference decision's predicates.
+
+So this figure has two defensible answers, three and ten, depending on whether
+the question is about places that can disagree or fields that carry the word.
+The plan said seven, which is neither, and that is the useful result. A number
+between two defensible boundaries is not a rounding of either - it is evidence
+that a third boundary was used and not written down.
+
+All four re-derivable figures now behave the same way. Temporal narrowed from
+eight to six, citation widened from eleven to twenty-five, applicability
+resolves to three or ten against a stated seven, and grade could not be derived
+at all. In none of the four was the original number reproducible, and in every
+one the boundary was the thing that decided the answer. A restatement count
+without its boundary is not a measurement that later turned out wrong; it is a
+measurement nobody can repeat, which is a different and worse thing to build a
+campaign's opening argument on.

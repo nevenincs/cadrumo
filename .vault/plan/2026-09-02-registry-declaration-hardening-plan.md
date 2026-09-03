@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:f40bbf9abe546d6ad283b4382e66686fabd19634a12528c83812f7ead735ce30'
+body_hash: 'sha256:73652e15ae494acec33e28f061273d94bd3ab6ec6c6e1b647864d202ab471437'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -46,6 +46,15 @@ citation can be restated across 25 declaration types and 48 fields, not eleven -
 source, in parallel fields. Whatever eleven counted, the surface a reader must keep consistent today
 is several times wider, and the symmetry says the two citation kinds were declared as a pair 24
 separate times rather than once with two projections.
+
+Applicability re-derives to two different numbers and the plan's is neither, which is the clearest
+demonstration of why a boundary matters more than a count. Ten declared fields carry the word:
+one on the revision, five inside the rule definition that field holds, two on a deadline window and
+two on a live cross-reference decision. But the rule's five are the CONTENTS of one declaration
+reached through one field, not five places that can disagree, so under the boundary that asks which
+declarations can independently state whether something applies, the answer is three: the revision's
+rules, a deadline window's conditions, and a cross-reference decision's predicates. Three or ten
+depending on the question; seven is neither, so the original counted something else again.
 
 The capability-grade figure could not be re-derived at all: no boundary survives saying what counts
 as an encoding of it, and the schema today carries one optional grade field with a documented reading
@@ -596,6 +605,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S328` - Correct the attribution of the five breadth figures, which the governing audit does not carry; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S329` - Establish that the capability-grade figure cannot be re-derived and that the grade is declared once today; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S330` - Re-derive the citation breadth figure against the live schema and state its boundary; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S331` - Re-derive the applicability figure to both its defensible boundaries and show the plan's is neither; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
