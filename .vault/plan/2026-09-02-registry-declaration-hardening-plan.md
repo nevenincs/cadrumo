@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:c2853cc3a65a4d3e6b3e0777d45a72b6c7c61bd74960c744869a7313e7cfd456'
+body_hash: 'sha256:792e14cc82139ddc9a99d65ef0d6779e1c887d64fa08205450e97ed3b318aa2f'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -21,12 +21,24 @@ body_hash: 'sha256:c2853cc3a65a4d3e6b3e0777d45a72b6c7c61bd74960c744869a7313e7cfd
 ## Description
 
 The registry declares the same fact in many places and reconciles the copies afterwards with
-agreement validators. The governing audit measured the breadth: a revision's temporal validity is
-expressed at eight sites, one citation can be restated at eleven, applicability at seven, capability
-grade in five encodings, and a rendered amount's semantics at six, against the validator modules in
+agreement validators. The breadth was measured before this plan was written: a revision's temporal
+validity expressed at eight sites, one citation restated at eleven, applicability at seven, capability
+grade in five encodings, a rendered amount's semantics at six - against the validator modules in
 the registry package whose job is to notice when the copies disagree - the `_validate*` family, fifty-one
 of them when last counted, which is a figure a reader can re-derive by listing the package rather than
-trusting this sentence. Detection after the fact is the wrong shape. This plan
+trusting this sentence. Those five figures were attributed to the governing audit and are not in it: searching that
+record finds them only where a later entry quotes this sentence, and no sibling document carries them
+either. They came from a measurement made before this plan and not carried into the record that
+survived, so they are stated here as history rather than as evidence a reader can check.
+
+One has since been re-derived, and the result is instructive about the other four. The temporal sites
+are now declared as data beside the screen that compares them, with the boundary written down: six
+year-level sites, not eight, because a deadline window's opening, closing and payment dates say WHEN
+within a year a filing is due rather than WHICH years a revision serves, and folding them in inflates
+a restatement count with facts that cannot disagree. The gap between six and eight is a difference
+between two definitions, not an error in either, and it is only visible because one of them is now
+written down. The remaining four await the same treatment. Detection after the fact is the wrong
+shape. This plan
 moves the registry toward declaring a fact once and deriving its projections, and builds the tooling
 that can prove it.
 
@@ -568,6 +580,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S325` - Gate that every public module in the registry tooling is imported by a test, proven on a planted root; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W06.P13.S326` - Make the reassembly proof exercise the gate's own walk instead of a copy of it; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W06.P13.S327` - Establish that every constructed screen proof asserts through its own screen, and that the contributor README needs no entry for the new defining modules; `dev/registry/tests dev/registry/README.md`.
+- [x] `W06.P13.S328` - Correct the attribution of the five breadth figures, which the governing audit does not carry; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

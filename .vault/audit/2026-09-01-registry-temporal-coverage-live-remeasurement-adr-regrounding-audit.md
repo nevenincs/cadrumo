@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:bb71c27858ac76b298cac06cd7e4c63a22974c13c5dab80d5d64d6a80de6547c'
+body_hash: 'sha256:6a06d2acd3d2f1b01720e349dde4d1f2a0dda004a76ea3126fe5962a342f1183'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8335,3 +8335,35 @@ Recording the decision matters more than the decision. A README left unchanged
 looks identical to a README nobody thought about, and the next contributor
 adding a defining module here will face the same question with no record that it
 was asked.
+
+### the-plan-s-opening-figures-cite-this-audit-and-this-audit-does-not-contain-them | high | Searching finds them only where a later entry quotes the sentence that cites them
+
+The plan's first paragraph justifies the whole campaign with five figures - a
+revision's temporal validity at eight sites, a citation at eleven, applicability
+at seven, capability grade in five encodings, an amount's semantics at six - and
+attributes them to the governing audit. They are not in it. "Five encodings"
+appears nowhere at all; the other phrasings appear exactly once each, in an entry
+written during this campaign that quotes the plan's own sentence back. Searching
+the rest of the vault finds no sibling record carrying them either: the one ADR
+that matches on "eight sites" is talking about something else.
+
+The circularity is what makes this worth recording rather than quietly fixing. A
+grep for the figures succeeds, which is what anyone checking would do, and the
+hit is the plan's claim reflected back from a record that cites the plan. A
+citation that resolves to a quotation of itself is indistinguishable from a
+citation that resolves to evidence, unless the reader looks at what the matching
+line actually says.
+
+The figures are not withdrawn. They came from a measurement made before this
+plan and not carried into the record that survived, which makes them history
+rather than evidence, and the Description now says so instead of pointing at a
+document that cannot support them.
+
+One has since been re-derived and the result argues for doing the rest. The
+temporal sites are declared as data now, with their boundary written down: six
+year-level sites rather than eight, because a deadline window's opening, closing
+and payment dates say when within a year a filing falls due rather than which
+years the revision serves, and counting them inflates a restatement measure with
+facts that cannot disagree with what they are counted against. Six against eight
+is two definitions, not an error - and that is only apparent because one of them
+is finally written down.
