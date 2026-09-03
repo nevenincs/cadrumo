@@ -3,7 +3,7 @@
 This is deliberately a verifier, not a mapper: all canonical homes are
 authored in the TOML fragments.  It proves that those reviewed homes cover the
 complete parsed source exactly once, retain the DP30300 envelope separately,
-and preserve the S63 declaration-index boundary for simplified-regime rows.
+and preserve the declaration-index boundary for simplified-regime rows.
 
 ONE implementation serves every AEAT design epoch.  The per-epoch copies this
 replaces were identical apart from their epoch label and their measured totals,
@@ -84,7 +84,7 @@ class M303SemanticCensusExpectation:
     #: the two agree today only because every producer-keyed entry happens to be
     #: a header, which is a measurement rather than an invariant.
     review_home_totals: Mapping[str, int]
-    #: The S63 declaration-index spans that carry simplified-regime projections.
+    #: The declaration-index spans that carry simplified-regime projections.
     #: DP30302's simplified rows are a plain sequential AEAT numbering with no
     #: dotted or ``bis`` label, so the census still expresses them as ``int``
     #: here; :attr:`simplified_anchors` renders each to the printed ``str``
@@ -407,7 +407,7 @@ def census_m303_semantic_map(
     )
     simplified_anchors = {(entry.anchor.record_identity, entry.anchor.ordinal) for entry in simplified_entries}
     if simplified_anchors != set(expectation.simplified_anchors):
-        raise ValueError(f"M303 {design_epoch} simplified projections must be exactly the S63 DP30302 anchor index")
+        raise ValueError(f"M303 {design_epoch} simplified projections must be exactly the DP30302 anchor index")
     # An ordinal is carved out of the simplified index only because the design
     # reserves it, so the carve-out must be justified by the map rather than
     # merely tolerated: a reserved ordinal that acquired a payload owner would
@@ -421,7 +421,7 @@ def census_m303_semantic_map(
     )
     if misclassified_reserved:
         raise ValueError(
-            f"M303 {design_epoch} reserved S63 ordinals must stay fillers: {misclassified_reserved!r}",
+            f"M303 {design_epoch} reserved declaration-index ordinals must stay fillers: {misclassified_reserved!r}",
         )
 
     envelopes = semantic_map.variable_envelopes

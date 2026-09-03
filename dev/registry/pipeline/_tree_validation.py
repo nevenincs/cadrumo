@@ -3,8 +3,8 @@
 This development-only boundary never locates an existing export tree, accepts a
 single-file modelo, or publishes a candidate.  Its sole purpose is to prove
 that the fresh isolated tree selected by the generator can survive both the
-real directory loader and the validated registry authority before S11 is
-allowed to publish it.
+real directory loader and the validated registry authority before publication
+is allowed.
 """
 
 from __future__ import annotations

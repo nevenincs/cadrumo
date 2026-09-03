@@ -3,17 +3,27 @@
 from __future__ import annotations
 
 import argparse
+import json
+import re
+import secrets
+import shutil
 import sys
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping
 from dataclasses import asdict, dataclass
 from datetime import date
+from hashlib import sha256
 from pathlib import Path
 
 import rtoml
 
+from cadrumo.core.atomic_write import atomic_write_text
+from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.fsync import fsync_parent_dir
+from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
 from cadrumo.domain.calculations.registry.schema_references import governed_period_span
 
@@ -28,6 +38,13 @@ SIBLING_SOURCE_REF = "aeat-dr-200-2025"
 TARGET_VALID_FROM = date(2024, 1, 1)
 TARGET_VALID_TO = date(2024, 12, 31)
 SIBLING_VALID_FROM = date(2025, 1, 1)
+
+_CASILLA_TABLE = re.compile(r'^\[\[revisions\."2024"\.casillas\]\]\s*$')
+_ID_LINE = re.compile(r'^\s*id\s*=\s*"(?P<id>[^"]+)"\s*$')
+_SOURCE_REFS_LINE = re.compile(r"^(?P<prefix>\s*source_refs\s*=\s*)(?P<value>.*?)(?P<ending>\r?\n)?$")
+_REBIND_JOURNAL = ".m200-2024-source-rebind.journal.json"
+_REBIND_STAGE_PREFIX = ".m200-2024-source-rebind-stage-"
+_REBIND_BACKUP_PREFIX = ".m200-2024-source-rebind-backup-"
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +64,7 @@ class M200TargetAnchorDisposition:
     aeat_type: str
     length: int
     source_refs: tuple[str, ...]
+    legal_refs: tuple[str, ...]
     legal_evidence_state: str
     applicable_legal_refs: tuple[str, ...]
     inapplicable_legal_refs: tuple[str, ...]
@@ -70,6 +88,7 @@ class M200ReconciliationRow:
     same_2024_template_state: str
     cross_revision_status: str
     cross_revision_proposal_non_authoritative: SemanticPayload | None
+    legal_refs: tuple[str, ...]
     legal_evidence_state: str
     applicable_legal_refs: tuple[str, ...]
     inapplicable_legal_refs: tuple[str, ...]
@@ -89,6 +108,79 @@ class M200ReconciliationCensus:
     revision_valid_to: date
     rows: tuple[M200ReconciliationRow, ...]
     anchors: tuple[M200TargetAnchorDisposition, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class M200LegalWorklistItem:
+    """One declaration or semantic-map legal-evidence result for the pinned target."""
+
+    evidence_home: str
+    subject_id: str
+    source_ref: str
+    source_sha256: str
+    legal_refs: tuple[str, ...]
+    applicable_legal_refs: tuple[str, ...]
+    unknown_legal_refs: tuple[str, ...]
+    out_of_window_legal_refs: tuple[str, ...]
+    state: str
+
+
+@dataclass(frozen=True, slots=True)
+class M200LegalWorklist:
+    """Complete, source-SHA-bound legal worklist for Modelo 200/2024 authority."""
+
+    source_ref: str
+    source_sha256: str
+    revision_valid_from: date
+    revision_valid_to: date
+    items: tuple[M200LegalWorklistItem, ...]
+
+    @property
+    def missing_provenance_count(self) -> int:
+        """Count carriers with no legal reference at all."""
+        return sum(item.state == "missing_provenance" for item in self.items)
+
+    @property
+    def unknown_reference_count(self) -> int:
+        """Count carriers whose catalogue key cannot resolve."""
+        return sum(bool(item.unknown_legal_refs) for item in self.items)
+
+    @property
+    def out_of_window_count(self) -> int:
+        """Count carriers whose known authority misses the target period."""
+        return sum(bool(item.out_of_window_legal_refs) for item in self.items)
+
+
+@dataclass(frozen=True, slots=True)
+class M200SourceRebind:
+    """One exact-map-owned 2025-to-2024 declaration-source replacement."""
+
+    casilla_id: str
+    expected_source_refs: tuple[str, ...]
+    target_source_refs: tuple[str, ...]
+    non_source_payload_sha256: str
+
+
+@dataclass(frozen=True, slots=True)
+class M200SourceRebindPlan:
+    """Complete source-SHA-bound mutation plan for the 2024 declaration tree."""
+
+    source_ref: str
+    source_sha256: str
+    semantic_map_source_ref: str
+    semantic_map_source_sha256: str
+    rebinds: tuple[M200SourceRebind, ...]
+    refused_orphan_ids: tuple[str, ...]
+    expected_current_ids: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class M200SourceRebindApplication:
+    """The deterministic result of validating, previewing, or applying a plan."""
+
+    planned_rebind_count: int
+    changed_paths: tuple[Path, ...]
+    dry_run: bool
 
 
 def reconcile_bundled_m200_2024() -> M200ReconciliationCensus:
@@ -120,8 +212,8 @@ def reconcile_bundled_m200_2024() -> M200ReconciliationCensus:
     candidate_ids = frozenset(candidate_documents)
     declaration_ids = tuple(str(item.id) for item in revision.casillas)
     _require_unique_identifiers(declaration_ids, label="current declaration")
-    _require_disjoint_ids(frozenset(declaration_ids), candidate_ids)
     current_declarations = {str(item.id): item for item in revision.casillas}
+    _require_reviewed_candidate_promotions(frozenset(declaration_ids) & candidate_ids)
     current = {identifier: _payload(item) for identifier, item in current_declarations.items()}
     candidates = {identifier: payload for identifier, (_path, payload) in candidate_documents.items()}
     planned_ids = frozenset((*current, *candidates))
@@ -165,7 +257,7 @@ def reconcile_bundled_m200_2024() -> M200ReconciliationCensus:
     )
     rows: list[M200ReconciliationRow] = []
     for identifier in sorted(planned_ids):
-        is_candidate = identifier in candidates
+        is_candidate = identifier in candidates and identifier not in current
         payload = candidates[identifier] if is_candidate else current[identifier]
         fields = tuple(sorted(exact_ownership.get(identifier, ()), key=lambda item: item.export_field_id))
         proposed_fields = tuple(sorted(proposed_ownership.get(identifier, ()), key=lambda item: item.export_field_id))
@@ -228,6 +320,7 @@ def reconcile_bundled_m200_2024() -> M200ReconciliationCensus:
                 cross_revision_proposal_non_authoritative=(
                     next(iter(cross_payloads)) if len(cross_payloads) == 1 else None
                 ),
+                legal_refs=tuple(payload.legal_refs),
                 legal_evidence_state=legal_state,
                 applicable_legal_refs=applicable,
                 inapplicable_legal_refs=inapplicable,
@@ -245,6 +338,600 @@ def reconcile_bundled_m200_2024() -> M200ReconciliationCensus:
         rows=tuple(rows),
         anchors=tuple(sorted(anchors, key=lambda item: item.export_field_id)),
     )
+
+
+def build_m200_2024_legal_worklist(census: M200ReconciliationCensus) -> M200LegalWorklist:
+    """Classify every target declaration and map citation without legal inference.
+
+    The exact 2024 record-design identity is deliberately retained on every
+    row.  A later model design, a legal provision under a different catalogue
+    key, or a provision whose governed period misses 2024 can therefore never
+    become a quiet substitute while preparing the catalogue worklist.
+    """
+    _require_exact_source_identity("legal worklist census", census.source_ref, census.source_sha256)
+    _require_exact_source_identity(
+        "legal worklist semantic map", census.semantic_map_source_ref, census.semantic_map_source_sha256
+    )
+    if (census.revision_valid_from, census.revision_valid_to) != (TARGET_VALID_FROM, TARGET_VALID_TO):
+        raise RegistryValidationError("legal worklist carries a drifted Modelo 200/2024 partition")
+
+    registry_root = bundled_path("registry", "aeat")
+    modelo = load_modelo_directory(registry_root / "modelos" / "200")
+    revision = modelo.revisions["2024"]
+    _require_partition(revision, modelo.revisions["2025-y-siguientes"])
+    parts = tuple(load_catalogue_file(path) for path in sorted((registry_root / "legal").glob("*.toml")))
+    legal = _merge_unique_catalogue(parts, attribute="legal")
+    items = tuple(
+        _legal_worklist_item(
+            evidence_home=evidence_home,
+            subject_id=subject_id,
+            legal_refs=legal_refs,
+            legal=legal,
+            source_ref=census.source_ref,
+            source_sha256=census.source_sha256,
+            valid_from=census.revision_valid_from,
+            valid_to=census.revision_valid_to,
+        )
+        for evidence_home, subject_id, legal_refs in (
+            *(
+                ("revision", subject_id, legal_refs)
+                for subject_id, legal_refs in _m200_2024_revision_legal_carriers(registry_root)
+            ),
+            *( ("declaration", row.casilla_id, row.legal_refs) for row in census.rows),
+            *( ("semantic_map", anchor.export_field_id, anchor.legal_refs) for anchor in census.anchors),
+        )
+    )
+    _verify_m200_2024_worklist_legal_authority(items, legal)
+    return M200LegalWorklist(
+        source_ref=census.source_ref,
+        source_sha256=census.source_sha256,
+        revision_valid_from=census.revision_valid_from,
+        revision_valid_to=census.revision_valid_to,
+        items=items,
+    )
+
+
+def _verify_m200_2024_worklist_legal_authority(
+    items: Iterable[M200LegalWorklistItem], legal: Mapping[str, object]
+) -> None:
+    """Require every known worklist citation to be reviewed and corpus-grounded."""
+    referenced = {
+        ref: legal[ref]
+        for item in items
+        for ref in item.legal_refs
+        if ref in legal
+    }
+    verify_legal_catalogue(referenced, source_root=bundled_path())
+
+
+def _require_closed_m200_2024_legal_worklist(
+    census: M200ReconciliationCensus, *, worklist: M200LegalWorklist | None = None
+) -> M200LegalWorklist:
+    """Build and admit only closed Modelo 200/2024 legal authority for CLI work."""
+    admitted = build_m200_2024_legal_worklist(census) if worklist is None else worklist
+    require_closed_m200_2024_legal_worklist(admitted)
+    return admitted
+
+
+def _m200_2024_revision_legal_carriers(registry_root: Path) -> tuple[tuple[str, tuple[str, ...]], ...]:
+    """Extract every legal-reference carrier from the target revision declaration.
+
+    ``orden_aplicabilidad`` is a legal-reference carrier despite using a
+    distinct schema key.  Recursing the actual TOML keeps future nested family
+    dispositions visible instead of assuming the top-level ``legal_refs`` list
+    is the entire worklist.
+    """
+    document = rtoml.loads(
+        (registry_root / "modelos" / "200" / "revisions" / "2024" / "revision.toml").read_text(encoding="utf-8")
+    )
+    revision = document["revisions"]["2024"]
+    carriers: list[tuple[str, tuple[str, ...]]] = []
+
+    def visit(value: object, path: tuple[str, ...]) -> None:
+        if isinstance(value, Mapping):
+            for key, child in value.items():
+                child_path = (*path, str(key))
+                if key in {"legal_refs", "orden_aplicabilidad"}:
+                    if not isinstance(child, list) or not all(isinstance(ref, str) for ref in child):
+                        raise RegistryValidationError(
+                            f"Modelo 200/2024 revision legal carrier {'.'.join(child_path)!r} is malformed"
+                        )
+                    carriers.append((".".join(child_path), tuple(child)))
+                else:
+                    visit(child, child_path)
+        elif isinstance(value, list):
+            for index, child in enumerate(value):
+                visit(child, (*path, str(index)))
+
+    visit(revision, ())
+    return tuple(carriers)
+
+
+def _legal_worklist_item(
+    *,
+    evidence_home: str,
+    subject_id: str,
+    legal_refs: tuple[str, ...],
+    legal: Mapping[str, object],
+    source_ref: str,
+    source_sha256: str,
+    valid_from: date,
+    valid_to: date,
+) -> M200LegalWorklistItem:
+    applicable, unknown, out_of_window = _legal_worklist_partition(legal_refs, legal, valid_from, valid_to)
+    state = (
+        "missing_provenance"
+        if not legal_refs
+        else "unresolved"
+        if unknown or out_of_window
+        else "applicable"
+    )
+    return M200LegalWorklistItem(
+        evidence_home=evidence_home,
+        subject_id=subject_id,
+        source_ref=source_ref,
+        source_sha256=source_sha256,
+        legal_refs=legal_refs,
+        applicable_legal_refs=applicable,
+        unknown_legal_refs=unknown,
+        out_of_window_legal_refs=out_of_window,
+        state=state,
+    )
+
+
+def require_closed_m200_2024_legal_worklist(worklist: M200LegalWorklist) -> None:
+    """Refuse catalogue authoring or semantic admission while any evidence is open."""
+    _require_exact_source_identity("legal worklist", worklist.source_ref, worklist.source_sha256)
+    if (worklist.revision_valid_from, worklist.revision_valid_to) != (TARGET_VALID_FROM, TARGET_VALID_TO):
+        raise RegistryValidationError("legal worklist carries a drifted Modelo 200/2024 partition")
+    unresolved = tuple(item for item in worklist.items if item.state != "applicable")
+    if unresolved:
+        sample = ", ".join(f"{item.evidence_home}:{item.subject_id}" for item in unresolved[:5])
+        raise RegistryValidationError(
+            "Modelo 200/2024 legal worklist is unresolved: "
+            f"missing={worklist.missing_provenance_count}, "
+            f"unknown={worklist.unknown_reference_count}, "
+            f"out_of_window={worklist.out_of_window_count}; {sample}"
+        )
+
+
+def build_m200_source_rebind_plan(census: M200ReconciliationCensus) -> M200SourceRebindPlan:
+    """Derive the complete, target-map-owned declaration-source rebind plan.
+
+    This deliberately consumes the census rather than walking source files by
+    number.  The census has already proved the target design/map bijection and
+    exact map ownership, so a declaration is eligible only when it owns one or
+    more exact target anchors and its sole design substitution is the pinned
+    2025 record-design reference.  The two declarations without target anchors
+    remain explicit refusals instead of becoming a catch-all source rewrite.
+    """
+    _require_exact_source_identity("source rebind census", census.source_ref, census.source_sha256)
+    _require_exact_source_identity(
+        "source rebind semantic map", census.semantic_map_source_ref, census.semantic_map_source_sha256
+    )
+    if (census.revision_valid_from, census.revision_valid_to) != (TARGET_VALID_FROM, TARGET_VALID_TO):
+        raise RegistryValidationError("source rebind census carries a drifted Modelo 200/2024 partition")
+
+    current = tuple(row for row in census.rows if row.origin == "current_declaration")
+    _require_unique_identifiers(tuple(row.casilla_id for row in current), label="source rebind current declaration")
+    rebinds: list[M200SourceRebind] = []
+    orphans: list[str] = []
+    for row in current:
+        payload = row.declaration_payload
+        if payload is None:
+            raise RegistryValidationError(f"current declaration {row.casilla_id!r} omitted its source payload")
+        if row.source_ref_state == "mechanical_rebind":
+            if not row.fields or row.mechanical_source_refs_proposal is None:
+                raise RegistryValidationError(
+                    f"source rebind candidate {row.casilla_id!r} lacks exact target-map ownership or a replacement",
+                )
+            rebinds.append(
+                M200SourceRebind(
+                    casilla_id=row.casilla_id,
+                    expected_source_refs=tuple(payload.source_refs),
+                    target_source_refs=tuple(row.mechanical_source_refs_proposal),
+                    non_source_payload_sha256="",
+                )
+            )
+        elif row.source_ref_state == "unmapped_no_rebind":
+            if row.fields:
+                raise RegistryValidationError(
+                    f"source rebind orphan {row.casilla_id!r} unexpectedly owns a target anchor"
+                )
+            orphans.append(row.casilla_id)
+        else:
+            raise RegistryValidationError(
+                "source rebind plan refuses unexpected declaration state "
+                f"{row.source_ref_state!r} for {row.casilla_id!r}",
+            )
+
+    planned = tuple(sorted(rebinds, key=lambda item: item.casilla_id))
+    _require_unique_identifiers(tuple(item.casilla_id for item in planned), label="source rebind output")
+    for item in planned:
+        _require_rebind_source_refs(item)
+    if len(planned) != 3171 or len(orphans) != 2:
+        raise RegistryValidationError(
+            "Modelo 200 source rebind population drifted: "
+            f"expected 3171 eligible and 2 refused orphans, found {len(planned)} eligible and {len(orphans)} orphans",
+        )
+    canonical_records = _read_m200_2024_casilla_records(bundled_path("registry", "aeat"))
+    if set(canonical_records) != {row.casilla_id for row in current}:
+        raise RegistryValidationError("source rebind canonical declaration anchors drifted while planning")
+    planned = tuple(
+        M200SourceRebind(
+            casilla_id=item.casilla_id,
+            expected_source_refs=item.expected_source_refs,
+            target_source_refs=item.target_source_refs,
+            non_source_payload_sha256=canonical_records[item.casilla_id].non_source_payload_sha256,
+        )
+        for item in planned
+    )
+    return M200SourceRebindPlan(
+        source_ref=census.source_ref,
+        source_sha256=census.source_sha256,
+        semantic_map_source_ref=census.semantic_map_source_ref,
+        semantic_map_source_sha256=census.semantic_map_source_sha256,
+        rebinds=planned,
+        refused_orphan_ids=tuple(sorted(orphans)),
+        expected_current_ids=tuple(sorted(row.casilla_id for row in current)),
+    )
+
+
+def build_bundled_m200_source_rebind_plan() -> M200SourceRebindPlan:
+    """Build the only supported source rebind plan from live pinned authority."""
+    return build_m200_source_rebind_plan(reconcile_bundled_m200_2024())
+
+
+def apply_m200_source_rebind_plan(
+    plan: M200SourceRebindPlan,
+    *,
+    registry_root: Path,
+    dry_run: bool = False,
+) -> M200SourceRebindApplication:
+    """Preflight then atomically replace only planned ``source_refs`` lines.
+
+    ``registry_root`` may be an isolated temporary registry tree for review and
+    detector tests, or the canonical bundled registry root for the explicit CLI
+    apply path.  Every anchor, input source tuple, output tuple, and complete
+    declaration population is checked before the first atomic file replace.
+    Thus a stale, duplicated, or partly-applied tree refuses before it can
+    receive an additional rebind.  Unrelated TOML bytes are carried through
+    unchanged rather than being parsed and reserialised.
+    """
+    _require_rebind_plan_identity(plan)
+    _require_unique_identifiers(tuple(item.casilla_id for item in plan.rebinds), label="source rebind output")
+    if len(plan.rebinds) != 3171 or len(plan.refused_orphan_ids) != 2:
+        raise RegistryValidationError("source rebind plan does not carry the complete 3171/2 population")
+    if set(item.casilla_id for item in plan.rebinds) & set(plan.refused_orphan_ids):
+        raise RegistryValidationError("source rebind plan overlaps eligible declarations and refused orphans")
+    if set(item.casilla_id for item in plan.rebinds) | set(plan.refused_orphan_ids) != set(plan.expected_current_ids):
+        raise RegistryValidationError("source rebind plan does not cover the complete current declaration population")
+    for item in plan.rebinds:
+        _require_rebind_source_refs(item)
+
+    registry_root = registry_root.resolve()
+    with exclusive_file_lock(registry_root / ".m200-2024-source-rebind.lock"):
+        _recover_m200_source_rebind(plan, registry_root)
+        return _apply_preflighted_m200_source_rebind(plan, registry_root=registry_root, dry_run=dry_run)
+
+
+def _apply_preflighted_m200_source_rebind(
+    plan: M200SourceRebindPlan, *, registry_root: Path, dry_run: bool
+) -> M200SourceRebindApplication:
+    records = _read_m200_2024_casilla_records(registry_root)
+    expected_ids = set(plan.expected_current_ids)
+    actual_ids = set(records)
+    if actual_ids != expected_ids:
+        missing = sorted(expected_ids - actual_ids)
+        extra = sorted(actual_ids - expected_ids)
+        raise RegistryValidationError(
+            f"source rebind declaration anchors drifted: missing={missing[:5]!r}, extra={extra[:5]!r}"
+        )
+
+    replacements: dict[Path, dict[int, str]] = defaultdict(dict)
+    for item in plan.rebinds:
+        record = records[item.casilla_id]
+        if record.source_refs != item.expected_source_refs:
+            raise RegistryValidationError(
+                f"source rebind input drifted or is partially applied for {item.casilla_id!r}: "
+                f"expected {item.expected_source_refs!r}, found {record.source_refs!r}",
+            )
+        if record.non_source_payload_sha256 != item.non_source_payload_sha256:
+            raise RegistryValidationError(f"source rebind non-source payload drifted for {item.casilla_id!r}")
+        replacement = _render_source_refs_line(record.source_line, item.target_source_refs)
+        if record.source_line_index in replacements[record.path]:
+            raise RegistryValidationError(f"duplicate source rebind output line for {item.casilla_id!r}")
+        replacements[record.path][record.source_line_index] = replacement
+
+    rendered: dict[Path, str] = {}
+    for path, line_replacements in replacements.items():
+        original = records_by_path(records, path)
+        lines = original.splitlines(keepends=True)
+        for line_index, replacement in line_replacements.items():
+            lines[line_index] = replacement
+        candidate = "".join(lines)
+        _require_non_source_payload_unchanged(original, candidate)
+        rendered[path] = candidate
+
+    changed_paths = tuple(sorted(rendered))
+    if not dry_run:
+        _publish_m200_source_rebind_transaction(registry_root, rendered, plan)
+    return M200SourceRebindApplication(
+        planned_rebind_count=len(plan.rebinds),
+        changed_paths=changed_paths,
+        dry_run=dry_run,
+    )
+
+
+def _publish_m200_source_rebind_transaction(
+    registry_root: Path, rendered: Mapping[Path, str], plan: M200SourceRebindPlan
+) -> None:
+    """Stage a whole casilla tree, then cut it over with journaled directory moves."""
+    casillas_root = registry_root / "modelos" / "200" / "revisions" / "2024" / "casillas"
+    revision_root = casillas_root.parent
+    token = secrets.token_hex(8)
+    stage = revision_root / f"{_REBIND_STAGE_PREFIX}{token}"
+    backup = revision_root / f"{_REBIND_BACKUP_PREFIX}{token}"
+    journal_path = revision_root / _REBIND_JOURNAL
+    journal = {"schema_version": 1, "state": "intent", "stage": stage.name, "backup": backup.name}
+    _write_rebind_journal(journal_path, journal)
+    try:
+        shutil.copytree(casillas_root, stage)
+        for path, text in rendered.items():
+            atomic_write_text(stage / path.relative_to(casillas_root), text, encoding="utf-8")
+        _require_rebound_tree(plan, _read_m200_2024_casilla_records_for_root(stage))
+        _replace_rebind_tree(casillas_root, backup)
+        journal["state"] = "backup_staged"
+        _write_rebind_journal(journal_path, journal)
+        _replace_rebind_tree(stage, casillas_root)
+        journal["state"] = "candidate_live"
+        _write_rebind_journal(journal_path, journal)
+        _require_rebound_tree(plan, _read_m200_2024_casilla_records(registry_root))
+    except BaseException:
+        _restore_rebind_backup(casillas_root, backup)
+        _remove_rebind_tree(stage, revision_root)
+        if casillas_root.exists():
+            _delete_rebind_journal(journal_path)
+        raise
+    _remove_rebind_tree(backup, revision_root)
+    _delete_rebind_journal(journal_path)
+
+
+def _read_m200_2024_casilla_records_for_root(casillas_root: Path) -> dict[str, _M200CasillaSourceRecord]:
+    """Read a staged casilla tree using the same parser as a registry root."""
+    return _read_m200_2024_casilla_records_at(casillas_root)
+
+
+def _recover_m200_source_rebind(plan: M200SourceRebindPlan, registry_root: Path) -> None:
+    revision_root = registry_root / "modelos" / "200" / "revisions" / "2024"
+    journal_path = revision_root / _REBIND_JOURNAL
+    if not journal_path.exists():
+        return
+    try:
+        journal = json.loads(journal_path.read_text(encoding="utf-8"))
+        if (
+            set(journal) != {"schema_version", "state", "stage", "backup"}
+            or journal["schema_version"] != 1
+            or not isinstance(journal["state"], str)
+            or journal["state"] not in {"intent", "backup_staged", "candidate_live"}
+        ):
+            raise ValueError("invalid schema")
+        stage = _rebind_transaction_child(revision_root, journal["stage"], _REBIND_STAGE_PREFIX)
+        backup = _rebind_transaction_child(revision_root, journal["backup"], _REBIND_BACKUP_PREFIX)
+    except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
+        raise RegistryValidationError(f"invalid source rebind recovery journal: {journal_path}") from exc
+    casillas_root = revision_root / "casillas"
+    state = journal["state"]
+    if state == "candidate_live" and casillas_root.exists() and backup.exists():
+        try:
+            _require_rebound_tree(plan, _read_m200_2024_casilla_records(registry_root))
+        except RegistryValidationError:
+            _restore_rebind_backup(casillas_root, backup)
+        else:
+            _remove_rebind_tree(backup, revision_root)
+        _remove_rebind_tree(stage, revision_root)
+        _delete_rebind_journal(journal_path)
+        return
+    if state in {"intent", "backup_staged"} and backup.exists():
+        _restore_rebind_backup(casillas_root, backup)
+    elif state != "intent" and not casillas_root.exists():
+        raise RegistryValidationError(f"source rebind journal cannot recover missing canonical tree: {journal_path}")
+    _remove_rebind_tree(stage, revision_root)
+    _delete_rebind_journal(journal_path)
+
+
+def _require_rebound_tree(plan: M200SourceRebindPlan, records: Mapping[str, _M200CasillaSourceRecord]) -> None:
+    if set(records) != set(plan.expected_current_ids):
+        raise RegistryValidationError("staged source rebind tree changed its declaration anchors")
+    for item in plan.rebinds:
+        record = records[item.casilla_id]
+        if (
+            record.source_refs != item.target_source_refs
+            or record.non_source_payload_sha256 != item.non_source_payload_sha256
+        ):
+            raise RegistryValidationError(f"staged source rebind tree drifted for {item.casilla_id!r}")
+
+
+def _replace_rebind_tree(source: Path, destination: Path) -> None:
+    import os
+
+    os.replace(source, destination)
+    fsync_parent_dir(destination)
+
+
+def _restore_rebind_backup(casillas_root: Path, backup: Path) -> None:
+    if not backup.exists():
+        return
+    if casillas_root.exists():
+        discarded = casillas_root.parent / f"{_REBIND_STAGE_PREFIX}discard-{secrets.token_hex(8)}"
+        _replace_rebind_tree(casillas_root, discarded)
+        _remove_rebind_tree(discarded, casillas_root.parent)
+    _replace_rebind_tree(backup, casillas_root)
+
+
+def _write_rebind_journal(path: Path, journal: Mapping[str, object]) -> None:
+    atomic_write_text(path, json.dumps(journal, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _delete_rebind_journal(path: Path) -> None:
+    path.unlink(missing_ok=True)
+    fsync_parent_dir(path)
+
+
+def _rebind_transaction_child(root: Path, name: object, prefix: str) -> Path:
+    if not isinstance(name, str) or not name.startswith(prefix) or Path(name).name != name:
+        raise RegistryValidationError("source rebind journal carries an unsafe transaction path")
+    return root / name
+
+
+def _remove_rebind_tree(path: Path, root: Path) -> None:
+    if not path.exists():
+        return
+    if path.parent.resolve() != root.resolve() or not path.name.startswith(
+        (_REBIND_STAGE_PREFIX, _REBIND_BACKUP_PREFIX)
+    ):
+        raise RegistryValidationError(f"unsafe source rebind transaction cleanup target: {path}")
+    shutil.rmtree(path)
+    fsync_parent_dir(path)
+
+
+@dataclass(frozen=True, slots=True)
+class _M200CasillaSourceRecord:
+    """The one direct ``source_refs`` line owned by one source declaration."""
+
+    casilla_id: str
+    path: Path
+    document: str
+    source_line_index: int
+    source_line: str
+    source_refs: tuple[str, ...]
+    non_source_payload_sha256: str
+
+
+def _require_rebind_plan_identity(plan: M200SourceRebindPlan) -> None:
+    _require_exact_source_identity("source rebind plan", plan.source_ref, plan.source_sha256)
+    _require_exact_source_identity(
+        "source rebind plan semantic map", plan.semantic_map_source_ref, plan.semantic_map_source_sha256
+    )
+
+
+def _require_rebind_source_refs(rebind: M200SourceRebind) -> None:
+    if SIBLING_SOURCE_REF not in rebind.expected_source_refs or TARGET_SOURCE_REF in rebind.expected_source_refs:
+        raise RegistryValidationError(
+            f"source rebind input is not an exact 2025-only design binding: {rebind.casilla_id!r}"
+        )
+    if TARGET_SOURCE_REF not in rebind.target_source_refs or SIBLING_SOURCE_REF in rebind.target_source_refs:
+        raise RegistryValidationError(
+            f"source rebind output is not an exact 2024 design binding: {rebind.casilla_id!r}"
+        )
+    if len(set(rebind.target_source_refs)) != len(rebind.target_source_refs):
+        raise RegistryValidationError(f"source rebind output duplicates a source reference: {rebind.casilla_id!r}")
+    expected_other = tuple(ref for ref in rebind.expected_source_refs if ref != SIBLING_SOURCE_REF)
+    target_other = tuple(ref for ref in rebind.target_source_refs if ref != TARGET_SOURCE_REF)
+    if expected_other != target_other:
+        raise RegistryValidationError(
+            f"source rebind output alters non-design source references: {rebind.casilla_id!r}"
+        )
+
+
+def _read_m200_2024_casilla_records(registry_root: Path) -> dict[str, _M200CasillaSourceRecord]:
+    casillas_root = registry_root / "modelos" / "200" / "revisions" / "2024" / "casillas"
+    return _read_m200_2024_casilla_records_at(casillas_root)
+
+
+def _read_m200_2024_casilla_records_at(casillas_root: Path) -> dict[str, _M200CasillaSourceRecord]:
+    if not casillas_root.is_dir():
+        raise RegistryValidationError(f"source rebind found no Modelo 200/2024 casilla root: {casillas_root}")
+    records: dict[str, _M200CasillaSourceRecord] = {}
+    for path in scan_directory(casillas_root, pattern="*.toml"):
+        document = path.read_text(encoding="utf-8")
+        lines = document.splitlines(keepends=True)
+        starts = tuple(index for index, line in enumerate(lines) if _CASILLA_TABLE.match(line.strip()))
+        for position, start in enumerate(starts):
+            end = starts[position + 1] if position + 1 < len(starts) else len(lines)
+            body_end = next((index for index in range(start + 1, end) if lines[index].lstrip().startswith("[")), end)
+            ids = tuple(match.group("id") for line in lines[start:body_end] if (match := _ID_LINE.match(line.strip())))
+            if len(ids) != 1:
+                raise RegistryValidationError(f"{path}: expected one direct casilla id, found {ids!r}")
+            source_lines = tuple(
+                index for index in range(start, body_end) if _SOURCE_REFS_LINE.match(lines[index]) is not None
+            )
+            if len(source_lines) != 1:
+                raise RegistryValidationError(
+                    f"{path}: casilla {ids[0]!r} has {len(source_lines)} direct source_refs anchors; expected one",
+                )
+            source_line_index = source_lines[0]
+            source_refs = _parse_source_refs(path, lines[source_line_index])
+            record = _M200CasillaSourceRecord(
+                casilla_id=ids[0],
+                path=path,
+                document=document,
+                source_line_index=source_line_index,
+                source_line=lines[source_line_index],
+                source_refs=source_refs,
+                non_source_payload_sha256=_non_source_payload_sha256(lines, start, end, source_line_index),
+            )
+            if record.casilla_id in records:
+                raise RegistryValidationError(
+                    f"duplicate source rebind declaration anchor {record.casilla_id!r}: "
+                    f"{records[record.casilla_id].path}, {path}",
+                )
+            records[record.casilla_id] = record
+    return records
+
+
+def _parse_source_refs(path: Path, line: str) -> tuple[str, ...]:
+    match = _SOURCE_REFS_LINE.match(line)
+    if match is None:  # pragma: no cover - caller selected this line through the same expression
+        raise RegistryValidationError(f"{path}: source_refs line lost its anchor")
+    try:
+        value = rtoml.loads(f"source_refs = {match.group('value')}")["source_refs"]
+    except rtoml.TomlParsingError as exc:
+        raise RegistryValidationError(f"{path}: cannot parse direct source_refs anchor") from exc
+    if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
+        raise RegistryValidationError(f"{path}: direct source_refs anchor is not a string array")
+    if len(set(value)) != len(value):
+        raise RegistryValidationError(f"{path}: direct source_refs anchor duplicates a source reference")
+    return tuple(value)
+
+
+def _render_source_refs_line(original: str, refs: tuple[str, ...]) -> str:
+    match = _SOURCE_REFS_LINE.match(original)
+    if match is None:  # pragma: no cover - caller holds a validated source line
+        raise RegistryValidationError("source rebind lost the direct source_refs anchor")
+    if len(set(refs)) != len(refs):
+        raise RegistryValidationError("source rebind produced duplicate source references")
+    ending = match.group("ending") or ""
+    return match.group("prefix") + "[" + ", ".join(f'"{item}"' for item in refs) + "]" + ending
+
+
+def _non_source_payload_sha256(lines: list[str], start: int, end: int, source_line_index: int) -> str:
+    """Digest exact declaration bytes after excluding only its direct source line."""
+    payload = "".join(line for index, line in enumerate(lines[start:end], start=start) if index != source_line_index)
+    return sha256(payload.encode("utf-8")).hexdigest()
+
+
+def records_by_path(records: Mapping[str, _M200CasillaSourceRecord], path: Path) -> str:
+    """Return the preflight document for ``path`` and reject a split view."""
+    documents = {record.document for record in records.values() if record.path == path}
+    if len(documents) != 1:
+        raise RegistryValidationError(f"source rebind preflight has no unique document for {path}")
+    return next(iter(documents))
+
+
+def _require_non_source_payload_unchanged(before: str, after: str) -> None:
+    """Prove a text edit changed only direct declaration ``source_refs`` lines."""
+    before_lines = before.splitlines(keepends=True)
+    after_lines = after.splitlines(keepends=True)
+    if len(before_lines) != len(after_lines):
+        raise RegistryValidationError("source rebind altered TOML line structure")
+    for before_line, after_line in zip(before_lines, after_lines, strict=True):
+        before_is_source = _SOURCE_REFS_LINE.match(before_line) is not None
+        after_is_source = _SOURCE_REFS_LINE.match(after_line) is not None
+        if before_is_source != after_is_source:
+            raise RegistryValidationError("source rebind altered a non-source TOML payload anchor")
+        if not before_is_source and before_line != after_line:
+            raise RegistryValidationError("source rebind altered non-source TOML payload bytes")
 
 
 def render_reconciliation_toml(census: M200ReconciliationCensus) -> str:
@@ -279,10 +966,39 @@ def main(argv: list[str] | None = None) -> int:
     """Print counts or the full deterministic TOML report."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--toml", action="store_true")
+    parser.add_argument(
+        "--apply-source-rebinds",
+        action="store_true",
+        help="preflight and atomically apply the exact target-map-owned declaration source rebind plan",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="validate and report --apply-source-rebinds without changing TOML",
+    )
+    parser.add_argument(
+        "--registry-root",
+        type=Path,
+        default=bundled_path("registry", "aeat"),
+        help="registry root (default: canonical bundle; use an isolated temporary root for review)",
+    )
     args = parser.parse_args(argv)
+    if args.dry_run and not args.apply_source_rebinds:
+        parser.error("--dry-run requires --apply-source-rebinds")
     census = reconcile_bundled_m200_2024()
+    legal_worklist = _require_closed_m200_2024_legal_worklist(census)
     if args.toml:
+        if args.apply_source_rebinds:
+            parser.error("--toml cannot be combined with --apply-source-rebinds")
         sys.stdout.write(render_reconciliation_toml(census))
+        return 0
+    if args.apply_source_rebinds:
+        plan = build_m200_source_rebind_plan(census)
+        result = apply_m200_source_rebind_plan(plan, registry_root=args.registry_root, dry_run=args.dry_run)
+        print(f"eligible={result.planned_rebind_count}")
+        print(f"refused_orphans={len(plan.refused_orphan_ids)}")
+        print(f"changed_files={len(result.changed_paths)}")
+        print(f"dry_run={str(result.dry_run).lower()}")
         return 0
     rows = census.rows
     anchors = census.anchors
@@ -320,6 +1036,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     print(f"declaration_legal_gaps={sum(row.legal_evidence_state != 'applicable' for row in rows)}")
     print(f"map_legal_gaps={sum(anchor.legal_evidence_state != 'applicable' for anchor in anchors)}")
+    print(f"legal_worklist_items={len(legal_worklist.items)}")
+    print(f"legal_worklist_missing_provenance={legal_worklist.missing_provenance_count}")
+    print(f"legal_worklist_unknown_references={legal_worklist.unknown_reference_count}")
+    print(f"legal_worklist_out_of_window={legal_worklist.out_of_window_count}")
     return 0
 
 
@@ -367,6 +1087,7 @@ def _classify_anchor(entry, field, *, planned_ids, legal, valid_from, valid_to) 
         aeat_type=field.aeat_type,
         length=field.length,
         source_refs=tuple(entry.source_refs),
+        legal_refs=tuple(entry.legal_refs),
         legal_evidence_state=legal_state,
         applicable_legal_refs=applicable,
         inapplicable_legal_refs=inapplicable,
@@ -424,6 +1145,33 @@ def _legal_partition(refs, legal, valid_from, valid_to):
         )
         target.append(ref)
     return tuple(applicable), tuple(inapplicable)
+
+
+def _legal_worklist_partition(refs, legal: Mapping[str, object], valid_from: date, valid_to: date):
+    """Separate absent catalogue keys from known provisions outside 2024.
+
+    Checking the catalogue object's embedded id matters: a dictionary key can
+    otherwise make a different provision appear to resolve merely because it
+    shares the requested reference key in an in-memory test or a faulty loader.
+    """
+    applicable, unknown, out_of_window = [], [], []
+    for ref in refs:
+        authority = legal.get(ref)
+        if authority is None:
+            unknown.append(ref)
+            continue
+        if str(getattr(authority, "id", "")) != ref:
+            raise RegistryValidationError(
+                f"legal catalogue provision mismatch for {ref!r}: found {getattr(authority, 'id', None)!r}"
+            )
+        start, end = governed_period_span(authority)
+        if start <= valid_from and end is not None and end < valid_to:
+            out_of_window.append(ref)
+        elif start <= valid_from:
+            applicable.append(ref)
+        else:
+            out_of_window.append(ref)
+    return tuple(applicable), tuple(unknown), tuple(out_of_window)
 
 
 def _legal_evidence(refs, legal, valid_from, valid_to):
@@ -512,6 +1260,23 @@ def _require_disjoint_ids(current_ids: frozenset[str], candidate_ids: frozenset[
     collisions = sorted(current_ids & candidate_ids)
     if collisions:
         raise RegistryValidationError(f"current declarations collide with non-authoritative candidates: {collisions!r}")
+
+
+def _require_reviewed_candidate_promotions(collisions: frozenset[str]) -> None:
+    """Allow collisions only when the reviewed target compiler proves live bytes."""
+    if not collisions:
+        return
+    from .m200_2024_template_adjudications import (
+        compile_m200_2024_same_template_authority,
+        promoted_candidate_ids,
+    )
+
+    authority = compile_m200_2024_same_template_authority()
+    if collisions != promoted_candidate_ids(authority):
+        raise RegistryValidationError(
+            "current declarations collide with non-authoritative candidates outside reviewed target adjudications: "
+            f"{sorted(collisions)!r}"
+        )
 
 
 def _require_anchor_bijection(*, design_keys, map_keys, export_ids) -> None:

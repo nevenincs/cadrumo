@@ -96,7 +96,7 @@ class _PublicationJournal(_StrictModel):
 
 @dataclass(frozen=True, slots=True)
 class GeneratedExportTreePublicationContext:
-    """Explicit caller roots and the S10 candidate for one export cutover."""
+    """Explicit caller roots and the validated candidate for one export cutover."""
 
     validation: GeneratedExportTreeValidationContext
     temporary_root: Path
@@ -124,7 +124,7 @@ class GeneratedExportTreeTargetStateReceipt:
 
 @dataclass(frozen=True, slots=True)
 class PublishedGeneratedExportTree:
-    """The precise generated export tree selected through S10 and cut over."""
+    """The precise generated export tree selected through the loader boundary and cut over."""
 
     validated: ValidatedGeneratedExportTree | None
     export_root: Path

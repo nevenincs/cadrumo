@@ -29,11 +29,23 @@ def test_a_modelo_with_sound_continuity_reports_nothing(authority: ValidatedRegi
     assert screen_authority(authority, ("100",)) == ()
 
 
-def test_the_one_singleton_chain_in_the_corpus_is_reported(authority: ValidatedRegistryAuthority) -> None:
-    """A chain sitting in a single revision asserts continuity across nothing."""
+def test_a_singleton_chain_in_the_corpus_is_reported_by_name(authority: ValidatedRegistryAuthority) -> None:
+    """A chain sitting in a single revision asserts continuity across nothing.
+
+    Held by chain identity rather than by how many exist. A count here fails
+    when a second singleton appears, which is the screen succeeding, and the
+    reader who repairs it by raising the number has been taught to absorb the
+    finding instead of reading it.
+
+    Pinned to a live declaration: chain `dr303-112` sits alone in one revision.
+    When it gains a sibling or is retired this test fails on that name, which is
+    the correction; name another singleton the screen reports, or construct one
+    if none remains, because the condition must keep a proof either way.
+    """
     findings = [item for item in screen_authority(authority, ("303",)) if item.kind == "singleton_chain"]
-    assert len(findings) == 1
-    assert "appears only in revision" in findings[0].detail
+    assert findings, "the singleton condition lost its live proof"
+    assert any("dr303-112" in item.detail for item in findings)
+    assert all("appears only in revision" in item.detail for item in findings)
 
 
 def test_absent_continuity_is_reported_as_its_own_kind(authority: ValidatedRegistryAuthority) -> None:
@@ -44,7 +56,10 @@ def test_absent_continuity_is_reported_as_its_own_kind(authority: ValidatedRegis
     """
     findings = screen_authority(authority, ("714",))
     assert [item.kind for item in findings] == ["modelo_without_continuity"]
-    assert "5 revisions" in findings[0].detail
+    # The detail carries the revision count, which is a live figure: asserting
+    # it here would fail the day this modelo gains a revision, though nothing
+    # about the absent continuity would have changed. The kind is the claim.
+    assert "and no casilla carries a chain" in findings[0].detail
 
 
 def test_the_census_reports_coverage_without_making_it_a_finding(

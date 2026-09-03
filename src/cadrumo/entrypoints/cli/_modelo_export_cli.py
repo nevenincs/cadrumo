@@ -97,7 +97,7 @@ def _export_text_lines(result: ModeloExportResult) -> list[str]:
     ]
 
 
-def _export_modelo_revision_for_cli(
+def export_modelo_revision_for_cli(
     *,
     calculation_revision_id: str,
     output_path: Path,
@@ -143,7 +143,7 @@ def _export_modelo_revision_for_cli(
         raise bad_parameter_from_error(exc) from exc
 
 
-__all__ = ["modelo_export_verb"]
+__all__ = ["export_modelo_revision_for_cli", "modelo_export_verb"]
 
 
 def modelo_export_verb(
@@ -183,7 +183,7 @@ def modelo_export_verb(
         select=select,
     )
     target_revision_id = selected_revision.calculation_revision_id
-    result = _export_modelo_revision_for_cli(
+    result = export_modelo_revision_for_cli(
         calculation_revision_id=target_revision_id,
         output_path=output,
         actor=actor or resolve_default_actor(),

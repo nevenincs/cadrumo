@@ -16,6 +16,7 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
+from textual.containers import Vertical
 from textual.widgets import Button, Input, Static
 
 from .....application.user_profile.login_session import login_profile
@@ -28,8 +29,12 @@ from .....core.credentials import assess_profile_password
 from .....tests.secure_sql import isolated_profile_storage_root
 from .....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZE_IDS, SUPPORTED_TERMINAL_SIZES
 from ...components.host import ScreenHostApp
+from ...components.status import PinnedStatusBar
 from ...components.widgets import ContentScroll
+from ...devtools.fixture import registration_attempt
+from ..credentials import CredentialScreen
 from ..passphrase import PassphraseChangeAttempt, PassphraseChangeRefusal, PassphraseScreen
+from ..registration import RegistrationScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -79,6 +84,51 @@ def _app(profile_id: UUID) -> PassphraseScreen:
     return PassphraseScreen(
         assess=assess_profile_password,
         rotate=lambda current, new, confirm: _rotate(profile_id, current, new, confirm),
+    )
+
+
+async def _assert_credential_shell[OutcomeT](
+    screen: CredentialScreen[OutcomeT],
+    *,
+    banner_id: str,
+    panel_id: str,
+    first_field_id: str,
+    journey_only_id: str,
+) -> None:
+    """Mount one journey and prove its shared shell preserves its own form."""
+    async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
+        await pilot.pause()
+        panel = screen.query_one(f"#{panel_id}", Vertical)
+        column = panel.parent
+
+        assert screen.query_one(f"#{banner_id}", Static).has_class("cadrumo-banner")
+        assert screen.query_one("#credential-status", PinnedStatusBar)
+        assert screen.query_one(ContentScroll) is not None
+        assert panel.has_class("cadrumo-panel")
+        assert column is not None and column.has_class("cadrumo-column")
+        assert column.parent is screen.query_one(ContentScroll)
+        assert screen.app.focused is screen.query_one(f"#{first_field_id}", Input)
+        assert screen.query_one(f"#{journey_only_id}") is not None
+
+
+@pytest.mark.asyncio
+async def test_credential_journeys_share_the_shell_but_keep_their_own_entry_contracts() -> None:
+    """The shared panel nesting must not exchange the two credential journeys."""
+    await _assert_credential_shell(
+        PassphraseScreen(
+            assess=assess_profile_password, rotate=lambda current, new, confirm: PassphraseChangeAttempt()
+        ),
+        banner_id="passphrase-banner",
+        panel_id="passphrase-body",
+        first_field_id="field-current",
+        journey_only_id="btn-change",
+    )
+    await _assert_credential_shell(
+        RegistrationScreen(assess=assess_profile_password, register=registration_attempt),
+        banner_id="registration-banner",
+        panel_id="registration-body",
+        first_field_id="field-username",
+        journey_only_id="field-output-language",
     )
 
 

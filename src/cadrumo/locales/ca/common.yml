@@ -997,6 +997,289 @@ transactions:
     unreadable: Arxiu il·legible o format no suportat
     verified: Importació verificada amb èxit
 tui:
+  aeat_sync:
+    action:
+      pull_comparison: Pull comparison evidence
+      pull_filed: Pull filed declarations
+      review_census: Review census
+    address:
+      declaration: Modelo %{modelo} · %{filing_year} · %{period}
+    aeat_observation_state:
+      accepted: Accepted
+      not_observed: Not observed
+      rejected: Rejected
+      submitted: Submitted
+    area:
+      census: Census
+      evidence_comparison: Evidence comparison
+      filed_declarations: Filed declarations
+      notifications: Notifications
+      reconciliation: Reconciliation
+    availability:
+      available: Available
+      locked: Locked
+      never_captured: Never captured
+      stale: Stale
+      unavailable: Unavailable
+    census:
+      title: AEAT Sync census
+    census_category:
+      activity: Activity
+      address: Address
+      contact: Contact
+      obligation: Obligation
+      other: Other
+    census_status:
+      adopted: Adopted
+      conflict: Conflict
+      unchanged: Unchanged
+      unset: Unset
+    column:
+      aeat: AEAT
+      area: Area
+      availability: Availability
+      category: Category
+      declaration: Declaration
+      difference: Difference
+      document_custody: Document custody
+      field: Field
+      issued: Issued
+      local: Local
+      local_filing: Local filing
+      read: Read
+      receipt: Receipt
+      resolution: Resolution
+      sources: Sources
+      status: Status
+    discrepancy:
+      aeat_only: AEAT only
+      contradictory_source: Contradictory source
+      local_only: Local only
+      none: No difference
+      state_mismatch: State mismatch
+      unobserved: Not observed
+    document_custody_state:
+      held: Held
+      not_captured: Not captured
+      refused: Refused
+      unavailable: Unavailable
+    evidence_comparison:
+      title: AEAT Sync evidence comparison
+    filed_declarations:
+      title: AEAT Sync filed declarations
+    justificante_state:
+      available: Available
+      not_observed: Not observed
+      unavailable: Unavailable
+      verified: Verified
+    local_filing_state:
+      filed: Filed
+      not_observed: Not observed
+      ready: Ready
+    notification_category:
+      communication: Communication
+      formal: Formal
+      other: Other
+      pending: Pending
+    notification_read_state:
+      read: Read
+      unknown: Unknown
+      unread: Unread
+    notifications:
+      title: AEAT Sync notifications
+    operation:
+      failed: Operation could not be started.
+      handed_off: Operation handed to the host.
+    overview:
+      title: AEAT Sync overview
+    reconciliation:
+      title: AEAT Sync reconciliation
+    reconciliation_state:
+      accept_aeat: Accept AEAT
+      dismissed: Dismissed
+      keep_local: Keep local
+      no_action: No action
+      unresolved: Unresolved
+    refusal:
+      operation_handoff: Operation handoff is unavailable.
+      source: This source is unavailable for viewing.
+    source:
+      aeat:
+        census: AEAT census
+        filed_declarations: AEAT filed declarations
+        notifications: AEAT notifications
+      local:
+        filings: Local filings
+        notification_custody: Local notification custody
+        profile: Local profile
+        reconciliation: Local reconciliation
+    source_state:
+      absent: Absent
+      accepted: Accepted
+      conflict: Conflict
+      not_observed: Not observed
+      present: Present
+      rejected: Rejected
+    sources:
+      entry: '%{source}: %{availability}'
+      joined: '%{entries}'
+    value:
+      none: —
+    zone:
+      census: Census
+      evidence_comparison: Evidence comparison
+      filed_declarations: Filed declarations
+      notifications: Notifications
+      overview: Overview
+      reconciliation: Reconciliation
+  declarations:
+    availability:
+      available: Disponible
+      locked: Bloquejat
+      never_captured: Mai capturat
+      stale: Últimes dades capturades
+      unavailable: No disponible
+    calendar:
+      action:
+        create: Crea o recupera aquesta declaració
+        open: Obre aquesta declaració
+      aeat:
+        accepted: Acceptada
+        justificante_verified: Justificant verificat
+        not_observed: No observada
+        submitted_observed: Enviament observat
+        unknown: Font no observable
+      column:
+        aeat: Evidència AEAT
+        close: Tancament
+        declaration: Declaració
+        legal: Situació legal
+        local: Estat local
+      detail:
+        action: 'Acció en prémer Retorn: {action}'
+        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificant: {receipt}'
+        dates: 'Obertura: {opening} · Pagament: {payment} · Tancament ajustat: {closing}'
+        source: '{source}: {availability} · Observat: {observed}'
+      empty:
+        known: No hi ha obligacions en aquest interval.
+        search: Cap obligació coincideix amb la cerca i l'àmbit.
+        stale: L'última agenda observada ({observed}) no té files; les dades estan
+          desactualitzades.
+      justificante:
+        not_verified: No verificat
+        unknown: Desconegut
+        verified: Verificat
+      legal:
+        due_soon: Venç aviat
+        due_today: Venç avui
+        filed: Presentada
+        not_applicable: No aplicable
+        overdue: Vençuda
+        upcoming: Propera
+      local:
+        external_baseline_imported: Registre extern importat
+        not_ready_to_file: No preparada
+        ready_to_file: Preparada per presentar
+        unknown: Font no observable
+      never_observed: Mai observat
+      none: No aplicable
+      observation:
+        not_recorded: Actual i disponible; hora d'observació no registrada
+        time_not_recorded: Hora d'observació no registrada
+      recovery:
+        cancel: Cancel·la
+        confirm: Confirma
+        failure: No s'ha pogut completar la recuperació.
+      scope:
+        all: Totes
+        evidence_unknown: Evidència AEAT desconeguda
+        filed: Presentades localment
+        overdue: Vençudes
+        past: Passades
+        upcoming: Properes
+      search:
+        placeholder: Cerca per model, exercici, període, estat o data
+      source:
+        aeat:
+          evidence: Evidència AEAT
+        local:
+          filing: Presentació local
+        schedule: Calendari legal
+      title: Agenda de declaracions
+      user:
+        due: Pendent
+        filed: Presentada localment
+        late: Endarrerida
+        unknown: Desconeguda
+    column:
+      aeat_accepted: Acceptació de l'AEAT observada
+      aeat_evidence: Evidència de l'AEAT
+      availability: Disponibilitat
+      calculation: Càlcul actual
+      calculation_revision: Revisió de càlcul creada
+      current: Actual
+      declaration: Declaració
+      destination: Destinació
+      filed: Presentada
+      local_filing: Estat local de presentació
+      local_state: Estat local
+      updated: Actualitzada
+      when: Data
+    destination:
+      calendar: Calendari fiscal
+      filing_history: Historial de presentacions
+      modelo_workspace: Obre l'espai de declaració
+      overview: Declaracions
+      revisions: Revisions de càlcul
+    empty: No hi ha registres mesurats.
+    evidence:
+      aeat_justificante_pdf: Justificant PDF de l'AEAT observat
+      aeat_live_capture: Observació en directe de l'AEAT
+      none: Sense evidència observada de l'AEAT
+    filing_history:
+      axes: L'estat local de presentació i l'evidència observada de l'AEAT són fets
+        separats.
+      title: Historial de presentacions
+    filing_state:
+      supersedido: Registre local substituït
+      vigente: Registre local vigent
+    lifecycle:
+      amended: Rectificació iniciada
+      calculated: Càlcul completat
+      created: Declaració creada
+      discarded: Declaració descartada
+      exported: Declaració exportada
+      external_evidence_imported: Evidència externa de l'AEAT importada
+      filed: Presentació registrada localment
+      renamed: Declaració reanomenada
+      superseded: Presentació substituïda localment
+      verified: Verificació completada
+    overview:
+      title: Resum de declaracions
+    refusal:
+      handoff: L'amfitrió no ha proporcionat aquesta destinació.
+      source: Aquesta font no està disponible actualment.
+    revision_state:
+      borrador: Esborrany
+      descartado: Descartat
+      presentado: Càlcul presentat
+      presentado_supersedido: Càlcul presentat substituït
+      verificado_completo: Verificació completa
+    revisions:
+      explanation: Les revisions de càlcul són versions desades del càlcul, no revisions
+        del registre del model.
+      title: Revisions de càlcul
+    unavailable:
+      title: Àrea de declaracions no disponible
+    value:
+      available: Disponible
+      'no': 'No'
+      none: Cap
+      not_applicable: No aplicable
+      'yes': Sí
+    work_state:
+      borrador: Esborrany
+      descartado: Descartat
   ledger:
     area:
       classification: Classificació

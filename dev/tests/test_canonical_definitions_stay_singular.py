@@ -50,6 +50,10 @@ _CANONICAL_DEFINITIONS: dict[str, str] = {
     "SHA256_HEX_LENGTH": "src/cadrumo/core/hashing.py",
     "FAMILIA_SECTION_ID": "src/cadrumo/application/wizard/catalogue.py",
     "RESPONSIBLE_OWNER": "src/cadrumo/application/modelo/edit_services.py",
+    # Collapsed by the concurrent campaign after this campaign adjudicated the pair
+    # as owed a merge and named `_adapter_utils` as the home both copies already
+    # depended on. Watched here so the collapse cannot be undone silently.
+    "extract_marker_verdict": "src/cadrumo/adapters/outbound/aeat/sede/_adapter_utils.py",
 }
 
 

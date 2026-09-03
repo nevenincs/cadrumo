@@ -993,7 +993,7 @@ def test_reviewed_anchor_vocabulary_is_exact(epoch: _EpochAuthorities) -> None:
         )
 
 
-def test_simplified_projections_cover_exactly_the_s63_declaration_index(epoch: _EpochAuthorities) -> None:
+def test_simplified_projections_cover_exactly_the_declared_anchor_set(epoch: _EpochAuthorities) -> None:
     expectation = M303_SEMANTIC_CENSUS_EXPECTATIONS[epoch.design_epoch]
     simplified = {
         (entry.anchor.record_identity, entry.anchor.ordinal)

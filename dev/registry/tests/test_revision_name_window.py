@@ -41,6 +41,16 @@ def test_a_name_later_than_its_window_is_reported_apart_from_one_that_is_earlier
     window understates the revision's reach - 151 serves filing years 2023 and
     2024 under a name claiming 2025 - while a name earlier than its window claims
     years the revision does not serve.
+
+    Pinned to a live defect. The plan carries an open Step to rename this
+    revision, and this test fails when that lands: the failure is the rename, not
+    a regression. One other revision is in this state - modelo 720's
+    2013-y-siguientes - and it carries a rename Step of its own, so it is not a
+    successor: when the cluster lands the corpus holds no member of this kind at
+    all. The replacement is therefore a constructed one, a real revision copied
+    with its opening year moved, as the sibling conditions already do. Do not
+    delete the test - the direction is the reason this condition exists apart
+    from its opposite.
     """
     revision = authority.modelo("151").revisions["2025-y-siguientes"]
     findings = name_window_findings(revision, modelo_id="151")
@@ -55,7 +65,23 @@ def test_a_name_later_than_its_window_is_reported_apart_from_one_that_is_earlier
 def test_a_name_earlier_than_its_window_is_the_other_direction(
     authority: ValidatedRegistryAuthority,
 ) -> None:
-    """Modelo 185 names 2025 while declaring a window that opens in 2026."""
+    """Modelo 185 names 2025 while declaring a window that opens in 2026.
+
+    Pinned to a live defect, deliberately, and this note is what the pin owes.
+    The plan carries an open Step to rename this revision; when that happens the
+    window and the name will agree and this test will fail. That failure is the
+    correction landing, not a regression.
+
+    What must replace it: another revision whose name opens before its window,
+    or - if none remains - a constructed one, as the closing-year and
+    open-ended conditions beside it already use. Do not delete the test to make
+    the rename green: the direction it distinguishes is the reason the condition
+    was split from its opposite.
+
+    Modelo 322's 2008-2022 is the only other revision in this state and it is
+    stepped for rename as well, so no live successor survives the cluster; the
+    replacement is constructed.
+"""
     revision = authority.modelo("185").revisions["2025-y-siguientes"]
     kinds = {finding.kind for finding in name_window_findings(revision, modelo_id="185")}
 
@@ -175,6 +201,12 @@ def test_a_selectable_open_end_still_reports_the_name_understating_its_reach(
     Modelo 721's 2024 is named for one year, runs open-ended, and admits filing
     year 2026. It must keep its finding, or the exclusion above would have
     silenced the condition rather than narrowed it.
+
+    Pinned to a live defect with an open Step to close or rename it. When that
+    lands this test fails. Modelo 194's 2024 is in the same state for the same
+    reason, but it carries a rename Step too, so it is a companion rather than a
+    successor. Both leave together, and the replacement is a constructed
+    revision: a real one copied with its closing bound removed.
     """
     revision = authority.modelo("721").revisions["2024"]
     kinds = {finding.kind for finding in name_window_findings(revision, modelo_id="721")}

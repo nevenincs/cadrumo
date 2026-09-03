@@ -108,7 +108,7 @@ def _wizard_dependencies() -> _WizardDeps:
     )
 
 
-def _resolve_modelo_work_unit_for_wizard(
+def resolve_modelo_work_unit_for_wizard(
     *,
     activate_output_language: Callable[[typer.Context, OutputLanguage | None], None],
     require_active_profile: Callable[[], None],
@@ -147,7 +147,7 @@ def run_modelo_work_wizard(
     actor: str | None,
     output_language_opt: OutputLanguage | None,
 ) -> None:
-    unit = _resolve_modelo_work_unit_for_wizard(
+    unit = resolve_modelo_work_unit_for_wizard(
         activate_output_language=deps.activate_output_language,
         require_active_profile=deps.require_active_profile,
         resolve_work_unit_for_cli=deps.resolve_work_unit_for_cli,
@@ -334,7 +334,7 @@ def _emit_wizard_result(
     emit_envelope(ctx, command="modelo.work.wizard", result=result, lines=lines, notices=notices or None)
 
 
-__all__ = ["work_wizard"]
+__all__ = ["resolve_modelo_work_unit_for_wizard", "work_wizard"]
 
 
 def work_wizard(

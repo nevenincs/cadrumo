@@ -12,6 +12,7 @@ import argparse
 import re
 import shutil
 import subprocess
+import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -35,10 +36,8 @@ HISTORIC_ROOT = "src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casi
 
 __all__ = [
     "HISTORIC_COMMIT",
-    "RestorationCandidate",
     "RestorationProposal",
     "RestorationRefusal",
-    "build_bundled_restoration_candidates",
     "build_bundled_restoration_proposals",
     "main",
     "render_review_toml",
@@ -72,11 +71,6 @@ class RestorationProposal:
     historic_path: str
 
 
-# Keep the old import name as a type alias for development callers while making
-# the non-authoritative status explicit in the canonical class name.
-RestorationCandidate = RestorationProposal
-
-
 @dataclass(frozen=True, slots=True)
 class RestorationRefusal:
     """One gap whose historic evidence cannot form even a review proposal."""
@@ -94,8 +88,10 @@ def build_bundled_restoration_proposals() -> tuple[tuple[RestorationProposal, ..
     """
     classified = _load_bundled_candidates()
     current_map = load_semantic_map(Path(__file__).parents[1] / "mappings" / "modelo_200" / "2024")
+    if not isinstance(current_map, SemanticMap):
+        raise TypeError("semantic-map loader returned a non-semantic-map value")
     current_entries = {str(entry.export_field_id): entry for entry in current_map.entries}
-    target_fields = _load_target_field_index(current_map) if isinstance(current_map, SemanticMap) else {}
+    target_fields = _load_target_field_index(current_map)
     historic = _historic_index()
     proposals: list[RestorationProposal] = []
     refused: list[RestorationRefusal] = []
@@ -158,11 +154,6 @@ def build_bundled_restoration_proposals() -> tuple[tuple[RestorationProposal, ..
     )
 
 
-def build_bundled_restoration_candidates() -> tuple[tuple[RestorationProposal, ...], tuple[RestorationRefusal, ...]]:
-    """Compatibility spelling for the proposal-only builder."""
-    return build_bundled_restoration_proposals()
-
-
 def render_review_toml(
     proposals: tuple[RestorationProposal, ...],
     refusals: tuple[RestorationRefusal, ...] = (),
@@ -186,30 +177,12 @@ def render_review_toml(
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Report proposal/refusal diagnostics and optionally write review TOML."""
+    """Emit proposal-only review TOML to stdout."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, help="write review-only TOML to this explicit path")
-    parser.add_argument("--check", action="store_true", help="compare --output without writing")
-    args = parser.parse_args(argv)
-    if args.check and args.output is None:
-        parser.error("--check requires --output")
+    parser.parse_args(argv)
 
     proposals, refusals = build_bundled_restoration_proposals()
-    print(f"proposals={len(proposals)}")
-    print(f"refused={len(refusals)}")
-    for item in refusals[:10]:
-        print(f"refusal[{item.export_field_id}]={item.reason}")
-    if args.output is not None:
-        rendered = render_review_toml(proposals, refusals)
-        if args.check:
-            if not args.output.is_file() or args.output.read_text(encoding="utf-8") != rendered:
-                print(f"stale={args.output}")
-                return 1
-            print(f"current={args.output}")
-        else:
-            args.output.parent.mkdir(parents=True, exist_ok=True)
-            args.output.write_text(rendered, encoding="utf-8", newline="\n")
-            print(f"wrote={args.output}")
+    sys.stdout.write(render_review_toml(proposals, refusals))
     return 1 if refusals else 0
 
 
@@ -252,6 +225,13 @@ def _load_target_field_index(current_map: SemanticMap) -> dict[str, RecordDesign
         filing_year=2024,
         design_epoch=current_map.design_epoch,
     )
+    parsed_identity = (str(design.source.source_ref), design.source.source_sha256)
+    map_identity = (str(current_map.source_ref), current_map.source_sha256)
+    if parsed_identity != map_identity:
+        raise ValueError(
+            "semantic map source identity does not exactly match the parsed pinned design: "
+            f"map={map_identity!r}, parsed={parsed_identity!r}",
+        )
     fields = {intermediate_anchor_key(field): field for sheet in design.sheets for field in sheet.fields}
     result: dict[str, RecordDesignIntermediateField] = {}
     for entry in current_map.entries:

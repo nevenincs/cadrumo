@@ -145,3 +145,31 @@ def test_the_registry_still_refuses_a_genuinely_ambiguous_coordinate(
     )
     assert str(before) == "2009-2011-junio"
     assert str(after) == "2011-julio-2015"
+
+
+def test_a_year_that_cannot_choose_between_split_windows_is_recorded_not_erased(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """The retry that rescues the answer must not hide that the year alone failed.
+
+    Modelo 308 changes at the end of June 2011, so both revisions cover filing
+    year 2011 and the year alone cannot choose. The probe asks again with a date
+    inside the revision's own window, which answers correctly - and that retry
+    used to clear the refusal and leave the row indistinguishable from one the
+    year decided outright. The single coordinate this screen was built to show
+    was therefore invisible in its own output.
+
+    Pinned to a live registry state, and this note is what the pin owes. If the
+    modelo 308 windows are ever restated so the year decides on its own, this
+    test fails and that failure is the correction. Replace the coordinate with
+    another revision pair splitting inside one year; if the corpus holds none,
+    the flag should still be proven against a constructed pair rather than
+    dropped, because the erasure it guards against returns silently.
+    """
+    probes = probe_modelo(authority, "308")
+    ambiguous = [probe for probe in probes if probe.year_alone_ambiguous]
+
+    assert [(probe.revision, probe.filing_year) for probe in ambiguous] == [("2011-julio-2015", 2011)]
+    assert ambiguous[0].resolved == "2011-julio-2015", "the date retry must still answer"
+    assert ambiguous[0].refusal is None, "a rescued coordinate is not a refusal"
+    assert all(not probe.year_alone_ambiguous for probe in probes if probe.revision != "2011-julio-2015")

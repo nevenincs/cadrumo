@@ -24,9 +24,12 @@ inject rather than import.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from typing import TYPE_CHECKING, ClassVar, Final, Protocol, cast
 
 from textual.binding import Binding
+from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Static
 from textual.worker import Worker, WorkerState
@@ -36,6 +39,7 @@ from ....core.i18n.render import tr
 from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.components.theme import toggle_appearance, tokenised
+from ....entrypoints.tui.components.widgets import ContentScroll
 from ..components.app_access import TypedAppAccess
 
 if TYPE_CHECKING:
@@ -124,6 +128,21 @@ class CredentialScreen[OutcomeT](TypedAppAccess, Screen[OutcomeT | None]):
         assessment = assess(candidate)
         line.add_class(assessment_css_class(assessment))
         line.update(assessment_copy(assessment, locale=locale))
+
+    @contextmanager
+    def credential_panel(self, *, panel_id: str) -> Iterator[None]:
+        """Compose the shared scrollable column that contains one credential form.
+
+        The caller owns its banner, status bar, fields, actions, and footer.
+        This context manager owns only the stable nesting that makes each
+        credential journey scroll and carry the common panel styling.
+        """
+        with (
+            ContentScroll(classes="cadrumo-scroll"),
+            Vertical(classes="cadrumo-column"),
+            Vertical(id=panel_id, classes="cadrumo-panel"),
+        ):
+            yield
 
     @property
     def attempt_in_flight(self) -> bool:

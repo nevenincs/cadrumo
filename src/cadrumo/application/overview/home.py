@@ -58,6 +58,26 @@ class HomeDeclarationState(StrEnum):
     DISCARDED = "discarded"
 
 
+class HomeTargetKind(StrEnum):
+    """Which Home zone a selected row came from.
+
+    One vocabulary that the production Home screen and the devtools candidate
+    prototypes had each written out.  The three members are the three
+    selectable zones of :class:`HomeProjectionV1`, so the projection that
+    defines those zones is where the vocabulary belongs; a frontend that
+    restates it can disagree with the projection it renders.
+    """
+
+    ACTION = "action"
+    """A row from the next-action zone."""
+
+    DECLARATION = "declaration"
+    """A row from the resumable-declaration zone."""
+
+    AGENDA = "agenda"
+    """A row from the agenda zone."""
+
+
 class HomeZoneState(BaseModel):
     """Authority and freshness state shared by every Home zone."""
 
@@ -219,6 +239,11 @@ class HomeProjectionV1(BaseModel):
             raise ValueError("Home next actions require unique contiguous ranks in display order")
         if len(self.agenda) > 3:
             raise ValueError("Home may preview at most three agenda entries")
+        agenda_addresses = tuple(
+            (item.modelo, item.filing_year, item.period.registry_token) for item in self.agenda
+        )
+        if len(set(agenda_addresses)) != len(agenda_addresses):
+            raise ValueError("Home agenda entries require unique natural addresses")
         due_dates = tuple(item.due_on for item in self.agenda)
         if due_dates != tuple(sorted(due_dates)):
             raise ValueError("Home agenda entries must be chronological")

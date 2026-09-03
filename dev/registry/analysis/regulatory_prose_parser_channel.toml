@@ -104,3 +104,8 @@ reason = "Resolves glossary term references in authored documentation; enrolled 
 module = "dev/docs/terminology/_sweep.py"
 corpus = "Terminology Handbook fragments"
 reason = "Sweeps documentation for enrolled terms; same disposition as its resolution sibling."
+
+[[parser]]
+module = "dev/registry/analysis/footnote_pointer_notes.py"
+corpus = "AEAT record-design transcriptions"
+reason = "Resolves a Contenido footnote pointer to the note text the design states beneath the table, so a reviewer authoring a representation rule can read what the pointer defers to. Enrolment authorises reading that prose and no value: the screen reports the note and derives nothing, and any scale or sign a note establishes still lands in the authoring tree with its provision. The design is located from the source reference's own corpus path rather than by globbing its directory, because one modelo bundles fifteen designs and a note resolved against the wrong year is worse evidence than none."

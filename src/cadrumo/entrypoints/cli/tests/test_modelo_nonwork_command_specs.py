@@ -19,8 +19,13 @@ from .._modelo_nonwork_bindings_command_specs import (
     _YEAR_OPTION,
     MODELO_NONWORK_BINDINGS_COMMAND_SPECS,
 )
+from .._modelo_nonwork_calculations_command_specs import MODELO_NONWORK_CALCULATION_COMMAND_SPECS
 from .._modelo_nonwork_command_spec_policies import _INTERACTIVE_MODEL_WRITE
 from .._modelo_nonwork_command_specs import MODELO_NONWORK_COMMAND_SPECS
+from .._modelo_nonwork_common_command_parameters import (
+    CALCULATION_REVISION_SELECTOR_OPTIONS,
+    FILING_ELECTION_OPTIONS,
+)
 from .._modelo_nonwork_discovery_command_specs import (
     _REGISTRY_YEAR_OPTION,
     CASILLA_LOOKUP_SCOPE,
@@ -453,6 +458,92 @@ def test_review_package_shared_inputs_keep_exact_order_and_identity() -> None:
     imported = specs["app_modelo_review_package_import_feedback"]
     assert imported.parameters[1].name == "package"
     assert imported.parameters[1] is not _REVIEW_PACKAGE_INPUT
+
+
+def test_calculation_and_filing_common_parameters_keep_exact_order_and_identity() -> None:
+    calculation_specs = {spec.key: spec for spec in MODELO_NONWORK_CALCULATION_COMMAND_SPECS}
+    export = calculation_specs["app_modelo_export"]
+    build = {spec.key: spec for spec in MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS}[
+        "app_modelo_review_package_build"
+    ]
+
+    assert type(CALCULATION_REVISION_SELECTOR_OPTIONS) is tuple
+    assert tuple(parameter.name for parameter in CALCULATION_REVISION_SELECTOR_OPTIONS) == (
+        "modelo",
+        "year",
+        "period",
+        "registry_revision",
+        "bucket_id",
+        "select",
+    )
+    assert tuple(parameter.declarations for parameter in CALCULATION_REVISION_SELECTOR_OPTIONS) == (
+        ("--modelo",),
+        ("--year",),
+        ("--period",),
+        ("--registry-revision",),
+        ("--bucket-id",),
+        ("--select",),
+    )
+    assert tuple(parameter.help_key for parameter in CALCULATION_REVISION_SELECTOR_OPTIONS) == (
+        TranslationKey("cli.app.modelo.work.modelo_help"),
+        TranslationKey("cli.app.modelo.work.year_help"),
+        TranslationKey("cli.app.modelo.work.period_help"),
+        TranslationKey("cli.app.modelo.work.revision_help"),
+        TranslationKey("cli.app.modelo.work.bucket_id_help"),
+        TranslationKey("cli.app.modelo.work.revision_selector_help"),
+    )
+    assert tuple(parameter.default.literal for parameter in CALCULATION_REVISION_SELECTOR_OPTIONS) == (
+        None,
+        None,
+        None,
+        None,
+        None,
+        "current",
+    )
+
+    assert type(FILING_ELECTION_OPTIONS) is tuple
+    assert tuple(parameter.name for parameter in FILING_ELECTION_OPTIONS) == (
+        "refund_election",
+        "payment_election",
+        "prior_domiciliation_election",
+    )
+    assert tuple(parameter.declarations for parameter in FILING_ELECTION_OPTIONS) == (
+        ("--refund-election",),
+        ("--payment-election",),
+        ("--prior-domiciliation-election",),
+    )
+    assert tuple(parameter.default.literal for parameter in FILING_ELECTION_OPTIONS) == (
+        "compensar",
+        "ingreso",
+        "keep",
+    )
+
+    assert tuple(parameter.name for parameter in export.parameters) == (
+        "work_unit_id",
+        "modelo",
+        "year",
+        "period",
+        "registry_revision",
+        "bucket_id",
+        "select",
+        "output",
+        "revision",
+        "actor",
+        "refund_election",
+        "payment_election",
+        "prior_domiciliation_election",
+    )
+    for spec in (export, build):
+        assert all(
+            actual is expected
+            for actual, expected in zip(spec.parameters[1:7], CALCULATION_REVISION_SELECTOR_OPTIONS, strict=True)
+        )
+        assert all(
+            actual is expected for actual, expected in zip(spec.parameters[10:13], FILING_ELECTION_OPTIONS, strict=True)
+        )
+
+    assert build.parameters[5] is CALCULATION_REVISION_SELECTOR_OPTIONS[4]
+    assert build.parameters[5] is not _REVIEW_PACKAGE_BUCKET_ID_OPTION
 
 
 def test_every_nonwork_target_is_public_resolvable_and_runtime_materializable() -> None:

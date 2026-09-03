@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import ClassVar, Final, Literal, cast, override
+from typing import ClassVar, Final, cast, override
 
 from textual import events
 from textual.app import ComposeResult
@@ -30,19 +30,30 @@ from ....application.overview.home import (
     HomeNextAction,
     HomeProjectionV1,
     HomeSessionPosture,
+    HomeTargetKind,
     HomeZoneState,
 )
 from ....core.external_constants import OutputLanguage
 from ..components.widgets import ContentDataTable, ContentScroll
-
-type CandidateTargetKind = Literal["action", "declaration", "agenda"]
+from ..home import (
+    home_action_identity as _action_identity,
+)
+from ..home import (
+    home_address as _address,
+)
+from ..home import (
+    home_agenda_identity as _agenda_identity,
+)
+from ..home import (
+    home_declaration_identity as _declaration_identity,
+)
 
 
 @dataclass(frozen=True, slots=True)
 class HomeCandidateTarget:
     """One semantic prototype selection, independent of row position."""
 
-    kind: CandidateTargetKind
+    kind: HomeTargetKind
     identity: str
 
 
@@ -365,25 +376,6 @@ def _state_copy(state: HomeZoneState, locale: OutputLanguage, *, empty_copy: str
     return label
 
 
-def _address(modelo: object, filing_year: int, period_token: str) -> str:
-    return f"Modelo {modelo} · {filing_year} · {period_token}"
-
-
-def _action_identity(item: HomeNextAction) -> str:
-    action_id = item.action.action.action_id
-    if item.period is None:
-        return f"action:{action_id}:{item.reason_code}:cross-cutting"
-    return f"action:{action_id}:{item.reason_code}:{item.modelo}:{item.filing_year}:{item.period.registry_token}"
-
-
-def _declaration_identity(item: HomeDeclarationResume) -> str:
-    return f"declaration:{item.work_unit_id}"
-
-
-def _agenda_identity(item: HomeAgendaEntry) -> str:
-    return f"agenda:{item.modelo}:{item.filing_year}:{item.period.registry_token}"
-
-
 def _action_cells(item: HomeNextAction, locale: OutputLanguage) -> tuple[str, str, str]:
     label = _ACTION_COPY.get(item.action.action.action_id, "Open suggested task")
     reason = _ACTION_REASON_COPY.get(item.reason_code, "Suggested by the local overview")
@@ -464,7 +456,7 @@ class _ProjectionCandidateScreen(Screen[None]):
         self.set_class(event.size.width >= self.WIDE_MINIMUM, "wide")
         self.set_class(event.size.width < self.WIDE_MINIMUM, "compact")
 
-    def _remember(self, kind: CandidateTargetKind, identity: str) -> str:
+    def _remember(self, kind: HomeTargetKind, identity: str) -> str:
         self._targets[identity] = HomeCandidateTarget(kind=kind, identity=identity)
         return identity
 
@@ -604,7 +596,7 @@ class DueDrivenHomeCandidateScreen(_ProjectionCandidateScreen):
         action_contexts: list[str] = []
         for item in projection.actions:
             reason, action, context = _action_cells(item, self._locale)
-            actions.add_row(action, key=self._remember("action", _action_identity(item)))
+            actions.add_row(action, key=self._remember(HomeTargetKind.ACTION, _action_identity(item)))
             action_contexts.append(f"{action} — {reason} · {context}")
         actions.display = bool(projection.actions)
         self.query_one("#due-action-contexts", Static).update("\n".join(action_contexts))
@@ -614,7 +606,8 @@ class DueDrivenHomeCandidateScreen(_ProjectionCandidateScreen):
         for item in projection.declarations:
             address, name, state = _declaration_cells(item, self._locale)
             declarations.add_row(
-                f"{address} · {name} · {state}", key=self._remember("declaration", _declaration_identity(item))
+                f"{address} · {name} · {state}",
+                key=self._remember(HomeTargetKind.DECLARATION, _declaration_identity(item)),
             )
         declarations.display = bool(projection.declarations)
 
@@ -623,7 +616,10 @@ class DueDrivenHomeCandidateScreen(_ProjectionCandidateScreen):
         evidence_rows: list[str] = []
         for item in projection.agenda:
             due, address, state = _agenda_cells(item, self._locale)
-            agenda.add_row(f"{due} · {address} · {state}", key=self._remember("agenda", _agenda_identity(item)))
+            agenda.add_row(
+                f"{due} · {address} · {state}",
+                key=self._remember(HomeTargetKind.AGENDA, _agenda_identity(item)),
+            )
             evidence_rows.append(f"{address} — {_evidence_copy(item, self._locale)}")
         agenda.display = bool(projection.agenda)
         self.query_one("#due-agenda-rows-evidence", Static).update("\n".join(evidence_rows))
@@ -735,17 +731,17 @@ class TaskLauncherHomeCandidateScreen(_ProjectionCandidateScreen):
         chooser.add_column("")
 
         for item in projection.actions:
-            identity = self._remember("action", _action_identity(item))
+            identity = self._remember(HomeTargetKind.ACTION, _action_identity(item))
             reason, label, context = _action_cells(item, self._locale)
             chooser.add_row(label, key=identity)
             self._details[identity] = f"{reason}. {context}."
         for item in projection.declarations[:1]:
-            identity = self._remember("declaration", _declaration_identity(item))
+            identity = self._remember(HomeTargetKind.DECLARATION, _declaration_identity(item))
             address, name, state = _declaration_cells(item, self._locale)
             chooser.add_row(f"{_text(self._locale, 'Resume')} {address}", key=identity)
             self._details[identity] = _text(self._locale, f"{name}. Local declaration status: {state}.")
         for item in projection.agenda[:1]:
-            identity = self._remember("agenda", _agenda_identity(item))
+            identity = self._remember(HomeTargetKind.AGENDA, _agenda_identity(item))
             due, address, state = _agenda_cells(item, self._locale)
             chooser.add_row(f"{_text(self._locale, 'Inspect')} {address}", key=identity)
             self._details[identity] = _text(self._locale, f"Due {due}. {state}. {_evidence_copy(item, self._locale)}.")
@@ -819,7 +815,6 @@ class TaskLauncherHomeCandidateScreen(_ProjectionCandidateScreen):
 
 
 __all__ = [
-    "CandidateTargetKind",
     "DueDrivenHomeCandidateScreen",
     "HomeCandidateTarget",
     "TaskLauncherHomeCandidateScreen",

@@ -71,6 +71,60 @@ _LEDGER_ACTOR_OPTION: Final[OptionSpec] = OptionSpec(
     show_default=True,
     hidden=False,
 )
+_LEDGER_ADD_CATEGORY_ID_OPTION: Final[OptionSpec] = OptionSpec(
+    name="category_id",
+    declarations=("--category-id",),
+    value=ValueContract(DeferredTarget("builtins", "str")),
+    default=ParameterDefault.value(None),
+    help_key=TranslationKey("cli.ledger.add.category_help"),
+    metavar=None,
+    is_flag=False,
+    flag_value=None,
+    multiple=False,
+    count=False,
+    eager=False,
+    constraint=ParameterConstraint(),
+    show_default=True,
+    hidden=False,
+)
+"""The exact optional category parameter shared by transaction add and allocation."""
+
+_LEDGER_USAGE_RATIO_ID_OPTION: Final[OptionSpec] = OptionSpec(
+    name="usage_ratio_id",
+    declarations=("--usage-ratio-id",),
+    value=ValueContract(DeferredTarget("builtins", "str")),
+    default=ParameterDefault.value(None),
+    help_key=TranslationKey("cli.ledger.add.usage_ratio_help"),
+    metavar=None,
+    is_flag=False,
+    flag_value=None,
+    multiple=False,
+    count=False,
+    eager=False,
+    constraint=ParameterConstraint(),
+    show_default=True,
+    hidden=False,
+)
+"""The exact optional usage-ratio parameter shared by transaction add and allocation."""
+
+_ARCHIVE_REASON_OPTION: Final[OptionSpec] = OptionSpec(
+    name="reason",
+    declarations=("--reason",),
+    value=ValueContract(DeferredTarget("builtins", "str")),
+    default=ParameterDefault.value(""),
+    help_key=TranslationKey("cli.ledger.archive.reason_help"),
+    metavar=None,
+    is_flag=False,
+    flag_value=None,
+    multiple=False,
+    count=False,
+    eager=False,
+    constraint=ParameterConstraint(),
+    show_default=True,
+    hidden=False,
+)
+"""The exact optional reason accepted by archive, restore, and stash."""
+
 _MERGE_REASON_OPTION: Final[OptionSpec] = OptionSpec(
     name="reason",
     declarations=("--reason",),
@@ -121,11 +175,14 @@ _OPTIONAL_YEAR_OPTION: Final[OptionSpec] = OptionSpec(
 )
 
 __all__ = [
+    "_ARCHIVE_REASON_OPTION",
     "_EVIDENCE_ACTOR_OPTION",
     "_EVIDENCE_TRANSACTION_ID_ARGUMENT",
     "_GROUP_INVOCATION",
     "_LEAF_INVOCATION",
     "_LEDGER_ACTOR_OPTION",
+    "_LEDGER_ADD_CATEGORY_ID_OPTION",
+    "_LEDGER_USAGE_RATIO_ID_OPTION",
     "_MERGE_REASON_OPTION",
     "_NO_RESULT_SCHEMA",
     "_OPTIONAL_PERIOD_OPTION",

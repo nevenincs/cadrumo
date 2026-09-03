@@ -992,6 +992,186 @@ transactions:
     unreadable: Olvashatatlan fájl vagy nem támogatott formátum.
     verified: Az import sikeresen ellenőrizve.
 tui:
+  aeat_sync:
+    area:
+      evidence_comparison: Evidence comparison
+      reconciliation: Reconciliation
+    census_category:
+      activity: Activity
+    census_status:
+      adopted: Adopted
+      conflict: Conflict
+    column:
+      document_custody: Document custody
+      read: Read
+    discrepancy:
+      state_mismatch: State mismatch
+    document_custody_state:
+      not_captured: Not captured
+    filed_declarations:
+      title: AEAT Sync filed declarations
+    justificante_state:
+      available: Available
+      unavailable: Unavailable
+    local_filing_state:
+      not_observed: Not observed
+    reconciliation_state:
+      keep_local: Keep local
+    source:
+      aeat:
+        notifications: AEAT notifications
+    sources:
+      entry: '%{source}: %{availability}'
+      joined: '%{entries}'
+    zone:
+      evidence_comparison: Evidence comparison
+  declarations:
+    availability:
+      available: Elérhető
+      locked: Zárolva
+      never_captured: Még nincs rögzítve
+      stale: Legutóbb rögzített adatok
+      unavailable: Nem érhető el
+    calendar:
+      action:
+        create: Bevallás létrehozása vagy helyreállítása
+        open: Bevallás megnyitása
+      aeat:
+        accepted: Elfogadva
+        justificante_verified: Igazolás ellenőrizve
+        not_observed: Nem figyelték meg
+        submitted_observed: Benyújtás megfigyelve
+        unknown: A forrás nem megfigyelhető
+      column:
+        aeat: AEAT-bizonyíték
+        close: Zárás
+        declaration: Bevallás
+        legal: Jogi állapot
+        local: Helyi állapot
+      detail:
+        action: 'Enter művelete: {action}'
+        axes: 'Jogi: {legal} · Helyi: {local} · AEAT: {aeat} · Igazolás: {receipt}'
+        dates: 'Nyitás: {opening} · Fizetés: {payment} · Módosított zárás: {closing}'
+        source: '{source}: {availability} · Megfigyelve: {observed}'
+      empty:
+        known: Ebben az időszakban nincs kötelezettség.
+        search: Nincs a keresésnek és szűrőnek megfelelő kötelezettség.
+        stale: Az utoljára megfigyelt napirendben ({observed}) nincs sor; az adatok
+          elavultak.
+      justificante:
+        not_verified: Nincs ellenőrizve
+        unknown: Ismeretlen
+        verified: Ellenőrzött
+      legal:
+        due_soon: Hamarosan esedékes
+        due_today: Ma esedékes
+        filed: Benyújtott
+        not_applicable: Nem alkalmazható
+        overdue: Lejárt
+        upcoming: Közelgő
+      local:
+        external_baseline_imported: Külső rekord importálva
+        not_ready_to_file: Nem benyújtható
+        ready_to_file: Benyújtható
+        unknown: A forrás nem megfigyelhető
+      never_observed: Soha nem figyelték meg
+      none: Nem alkalmazható
+      observation:
+        not_recorded: Aktuális és elérhető; a megfigyelés ideje nincs rögzítve
+        time_not_recorded: A megfigyelés ideje nincs rögzítve
+      recovery:
+        cancel: Mégse
+        confirm: Megerősítés
+        failure: A helyreállítási kérelem nem fejezhető be.
+      scope:
+        all: Mind
+        evidence_unknown: Ismeretlen AEAT-bizonyíték
+        filed: Helyben benyújtott
+        overdue: Lejárt
+        past: Múltbeli
+        upcoming: Közelgő
+      search:
+        placeholder: Keresés modell, év, időszak, állapot vagy dátum szerint
+      source:
+        aeat:
+          evidence: AEAT-bizonyíték
+        local:
+          filing: Helyi benyújtás
+        schedule: Jogi ütemezés
+      title: Bevallási napirend
+      user:
+        due: Esedékes
+        filed: Helyben benyújtott
+        late: Késedelmes
+        unknown: Ismeretlen
+    column:
+      aeat_accepted: Megfigyelt AEAT-elfogadás
+      aeat_evidence: AEAT-bizonyíték
+      availability: Elérhetőség
+      calculation: Aktuális számítás
+      calculation_revision: Számítási változat létrehozva
+      current: Aktuális
+      declaration: Bevallás
+      destination: Cél
+      filed: Benyújtva
+      local_filing: Helyi benyújtási állapot
+      local_state: Helyi állapot
+      updated: Frissítve
+      when: Dátum
+    destination:
+      calendar: Bevallási naptár
+      filing_history: Benyújtási előzmények
+      modelo_workspace: Bevallási munkaterület megnyitása
+      overview: Bevallások
+      revisions: Számítási változatok
+    empty: Nincs mért rekord.
+    evidence:
+      aeat_justificante_pdf: Megfigyelt AEAT PDF-nyugta
+      aeat_live_capture: Élő AEAT-megfigyelés
+      none: Nincs megfigyelt AEAT-bizonyíték
+    filing_history:
+      axes: A helyi benyújtási állapot és a megfigyelt AEAT-bizonyíték külön tény.
+      title: Benyújtási előzmények
+    filing_state:
+      supersedido: Felváltott helyi rekord
+      vigente: Aktuális helyi rekord
+    lifecycle:
+      amended: Helyesbítés elindítva
+      calculated: Számítás elkészült
+      created: Bevallás létrehozva
+      discarded: Bevallás elvetve
+      exported: Bevallás exportálva
+      external_evidence_imported: Külső AEAT-bizonyíték importálva
+      filed: Benyújtás helyben rögzítve
+      renamed: Bevallás átnevezve
+      superseded: Benyújtás helyben felváltva
+      verified: Ellenőrzés elkészült
+    overview:
+      title: Bevallások áttekintése
+    refusal:
+      handoff: A gazda nem biztosította ezt a célt.
+      source: Ez a forrás jelenleg nem érhető el.
+    revision_state:
+      borrador: Piszkozat
+      descartado: Elvetve
+      presentado: Benyújtott számítás
+      presentado_supersedido: Felváltott benyújtott számítás
+      verificado_completo: Ellenőrzés kész
+    revisions:
+      explanation: A számítási változatok mentett számítások, nem a Modelo-nyilvántartás
+        változatai.
+      title: Számítási változatok
+    unavailable:
+      title: A bevallási terület nem érhető el
+    value:
+      available: Elérhető
+      'no': Nem
+      none: Nincs
+      not_applicable: Nem alkalmazható
+      'yes': Igen
+    work_state:
+      borrador: Piszkozat
+      descartado: Elvetve
   ledger:
     area:
       classification: Besorolás

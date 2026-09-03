@@ -125,7 +125,7 @@ from ._modelo_cli_support import (
     resolve_default_actor,
     resolve_explicit_or_active_bucket_id,
 )
-from ._modelo_export_cli import _export_modelo_revision_for_cli
+from ._modelo_export_cli import export_modelo_revision_for_cli
 from ._modelo_review_package_rendering import (
     review_package_build_result_lines,
     review_package_build_result_payload,
@@ -186,7 +186,7 @@ def review_package_build(
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="cadrumo-review-package-draft-", dir=output.parent) as staging_name:
         draft_path = Path(staging_name) / "draft.fichero-boe"
-        export_result = _export_modelo_revision_for_cli(
+        export_result = export_modelo_revision_for_cli(
             calculation_revision_id=target_revision_id,
             output_path=draft_path,
             actor=resolved_actor,

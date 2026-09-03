@@ -78,8 +78,8 @@ def test_intermediate_consumes_the_hash_pinned_binary_not_adjacent_derivatives(t
     assert first_resolved.source.sha256 == bundled.source.sha256
     assert second_resolved.source.sha256 == bundled.source.sha256
     assert first_intermediate == second_intermediate
-    assert "S03-IR-DERIVATIVE-FIRST" not in first_intermediate.model_dump_json()
-    assert "S03-IR-DERIVATIVE-SECOND" not in second_intermediate.model_dump_json()
+    assert "IR-DERIVATIVE-FIRST" not in first_intermediate.model_dump_json()
+    assert "IR-DERIVATIVE-SECOND" not in second_intermediate.model_dump_json()
     _assert_complete_parser_projection(first_intermediate, extract_record_design(first_resolved.path).accept_partial())
 
 
@@ -94,11 +94,11 @@ def _copy_verified_binary_with_derivatives(
     destination.parent.mkdir(parents=True)
     copyfile(source_binary, destination)
     destination.with_name(f"{destination.name}.extracted.md").write_text(
-        f"S03-IR-DERIVATIVE-{marker}: position 999999 must never be read.\n",
+        f"IR-DERIVATIVE-{marker}: position 999999 must never be read.\n",
         encoding="utf-8",
     )
     destination.with_name(f"{destination.name}.extracted.json").write_text(
-        f'{{"units": [{{"anchor": "S03-IR-DERIVATIVE-{marker}", "text": "position 999999"}}]}}\n',
+        f'{{"units": [{{"anchor": "IR-DERIVATIVE-{marker}", "text": "position 999999"}}]}}\n',
         encoding="utf-8",
     )
 

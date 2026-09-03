@@ -2,7 +2,7 @@
 
 The checker renders from the supplied current generation authorities into an
 empty, isolated candidate registry.  It then proves that candidate through the
-real S10 loader boundary before comparing it byte-for-byte and semantically to
+real loader boundary before comparing it byte-for-byte and semantically to
 the published target.  The published target is observed only: this module has
 no publication, recovery, migration, or repair operation.
 """
@@ -94,7 +94,7 @@ def check_generated_export_tree(
     """Regenerate and compare one target without writing, repairing, or publishing it.
 
     The candidate is rendered only into the caller's isolated temporary
-    registry.  S10 validates it through the real loader and registry authority.
+    registry.  It is validated through the real loader and registry authority.
     The published export must independently attest to the same current
     authorities, have identical normalized loader semantics, and have the
     exact same regular members and bytes as the fresh candidate.

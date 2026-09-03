@@ -50,7 +50,6 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n.render import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes, tokenised
-from ....entrypoints.tui.components.widgets import ContentScroll
 from .credentials import (
     CREDENTIAL_PANEL_CSS,
     CredentialAttempt,
@@ -223,11 +222,7 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         """Yield the banner, the credential form, and the footer."""
         yield Static(id="registration-banner", classes="cadrumo-banner")
         yield PinnedStatusBar(id="credential-status")
-        with (
-            ContentScroll(classes="cadrumo-scroll"),
-            Vertical(classes="cadrumo-column"),
-            Vertical(id="registration-body", classes="cadrumo-panel"),
-        ):
+        with self.credential_panel(panel_id="registration-body"):
             yield Static(id="registration-intro")
             yield Static(id="registration-why")
 

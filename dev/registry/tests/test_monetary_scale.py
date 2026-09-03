@@ -132,10 +132,25 @@ def test_the_sibling_comparison_is_proven_by_a_live_defect_not_a_fixture(
     """The corpus itself supplies this screen's detector evidence.
 
     Most screens here construct a defect because the condition they guard does
-    not occur. This one does occur: exactly one field in the shipped registry
-    disagrees with its siblings, so the screen is proven against a real defect
-    rather than a synthetic one. When that field is corrected this test must be
-    replaced by a constructed case, and the screen becomes gateable at zero.
+    not occur. This one does occur, so the screen is proven against real defects
+    rather than synthetic ones.
+
+    Held by identity rather than by count, deliberately. An earlier version
+    asserted that exactly one field disagreed, and it broke when a second
+    disagreement arrived through somebody else's commit - reporting the screen
+    as failing when the screen had just done its job. A count over a live corpus
+    is a ratchet: it fails on the arrival of the very condition it exists to
+    detect, and the reader who repairs it by bumping the number has been taught
+    to silence the finding. So each known coordinate is named, and the closing
+    assertion says only that nothing outside the named set is reported - which
+    still catches an over-firing comparison without freezing the population.
+
+    Both coordinates are live filing-correctness defects with open Steps. When
+    either is corrected this test fails on its own name, which is the correction
+    landing; drop that coordinate and keep the rest. When the last one goes,
+    replace the whole test with a constructed case, because the screen becomes
+    gateable at zero and a detector with no proof is the failure this module
+    exists to avoid.
     """
     from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 
@@ -143,6 +158,7 @@ def test_the_sibling_comparison_is_proven_by_a_live_defect_not_a_fixture(
 
     modelo_ids = tuple(sorted(str(code) for code in registry_modelo_codes()))
     disagreements = [item for item in scale_screen(authority, modelo_ids) if item.kind == "sibling_scale_disagrees"]
-    assert len(disagreements) == 1
-    assert disagreements[0].modelo == "353"
-    assert str(disagreements[0].casilla_id) == "10"
+    reported = {(item.modelo, str(item.casilla_id)) for item in disagreements}
+    known = {("200", "03594"), ("353", "10")}
+    assert known <= reported, f"a pinned live defect stopped being reported: {sorted(known - reported)}"
+    assert reported <= known, f"a sibling-scale disagreement outside the known set: {sorted(reported - known)}"
