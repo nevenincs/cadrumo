@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....application.overview.home import HomeAvailability, HomeDeclarationState, HomeSessionPosture
+from .....application.overview.home import HomeAvailability, HomeDeclarationState, HomeSessionPosture
 from ..home_fixtures import (
     HOME_FIXTURE_SCENARIOS,
     HomeFixtureScenario,
@@ -81,10 +81,6 @@ def test_invalid_scenario_fails_closed() -> None:
 
 def test_fixture_module_has_no_reader_network_or_secret_imports() -> None:
     source = ast.parse((Path(__file__).parent.parent / "home_fixtures.py").read_text(encoding="utf-8"))
-    imported = {
-        (node.module or "").split(".")[0]
-        for node in ast.walk(source)
-        if isinstance(node, ast.ImportFrom)
-    }
+    imported = {(node.module or "").split(".")[0] for node in ast.walk(source) if isinstance(node, ast.ImportFrom)}
     assert not imported & {"pathlib", "socket", "httpx", "requests", "secrets", "sqlite3"}
     assert "entrypoints.tui.secret" not in "".join(imported)
