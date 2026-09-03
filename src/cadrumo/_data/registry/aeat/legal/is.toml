@@ -1386,11 +1386,14 @@ article = "modelo 200"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-12818"
 published_at = 2025-06-24
 effective_from = 2025-07-01
+governs_periods_from = 2024-01-01
+governs_periods_to = 2024-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "agent-review"
 notes = "Orden HAC/657/2025: aprueba el Modelo 200 de declaracion del Impuesto sobre Sociedades para periodos impositivos iniciados en 2024; the bundled BOE excerpt carries the Art. 6 reference to Art. 1 approval, deadline, entry into force, and Modelo 200 heading."
 required_text = [
+    "períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2024",
     "modelo 200 de declaración del Impuesto sobre Sociedades",
     "aprobado en el artículo 1 de la presente orden",
     "La presente orden entrará en vigor el día 1 de julio de 2025",
