@@ -14,7 +14,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path, PurePosixPath
@@ -45,6 +45,7 @@ from .object_name_graph import (
 )
 from .object_name_manifest import (
     MANDATORY_OBJECT_NAME_GATES,
+    REQUIRED_OBJECT_NAME_GATE_FAMILIES,
     ObjectNameGateCommand,
     ObjectNameGateFamily,
     ObjectNameManifestError,
@@ -78,7 +79,7 @@ class ObjectNameRehearsalError(RuntimeError):
 
 
 @contextmanager
-def _isolated_first_party_import_state() -> Iterator[None]:
+def _isolated_first_party_import_state() -> Generator[None]:
     """Keep live-tree imports from contaminating graph inspection in the copy."""
     owned = {
         name: module
@@ -642,9 +643,8 @@ def rehearse_object_name_component(
                 raise ObjectNameRehearsalError(_failed_command_message(outcome))
         generator_outcomes = tuple(generator_results)
         gate_outcomes = tuple(gate_results)
-        required_families = {gate.family for gate in MANDATORY_OBJECT_NAME_GATES} | {"focused"}
-        observed_families = {outcome.family for outcome in gate_outcomes}
-        if observed_families != required_families:
+        observed_families = {cast("ObjectNameGateFamily", outcome.family) for outcome in gate_outcomes}
+        if observed_families != REQUIRED_OBJECT_NAME_GATE_FAMILIES:
             raise ObjectNameRehearsalError("rehearsal gate evidence does not cover every required family")
 
         after_inventory = _inventory_after_allowed_changes(

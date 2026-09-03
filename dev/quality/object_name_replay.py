@@ -222,6 +222,28 @@ def _cleanup(paths: tuple[Path, ...]) -> None:
             path.unlink()
 
 
+def _complete_filesystem_state(root: Path) -> tuple[dict[str, tuple[str, str | None]], dict[str, bytes]]:
+    """Snapshot every entry, including normally excluded and Git-owned paths."""
+    state: dict[str, tuple[str, str | None]] = {}
+    payloads: dict[str, bytes] = {}
+    for directory, directory_names, file_names in os.walk(root, followlinks=False):
+        owner = Path(directory)
+        for name in sorted(directory_names):
+            path = owner / name
+            relative = path.relative_to(root).as_posix()
+            state[relative] = ("link" if is_link_like(path) else "dir", None)
+        for name in sorted(file_names):
+            path = owner / name
+            relative = path.relative_to(root).as_posix()
+            if is_link_like(path) or not path.is_file():
+                state[relative] = ("link", None)
+                continue
+            payload = path.read_bytes()
+            payloads[relative] = payload
+            state[relative] = ("file", _digest(payload))
+    return state, payloads
+
+
 def _create_transaction_root(path: Path) -> None:
     """Create one owned marker; pre-existing markers are retained and refused."""
     if path.exists() or is_link_like(path):
@@ -438,34 +460,41 @@ def replay_object_name_component(
                 missing.append(parent)
                 parent = parent.parent
             generator_missing_directories.extend(reversed(missing))
-        before_generator_paths = _temporary_paths(root)
-        before_generator_files = dict(_snapshot(root, before_generator_paths))
-        before_generator_payloads = {
-            relative: _safe_path(root, relative).read_bytes() for relative in before_generator_paths
-        }
+        before_generator_state, before_generator_payloads = _complete_filesystem_state(root)
         environment = _command_environment(root)
         generator_outcomes = tuple(
             _run_command(cast("ObjectNameGateCommand", item), cwd=root, environment=environment)
             for item in receipt.generator_outcomes
         )
-        after_generator_paths = _temporary_paths(root)
+        after_generator_state, _after_generator_payloads = _complete_filesystem_state(root)
         created_directories.extend(
             directory
             for directory in generator_missing_directories
             if directory.is_dir() and not is_link_like(directory)
         )
-        after_generator_files = dict(_snapshot(root, after_generator_paths))
         generator_changed = {
             path
-            for path in set(before_generator_files) | set(after_generator_files)
-            if before_generator_files.get(path) != after_generator_files.get(path)
+            for path in set(before_generator_state) | set(after_generator_state)
+            if before_generator_state.get(path) != after_generator_state.get(path)
         }
-        unexpected_generator_paths = generator_changed - generated_paths
-        for relative in sorted(generator_changed):
+        allowed_generated_directories = {
+            parent.as_posix()
+            for path in generated_paths
+            for parent in PurePosixPath(path).parents
+            if parent.as_posix() not in {".", ""}
+        }
+        unexpected_generator_paths = generator_changed - generated_paths - allowed_generated_directories
+        for relative in sorted(generator_changed & generated_paths):
             baseline_payloads.setdefault(relative, before_generator_payloads.get(relative))
-            mutation_intents[relative] = (
-                None if relative not in after_generator_files else _safe_path(root, relative).read_bytes()
-            )
+            mutation_intents[relative] = _current_payload(root, relative)
+        for relative in sorted(unexpected_generator_paths):
+            before_kind = before_generator_state.get(relative, (None, None))[0]
+            after_kind = after_generator_state.get(relative, (None, None))[0]
+            if after_kind == "file" or before_kind == "file":
+                baseline_payloads.setdefault(relative, before_generator_payloads.get(relative))
+                mutation_intents[relative] = _current_payload(root, relative)
+            elif before_kind is None and after_kind == "dir":
+                created_directories.append(_safe_path(root, relative))
         if unexpected_generator_paths:
             raise ObjectNameReplayError(
                 f"live generator changed paths outside its reviewed allowlist: {sorted(unexpected_generator_paths)!r}"
@@ -535,6 +564,7 @@ def replay_object_name_component(
                 transaction_root_created_by_this_call
                 and transaction_may_be_removed
                 and stage_cleanup_succeeded
+                and not primary_failure_active
                 and transaction_root.exists()
                 and not is_link_like(transaction_root)
             ):

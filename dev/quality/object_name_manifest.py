@@ -23,6 +23,7 @@ from ..audit.object_names import ObjectNameAuditResult, ObjectNameDeclaration, O
 
 __all__ = [
     "MANDATORY_OBJECT_NAME_GATES",
+    "REQUIRED_OBJECT_NAME_GATE_FAMILIES",
     "ObjectNameFilePrecondition",
     "ObjectNameGateCommand",
     "ObjectNameGateFamily",
@@ -63,6 +64,9 @@ ObjectNameGateFamily = Literal[
     "type-lint",
     "focused",
 ]
+REQUIRED_OBJECT_NAME_GATE_FAMILIES: Final[frozenset[str]] = frozenset(
+    {"parsing-import", "architecture", "semantic-overlap", "clone", "type-lint", "focused"}
+)
 
 
 class ObjectNameManifestError(ValueError):

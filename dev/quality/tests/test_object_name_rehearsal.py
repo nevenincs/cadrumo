@@ -325,6 +325,21 @@ def test_failed_gate_reports_exit_and_output_digests_and_retains_root(tmp_path: 
     assert _live_bytes(repo) == before
 
 
+def test_receipt_refuses_incomplete_mandatory_gate_family_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = tmp_path / "repo"
+    inventory, manifest, component = _fixture(repo)
+    monkeypatch.setattr(
+        rehearsal_module,
+        "MANDATORY_OBJECT_NAME_GATES",
+        tuple(gate for gate in _TEST_MANDATORY_GATES if gate.family != "clone"),
+    )
+
+    with pytest.raises(ObjectNameRehearsalError, match="does not cover every required family"):
+        rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
+
+
 def test_gate_runs_in_isolated_copy_with_bound_runtime_environment(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     gate = (
