@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e99e5874f07c55b092f5fa15a18898fcc8af23eb62ccf428d170a46091fc91f3'
+body_hash: 'sha256:f667815b8361bb9ba5439a362fa85534072c6f1b98fd28befa5b9c66eebdee08'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -14,6 +14,10 @@ related:
 Reviewed the S398 immutable installed-workbench snapshot assembly, root-service injection, authoritative-return refresh, launcher composition boundary, and focused proof suite.
 
 ## Findings
+
+### refresh-withdrawal-regression | high | A later edit restored stale search retention after a failed authoritative refresh
+
+Resolved. The failure branch again clears the installed service before setting `workbench.search.refresh_unavailable`; the focused regression proves the former service is no longer queryable after a real child dismissal.
 
 ### missing-installed-provider | high | A bare root session previously started without an authoritative search generation
 
