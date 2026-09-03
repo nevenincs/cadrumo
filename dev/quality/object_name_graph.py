@@ -657,6 +657,16 @@ def collect_import_edges(
         bindings = _import_bindings(tree, owner, package_module=path.name == "__init__.py")
         type_checking_nodes = _type_checking_node_ids(tree)
         for node in ast.walk(tree):
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                for locator in locators_by_module.get(node.value, ()):
+                    edges.add(
+                        HardEdge(
+                            locator.operation_id,
+                            relative,
+                            ReferenceKind.DYNAMIC_IMPORT,
+                            detail=f"literal-line:{node.lineno}",
+                        )
+                    )
             if isinstance(node, ast.ImportFrom):
                 target = _import_from_target(node, owner, package_module=path.name == "__init__.py")
                 for locator in locators_by_module.get(target, ()):

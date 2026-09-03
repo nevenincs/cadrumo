@@ -47,7 +47,7 @@ __all__ = [
 
 
 _SHA256_PREFIX: Final[str] = "sha256:"
-_UNSUPPORTED_REFERENCE_CLASSES: Final[frozenset[str]] = frozenset({"dynamic-target", "generated-artifact"})
+_UNSUPPORTED_REFERENCE_CLASSES: Final[frozenset[str]] = frozenset({"generated-artifact"})
 
 
 class ObjectNameTransformError(RuntimeError):
@@ -255,8 +255,30 @@ class _RenameTransformer(cst.CSTTransformer):
             raise ObjectNameTransformError(f"cannot evaluate a string literal in {self.module_name}") from exc
         if not isinstance(value, str):
             return True
+        if any(
+            operation.operation_kind == "module-rename"
+            and value == self._operation_names(operation)[0]
+            for operation in self.operations
+        ):
+            return True
         self._refuse_opaque_spelling(value)
         return True
+
+    @override
+    def leave_SimpleString(self, original_node: cst.SimpleString, updated_node: cst.SimpleString) -> cst.SimpleString:
+        value = original_node.evaluated_value
+        if not isinstance(value, str):
+            return updated_node
+        for operation in self.operations:
+            old_module, _old_name, new_module, _new_name = self._operation_names(operation)
+            if operation.operation_kind != "module-rename" or value != old_module:
+                continue
+            self.evidence[operation.operation_id].add("dynamic-target")
+            replacement = cst.parse_expression(repr(new_module))
+            if not isinstance(replacement, cst.SimpleString):
+                raise ObjectNameTransformError("module string target did not parse as a simple string")
+            return replacement
+        return updated_node
 
     @override
     def visit_FormattedStringText(self, node: cst.FormattedStringText) -> bool | None:

@@ -13,7 +13,7 @@ new_locator = "module:dev.packaging.all_extra_smoke#binding=1"
 new_path = "dev/packaging/all_extra_smoke.py"
 owner = "dev-packaging"
 rationale = "The module owns the single installed-wheel smoke for the aggregate all-extra capability; the target states that singular responsibility instead of naming plural dependency instances."
-expected_reference_classes = ["definition"]
+expected_reference_classes = ["definition", "dynamic-target"]
 changed_paths = [
   "dev/packaging/all_extra_smoke.py",
   "dev/packaging/campaign.py",

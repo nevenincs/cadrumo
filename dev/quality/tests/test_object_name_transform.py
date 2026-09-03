@@ -241,7 +241,7 @@ def test_locator_renames_only_the_selected_distinct_declaration(tmp_path: Path) 
     assert result.content_by_path()[declaration.path] == b"class Widget:\n    pass\n\nclass Other:\n    pass\n"
 
 
-@pytest.mark.parametrize("reference_class", ["dynamic-target", "generated-artifact"])
+@pytest.mark.parametrize("reference_class", ["generated-artifact"])
 def test_unsupported_reference_class_is_refused(tmp_path: Path, reference_class: str) -> None:
     inventory = _inventory(tmp_path, {"src/cadrumo/contracts.py": "class Widgets:\n    pass\n"})
     declaration = _declaration(inventory, path="src/cadrumo/contracts.py", name="Widgets")
@@ -260,7 +260,6 @@ def test_unsupported_reference_class_is_refused(tmp_path: Path, reference_class:
     ("consumer", "message"),
     [
         ("from cadrumo.widgets import *\n", "unsupported star import"),
-        ("target = 'cadrumo.widgets'\n", "unsupported string reference"),
         ("target = f'cadrumo.widgets'\n", "unsupported string reference"),
     ],
 )
@@ -279,6 +278,44 @@ def test_opaque_or_star_module_reference_is_refused(tmp_path: Path, consumer: st
     )
 
     with pytest.raises(ObjectNameTransformError, match=message):
+        plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
+
+
+def test_exact_module_string_target_is_renamed_and_classified(tmp_path: Path) -> None:
+    inventory = _inventory(
+        tmp_path,
+        {"src/cadrumo/widgets.py": "VALUE = 1\n", "dev/consumer.py": "target = 'cadrumo.widgets'\n"},
+    )
+    declaration = _declaration(inventory, path="src/cadrumo/widgets.py", name="widgets")
+    operation = _operation(
+        declaration,
+        target_name="widget",
+        target_path="src/cadrumo/widget.py",
+        sources=_tree_bytes(tmp_path),
+        expected_reference_classes=("definition", "dynamic-target"),
+        changed_paths=("dev/consumer.py", "src/cadrumo/widget.py", "src/cadrumo/widgets.py"),
+    )
+
+    result = plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
+
+    assert result.content_by_path()["dev/consumer.py"] == b"target = 'cadrumo.widget'\n"
+
+
+def test_near_match_module_string_remains_unsupported(tmp_path: Path) -> None:
+    inventory = _inventory(
+        tmp_path,
+        {"src/cadrumo/widgets.py": "VALUE = 1\n", "dev/consumer.py": "target = 'load cadrumo.widgets'\n"},
+    )
+    declaration = _declaration(inventory, path="src/cadrumo/widgets.py", name="widgets")
+    operation = _operation(
+        declaration,
+        target_name="widget",
+        target_path="src/cadrumo/widget.py",
+        sources=_tree_bytes(tmp_path),
+        changed_paths=("dev/consumer.py", "src/cadrumo/widget.py", "src/cadrumo/widgets.py"),
+    )
+
+    with pytest.raises(ObjectNameTransformError, match="unsupported string reference"):
         plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
 
 
