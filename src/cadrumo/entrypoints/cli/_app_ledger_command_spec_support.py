@@ -29,6 +29,190 @@ _LEAF_INVOCATION: Final[InvocationSpec] = InvocationSpec(
 )
 _NO_RESULT_SCHEMA: Final[ResultSchemaSpec] = ResultSchemaSpec(SchemaState.NOT_SUPPORTED)
 
+_TEXT_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "str"))
+_FLAG_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "bool"))
+
+
+def _optional_text_option(name: str, declarations: tuple[str, ...], help_key: str) -> OptionSpec:
+    """Declare an optional free-text option defaulting to absent.
+
+    The most repeated parameter contract in the ledger command surface. Only the
+    identity fields vary between uses; every other field is fixed by this
+    contract, which is why they are supplied here rather than at each call.
+
+    Args:
+        name: The parameter's identifier.
+        declarations: The CLI tokens that introduce it, aliases included.
+        help_key: The translation key for its help text.
+
+    Returns:
+        The immutable option declaration.
+    """
+    return OptionSpec(
+        name=name,
+        declarations=declarations,
+        value=_TEXT_VALUE,
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey(help_key),
+        metavar=None,
+        is_flag=False,
+        flag_value=None,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    )
+
+
+def _required_text_option(name: str, declarations: tuple[str, ...], help_key: str) -> OptionSpec:
+    """Declare a mandatory free-text option.
+
+    Distinct from :func:`_optional_text_option` in exactly one field, and the
+    distinction is a contract rather than a detail: a required parameter has no
+    absent state, so its handler never sees ``None``.
+
+    Args:
+        name: The parameter's identifier.
+        declarations: The CLI tokens that introduce it, aliases included.
+        help_key: The translation key for its help text.
+
+    Returns:
+        The immutable option declaration.
+    """
+    return OptionSpec(
+        name=name,
+        declarations=declarations,
+        value=_TEXT_VALUE,
+        default=ParameterDefault.required(),
+        help_key=TranslationKey(help_key),
+        metavar=None,
+        is_flag=False,
+        flag_value=None,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    )
+
+
+def _blank_default_text_option(name: str, declarations: tuple[str, ...], help_key: str) -> OptionSpec:
+    """Declare a free-text option defaulting to the empty string.
+
+    The empty default is not the same state as :func:`_optional_text_option`'s
+    absent default: this parameter always carries a string, so a handler cannot
+    distinguish "not supplied" from "supplied empty". Kept separate for that
+    reason rather than folded in behind a default argument.
+
+    Args:
+        name: The parameter's identifier.
+        declarations: The CLI tokens that introduce it, aliases included.
+        help_key: The translation key for its help text.
+
+    Returns:
+        The immutable option declaration.
+    """
+    return OptionSpec(
+        name=name,
+        declarations=declarations,
+        value=_TEXT_VALUE,
+        default=ParameterDefault.value(""),
+        help_key=TranslationKey(help_key),
+        metavar=None,
+        is_flag=False,
+        flag_value=None,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    )
+
+
+def _repeatable_text_option(name: str, declarations: tuple[str, ...], help_key: str) -> OptionSpec:
+    """Declare a repeatable free-text option collecting into a tuple.
+
+    Args:
+        name: The parameter's identifier.
+        declarations: The CLI tokens that introduce it, aliases included.
+        help_key: The translation key for its help text.
+
+    Returns:
+        The immutable option declaration.
+    """
+    return OptionSpec(
+        name=name,
+        declarations=declarations,
+        value=_TEXT_VALUE,
+        default=ParameterDefault.value(()),
+        help_key=TranslationKey(help_key),
+        metavar=None,
+        is_flag=False,
+        flag_value=None,
+        multiple=True,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    )
+
+
+def _boolean_flag_option(name: str, declarations: tuple[str, ...], help_key: str) -> OptionSpec:
+    """Declare a boolean flag that is false unless the token is present.
+
+    Args:
+        name: The parameter's identifier.
+        declarations: The CLI tokens that introduce it, aliases included.
+        help_key: The translation key for its help text.
+
+    Returns:
+        The immutable option declaration.
+    """
+    return OptionSpec(
+        name=name,
+        declarations=declarations,
+        value=_FLAG_VALUE,
+        default=ParameterDefault.value(False),
+        help_key=TranslationKey(help_key),
+        metavar=None,
+        is_flag=True,
+        flag_value=True,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    )
+
+
+def _required_text_argument(name: str, help_key: str) -> ArgumentSpec:
+    """Declare a mandatory positional free-text argument.
+
+    Args:
+        name: The parameter's identifier.
+        help_key: The translation key for its help text.
+
+    Returns:
+        The immutable argument declaration.
+    """
+    return ArgumentSpec(
+        name=name,
+        value=_TEXT_VALUE,
+        default=ParameterDefault.required(),
+        help_key=TranslationKey(help_key),
+        metavar=None,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    )
+
+
 _EVIDENCE_TRANSACTION_ID_ARGUMENT: Final[ArgumentSpec] = ArgumentSpec(
     name="transaction_id",
     value=ValueContract(DeferredTarget("builtins", "str")),
@@ -187,4 +371,10 @@ __all__ = [
     "_NO_RESULT_SCHEMA",
     "_OPTIONAL_PERIOD_OPTION",
     "_OPTIONAL_YEAR_OPTION",
+    "_blank_default_text_option",
+    "_boolean_flag_option",
+    "_optional_text_option",
+    "_repeatable_text_option",
+    "_required_text_argument",
+    "_required_text_option",
 ]
