@@ -7,9 +7,9 @@ perform I/O, translate labels, or import a concrete destination screen.
 
 from __future__ import annotations
 
+import inspect
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-import inspect
 from types import MappingProxyType
 from typing import Final, Literal, Protocol, Self, cast, get_args, runtime_checkable
 
