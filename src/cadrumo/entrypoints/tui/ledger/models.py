@@ -9,6 +9,7 @@ from weakref import WeakKeyDictionary
 
 from pydantic import BaseModel, model_validator
 
+from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.models import (
     LedgerSourceImportCommand,
     LedgerSourceImportResult,
@@ -16,12 +17,15 @@ from ....application.ledger.models import (
     ManualLedgerTransactionResult,
 )
 from ....application.ledger.workspace import (
+    LedgerAffectedDeclarationRefV1,
+    LedgerInvoiceReconciliationRefV1,
+    LedgerLinkInconsistencyRefV1,
     LedgerWorkspaceArea,
     LedgerWorkspaceAvailability,
     LedgerWorkspaceEntryRefV1,
 )
 from ....application.operator_actions.models import ActionReference
-from ....core.identity import TransactionId
+from ....core.identity import InvoiceId, TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG
 
 type LedgerDestinationIdV1 = Literal[
@@ -202,13 +206,75 @@ class LedgerImportSubmitterV1(Protocol):
         ...
 
 
+class LedgerEvidenceRowV1(BaseModel):
+    """Safe application evidence-review metadata with its declared read action."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    attachment_id: str
+    mime_type: str
+    bytes_size: int
+    captured_at: str
+    pending_review: bool
+    action: ActionReference
+    source: AttachmentReviewItem
+
+    @model_validator(mode="after")
+    def _mirror_source(self) -> LedgerEvidenceRowV1:
+        if (
+            self.attachment_id != self.source.attachment_id
+            or self.mime_type != self.source.mime_type
+            or self.bytes_size != self.source.bytes_size
+            or self.captured_at != self.source.captured_at
+            or self.pending_review != self.source.pending_review
+        ):
+            raise ValueError("Ledger evidence row must mirror its canonical application source")
+        return self
+
+
+class LedgerLinkSubmissionV1(BaseModel):
+    """Catalogue-authorized local invoice/transaction link request."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    action: ActionReference
+    transaction_id: TransactionId
+    invoice_id: InvoiceId
+
+
+class LedgerLinkResultV1(BaseModel):
+    """Safe identity-only acknowledgement returned by an injected link door."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    transaction_id: TransactionId
+    invoice_id: InvoiceId
+
+
+class LedgerLinkSubmitterV1(Protocol):
+    """Injected application door for one admitted local Ledger link."""
+
+    async def __call__(self, submission: LedgerLinkSubmissionV1) -> LedgerLinkResultV1:
+        """Submit one authorized link request."""
+        ...
+
+
+type LedgerReconciliationSourceV1 = (
+    LedgerInvoiceReconciliationRefV1 | LedgerLinkInconsistencyRefV1 | LedgerAffectedDeclarationRefV1
+)
+
+
 __all__ = [
     "LedgerClassificationSubmissionV1",
     "LedgerClassificationSubmitterV1",
     "LedgerDestinationIdV1",
     "LedgerEntryRowV1",
+    "LedgerEvidenceRowV1",
     "LedgerFlowState",
     "LedgerImportSubmitterV1",
+    "LedgerLinkResultV1",
+    "LedgerLinkSubmissionV1",
+    "LedgerLinkSubmitterV1",
     "LedgerPreparedImportV1",
     "LedgerReviewRowV1",
     "LedgerRouteRefusalV1",

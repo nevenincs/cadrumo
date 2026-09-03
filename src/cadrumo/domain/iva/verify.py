@@ -55,10 +55,10 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
     # re-enter that construction path.  The IVA grounding helper is the
     # established cycle-safe access path for the parsed shared catalogues.
     legal, _sources, source_root = registry_catalogues()
-    return _verify_catalogue_against_legal(catalogue, legal=legal, source_root=source_root)
+    return verify_catalogue_against_legal(catalogue, legal=legal, source_root=source_root)
 
 
-def _verify_catalogue_against_legal(
+def verify_catalogue_against_legal(
     catalogue: IvaCatalogue,
     *,
     legal: Mapping[LegalRefId, LegalReference],

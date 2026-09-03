@@ -134,9 +134,9 @@ def _require_verified_catalogue(
     # Keep the verifier import local.  Its legal-catalogue access is deliberately
     # cycle-safe: IVA registry loaders are themselves consumers of the registry
     # catalogue and must not construct the full validated registry authority.
-    from .verify import _verify_catalogue_against_legal
+    from .verify import verify_catalogue_against_legal
 
-    report = _verify_catalogue_against_legal(catalogue, legal=legal, source_root=source_root)
+    report = verify_catalogue_against_legal(catalogue, legal=legal, source_root=source_root)
     if report.ok:
         return
     failures = "\n".join(f" - [{issue.category_id}] {issue.code}: {issue.message}" for issue in report.errors)

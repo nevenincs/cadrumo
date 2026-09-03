@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 14:40+0200\n"
+"POT-Creation-Date: 2026-09-03 05:07+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: hu\n"
@@ -17,85 +17,98 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: ../../_release_notes_template.md:14
+#: ../../_release_notes_template.md:15
 msgid "Cadrumo vX.Y.Z"
 msgstr "Cadrumo vX.Y.Z"
 
-#: ../../_release_notes_template.md:16
-msgid "Released: YYYY-MM-DD Soak window: YYYY-MM-DD HH:MM UTC → YYYY-MM-DD HH:MM UTC (N hours)"
-msgstr "Kiadva: YYYY-MM-DD Bejáratási időszak: YYYY-MM-DD HH:MM UTC → YYYY-MM-DD HH:MM UTC (N óra)"
+#: ../../_release_notes_template.md:17
+msgid ""
+"Released: YYYY-MM-DD Soak window: YYYY-MM-DD HH:MM UTC → YYYY-MM-DD HH:MM"
+" UTC (N hours)"
+msgstr ""
+"Kiadva: YYYY-MM-DD Bejáratási időszak: YYYY-MM-DD HH:MM UTC → YYYY-MM-DD "
+"HH:MM UTC (N óra)"
 
-#: ../../_release_notes_template.md:19
+#: ../../_release_notes_template.md:20
 msgid "Highlights"
 msgstr "Kiemelt változások"
 
-#: ../../_release_notes_template.md:21
+#: ../../_release_notes_template.md:22
 msgid "One or two sentences on the most user-visible change in this release."
-msgstr "Egy-két mondat a kiadás leginkább felhasználó számára látható változásáról."
+msgstr ""
+"Egy-két mondat a kiadás leginkább felhasználó számára látható "
+"változásáról."
 
-#: ../../_release_notes_template.md:23
+#: ../../_release_notes_template.md:24
 msgid "Features"
 msgstr "Funkciók"
 
-#: ../../_release_notes_template.md:25
+#: ../../_release_notes_template.md:26
 msgid "(from `CHANGELOG.md` `### Features` for this version)"
 msgstr "(a `CHANGELOG.md` `### Features` szakaszából ehhez a verzióhoz)"
 
-#: ../../_release_notes_template.md:27
+#: ../../_release_notes_template.md:28
 msgid "Bug Fixes"
 msgstr "Hibajavítások"
 
-#: ../../_release_notes_template.md:29
+#: ../../_release_notes_template.md:30
 msgid "(from `CHANGELOG.md` `### Bug Fixes` for this version)"
 msgstr "(a `CHANGELOG.md` `### Bug Fixes` szakaszából ehhez a verzióhoz)"
 
-#: ../../_release_notes_template.md:31
+#: ../../_release_notes_template.md:32
 msgid "Breaking Changes"
 msgstr "Kompatibilitást megtörő változások"
 
-#: ../../_release_notes_template.md:33
+#: ../../_release_notes_template.md:34
 msgid ""
-"None. _(or: enumerate explicitly — pre-1.0 releases may carry breaking changes in a minor bump; state the migration "
-"step for each.)_"
+"None. _(or: enumerate explicitly — pre-1.0 releases may carry breaking "
+"changes in a minor bump; state the migration step for each.)_"
 msgstr ""
-"Nincs. _(vagy: sorolja fel őket tételesen - az 1.0 előtti kiadások minor verzióváltásnál is tartalmazhatnak "
-"kompatibilitást megtörő változásokat; adja meg mindegyikhez a migrációs lépést.)_"
+"Nincs. _(vagy: sorolja fel őket tételesen - az 1.0 előtti kiadások minor "
+"verzióváltásnál is tartalmazhatnak kompatibilitást megtörő változásokat; "
+"adja meg mindegyikhez a migrációs lépést.)_"
 
-#: ../../_release_notes_template.md:36
+#: ../../_release_notes_template.md:37
 msgid "Upgrade"
 msgstr "Frissítés"
 
-#: ../../_release_notes_template.md:42
+#: ../../_release_notes_template.md:43
 msgid "or, for an existing install:"
 msgstr "vagy meglévő telepítés esetén:"
 
-#: ../../_release_notes_template.md:48
+#: ../../_release_notes_template.md:49
 msgid "Rollback"
 msgstr "Visszaállítás"
 
-#: ../../_release_notes_template.md:50
+#: ../../_release_notes_template.md:51
+#, fuzzy
 msgid ""
-"If this release regresses, see `RELEASING.md#rollback-procedure`. In short: the previous version remains installable "
-"and this version can be yanked from PyPI without breaking anyone pinned to an earlier pin."
+"If this release regresses, see `RELEASING.md#diagnose-and-recover`. In "
+"short: the previous version remains installable and this version can be "
+"yanked from PyPI without breaking anyone pinned to an earlier pin."
 msgstr ""
-"Ha ez a kiadás visszalépést okoz, lásd a `RELEASING.md#rollback-procedure` szakaszt. Röviden: az előző verzió "
-"továbbra is telepíthető marad, ez a verzió pedig visszavonható a PyPI-ról anélkül, hogy megtörné bárki működését, aki"
-" egy korábbi verzióhoz van rögzítve."
+"Ha ez a kiadás visszalépést okoz, lásd a `RELEASING.md#rollback-"
+"procedure` szakaszt. Röviden: az előző verzió továbbra is telepíthető "
+"marad, ez a verzió pedig visszavonható a PyPI-ról anélkül, hogy megtörné "
+"bárki működését, aki egy korábbi verzióhoz van rögzítve."
 
-#: ../../_release_notes_template.md:54
+#: ../../_release_notes_template.md:55
 msgid "Verification"
 msgstr "Ellenőrzés"
 
-#: ../../_release_notes_template.md:56
+#: ../../_release_notes_template.md:57
 msgid "`just packaging-smoke` green on Linux/WSL"
 msgstr "`just packaging-smoke` zöld Linuxon/WSL-en"
 
-#: ../../_release_notes_template.md:57
+#: ../../_release_notes_template.md:58
 msgid "`uvx --from cadrumo==X.Y.Z aeat --version` resolves on a clean machine"
 msgstr "`uvx --from cadrumo==X.Y.Z aeat --version` feloldódik tiszta gépen"
 
-#: ../../_release_notes_template.md:58
-msgid "`pip install cadrumo==X.Y.Z` pulls both exact-version data distributions     and `aeat app registry verify` runs clean"
+#: ../../_release_notes_template.md:59
+msgid ""
+"`pip install cadrumo==X.Y.Z` pulls both exact-version data distributions"
+"     and `aeat app registry verify` runs clean"
 msgstr ""
-"a `pip install cadrumo==X.Y.Z` mindkét pontos verziójú adatcsomagot letölti, és az `aeat app registry verify` hiba "
-"nélkül lefut"
+"a `pip install cadrumo==X.Y.Z` mindkét pontos verziójú adatcsomagot "
+"letölti, és az `aeat app registry verify` hiba nélkül lefut"
+

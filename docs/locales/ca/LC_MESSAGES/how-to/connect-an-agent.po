@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-24 20:06+0200\n"
+"POT-Creation-Date: 2026-09-03 05:07+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -43,16 +43,18 @@ msgid "What the agent connection is"
 msgstr "Què és la connexió de l'agent"
 
 #: ../../how-to/connect-an-agent.md:12
+#, fuzzy
 msgid ""
-"The separate `cadrumo-harness` distribution ships an MCP (Model Context "
-"Protocol) server, `cadrumo-mcp`, for the `aeat` command. MCP is an open "
-"standard that lets assistants call tools. Any MCP-capable client can "
-"connect; Claude is one such client."
+"Installing Cadrumo installs two commands: `aeat`, the application, and "
+"`cadrumo-mcp`, an MCP (Model Context Protocol) server that exposes it. "
+"MCP is an open standard that lets assistants call tools. Any MCP-capable "
+"client can connect; Claude is one such client."
 msgstr ""
-"La distribució independent `cadrumo-harness` inclou un servidor MCP (Model "
-"Context Protocol), `cadrumo-mcp`, per a l'ordre `aeat`. L'MCP és un estàndard "
-"obert que permet als assistents cridar eines. Qualsevol client amb capacitat "
-"MCP s'hi pot connectar; Claude és un d'aquests clients."
+"La distribució independent `cadrumo-harness` inclou un servidor MCP "
+"(Model Context Protocol), `cadrumo-mcp`, per a l'ordre `aeat`. L'MCP és "
+"un estàndard obert que permet als assistents cridar eines. Qualsevol "
+"client amb capacitat MCP s'hi pot connectar; Claude és un d'aquests "
+"clients."
 
 #: ../../how-to/connect-an-agent.md:17
 msgid ""
@@ -66,51 +68,42 @@ msgstr ""
 "exactament com la CLI."
 
 #: ../../how-to/connect-an-agent.md:21
-msgid ""
-"In the beta, connect from the repository checkout below. Every release "
-"also builds the plugin and Desktop extension artifacts; their marketplace"
-" and registry listings open with the public launch (see [Get "
-"Cadrumo](../download.md) for channel status)."
+msgid "Check the server is installed"
 msgstr ""
-"En la beta, connecta des de la còpia del repositori de sota. Cada versió "
-"també construeix els artefactes del connector i de l'extensió "
-"d'escriptori; les seves llistes al mercat i als registres s'obriran amb "
-"el llançament públic (consulta [Obtén Cadrumo](../download.md) per a "
-"l'estat de cada canal)."
 
-#: ../../how-to/connect-an-agent.md:26
-msgid "Prepare the source checkout"
-msgstr "Prepara el checkout del codi font"
+#: ../../how-to/connect-an-agent.md:27
+msgid ""
+"If the command is not found, install Cadrumo first — see [Get "
+"Cadrumo](../download.md)."
+msgstr ""
 
-#: ../../how-to/connect-an-agent.md:35
-msgid "Register the source server"
+#: ../../how-to/connect-an-agent.md:30
+#, fuzzy
+msgid "Register the server"
 msgstr "Registra el servidor de codi font"
 
-#: ../../how-to/connect-an-agent.md:37
+#: ../../how-to/connect-an-agent.md:32
+#, fuzzy
 msgid ""
-"Register `uv run --package cadrumo-harness cadrumo-mcp` as a stdio server"
-" and set the checkout as the working directory. In clients that accept a "
-"JSON server definition:"
+"Register `cadrumo-mcp` as a stdio server. In clients that accept a JSON "
+"server definition:"
 msgstr ""
-"Registra `uv run --package cadrumo-harness cadrumo-mcp` com a servidor stdio "
-"i estableix la còpia del repositori com a directori de treball. En els clients "
-"que accepten una definició de servidor en JSON:"
+"Registra `uv run --package cadrumo-harness cadrumo-mcp` com a servidor "
+"stdio i estableix la còpia del repositori com a directori de treball. En "
+"els clients que accepten una definició de servidor en JSON:"
 
-#: ../../how-to/connect-an-agent.md:53
+#: ../../how-to/connect-an-agent.md:45
 msgid ""
-"Replace the example path with the absolute path to your authorized "
-"checkout. Do not replace this with `uvx`, a marketplace install, or a "
-"downloaded extension until public distribution is announced."
+"That is the whole configuration. The command is on your `PATH` after "
+"installation, and it finds your profile the same way `aeat` does, so it "
+"needs no working directory and no path of its own."
 msgstr ""
-"Substitueix el camí d'exemple pel camí absolut al teu checkout "
-"autoritzat. No ho substitueixis per `uvx`, una instal·lació de mercat o "
-"una extensió descarregada fins que s'anunciï la distribució pública."
 
-#: ../../how-to/connect-an-agent.md:57
+#: ../../how-to/connect-an-agent.md:49
 msgid "Before the first agent session"
 msgstr "Abans de la primera sessió de l'agent"
 
-#: ../../how-to/connect-an-agent.md:59
+#: ../../how-to/connect-an-agent.md:51
 msgid ""
 "The server uses the same local encrypted store and the same active "
 "profile as the CLI. A server cannot answer a passphrase prompt, so "
@@ -124,11 +117,11 @@ msgstr ""
 "execucions desateses: consulta [Executa sense sol·licitud de contrasenya"
 "](protect-data-access.md#run-without-a-passphrase-prompt)."
 
-#: ../../how-to/connect-an-agent.md:64
+#: ../../how-to/connect-an-agent.md:56
 msgid "What the agent can and cannot do"
 msgstr "Què pot i què no pot fer l'agent"
 
-#: ../../how-to/connect-an-agent.md:66
+#: ../../how-to/connect-an-agent.md:58
 msgid ""
 "The agent can import and classify records, run calculations, verify "
 "drafts, and prepare exports, because those are local operations. It "
@@ -161,3 +154,41 @@ msgstr ""
 #~ " Els artefactes de connector i "
 #~ "extensió generats són candidats a "
 #~ "llançament, no canals d'instal·lació públics."
+
+#~ msgid ""
+#~ "In the beta, connect from the "
+#~ "repository checkout below. Every release "
+#~ "also builds the plugin and Desktop "
+#~ "extension artifacts; their marketplace and "
+#~ "registry listings open with the public"
+#~ " launch (see [Get Cadrumo](../download.md) "
+#~ "for channel status)."
+#~ msgstr ""
+#~ "En la beta, connecta des de la "
+#~ "còpia del repositori de sota. Cada "
+#~ "versió també construeix els artefactes "
+#~ "del connector i de l'extensió "
+#~ "d'escriptori; les seves llistes al "
+#~ "mercat i als registres s'obriran amb "
+#~ "el llançament públic (consulta [Obtén "
+#~ "Cadrumo](../download.md) per a l'estat de "
+#~ "cada canal)."
+
+#~ msgid "Prepare the source checkout"
+#~ msgstr "Prepara el checkout del codi font"
+
+#~ msgid ""
+#~ "Replace the example path with the "
+#~ "absolute path to your authorized "
+#~ "checkout. Do not replace this with "
+#~ "`uvx`, a marketplace install, or a "
+#~ "downloaded extension until public distribution"
+#~ " is announced."
+#~ msgstr ""
+#~ "Substitueix el camí d'exemple pel camí"
+#~ " absolut al teu checkout autoritzat. "
+#~ "No ho substitueixis per `uvx`, una "
+#~ "instal·lació de mercat o una extensió"
+#~ " descarregada fins que s'anunciï la "
+#~ "distribució pública."
+

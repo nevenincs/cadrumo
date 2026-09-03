@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt
 
@@ -287,6 +287,41 @@ def build_invoice_rows(
     raise RegistryValidationError(f"unsupported invoice row grouping {grouping!r}")
 
 
+class _InvoiceRowBucket(Protocol):
+    """Shared identity and optional-name surface of every row accumulator."""
+
+    country_code: str
+    party_tax_id: TaxIdIdentityToken
+    clave: str
+    party_legal_name: str | None
+
+
+def _materialize_grouped_invoice_rows[InvoiceRowBucketT: _InvoiceRowBucket](
+    buckets: Iterable[InvoiceRowBucketT],
+    *,
+    values: Callable[[InvoiceRowBucketT], Mapping[str, Decimal | str]],
+) -> tuple[Mapping[str, Decimal | str], ...]:
+    """Build ordered export rows from already-grouped invoice accumulators.
+
+    This owns only the repeated mapping construction and optional legal-name
+    projection. Each grouping retains its own ordered buckets and explicitly
+    supplies its legal row-value mapping, so M349's base and rectification
+    semantics cannot be conflated with M347's annual and quarterly amounts.
+    """
+    rows: list[Mapping[str, Decimal | str]] = []
+    for bucket in buckets:
+        row: dict[str, Decimal | str] = {
+            "country_code": bucket.country_code,
+            "party_tax_id": bucket.party_tax_id,
+            "clave": bucket.clave,
+        }
+        row.update(values(bucket))
+        if bucket.party_legal_name is not None:
+            row["party_legal_name"] = bucket.party_legal_name
+        rows.append(row)
+    return tuple(rows)
+
+
 def _build_operator_clave_rows(
     observations: tuple[InvoiceObservation, ...],
 ) -> tuple[Mapping[str, Decimal | str], ...]:
@@ -312,19 +347,10 @@ def _build_operator_clave_rows(
         bucket.base_total += observation.base_amount
         if bucket.party_legal_name is None and observation.party_legal_name is not None:
             bucket.party_legal_name = observation.party_legal_name
-    rows: list[Mapping[str, Decimal | str]] = []
-    for key in sorted(grouped):
-        bucket = grouped[key]
-        row: dict[str, Decimal | str] = {
-            "country_code": bucket.country_code,
-            "party_tax_id": bucket.party_tax_id,
-            "clave": bucket.clave,
-            "base_imponible": bucket.base_total,
-        }
-        if bucket.party_legal_name is not None:
-            row["party_legal_name"] = bucket.party_legal_name
-        rows.append(row)
-    return tuple(rows)
+    return _materialize_grouped_invoice_rows(
+        (grouped[key] for key in sorted(grouped)),
+        values=lambda bucket: {"base_imponible": bucket.base_total},
+    )
 
 
 _M347_QUARTER_TOKENS: tuple[Literal["1T", "2T", "3T", "4T"], ...] = ("1T", "2T", "3T", "4T")
@@ -470,23 +496,16 @@ def _build_contraparte_clave_rows(
         setattr(bucket, quarter_field, getattr(bucket, quarter_field) + observation.invoice_total_amount)
         if bucket.party_legal_name is None and observation.party_legal_name is not None:
             bucket.party_legal_name = observation.party_legal_name
-    rows: list[Mapping[str, Decimal | str]] = []
-    for key in sorted(grouped):
-        bucket = grouped[key]
-        row: dict[str, Decimal | str] = {
-            "country_code": bucket.country_code,
-            "party_tax_id": bucket.party_tax_id,
-            "clave": bucket.clave,
+    return _materialize_grouped_invoice_rows(
+        (grouped[key] for key in sorted(grouped)),
+        values=lambda bucket: {
             "importe_total": bucket.importe_total,
             "importe_q1": bucket.importe_q1,
             "importe_q2": bucket.importe_q2,
             "importe_q3": bucket.importe_q3,
             "importe_q4": bucket.importe_q4,
-        }
-        if bucket.party_legal_name is not None:
-            row["party_legal_name"] = bucket.party_legal_name
-        rows.append(row)
-    return tuple(rows)
+        },
+    )
 
 
 def _build_operator_clave_period_rows(
@@ -532,22 +551,15 @@ def _build_operator_clave_period_rows(
         bucket.base_previous_total += previous
         if bucket.party_legal_name is None and observation.party_legal_name is not None:
             bucket.party_legal_name = observation.party_legal_name
-    rows: list[Mapping[str, Decimal | str]] = []
-    for key in sorted(grouped):
-        bucket = grouped[key]
-        row: dict[str, Decimal | str] = {
-            "country_code": bucket.country_code,
-            "party_tax_id": bucket.party_tax_id,
-            "clave": bucket.clave,
+    return _materialize_grouped_invoice_rows(
+        (grouped[key] for key in sorted(grouped)),
+        values=lambda bucket: {
             "rectified_year": str(bucket.rectified_year),
             "rectified_period": bucket.rectified_period,
             "base_imponible": bucket.base_total,
             "rectified_base_previous": bucket.base_previous_total,
-        }
-        if bucket.party_legal_name is not None:
-            row["party_legal_name"] = bucket.party_legal_name
-        rows.append(row)
-    return tuple(rows)
+        },
+    )
 
 
 def _m349_export_nif_number(party_tax_id: str, country_code: str) -> str:

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 14:40+0200\n"
+"POT-Creation-Date: 2026-09-03 05:07+0200\n"
 "PO-Revision-Date: 2026-07-18 14:00+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -17,86 +17,98 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: ../../_release_notes_template.md:14
+#: ../../_release_notes_template.md:15
 msgid "Cadrumo vX.Y.Z"
 msgstr "Cadrumo vX.Y.Z"
 
-#: ../../_release_notes_template.md:16
-msgid "Released: YYYY-MM-DD Soak window: YYYY-MM-DD HH:MM UTC → YYYY-MM-DD HH:MM UTC (N hours)"
-msgstr "Publicat: YYYY-MM-DD Finestra de proves (soak): YYYY-MM-DD HH:MM UTC → YYYY-MM-DD HH:MM UTC (N hores)"
+#: ../../_release_notes_template.md:17
+msgid ""
+"Released: YYYY-MM-DD Soak window: YYYY-MM-DD HH:MM UTC → YYYY-MM-DD HH:MM"
+" UTC (N hours)"
+msgstr ""
+"Publicat: YYYY-MM-DD Finestra de proves (soak): YYYY-MM-DD HH:MM UTC → "
+"YYYY-MM-DD HH:MM UTC (N hores)"
 
-#: ../../_release_notes_template.md:19
+#: ../../_release_notes_template.md:20
 msgid "Highlights"
 msgstr "Aspectes destacats"
 
-#: ../../_release_notes_template.md:21
+#: ../../_release_notes_template.md:22
 msgid "One or two sentences on the most user-visible change in this release."
-msgstr "Una o dues frases sobre el canvi més visible per a l'usuari d'aquesta versió."
+msgstr ""
+"Una o dues frases sobre el canvi més visible per a l'usuari d'aquesta "
+"versió."
 
-#: ../../_release_notes_template.md:23
+#: ../../_release_notes_template.md:24
 msgid "Features"
 msgstr "Funcionalitats"
 
-#: ../../_release_notes_template.md:25
+#: ../../_release_notes_template.md:26
 msgid "(from `CHANGELOG.md` `### Features` for this version)"
 msgstr "(de `CHANGELOG.md` `### Features` d'aquesta versió)"
 
-#: ../../_release_notes_template.md:27
+#: ../../_release_notes_template.md:28
 msgid "Bug Fixes"
 msgstr "Correccions d'errors"
 
-#: ../../_release_notes_template.md:29
+#: ../../_release_notes_template.md:30
 msgid "(from `CHANGELOG.md` `### Bug Fixes` for this version)"
 msgstr "(de `CHANGELOG.md` `### Bug Fixes` d'aquesta versió)"
 
-#: ../../_release_notes_template.md:31
+#: ../../_release_notes_template.md:32
 msgid "Breaking Changes"
 msgstr "Canvis incompatibles"
 
-#: ../../_release_notes_template.md:33
+#: ../../_release_notes_template.md:34
 msgid ""
-"None. _(or: enumerate explicitly — pre-1.0 releases may carry breaking changes in a minor bump; state the migration "
-"step for each.)_"
+"None. _(or: enumerate explicitly — pre-1.0 releases may carry breaking "
+"changes in a minor bump; state the migration step for each.)_"
 msgstr ""
-"Cap. _(o bé: enumera'ls explícitament - les versions anteriors a la 1.0 poden incloure canvis incompatibles en una "
-"pujada de versió menor; indica el pas de migració de cadascun.)_"
+"Cap. _(o bé: enumera'ls explícitament - les versions anteriors a la 1.0 "
+"poden incloure canvis incompatibles en una pujada de versió menor; indica"
+" el pas de migració de cadascun.)_"
 
-#: ../../_release_notes_template.md:36
+#: ../../_release_notes_template.md:37
 msgid "Upgrade"
 msgstr "Actualització"
 
-#: ../../_release_notes_template.md:42
+#: ../../_release_notes_template.md:43
 msgid "or, for an existing install:"
 msgstr "o bé, per a una instal·lació existent:"
 
-#: ../../_release_notes_template.md:48
+#: ../../_release_notes_template.md:49
 msgid "Rollback"
 msgstr "Reversió"
 
-#: ../../_release_notes_template.md:50
+#: ../../_release_notes_template.md:51
+#, fuzzy
 msgid ""
-"If this release regresses, see `RELEASING.md#rollback-procedure`. In short: the previous version remains installable "
-"and this version can be yanked from PyPI without breaking anyone pinned to an earlier pin."
+"If this release regresses, see `RELEASING.md#diagnose-and-recover`. In "
+"short: the previous version remains installable and this version can be "
+"yanked from PyPI without breaking anyone pinned to an earlier pin."
 msgstr ""
-"Si aquesta versió provoca una regressió, consulta `RELEASING.md#rollback-procedure`. En resum: la versió anterior es "
-"continua podent instal·lar i aquesta versió es pot retirar (yank) de PyPI sense afectar ningú que hagi fixat una "
-"versió anterior."
+"Si aquesta versió provoca una regressió, consulta `RELEASING.md#rollback-"
+"procedure`. En resum: la versió anterior es continua podent instal·lar i "
+"aquesta versió es pot retirar (yank) de PyPI sense afectar ningú que hagi"
+" fixat una versió anterior."
 
-#: ../../_release_notes_template.md:54
+#: ../../_release_notes_template.md:55
 msgid "Verification"
 msgstr "Verificació"
 
-#: ../../_release_notes_template.md:56
+#: ../../_release_notes_template.md:57
 msgid "`just packaging-smoke` green on Linux/WSL"
 msgstr "`just packaging-smoke` en verd a Linux/WSL"
 
-#: ../../_release_notes_template.md:57
+#: ../../_release_notes_template.md:58
 msgid "`uvx --from cadrumo==X.Y.Z aeat --version` resolves on a clean machine"
 msgstr "`uvx --from cadrumo==X.Y.Z aeat --version` es resol en una màquina neta"
 
-#: ../../_release_notes_template.md:58
-msgid "`pip install cadrumo==X.Y.Z` pulls both exact-version data distributions     and `aeat app registry verify` runs clean"
+#: ../../_release_notes_template.md:59
+msgid ""
+"`pip install cadrumo==X.Y.Z` pulls both exact-version data distributions"
+"     and `aeat app registry verify` runs clean"
 msgstr ""
-"`pip install cadrumo==X.Y.Z` descarrega les dues distribucions de dades de versió exacta i `aeat app registry verify`"
-" s'executa sense errors"
+"`pip install cadrumo==X.Y.Z` descarrega les dues distribucions de dades "
+"de versió exacta i `aeat app registry verify` s'executa sense errors"
 

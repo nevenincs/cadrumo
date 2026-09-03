@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -47,6 +48,11 @@ from .._paths import REPO_ROOT
 from .build import docs_build_jobs, ensure_isolated_storage_root
 
 _DOC_SUFFIXES: Final[frozenset[str]] = frozenset({".md", ".rst"})
+
+#: A BCP-47 language tag is a single, portable locale directory token. Keeping
+#: the grammar lexical (rather than asking the host ``Path`` parser) refuses
+#: Windows and POSIX path syntax consistently in every CI environment.
+_LANGUAGE_DIRECTORY_TOKEN: Final[re.Pattern[str]] = re.compile(r"[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*\Z")
 
 #: Top-level ``docs/`` directories that carry no authored, translatable pages:
 #: the generated API autodoc tree and viewcode source, the build output, the
@@ -186,6 +192,79 @@ def pot_root(docs_root: Path) -> Path:
 def locale_root(docs_root: Path) -> Path:
     """Return the committed per-language catalogue root under ``docs/locales``."""
     return docs_root / "locales"
+
+
+def _language_catalogue_root(docs_root: Path, language: str) -> Path | None:
+    """Return the validated ``LC_MESSAGES`` root for one target language.
+
+    ``language`` is an externally useful parameter for focused updates, so it
+    is treated as a directory name rather than concatenated as a path. This
+    keeps a malformed target from widening catalogue cleanup beyond its one
+    language tree.
+    """
+    if _LANGUAGE_DIRECTORY_TOKEN.fullmatch(language) is None:
+        raise ValueError(f"language must be one BCP-47 directory token, got {language!r}")
+
+    locales = locale_root(docs_root).resolve()
+    catalogue_root = locales / language / "LC_MESSAGES"
+    if not catalogue_root.is_dir():
+        return None
+    resolved_catalogue_root = catalogue_root.resolve()
+    try:
+        relative_root = resolved_catalogue_root.relative_to(locales)
+    except ValueError as exc:
+        raise ValueError(f"catalogue root escapes docs/locales: {catalogue_root}") from exc
+    if relative_root.parts != (language, "LC_MESSAGES"):
+        raise ValueError(f"catalogue root is not docs/locales/{language}/LC_MESSAGES: {catalogue_root}")
+    return resolved_catalogue_root
+
+
+def prune_orphan_catalogues(
+    repo_root: Path,
+    languages: tuple[str, ...] = TARGET_LANGUAGES,
+) -> tuple[Path, ...]:
+    """Remove catalogues that no longer correspond to an authored user page.
+
+    Extraction and ``sphinx-intl update`` add and refresh catalogues but do not
+    remove ones left behind by a deleted or generator-owned source page. The
+    authored user-scope set is the sole authority for those paths, so cleanup
+    maps it to expected ``.po`` leaves and unlinks only individually validated
+    files beneath each language's ``LC_MESSAGES`` root.
+
+    Args:
+        repo_root: Repository root containing ``docs/``.
+        languages: Target-language directory names to inspect.
+
+    Returns:
+        The removed catalogue paths, in deterministic scan order.
+
+    Raises:
+        ValueError: A language name or catalogue path would escape its
+            ``docs/locales/<lang>/LC_MESSAGES`` boundary.
+    """
+    docs_root = repo_root / "docs"
+    expected = {Path(page).with_suffix(".po").as_posix() for page in user_scope_source_pages(docs_root)}
+    removed: list[Path] = []
+    for language in languages:
+        catalogue_root = _language_catalogue_root(docs_root, language)
+        if catalogue_root is None:
+            continue
+        for catalogue in scan_directory(
+            catalogue_root,
+            pattern="*.po",
+            recursive=True,
+            select=DirectoryEntryKind.FILES,
+        ):
+            resolved_catalogue = catalogue.resolve()
+            try:
+                relative_catalogue = resolved_catalogue.relative_to(catalogue_root)
+            except ValueError as exc:
+                raise ValueError(f"catalogue path escapes {catalogue_root}: {catalogue}") from exc
+            if relative_catalogue.as_posix() in expected:
+                continue
+            catalogue.unlink()
+            removed.append(catalogue)
+    return tuple(removed)
 
 
 #: Wall-clock ceiling for a shelled documentation build, in seconds.
@@ -335,6 +414,7 @@ def update_catalogues(repo_root: Path, languages: tuple[str, ...] = TARGET_LANGU
     result = _run_bounded(command, cwd=repo_root, env=None, what="sphinx-intl catalogue update")
     if result.returncode != 0:
         raise SystemExit(result.returncode)
+    prune_orphan_catalogues(repo_root, languages)
 
 
 def main(argv: list[str] | None = None) -> int:

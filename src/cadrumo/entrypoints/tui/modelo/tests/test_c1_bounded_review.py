@@ -21,8 +21,9 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
+from textual.app import App, ComposeResult
 from textual.coordinate import Coordinate
-from textual.widgets import DataTable, Static
+from textual.widgets import Button, DataTable, Static
 
 from .....core.config import override_settings
 from .....core.i18n.render import SUPPORTED_OUTPUT_LANGUAGES, tr
@@ -184,15 +185,26 @@ async def test_two_themes_render_visibly_different_styles_via_shared_toggle() ->
     assert (dark_style.bgcolor, dark_style.color) != (light_style.bgcolor, light_style.color)
 
 
-def test_select_screen_refuses_a_foreign_app_host() -> None:
-    """The screen fails closed rather than rendering under an unrelated App."""
-    from textual.app import App
+@pytest.mark.asyncio
+async def test_select_screen_is_host_neutral_and_returns_to_the_exact_caller() -> None:
+    """A generic root receives the semantic result and regains its focus."""
 
-    class _ForeignApp(App[None]):
-        pass
+    class _RootApp(App[None]):
+        def compose(self) -> ComposeResult:
+            yield Button("Root", id="root-focus")
 
-    foreign = _ForeignApp()
-    screen = ModeloWorkSelectScreen()
-    foreign._register(foreign, screen)
-    with pytest.raises(TypeError, match="ModeloWorkSelectApp"):
-        _ = screen.select_app
+    units = _real_units()
+    outcomes: list[str | None] = []
+    app = _RootApp()
+    async with app.run_test(size=(100, 30)) as pilot:
+        root_focus = app.query_one("#root-focus", Button)
+        root_focus.focus()
+        await pilot.pause()
+        app.push_screen(ModeloWorkSelectScreen(units), callback=outcomes.append)
+        await pilot.pause()
+        await pilot.press("down", "enter")
+        await pilot.pause()
+
+        assert outcomes == [units[1].work_unit_id]
+        assert app.screen is app.screen_stack[0]
+        assert app.focused is root_focus

@@ -93,6 +93,7 @@ from ._modelo_amend_wizard_payloads import AmendWizardCorrectedCasillaPayload, W
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_cli_support import bad_parameter_from_error, resolve_default_actor
 from ._modelo_rendering import filing_record_lines
+from ._modelo_work_wizard_cli import _resolve_modelo_work_unit_for_wizard
 
 if TYPE_CHECKING:
     from ...domain.modelos.calculation_revision import CalculationRevision
@@ -167,10 +168,18 @@ def run_modelo_work_amend_wizard(
     actor: str | None,
     output_language_opt: OutputLanguage | None,
 ) -> None:
-    deps.activate_output_language(ctx, output_language_opt)
-    deps.require_active_profile()
-    unit = deps.resolve_work_unit_for_cli(
-        work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
+    unit = _resolve_modelo_work_unit_for_wizard(
+        activate_output_language=deps.activate_output_language,
+        require_active_profile=deps.require_active_profile,
+        resolve_work_unit_for_cli=deps.resolve_work_unit_for_cli,
+        ctx=ctx,
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        revision=revision,
+        bucket_id=bucket_id,
+        output_language_opt=output_language_opt,
     )
     if unit.current_filing_record_id is None:
         raise deps.bad_parameter_from_error(

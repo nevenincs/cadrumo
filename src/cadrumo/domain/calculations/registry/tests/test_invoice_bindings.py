@@ -69,6 +69,7 @@ def _observation(
     previous: str | None = None,
     period: str | None = None,
     year: int | None = None,
+    party_legal_name: str | None = None,
 ) -> InvoiceObservation:
     return InvoiceObservation(
         source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -83,6 +84,7 @@ def _observation(
         rectified_base_previous=Decimal(previous) if previous is not None else None,
         rectified_period=period,
         rectified_year=year,
+        party_legal_name=party_legal_name,
     )
 
 
@@ -486,6 +488,76 @@ def test_resolve_invoice_binding_row_values_period_grouping_carries_rectificatio
         ("iva-349-rectificacion-row-base-rectificada", 2): Decimal("200.00"),
         ("iva-349-rectificacion-row-base-anterior", 2): Decimal("180.00"),
     }
+
+
+def test_row_materialization_backfills_later_legal_names_without_merging_m349_row_semantics() -> None:
+    """Mutable buckets retain a later legal name in both M349 row families."""
+    revision = _revision(
+        _with_selector(
+            _binding("iva-349-operador-row-base"),
+            claves=("E",),
+            rectification_scope="exclude_rectifications",
+        ),
+        _with_selector(
+            _binding("iva-349-operador-row-apellidos"),
+            claves=("E",),
+            rectification_scope="exclude_rectifications",
+        ),
+        _with_selector(
+            _binding("iva-349-rectificacion-row-base-rectificada"),
+            claves=("E",),
+            rectification_scope="only_rectifications",
+        ),
+        _with_selector(
+            _binding("iva-349-rectificacion-row-base-anterior"),
+            claves=("E",),
+            rectification_scope="only_rectifications",
+        ),
+        _with_selector(
+            _binding("iva-349-rectificacion-row-apellidos"),
+            claves=("E",),
+            rectification_scope="only_rectifications",
+        ),
+    )
+    observations = (
+        _observation(party="DE111", country="DE", base="100.00", clave="E"),
+        _observation(
+            party="DE111",
+            country="DE",
+            base="50.00",
+            clave="E",
+            party_legal_name="DEUTSCHE GMBH",
+        ),
+        _observation(
+            party="IT222",
+            country="IT",
+            base="200.00",
+            clave="E",
+            is_rectification=True,
+            previous="180.00",
+            period="4T",
+            year=2025,
+        ),
+        _observation(
+            party="IT222",
+            country="IT",
+            base="30.00",
+            clave="E",
+            is_rectification=True,
+            previous="20.00",
+            period="4T",
+            year=2025,
+            party_legal_name="ITALIA SRL",
+        ),
+    )
+
+    resolved = resolve_invoice_binding_row_values(revision, observations)
+
+    assert resolved[("iva-349-operador-row-base", 1)] == Decimal("150.00")
+    assert resolved[("iva-349-operador-row-apellidos", 1)] == "DEUTSCHE GMBH"
+    assert resolved[("iva-349-rectificacion-row-base-rectificada", 1)] == Decimal("230.00")
+    assert resolved[("iva-349-rectificacion-row-base-anterior", 1)] == Decimal("200.00")
+    assert resolved[("iva-349-rectificacion-row-apellidos", 1)] == "ITALIA SRL"
 
 
 def test_resolve_invoice_binding_row_values_skips_scalar_bindings() -> None:

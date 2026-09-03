@@ -276,6 +276,53 @@ def _copy_snapshot(
     *,
     guarded_paths: frozenset[str] | None = None,
 ) -> None:
+    git_executable = shutil.which("git")
+    if git_executable is None:
+        raise ObjectNameRehearsalError("git executable is unavailable for isolated snapshot metadata")
+    head = subprocess.run(  # noqa: S603
+        (git_executable, "-C", str(source_root), "rev-parse", "HEAD"),
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+    if head.returncode != 0 or not head.stdout.strip():
+        raise ObjectNameRehearsalError(f"cannot resolve source HEAD for isolated Git metadata: {head.stderr.strip()}")
+    captured_head = head.stdout.strip()
+    if captured_head:
+        clone = subprocess.run(  # noqa: S603
+            (
+                git_executable,
+                "clone",
+                "--no-hardlinks",
+                "--no-checkout",
+                "--quiet",
+                str(source_root),
+                str(target_root),
+            ),
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+        if clone.returncode != 0:
+            raise ObjectNameRehearsalError(f"cannot create isolated Git metadata: {clone.stderr.strip()}")
+        remove_origin = subprocess.run(  # noqa: S603
+            (git_executable, "-C", str(target_root), "remote", "remove", "origin"),
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+        if remove_origin.returncode != 0:
+            raise ObjectNameRehearsalError(
+                f"cannot detach isolated Git metadata from its source: {remove_origin.stderr.strip()}"
+            )
+        pin = subprocess.run(  # noqa: S603
+            (git_executable, "-C", str(target_root), "update-ref", "--no-deref", "HEAD", captured_head),
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+        if pin.returncode != 0:
+            raise ObjectNameRehearsalError(f"cannot pin isolated Git metadata: {pin.stderr.strip()}")
     exact_paths = frozenset(path for path, _digest in files) if guarded_paths is None else guarded_paths
     for source_root_name in ("src", "dev"):
         (target_root / source_root_name).mkdir(parents=True, exist_ok=True)
