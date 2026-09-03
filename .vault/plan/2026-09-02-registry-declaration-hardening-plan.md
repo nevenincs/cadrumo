@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:b5bbd68461392a2d34154bc625c683ac1890ed95d7f448da87173be8eb083c9a'
+body_hash: 'sha256:ca5d4c86c2773b169588de0aca882db8b8434bedc8153cbe6c9ea01bf4d191f7'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -482,6 +482,7 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S443` - Enrol the two committed export trees the reproduction test omitted, m210 2026-y-siguientes and m303 2022, deriving their source ref epoch year and period from the registry and checking the derivation reproduces an existing row, which takes the directory to 38 failures where both new ones are the manifest staleness their twenty-five peers already carry; `dev/registry/tests/test_generated_export_trees.py`.
 - [x] `W04.P09.S444` - Gate that every committed export tree has a reproduction target, asserting the containment one way only since modelo 390 2022 is enrolled without a committed tree deliberately so its absence keeps failing; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [ ] `W04.P09.S445` - Decide whether modelo 840s authored semantic map and render profile anticipate an export layout or outlive one, since its only revision declares none and no gate test or render path ever loads the five files; `dev/registry/mappings/modelo_840 dev/registry/render_profiles/modelo_840`.
+- [ ] `W04.P09.S446` - Write the verification criterion for what a filer would meet, naming the five filing-correctness findings verified against shipped code and separating the twenty-nine generated trees by the repair each needs; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 
@@ -1038,6 +1039,40 @@ at a coordinate leaving at the same time as the one it was offered to replace. T
 owes is a claim about the corpus after this plan lands, not the corpus today; where the kind empties
 entirely, the honest instruction is to construct the case from a copy of a real revision, which is
 what the sibling conditions in the same module already do.
+
+Every declaration defect a filer would actually meet is named, counted, and separated from the ones
+that cost nothing. The corpus declares sixty-nine filing-grade revisions and **sixty-seven of them
+carry at least one condition**, so the useful unit of repair is the revision rather than the
+condition: choosing work by condition means touching almost every fileable revision, while modelo
+200's `2025-y-siguientes` alone carries seven independent ones and modelo 347's `2011-2024` six.
+
+Five findings in that set are filing-correctness rather than untidiness, and each was verified against
+the shipped code or the official design rather than taken from a screen's own description.
+
+Thirty-one revisions spell their filing envelope as a pseudo-record, twenty of them at filing grade.
+The export boundary sets `renders_filing_envelope` from the typed slot alone, so those filings render
+through the plain-records branch: nothing requires the product software identity and nothing stamps
+it, where a typed envelope refuses to export without both it and the prior domiciliation election.
+All eighteen layouts using the typed slot declare the identity requirement; the thirty-one cannot.
+
+Modelo 322 is the sharpest case and was found by comparing a revision with its predecessor, which no
+screen did until one was written for it. Its `2024-2025` declares the typed envelope and the identity
+requirement; its `2026-y-siguientes`, also filing grade, declares neither and opens its record tuple
+with an `envelope-header` pseudo-record. A capability held for three consecutive revisions was lost
+in the fourth.
+
+Eleven filing-grade revisions cannot state when a filing is due - five declare no deadline window at
+all, six leave years of their own closed window uncovered, modelo 347 for seven years of fourteen.
+Twenty-six monetary fields are rendered as text, applying no scale and declaring no decimals, and
+**every one sits in a filing-grade revision**. Five revisions declare filing grade while missing the
+completeness manifest that grade requires, which is the only place in the corpus where a grade is
+over-declared rather than under-declared.
+
+The generated trees are separated by the repair each needs rather than counted together: of
+twenty-nine renderable trees, one reproduces exactly, twenty-five are stale only in their generation
+manifest and are safe to republish, two carry record drift and are ledgered precisely so that
+republication does not overwrite correct bytes with wrong inputs, and one has never been committed.
+The disposition ledger names exactly the two, verified by comparing its rows with the measurement.
 
 No monetary amount is emitted at a magnitude the registry does not determine. Every monetary field is
 rendered by a wire type that scales, carries a declared scale, or is one half of the official part
