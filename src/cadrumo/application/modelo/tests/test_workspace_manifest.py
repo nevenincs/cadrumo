@@ -60,7 +60,7 @@ class _AnnotatedForwardReferenceRoot(BaseModel):
 
 
 class _UnresolvedForwardReference(BaseModel):
-    missing: MissingWorkspaceType  # noqa: F821 - intentional unresolved-reference fixture
+    missing: MissingWorkspaceType  # noqa: F821  # ty: ignore[unresolved-reference]  # reason: the unresolvable annotation IS the fixture under test
 
 
 @cache
