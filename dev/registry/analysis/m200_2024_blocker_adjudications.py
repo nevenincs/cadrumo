@@ -191,7 +191,11 @@ def _require_partition(
     ids = frozenset(row.casilla_id for row in rows)
     if len(ids) != len(rows) or len(rows) != S14_S15_EXPECTED_COUNT or ids & S12_MEMBERS:
         raise RegistryValidationError("M200/2024 S14/S15 adjudication membership is not closed and disjoint")
-    s12 = compile_m200_2024_same_template_authority(audits=audits) if same_template_authority is None else same_template_authority
+    s12 = (
+        compile_m200_2024_same_template_authority(audits=audits)
+        if same_template_authority is None
+        else same_template_authority
+    )
     # This validates the receipt membership here.  Canonical byte verification
     # is performed once by the invocation-owned promotions snapshot that
     # supplies this receipt, avoiding a second full compiler replay.

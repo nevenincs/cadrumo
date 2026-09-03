@@ -19,16 +19,22 @@ from .m200_2024_blocker_adjudication import build_worklist
 from .m200_2024_blocker_adjudications import (
     CompiledM200BlockerAuthority,
     compile_m200_2024_blocker_authority,
+)
+from .m200_2024_blocker_adjudications import (
     verify_canonical_declarations as verify_blocker_canonical_declarations,
 )
 from .m200_2024_template_adjudications import (
     CompiledM200Same2024TemplateAuthority,
     compile_m200_2024_same_template_authority,
+)
+from .m200_2024_template_adjudications import (
     verify_canonical_declarations as verify_template_canonical_declarations,
 )
 from .m200_2024_unique_adjudications import (
     CompiledM200UniqueAuthority,
     compile_m200_2024_unique_authority,
+)
+from .m200_2024_unique_adjudications import (
     verify_canonical_declarations as verify_unique_canonical_declarations,
 )
 from .m200_restored_semantic_audit import RestoredSemanticAudit, audit_bundled_restorations

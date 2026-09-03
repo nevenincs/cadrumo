@@ -55,7 +55,7 @@ def build_worklist(*, audits: tuple[RestoredSemanticAudit, ...] | None = None) -
     # A reconciliation invocation shares this immutable audit result among all
     # three adjudication compilers.  The default remains a fresh audit, so this
     # diagnostic has no process-global cache or stale-file behaviour.
-    for audit in (audit_bundled_restorations() if audits is None else audits):
+    for audit in audit_bundled_restorations() if audits is None else audits:
         if audit.cross_revision_status not in BLOCKER_STATUSES:
             continue
         entry = entries[audit.export_field_id]
