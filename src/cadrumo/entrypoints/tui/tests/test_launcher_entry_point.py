@@ -217,14 +217,7 @@ def test_entry_point_injects_and_rebuilds_the_installed_search_provider() -> Non
     assert len(calls) == 1
 
 
-def test_module_entry_routes_missing_root_composition_to_honest_shell(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Bare execution starts without inventing projections or an empty index."""
-    providers: list[object] = []
-
-    def start(**kwargs: object) -> int:
-        providers.append(kwargs["workbench_root_inputs_provider"])
-        return 0
-
-    monkeypatch.setattr("cadrumo.entrypoints.tui.__main__.main", start)
-    assert run([]) == 0
-    assert providers == [None]
+def test_module_entry_refuses_missing_installed_root_composition(capsys: pytest.CaptureFixture[str]) -> None:
+    """Bare execution cannot claim a root it was not given."""
+    assert run([]) == 2
+    assert capsys.readouterr().err == "workbench.root.composition_required\n"

@@ -138,3 +138,40 @@ def test_the_static_closure_matches_what_a_real_load_imports(
         "the graph says a load imports these modules and the real load did not, "
         f"and each has a module-level importer so no deferred edge explains it: {sorted(eagerly_reachable)}"
     )
+
+
+def test_no_registry_dynamic_import_site_is_left_unresolved() -> None:
+    """The census must be able to follow the registry's own dynamic edges.
+
+    A dynamic import the resolver cannot follow is dropped from the universe
+    silently. The report has always recorded such sites and the CLI prints
+    them, but nothing asserted on the field, so a resolver going blind produced
+    no failure of its own - it surfaced one directory away, as classification
+    rules that had apparently gone stale.
+
+    That is what happened here. `_snapshot_internals` imports the cross-domain
+    check modules from a tuple built out of another module's mapping values
+    rather than from a literal, which the static resolver cannot read, so the
+    renta package left the universe and the rule describing it started
+    reporting as stale. The rule is correct; the resolver stopped seeing the
+    edge it describes.
+
+    Scoped to the registry package deliberately. Unresolved sites elsewhere in
+    the tree are real too, but they belong to the surfaces that own them, and a
+    gate that fails on all of them at once would say nothing about which one
+    broke the census.
+    """
+    from ..analysis.load_census import run_census
+
+    report = run_census()
+    registry_sites = [
+        f"{site.module}:{site.lineno}"
+        for site in report.unresolved_dynamic_sites
+        if site.module.startswith("cadrumo.domain.calculations.registry")
+    ]
+
+    assert not registry_sites, (
+        "the census cannot follow a dynamic import inside the registry package, so whatever it "
+        "reaches is missing from the universe and the rules describing it will read as stale. "
+        f"Teach the resolver this shape or restore a readable one; do not delete the rules: {registry_sites}"
+    )

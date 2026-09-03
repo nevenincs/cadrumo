@@ -293,7 +293,7 @@ async def _run_root_session(
     *,
     headless: bool,
     auto_pilot: AutopilotCallbackType | None,
-    workbench_root_inputs_provider: InstalledWorkbenchRootInputsProviderV1 | None = None,
+    workbench_root_inputs_provider: InstalledWorkbenchRootInputsProviderV1,
 ) -> None:
     """Compose one session's services, run the root application, settle them.
 
@@ -303,17 +303,7 @@ async def _run_root_session(
     """
     from .app import CadrumoTuiApp
 
-    root = (
-        compose_installed_workbench_root(workbench_root_inputs_provider())
-        if workbench_root_inputs_provider is not None
-        else None
-    )
-
-    if root is None:
-        async with operation_services_scope() as services:
-            await CadrumoTuiApp(services=services).run_async(headless=headless, auto_pilot=auto_pilot)
-        return
-
+    root = compose_installed_workbench_root(workbench_root_inputs_provider())
     service = compose_installed_workbench_search(root.search_inputs)
 
     def refresh_search() -> WorkbenchSearchDoorV1:
@@ -338,7 +328,7 @@ def main(
     *,
     headless: bool = False,
     auto_pilot: AutopilotCallbackType | None = None,
-    workbench_root_inputs_provider: InstalledWorkbenchRootInputsProviderV1 | None = None,
+    workbench_root_inputs_provider: InstalledWorkbenchRootInputsProviderV1,
 ) -> int:
     """Start one dedicated TUI session and report its process exit status.
 
