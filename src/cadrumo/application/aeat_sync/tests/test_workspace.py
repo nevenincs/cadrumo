@@ -17,6 +17,7 @@ from ...operations.registry import OperationPublicContractSetV1
 from ...operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue, ActionCatalogueEntry
 from ...operator_actions.models import ActionReference
 from ...user_profile.censal_operation import CENSAL_OPERATION_DEFINITION, build_censal_operation_registration
+from .. import workspace as workspace_module
 from ..workspace import (
     AeatSyncAeatObservationState,
     AeatSyncCensusCategory,
@@ -221,6 +222,46 @@ def test_exact_six_zones_and_deterministic_safe_projection() -> None:
     assert tuple(row.path for row in first.census) == ("a", "z")
     assert first == second
     assert first.model_dump_json() == second.model_dump_json()
+
+
+def test_notification_selection_identity_is_stable_opaque_and_order_independent() -> None:
+    first = _projection(
+        notifications=(
+            _fact(_notification(), private_identity="notification-alpha"),
+            _fact(_notification(), private_identity="notification-beta"),
+        )
+    )
+    second = _projection(
+        notifications=(
+            _fact(_notification(), private_identity="notification-beta"),
+            _fact(_notification(), private_identity="notification-alpha"),
+        )
+    )
+    assert first == second
+    keys = tuple(row.selection_key for row in first.notifications)
+    assert all(key is not None for key in keys)
+    assert len(set(keys)) == 2
+    assert all(key.startswith("aeat_sync.notification.") and len(key) <= 160 for key in keys if key is not None)
+    encoded = first.model_dump_json() + repr(first)
+    assert "notification-alpha" not in encoded
+    assert "notification-beta" not in encoded
+    assert b"notification-alpha" not in pickle.dumps(first)
+    assert b"notification-beta" not in pickle.dumps(first)
+
+
+def test_notification_selection_identity_collision_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        workspace_module,
+        "_notification_selection_key",
+        lambda _: "aeat_sync.notification.collision",
+    )
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="selection identities"):
+        _projection(
+            notifications=(
+                _fact(_notification(), private_identity="notification-alpha"),
+                _fact(_notification(), private_identity="notification-beta"),
+            )
+        )
 
 
 def test_output_physically_omits_protected_scope_payload_and_identity() -> None:

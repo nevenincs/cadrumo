@@ -6,11 +6,12 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
-from typing import Any, Final, Protocol, Self, override
+from typing import Any, Final, Protocol, Self, cast, override
 
 from pydantic import BaseModel, Field, NonNegativeInt, TypeAdapter, model_validator
 
 from ...core.filing_year import FilingYear
+from ...core.hashing import content_hash_hex
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -23,6 +24,15 @@ from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalo
 from ..operator_actions.models import ActionReference
 
 AEAT_SYNC_WORKSPACE_CONTRACT_VERSION: Final[int] = 1
+
+type AeatSyncNotificationSelectionKey = NamespacedId
+"""Opaque, bounded identity for one projected notification row.
+
+The admission coordinate remains on :class:`AeatSyncWorkspaceFactV1` only.
+Projection derives this key from that coordinate and reconstructs the public
+row, so the public snapshot retains a stable semantic focus address without
+retaining the private notification identity.
+"""
 
 
 class AeatSyncWorkspaceProjectionError(ValueError):
@@ -296,7 +306,12 @@ class AeatSyncWorkspaceFiledDeclarationRowV1(AeatSyncWorkspaceActionRowV1):
 
 
 class AeatSyncWorkspaceNotificationRowV1(AeatSyncWorkspaceActionRowV1):
-    """Safe public notification metadata."""
+    """Safe public notification metadata.
+
+    ``selection_key`` is populated only by :func:`project_aeat_sync_workspace`.
+    An admission row may leave it absent; the projector always replaces it
+    from the fact's private coordinate before exposing the row publicly.
+    """
 
     issued_on: date
     read_on: date | None = None
@@ -304,6 +319,7 @@ class AeatSyncWorkspaceNotificationRowV1(AeatSyncWorkspaceActionRowV1):
     category: AeatSyncNotificationCategory
     document_custody_state: AeatSyncDocumentCustodyState
     document_custody_observed_at: UtcInstant | None = None
+    selection_key: AeatSyncNotificationSelectionKey | None = None
 
     @property
     def issue_date(self) -> date:
@@ -538,10 +554,7 @@ def project_aeat_sync_workspace(
     out_filed = tuple(
         sorted((_public_row(f.row, AeatSyncWorkspaceFiledDeclarationRowV1) for f in filed_declarations), key=_natural)
     )
-    out_notifications = tuple(
-        _public_row(f.row, AeatSyncWorkspaceNotificationRowV1)
-        for f in sorted(notifications, key=lambda f: (f.row.issued_on, f.private_identity or ""))
-    )
+    out_notifications = _project_notification_rows(notifications)
     out_comparison = tuple(
         sorted(
             (_public_row(f.row, AeatSyncWorkspaceEvidenceComparisonRowV1) for f in evidence_comparison), key=_natural
@@ -722,6 +735,48 @@ def _validate_action_catalogue(catalogue: ActionCatalogue) -> None:
 def _canonical_census_path(path: str) -> str:
     """Normalize insignificant whitespace and case for logical identity."""
     return " ".join(path.split()).casefold()
+
+
+_NOTIFICATION_SELECTION_NAMESPACE: Final[str] = "aeat_sync.notification.selection.v1"
+
+
+def _notification_selection_key(private_identity: str) -> AeatSyncNotificationSelectionKey:
+    """Derive a stable public focus key without retaining the private identity."""
+    digest = content_hash_hex(
+        {
+            "namespace": _NOTIFICATION_SELECTION_NAMESPACE,
+            "private_identity": private_identity,
+        }
+    )
+    return cast("AeatSyncNotificationSelectionKey", f"aeat_sync.notification.{digest}")
+
+
+def _project_notification_rows(
+    facts: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceNotificationRowV1], ...],
+) -> tuple[AeatSyncWorkspaceNotificationRowV1, ...]:
+    """Project notification rows with opaque keys and protected-value-free ordering."""
+    keyed: list[
+        tuple[AeatSyncNotificationSelectionKey, AeatSyncWorkspaceFactV1[AeatSyncWorkspaceNotificationRowV1]]
+    ] = []
+    for fact in facts:
+        if fact.private_identity is None:
+            raise AeatSyncWorkspaceProjectionError("notification requires private identity")
+        keyed.append((_notification_selection_key(fact.private_identity), fact))
+    _unique((key for key, _ in keyed), "notification selection identities")
+    return tuple(
+        _public_notification_row(fact.row, key)
+        for key, fact in sorted(keyed, key=lambda item: (item[1].row.issued_on, item[0]))
+    )
+
+
+def _public_notification_row(
+    row: AeatSyncWorkspaceNotificationRowV1,
+    selection_key: AeatSyncNotificationSelectionKey,
+) -> AeatSyncWorkspaceNotificationRowV1:
+    """Rebuild one notification row and inject only its safe selection key."""
+    values = row.model_dump(include=set(AeatSyncWorkspaceNotificationRowV1.model_fields))
+    values["selection_key"] = selection_key
+    return AeatSyncWorkspaceNotificationRowV1.model_validate(values)
 
 
 def _zone_state(observation: AeatSyncWorkspaceZoneObservationV1, count: int) -> AeatSyncWorkspaceZoneStateV1:
