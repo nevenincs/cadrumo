@@ -311,12 +311,24 @@ def test_stable_identity_is_derived_and_duplicate_safe_projections_are_refused()
         WorkbenchSearchService([_document(), _document()])
 
 
-def test_distinct_same_state_unaddressed_records_coexist_with_opaque_ids() -> None:
+@pytest.mark.parametrize(
+    "kind",
+    [
+        WorkbenchSearchKind.LEDGER_ENTRY,
+        WorkbenchSearchKind.LEDGER_EVIDENCE,
+        WorkbenchSearchKind.HISTORY,
+        WorkbenchSearchKind.RECONCILIATION,
+        WorkbenchSearchKind.NOTIFICATION,
+    ],
+)
+def test_distinct_same_state_multi_record_families_coexist_with_opaque_ids(
+    kind: WorkbenchSearchKind,
+) -> None:
     documents = (
-        _document(WorkbenchSearchKind.LEDGER_ENTRY, identity_basis="synthetic-ledger-record-a"),
-        _document(WorkbenchSearchKind.LEDGER_ENTRY, identity_basis="synthetic-ledger-record-b"),
+        _document(kind, identity_basis="synthetic-record-a"),
+        _document(kind, identity_basis="synthetic-record-b"),
     )
-    response = WorkbenchSearchService(documents).search(WorkbenchSearchRequest(query="ledger entry"))
+    response = WorkbenchSearchService(documents).search(WorkbenchSearchRequest(query=kind.value.replace("_", " ")))
     identities = tuple(result.stable_id for result in response.results)
 
     assert response.total_matches == 2
@@ -326,8 +338,8 @@ def test_distinct_same_state_unaddressed_records_coexist_with_opaque_ids() -> No
         not in {
             hashlib.sha256(basis.encode()).hexdigest()
             for basis in (
-                "synthetic-ledger-record-a",
-                "synthetic-ledger-record-b",
+                "synthetic-record-a",
+                "synthetic-record-b",
             )
         }
         for identity in identities

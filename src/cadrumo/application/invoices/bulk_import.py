@@ -469,7 +469,9 @@ def _read_delimited_source(path: Path, *, mapper: ColumnRoleMapper | None) -> Bu
     return BulkInvoiceImportSource(
         rows=rows,
         resolution=resolution,
-        decimal_separator=table.dialect.decimal_separator if resolution.consulted_mapping_lane else ".",
+        decimal_separator=(
+            table.dialect.decimal_separator if resolution.consulted_mapping_lane else DecimalSeparator.PERIOD
+        ),
     )
 
 

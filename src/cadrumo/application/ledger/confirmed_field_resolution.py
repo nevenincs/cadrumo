@@ -7,7 +7,8 @@ reading, and a field that quietly inverted the order would prefer a misread
 document over the person confirming it. The three fields that do NOT simply
 layer -- currency, counterparty name, invoice date -- each carry their own
 resolver stating why, and a field neither side supplies refuses through
-:func:`require_confirmed_field` rather than reaching the catalogue empty.
+:func:`refuse_an_absent_confirmed_field` rather than reaching the catalogue
+empty.
 
 Two resolutions read the document's own per-rate breakdown rather than a single
 flat triple, and both are skipped the moment the operator restates any of the
@@ -31,6 +32,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import NoReturn
 
 from ...adapters.inbound.einvoice.parsers import FacturaeInvoiceClass
 from ...application.invoices.catalogue_creation import resolve_iva_rate_slot
@@ -58,22 +60,34 @@ def operator_value_or_reading[SuppliedT, ReadT](supplied: SuppliedT | None, read
     The reading carries its own type, so a field the document may not have
     recovered layers to a result that is still absent rather than one this
     function has quietly declared present. Refusing that absence belongs to
-    :func:`require_confirmed_field` at the field that requires it; a reading
-    the draft does carry outright keeps its narrowed type through the layering.
+    :func:`refuse_an_absent_confirmed_field` at the field that requires it; a
+    reading the draft does carry outright keeps its narrowed type through the
+    layering.
     """
     return supplied if supplied is not None else read
 
 
-def require_confirmed_field[ConfirmedT](value: ConfirmedT | None, *, field: str) -> ConfirmedT:
-    if value is None:
-        raise PurchaseInvoiceEvidenceInputError(
-            translated_message="errors.refused.refused_ledger_evidence_input",
-            precondition_verdict=ledger_no_recovery_verdict(
-                LedgerPreconditionCondition.EVIDENCE_REQUIRED_FIELD_AVAILABLE,
-                facts={"required_field_available": False},
-            ),
-        )
-    return value
+def refuse_an_absent_confirmed_field(*, field: str) -> NoReturn:
+    """Refuse a required field neither the operator nor the document states.
+
+    Stated as a refusal rather than as a value-returning guard so the absence
+    is settled where it is proven: the caller tests its own optional value and
+    every path beyond that test carries a present one, which a checker
+    verifies rather than takes on trust. A guard that answers with a value
+    instead reads as present to its caller while its own signature still
+    admits absence, and that gap is exactly where an absent taxable base or
+    invoice number travels on into a filing-bound record.
+
+    The field is recorded in the verdict, so a surface can tell the operator
+    which one to state instead of reporting an unnamed missing field.
+    """
+    raise PurchaseInvoiceEvidenceInputError(
+        translated_message="errors.refused.refused_ledger_evidence_input",
+        precondition_verdict=ledger_no_recovery_verdict(
+            LedgerPreconditionCondition.EVIDENCE_REQUIRED_FIELD_AVAILABLE,
+            facts={"required_field_available": False, "required_field": field},
+        ),
+    )
 
 
 def confirmed_currency(supplied: str | None, read: str | None) -> str:

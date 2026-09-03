@@ -742,9 +742,11 @@ def _repeat_field_family_failure(
     claims_binding = has_binding or binding_record_declared
     if claims_binding and has_projection:
         return "export record cannot mix binding and projection fields"
-    if repeat is ExportRecordRepeat.PROJECTION_ROWS:
+    # ``==`` not ``is``: ``model_copy(update=...)`` can smuggle the raw token past
+    # validation, and this guard must still recognise it as that family.
+    if repeat == ExportRecordRepeat.PROJECTION_ROWS:
         return _projection_repeat_failure(claims_binding, has_projection)
-    if repeat is ExportRecordRepeat.BINDING_ROWS:
+    if repeat == ExportRecordRepeat.BINDING_ROWS:
         return _binding_repeat_failure(
             has_binding, has_projection, binding_record_declared, allow_unresolved_binding_record
         )
