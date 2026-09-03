@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 from ...application.search.installed_workbench import InstalledWorkbenchSearchInputsV1
 from ...application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
 from ...application.workbench_generation import (
+    WorkbenchGenerationAvailability,
     WorkbenchGenerationProjectionResultV1,
     WorkbenchGenerationV1,
 )
@@ -41,7 +42,6 @@ if TYPE_CHECKING:
     from ...core.external_constants import OutputLanguage
     from ...domain.modelos.work_unit import WorkUnit
     from .account import AccountFactoriesV1
-    from .declarations.models import ModeloWorkspaceScreenFactoryV1
     from .navigation import (
         TuiActionCandidateV1,
         TuiDestinationCatalogueV1,
@@ -218,7 +218,6 @@ class InstalledWorkbenchFactoryDependenciesV1:
     declarations_work_action: ActionReference
     declarations_revisions_action: ActionReference
     declarations_filing_action: ActionReference
-    modelo_workspace_factory: ModeloWorkspaceScreenFactoryV1 | None = None
 
 
 def compose_installed_workbench_generation_provider(
@@ -357,13 +356,25 @@ def _declarations_generation_factory(
     from .declarations.routes import declarations_screen_factory
 
     def create(context: TuiScreenContextV1) -> Screen[None]:
+        from .modelo.installed_workspace import compose_installed_modelo_workspace_factory
+
+        modelo = current[0].modelo
+        modelo_workspace_factory = (
+            compose_installed_modelo_workspace_factory(
+                bucket_id=_required_projection(current[0].declarations, "Declarations").bucket_id,
+                declarations=_required_projection(current[0].declarations, "Declarations").declarations,
+                projections=_required_projection(modelo, "Modelo"),
+            )
+            if modelo.availability is WorkbenchGenerationAvailability.AVAILABLE and modelo.projection is not None
+            else None
+        )
         calendar = current[0].declarations_calendar.projection
         return declarations_screen_factory(
             _required_projection(current[0].declarations, "Declarations"),
             work_action=dependencies.declarations_work_action,
             revisions_action=dependencies.declarations_revisions_action,
             filing_action=dependencies.declarations_filing_action,
-            modelo_workspace_factory=dependencies.modelo_workspace_factory,
+            modelo_workspace_factory=modelo_workspace_factory,
             calendar_projection=calendar,
         )(context)
 

@@ -217,13 +217,24 @@ def admit_workspace_session(
             projection = result.projection
         case _:
             assert_never(result)
+    return open_workspace_read_session(projection), None
+
+
+def open_workspace_read_session(projection: ModeloWorkspaceProjectionV1) -> ModeloWorkspaceReadSession:
+    """Open the canonical immutable session from an already-admitted projection.
+
+    Installed composition receives projections from its one captured generation,
+    rather than re-wrapping them as synthetic application outcomes.  Both
+    admission paths therefore share the exact version and semantic-identity
+    checks before a renderer can receive the session.
+    """
     if projection.contract_version != SUPPORTED_WORKSPACE_CONTRACT_VERSION:
         raise ModeloWorkspaceSessionAdmissionError(
             f"workspace projection declares contract version {projection.contract_version}, "
             f"which this read cohort does not read; it reads exactly "
             f"{SUPPORTED_WORKSPACE_CONTRACT_VERSION}"
         )
-    return ModeloWorkspaceReadSession(projection=projection, identity=semantic_identity(projection)), None
+    return ModeloWorkspaceReadSession(projection=projection, identity=semantic_identity(projection))
 
 
 __all__ = [
@@ -232,5 +243,6 @@ __all__ = [
     "ModeloWorkspaceSemanticIdentityV1",
     "ModeloWorkspaceSessionAdmissionError",
     "admit_workspace_session",
+    "open_workspace_read_session",
     "semantic_identity",
 ]
