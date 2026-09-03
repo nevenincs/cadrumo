@@ -72,6 +72,40 @@ def _annotation(target: DeferredTarget) -> object:
     return annotation
 
 
+def _shared_parameter_kwargs(
+    spec: ArgumentSpec | OptionSpec,
+    *,
+    default_factory: Callable[[], object] | None,
+    metavar: str | None,
+    parser: object | None,
+    click_type: object | None,
+) -> dict[str, object]:
+    """Project the Typer kwargs shared by positional and named parameters."""
+    kwargs: dict[str, object] = {
+        "default_factory": default_factory,
+        "help": None if spec.help_key is None else tr(spec.help_key.value),
+        "metavar": metavar,
+        "show_default": spec.show_default,
+        "hidden": spec.hidden,
+        "min": spec.constraint.minimum,
+        "max": spec.constraint.maximum,
+        "clamp": spec.constraint.clamp,
+        "case_sensitive": spec.constraint.case_sensitive,
+        "exists": spec.constraint.exists,
+        "file_okay": spec.constraint.file_okay,
+        "dir_okay": spec.constraint.dir_okay,
+        "writable": spec.constraint.writable,
+        "readable": spec.constraint.readable,
+        "resolve_path": spec.constraint.resolve_path,
+        "allow_dash": spec.constraint.allow_dash,
+    }
+    if parser is not None:
+        kwargs["parser"] = parser
+    if click_type is not None:
+        kwargs["click_type"] = click_type
+    return kwargs
+
+
 def _parameter(spec: ArgumentSpec | OptionSpec) -> inspect.Parameter:
     default, default_factory = _parameter_default(spec.default)
     annotation = _annotation(spec.value.annotation)
@@ -91,65 +125,39 @@ def _parameter(spec: ArgumentSpec | OptionSpec) -> inspect.Parameter:
     argument_choice_metavar = None if choice_metavar is None else f"{spec.name}:{choice_metavar}"
     if isinstance(spec, ArgumentSpec):
         argument_factory = cast(Any, typer.Argument)
-        argument_kwargs: dict[str, object] = {
-            "default_factory": default_factory,
-            "help": None if spec.help_key is None else tr(spec.help_key.value),
-            "metavar": spec.metavar or argument_choice_metavar,
-            "show_default": spec.show_default,
-            "hidden": spec.hidden,
-            "min": spec.constraint.minimum,
-            "max": spec.constraint.maximum,
-            "clamp": spec.constraint.clamp,
-            "case_sensitive": spec.constraint.case_sensitive,
-            "exists": spec.constraint.exists,
-            "file_okay": spec.constraint.file_okay,
-            "dir_okay": spec.constraint.dir_okay,
-            "writable": spec.constraint.writable,
-            "readable": spec.constraint.readable,
-            "resolve_path": spec.constraint.resolve_path,
-            "allow_dash": spec.constraint.allow_dash,
-        }
-        if parser is not None:
-            argument_kwargs["parser"] = parser
-        if click_type is not None:
-            argument_kwargs["click_type"] = click_type
+        argument_kwargs = _shared_parameter_kwargs(
+            spec,
+            default_factory=default_factory,
+            metavar=spec.metavar or argument_choice_metavar,
+            parser=parser,
+            click_type=click_type,
+        )
         typer_default = argument_factory(default, **argument_kwargs)
         kind = inspect.Parameter.POSITIONAL_OR_KEYWORD
     else:
         callback = None if spec.value.callback is None else resolve_deferred_target(spec.value.callback)
         completion = None if spec.value.completion is None else resolve_deferred_target(spec.value.completion)
         option_factory = cast(Any, typer.Option)
-        option_kwargs: dict[str, object] = {
-            "default_factory": default_factory,
-            "help": None if spec.help_key is None else tr(spec.help_key.value),
-            "metavar": spec.metavar or choice_metavar,
-            "show_default": spec.show_default,
-            "hidden": spec.hidden,
-            "count": spec.count,
-            "prompt": None if spec.prompt_key is None else tr(spec.prompt_key.value),
-            "confirmation_prompt": (
-                False if spec.confirmation_prompt_key is None else tr(spec.confirmation_prompt_key.value)
-            ),
-            "envvar": list(spec.envvar) or None,
-            "is_eager": spec.eager,
-            "callback": callback,
-            "shell_complete": completion,
-            "min": spec.constraint.minimum,
-            "max": spec.constraint.maximum,
-            "clamp": spec.constraint.clamp,
-            "case_sensitive": spec.constraint.case_sensitive,
-            "exists": spec.constraint.exists,
-            "file_okay": spec.constraint.file_okay,
-            "dir_okay": spec.constraint.dir_okay,
-            "writable": spec.constraint.writable,
-            "readable": spec.constraint.readable,
-            "resolve_path": spec.constraint.resolve_path,
-            "allow_dash": spec.constraint.allow_dash,
-        }
-        if parser is not None:
-            option_kwargs["parser"] = parser
-        if click_type is not None:
-            option_kwargs["click_type"] = click_type
+        option_kwargs = _shared_parameter_kwargs(
+            spec,
+            default_factory=default_factory,
+            metavar=spec.metavar or choice_metavar,
+            parser=parser,
+            click_type=click_type,
+        )
+        option_kwargs.update(
+            {
+                "count": spec.count,
+                "prompt": None if spec.prompt_key is None else tr(spec.prompt_key.value),
+                "confirmation_prompt": (
+                    False if spec.confirmation_prompt_key is None else tr(spec.confirmation_prompt_key.value)
+                ),
+                "envvar": list(spec.envvar) or None,
+                "is_eager": spec.eager,
+                "callback": callback,
+                "shell_complete": completion,
+            }
+        )
         # Typer derives flag semantics from the boolean annotation and paired
         # declarations. Its legacy ``is_flag`` / ``flag_value`` parameters are
         # deprecated and ignored, so projecting them would add warnings without
