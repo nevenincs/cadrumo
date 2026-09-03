@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:640ba9f31db9decd58c6f6b41a5118a70ae770dd1eca9d0a104ab96493fc8eb2'
+body_hash: 'sha256:92a40cacc0df636457efea917a1cbd5707e7c40e867a8fc3e86f9f69d4e9fc40'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
@@ -107,3 +107,31 @@ does not weaken the redesigned safety semantics.
 The complete graph and rehearsal suites passed 46 tests in 45.43 seconds. Ruff lint and ty
 passed. Ruff format failed on the three blocks described above. Final S25 status is one
 medium finding and no critical, high, or low findings.
+
+## Final hardening resolution
+
+Resolved: `redesigned-format-gate` is closed. The current S25 implementation and test files
+pass Ruff lint, Ruff format, and ty.
+
+The strengthened default and explicit rehearse paths no longer derive a graph from live
+bytes. CLI scans the inventory and validates the manifest, then passes `component=None` into
+rehearsal. Rehearsal captures the tracked and relevant untracked tree, copies it outside the
+worktree, verifies every copied Python file against its captured digest, rescans declarations
+from that copy, builds the canonical graph exactly once under isolated import state, and
+requires the manifest to resolve to exactly one complete component. Only that copied
+component determines generator paths, transform operations, the changed-path allowlist, and
+receipt identity. Plan and apply retain their live `_context` boundary; replay additionally
+performs its exact disposable preflight with the caller-supplied current component.
+
+This preserves fail-closed behavior under copy and reference races. A Python source changed
+during copying fails its exact digest check before graph discovery. A copied reference added
+after the copy helper's verification is discovered by the one canonical graph and refused
+when outside the reviewed allowlist. Missing or stale selected findings cannot form the
+copied manifest component, multiple independent components are refused, and all subsequent
+transform output, finding-delta, generator, gate, and changed-path checks remain bounded to
+the derived component. The CLI detector asserts rehearsal receives `None`, while the
+rehearsal detector asserts the sole canonical reconstruction is rooted in the retained copy.
+
+The combined graph, rehearsal, and CLI suites passed 85 tests in 69.29 seconds. Ruff lint,
+Ruff format, and ty passed for all six reviewed implementation/test files. Final S25 status
+is no findings at any severity.

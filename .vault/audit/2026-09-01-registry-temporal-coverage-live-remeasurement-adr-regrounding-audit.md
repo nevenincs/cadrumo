@@ -5591,3 +5591,34 @@ another writer commits everything on a timer, the window between creating a file
 is a window in which it becomes part of the project's history - and the earlier finding that
 recorded this slip described it as harmless because nothing persisted. That was true then and is
 not a property of the practice.
+
+### Forty of the two hundred and twenty-five live members do not load the way their rules say
+
+The two clean module dumps were already collected, so checking every `live` rule in the table -
+not only the ones written here - cost nothing further. Of 225 members claimed live, 40 fail in
+at least one regime, and they fail in two distinct ways.
+
+Eleven are never loaded at all, in either regime. Four are the justificante modules already
+identified, four more sit under `cadrumo.domain.modelos`, and three are core modules -
+`json_contract`, an observability recorder, and `output_rendering`. The rules claiming these
+load on `ValidatedRegistryAuthority.load` are simply wrong about them, and no regime rescues the
+claim.
+
+Twenty-nine are loaded on a cold load and not on a warm one. Those rules are right about the
+regime they were evidently written against and over-broad about the other, which is exactly the
+error this campaign made with `formula_runtime_m100` and corrected in the previous finding. The
+same mistake at a scale of twenty-nine suggests the table was authored from a single cold trace
+and never re-measured warm.
+
+None of the forty are this campaign's. The nineteen rulings authored here were re-verified in
+both regimes and seventeen held; the eighteenth was corrected. That is worth stating precisely
+because the finding otherwise reads as this campaign auditing its own work and finding it
+sound, which it is not - it is this campaign finding, in someone else's rules, the error it had
+just made in its own.
+
+The rules are not edited. Forty members across an unknown number of rules, each carrying an
+authored reason describing why a module loads, is another writer's reasoning to revise rather
+than a mechanical repair. The measurement is recorded with its own limits: one machine, one
+bundled corpus, one entry point into the authority, and two cache regimes distinguished by
+their directories. A rule claiming a module loads under some other entry point is not
+contradicted by any of it.
