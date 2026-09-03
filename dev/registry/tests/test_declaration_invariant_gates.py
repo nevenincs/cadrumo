@@ -863,7 +863,6 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
     import importlib
     import re
 
-
     wrong: list[str] = []
     checked = 0
     from ..analysis.screens import screen_findings, screen_module_names
@@ -992,7 +991,6 @@ def test_a_screen_that_counts_the_facts_it_reads_states_the_right_number() -> No
     import importlib
     import re
 
-
     wrong: list[str] = []
     checked = 0
     from ..analysis.screens import screen_module_names
@@ -1059,8 +1057,7 @@ def _public_modules(roots: tuple[pathlib.Path, ...]) -> list[pathlib.Path]:
                 continue
             tree = ast.parse(path.read_text(encoding=_UTF_8))
             if any(
-                isinstance(node, ast.FunctionDef | ast.ClassDef) and not node.name.startswith("_")
-                for node in tree.body
+                isinstance(node, ast.FunctionDef | ast.ClassDef) and not node.name.startswith("_") for node in tree.body
             ):
                 found.append(path)
     return found
@@ -1090,8 +1087,7 @@ def test_every_public_module_in_the_registry_tooling_is_imported_by_a_test() -> 
 
     unimported = sorted(path.stem for path in modules if path.stem not in imported)
     assert not unimported, (
-        "these modules declare a public surface that no test imports, so nothing asserts what they do: "
-        f"{unimported}"
+        f"these modules declare a public surface that no test imports, so nothing asserts what they do: {unimported}"
     )
 
 
@@ -1207,8 +1203,7 @@ def test_no_export_declaration_carries_a_character_outside_ascii(
                     for field in record.fields:
                         fields += 1
                         offenders.extend(
-                            f"{code}/{revision_id} {field.id}.{found}"
-                            for found in _non_ascii_declarations(field)
+                            f"{code}/{revision_id} {field.id}.{found}" for found in _non_ascii_declarations(field)
                         )
 
     assert fields, "no export field was read, so this gate checked nothing"
@@ -1302,7 +1297,7 @@ def test_the_export_declaration_gates_detect_their_defects(
 
 
 def test_no_two_revisions_of_a_modelo_claim_the_same_filing_year_and_period(
-    authority: ValidatedRegistryAuthority,
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
 ) -> None:
     """Selection must be decidable: at most one revision claims a year and period.
 
@@ -1323,10 +1318,12 @@ def test_no_two_revisions_of_a_modelo_claim_the_same_filing_year_and_period(
     gate is silent about them, and its holding is not a claim that every
     revision is unambiguous - only that no two that speak, contradict.
     """
+    from ..analysis.temporal_site_agreement import ambiguously_claimed_periods
+
     offenders: list[str] = []
     claimed_keys = 0
     speaking = 0
-    for modelo_id in bundled_modelo_ids():
+    for modelo_id in modelo_ids:
         claims: list[tuple[str, int, str]] = []
         for revision_id, revision in authority.modelo(modelo_id).revisions.items():
             if revision.deadline_windows:
@@ -1349,6 +1346,8 @@ def test_the_period_ambiguity_gate_detects_a_planted_clash() -> None:
     to find: a gate that fires on two revisions sharing a calendar year would
     refuse modelo 303's correct 2024 declaration.
     """
+    from ..analysis.temporal_site_agreement import ambiguously_claimed_periods
+
     split_year = (
         ("2024-hasta-08-y-2t", 2024, "2T"),
         ("2024-desde-09-y-3t", 2024, "3T"),
