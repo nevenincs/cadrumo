@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:c78e2043ce28448a6d1105010b3ddad20317d180bfd28829e34c2caf6b266044'
+body_hash: 'sha256:bb5164349f5cd1fe655fe01fcb5216411cd037ae95763f4cc7f39dd52a4a3d76'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -429,6 +429,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S404` - Name the encoding constant in the six modules this work added that passed a raw literal, and record that the convention one module describes as required by the tree holds at 44 sites against 138 that do not, so it is an aspiration rather than an established rule; `dev/registry`.
 - [x] `W04.P07.S405` - Finish the pass over which screen population each gate sees: run both runners in the whole-corpus and no-mutation gates, and give the population gate the design transcriptions and their parsed notes plus a docstring saying it checks named populations rather than every screen; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W04.P07.S406` - Gate the gap between enrolment and execution so a table added without a runner fails by name, write the verification criterion for the nine narrow gates, and correct the breakdown that said five carried the module walk when two did; `dev/registry/tests/test_declaration_invariant_gates.py .vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W04.P07.S407` - Count the note a field itself cites as grounding, which is the strongest kind and was missing entirely: it covers 38 of the 41 fields and settles the three that modelo 200s amounts note cannot, since a one-character field is not fifteen integers and two decimals; `dev/registry/analysis/rule_grounding_coverage.py dev/registry/tests/test_rule_grounding_coverage.py`.
 
 ### Phase `W04.P08` - grade earned gate
 

@@ -10723,3 +10723,53 @@ be checked. What replaces it is 41, which any reader can reproduce with one
 command, together with the grounding split that actually decides the effort -
 nine fields covered by a convention naming their type and thirty-two by modelo
 200's design-level amounts note.
+
+
+## The grounding screen never asked what the field itself cites
+
+Testing whether modelo 200's amounts note really settles the thirty-two fields
+credited to it found that it settles twenty-nine. The note states fifteen
+integers, a sign in place of one of them, and two decimals - a seventeen-
+character amount - and twenty-nine of the thirty-two declare exactly that width.
+Three do not: two of width one and one of width four, and no reading of "15
+enteros y 2 decimales" fits a one-character field.
+
+Chasing those three found the omission. Every one of them is settled, and each
+by the note its OWN content cell points at, on its own sheet: `DP200001B!A24`
+by an accounting-statement code table at width one, `DP200002B!A150` by a
+document-type enumeration at width one, and `DP200014!A36` by the rate filling
+rule at width four - "se rellenaran los dos primeros digitos con el tipo, y los
+dos ultimos con 00", which is four digits exactly.
+
+The screen had asked only what governed a field's CLASS - a convention naming
+its type, or a note governing its design - and never what the design pointed at
+for the field itself. That is the strongest grounding available and it was
+absent from the hierarchy. Corpus-wide it covers **38 of the 41 fields**: they
+cite a note that resolves on their own sheet, which is possible at all only
+because note labels were scoped to their sheet earlier in this work.
+
+The grounding now reads:
+
+| grounding | fields |
+| --------- | ------ |
+| a note the field's own cell cites, defined on its sheet | 38 |
+| a convention naming the field's AEAT type | 2 |
+| a design-level note | 1 |
+| nothing | 0 |
+
+The reading load falls with it, from twenty-two distinct notes to **thirteen**
+for forty-one fields, because a note cited by several fields of one sheet is one
+reading rather than one per class.
+
+An unresolved citation is deliberately not grounding. A field that cites
+something a classifier reading the citation alone would call grounded; what
+makes it grounding is that the citation RESOLVED, and the three fields whose
+pointer names a note their sheet does not carry fall through to the weaker
+conditions. That distinction has its own test, because it is the one a
+plausible-looking implementation gets wrong.
+
+The condition-count gate caught the docstring still saying three conditions
+inside the same edit that added the fourth. That is the second time this
+campaign a count in a screen's own opening line went stale in the edit that
+made it wrong, and the second time the gate written for precisely that caught it
+before a reader did.
