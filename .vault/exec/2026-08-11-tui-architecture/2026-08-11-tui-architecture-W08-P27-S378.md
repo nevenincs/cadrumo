@@ -11,10 +11,6 @@ related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
 
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Build the full declaration calendar as an agenda-first searchable and filterable workbench with past, upcoming, overdue, filed, and evidence-unknown scopes
 
@@ -37,19 +33,3 @@ related:
 - `verify:` `uv run --no-sync ty check src/cadrumo/entrypoints/tui/declarations/calendar.py src/cadrumo/entrypoints/tui/declarations/tests/test_calendar.py` -> `pass`
 - `verify:` `uv run --no-sync basedpyright src/cadrumo/entrypoints/tui/declarations/calendar.py src/cadrumo/entrypoints/tui/declarations/tests/test_calendar.py` -> `pass`
 - `verify:` `npx --yes jscpd@4.2.0 src/cadrumo/entrypoints/tui/declarations/calendar.py src/cadrumo/entrypoints/tui/declarations/tests/test_calendar.py --format python --min-lines 6 --min-tokens 80 --max-size 250kb --reporters console --noTips` -> `pass`
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->

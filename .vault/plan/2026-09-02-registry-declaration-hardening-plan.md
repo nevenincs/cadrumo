@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:b9b0c9d5bd415bf4687eeb76b6a53d295b6c15f37734f0d4ed9b2a6b6e169ec1'
+body_hash: 'sha256:15dc3fe25b001b3fbc38e5bf95a5999d09159f7d7d16909157bce1ed9f2f4631'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -512,6 +512,8 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S274` - Give every test pinned to a stepped defect its replacement instruction; `dev/registry/tests/test_revision_name_window.py`.
 - [x] `W06.P13.S275` - Split the generated-tree ledger from the manifest-staleness assertion; `dev/registry/tests/test_render_check.py dev/registry/pipeline/generated_tree_dispositions.toml`.
 - [x] `W06.P13.S276` - Record the twenty-one attestations a generator refactor left stale; `dev/registry/tests/test_render_check.py dev/registry/pipeline/generated_tree_dispositions.toml`.
+- [x] `W06.P13.S277` - Repoint the TUI coverage table at the interface the flows refactor left it naming; `dev/tui/_coverage.py`.
+- [x] `W06.P13.S278` - Correct the three name-window replacement instructions that named successors themselves stepped for rename; `dev/registry/tests/test_revision_name_window.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

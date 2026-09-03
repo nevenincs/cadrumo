@@ -6678,3 +6678,52 @@ and has a per-item cause. For a condition that arrives in bulk from a single
 cause, the per-item ledger records the cause once per victim and calls it
 accounting; what belongs there instead is the property that makes the bulk state
 tolerable, asserted over every member.
+
+### a-successor-that-is-itself-scheduled-for-correction-is-not-a-replacement | medium | All three name-window pins named live successors, and every one of those successors carries its own open rename Step
+
+The replacement instructions written into the three pinned tests each named a
+coordinate to move to when the pin's own defect is repaired. Checking those
+claims against the corpus rather than leaving them asserted showed the naming
+was right on the facts and wrong on the conclusion. Modelo 194's 2024 really is
+in the same state as modelo 721's, and modelo 720 and modelo 322 really do hold
+the only other members of the two directional kinds. But the plan carries an
+open rename Step for every one of them - 151, 185, 720, 322, 194 and 721 - so
+each named successor leaves at the same time as the coordinate it was offered to
+replace.
+
+An instruction that points the next reader at a coordinate scheduled to
+disappear is worse than one that says nothing, because it will be followed. All
+three now say that the other member is a companion rather than a successor, that
+the cluster empties the kind entirely, and that the replacement is therefore
+constructed - a real revision copied with its opening year moved or its closing
+bound removed, which is the technique the sibling conditions in the same module
+already use.
+
+The general form: a replacement instruction is a claim about the future corpus,
+not the present one, and checking it means asking what else the plan is going to
+change, not only what the registry holds today.
+
+### a-directory-ci-never-runs-held-a-stale-interface-table | high | dev/tui/tests reports 39 tests and one failure: the coverage table named two classes a refactor had removed
+
+The three test directories the plan proposes naming in a lane were run to
+establish what they report, which is the stated precondition for naming them.
+`dev/tui/tests` collects thirty-nine and exits 1. The single failure is a
+coverage table naming `FlowTuiApp` and `QuestionScreen`, neither of which the
+tree defines: the flows module was refactored from an app-plus-screen pair into
+a single screen with panes, and the table was not followed. The test's own
+docstring states the intent it failed to deliver - "a rename must break the
+table loudly, not quietly drop coverage" - and it did break loudly, into a
+directory no lane executes, which is the same as not breaking at all.
+
+The repair is not the rename it first appears to be. The refactor collapsed two
+interfaces into one and turned the question view into a pane, and the inventory
+counts only `App` and `Screen` subclasses as interfaces, so the pane cannot be
+named in the table at all. The corrected entry is a single interface with a
+comment saying why one is the whole of it; naming the pane would have kept the
+gate red while looking like a fix. Thirty-four pass and five skip after the
+correction, exit 0. The five skips want rendered SVGs that a separate render
+command produces, which is a genuine precondition rather than a masked failure.
+
+This is the argument for the lane Step in concrete terms: the directory was not
+merely uncovered, it was uncovered and red, and the failure it held was a stale
+declaration of exactly the kind this campaign exists to find.
