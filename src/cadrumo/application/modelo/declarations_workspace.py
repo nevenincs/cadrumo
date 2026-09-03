@@ -293,9 +293,7 @@ def project_declarations_workspace(
         if DeclarationsWorkspaceZone.CALCULATION_REVISIONS in observable
         else ()
     )
-    filing_rows = (
-        _filing_rows(filings) if DeclarationsWorkspaceZone.FILING_HISTORY in observable else ()
-    )
+    filing_rows = _filing_rows(filings) if DeclarationsWorkspaceZone.FILING_HISTORY in observable else ()
     lifecycle_rows = (
         _lifecycle_rows(lifecycle_facts, {unit.work_unit_id: unit for unit in units})
         if DeclarationsWorkspaceZone.FILING_HISTORY in observable

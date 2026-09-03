@@ -145,7 +145,9 @@ def _observations(
             observed_at=_T2
             if state in {DeclarationsWorkspaceAvailability.AVAILABLE, DeclarationsWorkspaceAvailability.STALE}
             else None,
-            reason_code=None if state is DeclarationsWorkspaceAvailability.AVAILABLE else "declarations.source.unavailable",
+            reason_code=None
+            if state is DeclarationsWorkspaceAvailability.AVAILABLE
+            else "declarations.source.unavailable",
         )
         for zone, state in zip(DeclarationsWorkspaceZone, values, strict=True)
     )
@@ -479,24 +481,13 @@ def test_filing_pointer_record_and_revision_matrix_refuses_every_contradiction(c
 def test_defining_module_has_no_io_adapter_entrypoint_or_network_import() -> None:
     path = Path(__file__).parents[1] / "declarations_workspace.py"
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    imports = {
-        alias.name
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Import)
-        for alias in node.names
-    } | {
-        node.module or ""
-        for node in ast.walk(tree)
-        if isinstance(node, ast.ImportFrom)
+    imports = {alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names} | {
+        node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)
     }
     assert not any(
         forbidden in imported
         for imported in imports
         for forbidden in ("adapters", "entrypoints", "pathlib", "requests", "httpx", "socket")
     )
-    calls = {
-        node.func.id
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
-    }
+    calls = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
     assert calls.isdisjoint({"open", "print", "input"})

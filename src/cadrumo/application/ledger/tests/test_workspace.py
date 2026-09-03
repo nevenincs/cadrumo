@@ -145,10 +145,7 @@ def test_projection_is_deterministic_total_local_and_intrinsically_safe() -> Non
     assert first.contract_version == LEDGER_WORKSPACE_CONTRACT_VERSION
     assert tuple(row.area for row in first.areas) == tuple(LedgerWorkspaceArea)
     assert all(source.value.startswith("local.") for row in first.areas for source in row.sources)
-    assert tuple(
-        (row.area, row.sources, row.availability, row.status, row.item_count)
-        for row in first.areas
-    ) == (
+    assert tuple((row.area, row.sources, row.availability, row.status, row.item_count) for row in first.areas) == (
         (
             LedgerWorkspaceArea.OVERVIEW,
             (LedgerWorkspaceSource.LOCAL_LEDGER, LedgerWorkspaceSource.LOCAL_DECLARATIONS),
@@ -422,8 +419,8 @@ def test_affected_declarations_keep_natural_addresses_counts_and_deterministic_o
 def test_workspace_module_has_no_adapter_entrypoint_or_io_imports() -> None:
     source_path = Path(__file__).parents[1] / "workspace.py"
     tree = ast.parse(source_path.read_text(encoding="utf-8"))
-    imported = {
-        alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names
-    } | {node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)}
+    imported = {alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names} | {
+        node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)
+    }
     assert not any("adapters" in module or "entrypoints" in module for module in imported)
     assert not any(module in {"os", "pathlib", "socket", "subprocess"} for module in imported)

@@ -244,9 +244,7 @@ def test_notification_selection_identity_is_stable_opaque_and_order_independent(
     assert all(key is not None for key in keys)
     assert len(set(keys)) == 2
     assert all(key.startswith("aeat_sync.notification.") and len(key) <= 160 for key in keys if key is not None)
-    single = _projection(
-        notifications=(_fact(_notification(), private_identity="notification-alpha"),)
-    )
+    single = _projection(notifications=(_fact(_notification(), private_identity="notification-alpha"),))
     single_key = single.notifications[0].selection_key
     assert single_key is not None
     raw_digest = content_hash_hex(

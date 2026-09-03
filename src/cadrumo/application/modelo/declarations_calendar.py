@@ -164,14 +164,18 @@ class DeclarationsCalendarProjectionV1(BaseModel):
         aeat = by_source[DeclarationsCalendarSource.AEAT_EVIDENCE]
         if schedule.item_count is not None and schedule.item_count != len(self.entries):
             raise ValueError("calendar schedule count must equal its projected rows")
-        if _observable(local.availability) != all(
-            row.local_filing_state is not None for row in self.entries
-        ) and self.entries:
+        if (
+            _observable(local.availability) != all(row.local_filing_state is not None for row in self.entries)
+            and self.entries
+        ):
             raise ValueError("calendar rows contradict local source observability")
-        if _observable(aeat.availability) != all(
-            row.aeat_submission_state is not None and row.justificante_verified is not None
-            for row in self.entries
-        ) and self.entries:
+        if (
+            _observable(aeat.availability)
+            != all(
+                row.aeat_submission_state is not None and row.justificante_verified is not None for row in self.entries
+            )
+            and self.entries
+        ):
             raise ValueError("calendar rows contradict AEAT source observability")
         return self
 
@@ -196,13 +200,11 @@ def project_declarations_calendar(
     local_observable = _observable(local_observation.availability)
     aeat_observable = _observable(aeat_observation.availability)
     if not local_observable and any(
-        row.local_filing_state is not OverviewLocalFilingState.NOT_READY_TO_FILE
-        for row in evidence.evidence
+        row.local_filing_state is not OverviewLocalFilingState.NOT_READY_TO_FILE for row in evidence.evidence
     ):
         raise DeclarationsCalendarProjectionError("unobservable local evidence carries a confident claim")
     if not aeat_observable and any(
-        row.aeat_submission_state is not OverviewAeatSubmissionState.NOT_OBSERVED
-        or row.justificante_verified
+        row.aeat_submission_state is not OverviewAeatSubmissionState.NOT_OBSERVED or row.justificante_verified
         for row in evidence.evidence
     ):
         raise DeclarationsCalendarProjectionError("unobservable AEAT evidence carries a confident claim")
@@ -254,12 +256,10 @@ def project_declarations_calendar(
         raise DeclarationsCalendarProjectionError("calendar contains duplicate natural legal identities")
 
     local_count = sum(
-        item.local_filing_state is not OverviewLocalFilingState.NOT_READY_TO_FILE
-        for item in evidence.evidence
+        item.local_filing_state is not OverviewLocalFilingState.NOT_READY_TO_FILE for item in evidence.evidence
     )
     aeat_count = sum(
-        item.aeat_submission_state is not OverviewAeatSubmissionState.NOT_OBSERVED
-        for item in evidence.evidence
+        item.aeat_submission_state is not OverviewAeatSubmissionState.NOT_OBSERVED for item in evidence.evidence
     )
     sources = (
         _state(schedule_observation, len(rows) if schedule_observable else None),
@@ -332,10 +332,7 @@ def _validate_calendar_evidence_join(
             or entry.justificante_verified != authority.justificante_verified
         ):
             raise DeclarationsCalendarProjectionError("calendar and AEAT evidence authority disagree")
-    elif (
-        entry.aeat_submission_state is not OverviewAeatSubmissionState.NOT_OBSERVED
-        or entry.justificante_verified
-    ):
+    elif entry.aeat_submission_state is not OverviewAeatSubmissionState.NOT_OBSERVED or entry.justificante_verified:
         raise DeclarationsCalendarProjectionError("an unobservable AEAT axis carries a confident evidence claim")
 
 
