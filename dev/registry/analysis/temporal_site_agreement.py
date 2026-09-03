@@ -45,6 +45,7 @@ __all__ = [
     "TemporalSiteFinding",
     "screen_authority",
     "site_agreement_findings",
+    "undated_window_years",
 ]
 
 #: Every declared field that states which YEARS a revision serves, as a dotted
@@ -79,6 +80,27 @@ class TemporalSiteFinding:
     revision: str
     kind: str
     detail: str
+
+
+def undated_window_years(revision: ModeloRevision) -> tuple[int, ...]:
+    """Return years inside a revision's CLOSED window that no deadline window covers.
+
+    The one home for this computation. The capability screen needs the same
+    years to say that a filing-grade revision cannot date some of the years it
+    serves, and its first version read them back out of this screen's finding
+    prose - which is a second implementation wearing a disguise, and one that
+    would return nothing at all if this wording were reworded.
+
+    An open window yields nothing: a revision that never closes has no last year
+    to enumerate to, and demanding a deadline for every year to come would be
+    asking it to predict them.
+    """
+    opening = revision.valid_from.year
+    closing = None if revision.valid_to is None else revision.valid_to.year
+    if closing is None:
+        return ()
+    declared = {window.filing_year for window in revision.deadline_windows}
+    return tuple(year for year in range(opening, closing + 1) if year not in declared)
 
 
 def site_agreement_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[TemporalSiteFinding, ...]:
@@ -122,7 +144,7 @@ def site_agreement_findings(revision: ModeloRevision, *, modelo_id: str) -> tupl
             )
 
     if closing is not None:
-        missing = [year for year in range(opening, closing + 1) if year not in set(deadline_years)]
+        missing = list(undated_window_years(revision))
         if missing:
             findings.append(
                 TemporalSiteFinding(

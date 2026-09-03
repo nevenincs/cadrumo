@@ -27,7 +27,7 @@ it, and each is read from the validated authority rather than a maintained list:
   render a fichero but cannot say when it must be presented has answered half
   the question a filer asks.
 
-Five conditions are reported, and every row names one:
+Six conditions are reported, and every row names one:
 
 - ``claims_filing_without_layout`` - a revision at filing grade that declares no
   export layout. The claim has no renderable form behind it.
@@ -44,6 +44,12 @@ Five conditions are reported, and every row names one:
   also declare none, and every one of those sits below filing grade, where
   saying nothing about a due date is the correct and complete answer. These five
   claim they can be filed and cannot say by when.
+- ``files_here_for_years_it_cannot_date`` - a filing-grade revision whose
+  declared window spans years its deadline windows do not cover. The revision
+  can be filed for those years and cannot say by when. Nine revisions have this
+  temporal gap and six are filing grade; the other three sit below filing grade,
+  where the gap costs nothing, and are left to the temporal screen.
+
 - ``claims_calculation_without_formulas`` - a filing-grade revision whose modelo
   declares `calculation_class = filing` while the revision declares no formula.
   Fourteen filing-grade revisions carry no formula and ten of them are right to:
@@ -98,6 +104,7 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 
 from ..pipeline._provenance_manifest import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from .corpus import bundled_modelo_ids
+from .temporal_site_agreement import undated_window_years
 
 __all__ = [
     "ModeloCapability",
@@ -122,6 +129,12 @@ class ModeloCapability:
     calculation_class: str
     formulas: int
     committed_tree: bool
+    #: Years inside the revision's own declared window that no deadline window
+    #: covers, as the temporal screen reports them. Taken from that screen
+    #: rather than recomputed: which years a revision serves is stated in three
+    #: places the temporal screen already reconciles, and a second reading here
+    #: would be a second answer to a question it exists to settle.
+    undated_window_years: tuple[int, ...] = ()
 
     @property
     def files_here(self) -> bool:
@@ -203,6 +216,7 @@ def capability_census(
                     calculation_class=str(definition.calculation_class).rsplit(".", 1)[-1],
                     formulas=len(revision.formulas),
                     committed_tree=_committed_tree(modelo_id, str(revision_id)),
+                    undated_window_years=undated_window_years(revision),
                 )
             )
     return tuple(rows)
@@ -244,6 +258,19 @@ def screen_authority(
                     detail=(
                         "reaches filing grade with a layout but declares no deadline window, "
                         "so it cannot say when the filing is due"
+                    ),
+                )
+            )
+        if row.files_here and row.undated_window_years:
+            findings.append(
+                ModeloCapabilityFinding(
+                    modelo=row.modelo,
+                    revision=row.revision,
+                    kind="files_here_for_years_it_cannot_date",
+                    detail=(
+                        f"reaches filing grade and declares no deadline window for "
+                        f"{len(row.undated_window_years)} year(s) of its own window: "
+                        f"{list(row.undated_window_years)}"
                     ),
                 )
             )
