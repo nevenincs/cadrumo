@@ -13,6 +13,7 @@ from textual.widgets import Button, DataTable, Static
 
 from ....application.aeat_sync.workspace import (
     AeatSyncNotificationReadState,
+    AeatSyncOverviewArea,
     AeatSyncWorkspaceNotificationRowV1,
     AeatSyncWorkspaceProjectionV1,
     AeatSyncWorkspaceZone,
@@ -44,6 +45,11 @@ _LABEL_PREFIXES: Final = {
     "AeatSyncNotificationReadState": "tui.aeat_sync.notification_read_state",
     "AeatSyncDocumentCustodyState": "tui.aeat_sync.document_custody_state",
     "AeatSyncReconciliationState": "tui.aeat_sync.reconciliation_state",
+}
+_OPERATION_LABEL_KEYS: Final = {
+    ("operator.profile.edit", "user-profile.censo-review"): "tui.aeat_sync.action.review_census",
+    ("operator.live.filed.pull", "live.filed-history.pull"): "tui.aeat_sync.action.pull_filed",
+    ("operator.live.filed.pull_all", "live.filed-history.pull"): "tui.aeat_sync.action.pull_filed_all",
 }
 
 
@@ -241,21 +247,29 @@ class AeatSyncWorkspaceScreen(Screen[None]):
         """Populate one safe public zone body in subclasses."""
         raise NotImplementedError
 
-    def add_operation(self, row: _OperationRow, *, label: str) -> None:
+    def add_operation(self, row: _OperationRow) -> None:
         """Render an explicit mutation button only for a closed admitted pair."""
-        if not label:
-            return
         request = self.controller.admitted_operation(row.supported_actions, row.supported_operations)
         if request is None:
+            if tuple(str(action.action_id) for action in row.supported_actions) == (
+                "operator.live.notifications.list",
+            ) and not row.supported_operations:
+                return
             if row.supported_actions or row.supported_operations:
                 self.query_one("#aeat-sync-status", Static).update(
                     aeat_sync_copy("tui.aeat_sync.refusal.operation_handoff")
                 )
             return
+        label_key = _OPERATION_LABEL_KEYS.get((str(request.action.action_id), str(request.operation)))
+        if label_key is None:
+            self.query_one("#aeat-sync-status", Static).update(
+                aeat_sync_copy("tui.aeat_sync.refusal.operation_handoff")
+            )
+            return
         button_id = f"aeat-sync-operation-{len(self._requests)}"
         self._requests[button_id] = request
         self.query_one("#aeat-sync-page", ContentScroll).mount(
-            Button(label, id=button_id, classes="aeat-sync-operation")
+            Button(aeat_sync_copy(label_key), id=button_id, classes="aeat-sync-operation")
         )
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -378,10 +392,7 @@ class AeatSyncOverviewScreen(AeatSyncWorkspaceScreen):
                 _label(row.discrepancy_kind),
                 key=f"overview:{row.area.value}",
             )
-            self.add_operation(
-                cast("_OperationRow", row),
-                label=aeat_sync_copy("tui.aeat_sync.action.review_census") if row.supported_actions else "",
-            )
+            self.add_operation(cast("_OperationRow", row))
 
 
 class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
@@ -434,6 +445,9 @@ class AeatSyncFiledDeclarationsScreen(AeatSyncWorkspaceScreen):
                 _label(row.justificante_state),
                 key=_natural_identity(row, prefix="filed"),
             )
+        for overview in self.controller.projection.overview:
+            if overview.area is AeatSyncOverviewArea.FILED_DECLARATIONS:
+                self.add_operation(cast("_OperationRow", overview))
 
 
 class AeatSyncNotificationsScreen(AeatSyncWorkspaceScreen):
@@ -491,7 +505,7 @@ class AeatSyncEvidenceComparisonScreen(AeatSyncWorkspaceScreen):
                 _label(row.discrepancy_kind),
                 key=_natural_identity(row, prefix="comparison"),
             )
-            self.add_operation(cast("_OperationRow", row), label=aeat_sync_copy("tui.aeat_sync.action.pull_comparison"))
+            self.add_operation(cast("_OperationRow", row))
 
 
 class AeatSyncReconciliationScreen(AeatSyncWorkspaceScreen):

@@ -1001,6 +1001,7 @@ tui:
     action:
       pull_comparison: Recupera l'evidència de comparació
       pull_filed: Recupera les declaracions presentades
+      pull_filed_all: Recupera totes les declaracions presentades
       review_census: Revisa el cens
     address:
       declaration: Modelo %{modelo} · %{filing_year} · %{period}

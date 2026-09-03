@@ -972,6 +972,7 @@ tui:
     action:
       pull_comparison: Pull comparison evidence
       pull_filed: Pull filed declarations
+      pull_filed_all: Pull all filed declarations
       review_census: Review census
     address:
       declaration: Modelo %{modelo} · %{filing_year} · %{period}

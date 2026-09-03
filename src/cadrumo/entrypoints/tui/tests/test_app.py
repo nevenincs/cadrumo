@@ -200,3 +200,37 @@ async def test_authoritative_child_return_rebuilds_the_injected_search_snapshot_
 
     assert refreshes == [refreshed_search]
     assert app.workbench_search_service is refreshed_search
+
+
+@pytest.mark.asyncio
+async def test_failed_search_refresh_retains_last_good_service_and_sanitizes_refusal() -> None:
+    """A bad refreshed projection cannot erase current search or leak its error."""
+    contexts: list[TuiScreenContextV1] = []
+    initial_search = WorkbenchSearchService(())
+
+    def fail_refresh() -> WorkbenchSearchService:
+        raise RuntimeError("12345678Z C:\\protected\\search.json")
+
+    app = CadrumoTuiApp(
+        services=cast(OperationComposedServices, object()),
+        destination_catalogue=_catalogue(contexts),
+        refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
+        workbench_search_service=initial_search,
+        refresh_workbench_search=fail_refresh,
+    )
+
+    async with app.run_test() as pilot:
+        app.navigate_to(
+            TuiNavigationTargetV1(
+                destination="workbench.ledger",
+                focus=TuiFocusIdentityV1(destination="workbench.ledger", semantic_key="ledger.entry"),
+            )
+        )
+        await pilot.pause()
+        await pilot.press("escape")
+        await pilot.pause()
+
+    assert app.workbench_search_service is initial_search
+    assert app.workbench_search_refusal_code == "workbench.search.refresh_unavailable"
+    assert "12345678Z" not in app.workbench_search_refusal_code
+    assert "protected" not in app.workbench_search_refusal_code

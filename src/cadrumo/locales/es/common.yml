@@ -1012,6 +1012,7 @@ tui:
     action:
       pull_comparison: Obtener evidencia comparativa
       pull_filed: Obtener declaraciones presentadas
+      pull_filed_all: Obtener todas las declaraciones presentadas
       review_census: Revisar el censo
     address:
       declaration: Modelo %{modelo} · %{filing_year} · %{period}

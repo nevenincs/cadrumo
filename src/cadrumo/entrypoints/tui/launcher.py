@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from ...application.modelo.work_review import ModeloWorkReview
     from ...application.modelo.workspace_models import ModeloWorkspaceStaticInspectionResultV1
     from ...application.operations.composition import OperationComposedServices
-    from ...application.search.installed_workbench import InstalledWorkbenchSearchSnapshotV1
+    from ...application.search.installed_workbench import InstalledWorkbenchSearchInputsV1
     from ...core.external_constants import OutputLanguage
     from ...domain.modelos.work_unit import WorkUnit
     from .search import WorkbenchSearchDoorV1
@@ -178,26 +178,23 @@ async def operation_services_scope() -> AsyncGenerator[OperationComposedServices
 
 
 def compose_installed_workbench_search(
-    snapshot: InstalledWorkbenchSearchSnapshotV1 | None = None,
+    inputs: InstalledWorkbenchSearchInputsV1,
 ) -> WorkbenchSearchDoorV1:
-    """Bind one already-assembled immutable snapshot to the installed root.
+    """Assemble preloaded public projections through the application boundary.
 
-    Snapshot assembly remains application-owned and happens before this
-    boundary.  An uncomposed session honestly starts with no searchable
-    documents; it never reads storage or contacts a service simply because the
-    command palette opens.
+    The input bundle is injected by the installed-session composition. This
+    function performs no reads: the application-owned provider derives the
+    immutable redacted snapshot from that one already-authoritative generation.
     """
-    from ...application.search.installed_workbench import InstalledWorkbenchSearchSnapshotV1
-
-    return (snapshot or InstalledWorkbenchSearchSnapshotV1(())).service()
+    return inputs.snapshot().service()
 
 
 async def _run_root_session(
     *,
     headless: bool,
     auto_pilot: AutopilotCallbackType | None,
-    workbench_search_snapshot: InstalledWorkbenchSearchSnapshotV1 | None = None,
-    refresh_workbench_search: Callable[[], WorkbenchSearchDoorV1] | None = None,
+    workbench_search_inputs: InstalledWorkbenchSearchInputsV1 | None = None,
+    refresh_workbench_search_inputs: Callable[[], InstalledWorkbenchSearchInputsV1] | None = None,
 ) -> None:
     """Compose one session's services, run the root application, settle them.
 
@@ -207,15 +204,30 @@ async def _run_root_session(
     """
     from .app import CadrumoTuiApp
 
+    service = (
+        compose_installed_workbench_search(workbench_search_inputs) if workbench_search_inputs is not None else None
+    )
+
+    def refresh_search() -> WorkbenchSearchDoorV1:
+        if refresh_workbench_search_inputs is None:
+            raise RuntimeError("workbench search refresh is unavailable")
+        return compose_installed_workbench_search(refresh_workbench_search_inputs())
+
     async with operation_services_scope() as services:
         await CadrumoTuiApp(
             services=services,
-            workbench_search_service=compose_installed_workbench_search(workbench_search_snapshot),
-            refresh_workbench_search=refresh_workbench_search,
+            workbench_search_service=service,
+            refresh_workbench_search=refresh_search if refresh_workbench_search_inputs is not None else None,
         ).run_async(headless=headless, auto_pilot=auto_pilot)
 
 
-def main(*, headless: bool = False, auto_pilot: AutopilotCallbackType | None = None) -> int:
+def main(
+    *,
+    headless: bool = False,
+    auto_pilot: AutopilotCallbackType | None = None,
+    workbench_search_inputs: InstalledWorkbenchSearchInputsV1 | None = None,
+    refresh_workbench_search_inputs: Callable[[], InstalledWorkbenchSearchInputsV1] | None = None,
+) -> int:
     """Start one dedicated TUI session and report its process exit status.
 
     This is the sole entry point for module execution and for the installed
@@ -224,7 +236,14 @@ def main(*, headless: bool = False, auto_pilot: AutopilotCallbackType | None = N
     own run parameters, carried so a caller can drive a real session to
     completion without a terminal rather than assert against an import.
     """
-    asyncio.run(_run_root_session(headless=headless, auto_pilot=auto_pilot))
+    asyncio.run(
+        _run_root_session(
+            headless=headless,
+            auto_pilot=auto_pilot,
+            workbench_search_inputs=workbench_search_inputs,
+            refresh_workbench_search_inputs=refresh_workbench_search_inputs,
+        )
+    )
     return 0
 
 

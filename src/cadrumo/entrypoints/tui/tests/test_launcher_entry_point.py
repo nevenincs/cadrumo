@@ -75,3 +75,20 @@ def test_entry_point_hands_the_session_its_composed_services() -> None:
 
     assert main(headless=True, auto_pilot=read_services) == 0
     assert services and services[0] is not None
+
+
+def test_entry_point_without_projection_bundle_is_unavailable_not_known_empty() -> None:
+    """A cold composition cannot masquerade as an authoritative empty index."""
+    refusal_codes: list[str | None] = []
+
+    async def inspect_search(pilot: Pilot[object]) -> None:
+        await pilot.pause()
+        app = pilot.app
+        assert isinstance(app, CadrumoTuiApp)
+        refusal_codes.append(app.workbench_search_refusal_code)
+        with pytest.raises(RuntimeError, match="no composed workbench search service"):
+            _ = app.workbench_search_service
+        app.exit()
+
+    assert main(headless=True, auto_pilot=inspect_search) == 0
+    assert refusal_codes == ["workbench.search.unavailable"]

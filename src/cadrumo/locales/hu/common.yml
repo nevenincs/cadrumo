@@ -996,6 +996,7 @@ tui:
     action:
       pull_comparison: Összehasonlítási bizonyítékok lekérése
       pull_filed: Benyújtott bevallások lekérése
+      pull_filed_all: Összes benyújtott bevallás lekérése
       review_census: Nyilvántartás áttekintése
     address:
       declaration: 'Modelo: %{modelo} · %{filing_year} · %{period}'

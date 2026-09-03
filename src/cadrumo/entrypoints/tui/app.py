@@ -88,6 +88,9 @@ class CadrumoTuiApp(App[None]):
         self._refresh_home = refresh_home
         self._workbench_search_service = workbench_search_service
         self._refresh_workbench_search = refresh_workbench_search
+        self._workbench_search_refusal_code: str | None = (
+            None if workbench_search_service is not None else "workbench.search.unavailable"
+        )
         self._active_target: TuiNavigationTargetV1 | None = None
         self._home_semantic_focus: HomeTarget | None = None
 
@@ -109,6 +112,11 @@ class CadrumoTuiApp(App[None]):
         if self._workbench_search_service is None:
             raise RuntimeError("the root has no composed workbench search service")
         return self._workbench_search_service
+
+    @property
+    def workbench_search_refusal_code(self) -> str | None:
+        """Expose only a sanitized availability code for host presentation."""
+        return self._workbench_search_refusal_code
 
     @override
     def compose(self) -> ComposeResult:
@@ -173,7 +181,13 @@ class CadrumoTuiApp(App[None]):
         """Replace search only after the owning child has authoritatively returned."""
         refresh_workbench_search = self._refresh_workbench_search
         if refresh_workbench_search is not None:
-            self._workbench_search_service = refresh_workbench_search()
+            try:
+                refreshed = refresh_workbench_search()
+            except Exception:  # projection failures must not leak protected diagnostics
+                self._workbench_search_refusal_code = "workbench.search.refresh_unavailable"
+                return
+            self._workbench_search_service = refreshed
+            self._workbench_search_refusal_code = None
 
     def _replace_destination(self, screen: Screen[None], *, return_to_home: bool = False) -> None:
         """Discard the inactive destination before mounting exactly one replacement."""
