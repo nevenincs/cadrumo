@@ -56,11 +56,15 @@ def _home_input() -> HomeProjectionInput:
     )
 
 
-def _admission(destination: str) -> WorkbenchDestinationAdmission:
-    """Return a route admission independent from source-capture state."""
+def _admission(
+    destination: str,
+    state: WorkbenchDestinationAdmissionState = WorkbenchDestinationAdmissionState.NEVER_CAPTURED,
+) -> WorkbenchDestinationAdmission:
+    """Return a route admission matching its source-capture state."""
     return WorkbenchDestinationAdmission(
         destination=destination,
-        state=WorkbenchDestinationAdmissionState.AVAILABLE,
+        state=state,
+        reason_code=None if state is WorkbenchDestinationAdmissionState.AVAILABLE else f"{destination}.not_captured",
     )
 
 
@@ -102,6 +106,16 @@ def test_source_result_rejects_confident_absence_and_preserves_known_empty() -> 
             availability=WorkbenchGenerationAvailability.AVAILABLE,
             observed_at=_NOW,
         )
+
+
+def test_generation_inputs_reject_admission_source_contradictions() -> None:
+    """A route cannot claim availability that its defining source does not have."""
+    payload = _inputs().model_dump()
+    payload["ledger_admission"] = _admission(
+        "workbench.ledger", WorkbenchDestinationAdmissionState.AVAILABLE
+    ).model_dump()
+    with pytest.raises(ValidationError, match="workbench.ledger admission must match"):
+        WorkbenchGenerationInputsV1.model_validate(payload)
 
 
 def test_generation_projects_home_and_never_turns_missing_areas_into_empty() -> None:

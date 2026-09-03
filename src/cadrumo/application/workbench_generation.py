@@ -34,7 +34,7 @@ from .search.installed_workbench import (
     InstalledWorkbenchSearchSnapshotV1,
     assemble_installed_workbench_search_snapshot,
 )
-from .search.workbench import WorkbenchDestinationAdmission
+from .search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
 
 WORKBENCH_GENERATION_CONTRACT_VERSION: Literal[1] = 1
 
@@ -188,13 +188,16 @@ class WorkbenchGenerationInputsV1(BaseModel):
     @model_validator(mode="after")
     def _search_admissions_are_canonical(self) -> Self:
         expected = (
-            (self.ledger_admission, "workbench.ledger"),
-            (self.declarations_admission, "workbench.declarations"),
-            (self.aeat_sync_admission, "workbench.aeat_sync"),
+            (self.ledger, self.ledger_admission, "workbench.ledger"),
+            (self.declarations, self.declarations_admission, "workbench.declarations"),
+            (self.aeat_sync, self.aeat_sync_admission, "workbench.aeat_sync"),
         )
-        for admission, destination in expected:
+        for source, admission, destination in expected:
             if admission.destination != destination:
                 raise ValueError(f"generation search admission must target {destination!r}")
+            expected_state = WorkbenchDestinationAdmissionState(source.availability.value)
+            if admission.state is not expected_state:
+                raise ValueError(f"{destination} admission must match its source availability")
         return self
 
 
