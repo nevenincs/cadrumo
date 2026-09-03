@@ -18,9 +18,9 @@ from .....application.ledger.models import (
 from .....application.ledger.workspace import LedgerWorkspaceArea
 from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
-from .....domain.transactions.enums import BusinessClassification
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
+from .....domain.transactions.enums import BusinessClassification
 from ....tui.components.host import ScreenHostApp
 from ..classification import LedgerClassificationScreen
 from ..import_flow import LedgerImportScreen
@@ -141,6 +141,12 @@ def test_factory_refuses_undeclared_or_drifted_classification_action() -> None:
             review_action=ActionReference(action_id="operator.ledger.review"),
             classify_action=ActionReference(action_id="operator.ledger.absent"),
         )
+    with pytest.raises(ValueError, match="canonical command"):
+        ledger_screen_factory(
+            _projection(),
+            review_action=ActionReference(action_id="operator.ledger.review"),
+            classify_action=ActionReference(action_id="operator.ledger.review"),
+        )
 
 
 @pytest.mark.asyncio
@@ -181,14 +187,6 @@ async def test_flow_copy_is_localized_while_semantic_choices_are_invariant(local
             assert tuple(row.key.value for row in import_screen.query_one("#ledger-import-choices", DataTable).ordered_rows) == (
                 "prepared-bank",
             )
-    with pytest.raises(ValueError, match="canonical command"):
-        ledger_screen_factory(
-            _projection(),
-            review_action=ActionReference(action_id="operator.ledger.review"),
-            classify_action=ActionReference(action_id="operator.ledger.review"),
-        )
-
-
 def test_flow_modules_cannot_read_files_detect_providers_or_import_mutators() -> None:
     package = Path(__file__).parents[1]
     trees = {
