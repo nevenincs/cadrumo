@@ -224,13 +224,32 @@ def main() -> int:
             f"provenance_outside_manifest modelo={modelo} revision={revision} "
             f"ref_kind={ref_kind} outside={reference} citing_children={sites}\n",
         )
+    authority = bundled_authority()
+    scopes = outside_reference_scope(
+        index, {modelo: len(authority.modelo(modelo).revisions) for modelo in bundled_modelo_ids()}
+    )
+    for scope in scopes:
+        sys.stdout.write(
+            f"provenance_reference_scope modelo={scope.modelo} ref_kind={scope.ref_kind} "
+            f"reference={scope.reference} revisions={len(scope.revisions)} "
+            f"spans_every_revision={str(scope.spans_every_revision).lower()} sites={scope.sites}\n",
+        )
     by_kind: dict[str, int] = {}
     for f in findings:
         by_kind[f"{f.child_kind}.{f.ref_kind}"] = by_kind.get(f"{f.child_kind}.{f.ref_kind}", 0) + 1
     census = " ".join(f"{key}={value}" for key, value in sorted(by_kind.items()))
+    # Single-child references are the small set worth reading one at a time: a
+    # reference cited by one child and absent from the manifest is as likely to
+    # be a citation outside the revision's scope as a gap in the manifest, while
+    # one cited by hundreds is the manifest under-declaring. The screen does not
+    # decide the direction; this is the figure that says where to look first.
+    single = sum(1 for scope in scopes if scope.sites == 1)
     sys.stdout.write(
         f"summary surface=authored_families+resolved_fields outside_references={len(index)} "
-        f"distinct_references={len({key[3] for key in index})} citing_sites={len(findings)} {census}\n"
+        f"distinct_reference_ids={len({key[3] for key in index})} citing_sites={len(findings)} "
+        f"modelo_reference_pairs={len(scopes)} "
+        f"spanning_every_revision={sum(s.spans_every_revision for s in scopes)} "
+        f"cited_by_one_child={single} {census}\n"
     )
     return 0
 
