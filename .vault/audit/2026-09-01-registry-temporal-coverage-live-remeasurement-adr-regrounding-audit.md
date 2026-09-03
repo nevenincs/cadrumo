@@ -5935,3 +5935,27 @@ can attribute their keystroke to the suite being measured - which this one nearl
 the pending-diff check caught for the fourth time in this campaign. And a suite nobody runs was
 the thing that noticed a broken file at all: nothing else in the session had imported that
 controller.
+
+### transient-syntax-error-masked-a-real-locator-drift | high | The ninth failure was not the IndentationError; the IndentationError was hiding it
+
+The previous finding classified the ninth source-connectivity failure as another writer's
+mid-edit syntax error and expected it to disappear when they finished. They finished - a sweep
+now parses all 5,837 files under `src` with none unparseable - and the test still fails.
+
+The real failure was underneath. `census capability locator drift for
+inventory.stock-valuation: ingress:src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:
+inventory_create now resolves to src/cadrumo/entrypoints/cli/_app_ledger_inventory_command_
+specs.py:30`. The census records where a capability lives, the code moved, and the record did
+not follow.
+
+So the suite's own state is nine drifts, not eight: eight frozen hashes and one recorded
+locator, both the same defect - a declaration holding a position the tree has left. That is
+this campaign's subject appearing again in a suite nothing runs, which is now the third such
+finding from the two unwired directories examined.
+
+The correction worth keeping is about transients. The previous finding treated an external
+syntax error as a complete explanation and stopped there. It was a real transient, correctly
+attributed, and it was also concealing a real defect in the file being measured. A transient
+that explains a failure is not the same as a transient that causes it, and the only way to tell
+them apart is to re-run once the transient is gone - which cost three minutes and changed the
+answer.

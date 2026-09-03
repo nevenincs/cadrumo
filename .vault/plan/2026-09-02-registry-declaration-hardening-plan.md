@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:59b9f9b4576cc78d5b09978f3dbcf67faf542b64da8acc9e8cecfb03640902d3'
+body_hash: 'sha256:6bf7cc0aa14834802751dce1f3b94a27a032a2bc4f2542a84544d81d6f9950eb'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -482,6 +482,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S244` - Establish what the never-run TUI suite reports and confirm its single failure is a coverage table naming absent interfaces; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S245` - Establish what the never-run source connectivity suite reports and separate its environmental errors from its drifted hashes; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S246` - Classify the last source connectivity failure as another writer's mid-edit syntax error rather than a suite defect; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S247` - Re-read the ninth failure once the tree parsed and record that a transient had masked a real locator drift; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
