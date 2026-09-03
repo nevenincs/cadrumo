@@ -31,6 +31,7 @@ from .errors import RegistryFailureClassification, RegistryFailureCondition, Reg
 from .ids import BindingId, RelationId
 from .period_selector_match import registry_period_for_request, selector_token_for_request
 from .query_reports import (
+    BindingInputChannel,
     BindingSelectorQueryEntry,
     BindingSelectorQueryProjection,
     BindingSelectorQueryValue,
@@ -785,7 +786,7 @@ def _binding_rows(
             binding_id=binding.id,
             source=binding.source,
             typed_enum=binding.typed_enum,
-            input_channel="enum" if binding.id in enum_consumed else "decimal",
+            input_channel=(BindingInputChannel.ENUM if binding.id in enum_consumed else BindingInputChannel.DECIMAL),
             selector=_public_selector(binding.source, binding.selector),
             aggregation={"op": binding.aggregation.op.value} if binding.aggregation is not None else None,
             legal_refs=tuple(binding.legal_refs),
