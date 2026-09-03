@@ -83,6 +83,7 @@ class _GeneratedTree:
 
 _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     _GeneratedTree("210", "2025", "aeat-dr-210-2022", "2022", 2025, "0A"),
+    _GeneratedTree("210", "2026-y-siguientes", "aeat-dr-210-2026", "2026", 2026, "0A"),
     _GeneratedTree("232", "2018-y-siguientes", "aeat-dr-232-2018", "2018", 2018, "0A"),
     _GeneratedTree("232", "2016-2017", "aeat-dr-232-2016", "2016", 2016, "0A"),
     _GeneratedTree("353", "2026-desde-02", "aeat-dr-353-2026", "2026", 2026, "02"),
@@ -139,6 +140,7 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     # The selected five source-bound M303 epochs.  The 2022 layout is out of
     # scope here; the superseded 2023-y-siguientes revision is not a
     # generated-tree fallback and must never re-enter this set.
+    _GeneratedTree("303", "2022", "aeat-dr-303-2022", "2022", 2022, "4T"),
     _GeneratedTree("303", "2023", "aeat-dr-303-2023", "2023", 2023, "4T"),
     _GeneratedTree("303", "2024-hasta-08-y-2t", "aeat-dr-303-2024-early", "2024-early", 2024, "2T"),
     _GeneratedTree("303", "2024-desde-09-y-3t", "aeat-dr-303-2024-late", "2024-late", 2024, "3T"),

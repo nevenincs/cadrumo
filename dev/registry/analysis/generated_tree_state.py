@@ -72,22 +72,40 @@ class GeneratedTreeState:
     revision: str
     state: str
     differing: tuple[str, ...]
+    #: Files differing only in serialisation form, which carry no change of
+    #: meaning and are excluded before the state is decided.
+    serialization_only: tuple[str, ...]
     detail: str
 
 
-def classify_comparison(differing: tuple[str, ...], *, committed: bool) -> str:
+def classify_comparison(
+    differing: tuple[str, ...],
+    *,
+    committed: bool,
+    serialization_only: tuple[str, ...] = (),
+) -> str:
     """Return the state a comparison result implies.
 
+    ``serialization_only`` files are subtracted first, and getting that wrong
+    inverts the advice this report exists to give. The comparison reports a file
+    as differing when its bytes differ, including when only its serialisation
+    form changed: modelo 322's 2023 tree lists six differing files of which five
+    are reformattings and one is the manifest. Classified on the raw list it
+    reads as record drift and "do not republish"; classified on the meaningful
+    difference it is manifest-only staleness and safe. The first version of this
+    function reported twenty-seven trees as drifting where the reproduction test
+    reports twenty-three as safe.
+
     Separated from the walk so every state is reachable from a test with input
-    written in it. The corpus carries three of the four today, and a state with
-    no live instance and no constructed proof is one that stops being reported
-    without anyone noticing.
+    written in it. A state with no live instance and no constructed proof is one
+    that stops being reported without anyone noticing.
     """
     if not committed:
         return "never_committed"
-    if not differing:
+    meaningful = set(differing) - set(serialization_only)
+    if not meaningful:
         return "reproducible"
-    if set(differing) == {EXPORT_FRAGMENT_PROVENANCE_FILENAME}:
+    if meaningful == {EXPORT_FRAGMENT_PROVENANCE_FILENAME}:
         return "manifest_only_stale"
     return "record_drift"
 
@@ -109,15 +127,20 @@ def tree_states(
                     continue
                 comparison = None
             differing = tuple(comparison.differing) if comparison is not None else ()
-            state = classify_comparison(differing, committed=committed)
+            serialization_only = tuple(comparison.serialization_only) if comparison is not None else ()
+            state = classify_comparison(
+                differing, committed=committed, serialization_only=serialization_only
+            )
             states.append(
                 GeneratedTreeState(
                     modelo=modelo_id,
                     revision=revision,
                     state=state,
                     differing=differing,
+                    serialization_only=serialization_only,
                     detail=(
-                        f"{len(differing)} file(s) differ from a fresh render"
+                        f"{len(set(differing) - set(serialization_only))} meaningful of "
+                        f"{len(differing)} differing file(s)"
                         if differing
                         else ("no committed tree" if not committed else "reproduces exactly")
                     ),
