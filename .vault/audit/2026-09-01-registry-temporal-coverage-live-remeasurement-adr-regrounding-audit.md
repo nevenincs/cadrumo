@@ -6546,3 +6546,51 @@ would replace a true statement with a misleading one.
 The test is what the sentence would be doing if the figure changed. A criterion saying twelve
 criteria exist is wrong when there are thirteen. A sentence saying five revisions were reclassified
 is still right when a sixth is reclassified later, because it was never counting the total.
+
+### refusal-test-was-invalidated-by-someone-fixing-the-thing-it-relied-on | medium | A fixture pinned to a revision with no generated layout broke when that layout was published
+
+The render-check suite gained a second failure, and its cause is the most benign one available:
+`test_a_revision_without_a_generated_layout_is_refused_by_name` named modelo 200's 2025 revision
+as an example of a revision that cannot be rendered, and somebody published its export tree.
+
+The test then failed with `DID NOT RAISE ValueError`, which reads as the refusal being broken. It
+is not. The refusal works; the example stopped being an example. A test pinned to a defect fails
+when the defect is fixed, and that is usually the design working - the sibling-scale gate is
+pinned deliberately for exactly that reason - but here the pin was to an absence that nobody had
+promised to preserve.
+
+The fixture is now derived. The test finds a revision carrying no export layout, asserts the
+search found one at all, and exercises the refusal against it. Thirty-four revisions currently
+qualify, so the search is not near empty, and if the corpus ever reached zero the assertion says
+so rather than the test passing over nothing.
+
+The distinction between the two kinds of pin is worth keeping. A gate pinned to a live defect
+should fail when the defect is corrected, because somebody must then decide what replaces it. A
+gate pinned to a convenient example should not, because nothing about that example was ever a
+claim. Both look like a hardcoded coordinate in the source; only the first has a reason recorded
+beside it.
+
+### a-pin-to-a-live-defect-owes-its-replacement-in-writing | medium | Two of this campaign's tests pin revisions the plan has open Steps to rename, and neither said what happens when they are
+
+Scanning this campaign's own tests for hardcoded coordinates found three files carrying them and
+one distinction that had not been applied to its own work.
+
+The render-check fixture repaired in the previous finding was pinned to a convenient example and
+broke when the example improved. The name-window tests are the other kind: they pin modelo 151
+and modelo 185 because those revisions genuinely misstate their windows, and the plan carries
+open Steps to rename both. When someone renames them these tests fail, and that failure is the
+correction arriving.
+
+Neither test said so. A gate this campaign wrote earlier - the sibling-scale comparison - is
+explicitly held up in the plan's own criteria for being proven against a live defect and saying
+what must replace it once the defect is corrected. The name-window tests do the first half and
+not the second, so the next person to act on an open Step meets a red test with no instruction
+in it.
+
+One now carries the instruction: what the pin is, that its failure is the rename landing rather
+than a regression, what should replace it, and that deleting the test is the wrong repair
+because the direction it distinguishes is why the condition was split from its opposite.
+
+The general form is small and worth stating plainly. A test pinned to a defect is a message to
+whoever fixes the defect, and a message that only says "assert equals" is not one. Fourteen
+tests in that module pass; the one that will fail on purpose now explains itself.

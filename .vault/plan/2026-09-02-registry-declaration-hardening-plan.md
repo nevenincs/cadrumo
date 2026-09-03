@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:2fcff9fdce4d1b10c79c31e4963bcf9e037a6cbc3ce9b1a87eb4e255fcbefb6c'
+body_hash: 'sha256:8fc8fcda9d5eceef872bfb85e95936f5eb5c82e67211bbd5cb13029bfe3b1047'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -507,6 +507,8 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S269` - Replace the stale failure accounting with a dated one and record that one failure did belong to this plan; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S270` - Establish that a gate checking the plan's own figures is forbidden by the code-stands-alone mandate and record what replaces it; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S271` - Retire the self-referential criteria count and distinguish live figures from historical ones; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S272` - Derive the no-layout refusal fixture instead of naming a revision that has since been published; `dev/registry/tests/test_render_check.py`.
+- [x] `W06.P13.S273` - Record what must replace the name-window test pinned to a revision the plan has an open Step to rename; `dev/registry/tests/test_revision_name_window.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
