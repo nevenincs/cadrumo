@@ -1126,32 +1126,32 @@ tui:
     source:
       aeat:
         census: Censo de la AEAT
-        filed_declarations: AEAT filed declarations
-        notifications: AEAT notifications
+        filed_declarations: Declaraciones presentadas en la AEAT
+        notifications: Notificaciones de la AEAT
       local:
-        filings: Local filings
-        notification_custody: Local notification custody
-        profile: Local profile
-        reconciliation: Local reconciliation
+        filings: Presentaciones locales
+        notification_custody: Custodia local de notificaciones
+        profile: Perfil local
+        reconciliation: Conciliación local
     source_state:
-      absent: Absent
-      accepted: Accepted
-      conflict: Conflict
-      not_observed: Not observed
-      present: Present
-      rejected: Rejected
+      absent: Ausente
+      accepted: Aceptado
+      conflict: Conflicto
+      not_observed: No observado
+      present: Presente
+      rejected: Rechazado
     sources:
       entry: '%{source}: %{availability}'
       joined: '%{entries}'
     value:
       none: —
     zone:
-      census: Census
-      evidence_comparison: Evidence comparison
-      filed_declarations: Filed declarations
-      notifications: Notifications
-      overview: Overview
-      reconciliation: Reconciliation
+      census: Censo
+      evidence_comparison: Comparación de evidencias
+      filed_declarations: Declaraciones presentadas
+      notifications: Notificaciones
+      overview: Resumen
+      reconciliation: Conciliación
   declarations:
     availability:
       available: Disponible
