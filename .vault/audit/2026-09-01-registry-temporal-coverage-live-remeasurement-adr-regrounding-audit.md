@@ -12695,3 +12695,55 @@ reader: it refuses to pass on fewer than 500 keys or fewer than 50 speaking
 revisions. And it states what it does not cover - the 27 revisions declaring no
 deadline window claim no period, so they cannot clash, and the gate's silence
 about them is not coverage of them.
+
+
+## Turning the campaign's own question on its instruments
+
+One duplicate condition has been found and retired in this campaign:
+`modelo_capability.layout_without_filing_grade` named exactly the revisions that
+`grade_earned.under_declared` already named with prerequisite `export_layout`.
+Not similar populations - the same set. Finding it took exporting both by hand
+and comparing them, which is a thing done once and then not done again.
+
+`dev/registry/analysis/condition_overlap.py` does that comparison for every pair
+of the 24 conditions that name a revision. The answer is **zero identical pairs**
+and 18 containments. The hand-found duplicate was the only one of its kind, and
+that is now a measured statement rather than an absence of further hand-checking.
+
+The report earned its place by being wrong first, in the campaign's own
+signature way. Its first run put
+`monetary_scale.money_split_representation` inside
+`monetary_scale.money_without_scale` at the top of its output - five revisions
+inside seven, the densest relation it found. The two kinds are an `if`/`elif` on
+one field. They cannot both hold of anything, and at the field they are
+disjoint; they merely land in the same five revisions. The report had aggregated
+two field-level conditions up to the revision and read the aggregate as a
+relationship.
+
+That is the same error as measuring revision overlap by calendar year instead of
+by year and period, which was found in a different module on the same afternoon.
+Both times a coarse unit turned a correct declaration into an apparent defect,
+and both times the finer unit was already there to be read.
+
+Comparison now happens at the finest unit BOTH conditions carry - field,
+casilla, or revision - and each row says which. The false pair is gone,
+`sibling_scale_disagrees` inside `money_without_scale` fell from a density of
+0.29 to 0.08 once measured at the field rather than the revision, and the
+strongest surviving relation is the one that was real all along:
+`files_here_for_years_it_cannot_date` occupies two thirds of
+`window_year_without_deadline`.
+
+The finer unit is kept only when EVERY finding of a condition carries it. A
+partial one is worse than none: half the rows keyed one way and half another
+makes a genuine pair read as disjoint, and a false negative in a report built to
+find relations is silent where a false positive is merely wrong out loud.
+
+Two further judgements are written into the report rather than left implicit.
+Partial overlap is not reported at all, because a few modelos carry most of the
+corpus's defects and nearly every pair of conditions intersects. And containment
+in a large population is nearly free: `provenance_consistency` names 88 of 128
+revisions, so a condition firing anywhere is probably inside it, and nine of the
+eighteen rows are that fact about its size rather than a relationship. Each row
+carries the density that separates the two, and no threshold is applied - where
+the cutoff sits is a reader's judgement, and one written into the module would
+silently drop the next real pair that fell beneath it.

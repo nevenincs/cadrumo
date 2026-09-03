@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:1796dff17e9404cf9d57e1de2fe70788b631053f2125e1222f45ffa599e6b255'
+body_hash: 'sha256:f04215eb8b62d2e287094fc672365fb899a3a731fd0ca2fc5f5344842c50b934'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -511,6 +511,7 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S461` - Gate that no modelo leaves a year inside its own span unserved, measuring the interior from the modelos earliest coverage rather than a fixed year, with the computation separated so a constructed gap proves the gate detects one the corpus does not contain; `dev/registry/tests/test_declaration_invariant_gates.py dev/registry/analysis/temporal_site_agreement.py`.
 - [x] `W04.P09.S462` - Measure the overlap failure mode beside the gap one: five modelos overlap at year granularity through mid-year splits, none overlaps at year and period across 837 keys, and the 27 revisions declaring no deadline window are outside what the finer check can see; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W04.P09.S463` - Gate the second coverage failure mode as ambiguously_claimed_periods: no two revisions of a modelo claim the same filing year and period, with teeth proving a planted clash is caught and a mid-year period split is not, and non-vacuity asserted at 837 keys across 101 speaking revisions; `dev/registry/analysis/temporal_site_agreement.py,dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W04.P09.S464` - Report screen conditions whose populations coincide, comparing at the finest unit both carry so an aggregation artifact is not read as a relationship: zero identical pairs across 24 conditions, confirming the hand-retired duplicate was the only one; `dev/registry/analysis/condition_overlap.py,dev/registry/tests/test_condition_overlap.py`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 
