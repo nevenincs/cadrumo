@@ -658,9 +658,15 @@ class TaskLauncherHomeCandidateScreen(_ProjectionCandidateScreen):
     .candidate-table { width: 100%; height: auto; }
     """
 
-    def __init__(self, projection: HomeProjectionV1) -> None:
+    def __init__(
+        self,
+        projection: HomeProjectionV1,
+        *,
+        locale: OutputLanguage | str = OutputLanguage.EN,
+        restore_target: HomeCandidateTarget | None = None,
+    ) -> None:
         """Bind one projection and an initially empty detail catalogue."""
-        super().__init__(projection)
+        super().__init__(projection, locale=locale, restore_target=restore_target)
         self._details: dict[str, str] = {}
 
     @override
