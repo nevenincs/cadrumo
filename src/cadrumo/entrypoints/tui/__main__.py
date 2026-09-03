@@ -21,14 +21,24 @@ from __future__ import annotations
 import sys
 
 from ..full_screen_session_protocol import SELF_TEST_FLAG, parse_request_arguments
-from .launcher import main
+from .launcher import InstalledWorkbenchSearchInputsProviderV1, main
 
 
-def run(arguments: list[str]) -> int:
+def run(
+    arguments: list[str],
+    *,
+    workbench_search_inputs_provider: InstalledWorkbenchSearchInputsProviderV1 | None = None,
+) -> int:
     """Start whichever session these arguments request, and report its status."""
     request = parse_request_arguments(arguments)
     if request is None:
-        return main(headless=SELF_TEST_FLAG in arguments)
+        if workbench_search_inputs_provider is None:
+            print("workbench.search.composition_required", file=sys.stderr)
+            return 2
+        return main(
+            headless=SELF_TEST_FLAG in arguments,
+            workbench_search_inputs_provider=workbench_search_inputs_provider,
+        )
     from .destination_session import run_requested_destination
 
     return run_requested_destination(request)

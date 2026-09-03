@@ -128,6 +128,9 @@ def _projection(
     unknown_pair: bool = False,
     census_status: AeatSyncCensusStatus = AeatSyncCensusStatus.CONFLICT,
     notification_specs: tuple[tuple[str, date], ...] | None = None,
+    overview_area: AeatSyncOverviewArea | None = None,
+    action_id: str | None = None,
+    operation_id: OperationDefinitionId = "user-profile.censo-review",
 ) -> AeatSyncWorkspaceProjectionV1:
     """Build through the public projector from local scoped facts."""
     observations = tuple(
@@ -145,17 +148,20 @@ def _projection(
             action_catalogue=OPERATOR_ACTION_CATALOGUE,
             operation_contracts=_contracts(),
         )
-    action = ActionReference(action_id="operator.live.notifications.list" if unknown_pair else "operator.profile.edit")
-    overview_area = AeatSyncOverviewArea.NOTIFICATIONS if unknown_pair else AeatSyncOverviewArea.CENSUS
+    resolved_action_id = action_id or ("operator.live.notifications.list" if unknown_pair else "operator.profile.edit")
+    action = ActionReference(action_id=resolved_action_id)
+    resolved_area = overview_area or (
+        AeatSyncOverviewArea.NOTIFICATIONS if unknown_pair else AeatSyncOverviewArea.CENSUS
+    )
     overview = AeatSyncWorkspaceOverviewRowV1(
-        area=overview_area,
+        area=resolved_area,
         local_state=AeatSyncSourceState.PRESENT,
         aeat_state=AeatSyncSourceState.PRESENT,
         local_observed_at=_T1,
         aeat_observed_at=_T2,
         discrepancy_kind=AeatSyncDiscrepancyKind.NONE,
         supported_actions=(action,),
-        supported_operations=() if unknown_pair else ("user-profile.censo-review",),
+        supported_operations=() if unknown_pair else (operation_id,),
     )
     period = Period.from_year_and_code(2026, "1T")
     return project_aeat_sync_workspace(
@@ -163,7 +169,7 @@ def _projection(
         subject_key=_SUBJECT_KEY,
         zone_observations=observations,
         action_catalogue=OPERATOR_ACTION_CATALOGUE,
-        operation_contracts=_contracts(),
+        operation_contracts=_contracts(resolved_action_id, operation_id),
         overview=(AeatSyncWorkspaceFactV1(_BUCKET_ID, _SUBJECT_KEY, overview),),
         census=(
             AeatSyncWorkspaceFactV1(
@@ -278,10 +284,16 @@ def _empty_projection(availability: AeatSyncWorkspaceAvailability) -> AeatSyncWo
     )
 
 
-def _contracts(action_id: str = "operator.profile.edit") -> OperationPublicContractSetV1:
+def _contracts(
+    action_id: str = "operator.profile.edit",
+    operation_id: OperationDefinitionId = "user-profile.censo-review",
+) -> OperationPublicContractSetV1:
     """Build a public contract whose operation/action join is explicit."""
     definition = CENSAL_OPERATION_DEFINITION.model_copy(
-        update={"action_reference": ActionReference(action_id=action_id)}
+        update={
+            "action_reference": ActionReference(action_id=action_id),
+            "definition_id": operation_id,
+        }
     )
     return OperationPublicContractSetV1.build((build_censal_operation_registration(definition).contract,))
 
@@ -291,11 +303,20 @@ def _controller(
     *,
     operation_handoff: AeatSyncOperationHandoffV1 | None = None,
     notification_document_handoff: AeatSyncNotificationDocumentHandoffV1 | None = None,
+    overview_area: AeatSyncOverviewArea | None = None,
+    action_id: str | None = None,
+    operation_id: OperationDefinitionId = "user-profile.censo-review",
 ) -> AeatSyncWorkspaceController:
+    resolved_action_id = action_id or "operator.profile.edit"
     return AeatSyncWorkspaceController(
         TuiScreenContextV1(destination="workbench.aeat_sync"),
-        _projection(availability),
-        operation_contracts=_contracts(),
+        _projection(
+            availability,
+            overview_area=overview_area,
+            action_id=resolved_action_id,
+            operation_id=operation_id,
+        ),
+        operation_contracts=_contracts(resolved_action_id, operation_id),
         operation_handoff=operation_handoff,
         notification_document_handoff=notification_document_handoff,
     )
@@ -418,7 +439,7 @@ def test_aeat_sync_namespace_matches_all_locales_and_hu_has_only_explicit_invari
     """Keep the complete 111-key surface translated, with a tiny HU allowlist."""
     english = _aeat_sync_catalogue("en")
     translated = _aeat_sync_catalogue(locale)
-    assert len(english) == 111
+    assert len(english) == 112
     assert set(translated) == set(english)
     if locale == "hu":
         identical = {key for key, value in translated.items() if value == english[key]}
@@ -814,3 +835,70 @@ async def test_census_adoption_is_local_wording_and_no_remote_push_control(local
             visible = _table_text(census.query_one("#aeat-sync-rows", DataTable))
             assert tr("tui.aeat_sync.census_status.adopted", locale=locale) in visible
             assert not tuple(census.query(Button))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
+async def test_filed_pull_all_uses_action_specific_copy_and_exact_one_shot_handoff(locale: str) -> None:
+    """Filed history pull comes from the overview declaration, never a filed DTO."""
+    calls: list[AeatSyncOperationRequestV1] = []
+
+    async def handoff(request: AeatSyncOperationRequestV1) -> None:
+        calls.append(request)
+
+    token = I18N_STRICT_MISSING_KEYS.set(True)
+    try:
+        with override_settings(cadrumo_output_language=locale):
+            controller = _controller(
+                operation_handoff=handoff,
+                overview_area=AeatSyncOverviewArea.FILED_DECLARATIONS,
+                action_id="operator.live.filed.pull_all",
+                operation_id="live.filed-history.pull",
+            )
+            for screen in (AeatSyncOverviewScreen(controller), AeatSyncFiledDeclarationsScreen(controller)):
+                async with ScreenHostApp[None](screen).run_test(size=(80, 24)) as pilot:
+                    await pilot.pause()
+                    button = screen.query_one("#aeat-sync-operation-0", Button)
+                    expected = tr("tui.aeat_sync.action.pull_filed_all", locale=locale)
+                    assert expected != "tui.aeat_sync.action.pull_filed_all"
+                    assert str(button.label) == expected
+                    await pilot.click("#aeat-sync-operation-0")
+                    await pilot.click("#aeat-sync-operation-0")
+    finally:
+        I18N_STRICT_MISSING_KEYS.reset(token)
+
+    expected_request = AeatSyncOperationRequestV1(
+        action=ActionReference(action_id="operator.live.filed.pull_all"),
+        operation="live.filed-history.pull",
+    )
+    assert calls == [expected_request, expected_request]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
+async def test_overview_census_label_is_distinct_and_notification_listing_has_no_operation(locale: str) -> None:
+    """Local census review is not pull copy; notifications remain a local route."""
+    token = I18N_STRICT_MISSING_KEYS.set(True)
+    try:
+        with override_settings(cadrumo_output_language=locale):
+            census = AeatSyncOverviewScreen(_controller())
+            async with ScreenHostApp[None](census).run_test(size=(80, 24)) as pilot:
+                await pilot.pause()
+                label = str(census.query_one("#aeat-sync-operation-0", Button).label)
+                assert label == tr("tui.aeat_sync.action.review_census", locale=locale)
+                assert label != tr("tui.aeat_sync.action.pull_filed_all", locale=locale)
+
+            notifications = AeatSyncOverviewScreen(
+                AeatSyncWorkspaceController(
+                    TuiScreenContextV1(destination="workbench.aeat_sync"),
+                    _projection(unknown_pair=True),
+                    operation_contracts=_contracts(),
+                )
+            )
+            async with ScreenHostApp[None](notifications).run_test(size=(80, 24)) as pilot:
+                await pilot.pause()
+                assert not tuple(notifications.query(Button))
+                status = str(notifications.query_one("#aeat-sync-status", Static).render())
+                assert tr("tui.aeat_sync.refusal.operation_handoff", locale=locale) not in status
+    finally:
+        I18N_STRICT_MISSING_KEYS.reset(token)

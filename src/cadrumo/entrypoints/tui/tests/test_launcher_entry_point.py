@@ -8,10 +8,15 @@ against, so none of them asserts on the symbol's existence or signature.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import pytest
 
+from ....application.search.installed_workbench import (
+    InstalledWorkbenchSearchInputsV1,
+    InstalledWorkbenchSearchSnapshotV1,
+)
+from ....application.search.workbench import WorkbenchSearchService
 from ....core.i18n.render import tr
 from ..app import CadrumoTuiApp
 from ..launcher import main
@@ -20,6 +25,33 @@ if TYPE_CHECKING:
     from textual.pilot import Pilot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+class _StaticSearchInputs:
+    """Minimal preloaded input double that crosses the real launcher seam."""
+
+    def __init__(self, service: WorkbenchSearchService) -> None:
+        self._service = service
+
+    def snapshot(self) -> InstalledWorkbenchSearchSnapshotV1:
+        """Return an immutable snapshot whose service is the supplied exact generation."""
+        return cast(InstalledWorkbenchSearchSnapshotV1, _StaticSearchSnapshot(self._service))
+
+
+class _StaticSearchSnapshot:
+    """Return a prebuilt service without making the launcher read any state."""
+
+    def __init__(self, service: WorkbenchSearchService) -> None:
+        self._service = service
+
+    def service(self) -> WorkbenchSearchService:
+        """Expose the generation this input provider selected."""
+        return self._service
+
+
+def _inputs_provider(service: WorkbenchSearchService | None = None) -> InstalledWorkbenchSearchInputsV1:
+    """Supply preloaded inputs as an installed-session composition would."""
+    return cast(InstalledWorkbenchSearchInputsV1, _StaticSearchInputs(service or WorkbenchSearchService(())))
 
 
 def test_entry_point_starts_a_real_session_and_exits_zero() -> None:
@@ -31,7 +63,7 @@ def test_entry_point_starts_a_real_session_and_exits_zero() -> None:
         await pilot.pause()
         pilot.app.exit()
 
-    assert main(headless=True, auto_pilot=observe) == 0
+    assert main(headless=True, auto_pilot=observe, workbench_search_inputs_provider=_inputs_provider) == 0
     assert mounted == [CadrumoTuiApp.__name__]
 
 
@@ -45,7 +77,7 @@ def test_entry_point_session_renders_the_areas_it_has_not_mounted() -> None:
         rendered.append(str(pilot.app.query_one("#root-title").render()))
         pilot.app.exit()
 
-    assert main(headless=True, auto_pilot=capture) == 0
+    assert main(headless=True, auto_pilot=capture, workbench_search_inputs_provider=_inputs_provider) == 0
     assert rendered == [tr("tui.root.no_areas"), tr("tui.root.title")]
 
 
@@ -58,7 +90,7 @@ def test_entry_point_session_mounts_no_area_screen() -> None:
         screens.append(len(pilot.app.screen_stack))
         pilot.app.exit()
 
-    assert main(headless=True, auto_pilot=count_screens) == 0
+    assert main(headless=True, auto_pilot=count_screens, workbench_search_inputs_provider=_inputs_provider) == 0
     assert screens == [1]
 
 
@@ -73,22 +105,31 @@ def test_entry_point_hands_the_session_its_composed_services() -> None:
         services.append(app.services.submission)
         pilot.app.exit()
 
-    assert main(headless=True, auto_pilot=read_services) == 0
+    assert main(headless=True, auto_pilot=read_services, workbench_search_inputs_provider=_inputs_provider) == 0
     assert services and services[0] is not None
 
 
-def test_entry_point_without_projection_bundle_is_unavailable_not_known_empty() -> None:
-    """A cold composition cannot masquerade as an authoritative empty index."""
-    refusal_codes: list[str | None] = []
+def test_entry_point_injects_and_rebuilds_the_installed_search_provider() -> None:
+    """A real session installs one current generation and replaces it on return."""
+    initial = WorkbenchSearchService(())
+    refreshed = WorkbenchSearchService(())
+    supplied = [_inputs_provider(initial), _inputs_provider(refreshed)]
+    calls: list[InstalledWorkbenchSearchInputsV1] = []
+
+    def provider() -> InstalledWorkbenchSearchInputsV1:
+        current = supplied.pop(0)
+        calls.append(current)
+        return current
 
     async def inspect_search(pilot: Pilot[object]) -> None:
         await pilot.pause()
         app = pilot.app
         assert isinstance(app, CadrumoTuiApp)
-        refusal_codes.append(app.workbench_search_refusal_code)
-        with pytest.raises(RuntimeError, match="no composed workbench search service"):
-            _ = app.workbench_search_service
+        assert app.workbench_search_service is initial
+        app._on_destination_dismissed(None)
+        assert app.workbench_search_service is refreshed
+        assert app.workbench_search_refusal_code is None
         app.exit()
 
-    assert main(headless=True, auto_pilot=inspect_search) == 0
-    assert refusal_codes == ["workbench.search.unavailable"]
+    assert main(headless=True, auto_pilot=inspect_search, workbench_search_inputs_provider=provider) == 0
+    assert len(calls) == 2

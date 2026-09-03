@@ -203,8 +203,8 @@ async def test_authoritative_child_return_rebuilds_the_injected_search_snapshot_
 
 
 @pytest.mark.asyncio
-async def test_failed_search_refresh_retains_last_good_service_and_sanitizes_refusal() -> None:
-    """A bad refreshed projection cannot erase current search or leak its error."""
+async def test_failed_search_refresh_withdraws_stale_service_and_sanitizes_refusal() -> None:
+    """A bad refreshed projection fails closed rather than serving stale search."""
     contexts: list[TuiScreenContextV1] = []
     initial_search = WorkbenchSearchService(())
 
@@ -230,7 +230,8 @@ async def test_failed_search_refresh_retains_last_good_service_and_sanitizes_ref
         await pilot.press("escape")
         await pilot.pause()
 
-    assert app.workbench_search_service is initial_search
     assert app.workbench_search_refusal_code == "workbench.search.refresh_unavailable"
+    with pytest.raises(RuntimeError, match="no composed workbench search service"):
+        _ = app.workbench_search_service
     assert "12345678Z" not in app.workbench_search_refusal_code
     assert "protected" not in app.workbench_search_refusal_code

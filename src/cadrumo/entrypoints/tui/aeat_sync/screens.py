@@ -251,9 +251,11 @@ class AeatSyncWorkspaceScreen(Screen[None]):
         """Render an explicit mutation button only for a closed admitted pair."""
         request = self.controller.admitted_operation(row.supported_actions, row.supported_operations)
         if request is None:
-            if tuple(str(action.action_id) for action in row.supported_actions) == (
-                "operator.live.notifications.list",
-            ) and not row.supported_operations:
+            if (
+                tuple(str(action.action_id) for action in row.supported_actions)
+                == ("operator.live.notifications.list",)
+                and not row.supported_operations
+            ):
                 return
             if row.supported_actions or row.supported_operations:
                 self.query_one("#aeat-sync-status", Static).update(

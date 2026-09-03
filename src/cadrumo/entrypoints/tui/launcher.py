@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnitCatalogue
+from ...application.search.installed_workbench import InstalledWorkbenchSearchInputsV1
 
 if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
@@ -17,10 +18,12 @@ if TYPE_CHECKING:
     from ...application.modelo.work_review import ModeloWorkReview
     from ...application.modelo.workspace_models import ModeloWorkspaceStaticInspectionResultV1
     from ...application.operations.composition import OperationComposedServices
-    from ...application.search.installed_workbench import InstalledWorkbenchSearchInputsV1
     from ...core.external_constants import OutputLanguage
     from ...domain.modelos.work_unit import WorkUnit
     from .search import WorkbenchSearchDoorV1
+
+
+type InstalledWorkbenchSearchInputsProviderV1 = Callable[[], InstalledWorkbenchSearchInputsV1]
 
 
 def load_modelo_work_unit_catalogue(bucket_id: str) -> WorkUnitCatalogue:
@@ -193,8 +196,7 @@ async def _run_root_session(
     *,
     headless: bool,
     auto_pilot: AutopilotCallbackType | None,
-    workbench_search_inputs: InstalledWorkbenchSearchInputsV1 | None = None,
-    refresh_workbench_search_inputs: Callable[[], InstalledWorkbenchSearchInputsV1] | None = None,
+    workbench_search_inputs_provider: InstalledWorkbenchSearchInputsProviderV1,
 ) -> None:
     """Compose one session's services, run the root application, settle them.
 
@@ -204,20 +206,16 @@ async def _run_root_session(
     """
     from .app import CadrumoTuiApp
 
-    service = (
-        compose_installed_workbench_search(workbench_search_inputs) if workbench_search_inputs is not None else None
-    )
+    service = compose_installed_workbench_search(workbench_search_inputs_provider())
 
     def refresh_search() -> WorkbenchSearchDoorV1:
-        if refresh_workbench_search_inputs is None:
-            raise RuntimeError("workbench search refresh is unavailable")
-        return compose_installed_workbench_search(refresh_workbench_search_inputs())
+        return compose_installed_workbench_search(workbench_search_inputs_provider())
 
     async with operation_services_scope() as services:
         await CadrumoTuiApp(
             services=services,
             workbench_search_service=service,
-            refresh_workbench_search=refresh_search if refresh_workbench_search_inputs is not None else None,
+            refresh_workbench_search=refresh_search,
         ).run_async(headless=headless, auto_pilot=auto_pilot)
 
 
@@ -225,8 +223,7 @@ def main(
     *,
     headless: bool = False,
     auto_pilot: AutopilotCallbackType | None = None,
-    workbench_search_inputs: InstalledWorkbenchSearchInputsV1 | None = None,
-    refresh_workbench_search_inputs: Callable[[], InstalledWorkbenchSearchInputsV1] | None = None,
+    workbench_search_inputs_provider: InstalledWorkbenchSearchInputsProviderV1,
 ) -> int:
     """Start one dedicated TUI session and report its process exit status.
 
@@ -240,8 +237,7 @@ def main(
         _run_root_session(
             headless=headless,
             auto_pilot=auto_pilot,
-            workbench_search_inputs=workbench_search_inputs,
-            refresh_workbench_search_inputs=refresh_workbench_search_inputs,
+            workbench_search_inputs_provider=workbench_search_inputs_provider,
         )
     )
     return 0
@@ -250,6 +246,7 @@ def main(
 __all__ = [
     "build_modelo_work_review_for_unit",
     "compose_installed_workbench_search",
+    "InstalledWorkbenchSearchInputsProviderV1",
     "load_modelo_work_unit_catalogue",
     "load_modelo_work_units",
     "main",
