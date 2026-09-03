@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:ca5d4c86c2773b169588de0aca882db8b8434bedc8153cbe6c9ea01bf4d191f7'
+body_hash: 'sha256:777fca8f8ef961c6341f8afae0882d980f31951d006a58864d5573aefda881fc'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -482,7 +482,8 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S443` - Enrol the two committed export trees the reproduction test omitted, m210 2026-y-siguientes and m303 2022, deriving their source ref epoch year and period from the registry and checking the derivation reproduces an existing row, which takes the directory to 38 failures where both new ones are the manifest staleness their twenty-five peers already carry; `dev/registry/tests/test_generated_export_trees.py`.
 - [x] `W04.P09.S444` - Gate that every committed export tree has a reproduction target, asserting the containment one way only since modelo 390 2022 is enrolled without a committed tree deliberately so its absence keeps failing; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [ ] `W04.P09.S445` - Decide whether modelo 840s authored semantic map and render profile anticipate an export layout or outlive one, since its only revision declares none and no gate test or render path ever loads the five files; `dev/registry/mappings/modelo_840 dev/registry/render_profiles/modelo_840`.
-- [ ] `W04.P09.S446` - Write the verification criterion for what a filer would meet, naming the five filing-correctness findings verified against shipped code and separating the twenty-nine generated trees by the repair each needs; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W04.P09.S446` - Write the verification criterion for what a filer would meet, naming the five filing-correctness findings verified against shipped code and separating the twenty-nine generated trees by the repair each needs; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W04.P09.S447` - Cross-check all four enrolments this package carries and record that the disposition ledgers two rows are exactly the two measured record-drifting trees, and that this works own new screen moved the exposure figure from 27,920 across 34 conditions to 27,922 across 36; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 

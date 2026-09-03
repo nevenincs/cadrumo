@@ -12083,3 +12083,40 @@ of which are decisions about a modelo rather than defects in tooling. A gate
 asserting every authored directory belongs to a modelo declaring a layout would
 fail on landing with no correction available inside this execution's scope,
 which is the shape this campaign has refused twice already.
+
+
+## Four enrolments cross-checked, and one figure moved because of this work
+
+The independent-count technique applied to every enrolment this package carries:
+
+- **Screens** - gated both ways since the entry-point declaration landed;
+  discovery and enrolment agree at eighteen.
+- **Generated trees** - the two unenrolled ones are enrolled and the containment
+  is gated; twenty-eight committed trees, all enrolled.
+- **Render profiles and semantic maps** - seventeen directories each, identical
+  sets, one of them (modelo 840) belonging to a modelo that declares no export
+  layout and is therefore validated by nothing.
+- **The disposition ledger** - its two rows are exactly the two trees measured as
+  record-drifting, `347/2011-2024` and `347/2025-y-siguientes`. Verified rather
+  than assumed, since the ledger's own header claims the gate refuses in both
+  directions and that claim had not been checked against a measurement.
+
+Three of the four agree with their populations. The fourth, modelo 840, is
+recorded above.
+
+### A figure in this audit moved, and this work moved it
+
+The exposure correction recorded earlier gave 27,920 filing-exposed findings
+across 34 conditions. Re-measured today: **27,922 across 36**, with
+wholly-below-filing conditions rising from three to four.
+
+The cause is the capability-continuity screen added since - two new conditions,
+two of its three findings in filing-grade revisions, and one condition (a
+capability lost together with the grade) that sits wholly below filing. The
+earlier table remains accurate as the before-and-after of the correction it
+described; this is what the same measurement says now.
+
+Recorded rather than silently left, because an audit that reports a figure and
+then changes the thing measured has the same drift problem it screens the
+registry for - and this campaign has now found that shape in a plan's step, its
+verification prose, its parallelization constraints, and here in its own audit.
