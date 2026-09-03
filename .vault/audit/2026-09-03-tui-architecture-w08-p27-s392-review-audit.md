@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:09481919e4220376450857b376187c50ba544e32636dafb8f06ea544c8e141e7'
+body_hash: 'sha256:5ddd584362c48a41ccb543566cea3e88bf8542bd0e463222ecc362cab197457e'
 related:
   - '[[2026-08-11-tui-architecture-plan]]'
 ---
@@ -17,13 +17,13 @@ Independent review of the live immutable Declarations workspace projection and i
 
 ## Findings
 
-### filed-revision-pointer-does-not-require-a-filing-record | high | Open: the projection can assert a filed revision with no filing authority
+### filed-revision-pointer-does-not-require-a-filing-record | high | Closed: filing pointers, records, and revision states now form one admitted fact
 
-`_validate_catalogue_joins` proves that a non-null `filed_calculation_revision_id` resolves to a revision owned by the work unit, but it does not require any filing record for that pointer. It separately permits `current_filing_record_id` to be `None`. The revision row then derives `is_filed` solely from the dangling semantic pointer.
+The initial projector accepted a work unit whose `filed_calculation_revision_id` remained set while `current_filing_record_id` was absent and the filing catalogue was empty. It emitted `has_current_filing=False`, `is_filed=True`, and zero filing rows.
 
-A live adversarial probe used otherwise valid canonical objects, removed the work unit's current filing pointer and supplied an empty filing catalogue while retaining its filed-calculation pointer. `project_declarations_workspace` accepted the snapshot and emitted `has_current_filing=False`, `calculation_revision.is_filed=True`, and zero filing rows. This is a contradictory legal-history projection: the UI can state that a revision is filed while the canonical filing-record authority supplies no filing event.
+Remediation requires the filed-revision and current-filing pointers to be present or absent together. When present, both must resolve to the same work unit, the current record must reference that exact revision and be `VIGENTE`, and the revision must be `PRESENTADO`. The reciprocal catalogue pass refuses a current filing not named by the work unit, requires every presented revision to have a current record, and requires every superseded revision to have a superseded record; superseded records also require a same-coordinate successor and superseded revision state.
 
-Require every `filed_calculation_revision_id` to be backed by the coherent current filing record for the same work unit and calculation revision, with the record `VIGENTE` and the revision in the filed state. Conversely, a current filing pointer must remain paired with that filed revision pointer. Add adversarial tests for the missing filing record, a missing current pointer, a pointer to a non-current or wrong revision, and a current pointer whose record is not current. The tests must use individually valid authorities and vary only their cross-catalog join.
+A ten-case adversarial matrix now refuses filed-pointer-only, filing-pointer-only, missing revision, missing record, record/revision mismatch, non-current current record, non-presented filed revision, presented revision without record, current record without pointers, and a superseded record attached to a current revision. The original reproduced state is explicitly covered. This finding is closed.
 
 ## Positive findings
 
@@ -33,8 +33,8 @@ All protected bucket, work-unit, calculation-revision, filing-record, and lifecy
 
 ## Verification
 
-All 8 focused projection tests passed. Ruff passed for the implementation and tests. ty passed for the implementation and tests. The green suite does not discharge the high finding because it checks orphan revisions and foreign work buckets but has no adversarial filing-pointer matrix; the direct probe reproduced the contradictory accepted output.
+Initial gates: 8 focused projection tests passed; Ruff and ty passed. Final remediation gates: all 18 focused projection tests passed, including the ten-case filing coherence matrix; Ruff and ty passed for the implementation and tests.
 
 ## Recommendation
 
-Do not close W08.P27.S392 until the high cross-authority coherence finding is remediated and covered by non-vacuous adversarial tests.
+CLOSE. The high cross-authority coherence finding is closed. W08.P27.S392 is safe to mark complete.
