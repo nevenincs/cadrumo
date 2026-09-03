@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:d64bb8541bb8b332ffd8df5b8d304915a9c94c27c870c2a04775a575a2f9afe6'
+body_hash: 'sha256:05e140b4cd9c681a82ae395b437d9f0e56d5a491c6f0d557cb4a5e06a25f1082'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -421,7 +421,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S396` - Join the fields needing a reviewed rule against the type conventions their design states: of 41 fields, 9 are grounded and the 32 that are not collapse to two modelo-and-type pairs, both in modelo 200, which is the size the rules-authoring step should carry; `dev/registry/analysis/rule_grounding_coverage.py dev/registry/tests/test_rule_grounding_coverage.py`.
 - [x] `W04.P07.S397` - Read the unnumbered NOTA lines the corpus carries, claiming only the shape that can be read without absorbing a neighbour, and leave what such a note governs unsettled: 47 of the 52 designs carry exactly one, so per-sheet counting distinguishes nothing, and modelo 200 prints its amounts convention on one sheet of seventy-seven while the fields it would govern sit elsewhere; `dev/registry/analysis/footnote_pointer_notes.py`.
 - [x] `W04.P07.S398` - Settle what an unnumbered NOTA governs: modelo 200 states how amounts are written on a sheet carrying no amount field while the 5,665 fields it describes sit on 74 others, and corpus-wide 47 of 51 designs print one such note while 4 repeat one identical text and none differs by sheet, so the sheet is where these are found and the design is what they govern; `dev/registry/analysis`.
-- [ ] `W04.P07.S399` - Admit design-level unnumbered notes as grounding now that their scope is settled, which is what modelo 200s thirty-two ungrounded fields need since its amounts convention states their integer width sign and decimal places; `dev/registry/analysis/rule_grounding_coverage.py`.
+- [x] `W04.P07.S399` - Admit design-level unnumbered notes as grounding now that their scope is settled, which is what modelo 200s thirty-two ungrounded fields need since its amounts convention states their integer width sign and decimal places; `dev/registry/analysis/rule_grounding_coverage.py`.
 
 ### Phase `W04.P08` - grade earned gate
 

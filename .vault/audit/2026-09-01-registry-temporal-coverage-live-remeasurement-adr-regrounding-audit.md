@@ -10412,3 +10412,52 @@ third condition had quietly become unreachable is a screen that would stop
 reporting a real change without anyone noticing. The corpus assertion is paired
 with a check that both observed conditions do occur, so it cannot pass
 vacuously if the reader ever stops reading.
+
+
+## Every field needing a reviewed rule now has official wording to read
+
+With the scope of an unnumbered note settled, the grounding join admits them.
+The result closes the question this thread opened with:
+
+| grounding | fields |
+| --------- | ------ |
+| a convention naming the field's own AEAT type | 9 |
+| a design-level note, which has to be read | 32 |
+| nothing | 0 |
+
+The thirty-two that were ungrounded are modelo 200's, and the wording available
+to them is the note stating that its amounts carry fifteen integers, a sign
+position and two decimals - which is exactly the integer width, sign carriage
+and decimal placement a representation rule for those fields has to state.
+
+The two grounded conditions are kept apart rather than summed, and the weaker
+one is named for what it is. A type convention names the field's class, so a
+field of that type is certainly covered. A design note names nothing: modelo
+200's settles its amounts, and another design's says only that the NIF is
+mandatory, and the row cannot tell them apart. Collapsing the two would report a
+field as grounded on wording that may say nothing about it, which is the same
+error as reading a vocabulary miss as a note stating no wire fact - made twice
+now, in the same corpus, from the same impulse to turn a located piece of
+evidence into a verdict about it.
+
+Where a field has both, the type convention is reported. A design note is
+available to every field of its design, so without that precedence the weaker
+condition would swallow every field that also had a convention naming its type,
+and the census would understate the grounding actually present.
+
+### The empty condition kept its proof
+
+`ungrounded` now has no instance in the corpus. It is kept, because a design
+carrying neither kind of wording is precisely the case an author must not
+discover halfway through authoring, and a condition with no instance and no
+proof stops reporting without anyone noticing. It is the second condition in
+this work to be emptied by a correction and kept with a constructed proof rather
+than deleted as unreachable.
+
+The first draft of that proof reached into the screen and replaced the functions
+it imports, so that its sources returned nothing. That is the globally
+monkeypatched production module this project's gate rules refuse, and it also
+tests a screen nobody runs. The classification is now a function taking the
+fields, the per-type conventions and the design notes as explicit arguments, so
+every condition - including the precedence between the two grounded ones - is
+reached with input written in the test.
