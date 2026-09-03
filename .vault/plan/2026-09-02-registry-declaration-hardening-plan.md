@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:9445d7d77009585f6f5d5a2cb994541389ea7b4b8bef17e3fb805f0b44fe6d68'
+body_hash: 'sha256:11ad126331fb5df5897c708fb5b014e5b7299dc7aa8ed02644aa6ebb4bcf6bc7'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -27,13 +27,6 @@ grade in five encodings, and a rendered amount's semantics at six, against 51 va
 job is to notice when the copies disagree. Detection after the fact is the wrong shape. This plan
 moves the registry toward declaring a fact once and deriving its projections, and builds the tooling
 that can prove it.
-
-It is sequenced so that measurement comes first, because four figures published during the audit were
-wrong, each because a consumer reassembled the resolved export surface by hand and dropped one of its
-three linkage paths. Wave one removed that class of error by providing the surface whole. Wave two
-returns the project to having a standing regression gate. Wave three makes the filing-export proof
-real. Wave four adds the missing edge gates. Wave five corrects the data defects that need no
-decision. Wave six applies the general contract.
 
 Measurement has since changed what the later Waves are for, and the Steps record it. The screens
 that measure the declaration conditions run from one entry point over a single loaded registry -
@@ -104,12 +97,6 @@ Wave three's proof enrolment cannot proceed at all by engineering: the corpus co
 official emitted-byte reference for any modelo, and a vector whose expected bytes came from this
 project's own writer would prove only that the writer agrees with itself. That Wave's first Step
 is therefore evidence acquisition, and it is the critical path to the product's central claim.
-
-Wave six remains different in kind: none of the four decisions it depends on has been written,
-and the feature's proposed coverage decision is itself resting on a problem statement the
-refactor has overtaken. Every Step in Wave six is authoring or migration that cannot begin until
-those records exist and are accepted, and the Phase that holds the four decisions gates the
-Phase that applies them.
 
 It is sequenced so that measurement comes first. Four figures published during the audit
 were wrong, each because a consumer reassembled the resolved export surface by hand and
@@ -190,7 +177,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S97` - Sweep the registry suites for gates that cannot pass and record each as owned, dispositioned or retired; `dev/registry/tests`.
 - [x] `W02.P02.S107` - Retire the developer registry package re-export facade and its enforcing inventory assertion, repointing the one symbol consumer at the defining module; `dev/registry/__init__.py`.
 - [ ] `W02.P02.S108` - Promote the eleven src-side private modules that non-test dev consumers reach across the package boundary, leaving the eleven test imports alone; `src/cadrumo,src/cadrumo_harness`.
-- [ ] `W02.P02.S109` - Rewrite the modelo 151 live-filing closure test onto the two-channel authority, then delete the single-channel proof authority whose only proof-producing path refuses; `dev/registry/conformance/tests/test_real_closure_outcomes.py`.
+- [ ] `W02.P02.S109` - Rewrite the modelo 151 live-filing closure test onto the two-channel authority and delete the single-channel proof authority, once an enrolled conformance vector lets that authority produce a satisfied outcome; blocked behind the official emitted-byte reference and the vector enrolment it feeds; `dev/registry/conformance/tests/test_real_closure_outcomes.py`.
 - [ ] `W02.P02.S110` - Resolve the twenty-four filing tests demanding filing grade from modelos 200, 038 and 036, which now declare calculation or applicability grade; `src/cadrumo/application/filing/tests`.
 - [x] `W02.P02.S111` - Retire the generation pipeline package re-export facade so the initialiser is an inert namespace marker; `dev/registry/pipeline/__init__.py`.
 - [x] `W02.P02.S112` - Bring the conformance test directory into the lane measurement, since every full-lane run so far covered only dev/registry/tests; `dev/registry/conformance/tests`.
@@ -522,6 +509,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S284` - Remove the plan-step citations from the registry tooling prose, leaving only the detector fixtures that must carry them; `dev/registry/pipeline/_tree_check.py dev/registry/pipeline/_tree_publication.py dev/registry/pipeline/_tree_validation.py dev/registry/analysis/m303_semantic_census.py dev/registry/tests/test_record_design_intermediate_source_boundary.py`.
 - [x] `W06.P13.S285` - Give the marker scan module-scoped lint discrimination so an explained suppression is not read as campaign metadata; `dev/tests/_marker_metadata_patterns.py dev/tests/test_campaign_marker_patterns.py`.
 - [ ] `W06.P13.S286` - Replace the plan-phase owning_authority values in the workspace action denominator with a durable authority, coordinating with that surface's writer; `dev/quality/modelo_workspace_action_denominator.py`.
+- [x] `W06.P13.S287` - Remove three restatements from the plan prose and record the cross-Wave evidence dependency once; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -569,6 +557,19 @@ remedy shrinks: expose the existing authority, do not write a second one. It gat
 Step touching a generated modelo, whatever Wave the Step sits in, and it also gates the two enrolled
 trees that render successfully and have never been committed.
 
+One missing artefact gates work in three Waves, and it is external to the repository. No
+official emitted-byte reference for any modelo revision has been acquired, and
+`CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS` is consequently the empty tuple. The whole of the proof
+vector Phase consumes that reference, which its own Steps already say. What was not written down is
+that the same absence reaches outside that Phase: the modelo 151 live-filing closure test cannot be
+rewritten onto the two-channel authority, because that authority resolves a conformance vector before
+it reports a satisfied outcome and the test's invariant needs a satisfied outcome to express; and
+that test is the single failure in the conformance directory the lane Steps propose to name, so the
+lane Step inherits the block through it. Three Steps in three Waves therefore wait on one artefact
+nobody in this repository can author, and none of them is undone for want of effort. A Step blocked
+on absent evidence should say so in its own text rather than read as outstanding work, which is now
+the case for each.
+
 The read-only half of that path exists and is deliberately kept separate: a comparison that renders
 into a temporary directory and never writes to the registry is safe to run against filing data, and
 publication is not.
@@ -584,12 +585,6 @@ That set is not static, and it is not a property of the file: two package initia
 when this constraint was written were released by a commit and became workable the same day. Re-read
 `git status --porcelain` for the specific path before assuming a Step is still blocked, and before
 every write. A Step deferred once is not deferred permanently.
-
-Within Waves, the four Phases of Wave four are mutually independent once the accessor
-exists and may proceed in parallel; each screen owns its own module and test. The three
-Phases of Wave two are independent of one another. In Wave six the decision Phase gates the
-migration Phase absolutely, and within the migration Phase the temporal, identifier and
-provenance migrations touch overlapping manifests and must be serialised behind one writer.
 
 A hard external constraint overrides all of the above while it lasts: an import refactor is
 in flight and holds a large pending diff. Any Step whose scope names a file that refactor

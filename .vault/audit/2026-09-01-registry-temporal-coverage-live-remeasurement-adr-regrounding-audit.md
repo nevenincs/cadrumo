@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:fccaa6d5f22b15ee39b9327de9ef7d0a9d70cdf376f0bf82e5d2bac29456d784'
+body_hash: 'sha256:c6367c8a3ddad82f553fbde1eab8aa06113cb95d9774147c06777f4af63e4028'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7084,3 +7084,73 @@ are a review, not a substitution.
 It is recorded here as the largest single population the marker scan found, and
 as the clearest example in the tree of the difference between a declaration that
 is absent and one that is present, validated, and empty of meaning.
+
+### the-conformance-directory-holds-nineteen-tests-and-one-blocked-failure | high | Eighteen pass and one fails on a broken edge, in eight minutes fifty-seven seconds serial
+
+With the ceiling raised past the three-minute test, the directory completes:
+nineteen tests, eighteen passed, one failed, exit 1, in 536.76 seconds. That
+settles the precondition the lane Steps carried. The directory is not a pile of
+rot - it is one blocked test and a nine-minute serial cost, and both facts
+belong in the Step that proposes naming it.
+
+The failure is not an assertion. It is
+`AttributeError: 'LiveFilingExportProofAuthority' object has no attribute
+'assess_for'` - the closure report asks its filing proof authority to assess a
+coordinate, and the authority handed to it offers only `proof_for`. Two classes
+in one module declare the same concept with different surfaces: the canonical
+two-channel authority carries `assess_for`, and the single-channel one does not,
+so the report's call finds nothing. This is the broken edge a deletion leaves
+when its consumer sweep misses a caller, and it sat in a directory no lane runs,
+which is why it reads as a crash rather than as a refusal anybody had to answer
+for.
+
+The plan already names the remedy, and the reason it has not been taken is now
+exact rather than assumed. The single-channel authority's only proof-producing
+path raises `legacy single-channel filing proof is disabled` whenever it finds
+an entry and returns `None` otherwise, so it cannot produce a proof by
+construction and its private verification helpers are unreachable. Rewriting the
+test onto the two-channel authority is the stated fix, and it cannot be done
+today: that authority resolves a conformance vector before it will report a
+satisfied outcome, and `CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS` is the
+empty tuple. The test's whole point is that a satisfied filing export does not
+make a row release-eligible while its source limb is unmeasured, and that
+invariant needs a satisfied outcome to express.
+
+So the chain is: the official emitted-byte reference, then vector enrolment,
+then this rewrite, then the deletion. The Step now says so. The measurement that
+matters here is negative - the work is blocked on evidence that does not exist
+in the repository, not on effort - and recording which link is missing is worth
+more than another attempt that would have to invent the evidence to succeed.
+
+### the-plan-restated-its-own-sequencing-three-times | medium | A document arguing against declaring one fact in many places was doing it, and the copies had drifted
+
+Measuring the plan's own prose the way this campaign measures the registry found
+three restatements. One was an exact duplicate: the paragraph describing which
+Phases may run in parallel appeared twice in the Parallelization section, word
+for word. The other two were paraphrases, which is the harder half and the one a
+duplicate check misses - the Wave sequencing was argued once thinly and once
+fully, and Wave six's dependence on unwritten decisions likewise.
+
+The copies had drifted, which is the argument against keeping either. The thin
+sequencing paragraph said Wave two "returns the project to having a standing
+regression gate"; the full one says the same and then says what that requires -
+moving the release-eligibility predicate into the shipped application, because a
+predicate that exists only development-side cannot gate anything. The thin Wave
+six paragraph omitted that the first five Waves need no architectural decision
+at all, which is the sentence that makes Wave six's difference legible. In both
+pairs the later text was a strict superset, so the earlier one carried no fact
+of its own while still being a place a reader might stop.
+
+Afterwards the plan holds fifty-nine prose paragraphs with no exact restatement
+and a highest pairwise similarity of 0.42, down from 0.74. That figure is a
+measurement of this document, not a target for it: two paragraphs about the same
+Wave will always share vocabulary, and driving the number lower would mean
+writing worse prose rather than removing duplicated meaning.
+
+One fact was added rather than removed, and only once. The missing official
+emitted-byte reference gates three Steps in three Waves - the proof vector Phase
+that names it, the modelo 151 closure rewrite that needs a satisfied outcome the
+empty vector tuple cannot produce, and the lane Step that inherits the block
+through that test's failure. The Parallelization section now says this in one
+place, as a discovered ordering constraint beside the others, because a
+dependency recorded three times is the defect this entry is about.
