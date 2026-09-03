@@ -474,7 +474,7 @@ def rehearse_object_name_component(
     manifest: ObjectNameRenameManifest,
     *,
     inventory: ObjectNameAuditResult,
-    component: OperationComponent,
+    component: OperationComponent | None,
     repo_root: Path,
 ) -> ObjectNameRehearsalReceipt:
     """Rehearse exactly one complete reviewed component outside the live tree."""
@@ -482,39 +482,16 @@ def rehearse_object_name_component(
     if not (root / ".git").exists() or not (root / "src").is_dir() or not (root / "dev").is_dir():
         raise ObjectNameRehearsalError(f"rehearsal root is not a repository worktree: {root}")
     executable = {operation.operation_id: operation for operation in select_object_name_execution(manifest)}
-    try:
-        selected = tuple(executable[operation_id] for operation_id in component.operation_ids)
-    except KeyError as exc:
-        raise ObjectNameRehearsalError(f"reviewed component names a non-executable operation: {exc.args[0]}") from exc
-    generated_paths_by_operation = {
-        operation.operation_id: frozenset(
-            edge.path
-            for edge in component.hard_edges
-            if edge.operation_id == operation.operation_id and edge.kind is ReferenceKind.GENERATED_ARTIFACT
-        )
-        for operation in selected
-    }
-    transform_operations = tuple(
-        operation.model_copy(
-            update={
-                "changed_paths": tuple(
-                    path
-                    for path in operation.changed_paths
-                    if path not in generated_paths_by_operation[operation.operation_id]
-                ),
-                "expected_reference_classes": tuple(
-                    kind for kind in operation.expected_reference_classes if kind != "generated-artifact"
-                ),
-                "generator_commands": (),
-            }
-        )
-        for operation in selected
-    )
-    component_manifest = manifest.model_copy(update={"operations": transform_operations})
+    if component is None:
+        selected = tuple(executable.values())
+    else:
+        try:
+            selected = tuple(executable[operation_id] for operation_id in component.operation_ids)
+        except KeyError as exc:
+            raise ObjectNameRehearsalError(
+                f"reviewed component names a non-executable operation: {exc.args[0]}"
+            ) from exc
     allowed_paths = tuple(sorted({path for operation in selected for path in operation.changed_paths}))
-    transform_allowed_paths = tuple(
-        sorted({path for operation in transform_operations for path in operation.changed_paths})
-    )
     try:
         validate_object_name_manifest(manifest, inventory=inventory, repo_root=root)
     except ObjectNameManifestError as exc:
@@ -567,20 +544,55 @@ def rehearse_object_name_component(
                 inventory=copied_inventory,
                 repo_root=temporary_root,
             )
-        copied_component = next(
-            (item for item in copied_components if item.component_id == component.component_id),
-            None,
+        if component is None:
+            if len(copied_components) != 1:
+                raise ObjectNameRehearsalError(
+                    f"manifest must select exactly one complete component; found {len(copied_components)}"
+                )
+            component = copied_components[0]
+        else:
+            copied_component = next(
+                (item for item in copied_components if item.component_id == component.component_id),
+                None,
+            )
+            if copied_component is None or (
+                copied_component.operation_ids,
+                copied_component.affected_paths,
+                copied_component.hard_edges,
+            ) != (
+                component.operation_ids,
+                component.affected_paths,
+                component.hard_edges,
+            ):
+                raise ObjectNameRehearsalError("copied repository graph differs from the reviewed component")
+        generated_paths_by_operation = {
+            operation.operation_id: frozenset(
+                edge.path
+                for edge in component.hard_edges
+                if edge.operation_id == operation.operation_id and edge.kind is ReferenceKind.GENERATED_ARTIFACT
+            )
+            for operation in selected
+        }
+        transform_operations = tuple(
+            operation.model_copy(
+                update={
+                    "changed_paths": tuple(
+                        path
+                        for path in operation.changed_paths
+                        if path not in generated_paths_by_operation[operation.operation_id]
+                    ),
+                    "expected_reference_classes": tuple(
+                        kind for kind in operation.expected_reference_classes if kind != "generated-artifact"
+                    ),
+                    "generator_commands": (),
+                }
+            )
+            for operation in selected
         )
-        if copied_component is None or (
-            copied_component.operation_ids,
-            copied_component.affected_paths,
-            copied_component.hard_edges,
-        ) != (
-            component.operation_ids,
-            component.affected_paths,
-            component.hard_edges,
-        ):
-            raise ObjectNameRehearsalError("copied repository graph differs from the reviewed component")
+        component_manifest = manifest.model_copy(update={"operations": transform_operations})
+        transform_allowed_paths = tuple(
+            sorted({path for operation in transform_operations for path in operation.changed_paths})
+        )
         copied_inventory_digest = cast("str", to_json(copied_inventory)["inventory_digest"])
         if not isinstance(copied_inventory_digest, str):
             raise ObjectNameRehearsalError("copied inventory did not emit a string digest")

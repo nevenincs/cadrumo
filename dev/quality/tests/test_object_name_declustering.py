@@ -110,6 +110,8 @@ def test_default_mode_rehearses_and_cannot_replay(tmp_path: Path, monkeypatch: p
     monkeypatch.chdir(root)
     monkeypatch.setattr(cli, "_manifest_path", lambda *_args: root / "manifest.toml")
     monkeypatch.setattr(cli, "_context", lambda *_args: (inventory, manifest, component))
+    monkeypatch.setattr(cli, "scan", lambda *_args: inventory)
+    monkeypatch.setattr(cli, "load_validated_object_name_manifest", lambda *_args, **_kwargs: manifest)
     monkeypatch.setattr(cli, "rehearse_object_name_component", lambda *_args, **_kwargs: receipt)
     monkeypatch.setattr(
         cli,
@@ -391,9 +393,12 @@ def test_mode_dispatches_only_to_its_owned_operation(
     monkeypatch.chdir(root)
     monkeypatch.setattr(cli, "_manifest_path", lambda *_args: root / "manifest.toml")
     monkeypatch.setattr(cli, "_context", lambda *_args: (inventory, manifest, component))
+    monkeypatch.setattr(cli, "scan", lambda *_args: inventory)
+    monkeypatch.setattr(cli, "load_validated_object_name_manifest", lambda *_args, **_kwargs: manifest)
     calls: list[str] = []
 
     def rehearse(*_args: Any, **_kwargs: Any) -> ObjectNameRehearsalReceipt:
+        assert _kwargs["component"] is None
         calls.append("rehearse")
         return receipt
 

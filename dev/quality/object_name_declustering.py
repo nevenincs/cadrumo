@@ -142,6 +142,21 @@ def main(argv: Sequence[str] | None = None) -> int:
             inventory = scan((root / "src", root / "dev"), root)
             _emit({"inventory": to_json(inventory), "mode": "verify"}, as_json=args.json)
             return exit_code(inventory)
+        if args.mode == "rehearse":
+            inventory = scan((root / "src", root / "dev"), root)
+            manifest = load_validated_object_name_manifest(
+                _manifest_path(root, args.manifest),
+                inventory=inventory,
+                repo_root=root,
+            )
+            receipt = rehearse_object_name_component(
+                manifest,
+                inventory=inventory,
+                component=None,
+                repo_root=root,
+            )
+            _emit({"mode": "rehearse", "receipt": asdict(receipt)}, as_json=args.json)
+            return 0
         inventory, manifest, component = _context(root, _manifest_path(root, args.manifest))
         if args.mode == "plan":
             _emit({"component": asdict(component), "mode": "plan"}, as_json=args.json)
@@ -154,9 +169,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
             _emit({"mode": "apply", "result": asdict(result)}, as_json=args.json)
             return 0
-        receipt = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=root)
-        _emit({"mode": "rehearse", "receipt": asdict(receipt)}, as_json=args.json)
-        return 0
+        raise ObjectNameDeclusteringCliError(f"unsupported mode: {args.mode}")
     except (
         ObjectNameDeclusteringCliError,
         ObjectNameGraphError,

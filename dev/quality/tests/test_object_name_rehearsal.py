@@ -467,9 +467,7 @@ def test_selected_component_cannot_be_replaced_by_an_otherwise_valid_component(t
     selected = next(item for item in components if item.operation_ids == ("rename-widgets",))
     other = next(item for item in components if item.operation_ids == ("rename-reports",))
 
-    with pytest.raises(
-        ObjectNameRehearsalError, match="copied repository graph differs from the reviewed component"
-    ):
+    with pytest.raises(ObjectNameRehearsalError, match="copied repository graph differs from the reviewed component"):
         rehearse_object_name_component(
             manifest,
             inventory=inventory,
@@ -541,9 +539,7 @@ def test_shared_hard_edge_makes_two_operations_indivisible(tmp_path: Path) -> No
     assert component.affected_paths.count(consumer_path) == 1
 
     partial = replace(component, operation_ids=("rename-widgets",))
-    with pytest.raises(
-        ObjectNameRehearsalError, match="copied repository graph differs from the reviewed component"
-    ):
+    with pytest.raises(ObjectNameRehearsalError, match="copied repository graph differs from the reviewed component"):
         rehearse_object_name_component(manifest, inventory=inventory, component=partial, repo_root=repo)
 
 
@@ -780,9 +776,7 @@ def test_generated_owner_runs_and_forged_generated_edge_is_refused(tmp_path: Pat
     forged_edge = replace(edge, generator_owner='[["forged-generator"]]')
     forged = build_manifest_components(manifest, inventory=inventory, hard_edges=(forged_edge,))[0]  # ty: ignore[invalid-argument-type]
 
-    with pytest.raises(
-        ObjectNameRehearsalError, match="copied repository graph differs from the reviewed component"
-    ):
+    with pytest.raises(ObjectNameRehearsalError, match="copied repository graph differs from the reviewed component"):
         rehearse_object_name_component(manifest, inventory=inventory, component=forged, repo_root=repo)
 
     receipt = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
