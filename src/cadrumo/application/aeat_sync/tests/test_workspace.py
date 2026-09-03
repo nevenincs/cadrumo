@@ -9,9 +9,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core.period import Period
-from .....domain.modelos.codes import ModeloCode
-from ..workspace import (
+from ....core.period import Period
+from ....domain.modelos.codes import ModeloCode
+from .. import (
     AeatSyncAeatObservationState,
     AeatSyncCensusCategory,
     AeatSyncCensusStatus,
@@ -32,11 +32,14 @@ from ..workspace import (
     AeatSyncWorkspaceNotificationRowV1,
     AeatSyncWorkspaceOverviewRowV1,
     AeatSyncWorkspaceProjectionError,
+    AeatSyncWorkspaceProjectionV1,
+    AeatSyncWorkspaceReconciliationRowV1,
     AeatSyncWorkspaceSource,
     AeatSyncWorkspaceZone,
     AeatSyncWorkspaceZoneObservationV1,
     project_aeat_sync_workspace,
 )
+from .. import __all__ as public_contract_names
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -52,7 +55,41 @@ _PRIVATE_CONCEPT = "Secret authority concept"
 _PRIVATE_URL = "https://private.example/secret"
 _PRIVATE_TEXT = "Confidential document text"
 _PRIVATE_CERTIFICATE = "private-certificado-id"
-_PRIVATE_SECRET = "private-secret"
+_PROTECTED_SENTINEL = "protected-secret-sentinel"
+
+
+def test_public_facade_exposes_the_safe_workspace_contract() -> None:
+    """The public seam exposes projection facts, not an implementation module."""
+    assert public_contract_names == [
+        "AEAT_SYNC_WORKSPACE_CONTRACT_VERSION",
+        "AeatSyncAeatObservationState",
+        "AeatSyncCensusCategory",
+        "AeatSyncCensusStatus",
+        "AeatSyncDiscrepancyKind",
+        "AeatSyncDocumentCustodyState",
+        "AeatSyncJustificanteState",
+        "AeatSyncLocalFilingState",
+        "AeatSyncNotificationCategory",
+        "AeatSyncNotificationReadState",
+        "AeatSyncOverviewArea",
+        "AeatSyncReconciliationState",
+        "AeatSyncSourceState",
+        "AeatSyncSupportedAction",
+        "AeatSyncWorkspaceAvailability",
+        "AeatSyncWorkspaceCensusRowV1",
+        "AeatSyncWorkspaceEvidenceComparisonRowV1",
+        "AeatSyncWorkspaceFiledDeclarationRowV1",
+        "AeatSyncWorkspaceNotificationRowV1",
+        "AeatSyncWorkspaceOverviewRowV1",
+        "AeatSyncWorkspaceProjectionError",
+        "AeatSyncWorkspaceProjectionV1",
+        "AeatSyncWorkspaceReconciliationRowV1",
+        "AeatSyncWorkspaceSource",
+        "AeatSyncWorkspaceZone",
+        "AeatSyncWorkspaceZoneObservationV1",
+        "AeatSyncWorkspaceZoneStateV1",
+        "project_aeat_sync_workspace",
+    ]
 
 
 def _period(code: str = "1T", year: int = 2026) -> Period:
@@ -64,10 +101,15 @@ def _observations(
     availability: AeatSyncWorkspaceAvailability = AeatSyncWorkspaceAvailability.AVAILABLE,
 ) -> tuple[AeatSyncWorkspaceZoneObservationV1, ...]:
     refusal = None if availability is AeatSyncWorkspaceAvailability.AVAILABLE else "aeat.sync.source.refused"
-    observed_at = _T2 if availability in {
-        AeatSyncWorkspaceAvailability.AVAILABLE,
-        AeatSyncWorkspaceAvailability.STALE,
-    } else None
+    observed_at = (
+        _T2
+        if availability
+        in {
+            AeatSyncWorkspaceAvailability.AVAILABLE,
+            AeatSyncWorkspaceAvailability.STALE,
+        }
+        else None
+    )
     if availability is AeatSyncWorkspaceAvailability.STALE:
         refusal = "aeat.sync.source.stale"
     return tuple(
@@ -95,14 +137,13 @@ def _mixed_observations() -> tuple[AeatSyncWorkspaceZoneObservationV1, ...]:
             zone=zone,
             availability=availability,
             observed_at=_T1
-            if availability in {
+            if availability
+            in {
                 AeatSyncWorkspaceAvailability.AVAILABLE,
                 AeatSyncWorkspaceAvailability.STALE,
             }
             else None,
-            refusal=None
-            if availability is AeatSyncWorkspaceAvailability.AVAILABLE
-            else "aeat.sync.source.refused",
+            refusal=None if availability is AeatSyncWorkspaceAvailability.AVAILABLE else "aeat.sync.source.refused",
         )
         for zone, availability in zip(AeatSyncWorkspaceZone, states, strict=True)
     )
@@ -127,7 +168,7 @@ def _census(
         nif=_PRIVATE_NIF,
         source_url=_PRIVATE_URL,
         raw_evidence={"text": _PRIVATE_TEXT},
-        secret=_PRIVATE_SECRET,
+        secret=_PROTECTED_SENTINEL,
     )
 
 
@@ -136,13 +177,14 @@ def _filed(
     *,
     local_state: AeatSyncLocalFilingState = AeatSyncLocalFilingState.FILED,
     aeat_state: AeatSyncAeatObservationState = AeatSyncAeatObservationState.ACCEPTED,
+    justificante_state: AeatSyncJustificanteState | None = None,
     semantic_identity: str = _PRIVATE_ID,
     bucket_id: str | None = _BUCKET,
     subject_key: str | None = "subject-a",
 ) -> AeatSyncWorkspaceFiledDeclarationRowV1:
     local_filed_at = _T1 if local_state is AeatSyncLocalFilingState.FILED else None
     aeat_observed_at = _T2 if aeat_state is not AeatSyncAeatObservationState.NOT_OBSERVED else None
-    justificante = (
+    justificante = justificante_state or (
         AeatSyncJustificanteState.VERIFIED
         if aeat_state is AeatSyncAeatObservationState.ACCEPTED
         else AeatSyncJustificanteState.NOT_OBSERVED
@@ -156,7 +198,9 @@ def _filed(
         aeat_observation_state=aeat_state,
         aeat_observed_at=aeat_observed_at,
         justificante_state=justificante,
-        justificante_observed_at=_T2 if justificante is AeatSyncJustificanteState.VERIFIED else None,
+        justificante_observed_at=(
+            _T2 if justificante in {AeatSyncJustificanteState.AVAILABLE, AeatSyncJustificanteState.VERIFIED} else None
+        ),
         semantic_identity=semantic_identity,
         bucket_id=bucket_id,
         subject_key=subject_key,
@@ -165,10 +209,10 @@ def _filed(
         justificante_id="private-justificante-id",
         source_url=_PRIVATE_URL,
         document_text=_PRIVATE_TEXT,
-        raw_evidence={"secret": _PRIVATE_SECRET},
+        raw_evidence={"secret": _PROTECTED_SENTINEL},
         name=_PRIVATE_NAME,
         nif=_PRIVATE_NIF,
-        secret=_PRIVATE_SECRET,
+        secret=_PROTECTED_SENTINEL,
     )
 
 
@@ -182,7 +226,7 @@ def _notification(
     return AeatSyncWorkspaceNotificationRowV1(
         semantic_identity=semantic_identity,
         issued_on=issued_on,
-        read_on=date(2026, 1, 3),
+        read_on=max(date(2026, 1, 3), issued_on),
         read_state=AeatSyncNotificationReadState.READ,
         category=AeatSyncNotificationCategory.FORMAL,
         document_custody_state=AeatSyncDocumentCustodyState.HELD,
@@ -197,8 +241,8 @@ def _notification(
         destinatario_nif=_PRIVATE_NIF,
         source_url=_PRIVATE_URL,
         document_text=_PRIVATE_TEXT,
-        raw_evidence={"secret": _PRIVATE_SECRET},
-        secret=_PRIVATE_SECRET,
+        raw_evidence={"secret": _PROTECTED_SENTINEL},
+        secret=_PROTECTED_SENTINEL,
     )
 
 
@@ -210,8 +254,9 @@ def _comparison(
     semantic_identity: str | None = _PRIVATE_ID,
     bucket_id: str | None = _BUCKET,
     subject_key: str | None = "subject-a",
+    discrepancy_kind: AeatSyncDiscrepancyKind | None = None,
 ) -> AeatSyncWorkspaceEvidenceComparisonRowV1:
-    discrepancy = (
+    discrepancy = discrepancy_kind or (
         AeatSyncDiscrepancyKind.LOCAL_ONLY
         if local_state is AeatSyncSourceState.PRESENT and aeat_state is AeatSyncSourceState.ABSENT
         else AeatSyncDiscrepancyKind.NONE
@@ -230,9 +275,9 @@ def _comparison(
         bucket_id=bucket_id,
         subject_key=subject_key,
         source_url=_PRIVATE_URL,
-        raw_evidence={"secret": _PRIVATE_SECRET},
+        raw_evidence={"secret": _PROTECTED_SENTINEL},
         document_text=_PRIVATE_TEXT,
-        secret=_PRIVATE_SECRET,
+        secret=_PROTECTED_SENTINEL,
     )
 
 
@@ -258,9 +303,9 @@ def _reconciliation(
         bucket_id=bucket_id,
         subject_key=subject_key,
         source_url=_PRIVATE_URL,
-        raw_evidence={"secret": _PRIVATE_SECRET},
+        raw_evidence={"secret": _PROTECTED_SENTINEL},
         document_text=_PRIVATE_TEXT,
-        secret=_PRIVATE_SECRET,
+        secret=_PROTECTED_SENTINEL,
     )
 
 
@@ -287,21 +332,29 @@ def _overview(
         source_url=_PRIVATE_URL,
         concept=_PRIVATE_CONCEPT,
         document_text=_PRIVATE_TEXT,
-        raw_evidence={"secret": _PRIVATE_SECRET},
-        secret=_PRIVATE_SECRET,
+        raw_evidence={"secret": _PROTECTED_SENTINEL},
+        secret=_PROTECTED_SENTINEL,
     )
 
 
-def _projection(**kwargs: object):
+def _projection(
+    *,
+    overview: tuple[AeatSyncWorkspaceOverviewRowV1, ...] | None = None,
+    census: tuple[AeatSyncWorkspaceCensusRowV1, ...] | None = None,
+    filed_declarations: tuple[AeatSyncWorkspaceFiledDeclarationRowV1, ...] | None = None,
+    notifications: tuple[AeatSyncWorkspaceNotificationRowV1, ...] | None = None,
+    evidence_comparison: tuple[AeatSyncWorkspaceEvidenceComparisonRowV1, ...] | None = None,
+    reconciliation: tuple[AeatSyncWorkspaceReconciliationRowV1, ...] | None = None,
+) -> AeatSyncWorkspaceProjectionV1:
     return project_aeat_sync_workspace(
         bucket_id=_BUCKET,
         zone_observations=_observations(),
-        overview=kwargs.get("overview", (_overview(),)),
-        census=kwargs.get("census", (_census(),)),
-        filed_declarations=kwargs.get("filed_declarations", (_filed(),)),
-        notifications=kwargs.get("notifications", (_notification(),)),
-        evidence_comparison=kwargs.get("evidence_comparison", (_comparison(),)),
-        reconciliation=kwargs.get("reconciliation", (_reconciliation(),)),
+        overview=overview if overview is not None else (_overview(),),
+        census=census if census is not None else (_census(),),
+        filed_declarations=filed_declarations if filed_declarations is not None else (_filed(),),
+        notifications=notifications if notifications is not None else (_notification(),),
+        evidence_comparison=evidence_comparison if evidence_comparison is not None else (_comparison(),),
+        reconciliation=reconciliation if reconciliation is not None else (_reconciliation(),),
     )
 
 
@@ -344,7 +397,7 @@ def test_serialization_is_redacted_by_construction_and_projection_is_frozen() ->
         _PRIVATE_URL,
         _PRIVATE_TEXT,
         _PRIVATE_CERTIFICATE,
-        _PRIVATE_SECRET,
+        _PROTECTED_SENTINEL,
         "name",
         "nif",
         "concept",
@@ -381,11 +434,12 @@ def test_independent_filing_axes_allow_local_only_and_aeat_only_observations() -
         AeatSyncAeatObservationState.NOT_OBSERVED,
         AeatSyncAeatObservationState.ACCEPTED,
     )
-    with pytest.raises(ValidationError, match="unobserved AEAT filing"):
+    with pytest.raises(ValidationError, match="justificante cannot be confident"):
         _filed(
             local_state=AeatSyncLocalFilingState.FILED,
             aeat_state=AeatSyncAeatObservationState.NOT_OBSERVED,
-        ).model_copy(update={"justificante_state": AeatSyncJustificanteState.AVAILABLE})
+            justificante_state=AeatSyncJustificanteState.AVAILABLE,
+        )
 
 
 def test_availability_freshness_and_known_empty_are_distinct() -> None:
@@ -438,7 +492,7 @@ def test_duplicate_identity_scope_and_contradiction_validation() -> None:
     with pytest.raises(AeatSyncWorkspaceProjectionError, match="mix subjects"):
         _projection(census=(_census(subject_key="subject-b"),))
     with pytest.raises(ValidationError, match="discrepancy kind"):
-        _comparison().model_copy(update={"discrepancy_kind": AeatSyncDiscrepancyKind.NONE})
+        _comparison(discrepancy_kind=AeatSyncDiscrepancyKind.NONE)
 
 
 def test_deterministic_ordering_and_action_order_are_independent_of_input_order() -> None:
@@ -477,21 +531,10 @@ def test_deterministic_ordering_and_action_order_are_independent_of_input_order(
 def test_defining_module_has_no_adapter_filesystem_network_or_tui_import() -> None:
     path = Path(__file__).parents[1] / "workspace.py"
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    imports = {
-        alias.name
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Import)
-        for alias in node.names
-    } | {
-        node.module or ""
-        for node in ast.walk(tree)
-        if isinstance(node, ast.ImportFrom)
+    imports = {alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names} | {
+        node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)
     }
     forbidden = ("adapters", "entrypoints", "pathlib", "requests", "httpx", "socket", "tui", "network")
     assert not any(term in imported for imported in imports for term in forbidden)
-    calls = {
-        node.func.id
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
-    }
+    calls = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
     assert calls.isdisjoint({"open", "print", "input"})

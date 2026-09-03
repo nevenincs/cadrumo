@@ -649,13 +649,19 @@ def project_aeat_sync_workspace(
                 f"non-observable AEAT Sync {zone.value} carries confident rows",
             )
 
+    projected_overview = _ordered_overview(overview)
+    projected_census = _ordered_census(census)
+    projected_filed_declarations = _ordered_filed_declarations(filed_declarations)
+    projected_notifications = _ordered_notifications(notifications)
+    projected_evidence_comparison = _ordered_comparisons(evidence_comparison)
+    projected_reconciliation = _ordered_reconciliations(reconciliation)
     projected = {
-        AeatSyncWorkspaceZone.OVERVIEW: _ordered_overview(overview),
-        AeatSyncWorkspaceZone.CENSUS: _ordered_census(census),
-        AeatSyncWorkspaceZone.FILED_DECLARATIONS: _ordered_filed_declarations(filed_declarations),
-        AeatSyncWorkspaceZone.NOTIFICATIONS: _ordered_notifications(notifications),
-        AeatSyncWorkspaceZone.EVIDENCE_COMPARISON: _ordered_comparisons(evidence_comparison),
-        AeatSyncWorkspaceZone.RECONCILIATION: _ordered_reconciliations(reconciliation),
+        AeatSyncWorkspaceZone.OVERVIEW: projected_overview,
+        AeatSyncWorkspaceZone.CENSUS: projected_census,
+        AeatSyncWorkspaceZone.FILED_DECLARATIONS: projected_filed_declarations,
+        AeatSyncWorkspaceZone.NOTIFICATIONS: projected_notifications,
+        AeatSyncWorkspaceZone.EVIDENCE_COMPARISON: projected_evidence_comparison,
+        AeatSyncWorkspaceZone.RECONCILIATION: projected_reconciliation,
     }
     zones = tuple(
         AeatSyncWorkspaceZoneStateV1(
@@ -671,12 +677,12 @@ def project_aeat_sync_workspace(
     return AeatSyncWorkspaceProjectionV1(
         bucket_id=bucket_id,
         zones=zones,
-        overview=projected[AeatSyncWorkspaceZone.OVERVIEW],
-        census=projected[AeatSyncWorkspaceZone.CENSUS],
-        filed_declarations=projected[AeatSyncWorkspaceZone.FILED_DECLARATIONS],
-        notifications=projected[AeatSyncWorkspaceZone.NOTIFICATIONS],
-        evidence_comparison=projected[AeatSyncWorkspaceZone.EVIDENCE_COMPARISON],
-        reconciliation=projected[AeatSyncWorkspaceZone.RECONCILIATION],
+        overview=projected_overview,
+        census=projected_census,
+        filed_declarations=projected_filed_declarations,
+        notifications=projected_notifications,
+        evidence_comparison=projected_evidence_comparison,
+        reconciliation=projected_reconciliation,
     )
 
 
