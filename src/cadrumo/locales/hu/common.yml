@@ -1403,6 +1403,15 @@ tui:
     unavailable:
       title: A főkönyvi terület nem érhető el
   root:
+    account:
+      appearance: Megjelenés
+      change_user: Felhasználóváltás
+      default_profile: Fiók
+      language: Nyelv
+      password: Jelszó
+      profile: Profil
+      sign_out: Kijelentkezés
+      unavailable: A fiókvezérlők ebben a munkamenetben nem érhetők el.
     no_areas: Ebben a munkamenetben még egyetlen terület sem érhető el.
     title: Cadrumo terminálmunkamenet
   search:

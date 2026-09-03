@@ -149,6 +149,7 @@ class InstalledWorkbenchRootCompositionV1:
     refresh_home: Callable[[], HomeProjectionV1]
     search_inputs: InstalledWorkbenchSearchInputsV1 | None
     refresh_search_inputs: InstalledWorkbenchSearchInputsProviderV1
+    account_factories: AccountFactoriesV1
 
 
 type InstalledWorkbenchRootInputsProviderV1 = Callable[
@@ -555,6 +556,7 @@ def compose_installed_workbench_root(
         refresh_home=inputs.refresh_home,
         search_inputs=inputs.search_inputs,
         refresh_search_inputs=inputs.refresh_search_inputs,
+        account_factories=inputs.account_factories,
     )
 
 
@@ -617,6 +619,7 @@ async def _run_root_session(
             refresh_home=root.refresh_home,
             workbench_search_service=service,
             refresh_workbench_search=refresh_search,
+            account_factories=root.account_factories,
         ).run_async(headless=headless, auto_pilot=auto_pilot)
 
 

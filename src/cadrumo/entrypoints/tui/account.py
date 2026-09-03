@@ -11,7 +11,9 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from textual.app import App
 
@@ -22,6 +24,7 @@ from .secret.login import LoginScreen
 from .secret.passphrase import PassphraseChangeAttempt, PassphraseScreen
 
 if TYPE_CHECKING:
+    from ...application.operations.composition import OperationComposedServices
     from ...application.user_profile.acquisition_sources import (
         AcquisitionSourceCredentialPostureV1,
         ProfileAcquisitionSourceV1,
@@ -38,6 +41,33 @@ type AccountPasswordFactoryV1 = Callable[[], PassphraseScreen]
 type AccountAppearanceFactoryV1 = Callable[[App[None]], str]
 type AccountLanguageFactoryV1 = Callable[[ProfileManagerScreen], None]
 type AccountSignOutFactoryV1 = Callable[[], Awaitable[OperationController]]
+
+
+class AccountRecomposeReasonV1(StrEnum):
+    """Why the current profile-bound workbench must be discarded."""
+
+    CHANGE_USER = "change_user"
+    SIGNED_OUT = "signed_out"
+    EXPIRED = "expired"
+
+
+@dataclass(frozen=True, slots=True)
+class AccountRecomposeRequiredV1:
+    """Non-secret handoff asking the outer bootstrap owner for a fresh root."""
+
+    reason: AccountRecomposeReasonV1
+    profile_id: str | None = None
+    profile_label: str | None = None
+
+    def __post_init__(self) -> None:
+        """Keep handover identity complete and prohibit it on close outcomes."""
+        has_profile = self.profile_id is not None or self.profile_label is not None
+        if self.reason is AccountRecomposeReasonV1.CHANGE_USER:
+            if not self.profile_id or not self.profile_label:
+                raise ValueError("change-user recomposition requires the authenticated profile identity")
+            return
+        if has_profile:
+            raise ValueError("closed-session recomposition cannot retain a profile identity")
 
 
 @dataclass(frozen=True, slots=True)
@@ -112,6 +142,33 @@ def compose_account_factories(
     )
 
 
+def compose_profile_sign_out_factory(
+    services: OperationComposedServices,
+    *,
+    profile_id: str,
+    actor_ref: str = "operator:tui-account",
+) -> AccountSignOutFactoryV1:
+    """Bind the canonical strong-close operation to the current profile.
+
+    The returned door submits only when invoked.  Starting and observing stay
+    with the existing operation modal, so composition performs no operation,
+    persistence, or credential work.
+    """
+    from ...application.user_profile.operations import build_profile_logout_operation_request
+    from .operations.controller import OperationController
+
+    parsed_profile_id = UUID(profile_id)
+
+    async def sign_out() -> OperationController:
+        submission = await services.submission.submit(
+            build_profile_logout_operation_request(parsed_profile_id),
+            actor_ref=actor_ref,
+        )
+        return OperationController(services=services, submission=submission, actor_ref=actor_ref)
+
+    return sign_out
+
+
 __all__ = [
     "AccountAppearanceFactoryV1",
     "AccountChangeUserFactoryV1",
@@ -119,6 +176,9 @@ __all__ = [
     "AccountLanguageFactoryV1",
     "AccountPasswordFactoryV1",
     "AccountProfileFactoryV1",
+    "AccountRecomposeReasonV1",
+    "AccountRecomposeRequiredV1",
     "AccountSignOutFactoryV1",
     "compose_account_factories",
+    "compose_profile_sign_out_factory",
 ]

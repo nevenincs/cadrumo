@@ -14,21 +14,22 @@ from typing import TYPE_CHECKING, ClassVar, override
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.containers import Vertical
+from textual.containers import Horizontal, ItemGrid, Vertical
 from textual.screen import Screen
-from textual.widgets import Footer, Static
+from textual.widgets import Button, Footer, Static
 
 from ...application.overview.home import HomeSessionPosture
-from ...application.search.workbench import WorkbenchDestinationAdmissionState
 from ...core.i18n.render import tr
+from ...core.operations import OperationTerminalCondition
+from .account import AccountFactoriesV1, AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from .components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
 from .home import HomeBackRequested, HomeScreen, HomeTarget, HomeTargetSelected
 from .navigation import (
-    TuiDestinationAdmissionV1,
     TuiDestinationCatalogueV1,
-    TuiDestinationRouteV1,
     TuiNavigationTargetV1,
+    TuiScreenContextV1,
 )
+from .operations.modal import OperationModal, OperationModalOutcomeV1, OperationModalSettledOutcomeV1
 from .search import WorkbenchCommandProviderV1, WorkbenchSearchDoorV1, WorkbenchSearchProviderV1
 
 if TYPE_CHECKING:
@@ -40,30 +41,23 @@ type HomeRefreshDoorV1 = Callable[[], HomeProjectionV1]
 type WorkbenchSearchRefreshDoorV1 = Callable[[], WorkbenchSearchDoorV1]
 
 
-def _expired_session_catalogue(catalogue: TuiDestinationCatalogueV1) -> TuiDestinationCatalogueV1:
-    """Disable every non-Home route in the catalogue after session expiry."""
-    routes: list[TuiDestinationRouteV1] = []
-    for route in catalogue.routes:
-        if route.descriptor.destination == "workbench.home":
-            routes.append(route)
-            continue
-        routes.append(
-            TuiDestinationRouteV1(
-                descriptor=route.descriptor,
-                admission=TuiDestinationAdmissionV1(
-                    destination=route.descriptor.destination,
-                    state=WorkbenchDestinationAdmissionState.LOCKED,
-                    reason_code="session.expired",
-                ),
-            )
-        )
-    return TuiDestinationCatalogueV1(routes)
-
-
-class CadrumoTuiApp(App[None]):
+class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
     """Host one composed TUI session and whichever areas are joinable."""
 
-    CSS = tokenised(BASE_CSS)
+    CSS = tokenised(
+        BASE_CSS
+        + """
+    #root-account-bar { width: 100%; height: auto; }
+    #root-account { width: 1fr; height: auto; padding: 1 2; text-style: bold; }
+    #root-account-actions {
+        width: 4fr;
+        height: auto;
+        grid-gutter: 0 1;
+    }
+    #root-account-actions Button { width: 1fr; min-width: 0; margin: 0; }
+    #root-account-refusal { height: auto; color: $warning; padding: 0 2; }
+    """
+    )
 
     BINDINGS: ClassVar = [
         Binding("f3", "toggle_appearance", "", show=False),
@@ -79,6 +73,7 @@ class CadrumoTuiApp(App[None]):
         refresh_home: HomeRefreshDoorV1 | None = None,
         workbench_search_service: WorkbenchSearchDoorV1 | None = None,
         refresh_workbench_search: WorkbenchSearchRefreshDoorV1 | None = None,
+        account_factories: AccountFactoriesV1 | None = None,
     ) -> None:
         """Bind the root to the operation services composed for this session."""
         super().__init__()
@@ -88,6 +83,7 @@ class CadrumoTuiApp(App[None]):
         self._refresh_home = refresh_home
         self._workbench_search_service = workbench_search_service
         self._refresh_workbench_search = refresh_workbench_search
+        self._account_factories = account_factories
         self._workbench_search_refusal_code: str | None = (
             None if workbench_search_service is not None else "workbench.search.unavailable"
         )
@@ -122,19 +118,101 @@ class CadrumoTuiApp(App[None]):
     def compose(self) -> ComposeResult:
         with Vertical(id="root-shell"):
             yield Static(tr("tui.root.title"), id="root-title", markup=False)
-            yield Static("", id="root-account", markup=False)
+            with Horizontal(id="root-account-bar"):
+                yield Static("", id="root-account", markup=False)
+                with ItemGrid(id="root-account-actions", min_column_width=12):
+                    yield Button(tr("tui.root.account.change_user"), id="root-change-user")
+                    yield Button(tr("tui.root.account.password"), id="root-password")
+                    yield Button(tr("tui.root.account.profile"), id="root-profile")
+                    yield Button(tr("tui.root.account.appearance"), id="root-appearance")
+                    yield Button(tr("tui.root.account.language"), id="root-language")
+                    yield Button(tr("tui.root.account.sign_out"), id="root-sign-out")
+            yield Static("", id="root-account-refusal", markup=False)
             yield Static(tr("tui.root.no_areas"), id="root-no-areas", markup=False)
         yield Footer()
 
     def on_mount(self) -> None:
         """Install the shared appearance for this session."""
         install_cadrumo_themes(self)
+        if self._account_factories is None:
+            self._refuse_account_action()
+            for button in self.query("#root-account-actions Button"):
+                button.disabled = True
         if self._destination_catalogue is not None and self._refresh_home is not None:
             self._show_home(None)
 
     def action_toggle_appearance(self) -> None:
         """Flip between the light and dark appearance."""
         toggle_appearance(self)
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Dispatch account chrome only through the injected existing owners."""
+        factories = self._account_factories
+        if factories is None:
+            self._refuse_account_action()
+            return
+        match event.button.id:
+            case "root-change-user":
+                self.push_screen(factories.change_user(), self._on_change_user_dismissed)
+            case "root-password":
+                self.push_screen(factories.password())
+            case "root-profile":
+                self.navigate_to(TuiNavigationTargetV1(destination="workbench.profile"))
+            case "root-appearance":
+                factories.appearance(self)  # type: ignore[arg-type]
+            case "root-language":
+                screen = factories.profile(
+                    TuiScreenContextV1(destination="workbench.profile")
+                )
+                self._replace_destination(screen, return_to_home=True)
+                self.call_after_refresh(factories.language, screen)
+            case "root-sign-out":
+                self.run_worker(self._open_sign_out(), name="account-sign-out", exclusive=True)
+
+    def _on_change_user_dismissed(self, outcome: object | None) -> None:
+        """Accept only the real Login owner's non-secret authenticated result."""
+        from ...application.user_profile.login_session import ProfileLoginOutcome
+
+        if not isinstance(outcome, ProfileLoginOutcome):
+            return
+        self._request_recompose(
+            AccountRecomposeRequiredV1(
+                reason=AccountRecomposeReasonV1.CHANGE_USER,
+                profile_id=str(outcome.bucket_id),
+                profile_label=outcome.label,
+            )
+        )
+
+    async def _open_sign_out(self) -> None:
+        """Submit strong close and hand observation to the canonical modal."""
+        factories = self._account_factories
+        if factories is None:
+            self._refuse_account_action()
+            return
+        try:
+            controller = await factories.sign_out()
+        except Exception:
+            self._refuse_account_action()
+            return
+        self.push_screen(OperationModal(controller), self._on_sign_out_dismissed)
+
+    def _on_sign_out_dismissed(self, outcome: OperationModalOutcomeV1 | None) -> None:
+        """Rebootstrap only after the canonical operation reports success."""
+        if (
+            isinstance(outcome, OperationModalSettledOutcomeV1)
+            and outcome.view_model.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+        ):
+            self._request_recompose(
+                AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.SIGNED_OUT)
+            )
+            return
+        if outcome is not None:
+            self._refuse_account_action()
+
+    def _refuse_account_action(self) -> None:
+        """Expose one localized fail-closed message without exception details."""
+        if self.is_mounted:
+            self.query_one("#root-account-refusal", Static).update(tr("tui.root.account.unavailable"))
 
     def navigate_to(self, target: TuiNavigationTargetV1, /) -> None:
         """Mount only the current admitted destination with its semantic focus."""
@@ -161,14 +239,15 @@ class CadrumoTuiApp(App[None]):
         if refresh_home is None:
             return
         projection = refresh_home()
-        self.query_one("#root-account", Static).update(projection.account.profile_label or "Account")
+        self.query_one("#root-account", Static).update(
+            projection.account.profile_label or tr("tui.root.account.default_profile")
+        )
         self.query_one("#root-no-areas", Static).display = False
+        if projection.account.posture is HomeSessionPosture.EXPIRED:
+            self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
+            return
         if self._destination_catalogue is not None:
-            self._active_destination_catalogue = (
-                _expired_session_catalogue(self._destination_catalogue)
-                if projection.account.posture is HomeSessionPosture.EXPIRED
-                else self._destination_catalogue
-            )
+            self._active_destination_catalogue = self._destination_catalogue
         self._active_target = None
         self._replace_destination(HomeScreen(projection, restore_target=semantic_focus))
 
@@ -194,6 +273,18 @@ class CadrumoTuiApp(App[None]):
         while len(self.screen_stack) > 1:
             self.pop_screen()
         self.push_screen(screen, self._on_destination_dismissed if return_to_home else None)
+
+    def _request_recompose(self, outcome: AccountRecomposeRequiredV1) -> None:
+        """Sever every profile-bound capability before returning to bootstrap."""
+        self._account_factories = None
+        self._destination_catalogue = None
+        self._active_destination_catalogue = None
+        self._refresh_home = None
+        self._workbench_search_service = None
+        self._refresh_workbench_search = None
+        self._active_target = None
+        self._home_semantic_focus = None
+        self.exit(outcome)
 
 
 __all__ = ["CadrumoTuiApp", "HomeRefreshDoorV1", "WorkbenchSearchRefreshDoorV1"]
