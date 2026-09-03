@@ -10,7 +10,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:2e4964aa8e667a6bd686314a52daa07cb7a05f719e750ab8707f508e23587a82'
+body_hash: 'sha256:4d9d6cad01f33e8e332db1cbaaba5df4bcbf10ff791710b58c8e2b22b5a3e678'
 ---
 
 # `modelo-200-semantic-crosswalk` plan
@@ -69,7 +69,7 @@ Resolve legal-catalogue gaps against applicable 2024 authority before semantic r
 
 - [x] `W03.P05.S09` - Derive the source-bound legal worklist with applicability-window and unresolved-reference evidence; `dev/registry/analysis/m200_2024_full_reconciliation.py`.
 - [x] `W03.P05.S10` - Author reviewed 2024-applicable legal catalogue entries and anchors for the closed worklist; `src/cadrumo/_data/registry/aeat/legal/`.
-- [ ] `W03.P05.S11` - Enforce legal resolution, target-window coverage, anchor reachability, and rejection of later-year substitution; `dev/registry/tests/test_m200_2024_full_reconciliation.py`.
+- [x] `W03.P05.S11` - Enforce legal resolution, target-window coverage, anchor reachability, and rejection of later-year substitution; `dev/registry/tests/test_m200_2024_full_reconciliation.py`.
 
 ### Phase `W03.P06` - record closed semantic adjudication families
 

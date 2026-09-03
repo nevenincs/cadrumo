@@ -224,6 +224,75 @@ def test_modelo_200_orden_governed_period_is_verified_against_its_bundled_boe_te
     assert legal.governs_periods_to == subject.TARGET_VALID_TO
     assert "períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2024" in legal.required_text
 
+
+def test_legal_worklist_refuses_missing_unknown_wrong_and_later_year_authority() -> None:
+    wrong_provision = SimpleNamespace(
+        id="ley-27-2014:art-30",
+        effective_from=date(2015, 1, 1),
+        effective_to=None,
+        governs_periods_from=None,
+        governs_periods_to=None,
+    )
+    with pytest.raises(RegistryValidationError, match="provision mismatch"):
+        subject._legal_worklist_partition(
+            ("ley-27-2014:art-29",),
+            {"ley-27-2014:art-29": wrong_provision},
+            subject.TARGET_VALID_FROM,
+            subject.TARGET_VALID_TO,
+        )
+
+    missing = subject._legal_worklist_item(
+        evidence_home="declaration",
+        subject_id="missing",
+        legal_refs=(),
+        legal={},
+        source_ref=subject.TARGET_SOURCE_REF,
+        source_sha256=subject.TARGET_SOURCE_SHA256,
+        valid_from=subject.TARGET_VALID_FROM,
+        valid_to=subject.TARGET_VALID_TO,
+    )
+    unknown = subject._legal_worklist_item(
+        evidence_home="semantic_map",
+        subject_id="unknown",
+        legal_refs=("missing-legal-ref",),
+        legal={},
+        source_ref=subject.TARGET_SOURCE_REF,
+        source_sha256=subject.TARGET_SOURCE_SHA256,
+        valid_from=subject.TARGET_VALID_FROM,
+        valid_to=subject.TARGET_VALID_TO,
+    )
+    later_year_substitute = SimpleNamespace(
+        id="ley-27-2014:dt-44",
+        effective_from=date(2025, 1, 1),
+        effective_to=None,
+        governs_periods_from=None,
+        governs_periods_to=None,
+    )
+    out_of_window = subject._legal_worklist_item(
+        evidence_home="declaration",
+        subject_id="later-year-substitute",
+        legal_refs=("ley-27-2014:dt-44",),
+        legal={"ley-27-2014:dt-44": later_year_substitute},
+        source_ref=subject.TARGET_SOURCE_REF,
+        source_sha256=subject.TARGET_SOURCE_SHA256,
+        valid_from=subject.TARGET_VALID_FROM,
+        valid_to=subject.TARGET_VALID_TO,
+    )
+    assert missing.state == "missing_provenance"
+    assert unknown.unknown_legal_refs == ("missing-legal-ref",)
+    assert out_of_window.out_of_window_legal_refs == ("ley-27-2014:dt-44",)
+    with pytest.raises(RegistryValidationError, match="missing=1, unknown=1, out_of_window=1"):
+        subject.require_closed_m200_2024_legal_worklist(
+            subject.M200LegalWorklist(
+                source_ref=subject.TARGET_SOURCE_REF,
+                source_sha256=subject.TARGET_SOURCE_SHA256,
+                revision_valid_from=subject.TARGET_VALID_FROM,
+                revision_valid_to=subject.TARGET_VALID_TO,
+                items=(missing, unknown, out_of_window),
+            )
+        )
+
+
 def test_source_rebind_plan_is_complete_target_map_owned_and_refuses_only_true_orphans(source_rebind_plan) -> None:
     assert source_rebind_plan.source_ref == subject.TARGET_SOURCE_REF
     assert source_rebind_plan.source_sha256 == subject.TARGET_SOURCE_SHA256
