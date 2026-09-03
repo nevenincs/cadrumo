@@ -83,3 +83,26 @@ def test_every_filing_finding_names_a_revision_declaring_filing_grade() -> None:
         assert item.filing_findings <= item.findings
         assert item.filing_revisions <= item.revisions
         assert item.unmeasured <= item.findings
+
+
+def test_a_census_entry_point_is_visible_beside_its_runner_count() -> None:
+    """A screen returning a census is not reported as if it returned findings.
+
+    The wire-type screen's entry point returns every casilla-to-wire transition
+    it examined, carrying a divergent flag: thousands of rows, of which a few
+    dozen are findings. Nothing in the shape distinguishes that from a screen
+    whose every row is a finding, so both counts are carried and the gap is the
+    reader's signal. The first version of this report carried only the first and
+    overstated that screen by a factor of nearly five hundred.
+    """
+    authority = bundled_authority()
+    modelo_ids = bundled_modelo_ids()
+    exposures = condition_exposure(authority, modelo_ids)
+    by_screen = {item.screen: item for item in exposures if item.screen == "wire_type_compatibility"}
+    assert by_screen, "the wire-type screen reported nothing, so this proves nothing"
+    census = by_screen["wire_type_compatibility"]
+    assert census.findings > census.runner_findings * 10
+    # Every condition carries its screen's runner count, so the comparison is
+    # available for all of them and not only the one that motivated it.
+    assert all(item.runner_findings >= 0 for item in exposures)
+    assert any(item.findings == item.runner_findings for item in exposures)

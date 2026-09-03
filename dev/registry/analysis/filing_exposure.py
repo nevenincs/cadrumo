@@ -11,6 +11,20 @@ campaign - of the deadline conditions, the unscaled monetary fields, the
 published trees and the grade findings - and each time it reordered what
 mattered. This asks it of every condition at once.
 
+A screen's entry point does not always return findings. Three shapes exist and
+they are not distinguishable from the outside: most screens return findings; the
+provenance screen returns findings that its runner entry projects onto a
+different unit; and the wire-type screen returns a CENSUS of every
+casilla-to-wire transition it examined, carrying a ``divergent`` flag, of which
+13,624 rows are 29 findings. Counting a census as findings overstates that
+screen by a factor of nearly five hundred, which the first version of this
+report did.
+
+There is no declaration to read the difference from, so both counts are carried:
+the population the entry point returned, and what the runner reports for the
+same screen. Where they diverge sharply the entry point is a census and the
+exposure figure describes rows examined rather than defects met.
+
 This is not a screen. It reports about the screens rather than about the
 registry, its unit is a condition rather than a modelo, and it therefore
 declares no screen entry point and is enrolled in no runner table. What it
@@ -65,6 +79,10 @@ class ConditionExposure:
     filing_findings: int
     revisions: int
     filing_revisions: int
+    #: What the runner reports for this screen, across all its conditions. A
+    #: population far larger than this one means the entry point returned a
+    #: census rather than findings, and the exposure above counts rows examined.
+    runner_findings: int = 0
     #: Findings carrying no revision, which were never measured against grade.
     #: Kept separate from a measured zero: several screens report per modelo or
     #: per design because that is their unit - a continuity chain spans
@@ -97,6 +115,10 @@ def condition_exposure(
     figure - a continuity chain spans revisions, so asking which one it sits in
     has no answer, and guessing would report an exposure nobody measured.
     """
+    from .screens import CORPUS_SCREENS, SCREENS
+
+    runner: dict[str, int] = {entry.name: len(tuple(entry.run(authority, modelo_ids))) for entry in SCREENS}
+    runner.update({entry.name: len(tuple(entry.run())) for entry in CORPUS_SCREENS})
     filing = filing_grade_revisions(authority, modelo_ids)
     totals: collections.Counter[tuple[str, str]] = collections.Counter()
     filing_totals: collections.Counter[tuple[str, str]] = collections.Counter()
@@ -133,6 +155,7 @@ def condition_exposure(
                     revisions=len(units[(screen, kind)]),
                     filing_revisions=len(filing_units[(screen, kind)]),
                     unmeasured=unmeasured[(screen, kind)],
+                    runner_findings=runner.get(screen, 0),
                 )
                 for (screen, kind), count in totals.items()
             ),
@@ -151,6 +174,7 @@ def main() -> int:
             f"filing_exposure screen={item.screen} kind={item.kind} findings={item.findings} "
             f"filing_findings={item.filing_findings} revisions={item.revisions} "
             f"filing_revisions={item.filing_revisions} unmeasured={item.unmeasured} "
+            f"runner_findings={item.runner_findings} "
             f"wholly_below_filing={str(item.wholly_below_filing).lower()}\n"
         )
     exposed = [item for item in exposures if item.filing_findings]
