@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:8fc8fcda9d5eceef872bfb85e95936f5eb5c82e67211bbd5cb13029bfe3b1047'
+body_hash: 'sha256:493af6a8d7a605bf792609113da2dd124d8802327e32ca2134d37e699c4deb92'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -509,6 +509,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S271` - Retire the self-referential criteria count and distinguish live figures from historical ones; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S272` - Derive the no-layout refusal fixture instead of naming a revision that has since been published; `dev/registry/tests/test_render_check.py`.
 - [x] `W06.P13.S273` - Record what must replace the name-window test pinned to a revision the plan has an open Step to rename; `dev/registry/tests/test_revision_name_window.py`.
+- [x] `W06.P13.S274` - Give every test pinned to a stepped defect its replacement instruction; `dev/registry/tests/test_revision_name_window.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

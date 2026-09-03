@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:cc300b46e7395e300bf9608ba402d5963469afaa075b6d2a4ecb6c69f05d5ed3'
+body_hash: 'sha256:593e1c98af32eb2bb1768da2fdf267dc15a12c92d3c975366b4491800682ada6'
 related: []
 ---
 # `code-duplication` audit: `ledger invoice lifecycle command specification consolidation`
@@ -15,6 +15,8 @@ related: []
 Reviewed committed change `699d3df4d7`, which replaces repeated frozen `ArgumentSpec` and `OptionSpec` construction within the ledger invoice lifecycle command declarations with shared records and adds an exact lifecycle contract test. The audit compared every shared field and insertion offset against the parent commit; checked frozen-record and tuple immutability; compared the resulting declarations with the ledger invoice intake surface; and ran the focused test, Ruff, `ty`, and the repository-owned duplication audit.
 
 Successor re-review covered `8e996268ca` and `b4c913ff31`: the new public common-parameter module, the live intake/lifecycle object identities, retained command-specific facts, the expanded exact contract test, type and lint gates, and the whole-tree duplication scan.
+
+Final re-review covered `b12b2aaece`: all remaining substitutable invoice-add and invoice-wizard parameter records, their identity and immutability contracts, the distinct counterparty-NIF and update-notes semantics, the changed-file quality gates, and the current whole-tree clone measurement.
 
 ## Findings
 
@@ -34,6 +36,12 @@ The successors move `iva_category` and the seven metadata options into the publi
 
 The successor does not resolve the full intake/lifecycle clone family. After excluding the deliberately different `counterparty_nif`, `invoice add` and `invoice wizard` have 18 parameters with the same names and complete equality. Eight are now shared, but ten remain separate equal objects: `kind`, `counterparty_name`, `invoice_number`, `invoice_date`, `taxable_base`, `country_code`, `iva_rate`, `currency`, `recargo`, and `notes`. The fresh repository-owned scan reports 79 clones (0.38%) but still names target intake/lifecycle clones of 21, 123, and 37 lines. These are not command-specific facts: all ten declarations, defaults, help metadata, and positions relative to their nonshared `counterparty_nif` are independently equal. The test asserts their values but not their intended canonical identity, so a future edit can drift the two creation doors.
 
+### final-add-wizard-parameter-authority | low | The remaining eighteen equal creation parameters now share one immutable identity
+
+Commit `b12b2aaece` adds the ten residual records to the public common-parameter owner and consumes them at their original offsets in `add` and `wizard`. A direct current-tree probe confirms exactly eighteen equal add/wizard parameters, each the identical frozen `OptionSpec` object. The committed focused contract test covers the same complete field projection and each shared slice. `counterparty_nif` remains separate because add accepts a literal `None` default while wizard requires it; update notes remains a separate `None`-default option while add and wizard share the empty-string creation option. The current global clone scan reports 72 advisory clusters across 1,959 analysed files; none joins the prior add/wizard or intake/lifecycle parameter family. The five invoice-named residual groups pair evidence commands with distinct contracts and are outside this consolidation.
+
 ## Recommendations
 
 Do not approve the consolidation yet. Retain the public owner introduced by the successors, but extend it to own the ten remaining fully substitutable create-parameter records and consume them at the existing offsets in both `add` and `wizard`. Preserve the separate optional-versus-required `counterparty_nif` records and their current positions. Extend the identity assertion across every newly shared record, keep the complete literal contract projection, and rerun the focused suite, Ruff, `ty`, and the whole-tree duplication audit. The audit can be approved when the invoice intake/lifecycle clone family no longer appears in that scan or is backed by a documented, non-substitutable contract difference.
+
+Final re-review: the requested common-owner expansion and identity proof are complete, the non-substitutable NIF and notes contracts remain intact, and the prior blocked clone family is absent from the current global scan. Approve `b12b2aaece`; the unrelated evidence-command clone groups remain advisory scope outside this consolidation.

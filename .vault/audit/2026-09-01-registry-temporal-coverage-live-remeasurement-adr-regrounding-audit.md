@@ -6594,3 +6594,27 @@ because the direction it distinguishes is why the condition was split from its o
 The general form is small and worth stating plainly. A test pinned to a defect is a message to
 whoever fixes the defect, and a message that only says "assert equals" is not one. Fourteen
 tests in that module pass; the one that will fail on purpose now explains itself.
+
+### every-pin-to-a-stepped-defect-now-carries-its-replacement | medium | The three name-window tests pinned to defects the plan still owes a rename now each say what their failure means and what replaces them
+
+The previous finding recorded that one of the pinned tests had been given a
+replacement instruction and the others had not. All three now carry one:
+`name_opens_before_window` (modelo 185), `name_opens_after_window` (modelo 151),
+and the open-end condition (modelo 721, replaced by modelo 194, which sits in the
+same state for the same reason).
+
+Each instruction states the same four things: that the pin is deliberate, that
+the plan carries an open Step whose landing turns the test red, that the red is
+the correction rather than a regression, and what coordinate takes its place -
+naming a live successor where one exists and falling back to construction where
+none does. Each also says not to delete the test, because in every case the
+condition exists apart from a near-neighbour precisely to keep a direction or an
+exclusion visible, and deleting it would silence that distinction rather than
+retire it.
+
+The general form is worth stating once: a test pinned to a defect is a message
+to whoever repairs the defect. A pin that only asserts a coordinate leaves that
+reader a red test and no account of why it is red, which is how a correct fix
+gets reverted or a gate gets deleted to make a suite green. Fourteen tests pass
+in the module, exit 0, and the count of pins carrying an instruction equals the
+count of pins.
