@@ -19,12 +19,6 @@ from ..home import HomeScreen
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-def _targets(screen: HomeScreen) -> tuple[str, ...]:
-    return tuple(
-        str(row.key.value) for table in screen.query(DataTable) for row in cast("DataTable[str]", table).ordered_rows
-    )
-
-
 @pytest.mark.asyncio
 @pytest.mark.parametrize("size", ((80, 24), (120, 40)))
 @pytest.mark.parametrize("theme", (CADRUMO_LIGHT_THEME_NAME, CADRUMO_DARK_THEME_NAME))
@@ -55,21 +49,18 @@ async def test_home_renders_the_selected_due_driven_projection_without_overflow(
         )
         assert app.focused is not None and app.focused.id == "home-actions"
         rendered = screen_text(app, *size)
-    assert "Status: Active local session" in rendered
-    mounted_ids = tuple(widget.id for widget in screen.walk_children())
-    assert "home-ledger" in mounted_ids
-    assert "home-agenda-state" in mounted_ids
-    assert str(screen.query_one("#home-ledger", Static).render()).startswith("Available —")
-    assert str(screen.query_one("#home-agenda-state", Static).render()).startswith("Available")
-    assert len(projection.actions) <= 3
-    action_table = screen.query_one("#home-actions", DataTable)
-    assert tuple(
-        cast("DataTable[str]", action_table).get_row_at(index)[0] for index in range(action_table.row_count)
-    ) == (
-        "Review declaration",
-        "Classify Ledger entries",
-        "Add missing evidence",
-    )
+        assert "Status: Active local session" in rendered
+        assert str(screen.query_one("#home-ledger", Static).render()).startswith("Available —")
+        assert str(screen.query_one("#home-agenda-state", Static).render()).startswith("Available")
+        assert len(projection.actions) <= 3
+        action_table = screen.query_one("#home-actions", DataTable)
+        assert tuple(
+            cast("DataTable[str]", action_table).get_row_at(index)[0] for index in range(action_table.row_count)
+        ) == (
+            "Review declaration",
+            "Classify Ledger entries",
+            "Add missing evidence",
+        )
 
 
 @pytest.mark.asyncio

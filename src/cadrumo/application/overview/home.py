@@ -58,6 +58,26 @@ class HomeDeclarationState(StrEnum):
     DISCARDED = "discarded"
 
 
+class HomeTargetKind(StrEnum):
+    """Which Home zone a selected row came from.
+
+    One vocabulary that the production Home screen and the devtools candidate
+    prototypes had each written out.  The three members are the three
+    selectable zones of :class:`HomeProjectionV1`, so the projection that
+    defines those zones is where the vocabulary belongs; a frontend that
+    restates it can disagree with the projection it renders.
+    """
+
+    ACTION = "action"
+    """A row from the next-action zone."""
+
+    DECLARATION = "declaration"
+    """A row from the resumable-declaration zone."""
+
+    AGENDA = "agenda"
+    """A row from the agenda zone."""
+
+
 class HomeZoneState(BaseModel):
     """Authority and freshness state shared by every Home zone."""
 

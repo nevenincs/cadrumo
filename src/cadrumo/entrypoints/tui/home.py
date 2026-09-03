@@ -8,7 +8,7 @@ selections and owns any later destination or action hand-off.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import ClassVar, Final, Literal, cast, override
+from typing import ClassVar, Final, cast, override
 
 from textual import events
 from textual.app import ComposeResult
@@ -30,12 +30,11 @@ from ...application.overview.home import (
     HomeNextAction,
     HomeProjectionV1,
     HomeSessionPosture,
+    HomeTargetKind,
     HomeZoneState,
 )
 from .components.theme import BASE_CSS, tokenised
 from .components.widgets import ContentDataTable, ContentScroll
-
-type HomeTargetKind = Literal["action", "declaration", "agenda"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -297,7 +296,7 @@ class HomeScreen(Screen[None]):
         contexts: list[str] = []
         for item in projection.actions:
             reason, label, context = _action_cells(item)
-            actions.add_row(label, key=self._remember("action", _action_identity(item)))
+            actions.add_row(label, key=self._remember(HomeTargetKind.ACTION, _action_identity(item)))
             contexts.append(f"{label} — {reason} · {context}")
         actions.display = bool(projection.actions)
         self.query_one("#home-action-contexts", Static).update("\n".join(contexts))
@@ -307,7 +306,8 @@ class HomeScreen(Screen[None]):
         for item in projection.declarations:
             address, name, state = _declaration_cells(item)
             declarations.add_row(
-                f"{address} · {name} · {state}", key=self._remember("declaration", _declaration_identity(item))
+                f"{address} · {name} · {state}",
+                key=self._remember(HomeTargetKind.DECLARATION, _declaration_identity(item)),
             )
         declarations.display = bool(projection.declarations)
 
@@ -316,7 +316,10 @@ class HomeScreen(Screen[None]):
         evidence_rows: list[str] = []
         for item in projection.agenda:
             due, address, state = _agenda_cells(item)
-            agenda.add_row(f"{due} · {address} · {state}", key=self._remember("agenda", _agenda_identity(item)))
+            agenda.add_row(
+                f"{due} · {address} · {state}",
+                key=self._remember(HomeTargetKind.AGENDA, _agenda_identity(item)),
+            )
             evidence_rows.append(f"{address} — {_evidence_copy(item)}")
         agenda.display = bool(projection.agenda)
         self.query_one("#home-agenda-evidence", Static).update("\n".join(evidence_rows))
@@ -365,7 +368,8 @@ class HomeScreen(Screen[None]):
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         """Track a semantic target, never a row number."""
-        if event.data_table is self.focused:
+        table = cast("DataTable[str]", event.data_table)
+        if table is self.focused:
             self._highlight(event.row_key.value)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
@@ -381,4 +385,4 @@ class HomeScreen(Screen[None]):
         self.post_message(HomeBackRequested())
 
 
-__all__ = ["HomeBackRequested", "HomeScreen", "HomeTarget", "HomeTargetKind", "HomeTargetSelected"]
+__all__ = ["HomeBackRequested", "HomeScreen", "HomeTarget", "HomeTargetSelected"]
