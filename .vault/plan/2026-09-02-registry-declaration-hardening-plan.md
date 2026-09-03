@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:18c5f045d884b2a1d5e10751cd87ef8081304770cece6826ef0d01d7ddec5a09'
+body_hash: 'sha256:b757af10801e432adc4f4661b97ff7dfd2a376c7ab21a1d6e9ddd51161665ab4'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -425,6 +425,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S400` - Write the verification criterion for the note-evidence work and replace the unreproducible field counts the rules-authoring and figure-recovery steps carried, with every figure taken from a screen that can be re-run; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W04.P07.S401` - Enrol the three screens the note-evidence work added, which the standing enrolment and README-table gates both refused until done, and project the grounding screen onto its residue so the runner does not carry two adjacent rows agreeing by construction; `dev/registry/analysis/screens.py dev/registry/README.md`.
 - [x] `W04.P07.S402` - Widen the enrolment and README gates to discover a screen by either entry point, since two screens reading the design corpus present screen_corpus and the gate looking only for screen_authority passed while they sat unenrolled, and enrol them in a corpus table whose signature does not force arguments they ignore; `dev/registry/tests/test_declaration_invariant_gates.py dev/registry/analysis/screens.py dev/registry/README.md`.
+- [x] `W04.P07.S403` - Declare the screen entry points once and route all six gates through it, since five carried their own copy of the narrow test and three never checked a corpus screens kinds counts or identity, and carry the modelo on the corpus findings the widened identity gate then found in breach; `dev/registry/analysis/screens.py dev/registry/tests/test_declaration_invariant_gates.py dev/registry/analysis/note_label_scope.py dev/registry/analysis/unnumbered_note_scope.py`.
 
 ### Phase `W04.P08` - grade earned gate
 

@@ -10531,3 +10531,43 @@ later script, made the file look edited. The gate then failed with its ORIGINAL
 message text, which is what gave it away. A script that computes several edits
 and writes once loses all of them when any assertion fails, and the half-applied
 result is harder to see than an outright error.
+
+
+## The same blind spot was in five gates, and it is now in one declaration
+
+Widening the enrolment gate to notice a corpus screen was the visible half. The
+other half is that the narrow test was not written once. Five separate gates
+carried their own copy of "a screen is a module containing `def
+screen_authority(`", each written when that was the only entry point, and every
+one of them silently stopped covering a whole class of screen the day the second
+appeared. Two enrolment-shaped gates read the module tree; three more iterated
+the authority table alone, so the corpus screens' emitted kinds, condition
+counts and finding identity were never checked at all.
+
+The knowledge now lives in `SCREEN_ENTRY_POINTS` beside the tables, with
+`screen_module_names()` for the gates that inspect modules and
+`enrolled_screen_findings()` for those that inspect what screens emit. Adding a
+third entry point widens all six together. Discovery and enrolment agree at
+fifteen.
+
+### Widening the finding-identity gate found a real contract breach
+
+With the corpus screens in scope, the identity gate failed: neither
+`NoteLabelScopeFinding` nor `UnnumberedNoteScopeFinding` declared the modelo the
+contract promises every caller. That is exactly what the gate is for, and it had
+been unable to see them.
+
+The choice was to widen the contract or to satisfy it. Satisfying it is right
+here: a design transcription lives in its modelo's corpus directory, so the
+modelo is a fact about the file rather than something the screen would have to
+invent. Both findings now carry it, read by walking up to the first `modelo_`
+ancestor rather than at a fixed depth - two hundred and fourteen designs sit
+under `modelo_NNN/files/` and one sits directly under `modelo_210/`, and a fixed
+parent count would have returned `disenos_registro` for that one and reported it
+as a modelo.
+
+A transcription outside any modelo directory raises rather than receiving an
+empty or invented modelo. That refusal immediately failed three constructed-design
+tests writing into a bare temporary directory, which is the guard working: the
+fixtures now build `modelo_999/files/` and are as faithful about where a design
+lives as about what it contains.
