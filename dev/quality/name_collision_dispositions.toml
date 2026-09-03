@@ -113,3 +113,35 @@ Collapsing them would force the list command to repeat work it has already
 done. The shared name is defensible because the returned value is the same
 concept; only the path to it differs.
 """
+
+[extract_pages_text]
+class = "distinct_by_design"
+sites = ["adapters/inbound/borrador/_parsers/pdfplumber_backend.py", "adapters/inbound/declaracion/_parsers/pdfplumber_backend.py"]
+reason = """
+Two inbound families each expose a backend entry point of the same name, and
+both delegate to the shared pdfplumber primitive with different strategies -
+the declaration backend tries pypdfium2 first and validates canaries, the
+borrador backend does not. They are reached by module path, never by the bare
+name, and the parallel naming is what makes the two backends recognisable as
+the same role. No action owed.
+
+Restored after removal: this row was deleted while the collision it describes
+still existed, unlike the sibling row for the verdict extractor, which was
+removed correctly once that duplicate was collapsed.
+"""
+
+[declared_destination_ids]
+class = "distinct_rename_owed"
+sites = ["entrypoints/tui/modelo/routes.py", "entrypoints/tui/navigation.py"]
+reason = """
+Both read a closed destination set from a type alias through `get_args`, and
+they read DIFFERENT aliases: the modelo workspace destinations in one, the
+whole TUI's destinations in the other. The technique is shared, the subject is
+not, and the name says only "destinations".
+
+The first carries a docstring warning that a literal copy would be a second
+definition agreeing with the first only until it does not. That reasoning is
+right and does not cover this case: neither is a copy, and what a caller
+importing the wrong one gets is not a stale set but a different one. Each name
+should say which destinations it means.
+"""
