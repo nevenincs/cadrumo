@@ -33,7 +33,7 @@ from .projection_services import (
     UnavailableSnapshot,
     read_snapshot,
 )
-from .registry import OperationRegistry
+from .registry import OperationPublicContractSetV1, OperationRegistry
 from .secret_submission import OperationSecretRequirement
 from .supervisor import OperationSupervisor
 
@@ -87,8 +87,9 @@ class OperationSubmissionService:
 
 @dataclass(frozen=True, slots=True)
 class OperationComposedServices:
-    """The only service family a frontend composition result can expose."""
+    """The service family and exact public contracts of one registry graph."""
 
+    public_contracts: OperationPublicContractSetV1
     submission: OperationSubmissionService
     observation: OperationObservationService
     review: OperationReviewProjectionService
@@ -139,6 +140,7 @@ def compose_operation_services(
     it, so omitting it stays a refusal rather than a silently operand-less
     supervisor.
     """
+    public_contracts = registry.public_contract_set
     authority_broker = OperationResponseAuthorityBroker()
     supervisor = OperationSupervisor(
         registry=registry,
@@ -182,6 +184,7 @@ def compose_operation_services(
         await supervisor.shutdown()
 
     return OperationComposedServices(
+        public_contracts=public_contracts,
         submission=OperationSubmissionService(supervisor, authority_broker),
         observation=observation,
         review=OperationReviewProjectionService(reader=reader, registry=registry, operands=operands, clock=clock),

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 from collections.abc import AsyncGenerator, Callable, Generator, Iterable, Mapping
 from contextlib import ExitStack, asynccontextmanager, contextmanager
 from dataclasses import dataclass
@@ -45,6 +46,14 @@ type InstalledWorkbenchSearchInputsProviderV1 = Callable[[], InstalledWorkbenchS
 type InstalledWorkbenchGenerationProviderV1 = Callable[[], WorkbenchGenerationV1]
 
 
+@dataclass(frozen=True, slots=True)
+class TuiOperationCompositionV1:
+    """One operation service graph and its same-registry public contracts."""
+
+    services: OperationComposedServices
+    public_contracts: OperationPublicContractSetV1
+
+
 def compose_secure_profile_workbench_generation_provider(
     *,
     profile_id: str,
@@ -60,6 +69,7 @@ def compose_secure_profile_workbench_generation_provider(
     from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ...application.overview.home import HomeAccountSession, HomeSessionPosture
     from ...application.user_profile.login_session_port import (
         profile_current_bucket_session,
         profile_session_serves_bucket,
@@ -71,27 +81,33 @@ def compose_secure_profile_workbench_generation_provider(
     from ...application.workbench_generation import (
         SecureProfileWorkbenchGenerationReadDoorV1,
     )
-    from ...core.time.clock import now, today_madrid
+    from ...core.time.clock import now
 
-    session = profile_current_bucket_session()
-    if (
-        session is None
-        or session.sealed
-        or not profile_session_serves_bucket(session, profile_id)
-        or session.is_expired(now())
-    ):
-        raise RuntimeError("installed workbench requires the live secure session for its selected profile")
-    expires_at = min(session.idle_deadline, session.absolute_deadline)
+    def account_session() -> HomeAccountSession:
+        """Recheck custody and return the current non-secret account facts."""
+        current_session = profile_current_bucket_session()
+        if (
+            current_session is None
+            or current_session.sealed
+            or not profile_session_serves_bucket(current_session, profile_id)
+            or current_session.is_expired(now())
+        ):
+            raise RuntimeError("installed workbench requires the live secure session for its selected profile")
+        return HomeAccountSession(
+            posture=HomeSessionPosture.ACTIVE,
+            profile_label=profile_label,
+            expires_at=min(current_session.idle_deadline, current_session.absolute_deadline),
+        )
+
+    account_session()
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=profile_id,
-        profile_label=profile_label,
-        profile_expires_at=expires_at,
         profile_repository=ProfileRecordRepository.for_current_session(profile_id),
         work_unit_repository=WorkUnitCatalogueRepository(bucket_id=profile_id),
         calculation_repository=CalculationRevisionCatalogueRepository(bucket_id=profile_id),
         filing_repository=ModeloRecordCatalogueRepository(bucket_id=profile_id),
         clock=now,
-        today=today_madrid,
+        account_session_reader=account_session,
     )
     return ApplicationGenerationProviderV1(door)
 
@@ -447,7 +463,7 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
 
 
 @asynccontextmanager
-async def operation_services_scope() -> AsyncGenerator[OperationComposedServices]:
+async def operation_services_scope() -> AsyncGenerator[TuiOperationCompositionV1]:
     """Compose the operation platform for one TUI run and settle it after.
 
     This is the sole TUI composition seam permitted to build the operation
@@ -462,8 +478,12 @@ async def operation_services_scope() -> AsyncGenerator[OperationComposedServices
     from ..operation_composition import compose_operation_dependencies
 
     services = compose_operation_dependencies()
+    composition = TuiOperationCompositionV1(
+        services=services,
+        public_contracts=services.public_contracts,
+    )
     try:
-        yield services
+        yield composition
     finally:
         await services.shutdown()
 
@@ -562,8 +582,11 @@ async def _run_root_session(
         else None
     )
     if root is None:
-        async with operation_services_scope() as services:
-            await CadrumoTuiApp(services=services).run_async(headless=headless, auto_pilot=auto_pilot)
+        async with operation_services_scope() as operation_runtime:
+            await CadrumoTuiApp(services=operation_runtime.services).run_async(
+                headless=headless,
+                auto_pilot=auto_pilot,
+            )
         return
     service = None if root.search_inputs is None else compose_installed_workbench_search(root.search_inputs)
 
@@ -577,9 +600,9 @@ async def _run_root_session(
         )
         return compose_installed_workbench_search(refreshed_inputs)
 
-    async with operation_services_scope() as services:
+    async with operation_services_scope() as operation_runtime:
         await CadrumoTuiApp(
-            services=services,
+            services=operation_runtime.services,
             destination_catalogue=root.destination_catalogue,
             refresh_home=root.refresh_home,
             workbench_search_service=service,
@@ -601,6 +624,9 @@ def main(
     own run parameters, carried so a caller can drive a real session to
     completion without a terminal rather than assert against an import.
     """
+    if workbench_root_inputs_provider is None:
+        sys.stderr.write("workbench.root.composition_required\n")
+        return 2
     asyncio.run(
         _run_root_session(
             headless=headless,
@@ -618,6 +644,7 @@ __all__ = [
     "InstalledWorkbenchRootInputsProviderV1",
     "InstalledWorkbenchRootInputsV1",
     "InstalledWorkbenchSearchInputsProviderV1",
+    "TuiOperationCompositionV1",
     "build_modelo_work_review_for_unit",
     "compose_installed_workbench_generation_provider",
     "compose_installed_workbench_root",
