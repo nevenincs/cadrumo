@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:92b394e4e5db10d519a66457408d90e6f2d0c774b6f037d951ce12a57ba2d3de'
+body_hash: 'sha256:f7039249c47159ab41d841c1d6280563e0b3f1dedeb7bdddbd0edaf5a7c459b4'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8139,3 +8139,35 @@ gate checked nothing" - the guard the gate carries against exactly this, written
 by whoever built it, catching the person who broke it. A gate that asserts it
 found something to check is worth the extra line every time; without it the
 broadened pattern would have passed silently while reading zero screens.
+
+### two-absence-gates-could-not-prove-they-had-looked-and-most-already-could | medium | The sweep flagged thirteen, then nine, and the answer was two
+
+The guard that caught a broken regex last iteration - a gate asserting it found
+something to check - was audited across all twenty-three declaration invariant
+gates. Two crude sweeps produced two wrong answers before the question was asked
+properly, which is worth recording because the wrongness had the same cause both
+times: the sweep encoded one shape of "proof that the gate looked".
+
+The first flagged thirteen by looking for a truthiness assertion, and missed
+that an equality against a populated import cannot be vacuous - if the discovery
+side empties, `defining == enrolled` FAILS rather than passing, so those gates
+need no separate guard. The second flagged nine by looking for absence
+assertions without a truthiness guard, and missed the comparison form: the
+package-initialiser gate proves it looked with `checked > 1`, and the vault
+citation gate with `scanned > 100`, both of which are stronger than the
+truthiness the sweep was hunting for.
+
+Two gates genuinely could not prove they had looked, and both walk the
+filesystem, which is where an empty discovery is realistic - a moved package or
+a changed suffix rather than an empty tree. The reassembly gate, rewritten this
+session onto the syntax tree and given a recursive walk, counted no modules; the
+screen-test-module gate built its set from a glob and asserted nothing about it.
+Both now assert the walk found something before asserting what it found. Twenty
+three tests pass, exit 0.
+
+The pattern in the corrections is the same one this campaign keeps meeting from
+new angles: a check for a property is only as good as its account of how that
+property can be expressed. Three spellings of "this gate looked" were in use
+here - a truthiness assert, a minimum count, and an equality whose other side is
+known non-empty - and any sweep recognising fewer than all three reports gaps
+that are not there.
