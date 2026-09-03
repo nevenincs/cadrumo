@@ -89,10 +89,21 @@ _ACTION_COPY: Final[dict[str, str]] = {
     "fixture.review_blocker": "Review blocked work",
     "fixture.evidence_blocker": "Resolve missing evidence",
 }
+_ACTION_REASON_COPY: Final[dict[str, str]] = {
+    "fixture.review_required": "Declaration needs review",
+    "fixture.classification_pending": "Ledger classification is pending",
+    "fixture.evidence_missing": "Supporting evidence is missing",
+    "fixture.blocked_dependency": "A declaration dependency is blocked",
+    "fixture.blocked_review": "Blocked work needs review",
+    "fixture.blocked_evidence": "A blocker needs supporting evidence",
+}
 
 
 def _state_copy(state: HomeZoneState, *, empty_copy: str | None = None) -> str:
     label = _AVAILABILITY_COPY[state.availability]
+    if state.availability is HomeAvailability.STALE and state.observed_at is not None:
+        observed = state.observed_at.strftime("%d %b %Y %H:%M %Z")
+        return f"{label}; last observed {observed}"
     if state.availability is HomeAvailability.AVAILABLE and empty_copy is not None:
         return f"{label} — {empty_copy}"
     return label
@@ -117,15 +128,16 @@ def _agenda_identity(item: HomeAgendaEntry) -> str:
     return f"agenda:{item.modelo}:{item.filing_year}:{item.period.registry_token}:{item.due_on.isoformat()}"
 
 
-def _action_cells(item: HomeNextAction) -> tuple[str, str]:
+def _action_cells(item: HomeNextAction) -> tuple[str, str, str]:
     label = _ACTION_COPY.get(item.action.action.action_id, "Open suggested task")
+    reason = _ACTION_REASON_COPY.get(item.reason_code, "Suggested by the local overview")
     if item.period is None:
         context = "Across records"
     elif item.modelo is None or item.filing_year is None:  # pragma: no cover - model validation rejects this
         raise ValueError("an addressed Home action requires Modelo, year, and period")
     else:
         context = _address(item.modelo, item.filing_year, item.period.registry_token)
-    return label, context
+    return reason, label, context
 
 
 def _declaration_cells(item: HomeDeclarationResume) -> tuple[str, str, str]:
@@ -263,9 +275,10 @@ class DueDrivenHomeCandidateScreen(_ProjectionCandidateScreen):
         """Populate the three keyboard lists from the supplied projection."""
         projection = self.projection
         actions = cast("ContentDataTable[str]", self.query_one("#due-actions", ContentDataTable))
-        actions.add_columns("Task", "Context")
+        actions.add_columns("Attention", "Action", "Context")
         for item in projection.actions:
             actions.add_row(*_action_cells(item), key=self._remember("action", _action_identity(item)))
+        actions.display = bool(projection.actions)
 
         declarations = cast("ContentDataTable[str]", self.query_one("#due-declarations", ContentDataTable))
         declarations.add_columns("Declaration", "Name", "Status")
@@ -273,11 +286,13 @@ class DueDrivenHomeCandidateScreen(_ProjectionCandidateScreen):
             declarations.add_row(
                 *_declaration_cells(item), key=self._remember("declaration", _declaration_identity(item))
             )
+        declarations.display = bool(projection.declarations)
 
         agenda = cast("ContentDataTable[str]", self.query_one("#due-agenda", ContentDataTable))
         agenda.add_columns("Date", "Declaration", "Status")
         for item in projection.agenda:
             agenda.add_row(*_agenda_cells(item), key=self._remember("agenda", _agenda_identity(item)))
+        agenda.display = bool(projection.agenda)
 
         self.query_one("#due-evidence", Static).update(
             f"AEAT evidence: {_state_copy(projection.agenda_evidence_state)}"
@@ -358,9 +373,9 @@ class TaskLauncherHomeCandidateScreen(_ProjectionCandidateScreen):
 
         for item in projection.actions:
             identity = self._remember("action", _action_identity(item))
-            label, context = _action_cells(item)
+            reason, label, context = _action_cells(item)
             chooser.add_row(label, "Suggested", key=identity)
-            self._details[identity] = f"{context}. Suggested by the local overview."
+            self._details[identity] = f"{reason}. {context}."
         for item in projection.declarations:
             identity = self._remember("declaration", _declaration_identity(item))
             address, name, state = _declaration_cells(item)
@@ -377,6 +392,7 @@ class TaskLauncherHomeCandidateScreen(_ProjectionCandidateScreen):
             if not chooser.row_count
             else "Use Up/Down to choose and Enter to confirm."
         )
+        chooser.display = bool(chooser.row_count)
         self.query_one("#launcher-signals", Static).update("\n".join(self._signal_lines()))
         if chooser.row_count:
             self.set_focus(chooser)
