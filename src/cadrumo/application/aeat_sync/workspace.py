@@ -17,7 +17,9 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.utc import UtcInstant
 from ...domain.modelos.codes import ModeloCode
-from ..operator_actions.catalogue import ActionCatalogueEntry
+from ..operations.models import OperationDefinitionId
+from ..operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
+from ..operator_actions.catalogue import ActionCatalogue
 from ..operator_actions.models import ActionReference
 
 AEAT_SYNC_WORKSPACE_CONTRACT_VERSION: Final[int] = 1
@@ -28,6 +30,8 @@ class AeatSyncWorkspaceProjectionError(ValueError):
 
 
 class AeatSyncWorkspaceZone(StrEnum):
+    """Closed workspace areas."""
+
     OVERVIEW = "overview"
     CENSUS = "census"
     FILED_DECLARATIONS = "filed_declarations"
@@ -37,6 +41,8 @@ class AeatSyncWorkspaceZone(StrEnum):
 
 
 class AeatSyncWorkspaceSource(StrEnum):
+    """Canonical local and AEAT source authorities."""
+
     LOCAL_PROFILE = "local.profile"
     LOCAL_FILINGS = "local.filings"
     LOCAL_NOTIFICATION_CUSTODY = "local.notification_custody"
@@ -47,6 +53,8 @@ class AeatSyncWorkspaceSource(StrEnum):
 
 
 class AeatSyncWorkspaceAvailability(StrEnum):
+    """Availability and freshness of one source observation."""
+
     AVAILABLE = "available"
     LOCKED = "locked"
     STALE = "stale"
@@ -55,6 +63,8 @@ class AeatSyncWorkspaceAvailability(StrEnum):
 
 
 class AeatSyncSourceState(StrEnum):
+    """Safe observed state of one comparison side."""
+
     NOT_OBSERVED = "not_observed"
     ABSENT = "absent"
     PRESENT = "present"
@@ -64,6 +74,8 @@ class AeatSyncSourceState(StrEnum):
 
 
 class AeatSyncDiscrepancyKind(StrEnum):
+    """Closed comparison outcomes."""
+
     NONE = "none"
     LOCAL_ONLY = "local_only"
     AEAT_ONLY = "aeat_only"
@@ -73,6 +85,8 @@ class AeatSyncDiscrepancyKind(StrEnum):
 
 
 class AeatSyncOverviewArea(StrEnum):
+    """Closed overview areas."""
+
     CENSUS = "census"
     FILED_DECLARATIONS = "filed_declarations"
     NOTIFICATIONS = "notifications"
@@ -81,6 +95,8 @@ class AeatSyncOverviewArea(StrEnum):
 
 
 class AeatSyncCensusCategory(StrEnum):
+    """Safe census field categories."""
+
     ADDRESS = "address"
     ACTIVITY = "activity"
     OBLIGATION = "obligation"
@@ -89,6 +105,8 @@ class AeatSyncCensusCategory(StrEnum):
 
 
 class AeatSyncCensusStatus(StrEnum):
+    """Safe census comparison outcomes."""
+
     ADOPTED = "adopted"
     CONFLICT = "conflict"
     UNCHANGED = "unchanged"
@@ -96,6 +114,8 @@ class AeatSyncCensusStatus(StrEnum):
 
 
 class AeatSyncLocalFilingState(StrEnum):
+    """Local filing states."""
+
     NOT_OBSERVED = "not_observed"
     DRAFT = "draft"
     READY = "ready"
@@ -103,6 +123,8 @@ class AeatSyncLocalFilingState(StrEnum):
 
 
 class AeatSyncAeatObservationState(StrEnum):
+    """AEAT declaration observation states."""
+
     NOT_OBSERVED = "not_observed"
     SUBMITTED = "submitted"
     ACCEPTED = "accepted"
@@ -110,6 +132,8 @@ class AeatSyncAeatObservationState(StrEnum):
 
 
 class AeatSyncJustificanteState(StrEnum):
+    """Justificante availability states."""
+
     NOT_OBSERVED = "not_observed"
     UNAVAILABLE = "unavailable"
     AVAILABLE = "available"
@@ -117,6 +141,8 @@ class AeatSyncJustificanteState(StrEnum):
 
 
 class AeatSyncNotificationCategory(StrEnum):
+    """Safe notification categories."""
+
     FORMAL = "formal"
     COMMUNICATION = "communication"
     PENDING = "pending"
@@ -124,12 +150,16 @@ class AeatSyncNotificationCategory(StrEnum):
 
 
 class AeatSyncNotificationReadState(StrEnum):
+    """Notification read states."""
+
     UNKNOWN = "unknown"
     UNREAD = "unread"
     READ = "read"
 
 
 class AeatSyncDocumentCustodyState(StrEnum):
+    """Encrypted document custody states."""
+
     NOT_CAPTURED = "not_captured"
     HELD = "held"
     REFUSED = "refused"
@@ -137,6 +167,8 @@ class AeatSyncDocumentCustodyState(StrEnum):
 
 
 class AeatSyncReconciliationState(StrEnum):
+    """Closed reconciliation outcomes."""
+
     UNRESOLVED = "unresolved"
     KEEP_LOCAL = "keep_local"
     ACCEPT_AEAT = "accept_aeat"
@@ -168,6 +200,8 @@ class AeatSyncWorkspaceSourceObservationV1(BaseModel):
 
 
 class AeatSyncWorkspaceZoneObservationV1(BaseModel):
+    """Independent source observations for one zone."""
+
     model_config = STRICT_FROZEN_CONFIG
     zone: AeatSyncWorkspaceZone
     sources: tuple[AeatSyncWorkspaceSourceObservationV1, ...]
@@ -181,6 +215,8 @@ class AeatSyncWorkspaceZoneObservationV1(BaseModel):
 
 
 class AeatSyncWorkspaceZoneStateV1(BaseModel):
+    """Projected zone state retaining its independent sources."""
+
     model_config = STRICT_FROZEN_CONFIG
     zone: AeatSyncWorkspaceZone
     availability: AeatSyncWorkspaceAvailability
@@ -189,15 +225,19 @@ class AeatSyncWorkspaceZoneStateV1(BaseModel):
 
     @property
     def measured_count(self) -> NonNegativeInt | None:
+        """Return the count only when at least one source was observable."""
         return self.item_count
 
 
 class _ActionRow(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
     supported_actions: tuple[ActionReference, ...] = ()
+    supported_operations: tuple[OperationDefinitionId, ...] = ()
 
 
 class AeatSyncWorkspaceOverviewRowV1(_ActionRow):
+    """Safe public overview row."""
+
     area: AeatSyncOverviewArea
     local_state: AeatSyncSourceState
     aeat_state: AeatSyncSourceState
@@ -213,12 +253,16 @@ class AeatSyncWorkspaceOverviewRowV1(_ActionRow):
 
 
 class AeatSyncWorkspaceCensusRowV1(_ActionRow):
+    """Safe public census row without values."""
+
     path: str = Field(min_length=1, max_length=256)
     category: AeatSyncCensusCategory
     status: AeatSyncCensusStatus
 
 
 class AeatSyncWorkspaceFiledDeclarationRowV1(_ActionRow):
+    """Safe public filed-declaration comparison."""
+
     modelo: ModeloCode
     filing_year: FilingYear
     period: Period
@@ -231,6 +275,7 @@ class AeatSyncWorkspaceFiledDeclarationRowV1(_ActionRow):
 
     @property
     def aeat_submission_state(self) -> AeatSyncAeatObservationState:
+        """Return the AEAT declaration state."""
         return self.aeat_observation_state
 
     @model_validator(mode="after")
@@ -249,6 +294,8 @@ class AeatSyncWorkspaceFiledDeclarationRowV1(_ActionRow):
 
 
 class AeatSyncWorkspaceNotificationRowV1(_ActionRow):
+    """Safe public notification metadata."""
+
     issued_on: date
     read_on: date | None = None
     read_state: AeatSyncNotificationReadState
@@ -258,10 +305,12 @@ class AeatSyncWorkspaceNotificationRowV1(_ActionRow):
 
     @property
     def issue_date(self) -> date:
+        """Return the notification issue date."""
         return self.issued_on
 
     @property
     def read_date(self) -> date | None:
+        """Return the optional notification read date."""
         return self.read_on
 
     @model_validator(mode="after")
@@ -298,10 +347,14 @@ class _DualRow(_ActionRow):
 
 
 class AeatSyncWorkspaceEvidenceComparisonRowV1(_DualRow):
+    """Safe public local-versus-AEAT evidence comparison."""
+
     pass
 
 
 class AeatSyncWorkspaceReconciliationRowV1(_DualRow):
+    """Safe public reconciliation row."""
+
     reconciliation_state: AeatSyncReconciliationState
 
     @model_validator(mode="after")
@@ -331,6 +384,7 @@ class AeatSyncWorkspaceFactV1[RowT: BaseModel]:
     private_identity: str | None = None
 
     def __post_init__(self) -> None:
+        """Reject absent or blank provenance coordinates."""
         if not self.subject_key.strip():
             raise ValueError("subject key cannot be blank")
         if self.private_identity is not None and not self.private_identity.strip():
@@ -391,6 +445,45 @@ _ALLOWED: Final = {
     "evidence_comparison": frozenset({"operator.overview.explain"}),
     "reconciliation": frozenset({"operator.overview.explain"}),
 }
+_ALLOWED_OPERATIONS: Final = {
+    "overview:census": frozenset({"user-profile.censo-review"}),
+    "overview:filed_declarations": frozenset({"live.filed-history.pull"}),
+    "overview:notifications": frozenset(),
+    "overview:evidence_comparison": frozenset({"live.filed-history.pull"}),
+    "overview:reconciliation": frozenset(),
+    "census": frozenset({"user-profile.censo-review"}),
+    "filed_declarations": frozenset({"live.filed-history.pull"}),
+    "notifications": frozenset(),
+    "evidence_comparison": frozenset({"live.filed-history.pull"}),
+    "reconciliation": frozenset(),
+}
+_OVERVIEW_SOURCES: Final = {
+    AeatSyncOverviewArea.CENSUS: (
+        AeatSyncWorkspaceSource.LOCAL_PROFILE,
+        AeatSyncWorkspaceSource.AEAT_CENSUS,
+    ),
+    AeatSyncOverviewArea.FILED_DECLARATIONS: (
+        AeatSyncWorkspaceSource.LOCAL_FILINGS,
+        AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS,
+    ),
+    AeatSyncOverviewArea.NOTIFICATIONS: (
+        AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY,
+        AeatSyncWorkspaceSource.AEAT_NOTIFICATIONS,
+    ),
+    AeatSyncOverviewArea.EVIDENCE_COMPARISON: (
+        AeatSyncWorkspaceSource.LOCAL_FILINGS,
+        AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS,
+    ),
+    AeatSyncOverviewArea.RECONCILIATION: (
+        AeatSyncWorkspaceSource.LOCAL_FILINGS,
+        AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS,
+    ),
+}
+
+
+def aeat_sync_workspace_sources(zone: AeatSyncWorkspaceZone) -> tuple[AeatSyncWorkspaceSource, ...]:
+    """Return the canonical independent sources required by one zone."""
+    return _SOURCES[zone]
 
 
 def project_aeat_sync_workspace(
@@ -398,7 +491,8 @@ def project_aeat_sync_workspace(
     bucket_id: BucketId,
     subject_key: str,
     zone_observations: tuple[AeatSyncWorkspaceZoneObservationV1, ...],
-    admitted_action_declarations: tuple[ActionCatalogueEntry, ...],
+    action_catalogue: ActionCatalogue,
+    operation_contracts: OperationPublicContractSetV1,
     overview: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceOverviewRowV1], ...] = (),
     census: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceCensusRowV1], ...] = (),
     filed_declarations: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceFiledDeclarationRowV1], ...] = (),
@@ -410,8 +504,6 @@ def project_aeat_sync_workspace(
     if not subject_key.strip():
         raise AeatSyncWorkspaceProjectionError("subject key cannot be blank")
     obs = _observations(zone_observations)
-    admitted = tuple(str(item.action_id) for item in admitted_action_declarations)
-    _unique(admitted, "action declarations")
     groups = {
         AeatSyncWorkspaceZone.OVERVIEW: overview,
         AeatSyncWorkspaceZone.CENSUS: census,
@@ -427,7 +519,7 @@ def project_aeat_sync_workspace(
             if fact.subject_key != subject_key:
                 raise AeatSyncWorkspaceProjectionError("mixed subjects")
     _duplicates(overview, census, filed_declarations, notifications, evidence_comparison, reconciliation)
-    _actions(groups, frozenset(admitted))
+    _actions(groups, action_catalogue, operation_contracts)
     _source_claims(groups, obs)
     out_overview = tuple(sorted((f.row for f in overview), key=lambda row: row.area.value))
     out_census = tuple(sorted((f.row for f in census), key=lambda row: row.path.casefold()))
@@ -485,16 +577,33 @@ def _duplicates(
     _unique((_natural(f.row) for f in reconciliation), "reconciliation addresses")
 
 
-def _actions(groups: dict[AeatSyncWorkspaceZone, tuple[Any, ...]], admitted: frozenset[str]) -> None:
+def _actions(
+    groups: dict[AeatSyncWorkspaceZone, tuple[Any, ...]],
+    catalogue: ActionCatalogue,
+    contracts: OperationPublicContractSetV1,
+) -> None:
+    contract_by_id = {contract.definition_id: contract for contract in contracts.definitions}
     for zone, facts in groups.items():
         for fact in facts:
             ids = tuple(str(item.action_id) for item in fact.row.supported_actions)
             _unique(ids, "row actions")
             key = f"overview:{fact.row.area.value}" if zone is AeatSyncWorkspaceZone.OVERVIEW else zone.value
-            if not set(ids) <= admitted:
-                raise AeatSyncWorkspaceProjectionError("action is not admitted by catalogue")
+            for action_id in ids:
+                try:
+                    catalogue.lookup(action_id)
+                except KeyError as error:
+                    raise AeatSyncWorkspaceProjectionError("action is not admitted by catalogue") from error
             if not set(ids) <= _ALLOWED[key]:
                 raise AeatSyncWorkspaceProjectionError("action is not allowed for row area/state")
+            operation_ids = tuple(fact.row.supported_operations)
+            _unique(operation_ids, "row operations")
+            allowed_operations = _ALLOWED_OPERATIONS[key]
+            for operation_id in operation_ids:
+                contract = contract_by_id.get(operation_id)
+                if contract is None or OperationFrontendProjection.TUI not in contract.permitted_frontends:
+                    raise AeatSyncWorkspaceProjectionError("operation is not admitted by public contracts")
+            if not set(operation_ids) <= allowed_operations:
+                raise AeatSyncWorkspaceProjectionError("operation is not allowed for row area/state")
 
 
 def _source_claims(
@@ -507,10 +616,16 @@ def _source_claims(
             raise AeatSyncWorkspaceProjectionError("unobservable zone carries rows")
         for fact in facts:
             row = fact.row
-            if hasattr(row, "local_state") and row.local_state is not AeatSyncSourceState.NOT_OBSERVED:
-                _require_any(sources, "local.", "local")
-            if hasattr(row, "aeat_state") and row.aeat_state is not AeatSyncSourceState.NOT_OBSERVED:
-                _require_any(sources, "aeat.", "AEAT")
+            if isinstance(row, AeatSyncWorkspaceOverviewRowV1):
+                local_source, aeat_source = _OVERVIEW_SOURCES[row.area]
+                _require(row.local_state is AeatSyncSourceState.NOT_OBSERVED, sources[local_source], "local")
+                _require(row.aeat_state is AeatSyncSourceState.NOT_OBSERVED, sources[aeat_source], "AEAT")
+            if isinstance(row, AeatSyncWorkspaceCensusRowV1):
+                _require(False, sources[AeatSyncWorkspaceSource.LOCAL_PROFILE], "local census")
+                _require(False, sources[AeatSyncWorkspaceSource.AEAT_CENSUS], "AEAT census")
+            if isinstance(row, _DualRow):
+                _require(row.local_state is AeatSyncSourceState.NOT_OBSERVED, sources[AeatSyncWorkspaceSource.LOCAL_FILINGS], "local")
+                _require(row.aeat_state is AeatSyncSourceState.NOT_OBSERVED, sources[AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS], "AEAT")
             if isinstance(row, AeatSyncWorkspaceFiledDeclarationRowV1):
                 _require(
                     row.local_filing_state is AeatSyncLocalFilingState.NOT_OBSERVED,
@@ -533,15 +648,6 @@ def _source_claims(
                     AeatSyncDocumentCustodyState.UNAVAILABLE,
                 }
                 _require(missing, sources[AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY], "notification custody")
-
-
-def _require_any(
-    sources: dict[AeatSyncWorkspaceSource, AeatSyncWorkspaceSourceObservationV1],
-    prefix: str,
-    axis: str,
-) -> None:
-    if not any(_observable(item.availability) for source, item in sources.items() if source.value.startswith(prefix)):
-        raise AeatSyncWorkspaceProjectionError(f"confident {axis} state lacks observable source")
 
 
 def _require(unconfident: bool, source: AeatSyncWorkspaceSourceObservationV1, axis: str) -> None:
@@ -617,4 +723,3 @@ def _discrepancy(local: AeatSyncSourceState, aeat: AeatSyncSourceState, kind: Ae
         expected = AeatSyncDiscrepancyKind.STATE_MISMATCH
     if kind is not expected:
         raise ValueError("discrepancy contradicts source states")
-

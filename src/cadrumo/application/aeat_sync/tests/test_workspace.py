@@ -13,8 +13,10 @@ from pydantic import ValidationError
 
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
-from ...operator_actions.catalogue import ActionCatalogueEntry
+from ...operations.registry import OperationPublicContractSetV1
+from ...operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ...operator_actions.models import ActionReference
+from ...user_profile.censal_operation import CENSAL_OPERATION_DEFINITION, build_censal_operation_registration
 from ..workspace import (
     AeatSyncAeatObservationState,
     AeatSyncCensusCategory,
@@ -41,6 +43,7 @@ from ..workspace import (
     AeatSyncWorkspaceSourceObservationV1,
     AeatSyncWorkspaceZone,
     AeatSyncWorkspaceZoneObservationV1,
+    aeat_sync_workspace_sources,
     project_aeat_sync_workspace,
 )
 
@@ -87,46 +90,21 @@ def _observations(
     *,
     overrides: dict[tuple[AeatSyncWorkspaceZone, AeatSyncWorkspaceSource], AeatSyncWorkspaceAvailability] | None = None,
 ) -> tuple[AeatSyncWorkspaceZoneObservationV1, ...]:
-    source_map = {
-        AeatSyncWorkspaceZone.OVERVIEW: tuple(AeatSyncWorkspaceSource),
-        AeatSyncWorkspaceZone.CENSUS: (AeatSyncWorkspaceSource.LOCAL_PROFILE, AeatSyncWorkspaceSource.AEAT_CENSUS),
-        AeatSyncWorkspaceZone.FILED_DECLARATIONS: (
-            AeatSyncWorkspaceSource.LOCAL_FILINGS,
-            AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS,
-        ),
-        AeatSyncWorkspaceZone.NOTIFICATIONS: (
-            AeatSyncWorkspaceSource.AEAT_NOTIFICATIONS,
-            AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY,
-        ),
-        AeatSyncWorkspaceZone.EVIDENCE_COMPARISON: (
-            AeatSyncWorkspaceSource.LOCAL_FILINGS,
-            AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS,
-        ),
-        AeatSyncWorkspaceZone.RECONCILIATION: (
-            AeatSyncWorkspaceSource.LOCAL_FILINGS,
-            AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS,
-            AeatSyncWorkspaceSource.LOCAL_RECONCILIATION,
-        ),
-    }
     overrides = overrides or {}
     return tuple(
         AeatSyncWorkspaceZoneObservationV1(
             zone=zone,
             sources=tuple(
                 _source(source, overrides.get((zone, source), AeatSyncWorkspaceAvailability.AVAILABLE))
-                for source in sources
+                for source in aeat_sync_workspace_sources(zone)
             ),
         )
-        for zone, sources in source_map.items()
+        for zone in AeatSyncWorkspaceZone
     )
 
 
 def _action(action_id: str) -> ActionReference:
     return ActionReference(action_id=action_id)
-
-
-def _declaration(action_id: str) -> ActionCatalogueEntry:
-    return ActionCatalogueEntry(action_id=action_id, target_command_key="safe.target")
 
 
 def _fact(row, *, bucket: str = BUCKET, subject: str = SUBJECT, private_identity: str | None = None):
@@ -222,9 +200,9 @@ def _projection(**updates):
         bucket_id=BUCKET,
         subject_key=SUBJECT,
         zone_observations=_observations(),
-        admitted_action_declarations=(
-            _declaration("operator.live.notifications.list"),
-            _declaration("operator.overview.explain"),
+        action_catalogue=OPERATOR_ACTION_CATALOGUE,
+        operation_contracts=OperationPublicContractSetV1.build(
+            (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
         ),
         overview=(_fact(_overview()),),
         census=(_fact(_census()),),
@@ -313,8 +291,9 @@ def test_actions_require_catalogue_admission_and_area_state_closure() -> None:
     with pytest.raises(AeatSyncWorkspaceProjectionError, match="not allowed"):
         _projection(overview=(_fact(_overview(actions=(_action("operator.live.notifications.list"),))),))
     with pytest.raises(ValidationError, match="NO_ACTION"):
-        _reconciliation(no_action=True).model_copy(
-            update={"supported_actions": (_action("operator.overview.explain"),)}
+        row = _reconciliation(no_action=True)
+        AeatSyncWorkspaceReconciliationRowV1.model_validate(
+            {**row.model_dump(), "supported_actions": (_action("operator.overview.explain"),)}
         )
 
 
