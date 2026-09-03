@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
-from typing import Final, Generic, Self, TypeVar
+from typing import Any, Final, Protocol, Self, override
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
@@ -313,12 +313,16 @@ class AeatSyncWorkspaceReconciliationRowV1(_DualRow):
             raise ValueError("NO_ACTION cannot carry actions")
         return self
 
-
-RowT = TypeVar("RowT", bound=BaseModel)
+    @override
+    def model_copy(self, *, update: Mapping[str, Any] | None = None, deep: bool = False) -> Self:
+        """Keep state/action closure intact across mutation-test copies."""
+        if update is None:
+            return super().model_copy(deep=deep)
+        return type(self).model_validate({**self.model_dump(), **update})
 
 
 @dataclass(frozen=True, slots=True)
-class AeatSyncWorkspaceFactV1(Generic[RowT]):
+class AeatSyncWorkspaceFactV1[RowT: BaseModel]:
     """Admission-only scope/private identity projected away from ``row``."""
 
     bucket_id: BucketId
@@ -356,10 +360,23 @@ class AeatSyncWorkspaceProjectionV1(BaseModel):
 _SOURCES: Final = {
     AeatSyncWorkspaceZone.OVERVIEW: tuple(AeatSyncWorkspaceSource),
     AeatSyncWorkspaceZone.CENSUS: (AeatSyncWorkspaceSource.LOCAL_PROFILE, AeatSyncWorkspaceSource.AEAT_CENSUS),
-    AeatSyncWorkspaceZone.FILED_DECLARATIONS: (AeatSyncWorkspaceSource.LOCAL_FILINGS, AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS),
-    AeatSyncWorkspaceZone.NOTIFICATIONS: (AeatSyncWorkspaceSource.AEAT_NOTIFICATIONS, AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY),
-    AeatSyncWorkspaceZone.EVIDENCE_COMPARISON: (AeatSyncWorkspaceSource.LOCAL_FILINGS, AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS),
-    AeatSyncWorkspaceZone.RECONCILIATION: (AeatSyncWorkspaceSource.LOCAL_FILINGS, AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS, AeatSyncWorkspaceSource.LOCAL_RECONCILIATION),
+    AeatSyncWorkspaceZone.FILED_DECLARATIONS: (
+        AeatSyncWorkspaceSource.LOCAL_FILINGS,
+        AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS,
+    ),
+    AeatSyncWorkspaceZone.NOTIFICATIONS: (
+        AeatSyncWorkspaceSource.AEAT_NOTIFICATIONS,
+        AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY,
+    ),
+    AeatSyncWorkspaceZone.EVIDENCE_COMPARISON: (
+        AeatSyncWorkspaceSource.LOCAL_FILINGS,
+        AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS,
+    ),
+    AeatSyncWorkspaceZone.RECONCILIATION: (
+        AeatSyncWorkspaceSource.LOCAL_FILINGS,
+        AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS,
+        AeatSyncWorkspaceSource.LOCAL_RECONCILIATION,
+    ),
 }
 
 _ALLOWED: Final = {
@@ -377,7 +394,9 @@ _ALLOWED: Final = {
 
 
 def project_aeat_sync_workspace(
-    *, bucket_id: BucketId, subject_key: str,
+    *,
+    bucket_id: BucketId,
+    subject_key: str,
     zone_observations: tuple[AeatSyncWorkspaceZoneObservationV1, ...],
     admitted_action_declarations: tuple[ActionCatalogueEntry, ...],
     overview: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceOverviewRowV1], ...] = (),
@@ -413,17 +432,33 @@ def project_aeat_sync_workspace(
     out_overview = tuple(sorted((f.row for f in overview), key=lambda row: row.area.value))
     out_census = tuple(sorted((f.row for f in census), key=lambda row: row.path.casefold()))
     out_filed = tuple(sorted((f.row for f in filed_declarations), key=_natural))
-    out_notifications = tuple(f.row for f in sorted(notifications, key=lambda f: (f.row.issued_on, f.private_identity or "")))
+    out_notifications = tuple(
+        f.row for f in sorted(notifications, key=lambda f: (f.row.issued_on, f.private_identity or ""))
+    )
     out_comparison = tuple(sorted((f.row for f in evidence_comparison), key=_natural))
     out_reconciliation = tuple(sorted((f.row for f in reconciliation), key=_natural))
-    public = dict(zip(AeatSyncWorkspaceZone, (out_overview, out_census, out_filed, out_notifications, out_comparison, out_reconciliation), strict=True))
+    public = dict(
+        zip(
+            AeatSyncWorkspaceZone,
+            (out_overview, out_census, out_filed, out_notifications, out_comparison, out_reconciliation),
+            strict=True,
+        )
+    )
     zones = tuple(_zone_state(obs[zone], len(public[zone])) for zone in AeatSyncWorkspaceZone)
-    return AeatSyncWorkspaceProjectionV1(zones=zones, overview=out_overview, census=out_census,
-        filed_declarations=out_filed, notifications=out_notifications,
-        evidence_comparison=out_comparison, reconciliation=out_reconciliation)
+    return AeatSyncWorkspaceProjectionV1(
+        zones=zones,
+        overview=out_overview,
+        census=out_census,
+        filed_declarations=out_filed,
+        notifications=out_notifications,
+        evidence_comparison=out_comparison,
+        reconciliation=out_reconciliation,
+    )
 
 
-def _observations(values: tuple[AeatSyncWorkspaceZoneObservationV1, ...]) -> dict[AeatSyncWorkspaceZone, AeatSyncWorkspaceZoneObservationV1]:
+def _observations(
+    values: tuple[AeatSyncWorkspaceZoneObservationV1, ...],
+) -> dict[AeatSyncWorkspaceZone, AeatSyncWorkspaceZoneObservationV1]:
     if tuple(item.zone for item in values) != tuple(AeatSyncWorkspaceZone):
         raise AeatSyncWorkspaceProjectionError("observations must cover six zones in order")
     for item in values:
@@ -432,7 +467,14 @@ def _observations(values: tuple[AeatSyncWorkspaceZoneObservationV1, ...]) -> dic
     return {item.zone: item for item in values}
 
 
-def _duplicates(overview: tuple, census: tuple, filed: tuple, notifications: tuple, comparison: tuple, reconciliation: tuple) -> None:
+def _duplicates(
+    overview: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceOverviewRowV1], ...],
+    census: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceCensusRowV1], ...],
+    filed: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceFiledDeclarationRowV1], ...],
+    notifications: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceNotificationRowV1], ...],
+    comparison: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceEvidenceComparisonRowV1], ...],
+    reconciliation: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceReconciliationRowV1], ...],
+) -> None:
     _unique((f.row.area for f in overview), "overview areas")
     _unique((f.row.path.casefold() for f in census), "census paths")
     _unique((_natural(f.row) for f in filed), "filed addresses")
@@ -443,7 +485,7 @@ def _duplicates(overview: tuple, census: tuple, filed: tuple, notifications: tup
     _unique((_natural(f.row) for f in reconciliation), "reconciliation addresses")
 
 
-def _actions(groups: dict, admitted: frozenset[str]) -> None:
+def _actions(groups: dict[AeatSyncWorkspaceZone, tuple[Any, ...]], admitted: frozenset[str]) -> None:
     for zone, facts in groups.items():
         for fact in facts:
             ids = tuple(str(item.action_id) for item in fact.row.supported_actions)
@@ -455,7 +497,10 @@ def _actions(groups: dict, admitted: frozenset[str]) -> None:
                 raise AeatSyncWorkspaceProjectionError("action is not allowed for row area/state")
 
 
-def _source_claims(groups: dict, observations: dict) -> None:
+def _source_claims(
+    groups: dict[AeatSyncWorkspaceZone, tuple[Any, ...]],
+    observations: dict[AeatSyncWorkspaceZone, AeatSyncWorkspaceZoneObservationV1],
+) -> None:
     for zone, facts in groups.items():
         sources = {item.source: item for item in observations[zone].sources}
         if facts and not any(_observable(item.availability) for item in sources.values()):
@@ -467,15 +512,34 @@ def _source_claims(groups: dict, observations: dict) -> None:
             if hasattr(row, "aeat_state") and row.aeat_state is not AeatSyncSourceState.NOT_OBSERVED:
                 _require_any(sources, "aeat.", "AEAT")
             if isinstance(row, AeatSyncWorkspaceFiledDeclarationRowV1):
-                _require(row.local_filing_state is AeatSyncLocalFilingState.NOT_OBSERVED, sources[AeatSyncWorkspaceSource.LOCAL_FILINGS], "local filing")
-                _require(row.aeat_observation_state is AeatSyncAeatObservationState.NOT_OBSERVED, sources[AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS], "AEAT filing")
+                _require(
+                    row.local_filing_state is AeatSyncLocalFilingState.NOT_OBSERVED,
+                    sources[AeatSyncWorkspaceSource.LOCAL_FILINGS],
+                    "local filing",
+                )
+                _require(
+                    row.aeat_observation_state is AeatSyncAeatObservationState.NOT_OBSERVED,
+                    sources[AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS],
+                    "AEAT filing",
+                )
             if isinstance(row, AeatSyncWorkspaceNotificationRowV1):
-                _require(row.read_state is AeatSyncNotificationReadState.UNKNOWN, sources[AeatSyncWorkspaceSource.AEAT_NOTIFICATIONS], "AEAT notification")
-                missing = row.document_custody_state in {AeatSyncDocumentCustodyState.NOT_CAPTURED, AeatSyncDocumentCustodyState.UNAVAILABLE}
+                _require(
+                    row.read_state is AeatSyncNotificationReadState.UNKNOWN,
+                    sources[AeatSyncWorkspaceSource.AEAT_NOTIFICATIONS],
+                    "AEAT notification",
+                )
+                missing = row.document_custody_state in {
+                    AeatSyncDocumentCustodyState.NOT_CAPTURED,
+                    AeatSyncDocumentCustodyState.UNAVAILABLE,
+                }
                 _require(missing, sources[AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY], "notification custody")
 
 
-def _require_any(sources: dict, prefix: str, axis: str) -> None:
+def _require_any(
+    sources: dict[AeatSyncWorkspaceSource, AeatSyncWorkspaceSourceObservationV1],
+    prefix: str,
+    axis: str,
+) -> None:
     if not any(_observable(item.availability) for source, item in sources.items() if source.value.startswith(prefix)):
         raise AeatSyncWorkspaceProjectionError(f"confident {axis} state lacks observable source")
 
@@ -488,13 +552,22 @@ def _require(unconfident: bool, source: AeatSyncWorkspaceSourceObservationV1, ax
 def _zone_state(observation: AeatSyncWorkspaceZoneObservationV1, count: int) -> AeatSyncWorkspaceZoneStateV1:
     states = tuple(item.availability for item in observation.sources)
     seen = any(_observable(item) for item in states)
-    if all(item is AeatSyncWorkspaceAvailability.AVAILABLE for item in states): availability = AeatSyncWorkspaceAvailability.AVAILABLE
-    elif seen: availability = AeatSyncWorkspaceAvailability.STALE
-    elif AeatSyncWorkspaceAvailability.LOCKED in states: availability = AeatSyncWorkspaceAvailability.LOCKED
-    elif all(item is AeatSyncWorkspaceAvailability.NEVER_CAPTURED for item in states): availability = AeatSyncWorkspaceAvailability.NEVER_CAPTURED
-    else: availability = AeatSyncWorkspaceAvailability.UNAVAILABLE
-    return AeatSyncWorkspaceZoneStateV1(zone=observation.zone, availability=availability,
-        sources=observation.sources, item_count=count if seen else None)
+    if all(item is AeatSyncWorkspaceAvailability.AVAILABLE for item in states):
+        availability = AeatSyncWorkspaceAvailability.AVAILABLE
+    elif seen:
+        availability = AeatSyncWorkspaceAvailability.STALE
+    elif AeatSyncWorkspaceAvailability.LOCKED in states:
+        availability = AeatSyncWorkspaceAvailability.LOCKED
+    elif all(item is AeatSyncWorkspaceAvailability.NEVER_CAPTURED for item in states):
+        availability = AeatSyncWorkspaceAvailability.NEVER_CAPTURED
+    else:
+        availability = AeatSyncWorkspaceAvailability.UNAVAILABLE
+    return AeatSyncWorkspaceZoneStateV1(
+        zone=observation.zone,
+        availability=availability,
+        sources=observation.sources,
+        item_count=count if seen else None,
+    )
 
 
 def _unique(values: Iterable[object], label: str) -> None:
@@ -503,8 +576,13 @@ def _unique(values: Iterable[object], label: str) -> None:
         raise AeatSyncWorkspaceProjectionError(f"duplicate {label}")
 
 
-def _natural(row: object) -> tuple[str, int, str]:
-    assert isinstance(row, (AeatSyncWorkspaceFiledDeclarationRowV1, AeatSyncWorkspaceEvidenceComparisonRowV1, AeatSyncWorkspaceReconciliationRowV1))
+class _NaturalRow(Protocol):
+    modelo: ModeloCode
+    filing_year: FilingYear
+    period: Period
+
+
+def _natural(row: _NaturalRow) -> tuple[str, int, str]:
     return (str(row.modelo), row.filing_year, row.period.registry_token)
 
 
@@ -517,20 +595,26 @@ def _optional_time(state: object, when: UtcInstant | None, missing: object) -> N
         raise ValueError("state contradicts observation time")
 
 
-def _dual(local: AeatSyncSourceState, local_at: UtcInstant | None, aeat: AeatSyncSourceState, aeat_at: UtcInstant | None) -> None:
+def _dual(
+    local: AeatSyncSourceState, local_at: UtcInstant | None, aeat: AeatSyncSourceState, aeat_at: UtcInstant | None
+) -> None:
     _optional_time(local, local_at, AeatSyncSourceState.NOT_OBSERVED)
     _optional_time(aeat, aeat_at, AeatSyncSourceState.NOT_OBSERVED)
 
 
 def _discrepancy(local: AeatSyncSourceState, aeat: AeatSyncSourceState, kind: AeatSyncDiscrepancyKind) -> None:
-    if AeatSyncSourceState.NOT_OBSERVED in {local, aeat}: expected = AeatSyncDiscrepancyKind.UNOBSERVED
-    elif local == aeat: expected = AeatSyncDiscrepancyKind.NONE
-    elif local is AeatSyncSourceState.ABSENT: expected = AeatSyncDiscrepancyKind.AEAT_ONLY
-    elif aeat is AeatSyncSourceState.ABSENT: expected = AeatSyncDiscrepancyKind.LOCAL_ONLY
-    elif AeatSyncSourceState.CONFLICT in {local, aeat}: expected = AeatSyncDiscrepancyKind.CONTRADICTORY_SOURCE
-    else: expected = AeatSyncDiscrepancyKind.STATE_MISMATCH
+    if AeatSyncSourceState.NOT_OBSERVED in {local, aeat}:
+        expected = AeatSyncDiscrepancyKind.UNOBSERVED
+    elif local == aeat:
+        expected = AeatSyncDiscrepancyKind.NONE
+    elif local is AeatSyncSourceState.ABSENT:
+        expected = AeatSyncDiscrepancyKind.AEAT_ONLY
+    elif aeat is AeatSyncSourceState.ABSENT:
+        expected = AeatSyncDiscrepancyKind.LOCAL_ONLY
+    elif AeatSyncSourceState.CONFLICT in {local, aeat}:
+        expected = AeatSyncDiscrepancyKind.CONTRADICTORY_SOURCE
+    else:
+        expected = AeatSyncDiscrepancyKind.STATE_MISMATCH
     if kind is not expected:
         raise ValueError("discrepancy contradicts source states")
 
-
-__all__ = [name for name in globals() if name.startswith(("AeatSync", "AEAT_SYNC"))]
