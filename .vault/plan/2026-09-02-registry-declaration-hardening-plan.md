@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:05e140b4cd9c681a82ae395b437d9f0e56d5a491c6f0d557cb4a5e06a25f1082'
+body_hash: 'sha256:0decf5f3c1faf8fdfa6c71602dbce92a892ff166b6ac153868392376bc3ca798'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -402,7 +402,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S78` - Measure whether the thirty-two footnoted corporate-tax amounts are also rendered unscaled; `dev/registry/analysis/monetary_scale.py`.
 - [ ] `W04.P07.S76` - Refuse a bare footnote pointer as a stated wire fact, landing with the reviewed rules the correction makes due, since the file is no longer held but the coverage gate demands both halves in one change; `dev/registry/pipeline/_render_profile.py`.
 - [ ] `W04.P07.S77` - Prove the eligibility predicate treats a footnote-only content cell as stating no wire fact; `dev/registry/tests/test_render_profile.py`.
-- [ ] `W04.P07.S79` - Author reviewed representation rules for the one hundred and forty-nine newly eligible fields in the six modelos that carry a render profile, the remaining thirty-four falling due when modelos 220 and 131 gain one; `dev/registry/render_profiles`.
+- [ ] `W04.P07.S79` - Author reviewed representation rules for the forty-one fields the eligibility correction newly admits, nine grounded in a convention naming their own AEAT type and thirty-two in modelo 200s design-level amounts note, rather than the one hundred and forty-nine this step claimed and no measurement reproduces; `dev/registry/render_profiles`.
 - [x] `W04.P07.S80` - Require a declared scale for every monetary export field in the new-modelo authoring checklist; `dev/registry/newmodelo/checklist.py`.
 - [x] `W04.P07.S81` - Require a sibling-amount comparison in the authoring checklist and stop pinning the checklist item count in its tests; `dev/registry/newmodelo/tests`.
 - [x] `W04.P07.S82` - Document which fields a render profile may govern and why a footnote reference removes one from its reach; `dev/registry/render_profiles/README.md`.
@@ -411,7 +411,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S150` - Make the pointer triage repeatable, deriving each design's transcription from the source reference rather than by searching its directory; `dev/registry/analysis/footnote_pointer_notes.py`.
 - [x] `W04.P07.S387` - Report the fields whose wire fact sits behind a footnote pointer, deciding membership through the shipped eligibility predicate rather than a second copy of its clauses, and resolve each pointer to the note wording a reviewed rule would be grounded in; `dev/registry/analysis/footnote_only_wire_facts.py`.
 - [x] `W04.P07.S388` - Pin the counterexample that stops a vocabulary miss being read as a note stating no wire fact, since modelo 200 nota 1 states a filling rule in full while carrying none of the words the reading aid looks for; `dev/registry/tests/test_footnote_only_wire_facts.py`.
-- [ ] `W04.P07.S389` - Recover or replace the unreproducible field counts the rules-authoring step rests on: the live predicate reports 6,434 already eligible, 41 newly admitted by refusing a bare pointer and 4,184 if any content cell stopped counting, against a step stating 149 across six modelos where seventeen carry a profile; `dev/registry/render_profiles`.
+- [ ] `W04.P07.S389` - Recover where the unreproducible one hundred and forty-nine came from, or retire the figure: the live predicate admits forty-one fields when a bare pointer stops counting as a stated fact and 4,184 if any content cell does, and seventeen modelo directories carry a render profile where the step says six; `dev/registry/render_profiles`.
 - [x] `W04.P07.S390` - Scope note definitions to the sheet that prints them, since a workbook numbers each pages notes from one and modelo 200 defines Nota 1 on six of seventy-seven sheets, which the design-wide reader concatenated into one entry and used to resolve a pointer on a sheet defining no such note; `dev/registry/analysis/footnote_pointer_notes.py dev/registry/tests/test_footnote_pointer_notes.py`.
 - [x] `W04.P07.S391` - Measure how far the design-wide note reading reached: 38 of 215 transcriptions repeat a note label across sheets, accounting for 225 definitions a design-wide reader absorbed, with modelo 303 carrying the condition in every revision and modelo 220 defining one label on twelve of thirteen sheets; `dev/registry/analysis/note_label_scope.py dev/registry/tests/test_note_label_scope.py`.
 - [x] `W04.P07.S392` - Recognise a sheet heading that carries spaces, since capturing a single token matched DP200001 but failed on every sheet named like dr M202 (1), which sent an entire designs notes to an empty sheet name where no field could match them and read exactly like a design with no notes; `dev/registry/analysis/footnote_pointer_notes.py`.
@@ -422,6 +422,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S397` - Read the unnumbered NOTA lines the corpus carries, claiming only the shape that can be read without absorbing a neighbour, and leave what such a note governs unsettled: 47 of the 52 designs carry exactly one, so per-sheet counting distinguishes nothing, and modelo 200 prints its amounts convention on one sheet of seventy-seven while the fields it would govern sit elsewhere; `dev/registry/analysis/footnote_pointer_notes.py`.
 - [x] `W04.P07.S398` - Settle what an unnumbered NOTA governs: modelo 200 states how amounts are written on a sheet carrying no amount field while the 5,665 fields it describes sit on 74 others, and corpus-wide 47 of 51 designs print one such note while 4 repeat one identical text and none differs by sheet, so the sheet is where these are found and the design is what they govern; `dev/registry/analysis`.
 - [x] `W04.P07.S399` - Admit design-level unnumbered notes as grounding now that their scope is settled, which is what modelo 200s thirty-two ungrounded fields need since its amounts convention states their integer width sign and decimal places; `dev/registry/analysis/rule_grounding_coverage.py`.
+- [x] `W04.P07.S400` - Write the verification criterion for the note-evidence work and replace the unreproducible field counts the rules-authoring and figure-recovery steps carried, with every figure taken from a screen that can be re-run; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W04.P08` - grade earned gate
 
@@ -950,6 +951,39 @@ defects: modelo 200's casilla 03594 and modelo 353's casilla 10, each emitting u
 amounts beside it in the same record emit cents. The second appeared through a commit while this
 plan was being executed and was caught by the gate that pins the first, which is what a gate
 proven against a live defect is for.
+
+Every field the eligibility correction newly admits has located official wording to ground its
+reviewed rule in, and the strength of that wording is reported rather than assumed. Forty-one fields
+are admitted, not the hundred and forty-nine this plan once claimed and could not reproduce: nine are
+covered by a note stating a convention for the field's own AEAT type, thirty-two by a design-level
+note that must still be read, and none by nothing. The two are counted apart because a type
+convention names the field's class while a design note names nothing, and modelo 200's settles its
+amounts where another design's says only that the NIF is mandatory.
+
+Reaching that took correcting the reader four times, and the corrections are the criterion's real
+evidence. Note labels are scoped to the sheet that prints them, because a workbook numbers each
+page's notes from one and seventy-five designs repeat a label across sheets, which a design-wide
+reading merged into three hundred and fifty-seven absorbed definitions. A sheet heading may carry
+spaces. A label is separated from its wording by a colon, a full stop or a table pipe. And an
+unnumbered note is read as its own line and nothing after it, because every boundary rule tried
+absorbed a neighbour somewhere in the corpus. Each correction changed what the corpus was understood
+to contain, and each is held by a test asserting the property over the whole corpus rather than a
+sample - the absorption that survived longest sat in one design out of the fifty-one that carry
+such a note.
+
+What an unnumbered note governs is settled by evidence and not by where it sits: modelo 200 prints
+its amounts convention on a sheet carrying no amount field while the five thousand six hundred and
+sixty-five fields it describes sit on seventy-four others, and no design in the corpus carries
+differing unnumbered notes on different sheets. The reader still returns them keyed by sheet, because
+that is the fact it observes, and a sibling screen reports the structure a consumer reads before
+keying a rule to one.
+
+Two conditions in this group have no live instance and keep their proofs on constructed input rather
+than being deleted: an unnumbered note differing across sheets, and a field with no grounding at all.
+Both were emptied by a correction, both are the case someone must not discover halfway through
+authoring, and a condition with no instance and no proof stops reporting without anyone noticing. No
+proof in this group reaches inside a screen to replace what it imports; each classifier takes its
+inputs explicitly so its conditions are reachable from a test.
 
 Every module the registry load reaches carries exactly one reviewed classification, and the census that
 decides this can see what it is measuring. Both halves are asserted, and the second is not decoration:
