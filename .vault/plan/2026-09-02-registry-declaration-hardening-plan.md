@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:c47fc25583a602a59406e9dcaee399fe8e2c0a7822434f7cc760245d3e433663'
+body_hash: 'sha256:833c1719237245db96b134f91caa456539d0fd9bd05ddfba27e86bd5d6f8039d'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -491,6 +491,8 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S447` - Cross-check all four enrolments this package carries and record that the disposition ledgers two rows are exactly the two measured record-drifting trees, and that this works own new screen moved the exposure figure from 27,920 across 34 conditions to 27,922 across 36; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W04.P09.S448` - Read deadline windows as the eighth citing family in both provenance screens, since the taxpayer calendar grounds due dates and no other child names it: 104 of the 263 uncited findings were manufactured by the omission and 243 citing sites outside a manifest were invisible; `dev/registry/analysis/manifest_uncited_references.py dev/registry/analysis/provenance_consistency.py`.
 - [x] `W04.P09.S449` - Declare a revisions citing children once instead of longhand in each screen, since the family list is written out twice and the deadline window omission propagated from the first screen to the second; `dev/registry/analysis`.
+- [x] `W04.P09.S450` - State the provenance repetition ratio with its definition in both places that carry it, since three ratios answer to it and the plan the index docstring and the first correction each gave a different bare number; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md dev/registry/analysis/provenance_consistency.py`.
+- [x] `W04.P09.S451` - Re-measure the reference worklist after the deadline window family joined the walk: 472 pairs, 224 systemic and 55 single-child of which 38 are deadline windows citing their years campaign orden at article 8, a second annual series confirming the manifest is the under-declared side; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 

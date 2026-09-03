@@ -12188,3 +12188,70 @@ Resolved export fields stay out of the shared declaration and are added by the
 screen that needs them, with its reason attached. Folding them in would have
 made the list shorter and the mirror wrong: a manifest reference cited only by a
 derived field would read as cited when no author ever wrote it.
+
+
+## A ratio with three answers, written as a bare number in two places
+
+Correcting the citing-site figure after the deadline-window fix meant correcting
+the ratio beside it, and the ratio turned out to have three answers:
+
+| quantity | value |
+| -------- | ----- |
+| findings, one per citing child and kind of reference | 31,851 |
+| references outside a manifest | 1,459 |
+| citing children summed over those references | 55,065 |
+| citing children per reference | **37.7** |
+| findings per reference | 21.8 |
+
+The claim both places make - a citation is repeated by N children for every one
+place a fix lands - is the fourth row, 38. The plan said nineteen; the index's
+own docstring said nineteen; and the correction first written for the plan said
+twenty-two, which is the fifth row and counts a child once per KIND of reference
+rather than once per reference.
+
+**Three of the four numbers in play were wrong, including the one written to
+replace a wrong one.** The reason is that "the repetition" is ambiguous between
+three ratios and none of the three sites said which it meant, so each author
+computed whichever was to hand and none of them disagreed visibly.
+
+Both places now state the definition with the figure. That costs a sentence and
+removes the ambiguity that produced four different numbers for one idea - the
+same remedy this campaign applies to the registry, where a value without its
+units is exactly this defect in a declaration rather than in prose.
+
+
+## The reference worklist, re-measured, and a second annual series
+
+The reference-scope figures were measured before deadline windows joined the
+walk and are the ones somebody would act on, so they are re-measured here:
+
+| figure | before | after |
+| ------ | ------ | ----- |
+| modelo-and-reference pairs outside a manifest | 414 | **472** |
+| absent from every revision of their modelo | 213 | **224** |
+| cited by exactly one child | 17 | **55** |
+
+The single-child population more than tripled, and **38 of the 55 are cited by a
+deadline window** - the family that was missing. The remainder divide as ten
+formulas, three casillas, three parameters and one binding.
+
+Those 38 are the same shape as the seventeen read earlier, arriving through a
+different family. Modelo 100's deadline windows cite, year by year, the campaign
+orden that sets that year's filing period at article 8: `orden-hac-248-2021` for
+2020, `orden-hfp-207-2022` for 2021, `orden-hfp-310-2023` for 2022,
+`orden-hac-265-2024` for 2023. Each window names the orden that governs its own
+due date, which is the most precise grounding a deadline could carry, and each
+modelo 100 manifest omits it.
+
+That is the second independent series pointing the same way. The earlier one was
+the estimacion objetiva formula citing its year's orden; this is the deadline
+window citing its year's campaign orden. Both are exact, both are single-child,
+and both sit outside a manifest - so the reading recorded earlier holds and now
+rests on two populations rather than one: **where a single child cites something
+its manifest omits, the manifest is the under-declared side.**
+
+It also means the earlier conclusion was reached on a population missing its
+largest contributor. Seventeen single-child references were read and found
+sound; thirty-eight more existed and were invisible because a citing family was
+not walked. The conclusion survived the population more than tripling, which is
+worth more than the original reading was.
