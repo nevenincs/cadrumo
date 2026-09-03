@@ -1,39 +1,228 @@
 schema_version = 1
-inventory_digest = "sha256:48ebdd1dfdbc2bac5c19ea4943df067a1fc8cdef8e7338cea06df4173222121e"
+inventory_digest = "sha256:58e88734b43bfefa49bb6781cde70d9d72aa354e62ae192d3583759df603d405"
 
 [[operations]]
-operation_id = "rename-terminology-coverage-report"
-finding_id = "sha256:5f55e6902559e73c67bfae62342d40770693b272a608c6433aa9b308be68d1d0"
+operation_id = "rename-aeat-domain-section"
+finding_id = "sha256:2aa1f87a0c48ff962ed91b9fc96acf3273c343cbb96ee1ed3960aa0b79ec40fc"
 operation_kind = "symbol-rename"
-disposition = "rename-distinct"
+disposition = "lexical-singular"
 lifecycle = "reviewed"
-old_locator = "class:dev.docs.terminology._coverage.CoverageReport#binding=1"
-old_path = "dev/docs/terminology/_coverage.py"
-new_locator = "class:dev.docs.terminology._coverage.TerminologyCoverageReport#binding=1"
-new_path = "dev/docs/terminology/_coverage.py"
-owner = "dev-docs"
-rationale = "The model is the terminology corpus coverage result; the qualified singular name distinguishes it from registry conformance coverage."
-expected_reference_classes = ["definition", "static-import"]
+old_locator = "class:cadrumo.core.external_constants.AeatDomains#binding=1"
+old_path = "src/cadrumo/core/external_constants.py"
+new_locator = "class:cadrumo.core.external_constants.AeatDomainSection#binding=1"
+new_path = "src/cadrumo/core/external_constants.py"
+owner = "core"
+rationale = "This is a frozen pydantic model for a TOML section; the module's own convention already spells a grouping model AeatSection / OnlineServicesSection / AeatPre303Surface, so the AEAT domain-hostname section follows the same Section suffix."
+expected_reference_classes = ["definition"]
 changed_paths = [
-  "dev/docs/terminology/_coverage.py",
-  "dev/docs/terminology/coverage.py",
-  "dev/docs/terminology/tests/test_coverage.py",
+  "src/cadrumo/core/external_constants.py",
 ]
 generator_commands = []
 focused_gates = [
-  ["uv", "run", "--no-sync", "pytest", "dev/docs/terminology/tests/test_coverage.py", "-q"],
-  ["uv", "run", "--no-sync", "ruff", "check", "dev/docs/terminology/_coverage.py", "dev/docs/terminology/coverage.py", "dev/docs/terminology/tests/test_coverage.py"],
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/core/tests/test_external_constants.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/core/external_constants.py"],
 ]
 moves = []
 
 [[operations.preconditions]]
-path = "dev/docs/terminology/_coverage.py"
-sha256 = "sha256:832a9bf11a5be97bee90164cbc788b1a3fcf284f9868063e8b29ef24a532904a"
+path = "src/cadrumo/core/external_constants.py"
+sha256 = "sha256:903a1ec379e4754426fc9cab19abb1321b0ca1111bdd603afbd31b66b99d0db2"
+
+[[operations]]
+operation_id = "rename-aeat-help-page-section"
+finding_id = "sha256:e075d14bf45dbae7c2c93aedfd838bb284686b4b78723b1dece7d9a39bb50bf9"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.core.external_constants.AeatHelpPages#binding=1"
+old_path = "src/cadrumo/core/external_constants.py"
+new_locator = "class:cadrumo.core.external_constants.AeatHelpPageSection#binding=1"
+new_path = "src/cadrumo/core/external_constants.py"
+owner = "core"
+rationale = "This is a frozen pydantic model for a TOML section; the module's own convention already spells a grouping model AeatSection / OnlineServicesSection / AeatPre303Surface, so the AEAT help-page section follows the same Section suffix."
+expected_reference_classes = ["definition"]
+changed_paths = [
+  "src/cadrumo/core/external_constants.py",
+]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/core/tests/test_external_constants.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/core/external_constants.py"],
+]
+moves = []
 
 [[operations.preconditions]]
-path = "dev/docs/terminology/coverage.py"
-sha256 = "sha256:bff28cf81d442149e39742930fac023053ff00ec054595765b0c69fb48eb810c"
+path = "src/cadrumo/core/external_constants.py"
+sha256 = "sha256:903a1ec379e4754426fc9cab19abb1321b0ca1111bdd603afbd31b66b99d0db2"
+
+[[operations]]
+operation_id = "rename-aeat-oracle-section"
+finding_id = "sha256:342cbf5368b1f631206af2ed2e381f263b91b2eb689a359ce33ad30aba662a04"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.core.external_constants.AeatOracles#binding=1"
+old_path = "src/cadrumo/core/external_constants.py"
+new_locator = "class:cadrumo.core.external_constants.AeatOracleSection#binding=1"
+new_path = "src/cadrumo/core/external_constants.py"
+owner = "core"
+rationale = "This is a frozen pydantic model for a TOML section; the module's own convention already spells a grouping model AeatSection / OnlineServicesSection / AeatPre303Surface, so the AEAT oracle-URL section follows the same Section suffix."
+expected_reference_classes = ["definition"]
+changed_paths = [
+  "src/cadrumo/core/external_constants.py",
+]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/core/tests/test_external_constants.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/core/external_constants.py"],
+]
+moves = []
 
 [[operations.preconditions]]
-path = "dev/docs/terminology/tests/test_coverage.py"
-sha256 = "sha256:d36c359c4e891459e36016d2eec3b923397cd143026d4d519c83c61142fdf746"
+path = "src/cadrumo/core/external_constants.py"
+sha256 = "sha256:903a1ec379e4754426fc9cab19abb1321b0ca1111bdd603afbd31b66b99d0db2"
+
+[[operations]]
+operation_id = "rename-aeat-portal-path-section"
+finding_id = "sha256:149563d478cd87ba40f163d1964a7bbf70e090f4203f0dd8fea89e471ee654ca"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.core.external_constants.AeatPortalPaths#binding=1"
+old_path = "src/cadrumo/core/external_constants.py"
+new_locator = "class:cadrumo.core.external_constants.AeatPortalPathSection#binding=1"
+new_path = "src/cadrumo/core/external_constants.py"
+owner = "core"
+rationale = "This is a frozen pydantic model for a TOML section; the module's own convention already spells a grouping model AeatSection / OnlineServicesSection / AeatPre303Surface, so the AEAT portal-path section follows the same Section suffix."
+expected_reference_classes = ["definition"]
+changed_paths = [
+  "src/cadrumo/core/external_constants.py",
+]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/core/tests/test_external_constants.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/core/external_constants.py"],
+]
+moves = []
+
+[[operations.preconditions]]
+path = "src/cadrumo/core/external_constants.py"
+sha256 = "sha256:903a1ec379e4754426fc9cab19abb1321b0ca1111bdd603afbd31b66b99d0db2"
+
+[[operations]]
+operation_id = "rename-aeat-sede-path-section"
+finding_id = "sha256:baa46a4b01d9ff7900d51dd64aeae0e1b48b7254858a9105dd99bb3a46126bec"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.core.external_constants.AeatSedePaths#binding=1"
+old_path = "src/cadrumo/core/external_constants.py"
+new_locator = "class:cadrumo.core.external_constants.AeatSedePathSection#binding=1"
+new_path = "src/cadrumo/core/external_constants.py"
+owner = "core"
+rationale = "This is a frozen pydantic model for a TOML section; the module's own convention already spells a grouping model AeatSection / OnlineServicesSection / AeatPre303Surface, so the AEAT sede-path section follows the same Section suffix."
+expected_reference_classes = ["definition"]
+changed_paths = [
+  "src/cadrumo/core/external_constants.py",
+]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/core/tests/test_external_constants.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/core/external_constants.py"],
+]
+moves = []
+
+[[operations.preconditions]]
+path = "src/cadrumo/core/external_constants.py"
+sha256 = "sha256:903a1ec379e4754426fc9cab19abb1321b0ca1111bdd603afbd31b66b99d0db2"
+
+[[operations]]
+operation_id = "rename-external-constant-registry"
+finding_id = "sha256:d60e9eb59b24868c3123edcdcdf42d69cb0bbbf572c554d0b725032aa8b160cd"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.core.external_constants.ExternalConstants#binding=1"
+old_path = "src/cadrumo/core/external_constants.py"
+new_locator = "class:cadrumo.core.external_constants.ExternalConstantRegistry#binding=1"
+new_path = "src/cadrumo/core/external_constants.py"
+owner = "core"
+rationale = "The module docstring already describes the root model as the external constants registry; ExternalConstants collides in spirit with the module's own name and reads like a plural collection rather than the single typed registry root."
+expected_reference_classes = ["definition", "static-import", "type-only-import"]
+changed_paths = [
+  "src/cadrumo/core/config.py",
+  "src/cadrumo/core/external_constants.py",
+  "src/cadrumo/core/tests/test_external_constants.py",
+]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/core/tests/test_external_constants.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/core/config.py", "src/cadrumo/core/external_constants.py", "src/cadrumo/core/tests/test_external_constants.py"],
+]
+moves = []
+
+[[operations.preconditions]]
+path = "src/cadrumo/core/config.py"
+sha256 = "sha256:344054b76cc545421db876e152f8ed2a0f0504f255c58dd020bc78da9af6fae1"
+
+[[operations.preconditions]]
+path = "src/cadrumo/core/external_constants.py"
+sha256 = "sha256:903a1ec379e4754426fc9cab19abb1321b0ca1111bdd603afbd31b66b99d0db2"
+
+[[operations.preconditions]]
+path = "src/cadrumo/core/tests/test_external_constants.py"
+sha256 = "sha256:e3e9f64674c96fa2989de7c4c28bf24be4f636158c6069ecc6fa468ab4ae980c"
+
+[[operations]]
+operation_id = "rename-google-oauth-scope-section"
+finding_id = "sha256:3d1bc27788c1dba689ca6641b5de979e834cfcd5f2ece2d21d09ff58f5a1a923"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.core.external_constants.GoogleOAuthScopes#binding=1"
+old_path = "src/cadrumo/core/external_constants.py"
+new_locator = "class:cadrumo.core.external_constants.GoogleOAuthScopeSection#binding=1"
+new_path = "src/cadrumo/core/external_constants.py"
+owner = "core"
+rationale = "This is a frozen pydantic model for a TOML section; the module's own convention already spells a grouping model AeatSection / OnlineServicesSection / AeatPre303Surface, so the Google OAuth-scope section follows the same Section suffix."
+expected_reference_classes = ["definition"]
+changed_paths = [
+  "src/cadrumo/core/external_constants.py",
+]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/core/tests/test_external_constants.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/core/external_constants.py"],
+]
+moves = []
+
+[[operations.preconditions]]
+path = "src/cadrumo/core/external_constants.py"
+sha256 = "sha256:903a1ec379e4754426fc9cab19abb1321b0ca1111bdd603afbd31b66b99d0db2"
+
+[[operations]]
+operation_id = "rename-google-service-section"
+finding_id = "sha256:f90011fe584a98a58aaba9968a022e9b28c639b8f0e0b2754bce54cad63f85f4"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.core.external_constants.GoogleServices#binding=1"
+old_path = "src/cadrumo/core/external_constants.py"
+new_locator = "class:cadrumo.core.external_constants.GoogleServiceSection#binding=1"
+new_path = "src/cadrumo/core/external_constants.py"
+owner = "core"
+rationale = "This is a frozen pydantic model for a TOML section; the module's own convention already spells a grouping model AeatSection / OnlineServicesSection / AeatPre303Surface, so the Google service-surface section follows the same Section suffix."
+expected_reference_classes = ["definition"]
+changed_paths = [
+  "src/cadrumo/core/external_constants.py",
+]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/core/tests/test_external_constants.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/core/external_constants.py"],
+]
+moves = []
+
+[[operations.preconditions]]
+path = "src/cadrumo/core/external_constants.py"
+sha256 = "sha256:903a1ec379e4754426fc9cab19abb1321b0ca1111bdd603afbd31b66b99d0db2"
