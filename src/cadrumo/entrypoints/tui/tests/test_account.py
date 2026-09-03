@@ -39,6 +39,7 @@ def _factories(
     calls: set[str] | None = None,
     appearance: AccountAppearanceFactoryV1 | None = None,
     sign_out: AccountSignOutFactoryV1 | None = None,
+    login_choices: Sequence[ProfileLoginChoice] = (ProfileLoginChoice(profile_id="profile-1", label="Profile one"),),
     preselected_profile_id: str | None = None,
     validate_profile_field: Callable[[str, str], str | None] | None = None,
     launch_profile_source: Callable[[ProfileAcquisitionSourceV1], Awaitable[None]] | None = None,
@@ -74,7 +75,7 @@ def _factories(
     return compose_account_factories(
         profile_overview=cast(ProfileOverview, object()),
         persist_profile_field=persist_profile_field,
-        login_choices=(ProfileLoginChoice(profile_id="profile-1", label="Profile one"),),
+        login_choices=login_choices,
         authenticate=authenticate,
         assess_password=assess_password,
         rotate_password=rotate_password,
@@ -90,7 +91,12 @@ def _factories(
 def test_account_factories_construct_existing_screens_without_host_effects() -> None:
     """Composition does not read or mutate; each screen remains its prior owner."""
     calls: set[str] = set()
-    factories = _factories(calls=calls)
+
+    def refuse_appearance(_app: App[None]) -> str:
+        calls.add("appearance")
+        raise AssertionError("appearance ran while composing an account screen")
+
+    factories = _factories(calls=calls, appearance=refuse_appearance)
     profile = factories.profile(
         TuiScreenContextV1(
             destination="workbench.profile",
@@ -116,7 +122,11 @@ def test_optional_profile_and_login_doors_reach_their_existing_screen_owner() ->
 
     posture = SimpleNamespace(source="censal-review")
     factories = _factories(
-        preselected_profile_id="profile-1",
+        login_choices=(
+            ProfileLoginChoice(profile_id="profile-1", label="Profile one"),
+            ProfileLoginChoice(profile_id="profile-2", label="Profile two"),
+        ),
+        preselected_profile_id="profile-2",
         validate_profile_field=validate,
         launch_profile_source=launch,
         credential_postures=cast(Sequence[AcquisitionSourceCredentialPostureV1], (posture,)),
@@ -132,7 +142,7 @@ def test_optional_profile_and_login_doors_reach_their_existing_screen_owner() ->
     assert profile._validate_field is validate
     assert profile._launch_source is launch
     assert profile._credential_postures == {"censal-review": posture}
-    assert login._preselected == "profile-1"
+    assert login._preselected == "profile-2"
 
 
 def test_profile_factory_refuses_another_destination_before_constructing_a_screen() -> None:
@@ -168,17 +178,27 @@ def test_language_and_appearance_delegates_are_explicit_host_effects() -> None:
 @pytest.mark.asyncio
 async def test_sign_out_is_deferred_to_the_injected_operation_factory() -> None:
     """Composing account utilities neither submits nor starts strong close."""
-    calls = 0
+    calls: set[str] = set()
+    sign_out_calls = 0
     expected = object()
 
     async def sign_out() -> object:
-        nonlocal calls
-        calls += 1
+        nonlocal sign_out_calls
+        sign_out_calls += 1
         return expected
 
-    factories = _factories(sign_out=cast(AccountSignOutFactoryV1, sign_out))
-    assert calls == 0
+    factories = _factories(calls=calls, sign_out=cast(AccountSignOutFactoryV1, sign_out))
+    factories.profile(
+        TuiScreenContextV1(
+            destination="workbench.profile",
+            focus=TuiFocusIdentityV1(destination="workbench.profile", semantic_key="profile.overview"),
+        )
+    )
+    factories.change_user()
+    factories.password()
+    assert calls == set()
+    assert sign_out_calls == 0
 
     actual = await cast(Awaitable[object], factories.sign_out())
     assert actual is expected
-    assert calls == 1
+    assert sign_out_calls == 1
