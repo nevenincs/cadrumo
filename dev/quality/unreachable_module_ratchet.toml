@@ -68,7 +68,6 @@ allowed = [
   "cadrumo.application.wizard._registered_values",  # unreachable
   "cadrumo.application.wizard.legal_zone",  # unreachable
   "cadrumo.core.compatibility_lifecycle",  # unreachable
-  "cadrumo.core.observability.replay",  # unreachable
   "cadrumo.domain.calculations.registry.record_spec",  # unreachable
   "cadrumo.domain.fincas",  # unreachable
   "cadrumo.domain.portals.drift",  # type-only
