@@ -31,7 +31,7 @@ from ...modelo.calculation_actions import calculate_modelo_revision_from_bucket_
 from ...modelo.verification_actions import verify_modelo_revision
 from ...modelo.work_lifecycle import create_work_unit
 from ...tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from .. import (
+from ..ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
     evaluate_ledger_filing_staleness,

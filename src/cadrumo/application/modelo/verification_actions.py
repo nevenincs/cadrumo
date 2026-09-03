@@ -114,10 +114,12 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from ..aggregation import (
     MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND,
     CalculationSourceDiagnostic,
+    missing_evidence_advisory_observations,
+)
+from ..aggregation.ledger_filing_snapshot import (
     assert_evidence_covers_snapshot,
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
-    missing_evidence_advisory_observations,
 )
 from ..calculations.cross_period_clean_state import CrossPeriodDependencyEvidence, CrossPeriodExpectedMemberSet
 from ..calculations.iva_compensation_casillas import M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA

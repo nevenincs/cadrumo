@@ -27,8 +27,8 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests import general_m303_filing_evidence
-from ...aggregation import (
-    LedgerFilingSnapshot,
+from ....domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
+from ...aggregation.ledger_filing_snapshot import (
     compute_ledger_filing_snapshot,
     evaluate_ledger_filing_staleness,
     stale_filed_revisions,

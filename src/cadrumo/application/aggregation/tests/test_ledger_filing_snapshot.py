@@ -15,7 +15,7 @@ from ....domain.modelos.ledger_filing_snapshot import LedgerFilingEvidence, Ledg
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from .._ledger_filing_snapshot import (
+from ..ledger_filing_snapshot import (
     assert_evidence_covers_snapshot,
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,

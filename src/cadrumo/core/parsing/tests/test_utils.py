@@ -33,7 +33,7 @@ class _NumericTier(Enum):
     """An enum whose ``.value`` is NOT a string -- the discriminating case.
 
     Distinguishes this converged ``_enum_value`` from the unrelated, genuinely
-    different ``_enum_value`` in ``application/aggregation/_ledger_filing_snapshot.py``:
+    different ``_enum_value`` in ``application/aggregation/ledger_filing_snapshot.py``:
     that one falls back to ``str(value)`` (the enum's own repr, e.g.
     ``"_NumericTier.THREE"``) when ``.value`` is not itself a string, while
     this converged version stringifies ``.value`` directly (``"3"``). Both are
@@ -117,7 +117,7 @@ def test_enum_value_reads_a_string_enum_member() -> None:
 
 
 def test_enum_value_stringifies_a_non_string_enum_value() -> None:
-    """The discriminator against the unconverged sibling in ``_ledger_filing_snapshot.py``.
+    """The discriminator against the unconverged sibling in ``ledger_filing_snapshot.py``.
 
     ``getattr(value, "value", value)`` reads ``.value`` first and stringifies
     THAT -- ``"3"``, not the enum's own repr.
