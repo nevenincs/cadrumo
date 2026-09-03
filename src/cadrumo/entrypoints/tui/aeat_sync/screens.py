@@ -48,7 +48,6 @@ _LABEL_PREFIXES: Final = {
 }
 _OPERATION_LABEL_KEYS: Final = {
     ("operator.profile.edit", "user-profile.censo-review"): "tui.aeat_sync.action.review_census",
-    ("operator.live.filed.pull", "live.filed-history.pull"): "tui.aeat_sync.action.pull_filed",
     ("operator.live.filed.pull_all", "live.filed-history.pull"): "tui.aeat_sync.action.pull_filed_all",
 }
 
@@ -303,6 +302,7 @@ class AeatSyncWorkspaceScreen(Screen[None]):
             status.update(aeat_sync_copy("tui.aeat_sync.operation.handed_off"))
         finally:
             self._in_flight_id = None
+            self._set_operation_buttons_disabled(False)
             event.button.disabled = True
 
     def _set_operation_buttons_disabled(self, disabled: bool) -> None:

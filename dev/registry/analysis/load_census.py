@@ -102,6 +102,9 @@ COLD_REGIME_ENV: Final[tuple[str, ...]] = (
     "CADRUMO_VALIDATION_VERDICT_CACHE_DIR",
 )
 
+#: Named once, as this tree requires of a module doing text IO.
+_UTF_8: Final[str] = "utf-8"
+
 TRACE_REGIMES: Final[tuple[str, ...]] = ("warm", "cold", "inspection_snapshot")
 
 
@@ -431,17 +434,14 @@ def evaluated_string_sequence(module: str, name: str) -> tuple[str, ...] | None:
     is not a sequence of strings - because a fallback that guessed would be
     worse than the unresolved record the caller already knows how to report.
     """
-    script = (
-        "import importlib, json, sys
-"
-        "module = importlib.import_module(sys.argv[1])
-"
-        "value = getattr(module, sys.argv[2], None)
-"
-        "ok = isinstance(value, (tuple, list)) and all(isinstance(item, str) for item in value)
-"
-        "sys.stdout.write(json.dumps(list(value)) if ok else '')
-"
+    script = chr(10).join(
+        (
+            "import importlib, json, sys",
+            "module = importlib.import_module(sys.argv[1])",
+            "value = getattr(module, sys.argv[2], None)",
+            "ok = isinstance(value, (tuple, list)) and all(isinstance(i, str) for i in value)",
+            "sys.stdout.write(json.dumps(list(value)) if ok else str())",
+        )
     )
     completed = subprocess.run(  # noqa: S603 - resolved interpreter, fixed argv, no caller input
         [sys.executable, "-c", script, module, name],
@@ -458,7 +458,9 @@ def evaluated_string_sequence(module: str, name: str) -> tuple[str, ...] | None:
     return tuple(members)
 
 
-def _loop_resolved_targets(tree: ast.Module, constants: Mapping[str, tuple[str, ...]], *, module: str) -> dict[int, tuple[str, ...]]:
+def _loop_resolved_targets(
+    tree: ast.Module, constants: Mapping[str, tuple[str, ...]], *, module: str
+) -> dict[int, tuple[str, ...]]:
     """Resolve ``for name in CONSTANT: import_module(name)`` to the constant's members.
 
     This is the one indirection worth following, because it is how every

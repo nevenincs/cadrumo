@@ -902,3 +902,81 @@ async def test_overview_census_label_is_distinct_and_notification_listing_has_no
                 assert tr("tui.aeat_sync.refusal.operation_handoff", locale=locale) not in status
     finally:
         I18N_STRICT_MISSING_KEYS.reset(token)
+
+
+@pytest.mark.asyncio
+async def test_completing_one_overview_operation_keeps_the_other_action_reachable() -> None:
+    """The global in-flight guard must not become a global consumed-state guard."""
+    rows = (
+        AeatSyncWorkspaceOverviewRowV1(
+            area=AeatSyncOverviewArea.CENSUS,
+            local_state=AeatSyncSourceState.PRESENT,
+            aeat_state=AeatSyncSourceState.PRESENT,
+            local_observed_at=_T1,
+            aeat_observed_at=_T2,
+            discrepancy_kind=AeatSyncDiscrepancyKind.NONE,
+            supported_actions=(ActionReference(action_id="operator.profile.edit"),),
+            supported_operations=("user-profile.censo-review",),
+        ),
+        AeatSyncWorkspaceOverviewRowV1(
+            area=AeatSyncOverviewArea.FILED_DECLARATIONS,
+            local_state=AeatSyncSourceState.PRESENT,
+            aeat_state=AeatSyncSourceState.PRESENT,
+            local_observed_at=_T1,
+            aeat_observed_at=_T2,
+            discrepancy_kind=AeatSyncDiscrepancyKind.NONE,
+            supported_actions=(ActionReference(action_id="operator.live.filed.pull_all"),),
+            supported_operations=("live.filed-history.pull",),
+        ),
+    )
+    observations = tuple(
+        AeatSyncWorkspaceZoneObservationV1(
+            zone=zone,
+            sources=tuple(
+                AeatSyncWorkspaceSourceObservationV1(
+                    source=source,
+                    availability=AeatSyncWorkspaceAvailability.AVAILABLE,
+                    observed_at=_T2,
+                    item_count=2 if zone is AeatSyncWorkspaceZone.OVERVIEW else 0,
+                )
+                for source in aeat_sync_workspace_sources(zone)
+            ),
+        )
+        for zone in AeatSyncWorkspaceZone
+    )
+    contracts = OperationPublicContractSetV1.build(
+        (*_contracts().definitions, *_contracts("operator.live.filed.pull_all", "live.filed-history.pull").definitions)
+    )
+    projection = project_aeat_sync_workspace(
+        bucket_id=_BUCKET_ID,
+        subject_key=_SUBJECT_KEY,
+        zone_observations=observations,
+        action_catalogue=OPERATOR_ACTION_CATALOGUE,
+        operation_contracts=contracts,
+        overview=tuple(AeatSyncWorkspaceFactV1(_BUCKET_ID, _SUBJECT_KEY, row) for row in rows),
+    )
+    calls: list[AeatSyncOperationRequestV1] = []
+
+    async def handoff(request: AeatSyncOperationRequestV1) -> None:
+        calls.append(request)
+
+    screen = AeatSyncOverviewScreen(
+        AeatSyncWorkspaceController(
+            TuiScreenContextV1(destination="workbench.aeat_sync"),
+            projection,
+            operation_contracts=contracts,
+            operation_handoff=handoff,
+        )
+    )
+    async with ScreenHostApp[None](screen).run_test(size=(80, 24)) as pilot:
+        await pilot.pause()
+        first = screen.query_one("#aeat-sync-operation-0", Button)
+        second = screen.query_one("#aeat-sync-operation-1", Button)
+        await pilot.click(first)
+        assert first.disabled
+        assert not second.disabled
+        await pilot.click(second)
+    assert tuple(call.action.action_id for call in calls) == (
+        "operator.profile.edit",
+        "operator.live.filed.pull_all",
+    )
