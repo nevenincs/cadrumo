@@ -63,6 +63,41 @@ def test_populated_declaration_identity_is_stable_across_fresh_builds() -> None:
     assert first_identity == second_identity
 
 
+@pytest.mark.parametrize(
+    ("scenario", "addressless_action_id"),
+    (
+        (HomeFixtureScenario.READY, "fixture.classify"),
+        (HomeFixtureScenario.BLOCKED, "fixture.review_blocker"),
+    ),
+)
+def test_populated_actions_cover_declaration_addressed_and_cross_cutting_tasks(
+    scenario: HomeFixtureScenario,
+    addressless_action_id: str,
+) -> None:
+    projection = build_home_projection_fixture(scenario)
+
+    addressed = projection.actions[0]
+    assert addressed.modelo == "303"
+    assert addressed.filing_year == 2026
+    assert addressed.period is not None and addressed.period.registry_token == "3T"
+    addressless = next(item for item in projection.actions if item.action.action.action_id == addressless_action_id)
+    assert (addressless.modelo, addressless.filing_year, addressless.period) == (None, None, None)
+
+
+@pytest.mark.parametrize("scenario", (HomeFixtureScenario.READY, HomeFixtureScenario.BLOCKED))
+def test_populated_agenda_period_state_agrees_with_generated_date(scenario: HomeFixtureScenario) -> None:
+    projection = build_home_projection_fixture(scenario)
+    generated_on = projection.generated_at.date()
+
+    assert tuple(item.due_on for item in projection.agenda) == tuple(sorted(item.due_on for item in projection.agenda))
+    assert all(
+        item.due_on < generated_on for item in projection.agenda if item.period_state is OverviewPeriodState.LATE
+    )
+    assert all(
+        item.due_on >= generated_on for item in projection.agenda if item.period_state is OverviewPeriodState.DUE
+    )
+
+
 def test_ready_empty_and_blocked_projections_keep_distinct_typed_signals() -> None:
     ready = build_home_projection_fixture(HomeFixtureScenario.READY)
     empty = build_home_projection_fixture(HomeFixtureScenario.EMPTY)

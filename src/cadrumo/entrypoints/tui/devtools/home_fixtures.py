@@ -34,6 +34,7 @@ from ....application.overview.home import (
 from ....core.period import Period
 
 _GENERATED_AT: Final[datetime] = datetime(2026, 9, 3, 10, 0, tzinfo=UTC)
+_PAST_DUE_ON: Final[date] = date(2026, 7, 20)
 _DUE_ON: Final[date] = date(2026, 10, 20)
 _PROFILE_LABEL: Final[str] = "Fixture profile"
 
@@ -80,11 +81,23 @@ def _account(posture: HomeSessionPosture = HomeSessionPosture.ACTIVE) -> HomeAcc
     )
 
 
-def _action(*, rank: int, action_id: str, reason_code: str) -> HomeNextAction:
+def _action(
+    *,
+    rank: int,
+    action_id: str,
+    reason_code: str,
+    modelo: str | None = None,
+    period_code: str | None = None,
+) -> HomeNextAction:
+    if (modelo is None) is not (period_code is None):
+        raise ValueError("fixture action declaration address must be complete or absent")
     return HomeNextAction(
         rank=rank,
         action=DeclaredNextAction(action=ActionReference(action_id=action_id)),
         reason_code=reason_code,
+        modelo=modelo,
+        filing_year=2026 if modelo is not None else None,
+        period=_period(period_code) if period_code is not None else None,
     )
 
 
@@ -143,7 +156,13 @@ def _ready() -> HomeProjectionV1:
         account=_account(),
         actions_state=_available(),
         actions=(
-            _action(rank=0, action_id="fixture.review", reason_code="fixture.review_required"),
+            _action(
+                rank=0,
+                action_id="fixture.review",
+                reason_code="fixture.review_required",
+                modelo="303",
+                period_code="3T",
+            ),
             _action(rank=1, action_id="fixture.classify", reason_code="fixture.classification_pending"),
             _action(rank=2, action_id="fixture.evidence", reason_code="fixture.evidence_missing"),
         ),
@@ -180,20 +199,20 @@ def _ready() -> HomeProjectionV1:
         agenda_evidence_state=_available(),
         agenda=(
             _agenda(
+                modelo="130",
+                period_code="2T",
+                due_on=_PAST_DUE_ON,
+                period_state=OverviewPeriodState.LATE,
+                local_state=OverviewLocalFilingState.NOT_READY_TO_FILE,
+                aeat_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
+            ),
+            _agenda(
                 modelo="303",
                 period_code="3T",
                 due_on=_DUE_ON,
                 period_state=OverviewPeriodState.DUE,
                 local_state=OverviewLocalFilingState.READY_TO_FILE,
                 aeat_state=OverviewAeatSubmissionState.NOT_OBSERVED,
-            ),
-            _agenda(
-                modelo="130",
-                period_code="2T",
-                due_on=date(2026, 10, 21),
-                period_state=OverviewPeriodState.LATE,
-                local_state=OverviewLocalFilingState.NOT_READY_TO_FILE,
-                aeat_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
             ),
             _agenda(
                 modelo="390",
@@ -287,7 +306,13 @@ def _blocked() -> HomeProjectionV1:
         account=_account(),
         actions_state=_available(),
         actions=(
-            _action(rank=0, action_id="fixture.resolve_blocker", reason_code="fixture.blocked_dependency"),
+            _action(
+                rank=0,
+                action_id="fixture.resolve_blocker",
+                reason_code="fixture.blocked_dependency",
+                modelo="303",
+                period_code="3T",
+            ),
             _action(rank=1, action_id="fixture.review_blocker", reason_code="fixture.blocked_review"),
             _action(rank=2, action_id="fixture.evidence_blocker", reason_code="fixture.blocked_evidence"),
         ),
@@ -324,20 +349,20 @@ def _blocked() -> HomeProjectionV1:
         agenda_evidence_state=_available(),
         agenda=(
             _agenda(
+                modelo="130",
+                period_code="2T",
+                due_on=_PAST_DUE_ON,
+                period_state=OverviewPeriodState.LATE,
+                local_state=OverviewLocalFilingState.READY_TO_FILE,
+                aeat_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
+            ),
+            _agenda(
                 modelo="303",
                 period_code="3T",
                 due_on=_DUE_ON,
-                period_state=OverviewPeriodState.LATE,
+                period_state=OverviewPeriodState.DUE,
                 local_state=OverviewLocalFilingState.NOT_READY_TO_FILE,
                 aeat_state=OverviewAeatSubmissionState.NOT_OBSERVED,
-            ),
-            _agenda(
-                modelo="130",
-                period_code="2T",
-                due_on=date(2026, 10, 21),
-                period_state=OverviewPeriodState.DUE,
-                local_state=OverviewLocalFilingState.READY_TO_FILE,
-                aeat_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
             ),
             _agenda(
                 modelo="390",
