@@ -179,6 +179,7 @@ Submodules
    cadrumo.domain.calculations.registry.relations
    cadrumo.domain.calculations.registry.remote_state_guard
    cadrumo.domain.calculations.registry.renta_web_open_oracle
+   cadrumo.domain.calculations.registry.renta_web_open_replay_corpus
    cadrumo.domain.calculations.registry.retenciones_bindings
    cadrumo.domain.calculations.registry.runtime_graph
    cadrumo.domain.calculations.registry.schedules

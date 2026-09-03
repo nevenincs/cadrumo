@@ -75,3 +75,4 @@ Submodules
    cadrumo.application.ledger.rule_repository
    cadrumo.application.ledger.transaction_repository
    cadrumo.application.ledger.usage_ratio_repository
+   cadrumo.application.ledger.workspace

@@ -16,6 +16,7 @@ Subpackages
    cadrumo.entrypoints.tui.components
    cadrumo.entrypoints.tui.devtools
    cadrumo.entrypoints.tui.flows
+   cadrumo.entrypoints.tui.ledger
    cadrumo.entrypoints.tui.modelo
    cadrumo.entrypoints.tui.operations
    cadrumo.entrypoints.tui.profile

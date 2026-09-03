@@ -20,6 +20,5 @@ Submodules
    cadrumo.core.observability.models
    cadrumo.core.observability.recorder
    cadrumo.core.observability.redaction_rules
-   cadrumo.core.observability.replay
    cadrumo.core.observability.sink
    cadrumo.core.observability.store
