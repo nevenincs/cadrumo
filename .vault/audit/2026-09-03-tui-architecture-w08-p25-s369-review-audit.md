@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f8a1781d0bd54ae751313e6e12921a8a8ffea0812954be2427a4660f1751e77f'
+body_hash: 'sha256:747abbcf17c8977d042197294a854c0ca87c9ecfa54472adad5ec5dac4cfde88'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
@@ -56,6 +56,18 @@ The static catalogue names exactly Home, Ledger, Declarations and AEAT Sync as p
 
 The 13 focused tests cover the static destination set, admission states, missing factories, unavailable routes, valid factory output, semantic focus, search admission drift, unknown search actions and one import inventory. They do not inject an undeclared action through a directly constructed target, construct a complete catalogue with corrupted descriptor metadata or order, or supply a non-callable/wrong-signature factory. The no-I/O detector reads the production file using test-side `Path`, scans only `ImportFrom` nodes, and does not inspect calls, so it would miss a direct `import pathlib`, aliased I/O, or repository call. Current purity is sound by inspection, but the gate does not prove it.
 
+### final-action-authority | low | Direct targets now use the same fail-closed action join as search results
+
+`create_screen()` now resolves every non-null target candidate through the current route before constructing a factory context. The original direct probe now raises `UnresolvedActionCandidateError`, and the factory is not invoked. The focused regression test exercises this public direct-target path. `action-authority-bypass` is closed.
+
+### final-descriptor-factory-contracts | low | Canonical descriptors and runtime factory shape now fail closed
+
+Route construction now requires its descriptor to equal the static canonical descriptor; catalogue construction additionally requires canonical order. The original relabelled and rezoned Home probe now raises `NavigationContractError`. Available routes validate callable factory shape and one-positional-context binding during assembly, and invalid invocation/return boundaries use `DestinationFactoryError`; the original non-callable probe now fails during route construction. Focused tests cover spoofed metadata, reordered routes, wrong arity and typed invocation failure. `descriptor-integrity` and `factory-runtime-contract` are closed.
+
+### final-gate-disposition | low | Remediation tests detect all reproduced contract defects
+
+The focused suite grew from 13 to 16 tests and now contains direct defect probes for each reproduced authority, descriptor and factory failure. The import-only purity assertion remains narrower than a comprehensive AST I/O detector, but the reviewed module is pure by full inspection, imports in the accepted entrypoint-to-application direction, and carries no repository, network, filesystem, locale catalogue or concrete-screen dependency. That residual test-hardening opportunity does not leave a production defect in S369. `navigation-gate-teeth` is closed for the blocking findings.
+
 <!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
      severity, using the heading form
 
@@ -72,4 +84,6 @@ The 13 focused tests cover the static destination set, admission states, missing
 3. Validate the factory callable/protocol at route assembly and return `DestinationFactoryError` for boundary-shape failures; retain the existing concrete `Screen` return validation.
 4. Add bite probes for direct-target undeclared and cross-destination actions, relabelled/rezoned/reordered descriptors, and non-callable/wrong-signature factories. Expand the purity gate across `Import`, `ImportFrom` and relevant call forms.
 5. Focused Pytest passed 13 tests; Ruff and ty passed; Basedpyright reported 0 errors, warnings or notes. No critical finding exists, but one high and three medium findings remain open. `W08.P25.S369` must not close.
+6. Final remediation probes rejected the undeclared direct action, spoofed descriptor and non-callable factory at their owning boundaries. Focused Pytest passed 16 tests; Ruff and ty passed; Basedpyright reported 0 errors, warnings or notes.
+7. No critical, high or medium finding remains open. `W08.P25.S369` may close.
 
