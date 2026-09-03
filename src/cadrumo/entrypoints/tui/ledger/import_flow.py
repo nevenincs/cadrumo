@@ -7,40 +7,27 @@ from typing import cast, override
 from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Static
 
-from ..components.widgets import ContentDataTable, ContentScroll
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
+from ..components.widgets import ContentDataTable
+from .controller import LedgerWorkspaceController, ledger_copy
 from .models import LedgerFlowState, LedgerPreparedImportV1
+from .workspace_presentation import LedgerConfirmationFlowScreen, ledger_workspace_page
 
 
-class LedgerImportScreen(LedgerWorkspaceScreen):
+class LedgerImportScreen(LedgerConfirmationFlowScreen):
     """Select and submit only application-prepared import operations."""
 
     def __init__(self, controller: LedgerWorkspaceController) -> None:
         """Retain only injected, pre-resolved import choices and their door."""
         super().__init__(controller, id="ledger-import-screen")
-        self._flow_state = LedgerFlowState.EDITING
         self.selected_choice: LedgerPreparedImportV1 | None = None
 
-    @property
-    def flow_state(self) -> LedgerFlowState:
-        """Expose the monotonic interaction state without a public setter."""
-        return self._flow_state
-
-    def _transition(self, target: LedgerFlowState) -> None:
-        allowed = {
-            LedgerFlowState.EDITING: {LedgerFlowState.CONFIRMING, LedgerFlowState.CANCELLED},
-            LedgerFlowState.CONFIRMING: {LedgerFlowState.SUBMITTING, LedgerFlowState.CANCELLED},
-            LedgerFlowState.SUBMITTING: {LedgerFlowState.SUCCEEDED, LedgerFlowState.FAILED},
-        }
-        if target not in allowed.get(self._flow_state, set()):
-            raise RuntimeError("invalid import flow transition")
-        self._flow_state = target
+    FLOW_NAME = "import"
 
     @override
     def compose(self) -> ComposeResult:
         yield Static(ledger_copy("tui.ledger.import.title"), classes="cadrumo-banner")
-        with ContentScroll(id="ledger-page", classes="cadrumo-scroll ledger-page"):
-            yield ContentDataTable[str](id="ledger-navigation", cursor_type="row", zebra_stripes=True)
+        with ledger_workspace_page() as navigation:
+            yield navigation
             yield Static(ledger_copy("tui.ledger.import.prompt"), markup=False)
             yield ContentDataTable[str](id="ledger-import-choices", cursor_type="row", zebra_stripes=True)
             yield Static("", id="ledger-flow-status", markup=False)
@@ -88,7 +75,7 @@ class LedgerImportScreen(LedgerWorkspaceScreen):
             LedgerFlowState.EDITING,
             LedgerFlowState.CONFIRMING,
         }:
-            self._cancel()
+            self._cancel_flow()
             return
         if (
             self.flow_state is not LedgerFlowState.CONFIRMING
@@ -118,7 +105,7 @@ class LedgerImportScreen(LedgerWorkspaceScreen):
             self._transition(LedgerFlowState.SUCCEEDED)
             status.update(ledger_copy("tui.ledger.import.success", imported=result.imported, skipped=result.skipped))
 
-    def _cancel(self) -> None:
+    def _cancel_flow(self) -> None:
         if self.flow_state not in {LedgerFlowState.EDITING, LedgerFlowState.CONFIRMING}:
             return
         self.selected_choice = None
@@ -126,16 +113,5 @@ class LedgerImportScreen(LedgerWorkspaceScreen):
         self.query_one("#ledger-flow-status", Static).update("")
         self.query_one("#ledger-import-confirm", Button).disabled = True
         self.query_one("#ledger-import-cancel", Button).disabled = True
-
-    @override
-    def action_back(self) -> None:
-        if self.flow_state is LedgerFlowState.SUBMITTING:
-            self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.flow.in_flight_refusal"))
-            return
-        if self.flow_state is LedgerFlowState.CONFIRMING:
-            self._cancel()
-            return
-        super().action_back()
-
 
 __all__ = ["LedgerImportScreen"]

@@ -1004,6 +1004,67 @@ tui:
       never_captured: Mai capturat
       stale: Últimes dades capturades
       unavailable: No disponible
+    calendar:
+      aeat:
+        accepted: Acceptada
+        justificante_verified: Justificant verificat
+        not_observed: No observada
+        submitted_observed: Enviament observat
+        unknown: Font no observable
+      column:
+        aeat: Evidència AEAT
+        close: Tancament
+        declaration: Declaració
+        legal: Situació legal
+        local: Estat local
+      detail:
+        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificant: {receipt}'
+        dates: 'Obertura: {opening} · Pagament: {payment} · Tancament ajustat: {closing}'
+        source: '{source}: {availability} · Observat: {observed}'
+      empty:
+        known: No hi ha obligacions en aquest interval.
+        search: Cap obligació coincideix amb la cerca i l'àmbit.
+        stale: L'última agenda observada ({observed}) no té files; les dades estan
+          desactualitzades.
+      justificante:
+        not_verified: No verificat
+        unknown: Desconegut
+        verified: Verificat
+      legal:
+        due_soon: Venç aviat
+        due_today: Venç avui
+        filed: Presentada
+        not_applicable: No aplicable
+        overdue: Vençuda
+        upcoming: Propera
+      local:
+        external_baseline_imported: Registre extern importat
+        not_ready_to_file: No preparada
+        ready_to_file: Preparada per presentar
+        unknown: Font no observable
+      never_observed: Mai observat
+      none: No aplicable
+      scope:
+        all: Totes
+        evidence_unknown: Evidència AEAT desconeguda
+        filed: Presentades localment
+        overdue: Vençudes
+        past: Passades
+        upcoming: Properes
+      search:
+        placeholder: Cerca per model, exercici, període, estat o data
+      source:
+        aeat:
+          evidence: Evidència AEAT
+        local:
+          filing: Presentació local
+        schedule: Calendari legal
+      title: Agenda de declaracions
+      user:
+        due: Pendent
+        filed: Presentada localment
+        late: Endarrerida
+        unknown: Desconeguda
     column:
       aeat_accepted: Acceptació de l'AEAT observada
       aeat_evidence: Evidència de l'AEAT
@@ -1019,6 +1080,7 @@ tui:
       updated: Actualitzada
       when: Data
     destination:
+      calendar: Calendari fiscal
       filing_history: Historial de presentacions
       modelo_workspace: Obre l'espai de declaració
       overview: Declaracions

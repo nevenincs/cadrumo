@@ -8,7 +8,7 @@ from textual.app import ComposeResult
 from textual.widgets import DataTable, Static
 
 from ....core.identity import TransactionId
-from ..components.widgets import ContentDataTable, ContentScroll
+from ..components.widgets import ContentDataTable
 from .controller import (
     LedgerEntrySelected,
     LedgerWorkspaceController,
@@ -16,6 +16,7 @@ from .controller import (
     ledger_copy,
     review_status_label,
 )
+from .workspace_presentation import ledger_workspace_page, restore_transaction_focus
 
 
 class LedgerEntriesScreen(LedgerWorkspaceScreen):
@@ -29,8 +30,8 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
     @override
     def compose(self) -> ComposeResult:
         yield Static(ledger_copy("tui.ledger.entries.title"), classes="cadrumo-banner")
-        with ContentScroll(id="ledger-page", classes="cadrumo-scroll ledger-page"):
-            yield ContentDataTable[str](id="ledger-navigation", cursor_type="row", zebra_stripes=True)
+        with ledger_workspace_page() as navigation:
+            yield navigation
             yield Static(
                 ledger_copy("tui.ledger.entries.redacted"),
                 markup=False,
@@ -50,17 +51,11 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
             self.query_one("#ledger-refusal", Static).update(
                 ledger_copy("tui.ledger.entries.empty")
             )
-        restored = self.controller.restored_transaction_id()
-        if restored is None:
-            self.query_one("#ledger-navigation", DataTable).focus()
-            return
-        row_index = next(
-            (index for index, row in enumerate(table.ordered_rows) if row.key.value == restored),
-            None,
+        restore_transaction_focus(
+            navigation=self.query_one("#ledger-navigation", DataTable),
+            table=table,
+            transaction_id=self.controller.restored_transaction_id(),
         )
-        if row_index is not None:
-            table.move_cursor(row=row_index)
-            table.focus()
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Route navigation or retain a safe semantic entry selection."""

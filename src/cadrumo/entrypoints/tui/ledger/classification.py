@@ -9,9 +9,10 @@ from textual.widgets import Button, DataTable, Static
 
 from ....application.ledger.models import ManualLedgerTransactionPatch
 from ....domain.transactions.enums import BusinessClassification
-from ..components.widgets import ContentDataTable, ContentScroll
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
+from ..components.widgets import ContentDataTable
+from .controller import LedgerWorkspaceController, ledger_copy
 from .models import LedgerFlowState
+from .workspace_presentation import LedgerConfirmationFlowScreen, ledger_workspace_page
 
 _CHOICES = (
     (BusinessClassification.BUSINESS, "tui.ledger.classification.business"),
@@ -20,35 +21,21 @@ _CHOICES = (
 )
 
 
-class LedgerClassificationScreen(LedgerWorkspaceScreen):
+class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
     """Let an operator explicitly edit, confirm, or cancel one classification."""
 
     def __init__(self, controller: LedgerWorkspaceController) -> None:
         """Retain an injected command-capable workspace controller."""
         super().__init__(controller, id="ledger-classification-screen")
-        self._flow_state = LedgerFlowState.EDITING
         self.selected_classification: BusinessClassification | None = None
 
-    @property
-    def flow_state(self) -> LedgerFlowState:
-        """Expose the monotonic interaction state without a public setter."""
-        return self._flow_state
-
-    def _transition(self, target: LedgerFlowState) -> None:
-        allowed = {
-            LedgerFlowState.EDITING: {LedgerFlowState.CONFIRMING, LedgerFlowState.CANCELLED},
-            LedgerFlowState.CONFIRMING: {LedgerFlowState.SUBMITTING, LedgerFlowState.CANCELLED},
-            LedgerFlowState.SUBMITTING: {LedgerFlowState.SUCCEEDED, LedgerFlowState.FAILED},
-        }
-        if target not in allowed.get(self._flow_state, set()):
-            raise RuntimeError("invalid classification flow transition")
-        self._flow_state = target
+    FLOW_NAME = "classification"
 
     @override
     def compose(self) -> ComposeResult:
         yield Static(ledger_copy("tui.ledger.classification.title"), classes="cadrumo-banner")
-        with ContentScroll(id="ledger-page", classes="cadrumo-scroll ledger-page"):
-            yield ContentDataTable[str](id="ledger-navigation", cursor_type="row", zebra_stripes=True)
+        with ledger_workspace_page() as navigation:
+            yield navigation
             position, total, short_id = self.controller.classification_target_coordinate()
             yield Static(
                 ledger_copy(
@@ -104,7 +91,7 @@ class LedgerClassificationScreen(LedgerWorkspaceScreen):
             LedgerFlowState.EDITING,
             LedgerFlowState.CONFIRMING,
         }:
-            self._cancel()
+            self._cancel_flow()
             return
         if (
             self.flow_state is not LedgerFlowState.CONFIRMING
@@ -136,7 +123,7 @@ class LedgerClassificationScreen(LedgerWorkspaceScreen):
             self._transition(LedgerFlowState.SUCCEEDED)
             status.update(ledger_copy("tui.ledger.classification.success"))
 
-    def _cancel(self) -> None:
+    def _cancel_flow(self) -> None:
         if self.flow_state not in {LedgerFlowState.EDITING, LedgerFlowState.CONFIRMING}:
             return
         self.selected_classification = None
@@ -144,16 +131,5 @@ class LedgerClassificationScreen(LedgerWorkspaceScreen):
         self.query_one("#ledger-flow-status", Static).update("")
         self.query_one("#ledger-classification-confirm", Button).disabled = True
         self.query_one("#ledger-classification-cancel", Button).disabled = True
-
-    @override
-    def action_back(self) -> None:
-        if self.flow_state is LedgerFlowState.SUBMITTING:
-            self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.flow.in_flight_refusal"))
-            return
-        if self.flow_state is LedgerFlowState.CONFIRMING:
-            self._cancel()
-            return
-        super().action_back()
-
 
 __all__ = ["LedgerClassificationScreen"]

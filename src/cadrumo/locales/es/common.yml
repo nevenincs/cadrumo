@@ -1015,6 +1015,67 @@ tui:
       never_captured: Nunca capturado
       stale: Últimos datos capturados
       unavailable: No disponible
+    calendar:
+      aeat:
+        accepted: Aceptada
+        justificante_verified: Justificante verificado
+        not_observed: No observada
+        submitted_observed: Envío observado
+        unknown: Fuente no observable
+      column:
+        aeat: Evidencia AEAT
+        close: Cierre
+        declaration: Declaración
+        legal: Situación legal
+        local: Estado local
+      detail:
+        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificante: {receipt}'
+        dates: 'Apertura: {opening} · Pago: {payment} · Cierre ajustado: {closing}'
+        source: '{source}: {availability} · Observado: {observed}'
+      empty:
+        known: No hay obligaciones en este intervalo.
+        search: Ninguna obligación coincide con la búsqueda y el ámbito.
+        stale: No hay filas en la última agenda observada ({observed}); los datos
+          están desactualizados.
+      justificante:
+        not_verified: No verificado
+        unknown: Desconocido
+        verified: Verificado
+      legal:
+        due_soon: Vence pronto
+        due_today: Vence hoy
+        filed: Presentada
+        not_applicable: No aplicable
+        overdue: Vencida
+        upcoming: Próxima
+      local:
+        external_baseline_imported: Registro externo importado
+        not_ready_to_file: No lista
+        ready_to_file: Lista para presentar
+        unknown: Fuente no observable
+      never_observed: Nunca observado
+      none: No aplicable
+      scope:
+        all: Todas
+        evidence_unknown: Evidencia AEAT desconocida
+        filed: Presentadas localmente
+        overdue: Vencidas
+        past: Pasadas
+        upcoming: Próximas
+      search:
+        placeholder: Buscar por modelo, ejercicio, período, estado o fecha
+      source:
+        aeat:
+          evidence: Evidencia AEAT
+        local:
+          filing: Presentación local
+        schedule: Calendario legal
+      title: Agenda de declaraciones
+      user:
+        due: Pendiente
+        filed: Presentada localmente
+        late: Atrasada
+        unknown: Desconocida
     column:
       aeat_accepted: Aceptación de la AEAT observada
       aeat_evidence: Evidencia de la AEAT
@@ -1030,6 +1091,7 @@ tui:
       updated: Actualizada
       when: Fecha
     destination:
+      calendar: Calendario fiscal
       filing_history: Historial de presentaciones
       modelo_workspace: Abrir espacio de declaración
       overview: Declaraciones

@@ -14,7 +14,6 @@ from ....application.ledger.workspace import LedgerWorkspaceArea, LedgerWorkspac
 from ....application.operator_actions.catalogue import lookup_action
 from ....application.operator_actions.models import ActionReference
 from ....core.identity import TransactionId
-from ..components.widgets import ContentDataTable, ContentScroll
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
 from .classification import LedgerClassificationScreen
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
@@ -33,6 +32,7 @@ from .models import (
 from .overview import LedgerOverviewScreen
 from .reconciliation import LedgerReconciliationScreen
 from .review import LedgerReviewScreen
+from .workspace_presentation import ledger_workspace_page
 
 type LedgerInternalScreenFactoryV1 = Callable[[LedgerWorkspaceController], LedgerWorkspaceScreen]
 
@@ -53,8 +53,8 @@ class LedgerUnavailableScreen(LedgerWorkspaceScreen):
             ledger_copy("tui.ledger.unavailable.title"),
             classes="cadrumo-banner",
         )
-        with ContentScroll(id="ledger-page", classes="cadrumo-scroll ledger-page"):
-            yield ContentDataTable[str](id="ledger-navigation", cursor_type="row", zebra_stripes=True)
+        with ledger_workspace_page() as navigation:
+            yield navigation
             yield Static(
                 ledger_copy(self._route_refusal.reason_key),
                 id="ledger-refusal",

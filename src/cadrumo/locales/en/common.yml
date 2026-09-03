@@ -975,6 +975,66 @@ tui:
       never_captured: Never captured
       stale: Last captured data
       unavailable: Unavailable
+    calendar:
+      aeat:
+        accepted: Accepted
+        justificante_verified: Receipt verified
+        not_observed: Not observed
+        submitted_observed: Submission observed
+        unknown: Source unobservable
+      column:
+        aeat: AEAT evidence
+        close: Closes
+        declaration: Declaration
+        legal: Legal status
+        local: Local status
+      detail:
+        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Receipt: {receipt}'
+        dates: 'Opens: {opening} · Payment: {payment} · Adjusted close: {closing}'
+        source: '{source}: {availability} · Observed: {observed}'
+      empty:
+        known: There are no obligations in this range.
+        search: No obligation matches the search and scope.
+        stale: The last observed agenda ({observed}) has no rows; the data is stale.
+      justificante:
+        not_verified: Not verified
+        unknown: Unknown
+        verified: Verified
+      legal:
+        due_soon: Due soon
+        due_today: Due today
+        filed: Filed
+        not_applicable: Not applicable
+        overdue: Overdue
+        upcoming: Upcoming
+      local:
+        external_baseline_imported: External record imported
+        not_ready_to_file: Not ready
+        ready_to_file: Ready to file
+        unknown: Source unobservable
+      never_observed: Never observed
+      none: Not applicable
+      scope:
+        all: All
+        evidence_unknown: Unknown AEAT evidence
+        filed: Filed locally
+        overdue: Overdue
+        past: Past
+        upcoming: Upcoming
+      search:
+        placeholder: Search by Modelo, year, period, status, or date
+      source:
+        aeat:
+          evidence: AEAT evidence
+        local:
+          filing: Local filing
+        schedule: Legal schedule
+      title: Declarations agenda
+      user:
+        due: Due
+        filed: Filed locally
+        late: Late
+        unknown: Unknown
     column:
       aeat_accepted: AEAT acceptance observed
       aeat_evidence: AEAT evidence
@@ -990,6 +1050,7 @@ tui:
       updated: Updated
       when: Date
     destination:
+      calendar: Filing calendar
       filing_history: Filing history
       modelo_workspace: Open declaration workspace
       overview: Declarations

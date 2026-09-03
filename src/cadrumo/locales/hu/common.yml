@@ -999,6 +999,67 @@ tui:
       never_captured: Még nincs rögzítve
       stale: Legutóbb rögzített adatok
       unavailable: Nem érhető el
+    calendar:
+      aeat:
+        accepted: Elfogadva
+        justificante_verified: Igazolás ellenőrizve
+        not_observed: Nem figyelték meg
+        submitted_observed: Benyújtás megfigyelve
+        unknown: A forrás nem megfigyelhető
+      column:
+        aeat: AEAT-bizonyíték
+        close: Zárás
+        declaration: Bevallás
+        legal: Jogi állapot
+        local: Helyi állapot
+      detail:
+        axes: 'Jogi: {legal} · Helyi: {local} · AEAT: {aeat} · Igazolás: {receipt}'
+        dates: 'Nyitás: {opening} · Fizetés: {payment} · Módosított zárás: {closing}'
+        source: '{source}: {availability} · Megfigyelve: {observed}'
+      empty:
+        known: Ebben az időszakban nincs kötelezettség.
+        search: Nincs a keresésnek és szűrőnek megfelelő kötelezettség.
+        stale: Az utoljára megfigyelt napirendben ({observed}) nincs sor; az adatok
+          elavultak.
+      justificante:
+        not_verified: Nincs ellenőrizve
+        unknown: Ismeretlen
+        verified: Ellenőrzött
+      legal:
+        due_soon: Hamarosan esedékes
+        due_today: Ma esedékes
+        filed: Benyújtott
+        not_applicable: Nem alkalmazható
+        overdue: Lejárt
+        upcoming: Közelgő
+      local:
+        external_baseline_imported: Külső rekord importálva
+        not_ready_to_file: Nem benyújtható
+        ready_to_file: Benyújtható
+        unknown: A forrás nem megfigyelhető
+      never_observed: Soha nem figyelték meg
+      none: Nem alkalmazható
+      scope:
+        all: Mind
+        evidence_unknown: Ismeretlen AEAT-bizonyíték
+        filed: Helyben benyújtott
+        overdue: Lejárt
+        past: Múltbeli
+        upcoming: Közelgő
+      search:
+        placeholder: Keresés modell, év, időszak, állapot vagy dátum szerint
+      source:
+        aeat:
+          evidence: AEAT-bizonyíték
+        local:
+          filing: Helyi benyújtás
+        schedule: Jogi ütemezés
+      title: Bevallási napirend
+      user:
+        due: Esedékes
+        filed: Helyben benyújtott
+        late: Késedelmes
+        unknown: Ismeretlen
     column:
       aeat_accepted: Megfigyelt AEAT-elfogadás
       aeat_evidence: AEAT-bizonyíték
@@ -1014,6 +1075,7 @@ tui:
       updated: Frissítve
       when: Dátum
     destination:
+      calendar: Bevallási naptár
       filing_history: Benyújtási előzmények
       modelo_workspace: Bevallási munkaterület megnyitása
       overview: Bevallások
