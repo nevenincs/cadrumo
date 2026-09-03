@@ -24,6 +24,15 @@ The seven-route catalogue is exact and total: overview, entries, review, import,
 
 The previously recorded slice findings remain closed. Authored locale copy exists for all shipped languages; unmeasured counts remain unknown rather than false zero; review status and action authority follow the projection and canonical catalogue; classification exposes and admits its visible target; prepared import commands remain opaque, immutable, non-serializable, and free of protected path/provider leakage; asynchronous flows guard double submission, terminal state, failure text, and in-flight Escape; evidence hides hashes, provider locators, linked identities, and full internal identities; reconciliation selects by semantic row key and presents canonical score, separate match facts, explicit inconsistency direction, and affected-declaration change counts; and exact all-locale assertions pin the local-Ledger/AEAT separation.
 
+The final three remediation points are also closed. Evidence Enter posts the
+canonical injected review action with the exact visible attachment identity to
+the host without executing or constructing new authority. Reconciliation
+continues to render suggestions, inconsistencies, and affected declarations
+when its optional link mutation door is absent, while hiding mutation controls
+and refusing attempted submission. The mounted compositor matrix covers every
+one of the seven routes at 80, 100, 120, and 200 columns with real focus-chain,
+scroll-owner, and horizontal-overflow inspection.
+
 ## Architecture and interaction disposition
 
 The TUI layer consumes injected immutable application projections and narrow protocols. It does not construct services, import adapters or CLI modules, read files, perform network access, or acquire business authority. Catalogue action identities are checked against their canonical application command keys, submitted identities are admitted against visible projection rows, and returned identities are validated. Read-only routes do not invent mutations; mutating routes require explicit selection and confirmation.
@@ -32,7 +41,7 @@ All screens preserve a single page scroll owner at eighty columns, avoid horizon
 
 ## Verification
 
-Combined focused smoke: all 45 Ledger package tests passed with all markers enabled. Focused Ruff over the complete Ledger package and canonical application workspace passed. A direct prohibited-dependency/I-O scan returned no adapter, CLI, filesystem, network-client, or `open` use. Earlier slice gates additionally passed ty and basedpyright with zero reported diagnostics.
+Combined focused smoke: all 74 Ledger package tests passed with all markers enabled. Ruff lint and format checks passed over the complete Ledger package; ty passed; basedpyright reported zero errors, warnings, and notes. A direct prohibited-dependency/I-O scan returned no adapter, CLI, filesystem, network-client, or `open` use.
 
 ## Recommendation
 
