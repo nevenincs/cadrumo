@@ -59,6 +59,7 @@ from ._provenance_manifest import (
 from ._render_profile import RenderProfile, RenderProfileSourceEvidence
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign
+from ._tree_paths import contains
 from ._tree_validation import (
     GeneratedExportTreeValidationContext,
     ValidatedGeneratedExportTree,
@@ -315,7 +316,7 @@ def _require_narrow_root(path: Path, *, subject: str) -> Path:
         raise RegistryValidationError(f"{subject} must be an existing non-linked directory: {path}")
     resolved = path.resolve()
     workspace_root = Path.cwd().resolve()
-    if resolved == resolved.parent or resolved == workspace_root or _contains(resolved, workspace_root):
+    if resolved == resolved.parent or resolved == workspace_root or contains(resolved, workspace_root):
         raise RegistryValidationError(f"{subject} is too broad for generated publication: {path}")
     if (resolved / ".git").exists():
         raise RegistryValidationError(f"{subject} must not be a workspace root: {path}")
@@ -323,7 +324,7 @@ def _require_narrow_root(path: Path, *, subject: str) -> Path:
 
 
 def _require_disjoint_roots(temporary_root: Path, target_root: Path) -> None:
-    if _contains(temporary_root, target_root) or _contains(target_root, temporary_root):
+    if contains(temporary_root, target_root) or contains(target_root, temporary_root):
         raise RegistryValidationError("generated temporary and publication target roots must be disjoint")
 
 
@@ -856,9 +857,3 @@ def _sha256(path: Path) -> str:
     return digest
 
 
-def _contains(parent: Path, child: Path) -> bool:
-    try:
-        child.relative_to(parent)
-    except ValueError:
-        return False
-    return True

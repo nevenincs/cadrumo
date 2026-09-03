@@ -37,6 +37,7 @@ from ._provenance_manifest import (
 from ._render_profile import RenderProfile, RenderProfileSourceEvidence
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign
+from ._tree_paths import require_existing_non_link
 
 __all__ = [
     "GeneratedExportTreeValidationContext",
@@ -312,14 +313,14 @@ def _require_isolated_target_context(
     )
     _require_directory(revision_root, subject="generated target revision directory")
     for name in ("revision.toml", "export"):
-        _require_existing_non_link(revision_root / name, subject=f"generated target revision member {name!r}")
+        require_existing_non_link(revision_root / name, subject=f"generated target revision member {name!r}")
     stale_sibling_manifest = revision_root / "export.provenance.json"
     if stale_sibling_manifest.exists() or is_link_like(stale_sibling_manifest):
         raise RegistryValidationError(
             f"generated target revision refuses stale sibling export provenance manifest: {stale_sibling_manifest}",
         )
     export_root = _require_directory(revision_root / "export", subject="generated export directory")
-    _require_existing_non_link(
+    require_existing_non_link(
         export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME,
         subject="generated export provenance manifest",
     )
@@ -400,17 +401,10 @@ def _collect_regular_tree_members(root: Path) -> tuple[set[PurePosixPath], set[s
 
 
 def _require_directory(path: Path, *, subject: str) -> Path:
-    _require_existing_non_link(path, subject=subject)
+    require_existing_non_link(path, subject=subject)
     if not path.is_dir():
         raise RegistryValidationError(f"{subject} is not a directory: {path}")
     return path.resolve()
-
-
-def _require_existing_non_link(path: Path, *, subject: str) -> None:
-    if is_link_like(path):
-        raise RegistryValidationError(f"{subject} must not be a link: {path}")
-    if not path.exists():
-        raise RegistryValidationError(f"{subject} is missing: {path}")
 
 
 def _children_without_links(directory: Path, *, subject: str) -> tuple[Path, ...]:

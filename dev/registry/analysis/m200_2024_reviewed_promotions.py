@@ -13,7 +13,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from .m200_2024_blocker_adjudication import build_worklist
@@ -107,6 +109,30 @@ def _verified_promoted_candidate_ids(
     verify_blocker_canonical_declarations(evidence.blocker_authority, casillas_root=casillas_root)
     verify_unique_canonical_declarations(evidence.unique_authority, casillas_root=casillas_root)
     return template | blocker | unique
+
+
+def publish_canonical_declarations(*, casillas_root: Path | None = None) -> frozenset[str]:
+    """Write every reviewed declaration from one freshly compiled receipt set.
+
+    This is the only bulk repair path for a verifier-proven stale canonical
+    tree.  It renders every byte from the target-only compilers, then replays
+    the canonical-byte verifier before reporting its admitted identities.
+    """
+    root = (
+        bundled_path("registry", "aeat", "modelos", "200", "revisions", "2024", "casillas")
+        if casillas_root is None
+        else casillas_root
+    )
+    evidence = build_m200_2024_reviewed_promotion_snapshot()
+    for authority, renderer in (
+        (evidence.template_authority, __import__("dev.registry.analysis.m200_2024_template_adjudications", fromlist=["render_canonical_declaration"]).render_canonical_declaration),
+        (evidence.blocker_authority, __import__("dev.registry.analysis.m200_2024_blocker_adjudications", fromlist=["render_canonical_declaration"]).render_canonical_declaration),
+        (evidence.unique_authority, __import__("dev.registry.analysis.m200_2024_unique_adjudications", fromlist=["render_canonical_declaration"]).render_canonical_declaration),
+    ):
+        for adjudication in authority.adjudications:
+            identifier = adjudication.casilla_id
+            atomic_write_text(root / f"c{identifier.replace(':', '+')}.toml", renderer(authority, identifier), encoding="utf-8")
+    return _verified_promoted_candidate_ids(evidence, casillas_root=root)
 
 
 def _receipt_sha256(

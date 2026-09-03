@@ -33,6 +33,7 @@ from ._render_profile import RenderProfile, RenderProfileSourceEvidence
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign
 from ._source_defects import SourceDefectDeclaration
+from ._tree_paths import contains, require_existing_non_link
 from ._tree_validation import (
     GeneratedExportTreeValidationContext,
     ValidatedGeneratedExportTree,
@@ -174,7 +175,7 @@ def _prepare_check_roots(context: GeneratedExportTreeCheckContext) -> tuple[Path
         context.target_registry_root,
         subject="generated check target registry root",
     )
-    if _contains(temporary_root, target_registry_root) or _contains(target_registry_root, temporary_root):
+    if contains(temporary_root, target_registry_root) or contains(target_registry_root, temporary_root):
         raise RegistryValidationError("generated check temporary and target registry roots must be disjoint")
 
     modelo_id = str(context.validation.target.modelo)
@@ -280,7 +281,7 @@ def _require_exact_tree_bytes(published_root: Path, candidate_root: Path) -> Non
 
 
 def _read_regular_tree_bytes(root: Path, *, subject: str) -> dict[str, bytes]:
-    _require_existing_non_link(root, subject=subject)
+    require_existing_non_link(root, subject=subject)
     if not root.is_dir():
         raise RegistryValidationError(f"{subject} must be a directory: {root}")
     members: dict[str, bytes] = {}
@@ -310,12 +311,12 @@ def _read_regular_tree_bytes(root: Path, *, subject: str) -> dict[str, bytes]:
 
 
 def _require_narrow_root(path: Path, *, subject: str) -> Path:
-    _require_existing_non_link(path, subject=subject)
+    require_existing_non_link(path, subject=subject)
     if not path.is_dir():
         raise RegistryValidationError(f"{subject} must be a directory: {path}")
     resolved = path.resolve()
     workspace_root = Path.cwd().resolve()
-    if resolved == resolved.parent or resolved == workspace_root or _contains(resolved, workspace_root):
+    if resolved == resolved.parent or resolved == workspace_root or contains(resolved, workspace_root):
         raise RegistryValidationError(f"{subject} is too broad: {path}")
     if (resolved / ".git").exists():
         raise RegistryValidationError(f"{subject} must not be a workspace root: {path}")
@@ -323,7 +324,7 @@ def _require_narrow_root(path: Path, *, subject: str) -> Path:
 
 
 def _require_descendant_directory(path: Path, *, root: Path, subject: str) -> Path:
-    _require_existing_non_link(path, subject=subject)
+    require_existing_non_link(path, subject=subject)
     resolved = path.resolve()
     try:
         relative = resolved.relative_to(root)
@@ -347,14 +348,7 @@ def _require_existing_link_free_descendant(path: Path, *, root: Path, subject: s
     cursor = root
     for part in relative.parts:
         cursor = cursor / part
-        _require_existing_non_link(cursor, subject=subject)
-
-
-def _require_existing_non_link(path: Path, *, subject: str) -> None:
-    if is_link_like(path):
-        raise RegistryValidationError(f"{subject} must not be a link: {path}")
-    if not path.exists():
-        raise RegistryValidationError(f"{subject} is missing: {path}")
+        require_existing_non_link(cursor, subject=subject)
 
 
 def _require_no_obsolete_sibling_manifest(revision_root: Path, *, subject: str) -> None:
@@ -374,14 +368,6 @@ def _require_no_obsolete_direct_paths(
     for path in (direct_modelo, direct_revision):
         if path.exists() or is_link_like(path):
             raise RegistryValidationError(f"generated check refuses obsolete direct registry path: {path}")
-
-
-def _contains(parent: Path, child: Path) -> bool:
-    try:
-        child.relative_to(parent)
-    except ValueError:
-        return False
-    return True
 
 
 def _refuse_repeat_the_candidate_would_drop(
