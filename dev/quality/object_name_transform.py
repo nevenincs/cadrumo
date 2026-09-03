@@ -263,6 +263,12 @@ class _RenameTransformer(cst.CSTTransformer):
                     isinstance(target.target, cst.Name) and target.target.value == "_EXPECTED_EXECUTION"
                     for target in parent.targets
                 )
+            if isinstance(parent, cst.AnnAssign):
+                return (
+                    child is parent.value
+                    and isinstance(parent.target, cst.Name)
+                    and parent.target.value == "_EXPECTED_EXECUTION"
+                )
             child = parent
         return False
 

@@ -210,7 +210,7 @@ def test_import_collector_distinguishes_runtime_type_only_dynamic_and_export(tmp
     _write(
         tmp_path,
         "dev/packaging/tests/test_campaign.py",
-        "_EXPECTED_EXECUTION = {'lane': (('cadrumo.target', ()),)}\n",
+        "_EXPECTED_EXECUTION: object = {'lane': (('cadrumo.target', ()),)}\n",
     )
     _write(tmp_path, "src/cadrumo/__init__.py", "from .target import Thing\n__all__ = ['Thing']\n")
     all_graph = _graph(

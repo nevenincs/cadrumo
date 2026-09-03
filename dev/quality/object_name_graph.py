@@ -657,10 +657,11 @@ def collect_import_edges(
         bindings = _import_bindings(tree, owner, package_module=path.name == "__init__.py")
         type_checking_nodes = _type_checking_node_ids(tree)
         if owner == "dev.packaging.tests.test_campaign":
-            for assignment in (item for item in ast.walk(tree) if isinstance(item, ast.Assign)):
-                if not any(
-                    isinstance(target, ast.Name) and target.id == "_EXPECTED_EXECUTION" for target in assignment.targets
-                ):
+            for assignment in (item for item in ast.walk(tree) if isinstance(item, (ast.Assign, ast.AnnAssign))):
+                targets = assignment.targets if isinstance(assignment, ast.Assign) else (assignment.target,)
+                if not any(isinstance(target, ast.Name) and target.id == "_EXPECTED_EXECUTION" for target in targets):
+                    continue
+                if assignment.value is None:
                     continue
                 for literal in ast.walk(assignment.value):
                     if not isinstance(literal, ast.Constant) or not isinstance(literal.value, str):

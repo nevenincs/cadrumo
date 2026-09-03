@@ -331,7 +331,7 @@ def test_campaign_execution_oracle_module_target_is_renamed(tmp_path: Path) -> N
         tmp_path,
         {
             "src/cadrumo/widgets.py": "VALUE = 1\n",
-            "dev/packaging/tests/test_campaign.py": "_EXPECTED_EXECUTION = (('cadrumo.widgets', ()),)\n",
+            "dev/packaging/tests/test_campaign.py": "_EXPECTED_EXECUTION: object = (('cadrumo.widgets', ()),)\n",
         },
     )
     declaration = _declaration(inventory, path="src/cadrumo/widgets.py", name="widgets")
@@ -351,8 +351,33 @@ def test_campaign_execution_oracle_module_target_is_renamed(tmp_path: Path) -> N
     result = plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
 
     assert result.content_by_path()["dev/packaging/tests/test_campaign.py"] == (
-        b"_EXPECTED_EXECUTION = (('cadrumo.widget', ()),)\n"
+        b"_EXPECTED_EXECUTION: object = (('cadrumo.widget', ()),)\n"
     )
+
+
+def test_campaign_execution_oracle_annotation_string_is_refused(tmp_path: Path) -> None:
+    inventory = _inventory(
+        tmp_path,
+        {
+            "src/cadrumo/widgets.py": "VALUE = 1\n",
+            "dev/packaging/tests/test_campaign.py": ("_EXPECTED_EXECUTION: Literal['cadrumo.widgets'] = ()\n"),
+        },
+    )
+    declaration = _declaration(inventory, path="src/cadrumo/widgets.py", name="widgets")
+    operation = _operation(
+        declaration,
+        target_name="widget",
+        target_path="src/cadrumo/widget.py",
+        sources=_tree_bytes(tmp_path),
+        changed_paths=(
+            "dev/packaging/tests/test_campaign.py",
+            "src/cadrumo/widget.py",
+            "src/cadrumo/widgets.py",
+        ),
+    )
+
+    with pytest.raises(ObjectNameTransformError, match="unsupported string reference"):
+        plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
 
 
 def test_cross_package_move_with_relative_import_is_refused(tmp_path: Path) -> None:
