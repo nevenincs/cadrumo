@@ -15,7 +15,7 @@ from .....tests.registry_snapshot import build_snapshot
 from .._validate_export_layout_coverage import validate_export_layout_record_coverage
 from .._validate_semantic_roles import semantic_role_consistency_failures
 from ..errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError, RegistryValidationError
-from ..loader import _load_shared_catalogue_files, load_modelo_directory
+from ..loader import load_modelo_directory, load_shared_catalogues
 from ..record_design import extract_record_design
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..temporal import select_revision
@@ -28,7 +28,7 @@ def _modelo_309() -> tuple[ModeloDefinition, RegistryCatalogues]:
     """Load this modelo and shared catalogues without in-flight peer modelos."""
     return (
         load_modelo_directory(bundled_path("registry", "aeat", "modelos", "309")),
-        _load_shared_catalogue_files(bundled_path("registry", "aeat", "legal")),
+        load_shared_catalogues(bundled_path("registry", "aeat")),
     )
 
 

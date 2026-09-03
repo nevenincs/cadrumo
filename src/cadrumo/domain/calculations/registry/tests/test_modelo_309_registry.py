@@ -12,7 +12,7 @@ from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
 from ....iva.schema import IvaLedgerObservationRole
 from .._validate import RegistryValidator
-from ..loader import _load_shared_catalogue_files, load_modelo_directory
+from ..loader import load_modelo_directory, load_shared_catalogues
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ._ledger_iva_aggregation_support import _deduction_provenance
 
@@ -24,7 +24,7 @@ def _load_modelo_309() -> tuple[ModeloDefinition, RegistryCatalogues]:
     """Load M309 with every shared catalogue, without unrelated modelos."""
     return (
         load_modelo_directory(bundled_path("registry", "aeat", "modelos", "309")),
-        _load_shared_catalogue_files(bundled_path("registry", "aeat", "legal")),
+        load_shared_catalogues(bundled_path("registry", "aeat")),
     )
 
 

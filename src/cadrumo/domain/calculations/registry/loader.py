@@ -143,24 +143,52 @@ def load_legal_parameters_only(root: Path) -> Mapping[str, LegalParameter]:
         RegistryLoadError: When duplicate legal or parameter ids are found
             across multiple TOML files in ``root/legal/``.
     """
+    return load_shared_catalogues(root).parameters
+
+
+def load_shared_catalogues(root: Path) -> RegistryCatalogues:
+    """Load registry legal, source, and parameter catalogues without modelos.
+
+    This is the canonical cycle-safe catalogue boundary.  IVA grounding needs
+    registry evidence while registry modelo compilation imports IVA domain
+    types, so constructing the full registry tree here would recurse through
+    bindings unnecessarily.
+    """
     resolved = root.resolve()
     legal_dir = resolved / "legal"
     _validate_legal_directory(legal_dir)
     legal: dict[str, LegalReference] = {}
+    sources: dict[str, SourceReference] = {}
     parameters: dict[str, LegalParameter] = {}
+    supported_filing_years: SupportedFilingYearsCatalogue | None = None
     for path in scan_directory(legal_dir, pattern="*.toml"):
         catalogue = load_catalogue_file(path)
         overlap_legal = set(legal).intersection(catalogue.legal)
+        overlap_sources = set(sources).intersection(catalogue.sources)
         overlap_parameters = set(parameters).intersection(catalogue.parameters)
-        if overlap_legal or overlap_parameters:
+        if overlap_legal or overlap_sources or overlap_parameters:
             raise RegistryLoadError(
                 f"{path}: duplicate catalogue ids legal={sorted(overlap_legal)!r} "
-                f"sources=[] parameters={sorted(overlap_parameters)!r}",
+                f"sources={sorted(overlap_sources)!r} parameters={sorted(overlap_parameters)!r}",
             )
+        if catalogue.supported_filing_years is not None:
+            if supported_filing_years is not None:
+                raise RegistryLoadError(
+                    f"{path}: supported_filing_years is already declared by another shared catalogue file",
+                )
+            supported_filing_years = catalogue.supported_filing_years
         legal.update(catalogue.legal)
+        sources.update(catalogue.sources)
         parameters.update(catalogue.parameters)
     _validate_legal_parameter_refs(legal_dir, parameters=parameters, legal=legal)
-    return parameters
+    if supported_filing_years is None:
+        raise RegistryLoadError(f"{legal_dir}: missing supported_filing_years catalogue declaration")
+    return RegistryCatalogues(
+        legal=legal,
+        sources=sources,
+        parameters=parameters,
+        supported_filing_years=supported_filing_years,
+    )
 
 
 def load_registry_tree(
@@ -231,49 +259,13 @@ def _load_registry_tree_cached(
         if cached is not None:
             return cached
 
-    catalogues = _load_shared_catalogue_files(resolved / "legal")
+    catalogues = load_shared_catalogues(resolved)
     modelos = _load_all_modelo_definitions(resolved / "modelos")
     result = (modelos, catalogues)
 
     if use_disk_cache:
         store_compiled_registry_cache(resolved, fingerprints, result)
     return result
-
-
-def _load_shared_catalogue_files(legal_dir: Path) -> RegistryCatalogues:
-    """Load every ``legal/*.toml`` shared-catalogue file with duplicate-id rejection."""
-    legal: dict[str, LegalReference] = {}
-    sources: dict[str, SourceReference] = {}
-    parameters: dict[str, LegalParameter] = {}
-    supported_filing_years: SupportedFilingYearsCatalogue | None = None
-    for path in scan_directory(legal_dir, pattern="*.toml"):
-        catalogue = load_catalogue_file(path)
-        overlap_legal = set(legal).intersection(catalogue.legal)
-        overlap_sources = set(sources).intersection(catalogue.sources)
-        overlap_parameters = set(parameters).intersection(catalogue.parameters)
-        if overlap_legal or overlap_sources or overlap_parameters:
-            raise RegistryLoadError(
-                f"{path}: duplicate catalogue ids legal={sorted(overlap_legal)!r} "
-                f"sources={sorted(overlap_sources)!r} parameters={sorted(overlap_parameters)!r}",
-            )
-        if catalogue.supported_filing_years is not None:
-            if supported_filing_years is not None:
-                raise RegistryLoadError(
-                    f"{path}: supported_filing_years is already declared by another shared catalogue file",
-                )
-            supported_filing_years = catalogue.supported_filing_years
-        legal.update(catalogue.legal)
-        sources.update(catalogue.sources)
-        parameters.update(catalogue.parameters)
-    _validate_legal_parameter_refs(legal_dir, parameters=parameters, legal=legal)
-    if supported_filing_years is None:
-        raise RegistryLoadError(f"{legal_dir}: missing supported_filing_years catalogue declaration")
-    return RegistryCatalogues(
-        legal=legal,
-        sources=sources,
-        parameters=parameters,
-        supported_filing_years=supported_filing_years,
-    )
 
 
 def _load_all_modelo_definitions(modelos_dir: Path) -> tuple[ModeloDefinition, ...]:
