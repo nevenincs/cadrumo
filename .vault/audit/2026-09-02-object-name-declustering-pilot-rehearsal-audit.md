@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:623abb7e0e89e827e582c0f6adc39ae6a48055cf385ab37f9621c54d4252a9ef'
+body_hash: 'sha256:f1b1b336049a8feabd94a1e54d1ee79c23d40c5e962d66c2255e6307833ae151'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
@@ -45,3 +45,7 @@ The live `just audit-object-names --json` run scanned 62,585 declarations and re
 ### live-application-recommendation
 
 Do not run Git commits or other repository-wide writers while an object-name transaction is active. Treat the transaction marker and the apply process handle as an exclusive operational window even though replay independently detects and refuses guarded-path drift.
+
+### completion-snapshot | low | final live invariants remain satisfied
+
+The completion audit inventory digest was `sha256:c7f4d3432cd739e93c270df6703f4210bf88871cfaca37b6e7f8b190dde44017` across 62,597 declarations. It reported 2,330 findings: 793 enforced and 1,537 advisory. The reviewed finding count was zero, the canonical declaration count was one, and the retired declaration count was zero. The old path was absent, the new path was present, and the transaction-marker count was zero. The audit target's exit code remained 1 solely because the repository-wide finding backlog is intentionally reported rather than suppressed.
