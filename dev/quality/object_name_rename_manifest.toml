@@ -1,40 +1,27 @@
 schema_version = 1
-inventory_digest = "sha256:c7f4d3432cd739e93c270df6703f4210bf88871cfaca37b6e7f8b190dde44017"
+inventory_digest = "sha256:60580606b189b05124d9cc9e29f1866af3ddad71dea6c5b744e12d927a38824c"
 
 [[operations]]
-operation_id = "rename-all-extra-smoke"
-finding_id = "sha256:462e90286b0b1d0eaf9a13dde4fa908e22db776df76da1a91faafac78867c7cb"
-operation_kind = "module-rename"
-disposition = "lexical-singular"
+operation_id = "rename-load-census-classification-error"
+finding_id = "sha256:72f50f39d4e0136d9a54e81e12e6a479fef68262c536ce596232cac529bc38d4"
+operation_kind = "symbol-rename"
+disposition = "rename-distinct"
 lifecycle = "reviewed"
-old_locator = "module:dev.packaging.smoke_extras#binding=1"
-old_path = "dev/packaging/smoke_extras.py"
-new_locator = "module:dev.packaging.all_extra_smoke#binding=1"
-new_path = "dev/packaging/all_extra_smoke.py"
-owner = "dev-packaging"
-rationale = "The module owns the single installed-wheel smoke for the aggregate all-extra capability; the target states that singular responsibility instead of naming plural dependency instances."
-expected_reference_classes = ["definition", "dynamic-target"]
-changed_paths = [
-  "dev/packaging/all_extra_smoke.py",
-  "dev/packaging/campaign.py",
-  "dev/packaging/smoke_extras.py",
-  "dev/packaging/tests/test_campaign.py",
-]
+old_locator = "class:dev.registry.analysis.load_census_classification.ClassificationError#binding=1"
+old_path = "dev/registry/analysis/load_census_classification.py"
+new_locator = "class:dev.registry.analysis.load_census_classification.LoadCensusClassificationError#binding=1"
+new_path = "dev/registry/analysis/load_census_classification.py"
+owner = "dev-registry"
+rationale = "The exception reports integrity failures in the reviewed registry load census; the qualified singular name distinguishes it from the persistence-layer sensitivity classification error."
+expected_reference_classes = ["definition"]
+changed_paths = ["dev/registry/analysis/load_census_classification.py"]
 generator_commands = []
 focused_gates = [
-  ["uv", "run", "--no-sync", "pytest", "dev/packaging/tests/test_campaign.py", "-q"],
-  ["uv", "run", "--no-sync", "ruff", "check", "dev/packaging/all_extra_smoke.py", "dev/packaging/campaign.py", "dev/packaging/tests/test_campaign.py"],
+  ["uv", "run", "--no-sync", "pytest", "dev/registry/tests/test_load_census_classification.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "dev/registry/analysis/load_census_classification.py", "dev/registry/tests/test_load_census_classification.py"],
 ]
-moves = [{ source = "dev/packaging/smoke_extras.py", target = "dev/packaging/all_extra_smoke.py" }]
+moves = []
 
 [[operations.preconditions]]
-path = "dev/packaging/campaign.py"
-sha256 = "sha256:7380645afe4df7061acfe2b6eb8653e575ab8546b57843b48393a5618ffb0970"
-
-[[operations.preconditions]]
-path = "dev/packaging/smoke_extras.py"
-sha256 = "sha256:1bbe92ee326a1bbd297f77b1e06832a3e8516f70530a83b59435857e150bb398"
-
-[[operations.preconditions]]
-path = "dev/packaging/tests/test_campaign.py"
-sha256 = "sha256:e10f43dddbe178f01626154f8605e1d031e2aa071ba468651d17e93d03496f69"
+path = "dev/registry/analysis/load_census_classification.py"
+sha256 = "sha256:4c2352b492629468eeb0dcb00786d5eeeb172f83d8cc6063c13d64f25bb7c581"
