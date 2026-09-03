@@ -369,8 +369,8 @@ def test_cli_rejects_hardlink_added_after_initial_handle_check(monkeypatch, tmp_
 
     def assert_then_add_hardlink(path: Path, expected_path: Path, file_descriptor: int) -> None:
         nonlocal assertion_count
-        real_assert(path, expected_path, file_descriptor)
         assertion_count += 1
+        real_assert(path, expected_path, file_descriptor)
         if assertion_count == 1:
             os.link(output, canonical_output)
 

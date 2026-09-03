@@ -10,7 +10,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
-import tempfile
+import stat
 from collections import Counter
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
@@ -52,6 +52,7 @@ __all__ = [
 
 TARGET_SOURCE_REF = "aeat-dr-200-2024"
 TARGET_SOURCE_SHA256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
+_CANONICAL_REGISTRY_ROOT = Path("src/cadrumo/_data/registry/aeat")
 
 
 class M200CasillaDisposition(StrEnum):
@@ -341,6 +342,7 @@ def render_m200_target_identity_worklist_toml(worklist: M200TargetIdentityWorkli
     return rtoml.dumps(
         {
             "schema_version": 1,
+            "authority_status": "proposal_only",
             "modelo": "200",
             "revision": "2024",
             "source_ref": worklist.source_ref,
@@ -364,17 +366,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.check and args.output is None:
         parser.error("--check requires --output")
 
-    candidates = _load_bundled_candidates()
+    output_path: Path | None = None
+    if args.output is not None:
+        try:
+            output_path = _resolve_review_output_path(args.output)
+        except ValueError as exc:
+            parser.error(str(exc))
+
     worklist = load_bundled_m200_target_identity_worklist()
-    counts = Counter(candidate.disposition.value for candidate in candidates)
-    print(f"total={len(candidates)}")
-    for disposition in M200CasillaDisposition:
-        print(f"{disposition.value}={counts[disposition.value]}")
-    unresolved_reasons = Counter(
-        candidate.reason for candidate in candidates if candidate.disposition is M200CasillaDisposition.UNRESOLVED
-    )
-    for reason, count in sorted(unresolved_reasons.items()):
-        print(f"unresolved[{reason}]={count}")
     print(f"map_owner_mismatches={len(worklist.map_owner_mismatches)}")
     for disposition in M200MapOwnerIdentityDisposition:
         print(
@@ -384,17 +383,26 @@ def main(argv: list[str] | None = None) -> int:
     print(f"orphaned_declarations={len(worklist.orphaned_declarations)}")
     print(f"printed_identity_diagnostics={len(worklist.printed_identity_diagnostics)}")
 
-    rendered = render_m200_casilla_candidates_toml(candidates)
-    if args.output is None:
+    rendered = render_m200_target_identity_worklist_toml(worklist)
+    if output_path is None:
         return 0
     if args.check:
-        if not args.output.is_file() or args.output.read_text(encoding="utf-8") != rendered:
-            print(f"stale={args.output}")
+        try:
+            checked_path = _resolve_review_output_path(output_path)
+        except ValueError as exc:
+            parser.error(str(exc))
+        if checked_path != output_path:
+            parser.error("--output destination changed while checking")
+        if not checked_path.is_file() or checked_path.read_text(encoding="utf-8") != rendered:
+            print(f"stale={checked_path}")
             return 1
-        print(f"current={args.output}")
+        print(f"current={checked_path}")
         return 0
-    _atomic_write(args.output, rendered)
-    print(f"wrote={args.output}")
+    try:
+        written_path = _write_review_output(output_path, rendered)
+    except (OSError, ValueError) as exc:
+        parser.error(str(exc))
+    print(f"wrote={written_path}")
     return 0
 
 
@@ -476,12 +484,70 @@ def _record_design_source(source_refs: tuple[str, ...], sources: Mapping[str, ob
     return str(matches[0])
 
 
-def _atomic_write(path: Path, text: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile("w", encoding="utf-8", newline="\n", dir=path.parent, delete=False) as stream:
-        temporary = Path(stream.name)
-        stream.write(text)
-    os.replace(temporary, path)
+def _resolve_review_output_path(path: Path) -> Path:
+    """Resolve a review destination and reject the canonical registry root."""
+    configured_root = _CANONICAL_REGISTRY_ROOT
+    if not configured_root.is_absolute():
+        configured_root = Path(__file__).resolve().parents[3] / configured_root
+    canonical_root = configured_root.resolve(strict=False)
+    lexical_root = Path(os.path.abspath(os.fspath(configured_root)))
+    lexical_path = Path(os.path.abspath(os.fspath(path)))
+    resolved_path = path.resolve(strict=False)
+    if _path_is_within(lexical_path, lexical_root) or _path_is_within(resolved_path, canonical_root):
+        raise ValueError("--output must resolve outside the canonical registry root")
+    return resolved_path
+
+
+def _path_is_within(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return False
+    return True
+
+
+def _write_review_output(path: Path, rendered: str) -> Path:
+    """Write through a validated handle so a swapped parent cannot redirect bytes."""
+    output_path = _resolve_review_output_path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path = _resolve_review_output_path(output_path)
+    flags = os.O_RDWR | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        file_descriptor = os.open(output_path, flags)
+    except FileNotFoundError:
+        file_descriptor = os.open(output_path, flags | os.O_CREAT | os.O_EXCL, 0o600)
+    try:
+        _assert_review_output_handle(path, output_path, file_descriptor)
+        with os.fdopen(file_descriptor, "r+", encoding="utf-8", newline="") as stream:
+            file_descriptor = -1
+            stream.seek(0)
+            _assert_review_output_handle(path, output_path, stream.fileno())
+            stream.truncate()
+            stream.write(rendered)
+            stream.flush()
+            os.fsync(stream.fileno())
+    finally:
+        if file_descriptor >= 0:
+            os.close(file_descriptor)
+    return output_path
+
+
+def _assert_review_output_handle(path: Path, expected_path: Path, file_descriptor: int) -> None:
+    """Prove the opened regular file is still the resolved, non-authoritative target."""
+    opened_stat = os.fstat(file_descriptor)
+    if not stat.S_ISREG(opened_stat.st_mode):
+        raise ValueError("--output must identify a regular file")
+    if type(getattr(opened_stat, "st_nlink", None)) is not int or opened_stat.st_nlink != 1:
+        raise ValueError("--output must identify a regular file with exactly one link")
+    current_path = _resolve_review_output_path(path)
+    if current_path != expected_path:
+        raise ValueError("--output destination changed while opening")
+    try:
+        current_stat = current_path.stat()
+    except OSError as exc:
+        raise ValueError("--output destination changed while opening") from exc
+    if (opened_stat.st_dev, opened_stat.st_ino) != (current_stat.st_dev, current_stat.st_ino):
+        raise ValueError("--output destination changed while opening")
 
 
 def _field_index(design: RecordDesignIntermediate) -> dict[tuple[object, ...], RecordDesignIntermediateField]:

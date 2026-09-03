@@ -345,6 +345,33 @@ def test_source_rebind_recovery_refuses_unknown_journal_state_without_touching_l
     assert journal.exists()
 
 
+@pytest.mark.parametrize("state", ("unknown", ["candidate_live"]))
+def test_source_rebind_recovery_refuses_malformed_journal_state_without_touching_live_tree(
+    source_rebind_plan, rebind_registry_root: Path, state: object
+) -> None:
+    revision_root = rebind_registry_root / "modelos" / "200" / "revisions" / "2024"
+    backup = revision_root / f"{subject._REBIND_BACKUP_PREFIX}malformed"
+    shutil.copytree(revision_root / "casillas", backup)
+    journal = revision_root / subject._REBIND_JOURNAL
+    journal.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "state": state,
+                "stage": f"{subject._REBIND_STAGE_PREFIX}malformed",
+                "backup": backup.name,
+            }
+        ),
+        encoding="utf-8",
+    )
+    live_before = _tree_bytes(revision_root / "casillas")
+    with pytest.raises(RegistryValidationError, match="invalid source rebind recovery journal"):
+        subject.apply_m200_source_rebind_plan(source_rebind_plan, registry_root=rebind_registry_root, dry_run=True)
+    assert _tree_bytes(revision_root / "casillas") == live_before
+    assert backup.exists()
+    assert journal.exists()
+
+
 @pytest.mark.parametrize("state", ("intent", "backup_staged"))
 def test_source_rebind_next_run_recovers_persisted_pre_candidate_journal(
     source_rebind_plan, rebind_registry_root: Path, state: str
@@ -367,6 +394,66 @@ def test_source_rebind_next_run_recovers_persisted_pre_candidate_journal(
     assert not (revision_root / subject._REBIND_JOURNAL).exists()
     assert not stage.exists()
     assert not backup.exists()
+
+
+def test_source_rebind_candidate_live_recovery_keeps_verified_candidate_and_cleans_transaction(
+    source_rebind_plan, rebind_registry_root: Path
+) -> None:
+    revision_root = rebind_registry_root / "modelos" / "200" / "revisions" / "2024"
+    casillas = revision_root / "casillas"
+    original = _tree_bytes(casillas)
+    backup = revision_root / f"{subject._REBIND_BACKUP_PREFIX}candidate-live"
+    shutil.copytree(casillas, backup)
+    subject.apply_m200_source_rebind_plan(source_rebind_plan, registry_root=rebind_registry_root)
+    candidate = _tree_bytes(casillas)
+    assert candidate != original
+    (revision_root / subject._REBIND_JOURNAL).write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "state": "candidate_live",
+                "stage": f"{subject._REBIND_STAGE_PREFIX}candidate-live",
+                "backup": backup.name,
+            }
+        ),
+        encoding="utf-8",
+    )
+    subject._recover_m200_source_rebind(source_rebind_plan, rebind_registry_root)
+    assert _tree_bytes(casillas) == candidate
+    assert not backup.exists()
+    assert not (revision_root / subject._REBIND_JOURNAL).exists()
+
+
+def test_source_rebind_candidate_live_recovery_rolls_back_partial_candidate(
+    source_rebind_plan, rebind_registry_root: Path
+) -> None:
+    revision_root = rebind_registry_root / "modelos" / "200" / "revisions" / "2024"
+    casillas = revision_root / "casillas"
+    original = _tree_bytes(casillas)
+    backup = revision_root / f"{subject._REBIND_BACKUP_PREFIX}partial-candidate"
+    shutil.copytree(casillas, backup)
+    first = source_rebind_plan.rebinds[0]
+    path = casillas / f"c{first.casilla_id}.toml"
+    path.write_text(
+        path.read_text(encoding="utf-8").replace(subject.SIBLING_SOURCE_REF, subject.TARGET_SOURCE_REF, 1),
+        encoding="utf-8",
+        newline="\n",
+    )
+    (revision_root / subject._REBIND_JOURNAL).write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "state": "candidate_live",
+                "stage": f"{subject._REBIND_STAGE_PREFIX}partial-candidate",
+                "backup": backup.name,
+            }
+        ),
+        encoding="utf-8",
+    )
+    subject._recover_m200_source_rebind(source_rebind_plan, rebind_registry_root)
+    assert _tree_bytes(casillas) == original
+    assert not backup.exists()
+    assert not (revision_root / subject._REBIND_JOURNAL).exists()
 
 
 def _tree_bytes(root: Path) -> dict[Path, bytes]:
