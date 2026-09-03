@@ -75,3 +75,81 @@ I/O, adapter, TUI, or new execution dependency was introduced.
 
 Focused evidence: 14 tests passed; Ruff passed; ty passed; basedpyright reported
 zero errors, warnings, and notes. Final result: **NO-CLOSE**.
+
+## Re-review disposition
+
+The secret-HMAC remediation closes
+`dictionary-recoverable-identity`: a random 256-bit module-private key is
+generated once per process, is absent from the output object and its
+JSON/repr/pickle forms, and makes the prior unkeyed dictionary result differ.
+This contract is intentionally stable only for the running process, which is
+the lifetime of refresh, reorder, resize, and child-return focus. S399 neither
+needs nor now claims cross-process stability.
+
+The projection validator now rejects missing and duplicated notification keys,
+closing `optional-public-selection-key` for those two cases. The notification
+row again has the exact seven safe fields and no action or operation fields,
+closing `notification-action-regression`. Collision refusal, reorder
+invariance, private-identity redaction, grammar/length, and module-secret
+nonserialization were re-probed successfully.
+
+### unconstrained-public-selection-key | high | Direct construction still accepts an arbitrary protected-looking NamespacedId as a public key
+
+The selection-key alias is the general `NamespacedId` grammar rather than a
+closed derived-key shape. Direct `AeatSyncWorkspaceProjectionV1.model_validate`
+accepted `notification.private_identity` and serialized that value unchanged.
+Thus the new validator proves only presence and uniqueness; it does not prove
+that a public key came from the HMAC boundary or even has the
+`aeat_sync.notification.k` plus 64 lowercase hexadecimal form. A caller can
+still place a protected identity into object/JSON/repr/pickle through the
+selection field.
+
+### hmac-test-mapping | medium | The unkeyed-dictionary regression compares different identities depending on HMAC sort order
+
+The test builds equal-date alpha and beta rows, takes the first row after
+HMAC-key ordering, then compares that key with the unkeyed digest for alpha.
+When beta sorts first, the assertion does not compare two derivations of the
+same private identity. Use a single alpha fact or otherwise retain an
+admission-side expected mapping for this assertion. Also reject arbitrary
+namespaced keys that do not match the exact derived-key shape.
+
+The remediation should define a constrained public selection-key type and
+validate it both on the row and at the projection boundary. This is format
+validation, not HMAC authentication: callers still cannot prove a key was
+minted in this process, but they must be unable to serialize protected prose
+or identifiers through the field. No cross-process test or persistence
+contract is required.
+
+Final re-review evidence: 14 focused application tests passed; Ruff passed; ty
+passed; basedpyright reported zero errors, warnings, and notes. The separate
+S379 public fixture builder still constructs notifications without a key and
+will need to consume projected fixtures after S399 closes; that integration
+work is not an additional S399 finding.
+
+Final re-review result: **NO-CLOSE**.
+
+## Final verification
+
+The constrained selection-key type now admits only
+`aeat_sync.notification.` followed by exactly 64 lowercase hexadecimal
+characters. That constraint is enforced when constructing a notification row
+and when validating a complete projection, closing the arbitrary
+NamespacedId/protected-value escape. Focused adversarial cases reject a wrong
+namespace, short digest, uppercase digest, and non-hexadecimal digest.
+
+The HMAC regression now projects a single known private identity before
+comparing its key with the former unkeyed content digest, so the assertion
+proves the same-input distinction. The random module-private HMAC key remains
+absent from projection object state and serialization, while rebuild/reorder
+stability holds for the running-process lifetime required by refresh, resize,
+and child return. No cross-process persistence behavior is claimed.
+
+Missing and duplicate projection keys still fail, collisions still fail before
+output, safe-key ordering remains input-order independent, protected identity
+is absent from object/JSON/repr/pickle, and the notification DTO retains exactly
+its seven closed non-action fields.
+
+Final evidence: 18 focused application tests passed with all lanes enabled;
+Ruff passed; ty passed; basedpyright reported zero errors, warnings, and notes.
+
+Final result: **CLOSE**. S399 may close.
