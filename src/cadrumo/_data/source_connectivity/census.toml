@@ -187,7 +187,7 @@ owner = "source-connectivity-campaign"
 review_condition = "Official evidence must adjudicate the per-finca, per-contract, annual scalar, and revision mapping for ingresos, gastos, amortization, reduction, imputed rent, and attribution. Name overlap with the Modelo 100 inmueble envelope is advisory only, and the finca computation must remain distinct from the encrypted asset-amortization ledger."
 expires_on = 2026-12-31
 capability_locators = [
-  "src/cadrumo/domain/fincas/aggregates.py:113",
+  "src/cadrumo/domain/fincas/aggregates.py:132",
   "src/cadrumo/domain/fincas/amortization_ledger.py:93",
   "src/cadrumo/domain/fincas/source_readiness.py:34",
 ]
