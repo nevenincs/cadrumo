@@ -6520,3 +6520,29 @@ name their source rather than state a number: the screen count is whatever the a
 entry point enumerates, and the dev-owned phase's Step count became "every Step" instead of
 twelve. A figure that says where it comes from does not need a machine to check it, because the
 next reader can.
+
+### a-figure-recording-history-does-not-go-stale | medium | Only one of the Verification section's remaining counts needed retiring; the others describe past events and are correct as written
+
+Applying the name-your-source remedy to the rest of the Verification section found fewer targets
+than expected, and the reason is a distinction the earlier corrections had not drawn.
+
+Three counts remained. "Twelve criteria decide whether the work achieved what it was for" is a
+live figure: it counts the paragraphs beneath it, it has to be maintained, and it was already
+wrong once. It now reads "the criteria below decide", which cannot drift because it names what it
+refers to instead of counting it.
+
+The other two are history. "A third condition had to stop firing on five revisions a neighbouring
+condition already described more accurately" records what was true when that decision was taken.
+"Two screens named every kind they emit while still opening with a count from an earlier version"
+records why an eighth gate was written. Neither describes the tree now, and if the tree changes
+neither becomes false - they would become false only if the events they record had not happened.
+
+That distinction is worth stating because the correction habit this campaign has built could
+easily damage such sentences. Four criteria were corrected for quoting figures that stopped being
+true, and the reflex it leaves is to treat every number in a document as a liability. A number in
+a record of what was done is not a claim about the present, and rewriting it to name a live source
+would replace a true statement with a misleading one.
+
+The test is what the sentence would be doing if the figure changed. A criterion saying twelve
+criteria exist is wrong when there are thirteen. A sentence saying five revisions were reclassified
+is still right when a sixth is reclassified later, because it was never counting the total.

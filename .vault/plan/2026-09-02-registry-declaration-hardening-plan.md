@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:f534b8ed752023557aadb3bb42a476bab48723c9a60df43247c9cccf86ed0507'
+body_hash: 'sha256:2fcff9fdce4d1b10c79c31e4963bcf9e037a6cbc3ce9b1a87eb4e255fcbefb6c'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -506,6 +506,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S268` - Correct the lane criterion to name which lane each figure describes; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S269` - Replace the stale failure accounting with a dated one and record that one failure did belong to this plan; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S270` - Establish that a gate checking the plan's own figures is forbidden by the code-stands-alone mandate and record what replaces it; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S271` - Retire the self-referential criteria count and distinguish live figures from historical ones; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -624,8 +625,8 @@ and left green without touching a file the other campaign holds.
 
 ## Verification
 
-The plan is complete when every Step is closed. Beyond that, twelve criteria decide whether the work
-achieved what it was for. Each names the evidence that settles it, because a criterion whose proof is
+The plan is complete when every Step is closed. Beyond that, the criteria below decide whether the
+work achieved what it was for. Each names the evidence that settles it, because a criterion whose proof is
 a reading rather than a command is one nobody can check later.
 
 No gate, screen or audit reassembles the resolved export surface. Proven by two gates in the
