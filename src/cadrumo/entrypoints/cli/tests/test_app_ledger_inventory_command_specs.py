@@ -69,7 +69,9 @@ def test_inventory_parameter_contracts_are_complete_and_ordered() -> None:
     assert specs["app_ledger_inventory_create"].parameters == (
         _argument("actividad_id", "builtins:str", "cli.app.ledger.inventory.actividad_id_help"),
         _option("year", "builtins:int", None, "cli.app.ledger.inventory.year_help", required=True),
-        _option("valuation_method", "builtins:str", None, "cli.app.ledger.inventory.valuation_method_help", required=True),
+        _option(
+            "valuation_method", "builtins:str", None, "cli.app.ledger.inventory.valuation_method_help", required=True
+        ),
         _option("opening_stock", "builtins:str", "0", "cli.app.ledger.inventory.opening_stock_help"),
     )
     assert specs["app_ledger_inventory_closing_authority_record"].parameters == (
