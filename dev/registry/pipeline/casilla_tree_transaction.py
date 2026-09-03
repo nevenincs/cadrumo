@@ -30,6 +30,7 @@ def publish_verified_casilla_tree(
     journal_name: str,
     stage_prefix: str,
     backup_prefix: str,
+    journal_root: Path | None = None,
     replace_tree: Callable[[Path, Path], None] | None = None,
 ) -> None:
     """Stage, verify, and atomically cut over one complete casilla tree.
@@ -44,7 +45,9 @@ def publish_verified_casilla_tree(
     replace = _replace_tree if replace_tree is None else replace_tree
     revision_root = casillas_root.parent
     _require_regular_directory(revision_root, subject="canonical revision root")
-    journal_path = revision_root / journal_name
+    journal_directory = revision_root if journal_root is None else journal_root
+    _require_regular_directory(journal_directory, subject="casilla publication journal root")
+    journal_path = journal_directory / journal_name
     if journal_path.exists() or is_link_like(journal_path):
         raise RegistryValidationError(f"casilla publication journal already exists: {journal_path}")
     if not rendered:
@@ -91,10 +94,13 @@ def recover_verified_casilla_tree(
     journal_name: str,
     stage_prefix: str,
     backup_prefix: str,
+    journal_root: Path | None = None,
 ) -> bool:
     """Recover one interrupted transaction; return whether recovery changed state."""
     revision_root = casillas_root.parent
-    journal_path = revision_root / journal_name
+    journal_directory = revision_root if journal_root is None else journal_root
+    _require_regular_directory(journal_directory, subject="casilla publication journal root")
+    journal_path = journal_directory / journal_name
     if not journal_path.exists():
         return False
     if is_link_like(journal_path) or not journal_path.is_file():

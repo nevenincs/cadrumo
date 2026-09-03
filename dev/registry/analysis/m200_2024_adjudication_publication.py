@@ -94,6 +94,7 @@ def publish_m200_2024_s14_s15(
             journal_name=_JOURNAL,
             stage_prefix=_STAGE_PREFIX,
             backup_prefix=_BACKUP_PREFIX,
+            journal_root=root,
         ):
             raise RegistryValidationError(
                 "M200/2024 adjudication recovered an interrupted publication; run check again"
@@ -119,6 +120,7 @@ def publish_m200_2024_s14_s15(
             journal_name=_JOURNAL,
             stage_prefix=_STAGE_PREFIX,
             backup_prefix=_BACKUP_PREFIX,
+            journal_root=root,
         )
 
 
