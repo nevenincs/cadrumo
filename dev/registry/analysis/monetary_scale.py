@@ -68,6 +68,8 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.export import resolved_export_endpoints
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
+from .corpus import bundled_modelo_ids
+
 __all__ = [
     "CENTS_SCALE",
     "MonetaryScaleFinding",
@@ -224,16 +226,10 @@ def screen_authority(
     return tuple(findings)
 
 
-def _bundled_modelo_ids() -> tuple[str, ...]:
-    from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
-
-    return tuple(sorted(str(code) for code in registry_modelo_codes()))
-
-
 def main() -> int:
     """Print one greppable row per finding and a closing census; always exit 0."""
     authority = bundled_authority()
-    findings = screen_authority(authority, _bundled_modelo_ids())
+    findings = screen_authority(authority, bundled_modelo_ids())
     by_kind: collections.Counter[str] = collections.Counter(finding.kind for finding in findings)
     by_modelo: collections.Counter[str] = collections.Counter(
         finding.modelo for finding in findings if finding.kind == "money_without_scale"

@@ -40,6 +40,7 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from .casilla_id_grammar import classify_casilla_id
+from .corpus import bundled_modelo_ids
 
 __all__ = [
     "ContinuityFinding",
@@ -166,16 +167,10 @@ def continuity_census(authority: ValidatedRegistryAuthority, modelo_ids: tuple[s
     return ContinuityCensus(casillas=casillas, with_chain=with_chain, chains=len(chains), evolutions=evolutions)
 
 
-def _bundled_modelo_ids() -> tuple[str, ...]:
-    from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
-
-    return tuple(sorted(str(code) for code in registry_modelo_codes()))
-
-
 def main() -> int:
     """Print one greppable row per finding and a closing census; always exit 0."""
     authority = bundled_authority()
-    modelo_ids = _bundled_modelo_ids()
+    modelo_ids = bundled_modelo_ids()
     findings = screen_authority(authority, modelo_ids)
     census = continuity_census(authority, modelo_ids)
     tally: collections.Counter[str] = collections.Counter(finding.kind for finding in findings)

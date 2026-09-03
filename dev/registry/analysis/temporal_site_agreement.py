@@ -38,6 +38,8 @@ from dataclasses import dataclass
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
+from .corpus import bundled_modelo_ids
+
 __all__ = [
     "YEAR_LEVEL_TEMPORAL_SITES",
     "TemporalSiteFinding",
@@ -145,16 +147,10 @@ def screen_authority(
     return tuple(findings)
 
 
-def _bundled_modelo_ids() -> tuple[str, ...]:
-    from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
-
-    return tuple(sorted(str(code) for code in registry_modelo_codes()))
-
-
 def main() -> int:
     """Print one greppable row per finding and a closing census; always exit 0."""
     authority = bundled_authority()
-    findings = screen_authority(authority, _bundled_modelo_ids())
+    findings = screen_authority(authority, bundled_modelo_ids())
     census: collections.Counter[str] = collections.Counter(finding.kind for finding in findings)
     for finding in findings:
         sys.stdout.write(

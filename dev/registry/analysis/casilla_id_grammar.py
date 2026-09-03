@@ -43,6 +43,8 @@ from dataclasses import dataclass
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
+from .corpus import bundled_modelo_ids
+
 __all__ = [
     "GRAMMARS",
     "ModeloGrammarUse",
@@ -122,16 +124,10 @@ def screen_authority(
     return tuple(uses)
 
 
-def _bundled_modelo_ids() -> tuple[str, ...]:
-    from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
-
-    return tuple(sorted(str(code) for code in registry_modelo_codes()))
-
-
 def main() -> int:
     """Print one row per modelo, then a corpus-wide census; always exit 0."""
     authority = bundled_authority()
-    uses = screen_authority(authority, _bundled_modelo_ids())
+    uses = screen_authority(authority, bundled_modelo_ids())
     corpus: collections.Counter[str] = collections.Counter()
     mixing = 0
     for use in uses:
