@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:15dc3fe25b001b3fbc38e5bf95a5999d09159f7d7d16909157bce1ed9f2f4631'
+body_hash: 'sha256:ffb4b2973401b1e5619a93a8f927ba74b1458bec581ed2c920d05237b530cdac'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -477,7 +477,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S239` - Identify the third import-graph blind spot behind the last stale member, a class named by string rather than imported; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S240` - Establish that this campaign's lane figures and the CI dev-tooling selection overlap in one directory of eighteen; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S241` - Measure which dev test directories no recipe or workflow names and size what they contain; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
-- [ ] `W06.P13.S242` - Name dev/source_connectivity/tests in a lane, after establishing what its hundred and five never-run tests report; `justfile`.
+- [ ] `W06.P13.S242` - Name dev/source_connectivity/tests in a lane, after establishing what its hundred and thirty collected tests report, of which the default lane selection admits a hundred and eight; `justfile`.
 - [ ] `W06.P13.S243` - Name dev/tui/tests in a lane, after establishing what its thirty-nine never-run tests report; `justfile`.
 - [x] `W06.P13.S244` - Establish what the never-run TUI suite reports and confirm its single failure is a coverage table naming absent interfaces; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S245` - Establish what the never-run source connectivity suite reports and separate its environmental errors from its drifted hashes; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
@@ -671,10 +671,19 @@ edit that added the missing name. A wrong count is worse than a missing one, bec
 reader the list is complete.
 
 Each declaration gate demonstrates detection of a representative defect from a constructed fixture or
-an isolated temporary registry tree, never by mutating the working tree, and each passes the normal path in the same suite. Two gates are exempt and
-better for it: the sibling scale comparison and the tree reproduction comparison are each proven
-against a live defect in the shipped registry, and each test says so and says what must replace it
-once that defect is corrected.
+an isolated temporary registry tree, never by mutating the working tree, and each passes the normal path in the same suite. Several gates are exempt and
+better for it, being proven against a live defect in the shipped registry instead of a constructed
+one: the sibling scale comparison, the record-drift ledger and its companion manifest-staleness
+assertion, and three of the revision-name conditions. Each says in its own docstring that the pin is
+deliberate, that its failure is the correction landing rather than a regression, and what must
+replace it.
+
+Naming that replacement turned out to be the hard half. Every one of the six misnamed revisions
+carries an open rename Step, so the instructions that first pointed at a live sibling were pointing
+at a coordinate leaving at the same time as the one it was offered to replace. The replacement a pin
+owes is a claim about the corpus after this plan lands, not the corpus today; where the kind empties
+entirely, the honest instruction is to construct the case from a copy of a real revision, which is
+what the sibling conditions in the same module already do.
 
 No monetary amount is emitted at a magnitude the registry does not determine. Every monetary field is
 rendered by a wire type that scales, carries a declared scale, or is one half of the official part

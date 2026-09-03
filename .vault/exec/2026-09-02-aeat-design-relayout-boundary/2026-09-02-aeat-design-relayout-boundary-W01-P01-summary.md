@@ -3,11 +3,11 @@ tags:
   - '#exec'
   - '#aeat-design-relayout-boundary'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-09-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:d2c0cd389e5ce0d766d87b01c7c96e61b283d50cc5123fd4c5920f97f72cb282'
 related:
-  - "[[2026-09-02-modelo-200-semantic-crosswalk-plan]]"
+  - "[[2026-09-02-aeat-design-relayout-boundary-plan]]"
 ---
 # `aeat-design-relayout-boundary` `W01.P01` summary
 

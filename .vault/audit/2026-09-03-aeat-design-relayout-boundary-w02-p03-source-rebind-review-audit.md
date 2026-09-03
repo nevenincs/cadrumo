@@ -1,16 +1,14 @@
 ---
 tags:
   - '#audit'
-  - '#modelo-200-semantic-crosswalk'
+  - '#aeat-design-relayout-boundary'
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8fcd9acddc704c057cc35784b3e9f4d2d9c13bcb23c2218214c7b4ae1054852c'
+body_hash: 'sha256:e306fcace15b82805fb0fbaf803dce2ac806a7f6e8a300b95f77c2480695574c'
 related:
-  - "[[2026-09-02-modelo-200-semantic-crosswalk-plan]]"
+  - "[[2026-09-02-aeat-design-relayout-boundary-plan]]"
 ---
-
-
 
 # `modelo-200-semantic-crosswalk` audit: `W02.P03 source-rebind review`
 

@@ -3,12 +3,12 @@ tags:
   - '#exec'
   - '#aeat-design-relayout-boundary'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-09-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:357bafb6c25881fe2ffcd1d44f2d752e0e77bd4e6d6a8ff9809fff13530df609'
 step_id: 'S02'
 related:
-  - "[[2026-09-02-modelo-200-semantic-crosswalk-plan]]"
+  - "[[2026-09-02-aeat-design-relayout-boundary-plan]]"
 ---
 # Prove census completeness, determinism, source-SHA binding, contamination visibility, and partition-drift refusal
 

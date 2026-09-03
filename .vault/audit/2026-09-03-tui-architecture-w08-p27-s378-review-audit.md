@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0458f7fd0b80bf4b611d1e0ec9c5f7edd69ee1d6be9914948541a0ec209297ad'
+body_hash: 'sha256:7e32dc327024ccc1fe1191de6a0bd14ca8c8f41880959247ad338dbcda59f20c'
 related: []
 ---
 # `tui-architecture` audit: `W08.P27.S378 Declarations calendar screen review`
@@ -14,21 +14,19 @@ related: []
 
 Independent review of the live S378 calendar screen, controller, presentation protocols, route integration, tests, locales, and S393 safe projection boundary. The review probed exact scope overlap, evidence observability, known empty/stale/refusal states, Unicode AND search over safe fields, natural callbacks and recovery authority, source/detail truth, semantic focus through filtering and re-entry, eighty-column geometry and scroll ownership, localization, and forbidden dependencies.
 
-## Findings
+## Findings -- final dispositions
 
-### recovery-action-is-an-unlabelled-direct-mutation | high | Open: Enter can create work without a visible recovery affordance
+### recovery-action-is-an-unlabelled-direct-mutation | high | Closed
 
-A row carrying `recovery_action` looks the same as an ordinary calendar row: neither the agenda nor detail copy says that a recovery action exists, names its application-owned meaning, or indicates that activation differs. `on_data_table_row_selected` nevertheless gives recovery precedence and immediately calls `recovery_handoff(action, row)`. The protocol explicitly describes that callback as an executor that submits the pre-admitted recovery action; the canonical action is `operator.modelo.work.create`. Thus the same Enter gesture either navigates or initiates creation based on hidden state.
+Recovery-bearing rows now render an explicit localized create/recover verb in the selected-row detail before activation. The controller rejects any recovery action whose catalogue identity is not `operator.modelo.work.create`, whose catalogue target is not `modelo.work.create`, or whose bindings do not exactly equal the row's natural Modelo/year/period address. Activation routes recovery rows only to the injected recovery handoff; an absent executor renders the existing localized handoff refusal and never falls through to the ordinary entry callback. Highlighting only renders detail. The focused tests prove invalid identity and bindings are rejected, the visible verb is present, the canonical payload is invoked once on Enter, ordinary handoff is not invoked, and the missing-executor path refuses visibly.
 
-The tests construct no recovery-bearing row and never exercise `calendar_recovery_handoff`, so action identity, exact bindings, single invocation, refusal, confirmation, and error/lifecycle behavior are unproved. Render an explicit localized recovery affordance derived from the application declaration, separate row inspection from action activation, and require a deliberate confirmation before invoking a mutating executor. Add a canonical S393-projected recovery row and prove exact action/bindings, no invocation on highlight/detail, one invocation after confirmation, and visible refusal when the executor is absent.
+### available-source-without-timestamp-is-labelled-never-observed | medium | Closed
 
-### available-source-without-timestamp-is-labelled-never-observed | medium | Open: valid source state renders contradictory freshness
+Freshness rendering now branches on both availability and timestamp. `NEVER_CAPTURED` alone receives Never observed; `AVAILABLE` without `observed_at` receives localized current/available wording that says the observation time was not recorded; other no-timestamp states receive neutral time-not-recorded wording. The focused screen test constructs the valid `AVAILABLE`/no-time state and proves the rendered detail contains the current/no-time copy and excludes Never observed.
 
-S393 and the inherited `HomeZoneState` contract allow `AVAILABLE` with `observed_at=None`; this can represent current in-memory authority without a retained observation timestamp. `_render_detail` maps every missing timestamp, regardless of availability, to the localized `never_observed` copy. A valid source can therefore render as both Available and Never observed. Reserve Never observed for `NEVER_CAPTURED`; use distinct localized current/no-timestamp wording for available, locked, or unavailable sources whose contract permits no timestamp. Add the valid cross-product to detail-copy tests.
+### calendar-ignores-semantic-focus-on-route-entry | medium | Closed
 
-### calendar-ignores-semantic-focus-on-route-entry | medium | Open: route re-entry always starts at search
-
-The controller retains `TuiScreenContextV1`, but the calendar never reads `context.focus`. `on_mount` always focuses the search box and `_refresh` defaults the agenda cursor to the first row. Its semantic preservation test covers only filtering while the selected row remains visible; it does not mount with a calendar natural-address restore token, filter a selected row out and back in, reorder rows, or resize a running compositor. Implement and test a stable calendar semantic focus identity based on the safe natural address, restoring both the exact agenda row and table focus on route re-entry. Preserve that identity through filter disappearance/reappearance and presentation reorder.
+The controller now resolves a namespaced public focus key back to the safe natural row identity. Mount restores the agenda widget and exact semantic row from `TuiScreenContext.focus`. The screen retains a hidden restore anchor while filtering removes the row, does not let the temporary fallback cursor overwrite it, and restores the row when it reappears. Projection replacement resolves by identity rather than position. Tests exercise mount focus, disappearance/re-entry, resize, child-screen return, actual `DataTable` cursor identity, and viewport bounds. A supplemental read-only runtime probe changed the target from rendered row 1 to row 2 by changing its sort key; the cursor followed the semantic identity and remained inside the actual viewport.
 
 ## Positive findings
 
@@ -36,10 +34,11 @@ The six scope predicates have explicit tested overlap: Past includes filed and o
 
 Rows and callbacks resolve through semantic natural identities rather than cursor positions. Detail copy separates legal, local filing, AEAT submission, justificante, and all three source availability axes. Known empty, stale empty, filtered empty, and unavailable schedule routes are distinct. Eighty-column compositor checks show no horizontal table scroll and one page scroll owner. Four locales contain authored title, status, and detail copy with no key fallback. The package consumes only the injected safe projection and protocols and imports no adapters, CLI, repositories, readers, filesystem or network facilities.
 
-## Verification
+## Final verification
 
-All 9 focused calendar tests passed. Ruff passed for the calendar slice. ty passed for the Declarations package. The green suite does not discharge the findings because it has no recovery action, every available source fixture supplies a timestamp, and it never supplies route-entry focus or removes the selected row during filtering.
+Five narrowly selected remediation tests passed with the integration lane explicitly enabled (`-n 0 -m ""`). They cover recovery catalogue/address validation, visible recovery/refusal behavior, available-without-time copy, route-context focus, hidden-filter restoration, resize, child return, cursor identity, and viewport bounds. The supplemental actual-reorder runtime probe also passed. The prior full-slice Ruff and ty results remain applicable; no production dependency boundary changed in the remediation.
 
-## Recommendation
+## Final recommendation
 
-NO-CLOSE. Remediate the high hidden mutation and both medium truth/focus defects before marking S378 complete.
+CLOSE. All three recorded blockers are remediated and re-proved. No high, medium, or remediation-introduced regression remains open; S378 may close.
+

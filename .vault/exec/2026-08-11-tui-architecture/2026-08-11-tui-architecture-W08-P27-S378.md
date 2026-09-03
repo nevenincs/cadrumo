@@ -5,12 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7be25800521872e557ddf0f63a3dada81e48a40c82f4c19aba6b78754be883a6'
+body_hash: 'sha256:16c0ef36221e672234f4754da489ac8f0dd3be58b21b5396a0cd4f68edec8040'
 step_id: 'S378'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
 
 # Build the full declaration calendar as an agenda-first searchable and filterable workbench with past, upcoming, overdue, filed, and evidence-unknown scopes
 

@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-03'
-body_hash: 'sha256:dfd3cc59c3c1aac52cb90d27498af7591c3b8c724f4cebee67cf7522e3c95e72'
+body_hash: 'sha256:e00f8222e4534cfcdb180215d6a42c1995f03ff9243bebc0dc034b3fe5a6b20e'
 ---
 
 <!-- RETIRED: S370 -->
@@ -580,6 +580,7 @@ Build host-neutral Ledger, Declarations with full calendar and history, AEAT Syn
 - [x] `W08.P27.S377` - Build the Declarations landing, revision and filing-history routes around existing Modelo workspace destinations; `src/cadrumo/entrypoints/tui/declarations/`.
 - [x] `W08.P27.S393` - Define a safe full Declarations calendar projection that preserves legal schedule, local filing, AEAT evidence, and source availability as independent axes; `src/cadrumo/application/modelo/declarations_calendar.py`.
 - [x] `W08.P27.S378` - Build the full declaration calendar as an agenda-first searchable and filterable workbench with past, upcoming, overdue, filed, and evidence-unknown scopes; `src/cadrumo/entrypoints/tui/declarations/calendar.py`.
+- [ ] `W08.P27.S397` - Define a safe immutable AEAT Sync workspace projection that joins overview, census, filed-declaration, notification, evidence-comparison, and reconciliation facts while excluding protected taxpayer values and preserving source availability, freshness, contradiction, and supported-action axes; `src/cadrumo/application/aeat_sync/workspace.py and focused application tests`.
 - [ ] `W08.P27.S379` - Build AEAT Sync overview, profile-census, filed-declaration, notification, evidence-comparison, and reconciliation screens with explicit pull and supported push actions; `src/cadrumo/entrypoints/tui/aeat_sync/`.
 - [ ] `W08.P27.S380` - Compose production Profile, change-user, password, appearance, language, and sign-out factories without duplicating their existing screens; `src/cadrumo/entrypoints/tui/account.py`.
 
@@ -592,6 +593,9 @@ Compose the production Home projection, destination catalogue, global search and
 - [x] `W08.P28.S383` - Compose the root destination stack, account header, semantic focus restoration, session expiry, and post-journey Home refresh; `src/cadrumo/entrypoints/tui/app.py`.
 - [ ] `W08.P28.S384` - Compose secure profile, overview, Ledger, declaration, evidence, notification, operation, and destination factories for one installed session; `src/cadrumo/entrypoints/tui/launcher.py`.
 - [ ] `W08.P28.S385` - Add complete localized workbench, account, Ledger, Declarations, calendar, AEAT Sync, search, availability, and refusal messages through the canonical locale workflow; `src/cadrumo/locales/`.
+- [ ] `W08.P28.S394` - Generate and enforce an exhaustive visual-review inventory that maps every production TUI page, dialog, and editor factory to a stable review surface identity and fails when a concrete surface is undiscovered or unclassified; `dev/tui/_inventory.py, dev/tui/_coverage.py, and dev/tui/tests/test_tui_visual_inventory.py`.
+- [ ] `W08.P28.S395` - Provide deterministic non-sensitive review fixtures for every inventoried page, dialog, and editor, including meaningful ready, empty, blocked, stale, unavailable, validation, confirmation, and failure states wherever that surface supports them; `dev/tui/_harness.py, src/cadrumo/entrypoints/tui/devtools/, and dev/tui/tests/test_tui_visual_inventory.py`.
+- [ ] `W08.P28.S396` - Expose every inventoried fixture through the dev TUI discovery and rendering commands and prove selectable interactive launch plus deterministic raster and text artifacts across supported viewports, themes, and locales with no missing-surface drift; `dev/tui/cli.py, dev/tui/_raster.py, dev/tui/_artifacts.py, dev/tui/README.md, and dev/tui/tests/`.
 
 ### Phase `W08.P29` - Workbench verification and closeout
 
@@ -604,6 +608,8 @@ Prove responsive, localized, keyboard, non-colour, secure-storage, explicit-sync
 - [ ] `W08.P29.S390` - Run independent architecture, UX, accessibility, security, redeclaration, and scope review over the completed operator workbench; `.vault/audit/2026-08-11-tui-architecture-audit.md`.
 
 ## Parallelization
+
+The visual-review inventory and fixture matrix in S394-S396 follows completed production-surface and launcher composition through S385 and must close before S386-S390. Operator feedback therefore exercises the actual composed pages and editors rather than prototypes or a partial catalogue.
 
 The discharged `casilla-schema` prerequisite no longer blocks execution. Independent backend contract phases may proceed in parallel when they do not share an authority or write surface, but receipt minting, composition, cutover, and deletion remain serialized. Within W03.P20, commit c94133f29516b12e3529f3d154c31592562f6198 is delivered mechanical registry-relocation history rather than an open dependency. S168-S172 retain their recorded order, then S175 must close with the independently reviewed fixed 78-row matrix, deterministic check, one-to-one bounded disposition Steps, and named final package gate before S173, S174, or any generated registry-family disposition Step begins. Those 78 disposition Steps run only in the dependency order recorded by the matrix, and the final zero-binding, zero-re-export, and zero-unresolved-row gate waits for all 78. S173 begins only after S175 and consumes the authority-family matrix row, S174 follows S173, and S160 follows the corrected pre-S160 prerequisite chain plus S159. S161-S166 require the epoch-v2 native-coordinate contract, S167 waits for every corrected native surface including S173 plus S126 v2, and the registry-dependent portions of S128-S131 wait for S175, S173, and their existing prerequisites. No TUI operation projection begins before the exact C0 receipt. Interface C2 waits for its exact Workspace C2 dependency receipt, interface C3 waits for the exact C2 exit plus financial-operand and Edit Contract dependency receipts, interface C4 waits for the C3 exit plus the enrolled action denominator, and C5 waits for the C4 exit and final structural fixed point. The interface plan consumes these receipts and never redeclares their application contracts.
 

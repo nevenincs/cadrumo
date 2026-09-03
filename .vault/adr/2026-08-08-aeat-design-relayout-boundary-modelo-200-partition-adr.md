@@ -3,13 +3,13 @@ tags:
   - '#adr'
   - '#aeat-design-relayout-boundary'
 date: '2026-08-08'
-modified: '2026-09-02'
+modified: '2026-09-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:e88c9e760815394334c156d9d85ab2822fccbfc1985d62f85aa7834133cf3ac9'
 related:
   - "[[2026-08-07-aeat-design-relayout-boundary-adr]]"
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
-  - '[[2026-09-02-modelo-200-semantic-crosswalk-research]]'
+  - '[[2026-09-02-aeat-design-relayout-boundary-research]]'
 ---
 # `aeat-design-relayout-boundary` adr: `Modelo 200 partitions by 2024 design authority and reviewed semantic crosswalk` | (**status:** `accepted`)
 

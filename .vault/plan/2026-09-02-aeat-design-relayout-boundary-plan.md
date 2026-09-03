@@ -1,16 +1,16 @@
 ---
 tags:
   - '#plan'
-  - '#modelo-200-semantic-crosswalk'
+  - '#aeat-design-relayout-boundary'
 date: '2026-09-02'
 tier: L3
 related:
   - '[[2026-08-08-aeat-design-relayout-boundary-modelo-200-partition-adr]]'
-  - '[[2026-09-02-modelo-200-semantic-crosswalk-research]]'
+  - '[[2026-09-02-aeat-design-relayout-boundary-research]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:5605dfb5464e5b4078aaff57c83a5b986b58f36e8628b2e9607d0791566c05ea'
+body_hash: 'sha256:5c715c35fd3fb410b6a2be1bf835a277930e15a37c71f678c53852c5993a2f95'
 ---
 
 # `modelo-200-semantic-crosswalk` plan
@@ -56,7 +56,7 @@ Derive exact 2024-anchor rebinds while preserving every non-source authority fac
 
 Assign identity mismatches and source-map orphans to closed target-first dispositions without sibling fallback.
 
-- [ ] `W02.P04.S07` - Implement target-anchor identity classification and explicit dispositions for every unmapped declaration; `dev/registry/analysis/m200_semantic_casilla_candidates.py`.
+- [x] `W02.P04.S07` - Implement target-anchor identity classification and explicit dispositions for every unmapped declaration; `dev/registry/analysis/m200_semantic_casilla_candidates.py`.
 - [ ] `W02.P04.S08` - Prove identity ambiguity, segment qualification, non-casilla ownership, and orphan omission fail closed; `dev/registry/tests/test_m200_semantic_casilla_candidates.py`.
 
 ## Wave `W03` - adjudicate 2024 meaning and legal authority
