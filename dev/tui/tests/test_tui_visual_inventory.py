@@ -161,8 +161,8 @@ def test_every_discovered_interface_has_one_stable_explicit_classification() -> 
     }
     assert counts == {
         _coverage.InventoryDisposition.COVERED: 5,
-        _coverage.InventoryDisposition.FIXTURE_NEEDED: 45,
-        _coverage.InventoryDisposition.ABSTRACT_BASE: 8,
+        _coverage.InventoryDisposition.FIXTURE_NEEDED: 44,
+        _coverage.InventoryDisposition.ABSTRACT_BASE: 9,
         _coverage.InventoryDisposition.DEVELOPMENT_ONLY: 2,
     }
 
@@ -170,7 +170,7 @@ def test_every_discovered_interface_has_one_stable_explicit_classification() -> 
 def test_every_concrete_review_surface_has_a_stable_fixture_identity() -> None:
     interfaces = _inventory.scan()
     needed = _coverage.fixture_needed(interfaces)
-    assert len(needed) == 45
+    assert len(needed) == 44
     for interface in interfaces:
         classification = _coverage.CLASSIFICATIONS[interface.qualname]
         if classification.disposition in {
