@@ -207,6 +207,11 @@ def test_import_collector_distinguishes_runtime_type_only_dynamic_and_export(tmp
         "import importlib\nimportlib.import_module(name='.target', package='cadrumo')\n",
     )
     _write(tmp_path, "dev/packaging/campaign.py", "Form('target', module='cadrumo.target')\n")
+    _write(
+        tmp_path,
+        "dev/packaging/tests/test_campaign.py",
+        "_EXPECTED_EXECUTION = {'lane': (('cadrumo.target', ()),)}\n",
+    )
     _write(tmp_path, "src/cadrumo/__init__.py", "from .target import Thing\n__all__ = ['Thing']\n")
     all_graph = _graph(
         "cadrumo",
@@ -244,10 +249,12 @@ def test_import_collector_distinguishes_runtime_type_only_dynamic_and_export(tmp
     assert ("module-op", "src/cadrumo/type_hint.py", ReferenceKind.TYPE_ONLY_IMPORT) in observed
     assert ("module-op", "src/cadrumo/dynamic.py", ReferenceKind.DYNAMIC_IMPORT) in observed
     assert ("module-op", "dev/packaging/campaign.py", ReferenceKind.DYNAMIC_IMPORT) in observed
+    assert ("module-op", "dev/packaging/tests/test_campaign.py", ReferenceKind.DYNAMIC_IMPORT) in observed
     assert ("symbol-op", "src/cadrumo/type_hint.py", ReferenceKind.TYPE_ONLY_IMPORT) in observed
     assert ("symbol-op", "src/cadrumo/__init__.py", ReferenceKind.EXPORT) in observed
     assert ("symbol-op", "src/cadrumo/dynamic.py", ReferenceKind.DYNAMIC_IMPORT) in observed
     assert ("symbol-op", "dev/packaging/campaign.py", ReferenceKind.DYNAMIC_IMPORT) not in observed
+    assert ("symbol-op", "dev/packaging/tests/test_campaign.py", ReferenceKind.DYNAMIC_IMPORT) not in observed
 
 
 def test_collector_preserves_multiple_symbols_and_mixed_type_checking_context(tmp_path: Path) -> None:

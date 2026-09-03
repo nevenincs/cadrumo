@@ -656,6 +656,25 @@ def collect_import_edges(
         owner = _module_name(path, repo_root)
         bindings = _import_bindings(tree, owner, package_module=path.name == "__init__.py")
         type_checking_nodes = _type_checking_node_ids(tree)
+        if owner == "dev.packaging.tests.test_campaign":
+            for assignment in (item for item in ast.walk(tree) if isinstance(item, ast.Assign)):
+                if not any(
+                    isinstance(target, ast.Name) and target.id == "_EXPECTED_EXECUTION" for target in assignment.targets
+                ):
+                    continue
+                for literal in ast.walk(assignment.value):
+                    if not isinstance(literal, ast.Constant) or not isinstance(literal.value, str):
+                        continue
+                    for locator in locators_by_module.get(literal.value, ()):
+                        if locator.symbol is None:
+                            edges.add(
+                                HardEdge(
+                                    locator.operation_id,
+                                    relative,
+                                    ReferenceKind.DYNAMIC_IMPORT,
+                                    detail=f"execution-oracle-line:{literal.lineno}",
+                                )
+                            )
         for node in ast.walk(tree):
             if (
                 isinstance(node, ast.Call)
