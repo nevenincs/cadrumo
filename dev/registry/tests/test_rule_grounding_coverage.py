@@ -10,6 +10,8 @@ fields the join exists to separate.
 
 from __future__ import annotations
 
+import dataclasses
+
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
@@ -19,6 +21,14 @@ from ..analysis.rule_grounding_coverage import KINDS, revision_findings, screen_
 from ..analysis.type_convention_notes import revision_findings as type_conventions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class _Field:
+    """The two attributes the classifier reads from a field needing a rule."""
+
+    aeat_type: str
+    cell: str
 
 
 @pytest.fixture(scope="module")
@@ -40,7 +50,13 @@ def test_the_join_separates_grounded_from_ungrounded_fields(corpus: tuple[object
     """
     assert corpus, "the join lost its live population"
     kinds = {item.kind for item in corpus}
-    assert kinds == set(KINDS), "the join no longer separates the two conditions"
+    assert len(kinds) > 1, "the join reports every field the same way"
+    assert kinds <= set(KINDS)
+    # `ungrounded` has no instance in the corpus since design-level notes were
+    # admitted, so it is not required here. It keeps its own proof below, on
+    # constructed input, rather than being deleted as unreachable.
+    assert "grounded_by_type_convention" in kinds
+    assert "grounded_by_design_note" in kinds
 
 
 def test_a_grounded_field_names_notes_that_really_cover_its_type(
@@ -65,21 +81,72 @@ def test_a_grounded_field_names_notes_that_really_cover_its_type(
         assert set(item.notes) == covering
 
 
-def test_an_ungrounded_field_has_no_convention_for_its_type(
-    authority: ValidatedRegistryAuthority, corpus: tuple[object, ...]
+def test_a_field_grounded_only_by_a_design_note_names_that_note(
+    corpus: tuple[object, ...],
 ) -> None:
-    """A field is only called ungrounded when its design really is silent.
+    """Weaker grounding is reported as itself, never as a type convention.
 
-    The complement of the test above, and the one that catches the join
-    under-reporting: a lookup miss caused by a key mismatch would report a
-    grounded field as ungrounded and look exactly like a real gap.
+    A design note names no type, so a field falling back to one has evidence
+    that may or may not settle it. Reporting that as the stronger condition
+    would put a field's rule on wording that says nothing about it - modelo
+    200's design note does settle its amounts, and another design's says only
+    that the NIF is mandatory, and the row cannot tell them apart.
     """
-    ungrounded = [item for item in corpus if item.kind == "ungrounded"]
-    assert ungrounded, "nothing is ungrounded, so this proves nothing"
-    for item in ungrounded:
-        assert item.notes == ()
-        for convention in type_conventions(authority, modelo=item.modelo, revision=item.revision):
-            assert item.aeat_type not in convention.types
+    fallback = [item for item in corpus if item.kind == "grounded_by_design_note"]
+    assert fallback, "the fallback condition lost its live population"
+    for item in fallback:
+        assert item.notes
+        assert all(note.endswith(":unnumbered") for note in item.notes)
+
+
+def test_the_ungrounded_condition_still_reports_when_nothing_is_available() -> None:
+    """No field in the corpus is ungrounded, so the condition is proven built.
+
+    Admitting design-level notes emptied this population. The condition is kept
+    rather than deleted, because a design carrying neither a type convention nor
+    a design note is exactly the case an author must not discover halfway
+    through, and a condition with no instance and no proof stops reporting
+    without anyone noticing.
+
+    Proven through the screen's own classifier on explicit input, rather than by
+    replacing what this module imports: a test that reached inside the screen to
+    silence its sources would be testing a screen nobody runs.
+    """
+    from ..analysis.rule_grounding_coverage import classify_grounding
+
+    field = _Field(aeat_type="Num", cell="A!B1")
+    findings = classify_grounding((field,), by_type={}, design_notes=(), modelo="200", revision="r")
+    assert [item.kind for item in findings] == ["ungrounded"]
+    assert findings[0].notes == ()
+
+
+def test_a_type_convention_outranks_a_design_note() -> None:
+    """Where both exist the stronger evidence is the one reported.
+
+    A design note is available to every field of the design, so without this the
+    weaker condition would swallow every field that also had a convention naming
+    its type, and the census would understate the grounding it actually has.
+    """
+    from ..analysis.rule_grounding_coverage import classify_grounding
+
+    field = _Field(aeat_type="Num", cell="A!B1")
+    findings = classify_grounding(
+        (field,), by_type={"Num": ["S1:nota 4"]}, design_notes=("S1",), modelo="202", revision="r"
+    )
+    assert [item.kind for item in findings] == ["grounded_by_type_convention"]
+    assert findings[0].notes == ("S1:nota 4",)
+
+
+def test_a_design_note_grounds_a_field_whose_type_no_convention_names() -> None:
+    """The fallback fires only when the stronger evidence is absent."""
+    from ..analysis.rule_grounding_coverage import classify_grounding
+
+    field = _Field(aeat_type="Num", cell="A!B1")
+    findings = classify_grounding(
+        (field,), by_type={"An": ["S1:nota 3"]}, design_notes=("DP200001",), modelo="200", revision="r"
+    )
+    assert [item.kind for item in findings] == ["grounded_by_design_note"]
+    assert findings[0].notes == ("DP200001:unnumbered",)
 
 
 def test_a_revision_stating_conventions_but_needing_no_rule_yields_nothing(

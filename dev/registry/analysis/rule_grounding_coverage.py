@@ -55,6 +55,7 @@ from .type_convention_notes import revision_findings as type_conventions
 __all__ = [
     "KINDS",
     "GroundingFinding",
+    "classify_grounding",
     "revision_findings",
     "screen_authority",
 ]
@@ -106,6 +107,28 @@ def revision_findings(
         sheet_unnumbered_notes(transcription.read_text(encoding="utf-8")) if transcription.is_file() else {}
     )
 
+    return classify_grounding(
+        needed, by_type=dict(by_type), design_notes=tuple(sorted(design_notes)), modelo=modelo, revision=revision
+    )
+
+
+def classify_grounding(
+    needed: tuple[object, ...],
+    *,
+    by_type: dict[str, list[str]],
+    design_notes: tuple[str, ...],
+    modelo: str,
+    revision: str,
+) -> tuple[GroundingFinding, ...]:
+    """Classify already-gathered fields and wording, separately from gathering them.
+
+    Kept apart from :func:`revision_findings` because the classification is what
+    decides which evidence a rule may rest on, and an instrument proven only
+    against the live corpus is proven against whatever the corpus happens to
+    say. Given the three inputs it can be shown to reach each condition on
+    explicit input - which is also why no test here has to reach inside this
+    module and replace what it imports.
+    """
     findings: list[GroundingFinding] = []
     for field in needed:
         notes = tuple(by_type.get(field.aeat_type, ()))
@@ -114,7 +137,7 @@ def revision_findings(
             detail = f"{len(notes)} note(s) state a convention for type {field.aeat_type}"
         elif design_notes:
             kind = "grounded_by_design_note"
-            notes = tuple(f"{sheet}:unnumbered" for sheet in sorted(design_notes))
+            notes = tuple(f"{sheet}:unnumbered" for sheet in design_notes)
             detail = (
                 f"no convention names type {field.aeat_type}; the design carries "
                 f"{len(design_notes)} unnumbered note(s), which have to be read"

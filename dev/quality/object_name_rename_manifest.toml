@@ -1,5 +1,5 @@
 schema_version = 1
-inventory_digest = "sha256:58e88734b43bfefa49bb6781cde70d9d72aa354e62ae192d3583759df603d405"
+inventory_digest = "sha256:9dcf780d584f30a0ce529d7950a9d85911fc7cd512b7713a6ee70257580539c3"
 
 [[operations]]
 operation_id = "rename-aeat-domain-section"
