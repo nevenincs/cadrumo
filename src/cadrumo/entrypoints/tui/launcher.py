@@ -45,6 +45,61 @@ type InstalledWorkbenchSearchInputsProviderV1 = Callable[[], InstalledWorkbenchS
 type InstalledWorkbenchGenerationProviderV1 = Callable[[], WorkbenchGenerationV1]
 
 
+def compose_secure_profile_workbench_generation_provider(
+    *,
+    profile_id: str,
+    profile_label: str,
+) -> InstalledWorkbenchGenerationProviderV1:
+    """Bind the installed provider to the current secure profile session.
+
+    Repository instances stay inside the application read door; neither the
+    root nor any screen receives a repository/service locator. Calling the
+    returned provider is the explicit local-I/O boundary for a fresh session
+    generation and never initiates network work.
+    """
+    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+    from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+    from ...application.user_profile.login_session_port import (
+        profile_current_bucket_session,
+        profile_session_serves_bucket,
+    )
+    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
+    from ...application.workbench_generation import (
+        InstalledWorkbenchGenerationProviderV1 as ApplicationGenerationProviderV1,
+    )
+    from ...application.workbench_generation import (
+        SecureProfileWorkbenchGenerationReadDoorV1,
+    )
+    from ...core.time.clock import now, today_madrid
+
+    session = profile_current_bucket_session()
+    if (
+        session is None
+        or session.sealed
+        or not profile_session_serves_bucket(session, profile_id)
+        or session.is_expired(now())
+    ):
+        raise RuntimeError("installed workbench requires the live secure session for its selected profile")
+    expires_at = min(session.idle_deadline, session.absolute_deadline)
+    door = SecureProfileWorkbenchGenerationReadDoorV1(
+        profile_id=profile_id,
+        profile_label=profile_label,
+        profile_expires_at=expires_at,
+        profile_repository=ProfileRecordRepository.for_current_session(profile_id),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=profile_id),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=profile_id),
+        work_unit_repository=WorkUnitCatalogueRepository(bucket_id=profile_id),
+        calculation_repository=CalculationRevisionCatalogueRepository(bucket_id=profile_id),
+        filing_repository=ModeloRecordCatalogueRepository(bucket_id=profile_id),
+        clock=now,
+        today=today_madrid,
+    )
+    return ApplicationGenerationProviderV1(door)
+
+
 @dataclass(frozen=True, slots=True)
 class InstalledWorkbenchRootInputsV1:
     """Explicit safe inputs needed to compose one installed workbench root.
@@ -571,6 +626,7 @@ __all__ = [
     "compose_installed_workbench_generation_provider",
     "compose_installed_workbench_root",
     "compose_installed_workbench_search",
+    "compose_secure_profile_workbench_generation_provider",
     "load_modelo_work_unit_catalogue",
     "load_modelo_work_units",
     "main",
