@@ -21,7 +21,7 @@ from .._app_ledger_lifecycle_command_specs import LEDGER_LIFECYCLE_COMMAND_SPECS
 from .._app_ledger_management_command_specs import LEDGER_MANAGEMENT_COMMAND_SPECS
 from .._app_ledger_operations_command_specs import LEDGER_OPERATIONS_COMMAND_SPECS
 from .._command_target import resolve_deferred_target
-from ..command_spec import CommandSpec, OptionSpec, ParameterSpec
+from ..command_spec import ArgumentSpec, CommandSpec, OptionSpec, ParameterSpec
 from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
