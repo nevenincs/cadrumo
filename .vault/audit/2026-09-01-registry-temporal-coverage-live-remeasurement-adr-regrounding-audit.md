@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6a06d2acd3d2f1b01720e349dde4d1f2a0dda004a76ea3126fe5962a342f1183'
+body_hash: 'sha256:b89e4d177b3ae7d9361665d5dfc98f913884e30b45bdf0d32c3710ba79c432dc'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8400,3 +8400,32 @@ are consistent with what is there. What matters for the next reader is that
 "grade in five encodings" should not be treated as a live defect on the strength
 of this plan's opening sentence, because nothing in the tree today supports it
 and nothing in the record explains what it meant.
+
+### the-citation-surface-is-25-types-and-48-fields-where-the-plan-said-eleven | high | Re-derivation moved this figure the other way, and the symmetry it exposed is the more useful half
+
+The third breadth figure re-derives cleanly, unlike the grade, and it moves
+against the plan rather than towards it. Counting every declared field on a
+registry declaration type whose name pairs `ref` with `legal` or `source` - a
+boundary that can be checked, which is what the original figures lacked - a
+citation can be restated across 25 declaration types and 48 fields. The plan
+said eleven.
+
+The direction matters. The temporal figure came down from eight to six because
+a stated boundary excluded within-year deadline dates that cannot disagree with
+a year window. This one goes up by a factor of four, so the plan has been
+understating its own case, and a reader who trusted eleven would have taken the
+citation surface for something a single afternoon could reconcile.
+
+The symmetry is worth more than the total. Twenty-four fields are `legal_refs`
+and twenty-four are `source_refs`, so nearly every declaration type able to cite
+a law is separately able to cite a source, in parallel fields declared beside
+each other. That is not one concept restated 48 times; it is one PAIR of
+concepts declared 24 times, which is a different defect with a different remedy.
+A campaign that collapsed citations into one home would have to decide whether
+the pair travels together or apart, and the count alone does not answer that.
+
+Three of the five figures now have a status: temporal re-derived and narrowed
+under a written boundary, citation re-derived and widened under another, grade
+not re-derivable because no boundary survives. What separates the two that
+worked from the one that did not is only that a boundary could be written down -
+and in every case the boundary, not the number, is what a later reader needs.

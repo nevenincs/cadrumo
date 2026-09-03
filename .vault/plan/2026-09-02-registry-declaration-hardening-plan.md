@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:2c9ec2e69f1c846b425bf9c4e8600c636ef29951f27775d67a7dc348abcba3a8'
+body_hash: 'sha256:f40bbf9abe546d6ad283b4382e66686fabd19634a12528c83812f7ead735ce30'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -31,13 +31,26 @@ record finds them only where a later entry quotes this sentence, and no sibling 
 either. They came from a measurement made before this plan and not carried into the record that
 survived, so they are stated here as history rather than as evidence a reader can check.
 
-One has since been re-derived, and the result is instructive about the other four. The temporal sites
+Two have since been re-derived, and the results are instructive about the rest. The temporal sites
 are now declared as data beside the screen that compares them, with the boundary written down: six
 year-level sites, not eight, because a deadline window's opening, closing and payment dates say WHEN
 within a year a filing is due rather than WHICH years a revision serves, and folding them in inflates
 a restatement count with facts that cannot disagree. The gap between six and eight is a difference
 between two definitions, not an error in either, and it is only visible because one of them is now
-written down. The remaining four await the same treatment. Detection after the fact is the wrong
+written down.
+
+The citation figure moves the other way and is worth more than the number it replaces. Counting every
+declared field on a registry declaration type whose name pairs `ref` with `legal` or `source`, a
+citation can be restated across 25 declaration types and 48 fields, not eleven - and the split is 24
+`legal_refs` against 24 `source_refs`, so nearly every type able to cite a law is also able to cite a
+source, in parallel fields. Whatever eleven counted, the surface a reader must keep consistent today
+is several times wider, and the symmetry says the two citation kinds were declared as a pair 24
+separate times rather than once with two projections.
+
+The capability-grade figure could not be re-derived at all: no boundary survives saying what counts
+as an encoding of it, and the schema today carries one optional grade field with a documented reading
+and a documented absence, which is the shape this plan recommends rather than the defect it alleges.
+The remaining two await the same treatment. Detection after the fact is the wrong
 shape. This plan
 moves the registry toward declaring a fact once and deriving its projections, and builds the tooling
 that can prove it.
@@ -582,6 +595,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S327` - Establish that every constructed screen proof asserts through its own screen, and that the contributor README needs no entry for the new defining modules; `dev/registry/tests dev/registry/README.md`.
 - [x] `W06.P13.S328` - Correct the attribution of the five breadth figures, which the governing audit does not carry; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S329` - Establish that the capability-grade figure cannot be re-derived and that the grade is declared once today; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S330` - Re-derive the citation breadth figure against the live schema and state its boundary; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
