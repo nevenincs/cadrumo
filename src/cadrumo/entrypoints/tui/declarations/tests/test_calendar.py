@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from textual.containers import VerticalScroll
 from textual.screen import Screen
-from textual.widgets import DataTable, Input, Select, Static
+from textual.widgets import Button, DataTable, Input, Select, Static
 
 from .....application.modelo.declarations_calendar import (
     DeclarationsCalendarEntryRefV1,
@@ -34,7 +34,7 @@ from ...components.host import ScreenHostApp
 from ...devtools.frame import geometry_band
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ..calendar import DeclarationsCalendarScreen
-from ..controller import DeclarationsCalendarController, calendar_focus_key
+from ..controller import DeclarationsCalendarController, calendar_focus_key, declarations_copy
 from ..models import DeclarationsCalendarScopeV1
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -325,7 +325,8 @@ async def test_recovery_confirmation_escape_cancels_without_dismissing_calendar_
 
 
 @pytest.mark.asyncio
-async def test_recovery_handoff_failure_is_displayed_without_exposing_host_error() -> None:
+@pytest.mark.parametrize("locale", tuple(OutputLanguage))
+async def test_recovery_handoff_failure_is_localized_without_exposing_host_error(locale: OutputLanguage) -> None:
     base = _projection()
     recovery_row = base.entries[0].model_copy(
         update={
@@ -337,18 +338,26 @@ async def test_recovery_handoff_failure_is_displayed_without_exposing_host_error
     def fail_recovery(*_: object) -> None:
         raise RuntimeError("host-secret")
 
-    screen = DeclarationsCalendarScreen(_controller(projection, recovery_handoff=fail_recovery))
-    app = ScreenHostApp[None](screen)
-    async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
-        screen.query_one("#declarations-calendar-agenda", DataTable).focus()
-        await pilot.press("enter")
-        await pilot.pause()
-        await pilot.click("#btn-confirm-accept")
-        await pilot.pause()
-        notice = str(screen.query_one("#declarations-calendar-notice", Static).render())
-        assert "Recovery request could not be completed." in notice
-        assert "host-secret" not in notice
+    with override_settings(cadrumo_output_language=locale.value):
+        screen = DeclarationsCalendarScreen(_controller(projection, recovery_handoff=fail_recovery))
+        app = ScreenHostApp[None](screen)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            screen.query_one("#declarations-calendar-agenda", DataTable).focus()
+            await pilot.press("enter")
+            await pilot.pause()
+            modal = app.screen
+            assert str(modal.query_one("#btn-confirm-accept", Button).label) == declarations_copy(
+                "tui.declarations.calendar.recovery.confirm"
+            )
+            assert str(modal.query_one("#btn-confirm-cancel", Button).label) == declarations_copy(
+                "tui.declarations.calendar.recovery.cancel"
+            )
+            await pilot.click("#btn-confirm-accept")
+            await pilot.pause()
+            notice = str(screen.query_one("#declarations-calendar-notice", Static).render())
+            assert declarations_copy("tui.declarations.calendar.recovery.failure") in notice
+            assert "host-secret" not in notice
 
 
 @pytest.mark.asyncio
