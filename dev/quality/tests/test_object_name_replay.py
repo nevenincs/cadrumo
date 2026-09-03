@@ -114,20 +114,21 @@ def _module_case(tmp_path: Path) -> tuple[Path, Any, Any, Any, ObjectNameRehears
     return repo, inventory, manifest, component, receipt
 
 
-def _generated_case(tmp_path: Path) -> tuple[Path, Any, Any, Any, ObjectNameRehearsalReceipt]:
+def _generated_case(
+    tmp_path: Path, *, delete: bool = False
+) -> tuple[Path, Any, Any, Any, ObjectNameRehearsalReceipt]:
     repo = tmp_path / "repo"
     inventory, manifest, _component = _fixture(repo)
     generated_path = "dev/generated.txt"
     generated_before = b"generated Widgets\n"
     _write(repo, generated_path, generated_before)
     inventory = scan((repo / "src", repo / "dev"), repo)
-    command = (
-        (
-            sys.executable,
-            "-c",
-            "from pathlib import Path; Path('dev/generated.txt').write_bytes(b'generated Widget\\n')",
-        ),
+    script = (
+        "from pathlib import Path; Path('dev/generated.txt').unlink()"
+        if delete
+        else "from pathlib import Path; Path('dev/generated.txt').write_bytes(b'generated Widget\\n')"
     )
+    command = ((sys.executable, "-c", script),)
     operation = manifest.operations[0].model_copy(
         update={
             "expected_reference_classes": ("definition", "generated-artifact"),
@@ -201,7 +202,7 @@ def test_successful_symbol_replay_tolerates_unrelated_post_receipt_bytes(tmp_pat
     assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
 
 
-def test_successful_generator_backed_replay_applies_and_reports_exact_owner_output(
+def test_successful_generator_backed_replay_runs_owner_in_isolated_post_transform_copy(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     repo, inventory, manifest, component, receipt = _generated_case(tmp_path)
@@ -209,7 +210,7 @@ def test_successful_generator_backed_replay_applies_and_reports_exact_owner_outp
     live_generator_calls: list[Path] = []
 
     def record_live_generator(*args: Any, cwd: Path, **kwargs: Any) -> Any:
-        if cwd == repo:
+        if args[0].argv == receipt.generator_outcomes[0].argv:
             live_generator_calls.append(cwd)
         return original_run(*args, cwd=cwd, **kwargs)
 
@@ -221,11 +222,84 @@ def test_successful_generator_backed_replay_applies_and_reports_exact_owner_outp
 
     assert result.generator_outcomes == receipt.generator_outcomes
     assert len(result.generator_outcomes) == 1
-    assert live_generator_calls == [repo]
+    assert len(live_generator_calls) == 1
+    assert live_generator_calls[0] != repo
     assert result.generator_outcomes[0].argv == manifest.operations[0].generator_commands[0]
     assert result.generator_outcomes[0].return_code == 0
     assert (repo / "dev/generated.txt").read_bytes() == b"generated Widget\n"
     assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
+
+
+def test_successful_generator_backed_replay_applies_reviewed_deletion(tmp_path: Path) -> None:
+    repo, inventory, manifest, component, receipt = _generated_case(tmp_path, delete=True)
+
+    result = replay_object_name_component(
+        manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
+    )
+
+    assert result.generator_outcomes == receipt.generator_outcomes
+    assert not (repo / "dev/generated.txt").exists()
+    assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
+
+
+@pytest.mark.parametrize(
+    ("escaped_relative", "as_directory"),
+    (("dev/unexpected-empty", True), (".pytest_cache/escaped.bin", False)),
+)
+def test_generator_unallowlisted_entries_never_enter_the_live_tree(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    escaped_relative: str,
+    as_directory: bool,
+) -> None:
+    repo, inventory, manifest, component, receipt = _generated_case(tmp_path)
+    original_run = replay_module._run_command
+
+    def escape_allowlist(*args: Any, cwd: Path, **kwargs: Any) -> Any:
+        outcome = original_run(*args, cwd=cwd, **kwargs)
+        if args[0].argv != receipt.generator_outcomes[0].argv:
+            return outcome
+        escaped = cwd / escaped_relative
+        if as_directory:
+            escaped.mkdir(parents=True)
+        else:
+            escaped.parent.mkdir(parents=True, exist_ok=True)
+            escaped.write_bytes(b"escaped")
+        return outcome
+
+    monkeypatch.setattr(replay_module, "_run_command", escape_allowlist)
+
+    replay_object_name_component(
+        manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
+    )
+
+    assert not (repo / escaped_relative).exists()
+    assert (repo / "dev/generated.txt").read_bytes() == b"generated Widget\n"
+    assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
+
+
+def test_concurrent_live_write_during_isolated_generator_is_preserved(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo, inventory, manifest, component, receipt = _generated_case(tmp_path)
+    concurrent = repo / "dev/concurrent.txt"
+    original_run = replay_module._run_command
+
+    def write_live_concurrently(*args: Any, cwd: Path, **kwargs: Any) -> Any:
+        outcome = original_run(*args, cwd=cwd, **kwargs)
+        concurrent.write_bytes(b"third-party bytes")
+        return outcome
+
+    monkeypatch.setattr(replay_module, "_run_command", write_live_concurrently)
+
+    with pytest.raises(ObjectNameReplayError, match="live tree drifted during isolated generator"):
+        replay_object_name_component(
+            manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
+        )
+
+    assert concurrent.read_bytes() == b"third-party bytes"
+    assert (repo / "dev/generated.txt").read_bytes() == b"generated Widgets\n"
+    assert (repo / "src/example/contracts.py").read_bytes() == b"class Widgets:\n    pass\n"
 
 
 def test_successful_module_replay_uses_deterministic_mixed_transaction_order(

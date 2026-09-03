@@ -804,15 +804,16 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
     ),
     ClassificationRule(
         classification="conditionally_reachable",
-        trigger="function-scoped import only: withholding row building",
+        trigger="function-scoped imports only: withholding row building and the renta web replay corpus",
         reason=(
-            "Not in sys.modules after a bundled load in either the cold or the warm regime, and "
-            "carrying no module-level importer. It is imported from inside "
+            "Neither is in sys.modules after a bundled load in either the cold or the warm regime, "
+            "and neither carries a module-level importer. `_withholding_rows` is imported from "
+            "inside "
             "resolve_withholding_binding_row_values, which is the standard break for the cycle it "
             "forms with withholding_bindings and cannot be hoisted without restoring that cycle, "
             "so it is reached only when that function runs."
         ),
-        members=_registry("_withholding_rows"),
+        members=_registry("_withholding_rows", "renta_web_open_replay_corpus"),
     ),
 )
 

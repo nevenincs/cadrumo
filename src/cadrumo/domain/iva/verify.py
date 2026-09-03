@@ -16,6 +16,7 @@ already performs:
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core.citation_grounding import CitationGrounding
