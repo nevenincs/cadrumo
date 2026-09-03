@@ -1,0 +1,46 @@
+schema_version = 1
+modelo = "200"
+revision = "2024"
+source_ref = "aeat-dr-200-2024"
+source_sha256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
+manual_source_ref = "aeat-modelo-200-manual-2024"
+manual_source_sha256 = "ad02f914246632dcd7ab30f3e7280daf3501be6ee3938237e2ebfe7328ff8179"
+review_status = "agent_reviewed"
+reviewed_at = "2026-09-03"
+reviewed_by = "agent-prepared from the pinned 2024 design and AEAT Manual práctico de Sociedades 2024; pending independent review"
+
+[[adjudications]]
+casilla_id = "00942"
+export_field_id = "m200-2024.dp200018c.f0089"
+official_label_sha256 = "e3bbbea0b04fcf4fd78c59095d1d5ef561648aa4bd3dcc0ce13ad6b841ca3eb3"
+manual_pages = [478, 479, 480, 481, 482, 483, 484, 485]
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+[[adjudications]]
+casilla_id = "02239"
+export_field_id = "m200-2024.dp200020b.f0034"
+official_label_sha256 = "1fe369f84672682ff08abbea94e1414525706b171d65d3985bbf49aff918fd34"
+manual_pages = [359, 360, 361]
+section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
+semantic_role = "is_reserva_nivelacion_adicion_realizada"
+legal_refs = ["ley-27-2014:art-105"]
+
+[[adjudications]]
+casilla_id = "01603"
+export_field_id = "m200-2024.dp200020b.f0035"
+official_label_sha256 = "d6b31542d4c336cef6a9fd01465246ce69fef649e49016a0d10b6e38d92702f0"
+manual_pages = [359, 360, 361]
+section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
+semantic_role = "is_reserva_nivelacion_incumplimiento"
+legal_refs = ["ley-27-2014:art-105"]
+
+[[adjudications]]
+casilla_id = "02412"
+export_field_id = "m200-2024.dp200020b.f0039"
+official_label_sha256 = "2b8d550e6cca7af16cab9794cac9397414d8a94353a6f13d26ad2259a1f00e6b"
+manual_pages = [359, 360, 361]
+section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
+semantic_role = "is_reserva_nivelacion_adicion_pendiente"
+legal_refs = ["ley-27-2014:art-105"]
