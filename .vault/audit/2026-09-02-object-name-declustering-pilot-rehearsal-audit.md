@@ -3,31 +3,14 @@ tags:
   - '#audit'
   - '#object-name-declustering'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1c2d290d887f3e2b2eb196bd060f6a98626c286025639244f6e957788cbb1b2d'
+body_hash: 'sha256:3e539aa4950cc10e4401b88c07f167fc103de135d8d6132d80efc03df0f22d85'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace object-name-declustering with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `object-name-declustering` audit: `pilot rehearsal`
 

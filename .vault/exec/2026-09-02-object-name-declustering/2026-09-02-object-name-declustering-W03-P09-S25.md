@@ -5,16 +5,12 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1d71664a739a0ade1c9a3b5048a69ed24f81ff9df6c2ac5f3866892708326756'
+body_hash: 'sha256:7b070cf7d1986bcf5b2d26f09274d15499ae80d599a2e40c1a5a5d246c57d114'
 step_id: 'S25'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
 
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Build the sole rehearsal component once from the verified disposable snapshot
 

@@ -4265,7 +4265,7 @@ would hide the omission, and the open Step that fixes the lane is the honest rem
 Separately, the closure suite was re-run after the vocabulary change and reports 15 passing
 with the single pre-existing failure, unchanged.
 
-### The private-import Step named the wrong side of the boundary
+### private-import-step-named-the-wrong-surface | medium | Eleven violations run from dev into src, not out of dev/registry/pipeline as the Step described
 
 The Step asking for promotion of privately-reached modules described a handful under
 `dev/registry/pipeline` reached by fourteen non-test consumers. Remeasured, the direction is
@@ -4304,7 +4304,7 @@ sites, so a scan that silently found nothing cannot report zero violations. That
 defence this campaign built after twice recording a green result over an empty selection, and
 it was already there.
 
-### The campaign authored a duplicate Step, which is the defect it exists to remove
+### campaign-authored-a-duplicate-step | low | A timed-out add had succeeded; the retry created a second identical Step that then absorbed a closure
 
 A `step add` in the previous iteration exceeded its timeout and was reported as incomplete.
 It had in fact succeeded in the background, and the retry created a second Step with
@@ -4326,7 +4326,7 @@ stopped waiting. Every retry of a mutating command needs the same question asked
 this campaign asks of every measurement - did the thing already happen - and the answer is
 one read of the document, which is cheaper than the duplicate.
 
-### The publication limb had no caller because its inputs had no name
+### publication-limb-had-no-caller-because-inputs-had-no-name | medium | Seven values were assembled inside a comparison, so any second consumer had to re-derive them
 
 `publish_validated_generated_export_tree` takes seven assembled values and is reached by
 nothing but its own tests - confirmed again here, with the only other mention being a test
@@ -4364,7 +4364,7 @@ pending diffs from the concurrent writer, neither contains any reference to the 
 the command has no write path to them. A timing coincidence read as causation would have put
 another writer's edits into this campaign's record.
 
-### The seam between derivation and publication is now held
+### derivation-publication-seam-is-gated | medium | A gate asserts the derived inputs still supply every revision-describing value publication needs
 
 Naming the render inputs removed the reason a publication caller had to derive them again.
 It did not stop the two halves drifting apart afterwards, which is a different failure and
@@ -4386,7 +4386,7 @@ reports success.
 
 The suite runs 19 tests, all passing.
 
-### The pending-diff rule caught a file that had changed hands
+### pending-diff-rule-caught-a-file-that-changed-hands | medium | A diff assumed to be this campaign's was another writer's, because the earlier edits had been committed
 
 The natural home for this gate was the render-check test module, and it carries a pending
 diff. The reflex answer was that the diff was mine, since this campaign edited that file
@@ -4401,7 +4401,7 @@ keep for the second time in three iterations, and the specific lesson is narrowe
 rule: "I edited this file recently" is not evidence that the current diff is mine, in a
 worktree where another writer commits across the whole tree. The diff has to be read.
 
-### Two of this campaign's own gates could have passed over nothing
+### two-of-this-campaigns-gates-could-pass-over-nothing | high | The empty-population defence this audit argues for was met by three of five gates written here
 
 This audit has argued repeatedly that a check over an empty population reports success, and
 has recorded twice that a green result had selected nothing. Turned on the gates written
@@ -4433,7 +4433,7 @@ move already made, the export list naming a retired surface, the copied vocabula
 same shape as this one. The difference here is only that the author and the auditor were the
 same person, which is the case where it is least likely to be found.
 
-### The filing export proof is empty, and the emptiness is the honest kind
+### empty-filing-export-proof-refuses-rather-than-passes | medium | Zero enrolled vectors, and a declared layout is refused as missing evidence rather than read as proven
 
 The plan recorded that the filing export proof carries zero enrolled coordinates, so no
 exported byte has ever been checked against an official record design. That is true, and the
@@ -4462,7 +4462,7 @@ prove. The Step has been rewritten to name official examples as the input and le
 Recording this as a correction rather than a discovery: the hole is real and unchanged, and
 what changed is that the plan now says what would fill it.
 
-### The failing closure test cannot be fixed by the repair its Step names
+### closure-test-repair-is-blocked-behind-vector-enrolment | high | Rewriting onto the two-channel authority changes what the test fails on, because the vectors are empty
 
 The one conformance failure this audit has carried throughout fails with an
 `AttributeError`: the modelo 151 test builds `LiveFilingExportProofAuthority` and the closure
@@ -4494,7 +4494,7 @@ test, in the one suite whose subject is whether real filing outcomes can be prov
 failure is more useful than the green would be, and it is the second time in this campaign
 that the honest move has been to leave a test failing and say precisely why.
 
-### A crashed worker is not a failing test, and this audit reported one as the other
+### crashed-worker-reported-as-a-failing-test | high | A summary line was trusted over the log beneath it, and the run's results were unusable
 
 The filing suites were run and reported "1 failed, 7 passed", and that was recorded here as a
 failure. Reading the log rather than its summary line shows something different: worker
@@ -4524,7 +4524,7 @@ Two things stand undamaged. The empty-proof refusal recorded in the previous fin
 established by reading the code and its test, not by that run. And this campaign's own five
 gates were re-run against the concurrent campaign's latest commits and pass at 28 tests.
 
-### Auditing this campaign's own measurements for the defect just found in one of them
+### campaign-runs-swept-for-lost-worker-markers | low | Eight runs carrying this audit's figures were re-read for crash markers and none carries one
 
 Having recorded a crashed worker as a failing test, the obvious next question is how many of
 this audit's other numbers were taken from runs with the same defect. Every lane and suite
@@ -4551,7 +4551,7 @@ number and a later tree. Until then the crash-marker sweep is the available inte
 and it is a check on the run rather than on the result, which is the weaker of the two things
 worth knowing.
 
-### The eleventh verification criterion, and a note on where this campaign's files now live
+### measurement-integrity-criterion-added | low | Four measurement failures that all looked like success are made an acceptance term of the plan
 
 Four of this campaign's measurements failed in ways that all looked like success: a suite
 reporting three passing tests over a file holding twenty-four, a gate comparing two sets that
@@ -4579,7 +4579,7 @@ derives, and a second consumer is now being written against it.
 That is the more useful confirmation than any test result. A seam is justified by something
 arriving to use it, and one has.
 
-### The serial re-run settles it: the test passes
+### serial-rerun-shows-the-test-passes | medium | Three collected, three passed: the parallel run's failure was the crashed worker and nothing else
 
 The filing acceptance suite was re-run serially, as the lost-test hook instructs. Three tests
 collected, three passed, exit status zero. The test this audit briefly recorded as failing
@@ -4592,7 +4592,7 @@ hook's instruction is worth following the first time: it named the remedy exactl
 took one command, and the ten minutes it cost bought a correct answer in place of a wrong one
 that had already been written down.
 
-### A feature-health warning that belongs to another writer
+### feature-health-warning-belongs-to-another-writer | low | Three body-section warnings fall on an untracked scaffold created under this feature's tag
 
 The feature's body-section check reports three warnings, and none of them are against this
 campaign's documents. They fall on an audit scaffolded under this feature's tag for a modelo
@@ -4608,7 +4608,7 @@ empty, and they should be, until whoever created it writes them.
 Worth stating because the alternative is tempting when a shared feature tag makes another
 writer's incomplete document look like this campaign's failing check.
 
-### A sizing attempt that measured nothing, caught before it became a number
+### footnote-sizing-measured-an-absent-attribute | medium | A confident zero came from reading content off an object that does not carry it
 
 The footnote-pointer correction is blocked behind authoring reviewed rules for whatever
 fields it newly makes eligible, so the useful question is how many that is. The predicate
@@ -4639,7 +4639,7 @@ the criterion added in the previous iteration: the habit cost one extra command 
 number that would have been quoted, believed, and used to argue that a correction had no
 work behind it.
 
-### The footnote sizing, taken again and this time from a population that exists
+### footnote-sizing-retaken-from-a-real-population | low | 845 content cells actually read across four designs, and the zero now says something
 
 The previous attempt read `content` off the joined design, where the attribute does not
 exist. The second attempt read it off the intermediate and asked for `records`, which the
@@ -4671,7 +4671,7 @@ Three attempts at one number, two of them producing a confident zero from an emp
 population. The number was worth the trouble only because the third attempt can be checked;
 the first two could not, and both would have supported the same wrong conclusion.
 
-### Swept corpus-wide, the bare footnote pointer does not occur
+### bare-footnote-pointer-does-not-occur | medium | 20,776 content cells, 26 carrying a pointer inside prose and none consisting only of one
 
 The four-design spot check has been replaced by a sweep of every record design the registry
 can reach: 111 designs loaded, one refusing to load, 73,040 fields, and 20,776 carrying a
@@ -4701,7 +4701,7 @@ the repository root is neither. Nothing was overwritten and nothing persisted, b
 correct move was a scratch location with the path supplied to the interpreter, not a file
 written beside the project's own.
 
-### A lane measurement that can be checked without trusting it
+### lane-measurement-reconciles-against-its-own-collection | low | 1,091 collected against 35 failed plus 1,056 passed, from one invocation and with no lost worker
 
 The eleventh criterion asks that a run's collected count come from the same invocation as its
 result. The first measurement taken that way reconciles: 1,091 tests collected of 1,125 with
@@ -4724,7 +4724,7 @@ the sibling campaign's committed operator path.
 Every remaining failure is attributed to a cause outside this campaign's reach or recorded as
 deliberately left, which is a different claim from a green suite and a more honest one.
 
-### Fifteen Step scopes name files that no longer exist
+### step-scopes-appeared-stale-withdrawn | low | WITHDRAWN: all fifteen were correct, nine recording where work happened and six naming files to create
 
 A sweep of the plan's own scope clauses finds fifteen naming a path absent from the tree.
 Some are this campaign's own doing: the ledger-bindings module and the applicability-fragment

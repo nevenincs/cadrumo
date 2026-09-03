@@ -10,7 +10,7 @@ related:
   - '[[2026-09-02-object-name-declustering-reference]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:d1b5024dd84d0fac89ee32e1172d8140f1b2bea28fb5e4727054ecab7f30df7f'
+body_hash: 'sha256:958c20f55391c1b0f483bfa2cc438014a28ed1626ed2e0ceb7b40271a30495c2'
 ---
 
 <!-- RETIRED: S21, S22 -->
@@ -103,7 +103,7 @@ Demonstrate the workflow on one reviewed leaf component and record evidence befo
 - [x] `W03.P09.S24` - Bind rehearsal receipts and replay drift checks to the reviewed component while preserving unrelated concurrent bytes; `dev/quality/object_name_rehearsal.py, dev/quality/object_name_replay.py, dev/quality/tests/test_object_name_rehearsal.py, dev/quality/tests/test_object_name_replay.py`.
 - [x] `W03.P09.S19` - Author one reviewed low-risk leaf-component manifest with exact finding and byte preconditions; `dev/quality/object_name_rename_manifest.toml`.
 - [x] `W03.P09.S25` - Build the sole rehearsal component exactly once from the hash-verified disposable snapshot; `dev/quality/object_name_rehearsal.py, dev/quality/object_name_declustering.py, dev/quality/tests/test_object_name_rehearsal.py, dev/quality/tests/test_object_name_declustering.py`.
-- [ ] `W03.P09.S20` - Run the Justfile rehearsal and record scope, receipt, gate results, residual findings, and unchanged-live-tree proof; `.vault/audit/2026-09-02-object-name-declustering-pilot-rehearsal-audit.md`.
+- [x] `W03.P09.S20` - Run the Justfile rehearsal and record scope, receipt, gate results, residual findings, and unchanged-live-tree proof; `.vault/audit/2026-09-02-object-name-declustering-pilot-rehearsal-audit.md`.
 
 ## Parallelization
 
