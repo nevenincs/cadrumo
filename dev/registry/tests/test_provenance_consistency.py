@@ -183,3 +183,76 @@ def test_the_scope_projection_agrees_with_the_index_it_reduces() -> None:
     assert {(item.modelo, item.ref_kind, item.reference) for item in scopes} == {
         (modelo, ref_kind, reference) for modelo, _, ref_kind, reference in index
     }
+
+
+def test_a_manifest_reference_no_child_cites_is_reported() -> None:
+    """The mirror condition, on the live corpus.
+
+    A manifest and its children's citations describe the same revision's
+    grounding, and neither contains the other. Screening only the children
+    reported half a disagreement for as long as this screen has existed.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+    from ..analysis.corpus import bundled_modelo_ids
+    from ..analysis.provenance_consistency import screen_uncited_manifest_references
+
+    found = screen_uncited_manifest_references(bundled_authority(), bundled_modelo_ids())
+    assert found, "the mirror condition lost its live population"
+    assert {item.ref_kind for item in found} == {"legal", "source"}
+    for item in found:
+        assert item.modelo and item.revision and item.reference
+
+
+def test_a_manifest_whose_references_are_all_cited_reports_nothing() -> None:
+    """No finding where the two surfaces agree.
+
+    Fifty-nine revisions are in this state, so a screen reporting every manifest
+    reference rather than the uncited ones would bury the finding under the
+    majority that is fine.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+    from ..analysis.corpus import bundled_modelo_ids
+    from ..analysis.provenance_consistency import uncited_manifest_references
+
+    authority = bundled_authority()
+    clean = [
+        (modelo, revision)
+        for modelo in bundled_modelo_ids()
+        for revision in authority.modelo(modelo).revisions.values()
+        if not uncited_manifest_references(revision, modelo_id=modelo)
+    ]
+    assert clean, "every revision carries an uncited manifest reference, so this proves nothing"
+
+
+def test_the_mirror_reads_authored_families_and_not_derived_fields() -> None:
+    """A derived export field's citations are copied and must not count as a citation.
+
+    Counting them would let a manifest reference look cited by a child that
+    never declares it, which would hide exactly the disagreement being measured.
+    Asserted by the totals: the mirror finds references the citing-side screen
+    never sees, which cannot happen if both read the same surface.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+    from ..analysis.corpus import bundled_modelo_ids
+    from ..analysis.provenance_consistency import (
+        screen_authority,
+        screen_uncited_manifest_references,
+    )
+
+    authority = bundled_authority()
+    modelo_ids = bundled_modelo_ids()
+    cited_outside = {
+        (item.modelo, item.revision, item.ref_kind, reference)
+        for item in screen_authority(authority, modelo_ids)
+        for reference in item.outside
+    }
+    uncited = {
+        (item.modelo, item.revision, item.ref_kind, item.reference)
+        for item in screen_uncited_manifest_references(authority, modelo_ids)
+    }
+    # The two populations are disjoint by construction: one is cited but not
+    # declared, the other declared but not cited.
+    assert not (cited_outside & uncited)

@@ -42,10 +42,13 @@ from .corpus import bundled_modelo_ids
 __all__ = [
     "OutsideReferenceScope",
     "ProvenanceFinding",
+    "UncitedManifestReference",
     "outside_reference_index",
     "outside_reference_scope",
     "provenance_findings",
     "screen_authority",
+    "screen_uncited_manifest_references",
+    "uncited_manifest_references",
 ]
 
 type ProvenanceChildKind = Literal[
@@ -130,6 +133,74 @@ def provenance_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[Pr
         legal, source = refs(endpoint.field)
         check("export_field", ".".join(key), legal, source)
     return tuple(findings)
+
+
+@dataclass(frozen=True, slots=True)
+class UncitedManifestReference:
+    """One reference a revision manifest declares that none of its children cites."""
+
+    modelo: str
+    revision: str
+    ref_kind: ProvenanceRefKind
+    reference: str
+
+
+def uncited_manifest_references(
+    revision: ModeloRevision, *, modelo_id: str
+) -> tuple[UncitedManifestReference, ...]:
+    """Return manifest references no child of the revision cites.
+
+    The mirror of the condition above, and it was unmeasured. A manifest and its
+    children's citations are two descriptions of the same revision's grounding,
+    and neither contains the other: 59 revisions declare a manifest that is a
+    subset of what their children cite, and 69 declare references nothing cites.
+    Screening one direction only reported half a disagreement.
+
+    Read from the authored families and not from resolved export fields, because
+    a derived field's citations are copied from its template and would make a
+    manifest reference look cited by a child that does not declare it.
+    """
+    cited_legal: set[str] = set()
+    cited_source: set[str] = set()
+    families: tuple[tuple[_CitedChild, ...], ...] = (
+        tuple(revision.casillas),
+        tuple(revision.formulas),
+        tuple(revision.bindings),
+        tuple(revision.relations),
+        tuple(revision.parameters),
+        tuple(revision.casilla_continuidad_evolutions),
+        tuple(revision.export_layouts),
+    )
+    for items in families:
+        for item in items:
+            cited_legal |= {str(ref) for ref in item.legal_refs}
+            cited_source |= {str(ref) for ref in item.source_refs}
+    found: list[UncitedManifestReference] = []
+    for kind, declared, cited in (
+        ("legal", revision.legal_refs, cited_legal),
+        ("source", revision.source_refs, cited_source),
+    ):
+        for reference in sorted({str(ref) for ref in declared} - cited):
+            found.append(
+                UncitedManifestReference(
+                    modelo=modelo_id,
+                    revision=str(revision.id),
+                    ref_kind=kind,
+                    reference=reference,
+                )
+            )
+    return tuple(found)
+
+
+def screen_uncited_manifest_references(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> tuple[UncitedManifestReference, ...]:
+    """Screen every revision for manifest references nothing cites."""
+    found: list[UncitedManifestReference] = []
+    for modelo_id in modelo_ids:
+        for revision in authority.modelo(modelo_id).revisions.values():
+            found.extend(uncited_manifest_references(revision, modelo_id=modelo_id))
+    return tuple(found)
 
 
 def screen_authority(
@@ -233,6 +304,12 @@ def main() -> int:
             f"provenance_reference_scope modelo={scope.modelo} ref_kind={scope.ref_kind} "
             f"reference={scope.reference} revisions={len(scope.revisions)} "
             f"spans_every_revision={str(scope.spans_every_revision).lower()} sites={scope.sites}\n",
+        )
+    uncited = screen_uncited_manifest_references(authority, bundled_modelo_ids())
+    for item in uncited:
+        sys.stdout.write(
+            f"provenance_uncited_manifest_ref modelo={item.modelo} revision={item.revision} "
+            f"ref_kind={item.ref_kind} reference={item.reference}\n",
         )
     by_kind: dict[str, int] = {}
     for f in findings:
