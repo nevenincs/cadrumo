@@ -202,12 +202,12 @@ advisory_destination_refs = [
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/domain/fincas/_aggregates.py:113"
+reference = "src/cadrumo/domain/fincas/aggregates.py:132"
 summary = "Typed finca aggregation produces several annual facts at finca and contract grains, none of which alone proves a casilla mapping."
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/domain/fincas/_source_readiness.py:34"
+reference = "src/cadrumo/domain/fincas/source_readiness.py:34"
 summary = "Explicit readiness remains false because finca aggregates do not cross the canonical secure calculation-revision boundary."
 
 [entries.bounded_follow_up]
