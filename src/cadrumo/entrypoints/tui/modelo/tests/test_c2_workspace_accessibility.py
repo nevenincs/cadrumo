@@ -19,6 +19,8 @@ would hold vacuously forever.
 
 from __future__ import annotations
 
+from typing import override
+
 import pytest
 from textual.app import App, ComposeResult
 from textual.widgets import Button, Static
@@ -106,6 +108,7 @@ async def test_destination_quit_dismisses_only_the_child_and_restores_root_focus
     """A mounted workspace view returns to its generic root without exiting it."""
 
     class _RootApp(App[None]):
+        @override
         def compose(self) -> ComposeResult:
             yield Button("Root", id="root-focus")
 

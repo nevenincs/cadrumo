@@ -18,7 +18,9 @@ this destination exists to open.
 
 from __future__ import annotations
 
+import ast
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 from textual.app import App, ComposeResult
@@ -36,6 +38,39 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _NOW = datetime(2026, 8, 12, 10, 0, 0, tzinfo=UTC)
+
+
+def test_host_neutral_modelo_screens_have_no_app_exit_or_concrete_app_narrowing() -> None:
+    """The refactored surfaces cannot regress through an indirect helper."""
+    view_root = Path(__file__).parents[1] / "view"
+    paths = (
+        view_root / "work_select.py",
+        view_root / "work_review.py",
+        *(view_root / name for name in ("overview.py", "inputs.py", "results.py", "provenance.py", "verification.py", "filing.py")),
+    )
+    forbidden_app_types = {"ModeloWorkSelectApp", "ModeloWorkReviewApp"}
+    violations: list[str] = []
+    for path in paths:
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr == "exit"
+                and isinstance(node.func.value, ast.Attribute)
+                and isinstance(node.func.value.value, ast.Name)
+                and node.func.value.value.id == "self"
+                and node.func.value.attr == "app"
+            ):
+                violations.append(f"{path.name}:{node.lineno}: self.app.exit")
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id == "isinstance"
+                and any(isinstance(arg, ast.Name) and arg.id in forbidden_app_types for arg in node.args[1:])
+            ):
+                violations.append(f"{path.name}:{node.lineno}: concrete App isinstance")
+    assert violations == []
 
 
 def _unit(*, modelo: str, filing_year: int, period_code: str, name: str, state: WorkUnitState) -> WorkUnit:

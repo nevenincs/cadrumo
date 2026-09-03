@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib
 from enum import Enum
 from pathlib import Path
-from typing import cast, get_args
+from typing import cast, get_args, override
 
 import pytest
 import yaml
@@ -69,6 +69,7 @@ async def test_review_screen_dismisses_only_itself_under_a_generic_root(tmp_path
     """Review cancellation calls its exact caller and restores root focus."""
 
     class _RootApp(App[None]):
+        @override
         def compose(self) -> ComposeResult:
             yield Button("Root", id="root-focus")
 

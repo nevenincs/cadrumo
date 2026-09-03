@@ -22,7 +22,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
-from textual.widgets import Input, Static
+from textual.app import App, ComposeResult
+from textual.widgets import Button, Input, Static
 
 from .....application.modelo.edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
 from .....application.modelo.work_addressing import ModeloExactWorkUnitTarget
@@ -77,14 +78,8 @@ def _work_unit() -> WorkUnit:
     )
 
 
-def _hosted(locale: OutputLanguage = OutputLanguage.ES) -> tuple[ScreenHostApp[None], ModeloEditController]:
-    """Admit a route and host its editor exactly as production would.
-
-    Composes the shared :class:`ScreenHostApp` rather than a local host, so
-    the matrix proves what an operator will actually see: a test-only host
-    would omit the tokenised base CSS and the awaited push the shared one
-    carries.
-    """
+def _screen(locale: OutputLanguage = OutputLanguage.ES) -> tuple[ModeloEditScreen, ModeloEditController]:
+    """Admit a route and build the host-neutral editor screen."""
     from .....application.modelo.edit_services import (
         modelo_edit_request_schema_identity,
         modelo_edit_result_schema_identity,
@@ -114,7 +109,19 @@ def _hosted(locale: OutputLanguage = OutputLanguage.ES) -> tuple[ScreenHostApp[N
         ),
     )
     assert admitted, f"admission refused: {controller.refusal_message_key}"
-    return ScreenHostApp(ModeloEditScreen(controller, catalogues=lambda: catalogues)), controller
+    return ModeloEditScreen(controller, catalogues=lambda: catalogues), controller
+
+
+def _hosted(locale: OutputLanguage = OutputLanguage.ES) -> tuple[ScreenHostApp[None], ModeloEditController]:
+    """Host an admitted editor exactly as the standalone production route does.
+
+    Composes the shared :class:`ScreenHostApp` rather than a local host, so
+    the matrix proves what an operator will actually see: a test-only host
+    would omit the tokenised base CSS and the awaited push the shared one
+    carries.
+    """
+    screen, controller = _screen(locale)
+    return ScreenHostApp(screen), controller
 
 
 @pytest.mark.asyncio
@@ -288,6 +295,36 @@ async def test_leaving_with_staged_work_reports_rather_than_discarding_it() -> N
 
         assert app.screen is not None, "escape discarded the screen while work was staged"
         assert controller.fields().state(casilla_id).touched, "the staged edit must survive the refused exit"
+
+
+@pytest.mark.asyncio
+async def test_generic_root_is_not_exited_when_editor_refuses_unsaved_escape() -> None:
+    """The unsaved gate retains the child and never invokes its caller."""
+
+    class _RootApp(App[None]):
+        def compose(self) -> ComposeResult:
+            yield Button("Root", id="root-focus")
+
+    screen, controller = _screen()
+    outcomes: list[None] = []
+    app = _RootApp()
+    async with app.run_test(size=(100, 30)) as pilot:
+        root_focus = app.query_one("#root-focus", Button)
+        root_focus.focus()
+        await pilot.pause()
+        app.push_screen(screen, callback=outcomes.append)
+        await pilot.pause()
+        casilla_id = controller.fields().casilla_ids()[0]
+        target = screen.query_one(f"#{casilla_input_id(casilla_id)}", Input)
+        target.value = "42.00"
+        await target.action_submit()
+        await pilot.press("escape")
+        await pilot.pause()
+
+        assert app.screen is screen
+        assert outcomes == []
+        assert app.focused is not root_focus
+        assert controller.fields().state(casilla_id).touched
 
 
 @pytest.mark.asyncio
