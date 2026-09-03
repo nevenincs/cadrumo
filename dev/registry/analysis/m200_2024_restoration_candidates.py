@@ -12,6 +12,7 @@ import argparse
 import os
 import re
 import shutil
+import stat
 import subprocess
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -89,8 +90,10 @@ def build_bundled_restoration_proposals() -> tuple[tuple[RestorationProposal, ..
     """
     classified = _load_bundled_candidates()
     current_map = load_semantic_map(Path(__file__).parents[1] / "mappings" / "modelo_200" / "2024")
+    if not isinstance(current_map, SemanticMap):
+        raise TypeError("semantic-map loader returned a non-semantic-map value")
     current_entries = {str(entry.export_field_id): entry for entry in current_map.entries}
-    target_fields = _load_target_field_index(current_map) if isinstance(current_map, SemanticMap) else {}
+    target_fields = _load_target_field_index(current_map)
     historic = _historic_index()
     proposals: list[RestorationProposal] = []
     refused: list[RestorationRefusal] = []
@@ -203,9 +206,11 @@ def main(argv: list[str] | None = None) -> int:
                 return 1
             print(f"current={output_path}")
         else:
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_text(rendered, encoding="utf-8", newline="\n")
-            print(f"wrote={output_path}")
+            try:
+                written_path = _write_review_output(output_path, rendered)
+            except (OSError, ValueError) as exc:
+                parser.error(str(exc))
+            print(f"wrote={written_path}")
     return 1 if refusals else 0
 
 
@@ -229,6 +234,47 @@ def _path_is_within(path: Path, root: Path) -> bool:
     except ValueError:
         return False
     return True
+
+
+def _write_review_output(path: Path, rendered: str) -> Path:
+    """Write through a validated handle so a swapped parent cannot redirect bytes."""
+    output_path = _resolve_review_output_path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path = _resolve_review_output_path(output_path)
+    flags = os.O_RDWR | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        file_descriptor = os.open(output_path, flags)
+    except FileNotFoundError:
+        file_descriptor = os.open(output_path, flags | os.O_CREAT | os.O_EXCL, 0o600)
+    try:
+        _assert_review_output_handle(path, output_path, file_descriptor)
+        with os.fdopen(file_descriptor, "r+", encoding="utf-8", newline="") as stream:
+            file_descriptor = -1
+            stream.seek(0)
+            stream.truncate()
+            stream.write(rendered)
+            stream.flush()
+            os.fsync(stream.fileno())
+    finally:
+        if file_descriptor >= 0:
+            os.close(file_descriptor)
+    return output_path
+
+
+def _assert_review_output_handle(path: Path, expected_path: Path, file_descriptor: int) -> None:
+    """Prove the opened regular file is still the resolved, non-authoritative target."""
+    opened_stat = os.fstat(file_descriptor)
+    if not stat.S_ISREG(opened_stat.st_mode):
+        raise ValueError("--output must identify a regular file")
+    current_path = _resolve_review_output_path(path)
+    if current_path != expected_path:
+        raise ValueError("--output destination changed while opening")
+    try:
+        current_stat = current_path.stat()
+    except OSError as exc:
+        raise ValueError("--output destination changed while opening") from exc
+    if (opened_stat.st_dev, opened_stat.st_ino) != (current_stat.st_dev, current_stat.st_ino):
+        raise ValueError("--output destination changed while opening")
 
 
 def _historic_index() -> dict[str, tuple[tuple[str, dict[str, Any]], ...]]:
@@ -270,6 +316,13 @@ def _load_target_field_index(current_map: SemanticMap) -> dict[str, RecordDesign
         filing_year=2024,
         design_epoch=current_map.design_epoch,
     )
+    parsed_identity = (str(design.source.source_ref), design.source.source_sha256)
+    map_identity = (str(current_map.source_ref), current_map.source_sha256)
+    if parsed_identity != map_identity:
+        raise ValueError(
+            "semantic map source identity does not exactly match the parsed pinned design: "
+            f"map={map_identity!r}, parsed={parsed_identity!r}",
+        )
     fields = {intermediate_anchor_key(field): field for sheet in design.sheets for field in sheet.fields}
     result: dict[str, RecordDesignIntermediateField] = {}
     for entry in current_map.entries:

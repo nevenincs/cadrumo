@@ -8,8 +8,12 @@ import rtoml
 
 from ..analysis import m200_2024_restoration_candidates as subject
 from ..analysis.m200_semantic_casilla_candidates import M200CasillaDisposition
+from ..pipeline._semantic_map import SemanticMap
+from ..pipeline._semantic_map_loader import load_semantic_map as load_real_semantic_map
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_REAL_MAP_PATH = Path(__file__).parents[1] / "mappings" / "modelo_200" / "2024"
 
 
 def _gap(
@@ -74,21 +78,75 @@ def _entry(*, legal_refs: tuple[str, ...] = ("ley-27-2014:art-41",)) -> SimpleNa
     )
 
 
-def test_build_returns_target_first_proposal_without_authority_writer(monkeypatch) -> None:
-    monkeypatch.setattr(subject, "_load_bundled_candidates", lambda: (_gap(),))
-    monkeypatch.setattr(subject, "load_semantic_map", lambda _path: SimpleNamespace(entries=(_entry(),)))
+@pytest.fixture(scope="module")
+def real_semantic_map() -> SemanticMap:
+    return load_real_semantic_map(_REAL_MAP_PATH)
+
+
+@pytest.fixture(scope="module")
+def real_target_fields(real_semantic_map: SemanticMap):
+    return subject._load_target_field_index(real_semantic_map)
+
+
+def _real_gap(
+    real_semantic_map: SemanticMap,
+    real_target_fields,
+    *,
+    export_field_id: str = "m200-2024.dp200012.f0013",
+    source_ref: str | None = None,
+    source_sha256: str | None = None,
+) -> SimpleNamespace:
+    target = real_target_fields[export_field_id]
+    printed = subject._printed_number(target.normalized_description)
+    assert printed is not None
+    return SimpleNamespace(
+        disposition=M200CasillaDisposition.REVISION_MISSING_DECLARATION,
+        export_field_id=export_field_id,
+        authored_token=printed,
+        label=target.normalized_description,
+        source_ref=source_ref or str(real_semantic_map.source_ref),
+        source_sha256=source_sha256 or real_semantic_map.source_sha256,
+        aeat_type=target.aeat_type,
+        length=target.length,
+    )
+
+
+def _real_historic(real_semantic_map: SemanticMap, real_target_fields, *, export_field_id: str) -> dict[str, object]:
+    entry = next(item for item in real_semantic_map.entries if str(item.export_field_id) == export_field_id)
+    printed = subject._printed_number(real_target_fields[export_field_id].normalized_description)
+    assert printed is not None
+    return {
+        **_historic(),
+        "id": printed.lstrip("0"),
+        "number": printed.lstrip("0"),
+        "legal_refs": list(entry.legal_refs),
+        "source_refs": list(entry.source_refs),
+        "export_refs": [export_field_id],
+    }
+
+
+def test_build_returns_target_first_proposal_without_authority_writer(
+    monkeypatch,
+    real_semantic_map: SemanticMap,
+    real_target_fields,
+) -> None:
+    export_field_id = "m200-2024.dp200012.f0013"
+    gap = _real_gap(real_semantic_map, real_target_fields, export_field_id=export_field_id)
+    historic = _real_historic(real_semantic_map, real_target_fields, export_field_id=export_field_id)
+    monkeypatch.setattr(subject, "_load_bundled_candidates", lambda: (gap,))
+    monkeypatch.setattr(subject, "load_semantic_map", lambda _path: real_semantic_map)
     monkeypatch.setattr(
         subject,
         "_historic_index",
-        lambda: {"m200-2024.dp200012.f0013": (("z2024only-dp200012.toml", _historic()),)},
+        lambda: {export_field_id: (("z2024only-dp200012.toml", historic),)},
     )
 
     proposals, refusals = subject.build_bundled_restoration_proposals()
 
     assert not refusals
     assert proposals[0].id == "00093"
-    assert proposals[0].export_field_id == "m200-2024.dp200012.f0013"
-    assert proposals[0].target_description == "Importe [00093]"
+    assert proposals[0].export_field_id == export_field_id
+    assert proposals[0].target_description == real_target_fields[export_field_id].normalized_description
     assert proposals[0].semantic_role == "is_correcciones_aumentos"
     assert not hasattr(subject, "render_apply_patch")
     assert not hasattr(subject, "_render_registry_fragment")
@@ -101,16 +159,71 @@ def test_legacy_candidate_aliases_are_not_exported() -> None:
     assert not hasattr(subject, "build_bundled_restoration_candidates")
 
 
-def test_build_refuses_ambiguous_historic_export_identity(monkeypatch) -> None:
-    match = ("z2024only-dp200012.toml", _historic())
-    monkeypatch.setattr(subject, "_load_bundled_candidates", lambda: (_gap(),))
-    monkeypatch.setattr(subject, "load_semantic_map", lambda _path: SimpleNamespace(entries=(_entry(),)))
-    monkeypatch.setattr(subject, "_historic_index", lambda: {"m200-2024.dp200012.f0013": (match, match)})
+def test_build_refuses_ambiguous_historic_export_identity(
+    monkeypatch,
+    real_semantic_map: SemanticMap,
+    real_target_fields,
+) -> None:
+    export_field_id = "m200-2024.dp200012.f0013"
+    gap = _real_gap(real_semantic_map, real_target_fields, export_field_id=export_field_id)
+    historic = _real_historic(real_semantic_map, real_target_fields, export_field_id=export_field_id)
+    match = ("z2024only-dp200012.toml", historic)
+    monkeypatch.setattr(subject, "_load_bundled_candidates", lambda: (gap,))
+    monkeypatch.setattr(subject, "load_semantic_map", lambda _path: real_semantic_map)
+    monkeypatch.setattr(subject, "_historic_index", lambda: {export_field_id: (match, match)})
 
     proposals, refusals = subject.build_bundled_restoration_proposals()
 
     assert not proposals
     assert refusals[0].reason == "historic export match count is 2"
+
+
+def test_build_refuses_coordinated_map_and_gap_source_drift(
+    monkeypatch,
+    real_semantic_map: SemanticMap,
+    real_target_fields,
+) -> None:
+    export_field_id = "m200-2024.dp200012.f0013"
+    drifted_sha256 = "b" * 64
+    drifted_map = real_semantic_map.model_copy(update={"source_sha256": drifted_sha256})
+    gap = _real_gap(
+        real_semantic_map,
+        real_target_fields,
+        export_field_id=export_field_id,
+        source_sha256=drifted_sha256,
+    )
+    monkeypatch.setattr(subject, "_load_bundled_candidates", lambda: (gap,))
+    monkeypatch.setattr(subject, "load_semantic_map", lambda _path: drifted_map)
+    monkeypatch.setattr(
+        subject,
+        "_historic_index",
+        lambda: pytest.fail("source drift must be refused before historic evidence is loaded"),
+    )
+
+    with pytest.raises(ValueError, match="source identity does not exactly match"):
+        subject.build_bundled_restoration_proposals()
+
+
+@pytest.mark.parametrize("identity_field", ("source_ref", "source_sha256"))
+def test_target_design_source_identity_requires_exact_map_match(
+    monkeypatch,
+    real_semantic_map: SemanticMap,
+    identity_field: str,
+) -> None:
+    parsed_source = SimpleNamespace(
+        source_ref=real_semantic_map.source_ref,
+        source_sha256=real_semantic_map.source_sha256,
+    )
+    if identity_field == "source_ref":
+        parsed_source.source_ref = "aeat-dr-200-2024-other"
+    else:
+        parsed_source.source_sha256 = "b" * 64
+    parsed_design = SimpleNamespace(source=parsed_source, sheets=())
+    monkeypatch.setattr(subject, "load_catalogue_file", lambda _path: SimpleNamespace(sources={}))
+    monkeypatch.setattr(subject, "load_record_design_intermediate", lambda *_args, **_kwargs: parsed_design)
+
+    with pytest.raises(ValueError, match="source identity does not exactly match"):
+        subject._load_target_field_index(real_semantic_map)
 
 
 def test_render_review_toml_is_deterministic_and_cannot_be_registry_toml() -> None:
@@ -186,6 +299,35 @@ def test_cli_rejects_output_symlink_containment(monkeypatch, tmp_path: Path) -> 
         assert error.value.code == 2
 
 
+def test_cli_rejects_parent_swap_during_evidence_build(monkeypatch, tmp_path: Path) -> None:
+    canonical_root = tmp_path / "authority"
+    canonical_root.mkdir()
+    canonical_output = canonical_root / "review.toml"
+    canonical_output.write_text("authority sentinel\n", encoding="utf-8")
+    output_parent = tmp_path / "review-output"
+    output_parent.mkdir()
+    output = output_parent / "review.toml"
+    monkeypatch.setattr(subject, "_CANONICAL_REGISTRY_ROOT", canonical_root)
+
+    def build_and_swap_parent():
+        original_parent = tmp_path / "review-output-original"
+        output_parent.rename(original_parent)
+        output_parent.symlink_to(canonical_root, target_is_directory=True)
+        return ((_proposal(),), ())
+
+    monkeypatch.setattr(subject, "build_bundled_restoration_proposals", build_and_swap_parent)
+
+    try:
+        with pytest.raises(SystemExit) as error:
+            subject.main(["--output", str(output)])
+    except (OSError, NotImplementedError):
+        pytest.skip("the current platform does not permit test symlinks")
+
+    assert error.value.code == 2
+    assert canonical_output.read_text(encoding="utf-8") == "authority sentinel\n"
+    assert not (tmp_path / "review-output-original" / "review.toml").exists()
+
+
 def test_cli_rejects_retired_patch_switch() -> None:
     with pytest.raises(SystemExit):
         subject.main(["--emit-patch"])
@@ -241,20 +383,15 @@ def test_source_sha_malformed_value_is_refused() -> None:
     )
 
 
-def test_f0014_proposal_keeps_current_printed_identity(monkeypatch) -> None:
-    gap = _gap(
-        label="Importe [02971]",
-        export_field_id="m200-2024.dp200012.f0014",
-        authored_token="2971",  # noqa: S106 - official casilla token
-    )
-    historic = {**_historic(), "id": "2971", "number": "2971", "export_refs": [gap.export_field_id]}
-    entry = SimpleNamespace(
-        export_field_id=gap.export_field_id,
-        source_refs=(gap.source_ref,),
-        legal_refs=("ley-27-2014:art-41",),
-    )
+def test_f0014_proposal_keeps_current_printed_identity(
+    monkeypatch,
+    real_semantic_map: SemanticMap,
+    real_target_fields,
+) -> None:
+    gap = _real_gap(real_semantic_map, real_target_fields, export_field_id="m200-2024.dp200012.f0014")
+    historic = _real_historic(real_semantic_map, real_target_fields, export_field_id=gap.export_field_id)
     monkeypatch.setattr(subject, "_load_bundled_candidates", lambda: (gap,))
-    monkeypatch.setattr(subject, "load_semantic_map", lambda _path: SimpleNamespace(entries=(entry,)))
+    monkeypatch.setattr(subject, "load_semantic_map", lambda _path: real_semantic_map)
     monkeypatch.setattr(subject, "_historic_index", lambda: {gap.export_field_id: (("historic.toml", historic),)})
 
     proposals, refusals = subject.build_bundled_restoration_proposals()
@@ -265,20 +402,15 @@ def test_f0014_proposal_keeps_current_printed_identity(monkeypatch) -> None:
     assert "00355" not in proposals[0].target_description
 
 
-def test_f0165_proposal_keeps_current_printed_identity(monkeypatch) -> None:
-    gap = _gap(
-        label="Importe [01683]",
-        export_field_id="m200-2024.dp200018.f0165",
-        authored_token="1683",  # noqa: S106 - official casilla token
-    )
-    historic = {**_historic(), "id": "1683", "number": "1683", "export_refs": [gap.export_field_id]}
-    entry = SimpleNamespace(
-        export_field_id=gap.export_field_id,
-        source_refs=(gap.source_ref,),
-        legal_refs=("ley-27-2014:art-41",),
-    )
+def test_f0165_proposal_keeps_current_printed_identity(
+    monkeypatch,
+    real_semantic_map: SemanticMap,
+    real_target_fields,
+) -> None:
+    gap = _real_gap(real_semantic_map, real_target_fields, export_field_id="m200-2024.dp200018.f0165")
+    historic = _real_historic(real_semantic_map, real_target_fields, export_field_id=gap.export_field_id)
     monkeypatch.setattr(subject, "_load_bundled_candidates", lambda: (gap,))
-    monkeypatch.setattr(subject, "load_semantic_map", lambda _path: SimpleNamespace(entries=(entry,)))
+    monkeypatch.setattr(subject, "load_semantic_map", lambda _path: real_semantic_map)
     monkeypatch.setattr(subject, "_historic_index", lambda: {gap.export_field_id: (("historic.toml", historic),)})
 
     proposals, refusals = subject.build_bundled_restoration_proposals()
