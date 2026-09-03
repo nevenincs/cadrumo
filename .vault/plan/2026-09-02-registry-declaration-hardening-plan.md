@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:2bbd69ca773ab19cdc43ef3823c93289c0be3e35fcabbac86bc716da366e0c0a'
+body_hash: 'sha256:9e43c4c93c428924ea9a73d58656c22479e49bef7a29dd0fd04ebffb4513340c'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -493,6 +493,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S255` - Record the second live sibling-scale disagreement in modelo 353 and correct the criterion asserting there is one; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [ ] `W06.P13.S256` - Correct the modelo 353 casilla 10 declared scale against the official record design for the 2026 revision; `src/cadrumo/_data/registry/aeat/modelos/353`.
 - [x] `W06.P13.S257` - Verify which screen condition each half of the monetary criterion counts before restating its figures; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S258` - Correct the claim that the modelo 353 defect is new, since the audit already records that field as unscaled; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

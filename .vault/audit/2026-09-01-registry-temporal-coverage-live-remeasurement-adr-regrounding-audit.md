@@ -6179,3 +6179,30 @@ rather than papering over with a third number.
 Both criterion figures had drifted, not one. The defect count doubling is the finding; the
 unscaled count moving from 24 to 26 arrived alongside it and would have gone unrecorded if the
 restatement had copied the old number and changed only the part that prompted the edit.
+
+### modelo-353-defect-is-not-new-its-classification-changed | high | The field was already recorded as unscaled; what is new is that it now also disagrees with its siblings
+
+The previous finding reported a second live monetary-scale defect in modelo 353 as though it had
+appeared through a recent commit. That over-claims, and this audit already contained the
+correction.
+
+An existing finding, `the-note-behind-the-filing-defect-says-nothing-about-the-wire-and-now-says-
+so-in-quotation`, records that the modelo 353 field renders unscaled and quotes the design note
+behind it - `Nota 4: Solo para periodos 02 y siguientes`, an applicability statement carrying no
+scale, no decimal count and no sign convention. It even calls that field "the filing defect".
+
+So the field was known. What changed is which condition it triggers. It was one of the unscaled
+fields, failing the criterion's first test. It now also registers as a sibling-scale
+disagreement, failing the second - meaning seven amounts of width 17 beside it in
+`m353-declaracion` now emit cents where previously the comparison did not fire.
+
+That is a smaller claim than "a new filing defect appeared" and a more precise one. It is still
+worth the criterion correction: two fields now fail the sibling test where one did, and the
+criterion said one. But the cause is a field moving between conditions rather than a defect
+arriving, and the difference matters to whoever fixes it - the question is what changed about
+the siblings, not what changed about casilla 10.
+
+The check that would have caught the over-claim before it was written is the one this campaign
+established for exactly this and did not run: search the audit for the subject before reporting
+it as new. It found the eight already-stepped name-window revisions that way and then failed to
+apply it four findings later.
