@@ -14,8 +14,10 @@ in a process that has already imported the analysis tooling, one module reported
 absent that a clean load holds - the contamination ran opposite to the obvious
 direction, so the reading was not merely noisy but inverted.
 
-Both cache regimes are measured. A cold load holds 378 first-party modules and a
-warm load 335, and the warm set is a strict subset. A claim verified against a
+Both cache regimes are measured, and the warm one is measured twice because a
+warm probe against empty caches is a cold probe wearing the wrong label. A cold
+load holds around 380 first-party modules and a genuinely warm load around 337,
+and the warm set is a strict subset. A claim verified against a
 cold load alone therefore cannot distinguish a module that always loads from one
 that loads only while the caches are empty, and twenty-nine members differ on
 exactly that.
@@ -128,6 +130,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     cold = loaded_modules(cold=True)
+    # The warm probe is only warm if something warmed it. Against empty caches the
+    # first run compiles and reports cold numbers under a warm label - observed
+    # once, as 380 modules in both regimes where the true gap is forty-three. The
+    # first call populates the caches and its result is discarded.
+    loaded_modules(cold=False)
     warm = loaded_modules(cold=False)
     findings = verify_live_claims(cold, warm)
     wanted = set(args.kind) if args.kind else None

@@ -644,7 +644,9 @@ def rehearse_object_name_component(
         generator_outcomes = tuple(generator_results)
         gate_outcomes = tuple(gate_results)
         observed_families = {cast("ObjectNameGateFamily", outcome.family) for outcome in gate_outcomes}
-        if observed_families != REQUIRED_OBJECT_NAME_GATE_FAMILIES:
+        missing_families = REQUIRED_OBJECT_NAME_GATE_FAMILIES.difference(observed_families)
+        unexpected_families = observed_families.difference(REQUIRED_OBJECT_NAME_GATE_FAMILIES)
+        if missing_families or unexpected_families:
             raise ObjectNameRehearsalError("rehearsal gate evidence does not cover every required family")
 
         after_inventory = _inventory_after_allowed_changes(
