@@ -10,14 +10,11 @@ section = [
     'dotacion_de_la_reserva',
 ]
 legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
+    'ley-27-2014:art-105',
 ]
 source_refs = [
     'aeat-dr-200-2024',
     'aeat-modelo-200-manual-2024',
 ]
+
 

@@ -10,14 +10,11 @@ section = [
     'exceso_cuota_liquida_positiva',
 ]
 legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
+    'ley-27-2014:art-130',
 ]
 source_refs = [
     'aeat-dr-200-2024',
     'aeat-modelo-200-manual-2024',
 ]
+
 
