@@ -64,29 +64,46 @@ class LedgerReconciliationScreen(LedgerWorkspaceScreen):
         suggestions.add_columns(
             ledger_copy("tui.ledger.reconciliation.entry"),
             ledger_copy("tui.ledger.reconciliation.invoice"),
-            ledger_copy("tui.ledger.reconciliation.match"),
+            ledger_copy("tui.ledger.reconciliation.score"),
+            ledger_copy("tui.ledger.reconciliation.amount_match"),
+            ledger_copy("tui.ledger.reconciliation.counterparty_match"),
         )
         for row in self.controller.projection.invoice_reconciliations:
             key = f"{row.transaction_id}:{row.invoice_id}"
-            match_key = (
-                "tui.ledger.reconciliation.match.full"
-                if row.amount_match and row.counterparty_match
-                else "tui.ledger.reconciliation.match.partial"
-            )
             suggestions.add_row(
                 str(row.transaction_id)[:12],
                 str(row.invoice_id)[:12],
-                ledger_copy(match_key),
+                row.score,
+                ledger_copy(
+                    "tui.ledger.reconciliation.yes"
+                    if row.amount_match
+                    else "tui.ledger.reconciliation.no"
+                ),
+                ledger_copy(
+                    "tui.ledger.reconciliation.yes"
+                    if row.counterparty_match
+                    else "tui.ledger.reconciliation.no"
+                ),
                 key=key,
             )
         inconsistencies = cast("DataTable[str]", self.query_one("#ledger-inconsistencies", DataTable))
         inconsistencies.add_columns(
-            ledger_copy("tui.ledger.reconciliation.entry"), ledger_copy("tui.ledger.reconciliation.invoice")
+            ledger_copy("tui.ledger.reconciliation.entry"),
+            ledger_copy("tui.ledger.reconciliation.invoice"),
+            ledger_copy("tui.ledger.reconciliation.direction"),
         )
         for row in self.controller.projection.link_inconsistencies:
+            direction_keys = {
+                "invoice-only": "tui.ledger.reconciliation.direction.invoice_only",
+                "transaction-only": "tui.ledger.reconciliation.direction.transaction_only",
+            }
+            direction_key = direction_keys.get(row.direction)
+            if direction_key is None:
+                raise ValueError("unsupported canonical link inconsistency direction")
             inconsistencies.add_row(
                 str(row.transaction_id)[:12],
                 str(row.invoice_id)[:12],
+                ledger_copy(direction_key),
                 key=f"{row.transaction_id}:{row.invoice_id}",
             )
         affected = cast("DataTable[str]", self.query_one("#ledger-affected", DataTable))
@@ -129,8 +146,17 @@ class LedgerReconciliationScreen(LedgerWorkspaceScreen):
         table = cast("DataTable[str]", event.data_table)
         if self.flow_state is not LedgerFlowState.EDITING or table.id != "ledger-suggestions":
             return
-        index = event.cursor_row
-        source = self.controller.projection.invoice_reconciliations[index]
+        semantic_key = str(event.row_key.value)
+        source = next(
+            (
+                row
+                for row in self.controller.projection.invoice_reconciliations
+                if f"{row.transaction_id}:{row.invoice_id}" == semantic_key
+            ),
+            None,
+        )
+        if source is None:
+            raise ValueError("selected reconciliation row is absent from the visible projection")
         self.selected_pair = (source.transaction_id, source.invoice_id)
         self._transition(LedgerFlowState.CONFIRMING)
         self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.reconciliation.confirming"))
