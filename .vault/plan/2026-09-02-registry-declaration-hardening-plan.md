@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:d628c6dd5c1f2c19adc347a7e9407238567319ef940609f6148434e3db33f95e'
+body_hash: 'sha256:e2c70e0ef13d147420abdee7e9128dd14045d57c8bc03804df2e74989160b5b7'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -299,7 +299,7 @@ Wire a standing regression gate comparing the satisfied filing-coordinate set by
 - [x] `W02.P04.S105` - Correct the five screen labels that described one kind while counting several, including one that inverted its sense; `dev/registry/analysis/screens.py`.
 - [x] `W02.P04.S106` - Gate that every kind a screen emits live is named in its own docstring; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W02.P04.S122` - State per modelo what the product can actually calculate and file, as a screen reading the declarations rather than a maintained list; `dev/registry/analysis/modelo_capability.py`.
-- [ ] `W02.P04.S123` - Migrate the thirty-one layouts that spell their envelope as a record onto the typed envelope slot, so the export boundary can see it and admit the required product identity; `src/cadrumo/_data/registry/aeat/modelos`.
+- [ ] `W02.P04.S123` - Migrate the thirty-one revisions across sixteen modelos that spell their envelope as a record onto the typed envelope slot twenty others already use, so the export boundary can see it and a product-identity requirement can be declared rather than left as uncovered offsets; `src/cadrumo/_data/registry/aeat/modelos`.
 - [ ] `W02.P04.S124` - Resolve the twenty-five revisions carrying an export layout or envelope while declaring a grade below filing, twenty-two at applicability and three at calculation, starting with modelos 185 and 222 whose 2025 revisions ship a committed generated tree at applicability; `src/cadrumo/_data/registry/aeat/modelos`.
 - [x] `W02.P04.S129` - Re-ground the capability screen's envelope condition against the official designs, replacing the fifty-two-row count with the thirty-one real record-spelled cases; `dev/registry/analysis/modelo_capability.py`.
 - [ ] `W02.P04.S130` - Withdraw the modelo 714 envelope authoring: offsets 93 to 96 and 101 to 109 are delegated to the entidad desarrolladora, which the coverage validator classifies omissible because this product holds no EEDD registration and writing one would invent a regulatory identity; `src/cadrumo/_data/registry/aeat/modelos/714/revisions`.
@@ -657,6 +657,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S357` - Establish that the 714 envelope offsets lie past the footer's declared extent, which itself has no length; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S358` - Withdraw the declared-length request after counting the corpus, and name the official design as the authority on record extent; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S359` - Resolve why the layout coverage validator accepts modelo 714 while its cited design declares an uncovered developer-identity position; `src/cadrumo/domain/calculations/registry/_validate_export_layout_coverage.py`.
+- [x] `W06.P13.S360` - Connect the envelope migration to the modelo 714 offsets it explains, and measure both declaration forms; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

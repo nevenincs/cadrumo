@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:9ea0b97a6397338c018b334884589def043ca98444ecff060332f94fa0991c10'
+body_hash: 'sha256:9885c099b863a5aa8ed19b84088fedbd3bb370c1e3fb527e4e8d72d48484523e'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -9293,3 +9293,30 @@ it could not. The constraint that this execution may not WRITE outside `dev/`
 and `.vault/` says nothing about reading, and the reasoning that resolves a
 registry question is frequently in the module that implements it rather than in
 any record about it. The evidence was one grep away throughout.
+
+### one-step-s-symptom-is-another-step-s-cause-and-the-plan-does-not-connect-them | high | 31 record-spelled envelopes against 20 typed ones, and modelo 714 is in the first group
+
+The envelope is declared two ways in this corpus. Twenty revisions use the typed
+`filing_envelope` slot, which carries record identity, prefix extent, total and
+closer derivations, a schema version, a source reference with its digest - and a
+`product_identity_requirement`. Thirty-one revisions across sixteen modelos
+spell the same thing as an ordinary record, where those facts have no slots and
+survive only as offsets.
+
+Modelo 714 is in the second group, which explains the Step that has occupied the
+last three iterations. Its developer-identity positions appear as uncovered
+offsets in a record because its envelope is spelled as a record; had it used the
+typed slot, the same fact would be a `product_identity_requirement` - a
+declaration the export boundary can read, rather than four bytes at position 93
+that this product must not write and cannot express its reason for omitting.
+
+So the migration Step is not tidying. It is the remedy for a class of question
+the plan has been answering one modelo at a time: a record-spelled envelope
+cannot say what it requires, so every question about it becomes an argument
+about offsets against an official design, which is where three iterations went.
+
+Both Steps now carry the connection - the migration names the twenty revisions
+already using the typed slot as the pattern and the product-identity requirement
+as the thing the record spelling cannot express. Neither Step was wrong. They
+were unconnected, and the smaller one could not be resolved on its own terms
+because its subject was a consequence of the larger one.
