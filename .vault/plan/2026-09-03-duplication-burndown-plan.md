@@ -8,11 +8,11 @@ related:
   - '[[2026-07-14-honest-all-green-adr]]'
   - '[[2026-07-17-duplication-evidence-repair-adr]]'
   - '[[2026-07-17-duplication-evidence-repair-plan]]'
+  - '[[2026-09-03-duplication-burndown-honest-clone-closure-research]]'
 modified: '2026-09-03'
 body_schema: body-v2
 body_hash: 'sha256:4e894bce0896057a78f220780fd6f56192e2cc8e650b5ddcb936c59f0b19cb5d'
 ---
-
 <!-- RETIRED: W05, W06, W07, P02, P03, P04, P06, P09, P12, P14, P16, P17, P19, P20, P21, P22, P23, P24, P25, P26, P27, S03, S06, S07 -->
 
 # `duplication-burndown` plan

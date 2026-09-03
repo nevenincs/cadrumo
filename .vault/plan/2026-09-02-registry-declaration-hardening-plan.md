@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:eab8783dfd23887b33a31a304264bce5120796f840ac1370a2a648e0c23d158c'
+body_hash: 'sha256:53c535ac176bc3e024e497a6d2a51665475c137505dbd8023fc055a2bbb43b91'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -547,6 +547,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S317` - Give the load census a verification criterion carrying both the coverage and the instrument condition; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S318` - Verify the session's consolidations against every screen module and the corpus census; `dev/registry/analysis dev/registry/pipeline`.
 - [x] `W06.P13.S319` - Correct the miscounted fact list and gate the fact claims the conditions gate deliberately skips; `dev/registry/analysis/modelo_capability.py dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W06.P13.S320` - Read the count claim rather than one spelling of it, so the fifth screen's census stops going unchecked; `dev/registry/tests/test_declaration_invariant_gates.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

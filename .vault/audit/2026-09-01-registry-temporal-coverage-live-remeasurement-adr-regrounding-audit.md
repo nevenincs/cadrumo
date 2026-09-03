@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:5e4f842bd9632dcd4f8e44cfdce241175b288e06f43e879643d8bb9b60b31fd5'
+body_hash: 'sha256:92b394e4e5db10d519a66457408d90e6f2d0c774b6f037d951ce12a57ba2d3de'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8116,3 +8116,26 @@ whether the thing being counted had the same shape - which is the fourth time
 this campaign has carried an assumption across from a neighbouring case, and the
 first where the gate I had just written caught me inside a minute. Twenty-three
 tests pass in that module, exit 0.
+
+### the-count-gate-was-keyed-to-one-spelling-and-read-four-screens-of-five | high | A screen saying "disagreements" instead of "conditions" was never checked
+
+The condition-count gate triggered on the literal phrase "N conditions are
+reported". Four screens write it that way. The temporal screen writes "Four
+disagreements are reported", and was therefore not checked at all - its count is
+in fact right, which is the only reason this cost nothing beyond the gap.
+
+The gate now reads the claim rather than one spelling of it: any number word,
+any noun, followed by "are reported". Enumerating the synonyms would have been
+the same defect written longer, and this campaign has already recorded four
+heuristics that encoded one shape of a concept and missed the rest. Five screens
+are now checked where four were, and no count is wrong.
+
+Two of my own errors are worth recording against this. The first attempt matched
+a docstring anchor that did not exist and made no change, which the assertion
+caught. The second wrote the regex through a shell heredoc that turned the
+word-boundary escape into a literal backspace byte, so the pattern matched
+nothing and the gate failed with "no screen stated a condition count, so this
+gate checked nothing" - the guard the gate carries against exactly this, written
+by whoever built it, catching the person who broke it. A gate that asserts it
+found something to check is worth the extra line every time; without it the
+broadened pattern would have passed silently while reading zero screens.
