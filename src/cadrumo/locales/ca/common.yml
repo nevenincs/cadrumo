@@ -1010,10 +1010,14 @@ tui:
       availability: Disponibilitat
       calculation: Càlcul actual
       calculation_revision: Revisió de càlcul creada
+      current: Actual
       declaration: Declaració
       destination: Destinació
+      filed: Presentada
       local_filing: Estat local de presentació
       local_state: Estat local
+      updated: Actualitzada
+      when: Data
     destination:
       filing_history: Historial de presentacions
       modelo_workspace: Obre l'espai de declaració
@@ -1031,6 +1035,17 @@ tui:
     filing_state:
       supersedido: Registre local substituït
       vigente: Registre local vigent
+    lifecycle:
+      amended: Rectificació iniciada
+      calculated: Càlcul completat
+      created: Declaració creada
+      discarded: Declaració descartada
+      exported: Declaració exportada
+      external_evidence_imported: Evidència externa de l'AEAT importada
+      filed: Presentació registrada localment
+      renamed: Declaració reanomenada
+      superseded: Presentació substituïda localment
+      verified: Verificació completada
     overview:
       title: Resum de declaracions
     refusal:
@@ -1052,6 +1067,7 @@ tui:
       available: Disponible
       'no': 'No'
       none: Cap
+      not_applicable: No aplicable
       'yes': Sí
     work_state:
       borrador: Esborrany

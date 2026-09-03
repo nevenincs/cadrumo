@@ -1021,10 +1021,14 @@ tui:
       availability: Disponibilidad
       calculation: Cálculo actual
       calculation_revision: Revisión de cálculo creada
+      current: Actual
       declaration: Declaración
       destination: Destino
+      filed: Presentada
       local_filing: Estado local de presentación
       local_state: Estado local
+      updated: Actualizada
+      when: Fecha
     destination:
       filing_history: Historial de presentaciones
       modelo_workspace: Abrir espacio de declaración
@@ -1042,6 +1046,17 @@ tui:
     filing_state:
       supersedido: Registro local sustituido
       vigente: Registro local vigente
+    lifecycle:
+      amended: Rectificación iniciada
+      calculated: Cálculo completado
+      created: Declaración creada
+      discarded: Declaración descartada
+      exported: Declaración exportada
+      external_evidence_imported: Evidencia externa de la AEAT importada
+      filed: Presentación registrada localmente
+      renamed: Declaración renombrada
+      superseded: Presentación sustituida localmente
+      verified: Verificación completada
     overview:
       title: Resumen de declaraciones
     refusal:
@@ -1063,6 +1078,7 @@ tui:
       available: Disponible
       'no': 'No'
       none: Ninguno
+      not_applicable: No aplicable
       'yes': Sí
     work_state:
       borrador: Borrador

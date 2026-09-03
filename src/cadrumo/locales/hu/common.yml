@@ -1005,10 +1005,14 @@ tui:
       availability: Elérhetőség
       calculation: Aktuális számítás
       calculation_revision: Számítási változat létrehozva
+      current: Aktuális
       declaration: Bevallás
       destination: Cél
+      filed: Benyújtva
       local_filing: Helyi benyújtási állapot
       local_state: Helyi állapot
+      updated: Frissítve
+      when: Dátum
     destination:
       filing_history: Benyújtási előzmények
       modelo_workspace: Bevallási munkaterület megnyitása
@@ -1025,6 +1029,17 @@ tui:
     filing_state:
       supersedido: Felváltott helyi rekord
       vigente: Aktuális helyi rekord
+    lifecycle:
+      amended: Helyesbítés elindítva
+      calculated: Számítás elkészült
+      created: Bevallás létrehozva
+      discarded: Bevallás elvetve
+      exported: Bevallás exportálva
+      external_evidence_imported: Külső AEAT-bizonyíték importálva
+      filed: Benyújtás helyben rögzítve
+      renamed: Bevallás átnevezve
+      superseded: Benyújtás helyben felváltva
+      verified: Ellenőrzés elkészült
     overview:
       title: Bevallások áttekintése
     refusal:
@@ -1046,6 +1061,7 @@ tui:
       available: Elérhető
       'no': Nem
       none: Nincs
+      not_applicable: Nem alkalmazható
       'yes': Igen
     work_state:
       borrador: Piszkozat

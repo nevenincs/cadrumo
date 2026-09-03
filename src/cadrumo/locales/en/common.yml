@@ -981,10 +981,14 @@ tui:
       availability: Availability
       calculation: Current calculation
       calculation_revision: Calculation revision created
+      current: Current
       declaration: Declaration
       destination: Destination
+      filed: Filed
       local_filing: Local filing status
       local_state: Local status
+      updated: Updated
+      when: Date
     destination:
       filing_history: Filing history
       modelo_workspace: Open declaration workspace
@@ -1002,6 +1006,17 @@ tui:
     filing_state:
       supersedido: Superseded local record
       vigente: Current local record
+    lifecycle:
+      amended: Amendment started
+      calculated: Calculation completed
+      created: Declaration created
+      discarded: Declaration discarded
+      exported: Declaration exported
+      external_evidence_imported: External AEAT evidence imported
+      filed: Filing recorded locally
+      renamed: Declaration renamed
+      superseded: Filing superseded locally
+      verified: Verification completed
     overview:
       title: Declarations overview
     refusal:
@@ -1023,6 +1038,7 @@ tui:
       available: Available
       'no': 'No'
       none: None
+      not_applicable: Not applicable
       'yes': 'Yes'
     work_state:
       borrador: Draft
