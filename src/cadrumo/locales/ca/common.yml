@@ -1005,6 +1005,9 @@ tui:
       stale: Últimes dades capturades
       unavailable: No disponible
     calendar:
+      action:
+        create: Crea o recupera aquesta declaració
+        open: Obre aquesta declaració
       aeat:
         accepted: Acceptada
         justificante_verified: Justificant verificat
@@ -1018,6 +1021,7 @@ tui:
         legal: Situació legal
         local: Estat local
       detail:
+        action: 'Acció en prémer Retorn: {action}'
         axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificant: {receipt}'
         dates: 'Obertura: {opening} · Pagament: {payment} · Tancament ajustat: {closing}'
         source: '{source}: {availability} · Observat: {observed}'
@@ -1044,6 +1048,8 @@ tui:
         unknown: Font no observable
       never_observed: Mai observat
       none: No aplicable
+      observation:
+        not_recorded: Actual i disponible; hora d'observació no registrada
       scope:
         all: Totes
         evidence_unknown: Evidència AEAT desconeguda

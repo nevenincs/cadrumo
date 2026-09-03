@@ -976,6 +976,9 @@ tui:
       stale: Last captured data
       unavailable: Unavailable
     calendar:
+      action:
+        create: Create or recover this declaration
+        open: Open this declaration
       aeat:
         accepted: Accepted
         justificante_verified: Receipt verified
@@ -989,6 +992,7 @@ tui:
         legal: Legal status
         local: Local status
       detail:
+        action: 'Enter action: {action}'
         axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Receipt: {receipt}'
         dates: 'Opens: {opening} · Payment: {payment} · Adjusted close: {closing}'
         source: '{source}: {availability} · Observed: {observed}'
@@ -1014,6 +1018,8 @@ tui:
         unknown: Source unobservable
       never_observed: Never observed
       none: Not applicable
+      observation:
+        not_recorded: Current and available; observation time not recorded
       scope:
         all: All
         evidence_unknown: Unknown AEAT evidence

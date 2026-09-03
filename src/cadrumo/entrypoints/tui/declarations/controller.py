@@ -303,12 +303,20 @@ class DeclarationsCalendarController:
         self.projection = projection
         self.entry_handoff = entry_handoff
         self.recovery_handoff = recovery_handoff
+        _validate_calendar_recovery_actions(projection)
 
     def source(
         self, source: DeclarationsCalendarSource
     ) -> DeclarationsCalendarSourceStateV1:
         """Return one explicit source state."""
         return next(item for item in self.projection.sources if item.source is source)
+
+    def replace_projection(self, projection: DeclarationsCalendarProjectionV1) -> None:
+        """Accept a fresh injected snapshot without performing a read."""
+        if projection.contract_version != DECLARATIONS_CALENDAR_CONTRACT_VERSION:
+            raise ValueError("unsupported Declarations calendar projection contract")
+        _validate_calendar_recovery_actions(projection)
+        self.projection = projection
 
     def visible_entries(
         self, scope: DeclarationsCalendarScopeV1, query: str
@@ -327,6 +335,50 @@ class DeclarationsCalendarController:
         if terms:
             rows = [row for row in rows if all(term in _calendar_search_text(row) for term in terms)]
         return tuple(sorted(rows, key=lambda row: (row.adjusted_closes_on, *row.semantic_key())))
+
+    def context_identity(self) -> str | None:
+        """Resolve a safe natural row identity carried by the route focus key."""
+        focus = self.context.focus
+        if focus is None or not focus.semantic_key.startswith("declarations.calendar"):
+            return None
+        return next(
+            (
+                _calendar_identity(row)
+                for row in self.projection.entries
+                if calendar_focus_key(row) == focus.semantic_key
+            ),
+            None,
+        )
+
+
+def _calendar_identity(row: DeclarationsCalendarEntryRefV1) -> str:
+    modelo, year, period = row.semantic_key()
+    return f"{modelo}|{year}|{period}"
+
+
+def _validate_calendar_recovery_actions(projection: DeclarationsCalendarProjectionV1) -> None:
+    for row in projection.entries:
+        action = row.recovery_action
+        if action is None:
+            continue
+        if (
+            action.action.action_id != "operator.modelo.work.create"
+            or lookup_action(action.action.action_id).target_command_key != "modelo.work.create"
+        ):
+            raise ValueError("calendar recovery action is not the canonical create action")
+        bindings = {item.argument_name: item.value for item in action.argument_bindings}
+        if bindings != {
+            "modelo": str(row.modelo),
+            "year": row.filing_year,
+            "period": row.period.registry_token,
+        }:
+            raise ValueError("calendar recovery action contradicts its natural address")
+
+
+def calendar_focus_key(row: DeclarationsCalendarEntryRefV1) -> str:
+    """Return a NamespacedId-compatible public natural calendar focus key."""
+    modelo, year, period = row.semantic_key()
+    return f"declarations.calendar.m{modelo}.y{year}.p{period.casefold()}"
 
 
 def _fold(value: str) -> str:
@@ -403,6 +455,7 @@ __all__ = [
     "availability_label",
     "calendar_aeat_label",
     "calendar_date_label",
+    "calendar_focus_key",
     "calendar_legal_label",
     "calendar_local_label",
     "calendar_user_label",

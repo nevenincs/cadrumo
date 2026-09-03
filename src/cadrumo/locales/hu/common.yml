@@ -1000,6 +1000,9 @@ tui:
       stale: Legutóbb rögzített adatok
       unavailable: Nem érhető el
     calendar:
+      action:
+        create: Bevallás létrehozása vagy helyreállítása
+        open: Bevallás megnyitása
       aeat:
         accepted: Elfogadva
         justificante_verified: Igazolás ellenőrizve
@@ -1013,6 +1016,7 @@ tui:
         legal: Jogi állapot
         local: Helyi állapot
       detail:
+        action: 'Enter művelete: {action}'
         axes: 'Jogi: {legal} · Helyi: {local} · AEAT: {aeat} · Igazolás: {receipt}'
         dates: 'Nyitás: {opening} · Fizetés: {payment} · Módosított zárás: {closing}'
         source: '{source}: {availability} · Megfigyelve: {observed}'
@@ -1039,6 +1043,8 @@ tui:
         unknown: A forrás nem megfigyelhető
       never_observed: Soha nem figyelték meg
       none: Nem alkalmazható
+      observation:
+        not_recorded: Aktuális és elérhető; a megfigyelés ideje nincs rögzítve
       scope:
         all: Mind
         evidence_unknown: Ismeretlen AEAT-bizonyíték

@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 from textual.containers import VerticalScroll
+from textual.screen import Screen
 from textual.widgets import DataTable, Input, Select, Static
 
 from .....application.modelo.declarations_calendar import (
@@ -24,25 +25,26 @@ from .....application.overview.calendar_models import (
     OverviewPeriodState,
 )
 from .....application.overview.home import HomeAvailability
+from .....application.overview.next_actions import declare_next_action
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
 from .....core.period import Period
 from .....domain.deadlines.models import ObligationStatus
 from ...components.host import ScreenHostApp
 from ...devtools.frame import geometry_band
-from ...navigation import TuiScreenContextV1
+from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ..calendar import DeclarationsCalendarScreen
-from ..controller import DeclarationsCalendarController
+from ..controller import DeclarationsCalendarController, calendar_focus_key
 from ..models import DeclarationsCalendarScopeV1
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _NOW = datetime(2026, 9, 3, 10, tzinfo=UTC)
 _EXPECTED = {
-    OutputLanguage.ES: ("Agenda de declaraciones", "Vencida", "Legal:"),
-    OutputLanguage.EN: ("Declarations agenda", "Overdue", "Legal:"),
-    OutputLanguage.CA: ("Agenda de declaracions", "Vençuda", "Legal:"),
-    OutputLanguage.HU: ("Bevallási napirend", "Lejárt", "Jogi:"),
+    OutputLanguage.ES: ("Agenda de declaraciones", "Vencida", "Legal:", "Abrir esta declaración"),
+    OutputLanguage.EN: ("Declarations agenda", "Overdue", "Legal:", "Open this declaration"),
+    OutputLanguage.CA: ("Agenda de declaracions", "Vençuda", "Legal:", "Obre aquesta declaració"),
+    OutputLanguage.HU: ("Bevallási napirend", "Lejárt", "Jogi:", "Bevallás megnyitása"),
 }
 
 
@@ -124,11 +126,14 @@ def _controller(
     projection: DeclarationsCalendarProjectionV1,
     *,
     handoff=None,
+    recovery_handoff=None,
+    context: TuiScreenContextV1 | None = None,
 ) -> DeclarationsCalendarController:
     return DeclarationsCalendarController(
-        TuiScreenContextV1(destination="workbench.declarations"),
+        context or TuiScreenContextV1(destination="workbench.declarations"),
         projection,
         entry_handoff=handoff,
+        recovery_handoff=recovery_handoff,
     )
 
 
@@ -167,6 +172,24 @@ def test_unicode_and_search_uses_only_safe_localized_fields() -> None:
     assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.ALL, "VENCIDA 130")] == ["130"]
     assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.ALL, "20/10/2026 111")] == ["111"]
     assert controller.visible_entries(DeclarationsCalendarScopeV1.ALL, "private-work-name nif-token") == ()
+
+
+def test_recovery_action_must_match_catalogue_and_natural_address() -> None:
+    base = _projection()
+    wrong_action = base.entries[0].model_copy(
+        update={"recovery_action": declare_next_action("operator.modelo.work.list")}
+    )
+    with pytest.raises(ValueError, match="canonical create action"):
+        _controller(base.model_copy(update={"entries": (wrong_action, *base.entries[1:])}))
+    wrong_address = base.entries[0].model_copy(
+        update={
+            "recovery_action": declare_next_action(
+                "operator.modelo.work.create", modelo="303", year=2026, period="1T"
+            )
+        }
+    )
+    with pytest.raises(ValueError, match="natural address"):
+        _controller(base.model_copy(update={"entries": (wrong_address, *base.entries[1:])}))
 
 
 @pytest.mark.asyncio
@@ -220,6 +243,112 @@ async def test_missing_handoff_refuses_and_escape_dismisses_only_child() -> None
         await pilot.press("escape")
         await pilot.pause()
         assert app.return_value is None
+
+
+@pytest.mark.asyncio
+async def test_recovery_row_has_explicit_verb_and_only_calls_canonical_recovery() -> None:
+    base = _projection()
+    recovery_row = base.entries[0].model_copy(
+        update={
+            "recovery_action": declare_next_action(
+                "operator.modelo.work.create", modelo="130", year=2026, period="1T"
+            )
+        }
+    )
+    projection = base.model_copy(update={"entries": (recovery_row, *base.entries[1:])})
+    ordinary: list[object] = []
+    recovered: list[object] = []
+    screen = DeclarationsCalendarScreen(
+        _controller(
+            projection,
+            handoff=ordinary.append,
+            recovery_handoff=lambda action, row: recovered.append((action, row)),
+        )
+    )
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await pilot.pause()
+        rendered = _rendered(screen)
+        assert "Crear o recuperar esta declaración" in rendered
+        table = screen.query_one("#declarations-calendar-agenda", DataTable)
+        table.focus()
+        await pilot.press("enter")
+        await pilot.pause()
+        assert ordinary == []
+        assert recovered == [(recovery_row.recovery_action, recovery_row)]
+
+    refused = DeclarationsCalendarScreen(_controller(projection, handoff=ordinary.append))
+    refused_app = ScreenHostApp[None](refused)
+    async with refused_app.run_test(size=(80, 24)) as pilot:
+        await pilot.pause()
+        refused.query_one("#declarations-calendar-agenda", DataTable).focus()
+        await pilot.press("enter")
+        await pilot.pause()
+        assert ordinary == []
+        assert str(refused.query_one("#declarations-calendar-notice", Static).render())
+
+
+@pytest.mark.asyncio
+async def test_available_without_timestamp_is_not_rendered_as_never_observed() -> None:
+    base = _projection()
+    sources = tuple(
+        state.model_copy(update={"observed_at": None})
+        if state.source is DeclarationsCalendarSource.SCHEDULE
+        else state
+        for state in base.sources
+    )
+    screen = DeclarationsCalendarScreen(_controller(base.model_copy(update={"sources": sources})))
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await pilot.pause()
+        rendered = _rendered(screen)
+        assert "Actual y disponible; hora de observación no registrada" in rendered
+        assert "Nunca observado" not in rendered
+
+
+@pytest.mark.asyncio
+async def test_context_focus_hidden_filter_reorder_resize_and_child_return_restore_exact_row() -> None:
+    projection = _projection()
+    target = projection.entries[1]
+    context = TuiScreenContextV1(
+        destination="workbench.declarations",
+        focus=TuiFocusIdentityV1(
+            destination="workbench.declarations",
+            semantic_key=calendar_focus_key(target),
+        ),
+    )
+    screen = DeclarationsCalendarScreen(_controller(projection, context=context))
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 18)) as pilot:
+        await pilot.pause()
+        table = screen.query_one("#declarations-calendar-agenda", DataTable)
+        assert app.focused is table
+        target_key = "303|2026|2T"
+        assert table.ordered_rows[table.cursor_row].key.value == target_key
+
+        screen.query_one("#declarations-calendar-search", Input).value = "111"
+        await pilot.pause()
+        assert table.ordered_rows[table.cursor_row].key.value == "111|2026|3T"
+        screen.query_one("#declarations-calendar-search", Input).value = ""
+        await pilot.pause()
+        assert table.ordered_rows[table.cursor_row].key.value == target_key
+
+        reordered = projection.model_copy(update={"entries": tuple(reversed(projection.entries))})
+        screen.replace_projection(reordered)
+        await pilot.resize_terminal(100, 22)
+        await pilot.pause()
+        assert app.focused is table
+        assert table.ordered_rows[table.cursor_row].key.value == target_key
+        assert table.scroll_offset.y <= table.cursor_row
+        assert table.cursor_row < table.scroll_offset.y + table.scrollable_content_region.height
+
+        child = Screen[None]()
+        await app.push_screen(child)
+        child.dismiss(None)
+        await pilot.pause()
+        assert app.screen is screen
+        assert app.focused is table
+        assert table.ordered_rows[table.cursor_row].key.value == target_key
 
 
 @pytest.mark.asyncio

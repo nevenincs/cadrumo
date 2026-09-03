@@ -11,6 +11,7 @@ from textual.widgets import DataTable, Input, Select, Static
 
 from ....application.modelo.declarations_calendar import (
     DeclarationsCalendarEntryRefV1,
+    DeclarationsCalendarProjectionV1,
     DeclarationsCalendarSource,
 )
 from ....application.overview.home import HomeAvailability
@@ -55,7 +56,8 @@ class DeclarationsCalendarScreen(Screen[None]):
         super().__init__(id="declarations-calendar-screen")
         self.controller = controller
         self._scope = DeclarationsCalendarScopeV1.ALL
-        self._selected_identity: str | None = None
+        self._selected_identity: str | None = controller.context_identity()
+        self._hidden_restore_identity: str | None = None
         self._rows_by_identity: dict[str, DeclarationsCalendarEntryRefV1] = {}
 
     @override
@@ -95,7 +97,13 @@ class DeclarationsCalendarScreen(Screen[None]):
         """Build the table and place focus at the start of the three-control chain."""
         self._configure_table()
         self._refresh()
-        self.query_one("#declarations-calendar-search", Input).focus()
+        focus = self.controller.context.focus
+        if focus is not None and focus.semantic_key == "declarations.calendar.scope":
+            self.query_one("#declarations-calendar-scope", Select).focus()
+        elif focus is not None and focus.semantic_key.startswith("declarations.calendar"):
+            self.query_one("#declarations-calendar-agenda", DataTable).focus()
+        else:
+            self.query_one("#declarations-calendar-search", Input).focus()
 
     def _configure_table(self) -> None:
         table = cast(
@@ -106,12 +114,12 @@ class DeclarationsCalendarScreen(Screen[None]):
         table.add_column(declarations_copy("tui.declarations.calendar.column.declaration"), width=16)
         table.add_column(declarations_copy("tui.declarations.calendar.column.legal"), width=13)
         table.add_column(declarations_copy("tui.declarations.calendar.column.local"), width=13)
-        table.add_column(declarations_copy("tui.declarations.calendar.column.aeat"), width=13)
+        table.add_column(declarations_copy("tui.declarations.calendar.column.aeat"), width=12)
 
     def _refresh(self) -> None:
         table = cast("DataTable[str]", self.query_one("#declarations-calendar-agenda", DataTable))
         current = self._selected_row(table)
-        if current is not None:
+        if current is not None and self._hidden_restore_identity is None:
             self._selected_identity = _identity(current)
         query = self.query_one("#declarations-calendar-search", Input).value
         rows = self.controller.visible_entries(self._scope, query)
@@ -130,15 +138,22 @@ class DeclarationsCalendarScreen(Screen[None]):
         if rows:
             notice.update("")
             restore = self._selected_identity
-            row_index = next(
+            restored_index = next(
                 (index for index, row in enumerate(rows) if _identity(row) == restore),
-                0,
+                None,
             )
+            row_index = restored_index if restored_index is not None else 0
             table.move_cursor(row=row_index)
-            self._selected_identity = _identity(rows[row_index])
+            if restored_index is not None:
+                self._selected_identity = _identity(rows[row_index])
+                self._hidden_restore_identity = None
+            elif restore is None:
+                self._selected_identity = _identity(rows[row_index])
+            else:
+                self._hidden_restore_identity = restore
             self._render_detail(rows[row_index])
         else:
-            self._selected_identity = None
+            self._hidden_restore_identity = self._selected_identity
             self.query_one("#declarations-calendar-detail", Static).update("")
             notice.update(self._empty_copy(query))
 
@@ -189,11 +204,14 @@ class DeclarationsCalendarScreen(Screen[None]):
         ]
         for source in DeclarationsCalendarSource:
             state = self.controller.source(source)
-            observed = (
-                declarations_copy("tui.declarations.calendar.never_observed")
-                if state.observed_at is None
-                else timestamp_label(state.observed_at)
-            )
+            if state.observed_at is not None:
+                observed = timestamp_label(state.observed_at)
+            elif state.availability is HomeAvailability.NEVER_CAPTURED:
+                observed = declarations_copy("tui.declarations.calendar.never_observed")
+            elif state.availability is HomeAvailability.AVAILABLE:
+                observed = declarations_copy("tui.declarations.calendar.observation.not_recorded")
+            else:
+                observed = declarations_copy("tui.declarations.calendar.observation.time_not_recorded")
             lines.append(
                 declarations_copy(
                     "tui.declarations.calendar.detail.source",
@@ -204,6 +222,16 @@ class DeclarationsCalendarScreen(Screen[None]):
                     observed=observed,
                 )
             )
+        lines.append(
+            declarations_copy(
+                "tui.declarations.calendar.detail.action",
+                action=declarations_copy(
+                    "tui.declarations.calendar.action.create"
+                    if row.recovery_action is not None
+                    else "tui.declarations.calendar.action.open"
+                ),
+            )
+        )
         self.query_one("#declarations-calendar-detail", Static).update("\n".join(lines))
 
     def on_input_changed(self, event: Input.Changed) -> None:
@@ -225,7 +253,10 @@ class DeclarationsCalendarScreen(Screen[None]):
             return
         row = self._rows_by_identity.get(str(event.row_key.value))
         if row is not None:
-            self._selected_identity = _identity(row)
+            identity = _identity(row)
+            if self._hidden_restore_identity is None or identity == self._hidden_restore_identity:
+                self._selected_identity = identity
+                self._hidden_restore_identity = None
             self._render_detail(row)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
@@ -236,14 +267,24 @@ class DeclarationsCalendarScreen(Screen[None]):
         row = self._rows_by_identity.get(str(event.row_key.value))
         if row is None:
             return
-        if row.recovery_action is not None and self.controller.recovery_handoff is not None:
-            self.controller.recovery_handoff(row.recovery_action, row)
+        if row.recovery_action is not None:
+            if self.controller.recovery_handoff is not None:
+                self.controller.recovery_handoff(row.recovery_action, row)
+            else:
+                self.query_one("#declarations-calendar-notice", Static).update(
+                    declarations_copy("tui.declarations.refusal.handoff")
+                )
         elif self.controller.entry_handoff is not None:
             self.controller.entry_handoff(row)
         else:
             self.query_one("#declarations-calendar-notice", Static).update(
                 declarations_copy("tui.declarations.refusal.handoff")
             )
+
+    def replace_projection(self, projection: DeclarationsCalendarProjectionV1) -> None:
+        """Re-render a newly injected projection while preserving semantic focus."""
+        self.controller.replace_projection(projection)
+        self._refresh()
 
     def action_back(self) -> None:
         """Dismiss only this child screen."""

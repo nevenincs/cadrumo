@@ -1016,6 +1016,9 @@ tui:
       stale: Últimos datos capturados
       unavailable: No disponible
     calendar:
+      action:
+        create: Crear o recuperar esta declaración
+        open: Abrir esta declaración
       aeat:
         accepted: Aceptada
         justificante_verified: Justificante verificado
@@ -1029,6 +1032,7 @@ tui:
         legal: Situación legal
         local: Estado local
       detail:
+        action: 'Acción al pulsar Intro: {action}'
         axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificante: {receipt}'
         dates: 'Apertura: {opening} · Pago: {payment} · Cierre ajustado: {closing}'
         source: '{source}: {availability} · Observado: {observed}'
@@ -1055,6 +1059,8 @@ tui:
         unknown: Fuente no observable
       never_observed: Nunca observado
       none: No aplicable
+      observation:
+        not_recorded: Actual y disponible; hora de observación no registrada
       scope:
         all: Todas
         evidence_unknown: Evidencia AEAT desconocida
