@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:fe8400f3b914b6ec43bd21134a673b53f762e6d59df45c3dd1765a2d69f0e6f2'
+body_hash: 'sha256:c9b6e1abd43ed9cb3c6c1c10ace35cdb74fb539ec9156c2d58899b48d0f95302'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -9205,3 +9205,32 @@ completeness gate over that record is measuring against nothing. The Step now
 asks for the length alongside the fields, because authoring nine characters of
 developer identity into a record whose extent is undeclared leaves the next
 reader exactly where this one started.
+
+### no-export-record-declares-a-length-and-my-previous-entry-asked-for-one | high | All 419 records omit it by design, because the official design is the authority on extent
+
+The entry above observed that modelo 714's envelope footer declares no length
+and asked the Step to add one so its coverage becomes measurable. Measuring the
+corpus first would have prevented that: all 419 export records declare no
+length, because neither the record model nor the layout model has such a field.
+The footer is not deficient; it is shaped like every other record in the
+registry.
+
+The extent of a fixed-width record is fixed by the official record design, and
+the shipped validator already enforces exactly that - an authored fixed-width
+layout must cover its official design. So the question "where does this record
+end" has an authority, it is simply not the registry declaration, and asking the
+Step to declare a length would have created a second statement of a fact the
+official design already fixes. That is the defect this campaign exists to
+remove, requested in a correction written by this campaign.
+
+The Step now names the official design as the authority for the record's end
+rather than asking for a declared length. What survives from the previous entry
+is the part that was measured rather than inferred: the footer's single field
+spans offsets 1 to 18, the two spans the Step names lie well beyond it, and the
+ten page records of the same revision cover 90 to 111 completely - so the work
+is an extension of one record, not a repair of a gap.
+
+The lesson is the one this campaign keeps paying for in a new currency: a
+property observed on one instance is a property of that instance until it is
+counted. One record without a length looked like an omission; 419 without one is
+a schema.
