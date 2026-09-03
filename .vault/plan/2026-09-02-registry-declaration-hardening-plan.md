@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:7add8016dd95ab024de37f447d47c7a0c753b31dd6908eea8cde7f2107495b40'
+body_hash: 'sha256:b29eadf6e6324d8b37f4ea7fe5a1fe9b4141e136b43d0a100669807b852a3e28'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -631,6 +631,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S337` - Carry both the surface and corpus answers for the citation figure in the Description; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S338` - Declare what a caller may assume about a screen finding, and learn from the gate that a runner row is not one; `dev/registry/analysis/screens.py dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W06.P13.S339` - Call the runner's output rows rather than findings, since two of them are reports; `dev/registry/analysis/screens.py`.
+- [x] `W06.P13.S340` - Make two screen labels name the unit their rows are, rather than the entity those rows are about; `dev/registry/analysis/screens.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

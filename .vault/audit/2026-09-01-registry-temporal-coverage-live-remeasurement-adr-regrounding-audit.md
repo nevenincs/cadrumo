@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:02b0ac1e7fa545f079895d7c75e3a5d290b010257576a2a97979e2bddd4c957d'
+body_hash: 'sha256:839828db2aceaafa600f240078f23eccc9dde4b5ec22326271c89cba83adae3e'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8717,3 +8717,31 @@ The change is one word in two lines and it closes the last place this package
 said finding where it meant row. That matters more than its size: seven
 cross-screen mis-reads in this campaign began by treating a report as a finding,
 and the runner's own output was teaching exactly that.
+
+### two-labels-named-revisions-and-counted-disagreements | medium | 67 rows over 53 revisions, and 36 over 34, each label promising the smaller number
+
+With the runner's rows renamed, the labels beside them were checked against what
+they count. Eight are exact: a screen whose label says modelos emits one row per
+modelo, one saying revisions emits one per revision, one saying fields emits one
+per field, and the two collapsed entries say references and transitions, which
+is what their rows are.
+
+Two were not. The capability label said "revisions whose declared filing rung
+and the machinery behind it disagree" and counted 67 rows across 53 revisions,
+because a revision failing on two axes produces two rows. The grade label said
+"declared grades that do not match what their prerequisites support" and counted
+36 across 34. Both promise the smaller number in the label and print the larger
+beside it.
+
+The labels now name disagreements rather than revisions or grades, which is what
+the rows are. The alternative - collapsing the rows onto their revision - would
+have been wrong: a revision failing on layout and on deadline needs both facts,
+and merging them into one row would hide the second the way counting sites
+instead of fixes hides the first. When a label and its count disagree, which one
+moves depends on which is the useful unit, and here the count was already right.
+
+This is the smallest instance of the pattern this campaign keeps finding and the
+easiest to dismiss: a fourteen-row overstatement in a screen nobody gates on. It
+is worth fixing for the same reason the runner's wording was - the labels are
+where a reader learns what these numbers mean, and a label that names the wrong
+unit teaches the mis-reading that has cost this campaign seven measurements.
