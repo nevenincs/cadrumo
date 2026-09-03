@@ -56,7 +56,7 @@ def test_snapshot_compiles_each_receipt_once_and_rechecks_all_canonical_bytes(mo
         )
 
     snapshot = subject.build_m200_2024_reviewed_promotion_snapshot()
-    assert subject.verified_promoted_candidate_ids(snapshot=snapshot) == {"s12", "s13", "s14"}
+    assert subject._verified_promoted_candidate_ids(snapshot) == {"s12", "s13", "s14"}
     assert [name for name, _value in calls] == [
         "template",
         "worklist",
@@ -75,8 +75,10 @@ def test_snapshot_refuses_overlap_before_canonical_byte_verification(monkeypatch
         template_authority=SimpleNamespace(adjudications=(SimpleNamespace(casilla_id="same"),)),
         blocker_authority=SimpleNamespace(adjudications=(SimpleNamespace(casilla_id="same"),)),
         unique_authority=SimpleNamespace(adjudications=()),
+        receipt_sha256="forged",
+        _issuer=object(),
     )
     monkeypatch.setattr(subject, "verify_template_canonical_declarations", lambda *_args, **_kwargs: pytest.fail())
 
-    with pytest.raises(RegistryValidationError, match="cohorts overlap"):
-        subject.verified_promoted_candidate_ids(snapshot=overlapping)
+    with pytest.raises(RegistryValidationError, match="snapshot provenance drifted"):
+        subject._verified_promoted_candidate_ids(overlapping)

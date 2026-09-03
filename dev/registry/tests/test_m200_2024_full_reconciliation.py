@@ -31,12 +31,12 @@ def reviewed_promotions():
 
 @pytest.fixture(scope="module")
 def census(reviewed_promotions):
-    return subject.reconcile_bundled_m200_2024(reviewed_promotions=reviewed_promotions)
+    return subject._reconcile_bundled_m200_2024(reviewed_promotions)
 
 
 @pytest.fixture(scope="module")
 def source_rebind_plan(census, reviewed_promotions):
-    return subject.build_m200_source_rebind_plan(census, reviewed_promotions=reviewed_promotions)
+    return subject._build_m200_source_rebind_plan(census, reviewed_promotions)
 
 
 @pytest.fixture
@@ -344,26 +344,18 @@ def test_cli_legal_admission_refuses_an_open_worklist_and_pending_authority(cens
         subject._verify_m200_2024_worklist_legal_authority((applicable,), {reference_id: pending})
 
 
-def test_source_rebind_plan_is_complete_target_map_owned_and_refuses_only_true_orphans(source_rebind_plan) -> None:
+def test_source_rebind_plan_is_complete_target_map_owned_and_refuses_only_true_orphans(
+    source_rebind_plan, reviewed_promotions
+) -> None:
     assert source_rebind_plan.source_ref == subject.TARGET_SOURCE_REF
     assert source_rebind_plan.source_sha256 == subject.TARGET_SOURCE_SHA256
     assert source_rebind_plan.semantic_map_source_ref == subject.TARGET_SOURCE_REF
     assert source_rebind_plan.semantic_map_source_sha256 == subject.TARGET_SOURCE_SHA256
     assert len(source_rebind_plan.rebinds) == 3171
-    from ..analysis.m200_2024_blocker_adjudications import (
-        compile_m200_2024_blocker_authority,
-    )
-    from ..analysis.m200_2024_blocker_adjudications import (
-        promoted_candidate_ids as promoted_blocker_candidate_ids,
-    )
-    from ..analysis.m200_2024_template_adjudications import (
-        compile_m200_2024_same_template_authority,
-        promoted_candidate_ids,
-    )
+    from ..analysis.m200_2024_reviewed_promotions import _verified_promoted_candidate_ids
 
-    receipted = promoted_candidate_ids(compile_m200_2024_same_template_authority()) | promoted_blocker_candidate_ids(
-        compile_m200_2024_blocker_authority()
-    )
+    receipted = _verified_promoted_candidate_ids(reviewed_promotions)
+    assert len(receipted) == 156
     assert source_rebind_plan.verified_current_design_ids == tuple(sorted(receipted))
     assert len(source_rebind_plan.refused_orphan_ids) == 2
     assert len(source_rebind_plan.expected_current_ids) == 3329
@@ -412,9 +404,9 @@ def test_source_rebind_refuses_current_design_bytes_that_do_not_match_the_receip
         semantic_map_source_ref=subject.TARGET_SOURCE_REF,
         semantic_map_source_sha256=subject.TARGET_SOURCE_SHA256,
         rebinds=(),
-        verified_current_design_ids=subject.build_m200_source_rebind_plan(
-            subject.reconcile_bundled_m200_2024(reviewed_promotions=reviewed_promotions),
-            reviewed_promotions=reviewed_promotions,
+        verified_current_design_ids=subject._build_m200_source_rebind_plan(
+            subject._reconcile_bundled_m200_2024(reviewed_promotions),
+            reviewed_promotions,
         ).verified_current_design_ids,
         refused_orphan_ids=(),
         expected_current_ids=(),
