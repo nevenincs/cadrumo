@@ -11,7 +11,7 @@ related:
   - '[[2026-09-03-duplication-burndown-honest-clone-closure-research]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:44385672d7a75639df1ed2efce350ceeea6acb7d54e42b229691a3ba9aa95870'
+body_hash: 'sha256:d6af2ee5bc8cfb4b163775560883cf8f151d4fefcc24c0778892b5be08e8b099'
 ---
 
 <!-- RETIRED: W05, W06, W07, P02, P03, P04, P06, P09, P12, P14, P16, P17, P19, P20, P21, P22, P23, P24, P25, P26, P27, S03, S06, S07 -->
@@ -45,7 +45,7 @@ Reduce the dominant CLI clone family through dependency-graph-bounded primitives
 
 Introduce only the minimal typed declaration primitives justified by repeated Ledger command semantics and prove contract equivalence.
 
-- [ ] `W02.P05.S08` - Define narrowly typed reusable Ledger parameter declarations and prove immutable CommandSpec equality; `src/cadrumo/entrypoints/cli/_app_ledger_command_spec_support.py`.
+- [x] `W02.P05.S08` - Define narrowly typed reusable Ledger parameter declarations and prove immutable CommandSpec equality; `src/cadrumo/entrypoints/cli/_app_ledger_command_spec_support.py`.
 
 ### Phase `W02.P08` - reduce Ledger command clusters
 
