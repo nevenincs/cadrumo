@@ -437,8 +437,8 @@ class AeatSyncWorkspaceNotificationRowV1(BaseModel):
         return self
 
 
-class AeatSyncWorkspaceEvidenceComparisonRowV1(BaseModel):
-    """One natural filing comparison with both source states retained."""
+class _AeatSyncWorkspaceDualSourceRowV1(BaseModel):
+    """Private immutable mechanics shared by two natural-address comparisons."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -461,9 +461,9 @@ class AeatSyncWorkspaceEvidenceComparisonRowV1(BaseModel):
     secret: str | None = Field(default=None, exclude=True, repr=False)
 
     @model_validator(mode="after")
-    def _comparison_axes_are_coherent(self) -> Self:
+    def _source_axes_are_coherent(self) -> Self:
         if self.period.filing_year != self.filing_year:
-            raise ValueError("evidence comparison period must match its filing year")
+            raise ValueError("AEAT Sync comparison period must match its filing year")
         _validate_source_axis(self.local_state, self.local_observed_at, axis="local")
         _validate_source_axis(self.aeat_state, self.aeat_observed_at, axis="AEAT")
         _validate_discrepancy(
@@ -474,41 +474,17 @@ class AeatSyncWorkspaceEvidenceComparisonRowV1(BaseModel):
         return self
 
 
-class AeatSyncWorkspaceReconciliationRowV1(BaseModel):
+class AeatSyncWorkspaceEvidenceComparisonRowV1(_AeatSyncWorkspaceDualSourceRowV1):
+    """One natural filing comparison with both source states retained."""
+
+
+class AeatSyncWorkspaceReconciliationRowV1(_AeatSyncWorkspaceDualSourceRowV1):
     """One safe reconciliation finding and only its admitted next actions."""
 
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    modelo: ModeloCode
-    filing_year: FilingYear
-    period: Period
-    local_state: AeatSyncSourceState
-    aeat_state: AeatSyncSourceState
-    local_observed_at: UtcInstant | None = None
-    aeat_observed_at: UtcInstant | None = None
-    discrepancy_kind: AeatSyncDiscrepancyKind
     reconciliation_state: AeatSyncReconciliationState
-    supported_actions: tuple[AeatSyncSupportedAction, ...] = ()
-
-    semantic_identity: str | None = Field(default=None, exclude=True, repr=False, min_length=1, max_length=256)
-    bucket_id: str | None = Field(default=None, exclude=True, repr=False, min_length=1, max_length=128)
-    subject_key: str | None = Field(default=None, exclude=True, repr=False, min_length=1, max_length=128)
-    source_url: str | None = Field(default=None, exclude=True, repr=False)
-    raw_evidence: object | None = Field(default=None, exclude=True, repr=False)
-    document_text: str | None = Field(default=None, exclude=True, repr=False)
-    secret: str | None = Field(default=None, exclude=True, repr=False)
 
     @model_validator(mode="after")
     def _reconciliation_axes_are_coherent(self) -> Self:
-        if self.period.filing_year != self.filing_year:
-            raise ValueError("reconciliation period must match its filing year")
-        _validate_source_axis(self.local_state, self.local_observed_at, axis="local")
-        _validate_source_axis(self.aeat_state, self.aeat_observed_at, axis="AEAT")
-        _validate_discrepancy(
-            local_state=self.local_state,
-            aeat_state=self.aeat_state,
-            discrepancy_kind=self.discrepancy_kind,
-        )
         if self.discrepancy_kind is AeatSyncDiscrepancyKind.NONE:
             if self.reconciliation_state is not AeatSyncReconciliationState.NO_ACTION:
                 raise ValueError("a matching reconciliation must have no action")
