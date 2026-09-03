@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:cb76805ff8c5c1ee0d200657e3db8c94600555735b554f62fcbccdd64ca59c20'
+body_hash: 'sha256:07e2c7673d48a4c50272ba505133da6baf8a56cfae18041b83fb9ccedaeba9d2'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -348,7 +348,7 @@ Repair the verifier that raises when probing a generated artefact source, which 
 Author filing-export conformance vectors as registry data for the generated trees and make an absent vector refuse rather than read as unmeasured.
 
 - [x] `W03.P06.S102` - Point the three emitted-byte acceptance tests at the two-channel authority the coverage composer now requires, starting with the guard that an empty proof cannot become evidence; `dev/registry/tests/test_filing_emitted_byte_acceptance.py`.
-- [ ] `W03.P06.S57` - Acquire one official emitted-byte reference for a single modelo revision, or an independently reviewed equivalent, as the evidence every later Step in this Phase consumes; `src/cadrumo/_data/corpus/aeat_official`.
+- [ ] `W03.P06.S57` - Acquire one official emitted-byte reference for a single modelo revision, or an independently reviewed equivalent; the official corpus already holds record designs, forms, instructions, manuals, calendars, e-invoice schemas and GROI servlet responses, and no filled fichero; `src/cadrumo/_data/corpus/aeat_official`.
 - [ ] `W03.P06.S20` - Declare the filing-export conformance vector schema as registry data beside the generation provenance; `src/cadrumo/domain/calculations/registry/schema_exports.py`.
 - [ ] `W03.P06.S21` - Author the conformance vector for the modelo 303 twenty twenty five generated tree as the reference case; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/_conformance.vector.toml`.
 - [ ] `W03.P06.S22` - Enrol filing export conformance vectors from official record-design examples, which the empty canonical tuples are honestly refusing in the meantime; `dev/registry/filing_export_proof.py`.
@@ -650,7 +650,8 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S350` - Attribute the registry failures the manifest and publication entries do not cover; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S351` - Characterise the last four registry failures so every one in the suite is attributed; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S352` - Record the completed registry attribution in the lane criterion, with its causes rather than its count; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
-- [ ] `W06.P13.S353` - Lift the unreachable-publication constraint, which a September second commit had already made false; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S353` - Lift the unreachable-publication constraint, which a September second commit had already made false; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S354` - Verify the official-reference absence and record what the corpus does hold beside it; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

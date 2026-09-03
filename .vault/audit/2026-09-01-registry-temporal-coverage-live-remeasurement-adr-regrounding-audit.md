@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:9da4f52156f716e2c94718292415566a905530eabafa1fb31ed36d0f7c0ad2e8'
+body_hash: 'sha256:58bf4a1c3f28dc96922ed9b8d93ec630af4f9317a82aa66b333587f491704d0e'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -9072,3 +9072,58 @@ The distinction between dated and attributed is worth keeping from this. Dating
 answers whether a failure is yours. Attribution answers whether anyone can act
 on it, and a lane where every failure is dated but none is attributed is a lane
 nobody is fixing.
+
+### the-publication-limb-is-reachable-and-has-been-since-september-second | high | The constraint blocking the twenty-seven-failure repair was true when written and false the next day
+
+The plan carries an ordering constraint saying the generator's publication
+authority exists and nothing can reach it - "a worse state than absence because
+it reads as capability" - and a Step proposing to give it an invocable entry
+point. Both are false today.
+
+`python -m dev.registry.pipeline publish` is a registered verb. It prepares a
+candidate, runs the same read-only check the `check` verb runs, and calls
+`publish_validated_generated_export_tree` with the validated result. The commit
+that added it - "add the operator invocation surface for one generated export
+tree" - landed on 2026-09-02, the day after the constraint was written and the
+day this plan was authored.
+
+That matters beyond the correction. Twenty-seven of the thirty-five failures in
+this directory share one cause, manifests a generator refactor left stale, and
+the repair is republication. The plan said republication was unreachable, so the
+twenty-seven read as blocked on machinery nobody had built. They are blocked on
+nothing but scope: the verb exists, and running it writes generated trees under
+`src/`, which this execution may not do.
+
+The Step now asks for the publication rather than for an entry point, and the
+constraint records that it was written twice and wrong both times - first
+because the verb was thought to need building, then because it was thought
+unreachable after it had become reachable. A constraint asserting an absence
+needs re-checking on the same schedule as a figure quoting a count, and this one
+had been carried for a day past its truth while the failures it explained
+accumulated.
+
+### the-other-absence-claim-is-real-and-now-says-what-is-present | high | Nine official corpus directories, none of them a filled fichero
+
+Having found one absence claim false a day after it was written, the plan's
+other one was checked on the same reasoning. It holds.
+
+The Step gating the whole proof-vector Phase asks for one official emitted-byte
+reference for a single modelo revision. The official corpus contains nine
+directories - record designs, forms, instructions, manuals, calendars, e-invoice
+record schemas, historical retired modelos, GROI servlet response samples, and a
+Renta WEB Open page. None is a filled fichero. The GROI samples are verbatim
+fragments of a consultation servlet's responses, which is evidence about a
+different exchange entirely, and the record designs describe the layout that
+emitted bytes would have to satisfy rather than an instance of them.
+
+So the chain this campaign has been recording as blocked - the official
+reference, then vector enrolment, then the modelo 151 closure rewrite, then the
+single-channel authority's deletion - is blocked on evidence that genuinely is
+not in the repository, and no amount of engineering closes it.
+
+The Step now lists what the corpus does hold. An absence stated alone invites
+the next reader to search for what might already be there, which is the search
+just performed; an absence stated beside the neighbouring evidence tells them
+where not to look. That is the difference between the two absence claims checked
+today: one was carried a day past its truth, and this one was true but silent
+about its own neighbourhood.
