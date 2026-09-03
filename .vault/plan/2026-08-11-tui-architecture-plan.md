@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-03'
-body_hash: 'sha256:1a84245d027bd49c0139c84d886b0450f90cf1de91c06d66ccd61c729ae4e118'
+body_hash: 'sha256:a63149ebf1b365b360fb1717b273e0e71d401bd3eabe89871b7792aec8185c0a'
 ---
 
 <!-- RETIRED: S370 -->
@@ -573,6 +573,7 @@ Exercise due-driven and task-launcher candidates through the real Textual compos
 
 Build host-neutral Ledger, Declarations with full calendar and history, AEAT Sync, and account utility routes over the approved application contracts.
 
+- [ ] `W08.P27.S391` - Define an immutable Ledger workspace projection and public affected-declaration reconciliation provider from canonical Ledger, invoice-link, and filing-staleness authorities; `src/cadrumo/application/ledger/workspace.py`.
 - [ ] `W08.P27.S375` - Build the Ledger overview, entries, review, import, classification, evidence, and reconciliation screens over canonical application doors; `src/cadrumo/entrypoints/tui/ledger/`.
 - [ ] `W08.P27.S376` - Remove concrete-host narrowing and whole-application exits from the declaration picker, review, workspace, and editor route chain; `src/cadrumo/entrypoints/tui/modelo/`.
 - [ ] `W08.P27.S377` - Build the Declarations landing, revision and filing-history routes around existing Modelo workspace destinations; `src/cadrumo/entrypoints/tui/declarations/`.
