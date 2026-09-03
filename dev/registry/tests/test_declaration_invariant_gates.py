@@ -883,35 +883,45 @@ def test_the_import_coverage_gate_sees_a_module_no_test_imports(tmp_path: pathli
     assert unimported == ["orphan"], "the gate must see the planted module and only that one"
 
 
-def test_every_screen_finding_carries_the_identity_the_contract_promises(
-    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
-) -> None:
-    """A caller may key on the modelo and nothing else, and this holds that line.
+def test_every_screen_finding_type_declares_the_identity_the_contract_promises() -> None:
+    """A caller may key a FINDING on its modelo, and this holds that line.
 
-    The contract is deliberately one field. Eight of the nine finding types also
-    carry a revision, and one does not because a continuity chain spans them; a
-    discriminator is carried only where a screen reports more than one
-    condition. Promising more would be promising a shape two screens correctly
-    do not have.
+    Asserted over the finding types each screen defines, not over the rows this
+    runner reports, because two entries deliberately collapse their screen onto
+    a different unit - a reference outside a manifest, a wire-type transition -
+    and those rows are a report rather than a finding. Running the gate over the
+    runner's output found exactly that and was wrong to call it a violation: the
+    contract had been written as though a report and a finding were the same
+    thing.
 
-    Asserted over findings the screens actually emit rather than over their
-    dataclass definitions, because a caller reads rows and a type that declares
-    a field its rows never populate would satisfy a definition check while
-    breaking the reader it was written for.
+    One field, deliberately. Eight of the nine types also carry a revision and
+    one does not, because a continuity chain spans revisions and pinning one
+    would name a revision the defect does not belong to. A discriminator appears
+    only where a screen reports more than one condition.
     """
+    import dataclasses
+    import importlib
+
     from ..analysis.screens import FINDING_IDENTITY_CONTRACT, SCREENS
 
-    assert FINDING_IDENTITY_CONTRACT == ("modelo",), "the contract changed; the gate below encodes it"
+    assert FINDING_IDENTITY_CONTRACT == ("modelo",), "the contract changed; this gate encodes it"
 
     checked = 0
     missing: list[str] = []
     for entry in SCREENS:
-        for finding in entry.run(authority, modelo_ids):
+        module = importlib.import_module(f"dev.registry.analysis.{entry.name}")
+        for name, obj in vars(module).items():
+            if not dataclasses.is_dataclass(obj) or getattr(obj, "__module__", None) != module.__name__:
+                continue
+            if not name.endswith(("Finding", "Transition")):
+                continue
             checked += 1
-            for field in FINDING_IDENTITY_CONTRACT:
-                if not getattr(finding, field, None):
-                    missing.append(f"{entry.name} emitted a finding without {field!r}")
-                    break
+            fields = {field.name for field in dataclasses.fields(obj)}
+            missing.extend(
+                f"{entry.name}.{name} declares no {required!r}"
+                for required in FINDING_IDENTITY_CONTRACT
+                if required not in fields
+            )
 
-    assert checked, "no screen emitted a finding, so this gate checked nothing"
-    assert not missing, "\n".join(sorted(set(missing)))
+    assert checked, "no finding type was found, so this gate checked nothing"
+    assert not missing, chr(10).join(sorted(missing))

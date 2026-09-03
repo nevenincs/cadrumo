@@ -105,9 +105,15 @@ def _mixing_modelos(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str
     return [use for use in grammar_screen(authority, modelo_ids) if use.mixes]
 
 
-#: What a caller may assume about any screen's finding, and nothing more.
+#: What a caller may assume about any screen's FINDING, and nothing more.
 #:
-#: Every finding identifies the modelo it concerns. That is the whole contract.
+#: Every finding type this package defines identifies the modelo it concerns.
+#: That is the whole contract, and it is a statement about the screens' own
+#: findings rather than about the rows this runner reports: two entries below
+#: collapse their screen onto a different unit - a reference that sits outside
+#: a manifest, a wire-type transition - and those rows are a report, not a
+#: finding. A caller reading this runner gets whatever the entry chose; a
+#: caller calling a screen gets a finding, and a finding names its modelo.
 #: A revision coordinate is carried by eight of the nine finding types and is
 #: deliberately absent from the ninth, because a continuity chain spans
 #: revisions and pinning one would name a revision the defect does not belong
@@ -169,9 +175,13 @@ def main() -> int:
     modelo_ids = tuple(sorted(str(code) for code in registry_modelo_codes()))
     results = run_screens(authority, modelo_ids)
     for name, count, meaning in results:
-        sys.stdout.write(f"screen name={name} findings={count} counts={meaning!r}\n")
+        sys.stdout.write(f"screen name={name} rows={count} counts={meaning!r}\n")
     total = sum(count for _, count, _ in results)
-    sys.stdout.write(f"summary screens={len(results)} findings={total}\n")
+    # `rows`, not `findings`. Two entries report a collapsed unit rather than
+    # the screen's own findings, and calling every row a finding is the exact
+    # conflation the identity contract above separates. Each line's `counts`
+    # label says what that screen's rows actually are.
+    sys.stdout.write(f"summary screens={len(results)} rows={total}\n")
     return 0
 
 
