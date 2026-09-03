@@ -147,7 +147,9 @@ class AeatSyncWorkspaceScreen(Screen[None]):
 
     def add_operation(self, row: _OperationRow, *, label: str) -> None:
         """Render an explicit mutation button only for a closed admitted pair."""
-        request = self.controller.admitted_operation(row.supported_actions, row.supported_operations)
+        request = self.controller.admitted_operation(
+            getattr(row, "supported_actions", ()), getattr(row, "supported_operations", ())
+        )
         if request is None:
             return
         button_id = f"aeat-sync-operation-{len(self._requests)}"

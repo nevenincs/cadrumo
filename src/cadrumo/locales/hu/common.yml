@@ -992,6 +992,39 @@ transactions:
     unreadable: Olvashatatlan fájl vagy nem támogatott formátum.
     verified: Az import sikeresen ellenőrizve.
 tui:
+  aeat_sync:
+    area:
+      evidence_comparison: Evidence comparison
+      reconciliation: Reconciliation
+    census_category:
+      activity: Activity
+    census_status:
+      adopted: Adopted
+      conflict: Conflict
+    column:
+      document_custody: Document custody
+      read: Read
+    discrepancy:
+      state_mismatch: State mismatch
+    document_custody_state:
+      not_captured: Not captured
+    filed_declarations:
+      title: AEAT Sync filed declarations
+    justificante_state:
+      available: Available
+      unavailable: Unavailable
+    local_filing_state:
+      not_observed: Not observed
+    reconciliation_state:
+      keep_local: Keep local
+    source:
+      aeat:
+        notifications: AEAT notifications
+    sources:
+      entry: '%{source}: %{availability}'
+      joined: '%{entries}'
+    zone:
+      evidence_comparison: Evidence comparison
   declarations:
     availability:
       available: Elérhető
