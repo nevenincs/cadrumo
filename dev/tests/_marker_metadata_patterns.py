@@ -293,6 +293,18 @@ PROCESS_SYMBOL_METADATA_CASES: tuple[PatternCase, ...] = (
     ),
     PROCESS_PLAN_CASE,
     PatternCase(re.compile(r"(^|[_-])p" + r"r($|[_-])", re.IGNORECASE), ("test_pr_review",), ("test_print_payload",)),
+    # The bare step id in a durable symbol name, which none of the siblings
+    # above reach: they name process NOUNS, and this form is an address. Two to
+    # three digits, deliberately: it admits the whole live step range while
+    # leaving a single digit to the domain, so an AWS bucket test keeps its
+    # name. The comment beside the lint-code pattern explains why the bare form
+    # was never production-scoped; nothing had scoped it for symbols either,
+    # which is how fourteen files came to carry one.
+    PatternCase(
+        re.compile(r"(^|[_-])s\d{2,3}($|[_-])", re.IGNORECASE),
+        ("test_s115_freezes_the_reviewed_helper_set",),
+        ("test_s3_client_retries",),
+    ),
 )
 PROCESS_SYMBOL_METADATA_PATTERNS = tuple(case.pattern for case in PROCESS_SYMBOL_METADATA_CASES)
 
