@@ -9154,3 +9154,31 @@ drifts is visibly a count and invites re-measurement. A blocker reads as a fact
 about the world, and nothing about the sentence suggests it has a shelf life -
 which is why the two found stale here had each been carried through every
 iteration of this campaign without anyone, including me, thinking to look.
+
+### the-deferral-step-asks-for-a-rationale-and-there-is-nowhere-to-put-one | high | Seven reason fields exist in the schema and none of them is on a revision
+
+The Step proposing to author "the missing deferral rationale" for three
+layout-bearing revisions was checked before being left alone. Its population
+holds exactly: modelos 189, 280 and 345 each have a 2025 revision carrying one
+export layout at applicability grade, with no committed tree.
+
+The rationale has nowhere to go. The revision model declares no field that could
+hold one - no deferral, reason, rationale or exemption slot of any kind - so the
+Step as written asks for data to be authored into a shape the schema does not
+have. Its scope named the registry data directory alone, which reads as an
+afternoon of writing three sentences and is actually a schema change first.
+
+The registry does know how to state reasons, which is what makes this a design
+question rather than an omission. Seven fields carry one: a casilla explains why
+it is exempt from export, an applicability rule explains why it applies and why
+it does not, a schema-family disposition and an XML path override each carry
+theirs, and a completeness manifest explains a manual extraction. The nearest
+analogue is the casilla's `export_exemption_reason` - a declaration explaining
+why an expected capability is absent - and what is missing is its mirror at the
+revision level: why a present layout does not imply the filing grade a reader
+would infer from it.
+
+The Step now asks for the slot before the sentences and names that analogue. A
+Step that assumes a place to write is the same defect as a constraint that
+assumes a limb is unreachable: both describe the tree as it was imagined rather
+than as it is, and both are cheap to check and expensive to inherit.

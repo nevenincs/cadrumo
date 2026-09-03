@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:332ba02b7e2abec0bc06e15227547af68c1386253afdf559a8af49ee81c94339'
+body_hash: 'sha256:a463b0f58892764d9a5523d1620aa7a1f302d8d9c6c0fea3389472a459223d55'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -306,7 +306,7 @@ Wire a standing regression gate comparing the satisfied filing-coordinate set by
 - [ ] `W02.P04.S131` - Decide modelo 100, which declares filing grade for an XML layout that refuses at render for want of a grounded aux version token; `src/cadrumo/_data/registry/aeat/modelos/100/revisions`.
 - [x] `W02.P04.S132` - Report structurally when a revision ships a committed export tree while declaring a grade below filing; `dev/registry/analysis/modelo_capability.py`.
 - [ ] `W02.P04.S133` - Re-review modelo 222, whose attestation reaches scheduling and applicability only and describes two casillas and no export layout while the revision now ships seventy-six casillas, a typed envelope and a committed tree; `src/cadrumo/_data/registry/aeat/modelos/222/revisions`.
-- [ ] `W02.P04.S135` - Author the missing deferral rationale for modelos 189, 280 and 345, whose layout-bearing revisions carry no stated reason for staying below filing grade; `src/cadrumo/_data/registry/aeat/modelos`.
+- [ ] `W02.P04.S135` - Declare a revision-level deferral rationale slot, modelled on the casilla export-exemption reason, then author it for modelos 189, 280 and 345 whose 2025 revisions each carry a layout at applicability grade; `src/cadrumo/_data/registry/aeat/modelos`.
 - [x] `W02.P04.S138` - Report provenance findings on the reference that is outside rather than on every child citing it; `dev/registry/analysis/provenance_consistency.py`.
 - [x] `W02.P04.S139` - Count the actionable unit in the screen runner census, not every site exhibiting it; `dev/registry/analysis/screens.py`.
 - [x] `W02.P04.S140` - Stop counting the official part split as a finding in the suite census, since the screen reports it for visibility and not as a defect; `dev/registry/analysis/screens.py`.
@@ -653,6 +653,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S353` - Lift the unreachable-publication constraint, which a September second commit had already made false; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S354` - Verify the official-reference absence and record what the corpus does hold beside it; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S355` - Correct the release-predicate criterion, whose held-file blocker has lifted; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [ ] `W06.P13.S356` - Establish that the deferral rationale has no revision-level slot and name the analogue it should follow; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
