@@ -313,7 +313,7 @@ def test_profile_repeatable_row_ingress_stays_in_structural_coverage() -> None:
     assert all(capability_id not in entry.capability_ids for entry in manifest.entries)
 
 
-def test_s115_freezes_reviewed_s112_helper_set_by_secondary_count() -> None:
+def test_capability_count_guards_the_reviewed_helper_set_beside_its_digest() -> None:
     """Count is a secondary selector guard; the digest remains its canonical identity proof."""
     manifest = load_source_connectivity_census()
     entry = next(item for item in manifest.entries if item.candidate_id == "coverage.remaining-calculation-helpers")

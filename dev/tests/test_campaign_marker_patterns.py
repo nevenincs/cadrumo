@@ -78,15 +78,16 @@ def test_the_retired_scrambled_pattern_still_matches_nothing_in_this_tree() -> N
     assert matches == [], f"the retired control matched live symbols: {matches}"
 
 
-def test_the_step_id_case_finds_the_development_tree_names_that_carry_one() -> None:
-    """The newest case bites on the live tree, measured over `dev/` alone.
+def test_no_development_tree_test_name_carries_a_step_id() -> None:
+    """The newest case is held against the live tree, measured over `dev/` alone.
 
-    Pinned to a live defect, and this note is what the pin owes. Both names are
+    The pin this test carried has been redeemed. Four `dev/` test names were
     addresses of plan Steps rather than descriptions of behaviour, which the
-    Code Stands Alone mandate forbids in a durable symbol. The plan carries the
-    rename, and when it lands this test fails: that failure is the correction.
-    Replace the expectation with an empty set and keep the assertion, because
-    the value of this test afterwards is that it stays empty.
+    Code Stands Alone mandate forbids in a durable symbol; all four were
+    renamed, and the expectation became the empty set exactly as the pin's own
+    instruction said it should. The assertion stays, because its value now is
+    that the set remains empty: this is the gate that keeps the next such name
+    from landing, and an empty expectation is what a closed gate looks like.
 
     Measured over `dev/` deliberately. The same case finds a larger population
     under `src/`, which this work does not own and must not half-rename; that
@@ -100,9 +101,4 @@ def test_the_step_id_case_finds_the_development_tree_names_that_carry_one() -> N
         for name in _test_symbol_names(path)
         if _STEP_ID_CASE.pattern.search(name)
     }
-    assert carrying == {
-        "dev/locales/tests/test_ledger_notice_action_conformance.py",
-        "dev/registry/tests/test_modelo_303_semantic_maps.py",
-        "dev/source_connectivity/tests/test_census_completeness.py",
-        "dev/tests/test_suggestion_command_conformance.py",
-    }, f"the development-tree step-id population moved: {sorted(carrying)}"
+    assert carrying == set(), f"a step id returned to a development-tree test name: {sorted(carrying)}"

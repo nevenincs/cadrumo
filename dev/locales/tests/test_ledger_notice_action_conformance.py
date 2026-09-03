@@ -271,7 +271,7 @@ def test_every_ledger_translation_is_catalogue_owned_without_a_runtime_fallback(
     assert failures == []
 
 
-def test_s90_helpers_do_not_reintroduce_presentation_defaults() -> None:
+def test_translation_helpers_do_not_reintroduce_presentation_defaults() -> None:
     """A translation helper cannot hide fallback prose from the direct ``tr`` gate."""
     failures: list[str] = []
     for module in _LEDGER_NOTICE_MODULES:

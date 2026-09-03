@@ -12,6 +12,8 @@ import rtoml
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
+from cadrumo.domain.calculations.registry.loader import load_catalogue_file
 
 from ..analysis import m200_2024_full_reconciliation as subject
 
@@ -193,7 +195,7 @@ def test_missing_map_legal_ref_is_visible_and_unreviewed_candidates_cannot_seed_
     assert candidate_payload not in peers["same-template"]
 
 
-def test_legal_worklist_measures_the_complete_2024_population_and_exposes_open_authority(census) -> None:
+def test_legal_worklist_measures_the_complete_2024_population_and_closes_reviewed_authority(census) -> None:
     worklist = subject.build_m200_2024_legal_worklist(census)
 
     assert worklist.source_ref == subject.TARGET_SOURCE_REF
@@ -204,19 +206,23 @@ def test_legal_worklist_measures_the_complete_2024_population_and_exposes_open_a
     assert all(item.source_sha256 == subject.TARGET_SOURCE_SHA256 for item in worklist.items)
     assert worklist.missing_provenance_count == 0
     assert worklist.unknown_reference_count == 0
-    assert worklist.out_of_window_count == 3
-    open_items = tuple(item for item in worklist.items if item.out_of_window_legal_refs)
-    assert tuple(item.subject_id for item in open_items) == (
-        "legal_refs",
-        "orden_aplicabilidad",
-        "family_dispositions.casilla_continuidad_evolutions.legal_refs",
-    )
-    assert all(item.out_of_window_legal_refs == ("orden-hac-657-2025:modelo-200",) for item in open_items)
-    with pytest.raises(RegistryValidationError, match="missing=0, unknown=0, out_of_window=3"):
-        subject.require_closed_m200_2024_legal_worklist(worklist)
+    assert worklist.out_of_window_count == 0
+    assert all(item.state == "applicable" for item in worklist.items)
+    subject.require_closed_m200_2024_legal_worklist(worklist)
 
     with pytest.raises(RegistryValidationError, match="source identity drifted"):
         subject.build_m200_2024_legal_worklist(replace(census, source_sha256="0" * 64))
+
+
+def test_modelo_200_orden_governed_period_is_verified_against_its_bundled_boe_text() -> None:
+    reference_id = "orden-hac-657-2025:modelo-200"
+    legal = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml")).legal[reference_id]
+
+    verify_legal_catalogue({reference_id: legal}, source_root=bundled_path())
+
+    assert legal.governs_periods_from == subject.TARGET_VALID_FROM
+    assert legal.governs_periods_to == subject.TARGET_VALID_TO
+    assert "períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2024" in legal.required_text
 
 def test_source_rebind_plan_is_complete_target_map_owned_and_refuses_only_true_orphans(source_rebind_plan) -> None:
     assert source_rebind_plan.source_ref == subject.TARGET_SOURCE_REF
