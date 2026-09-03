@@ -1081,15 +1081,15 @@ audit-health-report-json:
 audit-object-names *ARGS:
     @uv run --no-sync python -m dev.audit.object_names {{ARGS}}
 
-# Show conformance status across all modelo revisions and compare against the
-# committed baseline. ``report`` exits 0 always (a screen); ``audit`` exits 0
-# here too (screen posture without ``--check``). To gate on the baseline use
-# ``audit --check`` directly or run the CI integration test in ci-full.yml.
-[doc('Show conformance status across all modelo revisions and compare against the committed baseline.')]
+# Show conformance status across all modelo revisions and the derived release
+# closure. Both verbs exit 0 always (screen posture): ``report`` renders every
+# axis, ``closure`` renders the temporal, source, and filing release predicate.
+# To gate on the completeness claim use ``closure --check`` directly.
+[doc('Show conformance status across all modelo revisions and the derived release closure.')]
 [group('audits')]
 audit-registry-conformance:
     @uv run --no-sync python -m dev.registry.conformance report
-    @uv run --no-sync python -m dev.registry.conformance audit
+    @uv run --no-sync python -m dev.registry.conformance closure
 
 # ── Documentation ────────────────────────────────────────────────────────────
 

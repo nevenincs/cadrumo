@@ -49,12 +49,26 @@ __all__ = [
 #: A Contenido cell holding only a footnote pointer: "Nota 4", "Notas 1 y 2",
 #: optionally preceded by "Véase". Anything more is the design saying something.
 POINTER = re.compile(r"^(?:v[eé]ase\s+)?notas?\s*[\d\s,y]*$", re.IGNORECASE)
-_DEFINITION = re.compile(r"^\s*\|?\s*(nota\s*\d+)\s*:\s*(.*)$", re.IGNORECASE)
+#: A note definition row. The label is separated from its wording by a colon,
+#: a full stop, or a table pipe, because the corpus uses all three: modelo
+#: 200 writes `Nota 1:`, modelo 202 writes `Nota 4.` for most of its notes
+#: and `Nota 1 |` for one. Accepting only the colon made every note of
+#: modelo 202 invisible, including the two that state how numeric and
+#: alphanumeric fields are aligned and padded - the plainest wire wording in
+#: the corpus, unreadable because of a separator.
+_DEFINITION = re.compile(r"^\s*\|?\s*(nota\s*\d+)\s*[:.|]\s*(.*)$", re.IGNORECASE)
 _ROW = re.compile(r"^\s*\|?\s*(nota\s*\d+)\b", re.IGNORECASE)
 #: A sheet heading in the extracted transcription. A workbook design prints one
 #: sheet per page and numbers each page's notes from one, so note labels are
 #: scoped to the sheet this matches and never to the design.
-_SHEET_HEADING = re.compile(r"^#\s+(\S+)\s*$")
+#:
+#: The name runs to the end of the line. A first attempt captured a single
+#: non-space token, which silently failed on every multi-word sheet name -
+#: modelo 202 names its sheets `dr M202 (1)` - so the heading went
+#: unrecognised, every note in the design landed under an empty sheet name,
+#: and no field could match it. That failure is invisible from the outside:
+#: it looks exactly like a design whose notes are undefined.
+_SHEET_HEADING = re.compile(r"^#\s+(.+?)\s*$")
 
 
 @dataclass(frozen=True, slots=True)

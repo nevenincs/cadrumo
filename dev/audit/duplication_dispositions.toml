@@ -71,9 +71,9 @@
 
 [meta]
 generated_from = "just audit-duplication (jscpd@4.2.0)"
-observed_groups = 14
-reconciled_groups = 14
-duplicated_pct = "0.06"
+observed_groups = 12
+reconciled_groups = 12
+duplicated_pct = "0.05"
 files_analyzed = 1976
 source_root = "src/cadrumo"
 count_is_advisory = true
@@ -87,7 +87,7 @@ reason = "The three recovered PEP 562 lazy-facade locator pairs are absent from 
 # `observed_groups` is jscpd's own inventory size for this scan and equals the
 # sum of `cluster_owned` + `intentional` + `advisory_residue` below.
 [summary]
-cluster_owned = 14
+cluster_owned = 12
 intentional = 0
 advisory_residue = 0
 actionable = 0
@@ -205,30 +205,6 @@ owner = "modelo-export-review-package"
 where = [
   "- entrypoints/cli/_modelo_export_cli.py [149:23 - 164:2]",
   "  entrypoints/cli/_modelo_review_package_cli.py [144:25 - 159:10]",
-]
-
-# -------------------------------------------------------------------------
-# modelo-nonwork-command-declarations -- 2 group(s)
-#
-# Modelo nonwork CommandSpec declarations sharing a parameter block.
-# Resolution routes through their own narrow shared declaration authority,
-# not the Ledger family's.
-# -------------------------------------------------------------------------
-
-[[group]]
-classification = "cluster-owned"
-owner = "modelo-nonwork-command-declarations"
-where = [
-  "- entrypoints/cli/_modelo_nonwork_calculations_command_specs.py [135:79 - 157:79]",
-  "  entrypoints/cli/_modelo_nonwork_filing_record_command_specs.py [206:74 - 228:74]",
-]
-
-[[group]]
-classification = "cluster-owned"
-owner = "modelo-nonwork-command-declarations"
-where = [
-  "- entrypoints/cli/_modelo_nonwork_filing_record_command_specs.py [228:74 - 245:23]",
-  "  entrypoints/cli/_modelo_nonwork_reconcile_command_specs.py [87:69 - 104:2]",
 ]
 
 # -------------------------------------------------------------------------
