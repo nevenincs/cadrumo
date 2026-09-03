@@ -5703,3 +5703,26 @@ less than none, which is the same argument that refused a baselined gate twice.
 
 This finding uses the correct format, which is the smallest honest start: the convention is
 followed from the moment it is noticed, and the backlog is named rather than absorbed.
+
+### campaign-findings-count-corrected | low | Seventy-seven of the eighty unstructured headings are findings; three are section headers that never needed a slug
+
+The previous finding counted eighty prose headings and attributed them all to this campaign.
+Three are not findings and not this campaign's: the "Consolidated position" headers, two of which
+were present at the audit's first commit and one added later, which structure the recommendations
+rather than record a defect. They need no slug and no severity, and converting them would be
+applying a finding's format to something that is not a finding.
+
+The corrected figure is seventy-seven, and the shape of the document is sharper than the first
+count suggested. At its first commit the audit carried seventy-seven headings, seventy-five of
+them structured. It now carries two hundred and eleven, of which one hundred and thirty-one are
+structured. So fifty-six structured findings were authored between those two points, by writers
+who read the convention and followed it, and then seventy-seven unstructured ones were appended
+by this campaign.
+
+That makes the original finding worse rather than better. The convention was not a historical
+artefact preserved in an old section: it was actively maintained by other authors in the same
+document, and this campaign wrote seventy-seven findings past fifty-six recent examples of the
+format it was ignoring.
+
+The conversion backlog is seventy-seven, not eighty, and remains unstarted for the reason
+already given: severity is a judgement each finding has to earn.
