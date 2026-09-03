@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import SimpleNamespace
+from typing import cast
 
 import pytest
 
-from ..authority import bundled_authority
 from ..errors import RegistryValidationError
 from ..live_parity import ParityVerdictKind
 from ..renta_web_open_replay_corpus import (
@@ -35,25 +36,14 @@ def test_bundled_replay_report_is_validated_offline_match(replay_report: RentaWe
 
 
 def _modelos_with_conflicting_replay_cross_reference() -> tuple[ModeloDefinition, ...]:
-    """Return bundled modelos with two guards declared for the replay oracle."""
-    modelos = bundled_authority().modelos
-    for modelo_index, modelo in enumerate(modelos):
-        for revision_id, revision in modelo.revisions.items():
-            replay_reference = next(
-                (reference for reference in revision.live_cross_references if reference.id == "modelo-100-renta-web-open"),
-                None,
-            )
-            if replay_reference is None:
-                continue
-            conflicting = replay_reference.model_copy(update={"guard_policy_id": "conflicting-replay-guard"})
-            mutated_revision = revision.model_copy(
-                update={"live_cross_references": (*revision.live_cross_references, conflicting)},
-            )
-            mutated_modelo = modelo.model_copy(
-                update={"revisions": {**modelo.revisions, revision_id: mutated_revision}},
-            )
-            return (*modelos[:modelo_index], mutated_modelo, *modelos[modelo_index + 1 :])
-    raise AssertionError("bundled registry fixture lacks the Renta WEB Open cross-reference")
+    """Build only the structural cross-reference shape the resolver consumes."""
+    references = (
+        SimpleNamespace(id="modelo-100-renta-web-open", guard_policy_id="replay-guard-one"),
+        SimpleNamespace(id="modelo-100-renta-web-open", guard_policy_id="replay-guard-two"),
+    )
+    revision = SimpleNamespace(live_cross_references=references)
+    modelo = SimpleNamespace(revisions={"test": revision})
+    return cast(tuple[ModeloDefinition, ...], (modelo,))
 
 
 def test_malformed_replay_cross_reference_refuses_before_any_payload_report() -> None:
