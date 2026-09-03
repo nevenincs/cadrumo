@@ -57,3 +57,10 @@ def test_refuses_hand_authored_canonical_declaration_drift(monkeypatch, tmp_path
 
     with pytest.raises(RegistryValidationError, match="not compiler-identical"):
         subject.verify_canonical_declarations(authority)
+
+
+def test_promoted_candidate_ids_refuses_a_preconstructed_compiler_receipt() -> None:
+    authority = subject.compile_m200_2024_same_template_authority()
+
+    with pytest.raises(RegistryValidationError, match="compiler receipt/provenance drifted"):
+        subject.promoted_candidate_ids(replace(authority, reviewed_by="forged"))

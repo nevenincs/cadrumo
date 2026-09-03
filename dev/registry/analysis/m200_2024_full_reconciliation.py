@@ -170,6 +170,7 @@ class M200SourceRebindPlan:
     semantic_map_source_ref: str
     semantic_map_source_sha256: str
     rebinds: tuple[M200SourceRebind, ...]
+    verified_current_design_ids: tuple[str, ...]
     refused_orphan_ids: tuple[str, ...]
     expected_current_ids: tuple[str, ...]
 
@@ -502,8 +503,10 @@ def build_m200_source_rebind_plan(census: M200ReconciliationCensus) -> M200Sourc
     number.  The census has already proved the target design/map bijection and
     exact map ownership, so a declaration is eligible only when it owns one or
     more exact target anchors and its sole design substitution is the pinned
-    2025 record-design reference.  The two declarations without target anchors
-    remain explicit refusals instead of becoming a catch-all source rewrite.
+    2025 record-design reference.  An already-target-design declaration is
+    excluded only when the closed target compiler replays its exact receipt and
+    canonical bytes.  The two declarations without target anchors remain
+    explicit refusals instead of becoming a catch-all source rewrite.
     """
     _require_exact_source_identity("source rebind census", census.source_ref, census.source_sha256)
     _require_exact_source_identity(
@@ -513,8 +516,17 @@ def build_m200_source_rebind_plan(census: M200ReconciliationCensus) -> M200Sourc
         raise RegistryValidationError("source rebind census carries a drifted Modelo 200/2024 partition")
 
     current = tuple(row for row in census.rows if row.origin == "current_declaration")
+    candidates = tuple(row for row in census.rows if row.origin == "restoration_candidate")
     _require_unique_identifiers(tuple(row.casilla_id for row in current), label="source rebind current declaration")
+    from .m200_2024_template_adjudications import (
+        compile_m200_2024_same_template_authority,
+        promoted_candidate_ids,
+    )
+
+    compiler_authority = compile_m200_2024_same_template_authority()
+    receipted_current_ids = promoted_candidate_ids(compiler_authority)
     rebinds: list[M200SourceRebind] = []
+    verified_current_design_ids: list[str] = []
     orphans: list[str] = []
     for row in current:
         payload = row.declaration_payload
@@ -533,6 +545,16 @@ def build_m200_source_rebind_plan(census: M200ReconciliationCensus) -> M200Sourc
                     non_source_payload_sha256="",
                 )
             )
+        elif row.source_ref_state == "current_design":
+            if not row.fields:
+                raise RegistryValidationError(
+                    f"source rebind current-design declaration {row.casilla_id!r} lacks exact target-map ownership"
+                )
+            if row.casilla_id not in receipted_current_ids:
+                raise RegistryValidationError(
+                    f"source rebind plan refuses unreceipted current-design declaration {row.casilla_id!r}"
+                )
+            verified_current_design_ids.append(row.casilla_id)
         elif row.source_ref_state == "unmapped_no_rebind":
             if row.fields:
                 raise RegistryValidationError(
@@ -546,14 +568,25 @@ def build_m200_source_rebind_plan(census: M200ReconciliationCensus) -> M200Sourc
             )
 
     planned = tuple(sorted(rebinds, key=lambda item: item.casilla_id))
+    verified_current_design = tuple(sorted(verified_current_design_ids))
     _require_unique_identifiers(tuple(item.casilla_id for item in planned), label="source rebind output")
     for item in planned:
         _require_rebind_source_refs(item)
-    if len(planned) != 3171 or len(orphans) != 2:
+    if (
+        len(planned) != 3171
+        or len(verified_current_design) != 4
+        or len(orphans) != 2
+        or len(candidates) != 152
+        or len(census.rows) != 3329
+    ):
         raise RegistryValidationError(
             "Modelo 200 source rebind population drifted: "
-            f"expected 3171 eligible and 2 refused orphans, found {len(planned)} eligible and {len(orphans)} orphans",
+            "expected 3171 rebinds, 4 verified current-design declarations, 2 refused orphans, "
+            f"152 remaining candidates, and 3329 rows; found {len(planned)}, {len(verified_current_design)}, "
+            f"{len(orphans)}, {len(candidates)}, and {len(census.rows)}",
         )
+    if frozenset(verified_current_design) != receipted_current_ids:
+        raise RegistryValidationError("source rebind current-design declarations drifted from compiler receipt")
     canonical_records = _read_m200_2024_casilla_records(bundled_path("registry", "aeat"))
     if set(canonical_records) != {row.casilla_id for row in current}:
         raise RegistryValidationError("source rebind canonical declaration anchors drifted while planning")
@@ -572,6 +605,7 @@ def build_m200_source_rebind_plan(census: M200ReconciliationCensus) -> M200Sourc
         semantic_map_source_ref=census.semantic_map_source_ref,
         semantic_map_source_sha256=census.semantic_map_source_sha256,
         rebinds=planned,
+        verified_current_design_ids=verified_current_design,
         refused_orphan_ids=tuple(sorted(orphans)),
         expected_current_ids=tuple(sorted(row.casilla_id for row in current)),
     )
@@ -600,11 +634,16 @@ def apply_m200_source_rebind_plan(
     """
     _require_rebind_plan_identity(plan)
     _require_unique_identifiers(tuple(item.casilla_id for item in plan.rebinds), label="source rebind output")
-    if len(plan.rebinds) != 3171 or len(plan.refused_orphan_ids) != 2:
-        raise RegistryValidationError("source rebind plan does not carry the complete 3171/2 population")
-    if set(item.casilla_id for item in plan.rebinds) & set(plan.refused_orphan_ids):
-        raise RegistryValidationError("source rebind plan overlaps eligible declarations and refused orphans")
-    if set(item.casilla_id for item in plan.rebinds) | set(plan.refused_orphan_ids) != set(plan.expected_current_ids):
+    if len(plan.rebinds) != 3171 or len(plan.verified_current_design_ids) != 4 or len(plan.refused_orphan_ids) != 2:
+        raise RegistryValidationError("source rebind plan does not carry the complete 3171/4/2 population")
+    partitions = (
+        {item.casilla_id for item in plan.rebinds},
+        set(plan.verified_current_design_ids),
+        set(plan.refused_orphan_ids),
+    )
+    if any(left & right for index, left in enumerate(partitions) for right in partitions[index + 1 :]):
+        raise RegistryValidationError("source rebind plan overlaps its declaration partitions")
+    if set().union(*partitions) != set(plan.expected_current_ids):
         raise RegistryValidationError("source rebind plan does not cover the complete current declaration population")
     for item in plan.rebinds:
         _require_rebind_source_refs(item)
@@ -627,6 +666,10 @@ def _apply_preflighted_m200_source_rebind(
         raise RegistryValidationError(
             f"source rebind declaration anchors drifted: missing={missing[:5]!r}, extra={extra[:5]!r}"
         )
+    _require_verified_current_design(
+        plan,
+        registry_root / "modelos" / "200" / "revisions" / "2024" / "casillas",
+    )
 
     replacements: dict[Path, dict[int, str]] = defaultdict(dict)
     for item in plan.rebinds:
@@ -679,14 +722,14 @@ def _publish_m200_source_rebind_transaction(
         shutil.copytree(casillas_root, stage)
         for path, text in rendered.items():
             atomic_write_text(stage / path.relative_to(casillas_root), text, encoding="utf-8")
-        _require_rebound_tree(plan, _read_m200_2024_casilla_records_for_root(stage))
+        _require_rebound_tree(plan, stage)
         _replace_rebind_tree(casillas_root, backup)
         journal["state"] = "backup_staged"
         _write_rebind_journal(journal_path, journal)
         _replace_rebind_tree(stage, casillas_root)
         journal["state"] = "candidate_live"
         _write_rebind_journal(journal_path, journal)
-        _require_rebound_tree(plan, _read_m200_2024_casilla_records(registry_root))
+        _require_rebound_tree(plan, casillas_root)
     except BaseException:
         _restore_rebind_backup(casillas_root, backup)
         _remove_rebind_tree(stage, revision_root)
@@ -724,7 +767,7 @@ def _recover_m200_source_rebind(plan: M200SourceRebindPlan, registry_root: Path)
     state = journal["state"]
     if state == "candidate_live" and casillas_root.exists() and backup.exists():
         try:
-            _require_rebound_tree(plan, _read_m200_2024_casilla_records(registry_root))
+            _require_rebound_tree(plan, casillas_root)
         except RegistryValidationError:
             _restore_rebind_backup(casillas_root, backup)
         else:
@@ -740,7 +783,9 @@ def _recover_m200_source_rebind(plan: M200SourceRebindPlan, registry_root: Path)
     _delete_rebind_journal(journal_path)
 
 
-def _require_rebound_tree(plan: M200SourceRebindPlan, records: Mapping[str, _M200CasillaSourceRecord]) -> None:
+def _require_rebound_tree(plan: M200SourceRebindPlan, casillas_root: Path) -> None:
+    _require_verified_current_design(plan, casillas_root)
+    records = _read_m200_2024_casilla_records_for_root(casillas_root)
     if set(records) != set(plan.expected_current_ids):
         raise RegistryValidationError("staged source rebind tree changed its declaration anchors")
     for item in plan.rebinds:
@@ -750,6 +795,21 @@ def _require_rebound_tree(plan: M200SourceRebindPlan, records: Mapping[str, _M20
             or record.non_source_payload_sha256 != item.non_source_payload_sha256
         ):
             raise RegistryValidationError(f"staged source rebind tree drifted for {item.casilla_id!r}")
+
+
+def _require_verified_current_design(plan: M200SourceRebindPlan, casillas_root: Path) -> None:
+    """Bind every excluded current row to the compiler receipt and exact bytes."""
+    from .m200_2024_template_adjudications import (
+        compile_m200_2024_same_template_authority,
+        promoted_candidate_ids,
+    )
+
+    authority = compile_m200_2024_same_template_authority()
+    verified = promoted_candidate_ids(authority, casillas_root=casillas_root)
+    if verified != frozenset(plan.verified_current_design_ids):
+        raise RegistryValidationError(
+            "source rebind verified current-design declarations drifted from compiler receipt"
+        )
 
 
 def _replace_rebind_tree(source: Path, destination: Path) -> None:
