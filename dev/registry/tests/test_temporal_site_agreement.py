@@ -118,3 +118,43 @@ def test_the_site_list_excludes_the_within_year_deadline_dates() -> None:
     excluded = {"opens_on", "closes_on", "payment_cutoff_on"}
     named = {path.rsplit(".", 1)[-1] for path in YEAR_LEVEL_TEMPORAL_SITES}
     assert not (named & excluded), f"a within-year deadline date entered the year-level site list: {named & excluded}"
+
+
+def test_a_selector_declaring_both_forms_is_reported(authority: ValidatedRegistryAuthority) -> None:
+    """The dual-form condition is proven, because the corpus cannot prove it.
+
+    A selector may say which years a revision serves as an explicit ``years``
+    tuple or as a ``year_from``/``year_to`` bound. Carrying both states the same
+    fact twice with no rule for which wins, which is this package's subject in
+    one field. No shipped revision does it, so the condition reported nothing
+    and was exercised by nothing - declared, silent, and unproven, which is
+    indistinguishable from broken.
+
+    Constructed from a real revision rather than a stub, so the screen sees the
+    shape it would meet in the registry.
+    """
+    revision = authority.modelo("303").revisions["2025"]
+    selector = revision.period_selector
+    assert not selector.years, "the fixture revision must not already carry both forms"
+
+    dual = revision.model_copy(
+        update={"period_selector": selector.model_copy(update={"years": (2025,), "year_from": 2025})}
+    )
+
+    findings = site_agreement_findings(dual, modelo_id="303")
+    dual_form = [finding for finding in findings if finding.kind == "selector_dual_form"]
+
+    assert len(dual_form) == 1, "one constructed disagreement must yield one finding"
+    assert dual_form[0].detail == "years=[2025] and year_from=2025"
+
+
+def test_the_unmodified_revision_carries_no_dual_form(authority: ValidatedRegistryAuthority) -> None:
+    """The silence is the corpus, not the screen.
+
+    Paired with the constructed case above: together they say the condition can
+    fire and does not, which is what makes a zero readable. Either alone leaves
+    the reader unable to tell a clean registry from a dead check.
+    """
+    revision = authority.modelo("303").revisions["2025"]
+    kinds = [finding.kind for finding in site_agreement_findings(revision, modelo_id="303")]
+    assert "selector_dual_form" not in kinds

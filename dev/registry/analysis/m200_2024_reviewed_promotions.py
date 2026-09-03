@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+
 from .m200_2024_blocker_adjudications import (
     compile_m200_2024_blocker_authority,
     promoted_candidate_ids as blocker_promoted_candidate_ids,
@@ -23,5 +25,5 @@ def verified_promoted_candidate_ids(*, casillas_root: Path | None = None) -> fro
         compile_m200_2024_blocker_authority(), casillas_root=casillas_root
     )
     if template & blocker:
-        raise ValueError("M200/2024 reviewed promotion cohorts overlap")
+        raise RegistryValidationError("M200/2024 reviewed promotion cohorts overlap")
     return template | blocker

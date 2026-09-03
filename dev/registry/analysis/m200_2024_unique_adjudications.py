@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
+import json
 from pathlib import Path
 
 import rtoml
@@ -60,6 +61,28 @@ _PROFILES: dict[str, tuple[tuple[str, ...], str, tuple[str, ...]]] = {
     "donation_general": (("deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"), "is_deduccion_donativos_general", _COMMON_LEGAL),
     "donation_priority": (("deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"), "is_deduccion_donativos_prioritarias", _COMMON_LEGAL),
 }
+_MANUAL_TOKENS = {
+    "idi_limit_information": "Deducciones I+D+i excluidas",
+    "deduction_total_pending": "Deducciones para incentivar",
+    "deduction_total_future": "Deducciones para incentivar",
+    "deduction_total_applied": "Deducciones para incentivar",
+    "aid_excess_quota": "activos por impuesto diferido",
+    "public_interest_generated": "acontecimientos de excepcional interés público",
+    "public_interest_applied": "acontecimientos de excepcional interés público",
+    "public_interest_future": "acontecimientos de excepcional interés público",
+    "nivelacion_dotacion": "Reserva de nivelación",
+    "nivelacion_pendiente": "Reserva de nivelación",
+    "nivelacion_dispuesta": "Reserva de nivelación",
+    "canarias_financier_cinema": "Deducción por inversiones en Canarias",
+    "canarias_financier_live": "Deducción por inversiones en Canarias",
+    "canarias_rd": "Deducción por inversiones en Canarias",
+    "canarias_it": "Deducción por inversiones en Canarias",
+    "canarias_producer_cinema": "Deducción por inversiones en Canarias",
+    "canarias_producer_live": "Deducción por inversiones en Canarias",
+    "riib_anticipated": "Reserva para inversiones en las Illes Balears",
+    "donation_general": "donativos",
+    "donation_priority": "donativos",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,8 +110,8 @@ def compile_m200_2024_unique_authority(path: Path = ADJUDICATION_PATH) -> Compil
     _require_header(raw)
     rows = tuple(_parse_row(value) for value in raw.get("adjudications", ()))
     _require_closed_membership(rows)
-    fields, maps = _target_fields_and_map()
-    rows = _require_target_evidence(rows, fields, maps)
+    fields, maps, manual_text = _target_fields_and_map()
+    rows = _require_target_evidence(rows, fields, maps, manual_text)
     _require_legal_coverage(rows)
     _require_withheld_01403()
     return CompiledM200UniqueAuthority(str(raw["reviewed_by"]), str(raw["reviewed_at"]), tuple(sorted(rows, key=lambda row: row.export_field_id)))
@@ -99,7 +122,9 @@ def render_canonical_declaration(authority: CompiledM200UniqueAuthority, casilla
     if len(matches) != 1:
         raise RegistryValidationError(f"M200/2024 unique authority has no unique declaration for {casilla_id!r}")
     row = matches[0]
-    return "\n".join(("[[revisions.2024.casillas]]", f"id = {_literal(row.casilla_id)}", f"number = {_literal(row.casilla_id)}", "data_type = 'money'", f"semantic_role = {_literal(row.semantic_role)}", "required = false", "input_kind = 'manual'", f"section = {_array(row.section)}", f"legal_refs = {_array(row.legal_refs)}", f"source_refs = {_array((TARGET_SOURCE_REF, MANUAL_SOURCE_REF))}", ""))
+    # Registry fragments conventionally end with one blank line.  Preserve it
+    # in the renderer rather than leaving newline normalisation to a writer.
+    return "\n".join(("[[revisions.2024.casillas]]", f"id = {_literal(row.casilla_id)}", f"number = {_literal(row.casilla_id)}", "data_type = 'money'", f"semantic_role = {_literal(row.semantic_role)}", "required = false", "input_kind = 'manual'", f"section = {_array(row.section)}", f"legal_refs = {_array(row.legal_refs)}", f"source_refs = {_array((TARGET_SOURCE_REF, MANUAL_SOURCE_REF))}", "")) + "\n"
 
 
 def verify_canonical_declarations(authority: CompiledM200UniqueAuthority, *, casillas_root: Path | None = None) -> None:
@@ -144,7 +169,7 @@ def _require_closed_membership(rows: tuple[Adjudication, ...]) -> None:
         raise RegistryValidationError("M200/2024 S13 source candidate membership drifted")
 
 
-def _target_fields_and_map() -> tuple[dict[str, object], dict[str, object]]:
+def _target_fields_and_map() -> tuple[dict[str, object], dict[str, object], str]:
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
     source = catalogues.sources.get(TARGET_SOURCE_REF)
     manual = catalogues.sources.get(MANUAL_SOURCE_REF)
@@ -153,11 +178,14 @@ def _target_fields_and_map() -> tuple[dict[str, object], dict[str, object]]:
     design = load_record_design_intermediate(bundled_path(), catalogues.sources, source_ref=TARGET_SOURCE_REF, filing_year=2024, design_epoch="2024")
     fields = {intermediate_anchor_key(field): field for sheet in design.sheets for field in sheet.fields}
     semantic_map = load_semantic_map(Path(__file__).parents[1] / "mappings" / "modelo_200" / "2024")
-    return fields, {str(entry.export_field_id): entry for entry in semantic_map.entries}
+    extracted = json.loads(bundled_path(str(manual.corpus_path) + ".extracted.json").read_text(encoding="utf-8"))
+    if extracted.get("source_sha256") != MANUAL_SOURCE_SHA256:
+        raise RegistryValidationError("M200/2024 official manual extraction drifted")
+    return fields, {str(entry.export_field_id): entry for entry in semantic_map.entries}, "\n".join(str(unit["text"]) for unit in extracted["units"]).casefold()
 
 
 def _require_target_evidence(
-    rows: tuple[Adjudication, ...], fields: dict[str, object], maps: dict[str, object]
+    rows: tuple[Adjudication, ...], fields: dict[str, object], maps: dict[str, object], manual_text: str
 ) -> tuple[Adjudication, ...]:
     verified: list[Adjudication] = []
     for row in rows:
@@ -174,6 +202,8 @@ def _require_target_evidence(
         label = str(field.normalized_description)
         if row.official_column.casefold() not in label.casefold():
             raise RegistryValidationError(f"M200/2024 unique {row.casilla_id!r} official column distinction drifted")
+        if _MANUAL_TOKENS[row.profile].casefold() not in manual_text:
+            raise RegistryValidationError(f"M200/2024 unique {row.casilla_id!r} manual evidence drifted")
         verified.append(Adjudication(row.casilla_id, row.export_field_id, row.profile, row.official_column, sha256_hex(label.encode("utf-8")), row.section, row.semantic_role, row.legal_refs, row.semantic_payload_sha256))
     return tuple(verified)
 
@@ -192,7 +222,12 @@ def _require_legal_coverage(rows: tuple[Adjudication, ...]) -> None:
 
 def _require_withheld_01403() -> None:
     candidate = next((row for row in audit_bundled_restorations() if row.casilla_id == "01403"), None)
-    if candidate is None or candidate.cross_revision_status == "unique_non_authoritative" or "contradict" not in candidate.reason:
+    if (
+        candidate is None
+        or candidate.cross_revision_status == "unique_non_authoritative"
+        or candidate.proposed is None
+        or candidate.current == candidate.proposed
+    ):
         raise RegistryValidationError("M200/2024 casilla 01403 must remain outside the S13 receipt")
 
 
