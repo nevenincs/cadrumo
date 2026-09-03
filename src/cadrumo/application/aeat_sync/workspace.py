@@ -630,6 +630,8 @@ def _actions(
     contract_by_id = {contract.definition_id: contract for contract in contracts.definitions}
     for zone, facts in groups.items():
         for fact in facts:
+            if isinstance(fact.row, AeatSyncWorkspaceNotificationRowV1):
+                continue
             action_row = fact.row
             actions = action_row.supported_actions
             ids = tuple(str(item.action_id) for item in actions)
