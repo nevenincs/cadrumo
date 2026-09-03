@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core.resources.bundled_data import bundled_path
 from ..catalogue import bundled_iva_catalogue, iva_catalogue_years, load_iva_catalogue, resolve_catalogue
 from ..errors import IvaCatalogueError
 
@@ -66,3 +67,46 @@ def test_load_iva_catalogue_wraps_missing_path_as_domain_error(tmp_path: Path) -
 
     with pytest.raises(IvaCatalogueError, match=r"cannot stat IVA catalogue"):
         load_iva_catalogue(missing)
+
+
+def _mutated_catalogue(tmp_path: Path, *, old: str, new: str) -> Path:
+    """Copy the committed catalogue and replace one evidence claim."""
+    source = bundled_path("registry", "aeat", "iva", "catalogues.toml")
+    payload = source.read_text(encoding="utf-8")
+    assert old in payload, f"mutation anchor {old!r} disappeared from the bundled catalogue"
+    target = tmp_path / "catalogues.toml"
+    target.write_text(payload.replace(old, new, 1), encoding="utf-8")
+    return target
+
+
+def test_loader_refuses_an_unknown_legal_reference(tmp_path: Path) -> None:
+    target = _mutated_catalogue(
+        tmp_path,
+        old='legal_reference = "ley-37-1992:art-90"',
+        new='legal_reference = "ley-37-1992:art-invented"',
+    )
+
+    with pytest.raises(IvaCatalogueError, match="unknown_legal_reference"):
+        load_iva_catalogue(target)
+
+
+def test_loader_refuses_an_unquoted_verified_citation(tmp_path: Path) -> None:
+    target = _mutated_catalogue(
+        tmp_path,
+        old='quoted_text = "Artículo 90. Tipo impositivo general. Uno. El Impuesto se exigirá al tipo del 21 por ciento, salvo lo dispuesto en el artículo siguiente. Dos. El tipo impositivo aplicable a cada operación será el vigente en el momento del devengo. Tres."',
+        new='quoted_text = ""',
+    )
+
+    with pytest.raises(IvaCatalogueError, match="must carry its verbatim quotation"):
+        load_iva_catalogue(target)
+
+
+def test_loader_refuses_a_verified_quotation_absent_from_its_corpus(tmp_path: Path) -> None:
+    target = _mutated_catalogue(
+        tmp_path,
+        old="El Impuesto se exigirá al tipo del 21 por ciento",
+        new="El Impuesto se exigirá al tipo del 25 por ciento",
+    )
+
+    with pytest.raises(IvaCatalogueError, match="quotation_absent_from_corpus"):
+        load_iva_catalogue(target)
