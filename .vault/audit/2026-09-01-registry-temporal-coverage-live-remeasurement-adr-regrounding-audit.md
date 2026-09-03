@@ -5913,3 +5913,25 @@ Together with the TUI suite's single failure, both unwired directories examined 
 findings on first contact, and neither is a simple wiring job. The Steps naming them stay open
 with this recorded, because the honest sequence is: mark the twenty, refresh or retire the eight
 frozen hashes, understand the one, and only then name the directory in a lane.
+
+### ninth-source-connectivity-failure-is-a-mid-edit-syntax-error | medium | The unclassified failure is an IndentationError in another writer's uncommitted working state
+
+The failure left unclassified in the previous finding is `test_final_census_has_no_expired_
+disappearance_or_unsupported_connection`, and it fails on an `IndentationError` at
+`src/cadrumo/entrypoints/tui/ledger/controller.py:391` - a stray indented block sitting after a
+closing bracket.
+
+That file carries a pending diff. The working tree does not parse it, the last commit touching
+it is a feature advance, and the concurrent campaign is evidently mid-edit. It is transient,
+external, and not touched here.
+
+So the source-connectivity suite's own state is eight frozen-hash drifts and twenty
+environmental setup errors, not nine failures and twenty errors. The ninth belongs to whoever is
+typing, and will disappear when they finish.
+
+Two things follow that are worth more than the correction. A syntax error in the working tree
+fails every test that imports the module, so a measurement taken during another writer's edit
+can attribute their keystroke to the suite being measured - which this one nearly did, and which
+the pending-diff check caught for the fourth time in this campaign. And a suite nobody runs was
+the thing that noticed a broken file at all: nothing else in the session had imported that
+controller.
