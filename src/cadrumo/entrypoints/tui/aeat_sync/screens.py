@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import ClassVar, Protocol, cast, override
+from typing import ClassVar, Final, Protocol, cast, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -14,6 +14,7 @@ from ....application.aeat_sync.workspace import AeatSyncWorkspaceZone
 from ....application.operations.models import OperationDefinitionId
 from ....application.operator_actions.models import ActionReference
 from ....core.filing_year import FilingYear
+from ....core.i18n.render import tr
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ..components.widgets import ContentDataTable, ContentScroll
@@ -21,9 +22,38 @@ from .controller import AeatSyncWorkspaceController
 from .models import AeatSyncOperationRequestV1, AeatSyncRouteTargetV1
 
 
+_LABEL_PREFIXES: Final = {
+    "AeatSyncWorkspaceZone": "tui.aeat_sync.zone",
+    "AeatSyncWorkspaceAvailability": "tui.aeat_sync.availability",
+    "AeatSyncWorkspaceSource": "tui.aeat_sync.source",
+    "AeatSyncOverviewArea": "tui.aeat_sync.area",
+    "AeatSyncSourceState": "tui.aeat_sync.source_state",
+    "AeatSyncDiscrepancyKind": "tui.aeat_sync.discrepancy",
+    "AeatSyncCensusCategory": "tui.aeat_sync.census_category",
+    "AeatSyncCensusStatus": "tui.aeat_sync.census_status",
+    "AeatSyncLocalFilingState": "tui.aeat_sync.local_filing_state",
+    "AeatSyncAeatObservationState": "tui.aeat_sync.aeat_observation_state",
+    "AeatSyncJustificanteState": "tui.aeat_sync.justificante_state",
+    "AeatSyncNotificationCategory": "tui.aeat_sync.notification_category",
+    "AeatSyncNotificationReadState": "tui.aeat_sync.notification_read_state",
+    "AeatSyncDocumentCustodyState": "tui.aeat_sync.document_custody_state",
+    "AeatSyncReconciliationState": "tui.aeat_sync.reconciliation_state",
+}
+
+
+def aeat_sync_copy(key: str, **values: object) -> str:
+    """Resolve every operator-facing AEAT Sync string through one boundary."""
+    return tr(key, **values)
+
+
 def _label(value: object | None) -> str:
-    """Render public enum/state tokens without resolving protected values."""
-    return "—" if value is None else str(getattr(value, "value", value)).replace("_", " ")
+    """Render a public enum through its authored semantic catalogue key."""
+    if value is None:
+        return aeat_sync_copy("tui.aeat_sync.value.none")
+    prefix = _LABEL_PREFIXES.get(type(value).__name__)
+    if prefix is None:
+        raise ValueError("unsupported AEAT Sync operator label")
+    return aeat_sync_copy(f"{prefix}.{value.value}")
 
 
 class _OperationRow(Protocol):
@@ -43,7 +73,12 @@ class _NaturalRow(Protocol):
 
 def _address(row: _NaturalRow) -> str:
     """Render only the public Modelo/year/period natural coordinate."""
-    return f"Modelo {row.modelo} · {row.filing_year} · {row.period.registry_token}"
+    return aeat_sync_copy(
+        "tui.aeat_sync.address.declaration",
+        modelo=row.modelo,
+        filing_year=row.filing_year,
+        period=row.period.registry_token,
+    )
 
 
 class AeatSyncRouteRequested(Message):
@@ -71,7 +106,7 @@ class AeatSyncWorkspaceScreen(Screen[None]):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(self.heading, classes="cadrumo-banner", markup=False)
+        yield Static(aeat_sync_copy(self.heading), classes="cadrumo-banner", markup=False)
         with ContentScroll(id="aeat-sync-page", classes="cadrumo-scroll"):
             yield ContentDataTable[str](id="aeat-sync-navigation", cursor_type="row", zebra_stripes=True)
             yield ContentDataTable[str](id="aeat-sync-rows", cursor_type="row", zebra_stripes=True)
@@ -80,13 +115,27 @@ class AeatSyncWorkspaceScreen(Screen[None]):
     def on_mount(self) -> None:
         """Render all six independent source states and this screen's safe rows."""
         navigation = cast("DataTable[str]", self.query_one("#aeat-sync-navigation", DataTable))
-        navigation.add_columns("Area", "Availability", "Sources")
+        navigation.add_columns(
+            aeat_sync_copy("tui.aeat_sync.column.area"),
+            aeat_sync_copy("tui.aeat_sync.column.availability"),
+            aeat_sync_copy("tui.aeat_sync.column.sources"),
+        )
         for zone in AeatSyncWorkspaceZone:
             state = self.controller.state_for(zone)
             navigation.add_row(
                 _label(zone),
                 _label(state.availability),
-                ", ".join(f"{_label(source.source)}: {_label(source.availability)}" for source in state.sources),
+                aeat_sync_copy(
+                    "tui.aeat_sync.sources.joined",
+                    entries=", ".join(
+                        aeat_sync_copy(
+                            "tui.aeat_sync.sources.entry",
+                            source=_label(source.source),
+                            availability=_label(source.availability),
+                        )
+                        for source in state.sources
+                    ),
+                ),
                 key=zone.value,
             )
         self.populate_rows(cast("DataTable[str]", self.query_one("#aeat-sync-rows", DataTable)))
@@ -113,14 +162,14 @@ class AeatSyncWorkspaceScreen(Screen[None]):
         handoff = self.controller.operation_handoff
         status = self.query_one("#aeat-sync-status", Static)
         if handoff is None:
-            status.update("Operation handoff is unavailable.")
+            status.update(aeat_sync_copy("tui.aeat_sync.refusal.operation_handoff"))
             return
         try:
             await handoff(request)
         except Exception:  # host boundary must not disclose protected diagnostics
-            status.update("Operation could not be started.")
+            status.update(aeat_sync_copy("tui.aeat_sync.operation.failed"))
         else:
-            status.update("Operation handed to the host.")
+            status.update(aeat_sync_copy("tui.aeat_sync.operation.handed_off"))
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Request a host-owned internal route only for an observable zone."""
@@ -129,7 +178,7 @@ class AeatSyncWorkspaceScreen(Screen[None]):
             return
         zone = AeatSyncWorkspaceZone(event.row_key.value)
         if not self.controller.can_open(zone):
-            self.query_one("#aeat-sync-status", Static).update("This source is unavailable for viewing.")
+            self.query_one("#aeat-sync-status", Static).update(aeat_sync_copy("tui.aeat_sync.refusal.source"))
             return
         self.post_message(AeatSyncRouteRequested(self.controller.target(zone)))
 
@@ -142,7 +191,7 @@ class AeatSyncOverviewScreen(AeatSyncWorkspaceScreen):
     """Overview preserving local, AEAT, and discrepancy axes per area."""
 
     zone = AeatSyncWorkspaceZone.OVERVIEW
-    heading = "AEAT Sync overview"
+    heading = "tui.aeat_sync.overview.title"
 
     def __init__(self, controller: AeatSyncWorkspaceController) -> None:
         """Build the overview body."""
@@ -151,14 +200,19 @@ class AeatSyncOverviewScreen(AeatSyncWorkspaceScreen):
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render public overview states without collapsing either source."""
-        table.add_columns("Area", "Local", "AEAT", "Difference")
+        table.add_columns(
+            aeat_sync_copy("tui.aeat_sync.column.area"),
+            aeat_sync_copy("tui.aeat_sync.column.local"),
+            aeat_sync_copy("tui.aeat_sync.column.aeat"),
+            aeat_sync_copy("tui.aeat_sync.column.difference"),
+        )
         for row in self.controller.projection.overview:
             table.add_row(
                 _label(row.area), _label(row.local_state), _label(row.aeat_state), _label(row.discrepancy_kind)
             )
             self.add_operation(
                 cast("_OperationRow", row),
-                label=f"Start {_label(row.supported_actions[0].action_id)}" if row.supported_actions else "",
+                label=aeat_sync_copy("tui.aeat_sync.action.review_census") if row.supported_actions else "",
             )
 
 
@@ -166,7 +220,7 @@ class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
     """Census comparison without taxpayer values."""
 
     zone = AeatSyncWorkspaceZone.CENSUS
-    heading = "AEAT Sync census"
+    heading = "tui.aeat_sync.census.title"
 
     def __init__(self, controller: AeatSyncWorkspaceController) -> None:
         """Build the census body."""
@@ -175,17 +229,21 @@ class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render safe census path/category/status metadata only."""
-        table.add_columns("Field", "Category", "Status")
+        table.add_columns(
+            aeat_sync_copy("tui.aeat_sync.column.field"),
+            aeat_sync_copy("tui.aeat_sync.column.category"),
+            aeat_sync_copy("tui.aeat_sync.column.status"),
+        )
         for row in self.controller.projection.census:
             table.add_row(row.path, _label(row.category), _label(row.status))
-            self.add_operation(cast("_OperationRow", row), label="Review census")
+            self.add_operation(cast("_OperationRow", row), label=aeat_sync_copy("tui.aeat_sync.action.review_census"))
 
 
 class AeatSyncFiledDeclarationsScreen(AeatSyncWorkspaceScreen):
     """Filed declaration observation retaining local and AEAT state separately."""
 
     zone = AeatSyncWorkspaceZone.FILED_DECLARATIONS
-    heading = "AEAT Sync filed declarations"
+    heading = "tui.aeat_sync.filed_declarations.title"
 
     def __init__(self, controller: AeatSyncWorkspaceController) -> None:
         """Build the filed-declarations body."""
@@ -194,7 +252,12 @@ class AeatSyncFiledDeclarationsScreen(AeatSyncWorkspaceScreen):
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render only public filing and receipt state."""
-        table.add_columns("Declaration", "Local filing", "AEAT", "Receipt")
+        table.add_columns(
+            aeat_sync_copy("tui.aeat_sync.column.declaration"),
+            aeat_sync_copy("tui.aeat_sync.column.local_filing"),
+            aeat_sync_copy("tui.aeat_sync.column.aeat"),
+            aeat_sync_copy("tui.aeat_sync.column.receipt"),
+        )
         for row in self.controller.projection.filed_declarations:
             table.add_row(
                 _address(row),
@@ -202,14 +265,14 @@ class AeatSyncFiledDeclarationsScreen(AeatSyncWorkspaceScreen):
                 _label(row.aeat_observation_state),
                 _label(row.justificante_state),
             )
-            self.add_operation(cast("_OperationRow", row), label="Pull filed declarations")
+            self.add_operation(cast("_OperationRow", row), label=aeat_sync_copy("tui.aeat_sync.action.pull_filed"))
 
 
 class AeatSyncNotificationsScreen(AeatSyncWorkspaceScreen):
     """Notification metadata surface with no identity or document content."""
 
     zone = AeatSyncWorkspaceZone.NOTIFICATIONS
-    heading = "AEAT Sync notifications"
+    heading = "tui.aeat_sync.notifications.title"
 
     def __init__(self, controller: AeatSyncWorkspaceController) -> None:
         """Build the notifications body."""
@@ -218,7 +281,12 @@ class AeatSyncNotificationsScreen(AeatSyncWorkspaceScreen):
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render dates and public read/custody metadata only."""
-        table.add_columns("Issued", "Read", "Category", "Document custody")
+        table.add_columns(
+            aeat_sync_copy("tui.aeat_sync.column.issued"),
+            aeat_sync_copy("tui.aeat_sync.column.read"),
+            aeat_sync_copy("tui.aeat_sync.column.category"),
+            aeat_sync_copy("tui.aeat_sync.column.document_custody"),
+        )
         for row in self.controller.projection.notifications:
             table.add_row(
                 str(row.issued_on), _label(row.read_state), _label(row.category), _label(row.document_custody_state)
@@ -229,7 +297,7 @@ class AeatSyncEvidenceComparisonScreen(AeatSyncWorkspaceScreen):
     """Evidence comparison screen retaining the two observed source states."""
 
     zone = AeatSyncWorkspaceZone.EVIDENCE_COMPARISON
-    heading = "AEAT Sync evidence comparison"
+    heading = "tui.aeat_sync.evidence_comparison.title"
 
     def __init__(self, controller: AeatSyncWorkspaceController) -> None:
         """Build the evidence-comparison body."""
@@ -238,17 +306,22 @@ class AeatSyncEvidenceComparisonScreen(AeatSyncWorkspaceScreen):
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render a safe public comparison coordinate and discrepancy."""
-        table.add_columns("Declaration", "Local", "AEAT", "Difference")
+        table.add_columns(
+            aeat_sync_copy("tui.aeat_sync.column.declaration"),
+            aeat_sync_copy("tui.aeat_sync.column.local"),
+            aeat_sync_copy("tui.aeat_sync.column.aeat"),
+            aeat_sync_copy("tui.aeat_sync.column.difference"),
+        )
         for row in self.controller.projection.evidence_comparison:
             table.add_row(_address(row), _label(row.local_state), _label(row.aeat_state), _label(row.discrepancy_kind))
-            self.add_operation(cast("_OperationRow", row), label="Pull comparison evidence")
+            self.add_operation(cast("_OperationRow", row), label=aeat_sync_copy("tui.aeat_sync.action.pull_comparison"))
 
 
 class AeatSyncReconciliationScreen(AeatSyncWorkspaceScreen):
     """Reconciliation status surface without a generic mutation path."""
 
     zone = AeatSyncWorkspaceZone.RECONCILIATION
-    heading = "AEAT Sync reconciliation"
+    heading = "tui.aeat_sync.reconciliation.title"
 
     def __init__(self, controller: AeatSyncWorkspaceController) -> None:
         """Build the reconciliation body."""
@@ -257,7 +330,13 @@ class AeatSyncReconciliationScreen(AeatSyncWorkspaceScreen):
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render source states, discrepancy, and application-set resolution."""
-        table.add_columns("Declaration", "Local", "AEAT", "Difference", "Resolution")
+        table.add_columns(
+            aeat_sync_copy("tui.aeat_sync.column.declaration"),
+            aeat_sync_copy("tui.aeat_sync.column.local"),
+            aeat_sync_copy("tui.aeat_sync.column.aeat"),
+            aeat_sync_copy("tui.aeat_sync.column.difference"),
+            aeat_sync_copy("tui.aeat_sync.column.resolution"),
+        )
         for row in self.controller.projection.reconciliation:
             table.add_row(
                 _address(row),

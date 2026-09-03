@@ -607,9 +607,16 @@ def _actions(
     contract_by_id = {contract.definition_id: contract for contract in contracts.definitions}
     for zone, facts in groups.items():
         for fact in facts:
-            ids = tuple(str(item.action_id) for item in getattr(fact.row, "supported_actions", ()))
+            action_row = fact.row if isinstance(fact.row, _ActionRow) else None
+            actions = action_row.supported_actions if action_row is not None else ()
+            ids = tuple(str(item.action_id) for item in actions)
             _unique(ids, "row actions")
-            key = f"overview:{fact.row.area.value}" if zone is AeatSyncWorkspaceZone.OVERVIEW else zone.value
+            if zone is AeatSyncWorkspaceZone.OVERVIEW:
+                if not isinstance(fact.row, AeatSyncWorkspaceOverviewRowV1):
+                    raise AeatSyncWorkspaceProjectionError("overview facts require overview rows")
+                key = f"overview:{fact.row.area.value}"
+            else:
+                key = zone.value
             for action_id in ids:
                 try:
                     catalogue.lookup(action_id)
@@ -617,9 +624,7 @@ def _actions(
                     raise AeatSyncWorkspaceProjectionError("action is not admitted by catalogue") from error
             if not set(ids) <= _ALLOWED[key]:
                 raise AeatSyncWorkspaceProjectionError("action is not allowed for row area/state")
-            operation_ids: tuple[OperationDefinitionId, ...] = tuple(
-                getattr(fact.row, "supported_operations", ())
-            )
+            operation_ids = action_row.supported_operations if action_row is not None else ()
             operation_id_values: set[str] = {str(item) for item in operation_ids}
             _unique(operation_ids, "row operations")
             allowed_operations = _ALLOWED_OPERATIONS[key]
@@ -629,7 +634,7 @@ def _actions(
                     raise AeatSyncWorkspaceProjectionError("operation is not admitted by public contracts")
             if not set(operation_ids) <= allowed_operations:
                 raise AeatSyncWorkspaceProjectionError("operation is not allowed for row area/state")
-            for action in getattr(fact.row, "supported_actions", ()):
+            for action in actions:
                 joined = tuple(
                     contract
                     for contract in contracts.definitions

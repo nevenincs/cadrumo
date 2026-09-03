@@ -968,6 +968,135 @@ transactions:
     unreadable: Unreadable file or unsupported format
     verified: Import verified successfully
 tui:
+  aeat_sync:
+    action:
+      pull_comparison: Pull comparison evidence
+      pull_filed: Pull filed declarations
+      review_census: Review census
+    address:
+      declaration: Modelo %{modelo} · %{filing_year} · %{period}
+    aeat_observation_state:
+      accepted: Accepted
+      not_observed: Not observed
+      rejected: Rejected
+      submitted: Submitted
+    area:
+      census: Census
+      evidence_comparison: Evidence comparison
+      filed_declarations: Filed declarations
+      notifications: Notifications
+      reconciliation: Reconciliation
+    availability:
+      available: Available
+      locked: Locked
+      never_captured: Never captured
+      stale: Stale
+      unavailable: Unavailable
+    census:
+      title: AEAT Sync census
+    census_category:
+      activity: Activity
+      address: Address
+      contact: Contact
+      obligation: Obligation
+      other: Other
+    census_status:
+      adopted: Adopted
+      conflict: Conflict
+      unset: Unset
+    column:
+      aeat: AEAT
+      area: Area
+      availability: Availability
+      category: Category
+      declaration: Declaration
+      difference: Difference
+      document_custody: Document custody
+      field: Field
+      issued: Issued
+      local: Local
+      local_filing: Local filing
+      read: Read
+      receipt: Receipt
+      sources: Sources
+      status: Status
+    discrepancy:
+      aeat_only: AEAT only
+      contradictory_source: Contradictory source
+      local_only: Local only
+      none: No difference
+      state_mismatch: State mismatch
+      unobserved: Not observed
+    document_custody_state:
+      held: Held
+      not_captured: Not captured
+      refused: Refused
+      unavailable: Unavailable
+    filed_declarations:
+      title: AEAT Sync filed declarations
+    justificante_state:
+      available: Available
+      not_observed: Not observed
+      unavailable: Unavailable
+      verified: Verified
+    local_filing_state:
+      draft: Draft
+      filed: Filed
+      not_observed: Not observed
+      ready: Ready
+    notification_category:
+      communication: Communication
+      formal: Formal
+      other: Other
+      pending: Pending
+    notification_read_state:
+      read: Read
+      unknown: Unknown
+      unread: Unread
+    notifications:
+      title: AEAT Sync notifications
+    operation:
+      failed: Operation could not be started.
+      handed_off: Operation handed to the host.
+    overview:
+      title: AEAT Sync overview
+    reconciliation:
+      title: AEAT Sync reconciliation
+    reconciliation_state:
+      accept_aeat: Accept AEAT
+      dismissed: Dismissed
+      keep_local: Keep local
+      no_action: No action
+      unresolved: Unresolved
+    refusal:
+      operation_handoff: Operation handoff is unavailable.
+      source: This source is unavailable for viewing.
+    source:
+      aeat:
+        census: AEAT census
+        filed_declarations: AEAT filed declarations
+        notifications: AEAT notifications
+      local:
+        filings: Local filings
+        notification_custody: Local notification custody
+        profile: Local profile
+    source_state:
+      absent: Absent
+      not_observed: Not observed
+      present: Present
+      rejected: Rejected
+    sources:
+      entry: '%{source}: %{availability}'
+      joined: '%{entries}'
+    value:
+      none: —
+    zone:
+      census: Census
+      evidence_comparison: Evidence comparison
+      filed_declarations: Filed declarations
+      notifications: Notifications
+      overview: Overview
+      reconciliation: Reconciliation
   declarations:
     availability:
       available: Available
