@@ -184,12 +184,14 @@ def test_every_concrete_review_surface_has_a_stable_fixture_identity() -> None:
 
 
 def test_every_derived_base_is_explicitly_classified_as_a_base() -> None:
-    for interface in _inventory.scan():
-        if interface.is_base:
-            assert (
-                _coverage.CLASSIFICATIONS[interface.qualname].disposition
-                is _coverage.InventoryDisposition.ABSTRACT_BASE
-            )
+    by_name = {interface.qualname: interface for interface in _inventory.scan()}
+    abstract_bases = {
+        qualname
+        for qualname, classification in _coverage.CLASSIFICATIONS.items()
+        if classification.disposition is _coverage.InventoryDisposition.ABSTRACT_BASE
+    }
+    assert len(abstract_bases) == 8
+    assert all(by_name[qualname].is_base for qualname in abstract_bases)
 
 
 def test_coverage_check_bites_on_unclassified_and_stale_classifications() -> None:

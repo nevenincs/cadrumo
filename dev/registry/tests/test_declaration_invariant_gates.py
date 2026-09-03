@@ -249,6 +249,11 @@ def test_every_screen_module_has_a_test_module() -> None:
         if path.name != "screens.py" and "\ndef screen_authority(" in path.read_text(encoding=_UTF_8)
     }
     untested = sorted(name for name in screens if not (registry_root / "tests" / f"test_{name}.py").is_file())
+
+    # The discovered set must be proved non-empty before its emptiness means
+    # anything: a moved analysis package would leave `screens` empty and this
+    # assertion would pass having checked no screen at all.
+    assert screens, "the analysis package walk found no screen module, so this gate checked nothing"
     assert not untested, f"screens carrying no test module, so their detection is unproven: {untested}"
 
 
