@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+import inspect
 from types import MappingProxyType
 from typing import Final, Literal, Protocol, Self, cast, get_args, runtime_checkable
 
@@ -163,6 +164,21 @@ class TuiScreenFactoryV1(Protocol):
         ...
 
 
+def _validate_screen_factory(factory: object) -> TuiScreenFactoryV1:
+    """Admit only callables that accept one positional screen context."""
+    if not callable(factory):
+        raise DestinationFactoryError("a screen factory must be callable")
+    try:
+        signature = inspect.signature(factory)
+    except (TypeError, ValueError) as error:
+        raise DestinationFactoryError("screen factory signature cannot be inspected") from error
+    try:
+        signature.bind(object())
+    except TypeError as error:
+        raise DestinationFactoryError("screen factory must accept one positional context") from error
+    return cast(TuiScreenFactoryV1, factory)
+
+
 class TuiActionCandidateV1(BaseModel):
     """A declared action candidate that a result may refer to."""
 
@@ -183,10 +199,15 @@ class TuiDestinationRouteV1:
 
     def __post_init__(self) -> None:
         """Enforce route/admission/factory/action consistency."""
+        canonical_descriptor = _DESCRIPTORS_BY_ID.get(self.descriptor.destination)
+        if canonical_descriptor is None or self.descriptor != canonical_descriptor:
+            raise NavigationContractError("route descriptor must match the canonical destination catalogue")
         if self.descriptor.destination != self.admission.destination:
             raise DestinationAdmissionError("route descriptor and admission must name the same destination")
         if self.admission.state is WorkbenchDestinationAdmissionState.AVAILABLE and self.factory is None:
             raise DestinationFactoryError("an available destination requires an injected screen factory")
+        if self.admission.state is WorkbenchDestinationAdmissionState.AVAILABLE and self.factory is not None:
+            _validate_screen_factory(self.factory)
         if self.admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE:
             if self.factory is not None:
                 raise DestinationFactoryError("a non-available destination cannot carry a screen factory")
@@ -256,6 +277,8 @@ class TuiDestinationCatalogueV1:
             )
         if len(actual) != len(ordered_routes):
             raise NavigationContractError("destination route IDs must be unique")
+        if tuple(route.descriptor for route in ordered_routes) != TUI_DESTINATION_CATALOGUE:
+            raise NavigationContractError("destination routes must use the canonical catalogue order and metadata")
         self._routes = ordered_routes
         self._routes_by_id = MappingProxyType({route.descriptor.destination: route for route in ordered_routes})
 
@@ -305,12 +328,17 @@ class TuiDestinationCatalogueV1:
         factory = route.factory
         if factory is None:  # pragma: no cover - route construction prevents this
             raise DestinationFactoryError("available destination has no screen factory")
+        if target.action_candidate_id is not None:
+            route.action_candidate(target.action_candidate_id)
         context = TuiScreenContextV1(
             destination=target.destination,
             focus=target.focus,
             action_candidate_id=target.action_candidate_id,
         )
-        screen = factory(context)
+        try:
+            screen = factory(context)
+        except TypeError as error:
+            raise DestinationFactoryError("screen factory invocation failed") from error
         if not isinstance(screen, Screen):
             raise DestinationFactoryError("screen factory must return a Textual Screen")
         return screen

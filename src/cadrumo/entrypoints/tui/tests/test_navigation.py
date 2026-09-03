@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 from collections.abc import Mapping
 from pathlib import Path
+from typing import cast
 
 import pytest
 from pydantic import ValidationError
@@ -27,9 +28,12 @@ from ..navigation import (
     TUI_DESTINATION_CATALOGUE,
     DestinationFactoryError,
     DestinationUnavailableError,
+    NavigationContractError,
     TuiActionCandidateV1,
     TuiDestinationAdmissionV1,
     TuiDestinationCatalogueV1,
+    TuiDestinationDescriptorV1,
+    TuiDestinationRouteV1,
     TuiFocusIdentityV1,
     TuiNavigationTargetV1,
     TuiScreenContextV1,
@@ -174,6 +178,65 @@ def test_factory_protocol_receives_semantic_context_and_returns_screen() -> None
     screen = catalogue.create_screen(TuiNavigationTargetV1(destination="workbench.home", focus=focus))
     assert isinstance(screen, MarkerScreen)
     assert seen == [TuiScreenContextV1(destination="workbench.home", focus=focus)]
+
+
+def test_direct_target_action_candidate_is_resolved_before_factory_invocation() -> None:
+    seen: list[TuiScreenContextV1] = []
+
+    def factory(context: TuiScreenContextV1) -> Screen[None]:
+        seen.append(context)
+        return MarkerScreen()
+
+    factories = _factories()
+    factories["workbench.home"] = factory
+    catalogue = build_destination_catalogue(admissions=_admissions(), factories=factories)
+    focus = TuiFocusIdentityV1(destination="workbench.home", semantic_key="navigation.home")
+    target = TuiNavigationTargetV1(
+        destination="workbench.home",
+        focus=focus,
+        action_candidate_id="operator.not_declared.open",
+    )
+    with pytest.raises(UnresolvedActionCandidateError):
+        catalogue.create_screen(target)
+    assert seen == []
+
+
+def test_public_route_and_catalogue_construction_cannot_spoof_descriptor_or_order() -> None:
+    admissions = _admissions()
+    spoofed = TuiDestinationDescriptorV1(
+        destination="workbench.home",
+        label_key="tui.destination.profile",
+        zone="account",
+    )
+    with pytest.raises(NavigationContractError, match="canonical"):
+        TuiDestinationRouteV1(
+            descriptor=spoofed,
+            admission=admissions["workbench.home"],
+            factory=cast(TuiScreenFactoryV1, lambda _context: MarkerScreen()),
+        )
+
+    routes = _catalogue().routes
+    with pytest.raises(NavigationContractError, match="canonical catalogue order"):
+        TuiDestinationCatalogueV1((*routes[1:], routes[0]))
+
+
+def test_factory_signature_is_validated_and_invocation_type_errors_are_typed() -> None:
+    def wrong_arity() -> Screen[None]:
+        return MarkerScreen()
+
+    factories = _factories()
+    factories["workbench.home"] = cast(TuiScreenFactoryV1, wrong_arity)
+    with pytest.raises(DestinationFactoryError, match="one positional context"):
+        build_destination_catalogue(admissions=_admissions(), factories=factories)
+
+    def raises_type_error(_context: TuiScreenContextV1) -> Screen[None]:
+        raise TypeError("factory implementation detail")
+
+    factories["workbench.home"] = raises_type_error
+    catalogue = build_destination_catalogue(admissions=_admissions(), factories=factories)
+    focus = TuiFocusIdentityV1(destination="workbench.home", semantic_key="navigation.home")
+    with pytest.raises(DestinationFactoryError, match="invocation failed"):
+        catalogue.create_screen(TuiNavigationTargetV1(destination="workbench.home", focus=focus))
 
 
 def test_focus_identity_is_semantic_and_target_rejects_cross_destination_focus() -> None:
