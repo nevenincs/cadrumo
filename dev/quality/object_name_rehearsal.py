@@ -427,18 +427,13 @@ def canonical_object_name_component_set(
     *,
     inventory: ObjectNameAuditResult,
     repo_root: Path,
-    graph_cache_dir: str | None = None,
 ) -> tuple[OperationComponent, ...]:
     """Derive canonical components from repository evidence and reviewed generator intent."""
     root = repo_root.resolve()
     try:
         graph_manifest = cast("RenameManifestLike", manifest)
         graph_inventory = cast("InventoryLike", inventory)
-        discovered_edges = collect_import_edges(
-            operation_locators(graph_manifest),
-            repo_root=root,
-            cache_dir=graph_cache_dir,
-        )
+        discovered_edges = collect_import_edges(operation_locators(graph_manifest), repo_root=root)
         discovered_by_operation: dict[str, set[str]] = {}
         for edge in discovered_edges:
             discovered_by_operation.setdefault(edge.operation_id, set()).add(edge.path)
@@ -560,27 +555,6 @@ def rehearse_object_name_component(
     try:
         if temporary_parent.parent != system_temporary_root or is_link_like(temporary_parent):
             raise ObjectNameRehearsalError(f"allocated rehearsal parent is unsafe: {temporary_parent}")
-        graph_cache_dir = temporary_parent / "graph-cache"
-        graph_cache_dir.mkdir()
-        canonical_components = canonical_object_name_component_set(
-            manifest,
-            inventory=inventory,
-            repo_root=root,
-            graph_cache_dir=str(graph_cache_dir),
-        )
-        canonical = next((item for item in canonical_components if item.component_id == component.component_id), None)
-        if canonical is None or (
-            canonical.component_id,
-            canonical.operation_ids,
-            canonical.affected_paths,
-            canonical.hard_edges,
-        ) != (
-            component.component_id,
-            component.operation_ids,
-            component.affected_paths,
-            component.hard_edges,
-        ):
-            raise ObjectNameRehearsalError("supplied component differs from the canonical repository graph")
         temporary_root.mkdir()
         _copy_snapshot(root, temporary_root, baseline_files, guarded_paths=frozenset(guarded_paths))
         copied_baseline_files = _snapshot(temporary_root, tuple(path for path, _digest in baseline_files))
@@ -592,7 +566,6 @@ def rehearse_object_name_component(
                 manifest,
                 inventory=copied_inventory,
                 repo_root=temporary_root,
-                graph_cache_dir=str(graph_cache_dir),
             )
         copied_component = next(
             (item for item in copied_components if item.component_id == component.component_id),

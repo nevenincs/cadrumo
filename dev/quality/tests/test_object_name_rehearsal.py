@@ -10,7 +10,7 @@ import sys
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any, cast
+from typing import Any
 
 import pytest
 
@@ -153,13 +153,13 @@ def test_rehearsal_receipt_binds_only_declared_component_paths(tmp_path: Path, m
     inventory, manifest, component = _fixture(repo)
     before = _live_bytes(repo)
     original_components = rehearsal_module.canonical_object_name_component_set
-    graph_cache_directories: list[str | None] = []
+    canonical_roots: list[Path] = []
 
-    def observe_graph_cache(*args: Any, graph_cache_dir: str | None = None, **kwargs: Any) -> Any:
-        graph_cache_directories.append(graph_cache_dir)
-        return original_components(*args, graph_cache_dir=graph_cache_dir, **kwargs)
+    def observe_canonical_root(*args: Any, repo_root: Path, **kwargs: Any) -> Any:
+        canonical_roots.append(repo_root)
+        return original_components(*args, repo_root=repo_root, **kwargs)
 
-    monkeypatch.setattr(rehearsal_module, "canonical_object_name_component_set", observe_graph_cache)
+    monkeypatch.setattr(rehearsal_module, "canonical_object_name_component_set", observe_canonical_root)
 
     receipt = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
 
@@ -170,9 +170,7 @@ def test_rehearsal_receipt_binds_only_declared_component_paths(tmp_path: Path, m
     assert receipt.component_id == component.component_id
     assert receipt.operation_ids == component.operation_ids
     assert receipt.changed_paths == ("src/example/contracts.py",)
-    assert len(graph_cache_directories) == 2
-    assert graph_cache_directories[0] == graph_cache_directories[1]
-    assert Path(cast("str", graph_cache_directories[0])).parent == Path(receipt.rehearsal_root).parent
+    assert canonical_roots == [Path(receipt.rehearsal_root)]
     assert receipt.baseline_tree_digest == _digest(
         canonical_json_bytes({"schema_version": 1, "files": list(receipt.baseline_files)})
     )
@@ -470,7 +468,7 @@ def test_selected_component_cannot_be_replaced_by_an_otherwise_valid_component(t
     other = next(item for item in components if item.operation_ids == ("rename-reports",))
 
     with pytest.raises(
-        ObjectNameRehearsalError, match="supplied component differs from the canonical repository graph"
+        ObjectNameRehearsalError, match="copied repository graph differs from the reviewed component"
     ):
         rehearse_object_name_component(
             manifest,
@@ -544,7 +542,7 @@ def test_shared_hard_edge_makes_two_operations_indivisible(tmp_path: Path) -> No
 
     partial = replace(component, operation_ids=("rename-widgets",))
     with pytest.raises(
-        ObjectNameRehearsalError, match="supplied component differs from the canonical repository graph"
+        ObjectNameRehearsalError, match="copied repository graph differs from the reviewed component"
     ):
         rehearse_object_name_component(manifest, inventory=inventory, component=partial, repo_root=repo)
 
@@ -783,7 +781,7 @@ def test_generated_owner_runs_and_forged_generated_edge_is_refused(tmp_path: Pat
     forged = build_manifest_components(manifest, inventory=inventory, hard_edges=(forged_edge,))[0]  # ty: ignore[invalid-argument-type]
 
     with pytest.raises(
-        ObjectNameRehearsalError, match="supplied component differs from the canonical repository graph"
+        ObjectNameRehearsalError, match="copied repository graph differs from the reviewed component"
     ):
         rehearse_object_name_component(manifest, inventory=inventory, component=forged, repo_root=repo)
 

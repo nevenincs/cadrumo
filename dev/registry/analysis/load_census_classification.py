@@ -773,12 +773,14 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
         members=_registry("condition_mode", "schema_deadlines", "schema_revision_members"),
     ),
     ClassificationRule(
-        classification="live",
-        trigger="formula runtime dispatch for modelo 100",
+        classification="conditionally_reachable",
+        trigger="formula runtime dispatch for modelo 100 (cold regime only)",
         reason=(
-            "Imported at module level by the formula runtime, which the load reaches. The modelo "
-            "split is a division of that runtime rather than a per-modelo gate, so it loads "
-            "whether or not a modelo 100 formula is evaluated."
+            "Imported at module level by the formula runtime, and reached on a cold load but not "
+            "on a warm one: measured in clean subprocesses, it is in sys.modules with empty cache "
+            "directories and absent with populated ones. Forty-three modules differ between the "
+            "two regimes and this is one of them, so it is classified by the regime that does not "
+            "load it rather than the one that does."
         ),
         members=_registry("formula_runtime_m100"),
     ),
