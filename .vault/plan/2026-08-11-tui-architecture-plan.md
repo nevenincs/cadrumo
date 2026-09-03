@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-03'
-body_hash: 'sha256:56e78f8720eafed4d00346baacd43402ac2de587e6289cd78a8fe47c0a1ed1ae'
+body_hash: 'sha256:e1387f7609b4cf1c2e598b9a013d906fdf0c9c6382fa752bfe739b7cd0eb6c10'
 ---
 
 <!-- RETIRED: S370 -->
@@ -592,14 +592,14 @@ Compose the production Home projection, destination catalogue, global search and
 - [x] `W08.P28.S381` - Build the responsive Home screen from the selected projection-only candidate with status, next actions, Ledger readiness, resumable declarations, and filing agenda; `src/cadrumo/entrypoints/tui/home.py`.
 - [x] `W08.P28.S382` - Add global workbench search and command-palette providers that route stable result and action identities to admitted destinations; `src/cadrumo/entrypoints/tui/search.py`.
 - [x] `W08.P28.S383` - Compose the root destination stack, account header, semantic focus restoration, session expiry, and post-journey Home refresh; `src/cadrumo/entrypoints/tui/app.py`.
-- [ ] `W08.P28.S398` - Connect cadrumo.application.search to the installed workbench by assembling one immutable redacted document snapshot from the current Ledger, Declarations, filing-history, reconciliation, notification, and Modelo projections, injecting its service into the root host, and rebuilding it after authoritative child returns without implicit I/O; `src/cadrumo/application/search/, src/cadrumo/entrypoints/tui/launcher.py, and focused installed-search tests`.
+- [x] `W08.P28.S398` - Connect cadrumo.application.search to the installed workbench by assembling one immutable redacted document snapshot from the current Ledger, Declarations, filing-history, reconciliation, notification, and Modelo projections, injecting its service into the root host, and rebuilding it after authoritative child returns without implicit I/O; `src/cadrumo/application/search/, src/cadrumo/entrypoints/tui/launcher.py, and focused installed-search tests`.
 - [x] `W08.P28.S400` - Build the child-owned installed-workbench generation provider from secure profile repositories and application projection builders, representing authorities without production loaders as explicit unavailable or never-captured sources rather than empty fixtures; `src/cadrumo/application/workbench_generation.py, src/cadrumo/entrypoints/tui/launcher.py, and focused production-composition tests`.
 - [x] `W08.P28.S401` - Build a child-process session bootstrap coordinator for recognized profile inventory, resumable custody, login, cancellation, degraded inventory, and zero-profile registration without importing dev fixtures or the CLI; `src/cadrumo/application/user_profile/workbench_bootstrap.py, src/cadrumo/entrypoints/tui/bootstrap.py, and focused bootstrap tests`.
 - [x] `W08.P28.S402` - Expose one operation composition result containing services and the exact public contract set from the same registry so workbench actions and modals cannot drift; `src/cadrumo/application/operations/composition.py, src/cadrumo/entrypoints/tui/launcher.py, and focused composition tests`.
 - [x] `W08.P28.S403` - Compose production account doors and root affordances for Profile, change user, password, language, appearance, sign out, expiry, and authenticated-session recomposition; `src/cadrumo/entrypoints/tui/account.py, src/cadrumo/entrypoints/tui/app.py, src/cadrumo/entrypoints/tui/launcher.py, and focused account lifecycle tests`.
-- [ ] `W08.P28.S404` - Compose the production Modelo workspace factory from admitted declaration targets, canonical workspace sessions, and existing Modelo editor pages; `src/cadrumo/entrypoints/tui/modelo/, src/cadrumo/entrypoints/tui/launcher.py, and focused installed Modelo navigation tests`.
-- [ ] `W08.P28.S384` - Compose secure profile, overview, Ledger, declaration, evidence, notification, operation, and destination factories for one installed session; `src/cadrumo/entrypoints/tui/launcher.py`.
-- [ ] `W08.P28.S385` - Add complete localized workbench, account, Ledger, Declarations, calendar, AEAT Sync, search, availability, and refusal messages through the canonical locale workflow; `src/cadrumo/locales/`.
+- [x] `W08.P28.S404` - Compose the production Modelo workspace factory from admitted declaration targets, canonical workspace sessions, and existing Modelo editor pages; `src/cadrumo/entrypoints/tui/modelo/, src/cadrumo/entrypoints/tui/launcher.py, and focused installed Modelo navigation tests`.
+- [x] `W08.P28.S384` - Compose secure profile, overview, Ledger, declaration, evidence, notification, operation, and destination factories for one installed session; `src/cadrumo/entrypoints/tui/launcher.py`.
+- [x] `W08.P28.S385` - Add complete localized workbench, account, Ledger, Declarations, calendar, AEAT Sync, search, availability, and refusal messages through the canonical locale workflow; `src/cadrumo/locales/`.
 - [x] `W08.P28.S394` - Generate and enforce an exhaustive visual-review inventory that maps every production TUI page, dialog, and editor factory to a stable review surface identity and fails when a concrete surface is undiscovered or unclassified; `src/cadrumo/entrypoints/tui/devtools/surfaces.py, dev/tui/_inventory.py, dev/tui/_coverage.py, and dev/tui/tests/test_tui_visual_inventory.py`.
 - [ ] `W08.P28.S395` - Provide deterministic non-sensitive review fixtures for every inventoried page, dialog, and editor, including meaningful ready, empty, blocked, stale, unavailable, validation, confirmation, and failure states wherever that surface supports them; `dev/tui/_harness.py, src/cadrumo/entrypoints/tui/devtools/, and dev/tui/tests/test_tui_visual_inventory.py`.
 - [ ] `W08.P28.S396` - Expose every inventoried fixture through the dev TUI discovery and rendering commands and prove selectable interactive launch plus deterministic raster and text artifacts across supported viewports, themes, and locales with no missing-surface drift; `dev/tui/cli.py, dev/tui/_raster.py, dev/tui/_artifacts.py, dev/tui/README.md, and dev/tui/tests/`.
@@ -608,10 +608,10 @@ Compose the production Home projection, destination catalogue, global search and
 
 Prove responsive, localized, keyboard, non-colour, secure-storage, explicit-sync, authority-boundary, and installed-entrypoint behavior before independent code review.
 
-- [ ] `W08.P29.S386` - Prove Home and every principal workspace preserve content, navigation, focus, and single-scroll ownership across supported sizes, themes, and locales; `src/cadrumo/entrypoints/tui/tests/test_workbench_responsive.py`.
-- [ ] `W08.P29.S387` - Prove keyboard-only navigation, semantic focus restoration, non-colour state pairs, contextual help, and command-palette parity; `src/cadrumo/entrypoints/tui/tests/test_workbench_accessibility.py`.
-- [ ] `W08.P29.S388` - Prove locked, stale, unavailable, explicit-sync, redaction, secure-storage, and no-implicit-network invariants through real authority paths; `src/cadrumo/entrypoints/tui/tests/test_workbench_security.py`.
-- [ ] `W08.P29.S389` - Prove the installed aeat --tui process composes the exact admitted destination catalogue and returns from every journey without a CLI-to-TUI import; `src/cadrumo/entrypoints/tui/tests/test_installed_workbench.py`.
+- [x] `W08.P29.S386` - Prove Home and every principal workspace preserve content, navigation, focus, and single-scroll ownership across supported sizes, themes, and locales; `src/cadrumo/entrypoints/tui/tests/test_workbench_responsive.py`.
+- [x] `W08.P29.S387` - Prove keyboard-only navigation, semantic focus restoration, non-colour state pairs, contextual help, and command-palette parity; `src/cadrumo/entrypoints/tui/tests/test_workbench_accessibility.py`.
+- [x] `W08.P29.S388` - Prove locked, stale, unavailable, explicit-sync, redaction, secure-storage, and no-implicit-network invariants through real authority paths; `src/cadrumo/entrypoints/tui/tests/test_workbench_security.py`.
+- [x] `W08.P29.S389` - Prove the installed aeat --tui process composes the exact admitted destination catalogue and returns from every journey without a CLI-to-TUI import; `src/cadrumo/entrypoints/tui/tests/test_installed_workbench.py`.
 - [ ] `W08.P29.S390` - Run independent architecture, UX, accessibility, security, redeclaration, and scope review over the completed operator workbench; `.vault/audit/2026-08-11-tui-architecture-audit.md`.
 
 ## Parallelization
