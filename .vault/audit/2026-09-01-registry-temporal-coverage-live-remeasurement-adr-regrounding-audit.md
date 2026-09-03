@@ -5677,7 +5677,7 @@ the tree carrying no execution marker at all. That check has now been run at eve
 this campaign added tests, because the two occasions it was skipped both produced a green result
 over an empty selection.
 
-### campaign-findings-use-a-second-heading-format | high | Eighty findings appended here cannot be cited, because they abandoned the format the preceding hundred and thirty-one use
+### campaign-findings-use-a-second-heading-format | high | Seventy-seven findings appended here cannot be cited, because they abandoned the format the preceding hundred and thirty-one use (count corrected by campaign-findings-count-corrected)
 
 This audit's headings divide exactly at the point this campaign began writing in it. The 131
 findings before line 3279 carry `slug | severity | summary`. The 80 after line 3390 - every one
@@ -5887,7 +5887,7 @@ established is that one of the three unwired suites reports a real defect on its
 cost of fifteen seconds, which answers the question the wiring Step depends on for that
 directory.
 
-### never-run-source-connectivity-suite-splits-three-ways | high | 101 pass, 20 error on absent custody infrastructure, and 8 fail on frozen hashes that drifted while nothing checked them
+### never-run-source-connectivity-suite-splits-three-ways | high | 101 pass, 20 error on absent custody infrastructure, and 9 drift - eight frozen hashes and one locator, per transient-syntax-error-masked-a-real-locator-drift
 
 The largest unwired directory was run to answer what wiring it would cost: 101 passed, 9 failed
 and 20 errored, in under ten minutes. The three groups want three different things and none of
@@ -5914,7 +5914,7 @@ findings on first contact, and neither is a simple wiring job. The Steps naming 
 with this recorded, because the honest sequence is: mark the twenty, refresh or retire the eight
 frozen hashes, understand the one, and only then name the directory in a lane.
 
-### ninth-source-connectivity-failure-is-a-mid-edit-syntax-error | medium | The unclassified failure is an IndentationError in another writer's uncommitted working state
+### ninth-source-connectivity-failure-is-a-mid-edit-syntax-error | medium | SUPERSEDED by transient-syntax-error-masked-a-real-locator-drift: the IndentationError was hiding a real failure, not causing it
 
 The failure left unclassified in the previous finding is `test_final_census_has_no_expired_
 disappearance_or_unsupported_connection`, and it fails on an `IndentationError` at
@@ -6029,3 +6029,23 @@ difference between a gap worth reporting and a change worth making unilaterally.
 What this closes is the accounting on the four uncovered directories. One is empty for a
 traceable reason, and the other three hold 163 tests that no lane runs, of which two were
 examined and both reported real defects on first contact.
+
+### corrected-findings-now-point-at-their-corrections | medium | Three headings asserted figures or conclusions this campaign later revised, with the revision recorded only further down
+
+An audit read start to finish carries its own corrections. An audit read by grepping for a slug
+does not, and 222 findings is well past the length anyone reads through.
+
+Three of this campaign's headings asserted something it later revised. One counted eighty
+unstructured findings where seventy-seven are findings and three are section headers. One
+classified a source-connectivity failure as an external syntax error, which was true and
+incomplete - the error was concealing a real locator drift rather than causing the failure. One
+summarised that suite as eight drifts where it is nine.
+
+Each heading now names the finding that corrects it, in the summary field where a reader lands.
+The bodies are untouched: what was written at the time stays as it was written, and the pointer
+is added rather than the record rewritten.
+
+That leaves three of 222 headings signalling a correction, which is the honest count and not a
+reassuring one - it is only the corrections this campaign noticed it had made. A finding revised
+by someone else's later work, or by a measurement nobody re-ran, carries no pointer and there is
+no mechanism here that would add one.

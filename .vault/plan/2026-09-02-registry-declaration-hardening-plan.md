@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:999ab48e467a25c10cd5df617c55e8b2ee13206fe47f851d23f58a16ad310e5a'
+body_hash: 'sha256:b1a7073d55b3158108fd911f30d8aa4587c816c81b89ee6c0a5a0f824f53d5d5'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -486,6 +486,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S248` - Attempt the CI dev tooling selection and reject the result when its collection and its tally disagree by two hundred and sixty-three tests; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S249` - Retry the CI selection at low parallelism and record that the retry's own exit line is unusable because it was piped; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S250` - Establish that the fourth uncovered test directory is a package outliving the tests it declared; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S251` - Point the three corrected findings at their corrections from their own headings; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
