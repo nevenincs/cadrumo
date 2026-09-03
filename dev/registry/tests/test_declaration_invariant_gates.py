@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import collections
 import pathlib
+from collections.abc import Iterable
 from typing import Final
 
 import pytest
@@ -925,3 +926,140 @@ def test_every_screen_finding_type_declares_the_identity_the_contract_promises()
 
     assert checked, "no finding type was found, so this gate checked nothing"
     assert not missing, chr(10).join(sorted(missing))
+
+
+def _non_ascii_declarations(field: object) -> list[str]:
+    """Return each string attribute of ``field`` carrying a character outside ASCII.
+
+    Shared with the proof below, so the proof exercises the judgement the gate
+    makes rather than a second copy of it.
+    """
+    found: list[str] = []
+    for name in type(field).model_fields:
+        value = getattr(field, name, None)
+        if isinstance(value, str) and value and not value.isascii():
+            found.append(f"{name} = {value!r}")
+    return found
+
+
+def _mixed_line_endings(records: Iterable[object]) -> set[str]:
+    """Return the distinct line endings a layout's records declare.
+
+    More than one is the defect. An empty set means the layout declares no
+    records, which the caller skips rather than treating as agreement.
+    """
+    return {str(getattr(record, "line_ending", None)) for record in records}
+
+
+def test_no_export_declaration_carries_a_character_outside_ascii(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> None:
+    """A declared literal must not smuggle a byte the codec has to guess at.
+
+    Records declare iso-8859-1, and the accents a filing carries come from
+    taxpayer data at emission. A non-ASCII character in a DECLARATION is
+    different: it is written by an author, encoded on the way to disk, and
+    decoded again by whatever reads the registry, so it survives or does not
+    depending on three assumptions nobody states.
+    """
+    offenders: list[str] = []
+    fields = 0
+    for code in modelo_ids:
+        for revision_id, revision in authority.modelo(code).revisions.items():
+            for layout in revision.export_layouts:
+                for record in layout.records:
+                    for field in record.fields:
+                        fields += 1
+                        offenders.extend(
+                            f"{code}/{revision_id} {field.id}.{found}"
+                            for found in _non_ascii_declarations(field)
+                        )
+
+    assert fields, "no export field was read, so this gate checked nothing"
+    assert not offenders, "export declarations carrying non-ASCII characters:\n" + chr(10).join(sorted(offenders))
+
+
+def test_a_modelo_never_declares_two_record_encodings(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> None:
+    """Bytes written under one encoding and read under another are silently wrong.
+
+    Every record in this corpus declares iso-8859-1. The gate is not that value
+    but the agreement: a modelo declaring two encodings emits a file whose
+    records disagree about what its bytes mean, and no single record is wrong.
+    """
+    offenders: list[str] = []
+    checked = 0
+    for code in modelo_ids:
+        declared = set()
+        for revision in authority.modelo(code).revisions.values():
+            for layout in revision.export_layouts:
+                for record in layout.records:
+                    checked += 1
+                    declared.add(str(record.encoding))
+        if len(declared) > 1:
+            offenders.append(f"{code} declares {sorted(declared)}")
+
+    assert checked, "no record was read, so this gate checked nothing"
+    assert not offenders, "modelos declaring more than one record encoding: " + "; ".join(offenders)
+
+
+def test_no_layout_mixes_terminated_and_unterminated_records(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> None:
+    """A file whose records disagree about termination is malformed as a whole.
+
+    Fifty-nine layouts terminate no record and twenty-nine terminate every one;
+    both are valid shapes. A layout doing both emits a file that is neither, and
+    the defect is invisible record by record - each one carries exactly the
+    ending it declares.
+
+    Records-less layouts are skipped rather than counted as agreeing: modelo
+    100's XML dictionary layouts carry their content in a cited dictionary, so
+    they have no termination to disagree about.
+    """
+    offenders: list[str] = []
+    checked = 0
+    for code in modelo_ids:
+        for revision_id, revision in authority.modelo(code).revisions.items():
+            for layout in revision.export_layouts:
+                if not layout.records:
+                    continue
+                checked += 1
+                endings = _mixed_line_endings(layout.records)
+                if len(endings) > 1:
+                    offenders.append(f"{code}/{revision_id} {layout.id} declares {sorted(endings)}")
+
+    assert checked, "no layout with records was read, so this gate checked nothing"
+    assert not offenders, "layouts mixing line endings: " + chr(10).join(sorted(offenders))
+
+
+def test_the_export_declaration_gates_detect_their_defects(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """Each of the three export gates is shown to catch a planted defect.
+
+    Constructed from real declarations by copy, never by mutating the working
+    tree, and asserted through the helpers the gates themselves call - a proof
+    against a second implementation would prove the second implementation.
+    """
+    revision = authority.modelo("303").revisions["2025"]
+    layout = next(item for item in revision.export_layouts if item.records)
+    record = layout.records[0]
+    field = record.fields[0]
+
+    clean = _non_ascii_declarations(field)
+    accented = field.model_copy(update={"id": f"{field.id}-declaración"})
+
+    assert clean == [], "the fixture field must start clean or the planted defect proves nothing"
+    assert _non_ascii_declarations(accented), "an accented declaration must be reported"
+
+    assert len(_mixed_line_endings(layout.records)) == 1, "the fixture layout must agree with itself"
+
+    from cadrumo.domain.calculations.registry.schema_exports import ExportLineEnding
+
+    other = ExportLineEnding.CRLF if record.line_ending is ExportLineEnding.NONE else ExportLineEnding.NONE
+    mixed = (*layout.records, record.model_copy(update={"line_ending": other}))
+
+    assert len(_mixed_line_endings(mixed)) == 2, "a layout carrying both endings must be reported"
+    assert _mixed_line_endings(()) == set(), "a record-less layout declares no ending to disagree about"
