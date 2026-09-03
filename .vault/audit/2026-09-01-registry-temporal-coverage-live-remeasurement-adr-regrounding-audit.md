@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:89ec88a18ff649bc437522fe43a27917a5d92862b2c0ac8810ca8db12b08478f'
+body_hash: 'sha256:e0acb4410dfb51f310cade26db94850ef0811bdbd7b4c8096ef8aea8115cfc2e'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7817,3 +7817,34 @@ measured was being written by the same session doing the measuring. Comparing
 the two runs by identity rather than by count is what made it legible - the
 failing set was otherwise unchanged, so the single new entry stood out as an
 event rather than a regression.
+
+### the-pipeline-duplicated-two-guards-and-one-algorithm-and-only-the-guards-were-collapsed | high | A drifting sum is a wrong number; a drifting guard is a route into the tree that stops refusing
+
+Sweeping the registry tooling for identical function bodies across modules -
+the technique that found one helper written ten times - returns three more pairs
+in the pipeline package. Two are refusals: the check and validation paths both
+refused a link-like or absent location, and the check and publication paths both
+asked whether one location sits inside another. The third is a generic
+duplicate-finder over an iterable, in two unrelated modules.
+
+Only the guards were collapsed, and the asymmetry is the point. A duplicated
+computation that drifts produces a wrong number, which a test catches. A
+duplicated guard that drifts produces one route into the generated tree that
+refuses a symlink and another that does not, and the second is the route an
+accident arrives through. That is worth a defining module even at five lines
+apiece; the duplicate-finder is not.
+
+The guards live in `_tree_paths.py`, private to the pipeline package. The
+shipped `link_safety` module owns what a link IS, and these compose it into the
+two refusals this pipeline makes - a dev-side guard does not belong in the
+product's core, and the core is outside this work's scope in any case. The
+duplicate-finder stays where it is, and the reason is written here rather than
+left as an omission: a module named for finding duplicates in a sequence would
+be the generic bucket the architecture rule forbids, and inventing one to satisfy
+a symmetry would trade a small duplication for a permanent misnamed home.
+
+Two publication tests fail after the change and failed before it, with the same
+two refusals - a journal candidate that is not a staging sibling, and a
+provenance file the fragment loader will not accept without a TOML suffix. They
+appear in the pre-change suite run and are unrelated to the guards; the three
+edited modules import cleanly and twenty-nine tests pass beside them.
