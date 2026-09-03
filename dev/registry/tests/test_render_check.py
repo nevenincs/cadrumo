@@ -49,6 +49,13 @@ def test_a_stale_attestation_is_separated_from_record_drift(authority: Validated
     This is the class that is safe to republish, and separating it is the whole
     point: the remedy for a stale attestation is regeneration, and the remedy
     for record drift is emphatically not.
+
+    Pinned to a dispositioned tree. This one is safe to republish, so it will be,
+    and this test fails when it is - that failure is the republication, not a
+    regression. Three siblings sit in the same class and any of them replaces the
+    coordinate; if the class is ever empty, construct the case rather than
+    dropping it, because a provenance-only tree that nobody can produce is
+    exactly when the separation from record drift stops being exercised.
     """
     comparison = compare_revision_against_committed(authority, modelo="296", revision="2024-y-siguientes")
     assert not comparison.reproduced
@@ -63,6 +70,14 @@ def test_record_drift_is_reported_as_such(authority: ValidatedRegistryAuthority)
     binding rows, which the current inputs no longer produce. Republishing them
     would collapse every counterparty into one record, so a caller must be able
     to tell this apart from a stale manifest before regenerating anything.
+
+    Pinned to a live defect whose remedy is authored on the map, not here: the
+    pipeline's own refusal names the three things the inputs must carry before
+    this tree may be republished. When they do, both revisions reproduce and this
+    test fails, which is the repair landing. No other tree is in this class, so
+    the replacement must be constructed - a copy of a real revision with one
+    record's repeat removed. Do not delete it: this is the assertion that keeps
+    an unsafe republication from being reported as a stale manifest.
     """
     for revision in ("2011-2024", "2025-y-siguientes"):
         comparison = compare_revision_against_committed(authority, modelo="347", revision=revision)
