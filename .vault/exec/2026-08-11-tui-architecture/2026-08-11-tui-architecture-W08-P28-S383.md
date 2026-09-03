@@ -5,16 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:52ffe01df109c38ab3ab28a98a41f0f7e5c64bca4edfe57edb8fd1fb501a7f2c'
+body_hash: 'sha256:b76cbd157b950e39fc56261cc7c132fcaf2fb3b9f6d29fe01278db84c4de1d7f'
 step_id: 'S383'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Compose the root destination stack, account header, semantic focus restoration, session expiry, and post-journey Home refresh
 
@@ -24,19 +19,13 @@ related:
 
 ## Changes
 
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
+- `M` `src/cadrumo/entrypoints/tui/app.py`
+- `A` `src/cadrumo/entrypoints/tui/tests/test_app.py`
+- `M` `.vault/plan/2026-08-11-tui-architecture-plan.md`
+- `M` `.vault/exec/2026-08-11-tui-architecture/2026-08-11-tui-architecture-W08-P28-S383.md`
+- `verify:` `uv run --no-sync pytest -q src/cadrumo/entrypoints/tui/tests/test_app.py src/cadrumo/entrypoints/tui/tests/test_launcher_entry_point.py src/cadrumo/entrypoints/tui/tests/test_home.py src/cadrumo/entrypoints/tui/tests/test_search.py` -> `pass`
+- `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/tui/app.py src/cadrumo/entrypoints/tui/tests/test_app.py` -> `pass`
+- `verify:` `uv run --no-sync ty check src/cadrumo/entrypoints/tui/app.py src/cadrumo/entrypoints/tui/tests/test_app.py` -> `pass`
+- `verify:` `uv run --no-sync basedpyright src/cadrumo/entrypoints/tui/app.py src/cadrumo/entrypoints/tui/tests/test_app.py` -> `pass`
+- `verify:` `npx --yes jscpd@4.2.0 src/cadrumo/entrypoints/tui/app.py src/cadrumo/entrypoints/tui/tests/test_app.py --format python --min-lines 6 --min-tokens 80 --max-size 250kb --reporters console --noTips` -> `pass`
 
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
