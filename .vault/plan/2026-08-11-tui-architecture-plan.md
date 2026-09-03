@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-03'
-body_hash: 'sha256:8cfa8219c1792055269a072eca2e1a7a4d0e1edaf1032a9e9fe4290ef993a4e2'
+body_hash: 'sha256:57104b9b52cb6656e7b0202e23dad2f8f75ca8b240aa4896e894e2e502a9a643'
 ---
 
 <!-- RETIRED: S370 -->
@@ -582,7 +582,7 @@ Build host-neutral Ledger, Declarations with full calendar and history, AEAT Syn
 - [x] `W08.P27.S378` - Build the full declaration calendar as an agenda-first searchable and filterable workbench with past, upcoming, overdue, filed, and evidence-unknown scopes; `src/cadrumo/entrypoints/tui/declarations/calendar.py`.
 - [x] `W08.P27.S397` - Define a safe immutable AEAT Sync workspace projection that joins overview, census, filed-declaration, notification, evidence-comparison, and reconciliation facts while excluding protected taxpayer values and preserving source availability, freshness, contradiction, and supported-action axes; `src/cadrumo/application/aeat_sync/workspace.py and focused application tests`.
 - [ ] `W08.P27.S399` - Project a stable opaque non-sensitive notification selection identity for AEAT Sync so refresh, reorder, resize, and child-return focus restoration never depends on dates, categories, protected identifiers, or row ordinals; `src/cadrumo/application/aeat_sync/workspace.py and focused projection tests`.
-- [ ] `W08.P27.S379` - Build AEAT Sync overview, profile-census, filed-declaration, notification, evidence-comparison, and reconciliation screens with explicit pull and supported push actions; `src/cadrumo/entrypoints/tui/aeat_sync/`.
+- [x] `W08.P27.S379` - Build AEAT Sync overview, profile-census, filed-declaration, notification, evidence-comparison, and reconciliation screens with explicit pull and supported push actions; `src/cadrumo/entrypoints/tui/aeat_sync/`.
 - [ ] `W08.P27.S380` - Compose production Profile, change-user, password, appearance, language, and sign-out factories without duplicating their existing screens; `src/cadrumo/entrypoints/tui/account.py`.
 
 ### Phase `W08.P28` - Installed root composition and navigation

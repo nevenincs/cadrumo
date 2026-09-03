@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
+from typing import cast
 
 import pytest
 from textual.widgets import Button, DataTable, Static
@@ -23,6 +24,7 @@ from .....application.aeat_sync.workspace import (
     AeatSyncWorkspaceAvailability,
     AeatSyncWorkspaceCensusRowV1,
     AeatSyncWorkspaceEvidenceComparisonRowV1,
+    AeatSyncWorkspaceFactV1,
     AeatSyncWorkspaceFiledDeclarationRowV1,
     AeatSyncWorkspaceNotificationRowV1,
     AeatSyncWorkspaceOverviewRowV1,
@@ -31,18 +33,20 @@ from .....application.aeat_sync.workspace import (
     AeatSyncWorkspaceSource,
     AeatSyncWorkspaceSourceObservationV1,
     AeatSyncWorkspaceZone,
-    AeatSyncWorkspaceZoneStateV1,
+    AeatSyncWorkspaceZoneObservationV1,
     aeat_sync_workspace_sources,
+    project_aeat_sync_workspace,
 )
 from .....application.operations.models import OperationDefinitionId
 from .....application.operations.registry import OperationPublicContractSetV1
-from .....application.operator_actions.catalogue import ActionCatalogue, ActionCatalogueEntry
+from .....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue, ActionCatalogueEntry
 from .....application.operator_actions.models import ActionReference
 from .....application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION,
     build_censal_operation_registration,
 )
 from .....core.i18n.render import I18N_STRICT_MISSING_KEYS, tr
+from .....core.identity import BucketId
 from .....core.period import Period
 from .....domain.modelos.codes import ModeloCode
 from ...components.host import ScreenHostApp
@@ -60,6 +64,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _T1 = datetime(2026, 1, 3, 10, tzinfo=UTC)
 _T2 = datetime(2026, 1, 4, 11, tzinfo=UTC)
+_BUCKET_ID = cast(BucketId, "11111111-1111-4111-8111-111111111111")
+_SUBJECT_KEY = "private-subject"
 
 
 def _source(
@@ -82,90 +88,115 @@ def _projection(
     unknown_pair: bool = False,
 ) -> AeatSyncWorkspaceProjectionV1:
     """Build only public S397 output records; no application test helper leaks."""
-    sources_by_zone = {
-        zone: tuple(_source(source, availability) for source in aeat_sync_workspace_sources(zone))
-        for zone in AeatSyncWorkspaceZone
-    }
-    visible = availability in {AeatSyncWorkspaceAvailability.AVAILABLE, AeatSyncWorkspaceAvailability.STALE}
-    zones = tuple(
-        AeatSyncWorkspaceZoneStateV1(
+    observations = tuple(
+        AeatSyncWorkspaceZoneObservationV1(
             zone=zone,
-            availability=availability,
-            sources=sources_by_zone[zone],
-            item_count=1 if visible else None,
+            sources=tuple(_source(source, availability) for source in aeat_sync_workspace_sources(zone)),
         )
         for zone in AeatSyncWorkspaceZone
     )
-    if not visible:
-        return AeatSyncWorkspaceProjectionV1(zones=zones)
+    if availability not in {AeatSyncWorkspaceAvailability.AVAILABLE, AeatSyncWorkspaceAvailability.STALE}:
+        return project_aeat_sync_workspace(
+            bucket_id=_BUCKET_ID,
+            subject_key=_SUBJECT_KEY,
+            zone_observations=observations,
+            action_catalogue=OPERATOR_ACTION_CATALOGUE,
+            operation_contracts=_contracts(),
+        )
     action = ActionReference(action_id="operator.live.notifications.list" if unknown_pair else "operator.profile.edit")
+    overview_area = AeatSyncOverviewArea.NOTIFICATIONS if unknown_pair else AeatSyncOverviewArea.CENSUS
     overview = AeatSyncWorkspaceOverviewRowV1(
-        area=AeatSyncOverviewArea.CENSUS,
+        area=overview_area,
         local_state=AeatSyncSourceState.PRESENT,
         aeat_state=AeatSyncSourceState.PRESENT,
         local_observed_at=_T1,
         aeat_observed_at=_T2,
         discrepancy_kind=AeatSyncDiscrepancyKind.NONE,
         supported_actions=(action,),
-        supported_operations=("user-profile.censo-review",),
+        supported_operations=() if unknown_pair else ("user-profile.censo-review",),
     )
     period = Period.from_year_and_code(2026, "1T")
-    return AeatSyncWorkspaceProjectionV1(
-        zones=zones,
-        overview=(overview,),
+    return project_aeat_sync_workspace(
+        bucket_id=_BUCKET_ID,
+        subject_key=_SUBJECT_KEY,
+        zone_observations=observations,
+        action_catalogue=OPERATOR_ACTION_CATALOGUE,
+        operation_contracts=_contracts(),
+        overview=(AeatSyncWorkspaceFactV1(_BUCKET_ID, _SUBJECT_KEY, overview),),
         census=(
-            AeatSyncWorkspaceCensusRowV1(
-                path="tax address", category=AeatSyncCensusCategory.ADDRESS, status=AeatSyncCensusStatus.CONFLICT
+            AeatSyncWorkspaceFactV1(
+                _BUCKET_ID,
+                _SUBJECT_KEY,
+                AeatSyncWorkspaceCensusRowV1(
+                    path="tax address", category=AeatSyncCensusCategory.ADDRESS, status=AeatSyncCensusStatus.CONFLICT
+                ),
             ),
         ),
         filed_declarations=(
-            AeatSyncWorkspaceFiledDeclarationRowV1(
-                modelo=ModeloCode("130"),
-                filing_year=2026,
-                period=period,
-                local_filing_state=AeatSyncLocalFilingState.FILED,
-                local_filed_at=_T1,
-                aeat_observation_state=AeatSyncAeatObservationState.ACCEPTED,
-                aeat_observed_at=_T2,
-                justificante_state=AeatSyncJustificanteState.VERIFIED,
-                justificante_observed_at=_T2,
+            AeatSyncWorkspaceFactV1(
+                _BUCKET_ID,
+                _SUBJECT_KEY,
+                AeatSyncWorkspaceFiledDeclarationRowV1(
+                    modelo=ModeloCode("130"),
+                    filing_year=2026,
+                    period=period,
+                    local_filing_state=AeatSyncLocalFilingState.FILED,
+                    local_filed_at=_T1,
+                    aeat_observation_state=AeatSyncAeatObservationState.ACCEPTED,
+                    aeat_observed_at=_T2,
+                    justificante_state=AeatSyncJustificanteState.VERIFIED,
+                    justificante_observed_at=_T2,
+                ),
             ),
         ),
         notifications=(
-            AeatSyncWorkspaceNotificationRowV1(
-                issued_on=date(2026, 1, 2),
-                read_on=None if unread else date(2026, 1, 3),
-                read_state=AeatSyncNotificationReadState.UNREAD if unread else AeatSyncNotificationReadState.READ,
-                category=AeatSyncNotificationCategory.FORMAL,
-                document_custody_state=(
-                    AeatSyncDocumentCustodyState.NOT_CAPTURED if unread else AeatSyncDocumentCustodyState.HELD
+            AeatSyncWorkspaceFactV1(
+                _BUCKET_ID,
+                _SUBJECT_KEY,
+                AeatSyncWorkspaceNotificationRowV1(
+                    issued_on=date(2026, 1, 2),
+                    read_on=None if unread else date(2026, 1, 3),
+                    read_state=AeatSyncNotificationReadState.UNREAD if unread else AeatSyncNotificationReadState.READ,
+                    category=AeatSyncNotificationCategory.FORMAL,
+                    document_custody_state=(
+                        AeatSyncDocumentCustodyState.NOT_CAPTURED if unread else AeatSyncDocumentCustodyState.HELD
+                    ),
+                    document_custody_observed_at=None if unread else _T2,
                 ),
-                document_custody_observed_at=None if unread else _T2,
+                private_identity="notification-private",
             ),
         ),
         evidence_comparison=(
-            AeatSyncWorkspaceEvidenceComparisonRowV1(
-                modelo=ModeloCode("130"),
-                filing_year=2026,
-                period=period,
-                local_state=AeatSyncSourceState.PRESENT,
-                aeat_state=AeatSyncSourceState.ABSENT,
-                local_observed_at=_T1,
-                aeat_observed_at=_T2,
-                discrepancy_kind=AeatSyncDiscrepancyKind.LOCAL_ONLY,
+            AeatSyncWorkspaceFactV1(
+                _BUCKET_ID,
+                _SUBJECT_KEY,
+                AeatSyncWorkspaceEvidenceComparisonRowV1(
+                    modelo=ModeloCode("130"),
+                    filing_year=2026,
+                    period=period,
+                    local_state=AeatSyncSourceState.PRESENT,
+                    aeat_state=AeatSyncSourceState.ABSENT,
+                    local_observed_at=_T1,
+                    aeat_observed_at=_T2,
+                    discrepancy_kind=AeatSyncDiscrepancyKind.LOCAL_ONLY,
+                ),
             ),
         ),
         reconciliation=(
-            AeatSyncWorkspaceReconciliationRowV1(
-                modelo=ModeloCode("130"),
-                filing_year=2026,
-                period=period,
-                local_state=AeatSyncSourceState.PRESENT,
-                aeat_state=AeatSyncSourceState.ABSENT,
-                local_observed_at=_T1,
-                aeat_observed_at=_T2,
-                discrepancy_kind=AeatSyncDiscrepancyKind.LOCAL_ONLY,
-                reconciliation_state=AeatSyncReconciliationState.KEEP_LOCAL,
+            AeatSyncWorkspaceFactV1(
+                _BUCKET_ID,
+                _SUBJECT_KEY,
+                AeatSyncWorkspaceReconciliationRowV1(
+                    modelo=ModeloCode("130"),
+                    filing_year=2026,
+                    period=period,
+                    local_state=AeatSyncSourceState.PRESENT,
+                    aeat_state=AeatSyncSourceState.ABSENT,
+                    local_observed_at=_T1,
+                    aeat_observed_at=_T2,
+                    discrepancy_kind=AeatSyncDiscrepancyKind.LOCAL_ONLY,
+                    reconciliation_state=AeatSyncReconciliationState.KEEP_LOCAL,
+                ),
             ),
         ),
     )
@@ -253,7 +284,9 @@ async def test_explicit_overview_operation_invokes_host_once_and_missing_host_re
     async with ScreenHostApp[None](refused).run_test(size=(100, 30)) as pilot:
         await pilot.pause()
         await pilot.click("#aeat-sync-operation-0")
-        assert "Operation handoff is unavailable." in str(refused.query_one("#aeat-sync-status", Static).render())
+        assert tr("tui.aeat_sync.refusal.operation_handoff") in str(
+            refused.query_one("#aeat-sync-status", Static).render()
+        )
 
 
 @pytest.mark.asyncio
