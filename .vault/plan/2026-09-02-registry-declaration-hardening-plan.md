@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:f9e143a83c95d7aa439a757b1355479f9d05cc0eba8cc751e7498fcde3bd1d42'
+body_hash: 'sha256:a1796ca3bc2aba6df9b634ed3d4083c866e75249fc8958e57b7d7ebc74b2123e'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -507,6 +507,7 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S457` - Re-test the manifest-children relationship with every family walked and correct the earlier reading: 102 of 128 revisions have a manifest contained in their childrens citations and 37 agree exactly, so the corpus was authored to a containment the citing-side screen tests in reverse; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W04.P09.S458` - Publish the reference worklist measured on the complete walk with its date and command: 520 pairs, 256 systemic, 38 single-child where the single-child count fell as the walk widened because references thought to have one citer turned out to have several; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W04.P09.S459` - Read the seven filing-grade revision-name findings and record that modelo 322s misnamed revision hides a fourteen-year coverage gap, since no revision of that modelo serves any year before 2022 and only the directory name claims 2008 to 2021; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W04.P09.S460` - Measure whether any modelo has a year inside its span that no revision serves and record none does across 33 modelos and 199 served years, so modelo 322s unserved years are outside its coverage rather than a hole in it and the rename loses nothing; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 

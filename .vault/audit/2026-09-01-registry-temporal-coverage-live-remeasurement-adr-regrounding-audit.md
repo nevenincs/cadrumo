@@ -12575,3 +12575,32 @@ Three of the seven are modelo 369's `esquema-exterior`, `esquema-importacion` an
 `esquema-union`, which carry no year token because they are not temporal at all -
 the non-temporal scheme axis sitting in the revision slot, which the plan already
 tracks as its own Step.
+
+
+## No modelo has a hole in its coverage, and modelo 322's is not one
+
+The previous section came close to calling modelo 322's fourteen unserved years a
+coverage gap. Measured across the corpus, that framing is wrong and the
+distinction matters.
+
+**No modelo has a year inside its own span that no revision serves.** Thirty-three
+modelos carry a closed window and every one of them has more than one revision;
+between them they serve 199 distinct modelo-years, and the interior of every
+modelo's span is continuous. Where one revision closes, the next opens.
+
+Modelo 322's 2008 to 2021 is not interior. Its earliest coverage of any kind
+begins in 2022, and years before a modelo's first revision are outside the
+registry's reach rather than missing from it - the corpus's earliest coverage
+runs from 2003 to 2026 depending on the modelo, and nothing says every modelo
+must reach back to the same year.
+
+So the finding stands but its name changes. It is not a hole in coverage; it is a
+**revision directory named for years the registry does not claim to cover**, and
+the only thing asserting those years is the name. That is a naming defect, which
+is what the rename Step already calls it, and the addition this measurement makes
+is the certainty that renaming loses nothing - there is no coverage behind the
+name to preserve.
+
+The check was proved non-vacuous before its zero was believed: thirty-three
+modelos examined, all multi-revision, 199 served years between them. A continuity
+check that quietly examined nothing would report exactly the same zero.
