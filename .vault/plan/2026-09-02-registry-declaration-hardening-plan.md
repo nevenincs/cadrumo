@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:1d76fce88a38acde13ad5dda93b7fadc91bef0e518f8d01e158d2f4c92362d5a'
+body_hash: 'sha256:d96df605c10e5a5b2d77233cb59a1986616c21ca18e2a87a9aa4aede64e4134c'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -526,6 +526,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S296` - Verify the validator-module figure against the package and give it a re-derivable form; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S297` - Record that one name-window condition is refused upstream and is a canary, and refine the validator-family claim to the agreement subset; `dev/registry/analysis/revision_name_window.py .vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S298` - Prove the one declared screen condition that was silent and unexercised, and pair it with its live-corpus silence; `dev/registry/tests/test_temporal_site_agreement.py`.
+- [x] `W06.P13.S299` - Give the continuity screen a per-definition function so its two detector proofs assert the reported kind rather than the index beneath it; `dev/registry/analysis/continuity_integrity.py dev/registry/tests/test_continuity_integrity.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

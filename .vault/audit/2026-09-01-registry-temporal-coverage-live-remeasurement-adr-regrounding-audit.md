@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:93c83d5b38ea2f6068e84d7372d93193875f06842df533c635ecce3acd037e03'
+body_hash: 'sha256:6f5d4f704775512c9895277059cd0c3ec229ebe1090ccca70598891535210b6e'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7484,3 +7484,37 @@ the constructed case is over a fixture with one planted disagreement, not over
 the corpus, which is the distinction this campaign drew two iterations ago and
 is worth keeping straight: a count of what a fixture produces is a proof, a
 count of what the tree contains is a ratchet. Nine tests pass, exit 0.
+
+### two-detector-proofs-were-named-for-the-screen-and-never-ran-it | high | They asserted the index beneath the screen, which shows a defect is visible without showing the screen reports it
+
+An attempt to gate the reverse of an existing rule - every condition a screen
+declares must be emitted live or proven by a constructed defect - was abandoned,
+and the abandonment found the defect the gate was meant to catch.
+
+The gate needed to know which conditions a screen declares and which have
+proofs. The first half is already solved: the condition-count gate enumerates
+the bullets that follow a screen's "N conditions are reported" claim, and
+deliberately excludes the fact bullets before it, which is the discrimination a
+naive read of the docstring gets wrong. The second half is not solvable the way
+it looks. Searching a test module for the kind's name flags two continuity
+conditions as unproven, and they are proven - by tests that never name the kind.
+Building the gate on that signal would have made two correct tests look like
+gaps and taught the next author to paste the string in to silence it. That is
+the fifth heuristic in this campaign to encode one shape of a concept and miss
+the others, and the first caught before it was written into a gate rather than
+after.
+
+The flag was right for a different reason. `test_screen_detects_a_chain_spanning_two_identifier_grammars`
+and its sibling construct their defects correctly and then assert against
+`chain_index`, the index the screen reads. The index showing two grammars is the
+precondition; the finding is the claim. Both tests are named for the screen and
+neither ran it, so nothing connected the constructed defect to the row a
+maintainer would see - and the screen had no per-unit entry point to run,
+because `screen_authority` takes the authority and walks every modelo, while the
+sibling screens all expose a per-revision function their proofs use.
+
+The screen now has `definition_findings`, matching the shape its siblings
+already had, and `screen_authority` is a loop over it. The census is unchanged
+at twenty-six findings across the same kinds, which is what makes the extraction
+safe to believe. Both proofs now assert the kind the screen reports, one of them
+matching the finding's full detail text. Six tests pass, exit 0.
