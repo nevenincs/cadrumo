@@ -74,9 +74,31 @@ def test_record_drift_is_reported_as_such(authority: ValidatedRegistryAuthority)
 def test_a_revision_without_a_generated_layout_is_refused_by_name(
     authority: ValidatedRegistryAuthority,
 ) -> None:
-    """A revision that cannot be rendered refuses rather than comparing nothing."""
+    """A revision that cannot be rendered refuses rather than comparing nothing.
+
+    The coordinate is derived rather than named. This test previously pinned
+    modelo 200's 2025 revision, which had no generated layout until someone
+    published one - at which point the test failed for the best possible reason
+    and said nothing useful about the refusal it exists to prove.
+
+    Deriving it means the fixture cannot be invalidated by legitimate progress,
+    and the population is asserted first so that a corpus where every revision
+    had a layout would fail loudly rather than pass over an empty search.
+    """
+    from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
+
+    without_layout = [
+        (modelo, revision_id)
+        for modelo in sorted(str(code) for code in registry_modelo_codes())
+        for revision_id, revision in authority.modelo(modelo).revisions.items()
+        if not revision.export_layouts
+    ]
+
+    assert without_layout, "no revision lacks a generated layout, so this refusal cannot be exercised"
+
+    modelo, revision_id = without_layout[0]
     with pytest.raises(ValueError, match="no export layout"):
-        compare_revision_against_committed(authority, modelo="200", revision="2025-y-siguientes")
+        compare_revision_against_committed(authority, modelo=modelo, revision=revision_id)
 
 
 def test_every_non_reproducing_tree_is_dispositioned_and_every_disposition_is_live(
