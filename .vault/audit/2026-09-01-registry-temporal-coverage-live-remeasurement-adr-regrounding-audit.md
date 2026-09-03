@@ -10808,3 +10808,63 @@ This is the campaign's own target defect appearing in a summary line written
 within the same hour: the same concept expressed twice in different forms, in
 adjacent output, by one author. It was visible only because the second
 expression was built beside the first.
+
+
+## Reading the eleven notes: twelve fields are settled, not forty-one
+
+The worklist was built so the eleven notes could be read. Reading them changes
+the answer, and corrects an impression this audit has been building for several
+sections.
+
+"Zero ungrounded" was true and is not a readiness signal. Grounding established
+that official wording exists and that the design pointed at it; it never
+established that the wording answers the question a representation rule asks.
+Read, the eleven divide:
+
+**Seven notes state representation, covering twelve fields.** Modelo 200's
+amounts note gives fifteen integers, sign carriage and two decimals; its rate
+note gives the four-digit filling rule; two of its notes enumerate the permitted
+values of a one-character field; modelo 303's Lorca note enumerates three values
+at width one, covering six fields; and modelos 202 and 222 each carry the same
+alignment and padding sentence for numeric fields.
+
+**Four notes state something else entirely, covering twenty-nine fields.** The
+largest work item in the whole list - modelo 200's `DP200019:nota 1`, twenty-six
+fields - reads "A cumplimentar exclusivamente por entidades que pertenezcan a
+grupos mercantiles". That is who must fill the field, not how it is written. Two
+more of modelo 200's notes state when a casilla may carry content and how it
+must agree with another casilla; modelo 353's states a period applicability. All
+four are real official statements about their fields and none of them settles a
+byte.
+
+So the rules-authoring step faces **twelve fields with wording that answers it
+and twenty-nine with wording that does not**, and the twenty-nine are not
+ungrounded in the sense of nothing being found - they are fields whose only
+located wording is about something else. That is a different remedy: the
+representation for those has to come from the field's own extent and type
+together with the design's general conventions, or the capability stays
+advisory.
+
+The screen said this would happen. Its docstring has carried the sentence "a
+grounded row is not an authored rule; the note still has to be read, and it may
+turn out to settle less than the field needs" since it was written. What the
+sentence could not do is say which rows, and the number turns out to be most of
+them by field count and four notes of eleven by reading.
+
+No attempt is made to classify these automatically. Separating "how a value is
+written" from "who must write it" is a reading of Spanish prose, and a keyword
+list attempting it is the instrument error recorded four times in this audit
+already - most sharply when a vocabulary list reported the plainest wire wording
+in the corpus as absent. The worklist puts eleven notes in front of a reader in
+coverage order; the reading is the reader's.
+
+### A false finding caught before it was written down
+
+The first pass over these notes reported three of the eleven as resolving to
+empty text, which would have been a defect in the reader and a serious one. It
+was an artifact of the query: it looked each note up in the first revision of
+the modelo that produced render inputs, rather than in the revision the finding
+came from. Modelo 303's note belongs to its 2023 revision and modelo 353's to
+`2026-desde-02`; read there, every one of the eleven carries text, between
+thirty-five and four hundred and fifty-nine characters. The correction cost one
+command and the wrong version never left the session.

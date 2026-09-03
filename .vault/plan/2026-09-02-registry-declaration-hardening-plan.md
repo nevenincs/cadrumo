@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:5ab326f82b240b0b4e68b08c7d229ef697c496277d5849f54ae833d5ee9bd28f'
+body_hash: 'sha256:afab0b45a7a62f356b8ee5a1a9f67fde9f44f85ab99d31b8f5501bc5556f9c58'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -402,7 +402,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S78` - Measure whether the thirty-two footnoted corporate-tax amounts are also rendered unscaled; `dev/registry/analysis/monetary_scale.py`.
 - [ ] `W04.P07.S76` - Refuse a bare footnote pointer as a stated wire fact, landing with the reviewed rules the correction makes due, since the file is no longer held but the coverage gate demands both halves in one change; `dev/registry/pipeline/_render_profile.py`.
 - [ ] `W04.P07.S77` - Prove the eligibility predicate treats a footnote-only content cell as stating no wire fact; `dev/registry/tests/test_render_profile.py`.
-- [ ] `W04.P07.S79` - Author reviewed representation rules for the forty-one fields the eligibility correction newly admits, nine grounded in a convention naming their own AEAT type and thirty-two in modelo 200s design-level amounts note, rather than the one hundred and forty-nine this step claimed and no measurement reproduces; `dev/registry/render_profiles`.
+- [ ] `W04.P07.S79` - Author reviewed representation rules for the forty-one fields the eligibility correction newly admits, of which reading the eleven grounding notes shows twelve have wording that settles representation and twenty-nine have wording about applicability or cross-field agreement instead, so the latter must be derived from extent and type or stay advisory; `dev/registry/render_profiles`.
 - [x] `W04.P07.S80` - Require a declared scale for every monetary export field in the new-modelo authoring checklist; `dev/registry/newmodelo/checklist.py`.
 - [x] `W04.P07.S81` - Require a sibling-amount comparison in the authoring checklist and stop pinning the checklist item count in its tests; `dev/registry/newmodelo/tests`.
 - [x] `W04.P07.S82` - Document which fields a render profile may govern and why a footnote reference removes one from its reach; `dev/registry/render_profiles/README.md`.
@@ -431,6 +431,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [x] `W04.P07.S406` - Gate the gap between enrolment and execution so a table added without a runner fails by name, write the verification criterion for the nine narrow gates, and correct the breakdown that said five carried the module walk when two did; `dev/registry/tests/test_declaration_invariant_gates.py .vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W04.P07.S407` - Count the note a field itself cites as grounding, which is the strongest kind and was missing entirely: it covers 38 of the 41 fields and settles the three that modelo 200s amounts note cannot, since a one-character field is not fifteen integers and two decimals; `dev/registry/analysis/rule_grounding_coverage.py dev/registry/tests/test_rule_grounding_coverage.py`.
 - [x] `W04.P07.S408` - Emit the authoring worklist grouped by the note that grounds each field, since the cost is readings not fields: forty-one fields resolve to eleven items and the largest covers twenty-six at one width, with each item carrying its widths so a note that cannot serve them all is visible; `dev/registry/analysis/rule_grounding_coverage.py dev/registry/tests/test_rule_grounding_coverage.py`.
+- [x] `W04.P07.S409` - Read the eleven grounding notes and record which settle representation, since zero ungrounded is not a readiness signal: the largest work item covers twenty-six fields with a note stating who must fill them rather than how they are written; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W04.P08` - grade earned gate
 
